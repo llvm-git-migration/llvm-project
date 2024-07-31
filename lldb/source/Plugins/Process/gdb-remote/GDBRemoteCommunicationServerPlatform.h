@@ -85,7 +85,7 @@ public:
 
   void SetPortOffset(uint16_t port_offset);
 
-  void SetInferiorArguments(const lldb_private::Args &args);
+  void Proc(const lldb_private::Args &args);
 
   // Set port if you want to use a specific port number.
   // Otherwise port will be set to the port that was chosen for you.
