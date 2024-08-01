@@ -1505,6 +1505,80 @@ foldMinimumOverTrailingOrLeadingZeroCount(Value *I0, Value *I1,
       ConstantInt::getTrue(ZeroUndef->getType()));
 }
 
+/// Return whether "X LOp (Y ROp Z)" is always equal to
+/// "(X LOp Y) ROp (X LOp Z)".
+static bool leftDistributesOverRightIntrinsic(Intrinsic::ID LOp,
+                                              Intrinsic::ID ROp) {
+  switch (LOp) {
+  case Intrinsic::umax:
+    return ROp == Intrinsic::umin;
+  case Intrinsic::smax:
+    return ROp == Intrinsic::smin;
+  case Intrinsic::umin:
+    return ROp == Intrinsic::umax;
+  case Intrinsic::smin:
+    return ROp == Intrinsic::smax;
+  case Intrinsic::uadd_sat:
+    return ROp == Intrinsic::umax || ROp == Intrinsic::umin;
+  case Intrinsic::sadd_sat:
+    return ROp == Intrinsic::smax || ROp == Intrinsic::smin;
+  default:
+    return false;
+  }
+}
+
+// Attempts to factorise a common term
+// in an instruction that has the form "(A op' B) op (C op' D)
+static Instruction *
+foldCallUsingDistributiveLaws(CallInst *II, InstCombiner::BuilderTy &Builder) {
+  Value *LHS = II->getOperand(0), *RHS = II->getOperand(1);
+  Intrinsic::ID TopLevelOpcode = II->getCalledFunction()->getIntrinsicID();
+
+  if (LHS && RHS) {
+    CallInst *Op0 = dyn_cast<CallInst>(LHS);
+    CallInst *Op1 = dyn_cast<CallInst>(RHS);
+
+    if (!Op0 || !Op1)
+      return nullptr;
+
+    if (Op0->getCalledFunction()->getIntrinsicID() !=
+        Op1->getCalledFunction()->getIntrinsicID())
+      return nullptr;
+
+    Intrinsic::ID InnerOpcode = Op0->getCalledFunction()->getIntrinsicID();
+
+    bool InnerCommutative = Op0->isCommutative();
+    bool Distributive =
+        leftDistributesOverRightIntrinsic(InnerOpcode, TopLevelOpcode);
+
+    Value *A = Op0->getOperand(0);
+    Value *B = Op0->getOperand(1);
+    Value *C = Op1->getOperand(0);
+    Value *D = Op1->getOperand(1);
+
+    if (Distributive && (A == C || (InnerCommutative && A == D))) {
+      if (A != C)
+        std::swap(C, D);
+
+      Value *NewIntrinsic = Builder.CreateBinaryIntrinsic(TopLevelOpcode, B, D);
+      Function *F = Intrinsic::getDeclaration(II->getModule(), InnerOpcode,
+                                              II->getType());
+      return CallInst::Create(F, {NewIntrinsic, A});
+    }
+
+    if (Distributive && InnerCommutative && (B == D || B == C)) {
+      if (B != D)
+        std::swap(C, D);
+
+      Value *NewIntrinsic = Builder.CreateBinaryIntrinsic(TopLevelOpcode, A, C);
+      Function *F = Intrinsic::getDeclaration(II->getModule(), InnerOpcode,
+                                              II->getType());
+      return CallInst::Create(F, {NewIntrinsic, B});
+    }
+  }
+  return nullptr;
+}
+
 /// CallInst simplification. This mostly only handles folding of intrinsic
 /// instructions. For normal calls, it allows visitCallBase to do the heavy
 /// lifting.
@@ -1731,6 +1805,11 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
             foldMinimumOverTrailingOrLeadingZeroCount<Intrinsic::ctlz>(
                 I0, I1, DL, Builder))
       return replaceInstUsesWith(*II, FoldedCtlz);
+
+    if (Instruction *I = foldCallUsingDistributiveLaws(II, Builder)) {
+      return I;
+    }
+
     [[fallthrough]];
   }
   case Intrinsic::umax: {
@@ -1751,9 +1830,18 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
     }
     // If both operands of unsigned min/max are sign-extended, it is still ok
     // to narrow the operation.
+
+    if (Instruction *I = foldCallUsingDistributiveLaws(II, Builder))
+      return I;
+
     [[fallthrough]];
   }
-  case Intrinsic::smax:
+  case Intrinsic::smax: {
+    if (Instruction *I = foldCallUsingDistributiveLaws(II, Builder))
+      return I;
+
+    [[fallthrough]];
+  }
   case Intrinsic::smin: {
     Value *I0 = II->getArgOperand(0), *I1 = II->getArgOperand(1);
     Value *X, *Y;
@@ -1927,6 +2015,10 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
           return replaceInstUsesWith(*II,
                                      ConstantInt::get(II->getType(), *RHSC));
       }
+    }
+
+    if (Instruction *I = foldCallUsingDistributiveLaws(II, Builder)) {
+      return I;
     }
 
     break;
