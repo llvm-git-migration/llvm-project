@@ -1793,8 +1793,8 @@ DeclResult Sema::CheckClassTemplate(
     CXXScopeSpec &SS, IdentifierInfo *Name, SourceLocation NameLoc,
     const ParsedAttributesView &Attr, TemplateParameterList *TemplateParams,
     AccessSpecifier AS, SourceLocation ModulePrivateLoc,
-    SourceLocation FriendLoc, unsigned NumOuterTemplateParamLists,
-    TemplateParameterList **OuterTemplateParamLists, SkipBodyInfo *SkipBody) {
+    SourceLocation FriendLoc, ArrayRef<TemplateParameterList *> OuterTemplateParamLists,
+    bool IsMemberSpecialization, SkipBodyInfo *SkipBody) {
   assert(TemplateParams && TemplateParams->size() > 0 &&
          "No template parameters");
   assert(TUK != TagUseKind::Reference &&
@@ -2066,10 +2066,9 @@ DeclResult Sema::CheckClassTemplate(
                             PrevClassTemplate->getTemplatedDecl() : nullptr,
                           /*DelayTypeCreation=*/true);
   SetNestedNameSpecifier(*this, NewClass, SS);
-  if (NumOuterTemplateParamLists > 0)
+  if (!OuterTemplateParamLists.empty())
     NewClass->setTemplateParameterListsInfo(
-        Context,
-        llvm::ArrayRef(OuterTemplateParamLists, NumOuterTemplateParamLists));
+        Context, OuterTemplateParamLists);
 
   // Add alignment attributes if necessary; these attributes are checked when
   // the ASTContext lays out the structure.
@@ -2082,7 +2081,10 @@ DeclResult Sema::CheckClassTemplate(
     = ClassTemplateDecl::Create(Context, SemanticContext, NameLoc,
                                 DeclarationName(Name), TemplateParams,
                                 NewClass);
-
+  // If we are providing an explicit specialization of a member that is a
+  // class template, make a note of that.
+  if (IsMemberSpecialization)
+    NewTemplate->setMemberSpecialization();
   if (ShouldAddRedecl)
     NewTemplate->setPreviousDecl(PrevClassTemplate);
 
@@ -2096,12 +2098,6 @@ DeclResult Sema::CheckClassTemplate(
   T = Context.getInjectedClassNameType(NewClass, T);
   assert(T->isDependentType() && "Class template type is not dependent?");
   (void)T;
-
-  // If we are providing an explicit specialization of a member that is a
-  // class template, make a note of that.
-  if (PrevClassTemplate &&
-      PrevClassTemplate->getInstantiatedFromMemberTemplate())
-    PrevClassTemplate->setMemberSpecialization();
 
   // Set the access specifier.
   if (!Invalid && TUK != TagUseKind::Friend &&
@@ -3949,7 +3945,7 @@ void Sema::CheckDeductionGuideTemplate(FunctionTemplateDecl *TD) {
 DeclResult Sema::ActOnVarTemplateSpecialization(
     Scope *S, Declarator &D, TypeSourceInfo *DI, LookupResult &Previous,
     SourceLocation TemplateKWLoc, TemplateParameterList *TemplateParams,
-    StorageClass SC, bool IsPartialSpecialization) {
+    StorageClass SC, bool IsPartialSpecialization, bool IsMemberSpecialization) {
   // D must be variable template id.
   assert(D.getName().getKind() == UnqualifiedIdKind::IK_TemplateId &&
          "Variable template specialization is declared with a template id.");
@@ -4066,16 +4062,18 @@ DeclResult Sema::ActOnVarTemplateSpecialization(
             Context, VarTemplate->getDeclContext(), TemplateKWLoc,
             TemplateNameLoc, TemplateParams, VarTemplate, DI->getType(), DI, SC,
             CanonicalConverted);
+    // If we are providing an explicit specialization of a member variable
+    // template specialization, make a note of that.
+    if (IsMemberSpecialization)
+      Partial->setMemberSpecialization();
     Partial->setTemplateArgsAsWritten(TemplateArgs);
 
     if (!PrevPartial)
       VarTemplate->AddPartialSpecialization(Partial, InsertPos);
     Specialization = Partial;
 
-    // If we are providing an explicit specialization of a member variable
-    // template specialization, make a note of that.
-    if (PrevPartial && PrevPartial->getInstantiatedFromMember())
-      PrevPartial->setMemberSpecialization();
+    //if (PrevPartial && PrevPartial->getInstantiatedFromMember())
+    //  PrevPartial->setMemberSpecialization();
 
     CheckTemplatePartialSpecialization(Partial);
   } else {
@@ -8280,8 +8278,8 @@ DeclResult Sema::ActOnClassTemplateSpecialization(
                                 TemplateParams,
                                 AS_none, /*ModulePrivateLoc=*/SourceLocation(),
                                 /*FriendLoc*/SourceLocation(),
-                                TemplateParameterLists.size() - 1,
-                                TemplateParameterLists.data());
+                                TemplateParameterLists.drop_back(),
+                                isMemberSpecialization);
     }
 
     // Create a new class template partial specialization declaration node.
@@ -8291,6 +8289,11 @@ DeclResult Sema::ActOnClassTemplateSpecialization(
         ClassTemplatePartialSpecializationDecl::Create(
             Context, Kind, DC, KWLoc, TemplateNameLoc, TemplateParams,
             ClassTemplate, CanonicalConverted, CanonType, PrevPartial);
+
+    // If we are providing an explicit specialization of a member class
+    // template specialization, make a note of that.
+    if (isMemberSpecialization)
+      Partial->setMemberSpecialization();
     Partial->setTemplateArgsAsWritten(TemplateArgs);
     SetNestedNameSpecifier(*this, Partial, SS);
     if (TemplateParameterLists.size() > 1 && SS.isSet()) {
@@ -8301,11 +8304,6 @@ DeclResult Sema::ActOnClassTemplateSpecialization(
     if (!PrevPartial)
       ClassTemplate->AddPartialSpecialization(Partial, InsertPos);
     Specialization = Partial;
-
-    // If we are providing an explicit specialization of a member class
-    // template specialization, make a note of that.
-    if (PrevPartial && PrevPartial->getInstantiatedFromMember())
-      PrevPartial->setMemberSpecialization();
 
     CheckTemplatePartialSpecialization(Partial);
   } else {
@@ -11103,7 +11101,7 @@ private:
 
   template<typename TemplDecl>
   void checkTemplate(TemplDecl *TD) {
-    if (TD->isMemberSpecialization()) {
+    if (TD->getMostRecentDecl()->isMemberSpecialization()) {
       if (!CheckMemberSpecialization(TD))
         diagnose(TD->getMostRecentDecl(), false);
     }
