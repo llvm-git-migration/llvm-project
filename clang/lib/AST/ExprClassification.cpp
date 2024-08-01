@@ -119,8 +119,6 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
 
     // First come the expressions that are always lvalues, unconditionally.
   case Expr::ObjCIsaExprClass:
-    // C++ [expr.prim.general]p1: A string literal is an lvalue.
-  case Expr::StringLiteralClass:
     // @encode is equivalent to its string
   case Expr::ObjCEncodeExprClass:
     // __func__ and friends are too.
@@ -149,6 +147,12 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::OMPArrayShapingExprClass:
   case Expr::OMPIteratorExprClass:
     return Cl::CL_LValue;
+
+    // C++ [expr.prim.general]p1: A string literal is an lvalue.
+    // Except we special case them as prvalues when they are used for
+    // initialization.
+  case Expr::StringLiteralClass:
+    return E->isLValue() ? Cl::CL_LValue : Cl::CL_PRValue;
 
     // C99 6.5.2.5p5 says that compound literals are lvalues.
     // In C++, they're prvalue temporaries, except for file-scope arrays.
