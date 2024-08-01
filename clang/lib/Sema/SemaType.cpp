@@ -9267,13 +9267,13 @@ bool Sema::RequireLiteralType(SourceLocation Loc, QualType T,
   if (!RT)
     return true;
 
-  const CXXRecordDecl *RD = cast<CXXRecordDecl>(RT->getDecl());
-
   // A partially-defined class type can't be a literal type, because a literal
   // class type must have a trivial destructor (which can't be checked until
   // the class definition is complete).
   if (RequireCompleteType(Loc, ElemType, diag::note_non_literal_incomplete, T))
     return true;
+
+  const CXXRecordDecl *RD = cast<CXXRecordDecl>(RT->getDecl());
 
   // [expr.prim.lambda]p3:
   //   This class type is [not] a literal type.
