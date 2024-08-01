@@ -15,6 +15,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
@@ -46,6 +47,7 @@ static bool isIntrinsicExpansion(Function &F) {
   case Intrinsic::dx_normalize:
   case Intrinsic::dx_sdot:
   case Intrinsic::dx_udot:
+  case Intrinsic::dx_saturate:
     return true;
   }
   return false;
@@ -362,6 +364,34 @@ static bool expandClampIntrinsic(CallInst *Orig, Intrinsic::ID ClampIntrinsic) {
   return true;
 }
 
+static bool expandSaturateIntrinsic(CallInst *SaturateCall) {
+  FunctionType *FT = SaturateCall->getFunctionType();
+  Type *FTRetTy = FT->getReturnType();
+  assert(FTRetTy == FT->getParamType(0) &&
+         "Unexpected different operand and return types of call to saturate");
+  if (FTRetTy->isVectorTy()) {
+    IRBuilder<> Builder(SaturateCall->getParent());
+    Builder.SetInsertPoint(SaturateCall);
+    FixedVectorType *FTVecRetTy = dyn_cast<FixedVectorType>(FTRetTy);
+    Function *Callee = dyn_cast<Function>(SaturateCall->getOperand(1));
+    assert(Callee->getIntrinsicID() == Intrinsic::dx_saturate);
+    Value *SrcVec = SaturateCall->getOperand(0);
+    Type *EltTy = FTVecRetTy->getScalarType();
+    Function *ScalarSatCallee = Intrinsic::getDeclaration(
+        SaturateCall->getModule(), Intrinsic::dx_saturate, {EltTy});
+    Value *Result;
+    for (unsigned I = 0; I < FTVecRetTy->getNumElements(); I++) {
+      Value *Elt = Builder.CreateExtractElement(SrcVec, I);
+      CallInst *CallSatutate =
+          Builder.CreateCall(ScalarSatCallee, {Elt}, "dx_saturate");
+      Result = Builder.CreateInsertElement(SrcVec, CallSatutate, I);
+    }
+    SaturateCall->replaceAllUsesWith(Result);
+    SaturateCall->eraseFromParent();
+  }
+  return true;
+}
+
 static bool expandIntrinsic(Function &F, CallInst *Orig) {
   switch (F.getIntrinsicID()) {
   case Intrinsic::abs:
@@ -388,6 +418,8 @@ static bool expandIntrinsic(Function &F, CallInst *Orig) {
   case Intrinsic::dx_sdot:
   case Intrinsic::dx_udot:
     return expandIntegerDot(Orig, F.getIntrinsicID());
+  case Intrinsic::dx_saturate:
+    return expandSaturateIntrinsic(Orig);
   }
   return false;
 }
