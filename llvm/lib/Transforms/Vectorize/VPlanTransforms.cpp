@@ -1492,6 +1492,10 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
                                              GetNewMask(RedR->getCondOp()));
       } else if (auto *VPInst = dyn_cast<VPInstruction>(CurRecipe)) {
 
+	// TODO: Transform
+	//   select(HeaderMask, LHS, blend(RHS, LHS/BlendMask))
+	// into
+	//   MergeUntilPivot(BlendMask, LHS, RHS, EVL)
         VPValue *LHS, *RHS;
         if (match(VPInst, m_Select(m_Specific(HeaderMask), m_VPValue(LHS),
                                    m_VPValue(RHS)))) {
