@@ -22,6 +22,12 @@ namespace detail {
 class DataLayoutEntryAttrStorage;
 } // namespace detail
 } // namespace mlir
+namespace mlir {
+namespace dlti {
+DataLayoutSpecInterface getDataLayoutSpec(Operation *op);
+TargetSystemSpecInterface getTargetSystemSpec(Operation *op);
+} // namespace dlti
+} // namespace mlir
 
 #define GET_ATTRDEF_CLASSES
 #include "mlir/Dialect/DLTI/DLTIAttrs.h.inc"
