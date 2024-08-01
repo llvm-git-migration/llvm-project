@@ -754,6 +754,21 @@ func.func @fptrunc2(%arg0: f32) -> f16 {
   return %0 : f16
 }
 
+
+// CHECK-LABEL: @experimental_constrained_fptrunc
+func.func @experimental_constrained_fptrunc(%arg0 : f64) {
+  // CHECK: spirv.FConvert %arg0 {fp_rounding_mode = #spirv.fp_rounding_mode<RTE>} : f64 to f32
+  %0 = arith.truncf %arg0 to_nearest_even : f64 to f32
+  // CHECK: spirv.FConvert %arg0 {fp_rounding_mode = #spirv.fp_rounding_mode<RTN>} : f64 to f32
+  %1 = arith.truncf %arg0 downward : f64 to f32
+  // CHECK: spirv.FConvert %arg0 {fp_rounding_mode = #spirv.fp_rounding_mode<RTP>} : f64 to f32
+  %2 = arith.truncf %arg0 upward : f64 to f32
+  // CHECK: spirv.FConvert %arg0 {fp_rounding_mode = #spirv.fp_rounding_mode<RTZ>} : f64 to f32
+  %3 = arith.truncf %arg0 toward_zero : f64 to f32
+  return
+}
+
+
 // CHECK-LABEL: @sitofp1
 func.func @sitofp1(%arg0 : i32) -> f32 {
   // CHECK: spirv.ConvertSToF %{{.*}} : i32 to f32
