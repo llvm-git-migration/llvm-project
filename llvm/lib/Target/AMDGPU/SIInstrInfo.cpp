@@ -8966,10 +8966,10 @@ MachineInstrBuilder SIInstrInfo::getAddNoCarry(MachineBasicBlock &MBB,
                              : RS.scavengeRegisterBackwards(
                                    *RI.getBoolRC(), I, /* RestoreAfter */ false,
                                    0, /* AllowSpill */ false);
-
-  // TODO: Users need to deal with this.
   if (!UnusedCarry.isValid())
-    return MachineInstrBuilder();
+    // We are using the mad_u32_u24 primarily as an add with no carry out
+    // clobber.
+    return BuildMI(MBB, I, DL, get(AMDGPU::V_MAD_U32_U24_e64), DestReg);
 
   return BuildMI(MBB, I, DL, get(AMDGPU::V_ADD_CO_U32_e64), DestReg)
            .addReg(UnusedCarry, RegState::Define | RegState::Dead);

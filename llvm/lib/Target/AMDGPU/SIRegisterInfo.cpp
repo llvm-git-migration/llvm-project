@@ -2487,8 +2487,8 @@ bool SIRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
         } else {
           MachineInstrBuilder MIB;
           if (!IsSALU) {
-            if ((MIB = TII->getAddNoCarry(*MBB, MI, DL, ResultReg, *RS)) !=
-                nullptr) {
+            MIB = TII->getAddNoCarry(*MBB, MI, DL, ResultReg, *RS);
+            if (MIB->getOpcode() != AMDGPU::V_MAD_U32_U24_e64) {
               // Reuse ResultReg in intermediate step.
               Register ScaledReg = ResultReg;
 
@@ -2523,9 +2523,10 @@ bool SIRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
                 MIB.addReg(ScaledReg, RegState::Kill);
                 MIB.addImm(0); // clamp bit
               }
-            }
+            } else
+              MIB->eraseFromParent();
           }
-          if (!MIB || IsSALU) {
+          if ((MIB->getOpcode() == AMDGPU::V_MAD_U32_U24_e64) || IsSALU) {
             // We have to produce a carry out, and there isn't a free SGPR pair
             // for it. We can keep the whole computation on the SALU to avoid
             // clobbering an additional register at the cost of an extra mov.
@@ -2552,8 +2553,9 @@ bool SIRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
               TmpResultReg = RS->scavengeRegisterBackwards(
                   AMDGPU::VGPR_32RegClass, MI, false, 0, /*AllowSpill=*/true);
 
-              MachineInstrBuilder Add;
-              if ((Add = TII->getAddNoCarry(*MBB, MI, DL, TmpResultReg, *RS))) {
+              MachineInstrBuilder Add =
+                  TII->getAddNoCarry(*MBB, MI, DL, TmpResultReg, *RS);
+              if (Add->getOpcode() != AMDGPU::V_MAD_U32_U24_e64) {
                 BuildMI(*MBB, *Add, DL, TII->get(AMDGPU::V_LSHRREV_B32_e64),
                         TmpResultReg)
                     .addImm(ST.getWavefrontSizeLog2())
@@ -2571,18 +2573,12 @@ bool SIRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
                 assert(Offset > 0 &&
                        isUInt<24>(2 * ST.getMaxWaveScratchSize()) &&
                        "offset is unsafe for v_mad_u32_u24");
-
                 // We start with a frame pointer with a wave space value, and
                 // an offset in lane-space. We are materializing a lane space
                 // value. We can either do a right shift of the frame pointer
                 // to get to lane space, or a left shift of the offset to get
                 // to wavespace. We can right shift after the computation to
-                // get back to the desired per-lane value. We are using the
-                // mad_u32_u24 primarily as an add with no carry out clobber.
-                Add = BuildMI(*MBB, MI, DL, TII->get(AMDGPU::V_MAD_U32_U24_e64),
-                              TmpResultReg)
-                          .addReg(TmpResultReg, RegState::Kill);
-
+                // get back to the desired per-lane value.
                 if (AMDGPU::isInlinableLiteral32(Offset,
                                                  ST.hasInv2PiInlineImm())) {
                   BuildMI(*MBB, *Add, DL, TII->get(AMDGPU::V_LSHRREV_B32_e64),
@@ -2590,9 +2586,15 @@ bool SIRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator MI,
                       .addImm(ST.getWavefrontSizeLog2())
                       .addReg(FrameReg);
                   // We fold the offset into mad itself if its inlinable.
-                  Add.addImm(1).addImm(Offset).addImm(0);
+                  Add.addReg(TmpResultReg, RegState::Kill)
+                      .addImm(1)
+                      .addImm(Offset)
+                      .addImm(0);
                 } else {
-                  Add.addImm(ST.getWavefrontSize()).addReg(FrameReg).addImm(0);
+                  Add.addReg(TmpResultReg, RegState::Kill)
+                      .addImm(ST.getWavefrontSize())
+                      .addReg(FrameReg)
+                      .addImm(0);
                   BuildMI(*MBB, *Add, DL, TII->get(AMDGPU::V_MOV_B32_e32),
                           TmpResultReg)
                       .addImm(Offset);
