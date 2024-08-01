@@ -147,9 +147,14 @@ public:
   virtual bool isSafeBufferOptOut(const SourceLocation &Loc) const = 0;
 
   /// \return true iff unsafe uses in containers should NOT be reported at
-  /// `Loc`; false otherwise.
+  /// `Loc`; false otherwise. Controlled by `-Wunsafe-buffer-usage-in-container`
   virtual bool
   ignoreUnsafeBufferInContainer(const SourceLocation &Loc) const = 0;
+
+  /// \return true iff unsafe uses in string_views should NOT be reported at
+  /// `Loc`; false otherwise. Controlled by `-Wunsafe-buffer-usage-in-string-view`
+  virtual bool
+  ignoreUnsafeBufferInStringView(const SourceLocation &Loc) const = 0;
 
   virtual std::string
   getUnsafeBufferUsageAttributeTextAt(SourceLocation Loc,

@@ -247,9 +247,14 @@ AST_MATCHER_P(Stmt, notInSafeBufferOptOut, const UnsafeBufferUsageHandler *,
   return !Handler->isSafeBufferOptOut(Node.getBeginLoc());
 }
 
-AST_MATCHER_P(Stmt, ignoreUnsafeBufferInContainer,
+AST_MATCHER_P(Stmt, ignoreSpanTwoParamConstructor,
               const UnsafeBufferUsageHandler *, Handler) {
   return Handler->ignoreUnsafeBufferInContainer(Node.getBeginLoc());
+}
+
+AST_MATCHER_P(Stmt, ignoreStringViewUnsafeConstructor,
+              const UnsafeBufferUsageHandler *, Handler) {
+  return Handler->ignoreUnsafeBufferInStringView(Node.getBeginLoc());
 }
 
 AST_MATCHER_P(CastExpr, castSubExpr, internal::Matcher<Expr>, innerMatcher) {
@@ -448,7 +453,8 @@ AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
   return false;
 }
 
-AST_MATCHER(CallExpr, isUnsafeLibcFunctionCall) {
+AST_MATCHER_P(CallExpr, isUnsafeLibcFunctionCall, internal::Matcher<Expr>,
+              hasUnsafeStringView) {
   static const std::set<StringRef> PredefinedNames{
       // numeric conversion:
       "atof",
@@ -525,7 +531,9 @@ AST_MATCHER(CallExpr, isUnsafeLibcFunctionCall) {
   // checks for `printf`s:
   struct FuncNameMatch {
     const CallExpr *const Call;
-    FuncNameMatch(const CallExpr *Call) : Call(Call) {}
+    const bool hasUnsafeStringView;
+    FuncNameMatch(const CallExpr *Call, bool hasUnsafeStringView)
+        : Call(Call), hasUnsafeStringView(hasUnsafeStringView) {}
 
     // For a name `S` in `PredefinedNames` or a member of the printf/scanf
     // family, define matching function names with `S` by the grammar below:
@@ -605,24 +613,31 @@ AST_MATCHER(CallExpr, isUnsafeLibcFunctionCall) {
 
     // A pointer type expression is known to be null-terminated, if it has the
     // form: E.c_str(), for any expression E of `std::string` type.
-    static bool isNullTermPointer(const Expr *Ptr) {
+    static bool isNullTermPointer(const Expr *Ptr,
+                                  bool UnsafeStringView = true) {
       if (isa<StringLiteral>(Ptr->IgnoreParenImpCasts()))
         return true;
       if (auto *MCE = dyn_cast<CXXMemberCallExpr>(Ptr->IgnoreParenImpCasts())) {
         const CXXMethodDecl *MD = MCE->getMethodDecl();
         const CXXRecordDecl *RD = MCE->getRecordDecl()->getCanonicalDecl();
 
-        if (MD && RD && RD->isInStdNamespace())
+        if (MD && RD && RD->isInStdNamespace()) {
           if (MD->getName() == "c_str" && RD->getName() == "basic_string")
             return true;
+          if (!UnsafeStringView && MD->getName() == "data" &&
+              RD->getName() == "basic_string_view")
+            return true;
+        }
       }
       return false;
     }
 
     // Check safe patterns for printfs w.r.t their prefixes:
     bool isUnsafePrintf(StringRef Prefix /* empty, 'k', 'f', 's', or 'sn' */) {
-      auto AnyUnsafeStrPtr = [](const Expr *Arg) -> bool {
-        return Arg->getType()->isPointerType() && !isNullTermPointer(Arg);
+      const bool hasUnsafeStringView = this->hasUnsafeStringView;
+      auto AnyUnsafeStrPtr = [&hasUnsafeStringView](const Expr *Arg) -> bool {
+        return Arg->getType()->isPointerType() &&
+               !isNullTermPointer(Arg, hasUnsafeStringView);
       };
 
       if (Prefix.empty() || Prefix == "k") // printf: all pointer args should be null-terminated
@@ -677,7 +692,7 @@ AST_MATCHER(CallExpr, isUnsafeLibcFunctionCall) {
       return Name == "strlen" && Call->getNumArgs() == 1 &&
              isa<StringLiteral>(Call->getArg(0)->IgnoreParenImpCasts());
     }
-  } FuncNameMatch{&Node};
+  } FuncNameMatch{&Node, hasUnsafeStringView.matches(Node, Finder, Builder)};
 
   const FunctionDecl *FD = Node.getDirectCallee();
   const IdentifierInfo *II;
@@ -1037,6 +1052,47 @@ public:
   }
 };
 
+class StringViewUnsafeConstructorGadget : public WarningGadget {
+  static constexpr const char *const Tag = "StringViewUnsafeConstructor";
+  const CXXConstructExpr *Ctor;
+
+public:
+  StringViewUnsafeConstructorGadget(const MatchFinder::MatchResult &Result)
+      : WarningGadget(Kind::StringViewUnsafeConstructor),
+        Ctor(Result.Nodes.getNodeAs<CXXConstructExpr>(Tag)) {}
+
+  static bool classof(const Gadget *G) {
+    return G->getKind() == Kind::StringViewUnsafeConstructor;
+  }
+
+  // Matches any `basic_string_view` constructor call that is not a copy
+  // constructor or on a string literal:
+  static Matcher matcher() {
+    auto isStringViewDecl = hasDeclaration(cxxConstructorDecl(
+        hasDeclContext(isInStdNamespace()), hasName("basic_string_view")));
+
+    return stmt(
+        cxxConstructExpr(
+            isStringViewDecl,
+            unless(
+                hasArgument(0, expr(ignoringParenImpCasts(stringLiteral())))),
+            unless(hasDeclaration(cxxConstructorDecl(isCopyConstructor()))))
+            .bind(Tag));
+  }
+
+  const Stmt *getBaseStmt() const override { return Ctor; }
+
+  DeclUseList getClaimedVarUseSites() const override {
+    // If the constructor call is of the form `std::basic_string_view{ptrVar,
+    // ...}`, `ptrVar` is considered an unsafe variable.
+    if (auto *DRE = dyn_cast<DeclRefExpr>(Ctor->getArg(0))) {
+      if (DRE->getType()->isPointerType() && isa<VarDecl>(DRE->getDecl()))
+        return {DRE};
+    }
+    return {};
+  }
+};
+
 /// A pointer initialization expression of the form:
 ///  \code
 ///  int *p = q;
@@ -1293,8 +1349,10 @@ public:
       : WarningGadget(Kind::UnsafeLibcFunctionCall),
         Call(Result.Nodes.getNodeAs<CallExpr>(Tag)) {}
 
-  static Matcher matcher() {
-    return stmt(callExpr(isUnsafeLibcFunctionCall()).bind(Tag));
+  static Matcher
+  matcher(ast_matchers::internal::Matcher<Expr> HasUnsafeStringView) {
+    return stmt(
+        callExpr(isUnsafeLibcFunctionCall(HasUnsafeStringView)).bind(Tag));
   }
 
   const Stmt *getBaseStmt() const override { return Call; }
@@ -1724,10 +1782,13 @@ findGadgets(const Decl *D, const UnsafeBufferUsageHandler &Handler,
 #define WARNING_GADGET(x)                                                      \
           allOf(x ## Gadget::matcher().bind(#x),                               \
                 notInSafeBufferOptOut(&Handler)),
+#define WARNING_LIBC_GADGET(x)                                                          \
+          allOf(x ## Gadget::matcher(ignoreStringViewUnsafeConstructor(&Handler)).bind(#x), \
+                notInSafeBufferOptOut(&Handler)),
 #define WARNING_CONTAINER_GADGET(x)                                            \
           allOf(x ## Gadget::matcher().bind(#x),                               \
                 notInSafeBufferOptOut(&Handler),                               \
-                unless(ignoreUnsafeBufferInContainer(&Handler))),
+                unless(ignore ## x(&Handler))),
 #include "clang/Analysis/Analyses/UnsafeBufferUsageGadgets.def"
             // Avoid a hanging comma.
             unless(stmt())

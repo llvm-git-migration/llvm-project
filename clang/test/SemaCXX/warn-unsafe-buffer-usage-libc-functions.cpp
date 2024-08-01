@@ -1,5 +1,5 @@
-// RUN: %clang_cc1 -std=c++20 -Wno-all -Wunsafe-buffer-usage \
-// RUN:            -verify %s
+// RUN: %clang_cc1 -std=c++20 -Wno-all -Wunsafe-buffer-usage -verify %s
+// RUN: %clang_cc1 -std=c++20 -Wno-all -Wunsafe-buffer-usage -verify %s -Wno-unsafe-buffer-usage-in-string-view -D_IGNORE_STRING_VIEW
 
 typedef struct {} FILE;
 void memcpy();
@@ -42,6 +42,15 @@ namespace std {
 
   typedef basic_string<char> string;
   typedef basic_string<wchar_t> wstring;
+
+  template<typename T>
+  struct basic_string_view {
+    T* p;
+    T *data();
+    unsigned size_bytes();
+  };
+
+  typedef basic_string_view<char> string_view;
 }
 
 void f(char * p, char * q, std::span<char> s) {
@@ -69,8 +78,13 @@ void f(char * p, char * q, std::span<char> s) {
   strlen("hello");// no warn
 }
 
-void v(std::string s1, std::wstring s2) {
-  snprintf(s1.data(), s1.size_bytes(), "%s%d", s1.c_str(), 0); // no warn
+void v(std::string s, std::string_view sv) {
+  snprintf(s.data(), s.size_bytes(), "%s%d", s.c_str(), 0); // no warn
+#ifndef _IGNORE_STRING_VIEW
+  snprintf(sv.data(), sv.size_bytes(), "%s%d", sv.data(), 0); // no warn
+#else
+  snprintf(sv.data(), sv.size_bytes(), "%s%d", sv.data(), 0); // expected-warning{{function introduces unsafe buffer manipulation}} expected-note{{pass -fsafe-buffer-usage-suggestions to receive code hardening suggestions}}
+#endif
 }
 
 

@@ -18,6 +18,12 @@
 #define WARNING_GADGET(name) GADGET(name)
 #endif
 
+/// Make `WARNING_LIBC_GADGET` self a subset of WARNING_GADGET so that it can be
+/// tuned specially according to whether we warn `StringViewUnsafeConstructor`.
+#ifndef WARNING_LIBC_GADGET
+#define WARNING_LIBC_GADGET(name) WARNING_GADGET(name)
+#endif
+
 /// A `WARNING_GADGET` subset, where the code pattern of each gadget
 /// corresponds uses of a (possibly hardened) contatiner (e.g., `std::span`).
 #ifndef WARNING_CONTAINER_GADGET
@@ -38,8 +44,9 @@ WARNING_GADGET(PointerArithmetic)
 WARNING_GADGET(UnsafeBufferUsageAttr)
 WARNING_GADGET(UnsafeBufferUsageCtorAttr)
 WARNING_GADGET(DataInvocation)
-WARNING_GADGET(UnsafeLibcFunctionCall)
+WARNING_LIBC_GADGET(UnsafeLibcFunctionCall)
 WARNING_CONTAINER_GADGET(SpanTwoParamConstructor) // Uses of `std::span(arg0, arg1)`
+WARNING_CONTAINER_GADGET(StringViewUnsafeConstructor) // `std::string_view` constructed from std::string guarantees null-termination
 FIXABLE_GADGET(ULCArraySubscript)          // `DRE[any]` in an Unspecified Lvalue Context
 FIXABLE_GADGET(DerefSimplePtrArithFixable)
 FIXABLE_GADGET(PointerDereference)
@@ -53,5 +60,7 @@ FIXABLE_GADGET(PointerInit)
 
 #undef FIXABLE_GADGET
 #undef WARNING_GADGET
+#undef WARNING_LIBC_GADGET
 #undef WARNING_CONTAINER_GADGET
+#undef WARNING_STRINGVIEW_GADGET
 #undef GADGET

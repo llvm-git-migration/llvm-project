@@ -1551,7 +1551,8 @@ def HLSLAvailability : DiagGroup<"hlsl-availability">;
 def ReadOnlyPlacementChecks : DiagGroup<"read-only-types">;
 
 // Warnings and fixes to support the "safe buffers" programming model.
-def UnsafeBufferUsageInContainer : DiagGroup<"unsafe-buffer-usage-in-container">;
+def UnsafeBufferUsageInStringView : DiagGroup<"unsafe-buffer-usage-in-string-view">;
+def UnsafeBufferUsageInContainer : DiagGroup<"unsafe-buffer-usage-in-container", [UnsafeBufferUsageInStringView]>;
 def UnsafeBufferUsage : DiagGroup<"unsafe-buffer-usage", [UnsafeBufferUsageInContainer]>;
 
 // Warnings and notes related to the function effects system underlying
