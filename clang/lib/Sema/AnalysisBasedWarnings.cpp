@@ -2292,6 +2292,18 @@ public:
     }
   }
 
+  void handleUnsafeLibcCall(const CallExpr *Call, unsigned PrintfInfo,
+                            ASTContext &Ctx) override {
+    S.Diag(Call->getBeginLoc(), diag::warn_unsafe_buffer_operation)
+        << 3 << Call->getSourceRange();
+    if (PrintfInfo == 1)
+      S.Diag(Call->getBeginLoc(), diag::note_unsafe_buffer_printf_call)
+          << 1 << Call->getSourceRange();
+    if (PrintfInfo == 2)
+      S.Diag(Call->getBeginLoc(), diag::note_unsafe_buffer_printf_call)
+          << 2 << Call->getSourceRange();
+  }
+
   void handleUnsafeOperationInContainer(const Stmt *Operation,
                                         bool IsRelatedToDecl,
                                         ASTContext &Ctx) override {
