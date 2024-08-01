@@ -4,9 +4,8 @@
 define i32 @umin_of_umax(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umin_of_umax(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MAX1:%.*]] = call i32 @llvm.umax.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX2:%.*]] = call i32 @llvm.umax.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umin.i32(i32 [[MAX1]], i32 [[MAX2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umax.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %max1 = call i32 @llvm.umax.i32(i32 %x, i32 %z)
@@ -18,9 +17,8 @@ define i32 @umin_of_umax(i32 %x, i32 %y, i32 %z) {
 define i32 @umin_of_umax_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umin_of_umax_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MAX1:%.*]] = call i32 @llvm.umax.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[MAX2:%.*]] = call i32 @llvm.umax.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umin.i32(i32 [[MAX1]], i32 [[MAX2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umax.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %max1 = call i32 @llvm.umax.i32(i32 %z, i32 %x)
@@ -32,9 +30,8 @@ define i32 @umin_of_umax_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @smin_of_smax(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smin_of_smax(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MAX1:%.*]] = call i32 @llvm.smax.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX2:%.*]] = call i32 @llvm.smax.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smin.i32(i32 [[MAX1]], i32 [[MAX2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smax.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %max1 = call i32 @llvm.smax.i32(i32 %x, i32 %z)
@@ -46,9 +43,8 @@ define i32 @smin_of_smax(i32 %x, i32 %y, i32 %z) {
 define i32 @smin_of_smax_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smin_of_smax_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MAX1:%.*]] = call i32 @llvm.smax.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[MAX2:%.*]] = call i32 @llvm.smax.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smin.i32(i32 [[MAX1]], i32 [[MAX2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smax.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %max1 = call i32 @llvm.smax.i32(i32 %z, i32 %x)
@@ -60,9 +56,8 @@ define i32 @smin_of_smax_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @umax_of_umin(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umax_of_umin(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MIN1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN2:%.*]] = call i32 @llvm.umin.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umax.i32(i32 [[MIN1]], i32 [[MIN2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umin.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %min1 = call i32 @llvm.umin.i32(i32 %x, i32 %z)
@@ -74,9 +69,8 @@ define i32 @umax_of_umin(i32 %x, i32 %y, i32 %z) {
 define i32 @umax_of_umin_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umax_of_umin_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MIN1:%.*]] = call i32 @llvm.umin.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[MIN2:%.*]] = call i32 @llvm.umin.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umax.i32(i32 [[MIN1]], i32 [[MIN2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umin.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %min1 = call i32 @llvm.umin.i32(i32 %z, i32 %x)
@@ -88,9 +82,8 @@ define i32 @umax_of_umin_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @smax_of_smin(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smax_of_smin(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MIN1:%.*]] = call i32 @llvm.smin.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN2:%.*]] = call i32 @llvm.smin.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smax.i32(i32 [[MIN1]], i32 [[MIN2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smin.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %min1 = call i32 @llvm.smin.i32(i32 %x, i32 %z)
@@ -102,9 +95,8 @@ define i32 @smax_of_smin(i32 %x, i32 %y, i32 %z) {
 define i32 @smax_of_smin_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smax_of_smin_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[MIN1:%.*]] = call i32 @llvm.smin.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[MIN2:%.*]] = call i32 @llvm.smin.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smax.i32(i32 [[MIN1]], i32 [[MIN2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smin.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %min1 = call i32 @llvm.smin.i32(i32 %z, i32 %x)
@@ -116,9 +108,8 @@ define i32 @smax_of_smin_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @umax_of_uadd_sat(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umax_of_uadd_sat(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umax.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %add1 = call i32 @llvm.uadd.sat.i32(i32 %x, i32 %z)
@@ -130,9 +121,8 @@ define i32 @umax_of_uadd_sat(i32 %x, i32 %y, i32 %z) {
 define i32 @umax_of_uadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umax_of_uadd_sat_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.umax.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %add1 = call i32 @llvm.uadd.sat.i32(i32 %z, i32 %x)
@@ -144,9 +134,8 @@ define i32 @umax_of_uadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @umin_of_uadd_sat(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umin_of_uadd_sat(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umin.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %add1 = call i32 @llvm.uadd.sat.i32(i32 %x, i32 %z)
@@ -158,9 +147,8 @@ define i32 @umin_of_uadd_sat(i32 %x, i32 %y, i32 %z) {
 define i32 @umin_of_uadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @umin_of_uadd_sat_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.umin.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.umin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.uadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %add1 = call i32 @llvm.uadd.sat.i32(i32 %z, i32 %x)
@@ -172,9 +160,8 @@ define i32 @umin_of_uadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @smax_of_sadd_sat(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smax_of_sadd_sat(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smax.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %add1 = call i32 @llvm.sadd.sat.i32(i32 %x, i32 %z)
@@ -186,9 +173,8 @@ define i32 @smax_of_sadd_sat(i32 %x, i32 %y, i32 %z) {
 define i32 @smax_of_sadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smax_of_sadd_sat_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.smax.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smax.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MAX:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MAX]]
 ;
   %add1 = call i32 @llvm.sadd.sat.i32(i32 %z, i32 %x)
@@ -200,9 +186,8 @@ define i32 @smax_of_sadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 define i32 @smin_of_sadd_sat(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smin_of_sadd_sat(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[X]], i32 [[Z]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Y]], i32 [[Z]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smin.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %add1 = call i32 @llvm.sadd.sat.i32(i32 %x, i32 %z)
@@ -214,9 +199,8 @@ define i32 @smin_of_sadd_sat(i32 %x, i32 %y, i32 %z) {
 define i32 @smin_of_sadd_sat_comm(i32 %x, i32 %y, i32 %z) {
 ; CHECK-LABEL: define i32 @smin_of_sadd_sat_comm(
 ; CHECK-SAME: i32 [[X:%.*]], i32 [[Y:%.*]], i32 [[Z:%.*]]) {
-; CHECK-NEXT:    [[ADD1:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Z]], i32 [[X]])
-; CHECK-NEXT:    [[ADD2:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[Z]], i32 [[Y]])
-; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.smin.i32(i32 [[ADD1]], i32 [[ADD2]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call i32 @llvm.smin.i32(i32 [[X]], i32 [[Y]])
+; CHECK-NEXT:    [[MIN:%.*]] = call i32 @llvm.sadd.sat.i32(i32 [[TMP1]], i32 [[Z]])
 ; CHECK-NEXT:    ret i32 [[MIN]]
 ;
   %add1 = call i32 @llvm.sadd.sat.i32(i32 %z, i32 %x)
