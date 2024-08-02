@@ -274,8 +274,9 @@ void IRExecutionUnit::GetRunnableInfo(Status &error, lldb::addr_t &func_addr,
 
   builder.setEngineKind(llvm::EngineKind::JIT)
       .setErrorStr(&error_string)
-      .setRelocationModel(triple.isOSBinFormatMachO() ? llvm::Reloc::PIC_
-                                                      : llvm::Reloc::Static)
+      .setRelocationModel((triple.isOSBinFormatMachO() || triple.isRISCV64())
+                              ? llvm::Reloc::PIC_
+                              : llvm::Reloc::Static)
       .setMCJITMemoryManager(std::make_unique<MemoryManager>(*this))
       .setOptLevel(llvm::CodeGenOptLevel::Less);
 
