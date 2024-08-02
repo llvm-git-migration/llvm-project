@@ -404,7 +404,7 @@ TEST_F(FormatTestComments, UnderstandsBlockComments) {
                "  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);");
 
   FormatStyle NoBinPacking = getLLVMStyle();
-  NoBinPacking.BinPackParameters = false;
+  NoBinPacking.PackParameters = FormatStyle::PPS_CurrentLine;
   verifyFormat("aaaaaaaa(/* parameter 1 */ aaaaaa,\n"
                "         /* parameter 2 */ aaaaaa,\n"
                "         /* parameter 3 */ aaaaaa,\n"
@@ -2449,7 +2449,7 @@ TEST_F(FormatTestComments, BlockComments) {
                    getLLVMStyleWithColumns(50)));
 
   FormatStyle NoBinPacking = getLLVMStyle();
-  NoBinPacking.BinPackParameters = false;
+  NoBinPacking.PackParameters = FormatStyle::PPS_CurrentLine;
   EXPECT_EQ("someFunction(1, /* comment 1 */\n"
             "             2, /* comment 2 */\n"
             "             3, /* comment 3 */\n"

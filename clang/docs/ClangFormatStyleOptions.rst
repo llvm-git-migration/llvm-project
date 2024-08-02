@@ -2068,19 +2068,7 @@ the configuration (without a prefix: ``Auto``).
 .. _BinPackParameters:
 
 **BinPackParameters** (``Boolean``) :versionbadge:`clang-format 3.7` :ref:`¶ <BinPackParameters>`
-  If ``false``, a function declaration's or function definition's
-  parameters will either all be on the same line or will have one line each.
-
-  .. code-block:: c++
-
-    true:
-    void f(int aaaaaaaaaaaaaaaaaaaa, int aaaaaaaaaaaaaaaaaaaa,
-           int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
-
-    false:
-    void f(int aaaaaaaaaaaaaaaaaaaa,
-           int aaaaaaaaaaaaaaaaaaaa,
-           int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+  This option is **deprecated**. See ``PackParameters``.
 
 .. _BitFieldColonSpacing:
 
@@ -4981,6 +4969,44 @@ the configuration (without a prefix: ``Auto``).
            : aaaaaaaaaaaaaaaaaaaa(),
              bbbbbbbbbbbbbbbbbbbb(),
              cccccccccccccccccccc()
+
+
+
+.. _PackParameters:
+
+**PackParameters** (``PackParametersStyle``) :versionbadge:`clang-format 20` :ref:`¶ <PackParameters>`
+  The pack parameters style to use.
+
+  Possible values:
+
+  * ``PPS_CurrentLine`` (in configuration: ``CurrentLine``)
+    Put all parameters on the current line if they fit.
+    Otherwise, put each one on its own line.
+
+    .. code-block:: c++
+
+       void f(int a, int b, int c);
+
+       void f(int a,
+              int b,
+              int ccccccccccccccccccccccccccccccccccccc);
+
+  * ``PPS_BinPack`` (in configuration: ``BinPack``)
+    Bin-pack parameters.
+
+    .. code-block:: c++
+
+       void f(int a, int bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,
+              int ccccccccccccccccccccccccccccccccccccccccccc);
+
+  * ``PPS_BreakAlways`` (in configuration: ``BreakAlways``)
+    Always put each parameter on its own line.
+
+    .. code-block:: c++
+
+       void f(int a,
+              int b,
+              int c);
 
 
 
