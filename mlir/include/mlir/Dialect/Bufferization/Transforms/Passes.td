@@ -252,6 +252,23 @@ def BufferDeallocationSimplification :
   ];
 }
 
+def OptimizeAllocationLiveness
+    : Pass<"optimize-allocation-liveness", "func::FuncOp"> {
+  let summary = "This pass optimizes the liveness of temp allocations in the "
+                "input function";
+  let description =
+      [{This pass will go over all the allocations that also have deallocations
+                in the same block i.e.temp buffers.And finds the last user /
+            dependency of each allocation,
+        it attempts to move the deallocation right after that last
+            user.This will optimize liveness of the allocations to the minimum
+                .The pass is expected to run after the deallocating pipeline,
+        which places all deallocation at the end of the function.}];
+  let constructor =
+      "mlir::bufferization::createOptimizeAllocationLivenessPass()";
+  let dependentDialects = ["mlir::memref::MemRefDialect"];
+}
+
 def LowerDeallocations : Pass<"bufferization-lower-deallocations"> {
   let summary = "Lowers `bufferization.dealloc` operations to `memref.dealloc`"
                 "operations";
