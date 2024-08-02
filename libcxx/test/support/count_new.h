@@ -460,6 +460,8 @@ inline void* alocate_aligned_impl(std::size_t size, std::align_val_t align) {
   void* ret                   = nullptr;
 #    ifdef USE_ALIGNED_ALLOC
   ret = _aligned_malloc(size, alignment);
+#    elif TEST_STD_VER >= 17
+  ret = aligned_alloc(alignment, size);
 #    else
   assert(posix_memalign(&ret, std::max(alignment, sizeof(void*)), size) != EINVAL);
 #    endif
