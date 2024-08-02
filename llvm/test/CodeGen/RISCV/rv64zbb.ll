@@ -1560,3 +1560,41 @@ define i64 @orc_b_i64(i64 %a) {
   %2 = mul nuw i64 %1, 255
   ret i64 %2
 }
+
+define i64 @srai_slli(i16 signext %0) {
+; RV64I-LABEL: srai_slli:
+; RV64I:       # %bb.0:
+; RV64I-NEXT:    slli a0, a0, 57
+; RV64I-NEXT:    srai a0, a0, 63
+; RV64I-NEXT:    ret
+;
+; RV64ZBB-LABEL: srai_slli:
+; RV64ZBB:       # %bb.0:
+; RV64ZBB-NEXT:    slli a0, a0, 9
+; RV64ZBB-NEXT:    slli a0, a0, 48
+; RV64ZBB-NEXT:    srai a0, a0, 63
+; RV64ZBB-NEXT:    ret
+  %2 = shl i16 %0, 9
+  %sext = ashr i16 %2, 15
+  %3 = sext i16 %sext to i64
+  ret i64 %3
+}
+
+define i64 @srai_slli2(i16 signext %0) {
+; RV64I-LABEL: srai_slli2:
+; RV64I:       # %bb.0:
+; RV64I-NEXT:    slli a0, a0, 57
+; RV64I-NEXT:    srai a0, a0, 62
+; RV64I-NEXT:    ret
+;
+; RV64ZBB-LABEL: srai_slli2:
+; RV64ZBB:       # %bb.0:
+; RV64ZBB-NEXT:    slli a0, a0, 9
+; RV64ZBB-NEXT:    slli a0, a0, 48
+; RV64ZBB-NEXT:    srai a0, a0, 62
+; RV64ZBB-NEXT:    ret
+  %2 = shl i16 %0, 9
+  %sext = ashr i16 %2, 14
+  %3 = sext i16 %sext to i64
+  ret i64 %3
+}
