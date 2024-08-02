@@ -681,7 +681,6 @@ Value *VPInstruction::generatePerPart(VPTransformState &State, unsigned Part) {
     Value *OnFalse = State.get(getOperand(2), Part);
     Value *Pivot = State.get(getOperand(3), VPIteration(0, 0));
     assert(Pivot->getType()->isIntegerTy() && "Pivot should be an integer.");
-
     return Builder.CreateIntrinsic(Intrinsic::vp_merge, {OnTrue->getType()},
                                    {Cond, OnTrue, OnFalse, Pivot}, nullptr,
                                    Name);

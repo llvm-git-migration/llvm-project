@@ -1491,7 +1491,6 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
         NewRecipe = new VPReductionEVLRecipe(*RedR, *VPEVL,
                                              GetNewMask(RedR->getCondOp()));
       } else if (auto *VPInst = dyn_cast<VPInstruction>(CurRecipe)) {
-
         VPValue *LHS, *RHS;
         if (match(VPInst, m_Select(m_Specific(HeaderMask), m_VPValue(LHS),
                                    m_VPValue(RHS)))) {
