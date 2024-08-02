@@ -58,6 +58,9 @@ void initializeDXILPrettyPrinterPass(PassRegistry &);
 /// Initializer for dxil::ShaderFlagsAnalysisWrapper pass.
 void initializeShaderFlagsAnalysisWrapperPass(PassRegistry &);
 
+/// Initializer for dxil::DXILMetadataAnalysisWrapper pass.
+void initializeDXILMetadataAnalysisWrapperPassPass(PassRegistry &);
+
 /// Initializer for DXContainerGlobals pass.
 void initializeDXContainerGlobalsPass(PassRegistry &);
 
