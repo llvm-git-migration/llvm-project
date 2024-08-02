@@ -120,6 +120,7 @@ void BinaryContext::logBOLTErrorsAndQuitOnFatal(Error E) {
   });
 }
 
+std::mutex ArchMutex;
 BinaryContext::BinaryContext(std::unique_ptr<MCContext> Ctx,
                              std::unique_ptr<DWARFContext> DwCtx,
                              std::unique_ptr<Triple> TheTriple,
