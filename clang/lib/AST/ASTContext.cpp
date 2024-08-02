@@ -3908,6 +3908,7 @@ ASTContext::getBuiltinVectorTypeInfo(const BuiltinType *Ty) const {
     llvm_unreachable("Unsupported builtin vector type");
   case BuiltinType::SveInt8:
     return SVE_INT_ELTTY(8, 16, true, 1);
+  case BuiltinType::SveMFloat8:
   case BuiltinType::SveUint8:
     return SVE_INT_ELTTY(8, 16, false, 1);
   case BuiltinType::SveInt8x2:

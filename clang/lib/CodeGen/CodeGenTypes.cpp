@@ -493,7 +493,8 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
     case BuiltinType::SveBFloat16:
     case BuiltinType::SveBFloat16x2:
     case BuiltinType::SveBFloat16x3:
-    case BuiltinType::SveBFloat16x4: {
+    case BuiltinType::SveBFloat16x4:
+    case BuiltinType::SveMFloat8: {
       ASTContext::BuiltinVectorTypeInfo Info =
           Context.getBuiltinVectorTypeInfo(cast<BuiltinType>(Ty));
       return llvm::ScalableVectorType::get(ConvertType(Info.ElementType),
