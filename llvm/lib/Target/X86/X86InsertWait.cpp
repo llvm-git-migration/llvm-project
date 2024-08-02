@@ -103,8 +103,9 @@ bool WaitInsert::runOnMachineFunction(MachineFunction &MF) {
 
   for (MachineBasicBlock &MBB : MF) {
     for (MachineBasicBlock::iterator MI = MBB.begin(); MI != MBB.end(); ++MI) {
-      // Jump non X87 instruction.
-      if (!X86::isX87Instruction(*MI))
+
+      // Jump non X87 instruction and Inline asm.
+      if (!X86::isX87Instruction(*MI) || MI->isInlineAsm())
         continue;
       // If the instruction instruction neither has float exception nor is
       // a load/store instruction, or the instruction is x87 control
