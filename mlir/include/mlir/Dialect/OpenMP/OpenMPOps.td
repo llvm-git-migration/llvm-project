@@ -291,7 +291,9 @@ def SingleOp : OpenMP_Op<"single", traits = [
 // 2.8.3 Workshare Construct
 //===----------------------------------------------------------------------===//
 
-def WorkshareOp : OpenMP_Op<"workshare", clauses = [
+def WorkshareOp : OpenMP_Op<"workshare", traits = [
+    RecursiveMemoryEffects,
+  ], clauses = [
     OpenMP_NowaitClause,
   ], singleRegion = true> {
   let summary = "workshare directive";
