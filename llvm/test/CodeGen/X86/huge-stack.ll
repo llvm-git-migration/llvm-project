@@ -5,12 +5,13 @@
 define void @foo() unnamed_addr #0 {
 ; CHECK-LABEL: foo:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    movabsq $8589934462, %rax # imm = 0x1FFFFFF7E
+; CHECK-NEXT:    movabsq $8589934472, %rax # imm = 0x1FFFFFF88
 ; CHECK-NEXT:    subq %rax, %rsp
-; CHECK-NEXT:    .cfi_def_cfa_offset 8589934470
-; CHECK-NEXT:    movb $42, -129(%rsp)
-; CHECK-NEXT:    movb $43, -128(%rsp)
-; CHECK-NEXT:    movabsq $8589934462, %rax # imm = 0x1FFFFFF7E
+; CHECK-NEXT:    .cfi_def_cfa_offset 8589934480
+; CHECK-NEXT:    movabsq $4294967177, %rax # imm = 0xFFFFFF89
+; CHECK-NEXT:    movb $42, (%rsp,%rax)
+; CHECK-NEXT:    movb $43, -118(%rsp)
+; CHECK-NEXT:    movabsq $8589934472, %rax # imm = 0x1FFFFFF88
 ; CHECK-NEXT:    addq %rax, %rsp
 ; CHECK-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-NEXT:    retq
@@ -21,4 +22,53 @@ define void @foo() unnamed_addr #0 {
   %4 = getelementptr inbounds %large, ptr %2, i64 0, i64 0
   store i8 43, ptr %4, align 1
   ret void
+}
+
+declare ptr @baz(ptr, ptr, ptr, ptr)
+
+define ptr @scavenge_spill() unnamed_addr #0 {
+; CHECK-LABEL: scavenge_spill:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    movabsq $25769803816, %rax # imm = 0x600000028
+; CHECK-NEXT:    subq %rax, %rsp
+; CHECK-NEXT:    .cfi_def_cfa_offset 25769803824
+; CHECK-NEXT:    movabsq $21474836521, %rax # imm = 0x500000029
+; CHECK-NEXT:    leaq (%rsp,%rax), %rdi
+; CHECK-NEXT:    movabsq $17179869226, %rax # imm = 0x40000002A
+; CHECK-NEXT:    leaq (%rsp,%rax), %rsi
+; CHECK-NEXT:    movq %rsi, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    movabsq $12884901931, %rax # imm = 0x30000002B
+; CHECK-NEXT:    leaq (%rsp,%rax), %rdx
+; CHECK-NEXT:    movq %rdx, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    movabsq $8589934636, %rax # imm = 0x20000002C
+; CHECK-NEXT:    leaq (%rsp,%rax), %rcx
+; CHECK-NEXT:    movq %rcx, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    callq baz@PLT
+; CHECK-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %rsi # 8-byte Reload
+; CHECK-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %rdx # 8-byte Reload
+; CHECK-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %rcx # 8-byte Reload
+; CHECK-NEXT:    movq %rax, {{[-0-9]+}}(%r{{[sb]}}p) # 8-byte Spill
+; CHECK-NEXT:    leaq 46(%rsp), %rdi
+; CHECK-NEXT:    callq baz@PLT
+; CHECK-NEXT:    # kill: def $rcx killed $rax
+; CHECK-NEXT:    movq {{[-0-9]+}}(%r{{[sb]}}p), %rax # 8-byte Reload
+; CHECK-NEXT:    movabsq $25769803816, %rcx # imm = 0x600000028
+; CHECK-NEXT:    addq %rcx, %rsp
+; CHECK-NEXT:    .cfi_def_cfa_offset 8
+; CHECK-NEXT:    retq
+  %1 = alloca %large, align 1
+  %2 = getelementptr inbounds %large, ptr %1, i64 0, i64 0
+  %3 = alloca %large, align 1
+  %4 = getelementptr inbounds %large, ptr %3, i64 0, i64 0
+  %5 = alloca %large, align 1
+  %6 = getelementptr inbounds %large, ptr %5, i64 0, i64 0
+  %7 = alloca %large, align 1
+  %8 = getelementptr inbounds %large, ptr %7, i64 0, i64 0
+  %9 = alloca %large, align 1
+  %10 = getelementptr inbounds %large, ptr %9, i64 0, i64 0
+  %11 = call ptr @baz(ptr %2, ptr %4, ptr %6, ptr %8)
+  %12 = alloca %large, align 1
+  %13 = getelementptr inbounds %large, ptr %12, i64 0, i64 0
+  %14 = call ptr @baz(ptr %13, ptr %4, ptr %6, ptr %8)
+  ret ptr %11
 }
