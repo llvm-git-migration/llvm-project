@@ -322,6 +322,33 @@ def sync_csv(rows: List[Tuple], from_github: List[PaperInfo]) -> List[Tuple]:
 
     return results
 
+def create_github_issues(rows: List[Tuple], labels: List[str]) -> None:
+    """
+    Given a list of CSV rows representing newly voted issues and papers, create the Github issues
+    representing those and add them to the conformance table.
+    """
+    for row in rows:
+        paper = PaperInfo.from_csv_row(row)
+        paper_name = paper.paper_name.replace('``', '`').replace('\\', '')
+
+        create_cli = ['gh', 'issue', 'create', '--repo', 'llvm/llvm-project',
+                        '--title', f'{paper.paper_number}: {paper_name}',
+                        '--body', f'**Link:** https://wg21.link/{paper.paper_number}',
+                        '--project', 'libc++ Standards Conformance',
+                        '--label', 'libc++']
+
+        for label in labels:
+            create_cli += ['--label', label]
+
+        issue_link = subprocess.check_output(create_cli).decode().strip()
+        print(f"\nCreated tracking issue for {paper.paper_number}: {issue_link}")
+
+        # TODO: It would be possible to adjust the "Meeting voted" field automatically, but we need
+        #       the ID of the just-created issue.
+        # adjust_meeting = ['gh', 'project', 'item-edit', '--project-id', 'PVT_kwDOAQWwKc4AlOgt',
+        #                     '--field-id', 'PVTF_lADOAQWwKc4AlOgtzgdUEXI',
+        #                     '--text', paper.meeting, '--id', tracking.original['id']]
+
 CSV_FILES_TO_SYNC = [
     'Cxx17Issues.csv',
     'Cxx17Papers.csv',
@@ -333,21 +360,36 @@ CSV_FILES_TO_SYNC = [
     'Cxx2cPapers.csv',
 ]
 
-def main():
-    libcxx_root = pathlib.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+def main(argv):
+    import argparse
+    parser = argparse.ArgumentParser(prog='status-files',
+        description='Manipulate the libc++ conformance status files and Github issues')
+    parser.add_argument('--synchronize', action='store_true', help="Synchronize the CSV files with the online Github issues.")
+    parser.add_argument('--create-new', help="Create new Github issues from the CSV rows located in the given file.")
+    parser.add_argument('--labels', nargs='+', help="When creating new Github issues, this is a list of labels to use on the created issues (e.g. lwg-issue, wg21 paper, c++23).")
+    args = parser.parse_args(argv)
 
-    # Extract the list of PaperInfos from issues we're tracking on Github.
-    print("Loading all issues from Github")
-    gh_command_line = ['gh', 'project', 'item-list', LIBCXX_CONFORMANCE_PROJECT, '--owner', 'llvm', '--format', 'json', '--limit', '9999999']
-    project_info = json.loads(subprocess.check_output(gh_command_line))
-    from_github = [PaperInfo.from_github_issue(i) for i in project_info['items']]
+    if args.synchronize:
+        libcxx_root = pathlib.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    for filename in CSV_FILES_TO_SYNC:
-        print(f"Synchronizing {filename} with Github issues")
-        file = libcxx_root / 'docs' / 'Status' / filename
-        csv = load_csv(file)
-        synced = sync_csv(csv, from_github)
-        write_csv(file, synced)
+        # Extract the list of PaperInfos from issues we're tracking on Github.
+        print("Loading all issues from Github")
+        gh_command_line = ['gh', 'project', 'item-list', LIBCXX_CONFORMANCE_PROJECT, '--owner', 'llvm', '--format', 'json', '--limit', '9999999']
+        project_info = json.loads(subprocess.check_output(gh_command_line))
+        from_github = [PaperInfo.from_github_issue(i) for i in project_info['items']]
+
+        for filename in CSV_FILES_TO_SYNC:
+            print(f"Synchronizing {filename} with Github issues")
+            file = libcxx_root / 'docs' / 'Status' / filename
+            csv = load_csv(file)
+            synced = sync_csv(csv, from_github)
+            write_csv(file, synced)
+
+    elif args.create_new:
+        print(f"Creating new Github issues from {args.create_new}")
+        new = load_csv(args.create_new)
+        create_github_issues(new, args.labels)
 
 if __name__ == '__main__':
-    main()
+    import sys
+    main(sys.argv[1:])
