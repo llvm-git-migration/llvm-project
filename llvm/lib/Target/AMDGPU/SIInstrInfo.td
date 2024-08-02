@@ -1748,9 +1748,11 @@ class getIns64 <RegisterOperand Src0RC, RegisterOperand Src1RC,
             (ins Src0Mod:$src0_modifiers, Src0RC:$src0)))
       /* else */,
         // VOP1 without modifiers
-        !if (HasClamp,
-          (ins Src0RC:$src0, Clamp0:$clamp),
-          (ins Src0RC:$src0))
+        !if(HasOMod,
+          (ins Src0RC:$src0, Clamp0:$clamp, omod0:$omod),
+          !if (HasClamp,
+            (ins Src0RC:$src0, Clamp0:$clamp),
+            (ins Src0RC:$src0)))
       /* endif */ ),
     !if (!eq(NumSrcArgs, 2),
       !if (HasModifiers,
@@ -2538,6 +2540,7 @@ class VOPProfile_Fake16<VOPProfile P> : VOPProfile<P.ArgVT> {
   // Most DstVT are 16-bit, but not all
   let DstRC = getVALUDstForVT_fake16<DstVT>.ret;
   let DstRC64 = getVALUDstForVT<DstVT>.ret;
+  let Src0RC32 = getVOPSrc0ForVT<Src0VT, 1/*IsTrue16*/, 1/*IsFake16*/>.ret;
   let Src1RC32 = getVregSrcForVT<Src1VT, 1/*IsTrue16*/, 1/*IsFake16*/>.ret;
   let Src0DPP = getVregSrcForVT<Src0VT, 1/*IsTrue16*/, 1/*IsFake16*/>.ret;
   let Src1DPP = getVregSrcForVT<Src1VT, 1/*IsTrue16*/, 1/*IsFake16*/>.ret;
