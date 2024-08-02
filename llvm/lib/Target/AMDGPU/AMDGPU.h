@@ -11,6 +11,7 @@
 #define LLVM_LIB_TARGET_AMDGPU_AMDGPU_H
 
 #include "llvm/CodeGen/MachinePassManager.h"
+#include "llvm/IR/CallingConv.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/AMDGPUAddrSpace.h"
@@ -499,6 +500,10 @@ static inline bool addrspacesMayAlias(unsigned AS1, unsigned AS2) {
   // clang-format on
 
   return ASAliasRules[AS1][AS2];
+}
+
+static inline bool isEntryPointCC(CallingConv::ID CC) {
+  return CC == CallingConv::AMDGPU_KERNEL;
 }
 
 }
