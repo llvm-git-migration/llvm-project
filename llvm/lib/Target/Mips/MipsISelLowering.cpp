@@ -876,21 +876,60 @@ static SDValue performANDCombine(SDNode *N, SelectionDAG &DAG,
 static SDValue performORCombine(SDNode *N, SelectionDAG &DAG,
                                 TargetLowering::DAGCombinerInfo &DCI,
                                 const MipsSubtarget &Subtarget) {
-  // Pattern match INS.
-  //  $dst = or (and $src1 , mask0), (and (shl $src, pos), mask1),
-  //  where mask1 = (2**size - 1) << pos, mask0 = ~mask1
-  //  => ins $dst, $src, size, pos, $src1
   if (DCI.isBeforeLegalizeOps() || !Subtarget.hasExtractInsert())
     return SDValue();
 
   SDValue And0 = N->getOperand(0), And1 = N->getOperand(1);
   unsigned SMPos0, SMSize0, SMPos1, SMSize1;
   ConstantSDNode *CN, *CN1;
+  uint64_t Pos = 0;
+
+  if ((And0.getOpcode() == ISD::AND && And1.getOpcode() == ISD::SHL) ||
+      (And0.getOpcode() == ISD::SHL && And1.getOpcode() == ISD::AND)) {
+    // Pattern match INS.
+    //   $dst = or (and $src1, (2**size0 - 1)), (shl $src2, size0)
+    //   ==> ins $src1, $src2, pos, size, pos = size0, size = 32 - pos;
+    //   Or:
+    //   $dst = or (shl $src2, size0), (and $src1, (2**size0 - 1))
+    //   ==> ins $src1, $src2, pos, size, pos = size0, size = 32 - pos;
+    SDValue Operand =
+        And0.getOpcode() == ISD::AND ? And0.getOperand(1) : And1.getOperand(1);
+    if (!(CN = dyn_cast<ConstantSDNode>(Operand)) ||
+        !isShiftedMask_64(CN->getZExtValue(), SMPos0, SMSize0))
+      return SDValue();
+
+    Operand =
+        And0.getOpcode() == ISD::AND ? And1.getOperand(1) : And0.getOperand(1);
+    if (!(CN = dyn_cast<ConstantSDNode>(Operand)))
+      return SDValue();
+    Pos = CN->getZExtValue();
+
+    if (SMPos0 != 0 || SMSize0 != Pos)
+      return SDValue();
+
+    SDLoc DL(N);
+    EVT ValTy = N->getValueType(0);
+    SMPos1 = Pos;
+    SMSize1 = (ValTy == MVT::i64 ? 64 : 32) - SMPos1;
+    return And0.getOpcode() == ISD::AND
+               ? DAG.getNode(MipsISD::Ins, DL, ValTy, And1.getOperand(0),
+                             DAG.getConstant(SMPos1, DL, MVT::i32),
+                             DAG.getConstant(SMSize1, DL, MVT::i32),
+                             And0.getOperand(0))
+               : DAG.getNode(MipsISD::Ins, DL, ValTy, And0.getOperand(0),
+                             DAG.getConstant(SMPos1, DL, MVT::i32),
+                             DAG.getConstant(SMSize1, DL, MVT::i32),
+                             And1.getOperand(0));
+  }
 
   // See if Op's first operand matches (and $src1 , mask0).
   if (And0.getOpcode() != ISD::AND)
     return SDValue();
 
+  // Pattern match INS.
+  //  $dst = or (and $src1 , mask0), (and (shl $src, pos), mask1),
+  //  where mask1 = (2**size - 1) << pos, mask0 = ~mask1
+  //  => ins $dst, $src, size, pos, $src1
   if (!(CN = dyn_cast<ConstantSDNode>(And0.getOperand(1))) ||
       !isShiftedMask_64(~CN->getSExtValue(), SMPos0, SMSize0))
     return SDValue();
