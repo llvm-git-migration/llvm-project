@@ -278,7 +278,7 @@ public:
 
   // Returns true if section is empty.
   bool empty() {
-    return RangesBuffer.get() == nullptr || RangesBuffer->empty();
+    return RangesBuffer->empty();
   }
 
   static bool classof(const DebugRangesSectionWriter *Writer) {
