@@ -464,6 +464,14 @@ struct ScalarEnumerationTraits<FormatStyle::PackConstructorInitializersStyle> {
   }
 };
 
+template <> struct ScalarEnumerationTraits<FormatStyle::PackParametersStyle> {
+  static void enumeration(IO &IO, FormatStyle::PackParametersStyle &Value) {
+    IO.enumCase(Value, "CurrentLine", FormatStyle::PPS_CurrentLine);
+    IO.enumCase(Value, "BinPack", FormatStyle::PPS_BinPack);
+    IO.enumCase(Value, "BreakAlways", FormatStyle::PPS_BreakAlways);
+  }
+};
+
 template <> struct ScalarEnumerationTraits<FormatStyle::PointerAlignmentStyle> {
   static void enumeration(IO &IO, FormatStyle::PointerAlignmentStyle &Value) {
     IO.enumCase(Value, "Middle", FormatStyle::PAS_Middle);
@@ -852,6 +860,15 @@ template <> struct MappingTraits<FormatStyle> {
     bool OnCurrentLine = IsGoogleOrChromium;
     bool OnNextLine = true;
 
+    // For backward compatibility:
+    // The default value of BinPackParameters was true unless BasedOnStyle was
+    // Mozilla or Chromium. If BinPackParameters was true then the equilvalent
+    // value for PackParameters is PPS_BinPack and PPS_CurrentLine otherwise.
+    const bool IsChromiumOrMozilla =
+        BasedOnStyle.equals_insensitive("chromium") ||
+        BasedOnStyle.equals_insensitive("mozilla");
+    bool BinPackParameters = !IsChromiumOrMozilla;
+
     bool BreakBeforeInheritanceComma = false;
     bool BreakConstructorInitializersBeforeComma = false;
 
@@ -870,6 +887,7 @@ template <> struct MappingTraits<FormatStyle> {
       IO.mapOptional("AlwaysBreakAfterReturnType", Style.BreakAfterReturnType);
       IO.mapOptional("AlwaysBreakTemplateDeclarations",
                      Style.BreakTemplateDeclarations);
+      IO.mapOptional("BinPackParameters", BinPackParameters);
       IO.mapOptional("BreakBeforeInheritanceComma",
                      BreakBeforeInheritanceComma);
       IO.mapOptional("BreakConstructorInitializersBeforeComma",
@@ -947,7 +965,6 @@ template <> struct MappingTraits<FormatStyle> {
                    Style.AlwaysBreakBeforeMultilineStrings);
     IO.mapOptional("AttributeMacros", Style.AttributeMacros);
     IO.mapOptional("BinPackArguments", Style.BinPackArguments);
-    IO.mapOptional("BinPackParameters", Style.BinPackParameters);
     IO.mapOptional("BitFieldColonSpacing", Style.BitFieldColonSpacing);
     IO.mapOptional("BracedInitializerIndentWidth",
                    Style.BracedInitializerIndentWidth);
@@ -1037,6 +1054,7 @@ template <> struct MappingTraits<FormatStyle> {
                    Style.ObjCSpaceBeforeProtocolList);
     IO.mapOptional("PackConstructorInitializers",
                    Style.PackConstructorInitializers);
+    IO.mapOptional("PackParameters", Style.PackParameters);
     IO.mapOptional("PenaltyBreakAssignment", Style.PenaltyBreakAssignment);
     IO.mapOptional("PenaltyBreakBeforeFirstCallParameter",
                    Style.PenaltyBreakBeforeFirstCallParameter);
@@ -1172,6 +1190,18 @@ template <> struct MappingTraits<FormatStyle> {
         Style.PackConstructorInitializers = FormatStyle::PCIS_BinPack;
       else if (!OnNextLine)
         Style.PackConstructorInitializers = FormatStyle::PCIS_CurrentLine;
+    }
+
+    // If BinPackParameters was specified but PackParameters was not, initialize
+    // the latter from the former for backwards compatibility.
+    if (IsChromiumOrMozilla) {
+      if (BinPackParameters &&
+          Style.PackParameters == FormatStyle::PPS_CurrentLine) {
+        Style.PackParameters = FormatStyle::PPS_BinPack;
+      }
+    } else if (!BinPackParameters &&
+               Style.PackParameters == FormatStyle::PPS_BinPack) {
+      Style.PackParameters = FormatStyle::PPS_CurrentLine;
     }
 
     if (Style.LineEnding == FormatStyle::LE_DeriveLF) {
@@ -1449,7 +1479,6 @@ FormatStyle getLLVMStyle(FormatStyle::LanguageKind Language) {
   LLVMStyle.AlwaysBreakBeforeMultilineStrings = false;
   LLVMStyle.AttributeMacros.push_back("__capability");
   LLVMStyle.BinPackArguments = true;
-  LLVMStyle.BinPackParameters = true;
   LLVMStyle.BitFieldColonSpacing = FormatStyle::BFCS_Both;
   LLVMStyle.BracedInitializerIndentWidth = std::nullopt;
   LLVMStyle.BraceWrapping = {/*AfterCaseLabel=*/false,
@@ -1543,6 +1572,7 @@ FormatStyle getLLVMStyle(FormatStyle::LanguageKind Language) {
   LLVMStyle.ObjCSpaceAfterProperty = false;
   LLVMStyle.ObjCSpaceBeforeProtocolList = true;
   LLVMStyle.PackConstructorInitializers = FormatStyle::PCIS_BinPack;
+  LLVMStyle.PackParameters = FormatStyle::PPS_BinPack;
   LLVMStyle.PointerAlignment = FormatStyle::PAS_Right;
   LLVMStyle.PPIndentWidth = -1;
   LLVMStyle.QualifierAlignment = FormatStyle::QAS_Leave;
@@ -1823,8 +1853,8 @@ FormatStyle getChromiumStyle(FormatStyle::LanguageKind Language) {
     ChromiumStyle.AllowShortFunctionsOnASingleLine = FormatStyle::SFS_Inline;
     ChromiumStyle.AllowShortIfStatementsOnASingleLine = FormatStyle::SIS_Never;
     ChromiumStyle.AllowShortLoopsOnASingleLine = false;
-    ChromiumStyle.BinPackParameters = false;
     ChromiumStyle.DerivePointerAlignment = false;
+    ChromiumStyle.PackParameters = FormatStyle::PPS_CurrentLine;
     if (Language == FormatStyle::LK_ObjC)
       ChromiumStyle.ColumnLimit = 80;
   }
@@ -1838,7 +1868,6 @@ FormatStyle getMozillaStyle() {
   MozillaStyle.AlwaysBreakAfterDefinitionReturnType =
       FormatStyle::DRTBS_TopLevel;
   MozillaStyle.BinPackArguments = false;
-  MozillaStyle.BinPackParameters = false;
   MozillaStyle.BreakAfterReturnType = FormatStyle::RTBS_TopLevel;
   MozillaStyle.BreakBeforeBraces = FormatStyle::BS_Mozilla;
   MozillaStyle.BreakConstructorInitializers = FormatStyle::BCIS_BeforeComma;
@@ -1851,6 +1880,7 @@ FormatStyle getMozillaStyle() {
   MozillaStyle.IndentCaseLabels = true;
   MozillaStyle.ObjCSpaceAfterProperty = true;
   MozillaStyle.ObjCSpaceBeforeProtocolList = false;
+  MozillaStyle.PackParameters = FormatStyle::PPS_CurrentLine;
   MozillaStyle.PenaltyReturnTypeOnItsOwnLine = 200;
   MozillaStyle.PointerAlignment = FormatStyle::PAS_Left;
   MozillaStyle.SpaceAfterTemplateKeyword = false;

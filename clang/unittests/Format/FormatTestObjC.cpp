@@ -377,7 +377,7 @@ TEST_F(FormatTestObjC, FormatObjCInterface) {
                "    ddddddddddddd> {\n"
                "}");
 
-  Style.BinPackParameters = false;
+  Style.PackParameters = FormatStyle::PPS_CurrentLine;
   Style.ObjCBinPackProtocolList = FormatStyle::BPS_Auto;
   verifyFormat("@interface eeeeeeeeeeeee () <\n"
                "    eeeeeeeeeeeee,\n"

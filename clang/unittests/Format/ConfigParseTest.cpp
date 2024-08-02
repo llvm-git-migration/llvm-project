@@ -160,7 +160,6 @@ TEST(ConfigParseTest, ParsesConfigurationBools) {
   CHECK_PARSE_BOOL(AllowShortEnumsOnASingleLine);
   CHECK_PARSE_BOOL(AllowShortLoopsOnASingleLine);
   CHECK_PARSE_BOOL(BinPackArguments);
-  CHECK_PARSE_BOOL(BinPackParameters);
   CHECK_PARSE_BOOL(BreakAdjacentStringLiterals);
   CHECK_PARSE_BOOL(BreakAfterJavaFieldAnnotations);
   CHECK_PARSE_BOOL(BreakBeforeTernaryOperators);
@@ -455,6 +454,21 @@ TEST(ConfigParseTest, ParsesConfiguration) {
   CHECK_PARSE("ConstructorInitializerAllOnOneLineOrOnePerLine: true\n"
               "AllowAllConstructorInitializersOnNextLine: false",
               PackConstructorInitializers, FormatStyle::PCIS_CurrentLine);
+
+  Style.PackParameters = FormatStyle::PPS_BinPack;
+  CHECK_PARSE("PackParameters: CurrentLine", PackParameters,
+              FormatStyle::PPS_CurrentLine);
+  CHECK_PARSE("PackParameters: BinPack", PackParameters,
+              FormatStyle::PPS_BinPack);
+  CHECK_PARSE("PackParameters: BreakAlways", PackParameters,
+              FormatStyle::PPS_BreakAlways);
+  // For backward compatibility.
+  CHECK_PARSE("BasedOnStyle: Mozilla\n"
+              "BinPackParameters: true",
+              PackParameters, FormatStyle::PPS_BinPack);
+  CHECK_PARSE("BasedOnStyle: Llvm\n"
+              "BinPackParameters: false",
+              PackParameters, FormatStyle::PPS_CurrentLine);
 
   Style.EmptyLineBeforeAccessModifier = FormatStyle::ELBAMS_LogicalBlock;
   CHECK_PARSE("EmptyLineBeforeAccessModifier: Never",
