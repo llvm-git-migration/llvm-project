@@ -160,7 +160,6 @@ TEST(ConfigParseTest, ParsesConfigurationBools) {
   CHECK_PARSE_BOOL(AllowShortEnumsOnASingleLine);
   CHECK_PARSE_BOOL(AllowShortLoopsOnASingleLine);
   CHECK_PARSE_BOOL(BinPackArguments);
-  CHECK_PARSE_BOOL(BinPackParameters);
   CHECK_PARSE_BOOL(BreakAdjacentStringLiterals);
   CHECK_PARSE_BOOL(BreakAfterJavaFieldAnnotations);
   CHECK_PARSE_BOOL(BreakBeforeTernaryOperators);
@@ -427,6 +426,19 @@ TEST(ConfigParseTest, ParsesConfiguration) {
   // For backward compatibility:
   CHECK_PARSE("BreakBeforeInheritanceComma: true", BreakInheritanceList,
               FormatStyle::BILS_BeforeComma);
+
+  Style.BinPackParameters = FormatStyle::BPPS_BinPack;
+  CHECK_PARSE("BinPackParameters: CurrentLine", BinPackParameters,
+              FormatStyle::BPPS_CurrentLine);
+  CHECK_PARSE("BinPackParameters: BinPack", BinPackParameters,
+              FormatStyle::BPPS_BinPack);
+  CHECK_PARSE("BinPackParameters: BreakAlways", BinPackParameters,
+              FormatStyle::BPPS_BreakAlways);
+  // For backward compatibility.
+  CHECK_PARSE("BinPackParameters: true", BinPackParameters,
+              FormatStyle::BPPS_BinPack);
+  CHECK_PARSE("BinPackParameters: false", BinPackParameters,
+              FormatStyle::BPPS_CurrentLine);
 
   Style.PackConstructorInitializers = FormatStyle::PCIS_BinPack;
   CHECK_PARSE("PackConstructorInitializers: Never", PackConstructorInitializers,
