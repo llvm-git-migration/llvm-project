@@ -277,9 +277,7 @@ public:
   void finalizeSection() override;
 
   // Returns true if section is empty.
-  bool empty() {
-    return RangesBuffer->empty();
-  }
+  bool empty() { return RangesBuffer->empty(); }
 
   static bool classof(const DebugRangesSectionWriter *Writer) {
     return Writer->getKind() == RangesWriterKind::DebugRangeListsWriter;
