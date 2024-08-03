@@ -7353,6 +7353,15 @@ void emitReadOnlyPlacementAttrWarning(Sema &S, const VarDecl *VD) {
   }
 }
 
+static bool isMainVar(DeclarationName Name, VarDecl *VD) {
+  if (Name.getAsIdentifierInfo() && Name.getAsIdentifierInfo()->isStr("main") &&
+      !VD->getDescribedVarTemplate()) {
+    const DeclContext *DC = VD->getDeclContext();
+    return DC->getRedeclContext()->isTranslationUnit() || DC->isLinkageSpec();
+  }
+  return false;
+}
+
 NamedDecl *Sema::ActOnVariableDeclarator(
     Scope *S, Declarator &D, DeclContext *DC, TypeSourceInfo *TInfo,
     LookupResult &Previous, MultiTemplateParamsArg TemplateParamLists,
@@ -8052,15 +8061,13 @@ NamedDecl *Sema::ActOnVariableDeclarator(
   }
 
   // Special handling of variable named 'main'.
-  if (Name.getAsIdentifierInfo() && Name.getAsIdentifierInfo()->isStr("main") &&
-      NewVD->getDeclContext()->getRedeclContext()->isTranslationUnit() &&
-      !getLangOpts().Freestanding && !NewVD->getDescribedVarTemplate()) {
-
+  if (isMainVar(Name, NewVD) && !getLangOpts().Freestanding) {
     // C++ [basic.start.main]p3
     // A program that declares a variable main at global scope is ill-formed.
-    if (getLangOpts().CPlusPlus)
-      Diag(D.getBeginLoc(), diag::err_main_global_variable);
-
+    if (getLangOpts().CPlusPlus) {
+      if (!CheckLinkageSpecification(DC, NewVD))
+        Diag(D.getBeginLoc(), diag::err_main_global_variable);
+    }
     // In C, and external-linkage variable named main results in undefined
     // behavior.
     else if (NewVD->hasExternalFormalLinkage())
@@ -10308,7 +10315,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   if (!getLangOpts().CPlusPlus) {
     // Perform semantic checking on the function declaration.
     if (!NewFD->isInvalidDecl() && NewFD->isMain())
-      CheckMain(NewFD, D.getDeclSpec());
+      CheckMain(NewFD, DC, D.getDeclSpec());
 
     if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
       CheckMSVCRTEntryPoint(NewFD);
@@ -10473,7 +10480,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
 
     // Perform semantic checking on the function declaration.
     if (!NewFD->isInvalidDecl() && NewFD->isMain())
-      CheckMain(NewFD, D.getDeclSpec());
+      CheckMain(NewFD, DC, D.getDeclSpec());
 
     if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
       CheckMSVCRTEntryPoint(NewFD);
@@ -12210,7 +12217,10 @@ bool Sema::CheckFunctionDeclaration(Scope *S, FunctionDecl *NewFD,
   return Redeclaration;
 }
 
-void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
+void Sema::CheckMain(FunctionDecl *FD, DeclContext *DC, const DeclSpec &DS) {
+  if (CheckLinkageSpecification(DC, FD))
+    return;
+
   // C++11 [basic.start.main]p3:
   //   A program that [...] declares main to be inline, static or
   //   constexpr is ill-formed.
@@ -12238,7 +12248,6 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
         << FixItHint::CreateRemoval(DS.getConstexprSpecLoc());
     FD->setConstexprKind(ConstexprSpecKind::Unspecified);
   }
-
   if (getLangOpts().OpenCL) {
     Diag(FD->getLocation(), diag::err_opencl_no_main)
         << FD->hasAttr<OpenCLKernelAttr>();
@@ -12368,6 +12377,17 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
     Diag(FD->getLocation(), diag::err_mainlike_template_decl) << FD;
     FD->setInvalidDecl();
   }
+}
+
+bool Sema::CheckLinkageSpecification(DeclContext *DC, Decl *D) {
+  // [basic.start.main] p2
+  //   The main function shall not be declared with a linkage-specification.
+  if (DC->isExternCContext()) {
+    Diag(D->getLocation(), diag::err_main_invalid_linkage_specification);
+    D->setInvalidDecl();
+    return true;
+  }
+  return false;
 }
 
 static bool isDefaultStdCall(FunctionDecl *FD, Sema &S) {

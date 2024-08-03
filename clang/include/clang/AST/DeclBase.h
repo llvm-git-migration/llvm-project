@@ -2156,6 +2156,8 @@ public:
     return getDeclKind() == Decl::TranslationUnit;
   }
 
+  bool isLinkageSpec() const { return getDeclKind() == Decl::LinkageSpec; }
+
   bool isRecord() const {
     return getDeclKind() >= Decl::firstRecord &&
            getDeclKind() <= Decl::lastRecord;
