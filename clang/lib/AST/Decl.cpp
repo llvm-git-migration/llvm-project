@@ -3292,11 +3292,15 @@ bool FunctionDecl::isImmediateFunction() const {
 }
 
 bool FunctionDecl::isMain() const {
-  const TranslationUnitDecl *tunit =
-    dyn_cast<TranslationUnitDecl>(getDeclContext()->getRedeclContext());
-  return tunit &&
-         !tunit->getASTContext().getLangOpts().Freestanding &&
-         isNamed(this, "main");
+  const TranslationUnitDecl *TUnit =
+      dyn_cast<TranslationUnitDecl>(getDeclContext()->getRedeclContext());
+  const LinkageSpecDecl *LSD = dyn_cast<LinkageSpecDecl>(getDeclContext());
+  if (!TUnit && !LSD)
+    return false;
+  if ((TUnit && TUnit->getASTContext().getLangOpts().Freestanding) ||
+      (LSD && LSD->getASTContext().getLangOpts().Freestanding))
+    return false;
+  return isNamed(this, "main");
 }
 
 bool FunctionDecl::isMSVCRTEntryPoint() const {

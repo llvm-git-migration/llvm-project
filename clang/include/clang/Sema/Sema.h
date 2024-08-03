@@ -3585,7 +3585,7 @@ public:
   /// \param OldT The portion of the type of the old declaration to check.
   bool canFullyTypeCheckRedeclaration(ValueDecl *NewD, ValueDecl *OldD,
                                       QualType NewT, QualType OldT);
-  void CheckMain(FunctionDecl *FD, const DeclSpec &D);
+  void CheckMain(FunctionDecl *FD, DeclContext *DC, const DeclSpec &D);
   void CheckMSVCRTEntryPoint(FunctionDecl *FD);
 
   /// Returns an implicit CodeSegAttr if a __declspec(code_seg) is found on a

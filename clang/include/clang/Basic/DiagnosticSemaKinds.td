@@ -5986,6 +5986,9 @@ def err_new_abi_tag_on_redeclaration : Error<
   "'abi_tag' %0 missing in original declaration">;
 def note_use_ifdef_guards : Note<
   "unguarded header; consider using #ifdef guards or #pragma once">;
+def err_invalid_linkage_specification : Error<
+  "invalid linkage specification "
+  "'extern \"%select{C|C++}0\"'">;
 
 def warn_var_decl_not_read_only : Warning<
   "object of type %0 cannot be placed in read-only memory">,

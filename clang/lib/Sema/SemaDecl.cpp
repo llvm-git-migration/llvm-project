@@ -10308,7 +10308,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   if (!getLangOpts().CPlusPlus) {
     // Perform semantic checking on the function declaration.
     if (!NewFD->isInvalidDecl() && NewFD->isMain())
-      CheckMain(NewFD, D.getDeclSpec());
+      CheckMain(NewFD, DC, D.getDeclSpec());
 
     if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
       CheckMSVCRTEntryPoint(NewFD);
@@ -10473,7 +10473,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
 
     // Perform semantic checking on the function declaration.
     if (!NewFD->isInvalidDecl() && NewFD->isMain())
-      CheckMain(NewFD, D.getDeclSpec());
+      CheckMain(NewFD, DC, D.getDeclSpec());
 
     if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
       CheckMSVCRTEntryPoint(NewFD);
@@ -12210,7 +12210,15 @@ bool Sema::CheckFunctionDeclaration(Scope *S, FunctionDecl *NewFD,
   return Redeclaration;
 }
 
-void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
+void Sema::CheckMain(FunctionDecl *FD, DeclContext *DC, const DeclSpec &DS) {
+  // [basic.start.main] p2
+  //   The main function shall not be declared with a linkage-specification.
+  if (DC->isExternCXXContext() || DC->isExternCContext()) {
+    Diag(FD->getLocation(), diag::err_invalid_linkage_specification)
+        << FD->getLanguageLinkage();
+    FD->setInvalidDecl();
+    return;
+  }
   // C++11 [basic.start.main]p3:
   //   A program that [...] declares main to be inline, static or
   //   constexpr is ill-formed.
@@ -12238,7 +12246,6 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
         << FixItHint::CreateRemoval(DS.getConstexprSpecLoc());
     FD->setConstexprKind(ConstexprSpecKind::Unspecified);
   }
-
   if (getLangOpts().OpenCL) {
     Diag(FD->getLocation(), diag::err_opencl_no_main)
         << FD->hasAttr<OpenCLKernelAttr>();
