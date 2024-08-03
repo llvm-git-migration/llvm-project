@@ -2,7 +2,7 @@
 ; RUN: llc -mtriple=riscv64 -verify-machineinstrs < %s \
 ; RUN:   | FileCheck -check-prefix=RV64 %s
 
-define void @test(ptr nocapture noundef writeonly %array1, i32 noundef signext %a, i32 noundef signext %b) {
+define void @test(ptr %array1, i32 signext %a, i32 signext %b) {
 ; RV64-LABEL: test:
 ; RV64:       # %bb.0: # %entry
 ; RV64-NEXT:    addiw a3, a1, 5
@@ -31,7 +31,7 @@ entry:
 }
 
 ; test of jumpping, find add's operand has one more use can simplified
-define void @test1(ptr nocapture noundef %array1, i32 noundef signext %a, i32 noundef signext %b, i32 noundef signext %x) {
+define void @test1(ptr %array1, i32 signext %a, i32 signext %b, i32 signext %x) {
 ; RV64-LABEL: test1:
 ; RV64:       # %bb.0: # %entry
 ; RV64-NEXT:    addiw a4, a1, 5
@@ -66,15 +66,13 @@ entry:
   ret void
 }
 
-define void @test2(ptr nocapture noundef writeonly %array1, i64 noundef %a, i64 noundef %b) local_unnamed_addr #0 {
+define void @test2(ptr %array1, i64 %a, i64 %b) {
 ; RV64-LABEL: test2:
 ; RV64:       # %bb.0: # %entry
 ; RV64-NEXT:    addi a3, a1, 5
-; RV64-NEXT:    slli a4, a3, 3
-; RV64-NEXT:    add a4, a0, a4
-; RV64-NEXT:    sd a2, 0(a4)
 ; RV64-NEXT:    slli a1, a1, 3
 ; RV64-NEXT:    add a0, a1, a0
+; RV64-NEXT:    sd a2, 40(a0)
 ; RV64-NEXT:    sd a2, 48(a0)
 ; RV64-NEXT:    sd a3, 280(a0)
 ; RV64-NEXT:    ret
@@ -91,7 +89,7 @@ entry:
   ret void
 }
 
-define void @test3(ptr nocapture noundef %array1, i64 noundef %a, i64 noundef %b, i64 noundef %x) {
+define void @test3(ptr %array1, i64 %a, i64 %b, i64 %x) {
 ; RV64-LABEL: test3:
 ; RV64:       # %bb.0: # %entry
 ; RV64-NEXT:    addi a4, a1, 5
@@ -100,11 +98,9 @@ define void @test3(ptr nocapture noundef %array1, i64 noundef %a, i64 noundef %b
 ; RV64-NEXT:  # %bb.1: # %entry
 ; RV64-NEXT:    mv a5, a2
 ; RV64-NEXT:  .LBB3_2: # %entry
-; RV64-NEXT:    slli a2, a4, 3
-; RV64-NEXT:    add a2, a0, a2
-; RV64-NEXT:    sd a5, 0(a2)
 ; RV64-NEXT:    slli a1, a1, 3
 ; RV64-NEXT:    add a0, a1, a0
+; RV64-NEXT:    sd a5, 40(a0)
 ; RV64-NEXT:    sd a5, 48(a0)
 ; RV64-NEXT:    sd a4, 280(a0)
 ; RV64-NEXT:    ret
