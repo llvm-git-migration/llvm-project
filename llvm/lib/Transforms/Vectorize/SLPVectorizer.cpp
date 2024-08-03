@@ -19123,6 +19123,14 @@ bool SLPVectorizerPass::vectorizeStoreChains(BoUpSLP &R) {
     if (V->getPointerOperandType()->getTypeID() >
         V2->getPointerOperandType()->getTypeID())
       return false;
+    if (V->getValueOperand()->getType()->getScalarSizeInBits() <
+        V2->getValueOperand()->getType()->getScalarSizeInBits()) {
+      return true;
+    }
+    if (V->getValueOperand()->getType()->getScalarSizeInBits() >
+        V2->getValueOperand()->getType()->getScalarSizeInBits()) {
+      return false;
+    }
     // UndefValues are compatible with all other values.
     if (isa<UndefValue>(V->getValueOperand()) ||
         isa<UndefValue>(V2->getValueOperand()))
@@ -19157,6 +19165,10 @@ bool SLPVectorizerPass::vectorizeStoreChains(BoUpSLP &R) {
       return true;
     if (V1->getValueOperand()->getType() != V2->getValueOperand()->getType())
       return false;
+    if (V1->getValueOperand()->getType()->getScalarSizeInBits() !=
+        V2->getValueOperand()->getType()->getScalarSizeInBits()) {
+      return false;
+    }
     if (V1->getPointerOperandType() != V2->getPointerOperandType())
       return false;
     // Undefs are compatible with any other value.
