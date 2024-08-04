@@ -1002,31 +1002,48 @@ bool InferAddressSpacesImpl::updateAddressSpace(
   return true;
 }
 
+/// Replace operand \p OpIdx in \p Inst, if the value is the same as \p OldVal
+/// with \p NewVal.
+static void replaceOperandIfSame(Instruction *Inst, unsigned OpIdx,
+                                 Value *OldVal, Value *NewVal) {
+  Use &U = Inst->getOperandUse(OpIdx);
+  if (U.get() == OldVal)
+    U.set(NewVal);
+}
+
 /// \p returns true if \p U is the pointer operand of a memory instruction with
 /// a single pointer operand that can have its address space changed by simply
 /// mutating the use to a new value. If the memory instruction is volatile,
 /// return true only if the target allows the memory instruction to be volatile
 /// in the new address space.
 static bool isSimplePointerUseValidToReplace(const TargetTransformInfo &TTI,
-                                             Use &U, unsigned AddrSpace) {
-  User *Inst = U.getUser();
-  unsigned OpNo = U.getOperandNo();
+                                             User *Inst, unsigned AddrSpace,
+                                             Value *OldV, Value *NewV) {
+  if (auto *LI = dyn_cast<LoadInst>(Inst)) {
+    if (!LI->isVolatile() || TTI.hasVolatileVariant(LI, AddrSpace))
+      replaceOperandIfSame(LI, LoadInst::getPointerOperandIndex(), OldV, NewV);
+    return true;
+  }
 
-  if (auto *LI = dyn_cast<LoadInst>(Inst))
-    return OpNo == LoadInst::getPointerOperandIndex() &&
-           (!LI->isVolatile() || TTI.hasVolatileVariant(LI, AddrSpace));
+  if (auto *SI = dyn_cast<StoreInst>(Inst)) {
+    if (!SI->isVolatile() || TTI.hasVolatileVariant(SI, AddrSpace))
+      replaceOperandIfSame(SI, StoreInst::getPointerOperandIndex(), OldV, NewV);
+    return true;
+  }
 
-  if (auto *SI = dyn_cast<StoreInst>(Inst))
-    return OpNo == StoreInst::getPointerOperandIndex() &&
-           (!SI->isVolatile() || TTI.hasVolatileVariant(SI, AddrSpace));
+  if (auto *RMW = dyn_cast<AtomicRMWInst>(Inst)) {
+    if (!RMW->isVolatile() || TTI.hasVolatileVariant(RMW, AddrSpace))
+      replaceOperandIfSame(RMW, AtomicRMWInst::getPointerOperandIndex(), OldV,
+                           NewV);
+    return true;
+  }
 
-  if (auto *RMW = dyn_cast<AtomicRMWInst>(Inst))
-    return OpNo == AtomicRMWInst::getPointerOperandIndex() &&
-           (!RMW->isVolatile() || TTI.hasVolatileVariant(RMW, AddrSpace));
-
-  if (auto *CmpX = dyn_cast<AtomicCmpXchgInst>(Inst))
-    return OpNo == AtomicCmpXchgInst::getPointerOperandIndex() &&
-           (!CmpX->isVolatile() || TTI.hasVolatileVariant(CmpX, AddrSpace));
+  if (auto *CmpX = dyn_cast<AtomicCmpXchgInst>(Inst)) {
+    if (!CmpX->isVolatile() || TTI.hasVolatileVariant(CmpX, AddrSpace))
+      replaceOperandIfSame(CmpX, AtomicCmpXchgInst::getPointerOperandIndex(),
+                           OldV, NewV);
+    return true;
+  }
 
   return false;
 }
@@ -1226,11 +1243,10 @@ bool InferAddressSpacesImpl::rewriteWithNewAddressSpaces(
       I = skipToNextUser(I, E);
 
       if (isSimplePointerUseValidToReplace(
-              *TTI, U, V->getType()->getPointerAddressSpace())) {
+              *TTI, CurUser, V->getType()->getPointerAddressSpace(), V, NewV)) {
         // If V is used as the pointer operand of a compatible memory operation,
         // sets the pointer operand to NewV. This replacement does not change
         // the element type, so the resultant load/store is still valid.
-        U.set(NewV);
         continue;
       }
 

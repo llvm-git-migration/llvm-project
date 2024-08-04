@@ -27,7 +27,7 @@ define ptr @atomicrmw_xchg_flat_pointer_to_self() {
 ; CHECK-LABEL: define ptr @atomicrmw_xchg_flat_pointer_to_self() {
 ; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca ptr, align 8, addrspace(5)
 ; CHECK-NEXT:    [[FLAT:%.*]] = addrspacecast ptr addrspace(5) [[ALLOCA]] to ptr
-; CHECK-NEXT:    [[XCHG:%.*]] = atomicrmw xchg ptr [[FLAT]], ptr [[FLAT]] seq_cst, align 8
+; CHECK-NEXT:    [[XCHG:%.*]] = atomicrmw xchg ptr addrspace(5) [[ALLOCA]], ptr [[FLAT]] seq_cst, align 8
 ; CHECK-NEXT:    call void @user(ptr [[FLAT]])
 ; CHECK-NEXT:    ret ptr [[XCHG]]
 ;
@@ -43,7 +43,7 @@ define { ptr, i1 } @cmpxchg_flat_pointer_new_to_self(ptr %cmp) {
 ; CHECK-SAME: ptr [[CMP:%.*]]) {
 ; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca ptr, align 8, addrspace(5)
 ; CHECK-NEXT:    [[FLAT:%.*]] = addrspacecast ptr addrspace(5) [[ALLOCA]] to ptr
-; CHECK-NEXT:    [[CMPX:%.*]] = cmpxchg ptr [[FLAT]], ptr [[CMP]], ptr [[FLAT]] seq_cst seq_cst, align 8
+; CHECK-NEXT:    [[CMPX:%.*]] = cmpxchg ptr addrspace(5) [[ALLOCA]], ptr [[CMP]], ptr [[FLAT]] seq_cst seq_cst, align 8
 ; CHECK-NEXT:    call void @user(ptr [[FLAT]])
 ; CHECK-NEXT:    ret { ptr, i1 } [[CMPX]]
 ;
@@ -59,7 +59,7 @@ define { ptr, i1 } @cmpxchg_flat_pointer_cmp_to_self(ptr %new) {
 ; CHECK-SAME: ptr [[NEW:%.*]]) {
 ; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca ptr, align 8, addrspace(5)
 ; CHECK-NEXT:    [[FLAT:%.*]] = addrspacecast ptr addrspace(5) [[ALLOCA]] to ptr
-; CHECK-NEXT:    [[CMPX:%.*]] = cmpxchg ptr [[FLAT]], ptr [[FLAT]], ptr [[NEW]] seq_cst seq_cst, align 8
+; CHECK-NEXT:    [[CMPX:%.*]] = cmpxchg ptr addrspace(5) [[ALLOCA]], ptr [[FLAT]], ptr [[NEW]] seq_cst seq_cst, align 8
 ; CHECK-NEXT:    call void @user(ptr [[FLAT]])
 ; CHECK-NEXT:    ret { ptr, i1 } [[CMPX]]
 ;
@@ -68,4 +68,40 @@ define { ptr, i1 } @cmpxchg_flat_pointer_cmp_to_self(ptr %new) {
   %cmpx = cmpxchg ptr %flat, ptr %flat, ptr %new seq_cst seq_cst, align 8
   call void @user(ptr %flat)
   ret { ptr, i1 } %cmpx
+}
+
+define { ptr, i1 } @cmpxchg_flat_pointer_cmp_new_self() {
+; CHECK-LABEL: define { ptr, i1 } @cmpxchg_flat_pointer_cmp_new_self() {
+; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca ptr, align 8, addrspace(5)
+; CHECK-NEXT:    [[FLAT:%.*]] = addrspacecast ptr addrspace(5) [[ALLOCA]] to ptr
+; CHECK-NEXT:    [[CMPX:%.*]] = cmpxchg ptr addrspace(5) [[ALLOCA]], ptr [[FLAT]], ptr [[FLAT]] seq_cst seq_cst, align 8
+; CHECK-NEXT:    call void @user(ptr [[FLAT]])
+; CHECK-NEXT:    ret { ptr, i1 } [[CMPX]]
+;
+  %alloca = alloca ptr, align 8, addrspace(5)
+  %flat = addrspacecast ptr addrspace(5) %alloca to ptr
+  %cmpx = cmpxchg ptr %flat, ptr %flat, ptr %flat seq_cst seq_cst, align 8
+  call void @user(ptr %flat)
+  ret { ptr, i1 } %cmpx
+}
+
+define void @multi_store_flat_pointer_to_self() {
+; CHECK-LABEL: define void @multi_store_flat_pointer_to_self() {
+; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca ptr, align 8, addrspace(5)
+; CHECK-NEXT:    [[FLAT:%.*]] = addrspacecast ptr addrspace(5) [[ALLOCA]] to ptr
+; CHECK-NEXT:    store ptr [[FLAT]], ptr addrspace(5) [[ALLOCA]], align 8
+; CHECK-NEXT:    store ptr [[FLAT]], ptr addrspace(5) [[ALLOCA]], align 8
+; CHECK-NEXT:    call void @user(ptr [[FLAT]])
+; CHECK-NEXT:    store ptr [[FLAT]], ptr addrspace(5) [[ALLOCA]], align 8
+; CHECK-NEXT:    store ptr addrspace(5) [[ALLOCA]], ptr addrspace(5) [[ALLOCA]], align 8
+; CHECK-NEXT:    ret void
+;
+  %alloca = alloca ptr, align 8, addrspace(5)
+  %flat = addrspacecast ptr addrspace(5) %alloca to ptr
+  store ptr %flat, ptr %flat, align 8
+  store ptr %flat, ptr %flat, align 8
+  call void @user(ptr %flat)
+  store ptr %flat, ptr addrspace(5) %alloca, align 8
+  store ptr addrspace(5) %alloca, ptr %flat, align 8
+  ret void
 }
