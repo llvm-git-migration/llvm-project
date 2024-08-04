@@ -1698,10 +1698,6 @@ void WorkshareOp::build(OpBuilder &builder, OperationState &state,
   WorkshareOp::build(builder, state, clauses.nowait);
 }
 
-LogicalResult WorkshareOp::verify() {
-  return (*this)->getRegion(0).getBlocks().size() == 1 ? success() : failure();
-}
-
 //===----------------------------------------------------------------------===//
 // WsloopOp
 //===----------------------------------------------------------------------===//
