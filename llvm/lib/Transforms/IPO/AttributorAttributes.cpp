@@ -1331,7 +1331,7 @@ struct AAPointerInfoImpl
         // itself either.
         bool Inserted = ExclusionSet.insert(&I).second;
 
-        if (!FnReachabilityAA ||
+        if (FnReachabilityAA &&
             !FnReachabilityAA->instructionCanReach(
                 A, *LeastDominatingWriteInst,
                 *Acc.getRemoteInst()->getFunction(), &ExclusionSet))
