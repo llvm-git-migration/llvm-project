@@ -761,7 +761,7 @@ void StubFile::parse() {
     }
 
     // Lines starting with # are considered comments
-    if (line.starts_with("#"))
+    if (line.starts_with("#") || !line.size())
       continue;
 
     StringRef sym;
