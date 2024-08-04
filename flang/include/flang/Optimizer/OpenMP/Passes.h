@@ -25,6 +25,8 @@ namespace flangomp {
 #define GEN_PASS_REGISTRATION
 #include "flang/Optimizer/OpenMP/Passes.h.inc"
 
+bool shouldUseWorkshareLowering(mlir::Operation *op);
+
 } // namespace flangomp
 
 #endif // FORTRAN_OPTIMIZER_OPENMP_PASSES_H
