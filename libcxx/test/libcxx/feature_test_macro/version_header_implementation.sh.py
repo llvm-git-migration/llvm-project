@@ -16,7 +16,7 @@ TEST_DATA = sys.argv[2]
 del sys.argv[1:3]
 
 sys.path.append(UTILS)
-from generate_feature_test_macro_components import FeatureTestMacros
+from generate_feature_test_macro_components import FeatureTestMacros, VersionHeader
 
 class Test(unittest.TestCase):
     def setUp(self):
@@ -143,3 +143,96 @@ class Test(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    ftm.version_header_implementation,
+    {
+        "17": [
+            {
+                "__cpp_lib_any": VersionHeader(
+                    value="201606L",
+                    implemented=True,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+            {
+                "__cpp_lib_parallel_algorithm": VersionHeader(
+                    value="201603L",
+                    implemented=True,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+            {
+                "__cpp_lib_variant": VersionHeader(
+                    value="202102L",
+                    implemented=True,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+        ],
+        "20": [
+            {
+                "__cpp_lib_barrier": VersionHeader(
+                    value="201907L",
+                    implemented=True,
+                    need_undef=False,
+                    condition="!defined(_LIBCPP_HAS_NO_THREADS) && _LIBCPP_AVAILABILITY_HAS_SYNC",
+                ),
+            },
+            {
+                "__cpp_lib_format": VersionHeader(
+                    value="202110L",
+                    implemented=False,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+            {
+                "__cpp_lib_variant": VersionHeader(
+                    value="202106L",
+                    implemented=True,
+                    need_undef=True,
+                    condition=None,
+                ),
+            },
+        ],
+        "23": [
+            {
+                "__cpp_lib_format": VersionHeader(
+                    value="202207L",
+                    implemented=False,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+        ],
+        "26": [
+            {
+                "__cpp_lib_barrier": VersionHeader(
+                    value="299900L",
+                    implemented=True,
+                    need_undef=True,
+                    condition="!defined(_LIBCPP_HAS_NO_THREADS) && _LIBCPP_AVAILABILITY_HAS_SYNC",
+                ),
+            },
+            {
+                "__cpp_lib_format": VersionHeader(
+                    value="202311L",
+                    implemented=False,
+                    need_undef=False,
+                    condition=None,
+                ),
+            },
+            {
+                "__cpp_lib_variant": VersionHeader(
+                    value="202306L",
+                    implemented=True,
+                    need_undef=True,
+                    condition=None,
+                ),
+            },
+        ],
+    },
+)
+>>>>>>> a6a7541b7b8c ([libc++] Improves type-safety in generator script.)

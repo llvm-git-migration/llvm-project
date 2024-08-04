@@ -11,7 +11,7 @@
 import sys
 
 sys.path.append(sys.argv[1])
-from generate_feature_test_macro_components import FeatureTestMacros
+from generate_feature_test_macro_components import FeatureTestMacros, Metadata
 
 
 def test(output, expected):
@@ -19,6 +19,7 @@ def test(output, expected):
 
 
 ftm = FeatureTestMacros(sys.argv[2])
+
 test(
     ftm.ftm_metadata,
     {
