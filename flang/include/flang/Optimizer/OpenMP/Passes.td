@@ -1,4 +1,4 @@
-//===-- Passes.td - HLFIR pass definition file -------------*- tablegen -*-===//
+//===-- Passes.td - flang OpenMP pass definition -----------*- tablegen -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -35,6 +35,10 @@ def FunctionFiltering : Pass<"omp-function-filtering"> {
     "mlir::func::FuncDialect",
     "fir::FIROpsDialect"
   ];
+}
+
+def LowerWorkshare : Pass<"lower-workshare"> {
+  let summary = "Lower workshare construct";
 }
 
 #endif //FORTRAN_OPTIMIZER_OPENMP_PASSES
