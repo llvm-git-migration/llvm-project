@@ -37,4 +37,8 @@ def FunctionFiltering : Pass<"omp-function-filtering"> {
   ];
 }
 
+def LowerWorkshare : Pass<"lower-workshare"> {
+  let summary = "Lower workshare construct";
+}
+
 #endif //FORTRAN_OPTIMIZER_OPENMP_PASSES
