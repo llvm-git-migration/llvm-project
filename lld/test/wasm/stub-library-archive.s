@@ -1,6 +1,7 @@
 # RUN: split-file %s %t
 # RUN: llvm-mc -filetype=obj -triple=wasm32-unknown-unknown -o %t.o %t/main.s
 # RUN: llvm-mc -filetype=obj -triple=wasm32-unknown-unknown -o %t/foodeps.o %t/foodeps.s
+# RUN: mkdir -p %t
 # RUN: rm -f %t/libfoodeps.a
 # RUN: llvm-ar rcs %t/libfoodeps.a %t/foodeps.o
 # RUN: wasm-ld %t.o %p/Inputs/libstub.so %t/libfoodeps.a -o %t.wasm

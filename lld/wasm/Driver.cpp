@@ -945,10 +945,23 @@ static void processStubLibrariesPreLTO() {
       // undefined, then mark the dependent symbols as used by a regular
       // object so they will be preserved and exported by the LTO process.
       if (!sym || sym->isUndefined()) {
+        LLVM_DEBUG(llvm::dbgs()
+                   << "marking symbol deps: " << name << "\n");
         for (const auto dep : deps) {
           auto* needed = symtab->find(dep);
           if (needed ) {
             needed->isUsedInRegularObj = true;
+            // Like with handleLibcall we have extract any archive members
+            // that might need to be exported due to stub library symbol being
+            // used.  Without this the LTO object could be extracted during
+            // processStubLibraries, which is too late since LTO has already
+            // beeing performed at that point.
+            if (needed->isLazy() && isa<BitcodeFile>(needed->getFile())) {
+              if (!config->whyExtract.empty())
+                ctx.whyExtractRecords.emplace_back("<stubdep>", needed->getFile(),
+                                                   *needed);
+              cast<LazySymbol>(needed)->extract();
+            }
           }
         }
       }
