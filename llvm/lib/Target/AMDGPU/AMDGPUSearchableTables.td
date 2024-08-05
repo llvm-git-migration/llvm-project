@@ -378,3 +378,7 @@ def : AlwaysUniform<int_amdgcn_icmp>;
 def : AlwaysUniform<int_amdgcn_fcmp>;
 def : AlwaysUniform<int_amdgcn_ballot>;
 def : AlwaysUniform<int_amdgcn_if_break>;
+def : AlwaysUniform<int_amdgcn_s_getpc>;
+def : AlwaysUniform<int_amdgcn_s_getreg>;
+def : AlwaysUniform<int_amdgcn_s_memrealtime>;
+def : AlwaysUniform<int_amdgcn_s_memtime>;
