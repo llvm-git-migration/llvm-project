@@ -762,7 +762,8 @@ enum class MatchConvolutionResult {
   NotProjectedPermutations,
   NonConvolutionLoop,
   OutputDimsNotParallel,
-  NonOutputDimNotReduction
+  NonOutputDimNotReduction,
+  NoValidConvolvedDim
 };
 } // namespace mlir::linalg::detail
 
@@ -810,6 +811,8 @@ mlir::linalg::detail::isConvolutionInterfaceImpl(
   // - Depth multiplier : unconvolved in input, present in output, present in
   //   filter.
   llvm::SmallDenseSet<int64_t> allLoopDims;
+  bool hasOutputImageDim = false;
+  bool hasFilterLoopDim = false;
   for (auto outputExpr : indexingMaps.back().getResults()) {
     int64_t outputDim = cast<AffineDimExpr>(outputExpr).getPosition();
     if (inputExprWalker.unConvolvedDims.count(outputDim) &&
@@ -825,6 +828,7 @@ mlir::linalg::detail::isConvolutionInterfaceImpl(
       // Output image Loop dimension.
       if (iteratorTypes[outputDim] != utils::IteratorType::parallel)
         return MatchConvolutionResult::OutputDimsNotParallel;
+      hasOutputImageDim = true;
       allLoopDims.insert(outputDim);
       continue;
     }
@@ -862,6 +866,7 @@ mlir::linalg::detail::isConvolutionInterfaceImpl(
         return MatchConvolutionResult::NonOutputDimNotReduction;
       if (allLoopDims.count(filterDim))
         return MatchConvolutionResult::NonConvolutionLoop;
+      hasFilterLoopDim = true;
       allLoopDims.insert(filterDim);
       continue;
     }
@@ -885,6 +890,9 @@ mlir::linalg::detail::isConvolutionInterfaceImpl(
   // All loops must be covered now.
   if (allLoopDims.size() != linalgOp.getNumLoops())
     return MatchConvolutionResult::NonConvolutionLoop;
+
+  if (!hasOutputImageDim || !hasFilterLoopDim)
+    return MatchConvolutionResult::NoValidConvolvedDim;
 
   if (dimensions) {
     FailureOr<ConvolutionDimensions> res =
