@@ -36,3 +36,14 @@ func.func @rfft2d_with_non_float_type(%arg0 : tensor<1x1x1xi32>) -> (tensor<1x1x
   %real, %imag = tosa.rfft2d %arg0 : (tensor<1x1x1xi32>) -> (tensor<1x1x1xi32>, tensor<1x1x1xi32>)
   return %real, %imag : tensor<1x1x1xi32>, tensor<1x1x1xi32>
 }
+
+// -----
+
+// CHECK-LABEL: @test_invalid_constant_permutation
+func.func @test_invalid_constant_permutation() {
+  // expected-error@+3 {{permutation must be within input bounds}}
+	%14 = tensor.empty() : tensor<3x4x5xi32>
+	%c1 = arith.constant dense<[3, 0, 1]> : tensor<3xi32>
+	%72 = tosa.transpose %14, %c1 : (tensor<3x4x5xi32>, tensor<3xi32>) -> tensor<3x4x5xi32>
+	return 
+}
