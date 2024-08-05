@@ -14,8 +14,8 @@
 
 [[maybe_unused]] std::tuple_element<0, std::tuple<void, void>> test;
 
-// expected-warning@__tuple/tuple_element.h:* {{'__volatile_deprecated_since_cxx20_warning<volatile std::tuple<void, void>>' is deprecated}}
+// expected-warning@*:* {{'__volatile_deprecated_since_cxx20_warning<volatile std::tuple<void, void>>' is deprecated}}
 [[maybe_unused]] std::tuple_element<0, volatile std::tuple<void, void>> vol_test;
 
-// expected-warning@__tuple/tuple_element.h:* {{'__volatile_deprecated_since_cxx20_warning<const volatile std::tuple<void, void>>' is deprecated}}
+// expected-warning@*:* {{'__volatile_deprecated_since_cxx20_warning<const volatile std::tuple<void, void>>' is deprecated}}
 [[maybe_unused]] std::tuple_element<0, const volatile std::tuple<void, void>> const_vol_test;
