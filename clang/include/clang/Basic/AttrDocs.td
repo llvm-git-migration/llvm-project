@@ -1419,6 +1419,29 @@ is not specified.
   }];
 }
 
+def ExplicitInitDocs : Documentation {
+  let Category = DocCatField;
+  let Content = [{
+The ``clang::requires_explicit_initialization`` attribute indicates that the
+field of an aggregate must be initialized explicitly by the caller when the
+class is constructed. Its usage is invalid on non-aggregates.
+
+Example usage:
+
+.. code-block:: c++
+
+  struct some_aggregate {
+    int x;
+    int y [[clang::requires_explicit_initialization]];
+  };
+
+  some_aggregate create() {
+    return {.x = 1};  // error: y is not initialized explicitly
+  }
+
+  }];
+}
+
 def NoUniqueAddressDocs : Documentation {
   let Category = DocCatField;
   let Content = [{
