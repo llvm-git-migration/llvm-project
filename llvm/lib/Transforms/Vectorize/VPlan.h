@@ -3827,6 +3827,20 @@ inline bool isUniformAfterVectorization(VPValue *VPV) {
 bool isHeaderMask(VPValue *V, VPlan &Plan);
 } // end namespace vputils
 
+/// A pair of pointers that could overlap across a loop iteration.
+struct PointerDiffInfoValues {
+  /// The pointer being read from
+  Value *Src;
+  /// The pointer being stored to
+  Value *Sink;
+
+  PointerDiffInfoValues(const SCEV *SrcStart, const SCEV *SinkStart,
+                        SCEVExpander Exp, Instruction *Loc)
+      : Src(Exp.expandCodeFor(SrcStart, SrcStart->getType(), Loc)),
+        Sink(Exp.expandCodeFor(SinkStart, SinkStart->getType(), Loc)) {}
+  PointerDiffInfoValues(Value *Src, Value *Sink) : Src(Src), Sink(Sink) {}
+};
+
 } // end namespace llvm
 
 #endif // LLVM_TRANSFORMS_VECTORIZE_VPLAN_H
