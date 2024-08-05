@@ -28,7 +28,9 @@
 #include "mlir/Transforms/InliningUtils.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/TypeSwitch.h"
+#include <sys/_types/_int64_t.h>
 
 using namespace mlir;
 using namespace mlir::tosa;
@@ -1116,6 +1118,12 @@ LogicalResult tosa::TransposeOp::verify() {
            "Unexpectedly found permutation tensor without rank");
     if (!isPermutationVector(constantPerms))
       return emitOpError() << "expected valid permutation tensor";
+
+    if (inputType.hasRank() && (!inputType.getNumDynamicDims()) &&
+        !llvm::all_of(constantPerms,
+                      [&](int64_t s) { return s < inputType.getRank(); })) {
+      return emitOpError() << "permutation must be within input bounds";
+    }
   }
   return success();
 }
