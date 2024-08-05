@@ -1472,3 +1472,41 @@ template<typename T> struct Outer {
   };
 };
 Outer<int>::Inner outerinner;
+
+void aggregate() {
+  struct S {
+    [[clang::requires_explicit_initialization]] int x;
+    int y;
+    int z = 12;
+    [[clang::requires_explicit_initialization]] int q = 100;
+    static void foo(S) { }
+  };
+
+  struct D : S { // expected-warning {{not explicitly initialized}}
+    int f1;
+    int f2 [[clang::requires_explicit_initialization]];
+  };
+
+  S::foo(S{1, 2, 3, 4});
+  S::foo(S{.x = 100, .q = 100});
+  S::foo(S{.x = 100}); // expected-warning {{'q' is not explicitly initialized}} expected-warning {{'q' is not explicitly initialized}}
+  S s{.x = 100, .q = 100};
+  (void)s;
+  S t{.q = 100}; // expected-warning {{'x' is not explicitly initialized}} expected-warning {{'x' is not explicitly initialized}}
+  (void)t;
+  S *ptr1 = new S; // expected-warning {{field in class is not explicitly initialized}}
+  delete ptr1;
+  S *ptr2 = new S{.x = 100, .q = 100};
+  delete ptr2;
+#if __cplusplus >= 202002L
+  D a({}, 0);  // expected-warning {{'x' is not explicitly initialized}} expected-warning {{'f2' is not explicitly initialized}}
+  (void)a;
+#endif
+  D b{.f2 = 1}; // expected-warning {{'x' is not explicitly initialized}} expected-warning {{'q' is not explicitly initialized}}
+  (void)b;
+  (void)c;
+  D c{.f1 = 5}; // expected-warning {{'x' is not explicitly initialized}} expected-warning {{'q' is not explicitly initialized}} expected-warning {{'f2' is not explicitly initialized}} expected-warning {{'f2' is not explicitly initialized}}
+  c = {{}, 0};  // expected-warning {{'x' is not explicitly initialized}} expected-warning {{'q' is not explicitly initialized}} expected-warning {{'f2' is not explicitly initialized}}
+  D d; // expected-warning {{not explicitly initialized}} expected-note {{constructor}}
+  (void)d;
+}

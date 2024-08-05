@@ -81,6 +81,7 @@ CXXRecordDecl::DefinitionData::DefinitionData(CXXRecordDecl *D)
       HasPrivateFields(false), HasProtectedFields(false),
       HasPublicFields(false), HasMutableFields(false), HasVariantMembers(false),
       HasOnlyCMembers(true), HasInitMethod(false), HasInClassInitializer(false),
+      HasUninitializedExplicitInitFields(false),
       HasUninitializedReferenceMember(false), HasUninitializedFields(false),
       HasInheritedConstructor(false), HasInheritedDefaultConstructor(false),
       HasInheritedAssignment(false),
@@ -1111,6 +1112,10 @@ void CXXRecordDecl::addedMember(Decl *D) {
     } else if (!T.isCXX98PODType(Context))
       data().PlainOldData = false;
 
+    if (Field->hasAttr<ExplicitInitAttr>() && !Field->hasInClassInitializer()) {
+      data().HasUninitializedExplicitInitFields = true;
+    }
+
     if (T->isReferenceType()) {
       if (!Field->hasInClassInitializer())
         data().HasUninitializedReferenceMember = true;
@@ -1361,6 +1366,10 @@ void CXXRecordDecl::addedMember(Decl *D) {
         //   parameter is of type 'const M&', 'const volatile M&' or 'M'.
         if (!FieldRec->hasCopyAssignmentWithConstParam())
           data().ImplicitCopyAssignmentHasConstParam = false;
+
+        if (FieldRec->hasUninitializedExplicitInitFields() &&
+            FieldRec->isAggregate() && !Field->hasInClassInitializer())
+          data().HasUninitializedExplicitInitFields = true;
 
         if (FieldRec->hasUninitializedReferenceMember() &&
             !Field->hasInClassInitializer())
@@ -2148,6 +2157,18 @@ void CXXRecordDecl::completeDefinition(CXXFinalOverriderMap *FinalOverriders) {
   for (conversion_iterator I = conversion_begin(), E = conversion_end();
        I != E; ++I)
     I.setAccess((*I)->getAccess());
+
+  ASTContext &Context = getASTContext();
+  if (!Context.getLangOpts().CPlusPlus20 && hasUserDeclaredConstructor()) {
+    // Diagnose any aggregate behavior changes in C++20
+    for (field_iterator I = field_begin(), E = field_end(); I != E; ++I) {
+      if (const auto *attr = I->getAttr<ExplicitInitAttr>()) {
+        Context.getDiagnostics().Report(
+            getLocation(), diag::warn_cxx20_compat_aggregate_init_with_ctors)
+            << attr->getRange() << Context.getRecordType(this);
+      }
+    }
+  }
 }
 
 bool CXXRecordDecl::mayBeAbstract() const {
