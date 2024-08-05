@@ -7,7 +7,6 @@ define i32 @test() {
 ; CHECK-NEXT:    [[ARRAY:%.*]] = alloca [26 x i32], align 16
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr noundef nonnull align 16 [[ARRAY]], i8 0, i64 104, i1 false)
 ; CHECK-NEXT:    [[ARRAY_IDX:%.*]] = getelementptr inbounds i8, ptr [[ARRAY]], i64 4
-; CHECK-NEXT:    call void @llvm.memmove.p0.p0.i64(ptr noundef nonnull align 16 [[ARRAY]], ptr noundef nonnull align 4 [[ARRAY_IDX]], i64 100, i1 false)
 ; CHECK-NEXT:    [[VAL:%.*]] = load i32, ptr [[ARRAY]], align 16
 ; CHECK-NEXT:    ret i32 [[VAL]]
 ;
