@@ -985,7 +985,7 @@ Instruction *InstCombinerImpl::transformZExtICmp(ICmpInst *Cmp,
     }
   }
 
-  if (Cmp->isEquality() && Zext.getType() == Cmp->getOperand(0)->getType()) {
+  if (Cmp->isEquality()) {
     // Test if a bit is clear/set using a shifted-one mask:
     // zext (icmp eq (and X, (1 << ShAmt)), 0) --> and (lshr (not X), ShAmt), 1
     // zext (icmp ne (and X, (1 << ShAmt)), 0) --> and (lshr X, ShAmt), 1
@@ -997,7 +997,8 @@ Instruction *InstCombinerImpl::transformZExtICmp(ICmpInst *Cmp,
         X = Builder.CreateNot(X);
       Value *Lshr = Builder.CreateLShr(X, ShAmt);
       Value *And1 = Builder.CreateAnd(Lshr, ConstantInt::get(X->getType(), 1));
-      return replaceInstUsesWith(Zext, And1);
+      return replaceInstUsesWith(
+          Zext, Builder.CreateZExtOrTrunc(And1, Zext.getType()));
     }
   }
 
