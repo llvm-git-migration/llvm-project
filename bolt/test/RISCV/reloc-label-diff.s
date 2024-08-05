@@ -1,5 +1,5 @@
 // RUN: %clang %cflags -o %t %s
-// RUN: llvm-bolt -o %t.bolt %t
+// RUN: llvm-bolt --strict -o %t.bolt %t
 // RUN: llvm-readelf -x .data %t.bolt | FileCheck %s
 
   .text
