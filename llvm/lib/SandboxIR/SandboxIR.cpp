@@ -1241,32 +1241,28 @@ AllocaInst *AllocaInst::create(Type *Ty, unsigned AddrSpace,
 void AllocaInst::setAllocatedType(Type *Ty) {
   auto &Tracker = Ctx.getTracker();
   if (Tracker.isTracking())
-    Tracker.track(std::make_unique<AllocaSetAllocatedType>(
-        cast<AllocaInst>(this), Tracker));
+    Tracker.track(std::make_unique<AllocaSetAllocatedType>(this, Tracker));
   cast<llvm::AllocaInst>(Val)->setAllocatedType(Ty);
 }
 
 void AllocaInst::setAlignment(Align Align) {
   auto &Tracker = Ctx.getTracker();
   if (Tracker.isTracking())
-    Tracker.track(
-        std::make_unique<AllocaSetAlignment>(cast<AllocaInst>(this), Tracker));
+    Tracker.track(std::make_unique<AllocaSetAlignment>(this, Tracker));
   cast<llvm::AllocaInst>(Val)->setAlignment(Align);
 }
 
 void AllocaInst::setUsedWithInAlloca(bool V) {
   auto &Tracker = Ctx.getTracker();
   if (Tracker.isTracking())
-    Tracker.track(std::make_unique<AllocaSetUsedWithInAlloca>(
-        cast<AllocaInst>(this), Tracker));
+    Tracker.track(std::make_unique<AllocaSetUsedWithInAlloca>(this, Tracker));
   cast<llvm::AllocaInst>(Val)->setUsedWithInAlloca(V);
 }
 
 void AllocaInst::setSwiftError(bool V) {
   auto &Tracker = Ctx.getTracker();
   if (Tracker.isTracking())
-    Tracker.track(
-        std::make_unique<AllocaSetSwiftError>(cast<AllocaInst>(this), Tracker));
+    Tracker.track(std::make_unique<AllocaSetSwiftError>(this, Tracker));
   cast<llvm::AllocaInst>(Val)->setSwiftError(V);
 }
 
