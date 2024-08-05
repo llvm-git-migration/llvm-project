@@ -38,6 +38,7 @@ typedef enum {
   RPC_PRINTF_TO_STDERR_PACKED,
   RPC_PRINTF_TO_STREAM_PACKED,
   RPC_REMOVE,
+  RPC_RAISE,
   RPC_LAST = 0xFFFF,
 } rpc_opcode_t;
 

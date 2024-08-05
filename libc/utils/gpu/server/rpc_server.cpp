@@ -22,6 +22,7 @@
 #include "src/stdio/gpu/file.h"
 #include <algorithm>
 #include <atomic>
+#include <csignal>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -386,6 +387,12 @@ rpc_status_t handle_server_impl(
       buffer->data[0] = static_cast<uint64_t>(
           remove(reinterpret_cast<const char *>(args[id])));
       delete[] reinterpret_cast<uint8_t *>(args[id]);
+    });
+    break;
+  }
+  case RPC_RAISE: {
+    port->recv_and_send([](rpc::Buffer *buffer) {
+      buffer->data[0] = raise(static_cast<int>(buffer->data[0]));
     });
     break;
   }

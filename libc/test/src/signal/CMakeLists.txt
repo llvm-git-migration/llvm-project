@@ -1,6 +1,6 @@
 add_custom_target(libc_signal_unittests)
 
-add_libc_unittest(
+add_libc_test(
   raise_test
   SUITE
     libc_signal_unittests
@@ -9,6 +9,7 @@ add_libc_unittest(
   DEPENDS
     libc.include.signal
     libc.src.signal.raise
+  UNIT_TEST_ONLY # Requires death tests.
 )
 
 add_libc_unittest(

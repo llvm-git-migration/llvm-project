@@ -228,6 +228,9 @@ set(TARGET_LIBC_ENTRYPOINTS
     # wchar.h entrypoints
     libc.src.wchar.wctob
 
+    # signal.h entrypoints
+    libc.src.signal.raise
+
     # gpu/rpc.h entrypoints
     libc.src.gpu.rpc_host_call
 )
