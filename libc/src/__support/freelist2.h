@@ -27,6 +27,9 @@ private:
 };
 
 LIBC_INLINE void FreeList2::push(Block<> *block) {
+  Node *node = new (block->usable_space()) Node;
+  LIBC_ASSERT(!begin_ && "not yet implemented");
+  begin_ = node;
 }
 
 } // namespace LIBC_NAMESPACE_DECL

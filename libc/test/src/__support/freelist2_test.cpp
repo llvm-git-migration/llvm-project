@@ -9,13 +9,25 @@
 #include <stddef.h>
 
 #include "src/__support/freelist2.h"
+#include "src/__support/freelist2.h"
 #include "test/UnitTest/Test.h"
 
-using LIBC_NAMESPACE::FreeList2;
+namespace LIBC_NAMESPACE_DECL {
 
 TEST(LlvmLibcFreeList2, DefaultListIsEmpty) {
   FreeList2 list;
   EXPECT_TRUE(list.empty());
+}
+
+TEST(LlvmLibcFreeList2, PushMakesListNonEmpty) {
+  cpp::byte mem[1024];
+  optional<Block<>*> maybeBlock = Block<>::init(mem);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<>* block = *maybeBlock;
+
+  FreeList2 list;
+  list.push(block);
+  EXPECT_FALSE(list.empty());
 }
 
 #if 0
@@ -162,3 +174,5 @@ TEST(LlvmLibcFreeList, CanStoreMultipleChunksPerBucket) {
   EXPECT_TRUE(chunk2.data() == data1 || chunk2.data() == data2);
 }
 #endif
+
+} // namespace LIBC_NAMESPACE_DECL
