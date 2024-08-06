@@ -200,7 +200,29 @@ typedef unsigned LLVMMetadataKind;
 /**
  * An LLVM DWARF type encoding.
  */
-typedef unsigned LLVMDWARFTypeEncoding;
+typedef enum {
+  LVMDWARFAddressTypeEncoding = 0x01,
+  LVMDWARFBooleanTypeEncoding = 0x02,
+  LVMDWARFComplexFloatTypeEncoding = 0x03,
+  LVMDWARFFloatTypeEncoding = 0x04,
+  LVMDWARFSignedTypeEncoding = 0x05,
+  LVMDWARFSignedCharTypeEncoding = 0x06,
+  LVMDWARFUnsignedTypeEncoding = 0x07,
+  LVMDWARFUnsignedCharTypeEncoding = 0x08,
+  // New in DWARF v3:
+  LVMDWARFImmaginaryFloatTypeEncoding = 0x09,
+  LVMDWARFPackedDecimalTypeEncoding = 0x0a,
+  LVMDWARFNumericStringTypeEncoding = 0x0b,
+  LVMDWARFEditedTypeEncoding = 0x0c,
+  LVMDWARFSignedFixedTypeEncoding = 0x0d,
+  LVMDWARFUnsignedFixedTypeEncoding = 0x0e,
+  LVMDWARFDecimalFloatTypeEncoding = 0x0f,
+  // New in DWARF v4:
+  LVMDWARFUTFTypeEncoding = 0x10,
+  // New in DWARF v5:
+  LVMDWARFUCSTypeEncoding = 0x11,
+  LVMDWARFASCIITypeEncoding = 0x12,
+} LLVMDWARFTypeEncoding;
 
 /**
  * Describes the kind of macro declaration used for LLVMDIBuilderCreateMacro.
