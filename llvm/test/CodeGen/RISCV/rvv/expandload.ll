@@ -1547,3 +1547,34 @@ declare <4 x i64> @llvm.masked.expandload.v4i64(ptr, <4 x i1>, <4 x i64>)
 declare <8 x i64> @llvm.masked.expandload.v8i64(ptr, <8 x i1>, <8 x i64>)
 declare <16 x i64> @llvm.masked.expandload.v16i64(ptr, <16 x i1>, <16 x i64>)
 declare <32 x i64> @llvm.masked.expandload.v32i64(ptr, <32 x i1>, <32 x i64>)
+
+define <512 x i8> @test_expandload_v512i8(ptr %base, <512 x i1> %mask, <512 x i8> %passthru) "target-features"="+zvl1024b" {
+; RV64-LABEL: test_expandload_v512i8:
+; RV64:       # %bb.0:
+; RV64-NEXT:    li a1, 512
+; RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; RV64-NEXT:    viota.m v16, v0
+; RV64-NEXT:    vsetvli zero, zero, e8, m4, ta, mu
+; RV64-NEXT:    vluxei16.v v8, (a0), v16, v0.t
+; RV64-NEXT:    ret
+;
+; RV32-LABEL: test_expandload_v512i8:
+; RV32:       # %bb.0:
+; RV32-NEXT:    li a1, 512
+; RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; RV32-NEXT:    viota.m v16, v0
+; RV32-NEXT:    vsetvli zero, zero, e8, m4, ta, mu
+; RV32-NEXT:    vluxei16.v v8, (a0), v16, v0.t
+; RV32-NEXT:    ret
+  %res = call <512 x i8> @llvm.masked.expandload.v512i8(ptr align 1 %base, <512 x i1> %mask, <512 x i8> %passthru)
+  ret <512 x i8> %res
+}
+
+; FIXME: Don't know how to make it legal.
+; define <1024 x i8> @test_expandload_v1024i8(ptr %base, <1024 x i1> %mask, <1024 x i8> %passthru) "target-features"="+zvl1024b" {
+;   %res = call <1024 x i8> @llvm.masked.expandload.v1024i8(ptr align 1 %base, <1024 x i1> %mask, <1024 x i8> %passthru)
+;   ret <1024 x i8> %res
+; }
+
+declare <512 x i8> @llvm.masked.expandload.v512i8(ptr, <512 x i1>, <512 x i8>)
+declare <1024 x i8> @llvm.masked.expandload.v1024i8(ptr, <1024 x i1>, <1024 x i8>)
