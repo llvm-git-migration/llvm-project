@@ -2369,7 +2369,9 @@ Error BitcodeReader::parseAttributeGroupBlock() {
             return MaybeCR.takeError();
           i--;
 
-          B.addConstantRangeAttr(Kind, MaybeCR.get());
+          assert(Kind == Attribute::Range &&
+                 "Unhandled ConstantRangeAttribute");
+          B.addRangeAttr(MaybeCR.get());
         } else if (Record[i] == 8) {
           Attribute::AttrKind Kind;
 
