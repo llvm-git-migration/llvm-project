@@ -9,17 +9,24 @@
 #ifndef LLVM_LIBC_SRC___SUPPORT_FREELIST2_H
 #define LLVM_LIBC_SRC___SUPPORT_FREELIST2_H
 
+#include "block.h"
+
 namespace LIBC_NAMESPACE_DECL {
 
-class FreeList {
+class FreeList2 {
 public:
   class Node {
   };
 
+  bool empty() const { return !begin_; }
+
+  void push(Block<> *block);
+
 private:
-  Node *begin_;
+  Node *begin_ = nullptr;
 };
 
+LIBC_INLINE void FreeList2::push(Block<> *block) {
 }
 
 } // namespace LIBC_NAMESPACE_DECL
