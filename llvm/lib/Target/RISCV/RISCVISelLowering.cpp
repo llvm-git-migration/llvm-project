@@ -11157,9 +11157,10 @@ SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
       IndexVT = IndexVT.changeVectorElementType(MVT::i16);
     }
 
-    Index = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, IndexVT,
-                        DAG.getConstant(Intrinsic::riscv_viota, DL, XLenVT),
-                        DAG.getUNDEF(IndexVT), Mask, VL);
+    Index =
+        DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, IndexVT,
+                    DAG.getTargetConstant(Intrinsic::riscv_viota, DL, XLenVT),
+                    DAG.getUNDEF(IndexVT), Mask, VL);
     if (uint64_t EltSize = ContainerVT.getScalarSizeInBits(); EltSize > 8)
       Index = DAG.getNode(RISCVISD::SHL_VL, DL, IndexVT, Index,
                           DAG.getConstant(Log2_64(EltSize / 8), DL, IndexVT),
