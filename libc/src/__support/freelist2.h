@@ -15,7 +15,7 @@ namespace LIBC_NAMESPACE_DECL {
 
 /// A FIFO free-list storing Blocks of the same size.
 class FreeList2 {
-private:
+protected:
   // A circular doubly-linked node.
   struct Node {
     Node *prev;
@@ -39,7 +39,7 @@ private:
   Node *begin_ = nullptr;
 };
 
-Block<> *FreeList2::front() const {
+LIBC_INLINE Block<> *FreeList2::front() const {
   LIBC_ASSERT(!empty());
   return Block<>::from_usable_space(begin_);
 }

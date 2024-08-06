@@ -22,6 +22,7 @@ if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
     SRCS
       freelist_test.cpp
       freelist2_test.cpp
+      freetrie_test.cpp
     DEPENDS
       libc.src.__support.CPP.array
       libc.src.__support.CPP.span
