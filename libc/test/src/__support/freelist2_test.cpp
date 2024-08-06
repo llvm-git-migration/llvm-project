@@ -30,6 +30,18 @@ TEST(LlvmLibcFreeList2, PushMakesListNonEmpty) {
   EXPECT_FALSE(list.empty());
 }
 
+TEST(LlvmLibcFreeList2, PushPopEmptiesList) {
+  cpp::byte mem[1024];
+  optional<Block<>*> maybeBlock = Block<>::init(mem);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<>* block = *maybeBlock;
+
+  FreeList2 list;
+  list.push(block);
+  list.pop();
+  EXPECT_TRUE(list.empty());
+}
+
 #if 0
 TEST(LlvmLibcFreeList2, EmptyListHasNoMembers) {
   FreeList<SIZE> list(example_sizes);

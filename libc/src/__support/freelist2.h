@@ -21,6 +21,7 @@ public:
   bool empty() const { return !begin_; }
 
   void push(Block<> *block);
+  void pop();
 
 private:
   Node *begin_ = nullptr;
@@ -30,6 +31,11 @@ LIBC_INLINE void FreeList2::push(Block<> *block) {
   Node *node = new (block->usable_space()) Node;
   LIBC_ASSERT(!begin_ && "not yet implemented");
   begin_ = node;
+}
+
+LIBC_INLINE void FreeList2::pop() {
+  LIBC_ASSERT(!empty());
+  begin_ = nullptr;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
