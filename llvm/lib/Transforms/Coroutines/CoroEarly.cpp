@@ -121,8 +121,8 @@ static void buildDebugInfoForNoopResumeDestroyFunc(Function *NoopFn) {
 }
 
 void Lowerer::lowerCoroNoop(IntrinsicInst *II) {
+  LLVMContext &C = Builder.getContext();
   if (!NoopCoro) {
-    LLVMContext &C = Builder.getContext();
     Module &M = *II->getModule();
 
     // Create a noop.frame struct type.
@@ -152,7 +152,8 @@ void Lowerer::lowerCoroNoop(IntrinsicInst *II) {
   }
 
   Builder.SetInsertPoint(II);
-  auto *NoopCoroVoidPtr = Builder.CreateBitCast(NoopCoro, Int8Ptr);
+  auto *NoopCoroVoidPtr =
+      Builder.CreateAddrSpaceCast(NoopCoro, PointerType::getUnqual(C));
   II->replaceAllUsesWith(NoopCoroVoidPtr);
   II->eraseFromParent();
 }

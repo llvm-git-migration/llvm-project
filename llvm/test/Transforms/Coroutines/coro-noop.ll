@@ -1,8 +1,10 @@
 ; Tests that CoroEarly pass correctly lowers coro.noop
-; RUN: opt < %s -S -passes=coro-early | FileCheck %s
+; RUN: opt -S -passes=coro-early < %s | FileCheck %s
+; RUN: opt -mtriple=amdgcn-- -S -passes=coro-early < %s | FileCheck %s --check-prefix=AMDGPU
 
 ; CHECK: %NoopCoro.Frame = type { ptr, ptr }
 ; CHECK: @NoopCoro.Frame.Const = private constant %NoopCoro.Frame { ptr @__NoopCoro_ResumeDestroy, ptr @__NoopCoro_ResumeDestroy }
+; AMDGPU: @NoopCoro.Frame.Const = private addrspace(1) constant %NoopCoro.Frame { ptr @__NoopCoro_ResumeDestroy, ptr @__NoopCoro_ResumeDestroy }
 
 
 ; CHECK-LABEL: @noop(
@@ -10,6 +12,7 @@ define ptr @noop() {
 ; CHECK-NEXT: entry
 entry:
 ; CHECK-NEXT: ret ptr @NoopCoro.Frame.Const
+; AMDGPU: ret ptr addrspacecast (ptr addrspace(1) @NoopCoro.Frame.Const to ptr)
   %n = call ptr @llvm.coro.noop()
   ret ptr %n
 }
