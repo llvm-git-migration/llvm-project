@@ -30,9 +30,6 @@ private:
   };
 
 public:
-  // Blocks with inner sizes smaller than this must not be pushed.
-  static constexpr size_t MIN_INNER_SIZE = sizeof(Node);
-
   // Power-of-two range of sizes covered by a subtrie.
   class SizeRange {
   public:
@@ -52,6 +49,12 @@ public:
     size_t width;
   };
 
+  // Blocks with inner sizes smaller than this must not be pushed.
+  static constexpr size_t MIN_INNER_SIZE = sizeof(Node);
+
+  /// Push to this freelist.
+  void push(Block<> *block);
+
   /// Push to the correctly-sized freelist. The caller must provide the size
   /// range for this trie, since it isn't stored within.
   void push(Block<> *block, SizeRange range);
@@ -70,6 +73,12 @@ LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::upper() const {
 }
 LIBC_INLINE size_t FreeTrie::SizeRange::middle() const {
   return min + width / 2;
+}
+
+LIBC_INLINE void FreeTrie::push(Block<> *block) {
+  LIBC_ASSERT(block->inner_size() >= MIN_INNER_SIZE &&
+              "block too small to accomodate free list node");
+  FreeList2::push(new (block->usable_space()) Node);
 }
 
 } // namespace LIBC_NAMESPACE_DECL

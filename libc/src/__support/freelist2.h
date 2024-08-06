@@ -35,6 +35,10 @@ public:
   /// Pop the front.
   void pop();
 
+protected:
+  /// Push an already-constructed node to the back.
+  void push(Node *node);
+
 private:
   Node *begin_ = nullptr;
 };
@@ -47,17 +51,7 @@ LIBC_INLINE Block<> *FreeList2::front() const {
 LIBC_INLINE void FreeList2::push(Block<> *block) {
   LIBC_ASSERT(block->inner_size() >= MIN_INNER_SIZE &&
               "block too small to accomodate free list node");
-  Node *node = new (block->usable_space()) Node;
-  if (begin_) {
-    LIBC_ASSERT(block->outer_size() == front()->outer_size() &&
-                "freelist entries must have the same size");
-    node->prev = begin_->prev;
-    node->next = begin_;
-    begin_->prev->next = node;
-    begin_->prev = node;
-  } else {
-    begin_ = node->prev = node->next = node;
-  }
+  push(new (block->usable_space()) Node);
 }
 
 LIBC_INLINE void FreeList2::pop() {
@@ -68,6 +62,20 @@ LIBC_INLINE void FreeList2::pop() {
     begin_->prev->next = begin_->next;
     begin_->next->prev = begin_->prev;
     begin_ = begin_->next;
+  }
+}
+
+LIBC_INLINE void FreeList2::push(Node *node) {
+  if (begin_) {
+    LIBC_ASSERT(Block<>::from_usable_space(node)->outer_size() ==
+                    front()->outer_size() &&
+                "freelist entries must have the same size");
+    node->prev = begin_->prev;
+    node->next = begin_;
+    begin_->prev->next = node;
+    begin_->prev = node;
+  } else {
+    begin_ = node->prev = node->next = node;
   }
 }
 
