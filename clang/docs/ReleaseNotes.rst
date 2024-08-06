@@ -284,6 +284,8 @@ AST Matchers
 - Fixed an issue with the `hasName` and `hasAnyName` matcher when matching
   inline namespaces with an enclosing namespace of the same name.
 
+- Add ``matches``.
+
 clang-format
 ------------
 
