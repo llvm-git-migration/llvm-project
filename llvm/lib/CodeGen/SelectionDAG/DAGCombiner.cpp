@@ -18171,7 +18171,7 @@ SDValue DAGCombiner::visitBRCOND(SDNode *N) {
   // nondeterministic jumps).
   if (N1->getOpcode() == ISD::FREEZE && N1.hasOneUse()) {
     return DAG.getNode(ISD::BRCOND, SDLoc(N), MVT::Other, Chain,
-                       N1->getOperand(0), N2);
+                       N1->getOperand(0), N2, N->getFlags());
   }
 
   // Variant of the previous fold where there is a SETCC in between:
@@ -18220,7 +18220,8 @@ SDValue DAGCombiner::visitBRCOND(SDNode *N) {
     if (Updated)
       return DAG.getNode(
           ISD::BRCOND, SDLoc(N), MVT::Other, Chain,
-          DAG.getSetCC(SDLoc(N1), N1->getValueType(0), S0, S1, Cond), N2);
+          DAG.getSetCC(SDLoc(N1), N1->getValueType(0), S0, S1, Cond), N2,
+          N->getFlags());
   }
 
   // If N is a constant we could fold this into a fallthrough or unconditional
@@ -18245,7 +18246,7 @@ SDValue DAGCombiner::visitBRCOND(SDNode *N) {
     HandleSDNode ChainHandle(Chain);
     if (SDValue NewN1 = rebuildSetCC(N1))
       return DAG.getNode(ISD::BRCOND, SDLoc(N), MVT::Other,
-                         ChainHandle.getValue(), NewN1, N2);
+                         ChainHandle.getValue(), NewN1, N2, N->getFlags());
   }
 
   return SDValue();
