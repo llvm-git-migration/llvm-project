@@ -1215,10 +1215,99 @@ define <512 x i8> @test_expandload_v512i8(ptr %base, <512 x i1> %mask, <512 x i8
 }
 
 ; FIXME: Don't know how to make it legal.
-; define <1024 x i8> @test_expandload_v1024i8(ptr %base, <1024 x i1> %mask, <1024 x i8> %passthru) "target-features"="+zvl1024b" {
-;   %res = call <1024 x i8> @llvm.masked.expandload.v1024i8(ptr align 1 %base, <1024 x i1> %mask, <1024 x i8> %passthru)
-;   ret <1024 x i8> %res
-; }
+define <1024 x i8> @test_expandload_v1024i8(ptr %base, <1024 x i1> %mask, <1024 x i8> %passthru) "target-features"="+zvl1024b" {
+; CHECK-RV32-LABEL: test_expandload_v1024i8:
+; CHECK-RV32:       # %bb.0:
+; CHECK-RV32-NEXT:    addi sp, sp, -16
+; CHECK-RV32-NEXT:    .cfi_def_cfa_offset 16
+; CHECK-RV32-NEXT:    csrr a1, vlenb
+; CHECK-RV32-NEXT:    slli a1, a1, 3
+; CHECK-RV32-NEXT:    sub sp, sp, a1
+; CHECK-RV32-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x08, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 8 * vlenb
+; CHECK-RV32-NEXT:    vmv1r.v v7, v0
+; CHECK-RV32-NEXT:    li a1, 512
+; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m4, ta, ma
+; CHECK-RV32-NEXT:    vcpop.m a2, v0
+; CHECK-RV32-NEXT:    add a2, a0, a2
+; CHECK-RV32-NEXT:    li a3, 64
+; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
+; CHECK-RV32-NEXT:    vslidedown.vx v0, v0, a3
+; CHECK-RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; CHECK-RV32-NEXT:    viota.m v16, v0
+; CHECK-RV32-NEXT:    addi a3, sp, 16
+; CHECK-RV32-NEXT:    vs8r.v v16, (a3) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
+; CHECK-RV32-NEXT:    vslidedown.vx v24, v8, a1
+; CHECK-RV32-NEXT:    vl8r.v v16, (a3) # Unknown-size Folded Reload
+; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m4, ta, mu
+; CHECK-RV32-NEXT:    vluxei16.v v24, (a2), v16, v0.t
+; CHECK-RV32-NEXT:    vsetvli zero, zero, e16, m8, ta, ma
+; CHECK-RV32-NEXT:    viota.m v16, v7
+; CHECK-RV32-NEXT:    vmv1r.v v0, v7
+; CHECK-RV32-NEXT:    vsetvli zero, zero, e8, m4, ta, mu
+; CHECK-RV32-NEXT:    vluxei16.v v8, (a0), v16, v0.t
+; CHECK-RV32-NEXT:    li a0, 1024
+; CHECK-RV32-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a1
+; CHECK-RV32-NEXT:    csrr a0, vlenb
+; CHECK-RV32-NEXT:    slli a0, a0, 3
+; CHECK-RV32-NEXT:    add sp, sp, a0
+; CHECK-RV32-NEXT:    addi sp, sp, 16
+; CHECK-RV32-NEXT:    ret
+;
+; CHECK-RV64-LABEL: test_expandload_v1024i8:
+; CHECK-RV64:       # %bb.0:
+; CHECK-RV64-NEXT:    addi sp, sp, -16
+; CHECK-RV64-NEXT:    .cfi_def_cfa_offset 16
+; CHECK-RV64-NEXT:    csrr a1, vlenb
+; CHECK-RV64-NEXT:    slli a1, a1, 4
+; CHECK-RV64-NEXT:    sub sp, sp, a1
+; CHECK-RV64-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x10, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 16 * vlenb
+; CHECK-RV64-NEXT:    vmv1r.v v7, v0
+; CHECK-RV64-NEXT:    li a1, 512
+; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, ta, ma
+; CHECK-RV64-NEXT:    vcpop.m a2, v0
+; CHECK-RV64-NEXT:    add a2, a0, a2
+; CHECK-RV64-NEXT:    li a3, 64
+; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
+; CHECK-RV64-NEXT:    vslidedown.vx v0, v0, a3
+; CHECK-RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; CHECK-RV64-NEXT:    viota.m v24, v0
+; CHECK-RV64-NEXT:    csrr a3, vlenb
+; CHECK-RV64-NEXT:    slli a3, a3, 3
+; CHECK-RV64-NEXT:    add a3, sp, a3
+; CHECK-RV64-NEXT:    addi a3, a3, 16
+; CHECK-RV64-NEXT:    vs8r.v v24, (a3) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
+; CHECK-RV64-NEXT:    vslidedown.vx v16, v8, a1
+; CHECK-RV64-NEXT:    addi a3, sp, 16
+; CHECK-RV64-NEXT:    vs8r.v v16, (a3) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    csrr a3, vlenb
+; CHECK-RV64-NEXT:    slli a3, a3, 3
+; CHECK-RV64-NEXT:    add a3, sp, a3
+; CHECK-RV64-NEXT:    addi a3, a3, 16
+; CHECK-RV64-NEXT:    vl8r.v v24, (a3) # Unknown-size Folded Reload
+; CHECK-RV64-NEXT:    addi a3, sp, 16
+; CHECK-RV64-NEXT:    vl8r.v v16, (a3) # Unknown-size Folded Reload
+; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, ta, mu
+; CHECK-RV64-NEXT:    vluxei16.v v16, (a2), v24, v0.t
+; CHECK-RV64-NEXT:    vmv.v.v v24, v16
+; CHECK-RV64-NEXT:    vsetvli zero, zero, e16, m8, ta, ma
+; CHECK-RV64-NEXT:    viota.m v16, v7
+; CHECK-RV64-NEXT:    vmv1r.v v0, v7
+; CHECK-RV64-NEXT:    vsetvli zero, zero, e8, m4, ta, mu
+; CHECK-RV64-NEXT:    vluxei16.v v8, (a0), v16, v0.t
+; CHECK-RV64-NEXT:    li a0, 1024
+; CHECK-RV64-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
+; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a1
+; CHECK-RV64-NEXT:    csrr a0, vlenb
+; CHECK-RV64-NEXT:    slli a0, a0, 4
+; CHECK-RV64-NEXT:    add sp, sp, a0
+; CHECK-RV64-NEXT:    addi sp, sp, 16
+; CHECK-RV64-NEXT:    ret
+  %res = call <1024 x i8> @llvm.masked.expandload.v1024i8(ptr align 1 %base, <1024 x i1> %mask, <1024 x i8> %passthru)
+  ret <1024 x i8> %res
+}
 
 declare <512 x i8> @llvm.masked.expandload.v512i8(ptr, <512 x i1>, <512 x i8>)
 declare <1024 x i8> @llvm.masked.expandload.v1024i8(ptr, <1024 x i1>, <1024 x i8>)
