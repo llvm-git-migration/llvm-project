@@ -178,6 +178,9 @@ private:
   bool selectRsqrt(Register ResVReg, const SPIRVType *ResType,
                    MachineInstr &I) const;
 
+  bool selectIntegerDot(Register ResVReg, const SPIRVType *ResType,
+                        MachineInstr &I) const;
+
   void renderImm32(MachineInstrBuilder &MIB, const MachineInstr &I,
                    int OpIdx) const;
   void renderFImm32(MachineInstrBuilder &MIB, const MachineInstr &I,
@@ -380,6 +383,20 @@ bool SPIRVInstructionSelector::spvSelect(Register ResVReg,
       MIB.addImm(V);
     return MIB.constrainAllUses(TII, TRI, RBI);
   }
+
+  case TargetOpcode::G_FDOTPROD: {
+    MachineBasicBlock &BB = *I.getParent();
+    return BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpDot))
+        .addDef(ResVReg)
+        .addUse(GR.getSPIRVTypeID(ResType))
+        .addUse(I.getOperand(1).getReg())
+        .addUse(I.getOperand(2).getReg())
+        .constrainAllUses(TII, TRI, RBI);
+  }
+  case TargetOpcode::G_SDOTPROD:
+  case TargetOpcode::G_UDOTPROD:
+    return selectIntegerDot(ResVReg, ResType, I);
+
   case TargetOpcode::G_MEMMOVE:
   case TargetOpcode::G_MEMCPY:
   case TargetOpcode::G_MEMSET:
@@ -1364,6 +1381,58 @@ bool SPIRVInstructionSelector::selectRsqrt(Register ResVReg,
       .addImm(GL::InverseSqrt)
       .addUse(I.getOperand(2).getReg())
       .constrainAllUses(TII, TRI, RBI);
+}
+
+// Since there is no integer dot implementation, expand by piecewise multiplying
+// and adding the results, making use of FMA operations where possible.
+bool SPIRVInstructionSelector::selectIntegerDot(Register ResVReg,
+                                                const SPIRVType *ResType,
+                                                MachineInstr &I) const {
+  assert(I.getNumOperands() == 3);
+  assert(I.getOperand(1).isReg());
+  assert(I.getOperand(2).isReg());
+  MachineBasicBlock &BB = *I.getParent();
+
+  // Multiply the vectors, then sum the results
+  Register Vec0 = I.getOperand(1).getReg();
+  Register Vec1 = I.getOperand(2).getReg();
+  Register TmpVec = MRI->createVirtualRegister(&SPIRV::IDRegClass);
+  SPIRVType *VecType = GR.getSPIRVTypeForVReg(Vec0);
+
+  bool Result = BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpIMulV))
+                    .addDef(TmpVec)
+                    .addUse(GR.getSPIRVTypeID(VecType))
+                    .addUse(Vec0)
+                    .addUse(Vec1)
+                    .constrainAllUses(TII, TRI, RBI);
+
+  Register Elt = MRI->createVirtualRegister(&SPIRV::IDRegClass);
+
+  Result |= BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpCompositeExtract))
+                .addDef(ResVReg)
+                .addUse(GR.getSPIRVTypeID(ResType))
+                .addUse(TmpVec)
+                .addImm(0)
+                .constrainAllUses(TII, TRI, RBI);
+
+  for (unsigned i = 1; i < GR.getScalarOrVectorComponentCount(VecType); i++) {
+    Result |=
+        BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpCompositeExtract))
+            .addDef(Elt)
+            .addUse(GR.getSPIRVTypeID(ResType))
+            .addUse(TmpVec)
+            .addImm(i)
+            .constrainAllUses(TII, TRI, RBI);
+
+    Result |= BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpIAddS))
+                  .addDef(ResVReg)
+                  .addUse(GR.getSPIRVTypeID(ResType))
+                  .addUse(ResVReg)
+                  .addUse(Elt)
+                  .constrainAllUses(TII, TRI, RBI);
+  }
+
+  return Result;
 }
 
 bool SPIRVInstructionSelector::selectBitreverse(Register ResVReg,
