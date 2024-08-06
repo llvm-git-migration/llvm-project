@@ -2513,7 +2513,7 @@ inline bool ArrayDecay(InterpState &S, CodePtr OpPC) {
 }
 
 inline bool CallVar(InterpState &S, CodePtr OpPC, const Function *Func,
-                    uint32_t VarArgSize) {
+                    uint32_t VarArgSize, const Expr *CE) {
   if (Func->hasThisPointer()) {
     size_t ArgSize = Func->getArgSize() + VarArgSize;
     size_t ThisOffset = ArgSize - (Func->hasRVO() ? primSize(PT_Ptr) : 0);
@@ -2540,7 +2540,7 @@ inline bool CallVar(InterpState &S, CodePtr OpPC, const Function *Func,
   if (!CheckCallDepth(S, OpPC))
     return false;
 
-  auto NewFrame = std::make_unique<InterpFrame>(S, Func, OpPC, VarArgSize);
+  auto NewFrame = std::make_unique<InterpFrame>(S, Func, OpPC, CE, VarArgSize);
   InterpFrame *FrameBefore = S.Current;
   S.Current = NewFrame.get();
 
@@ -2563,7 +2563,7 @@ inline bool CallVar(InterpState &S, CodePtr OpPC, const Function *Func,
 }
 
 inline bool Call(InterpState &S, CodePtr OpPC, const Function *Func,
-                 uint32_t VarArgSize) {
+                 uint32_t VarArgSize, const Expr *CE) {
   if (Func->hasThisPointer()) {
     size_t ArgSize = Func->getArgSize() + VarArgSize;
     size_t ThisOffset = ArgSize - (Func->hasRVO() ? primSize(PT_Ptr) : 0);
@@ -2591,7 +2591,7 @@ inline bool Call(InterpState &S, CodePtr OpPC, const Function *Func,
   if (!CheckCallDepth(S, OpPC))
     return false;
 
-  auto NewFrame = std::make_unique<InterpFrame>(S, Func, OpPC, VarArgSize);
+  auto NewFrame = std::make_unique<InterpFrame>(S, Func, OpPC, CE, VarArgSize);
   InterpFrame *FrameBefore = S.Current;
   S.Current = NewFrame.get();
 
@@ -2612,7 +2612,7 @@ inline bool Call(InterpState &S, CodePtr OpPC, const Function *Func,
 }
 
 inline bool CallVirt(InterpState &S, CodePtr OpPC, const Function *Func,
-                     uint32_t VarArgSize) {
+                     uint32_t VarArgSize, const Expr *CE) {
   assert(Func->hasThisPointer());
   assert(Func->isVirtual());
   size_t ArgSize = Func->getArgSize() + VarArgSize;
@@ -2659,7 +2659,7 @@ inline bool CallVirt(InterpState &S, CodePtr OpPC, const Function *Func,
     }
   }
 
-  if (!Call(S, OpPC, Func, VarArgSize))
+  if (!Call(S, OpPC, Func, VarArgSize, CE))
     return false;
 
   // Covariant return types. The return type of Overrider is a pointer
@@ -2686,7 +2686,7 @@ inline bool CallVirt(InterpState &S, CodePtr OpPC, const Function *Func,
 
 inline bool CallBI(InterpState &S, CodePtr &PC, const Function *Func,
                    const CallExpr *CE) {
-  auto NewFrame = std::make_unique<InterpFrame>(S, Func, PC);
+  auto NewFrame = std::make_unique<InterpFrame>(S, Func, PC, CE);
 
   InterpFrame *FrameBefore = S.Current;
   S.Current = NewFrame.get();
@@ -2737,9 +2737,9 @@ inline bool CallPtr(InterpState &S, CodePtr OpPC, uint32_t ArgSize,
     VarArgSize -= align(primSize(PT_Ptr));
 
   if (F->isVirtual())
-    return CallVirt(S, OpPC, F, VarArgSize);
+    return CallVirt(S, OpPC, F, VarArgSize, CE);
 
-  return Call(S, OpPC, F, VarArgSize);
+  return Call(S, OpPC, F, VarArgSize, CE);
 }
 
 inline bool GetFnPtr(InterpState &S, CodePtr OpPC, const Function *Func) {

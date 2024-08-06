@@ -2551,10 +2551,10 @@ bool Compiler<Emitter>::VisitCXXConstructExpr(const CXXConstructExpr *E) {
         VarArgSize +=
             align(primSize(classify(E->getArg(I)->getType()).value_or(PT_Ptr)));
       }
-      if (!this->emitCallVar(Func, VarArgSize, E))
+      if (!this->emitCallVar(Func, VarArgSize, E, E))
         return false;
     } else {
-      if (!this->emitCall(Func, 0, E))
+      if (!this->emitCall(Func, 0, E, E))
         return false;
     }
 
@@ -2588,7 +2588,7 @@ bool Compiler<Emitter>::VisitCXXConstructExpr(const CXXConstructExpr *E) {
           return false;
       }
 
-      if (!this->emitCall(Func, 0, E))
+      if (!this->emitCall(Func, 0, E, E))
         return false;
     }
     return true;
@@ -2799,7 +2799,7 @@ bool Compiler<Emitter>::VisitCXXInheritedCtorInitExpr(
     Offset += align(primSize(PT));
   }
 
-  return this->emitCall(F, 0, E);
+  return this->emitCall(F, 0, E, E);
 }
 
 template <class Emitter>
@@ -4087,7 +4087,7 @@ bool Compiler<Emitter>::VisitCallExpr(const CallExpr *E) {
       for (unsigned I = NumParams, N = E->getNumArgs(); I != N; ++I)
         VarArgSize += align(primSize(classify(E->getArg(I)).value_or(PT_Ptr)));
 
-      if (!this->emitCallVirt(Func, VarArgSize, E))
+      if (!this->emitCallVirt(Func, VarArgSize, E, E))
         return false;
     } else if (Func->isVariadic()) {
       uint32_t VarArgSize = 0;
@@ -4095,10 +4095,10 @@ bool Compiler<Emitter>::VisitCallExpr(const CallExpr *E) {
           Func->getNumWrittenParams() + isa<CXXOperatorCallExpr>(E);
       for (unsigned I = NumParams, N = E->getNumArgs(); I != N; ++I)
         VarArgSize += align(primSize(classify(E->getArg(I)).value_or(PT_Ptr)));
-      if (!this->emitCallVar(Func, VarArgSize, E))
+      if (!this->emitCallVar(Func, VarArgSize, E, E))
         return false;
     } else {
-      if (!this->emitCall(Func, 0, E))
+      if (!this->emitCall(Func, 0, E, E))
         return false;
     }
   } else {
@@ -4705,7 +4705,7 @@ bool Compiler<Emitter>::emitLambdaStaticInvokerBody(const CXXMethodDecl *MD) {
       return false;
   }
 
-  if (!this->emitCall(Func, 0, LambdaCallOp))
+  if (!this->emitCall(Func, 0, nullptr, LambdaCallOp))
     return false;
 
   this->emitCleanup();
@@ -5567,7 +5567,7 @@ bool Compiler<Emitter>::emitRecordDestruction(const Record *R) {
     assert(DtorFunc->getNumParams() == 1);
     if (!this->emitDupPtr(SourceInfo{}))
       return false;
-    if (!this->emitCall(DtorFunc, 0, SourceInfo{}))
+    if (!this->emitCall(DtorFunc, 0, nullptr, SourceInfo{}))
       return false;
   }
 

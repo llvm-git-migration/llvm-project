@@ -872,7 +872,7 @@ static bool runRecordDestructor(InterpState &S, CodePtr OpPC,
       return false;
 
     S.Stk.push<Pointer>(BasePtr);
-    if (!Call(S, OpPC, DtorFunc, 0))
+    if (!Call(S, OpPC, DtorFunc, 0, 0))
       return false;
   }
 
