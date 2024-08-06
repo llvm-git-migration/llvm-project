@@ -162,6 +162,18 @@ for header in public_headers:
 #define erase SYSTEM_RESERVED_NAME
 #define refresh SYSTEM_RESERVED_NAME
 
+// Dinkumware libc ctype.h uses these definitions
+#define _XA SYSTEM_RESERVED_NAME
+#define _XS SYSTEM_RESERVED_NAME
+#define _BB SYSTEM_RESERVED_NAME
+#define _CN SYSTEM_RESERVED_NAME
+#define _DI SYSTEM_RESERVED_NAME
+#define _LO SYSTEM_RESERVED_NAME
+#define _PU SYSTEM_RESERVED_NAME
+#define _SP SYSTEM_RESERVED_NAME
+#define _UP SYSTEM_RESERVED_NAME
+#define _XD SYSTEM_RESERVED_NAME
+
 #include <{header}>
 
 // Make sure we don't swallow the definition of the macros we push/pop
