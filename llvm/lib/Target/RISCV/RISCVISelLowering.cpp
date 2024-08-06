@@ -46,6 +46,7 @@
 #include "llvm/Support/KnownBits.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 #include <optional>
 
 using namespace llvm;
@@ -11142,8 +11143,19 @@ SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
     if (ContainerVT.isFloatingPoint())
       IndexVT = IndexVT.changeVectorElementTypeToInteger();
 
-    if (Subtarget.isRV32() && IndexVT.getVectorElementType().bitsGT(XLenVT))
+    MVT IndexEltVT = IndexVT.getVectorElementType();
+    if (Subtarget.isRV32() && IndexEltVT.bitsGT(XLenVT))
       IndexVT = IndexVT.changeVectorElementType(XLenVT);
+
+    // If index vector is an i8 vector and the element count exceeds 256, we
+    // should change the element type of index vector to i16 to avoid overflow.
+    if (IndexEltVT == MVT::i8 &&
+        VT.getVectorElementCount().getKnownMinValue() > 256) {
+      // FIXME: Don't know how to make LMUL==8 case legal.
+      assert(getLMUL(IndexVT) != RISCVII::LMUL_8 &&
+             "We don't know how to lower LMUL==8 case");
+      IndexVT = IndexVT.changeVectorElementType(MVT::i16);
+    }
 
     Index = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, IndexVT,
                         DAG.getConstant(Intrinsic::riscv_viota, DL, XLenVT),
