@@ -14,12 +14,14 @@
 
 #include <cassert>
 #include <mutex>
+#include <type_traits>
 
-#include "test_macros.h"
-#include "../types.h"
+#include "checking_mutex.h"
+
+static_assert(std::is_nothrow_default_constructible<std::unique_lock<checking_mutex>>::value, "");
 
 int main(int, char**) {
-  std::unique_lock<MyMutex> ul;
+  std::unique_lock<checking_mutex> ul;
   assert(!ul.owns_lock());
   assert(ul.mutex() == nullptr);
 
