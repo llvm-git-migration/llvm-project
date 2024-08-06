@@ -363,7 +363,7 @@ public:
   /// loop iteration.
   std::optional<VectorizationFactor>
   plan(ElementCount UserVF, unsigned UserIC,
-       SmallVector<PointerDiffInfoValues> RTChecks, bool &HasAliasMask);
+       std::optional<ArrayRef<PointerDiffInfo>> DiffChecks, std::function<Value*(const SCEV *)> Expander, bool &HasAliasMask);
 
   /// Use the VPlan-native path to plan how to best vectorize, return the best
   /// VF and its cost.
