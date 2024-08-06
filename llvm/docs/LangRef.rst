@@ -3577,6 +3577,12 @@ seq\_cst total orderings of other operations that are not marked
 Floating-Point Environment
 --------------------------
 
+Unless noted otherwise, LLVM works with IEEE-754 floating-point semantics: LLVM
+backends assume that the CPU is configured to provide IEEE-compatible behavior,
+and LLVM frontends can assume that LLVM IR floating-point operations behave
+according to the IEEE specification (with an :ref:`exception around NaN values
+<floatnan>`).
+
 The default LLVM floating-point environment assumes that traps are disabled and
 status flags are not observable. Therefore, floating-point math operations do
 not have side effects and may be speculated freely. Results assume the
@@ -3608,10 +3614,11 @@ are not "floating-point math operations": ``fneg``, ``llvm.fabs``, and
 ``llvm.copysign``. These operations act directly on the underlying bit
 representation and never change anything except possibly for the sign bit.
 
-For floating-point math operations, unless specified otherwise, the following
-rules apply when a NaN value is returned: the result has a non-deterministic
-sign; the quiet bit and payload are non-deterministically chosen from the
-following set of options:
+Floating-point math operations that return a NaN are an exception from the
+general principle that LLVM implements IEEE-754 semantics. Unless specified
+otherwise, the following rules apply when a NaN value is returned: the result
+has a non-deterministic sign; the quiet bit and payload are
+non-deterministically chosen from the following set of options:
 
 - The quiet bit is set and the payload is all-zero. ("Preferred NaN" case)
 - The quiet bit is set and the payload is copied from any input operand that is
