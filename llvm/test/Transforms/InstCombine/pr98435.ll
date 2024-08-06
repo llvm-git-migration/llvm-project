@@ -4,7 +4,8 @@
 define <2 x i1> @pr98435(<2 x i1> %val0) {
 ; CHECK-LABEL: define <2 x i1> @pr98435(
 ; CHECK-SAME: <2 x i1> [[VAL0:%.*]]) {
-; CHECK-NEXT:    ret <2 x i1> <i1 poison, i1 true>
+; CHECK-NEXT:    [[VAL3:%.*]] = select <2 x i1> <i1 undef, i1 true>, <2 x i1> <i1 true, i1 true>, <2 x i1> [[VAL0]]
+; CHECK-NEXT:    ret <2 x i1> [[VAL3]]
 ;
   %val3 = select <2 x i1> <i1 undef, i1 true>, <2 x i1> <i1 true, i1 true>, <2 x i1> %val0
   ret <2 x i1> %val3

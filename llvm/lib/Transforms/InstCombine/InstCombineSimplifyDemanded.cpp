@@ -1740,9 +1740,13 @@ Value *InstCombinerImpl::SimplifyDemandedVectorElts(Value *V,
         Constant *CElt = CV->getAggregateElement(i);
         if (isa<ConstantExpr>(CElt))
           continue;
+
         // TODO: If a select condition element is undef, we can demand from
         // either side. If one side is known undef, choosing that side would
         // propagate undef.
+        if (isa<UndefValue>(CElt))
+          continue;
+
         if (CElt->isNullValue())
           DemandedLHS.clearBit(i);
         else
