@@ -19,16 +19,25 @@ TEST(LlvmLibcFreeList2, Contruct) {
 }
 
 TEST(LlvmLibcFreeList2, PushPop) {
-  cpp::byte mem[1024];
-  optional<Block<> *> maybeBlock = Block<>::init(mem);
+  cpp::byte mem1[1024];
+  optional<Block<> *> maybeBlock = Block<>::init(mem1);
   ASSERT_TRUE(maybeBlock.has_value());
-  Block<> *block = *maybeBlock;
+  Block<> *block1 = *maybeBlock;
+
+  cpp::byte mem2[1024];
+  maybeBlock = Block<>::init(mem2);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block2 = *maybeBlock;
 
   FreeList2 list;
-  list.push(block);
+  list.push(block1);
   ASSERT_FALSE(list.empty());
-  EXPECT_EQ(&list.front(),
-            reinterpret_cast<const FreeList2::Node *>(block->usable_space()));
+  EXPECT_EQ(list.front(), block1);
+  list.push(block2);
+  EXPECT_EQ(list.front(), block1);
+  list.pop();
+  ASSERT_FALSE(list.empty());
+  EXPECT_EQ(list.front(), block2);
   list.pop();
   EXPECT_TRUE(list.empty());
 }
