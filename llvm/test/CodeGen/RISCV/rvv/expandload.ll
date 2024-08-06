@@ -334,16 +334,6 @@ define <256 x i8> @test_expandload_v256i8_all_ones(ptr %base, <256 x i8> %passth
   ret <256 x i8> %res
 }
 
-declare <1 x i8> @llvm.masked.expandload.v1i8(ptr, <1 x i1>, <1 x i8>)
-declare <2 x i8> @llvm.masked.expandload.v2i8(ptr, <2 x i1>, <2 x i8>)
-declare <4 x i8> @llvm.masked.expandload.v4i8(ptr, <4 x i1>, <4 x i8>)
-declare <8 x i8> @llvm.masked.expandload.v8i8(ptr, <8 x i1>, <8 x i8>)
-declare <16 x i8> @llvm.masked.expandload.v16i8(ptr, <16 x i1>, <16 x i8>)
-declare <32 x i8> @llvm.masked.expandload.v32i8(ptr, <32 x i1>, <32 x i8>)
-declare <64 x i8> @llvm.masked.expandload.v64i8(ptr, <64 x i1>, <64 x i8>)
-declare <128 x i8> @llvm.masked.expandload.v128i8(ptr, <128 x i1>, <128 x i8>)
-declare <256 x i8> @llvm.masked.expandload.v256i8(ptr, <256 x i1>, <256 x i8>)
-
 ; Load + expand for i16 type
 
 define <1 x i16> @test_expandload_v1i16(ptr %base, <1 x i1> %mask, <1 x i16> %passthru) {
@@ -659,15 +649,6 @@ define <128 x i16> @test_expandload_v128i16_all_ones(ptr %base, <128 x i16> %pas
   ret <128 x i16> %res
 }
 
-declare <1 x i16> @llvm.masked.expandload.v1i16(ptr, <1 x i1>, <1 x i16>)
-declare <2 x i16> @llvm.masked.expandload.v2i16(ptr, <2 x i1>, <2 x i16>)
-declare <4 x i16> @llvm.masked.expandload.v4i16(ptr, <4 x i1>, <4 x i16>)
-declare <8 x i16> @llvm.masked.expandload.v8i16(ptr, <8 x i1>, <8 x i16>)
-declare <16 x i16> @llvm.masked.expandload.v16i16(ptr, <16 x i1>, <16 x i16>)
-declare <32 x i16> @llvm.masked.expandload.v32i16(ptr, <32 x i1>, <32 x i16>)
-declare <64 x i16> @llvm.masked.expandload.v64i16(ptr, <64 x i1>, <64 x i16>)
-declare <128 x i16> @llvm.masked.expandload.v128i16(ptr, <128 x i1>, <128 x i16>)
-
 ; Load + expand for i32 type
 
 define <1 x i32> @test_expandload_v1i32(ptr %base, <1 x i1> %mask, <1 x i32> %passthru) {
@@ -934,14 +915,6 @@ define <64 x i32> @test_expandload_v64i32_all_ones(ptr %base, <64 x i32> %passth
   ret <64 x i32> %res
 }
 
-declare <1 x i32> @llvm.masked.expandload.v1i32(ptr, <1 x i1>, <1 x i32>)
-declare <2 x i32> @llvm.masked.expandload.v2i32(ptr, <2 x i1>, <2 x i32>)
-declare <4 x i32> @llvm.masked.expandload.v4i32(ptr, <4 x i1>, <4 x i32>)
-declare <8 x i32> @llvm.masked.expandload.v8i32(ptr, <8 x i1>, <8 x i32>)
-declare <16 x i32> @llvm.masked.expandload.v16i32(ptr, <16 x i1>, <16 x i32>)
-declare <32 x i32> @llvm.masked.expandload.v32i32(ptr, <32 x i1>, <32 x i32>)
-declare <64 x i32> @llvm.masked.expandload.v64i32(ptr, <64 x i1>, <64 x i32>)
-
 ; Load + expand for i64 type
 
 define <1 x i64> @test_expandload_v1i64(ptr %base, <1 x i1> %mask, <1 x i64> %passthru) {
@@ -1192,16 +1165,9 @@ define <32 x i64> @test_expandload_v32i64_all_ones(ptr %base, <32 x i64> %passth
   ret <32 x i64> %res
 }
 
-declare <1 x i64> @llvm.masked.expandload.v1i64(ptr, <1 x i1>, <1 x i64>)
-declare <2 x i64> @llvm.masked.expandload.v2i64(ptr, <2 x i1>, <2 x i64>)
-declare <4 x i64> @llvm.masked.expandload.v4i64(ptr, <4 x i1>, <4 x i64>)
-declare <8 x i64> @llvm.masked.expandload.v8i64(ptr, <8 x i1>, <8 x i64>)
-declare <16 x i64> @llvm.masked.expandload.v16i64(ptr, <16 x i1>, <16 x i64>)
-declare <32 x i64> @llvm.masked.expandload.v32i64(ptr, <32 x i1>, <32 x i64>)
-
 ; Tests that will exceed the range of i8 index.
 
-define <512 x i8> @test_expandload_v512i8(ptr %base, <512 x i1> %mask, <512 x i8> %passthru) "target-features"="+zvl1024b" {
+define <512 x i8> @test_expandload_v512i8(ptr %base, <512 x i1> %mask, <512 x i8> %passthru) vscale_range(16, 1024) {
 ; CHECK-LABEL: test_expandload_v512i8:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    li a1, 512
@@ -1213,12 +1179,3 @@ define <512 x i8> @test_expandload_v512i8(ptr %base, <512 x i1> %mask, <512 x i8
   %res = call <512 x i8> @llvm.masked.expandload.v512i8(ptr align 1 %base, <512 x i1> %mask, <512 x i8> %passthru)
   ret <512 x i8> %res
 }
-
-; FIXME: Don't know how to make it legal.
-; define <1024 x i8> @test_expandload_v1024i8(ptr %base, <1024 x i1> %mask, <1024 x i8> %passthru) "target-features"="+zvl1024b" {
-;   %res = call <1024 x i8> @llvm.masked.expandload.v1024i8(ptr align 1 %base, <1024 x i1> %mask, <1024 x i8> %passthru)
-;   ret <1024 x i8> %res
-; }
-
-declare <512 x i8> @llvm.masked.expandload.v512i8(ptr, <512 x i1>, <512 x i8>)
-declare <1024 x i8> @llvm.masked.expandload.v1024i8(ptr, <1024 x i1>, <1024 x i8>)

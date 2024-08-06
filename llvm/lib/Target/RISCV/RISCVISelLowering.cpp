@@ -11151,9 +11151,9 @@ SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
     // should change the element type of index vector to i16 to avoid overflow.
     if (IndexEltVT == MVT::i8 &&
         VT.getVectorElementCount().getKnownMinValue() > 256) {
-      // FIXME: Don't know how to make LMUL==8 case legal.
-      assert(getLMUL(IndexVT) != RISCVII::LMUL_8 &&
-             "We don't know how to lower LMUL==8 case");
+      // FIXME: We need to do vector splitting manually for LMUL=8 cases.
+      if (getLMUL(IndexVT) == RISCVII::LMUL_8)
+        return SDValue();
       IndexVT = IndexVT.changeVectorElementType(MVT::i16);
     }
 
