@@ -9,35 +9,26 @@
 #include <stddef.h>
 
 #include "src/__support/freelist2.h"
-#include "src/__support/freelist2.h"
 #include "test/UnitTest/Test.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
-TEST(LlvmLibcFreeList2, DefaultListIsEmpty) {
+TEST(LlvmLibcFreeList2, Contruct) {
   FreeList2 list;
   EXPECT_TRUE(list.empty());
 }
 
-TEST(LlvmLibcFreeList2, PushMakesListNonEmpty) {
+TEST(LlvmLibcFreeList2, PushPop) {
   cpp::byte mem[1024];
-  optional<Block<>*> maybeBlock = Block<>::init(mem);
+  optional<Block<> *> maybeBlock = Block<>::init(mem);
   ASSERT_TRUE(maybeBlock.has_value());
-  Block<>* block = *maybeBlock;
+  Block<> *block = *maybeBlock;
 
   FreeList2 list;
   list.push(block);
-  EXPECT_FALSE(list.empty());
-}
-
-TEST(LlvmLibcFreeList2, PushPopEmptiesList) {
-  cpp::byte mem[1024];
-  optional<Block<>*> maybeBlock = Block<>::init(mem);
-  ASSERT_TRUE(maybeBlock.has_value());
-  Block<>* block = *maybeBlock;
-
-  FreeList2 list;
-  list.push(block);
+  ASSERT_FALSE(list.empty());
+  EXPECT_EQ(&list.front(),
+            reinterpret_cast<const FreeList2::Node *>(block->usable_space()));
   list.pop();
   EXPECT_TRUE(list.empty());
 }

@@ -15,10 +15,10 @@ namespace LIBC_NAMESPACE_DECL {
 
 class FreeList2 {
 public:
-  class Node {
-  };
+  class Node {};
 
   bool empty() const { return !begin_; }
+  const Node &front() const;
 
   void push(Block<> *block);
   void pop();
@@ -26,6 +26,11 @@ public:
 private:
   Node *begin_ = nullptr;
 };
+
+const FreeList2::Node &FreeList2::front() const {
+  LIBC_ASSERT(!empty());
+  return *begin_;
+}
 
 LIBC_INLINE void FreeList2::push(Block<> *block) {
   Node *node = new (block->usable_space()) Node;
@@ -39,5 +44,5 @@ LIBC_INLINE void FreeList2::pop() {
 }
 
 } // namespace LIBC_NAMESPACE_DECL
-  
+
 #endif // LLVM_LIBC_SRC___SUPPORT_FREELIST2_H
