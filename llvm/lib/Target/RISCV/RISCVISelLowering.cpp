@@ -11096,95 +11096,6 @@ RISCVTargetLowering::lowerFixedLengthVectorStoreToRVV(SDValue Op,
       Store->getMemoryVT(), Store->getMemOperand());
 }
 
-SDValue RISCVTargetLowering::splitMaskedExpandingLoad(SDValue Op,
-                                                      SelectionDAG &DAG) const {
-  SDLoc DL(Op);
-  MVT VT = Op.getSimpleValueType();
-  auto *MLD = cast<MaskedLoadSDNode>(Op);
-  MVT XLenVT = Subtarget.getXLenVT();
-  auto [LoVT, HiVT] = DAG.GetSplitDestVTs(MLD->getValueType(0));
-
-  SDValue Chain = MLD->getChain();
-  SDValue Ptr = MLD->getBasePtr();
-  SDValue Offset = MLD->getOffset();
-  SDValue Mask = MLD->getMask();
-  SDValue Passthru = MLD->getPassThru();
-  Align Alignment = MLD->getOriginalAlign();
-  ISD::LoadExtType ExtType = MLD->getExtensionType();
-
-  // Split Mask operand
-  auto [MaskLo, MaskHi] = DAG.SplitVector(Mask, DL);
-
-  EVT MemoryVT = MLD->getMemoryVT();
-  bool HiIsEmpty = false;
-  auto [LoMemVT, HiMemVT] =
-      DAG.GetDependentSplitDestVTs(MemoryVT, LoVT, &HiIsEmpty);
-
-  // Split PassThru operand
-  auto [PassthruLo, PassthruHi] = DAG.SplitVector(Passthru, DL);
-
-  MachineMemOperand *MMO = DAG.getMachineFunction().getMachineMemOperand(
-      MLD->getPointerInfo(), MachineMemOperand::MOLoad,
-      LocationSize::beforeOrAfterPointer(), Alignment, MLD->getAAInfo(),
-      MLD->getRanges());
-
-  SDValue Lo, Hi;
-  Lo = DAG.getMaskedLoad(LoVT, DL, Chain, Ptr, Offset, MaskLo, PassthruLo,
-                         LoMemVT, MMO, MLD->getAddressingMode(), ExtType,
-                         /*IsExpanding=*/true);
-
-  if (HiIsEmpty) {
-    // The hi masked load has zero storage size. We therefore simply set it to
-    // the low masked load and rely on subsequent removal from the chain.
-    Hi = Lo;
-  } else {
-    EVT MaskVT = MaskLo.getValueType();
-    SDValue VL = DAG.getConstant(MaskVT.getVectorNumElements(), DL, XLenVT);
-
-    MVT MaskContainerVT =
-        getContainerForFixedLengthVector(MaskVT.getSimpleVT());
-    MaskLo = convertToScalableVector(MaskContainerVT, MaskLo, DAG, Subtarget);
-
-    SDValue Increment = DAG.getNode(
-        RISCVISD::VCPOP_VL, DL, XLenVT, MaskLo,
-        getAllOnesMask(MaskLo.getSimpleValueType(), VL, DL, DAG), VL);
-
-    // Scale is an element size in bytes.
-    SDValue Scale =
-        DAG.getConstant(LoMemVT.getScalarSizeInBits() / 8, DL, XLenVT);
-    Increment = DAG.getNode(ISD::MUL, DL, XLenVT, Increment, Scale);
-
-    Ptr = DAG.getNode(ISD::ADD, DL, XLenVT, Ptr, Increment);
-
-    MachinePointerInfo MPI;
-    if (LoMemVT.isScalableVector())
-      MPI = MachinePointerInfo(MLD->getPointerInfo().getAddrSpace());
-    else
-      MPI = MLD->getPointerInfo().getWithOffset(
-          LoMemVT.getStoreSize().getFixedValue());
-
-    MMO = DAG.getMachineFunction().getMachineMemOperand(
-        MPI, MachineMemOperand::MOLoad, LocationSize::beforeOrAfterPointer(),
-        Alignment, MLD->getAAInfo(), MLD->getRanges());
-
-    Hi = DAG.getMaskedLoad(HiVT, DL, Chain, Ptr, Offset, MaskHi, PassthruHi,
-                           HiMemVT, MMO, MLD->getAddressingMode(), ExtType,
-                           /*IsExpanding=*/true);
-  }
-
-  // Build a factor node to remember that this load is independent of the
-  // other one.
-  Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, Lo.getValue(1),
-                      Hi.getValue(1));
-
-  // Legalize the chain result - switch anything that used the old chain to
-  // use the new one.
-  DAG.ReplaceAllUsesOfValueWith(SDValue(MLD, 1), Chain);
-
-  return DAG.getMergeValues(
-      {DAG.getNode(ISD::CONCAT_VECTORS, DL, VT, Lo, Hi), Chain}, DL);
-}
-
 SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
                                              SelectionDAG &DAG) const {
   SDLoc DL(Op);
@@ -11240,10 +11151,9 @@ SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
     // should change the element type of index vector to i16 to avoid overflow.
     if (IndexEltVT == MVT::i8 &&
         VT.getVectorElementCount().getKnownMinValue() > 256) {
-      // If this will result in illegal types, we split it into two loads.
-      if (getLMUL(IndexVT) == RISCVII::LMUL_8)
-        return splitMaskedExpandingLoad(Op, DAG);
-
+      // FIXME: Don't know how to make LMUL==8 case legal.
+      assert(getLMUL(IndexVT) != RISCVII::LMUL_8 &&
+             "We don't know how to lower LMUL==8 case");
       IndexVT = IndexVT.changeVectorElementType(MVT::i16);
     }
 
