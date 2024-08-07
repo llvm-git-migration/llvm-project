@@ -15,7 +15,6 @@
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/PatternMatch.h"
-#include "llvm/Support/TypeSize.h"
 #include <cmath>
 #include <optional>
 using namespace llvm;
