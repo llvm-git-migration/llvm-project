@@ -649,6 +649,11 @@ private:
   void addReadAdvance(Record *ProcReadAdvanceDef, unsigned PIdx);
 };
 
+/// Verifies that there are no duplicate records with the same "Name" field.
+/// If there are, reports a fatal error message (and exits). Assumes that
+/// Records are sorted on the "Name" field.
+void checkDuplicateRecords(ArrayRef<Record *> Records, StringRef ObjectName);
+
 } // namespace llvm
 
 #endif
