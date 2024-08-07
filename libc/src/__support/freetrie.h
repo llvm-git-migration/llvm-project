@@ -13,22 +13,10 @@
 
 namespace LIBC_NAMESPACE_DECL {
 
-/// A trie representing a map of free lists covering a contiguous SizeRange.
+/// A trie node containing a free list. The subtrie contains a contiguous
+/// SizeRange of freelists.There is no relationship between the size of this
+/// free list and the size ranges of the subtries.
 class FreeTrie : public FreeList2 {
-private:
-  // A subtrie of free lists covering a contiguous SizeRange. This is also a
-  // free list with a size somewhere within the range. There is no relationship
-  // between the size of this free list and the sizes of the lower and upper
-  // subtries.
-  struct Node : public FreeList2::Node {
-    // The containing trie or nullptr if this is the root.
-    Node *parent;
-    // The child subtrie covering the lower half of this subtrie's size range.
-    Node *lower;
-    // The child subtrie covering the upper half of this subtrie's size range.
-    Node *upper;
-  };
-
 public:
   // Power-of-two range of sizes covered by a subtrie.
   class SizeRange {
@@ -49,15 +37,18 @@ public:
     size_t width;
   };
 
-  // Blocks with inner sizes smaller than this must not be pushed.
-  static constexpr size_t MIN_INNER_SIZE = sizeof(Node);
+  /// Push to the back of this node's free list.
+  static void push(FreeTrie *&trie, Block<> *block);
 
-  /// Push to this freelist.
-  void push(Block<> *block);
+  /// Pop from the front of this node's free list.
+  static void pop(FreeTrie *&trie);
 
-  /// Push to the correctly-sized freelist. The caller must provide the size
-  /// range for this trie, since it isn't stored within.
-  void push(Block<> *block, SizeRange range);
+  // The containing trie or nullptr if this is the root.
+  FreeTrie *parent;
+  // The child subtrie covering the lower half of this subtrie's size range.
+  FreeTrie *lower;
+  // The child subtrie covering the upper half of this subtrie's size range.
+  FreeTrie *upper;
 };
 
 LIBC_INLINE FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
@@ -75,22 +66,28 @@ LIBC_INLINE size_t FreeTrie::SizeRange::middle() const {
   return min + width / 2;
 }
 
-LIBC_INLINE void FreeTrie::push(Block<> *block) {
-  LIBC_ASSERT(block->inner_size() >= MIN_INNER_SIZE &&
-              "block too small to accomodate free list node");
-  Node *node = new (block->usable_space()) Node;
-  if (empty())
+LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
+  LIBC_ASSERT(block->inner_size() >= sizeof(FreeTrie) &&
+              "block too small to accomodate free trie node");
+  FreeTrie *node = new (block->usable_space()) FreeTrie;
+  // The trie links are irrelevant for all but the first node in the free list.
+  if (!trie)
     node->parent = node->lower = node->upper = nullptr;
-  FreeList2::push(node);
+  FreeList2 *list = trie;
+  FreeList2::push(list, node);
+  trie = static_cast<FreeTrie *>(list);
 }
 
-LIBC_INLINE void FreeTrie::push(Block<> *block, SizeRange range) {
-  if (empty() || block->outer_size() == front()->outer_size()) {
-    push(block);
-    return;
+LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
+  FreeList2 *list = trie;
+  FreeList2::pop(list);
+  FreeTrie *new_trie = static_cast<FreeTrie*>(list);
+  if (new_trie) {
+    new_trie->parent = trie->parent;
+    new_trie->lower = trie->lower;
+    new_trie->upper = trie->upper;
   }
-
-  // TODO;
+  trie = new_trie;
 }
 
 } // namespace LIBC_NAMESPACE_DECL

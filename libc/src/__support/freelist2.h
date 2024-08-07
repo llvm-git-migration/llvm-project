@@ -13,69 +13,59 @@
 
 namespace LIBC_NAMESPACE_DECL {
 
-/// A FIFO free-list storing Blocks of the same size.
+/// A circularly-linked FIFO list node storing a free Block. A list is a
+/// FreeList2*; nullptr is an empty list. All Blocks on a list are the same
+/// size.
 class FreeList2 {
-protected:
-  // A circular doubly-linked node.
-  struct Node {
-    Node *prev;
-    Node *next;
-  };
-
 public:
-  // Blocks with inner sizes smaller than this must not be pushed.
-  static constexpr size_t MIN_INNER_SIZE = sizeof(Node);
+  Block<> *block() const {
+    return const_cast<Block<> *>(Block<>::from_usable_space(this));
+  }
 
-  bool empty() const { return !begin_; }
-  Block<> *front() const;
-
-  /// Push to the back.
-  void push(Block<> *block);
+  /// Push to the back. The Block must be able to contain a FreeList2.
+  static void push(FreeList2 *&list, Block<> *block);
 
   /// Pop the front.
-  void pop();
+  static void pop(FreeList2 *&list);
 
 protected:
   /// Push an already-constructed node to the back.
-  void push(Node *node);
+  static void push(FreeList2 *&list, FreeList2 *node);
 
 private:
-  Node *begin_ = nullptr;
+  // Circularly linked pointers to adjacent nodes.
+  FreeList2 *prev;
+  FreeList2 *next;
 };
 
-LIBC_INLINE Block<> *FreeList2::front() const {
-  LIBC_ASSERT(!empty());
-  return Block<>::from_usable_space(begin_);
-}
-
-LIBC_INLINE void FreeList2::push(Block<> *block) {
-  LIBC_ASSERT(block->inner_size() >= MIN_INNER_SIZE &&
+LIBC_INLINE void FreeList2::push(FreeList2 *&list, Block<> *block) {
+  LIBC_ASSERT(block->inner_size() >= sizeof(FreeList2) &&
               "block too small to accomodate free list node");
-  push(new (block->usable_space()) Node);
+  push(list, new (block->usable_space()) FreeList2);
 }
 
-LIBC_INLINE void FreeList2::pop() {
-  LIBC_ASSERT(!empty());
-  if (begin_->next == begin_) {
-    begin_ = nullptr;
+LIBC_INLINE void FreeList2::pop(FreeList2 *&list) {
+  LIBC_ASSERT(list != nullptr && "cannot pop from empty list");
+  if (list->next == list) {
+    list = nullptr;
   } else {
-    begin_->prev->next = begin_->next;
-    begin_->next->prev = begin_->prev;
-    begin_ = begin_->next;
+    list->prev->next = list->next;
+    list->next->prev = list->prev;
+    list = list->next;
   }
 }
 
-LIBC_INLINE void FreeList2::push(Node *node) {
-  if (begin_) {
+LIBC_INLINE void FreeList2::push(FreeList2 *&list, FreeList2 *node) {
+  if (list) {
     LIBC_ASSERT(Block<>::from_usable_space(node)->outer_size() ==
-                    front()->outer_size() &&
+                    list->block()->outer_size() &&
                 "freelist entries must have the same size");
-    node->prev = begin_->prev;
-    node->next = begin_;
-    begin_->prev->next = node;
-    begin_->prev = node;
+    node->prev = list->prev;
+    node->next = list;
+    list->prev->next = node;
+    list->prev = node;
   } else {
-    begin_ = node->prev = node->next = node;
+    list = node->prev = node->next = node;
   }
 }
 
