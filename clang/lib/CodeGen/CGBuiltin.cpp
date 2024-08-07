@@ -3564,7 +3564,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
                                              /*EmittedE=*/nullptr, IsDynamic));
   }
   case Builtin::BI__builtin_get_counted_by: {
-    llvm::Value *Result = nullptr;
+    llvm::Value *Result =
+        llvm::ConstantPointerNull::get(cast<llvm::PointerType>(ConvertType(E->getType())));
 
     if (const MemberExpr *ME =
             dyn_cast<MemberExpr>(E->getArg(0)->IgnoreImpCasts())) {
@@ -3580,8 +3581,6 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
         const FieldDecl *FAMDecl = dyn_cast<FieldDecl>(ME->getMemberDecl());
         if (const FieldDecl *CountFD = FindCountedByField(FAMDecl))
           Result = GetCountedByFieldExprGEP(ME, FAMDecl, CountFD);
-      } else {
-        Result = llvm::ConstantPointerNull::get(cast<llvm::PointerType>(ConvertType(E->getType())));
       }
     }
 
