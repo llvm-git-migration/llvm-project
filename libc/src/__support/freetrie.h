@@ -35,13 +35,13 @@ public:
   public:
     SizeRange(size_t min, size_t width);
 
-    /// Return the lower half of the size range.
+    /// @returns The lower half of the size range.
     SizeRange lower() const;
 
-    /// Return the lower half of the size range.
+    /// @returns The lower half of the size range.
     SizeRange upper() const;
 
-    /// Return the split point between lower and upper.
+    /// @returns The split point between lower and upper.
     size_t middle() const;
 
   private:
@@ -78,7 +78,19 @@ LIBC_INLINE size_t FreeTrie::SizeRange::middle() const {
 LIBC_INLINE void FreeTrie::push(Block<> *block) {
   LIBC_ASSERT(block->inner_size() >= MIN_INNER_SIZE &&
               "block too small to accomodate free list node");
-  FreeList2::push(new (block->usable_space()) Node);
+  Node *node = new (block->usable_space()) Node;
+  if (empty())
+    node->parent = node->lower = node->upper = nullptr;
+  FreeList2::push(node);
+}
+
+LIBC_INLINE void FreeTrie::push(Block<> *block, SizeRange range) {
+  if (empty() || block->outer_size() == front()->outer_size()) {
+    push(block);
+    return;
+  }
+
+  // TODO;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
