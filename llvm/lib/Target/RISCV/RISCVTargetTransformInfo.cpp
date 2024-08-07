@@ -15,6 +15,7 @@
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/PatternMatch.h"
+#include "llvm/Support/TypeSize.h"
 #include <cmath>
 #include <optional>
 using namespace llvm;
@@ -2293,6 +2294,13 @@ bool RISCVTTIImpl::isLegalMaskedExpandLoad(Type *DataTy, Align Alignment) {
 
   if (!isLegalMaskedLoadStore(DataTy, Alignment))
     return false;
+
+  // FIXME: If it is an i8 vector and the element count exceeds 256, we should
+  // scalarize these types with LMUL >= maximum fixed-length LMUL.
+  if (VTy->getElementType()->isIntegerTy(8))
+    if (VTy->getElementCount().getFixedValue() > 256)
+      return VTy->getPrimitiveSizeInBits() / ST->getRealMinVLen() <
+             ST->getMaxLMULForFixedLengthVectors();
   return true;
 }
 
