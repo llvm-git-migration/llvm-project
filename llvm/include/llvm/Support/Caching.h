@@ -16,6 +16,14 @@
 #define LLVM_SUPPORT_CACHING_H
 
 #include "llvm/Support/Error.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/Support/raw_ostream.h"
+#include <functional>
+#include <memory>
+#include <stddef.h>
+#include <string>
+#include <utility>
 
 namespace llvm {
 

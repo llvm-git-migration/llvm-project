@@ -17,11 +17,19 @@
 #define LLVM_ADT_DYNAMICAPINT_H
 
 #include "llvm/ADT/SlowDynamicAPInt.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/Hashing.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/MathExtras.h"
-#include "llvm/Support/raw_ostream.h"
+#include <assert.h>
+#include <limits>
+#include <new>
 #include <numeric>
+#include <stdint.h>
 
 namespace llvm {
+class raw_ostream;
+
 /// This class provides support for dynamic arbitrary-precision arithmetic.
 ///
 /// Unlike APInt, this extends the precision as necessary to prevent overflows

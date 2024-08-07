@@ -14,11 +14,19 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/SpecialCaseList.h"
+#include "llvm/ADT/StringMapEntry.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/ADT/iterator.h"
+#include "llvm/Support/Errc.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/VirtualFileSystem.h"
+#include <optional>
 #include <stdio.h>
 #include <string>
+#include <string.h>
 #include <system_error>
 #include <utility>
 

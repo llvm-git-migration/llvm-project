@@ -10,9 +10,14 @@
 #define LLVM_SUPPORT_CSKYATTRIBUTEPARSER_H
 
 #include "llvm/Support/CSKYAttributes.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ELFAttributeParser.h"
+#include "llvm/Support/Error.h"
+#include <stdint.h>
 
 namespace llvm {
+class ScopedPrinter;
+
 class CSKYAttributeParser : public ELFAttributeParser {
   struct DisplayHandler {
     CSKYAttrs::AttrType attribute;

@@ -16,12 +16,14 @@
 #define LLVM_ADT_APINT_H
 
 #include "llvm/Support/Compiler.h"
+#include "llvm/ADT/bit.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/float128.h"
 #include <cassert>
 #include <climits>
 #include <cstring>
 #include <optional>
+#include <stdint.h>
 #include <utility>
 
 namespace llvm {

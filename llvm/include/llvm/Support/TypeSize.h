@@ -16,9 +16,8 @@
 #define LLVM_SUPPORT_TYPESIZE_H
 
 #include "llvm/Support/MathExtras.h"
+#include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/Support/raw_ostream.h"
-
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <type_traits>

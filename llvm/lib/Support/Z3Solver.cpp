@@ -6,15 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ADT/ScopeExit.h"
-#include "llvm/Config/config.h"
-#include "llvm/Support/NativeFormatting.h"
+#include "llvm/Config/llvm-config.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SMTAPI.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
 #if LLVM_WITH_Z3
 
+#include <z3.h>
+#include <set>
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/Twine.h"
 

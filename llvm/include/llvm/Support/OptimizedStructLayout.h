@@ -37,6 +37,8 @@
 
 #include "llvm/Support/Alignment.h"
 #include "llvm/ADT/ArrayRef.h"
+#include <assert.h>
+#include <stdint.h>
 #include <utility>
 
 namespace llvm {
