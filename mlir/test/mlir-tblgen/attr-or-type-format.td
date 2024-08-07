@@ -663,6 +663,26 @@ def TypeO : TestType<"TestQ"> {
   let assemblyFormat = "(custom<AB>($a)^ `x`) : (`y`)?";
 }
 
+// TYPE: ::llvm::LogicalResult TestPType::verifyInvariantsImpl(::llvm::function_ref<::mlir::InFlightDiagnostic()> emitError, ::mlir::Type a) {
+// TYPE:   if (!(((a.isSignlessInteger(16))) || ((a.isSignlessInteger(32))))) {
+// TYPE:     emitError() << "failed to verify 'a': 16-bit signless integer or 32-bit signless integer";
+// TYPE:     return ::mlir::failure();
+// TYPE:   }
+// TYPE:   return ::mlir::success();
+// TYPE: }
+
+// TYPE: ::llvm::LogicalResult TestPType::verifyInvariants(::llvm::function_ref<::mlir::InFlightDiagnostic()> emitError, ::mlir::Type a) {
+// TYPE:   if (::mlir::failed(verifyInvariantsImpl(emitError, a)))
+// TYPE:     return ::mlir::failure();
+// TYPE:   return ::mlir::success();
+// TYPE: }
+
+def TypeP : TestType<"TestP"> {
+  let parameters = (ins AnyTypeOf<[I16, I32]>:$a);
+  let mnemonic = "type_p";
+  let assemblyFormat = "$a";
+}
+
 // DEFAULT_TYPE_PARSER: TestDialect::parseType(::mlir::DialectAsmParser &parser)
 // DEFAULT_TYPE_PARSER: auto parseResult = parseOptionalDynamicType(mnemonic, parser, genType);
 // DEFAULT_TYPE_PARSER: if (parseResult.has_value()) {
