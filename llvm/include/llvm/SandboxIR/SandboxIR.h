@@ -713,27 +713,43 @@ public:
 #endif
 };
 
-class SelectInst : public Instruction {
-  /// Use Context::createSelectInst(). Don't call the
-  /// constructor directly.
-  SelectInst(llvm::SelectInst *CI, Context &Ctx)
-      : Instruction(ClassID::Select, Opcode::Select, CI, Ctx) {}
-  friend Context; // for SelectInst()
+/// Instructions that contain a single LLVM Instruction can inherit from this.
+class SingleLLVMInstructionImpl : public Instruction {
+  SingleLLVMInstructionImpl(ClassID ID, Opcode Opc, llvm::Instruction *I,
+                            sandboxir::Context &SBCtx)
+      : Instruction(ID, Opc, I, SBCtx) {}
+
+  // All instructions are friends with this so they can call the constructor.
+#define DEF_INSTR(ID, OPC, CLASS) friend class CLASS;
+#include "llvm/SandboxIR/SandboxIRValues.def"
+  friend class UnaryInstruction;
+  friend class CallBase;
+
   Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
     return getOperandUseDefault(OpIdx, Verify);
   }
   SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
     return {cast<llvm::Instruction>(Val)};
   }
-  static Value *createCommon(Value *Cond, Value *True, Value *False,
-                             const Twine &Name, IRBuilder<> &Builder,
-                             Context &Ctx);
 
 public:
   unsigned getUseOperandNo(const Use &Use) const final {
     return getUseOperandNoDefault(Use);
   }
   unsigned getNumOfIRInstrs() const final { return 1u; }
+};
+
+class SelectInst : public SingleLLVMInstructionImpl {
+  /// Use Context::createSelectInst(). Don't call the
+  /// constructor directly.
+  SelectInst(llvm::SelectInst *CI, Context &Ctx)
+      : SingleLLVMInstructionImpl(ClassID::Select, Opcode::Select, CI, Ctx) {}
+  friend Context; // for SelectInst()
+  static Value *createCommon(Value *Cond, Value *True, Value *False,
+                             const Twine &Name, IRBuilder<> &Builder,
+                             Context &Ctx);
+
+public:
   static Value *create(Value *Cond, Value *True, Value *False,
                        Instruction *InsertBefore, Context &Ctx,
                        const Twine &Name = "");
@@ -759,18 +775,12 @@ public:
 #endif
 };
 
-class InsertElementInst final : public Instruction {
+class InsertElementInst final : public SingleLLVMInstructionImpl {
   /// Use Context::createInsertElementInst() instead.
   InsertElementInst(llvm::Instruction *I, Context &Ctx)
-      : Instruction(ClassID::InsertElement, Opcode::InsertElement, I, Ctx) {}
-  friend class Context; // For accessing the constructor in
-                        // create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
+      : SingleLLVMInstructionImpl(ClassID::InsertElement, Opcode::InsertElement,
+                                  I, Ctx) {}
+  friend class Context; // For accessing the constructor in create*()
 
 public:
   static Value *create(Value *Vec, Value *NewElt, Value *Idx,
@@ -787,10 +797,6 @@ public:
     return llvm::InsertElementInst::isValidOperands(Vec->Val, NewElt->Val,
                                                     Idx->Val);
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
 #ifndef NDEBUG
   void verify() const final {
     assert(isa<llvm::InsertElementInst>(Val) && "Expected InsertElementInst");
@@ -805,23 +811,13 @@ public:
 #endif
 };
 
-class BranchInst : public Instruction {
+class BranchInst : public SingleLLVMInstructionImpl {
   /// Use Context::createBranchInst(). Don't call the constructor directly.
   BranchInst(llvm::BranchInst *BI, Context &Ctx)
-      : Instruction(ClassID::Br, Opcode::Br, BI, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::Br, Opcode::Br, BI, Ctx) {}
   friend Context; // for BranchInst()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   static BranchInst *create(BasicBlock *IfTrue, Instruction *InsertBefore,
                             Context &Ctx);
   static BranchInst *create(BasicBlock *IfTrue, BasicBlock *InsertAtEnd,
@@ -900,11 +896,11 @@ public:
 };
 
 /// An abstract class, parent of unary instructions.
-class UnaryInstruction : public Instruction {
+class UnaryInstruction : public SingleLLVMInstructionImpl {
 protected:
   UnaryInstruction(ClassID ID, Opcode Opc, llvm::Instruction *LLVMI,
                    Context &Ctx)
-      : Instruction(ID, Opc, LLVMI, Ctx) {}
+      : SingleLLVMInstructionImpl(ID, Opc, LLVMI, Ctx) {}
 
 public:
   static bool classof(const Instruction *I) {
@@ -920,23 +916,13 @@ class LoadInst final : public UnaryInstruction {
   LoadInst(llvm::LoadInst *LI, Context &Ctx)
       : UnaryInstruction(ClassID::Load, Opcode::Load, LI, Ctx) {}
   friend Context; // for LoadInst()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   /// Return true if this is a load from a volatile memory location.
   bool isVolatile() const { return cast<llvm::LoadInst>(Val)->isVolatile(); }
   /// Specify whether this is a volatile load or not.
   void setVolatile(bool V);
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
 
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   static LoadInst *create(Type *Ty, Value *Ptr, MaybeAlign Align,
                           Instruction *InsertBefore, Context &Ctx,
                           const Twine &Name = "");
@@ -965,27 +951,18 @@ public:
 #endif
 };
 
-class StoreInst final : public Instruction {
+class StoreInst final : public SingleLLVMInstructionImpl {
   /// Use StoreInst::create().
   StoreInst(llvm::StoreInst *SI, Context &Ctx)
-      : Instruction(ClassID::Store, Opcode::Store, SI, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::Store, Opcode::Store, SI, Ctx) {}
   friend Context; // for StoreInst()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   /// Return true if this is a store from a volatile memory location.
   bool isVolatile() const { return cast<llvm::StoreInst>(Val)->isVolatile(); }
   /// Specify whether this is a volatile store or not.
   void setVolatile(bool V);
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
+
   static StoreInst *create(Value *V, Value *Ptr, MaybeAlign Align,
                            Instruction *InsertBefore, Context &Ctx);
   static StoreInst *create(Value *V, Value *Ptr, MaybeAlign Align,
@@ -1042,19 +1019,13 @@ public:
 #endif
 };
 
-class ReturnInst final : public Instruction {
+class ReturnInst final : public SingleLLVMInstructionImpl {
   /// Use ReturnInst::create() instead of calling the constructor.
   ReturnInst(llvm::Instruction *I, Context &Ctx)
-      : Instruction(ClassID::Ret, Opcode::Ret, I, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::Ret, Opcode::Ret, I, Ctx) {}
   ReturnInst(ClassID SubclassID, llvm::Instruction *I, Context &Ctx)
-      : Instruction(SubclassID, Opcode::Ret, I, Ctx) {}
+      : SingleLLVMInstructionImpl(SubclassID, Opcode::Ret, I, Ctx) {}
   friend class Context; // For accessing the constructor in create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
   static ReturnInst *createCommon(Value *RetVal, IRBuilder<> &Builder,
                                   Context &Ctx);
 
@@ -1066,10 +1037,6 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::Ret;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   /// \Returns null if there is no return value.
   Value *getReturnValue() const;
 #ifndef NDEBUG
@@ -1079,9 +1046,9 @@ public:
 #endif
 };
 
-class CallBase : public Instruction {
+class CallBase : public SingleLLVMInstructionImpl {
   CallBase(ClassID ID, Opcode Opc, llvm::Instruction *I, Context &Ctx)
-      : Instruction(ID, Opc, I, Ctx) {}
+      : SingleLLVMInstructionImpl(ID, Opc, I, Ctx) {}
   friend class CallInst;   // For constructor.
   friend class InvokeInst; // For constructor.
   friend class CallBrInst; // For constructor.
@@ -1219,12 +1186,6 @@ class CallInst final : public CallBase {
       : CallBase(ClassID::Call, Opcode::Call, I, Ctx) {}
   friend class Context; // For accessing the constructor in
                         // create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   static CallInst *create(FunctionType *FTy, Value *Func,
@@ -1241,10 +1202,6 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::Call;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
 #ifndef NDEBUG
   void verify() const final {}
   void dump(raw_ostream &OS) const override;
@@ -1259,12 +1216,6 @@ class InvokeInst final : public CallBase {
       : CallBase(ClassID::Invoke, Opcode::Invoke, I, Ctx) {}
   friend class Context; // For accessing the constructor in
                         // create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   static InvokeInst *create(FunctionType *FTy, Value *Func,
@@ -1284,10 +1235,6 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::Invoke;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   BasicBlock *getNormalDest() const;
   BasicBlock *getUnwindDest() const;
   void setNormalDest(BasicBlock *BB);
@@ -1323,12 +1270,6 @@ class CallBrInst final : public CallBase {
       : CallBase(ClassID::CallBr, Opcode::CallBr, I, Ctx) {}
   friend class Context; // For accessing the constructor in
                         // create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   static CallBrInst *create(FunctionType *FTy, Value *Func,
@@ -1350,10 +1291,6 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::CallBr;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   unsigned getNumIndirectDests() const {
     return cast<llvm::CallBrInst>(Val)->getNumIndirectDests();
   }
@@ -1379,21 +1316,16 @@ public:
 #endif
 };
 
-class GetElementPtrInst final : public Instruction {
+class GetElementPtrInst final : public SingleLLVMInstructionImpl {
   /// Use Context::createGetElementPtrInst(). Don't call
   /// the constructor directly.
   GetElementPtrInst(llvm::Instruction *I, Context &Ctx)
-      : Instruction(ClassID::GetElementPtr, Opcode::GetElementPtr, I, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::GetElementPtr, Opcode::GetElementPtr,
+                                  I, Ctx) {}
   GetElementPtrInst(ClassID SubclassID, llvm::Instruction *I, Context &Ctx)
-      : Instruction(SubclassID, Opcode::GetElementPtr, I, Ctx) {}
+      : SingleLLVMInstructionImpl(SubclassID, Opcode::GetElementPtr, I, Ctx) {}
   friend class Context; // For accessing the constructor in
                         // create*()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   static Value *create(Type *Ty, Value *Ptr, ArrayRef<Value *> IdxList,
@@ -1409,10 +1341,6 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::GetElementPtr;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
 
   Type *getSourceElementType() const {
     return cast<llvm::GetElementPtrInst>(Val)->getSourceElementType();
@@ -1484,13 +1412,6 @@ public:
 };
 
 class AllocaInst final : public UnaryInstruction {
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
-
   AllocaInst(llvm::AllocaInst *AI, Context &Ctx)
       : UnaryInstruction(ClassID::Alloca, Instruction::Opcode::Alloca, AI,
                          Ctx) {}
@@ -1506,11 +1427,6 @@ public:
   static AllocaInst *create(Type *Ty, unsigned AddrSpace,
                             BasicBlock *InsertAtEnd, Context &Ctx,
                             Value *ArraySize = nullptr, const Twine &Name = "");
-
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
 
   /// Return true if there is an allocation size parameter to the allocation
   /// instruction that is not 1.
@@ -1620,18 +1536,8 @@ class CastInst : public UnaryInstruction {
       : UnaryInstruction(ClassID::Cast, getCastOpcode(CI->getOpcode()), CI,
                          Ctx) {}
   friend Context; // for SBCastInstruction()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   static Value *create(Type *DestTy, Opcode Op, Value *Operand,
                        BBIterator WhereIt, BasicBlock *WhereBB, Context &Ctx,
                        const Twine &Name = "");
@@ -1714,17 +1620,11 @@ public:
   }
 };
 
-class PHINode final : public Instruction {
+class PHINode final : public SingleLLVMInstructionImpl {
   /// Use Context::createPHINode(). Don't call the constructor directly.
   PHINode(llvm::PHINode *PHI, Context &Ctx)
-      : Instruction(ClassID::PHI, Opcode::PHI, PHI, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::PHI, Opcode::PHI, PHI, Ctx) {}
   friend Context; // for PHINode()
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
   /// Helper for mapped_iterator.
   struct LLVMBBToBB {
     Context &Ctx;
@@ -1733,10 +1633,6 @@ class PHINode final : public Instruction {
   };
 
 public:
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
   static PHINode *create(Type *Ty, unsigned NumReservedValues,
                          Instruction *InsertBefore, Context &Ctx,
                          const Twine &Name = "");
@@ -1810,27 +1706,17 @@ public:
 
 /// An LLLVM Instruction that has no SandboxIR equivalent class gets mapped to
 /// an OpaqueInstr.
-class OpaqueInst : public sandboxir::Instruction {
+class OpaqueInst : public SingleLLVMInstructionImpl {
   OpaqueInst(llvm::Instruction *I, sandboxir::Context &Ctx)
-      : sandboxir::Instruction(ClassID::Opaque, Opcode::Opaque, I, Ctx) {}
+      : SingleLLVMInstructionImpl(ClassID::Opaque, Opcode::Opaque, I, Ctx) {}
   OpaqueInst(ClassID SubclassID, llvm::Instruction *I, sandboxir::Context &Ctx)
-      : sandboxir::Instruction(SubclassID, Opcode::Opaque, I, Ctx) {}
+      : SingleLLVMInstructionImpl(SubclassID, Opcode::Opaque, I, Ctx) {}
   friend class Context; // For constructor.
-  Use getOperandUseInternal(unsigned OpIdx, bool Verify) const final {
-    return getOperandUseDefault(OpIdx, Verify);
-  }
-  SmallVector<llvm::Instruction *, 1> getLLVMInstrs() const final {
-    return {cast<llvm::Instruction>(Val)};
-  }
 
 public:
   static bool classof(const sandboxir::Value *From) {
     return From->getSubclassID() == ClassID::Opaque;
   }
-  unsigned getUseOperandNo(const Use &Use) const final {
-    return getUseOperandNoDefault(Use);
-  }
-  unsigned getNumOfIRInstrs() const final { return 1u; }
 #ifndef NDEBUG
   void verify() const final {
     // Nothing to do
