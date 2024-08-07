@@ -13,18 +13,22 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/RandomNumberGenerator.h"
-
 #include "DebugOptions.h"
-
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/raw_ostream.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <vector>
 #ifdef _WIN32
 #include "llvm/Support/Windows/WindowsSupport.h"
 #else
-#include "Unix/Unix.h"
 #endif
 
 using namespace llvm;

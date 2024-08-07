@@ -19,9 +19,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/CRC.h"
-
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/Config/config.h"
+#include "llvm/Config/llvm-config.h"
+#include <zconf.h>
 
 using namespace llvm;
 
