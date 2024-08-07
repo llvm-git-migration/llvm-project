@@ -30,14 +30,14 @@ public:
 
   /// Creates a new frame for a method call.
   InterpFrame(InterpState &S, const Function *Func, InterpFrame *Caller,
-              CodePtr RetPC, unsigned ArgSize);
+              CodePtr RetPC, unsigned ArgSize, const Expr *CE);
 
   /// Creates a new frame with the values that make sense.
   /// I.e., the caller is the current frame of S,
   /// the This() pointer is the current Pointer on the top of S's stack,
   /// and the RVO pointer is before that.
   InterpFrame(InterpState &S, const Function *Func, CodePtr RetPC,
-              unsigned VarArgSize = 0);
+              unsigned VarArgSize = 0, const Expr *CE = nullptr);
 
   /// Destroys the frame, killing all live pointers to stack slots.
   ~InterpFrame();
@@ -152,6 +152,8 @@ private:
   unsigned Depth;
   /// Reference to the function being executed.
   const Function *Func;
+  /// The syntactical structure of member function calls
+  const Expr *CallExpr;
   /// Current object pointer for methods.
   Pointer This;
   /// Pointer the non-primitive return value gets constructed in.

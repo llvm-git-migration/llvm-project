@@ -20,8 +20,8 @@ EvalEmitter::EvalEmitter(Context &Ctx, Program &P, State &Parent,
                          InterpStack &Stk)
     : Ctx(Ctx), P(P), S(Parent, P, Stk, Ctx, this), EvalResult(&Ctx) {
   // Create a dummy frame for the interpreter which does not have locals.
-  S.Current =
-      new InterpFrame(S, /*Func=*/nullptr, /*Caller=*/nullptr, CodePtr(), 0);
+  S.Current = new InterpFrame(S, /*Func=*/nullptr, /*Caller=*/nullptr,
+                              CodePtr(), /*ArgSize=*/0, /*CE=*/nullptr);
 }
 
 EvalEmitter::~EvalEmitter() {

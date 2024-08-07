@@ -18,15 +18,17 @@
 #include "Program.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/ExprCXX.h"
 
 using namespace clang;
 using namespace clang::interp;
 
 InterpFrame::InterpFrame(InterpState &S, const Function *Func,
-                         InterpFrame *Caller, CodePtr RetPC, unsigned ArgSize)
+                         InterpFrame *Caller, CodePtr RetPC, unsigned ArgSize,
+                         const clang::Expr *CE)
     : Caller(Caller), S(S), Depth(Caller ? Caller->Depth + 1 : 0), Func(Func),
-      RetPC(RetPC), ArgSize(ArgSize), Args(static_cast<char *>(S.Stk.top())),
-      FrameOffset(S.Stk.size()) {
+      CallExpr(CE), RetPC(RetPC), ArgSize(ArgSize),
+      Args(static_cast<char *>(S.Stk.top())), FrameOffset(S.Stk.size()) {
   if (!Func)
     return;
 
@@ -46,8 +48,9 @@ InterpFrame::InterpFrame(InterpState &S, const Function *Func,
 }
 
 InterpFrame::InterpFrame(InterpState &S, const Function *Func, CodePtr RetPC,
-                         unsigned VarArgSize)
-    : InterpFrame(S, Func, S.Current, RetPC, Func->getArgSize() + VarArgSize) {
+                         unsigned VarArgSize, const clang::Expr *CE)
+    : InterpFrame(S, Func, S.Current, RetPC, Func->getArgSize() + VarArgSize,
+                  CE) {
   // As per our calling convention, the this pointer is
   // part of the ArgSize.
   // If the function has RVO, the RVO pointer is first.
@@ -170,10 +173,20 @@ void InterpFrame::describe(llvm::raw_ostream &OS) const {
     return;
 
   const FunctionDecl *F = getCallee();
-  if (const auto *M = dyn_cast<CXXMethodDecl>(F);
-      M && M->isInstance() && !isa<CXXConstructorDecl>(F)) {
-    print(OS, This, S.getCtx(), S.getCtx().getRecordType(M->getParent()));
-    OS << "->";
+  if (const auto *MCE = dyn_cast_if_present<CXXMemberCallExpr>(CallExpr)) {
+    const Expr *Object = MCE->getImplicitObjectArgument();
+    Object->printPretty(OS, /*Helper=*/nullptr, S.getCtx().getPrintingPolicy(),
+                        /*Indentation=*/0);
+    if (Object->getType()->isPointerType())
+      OS << "->";
+    else
+      OS << ".";
+  } else if (const auto *OCE =
+                 dyn_cast_if_present<CXXOperatorCallExpr>(CallExpr)) {
+    OCE->getArg(0)->printPretty(OS, /*Helper=*/nullptr,
+                                S.getCtx().getPrintingPolicy(),
+                                /*Indentation=*/0);
+    OS << ".";
   }
 
   F->getNameForDiagnostic(OS, S.getCtx().getPrintingPolicy(),

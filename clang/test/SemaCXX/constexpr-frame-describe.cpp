@@ -1,4 +1,5 @@
 // RUN: %clang_cc1 -std=c++20 -fsyntax-only -verify %s
+// RUN: %clang_cc1 -DNEW_CONST_INTERP -std=c++20 -fexperimental-new-constant-interpreter -fsyntax-only -verify %s
 
 
 struct Foo {
@@ -67,9 +68,11 @@ struct Bar {
   template <typename U, int num>
   constexpr int fail2() const { return 1 / 0; } // expected-warning {{division by zero}} \
                                                 // expected-note {{division by zero}}
+#ifndef NEW_CONST_INTERP
   template <typename ...Args>
   constexpr int fail3(Args... args) const { return 1 / 0; } // expected-warning {{division by zero}} \
                                                 // expected-note {{division by zero}}
+#endif
 };
 
 constexpr Bar<int> bar;
@@ -77,5 +80,7 @@ static_assert(bar.fail1<int>()); // expected-error {{constant expression}} \
                                  // expected-note {{in call to 'bar.fail1<int>()'}}
 static_assert(bar.fail2<int*, 42>()); // expected-error {{constant expression}} \
                                       // expected-note {{in call to 'bar.fail2<int *, 42>()'}}
+#ifndef NEW_CONST_INTERP
 static_assert(bar.fail3(3, 4UL, bar, &bar)); // expected-error {{constant expression}} \
                                              // expected-note {{in call to 'bar.fail3<int, unsigned long, Bar<int>, const Bar<int> *>(3, 4, {}, &bar)'}}
+#endif

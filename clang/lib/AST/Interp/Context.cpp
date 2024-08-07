@@ -206,7 +206,7 @@ bool Context::Run(State &Parent, const Function *Func, APValue &Result) {
   {
     InterpState State(Parent, *P, Stk, *this);
     State.Current = new InterpFrame(State, Func, /*Caller=*/nullptr, CodePtr(),
-                                    Func->getArgSize());
+                                    Func->getArgSize(), /*CE=*/nullptr);
     if (Interpret(State, Result)) {
       assert(Stk.empty());
       return true;

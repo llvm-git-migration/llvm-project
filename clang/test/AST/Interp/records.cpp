@@ -335,7 +335,7 @@ namespace InitializerTemporaries {
 
   constexpr int f() {
     S{}; // ref-note {{in call to 'S{}.~S()'}} \
-         // expected-note {{in call to '&S{}->~S()'}}
+         // expected-note {{in call to '~S()'}}
     return 12;
   }
   static_assert(f() == 12); // both-error {{not an integral constant expression}} \
@@ -599,7 +599,7 @@ namespace Destructors {
   };
   constexpr int testS() {
     S{}; // ref-note {{in call to 'S{}.~S()'}} \
-         // expected-note {{in call to '&S{}->~S()'}}
+         // expected-note {{in call to '~S()'}}
     return 1;
   }
   static_assert(testS() == 1); // both-error {{not an integral constant expression}} \
