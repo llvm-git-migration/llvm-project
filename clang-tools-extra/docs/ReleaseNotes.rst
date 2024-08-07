@@ -101,6 +101,11 @@ Improvements to clang-tidy
 New checks
 ^^^^^^^^^^
 
+- New :doc:`bugprone-public-enable-shared-from-this
+  <clang-tidy/checks/bugprone/public-enable-shared-from-this>` check.
+
+  Checks if a class deriving from enable_shared_from_this has public access specifiers, because otherwise the program will crash when shared_from_this is called.
+
 New check aliases
 ^^^^^^^^^^^^^^^^^
 
