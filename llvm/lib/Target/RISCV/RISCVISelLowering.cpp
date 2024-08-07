@@ -11148,8 +11148,7 @@ SDValue RISCVTargetLowering::lowerMaskedLoad(SDValue Op,
 
     // If index vector is an i8 vector and the element count exceeds 256, we
     // should change the element type of index vector to i16 to avoid overflow.
-    if (IndexEltVT == MVT::i8 &&
-        VT.getVectorElementCount().getKnownMinValue() > 256) {
+    if (IndexEltVT == MVT::i8 && VT.getVectorNumElements() > 256) {
       // FIXME: We need to do vector splitting manually for LMUL=8 cases.
       if (getLMUL(IndexVT) == RISCVII::LMUL_8)
         return SDValue();
