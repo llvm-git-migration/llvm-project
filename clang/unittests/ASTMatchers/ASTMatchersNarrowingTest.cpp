@@ -2503,6 +2503,12 @@ TEST_P(ASTMatchersTest, IsDelegatingConstructor) {
       cxxConstructorDecl(isDelegatingConstructor(), parameterCountIs(1))));
 }
 
+TEST_P(ASTMatchersTest, matchesString) {
+  StatementMatcher Literal = stringLiteral(matchesString("foo.*"));
+  EXPECT_TRUE(matches("const char* a = \"foo\";", Literal));
+  EXPECT_TRUE(matches("const char* b = \"foobar\";", Literal));
+}
+
 TEST_P(ASTMatchersTest, HasSize) {
   StatementMatcher Literal = stringLiteral(hasSize(4));
   EXPECT_TRUE(matches("const char *s = \"abcd\";", Literal));
