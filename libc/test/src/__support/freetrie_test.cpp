@@ -18,16 +18,28 @@ TEST(LlvmLibcFreeTrie, Construct) {
   EXPECT_TRUE(trie.empty());
 }
 
-TEST(LlvmLibcFreeTrie, Push) {
+TEST(LlvmLibcFreeList2, PushPopDirect) {
   cpp::byte mem1[1024];
   optional<Block<> *> maybeBlock = Block<>::init(mem1);
   ASSERT_TRUE(maybeBlock.has_value());
-  Block<> *block = *maybeBlock;
+  Block<> *block1 = *maybeBlock;
 
-  FreeTrie trie;
-  trie.push(block);
-  ASSERT_FALSE(trie.empty());
-  EXPECT_EQ(trie.front(), block);
+  cpp::byte mem2[1024];
+  maybeBlock = Block<>::init(mem2);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block2 = *maybeBlock;
+
+  FreeList2 list;
+  list.push(block1);
+  ASSERT_FALSE(list.empty());
+  EXPECT_EQ(list.front(), block1);
+  list.push(block2);
+  EXPECT_EQ(list.front(), block1);
+  list.pop();
+  ASSERT_FALSE(list.empty());
+  EXPECT_EQ(list.front(), block2);
+  list.pop();
+  EXPECT_TRUE(list.empty());
 }
 
 } // namespace LIBC_NAMESPACE_DECL
