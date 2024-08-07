@@ -1,6 +1,3 @@
-// Temporarily disable test due to non-deterministic order of error messages.
-// UNSUPPORTED: target={{.*}}
-
 // RUN: not llvm-tblgen -gen-subtarget -I %p/../../include %s 2>&1 | FileCheck %s -DFILE=%s
 // Verify that subtarget features with same names result in an error.
 
@@ -10,6 +7,6 @@ def MyTarget : Target;
 
 def FeatureA : SubtargetFeature<"NameA", "", "", "">;
 
-// CHECK: [[FILE]]:[[@LINE+2]]:5: error: Feature `NameA` already defined.
-// CHECK: [[FILE]]:[[@LINE-3]]:5: note: Previous definition here.
+// CHECK: [[FILE]]:[[@LINE+2]]:5: error: Feature `NameA` has multiple definitions.
+// CHECK: [[FILE]]:[[@LINE-3]]:5: note: Another definition here.
 def FeatureB : SubtargetFeature<"NameA", "", "", "">;
