@@ -16,8 +16,8 @@
 
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
+#include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/IR/DiagnosticInfo.h"
-#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
 #include <optional>
 #include <variant>
 

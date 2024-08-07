@@ -43,6 +43,7 @@
 #include "llvm/IR/FMF.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/Support/InstructionCost.h"
+#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
