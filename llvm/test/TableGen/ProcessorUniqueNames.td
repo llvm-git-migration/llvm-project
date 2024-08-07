@@ -1,0 +1,12 @@
+// RUN: not llvm-tblgen -gen-subtarget -I %p/../../include %s 2>&1 | FileCheck %s -DFILE=%s
+// Verify that processors with same names result in an error.
+
+include "llvm/Target/Target.td"
+
+def MyTarget : Target;
+
+def ProcessorA : ProcessorModel<"NameA", NoSchedModel, []>;
+
+// CHECK: [[FILE]]:[[@LINE+2]]:5: error: Processor `NameA` has multiple definitions.
+// CHECK: [[FILE]]:[[@LINE-3]]:5: note: Another definition here.
+def ProcessorB : ProcessorModel<"NameA", NoSchedModel, []>;

@@ -18,4 +18,4 @@ namespace llvm {
 const char *getMinimalTypeForRange(uint64_t Range, unsigned MaxSize = 64);
 } // namespace llvm
 
-#endif
+#endif // LLVM_UTILS_TABLEGEN_TYPES_H
