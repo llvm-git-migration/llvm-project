@@ -447,3 +447,29 @@ body:             |
     %13:vreg_64 = REG_SEQUENCE %9, %subreg.sub0, %11, %subreg.sub1
     %15:vgpr_32 = FLAT_ATOMIC_ADD_RTN %13:vreg_64, %0.sub0, 0, 0, implicit $exec, implicit $flat_scr
 ...
+
+---
+# GCN-LABEL: name: nullptr_negative_offset
+# GCN: V_ADD_CO_U32_e64 -1, 0, 0
+# GCN: V_ADDC_U32_e64 -1, $vgpr1, $vcc, 0
+
+name: nullptr_negative_offset
+body:             |
+  bb.0.entry:
+    $sgpr0_sgpr1 = S_MOV_B64 $src_private_base
+    $vgpr1 = COPY $sgpr1
+    $vgpr0, $vcc = V_ADD_CO_U32_e64 -1, 0, 0, implicit $exec
+    $vgpr1, dead $vcc = V_ADDC_U32_e64 -1, $vgpr1, $vcc, 0, implicit $exec
+    $vgpr0 = FLAT_LOAD_UBYTE $vgpr0_vgpr1, 0, 0, implicit $exec, implicit $flat_scr
+    $vcc = V_CMP_EQ_U16_e64 0, $vgpr0, implicit $exec
+    $sgpr0_sgpr1 = S_MOV_B64 0
+
+  bb.1:
+    $sgpr2_sgpr3 = S_AND_B64 $exec, $vcc, implicit-def $scc
+    $sgpr0_sgpr1 = S_OR_B64 $sgpr2_sgpr3, $sgpr0_sgpr1, implicit-def $scc
+    $exec = S_ANDN2_B64_term $exec, $sgpr0_sgpr1, implicit-def $scc
+    S_CBRANCH_EXECNZ %bb.1, implicit $exec
+    S_BRANCH %bb.2
+
+  bb.2:
+    S_ENDPGM 0
