@@ -383,7 +383,22 @@ public:
   Context &getContext() const { return Ctx; }
   /// Record \p Change and take ownership. This is the main function used to
   /// track Sandbox IR changes.
-  void track(std::unique_ptr<IRChangeBase> &&Change);
+  void track(std::unique_ptr<IRChangeBase> &&Change) {
+    assert(State == TrackerState::Record && "The tracker should be tracking!");
+    Changes.push_back(std::move(Change));
+
+#ifndef NDEBUG
+    InMiddleOfCreatingChange = false;
+#endif
+  }
+  /// A convenience wrapper for `track()` that constructs and tracks the Change
+  /// object if tracking is enabled.
+  template <typename ChangeT, typename... ArgsT>
+  void tryTrack(ArgsT... ChangeArgs) {
+    if (!isTracking())
+      return;
+    track(std::make_unique<ChangeT>(ChangeArgs..., *this));
+  }
   /// \Returns true if the tracker is recording changes.
   bool isTracking() const { return State == TrackerState::Record; }
   /// \Returns the current state of the tracker.
