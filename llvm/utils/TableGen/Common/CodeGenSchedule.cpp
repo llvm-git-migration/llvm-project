@@ -535,15 +535,8 @@ void CodeGenSchedModels::collectProcModels() {
   RecVec ProcRecords = Records.getAllDerivedDefinitions("Processor");
   llvm::sort(ProcRecords, LessRecordFieldName());
 
-  // Check for duplicated names.
-  auto I = std::adjacent_find(ProcRecords.begin(), ProcRecords.end(),
-                              [](const Record *Rec1, const Record *Rec2) {
-                                return Rec1->getValueAsString("Name") ==
-                                       Rec2->getValueAsString("Name");
-                              });
-  if (I != ProcRecords.end())
-    PrintFatalError((*I)->getLoc(), "Duplicate processor name " +
-                                        (*I)->getValueAsString("Name"));
+  // Check duplicate Processor name.
+  checkDuplicateRecords(ProcRecords, "Processor");
 
   // Reserve space because we can. Reallocation would be ok.
   ProcModels.reserve(ProcRecords.size() + 1);
@@ -2290,3 +2283,24 @@ void PredTransitions::dump() const {
   }
 }
 #endif // NDEBUG
+
+/// Verifies that there are no duplicate records with the same "Name" field.
+/// If there are, reports a fatal error message (and exits). Assumes that
+/// Records are sorted on the "Name" field.
+void llvm::checkDuplicateRecords(ArrayRef<Record *> Records,
+                                 StringRef ObjectName) {
+  auto I = std::adjacent_find(Records.begin(), Records.end(),
+                              [](const Record *Rec1, const Record *Rec2) {
+                                return Rec1->getValueAsString("Name") ==
+                                       Rec2->getValueAsString("Name");
+                              });
+  if (I == Records.end())
+    return;
+
+  // Found a duplicate name.
+  const Record *First = *I;
+  const Record *Second = *(I + 1);
+  StringRef Name = First->getValueAsString("Name");
+  PrintError(Second, ObjectName + " `" + Name + "` already defined.");
+  PrintFatalNote(First, "Previous definition here.");
+}

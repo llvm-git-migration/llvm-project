@@ -250,33 +250,36 @@ void SubtargetEmitter::EmitSubtargetInfoMacroCalls(raw_ostream &OS) {
 //
 unsigned SubtargetEmitter::FeatureKeyValues(
     raw_ostream &OS, const DenseMap<Record *, unsigned> &FeatureMap) {
-  // Gather and sort all the features
+  // Gather and sort all the features.
   std::vector<Record *> FeatureList =
       Records.getAllDerivedDefinitions("SubtargetFeature");
 
-  if (FeatureList.empty())
+  // Remove features with empty name.
+  auto End = llvm::remove_if(FeatureList, [](const Record *Rec) {
+    return Rec->getValueAsString("Name").empty();
+  });
+  auto Begin = FeatureList.begin();
+  if (Begin == End)
     return 0;
 
-  llvm::sort(FeatureList, LessRecordFieldName());
+  llvm::sort(Begin, End, LessRecordFieldName());
 
-  // Check that there are no duplicate features.
-  DenseMap<StringRef, const Record *> UniqueFeatures;
+  // ArrayRef for the non-empty set of Features.
+  ArrayRef<Record *> TrimmedList(&*Begin, End - Begin);
 
-  // Begin feature table
+  // Check duplicate Feature name.
+  checkDuplicateRecords(TrimmedList, "Feature");
+
+  // Begin feature table.
   OS << "// Sorted (by key) array of values for CPU features.\n"
      << "extern const llvm::SubtargetFeatureKV " << Target
      << "FeatureKV[] = {\n";
 
-  // For each feature
-  unsigned NumFeatures = 0;
-  for (const Record *Feature : FeatureList) {
+  for (const Record *Feature : TrimmedList) {
     // Next feature
     StringRef Name = Feature->getName();
     StringRef CommandLineName = Feature->getValueAsString("Name");
     StringRef Desc = Feature->getValueAsString("Desc");
-
-    if (CommandLineName.empty())
-      continue;
 
     // Emit as { "feature", "description", { featureEnum }, { i1 , i2 , ... , in
     // } }
@@ -289,20 +292,12 @@ unsigned SubtargetEmitter::FeatureKeyValues(
     printFeatureMask(OS, ImpliesList, FeatureMap);
 
     OS << " },\n";
-    ++NumFeatures;
-
-    auto [It, Inserted] = UniqueFeatures.insert({CommandLineName, Feature});
-    if (!Inserted) {
-      PrintError(Feature, "Feature `" + CommandLineName + "` already defined.");
-      const Record *Previous = It->second;
-      PrintFatalNote(Previous, "Previous definition here.");
-    }
   }
 
-  // End feature table
+  // End feature table.
   OS << "};\n";
 
-  return NumFeatures;
+  return TrimmedList.size();
 }
 
 //
@@ -317,18 +312,17 @@ SubtargetEmitter::CPUKeyValues(raw_ostream &OS,
       Records.getAllDerivedDefinitions("Processor");
   llvm::sort(ProcessorList, LessRecordFieldName());
 
-  // Begin processor table
+  // Begin processor table.
   OS << "// Sorted (by key) array of values for CPU subtype.\n"
      << "extern const llvm::SubtargetSubTypeKV " << Target
      << "SubTypeKV[] = {\n";
 
-  // For each processor
   for (Record *Processor : ProcessorList) {
     StringRef Name = Processor->getValueAsString("Name");
     RecVec FeatureList = Processor->getValueAsListOfDefs("Features");
     RecVec TuneFeatureList = Processor->getValueAsListOfDefs("TuneFeatures");
 
-    // Emit as { "cpu", "description", 0, { f1 , f2 , ... fn } },
+    // Emit as "{ "cpu", "description", 0, { f1 , f2 , ... fn } },".
     OS << " { "
        << "\"" << Name << "\", ";
 
@@ -342,7 +336,7 @@ SubtargetEmitter::CPUKeyValues(raw_ostream &OS,
     OS << ", &" << ProcModelName << " },\n";
   }
 
-  // End processor table
+  // End processor table.
   OS << "};\n";
 
   return ProcessorList.size();
