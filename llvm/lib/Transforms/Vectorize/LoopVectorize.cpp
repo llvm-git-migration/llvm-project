@@ -179,6 +179,7 @@ const char LLVMLoopVectorizeFollowupEpilogue[] =
 STATISTIC(LoopsVectorized, "Number of loops vectorized");
 STATISTIC(LoopsAnalyzed, "Number of loops analyzed for vectorization");
 STATISTIC(LoopsEpilogueVectorized, "Number of epilogues vectorized");
+STATISTIC(LoopsAliasMasked, "Number of loops predicated with an alias mask");
 
 static cl::opt<bool> EnableEpilogueVectorization(
     "enable-epilogue-vectorization", cl::init(true), cl::Hidden,
@@ -10034,6 +10035,8 @@ bool LoopVectorizePass::processLoop(Loop *L) {
   };
   LVP.plan(UserVF, UserIC, LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks(), Expand, Checks.HasAliasMask);
   VectorizationFactor VF = LVP.computeBestVF();
+  if (Checks.HasAliasMask)
+    LoopsAliasMasked++;
   unsigned IC = 1;
 
   if (ORE->allowExtraAnalysis(LV_NAME))
