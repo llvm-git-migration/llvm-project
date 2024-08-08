@@ -1213,8 +1213,20 @@ Value *InstrLowerer::getBitmapAddress(InstrProfMCDCTVBitmapUpdate *I) {
 void InstrLowerer::lowerCover(InstrProfCoverInst *CoverInstruction) {
   auto *Addr = getCounterAddress(CoverInstruction);
   IRBuilder<> Builder(CoverInstruction);
-  // We store zero to represent that this block is covered.
-  Builder.CreateStore(Builder.getInt8(0), Addr);
+  if (ConditionalCounterUpdate) {
+    auto &Ctx = CoverInstruction->getParent()->getContext();
+    auto *Int8Ty = llvm::Type::getInt8Ty(Ctx);
+    Value *Load = Builder.CreateLoad(Int8Ty, Addr, "pgocount");
+    Value *Cmp = Builder.CreateICmpNE(Load, ConstantInt::get(Int8Ty, 0),
+                                      "pgocount.ifnonzero");
+    Value *Sel =
+        Builder.CreateSelect(Cmp, Builder.getInt8(0), Load, "pgocount.select");
+    Builder.CreateStore(Sel, Addr);
+  } else {
+    // We store zero to represent that this block is covered.
+    Builder.CreateStore(Builder.getInt8(0), Addr);
+  }
+
   CoverInstruction->eraseFromParent();
 }
 
