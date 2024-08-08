@@ -2058,6 +2058,11 @@ bool RISCVTTIImpl::isLSRCostLess(const TargetTransformInfo::LSRCost &C1,
                   C2.ScaleCost, C2.ImmCost, C2.SetupCost);
 }
 
+bool RISCVTTIImpl::enableCSAVectorization() const {
+  return ST->hasVInstructions() &&
+         ST->getProcFamily() == RISCVSubtarget::SiFive7;
+}
+
 bool RISCVTTIImpl::isLegalMaskedCompressStore(Type *DataTy, Align Alignment) {
   auto *VTy = dyn_cast<VectorType>(DataTy);
   if (!VTy || VTy->isScalableTy())
