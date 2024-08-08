@@ -47,8 +47,8 @@ TEST(LlvmLibcFreeTrie, Find) {
   FreeTrie *&empty_found = FreeTrie::find(trie, 123, {0, WIDTH});
   EXPECT_EQ(&empty_found, &trie);
 
-  cpp::byte mem1[1024];
-  optional<Block<> *> maybeBlock = Block<>::init(mem1);
+  cpp::byte mem[1024];
+  optional<Block<> *> maybeBlock = Block<>::init(mem);
   ASSERT_TRUE(maybeBlock.has_value());
   Block<> *block1 = *maybeBlock;
 
@@ -66,6 +66,36 @@ TEST(LlvmLibcFreeTrie, Find) {
   EXPECT_NE(&greater_found, &trie);
   EXPECT_NE(&greater_found, &less_found);
   EXPECT_EQ(greater_found, static_cast<FreeTrie *>(nullptr));
+}
+
+TEST(LlvmLibcFreeTrie, RootPopPreservesChild) {
+  cpp::byte mem1[1024];
+  optional<Block<> *> maybeBlock = Block<>::init(mem1);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block1 = *maybeBlock;
+
+  cpp::byte mem2[1024];
+  maybeBlock = Block<>::init(mem2);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block2 = *maybeBlock;
+
+  cpp::byte mem3[2048];
+  maybeBlock = Block<>::init(mem3);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block3 = *maybeBlock;
+
+  FreeTrie *trie = nullptr;
+  FreeTrie::push(trie, block1);
+  FreeTrie::push(trie, block2);
+
+  FreeTrie *&child = trie->find(trie, block3->inner_size(), {0, 2048});
+  FreeTrie::push(child, block3);
+  ASSERT_NE(child, static_cast<FreeTrie *>(nullptr));
+  EXPECT_EQ(child->block(), block3);
+
+  FreeTrie::pop(trie);
+  FreeTrie *&new_child = trie->find(trie, block3->inner_size(), {0, 2048});
+  EXPECT_EQ(new_child, child);
 }
 
 } // namespace LIBC_NAMESPACE_DECL
