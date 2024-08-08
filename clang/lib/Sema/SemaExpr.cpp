@@ -6656,8 +6656,8 @@ ExprResult Sema::BuildCallExpr(Scope *Scope, Expr *Fn, SourceLocation LParenLoc,
     if (const Expr *Ptr = MemberExprVisitor().Visit(ArgExprs[0])) {
       const MemberExpr *ME = cast<MemberExpr>(Ptr);
       bool IsFlexibleArrayMember = ME->isFlexibleArrayMemberLike(
-              Context, getLangOpts().getStrictFlexArraysLevel(),
-              /*IgnoreTemplateOrMacroSubstitution=*/false);
+          Context, getLangOpts().getStrictFlexArraysLevel(),
+          /*IgnoreTemplateOrMacroSubstitution=*/false);
 
       if (!ME->HasSideEffects(Context) && IsFlexibleArrayMember &&
           ME->getMemberDecl()->getType()->isCountAttributedType()) {
