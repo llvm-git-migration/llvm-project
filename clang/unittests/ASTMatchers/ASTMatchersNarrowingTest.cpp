@@ -2512,7 +2512,7 @@ TEST_P(ASTMatchersTest, MatchesString) {
   // test embedded nulls
   StatementMatcher Literal2 = stringLiteral(matchesString("bar"));
   EXPECT_TRUE(matches("const char* b = \"foo\\0bar\";", Literal2));
-  EXPECT_TRUE(notMatches("const char* b = \"foo\0b\\0ar\";", Literal2));
+  EXPECT_TRUE(notMatches("const char* b = \"foo\\0b\\0ar\";", Literal2));
   // test prefix
   if (!GetParam().isCXX20OrLater()) {
     return;
