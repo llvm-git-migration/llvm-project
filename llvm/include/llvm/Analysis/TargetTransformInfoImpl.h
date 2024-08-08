@@ -966,6 +966,8 @@ public:
     return false;
   }
 
+  bool enableCSAVectorization() const { return false; }
+
   TargetTransformInfo::VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const {
     return TargetTransformInfo::VPLegalization(

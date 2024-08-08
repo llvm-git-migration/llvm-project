@@ -1769,6 +1769,10 @@ public:
         : EVLParamStrategy(EVLParamStrategy), OpStrategy(OpStrategy) {}
   };
 
+  /// \returns true if the loop vectorizer should vectorize conditional
+  /// scalar assignments for the target.
+  bool enableCSAVectorization() const;
+
   /// \returns How the target needs this vector-predicated operation to be
   /// transformed.
   VPLegalization getVPLegalizationStrategy(const VPIntrinsic &PI) const;
@@ -2178,6 +2182,7 @@ public:
   virtual bool supportsScalableVectors() const = 0;
   virtual bool hasActiveVectorLength(unsigned Opcode, Type *DataType,
                                      Align Alignment) const = 0;
+  virtual bool enableCSAVectorization() const = 0;
   virtual VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const = 0;
   virtual bool hasArmWideBranch(bool Thumb) const = 0;
@@ -2943,6 +2948,10 @@ public:
   bool hasActiveVectorLength(unsigned Opcode, Type *DataType,
                              Align Alignment) const override {
     return Impl.hasActiveVectorLength(Opcode, DataType, Alignment);
+  }
+
+  bool enableCSAVectorization() const override {
+    return Impl.enableCSAVectorization();
   }
 
   VPLegalization
