@@ -2509,6 +2509,14 @@ TEST_P(ASTMatchersTest, MatchesString) {
   EXPECT_TRUE(matches("const char* b = \"foobar\";", Literal));
   EXPECT_TRUE(matches("const char* b = \"fo\"\"obar\";", Literal));
   EXPECT_TRUE(notMatches("const char* c = \"bar\";", Literal));
+  // test prefix
+  EXPECT_TRUE(matches("const wchar_t* a = L\"foo\";", Literal));
+  EXPECT_TRUE(matches("const char16_t* a = u\"foo\";", Literal));
+  EXPECT_TRUE(matches("const char32_t* a = U\"foo\";", Literal));
+  // test embedded nulls
+  Literal = stringLiteral(matchesString("bar"));
+  EXPECT_TRUE(matches("const char* b = \"foo\0bar\";", Literal));
+  EXPECT_TRUE(notMatches("const char* b = \"foo\0b\0ar\";", Literal));
 }
 
 TEST_P(ASTMatchersTest, HasSize) {
