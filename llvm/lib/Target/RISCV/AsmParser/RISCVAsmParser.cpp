@@ -1923,8 +1923,26 @@ ParseStatus RISCVAsmParser::parseCSRSystemRegister(OperandVector &Operands) {
 
     // Accept a named Sys Reg if the required features are present.
     if (SysReg) {
-      if (!SysReg->haveRequiredFeatures(getSTI().getFeatureBits()))
-        return Error(S, "system register use requires an option to be enabled");
+      const auto &FeatureBits = getSTI().getFeatureBits();
+      if (!SysReg->haveRequiredFeatures(FeatureBits)) {
+        const auto *Feature = std::find_if(
+            RISCVFeatureKV, RISCVFeatureKV + RISCV::NumSubtargetFeatures,
+            [&](auto Feature) {
+              return SysReg->FeaturesRequired[Feature.Value];
+            });
+        auto ErrorMsg = std::string("system register '") + SysReg->Name + "' ";
+        if (SysReg->isRV32Only && FeatureBits[RISCV::Feature64Bit]) {
+          ErrorMsg += "is 32-bit only";
+          if (Feature != RISCVFeatureKV + RISCV::NumSubtargetFeatures)
+            ErrorMsg += " and ";
+        }
+        if (Feature != RISCVFeatureKV + RISCV::NumSubtargetFeatures) {
+          ErrorMsg +=
+              "requires '" + std::string(Feature->Key) + "' to be enabled";
+        }
+
+        return Error(S, ErrorMsg);
+      }
       Operands.push_back(
           RISCVOperand::createSysReg(Identifier, S, SysReg->Encoding));
       return ParseStatus::Success;
