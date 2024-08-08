@@ -303,6 +303,26 @@ static ParseResult parseNamedStructuredOp(OpAsmParser &parser,
   if (parseCommonStructuredOpParts(parser, result, inputTypes, outputTypes))
     return failure();
 
+  if (parser.parseOptionalKeyword("permutationA").succeeded()) {
+    if (parser.parseEqual())
+      return failure();
+
+    result.attributes.set("permutationA",
+                          DenseI64ArrayAttr::parse(parser, Type{}));
+  }
+
+  if (parser.parseOptionalKeyword("permutationB").succeeded()) {
+    if (parser.parseEqual())
+      return failure();
+
+    result.attributes.set("permutationB",
+                          DenseI64ArrayAttr::parse(parser, Type{}));
+  }
+
+  // Parse optional attributes.
+  if (parser.parseOptionalAttrDict(result.attributes))
+    return failure();
+
   // TODO: consider merging results parsing into region parsing.
   // Need to wait for declarative assembly resolution to decide.
   SmallVector<Type, 1> outputTensorsTypes;
@@ -334,7 +354,8 @@ static void printNamedStructuredOp(OpAsmPrinter &p, Operation *op,
       /*elidedAttrs=*/{"operandSegmentSizes",
                        // See generated code in
                        // LinalgNamedStructuredOps.yamlgen.cpp.inc
-                       "linalg.memoized_indexing_maps"});
+                       "linalg.memoized_indexing_maps", "permutationA",
+                       "permutationB"});
 
   // Printing is shared with generic ops, except for the region and
   // attributes.
@@ -2980,3 +3001,132 @@ Operation *LinalgDialect::materializeConstant(OpBuilder &builder,
                                               Location loc) {
   return arith::ConstantOp::materialize(builder, value, type, loc);
 }
+
+namespace mlir {
+namespace linalg {
+//===----------------------------------------------------------------------===//
+// MatMulOp
+//===----------------------------------------------------------------------===//
+SmallVector<utils::IteratorType> MatmulOp::getIteratorTypesArray() {
+  return SmallVector<utils::IteratorType>{utils::IteratorType::parallel,
+                                          utils::IteratorType::parallel,
+                                          utils::IteratorType::reduction};
+}
+
+ArrayAttr MatmulOp::getIndexingMaps() {
+  static const char memoizeAttr[] = "linalg.memoized_indexing_maps";
+  ArrayAttr cached = getOperation()->getAttrOfType<ArrayAttr>(memoizeAttr);
+  if (cached)
+    return cached;
+
+  MLIRContext *context = getContext();
+  SmallVector<AffineMap> maps;
+
+  unsigned numResults;
+  SmallVector<AffineExpr, 3> dimReplacements;
+  AffineMap originalMap =
+      llvm::cast<AffineMapAttr>(
+          mlir::parseAttribute("affine_map<(d0, d1, d2)->(d0, d2)>", context))
+          .getValue();
+  numResults = originalMap.getNumResults();
+  for (unsigned i = 0; i < numResults; i++) {
+    AffineExpr expr = originalMap.getResult(getPermutationA()[i]);
+    dimReplacements.push_back(expr);
+  }
+
+  AffineMap newMap =
+      AffineMap::get(originalMap.getNumDims(), originalMap.getNumSymbols(),
+                     dimReplacements, context);
+  maps.push_back(newMap);
+  maps.back() =
+      simplifyAffineMap(maps.back().replaceDimsAndSymbols({}, {}, 3, 0));
+
+  originalMap =
+      llvm::cast<AffineMapAttr>(
+          mlir::parseAttribute("affine_map<(d0, d1, d2)->(d2, d1)>", context))
+          .getValue();
+  numResults = originalMap.getNumResults();
+  dimReplacements.clear();
+  for (unsigned i = 0; i < numResults; i++) {
+    AffineExpr expr = originalMap.getResult(getPermutationB()[i]);
+    dimReplacements.push_back(expr);
+  }
+
+  newMap = AffineMap::get(originalMap.getNumDims(), originalMap.getNumSymbols(),
+                          dimReplacements, context);
+  maps.push_back(newMap);
+  maps.back() =
+      simplifyAffineMap(maps.back().replaceDimsAndSymbols({}, {}, 3, 0));
+
+  maps.push_back(
+      llvm::cast<AffineMapAttr>(
+          mlir::parseAttribute("affine_map<(d0, d1, d2)->(d0, d1)>", context))
+          .getValue());
+  maps.back() =
+      simplifyAffineMap(maps.back().replaceDimsAndSymbols({}, {}, 3, 0));
+  cached = Builder(context).getAffineMapArrayAttr(maps);
+  getOperation()->setAttr(memoizeAttr, cached);
+  return cached;
+}
+
+unsigned MatmulOp::getNumRegionArgs() { return 3; }
+
+std::string MatmulOp::getLibraryCallName() {
+  return generateLibraryCallName(getOperation());
+}
+
+bool MatmulOp::hasDynamicIndexingMaps() { return true; }
+
+void MatmulOp::regionBuilder(ImplicitLocOpBuilder &b, Block &block,
+                             ArrayRef<NamedAttribute> attrs) {
+  assert(3 > 0 && block.getNumArguments() == 3 &&
+         "MatmulOp regionBuilder expects 3 (>=0) args");
+  RegionBuilderHelper helper(b, block);
+  SmallVector<Value> yields;
+
+  TypeFn castVal = TypeFn::cast_signed;
+  auto castIter = llvm::find_if(attrs, [&](const NamedAttribute &attr) {
+    return attr.getName() == "cast";
+  });
+  if (castIter != attrs.end()) {
+    if (auto attr = llvm::dyn_cast<TypeFnAttr>(castIter->getValue()))
+      castVal = attr.getValue();
+  }
+
+  Value value1 = helper.buildTypeFn(castVal, block.getArgument(2).getType(),
+                                    block.getArgument(0));
+  Value value2 = helper.buildTypeFn(castVal, block.getArgument(2).getType(),
+                                    block.getArgument(1));
+  Value value3 = helper.buildBinaryFn(BinaryFn::mul, value1, value2);
+  Value value4 =
+      helper.buildBinaryFn(BinaryFn::add, block.getArgument(2), value3);
+  yields.push_back(value4);
+  helper.yieldOutputs(yields);
+}
+
+ParseResult MatmulOp::parse(OpAsmParser &parser, OperationState &result) {
+  return parseNamedStructuredOp(parser, result, MatmulOp::getNumRegionArgs(),
+                                MatmulOp::getRegionBuilder());
+}
+void MatmulOp::print(OpAsmPrinter &p) {
+  printNamedStructuredOp(p, getOperation(), getInputs(), getOutputs());
+  if (!getPermutationA().empty())
+    printDenseI64ArrayAttr(p, getPermutationAAttrName(), getPermutationA());
+
+  if (!getPermutationB().empty())
+    printDenseI64ArrayAttr(p, getPermutationBAttrName(), getPermutationB());
+}
+
+LogicalResult MatmulOp::fold(FoldAdaptor, SmallVectorImpl<OpFoldResult> &) {
+  return memref::foldMemRefCast(*this);
+}
+void MatmulOp::getEffects(
+    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
+        &effects) {
+  if (hasPureTensorSemantics())
+    return;
+  getGenericEffectsImpl(effects, cast<LinalgOp>(getOperation()));
+}
+
+} // namespace linalg
+} // namespace mlir
