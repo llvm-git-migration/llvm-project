@@ -101,10 +101,12 @@ Improvements to clang-tidy
 New checks
 ^^^^^^^^^^
 
-- New :doc:`bugprone-public-enable-shared-from-this
-  <clang-tidy/checks/bugprone/public-enable-shared-from-this>` check.
+- New :doc:`bugprone-incorrect-enable-shared-from-this
+  <clang-tidy/checks/bugprone/incorrect-enable-shared-from-this>` check.
 
-  Checks if a class deriving from enable_shared_from_this has public access specifiers, because otherwise the program will crash when shared_from_this is called.
+  Check if class/structs publicly inherits from ``std::enable_shared_from_this``,
+  because otherwise when ``shared_from_this`` is called, the code will throw 
+  ``std::bad_weak_ptr``.
 
 New check aliases
 ^^^^^^^^^^^^^^^^^
