@@ -22,6 +22,9 @@ public:
     return const_cast<Block<> *>(Block<>::from_usable_space(this));
   }
 
+  /// @returns Size for all blocks on the list.
+  size_t size() const { return block()->inner_size(); }
+
   /// Push to the back. The Block must be able to contain a FreeList2.
   static void push(FreeList2 *&list, Block<> *block);
 

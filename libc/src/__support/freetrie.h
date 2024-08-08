@@ -32,6 +32,8 @@ public:
     /// @returns The split point between lower and upper.
     size_t middle() const;
 
+    bool contains(size_t size) const;
+
   private:
     size_t min;
     size_t width;
@@ -64,11 +66,21 @@ LIBC_INLINE FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
 LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::lower() const {
   return {min, width / 2};
 }
+
 LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::upper() const {
   return {middle(), width / 2};
 }
+
 LIBC_INLINE size_t FreeTrie::SizeRange::middle() const {
   return min + width / 2;
+}
+
+LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
+  if (size < min)
+    return false;
+  if (size > min + width)
+    return false;
+  return true;
 }
 
 LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
@@ -91,12 +103,18 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
     new_trie->parent = trie->parent;
     new_trie->lower = trie->lower;
     new_trie->upper = trie->upper;
+  } else {
+    // TODO
   }
   trie = new_trie;
 }
 
-FreeTrie *&FreeTrie::find(FreeTrie *&list, size_t size, SizeRange range) {
-  return list;
+FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
+  LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+  if (!trie || trie->size() == size)
+    return trie;
+  return find(size <= range.middle() ? trie->lower : trie->upper, size,
+              size <= range.middle() ? range.lower() : range.upper());
 }
 
 } // namespace LIBC_NAMESPACE_DECL

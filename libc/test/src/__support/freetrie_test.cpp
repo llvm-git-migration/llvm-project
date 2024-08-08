@@ -41,8 +41,10 @@ TEST(LlvmLibcFreeTrie, PushPop) {
 }
 
 TEST(LlvmLibcFreeTrie, Find) {
+  size_t WIDTH = 1024;
+
   FreeTrie *trie = nullptr;
-  FreeTrie *&empty_found = FreeTrie::find(trie, 123, {0, 1024});
+  FreeTrie *&empty_found = FreeTrie::find(trie, 123, {0, WIDTH});
   EXPECT_EQ(&empty_found, &trie);
 
   cpp::byte mem1[1024];
@@ -52,8 +54,16 @@ TEST(LlvmLibcFreeTrie, Find) {
 
   FreeTrie::push(trie, block1);
 
-  FreeTrie *&root_found = FreeTrie::find(trie, block1->inner_size(), {0, 1024});
+  FreeTrie *&root_found =
+      FreeTrie::find(trie, block1->inner_size(), {0, WIDTH});
   EXPECT_EQ(&root_found, &trie);
+
+  FreeTrie *&less_found = FreeTrie::find(trie, WIDTH / 2, {0, 1024});
+  EXPECT_NE(&less_found, &trie);
+
+  FreeTrie *&greater_found = FreeTrie::find(trie, WIDTH / 2 + 1, {0, 1024});
+  EXPECT_NE(&greater_found, &trie);
+  EXPECT_NE(&greater_found, &less_found);
 }
 
 } // namespace LIBC_NAMESPACE_DECL
