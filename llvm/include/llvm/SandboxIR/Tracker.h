@@ -229,8 +229,6 @@ class GenericSetter final : public IRChangeBase {
   /// Helper for getting the class type from the getter
   template <typename ClassT, typename RetT>
   static ClassT getClassTypeFromGetter(RetT (ClassT::*Fn)() const);
-  template <typename ClassT, typename RetT>
-  static ClassT getClassTypeFromGetter(RetT (ClassT::*Fn)());
 
   using InstrT = decltype(getClassTypeFromGetter(GetterFn));
   using SavedValT = std::invoke_result_t<decltype(GetterFn), InstrT>;
