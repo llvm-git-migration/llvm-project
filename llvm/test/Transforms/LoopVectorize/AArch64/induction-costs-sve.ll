@@ -146,12 +146,14 @@ define void @iv_casts(ptr %dst, ptr %src, i32 %x, i64 %N) #0 {
 ; PRED-NEXT:  entry:
 ; PRED-NEXT:    [[SRC2:%.*]] = ptrtoint ptr [[SRC]] to i64
 ; PRED-NEXT:    [[DST1:%.*]] = ptrtoint ptr [[DST]] to i64
+; PRED-NEXT:    [[SRC3:%.*]] = ptrtoint ptr [[SRC]] to i64
+; PRED-NEXT:    [[DST2:%.*]] = ptrtoint ptr [[DST]] to i64
 ; PRED-NEXT:    [[TMP0:%.*]] = add i64 [[N]], 1
 ; PRED-NEXT:    br i1 false, label [[SCALAR_PH:%.*]], label [[VECTOR_MEMCHECK:%.*]]
 ; PRED:       vector.memcheck:
 ; PRED-NEXT:    [[TMP1:%.*]] = call i64 @llvm.vscale.i64()
 ; PRED-NEXT:    [[TMP2:%.*]] = mul i64 [[TMP1]], 8
-; PRED-NEXT:    [[TMP3:%.*]] = sub i64 [[DST1]], [[SRC2]]
+; PRED-NEXT:    [[TMP3:%.*]] = sub i64 [[DST2]], [[SRC3]]
 ; PRED-NEXT:    [[DIFF_CHECK:%.*]] = icmp ult i64 [[TMP3]], [[TMP2]]
 ; PRED-NEXT:    br label [[VECTOR_PH:%.*]]
 ; PRED:       vector.ph:

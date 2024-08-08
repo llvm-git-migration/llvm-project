@@ -363,7 +363,7 @@ public:
   /// loop iteration.
   std::optional<VectorizationFactor>
   plan(ElementCount UserVF, unsigned UserIC,
-       std::optional<ArrayRef<PointerDiffInfo>> DiffChecks, std::function<Value*(const SCEV *)> Expander, bool &HasAliasMask);
+       std::optional<ArrayRef<PointerDiffInfo>> DiffChecks, bool &HasAliasMask);
 
   /// Use the VPlan-native path to plan how to best vectorize, return the best
   /// VF and its cost.
@@ -440,10 +440,9 @@ private:
   /// setting HasAliasMask to true in the case that an alias mask is generated
   /// and the vector loop should be entered even if the pointers alias across a
   /// loop iteration.
-  VPlanPtr
-  tryToBuildVPlanWithVPRecipes(VFRange &Range,
-                               SmallVector<PointerDiffInfoValues> RTChecks,
-                               bool &HasAliasMask);
+  VPlanPtr tryToBuildVPlanWithVPRecipes(VFRange &Range,
+                                        ArrayRef<PointerDiffInfo> RTChecks,
+                                        bool &HasAliasMask);
 
   /// Build VPlans for power-of-2 VF's between \p MinVF and \p MaxVF inclusive,
   /// according to the information gathered by Legal when it checked if it is
@@ -451,7 +450,7 @@ private:
   /// RTChecks contains a list of pointer pairs that an alias mask should be
   /// generated for.
   void buildVPlansWithVPRecipes(ElementCount MinVF, ElementCount MaxVF,
-                                SmallVector<PointerDiffInfoValues> RTChecks,
+                                ArrayRef<PointerDiffInfo> RTChecks,
                                 bool &HasAliasMask);
 
   // Adjust the recipes for reductions. For in-loop reductions the chain of
