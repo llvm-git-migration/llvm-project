@@ -9,8 +9,8 @@ define void @pred_loop(ptr %off, ptr %data, ptr %dst, i32 %n) #0 {
 ; CHECK-COST: LV: Found an estimated cost of 0 for VF 1 For instruction:   %i.09 = phi i32 [ %add, %for.body ], [ 0, %for.body.preheader ]
 ; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %add = add nuw nsw i32 %i.09, 1
 ; CHECK-COST-NEXT: LV: Found an estimated cost of 0 for VF 1 For instruction:   %arrayidx = getelementptr inbounds i32, ptr %data, i32 %add
-; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %1 = load i32, ptr %arrayidx, align 4
-; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %add1 = add nsw i32 %1, 5
+; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %0 = load i32, ptr %arrayidx, align 4
+; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %add1 = add nsw i32 %0, 5
 ; CHECK-COST-NEXT: LV: Found an estimated cost of 0 for VF 1 For instruction:   %arrayidx2 = getelementptr inbounds i32, ptr %dst, i32 %i.09
 ; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   store i32 %add1, ptr %arrayidx2, align 4
 ; CHECK-COST-NEXT: LV: Found an estimated cost of 1 for VF 1 For instruction:   %exitcond.not = icmp eq i32 %add, %n

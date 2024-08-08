@@ -1929,10 +1929,6 @@ public:
     OuterLoop = L->getParentLoop();
   }
 
-  Value *expandCodeForMemCheck(const SCEV *Scev, Instruction *Loc) {
-    return MemCheckExp.expandCodeFor(Scev, Scev->getType(), Loc);
-  }
-
   InstructionCost getCost() {
     if (SCEVCheckBlock || MemCheckBlock)
       LLVM_DEBUG(dbgs() << "Calculating cost of runtime checks:\n");
@@ -7007,8 +7003,7 @@ LoopVectorizationPlanner::planInVPlanNativePath(ElementCount UserVF) {
 }
 
 void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
-                               std::optional<ArrayRef<PointerDiffInfo>> RTChecks,
-                               std::function<Value*(const SCEV*)> Expander, bool &HasAliasMask) {
+    std::optional<ArrayRef<PointerDiffInfo>> RTChecks, bool &HasAliasMask) {
   assert(OrigLoop->isInnermost() && "Inner loop expected.");
   CM.collectValuesToIgnore();
   CM.collectElementTypesForWidening();
@@ -7019,15 +7014,9 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
 
   // VPlan needs the aliasing pointers as Values and not SCEVs, so expand them
   // here and put them into a list.
-  SmallVector<PointerDiffInfoValues> DiffChecksValues;
-  if (RTChecks.has_value()
-      && useActiveLaneMask(CM.getTailFoldingStyle(true))) {
-    for (auto Check : *RTChecks) {
-      Value *Sink = Expander(Check.SinkStart);
-      Value *Src = Expander(Check.SrcStart);
-      DiffChecksValues.push_back(PointerDiffInfoValues(Src, Sink));
-    }
-  }
+  ArrayRef<PointerDiffInfo> DiffChecks;
+  if (RTChecks.has_value() && useActiveLaneMask(CM.getTailFoldingStyle(true)))
+    DiffChecks = *RTChecks;
 
   // Invalidate interleave groups if all blocks of loop will be predicated.
   if (CM.blockNeedsPredicationForAnyReason(OrigLoop->getHeader()) &&
@@ -7061,7 +7050,7 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
       CM.collectInLoopReductions();
       if (CM.selectUserVectorizationFactor(UserVF)) {
         LLVM_DEBUG(dbgs() << "LV: Using user VF " << UserVF << ".\n");
-        buildVPlansWithVPRecipes(UserVF, UserVF, DiffChecksValues, HasAliasMask);
+        buildVPlansWithVPRecipes(UserVF, UserVF, DiffChecks, HasAliasMask);
         LLVM_DEBUG(printPlans(dbgs()));
         return;
       } else
@@ -7091,9 +7080,9 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
   }
 
   buildVPlansWithVPRecipes(ElementCount::getFixed(1), MaxFactors.FixedVF,
-                           DiffChecksValues, HasAliasMask);
+                           DiffChecks, HasAliasMask);
   buildVPlansWithVPRecipes(ElementCount::getScalable(1), MaxFactors.ScalableVF,
-                           DiffChecksValues, HasAliasMask);
+                           DiffChecks, HasAliasMask);
 
   LLVM_DEBUG(printPlans(dbgs()));
 }
@@ -8571,8 +8560,8 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
 }
 
 void LoopVectorizationPlanner::buildVPlansWithVPRecipes(
-    ElementCount MinVF, ElementCount MaxVF,
-    SmallVector<PointerDiffInfoValues> RTChecks, bool &HasAliasMask) {
+    ElementCount MinVF, ElementCount MaxVF, ArrayRef<PointerDiffInfo> RTChecks,
+    bool &HasAliasMask) {
   assert(OrigLoop->isInnermost() && "Inner loop expected.");
 
   auto MaxVFTimes2 = MaxVF * 2;
@@ -8867,8 +8856,7 @@ static void addLiveOutsForFirstOrderRecurrences(
 }
 
 VPlanPtr LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(
-    VFRange &Range, SmallVector<PointerDiffInfoValues> RTChecks,
-    bool &HasAliasMask) {
+    VFRange &Range, ArrayRef<PointerDiffInfo> RTChecks, bool &HasAliasMask) {
 
   SmallPtrSet<const InterleaveGroup<Instruction> *, 1> InterleaveGroups;
 
@@ -8917,8 +8905,10 @@ VPlanPtr LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(
     VPBuilder Builder(VecPreheader);
     for (auto C : RTChecks) {
       HasAliasMask = true;
-      VPValue *Sink = Plan->getOrAddLiveIn(C.Sink);
-      VPValue *Src = Plan->getOrAddLiveIn(C.Src);
+      VPValue *Sink = vputils::getOrCreateVPValueForSCEVExpr(*Plan, C.SinkStart,
+                                                             *PSE.getSE());
+      VPValue *Src = vputils::getOrCreateVPValueForSCEVExpr(*Plan, C.SrcStart,
+                                                            *PSE.getSE());
       VPValue *M =
           Builder.createNaryOp(VPInstruction::AliasLaneMask, {Sink, Src}, DL,
                                "active.lane.mask.alias");
@@ -10014,26 +10004,8 @@ bool LoopVectorizePass::processLoop(Loop *L) {
   GeneratedRTChecks Checks(*PSE.getSE(), DT, LI, TTI,
                            F->getDataLayout(), AddBranchWeights);
 
-  // VPlan needs the aliasing pointers as Values and not SCEVs, so expand them
-  // here and put them into a list.
-  std::optional<ArrayRef<PointerDiffInfo>> DiffChecks =
-      LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks();
-  SmallVector<PointerDiffInfoValues> DiffChecksValues;
-  if (DiffChecks.has_value() &&
-      useActiveLaneMask(CM.getTailFoldingStyle(true))) {
-    Instruction *Loc = L->getLoopPreheader()->getTerminator();
-    for (auto Check : *DiffChecks) {
-      Value *Sink = Checks.expandCodeForMemCheck(Check.SinkStart, Loc);
-      Value *Src = Checks.expandCodeForMemCheck(Check.SrcStart, Loc);
-      DiffChecksValues.push_back(PointerDiffInfoValues(Src, Sink));
-    }
-  }
-
   // Plan how to best vectorize.
-  auto Expand = [&Checks, &L](const SCEV *S) {
-    return Checks.expandCodeForMemCheck(S, L->getLoopPreheader()->getTerminator());
-  };
-  LVP.plan(UserVF, UserIC, LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks(), Expand, Checks.HasAliasMask);
+  LVP.plan(UserVF, UserIC, LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks(), Checks.HasAliasMask);
   VectorizationFactor VF = LVP.computeBestVF();
   if (Checks.HasAliasMask)
     LoopsAliasMasked++;
