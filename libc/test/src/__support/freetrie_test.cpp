@@ -24,17 +24,36 @@ TEST(LlvmLibcFreeTrie, PushPop) {
   ASSERT_TRUE(maybeBlock.has_value());
   Block<> *block2 = *maybeBlock;
 
-  FreeTrie *list = nullptr;
-  FreeTrie::push(list, block1);
-  ASSERT_NE(list, static_cast<FreeTrie *>(nullptr));
-  EXPECT_EQ(list->block(), block1);
-  FreeTrie::push(list, block2);
-  EXPECT_EQ(list->block(), block1);
-  FreeTrie::pop(list);
-  ASSERT_NE(list, static_cast<FreeTrie *>(nullptr));
-  EXPECT_EQ(list->block(), block2);
-  FreeTrie::pop(list);
-  ASSERT_EQ(list, static_cast<FreeTrie *>(nullptr));
+  FreeTrie *trie = nullptr;
+  FreeTrie::push(trie, block1);
+  ASSERT_NE(trie, static_cast<FreeTrie *>(nullptr));
+  EXPECT_EQ(trie->block(), block1);
+
+  FreeTrie::push(trie, block2);
+  EXPECT_EQ(trie->block(), block1);
+
+  FreeTrie::pop(trie);
+  ASSERT_NE(trie, static_cast<FreeTrie *>(nullptr));
+  EXPECT_EQ(trie->block(), block2);
+
+  FreeTrie::pop(trie);
+  ASSERT_EQ(trie, static_cast<FreeTrie *>(nullptr));
+}
+
+TEST(LlvmLibcFreeTrie, Find) {
+  FreeTrie *trie = nullptr;
+  FreeTrie *&empty_found = FreeTrie::find(trie, 123, {0, 1024});
+  EXPECT_EQ(&empty_found, &trie);
+
+  cpp::byte mem1[1024];
+  optional<Block<> *> maybeBlock = Block<>::init(mem1);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block1 = *maybeBlock;
+
+  FreeTrie::push(trie, block1);
+
+  FreeTrie *&root_found = FreeTrie::find(trie, block1->inner_size(), {0, 1024});
+  EXPECT_EQ(&root_found, &trie);
 }
 
 } // namespace LIBC_NAMESPACE_DECL

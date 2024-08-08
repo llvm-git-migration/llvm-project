@@ -28,11 +28,14 @@ TEST(LlvmLibcFreeList2, PushPop) {
   FreeList2::push(list, block1);
   ASSERT_NE(list, static_cast<FreeList2*>(nullptr));
   EXPECT_EQ(list->block(), block1);
+
   FreeList2::push(list, block2);
   EXPECT_EQ(list->block(), block1);
+
   FreeList2::pop(list);
   ASSERT_NE(list, static_cast<FreeList2*>(nullptr));
   EXPECT_EQ(list->block(), block2);
+
   FreeList2::pop(list);
   ASSERT_EQ(list, static_cast<FreeList2*>(nullptr));
 }

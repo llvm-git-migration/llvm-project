@@ -43,6 +43,11 @@ public:
   /// Pop from the front of this node's free list.
   static void pop(FreeTrie *&trie);
 
+  /// Finds the free trie for a given size. This may be a referance to a nullptr
+  /// at the correct place in the trie structure. The caller must provide the
+  /// SizeRange for this trie; the trie does not store it.
+  static FreeTrie *&find(FreeTrie *&trie, size_t size, SizeRange range);
+
   // The containing trie or nullptr if this is the root.
   FreeTrie *parent;
   // The child subtrie covering the lower half of this subtrie's size range.
@@ -81,13 +86,17 @@ LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
 LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
   FreeList2 *list = trie;
   FreeList2::pop(list);
-  FreeTrie *new_trie = static_cast<FreeTrie*>(list);
+  FreeTrie *new_trie = static_cast<FreeTrie *>(list);
   if (new_trie) {
     new_trie->parent = trie->parent;
     new_trie->lower = trie->lower;
     new_trie->upper = trie->upper;
   }
   trie = new_trie;
+}
+
+FreeTrie *&FreeTrie::find(FreeTrie *&list, size_t size, SizeRange range) {
+  return list;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
