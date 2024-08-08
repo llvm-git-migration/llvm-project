@@ -2425,12 +2425,12 @@ Instruction *InstCombinerImpl::visitAnd(BinaryOperator &I) {
       return BinaryOperator::CreateLShr(X, ConstantInt::get(Ty, *ShiftC));
 
     const APInt *AddC;
-    if (match(Op0, m_Add(m_Value(X), m_APInt(AddC)))) {
+    if (match(Op0, m_OneUse(m_Add(m_Value(X), m_Power2(AddC))))) {
       // If we are masking the result of the add down to exactly one bit and
       // the constant we are adding has no bits set below that bit, then the
       // add is flipping a single bit. Example:
       // (X + 4) & 4 --> (X & 4) ^ 4
-      if (Op0->hasOneUse() && C->isPowerOf2() && (*AddC & (*C - 1)) == 0) {
+      if ((*AddC & (*C - 1)) == 0) {
         assert((*C & *AddC) != 0 && "Expected common bit");
         Value *NewAnd = Builder.CreateAnd(X, Op1);
         return BinaryOperator::CreateXor(NewAnd, Op1);
