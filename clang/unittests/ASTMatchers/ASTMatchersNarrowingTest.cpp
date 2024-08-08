@@ -2514,9 +2514,9 @@ TEST_P(ASTMatchersTest, MatchesString) {
   EXPECT_TRUE(matches("const char16_t* a = u\"foo\";", Literal));
   EXPECT_TRUE(matches("const char32_t* a = U\"foo\";", Literal));
   // test embedded nulls
-  Literal = stringLiteral(matchesString("bar"));
-  EXPECT_TRUE(matches("const char* b = \"foo\0bar\";", Literal));
-  EXPECT_TRUE(notMatches("const char* b = \"foo\0b\0ar\";", Literal));
+  StatementMatcher Literal2 = stringLiteral(matchesString("bar"));
+  EXPECT_TRUE(matches("const char* b = \"foo\0bar\";", Literal2));
+  EXPECT_TRUE(notMatches("const char* b = \"foo\0b\0ar\";", Literal2));
 }
 
 TEST_P(ASTMatchersTest, HasSize) {
