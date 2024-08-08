@@ -3090,6 +3090,8 @@ void DAGTypeLegalizer::SoftPromoteHalfResult(SDNode *N, unsigned ResNo) {
     break;
   case ISD::SELECT:      R = SoftPromoteHalfRes_SELECT(N); break;
   case ISD::SELECT_CC:   R = SoftPromoteHalfRes_SELECT_CC(N); break;
+  case ISD::STRICT_SINT_TO_FP:
+  case ISD::STRICT_UINT_TO_FP:
   case ISD::SINT_TO_FP:
   case ISD::UINT_TO_FP:  R = SoftPromoteHalfRes_XINT_TO_FP(N); break;
   case ISD::UNDEF:       R = SoftPromoteHalfRes_UNDEF(N); break;
@@ -3311,7 +3313,12 @@ SDValue DAGTypeLegalizer::SoftPromoteHalfRes_XINT_TO_FP(SDNode *N) {
   EVT NVT = TLI.getTypeToTransformTo(*DAG.getContext(), OVT);
   SDLoc dl(N);
 
-  SDValue Res = DAG.getNode(N->getOpcode(), dl, NVT, N->getOperand(0));
+  bool IsStrict = N->isStrictFPOpcode();
+  SDValue Op = N->getOperand(IsStrict ? 1 : 0);
+
+  bool Signed = N->getOpcode() == ISD::SINT_TO_FP ||
+                N->getOpcode() == ISD::STRICT_SINT_TO_FP;
+  SDValue Res = DAG.getNode(Signed ? ISD::SINT_TO_FP : ISD::UINT_TO_FP, dl, NVT, Op);
 
   // Round the value to the softened type.
   return DAG.getNode(GetPromotionOpcode(NVT, OVT), dl, MVT::i16, Res);
