@@ -60,10 +60,12 @@ TEST(LlvmLibcFreeTrie, Find) {
 
   FreeTrie *&less_found = FreeTrie::find(trie, WIDTH / 2, {0, 1024});
   EXPECT_NE(&less_found, &trie);
+  EXPECT_EQ(less_found, static_cast<FreeTrie *>(nullptr));
 
   FreeTrie *&greater_found = FreeTrie::find(trie, WIDTH / 2 + 1, {0, 1024});
   EXPECT_NE(&greater_found, &trie);
   EXPECT_NE(&greater_found, &less_found);
+  EXPECT_EQ(greater_found, static_cast<FreeTrie *>(nullptr));
 }
 
 } // namespace LIBC_NAMESPACE_DECL
