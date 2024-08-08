@@ -5,6 +5,7 @@
 // RISCV32-NEXT: note: valid target CPU values are:
 // RISCV32-SAME: generic-rv32,
 // RISCV32-SAME: rocket-rv32,
+// RISCV32-SAME: rp2350-hazard3,
 // RISCV32-SAME: sifive-e20,
 // RISCV32-SAME: sifive-e21,
 // RISCV32-SAME: sifive-e24,
@@ -46,6 +47,7 @@
 // TUNE-RISCV32-NEXT: note: valid target CPU values are:
 // TUNE-RISCV32-SAME: generic-rv32,
 // TUNE-RISCV32-SAME: rocket-rv32,
+// TUNE-RISCV32-SAME: rp2350-hazard3,
 // TUNE-RISCV32-SAME: sifive-e20,
 // TUNE-RISCV32-SAME: sifive-e21,
 // TUNE-RISCV32-SAME: sifive-e24,
