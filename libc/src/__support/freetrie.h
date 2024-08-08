@@ -50,8 +50,10 @@ public:
   /// SizeRange for this trie; the trie does not store it.
   static FreeTrie *&find(FreeTrie *&trie, size_t size, SizeRange range);
 
-  // The containing trie or nullptr if this is the root.
-  FreeTrie *parent;
+private:
+  /// Return an abitrary leaf.
+  FreeTrie &leaf();
+
   // The child subtrie covering the lower half of this subtrie's size range.
   FreeTrie *lower;
   // The child subtrie covering the upper half of this subtrie's size range.
@@ -89,7 +91,7 @@ LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
   FreeTrie *node = new (block->usable_space()) FreeTrie;
   // The trie links are irrelevant for all but the first node in the free list.
   if (!trie)
-    node->parent = node->lower = node->upper = nullptr;
+    node->lower = node->upper = nullptr;
   FreeList2 *list = trie;
   FreeList2::push(list, node);
   trie = static_cast<FreeTrie *>(list);
@@ -100,13 +102,27 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
   FreeList2::pop(list);
   FreeTrie *new_trie = static_cast<FreeTrie *>(list);
   if (new_trie) {
-    new_trie->parent = trie->parent;
+    // The freelist is non-empty, so copy the trie links to the new head. 
     new_trie->lower = trie->lower;
     new_trie->upper = trie->upper;
-  } else {
-    // TODO
+    trie = new_trie;
+    return;
   }
-  trie = new_trie;
+
+  // The freelist is empty.
+
+  FreeTrie &l = trie->leaf();
+  if (&l == trie) {
+    // The last element of the trie was remved.
+    trie = nullptr;
+    return;
+  }
+
+  // Replace the root with an arbitrary leaf. This is legal because there is
+  // no relationship between the size of the root and its children.
+  l.lower = trie->lower;
+  l.upper = trie->upper;
+  trie = &l;
 }
 
 FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
@@ -115,6 +131,13 @@ FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
     return trie;
   return find(size <= range.middle() ? trie->lower : trie->upper, size,
               size <= range.middle() ? range.lower() : range.upper());
+}
+
+FreeTrie &FreeTrie::leaf() {
+  FreeTrie *t = this;
+  while (t->lower || t->upper)
+    t = t->lower ? t->lower : t->upper;
+  return *t;
 }
 
 } // namespace LIBC_NAMESPACE_DECL

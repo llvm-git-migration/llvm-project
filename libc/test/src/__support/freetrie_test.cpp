@@ -68,7 +68,7 @@ TEST(LlvmLibcFreeTrie, Find) {
   EXPECT_EQ(greater_found, static_cast<FreeTrie *>(nullptr));
 }
 
-TEST(LlvmLibcFreeTrie, RootPopPreservesChild) {
+TEST(LlvmLibcFreeTrie, RootPopWithChild) {
   cpp::byte mem1[1024];
   optional<Block<> *> maybeBlock = Block<>::init(mem1);
   ASSERT_TRUE(maybeBlock.has_value());
@@ -84,18 +84,52 @@ TEST(LlvmLibcFreeTrie, RootPopPreservesChild) {
   ASSERT_TRUE(maybeBlock.has_value());
   Block<> *block3 = *maybeBlock;
 
+  cpp::byte mem4[2047];
+  maybeBlock = Block<>::init(mem4);
+  ASSERT_TRUE(maybeBlock.has_value());
+  Block<> *block4 = *maybeBlock;
+
   FreeTrie *trie = nullptr;
   FreeTrie::push(trie, block1);
   FreeTrie::push(trie, block2);
 
-  FreeTrie *&child = trie->find(trie, block3->inner_size(), {0, 2048});
-  FreeTrie::push(child, block3);
-  ASSERT_NE(child, static_cast<FreeTrie *>(nullptr));
-  EXPECT_EQ(child->block(), block3);
+  FreeTrie *&child3 = trie->find(trie, block3->inner_size(), {0, 4096});
+  FreeTrie::push(child3, block3);
+
+  ASSERT_NE(child3, static_cast<FreeTrie *>(nullptr));
+  EXPECT_EQ(child3->block(), block3);
+
+  FreeTrie *&child4 = trie->find(trie, block4->inner_size(), {0, 4096});
+  FreeTrie::push(child4, block4);
+  ASSERT_NE(child4, static_cast<FreeTrie *>(nullptr));
+  EXPECT_EQ(child4->block(), block4);
+
+  // Expected Trie:
+  // block1 -> block2
+  //   lower:
+  //     block3
+  //       upper:
+  //         block4
 
   FreeTrie::pop(trie);
-  FreeTrie *&new_child = trie->find(trie, block3->inner_size(), {0, 2048});
-  EXPECT_EQ(new_child, child);
+  FreeTrie *&new_child4 = trie->find(trie, block4->inner_size(), {0, 4096});
+  // Expected Trie:
+  // block2
+  //   lower:
+  //     block3
+  //       upper:
+  //         block4
+  EXPECT_EQ(new_child4, child4);
+
+  FreeTrie::pop(trie);
+
+  // Expected Trie:
+  // block4
+  //   lower:
+  //     block3
+  EXPECT_EQ(trie, child4);
+  FreeTrie *&new_child3 = trie->find(trie, block3->inner_size(), {0, 4096});
+  EXPECT_EQ(new_child3, child3);
 }
 
 } // namespace LIBC_NAMESPACE_DECL
