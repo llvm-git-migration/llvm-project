@@ -2514,9 +2514,6 @@ TEST_P(ASTMatchersTest, MatchesString) {
   EXPECT_TRUE(matches("const char* b = \"foo\\0bar\";", Literal2));
   EXPECT_TRUE(notMatches("const char* b = \"foo\\0b\\0ar\";", Literal2));
   // test prefix
-  if (!GetParam().isCXX20OrLater()) {
-    return;
-  }
   EXPECT_TRUE(matches("const wchar_t* a = L\"foo\";", Literal));
   EXPECT_TRUE(matches("const char16_t* a = u\"foo\";", Literal));
   EXPECT_TRUE(matches("const char32_t* a = U\"foo\";", Literal));
