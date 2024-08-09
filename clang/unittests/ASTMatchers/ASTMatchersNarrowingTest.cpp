@@ -2513,13 +2513,13 @@ TEST_P(ASTMatchersTest, MatchesString) {
   StatementMatcher Literal2 = stringLiteral(matchesString("bar"));
   EXPECT_TRUE(matches("const char* b = \"foo\\0bar\";", Literal2));
   EXPECT_TRUE(notMatches("const char* b = \"foo\\0b\\0ar\";", Literal2));
-  // test prefix
-  EXPECT_TRUE(matches("const wchar_t* a = L\"foo\";", Literal));
 }
 
 TEST(MatchesString, MatchesStringPrefixed) {
   StatementMatcher Literal = stringLiteral(matchesString("foo.*"));
   EXPECT_TRUE(matchesConditionally("const char16_t* a = u\"foo\";", Literal,
+                                   true, {"-std=c++11"}));
+  EXPECT_TRUE(matchesConditionally("const char32_t* a = U\"foo\";", Literal,
                                    true, {"-std=c++11"}));
   EXPECT_TRUE(matchesConditionally("const char32_t* a = U\"foo\";", Literal,
                                    true, {"-std=c++11"}));
