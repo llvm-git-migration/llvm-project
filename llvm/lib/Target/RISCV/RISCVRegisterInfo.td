@@ -607,17 +607,17 @@ def GPRPair : RISCVRegisterClass<[XLenPairFVT], 64, (add
 // The register class is added for inline assembly for vector mask types.
 def VM : VReg<VMaskVTs, (add VR), 1>;
 
-defvar VTupM1N2VTs = [riscv_m1x2, riscv_mf2x2, riscv_mf4x2, riscv_mf8x2];
-defvar VTupM1N3VTs = [riscv_m1x3, riscv_mf2x3, riscv_mf4x3, riscv_mf8x3];
-defvar VTupM1N4VTs = [riscv_m1x4, riscv_mf2x4, riscv_mf4x4, riscv_mf8x4];
-defvar VTupM1N5VTs = [riscv_m1x5, riscv_mf2x5, riscv_mf4x5, riscv_mf8x5];
-defvar VTupM1N6VTs = [riscv_m1x6, riscv_mf2x6, riscv_mf4x6, riscv_mf8x6];
-defvar VTupM1N7VTs = [riscv_m1x7, riscv_mf2x7, riscv_mf4x7, riscv_mf8x7];
-defvar VTupM1N8VTs = [riscv_m1x8, riscv_mf2x8, riscv_mf4x8, riscv_mf8x8];
-defvar VTupM2N2VTs = [riscv_m2x2];
-defvar VTupM2N3VTs = [riscv_m2x3];
-defvar VTupM2N4VTs = [riscv_m2x4];
-defvar VTupM4N2VTs = [riscv_m4x2];
+defvar VTupM1N2VTs = [riscv_nxv8i8x2, riscv_nxv4i8x2, riscv_nxv2i8x2, riscv_nxv1i8x2];
+defvar VTupM1N3VTs = [riscv_nxv8i8x3, riscv_nxv4i8x3, riscv_nxv2i8x3, riscv_nxv1i8x3];
+defvar VTupM1N4VTs = [riscv_nxv8i8x4, riscv_nxv4i8x4, riscv_nxv2i8x4, riscv_nxv1i8x4];
+defvar VTupM1N5VTs = [riscv_nxv8i8x5, riscv_nxv4i8x5, riscv_nxv2i8x5, riscv_nxv1i8x5];
+defvar VTupM1N6VTs = [riscv_nxv8i8x6, riscv_nxv4i8x6, riscv_nxv2i8x6, riscv_nxv1i8x6];
+defvar VTupM1N7VTs = [riscv_nxv8i8x7, riscv_nxv4i8x7, riscv_nxv2i8x7, riscv_nxv1i8x7];
+defvar VTupM1N8VTs = [riscv_nxv8i8x8, riscv_nxv4i8x8, riscv_nxv2i8x8, riscv_nxv1i8x8];
+defvar VTupM2N2VTs = [riscv_nxv16i8x2];
+defvar VTupM2N3VTs = [riscv_nxv16i8x3];
+defvar VTupM2N4VTs = [riscv_nxv16i8x4];
+defvar VTupM4N2VTs = [riscv_nxv32i8x2];
 class VTupRegList<int LMUL, int NF> {
   list<ValueType> L = !cond(!and(!eq(LMUL, 1), !eq(NF, 2)): VTupM1N2VTs,
                             !and(!eq(LMUL, 1), !eq(NF, 3)): VTupM1N3VTs,

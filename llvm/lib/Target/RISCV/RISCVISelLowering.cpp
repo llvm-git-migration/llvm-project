@@ -160,14 +160,17 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   static const MVT::SimpleValueType F64VecVTs[] = {
       MVT::nxv1f64, MVT::nxv2f64, MVT::nxv4f64, MVT::nxv8f64};
   static const MVT::SimpleValueType VecTupleVTs[] = {
-      MVT::riscv_mf8x2, MVT::riscv_mf8x3, MVT::riscv_mf8x4, MVT::riscv_mf8x5,
-      MVT::riscv_mf8x6, MVT::riscv_mf8x7, MVT::riscv_mf8x8, MVT::riscv_mf4x2,
-      MVT::riscv_mf4x3, MVT::riscv_mf4x4, MVT::riscv_mf4x5, MVT::riscv_mf4x6,
-      MVT::riscv_mf4x7, MVT::riscv_mf4x8, MVT::riscv_mf2x2, MVT::riscv_mf2x3,
-      MVT::riscv_mf2x4, MVT::riscv_mf2x5, MVT::riscv_mf2x6, MVT::riscv_mf2x7,
-      MVT::riscv_mf2x8, MVT::riscv_m1x2,  MVT::riscv_m1x3,  MVT::riscv_m1x4,
-      MVT::riscv_m1x5,  MVT::riscv_m1x6,  MVT::riscv_m1x7,  MVT::riscv_m1x8,
-      MVT::riscv_m2x2,  MVT::riscv_m2x3,  MVT::riscv_m2x4,  MVT::riscv_m4x2};
+      MVT::riscv_nxv1i8x2,  MVT::riscv_nxv1i8x3,  MVT::riscv_nxv1i8x4,
+      MVT::riscv_nxv1i8x5,  MVT::riscv_nxv1i8x6,  MVT::riscv_nxv1i8x7,
+      MVT::riscv_nxv1i8x8,  MVT::riscv_nxv2i8x2,  MVT::riscv_nxv2i8x3,
+      MVT::riscv_nxv2i8x4,  MVT::riscv_nxv2i8x5,  MVT::riscv_nxv2i8x6,
+      MVT::riscv_nxv2i8x7,  MVT::riscv_nxv2i8x8,  MVT::riscv_nxv4i8x2,
+      MVT::riscv_nxv4i8x3,  MVT::riscv_nxv4i8x4,  MVT::riscv_nxv4i8x5,
+      MVT::riscv_nxv4i8x6,  MVT::riscv_nxv4i8x7,  MVT::riscv_nxv4i8x8,
+      MVT::riscv_nxv8i8x2,  MVT::riscv_nxv8i8x3,  MVT::riscv_nxv8i8x4,
+      MVT::riscv_nxv8i8x5,  MVT::riscv_nxv8i8x6,  MVT::riscv_nxv8i8x7,
+      MVT::riscv_nxv8i8x8,  MVT::riscv_nxv16i8x2, MVT::riscv_nxv16i8x3,
+      MVT::riscv_nxv16i8x4, MVT::riscv_nxv32i8x2};
 
   if (Subtarget.hasVInstructions()) {
     auto addRegClassForRVV = [this](MVT VT) {
@@ -234,38 +237,38 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
           addRegClassForFixedVectors(VT);
     }
 
-    addRegisterClass(MVT::riscv_mf8x2, &RISCV::VRN2M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x3, &RISCV::VRN3M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x4, &RISCV::VRN4M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x5, &RISCV::VRN5M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x6, &RISCV::VRN6M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x7, &RISCV::VRN7M1RegClass);
-    addRegisterClass(MVT::riscv_mf8x8, &RISCV::VRN8M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x2, &RISCV::VRN2M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x3, &RISCV::VRN3M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x4, &RISCV::VRN4M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x5, &RISCV::VRN5M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x6, &RISCV::VRN6M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x7, &RISCV::VRN7M1RegClass);
-    addRegisterClass(MVT::riscv_mf4x8, &RISCV::VRN8M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x2, &RISCV::VRN2M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x3, &RISCV::VRN3M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x4, &RISCV::VRN4M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x5, &RISCV::VRN5M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x6, &RISCV::VRN6M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x7, &RISCV::VRN7M1RegClass);
-    addRegisterClass(MVT::riscv_mf2x8, &RISCV::VRN8M1RegClass);
-    addRegisterClass(MVT::riscv_m1x2, &RISCV::VRN2M1RegClass);
-    addRegisterClass(MVT::riscv_m1x3, &RISCV::VRN3M1RegClass);
-    addRegisterClass(MVT::riscv_m1x4, &RISCV::VRN4M1RegClass);
-    addRegisterClass(MVT::riscv_m1x5, &RISCV::VRN5M1RegClass);
-    addRegisterClass(MVT::riscv_m1x6, &RISCV::VRN6M1RegClass);
-    addRegisterClass(MVT::riscv_m1x7, &RISCV::VRN7M1RegClass);
-    addRegisterClass(MVT::riscv_m1x8, &RISCV::VRN8M1RegClass);
-    addRegisterClass(MVT::riscv_m2x2, &RISCV::VRN2M2RegClass);
-    addRegisterClass(MVT::riscv_m2x3, &RISCV::VRN3M2RegClass);
-    addRegisterClass(MVT::riscv_m2x4, &RISCV::VRN4M2RegClass);
-    addRegisterClass(MVT::riscv_m4x2, &RISCV::VRN2M4RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x2, &RISCV::VRN2M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x3, &RISCV::VRN3M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x4, &RISCV::VRN4M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x5, &RISCV::VRN5M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x6, &RISCV::VRN6M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x7, &RISCV::VRN7M1RegClass);
+    addRegisterClass(MVT::riscv_nxv1i8x8, &RISCV::VRN8M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x2, &RISCV::VRN2M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x3, &RISCV::VRN3M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x4, &RISCV::VRN4M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x5, &RISCV::VRN5M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x6, &RISCV::VRN6M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x7, &RISCV::VRN7M1RegClass);
+    addRegisterClass(MVT::riscv_nxv2i8x8, &RISCV::VRN8M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x2, &RISCV::VRN2M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x3, &RISCV::VRN3M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x4, &RISCV::VRN4M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x5, &RISCV::VRN5M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x6, &RISCV::VRN6M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x7, &RISCV::VRN7M1RegClass);
+    addRegisterClass(MVT::riscv_nxv4i8x8, &RISCV::VRN8M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x2, &RISCV::VRN2M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x3, &RISCV::VRN3M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x4, &RISCV::VRN4M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x5, &RISCV::VRN5M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x6, &RISCV::VRN6M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x7, &RISCV::VRN7M1RegClass);
+    addRegisterClass(MVT::riscv_nxv8i8x8, &RISCV::VRN8M1RegClass);
+    addRegisterClass(MVT::riscv_nxv16i8x2, &RISCV::VRN2M2RegClass);
+    addRegisterClass(MVT::riscv_nxv16i8x3, &RISCV::VRN3M2RegClass);
+    addRegisterClass(MVT::riscv_nxv16i8x4, &RISCV::VRN4M2RegClass);
+    addRegisterClass(MVT::riscv_nxv32i8x2, &RISCV::VRN2M4RegClass);
   }
 
   // Compute derived properties from the register classes.
@@ -2499,17 +2502,22 @@ static void translateSetCCForBranch(const SDLoc &DL, SDValue &LHS, SDValue &RHS,
 
 RISCVII::VLMUL RISCVTargetLowering::getLMUL(MVT VT) {
   if (VT.isRISCVVectorTuple()) {
-    if (VT.SimpleTy >= MVT::riscv_mf8x2 && VT.SimpleTy <= MVT::riscv_mf8x8)
+    if (VT.SimpleTy >= MVT::riscv_nxv1i8x2 &&
+        VT.SimpleTy <= MVT::riscv_nxv1i8x8)
       return RISCVII::LMUL_F8;
-    if (VT.SimpleTy >= MVT::riscv_mf4x2 && VT.SimpleTy <= MVT::riscv_mf4x8)
+    if (VT.SimpleTy >= MVT::riscv_nxv2i8x2 &&
+        VT.SimpleTy <= MVT::riscv_nxv2i8x8)
       return RISCVII::LMUL_F4;
-    if (VT.SimpleTy >= MVT::riscv_mf2x2 && VT.SimpleTy <= MVT::riscv_mf2x8)
+    if (VT.SimpleTy >= MVT::riscv_nxv4i8x2 &&
+        VT.SimpleTy <= MVT::riscv_nxv4i8x8)
       return RISCVII::LMUL_F2;
-    if (VT.SimpleTy >= MVT::riscv_m1x2 && VT.SimpleTy <= MVT::riscv_m1x8)
+    if (VT.SimpleTy >= MVT::riscv_nxv8i8x2 &&
+        VT.SimpleTy <= MVT::riscv_nxv8i8x8)
       return RISCVII::LMUL_1;
-    if (VT.SimpleTy >= MVT::riscv_m2x2 && VT.SimpleTy <= MVT::riscv_m2x4)
+    if (VT.SimpleTy >= MVT::riscv_nxv16i8x2 &&
+        VT.SimpleTy <= MVT::riscv_nxv16i8x4)
       return RISCVII::LMUL_2;
-    if (VT.SimpleTy == MVT::riscv_m4x2)
+    if (VT.SimpleTy == MVT::riscv_nxv32i8x2)
       return RISCVII::LMUL_4;
     llvm_unreachable("Invalid vector tuple type LMUL.");
   }
@@ -9713,9 +9721,9 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_W_CHAIN(SDValue Op,
     MVT XLenVT = Subtarget.getXLenVT();
     MVT VT = Op->getSimpleValueType(0);
     MVT ContainerVT = getContainerForFixedLengthVector(VT);
-    auto LMUL = static_cast<unsigned>(getLMUL(ContainerVT));
-    auto Log2LMUL = LMUL > 4 ? LMUL - 8 : LMUL;
-    EVT VecTupTy = EVT::getRISCVVectorTupleVT(Log2LMUL, NF);
+    unsigned Sz = NF * ContainerVT.getVectorMinNumElements() *
+                  ContainerVT.getScalarSizeInBits();
+    EVT VecTupTy = MVT::getRISCVVectorTupleVT(Sz, NF);
 
     SDValue VL = getVLOp(VT.getVectorNumElements(), ContainerVT, DL, DAG,
                          Subtarget);
@@ -9842,9 +9850,9 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_VOID(SDValue Op,
     MVT XLenVT = Subtarget.getXLenVT();
     MVT VT = Op->getOperand(2).getSimpleValueType();
     MVT ContainerVT = getContainerForFixedLengthVector(VT);
-    auto LMUL = static_cast<unsigned>(getLMUL(ContainerVT));
-    auto Log2LMUL = LMUL > 4 ? LMUL - 8 : LMUL;
-    EVT VecTupTy = EVT::getRISCVVectorTupleVT(Log2LMUL, NF);
+    unsigned Sz = NF * ContainerVT.getVectorMinNumElements() *
+                  ContainerVT.getScalarSizeInBits();
+    EVT VecTupTy = MVT::getRISCVVectorTupleVT(Sz, NF);
 
     SDValue VL = getVLOp(VT.getVectorNumElements(), ContainerVT, DL, DAG,
                          Subtarget);
@@ -22171,7 +22179,7 @@ bool RISCVTargetLowering::lowerDeinterleaveIntrinsicToLoad(IntrinsicInst *DI,
     unsigned SEW = ResVTy->getElementType()->getScalarSizeInBits();
     unsigned NumElts = ResVTy->getElementCount().getKnownMinValue();
     Type *VecTupTy = TargetExtType::get(
-        LI->getContext(), "riscv_vec_tuple",
+        LI->getContext(), "riscv.vector.tuple",
         ScalableVectorType::get(Type::getInt8Ty(LI->getContext()),
                                 NumElts * SEW / 8),
         2);
@@ -22241,7 +22249,7 @@ bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
     unsigned SEW = InVTy->getElementType()->getScalarSizeInBits();
     unsigned NumElts = InVTy->getElementCount().getKnownMinValue();
     Type *VecTupTy = TargetExtType::get(
-        SI->getContext(), "riscv_vec_tuple",
+        SI->getContext(), "riscv.vector.tuple",
         ScalableVectorType::get(Type::getInt8Ty(SI->getContext()),
                                 NumElts * SEW / 8),
         2);

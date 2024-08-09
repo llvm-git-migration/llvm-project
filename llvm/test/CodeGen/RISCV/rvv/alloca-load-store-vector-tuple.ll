@@ -4,7 +4,7 @@
 
 target triple = "riscv64-unknown-unknown-elf"
 
-define target("riscv_vec_tuple", <vscale x 8 x i8>, 5) @load_store_m1x5(target("riscv_vec_tuple", <vscale x 8 x i8>, 5) %tuple) {
+define target("riscv.vector.tuple", <vscale x 8 x i8>, 5) @load_store_m1x5(target("riscv.vector.tuple", <vscale x 8 x i8>, 5) %tuple) {
 ; CHECK-LABEL: load_store_m1x5:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    addi sp, sp, -16
@@ -37,15 +37,15 @@ define target("riscv_vec_tuple", <vscale x 8 x i8>, 5) @load_store_m1x5(target("
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    jalr zero, 0(ra)
 entry:
-  %tuple.addr = alloca target("riscv_vec_tuple", <vscale x 8 x i8>, 5), align 1
-  store target("riscv_vec_tuple", <vscale x 8 x i8>, 5) %tuple, ptr %tuple.addr, align 1
+  %tuple.addr = alloca target("riscv.vector.tuple", <vscale x 8 x i8>, 5), align 1
+  store target("riscv.vector.tuple", <vscale x 8 x i8>, 5) %tuple, ptr %tuple.addr, align 1
   call void asm sideeffect "",
   "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
-  %0 = load target("riscv_vec_tuple", <vscale x 8 x i8>, 5), ptr %tuple.addr, align 1
-  ret target("riscv_vec_tuple", <vscale x 8 x i8>, 5) %0
+  %0 = load target("riscv.vector.tuple", <vscale x 8 x i8>, 5), ptr %tuple.addr, align 1
+  ret target("riscv.vector.tuple", <vscale x 8 x i8>, 5) %0
 }
 
-define target("riscv_vec_tuple", <vscale x 16 x i8>, 2) @load_store_m2x2(target("riscv_vec_tuple", <vscale x 16 x i8>, 2) %tuple) {
+define target("riscv.vector.tuple", <vscale x 16 x i8>, 2) @load_store_m2x2(target("riscv.vector.tuple", <vscale x 16 x i8>, 2) %tuple) {
 ; CHECK-LABEL: load_store_m2x2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    addi sp, sp, -16
@@ -70,15 +70,15 @@ define target("riscv_vec_tuple", <vscale x 16 x i8>, 2) @load_store_m2x2(target(
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    jalr zero, 0(ra)
 entry:
-  %tuple.addr = alloca target("riscv_vec_tuple", <vscale x 16 x i8>, 2), align 1
-  store target("riscv_vec_tuple", <vscale x 16 x i8>, 2) %tuple, ptr %tuple.addr, align 1
+  %tuple.addr = alloca target("riscv.vector.tuple", <vscale x 16 x i8>, 2), align 1
+  store target("riscv.vector.tuple", <vscale x 16 x i8>, 2) %tuple, ptr %tuple.addr, align 1
   call void asm sideeffect "",
   "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
-  %0 = load target("riscv_vec_tuple", <vscale x 16 x i8>, 2), ptr %tuple.addr, align 1
-  ret target("riscv_vec_tuple", <vscale x 16 x i8>, 2) %0
+  %0 = load target("riscv.vector.tuple", <vscale x 16 x i8>, 2), ptr %tuple.addr, align 1
+  ret target("riscv.vector.tuple", <vscale x 16 x i8>, 2) %0
 }
 
-define target("riscv_vec_tuple", <vscale x 32 x i8>, 2) @load_store_m4x2(target("riscv_vec_tuple", <vscale x 32 x i8>, 2) %tuple) {
+define target("riscv.vector.tuple", <vscale x 32 x i8>, 2) @load_store_m4x2(target("riscv.vector.tuple", <vscale x 32 x i8>, 2) %tuple) {
 ; CHECK-LABEL: load_store_m4x2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    addi sp, sp, -16
@@ -103,10 +103,10 @@ define target("riscv_vec_tuple", <vscale x 32 x i8>, 2) @load_store_m4x2(target(
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    jalr zero, 0(ra)
 entry:
-  %tuple.addr = alloca target("riscv_vec_tuple", <vscale x 32 x i8>, 2), align 1
-  store target("riscv_vec_tuple", <vscale x 32 x i8>, 2) %tuple, ptr %tuple.addr, align 1
+  %tuple.addr = alloca target("riscv.vector.tuple", <vscale x 32 x i8>, 2), align 1
+  store target("riscv.vector.tuple", <vscale x 32 x i8>, 2) %tuple, ptr %tuple.addr, align 1
   call void asm sideeffect "",
   "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
-  %0 = load target("riscv_vec_tuple", <vscale x 32 x i8>, 2), ptr %tuple.addr, align 1
-  ret target("riscv_vec_tuple", <vscale x 32 x i8>, 2) %0
+  %0 = load target("riscv.vector.tuple", <vscale x 32 x i8>, 2), ptr %tuple.addr, align 1
+  ret target("riscv.vector.tuple", <vscale x 32 x i8>, 2) %0
 }

@@ -421,7 +421,7 @@ entry:
   ret <vscale x 1 x i1> %0
 }
 
-define void @test_vector_tuple_type0(target("riscv_vec_tuple", <vscale x 8 x i8>, 3) %val, ptr %base) nounwind {
+define void @test_vector_tuple_type0(target("riscv.vector.tuple", <vscale x 8 x i8>, 3) %val, ptr %base) nounwind {
 ; CHECK-LABEL: test_vector_tuple_type0:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    #APP
@@ -429,11 +429,11 @@ define void @test_vector_tuple_type0(target("riscv_vec_tuple", <vscale x 8 x i8>
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    ret
 entry:
-  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv_vec_tuple", <vscale x 8 x i8>, 3) %val, ptr %base)
+  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv.vector.tuple", <vscale x 8 x i8>, 3) %val, ptr %base)
   ret void
 }
 
-define void @test_vector_tuple_type1(target("riscv_vec_tuple", <vscale x 2 x i8>, 3) %val, ptr %base) nounwind {
+define void @test_vector_tuple_type1(target("riscv.vector.tuple", <vscale x 2 x i8>, 3) %val, ptr %base) nounwind {
 ; CHECK-LABEL: test_vector_tuple_type1:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    #APP
@@ -441,11 +441,11 @@ define void @test_vector_tuple_type1(target("riscv_vec_tuple", <vscale x 2 x i8>
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    ret
 entry:
-  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv_vec_tuple", <vscale x 2 x i8>, 3) %val, ptr %base)
+  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv.vector.tuple", <vscale x 2 x i8>, 3) %val, ptr %base)
   ret void
 }
 
-define void @test_vector_tuple_type2(target("riscv_vec_tuple", <vscale x 16 x i8>, 4) %val, target("riscv_vec_tuple", <vscale x 8 x i8>, 7) %val2, target("riscv_vec_tuple", <vscale x 8 x i8>, 7) %val3, ptr %base) nounwind {
+define void @test_vector_tuple_type2(target("riscv.vector.tuple", <vscale x 16 x i8>, 4) %val, target("riscv.vector.tuple", <vscale x 8 x i8>, 7) %val2, target("riscv.vector.tuple", <vscale x 8 x i8>, 7) %val3, ptr %base) nounwind {
 ; CHECK-LABEL: test_vector_tuple_type2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vl1r.v v23, (a0)
@@ -473,8 +473,8 @@ define void @test_vector_tuple_type2(target("riscv_vec_tuple", <vscale x 16 x i8
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    ret
 entry:
-  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv_vec_tuple", <vscale x 16 x i8>, 4) %val, ptr %base)
-  tail call void asm "vsseg7e8.v $0, ($1)", "^vr,r"(target("riscv_vec_tuple", <vscale x 8 x i8>, 7) %val2, ptr %base)
-  tail call void asm "vsseg7e8.v $0, ($1)", "^vr,r"(target("riscv_vec_tuple", <vscale x 8 x i8>, 7) %val3, ptr %base)
+  tail call void asm "vsseg3e8.v $0, ($1)", "^vr,r"(target("riscv.vector.tuple", <vscale x 16 x i8>, 4) %val, ptr %base)
+  tail call void asm "vsseg7e8.v $0, ($1)", "^vr,r"(target("riscv.vector.tuple", <vscale x 8 x i8>, 7) %val2, ptr %base)
+  tail call void asm "vsseg7e8.v $0, ($1)", "^vr,r"(target("riscv.vector.tuple", <vscale x 8 x i8>, 7) %val3, ptr %base)
   ret void
 }
