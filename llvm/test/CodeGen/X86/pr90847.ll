@@ -15,14 +15,9 @@ define i32 @PR90847(<8 x float> %x) nounwind {
 ; AVX1-NEXT:    vminps %ymm2, %ymm1, %ymm1
 ; AVX1-NEXT:    vcmpeqps %ymm0, %ymm1, %ymm0
 ; AVX1-NEXT:    vmovmskps %ymm0, %eax
-; AVX1-NEXT:    testl %eax, %eax
-; AVX1-NEXT:    je .LBB0_1
-; AVX1-NEXT:  # %bb.2: # %cond.false
-; AVX1-NEXT:    rep bsfl %eax, %eax
-; AVX1-NEXT:    vzeroupper
-; AVX1-NEXT:    retq
-; AVX1-NEXT:  .LBB0_1:
+; AVX1-NEXT:    bsfl %eax, %ecx
 ; AVX1-NEXT:    movl $32, %eax
+; AVX1-NEXT:    cmovnel %ecx, %eax
 ; AVX1-NEXT:    vzeroupper
 ; AVX1-NEXT:    retq
 ;
@@ -36,14 +31,9 @@ define i32 @PR90847(<8 x float> %x) nounwind {
 ; AVX2-NEXT:    vminps %ymm2, %ymm1, %ymm1
 ; AVX2-NEXT:    vcmpeqps %ymm0, %ymm1, %ymm0
 ; AVX2-NEXT:    vmovmskps %ymm0, %eax
-; AVX2-NEXT:    testl %eax, %eax
-; AVX2-NEXT:    je .LBB0_1
-; AVX2-NEXT:  # %bb.2: # %cond.false
-; AVX2-NEXT:    rep bsfl %eax, %eax
-; AVX2-NEXT:    vzeroupper
-; AVX2-NEXT:    retq
-; AVX2-NEXT:  .LBB0_1:
+; AVX2-NEXT:    bsfl %eax, %ecx
 ; AVX2-NEXT:    movl $32, %eax
+; AVX2-NEXT:    cmovnel %ecx, %eax
 ; AVX2-NEXT:    vzeroupper
 ; AVX2-NEXT:    retq
 entry:
