@@ -36,7 +36,7 @@ static void VTtoGetLLVMTyString(raw_ostream &OS, const Record *VT) {
   if (IsRISCVVecTuple) {
     unsigned NElem = VT->getValueAsInt("nElem");
     unsigned Sz = VT->getValueAsInt("Size");
-    OS << "TargetExtType::get(Context, \"riscv_vec_tuple\", "
+    OS << "TargetExtType::get(Context, \"riscv.vector.tuple\", "
           "ScalableVectorType::get(Type::getInt8Ty(Context), "
        << (Sz / (NElem * 8)) << "), " << NElem << ")";
     return;

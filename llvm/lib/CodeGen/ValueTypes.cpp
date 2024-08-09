@@ -164,10 +164,8 @@ std::string EVT::getEVTString() const {
     if (isRISCVVectorTuple()) {
       unsigned Sz = getSizeInBits();
       unsigned NF = getVectorMinNumElements();
-      int Log2LMUL = Log2_64(Sz / NF) - 6;
-      return "riscv_m" +
-             ((Log2LMUL < 0 ? "f" : "") + utostr(1 << std::abs(Log2LMUL))) +
-             "x" + utostr(getVectorMinNumElements());
+      unsigned MinNumElts = Sz / (NF * 8);
+      return "riscv_nxv" + utostr(MinNumElts) + "i8";
     }
     if (isVector())
       return (isScalableVector() ? "nxv" : "v") +
@@ -257,7 +255,7 @@ MVT MVT::getVT(Type *Ty, bool HandleUnknown){
       return MVT(MVT::aarch64svcount);
     else if (TargetExtTy->getName().starts_with("spirv."))
       return MVT(MVT::spirvbuiltin);
-    if (TargetExtTy->getName() == "riscv_vec_tuple") {
+    if (TargetExtTy->getName() == "riscv.vector.tuple") {
       unsigned Sz = cast<ScalableVectorType>(TargetExtTy->getTypeParameter(0))
                         ->getMinNumElements() *
                     8;
