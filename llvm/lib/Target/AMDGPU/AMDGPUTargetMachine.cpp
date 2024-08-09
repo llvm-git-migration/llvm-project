@@ -21,6 +21,7 @@
 #include "AMDGPUIGroupLP.h"
 #include "AMDGPUISelDAGToDAG.h"
 #include "AMDGPUMacroFusion.h"
+#include "AMDGPUPerfHintAnalysis.h"
 #include "AMDGPURegBankSelect.h"
 #include "AMDGPUSplitModule.h"
 #include "AMDGPUTargetObjectFile.h"
@@ -1229,7 +1230,7 @@ bool GCNPassConfig::addPreISel() {
   addPass(createLCSSAPass());
 
   if (TM->getOptLevel() > CodeGenOptLevel::Less)
-    addPass(&AMDGPUPerfHintAnalysisID);
+    addPass(&AMDGPUPerfHintAnalysisLegacyID);
 
   return false;
 }
