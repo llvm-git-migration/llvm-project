@@ -59,7 +59,7 @@ define void @foo() {
 ; CHECK-NEXT:    [[TMP17:%.*]] = icmp eq <vscale x 4 x i64> [[TMP16]], shufflevector (<vscale x 4 x i64> insertelement (<vscale x 4 x i64> poison, i64 1024, i64 0), <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer)
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], [[TMP19]]
 ; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <vscale x 4 x i64> [[VEC_IND]], [[DOTSPLAT]]
-; CHECK-NEXT:    [[TMP20:%.*]] = icmp eq i64 [[INDEX_NEXT]], [[N_VEC]]
+; CHECK-NEXT:    [[TMP20:%.*]] = icmp uge i64 [[INDEX_NEXT]], [[N_VEC]]
 ; CHECK-NEXT:    br i1 [[TMP20]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]
 ; CHECK:       middle.block:
 ; CHECK-NEXT:    [[CMP_N:%.*]] = icmp eq i64 1024, [[N_VEC]]
@@ -115,6 +115,7 @@ define void @foo() {
 ; NO_SCALABLE_VECS-NEXT:    br i1 [[OUTER_EXITCOND]], label [[EXIT:%.*]], label [[OUTER_LOOP]], !llvm.loop [[LOOP0:![0-9]+]]
 ; NO_SCALABLE_VECS:       exit:
 ; NO_SCALABLE_VECS-NEXT:    ret void
+;
 entry:
   br label %outer_loop
 
