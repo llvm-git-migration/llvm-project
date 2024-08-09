@@ -3431,7 +3431,8 @@ bool DAGTypeLegalizer::SoftPromoteHalfOperand(SDNode *N, unsigned OpNo) {
 
   assert(Res.getNode() != N && "Expected a new node!");
 
-  assert(Res.getValueType() == N->getValueType(0) && "Invalid operand expansion");
+  assert(Res.getValueType() == N->getValueType(0) &&
+         "Invalid operand expansion");
 
   ReplaceValueWith(SDValue(N, 0), Res);
   return false;
