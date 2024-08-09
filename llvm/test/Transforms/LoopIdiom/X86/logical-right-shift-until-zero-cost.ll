@@ -8,20 +8,29 @@ declare void @escape_outer(i8, i8, i8, i1, i8)
 define i8 @n(i8 %val, i8 %start, i8 %extraoffset) {
 ; CHECK-LABEL: @n(
 ; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false)
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]])
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1
 ; CHECK-NEXT:    br label [[LOOP:%.*]]
 ; CHECK:       loop:
-; CHECK-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
-; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]]
-; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = lshr i8 [[VAL:%.*]], [[NBITS]]
-; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0
-; CHECK-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1
-; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]])
-; CHECK-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]]
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]]
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]]
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = lshr i8 [[VAL]], [[NBITS]]
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]])
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]]
 ; CHECK:       end:
-; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ]
 ; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ]
 ; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ]
-; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ]
 ; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ]
 ; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]])
 ; CHECK-NEXT:    ret i8 [[IV_RES]]

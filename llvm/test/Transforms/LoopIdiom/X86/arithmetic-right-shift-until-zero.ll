@@ -11,74 +11,44 @@ declare i8 @gen.i8()
 ; Most basic pattern; Note that iff the shift amount is offset, said offsetting
 ; must not cause an overflow, but `add nsw` is fine.
 define i8 @p0(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @p0(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG20:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG21:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META9:![0-9]+]], !DIExpression(), [[DBG21]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG22:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META11:![0-9]+]], !DIExpression(), [[DBG22]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG23:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META12:![0-9]+]], !DIExpression(), [[DBG23]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG24:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META13:![0-9]+]], !DIExpression(), [[DBG24]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG25:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META14:![0-9]+]], !DIExpression(), [[DBG25]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG26:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG27:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG28:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG29:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG30:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG31:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG32:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META15:![0-9]+]], !DIExpression(), [[DBG28]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META16:![0-9]+]], !DIExpression(), [[DBG29]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META17:![0-9]+]], !DIExpression(), [[DBG30]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META18:![0-9]+]], !DIExpression(), [[DBG31]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META19:![0-9]+]], !DIExpression(), [[DBG32]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG33:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG34:![0-9]+]]
-;
-; LZCNT-LABEL: @p0(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG20:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG20]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG21:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG20]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG20]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG20]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG20]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG21]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG20]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG22:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG22]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG22]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META9:![0-9]+]], !DIExpression(), [[DBG20]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG22]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META11:![0-9]+]], !DIExpression(), [[DBG22]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG23:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META12:![0-9]+]], !DIExpression(), [[DBG23]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META13:![0-9]+]], !DIExpression(), [[META24:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG25:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META14:![0-9]+]], !DIExpression(), [[DBG25]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG26:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG27:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG28:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG29:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG30:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG31:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG32:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META15:![0-9]+]], !DIExpression(), [[DBG28]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META16:![0-9]+]], !DIExpression(), [[DBG29]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META17:![0-9]+]], !DIExpression(), [[DBG30]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META18:![0-9]+]], !DIExpression(), [[DBG31]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META19:![0-9]+]], !DIExpression(), [[DBG32]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG33:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG34:![0-9]+]]
+; CHECK-LABEL: @p0(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG20:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG20]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG21:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG20]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG20]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG20]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG20]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG21]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG20]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG22:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG22]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG22]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META9:![0-9]+]], !DIExpression(), [[DBG20]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG22]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META11:![0-9]+]], !DIExpression(), [[DBG22]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG23:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META12:![0-9]+]], !DIExpression(), [[DBG23]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META13:![0-9]+]], !DIExpression(), [[META24:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG25:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META14:![0-9]+]], !DIExpression(), [[DBG25]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG26:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG27:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG28:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG29:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG30:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG31:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG32:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META15:![0-9]+]], !DIExpression(), [[DBG28]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META16:![0-9]+]], !DIExpression(), [[DBG29]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META17:![0-9]+]], !DIExpression(), [[DBG30]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META18:![0-9]+]], !DIExpression(), [[DBG31]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META19:![0-9]+]], !DIExpression(), [[DBG32]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG33:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG34:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -108,74 +78,44 @@ end:
 
 ; `add nuw` is also fine.
 define i8 @p1(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @p1(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG47:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG48:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META37:![0-9]+]], !DIExpression(), [[DBG48]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nuw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG49:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META38:![0-9]+]], !DIExpression(), [[DBG49]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG50:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META39:![0-9]+]], !DIExpression(), [[DBG50]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG51:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META40:![0-9]+]], !DIExpression(), [[DBG51]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG52:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META41:![0-9]+]], !DIExpression(), [[DBG52]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG53:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG54:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG55:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG56:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG57:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG58:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG59:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META42:![0-9]+]], !DIExpression(), [[DBG55]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META43:![0-9]+]], !DIExpression(), [[DBG56]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META44:![0-9]+]], !DIExpression(), [[DBG57]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META45:![0-9]+]], !DIExpression(), [[DBG58]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META46:![0-9]+]], !DIExpression(), [[DBG59]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG60:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG61:![0-9]+]]
-;
-; LZCNT-LABEL: @p1(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG47:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG47]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG48:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG47]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG47]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG47]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG47]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG48]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG47]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG49:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG49]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG49]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META37:![0-9]+]], !DIExpression(), [[DBG47]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nuw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG49]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META38:![0-9]+]], !DIExpression(), [[DBG49]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG50:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META39:![0-9]+]], !DIExpression(), [[DBG50]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META40:![0-9]+]], !DIExpression(), [[META51:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG52:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META41:![0-9]+]], !DIExpression(), [[DBG52]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG53:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG54:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG55:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG56:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG57:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG58:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG59:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META42:![0-9]+]], !DIExpression(), [[DBG55]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META43:![0-9]+]], !DIExpression(), [[DBG56]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META44:![0-9]+]], !DIExpression(), [[DBG57]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META45:![0-9]+]], !DIExpression(), [[DBG58]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META46:![0-9]+]], !DIExpression(), [[DBG59]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG60:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG61:![0-9]+]]
+; CHECK-LABEL: @p1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG47:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG47]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG48:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG47]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG47]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG47]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG47]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG48]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG47]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG49:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG49]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG49]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META37:![0-9]+]], !DIExpression(), [[DBG47]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nuw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG49]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META38:![0-9]+]], !DIExpression(), [[DBG49]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG50:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META39:![0-9]+]], !DIExpression(), [[DBG50]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META40:![0-9]+]], !DIExpression(), [[META51:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG52:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META41:![0-9]+]], !DIExpression(), [[DBG52]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG53:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG54:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG55:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG56:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG57:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG58:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG59:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META42:![0-9]+]], !DIExpression(), [[DBG55]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META43:![0-9]+]], !DIExpression(), [[DBG56]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META44:![0-9]+]], !DIExpression(), [[DBG57]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META45:![0-9]+]], !DIExpression(), [[DBG58]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META46:![0-9]+]], !DIExpression(), [[DBG59]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG60:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG61:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -205,73 +145,43 @@ end:
 
 ; `sub nsw` is also fine.
 define i8 @p2(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @p2(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG74:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG75:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META64:![0-9]+]], !DIExpression(), [[DBG75]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG76:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META65:![0-9]+]], !DIExpression(), [[DBG76]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG77:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META66:![0-9]+]], !DIExpression(), [[DBG77]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG78:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META67:![0-9]+]], !DIExpression(), [[DBG78]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG79:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META68:![0-9]+]], !DIExpression(), [[DBG79]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG80:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG81:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG82:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG83:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG84:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG85:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG86:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META69:![0-9]+]], !DIExpression(), [[DBG82]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META70:![0-9]+]], !DIExpression(), [[DBG83]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META71:![0-9]+]], !DIExpression(), [[DBG84]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META72:![0-9]+]], !DIExpression(), [[DBG85]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META73:![0-9]+]], !DIExpression(), [[DBG86]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG87:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG88:![0-9]+]]
-;
-; LZCNT-LABEL: @p2(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG74:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG74]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG74]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG74]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG74]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG74]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG75:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG74]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG76:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG76]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG76]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META64:![0-9]+]], !DIExpression(), [[DBG74]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG76]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META65:![0-9]+]], !DIExpression(), [[DBG76]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG77:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META66:![0-9]+]], !DIExpression(), [[DBG77]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META67:![0-9]+]], !DIExpression(), [[META78:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG79:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META68:![0-9]+]], !DIExpression(), [[DBG79]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG80:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG81:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG82:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG83:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG84:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG85:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG86:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META69:![0-9]+]], !DIExpression(), [[DBG82]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META70:![0-9]+]], !DIExpression(), [[DBG83]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META71:![0-9]+]], !DIExpression(), [[DBG84]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META72:![0-9]+]], !DIExpression(), [[DBG85]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META73:![0-9]+]], !DIExpression(), [[DBG86]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG87:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG88:![0-9]+]]
+; CHECK-LABEL: @p2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG74:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG74]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG74]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG74]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG74]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG74]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG75:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG74]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG76:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG76]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG76]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META64:![0-9]+]], !DIExpression(), [[DBG74]])
+; CHECK-NEXT:    [[NBITS:%.*]] = sub nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG76]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META65:![0-9]+]], !DIExpression(), [[DBG76]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG77:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META66:![0-9]+]], !DIExpression(), [[DBG77]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META67:![0-9]+]], !DIExpression(), [[META78:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG79:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META68:![0-9]+]], !DIExpression(), [[DBG79]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG80:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG81:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG82:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG83:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG84:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG85:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG86:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META69:![0-9]+]], !DIExpression(), [[DBG82]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META70:![0-9]+]], !DIExpression(), [[DBG83]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META71:![0-9]+]], !DIExpression(), [[DBG84]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META72:![0-9]+]], !DIExpression(), [[DBG85]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META73:![0-9]+]], !DIExpression(), [[DBG86]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG87:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG88:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -475,65 +385,39 @@ end:
 
 ; Of course, we don't have to have an offset
 define i8 @p6(i8 %val, i8 %start) mustprogress {
-; NOLZCNT-LABEL: @p6(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG180:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG181:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META172:![0-9]+]], !DIExpression(), [[DBG181]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[IV]], !dbg [[DBG182:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META173:![0-9]+]], !DIExpression(), [[DBG182]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG183:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META174:![0-9]+]], !DIExpression(), [[DBG183]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG184:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META175:![0-9]+]], !DIExpression(), [[DBG184]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[IV]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG185:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG186:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG187:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG188:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG189:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG190:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META176:![0-9]+]], !DIExpression(), [[DBG187]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META177:![0-9]+]], !DIExpression(), [[DBG188]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META178:![0-9]+]], !DIExpression(), [[DBG189]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META179:![0-9]+]], !DIExpression(), [[DBG190]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[IV_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG191:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG192:![0-9]+]]
-;
-; LZCNT-LABEL: @p6(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG180:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG180]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i8 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG180]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG180]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG180]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG180]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG181:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG180]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG182:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG182]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG182]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META172:![0-9]+]], !DIExpression(), [[DBG180]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[IV]], !dbg [[DBG182]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META173:![0-9]+]], !DIExpression(), [[DBG182]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META174:![0-9]+]], !DIExpression(), [[META183:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG184:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META175:![0-9]+]], !DIExpression(), [[DBG184]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[IV]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG185:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG186:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG187:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG188:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG189:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG190:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META176:![0-9]+]], !DIExpression(), [[DBG187]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META177:![0-9]+]], !DIExpression(), [[DBG188]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META178:![0-9]+]], !DIExpression(), [[DBG189]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META179:![0-9]+]], !DIExpression(), [[DBG190]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[IV_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG191:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG192:![0-9]+]]
+; CHECK-LABEL: @p6(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG180:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG180]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i8 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG180]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG180]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG180]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG180]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG181:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG180]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG182:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG182]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG182]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META172:![0-9]+]], !DIExpression(), [[DBG180]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[IV]], !dbg [[DBG182]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META173:![0-9]+]], !DIExpression(), [[DBG182]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META174:![0-9]+]], !DIExpression(), [[META183:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG184:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META175:![0-9]+]], !DIExpression(), [[DBG184]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[IV]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG185:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG186:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG187:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG188:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG189:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG190:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META176:![0-9]+]], !DIExpression(), [[DBG187]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META177:![0-9]+]], !DIExpression(), [[DBG188]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META178:![0-9]+]], !DIExpression(), [[DBG189]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META179:![0-9]+]], !DIExpression(), [[DBG190]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[IV_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG191:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG192:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -564,74 +448,44 @@ declare void @escape_outer.i7(i7, i7, i7, i1, i7)
 
 ; Other bitwidths are fine also
 define i7 @p7(i7 %val, i7 %start, i7 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @p7(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG205:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i7 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG206:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i7 [[IV]], [[META195:![0-9]+]], !DIExpression(), [[DBG206]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i7 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG207:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i7 [[NBITS]], [[META196:![0-9]+]], !DIExpression(), [[DBG207]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i7 [[VAL:%.*]], [[NBITS]], !dbg [[DBG208:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i7 [[VAL_SHIFTED]], [[META197:![0-9]+]], !DIExpression(), [[DBG208]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i7 [[VAL_SHIFTED]], 0, !dbg [[DBG209:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META198:![0-9]+]], !DIExpression(), [[DBG209]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i7 [[IV]], 1, !dbg [[DBG210:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i7 [[IV_NEXT]], [[META199:![0-9]+]], !DIExpression(), [[DBG210]])
-; NOLZCNT-NEXT:    call void @escape_inner.i7(i7 [[IV]], i7 [[NBITS]], i7 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i7 [[IV_NEXT]]), !dbg [[DBG211:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG212:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i7 [ [[IV]], [[LOOP]] ], !dbg [[DBG213:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i7 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG214:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i7 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG215:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG216:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i7 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG217:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i7 [[IV_RES]], [[META200:![0-9]+]], !DIExpression(), [[DBG213]])
-; NOLZCNT-NEXT:      #dbg_value(i7 [[NBITS_RES]], [[META201:![0-9]+]], !DIExpression(), [[DBG214]])
-; NOLZCNT-NEXT:      #dbg_value(i7 [[VAL_SHIFTED_RES]], [[META202:![0-9]+]], !DIExpression(), [[DBG215]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META203:![0-9]+]], !DIExpression(), [[DBG216]])
-; NOLZCNT-NEXT:      #dbg_value(i7 [[IV_NEXT_RES]], [[META204:![0-9]+]], !DIExpression(), [[DBG217]])
-; NOLZCNT-NEXT:    call void @escape_outer.i7(i7 [[IV_RES]], i7 [[NBITS_RES]], i7 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i7 [[IV_NEXT_RES]]), !dbg [[DBG218:![0-9]+]]
-; NOLZCNT-NEXT:    ret i7 [[IV_RES]], !dbg [[DBG219:![0-9]+]]
-;
-; LZCNT-LABEL: @p7(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i7 @llvm.ctlz.i7(i7 [[VAL:%.*]], i1 false), !dbg [[DBG205:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i7 7, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG205]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i7 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG206:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i7 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG205]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i7 @llvm.smax.i7(i7 [[VAL_NUMACTIVEBITS_OFFSET]], i7 [[START:%.*]]), !dbg [[DBG205]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i7 [[IV_FINAL]], [[START]], !dbg [[DBG205]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i7 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG205]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG206]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i7 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG205]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i7 [[LOOP_IV]], 1, !dbg [[DBG207:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i7 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG207]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i7 [[LOOP_IV]], [[START]], !dbg [[DBG207]]
-; LZCNT-NEXT:      #dbg_value(i7 [[IV]], [[META195:![0-9]+]], !DIExpression(), [[DBG205]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i7 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG207]]
-; LZCNT-NEXT:      #dbg_value(i7 [[NBITS]], [[META196:![0-9]+]], !DIExpression(), [[DBG207]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i7 [[VAL]], [[NBITS]], !dbg [[DBG208:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i7 [[VAL_SHIFTED]], [[META197:![0-9]+]], !DIExpression(), [[DBG208]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META198:![0-9]+]], !DIExpression(), [[META209:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i7 [[IV]], 1, !dbg [[DBG210:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i7 [[IV_NEXT]], [[META199:![0-9]+]], !DIExpression(), [[DBG210]])
-; LZCNT-NEXT:    call void @escape_inner.i7(i7 [[IV]], i7 [[NBITS]], i7 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i7 [[IV_NEXT]]), !dbg [[DBG211:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG212:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i7 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG213:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i7 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG214:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i7 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG215:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG216:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i7 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG217:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i7 [[IV_RES]], [[META200:![0-9]+]], !DIExpression(), [[DBG213]])
-; LZCNT-NEXT:      #dbg_value(i7 [[NBITS_RES]], [[META201:![0-9]+]], !DIExpression(), [[DBG214]])
-; LZCNT-NEXT:      #dbg_value(i7 [[VAL_SHIFTED_RES]], [[META202:![0-9]+]], !DIExpression(), [[DBG215]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META203:![0-9]+]], !DIExpression(), [[DBG216]])
-; LZCNT-NEXT:      #dbg_value(i7 [[IV_NEXT_RES]], [[META204:![0-9]+]], !DIExpression(), [[DBG217]])
-; LZCNT-NEXT:    call void @escape_outer.i7(i7 [[IV_RES]], i7 [[NBITS_RES]], i7 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i7 [[IV_NEXT_RES]]), !dbg [[DBG218:![0-9]+]]
-; LZCNT-NEXT:    ret i7 [[IV_RES]], !dbg [[DBG219:![0-9]+]]
+; CHECK-LABEL: @p7(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i7 @llvm.ctlz.i7(i7 [[VAL:%.*]], i1 false), !dbg [[DBG205:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i7 7, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG205]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i7 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG206:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i7 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG205]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i7 @llvm.smax.i7(i7 [[VAL_NUMACTIVEBITS_OFFSET]], i7 [[START:%.*]]), !dbg [[DBG205]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i7 [[IV_FINAL]], [[START]], !dbg [[DBG205]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i7 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG205]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG206]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i7 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG205]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i7 [[LOOP_IV]], 1, !dbg [[DBG207:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i7 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG207]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i7 [[LOOP_IV]], [[START]], !dbg [[DBG207]]
+; CHECK-NEXT:      #dbg_value(i7 [[IV]], [[META195:![0-9]+]], !DIExpression(), [[DBG205]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i7 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG207]]
+; CHECK-NEXT:      #dbg_value(i7 [[NBITS]], [[META196:![0-9]+]], !DIExpression(), [[DBG207]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i7 [[VAL]], [[NBITS]], !dbg [[DBG208:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i7 [[VAL_SHIFTED]], [[META197:![0-9]+]], !DIExpression(), [[DBG208]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META198:![0-9]+]], !DIExpression(), [[META209:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i7 [[IV]], 1, !dbg [[DBG210:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i7 [[IV_NEXT]], [[META199:![0-9]+]], !DIExpression(), [[DBG210]])
+; CHECK-NEXT:    call void @escape_inner.i7(i7 [[IV]], i7 [[NBITS]], i7 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i7 [[IV_NEXT]]), !dbg [[DBG211:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG212:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i7 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG213:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i7 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG214:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i7 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG215:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG216:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i7 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG217:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i7 [[IV_RES]], [[META200:![0-9]+]], !DIExpression(), [[DBG213]])
+; CHECK-NEXT:      #dbg_value(i7 [[NBITS_RES]], [[META201:![0-9]+]], !DIExpression(), [[DBG214]])
+; CHECK-NEXT:      #dbg_value(i7 [[VAL_SHIFTED_RES]], [[META202:![0-9]+]], !DIExpression(), [[DBG215]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META203:![0-9]+]], !DIExpression(), [[DBG216]])
+; CHECK-NEXT:      #dbg_value(i7 [[IV_NEXT_RES]], [[META204:![0-9]+]], !DIExpression(), [[DBG217]])
+; CHECK-NEXT:    call void @escape_outer.i7(i7 [[IV_RES]], i7 [[NBITS_RES]], i7 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i7 [[IV_NEXT_RES]]), !dbg [[DBG218:![0-9]+]]
+; CHECK-NEXT:    ret i7 [[IV_RES]], !dbg [[DBG219:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -719,75 +573,45 @@ end:
 
 ; Cmp-br are commutable
 define i8 @t9(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t9(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG259:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG260:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META249:![0-9]+]], !DIExpression(), [[DBG260]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG261:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META250:![0-9]+]], !DIExpression(), [[DBG261]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG262:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META251:![0-9]+]], !DIExpression(), [[DBG262]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISNOTZERO:%.*]] = icmp ne i8 [[VAL_SHIFTED]], 0, !dbg [[DBG263:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO]], [[META252:![0-9]+]], !DIExpression(), [[DBG263]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG264:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META253:![0-9]+]], !DIExpression(), [[DBG264]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISNOTZERO]], i8 [[IV_NEXT]]), !dbg [[DBG265:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISNOTZERO]], label [[LOOP]], label [[END:%.*]], !dbg [[DBG266:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG267:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG268:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG269:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISNOTZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISNOTZERO]], [[LOOP]] ], !dbg [[DBG270:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG271:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META254:![0-9]+]], !DIExpression(), [[DBG267]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META255:![0-9]+]], !DIExpression(), [[DBG268]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META256:![0-9]+]], !DIExpression(), [[DBG269]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO_RES]], [[META257:![0-9]+]], !DIExpression(), [[DBG270]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META258:![0-9]+]], !DIExpression(), [[DBG271]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISNOTZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG272:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG273:![0-9]+]]
-;
-; LZCNT-LABEL: @t9(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG259:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG259]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG260:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG259]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG259]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG259]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG259]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG260]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG259]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG261:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG261]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISNOTZERO:%.*]] = xor i1 [[LOOP_IVCHECK]], true, !dbg [[DBG261]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG261]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META249:![0-9]+]], !DIExpression(), [[DBG259]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG261]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META250:![0-9]+]], !DIExpression(), [[DBG261]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG262:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META251:![0-9]+]], !DIExpression(), [[DBG262]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO]], [[META252:![0-9]+]], !DIExpression(), [[META263:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG264:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META253:![0-9]+]], !DIExpression(), [[DBG264]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISNOTZERO]], i8 [[IV_NEXT]]), !dbg [[DBG265:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG266:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG267:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG268:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG269:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISNOTZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISNOTZERO]], [[LOOP]] ], !dbg [[DBG270:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG271:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META254:![0-9]+]], !DIExpression(), [[DBG267]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META255:![0-9]+]], !DIExpression(), [[DBG268]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META256:![0-9]+]], !DIExpression(), [[DBG269]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO_RES]], [[META257:![0-9]+]], !DIExpression(), [[DBG270]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META258:![0-9]+]], !DIExpression(), [[DBG271]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISNOTZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG272:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG273:![0-9]+]]
+; CHECK-LABEL: @t9(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG259:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG259]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG260:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG259]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG259]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG259]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG259]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG260]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG259]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG261:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG261]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISNOTZERO:%.*]] = xor i1 [[LOOP_IVCHECK]], true, !dbg [[DBG261]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG261]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META249:![0-9]+]], !DIExpression(), [[DBG259]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG261]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META250:![0-9]+]], !DIExpression(), [[DBG261]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG262:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META251:![0-9]+]], !DIExpression(), [[DBG262]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO]], [[META252:![0-9]+]], !DIExpression(), [[META263:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG264:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META253:![0-9]+]], !DIExpression(), [[DBG264]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISNOTZERO]], i8 [[IV_NEXT]]), !dbg [[DBG265:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG266:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG267:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG268:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG269:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISNOTZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISNOTZERO]], [[LOOP]] ], !dbg [[DBG270:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG271:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META254:![0-9]+]], !DIExpression(), [[DBG267]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META255:![0-9]+]], !DIExpression(), [[DBG268]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META256:![0-9]+]], !DIExpression(), [[DBG269]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISNOTZERO_RES]], [[META257:![0-9]+]], !DIExpression(), [[DBG270]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META258:![0-9]+]], !DIExpression(), [[DBG271]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISNOTZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG272:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG273:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1112,74 +936,44 @@ end:
 
 ; offset computation can be commuted
 define i8 @t15(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t15(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG422:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG423:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META412:![0-9]+]], !DIExpression(), [[DBG423]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[EXTRAOFFSET:%.*]], [[IV]], !dbg [[DBG424:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META413:![0-9]+]], !DIExpression(), [[DBG424]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG425:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META414:![0-9]+]], !DIExpression(), [[DBG425]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG426:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META415:![0-9]+]], !DIExpression(), [[DBG426]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG427:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META416:![0-9]+]], !DIExpression(), [[DBG427]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG428:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG429:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG430:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG431:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG432:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG433:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG434:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META417:![0-9]+]], !DIExpression(), [[DBG430]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META418:![0-9]+]], !DIExpression(), [[DBG431]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META419:![0-9]+]], !DIExpression(), [[DBG432]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META420:![0-9]+]], !DIExpression(), [[DBG433]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META421:![0-9]+]], !DIExpression(), [[DBG434]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG435:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG436:![0-9]+]]
-;
-; LZCNT-LABEL: @t15(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG422:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG422]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG423:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG422]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG422]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG422]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG422]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG423]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG422]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG424:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG424]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG424]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META412:![0-9]+]], !DIExpression(), [[DBG422]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[EXTRAOFFSET]], [[IV]], !dbg [[DBG424]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META413:![0-9]+]], !DIExpression(), [[DBG424]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG425:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META414:![0-9]+]], !DIExpression(), [[DBG425]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META415:![0-9]+]], !DIExpression(), [[META426:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG427:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META416:![0-9]+]], !DIExpression(), [[DBG427]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG428:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG429:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG430:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG431:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG432:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG433:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG434:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META417:![0-9]+]], !DIExpression(), [[DBG430]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META418:![0-9]+]], !DIExpression(), [[DBG431]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META419:![0-9]+]], !DIExpression(), [[DBG432]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META420:![0-9]+]], !DIExpression(), [[DBG433]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META421:![0-9]+]], !DIExpression(), [[DBG434]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG435:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG436:![0-9]+]]
+; CHECK-LABEL: @t15(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG422:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG422]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG423:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG422]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG422]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG422]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG422]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG423]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG422]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG424:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG424]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG424]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META412:![0-9]+]], !DIExpression(), [[DBG422]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[EXTRAOFFSET]], [[IV]], !dbg [[DBG424]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META413:![0-9]+]], !DIExpression(), [[DBG424]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG425:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META414:![0-9]+]], !DIExpression(), [[DBG425]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META415:![0-9]+]], !DIExpression(), [[META426:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG427:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META416:![0-9]+]], !DIExpression(), [[DBG427]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG428:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG429:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG430:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG431:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG432:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG433:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG434:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META417:![0-9]+]], !DIExpression(), [[DBG430]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META418:![0-9]+]], !DIExpression(), [[DBG431]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META419:![0-9]+]], !DIExpression(), [[DBG432]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META420:![0-9]+]], !DIExpression(), [[DBG433]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META421:![0-9]+]], !DIExpression(), [[DBG434]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG435:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG436:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1571,82 +1365,48 @@ end:
 
 ; We should not just blindly look for add, we should look what IV actually uses.
 define i8 @n22(i8 %val, i8 %start, i8 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @n22(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG620:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG621:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META608:![0-9]+]], !DIExpression(), [[DBG621]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG622:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META609:![0-9]+]], !DIExpression(), [[DBG622]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG623:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META610:![0-9]+]], !DIExpression(), [[DBG623]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG624:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META611:![0-9]+]], !DIExpression(), [[DBG624]])
-; NOLZCNT-NEXT:    [[NOT_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG625:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NOT_IV_NEXT]], [[META612:![0-9]+]], !DIExpression(), [[DBG625]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG626:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META613:![0-9]+]], !DIExpression(), [[DBG626]])
-; NOLZCNT-NEXT:    [[ALSO_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG627:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[ALSO_IV_NEXT]], [[META614:![0-9]+]], !DIExpression(), [[DBG627]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG628:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG629:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG630:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG631:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG632:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG633:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG634:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META615:![0-9]+]], !DIExpression(), [[DBG630]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META616:![0-9]+]], !DIExpression(), [[DBG631]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META617:![0-9]+]], !DIExpression(), [[DBG632]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META618:![0-9]+]], !DIExpression(), [[DBG633]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META619:![0-9]+]], !DIExpression(), [[DBG634]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG635:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG636:![0-9]+]]
-;
-; LZCNT-LABEL: @n22(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG620:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG620]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG621:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG620]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG620]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG620]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG620]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG621]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG620]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG622:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG622]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG622]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META608:![0-9]+]], !DIExpression(), [[DBG620]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG622]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META609:![0-9]+]], !DIExpression(), [[DBG622]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG623:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META610:![0-9]+]], !DIExpression(), [[DBG623]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META611:![0-9]+]], !DIExpression(), [[META624:![0-9]+]])
-; LZCNT-NEXT:    [[NOT_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG625:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NOT_IV_NEXT]], [[META612:![0-9]+]], !DIExpression(), [[DBG625]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG626:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META613:![0-9]+]], !DIExpression(), [[DBG626]])
-; LZCNT-NEXT:    [[ALSO_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG627:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[ALSO_IV_NEXT]], [[META614:![0-9]+]], !DIExpression(), [[DBG627]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG628:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG629:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG630:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG631:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG632:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG633:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG634:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META615:![0-9]+]], !DIExpression(), [[DBG630]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META616:![0-9]+]], !DIExpression(), [[DBG631]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META617:![0-9]+]], !DIExpression(), [[DBG632]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META618:![0-9]+]], !DIExpression(), [[DBG633]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META619:![0-9]+]], !DIExpression(), [[DBG634]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG635:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG636:![0-9]+]]
+; CHECK-LABEL: @n22(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG620:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG620]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG621:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG620]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG620]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG620]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG620]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG621]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG620]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG622:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG622]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG622]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META608:![0-9]+]], !DIExpression(), [[DBG620]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG622]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META609:![0-9]+]], !DIExpression(), [[DBG622]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG623:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META610:![0-9]+]], !DIExpression(), [[DBG623]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META611:![0-9]+]], !DIExpression(), [[META624:![0-9]+]])
+; CHECK-NEXT:    [[NOT_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG625:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[NOT_IV_NEXT]], [[META612:![0-9]+]], !DIExpression(), [[DBG625]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG626:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META613:![0-9]+]], !DIExpression(), [[DBG626]])
+; CHECK-NEXT:    [[ALSO_IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG627:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[ALSO_IV_NEXT]], [[META614:![0-9]+]], !DIExpression(), [[DBG627]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG628:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG629:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG630:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG631:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG632:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG633:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG634:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META615:![0-9]+]], !DIExpression(), [[DBG630]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META616:![0-9]+]], !DIExpression(), [[DBG631]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META617:![0-9]+]], !DIExpression(), [[DBG632]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META618:![0-9]+]], !DIExpression(), [[DBG633]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META619:![0-9]+]], !DIExpression(), [[DBG634]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG635:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG636:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1745,65 +1505,39 @@ declare void @escape_inner.i3(i3, i3, i3, i1, i3)
 declare void @escape_outer.i3(i3, i3, i3, i1, i3)
 
 define i1 @t24_nooffset_i1(i1 %val, i1 %start) mustprogress {
-; NOLZCNT-LABEL: @t24_nooffset_i1(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG676:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i1 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG677:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META668:![0-9]+]], !DIExpression(), [[DBG677]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL:%.*]], [[IV]], !dbg [[DBG678:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META669:![0-9]+]], !DIExpression(), [[DBG678]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i1 [[VAL_SHIFTED]], false, !dbg [[DBG679:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META670:![0-9]+]], !DIExpression(), [[DBG679]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i1 [[IV]], true, !dbg [[DBG680:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META671:![0-9]+]], !DIExpression(), [[DBG680]])
-; NOLZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[IV]], i1 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i1 [[IV_NEXT]]), !dbg [[DBG681:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG682:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV]], [[LOOP]] ], !dbg [[DBG683:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG684:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG685:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG686:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META672:![0-9]+]], !DIExpression(), [[DBG683]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META673:![0-9]+]], !DIExpression(), [[DBG684]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META674:![0-9]+]], !DIExpression(), [[DBG685]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META675:![0-9]+]], !DIExpression(), [[DBG686]])
-; NOLZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[IV_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG687:![0-9]+]]
-; NOLZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG688:![0-9]+]]
-;
-; LZCNT-LABEL: @t24_nooffset_i1(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG676:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG676]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i1 [[VAL_NUMACTIVEBITS]], false, !dbg [[DBG676]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG676]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG676]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG676]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG677:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG676]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG678:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG678]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG678]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META668:![0-9]+]], !DIExpression(), [[DBG676]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[IV]], !dbg [[DBG678]]
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META669:![0-9]+]], !DIExpression(), [[DBG678]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META670:![0-9]+]], !DIExpression(), [[META679:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG680:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META671:![0-9]+]], !DIExpression(), [[DBG680]])
-; LZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[IV]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG681:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG682:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG683:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG684:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG685:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG686:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META672:![0-9]+]], !DIExpression(), [[DBG683]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META673:![0-9]+]], !DIExpression(), [[DBG684]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META674:![0-9]+]], !DIExpression(), [[DBG685]])
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META675:![0-9]+]], !DIExpression(), [[DBG686]])
-; LZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[IV_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG687:![0-9]+]]
-; LZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG688:![0-9]+]]
+; CHECK-LABEL: @t24_nooffset_i1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG676:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG676]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i1 [[VAL_NUMACTIVEBITS]], false, !dbg [[DBG676]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG676]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG676]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG676]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG677:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG676]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG678:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG678]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG678]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV]], [[META668:![0-9]+]], !DIExpression(), [[DBG676]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[IV]], !dbg [[DBG678]]
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META669:![0-9]+]], !DIExpression(), [[DBG678]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META670:![0-9]+]], !DIExpression(), [[META679:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG680:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META671:![0-9]+]], !DIExpression(), [[DBG680]])
+; CHECK-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[IV]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG681:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG682:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG683:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG684:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG685:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG686:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_RES]], [[META672:![0-9]+]], !DIExpression(), [[DBG683]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META673:![0-9]+]], !DIExpression(), [[DBG684]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META674:![0-9]+]], !DIExpression(), [[DBG685]])
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META675:![0-9]+]], !DIExpression(), [[DBG686]])
+; CHECK-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[IV_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG687:![0-9]+]]
+; CHECK-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG688:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1829,65 +1563,39 @@ end:
   ret i1 %iv.res
 }
 define i2 @t25_nooffset_i2(i2 %val, i2 %start) mustprogress {
-; NOLZCNT-LABEL: @t25_nooffset_i2(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG699:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i2 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG700:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META691:![0-9]+]], !DIExpression(), [[DBG700]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL:%.*]], [[IV]], !dbg [[DBG701:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META692:![0-9]+]], !DIExpression(), [[DBG701]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i2 [[VAL_SHIFTED]], 0, !dbg [[DBG702:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META693:![0-9]+]], !DIExpression(), [[DBG702]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i2 [[IV]], 1, !dbg [[DBG703:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META694:![0-9]+]], !DIExpression(), [[DBG703]])
-; NOLZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[IV]], i2 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i2 [[IV_NEXT]]), !dbg [[DBG704:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG705:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV]], [[LOOP]] ], !dbg [[DBG706:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG707:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG708:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG709:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META695:![0-9]+]], !DIExpression(), [[DBG706]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META696:![0-9]+]], !DIExpression(), [[DBG707]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META697:![0-9]+]], !DIExpression(), [[DBG708]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META698:![0-9]+]], !DIExpression(), [[DBG709]])
-; NOLZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[IV_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG710:![0-9]+]]
-; NOLZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG711:![0-9]+]]
-;
-; LZCNT-LABEL: @t25_nooffset_i2(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG699:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG699]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i2 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG699]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG699]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG699]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG699]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG700:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG699]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG701:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG701]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG701]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META691:![0-9]+]], !DIExpression(), [[DBG699]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[IV]], !dbg [[DBG701]]
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META692:![0-9]+]], !DIExpression(), [[DBG701]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META693:![0-9]+]], !DIExpression(), [[META702:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG703:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META694:![0-9]+]], !DIExpression(), [[DBG703]])
-; LZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[IV]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG704:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG705:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG706:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG707:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG708:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG709:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META695:![0-9]+]], !DIExpression(), [[DBG706]])
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META696:![0-9]+]], !DIExpression(), [[DBG707]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META697:![0-9]+]], !DIExpression(), [[DBG708]])
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META698:![0-9]+]], !DIExpression(), [[DBG709]])
-; LZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[IV_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG710:![0-9]+]]
-; LZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG711:![0-9]+]]
+; CHECK-LABEL: @t25_nooffset_i2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG699:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG699]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i2 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG699]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG699]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG699]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG699]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG700:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG699]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG701:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG701]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG701]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV]], [[META691:![0-9]+]], !DIExpression(), [[DBG699]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[IV]], !dbg [[DBG701]]
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META692:![0-9]+]], !DIExpression(), [[DBG701]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META693:![0-9]+]], !DIExpression(), [[META702:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG703:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META694:![0-9]+]], !DIExpression(), [[DBG703]])
+; CHECK-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[IV]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG704:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG705:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG706:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG707:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG708:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG709:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_RES]], [[META695:![0-9]+]], !DIExpression(), [[DBG706]])
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META696:![0-9]+]], !DIExpression(), [[DBG707]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META697:![0-9]+]], !DIExpression(), [[DBG708]])
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META698:![0-9]+]], !DIExpression(), [[DBG709]])
+; CHECK-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[IV_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG710:![0-9]+]]
+; CHECK-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG711:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1913,65 +1621,39 @@ end:
   ret i2 %iv.res
 }
 define i3 @t26_nooffset_i3(i3 %val, i3 %start) mustprogress {
-; NOLZCNT-LABEL: @t26_nooffset_i3(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG722:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i3 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG723:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META714:![0-9]+]], !DIExpression(), [[DBG723]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL:%.*]], [[IV]], !dbg [[DBG724:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META715:![0-9]+]], !DIExpression(), [[DBG724]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i3 [[VAL_SHIFTED]], 0, !dbg [[DBG725:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META716:![0-9]+]], !DIExpression(), [[DBG725]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i3 [[IV]], 1, !dbg [[DBG726:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META717:![0-9]+]], !DIExpression(), [[DBG726]])
-; NOLZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[IV]], i3 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i3 [[IV_NEXT]]), !dbg [[DBG727:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG728:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV]], [[LOOP]] ], !dbg [[DBG729:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG730:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG731:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG732:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META718:![0-9]+]], !DIExpression(), [[DBG729]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META719:![0-9]+]], !DIExpression(), [[DBG730]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META720:![0-9]+]], !DIExpression(), [[DBG731]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META721:![0-9]+]], !DIExpression(), [[DBG732]])
-; NOLZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[IV_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG733:![0-9]+]]
-; NOLZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG734:![0-9]+]]
-;
-; LZCNT-LABEL: @t26_nooffset_i3(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG722:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG722]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i3 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG722]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG722]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG722]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG722]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG723:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG722]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG724:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG724]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG724]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META714:![0-9]+]], !DIExpression(), [[DBG722]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[IV]], !dbg [[DBG724]]
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META715:![0-9]+]], !DIExpression(), [[DBG724]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META716:![0-9]+]], !DIExpression(), [[META725:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG726:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META717:![0-9]+]], !DIExpression(), [[DBG726]])
-; LZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[IV]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG727:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG728:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG729:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG730:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG731:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG732:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META718:![0-9]+]], !DIExpression(), [[DBG729]])
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META719:![0-9]+]], !DIExpression(), [[DBG730]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META720:![0-9]+]], !DIExpression(), [[DBG731]])
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META721:![0-9]+]], !DIExpression(), [[DBG732]])
-; LZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[IV_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG733:![0-9]+]]
-; LZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG734:![0-9]+]]
+; CHECK-LABEL: @t26_nooffset_i3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG722:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG722]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nuw nsw i3 [[VAL_NUMACTIVEBITS]], 0, !dbg [[DBG722]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG722]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nuw nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG722]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG722]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG723:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG722]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG724:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG724]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG724]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV]], [[META714:![0-9]+]], !DIExpression(), [[DBG722]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[IV]], !dbg [[DBG724]]
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META715:![0-9]+]], !DIExpression(), [[DBG724]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META716:![0-9]+]], !DIExpression(), [[META725:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG726:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META717:![0-9]+]], !DIExpression(), [[DBG726]])
+; CHECK-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[IV]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG727:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG728:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG729:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG730:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG731:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG732:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_RES]], [[META718:![0-9]+]], !DIExpression(), [[DBG729]])
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META719:![0-9]+]], !DIExpression(), [[DBG730]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META720:![0-9]+]], !DIExpression(), [[DBG731]])
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META721:![0-9]+]], !DIExpression(), [[DBG732]])
+; CHECK-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[IV_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG733:![0-9]+]]
+; CHECK-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG734:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -1998,73 +1680,43 @@ end:
 }
 
 define i1 @t27_addnsw_i1(i1 %val, i1 %start, i1 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t27_addnsw_i1(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG747:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i1 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG748:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META737:![0-9]+]], !DIExpression(), [[DBG748]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i1 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG749:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META738:![0-9]+]], !DIExpression(), [[DBG749]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL:%.*]], [[NBITS]], !dbg [[DBG750:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META739:![0-9]+]], !DIExpression(), [[DBG750]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i1 [[VAL_SHIFTED]], false, !dbg [[DBG751:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META740:![0-9]+]], !DIExpression(), [[DBG751]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i1 [[IV]], true, !dbg [[DBG752:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META741:![0-9]+]], !DIExpression(), [[DBG752]])
-; NOLZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i1 [[IV_NEXT]]), !dbg [[DBG753:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG754:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV]], [[LOOP]] ], !dbg [[DBG755:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG756:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG757:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG758:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG759:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META742:![0-9]+]], !DIExpression(), [[DBG755]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META743:![0-9]+]], !DIExpression(), [[DBG756]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META744:![0-9]+]], !DIExpression(), [[DBG757]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META745:![0-9]+]], !DIExpression(), [[DBG758]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META746:![0-9]+]], !DIExpression(), [[DBG759]])
-; NOLZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG760:![0-9]+]]
-; NOLZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG761:![0-9]+]]
-;
-; LZCNT-LABEL: @t27_addnsw_i1(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG747:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG747]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG747]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG747]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG747]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG747]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG748:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG747]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG749:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG749]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG749]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META737:![0-9]+]], !DIExpression(), [[DBG747]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG749]]
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META738:![0-9]+]], !DIExpression(), [[DBG749]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG750:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META739:![0-9]+]], !DIExpression(), [[DBG750]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META740:![0-9]+]], !DIExpression(), [[META751:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG752:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META741:![0-9]+]], !DIExpression(), [[DBG752]])
-; LZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG753:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG754:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG755:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG756:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG757:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG758:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG759:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META742:![0-9]+]], !DIExpression(), [[DBG755]])
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META743:![0-9]+]], !DIExpression(), [[DBG756]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META744:![0-9]+]], !DIExpression(), [[DBG757]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META745:![0-9]+]], !DIExpression(), [[DBG758]])
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META746:![0-9]+]], !DIExpression(), [[DBG759]])
-; LZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG760:![0-9]+]]
-; LZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG761:![0-9]+]]
+; CHECK-LABEL: @t27_addnsw_i1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG747:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG747]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG747]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG747]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG747]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG747]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG748:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG747]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG749:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG749]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG749]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV]], [[META737:![0-9]+]], !DIExpression(), [[DBG747]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG749]]
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS]], [[META738:![0-9]+]], !DIExpression(), [[DBG749]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG750:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META739:![0-9]+]], !DIExpression(), [[DBG750]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META740:![0-9]+]], !DIExpression(), [[META751:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG752:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META741:![0-9]+]], !DIExpression(), [[DBG752]])
+; CHECK-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG753:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG754:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG755:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG756:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG757:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG758:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG759:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_RES]], [[META742:![0-9]+]], !DIExpression(), [[DBG755]])
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META743:![0-9]+]], !DIExpression(), [[DBG756]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META744:![0-9]+]], !DIExpression(), [[DBG757]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META745:![0-9]+]], !DIExpression(), [[DBG758]])
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META746:![0-9]+]], !DIExpression(), [[DBG759]])
+; CHECK-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG760:![0-9]+]]
+; CHECK-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG761:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2092,74 +1744,44 @@ end:
   ret i1 %iv.res
 }
 define i2 @t28_addnsw_i2(i2 %val, i2 %start, i2 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t28_addnsw_i2(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG774:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i2 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG775:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META764:![0-9]+]], !DIExpression(), [[DBG775]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i2 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG776:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META765:![0-9]+]], !DIExpression(), [[DBG776]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL:%.*]], [[NBITS]], !dbg [[DBG777:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META766:![0-9]+]], !DIExpression(), [[DBG777]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i2 [[VAL_SHIFTED]], 0, !dbg [[DBG778:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META767:![0-9]+]], !DIExpression(), [[DBG778]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i2 [[IV]], 1, !dbg [[DBG779:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META768:![0-9]+]], !DIExpression(), [[DBG779]])
-; NOLZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i2 [[IV_NEXT]]), !dbg [[DBG780:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG781:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV]], [[LOOP]] ], !dbg [[DBG782:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG783:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG784:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG785:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG786:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META769:![0-9]+]], !DIExpression(), [[DBG782]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META770:![0-9]+]], !DIExpression(), [[DBG783]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META771:![0-9]+]], !DIExpression(), [[DBG784]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META772:![0-9]+]], !DIExpression(), [[DBG785]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META773:![0-9]+]], !DIExpression(), [[DBG786]])
-; NOLZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG787:![0-9]+]]
-; NOLZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG788:![0-9]+]]
-;
-; LZCNT-LABEL: @t28_addnsw_i2(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG774:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG774]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i2 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG775:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG774]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG774]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG774]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG774]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG775]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG774]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG776:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG776]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG776]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META764:![0-9]+]], !DIExpression(), [[DBG774]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG776]]
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META765:![0-9]+]], !DIExpression(), [[DBG776]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG777:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META766:![0-9]+]], !DIExpression(), [[DBG777]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META767:![0-9]+]], !DIExpression(), [[META778:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG779:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META768:![0-9]+]], !DIExpression(), [[DBG779]])
-; LZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG780:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG781:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG782:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG783:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG784:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG785:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG786:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META769:![0-9]+]], !DIExpression(), [[DBG782]])
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META770:![0-9]+]], !DIExpression(), [[DBG783]])
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META771:![0-9]+]], !DIExpression(), [[DBG784]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META772:![0-9]+]], !DIExpression(), [[DBG785]])
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META773:![0-9]+]], !DIExpression(), [[DBG786]])
-; LZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG787:![0-9]+]]
-; LZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG788:![0-9]+]]
+; CHECK-LABEL: @t28_addnsw_i2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG774:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG774]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i2 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG775:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG774]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG774]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG774]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG774]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG775]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG774]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG776:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG776]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG776]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV]], [[META764:![0-9]+]], !DIExpression(), [[DBG774]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG776]]
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS]], [[META765:![0-9]+]], !DIExpression(), [[DBG776]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG777:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META766:![0-9]+]], !DIExpression(), [[DBG777]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META767:![0-9]+]], !DIExpression(), [[META778:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG779:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META768:![0-9]+]], !DIExpression(), [[DBG779]])
+; CHECK-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG780:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG781:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG782:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG783:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG784:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG785:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG786:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_RES]], [[META769:![0-9]+]], !DIExpression(), [[DBG782]])
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META770:![0-9]+]], !DIExpression(), [[DBG783]])
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META771:![0-9]+]], !DIExpression(), [[DBG784]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META772:![0-9]+]], !DIExpression(), [[DBG785]])
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META773:![0-9]+]], !DIExpression(), [[DBG786]])
+; CHECK-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG787:![0-9]+]]
+; CHECK-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG788:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2187,74 +1809,44 @@ end:
   ret i2 %iv.res
 }
 define i3 @t29_addnsw_i3(i3 %val, i3 %start, i3 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t29_addnsw_i3(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG801:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i3 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG802:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META791:![0-9]+]], !DIExpression(), [[DBG802]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i3 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG803:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META792:![0-9]+]], !DIExpression(), [[DBG803]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL:%.*]], [[NBITS]], !dbg [[DBG804:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META793:![0-9]+]], !DIExpression(), [[DBG804]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i3 [[VAL_SHIFTED]], 0, !dbg [[DBG805:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META794:![0-9]+]], !DIExpression(), [[DBG805]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i3 [[IV]], 1, !dbg [[DBG806:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META795:![0-9]+]], !DIExpression(), [[DBG806]])
-; NOLZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i3 [[IV_NEXT]]), !dbg [[DBG807:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG808:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV]], [[LOOP]] ], !dbg [[DBG809:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG810:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG811:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG812:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG813:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META796:![0-9]+]], !DIExpression(), [[DBG809]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META797:![0-9]+]], !DIExpression(), [[DBG810]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META798:![0-9]+]], !DIExpression(), [[DBG811]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META799:![0-9]+]], !DIExpression(), [[DBG812]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META800:![0-9]+]], !DIExpression(), [[DBG813]])
-; NOLZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG814:![0-9]+]]
-; NOLZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG815:![0-9]+]]
-;
-; LZCNT-LABEL: @t29_addnsw_i3(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG801:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG801]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i3 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG802:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG801]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG801]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG801]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG801]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG802]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG801]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG803:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG803]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG803]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META791:![0-9]+]], !DIExpression(), [[DBG801]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG803]]
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META792:![0-9]+]], !DIExpression(), [[DBG803]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG804:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META793:![0-9]+]], !DIExpression(), [[DBG804]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META794:![0-9]+]], !DIExpression(), [[META805:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG806:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META795:![0-9]+]], !DIExpression(), [[DBG806]])
-; LZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG807:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG808:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG809:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG810:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG811:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG812:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG813:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META796:![0-9]+]], !DIExpression(), [[DBG809]])
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META797:![0-9]+]], !DIExpression(), [[DBG810]])
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META798:![0-9]+]], !DIExpression(), [[DBG811]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META799:![0-9]+]], !DIExpression(), [[DBG812]])
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META800:![0-9]+]], !DIExpression(), [[DBG813]])
-; LZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG814:![0-9]+]]
-; LZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG815:![0-9]+]]
+; CHECK-LABEL: @t29_addnsw_i3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG801:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG801]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i3 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG802:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG801]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG801]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG801]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG801]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG802]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG801]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG803:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG803]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG803]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV]], [[META791:![0-9]+]], !DIExpression(), [[DBG801]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG803]]
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS]], [[META792:![0-9]+]], !DIExpression(), [[DBG803]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG804:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META793:![0-9]+]], !DIExpression(), [[DBG804]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META794:![0-9]+]], !DIExpression(), [[META805:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG806:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META795:![0-9]+]], !DIExpression(), [[DBG806]])
+; CHECK-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG807:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG808:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG809:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG810:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG811:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG812:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG813:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_RES]], [[META796:![0-9]+]], !DIExpression(), [[DBG809]])
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META797:![0-9]+]], !DIExpression(), [[DBG810]])
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META798:![0-9]+]], !DIExpression(), [[DBG811]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META799:![0-9]+]], !DIExpression(), [[DBG812]])
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META800:![0-9]+]], !DIExpression(), [[DBG813]])
+; CHECK-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG814:![0-9]+]]
+; CHECK-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG815:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2283,73 +1875,43 @@ end:
 }
 
 define i1 @t30_addnuw_i1(i1 %val, i1 %start, i1 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t30_addnuw_i1(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG828:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i1 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG829:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META818:![0-9]+]], !DIExpression(), [[DBG829]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nuw i1 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG830:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META819:![0-9]+]], !DIExpression(), [[DBG830]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL:%.*]], [[NBITS]], !dbg [[DBG831:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META820:![0-9]+]], !DIExpression(), [[DBG831]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i1 [[VAL_SHIFTED]], false, !dbg [[DBG832:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META821:![0-9]+]], !DIExpression(), [[DBG832]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i1 [[IV]], true, !dbg [[DBG833:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META822:![0-9]+]], !DIExpression(), [[DBG833]])
-; NOLZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i1 [[IV_NEXT]]), !dbg [[DBG834:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG835:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV]], [[LOOP]] ], !dbg [[DBG836:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG837:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG838:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG839:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG840:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META823:![0-9]+]], !DIExpression(), [[DBG836]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META824:![0-9]+]], !DIExpression(), [[DBG837]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META825:![0-9]+]], !DIExpression(), [[DBG838]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META826:![0-9]+]], !DIExpression(), [[DBG839]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META827:![0-9]+]], !DIExpression(), [[DBG840]])
-; NOLZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG841:![0-9]+]]
-; NOLZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG842:![0-9]+]]
-;
-; LZCNT-LABEL: @t30_addnuw_i1(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG828:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG828]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG828]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG828]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG828]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG828]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG829:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG828]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG830:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG830]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG830]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META818:![0-9]+]], !DIExpression(), [[DBG828]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nuw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG830]]
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META819:![0-9]+]], !DIExpression(), [[DBG830]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG831:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META820:![0-9]+]], !DIExpression(), [[DBG831]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META821:![0-9]+]], !DIExpression(), [[META832:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG833:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META822:![0-9]+]], !DIExpression(), [[DBG833]])
-; LZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG834:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG835:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG836:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG837:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG838:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG839:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG840:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META823:![0-9]+]], !DIExpression(), [[DBG836]])
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META824:![0-9]+]], !DIExpression(), [[DBG837]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META825:![0-9]+]], !DIExpression(), [[DBG838]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META826:![0-9]+]], !DIExpression(), [[DBG839]])
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META827:![0-9]+]], !DIExpression(), [[DBG840]])
-; LZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG841:![0-9]+]]
-; LZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG842:![0-9]+]]
+; CHECK-LABEL: @t30_addnuw_i1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG828:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG828]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG828]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG828]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG828]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG828]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG829:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG828]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG830:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG830]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG830]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV]], [[META818:![0-9]+]], !DIExpression(), [[DBG828]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nuw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG830]]
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS]], [[META819:![0-9]+]], !DIExpression(), [[DBG830]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG831:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META820:![0-9]+]], !DIExpression(), [[DBG831]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META821:![0-9]+]], !DIExpression(), [[META832:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG833:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META822:![0-9]+]], !DIExpression(), [[DBG833]])
+; CHECK-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG834:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG835:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG836:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG837:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG838:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG839:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG840:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_RES]], [[META823:![0-9]+]], !DIExpression(), [[DBG836]])
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META824:![0-9]+]], !DIExpression(), [[DBG837]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META825:![0-9]+]], !DIExpression(), [[DBG838]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META826:![0-9]+]], !DIExpression(), [[DBG839]])
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META827:![0-9]+]], !DIExpression(), [[DBG840]])
+; CHECK-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG841:![0-9]+]]
+; CHECK-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG842:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2377,74 +1939,44 @@ end:
   ret i1 %iv.res
 }
 define i2 @t31_addnuw_i2(i2 %val, i2 %start, i2 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t31_addnuw_i2(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG855:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i2 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG856:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META845:![0-9]+]], !DIExpression(), [[DBG856]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nuw i2 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG857:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META846:![0-9]+]], !DIExpression(), [[DBG857]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL:%.*]], [[NBITS]], !dbg [[DBG858:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META847:![0-9]+]], !DIExpression(), [[DBG858]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i2 [[VAL_SHIFTED]], 0, !dbg [[DBG859:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META848:![0-9]+]], !DIExpression(), [[DBG859]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i2 [[IV]], 1, !dbg [[DBG860:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META849:![0-9]+]], !DIExpression(), [[DBG860]])
-; NOLZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i2 [[IV_NEXT]]), !dbg [[DBG861:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG862:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV]], [[LOOP]] ], !dbg [[DBG863:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG864:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG865:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG866:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG867:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META850:![0-9]+]], !DIExpression(), [[DBG863]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META851:![0-9]+]], !DIExpression(), [[DBG864]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META852:![0-9]+]], !DIExpression(), [[DBG865]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META853:![0-9]+]], !DIExpression(), [[DBG866]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META854:![0-9]+]], !DIExpression(), [[DBG867]])
-; NOLZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG868:![0-9]+]]
-; NOLZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG869:![0-9]+]]
-;
-; LZCNT-LABEL: @t31_addnuw_i2(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG855:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG855]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i2 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG856:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG855]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG855]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG855]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG855]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG856]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG855]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG857:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG857]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG857]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META845:![0-9]+]], !DIExpression(), [[DBG855]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nuw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG857]]
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META846:![0-9]+]], !DIExpression(), [[DBG857]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG858:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META847:![0-9]+]], !DIExpression(), [[DBG858]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META848:![0-9]+]], !DIExpression(), [[META859:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG860:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META849:![0-9]+]], !DIExpression(), [[DBG860]])
-; LZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG861:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG862:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG863:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG864:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG865:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG866:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG867:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META850:![0-9]+]], !DIExpression(), [[DBG863]])
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META851:![0-9]+]], !DIExpression(), [[DBG864]])
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META852:![0-9]+]], !DIExpression(), [[DBG865]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META853:![0-9]+]], !DIExpression(), [[DBG866]])
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META854:![0-9]+]], !DIExpression(), [[DBG867]])
-; LZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG868:![0-9]+]]
-; LZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG869:![0-9]+]]
+; CHECK-LABEL: @t31_addnuw_i2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG855:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG855]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i2 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG856:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG855]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG855]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG855]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG855]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG856]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG855]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG857:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG857]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG857]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV]], [[META845:![0-9]+]], !DIExpression(), [[DBG855]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nuw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG857]]
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS]], [[META846:![0-9]+]], !DIExpression(), [[DBG857]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG858:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META847:![0-9]+]], !DIExpression(), [[DBG858]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META848:![0-9]+]], !DIExpression(), [[META859:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG860:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META849:![0-9]+]], !DIExpression(), [[DBG860]])
+; CHECK-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG861:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG862:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG863:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG864:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG865:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG866:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG867:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_RES]], [[META850:![0-9]+]], !DIExpression(), [[DBG863]])
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META851:![0-9]+]], !DIExpression(), [[DBG864]])
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META852:![0-9]+]], !DIExpression(), [[DBG865]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META853:![0-9]+]], !DIExpression(), [[DBG866]])
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META854:![0-9]+]], !DIExpression(), [[DBG867]])
+; CHECK-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG868:![0-9]+]]
+; CHECK-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG869:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2472,74 +2004,44 @@ end:
   ret i2 %iv.res
 }
 define i3 @t32_addnuw_i3(i3 %val, i3 %start, i3 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t32_addnuw_i3(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG882:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i3 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG883:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META872:![0-9]+]], !DIExpression(), [[DBG883]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nuw i3 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG884:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META873:![0-9]+]], !DIExpression(), [[DBG884]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL:%.*]], [[NBITS]], !dbg [[DBG885:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META874:![0-9]+]], !DIExpression(), [[DBG885]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i3 [[VAL_SHIFTED]], 0, !dbg [[DBG886:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META875:![0-9]+]], !DIExpression(), [[DBG886]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i3 [[IV]], 1, !dbg [[DBG887:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META876:![0-9]+]], !DIExpression(), [[DBG887]])
-; NOLZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i3 [[IV_NEXT]]), !dbg [[DBG888:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG889:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV]], [[LOOP]] ], !dbg [[DBG890:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG891:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG892:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG893:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG894:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META877:![0-9]+]], !DIExpression(), [[DBG890]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META878:![0-9]+]], !DIExpression(), [[DBG891]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META879:![0-9]+]], !DIExpression(), [[DBG892]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META880:![0-9]+]], !DIExpression(), [[DBG893]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META881:![0-9]+]], !DIExpression(), [[DBG894]])
-; NOLZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG895:![0-9]+]]
-; NOLZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG896:![0-9]+]]
-;
-; LZCNT-LABEL: @t32_addnuw_i3(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG882:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG882]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i3 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG883:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG882]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG882]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG882]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG882]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG883]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG882]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG884:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG884]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG884]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META872:![0-9]+]], !DIExpression(), [[DBG882]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nuw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG884]]
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META873:![0-9]+]], !DIExpression(), [[DBG884]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG885:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META874:![0-9]+]], !DIExpression(), [[DBG885]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META875:![0-9]+]], !DIExpression(), [[META886:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG887:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META876:![0-9]+]], !DIExpression(), [[DBG887]])
-; LZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG888:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG889:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG890:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG891:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG892:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG893:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG894:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META877:![0-9]+]], !DIExpression(), [[DBG890]])
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META878:![0-9]+]], !DIExpression(), [[DBG891]])
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META879:![0-9]+]], !DIExpression(), [[DBG892]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META880:![0-9]+]], !DIExpression(), [[DBG893]])
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META881:![0-9]+]], !DIExpression(), [[DBG894]])
-; LZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG895:![0-9]+]]
-; LZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG896:![0-9]+]]
+; CHECK-LABEL: @t32_addnuw_i3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG882:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG882]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i3 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG883:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG882]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG882]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG882]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG882]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG883]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG882]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG884:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG884]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG884]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV]], [[META872:![0-9]+]], !DIExpression(), [[DBG882]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nuw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG884]]
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS]], [[META873:![0-9]+]], !DIExpression(), [[DBG884]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG885:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META874:![0-9]+]], !DIExpression(), [[DBG885]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META875:![0-9]+]], !DIExpression(), [[META886:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG887:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META876:![0-9]+]], !DIExpression(), [[DBG887]])
+; CHECK-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG888:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG889:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG890:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG891:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG892:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG893:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG894:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_RES]], [[META877:![0-9]+]], !DIExpression(), [[DBG890]])
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META878:![0-9]+]], !DIExpression(), [[DBG891]])
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META879:![0-9]+]], !DIExpression(), [[DBG892]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META880:![0-9]+]], !DIExpression(), [[DBG893]])
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META881:![0-9]+]], !DIExpression(), [[DBG894]])
+; CHECK-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG895:![0-9]+]]
+; CHECK-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG896:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2569,73 +2071,43 @@ end:
 
 
 define i1 @t33_subnsw_i1(i1 %val, i1 %start, i1 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t33_subnsw_i1(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG909:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i1 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG910:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META899:![0-9]+]], !DIExpression(), [[DBG910]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i1 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG911:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META900:![0-9]+]], !DIExpression(), [[DBG911]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL:%.*]], [[NBITS]], !dbg [[DBG912:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META901:![0-9]+]], !DIExpression(), [[DBG912]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i1 [[VAL_SHIFTED]], false, !dbg [[DBG913:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META902:![0-9]+]], !DIExpression(), [[DBG913]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i1 [[IV]], true, !dbg [[DBG914:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META903:![0-9]+]], !DIExpression(), [[DBG914]])
-; NOLZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i1 [[IV_NEXT]]), !dbg [[DBG915:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG916:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV]], [[LOOP]] ], !dbg [[DBG917:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG918:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG919:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG920:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG921:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META904:![0-9]+]], !DIExpression(), [[DBG917]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META905:![0-9]+]], !DIExpression(), [[DBG918]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META906:![0-9]+]], !DIExpression(), [[DBG919]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META907:![0-9]+]], !DIExpression(), [[DBG920]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META908:![0-9]+]], !DIExpression(), [[DBG921]])
-; NOLZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG922:![0-9]+]]
-; NOLZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG923:![0-9]+]]
-;
-; LZCNT-LABEL: @t33_subnsw_i1(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG909:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG909]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG909]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG909]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG909]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG909]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG910:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG909]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG911:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG911]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG911]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV]], [[META899:![0-9]+]], !DIExpression(), [[DBG909]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG911]]
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS]], [[META900:![0-9]+]], !DIExpression(), [[DBG911]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG912:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META901:![0-9]+]], !DIExpression(), [[DBG912]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META902:![0-9]+]], !DIExpression(), [[META913:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG914:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META903:![0-9]+]], !DIExpression(), [[DBG914]])
-; LZCNT-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG915:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG916:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG917:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG918:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG919:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG920:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG921:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_RES]], [[META904:![0-9]+]], !DIExpression(), [[DBG917]])
-; LZCNT-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META905:![0-9]+]], !DIExpression(), [[DBG918]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META906:![0-9]+]], !DIExpression(), [[DBG919]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META907:![0-9]+]], !DIExpression(), [[DBG920]])
-; LZCNT-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META908:![0-9]+]], !DIExpression(), [[DBG921]])
-; LZCNT-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG922:![0-9]+]]
-; LZCNT-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG923:![0-9]+]]
+; CHECK-LABEL: @t33_subnsw_i1(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i1 @llvm.ctlz.i1(i1 [[VAL:%.*]], i1 false), !dbg [[DBG909:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i1 true, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG909]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i1 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG909]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i1 @llvm.smax.i1(i1 [[VAL_NUMACTIVEBITS_OFFSET]], i1 [[START:%.*]]), !dbg [[DBG909]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i1 [[IV_FINAL]], [[START]], !dbg [[DBG909]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i1 [[LOOP_BACKEDGETAKENCOUNT]], true, !dbg [[DBG909]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG910:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i1 [ false, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG909]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i1 [[LOOP_IV]], true, !dbg [[DBG911:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i1 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG911]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i1 [[LOOP_IV]], [[START]], !dbg [[DBG911]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV]], [[META899:![0-9]+]], !DIExpression(), [[DBG909]])
+; CHECK-NEXT:    [[NBITS:%.*]] = sub nsw i1 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG911]]
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS]], [[META900:![0-9]+]], !DIExpression(), [[DBG911]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i1 [[VAL]], [[NBITS]], !dbg [[DBG912:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED]], [[META901:![0-9]+]], !DIExpression(), [[DBG912]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META902:![0-9]+]], !DIExpression(), [[META913:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i1 [[IV]], true, !dbg [[DBG914:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT]], [[META903:![0-9]+]], !DIExpression(), [[DBG914]])
+; CHECK-NEXT:    call void @escape_inner.i1(i1 [[IV]], i1 [[NBITS]], i1 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i1 [[IV_NEXT]]), !dbg [[DBG915:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG916:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i1 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG917:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i1 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG918:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i1 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG919:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG920:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i1 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG921:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i1 [[IV_RES]], [[META904:![0-9]+]], !DIExpression(), [[DBG917]])
+; CHECK-NEXT:      #dbg_value(i1 [[NBITS_RES]], [[META905:![0-9]+]], !DIExpression(), [[DBG918]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_RES]], [[META906:![0-9]+]], !DIExpression(), [[DBG919]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META907:![0-9]+]], !DIExpression(), [[DBG920]])
+; CHECK-NEXT:      #dbg_value(i1 [[IV_NEXT_RES]], [[META908:![0-9]+]], !DIExpression(), [[DBG921]])
+; CHECK-NEXT:    call void @escape_outer.i1(i1 [[IV_RES]], i1 [[NBITS_RES]], i1 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i1 [[IV_NEXT_RES]]), !dbg [[DBG922:![0-9]+]]
+; CHECK-NEXT:    ret i1 [[IV_RES]], !dbg [[DBG923:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2663,73 +2135,43 @@ end:
   ret i1 %iv.res
 }
 define i2 @t34_addnuw_i2(i2 %val, i2 %start, i2 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t34_addnuw_i2(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG936:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i2 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG937:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META926:![0-9]+]], !DIExpression(), [[DBG937]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i2 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG938:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META927:![0-9]+]], !DIExpression(), [[DBG938]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL:%.*]], [[NBITS]], !dbg [[DBG939:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META928:![0-9]+]], !DIExpression(), [[DBG939]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i2 [[VAL_SHIFTED]], 0, !dbg [[DBG940:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META929:![0-9]+]], !DIExpression(), [[DBG940]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i2 [[IV]], 1, !dbg [[DBG941:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META930:![0-9]+]], !DIExpression(), [[DBG941]])
-; NOLZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i2 [[IV_NEXT]]), !dbg [[DBG942:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG943:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV]], [[LOOP]] ], !dbg [[DBG944:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG945:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG946:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG947:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG948:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META931:![0-9]+]], !DIExpression(), [[DBG944]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META932:![0-9]+]], !DIExpression(), [[DBG945]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META933:![0-9]+]], !DIExpression(), [[DBG946]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META934:![0-9]+]], !DIExpression(), [[DBG947]])
-; NOLZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META935:![0-9]+]], !DIExpression(), [[DBG948]])
-; NOLZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG949:![0-9]+]]
-; NOLZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG950:![0-9]+]]
-;
-; LZCNT-LABEL: @t34_addnuw_i2(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG936:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG936]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG936]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG936]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG936]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG936]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG937:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG936]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG938:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG938]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG938]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV]], [[META926:![0-9]+]], !DIExpression(), [[DBG936]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG938]]
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS]], [[META927:![0-9]+]], !DIExpression(), [[DBG938]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG939:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META928:![0-9]+]], !DIExpression(), [[DBG939]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META929:![0-9]+]], !DIExpression(), [[META940:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG941:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META930:![0-9]+]], !DIExpression(), [[DBG941]])
-; LZCNT-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG942:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG943:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG944:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG945:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG946:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG947:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG948:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_RES]], [[META931:![0-9]+]], !DIExpression(), [[DBG944]])
-; LZCNT-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META932:![0-9]+]], !DIExpression(), [[DBG945]])
-; LZCNT-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META933:![0-9]+]], !DIExpression(), [[DBG946]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META934:![0-9]+]], !DIExpression(), [[DBG947]])
-; LZCNT-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META935:![0-9]+]], !DIExpression(), [[DBG948]])
-; LZCNT-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG949:![0-9]+]]
-; LZCNT-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG950:![0-9]+]]
+; CHECK-LABEL: @t34_addnuw_i2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i2 @llvm.ctlz.i2(i2 [[VAL:%.*]], i1 false), !dbg [[DBG936:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw i2 -2, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG936]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i2 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG936]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i2 @llvm.smax.i2(i2 [[VAL_NUMACTIVEBITS_OFFSET]], i2 [[START:%.*]]), !dbg [[DBG936]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i2 [[IV_FINAL]], [[START]], !dbg [[DBG936]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw i2 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG936]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG937:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i2 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG936]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw i2 [[LOOP_IV]], 1, !dbg [[DBG938:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i2 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG938]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i2 [[LOOP_IV]], [[START]], !dbg [[DBG938]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV]], [[META926:![0-9]+]], !DIExpression(), [[DBG936]])
+; CHECK-NEXT:    [[NBITS:%.*]] = sub nsw i2 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG938]]
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS]], [[META927:![0-9]+]], !DIExpression(), [[DBG938]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i2 [[VAL]], [[NBITS]], !dbg [[DBG939:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED]], [[META928:![0-9]+]], !DIExpression(), [[DBG939]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META929:![0-9]+]], !DIExpression(), [[META940:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i2 [[IV]], 1, !dbg [[DBG941:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT]], [[META930:![0-9]+]], !DIExpression(), [[DBG941]])
+; CHECK-NEXT:    call void @escape_inner.i2(i2 [[IV]], i2 [[NBITS]], i2 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i2 [[IV_NEXT]]), !dbg [[DBG942:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG943:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i2 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG944:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i2 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG945:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i2 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG946:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG947:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i2 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG948:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i2 [[IV_RES]], [[META931:![0-9]+]], !DIExpression(), [[DBG944]])
+; CHECK-NEXT:      #dbg_value(i2 [[NBITS_RES]], [[META932:![0-9]+]], !DIExpression(), [[DBG945]])
+; CHECK-NEXT:      #dbg_value(i2 [[VAL_SHIFTED_RES]], [[META933:![0-9]+]], !DIExpression(), [[DBG946]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META934:![0-9]+]], !DIExpression(), [[DBG947]])
+; CHECK-NEXT:      #dbg_value(i2 [[IV_NEXT_RES]], [[META935:![0-9]+]], !DIExpression(), [[DBG948]])
+; CHECK-NEXT:    call void @escape_outer.i2(i2 [[IV_RES]], i2 [[NBITS_RES]], i2 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i2 [[IV_NEXT_RES]]), !dbg [[DBG949:![0-9]+]]
+; CHECK-NEXT:    ret i2 [[IV_RES]], !dbg [[DBG950:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2757,73 +2199,43 @@ end:
   ret i2 %iv.res
 }
 define i3 @t35_addnuw_i3(i3 %val, i3 %start, i3 %extraoffset) mustprogress {
-; NOLZCNT-LABEL: @t35_addnuw_i3(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG963:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i3 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG964:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META953:![0-9]+]], !DIExpression(), [[DBG964]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i3 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG965:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META954:![0-9]+]], !DIExpression(), [[DBG965]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL:%.*]], [[NBITS]], !dbg [[DBG966:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META955:![0-9]+]], !DIExpression(), [[DBG966]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i3 [[VAL_SHIFTED]], 0, !dbg [[DBG967:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META956:![0-9]+]], !DIExpression(), [[DBG967]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i3 [[IV]], 1, !dbg [[DBG968:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META957:![0-9]+]], !DIExpression(), [[DBG968]])
-; NOLZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i3 [[IV_NEXT]]), !dbg [[DBG969:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG970:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV]], [[LOOP]] ], !dbg [[DBG971:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG972:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG973:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG974:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG975:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META958:![0-9]+]], !DIExpression(), [[DBG971]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META959:![0-9]+]], !DIExpression(), [[DBG972]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META960:![0-9]+]], !DIExpression(), [[DBG973]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META961:![0-9]+]], !DIExpression(), [[DBG974]])
-; NOLZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META962:![0-9]+]], !DIExpression(), [[DBG975]])
-; NOLZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG976:![0-9]+]]
-; NOLZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG977:![0-9]+]]
-;
-; LZCNT-LABEL: @t35_addnuw_i3(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG963:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG963]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG963]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG963]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG963]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG963]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG964:![0-9]+]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG963]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG965:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG965]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG965]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV]], [[META953:![0-9]+]], !DIExpression(), [[DBG963]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = sub nsw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG965]]
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS]], [[META954:![0-9]+]], !DIExpression(), [[DBG965]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG966:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META955:![0-9]+]], !DIExpression(), [[DBG966]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META956:![0-9]+]], !DIExpression(), [[META967:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG968:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META957:![0-9]+]], !DIExpression(), [[DBG968]])
-; LZCNT-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG969:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG970:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG971:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG972:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG973:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG974:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG975:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_RES]], [[META958:![0-9]+]], !DIExpression(), [[DBG971]])
-; LZCNT-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META959:![0-9]+]], !DIExpression(), [[DBG972]])
-; LZCNT-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META960:![0-9]+]], !DIExpression(), [[DBG973]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META961:![0-9]+]], !DIExpression(), [[DBG974]])
-; LZCNT-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META962:![0-9]+]], !DIExpression(), [[DBG975]])
-; LZCNT-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG976:![0-9]+]]
-; LZCNT-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG977:![0-9]+]]
+; CHECK-LABEL: @t35_addnuw_i3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i3 @llvm.ctlz.i3(i3 [[VAL:%.*]], i1 false), !dbg [[DBG963:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i3 3, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG963]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i3 [[VAL_NUMACTIVEBITS]], [[EXTRAOFFSET:%.*]], !dbg [[DBG963]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i3 @llvm.smax.i3(i3 [[VAL_NUMACTIVEBITS_OFFSET]], i3 [[START:%.*]]), !dbg [[DBG963]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i3 [[IV_FINAL]], [[START]], !dbg [[DBG963]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i3 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG963]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG964:![0-9]+]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i3 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG963]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i3 [[LOOP_IV]], 1, !dbg [[DBG965:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i3 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG965]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i3 [[LOOP_IV]], [[START]], !dbg [[DBG965]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV]], [[META953:![0-9]+]], !DIExpression(), [[DBG963]])
+; CHECK-NEXT:    [[NBITS:%.*]] = sub nsw i3 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG965]]
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS]], [[META954:![0-9]+]], !DIExpression(), [[DBG965]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i3 [[VAL]], [[NBITS]], !dbg [[DBG966:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED]], [[META955:![0-9]+]], !DIExpression(), [[DBG966]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META956:![0-9]+]], !DIExpression(), [[META967:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i3 [[IV]], 1, !dbg [[DBG968:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT]], [[META957:![0-9]+]], !DIExpression(), [[DBG968]])
+; CHECK-NEXT:    call void @escape_inner.i3(i3 [[IV]], i3 [[NBITS]], i3 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i3 [[IV_NEXT]]), !dbg [[DBG969:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG970:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i3 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG971:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i3 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG972:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i3 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG973:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG974:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i3 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG975:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i3 [[IV_RES]], [[META958:![0-9]+]], !DIExpression(), [[DBG971]])
+; CHECK-NEXT:      #dbg_value(i3 [[NBITS_RES]], [[META959:![0-9]+]], !DIExpression(), [[DBG972]])
+; CHECK-NEXT:      #dbg_value(i3 [[VAL_SHIFTED_RES]], [[META960:![0-9]+]], !DIExpression(), [[DBG973]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META961:![0-9]+]], !DIExpression(), [[DBG974]])
+; CHECK-NEXT:      #dbg_value(i3 [[IV_NEXT_RES]], [[META962:![0-9]+]], !DIExpression(), [[DBG975]])
+; CHECK-NEXT:    call void @escape_outer.i3(i3 [[IV_RES]], i3 [[NBITS_RES]], i3 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i3 [[IV_NEXT_RES]]), !dbg [[DBG976:![0-9]+]]
+; CHECK-NEXT:    ret i3 [[IV_RES]], !dbg [[DBG977:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -2910,74 +2322,44 @@ end:
 }
 
 define i8 @p37(i8 %val, i8 %start, i8 %extraoffset) {
-; NOLZCNT-LABEL: @p37(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1017:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1018:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META1007:![0-9]+]], !DIExpression(), [[DBG1018]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG1019:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META1008:![0-9]+]], !DIExpression(), [[DBG1019]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL:%.*]], [[NBITS]], !dbg [[DBG1020:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1009:![0-9]+]], !DIExpression(), [[DBG1020]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG1021:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META1010:![0-9]+]], !DIExpression(), [[DBG1021]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG1022:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1011:![0-9]+]], !DIExpression(), [[DBG1022]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG1023:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1024:![0-9]+]], !llvm.loop [[LOOP1025:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG1027:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1028:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1029:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG1030:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1031:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1012:![0-9]+]], !DIExpression(), [[DBG1027]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1013:![0-9]+]], !DIExpression(), [[DBG1028]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1014:![0-9]+]], !DIExpression(), [[DBG1029]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1015:![0-9]+]], !DIExpression(), [[DBG1030]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1016:![0-9]+]], !DIExpression(), [[DBG1031]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1032:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1033:![0-9]+]]
-;
-; LZCNT-LABEL: @p37(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG1017:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG1017]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG1018:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG1017]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG1017]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG1017]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG1017]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1018]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1017]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG1019:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG1019]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG1019]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META1007:![0-9]+]], !DIExpression(), [[DBG1017]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG1019]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META1008:![0-9]+]], !DIExpression(), [[DBG1019]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG1020:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1009:![0-9]+]], !DIExpression(), [[DBG1020]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META1010:![0-9]+]], !DIExpression(), [[META1021:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG1022:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1011:![0-9]+]], !DIExpression(), [[DBG1022]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG1023:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1024:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG1025:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1026:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1027:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG1028:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1029:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1012:![0-9]+]], !DIExpression(), [[DBG1025]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1013:![0-9]+]], !DIExpression(), [[DBG1026]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1014:![0-9]+]], !DIExpression(), [[DBG1027]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1015:![0-9]+]], !DIExpression(), [[DBG1028]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1016:![0-9]+]], !DIExpression(), [[DBG1029]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1030:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1031:![0-9]+]]
+; CHECK-LABEL: @p37(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL:%.*]], i1 false), !dbg [[DBG1017:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG1017]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG1018:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG1017]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG1017]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG1017]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG1017]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1018]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1017]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG1019:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG1019]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG1019]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META1007:![0-9]+]], !DIExpression(), [[DBG1017]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG1019]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META1008:![0-9]+]], !DIExpression(), [[DBG1019]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG1020:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1009:![0-9]+]], !DIExpression(), [[DBG1020]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META1010:![0-9]+]], !DIExpression(), [[META1021:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG1022:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1011:![0-9]+]], !DIExpression(), [[DBG1022]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG1023:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1024:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG1025:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1026:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1027:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG1028:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1029:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1012:![0-9]+]], !DIExpression(), [[DBG1025]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1013:![0-9]+]], !DIExpression(), [[DBG1026]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1014:![0-9]+]], !DIExpression(), [[DBG1027]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1015:![0-9]+]], !DIExpression(), [[DBG1028]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1016:![0-9]+]], !DIExpression(), [[DBG1029]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1030:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1031:![0-9]+]]
 ;
 entry:
   br label %loop
@@ -3008,78 +2390,46 @@ end:
 !1 = !{!"llvm.loop.mustprogress"}
 
 define i8 @p38(i8 %val.crude, i8 %start, i8 %extraoffset) {
-; NOLZCNT-LABEL: @p38(
-; NOLZCNT-NEXT:  entry:
-; NOLZCNT-NEXT:    [[VAL:%.*]] = and i8 [[VAL_CRUDE:%.*]], 127, !dbg [[DBG1047:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL]], [[META1036:![0-9]+]], !DIExpression(), [[DBG1047]])
-; NOLZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1048:![0-9]+]]
-; NOLZCNT:       loop:
-; NOLZCNT-NEXT:    [[IV:%.*]] = phi i8 [ [[START:%.*]], [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1049:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META1037:![0-9]+]], !DIExpression(), [[DBG1049]])
-; NOLZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET:%.*]], !dbg [[DBG1050:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META1038:![0-9]+]], !DIExpression(), [[DBG1050]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG1051:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1039:![0-9]+]], !DIExpression(), [[DBG1051]])
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO:%.*]] = icmp eq i8 [[VAL_SHIFTED]], 0, !dbg [[DBG1052:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO]], [[META1040:![0-9]+]], !DIExpression(), [[DBG1052]])
-; NOLZCNT-NEXT:    [[IV_NEXT]] = add i8 [[IV]], 1, !dbg [[DBG1053:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1041:![0-9]+]], !DIExpression(), [[DBG1053]])
-; NOLZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[VAL_SHIFTED_ISZERO]], i8 [[IV_NEXT]]), !dbg [[DBG1054:![0-9]+]]
-; NOLZCNT-NEXT:    br i1 [[VAL_SHIFTED_ISZERO]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1055:![0-9]+]]
-; NOLZCNT:       end:
-; NOLZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV]], [[LOOP]] ], !dbg [[DBG1056:![0-9]+]]
-; NOLZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1057:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1058:![0-9]+]]
-; NOLZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[VAL_SHIFTED_ISZERO]], [[LOOP]] ], !dbg [[DBG1059:![0-9]+]]
-; NOLZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1060:![0-9]+]]
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1042:![0-9]+]], !DIExpression(), [[DBG1056]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1043:![0-9]+]], !DIExpression(), [[DBG1057]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1044:![0-9]+]], !DIExpression(), [[DBG1058]])
-; NOLZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1045:![0-9]+]], !DIExpression(), [[DBG1059]])
-; NOLZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1046:![0-9]+]], !DIExpression(), [[DBG1060]])
-; NOLZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1061:![0-9]+]]
-; NOLZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1062:![0-9]+]]
-;
-; LZCNT-LABEL: @p38(
-; LZCNT-NEXT:  entry:
-; LZCNT-NEXT:    [[VAL:%.*]] = and i8 [[VAL_CRUDE:%.*]], 127, !dbg [[DBG1045:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL]], [[META1034:![0-9]+]], !DIExpression(), [[DBG1045]])
-; LZCNT-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL]], i1 false), !dbg [[DBG1046:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG1046]]
-; LZCNT-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG1047:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG1046]]
-; LZCNT-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG1046]]
-; LZCNT-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG1046]]
-; LZCNT-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG1046]]
-; LZCNT-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1047]]
-; LZCNT:       loop:
-; LZCNT-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1046]]
-; LZCNT-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG1048:![0-9]+]]
-; LZCNT-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG1048]]
-; LZCNT-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG1048]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV]], [[META1035:![0-9]+]], !DIExpression(), [[DBG1046]])
-; LZCNT-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG1048]]
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS]], [[META1036:![0-9]+]], !DIExpression(), [[DBG1048]])
-; LZCNT-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG1049:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1037:![0-9]+]], !DIExpression(), [[DBG1049]])
-; LZCNT-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META1038:![0-9]+]], !DIExpression(), [[META1050:![0-9]+]])
-; LZCNT-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG1051:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1039:![0-9]+]], !DIExpression(), [[DBG1051]])
-; LZCNT-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG1052:![0-9]+]]
-; LZCNT-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1053:![0-9]+]]
-; LZCNT:       end:
-; LZCNT-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG1054:![0-9]+]]
-; LZCNT-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1055:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1056:![0-9]+]]
-; LZCNT-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG1057:![0-9]+]]
-; LZCNT-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1058:![0-9]+]]
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1040:![0-9]+]], !DIExpression(), [[DBG1054]])
-; LZCNT-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1041:![0-9]+]], !DIExpression(), [[DBG1055]])
-; LZCNT-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1042:![0-9]+]], !DIExpression(), [[DBG1056]])
-; LZCNT-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1043:![0-9]+]], !DIExpression(), [[DBG1057]])
-; LZCNT-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1044:![0-9]+]], !DIExpression(), [[DBG1058]])
-; LZCNT-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1059:![0-9]+]]
-; LZCNT-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1060:![0-9]+]]
+; CHECK-LABEL: @p38(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[VAL:%.*]] = and i8 [[VAL_CRUDE:%.*]], 127, !dbg [[DBG1045:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL]], [[META1034:![0-9]+]], !DIExpression(), [[DBG1045]])
+; CHECK-NEXT:    [[VAL_NUMLEADINGZEROS:%.*]] = call i8 @llvm.ctlz.i8(i8 [[VAL]], i1 false), !dbg [[DBG1046:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS:%.*]] = sub nuw nsw i8 8, [[VAL_NUMLEADINGZEROS]], !dbg [[DBG1046]]
+; CHECK-NEXT:    [[TMP0:%.*]] = sub i8 0, [[EXTRAOFFSET:%.*]], !dbg [[DBG1047:![0-9]+]]
+; CHECK-NEXT:    [[VAL_NUMACTIVEBITS_OFFSET:%.*]] = add nsw i8 [[VAL_NUMACTIVEBITS]], [[TMP0]], !dbg [[DBG1046]]
+; CHECK-NEXT:    [[IV_FINAL:%.*]] = call i8 @llvm.smax.i8(i8 [[VAL_NUMACTIVEBITS_OFFSET]], i8 [[START:%.*]]), !dbg [[DBG1046]]
+; CHECK-NEXT:    [[LOOP_BACKEDGETAKENCOUNT:%.*]] = sub nsw i8 [[IV_FINAL]], [[START]], !dbg [[DBG1046]]
+; CHECK-NEXT:    [[LOOP_TRIPCOUNT:%.*]] = add nuw nsw i8 [[LOOP_BACKEDGETAKENCOUNT]], 1, !dbg [[DBG1046]]
+; CHECK-NEXT:    br label [[LOOP:%.*]], !dbg [[DBG1047]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[LOOP_IV:%.*]] = phi i8 [ 0, [[ENTRY:%.*]] ], [ [[LOOP_IV_NEXT:%.*]], [[LOOP]] ], !dbg [[DBG1046]]
+; CHECK-NEXT:    [[LOOP_IV_NEXT]] = add nuw nsw i8 [[LOOP_IV]], 1, !dbg [[DBG1048:![0-9]+]]
+; CHECK-NEXT:    [[LOOP_IVCHECK:%.*]] = icmp eq i8 [[LOOP_IV_NEXT]], [[LOOP_TRIPCOUNT]], !dbg [[DBG1048]]
+; CHECK-NEXT:    [[IV:%.*]] = add nsw i8 [[LOOP_IV]], [[START]], !dbg [[DBG1048]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV]], [[META1035:![0-9]+]], !DIExpression(), [[DBG1046]])
+; CHECK-NEXT:    [[NBITS:%.*]] = add nsw i8 [[IV]], [[EXTRAOFFSET]], !dbg [[DBG1048]]
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS]], [[META1036:![0-9]+]], !DIExpression(), [[DBG1048]])
+; CHECK-NEXT:    [[VAL_SHIFTED:%.*]] = ashr i8 [[VAL]], [[NBITS]], !dbg [[DBG1049:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED]], [[META1037:![0-9]+]], !DIExpression(), [[DBG1049]])
+; CHECK-NEXT:      #dbg_value(i1 [[LOOP_IVCHECK]], [[META1038:![0-9]+]], !DIExpression(), [[META1050:![0-9]+]])
+; CHECK-NEXT:    [[IV_NEXT:%.*]] = add i8 [[IV]], 1, !dbg [[DBG1051:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT]], [[META1039:![0-9]+]], !DIExpression(), [[DBG1051]])
+; CHECK-NEXT:    call void @escape_inner(i8 [[IV]], i8 [[NBITS]], i8 [[VAL_SHIFTED]], i1 [[LOOP_IVCHECK]], i8 [[IV_NEXT]]), !dbg [[DBG1052:![0-9]+]]
+; CHECK-NEXT:    br i1 [[LOOP_IVCHECK]], label [[END:%.*]], label [[LOOP]], !dbg [[DBG1053:![0-9]+]]
+; CHECK:       end:
+; CHECK-NEXT:    [[IV_RES:%.*]] = phi i8 [ [[IV_FINAL]], [[LOOP]] ], !dbg [[DBG1054:![0-9]+]]
+; CHECK-NEXT:    [[NBITS_RES:%.*]] = phi i8 [ [[NBITS]], [[LOOP]] ], !dbg [[DBG1055:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_RES:%.*]] = phi i8 [ [[VAL_SHIFTED]], [[LOOP]] ], !dbg [[DBG1056:![0-9]+]]
+; CHECK-NEXT:    [[VAL_SHIFTED_ISZERO_RES:%.*]] = phi i1 [ [[LOOP_IVCHECK]], [[LOOP]] ], !dbg [[DBG1057:![0-9]+]]
+; CHECK-NEXT:    [[IV_NEXT_RES:%.*]] = phi i8 [ [[IV_NEXT]], [[LOOP]] ], !dbg [[DBG1058:![0-9]+]]
+; CHECK-NEXT:      #dbg_value(i8 [[IV_RES]], [[META1040:![0-9]+]], !DIExpression(), [[DBG1054]])
+; CHECK-NEXT:      #dbg_value(i8 [[NBITS_RES]], [[META1041:![0-9]+]], !DIExpression(), [[DBG1055]])
+; CHECK-NEXT:      #dbg_value(i8 [[VAL_SHIFTED_RES]], [[META1042:![0-9]+]], !DIExpression(), [[DBG1056]])
+; CHECK-NEXT:      #dbg_value(i1 [[VAL_SHIFTED_ISZERO_RES]], [[META1043:![0-9]+]], !DIExpression(), [[DBG1057]])
+; CHECK-NEXT:      #dbg_value(i8 [[IV_NEXT_RES]], [[META1044:![0-9]+]], !DIExpression(), [[DBG1058]])
+; CHECK-NEXT:    call void @escape_outer(i8 [[IV_RES]], i8 [[NBITS_RES]], i8 [[VAL_SHIFTED_RES]], i1 [[VAL_SHIFTED_ISZERO_RES]], i8 [[IV_NEXT_RES]]), !dbg [[DBG1059:![0-9]+]]
+; CHECK-NEXT:    ret i8 [[IV_RES]], !dbg [[DBG1060:![0-9]+]]
 ;
 entry:
   %val = and i8 %val.crude, 127
@@ -3107,3 +2457,6 @@ end:
 
   ret i8 %iv.res
 }
+;; NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
+; LZCNT: {{.*}}
+; NOLZCNT: {{.*}}

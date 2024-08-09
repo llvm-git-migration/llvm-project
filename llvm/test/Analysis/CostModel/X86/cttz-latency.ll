@@ -17,13 +17,9 @@ declare i16 @llvm.cttz.i16(i16, i1)
 declare  i8 @llvm.cttz.i8(i8, i1)
 
 define i64 @var_cttz_i64(i64 %a) {
-; NOBMI-LABEL: 'var_cttz_i64'
-; NOBMI-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %cttz = call i64 @llvm.cttz.i64(i64 %a, i1 false)
-; NOBMI-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret i64 %cttz
-;
-; BMI-LABEL: 'var_cttz_i64'
-; BMI-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %cttz = call i64 @llvm.cttz.i64(i64 %a, i1 false)
-; BMI-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret i64 %cttz
+; CHECK-LABEL: 'var_cttz_i64'
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %cttz = call i64 @llvm.cttz.i64(i64 %a, i1 false)
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret i64 %cttz
 ;
   %cttz = call i64 @llvm.cttz.i64(i64 %a, i1 0)
   ret i64 %cttz
