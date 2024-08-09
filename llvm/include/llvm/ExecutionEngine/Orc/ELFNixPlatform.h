@@ -31,25 +31,9 @@ struct ELFPerObjectSectionsToRegister {
   ExecutorAddrRange ThreadDataSection;
 };
 
-struct ELFNixJITDylibInitializers {
-  using SectionList = std::vector<ExecutorAddrRange>;
-
-  ELFNixJITDylibInitializers(std::string Name, ExecutorAddr DSOHandleAddress)
-      : Name(std::move(Name)), DSOHandleAddress(std::move(DSOHandleAddress)) {}
-
-  std::string Name;
-  ExecutorAddr DSOHandleAddress;
-
-  StringMap<SectionList> InitSections;
-};
-
-class ELFNixJITDylibDeinitializers {};
-
-using ELFNixJITDylibInitializerSequence =
-    std::vector<ELFNixJITDylibInitializers>;
-
-using ELFNixJITDylibDeinitializerSequence =
-    std::vector<ELFNixJITDylibDeinitializers>;
+using ELFNixJITDylibDepInfo = std::vector<ExecutorAddr>;
+using ELFNixJITDylibDepInfoMap =
+    std::vector<std::pair<ExecutorAddr, ELFNixJITDylibDepInfo>>;
 
 /// Mediates between ELFNix initialization and ExecutionSession state.
 class ELFNixPlatform : public Platform {
@@ -161,7 +145,8 @@ private:
                                      jitlink::PassConfiguration &Config);
 
     void addDSOHandleSupportPasses(MaterializationResponsibility &MR,
-                                   jitlink::PassConfiguration &Config);
+                                   jitlink::PassConfiguration &Config,
+                                   bool IsBootstraping);
 
     void addEHAndTLVSupportPasses(MaterializationResponsibility &MR,
                                   jitlink::PassConfiguration &Config);
@@ -169,7 +154,8 @@ private:
     Error preserveInitSections(jitlink::LinkGraph &G,
                                MaterializationResponsibility &MR);
 
-    Error registerInitSections(jitlink::LinkGraph &G, JITDylib &JD);
+    Error registerInitSections(jitlink::LinkGraph &G, JITDylib &JD,
+                               bool IsBootstraping);
 
     Error fixTLVSectionsAndEdges(jitlink::LinkGraph &G, JITDylib &JD);
 
@@ -178,11 +164,8 @@ private:
     InitSymbolDepMap InitSymbolDeps;
   };
 
-  using SendInitializerSequenceFn =
-      unique_function<void(Expected<ELFNixJITDylibInitializerSequence>)>;
-
-  using SendDeinitializerSequenceFn =
-      unique_function<void(Expected<ELFNixJITDylibDeinitializerSequence>)>;
+  using PushInitializersSendResultFn =
+      unique_function<void(Expected<ELFNixJITDylibDepInfoMap>)>;
 
   using SendSymbolAddressFn = unique_function<void(Expected<ExecutorAddr>)>;
 
@@ -196,18 +179,10 @@ private:
   // Associate ELFNixPlatform JIT-side runtime support functions with handlers.
   Error associateRuntimeSupportFunctions(JITDylib &PlatformJD);
 
-  void getInitializersBuildSequencePhase(SendInitializerSequenceFn SendResult,
-                                         JITDylib &JD,
-                                         std::vector<JITDylibSP> DFSLinkOrder);
+  void pushInitializersLoop(PushInitializersSendResultFn SendResult, JITDylibSP JD);
 
-  void getInitializersLookupPhase(SendInitializerSequenceFn SendResult,
-                                  JITDylib &JD);
-
-  void rt_getInitializers(SendInitializerSequenceFn SendResult,
-                          StringRef JDName);
-
-  void rt_getDeinitializers(SendDeinitializerSequenceFn SendResult,
-                            ExecutorAddr Handle);
+  void rt_recordInitializers(PushInitializersSendResultFn SendResult,
+                             ExecutorAddr JDHeader);
 
   void rt_lookupSymbol(SendSymbolAddressFn SendResult, ExecutorAddr Handle,
                        StringRef SymbolName);
@@ -215,22 +190,34 @@ private:
   // Records the addresses of runtime symbols used by the platform.
   Error bootstrapELFNixRuntime(JITDylib &PlatformJD);
 
-  Error registerInitInfo(JITDylib &JD,
-                         ArrayRef<jitlink::Section *> InitSections);
-
   Error registerPerObjectSections(const ELFPerObjectSectionsToRegister &POSR);
 
   Expected<uint64_t> createPThreadKey();
+
+  struct JDBootstrapState {
+    JITDylib *JD = nullptr;
+    std::string JDName;
+    ExecutorAddr HeaderAddr;
+    SmallVector<ExecutorAddrRange> Initializers;
+  };
+
+  std::map<JITDylib *, JDBootstrapState> JDBootstrapStates;
 
   ExecutionSession &ES;
   ObjectLinkingLayer &ObjLinkingLayer;
 
   SymbolStringPtr DSOHandleSymbol;
+  ExecutorAddr DSOHandleAddr;
   std::atomic<bool> RuntimeBootstrapped{false};
 
   ExecutorAddr orc_rt_elfnix_platform_bootstrap;
   ExecutorAddr orc_rt_elfnix_platform_shutdown;
+  ExecutorAddr orc_rt_elfnix_register_jitdylib;
+  ExecutorAddr orc_rt_elfnix_deregister_jitdylib;
+  ExecutorAddr orc_rt_elfnix_register_init_sections;
+  ExecutorAddr orc_rt_elfnix_deregister_init_sections;
   ExecutorAddr orc_rt_elfnix_register_object_sections;
+  ExecutorAddr orc_rt_elfnix_deregister_object_sections;
   ExecutorAddr orc_rt_elfnix_create_pthread_key;
 
   DenseMap<JITDylib *, SymbolLookupSet> RegisteredInitSymbols;
@@ -238,10 +225,10 @@ private:
   // InitSeqs gets its own mutex to avoid locking the whole session when
   // aggregating data from the jitlink.
   std::mutex PlatformMutex;
-  DenseMap<JITDylib *, ELFNixJITDylibInitializers> InitSeqs;
   std::vector<ELFPerObjectSectionsToRegister> BootstrapPOSRs;
 
   DenseMap<ExecutorAddr, JITDylib *> HandleAddrToJITDylib;
+  DenseMap<JITDylib *, ExecutorAddr> JITDylibToHandleAddr;
   DenseMap<JITDylib *, uint64_t> JITDylibToPThreadKey;
 };
 
@@ -273,63 +260,12 @@ public:
   }
 };
 
-using SPSNamedExecutorAddrRangeSequenceMap =
-    SPSSequence<SPSTuple<SPSString, SPSExecutorAddrRangeSequence>>;
-
-using SPSELFNixJITDylibInitializers =
-    SPSTuple<SPSString, SPSExecutorAddr, SPSNamedExecutorAddrRangeSequenceMap>;
-
-using SPSELFNixJITDylibInitializerSequence =
-    SPSSequence<SPSELFNixJITDylibInitializers>;
-
-/// Serialization traits for ELFNixJITDylibInitializers.
-template <>
-class SPSSerializationTraits<SPSELFNixJITDylibInitializers,
-                             ELFNixJITDylibInitializers> {
-public:
-  static size_t size(const ELFNixJITDylibInitializers &MOJDIs) {
-    return SPSELFNixJITDylibInitializers::AsArgList::size(
-        MOJDIs.Name, MOJDIs.DSOHandleAddress, MOJDIs.InitSections);
-  }
-
-  static bool serialize(SPSOutputBuffer &OB,
-                        const ELFNixJITDylibInitializers &MOJDIs) {
-    return SPSELFNixJITDylibInitializers::AsArgList::serialize(
-        OB, MOJDIs.Name, MOJDIs.DSOHandleAddress, MOJDIs.InitSections);
-  }
-
-  static bool deserialize(SPSInputBuffer &IB,
-                          ELFNixJITDylibInitializers &MOJDIs) {
-    return SPSELFNixJITDylibInitializers::AsArgList::deserialize(
-        IB, MOJDIs.Name, MOJDIs.DSOHandleAddress, MOJDIs.InitSections);
-  }
-};
-
-using SPSELFJITDylibDeinitializers = SPSEmpty;
-
-using SPSELFJITDylibDeinitializerSequence =
-    SPSSequence<SPSELFJITDylibDeinitializers>;
-
-template <>
-class SPSSerializationTraits<SPSELFJITDylibDeinitializers,
-                             ELFNixJITDylibDeinitializers> {
-public:
-  static size_t size(const ELFNixJITDylibDeinitializers &MOJDDs) { return 0; }
-
-  static bool serialize(SPSOutputBuffer &OB,
-                        const ELFNixJITDylibDeinitializers &MOJDDs) {
-    return true;
-  }
-
-  static bool deserialize(SPSInputBuffer &IB,
-                          ELFNixJITDylibDeinitializers &MOJDDs) {
-    MOJDDs = ELFNixJITDylibDeinitializers();
-    return true;
-  }
-};
+using SPSELFNixJITDylibDepInfoMap =
+    SPSSequence<SPSTuple<SPSExecutorAddr, SPSSequence<SPSExecutorAddr>>>;
 
 } // end namespace shared
 } // end namespace orc
 } // end namespace llvm
 
 #endif // LLVM_EXECUTIONENGINE_ORC_ELFNIXPLATFORM_H
+
