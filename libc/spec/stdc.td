@@ -1587,6 +1587,62 @@ def StdC : StandardSpec<"stdc"> {
       ]
   >;
 
+  
+  def StructLconv : NamedType<"struct lconv">;
+  def StructLconvPtr : PtrType<StructLconv>;
+  def LocaleT : NamedType<"locale_t">;
+
+  HeaderSpec Locale = HeaderSpec<
+     "locale.h",
+      [], // Macros
+      [LocaleT, StructLconv], // Types
+      [], // Enumerations
+      [
+        FunctionSpec<
+          "duplocale",
+          RetValSpec<LocaleT>,
+          [
+            ArgSpec<LocaleT>
+          ]
+        >,
+        FunctionSpec<
+          "freelocale",
+          RetValSpec<VoidType>,
+          [
+            ArgSpec<LocaleT>
+          ]
+        >,
+        FunctionSpec<
+          "localeconv",
+          RetValSpec<StructLconvPtr>,
+          []
+        >,
+        FunctionSpec<
+          "newlocale",
+          RetValSpec<LocaleT>,
+          [
+            ArgSpec<IntType>,
+            ArgSpec<ConstCharPtr>,
+            ArgSpec<LocaleT>
+          ]
+        >,
+        FunctionSpec<
+          "setlocale",
+          RetValSpec<CharPtr>,
+          [
+            ArgSpec<IntType>,
+            ArgSpec<ConstCharPtr>
+          ]
+        >,
+        FunctionSpec<
+          "uselocale",
+          RetValSpec<LocaleT>,
+          [
+            ArgSpec<LocaleT>
+          ]
+        >
+      ]  // Functions
+  >;
 
   let Headers = [
     Assert,
@@ -1609,5 +1665,6 @@ def StdC : StandardSpec<"stdc"> {
     Time,
     UChar,
     WChar,
+    Locale,
   ];
 }
