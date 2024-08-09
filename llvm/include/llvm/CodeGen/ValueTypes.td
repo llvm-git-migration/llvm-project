@@ -23,6 +23,7 @@ class ValueType<int size, int value> {
   bit isFP = false;
   bit isVector = false;
   bit isScalable = false;
+  int NF = 0;
   bit isRISCVVecTuple = false;
   // Indicates this VT should be included in the
   // [FIRST_VALUETYPE,LAST_VALUETYPE] range.
@@ -59,8 +60,7 @@ class VTScalableVec<int nelem, ValueType elt, int value>
 
 class VTVecTup<int size, int nf, ValueType dummy_elt, int value>
     : ValueType<size, value> {
-  let nElem = nf;
-  let isVector = true;
+  let NF = nf;
   let ElementType = dummy_elt;
   let isRISCVVecTuple = true;
 }

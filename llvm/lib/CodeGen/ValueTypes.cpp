@@ -163,7 +163,7 @@ std::string EVT::getEVTString() const {
   default:
     if (isRISCVVectorTuple()) {
       unsigned Sz = getSizeInBits();
-      unsigned NF = getVectorMinNumElements();
+      unsigned NF = getRISCVVectorTupleNumFields();
       unsigned MinNumElts = Sz / (NF * 8);
       return "riscv_nxv" + utostr(MinNumElts) + "i8";
     }

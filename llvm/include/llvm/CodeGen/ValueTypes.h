@@ -353,6 +353,11 @@ namespace llvm {
       return getVectorElementCount().getKnownMinValue();
     }
 
+    /// Given a RISCV vector tuple type, return the num_fields.
+    unsigned getRISCVVectorTupleNumFields() const {
+      return V.getRISCVVectorTupleNumFields();
+    }
+
     /// Return the size of the specified value type in bits.
     ///
     /// If the value type is a scalable vector type, the scalable property will
