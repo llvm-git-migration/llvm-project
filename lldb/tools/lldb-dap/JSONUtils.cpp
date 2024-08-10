@@ -614,9 +614,8 @@ CreateExceptionBreakpointFilter(const ExceptionBreakpoint &bp) {
 //     }
 //   }
 // }
-llvm::json::Value CreateSource(lldb::SBLineEntry &line_entry) {
+llvm::json::Value CreateSource(const lldb::SBFileSpec &file) {
   llvm::json::Object object;
-  lldb::SBFileSpec file = line_entry.GetFileSpec();
   if (file.IsValid()) {
     const char *name = file.GetFilename();
     if (name)
@@ -628,6 +627,10 @@ llvm::json::Value CreateSource(lldb::SBLineEntry &line_entry) {
     }
   }
   return llvm::json::Value(std::move(object));
+}
+
+llvm::json::Value CreateSource(const lldb::SBLineEntry &line_entry) {
+  return CreateSource(line_entry.GetFileSpec());
 }
 
 llvm::json::Value CreateSource(llvm::StringRef source_path) {
@@ -1252,6 +1255,17 @@ llvm::json::Value CreateVariable(lldb::SBValue v, int64_t variablesReference,
     object.try_emplace("variablesReference", variablesReference);
   else
     object.try_emplace("variablesReference", (int64_t)0);
+
+  if (lldb::SBDeclaration decl = v.GetDeclaration(); decl.IsValid()) {
+    llvm::json::Object decl_obj;
+    decl_obj.try_emplace("source", CreateSource(decl.GetFileSpec()));
+    if (int line = decl.GetLine())
+      decl_obj.try_emplace("line", line);
+    if (int column = decl.GetColumn())
+      decl_obj.try_emplace("column", column);
+
+    object.try_emplace("declarationLocation", std::move(decl_obj));
+  }
 
   object.try_emplace("$__lldb_extensions", desc.GetVariableExtensionsJSON());
   return llvm::json::Value(std::move(object));

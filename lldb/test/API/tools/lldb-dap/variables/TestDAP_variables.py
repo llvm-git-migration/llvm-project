@@ -168,6 +168,10 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
                     "type": "int",
                     "value": "1",
                 },
+                "declarationLocation": {
+                    "equals": {"line": 12, "column": 14},
+                    "contains": {"path": ["lldb-dap", "variables", "main.cpp"]},
+                },
                 "$__lldb_extensions": {
                     "equals": {
                         "value": "1",

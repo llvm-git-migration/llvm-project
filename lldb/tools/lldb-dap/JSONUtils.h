@@ -284,14 +284,24 @@ llvm::json::Value CreateScope(const llvm::StringRef name,
 
 /// Create a "Source" JSON object as described in the debug adaptor definition.
 ///
+/// \param[in] file
+///     The SBFileSpec to use when populating out the "Source" object
+///
+/// \return
+///     A "Source" JSON object that follows the formal JSON
+///     definition outlined by Microsoft.
+llvm::json::Value CreateSource(const lldb::SBFileSpec &file);
+
+/// Create a "Source" JSON object as described in the debug adaptor definition.
+///
 /// \param[in] line_entry
 ///     The LLDB line table to use when populating out the "Source"
 ///     object
 ///
 /// \return
-///     A "Source" JSON object with that follows the formal JSON
+///     A "Source" JSON object that follows the formal JSON
 ///     definition outlined by Microsoft.
-llvm::json::Value CreateSource(lldb::SBLineEntry &line_entry);
+llvm::json::Value CreateSource(const lldb::SBLineEntry &line_entry);
 
 /// Create a "Source" object for a given source path.
 ///
