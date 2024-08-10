@@ -2523,7 +2523,7 @@ bool Compiler<Emitter>::VisitCXXConstructExpr(const CXXConstructExpr *E) {
     if (E->requiresZeroInitialization()) {
       const Record *R = getRecord(E->getType());
 
-      if (!this->visitZeroRecordInitializer(R, E))
+      if (!R->isUnion() && !this->visitZeroRecordInitializer(R, E))
         return false;
 
       // If the constructor is trivial anyway, we're done.

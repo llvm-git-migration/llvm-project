@@ -253,4 +253,19 @@ namespace Nested {
                               // both-note {{in call to}}
 
 }
+
+
+namespace Zeroing {
+  struct non_trivial_constructor {
+      constexpr non_trivial_constructor() : x(100) {}
+      int x;
+  };
+  union U2 {
+      int a{1000};
+      non_trivial_constructor b;
+  };
+
+  static_assert(U2().b.x == 100, ""); // both-error {{not an integral constant expression}} \
+                                      // both-note {{read of member 'b' of union with active member 'a'}}
+}
 #endif
