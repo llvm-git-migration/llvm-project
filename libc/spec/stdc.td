@@ -4,7 +4,11 @@ def StdC : StandardSpec<"stdc"> {
   PtrType StructTmPtr = PtrType<StructTmType>;
   PtrType TimeTTypePtr = PtrType<TimeTType>;
   NamedType ClockT = NamedType<"clock_t">;
+<<<<<<< HEAD
   NamedType LocaleT = NamedType<"locale_t">;
+=======
+  NamedType LocaleT : NamedType<"locale_t">;
+>>>>>>> a805b5fe17fa ([libc] Add `ctype.h` locale variants)
 
   NamedType DivTType = NamedType<"div_t">;
   NamedType LDivTType = NamedType<"ldiv_t">;
@@ -107,6 +111,76 @@ def StdC : StandardSpec<"stdc"> {
               "toupper",
               RetValSpec<IntType>,
               [ArgSpec<IntType>]
+          >,
+          FunctionSpec<
+              "isalnum_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isalpha_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isblank_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "iscntrl_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isdigit_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isgraph_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "islower_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isprint_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "ispunct_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isspace_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isupper_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "isxdigit_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "tolower_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
+          >,
+          FunctionSpec<
+              "toupper_l",
+              RetValSpec<IntType>,
+              [ArgSpec<IntType>, ArgSpec<LocaleT>]
           >,
       ]
   >;

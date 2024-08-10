@@ -10,6 +10,7 @@
 #define LLVM_LIBC_SRC_CTYPE_ISDIGIT_H
 
 #include "src/__support/macros/config.h"
+#include "include/llvm-libc-types/locale_t.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
