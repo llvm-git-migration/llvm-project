@@ -15,8 +15,9 @@ define i8 @test_load(ptr %a) sanitize_hwaddress {
 ; CHECK: %[[A:[^ ]*]] = ptrtoint ptr %a to i64
 ; CHECK: %[[B:[^ ]*]] = lshr i64 %[[A]], 56
 ; CHECK: %[[PTRTAG:[^ ]*]] = trunc i64 %[[B]] to i8
-; CHECK: %[[C:[^ ]*]] = or i64 %[[A]], -72057594037927936
-; CHECK: %[[D:[^ ]*]] = lshr i64 %[[C]], 4
+; CHECK: %[[C:[^ ]*]] = shl i64 %[[A]], 8
+; CHECK: %[[UNTAG:[^ ]*]] = ashr i64 %[[C]], 8
+; CHECK: %[[D:[^ ]*]] = ashr i64 %[[UNTAG]], 4
 
 ; NOOFFSET: %[[E:[^ ]*]] = inttoptr i64 %[[D]] to ptr
 

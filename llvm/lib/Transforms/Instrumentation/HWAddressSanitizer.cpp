@@ -307,7 +307,6 @@ private:
   struct ShadowTagCheckInfo {
     Instruction *TagMismatchTerm = nullptr;
     Value *PtrLong = nullptr;
-    Value *AddrLong = nullptr;
     Value *PtrTag = nullptr;
     Value *MemTag = nullptr;
   };
@@ -896,7 +895,7 @@ void HWAddressSanitizer::untagPointerOperand(Instruction *I, Value *Addr) {
 
 Value *HWAddressSanitizer::memToShadow(Value *Mem, IRBuilder<> &IRB) {
   // Mem >> Scale
-  Value *Shadow = IRB.CreateLShr(Mem, Mapping.Scale);
+  Value *Shadow = IRB.CreateAShr(Mem, Mapping.Scale);
   if (Mapping.Offset == 0)
     return IRB.CreateIntToPtr(Shadow, PtrTy);
   // (Mem >> Scale) + Offset
@@ -923,8 +922,8 @@ HWAddressSanitizer::insertShadowTagCheck(Value *Ptr, Instruction *InsertBefore,
   R.PtrLong = IRB.CreatePointerCast(Ptr, IntptrTy);
   R.PtrTag =
       IRB.CreateTrunc(IRB.CreateLShr(R.PtrLong, PointerTagShift), Int8Ty);
-  R.AddrLong = untagPointer(IRB, R.PtrLong);
-  Value *Shadow = memToShadow(R.AddrLong, IRB);
+  Value *AddrLong = untagPointer(IRB, R.PtrLong);
+  Value *Shadow = memToShadow(AddrLong, IRB);
   R.MemTag = IRB.CreateLoad(Int8Ty, Shadow);
   Value *TagMismatch = IRB.CreateICmpNE(R.PtrTag, R.MemTag);
 
@@ -1011,7 +1010,7 @@ void HWAddressSanitizer::instrumentMemAccessInline(Value *Ptr, bool IsWrite,
                             LI, CheckFailTerm->getParent());
 
   IRB.SetInsertPoint(TCI.TagMismatchTerm);
-  Value *InlineTagAddr = IRB.CreateOr(TCI.AddrLong, 15);
+  Value *InlineTagAddr = IRB.CreateOr(TCI.PtrLong, 15);
   InlineTagAddr = IRB.CreateIntToPtr(InlineTagAddr, PtrTy);
   Value *InlineTag = IRB.CreateLoad(Int8Ty, InlineTagAddr);
   Value *InlineTagMismatch = IRB.CreateICmpNE(TCI.PtrTag, InlineTag);
@@ -1255,20 +1254,10 @@ Value *HWAddressSanitizer::tagPointer(IRBuilder<> &IRB, Type *Ty,
 
 // Remove tag from an address.
 Value *HWAddressSanitizer::untagPointer(IRBuilder<> &IRB, Value *PtrLong) {
+  unsigned SignExtShift = 64 - PointerTagShift;
   assert(!UsePageAliases);
-  Value *UntaggedPtrLong;
-  if (CompileKernel) {
-    // Kernel addresses have 0xFF in the most significant byte.
-    UntaggedPtrLong =
-        IRB.CreateOr(PtrLong, ConstantInt::get(PtrLong->getType(),
-                                               TagMaskByte << PointerTagShift));
-  } else {
-    // Userspace addresses have 0x00.
-    UntaggedPtrLong = IRB.CreateAnd(
-        PtrLong, ConstantInt::get(PtrLong->getType(),
-                                  ~(TagMaskByte << PointerTagShift)));
-  }
-  return UntaggedPtrLong;
+
+  return IRB.CreateAShr(IRB.CreateShl(PtrLong, SignExtShift), SignExtShift);
 }
 
 Value *HWAddressSanitizer::getHwasanThreadSlotPtr(IRBuilder<> &IRB) {

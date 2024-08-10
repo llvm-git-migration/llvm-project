@@ -11,7 +11,8 @@ define void @atomicrmw(ptr %ptr) sanitize_hwaddress {
 ; CHECK-SAME: (ptr [[PTR:%.*]]) #[[ATTR0:[0-9]+]] {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], 72057594037927935
+; CHECK-NEXT:    [[TMP5:%.*]] = shl i64 [[TMP0]], 8
+; CHECK-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP5]], 8
 ; CHECK-NEXT:    [[TMP2:%.*]] = or i64 [[TMP1]], 4294967295
 ; CHECK-NEXT:    [[HWASAN_SHADOW:%.*]] = add i64 [[TMP2]], 1
 ; CHECK-NEXT:    [[TMP3:%.*]] = inttoptr i64 [[HWASAN_SHADOW]] to ptr
@@ -30,7 +31,8 @@ define void @cmpxchg(ptr %ptr, i64 %compare_to, i64 %new_value) sanitize_hwaddre
 ; CHECK-SAME: (ptr [[PTR:%.*]], i64 [[COMPARE_TO:%.*]], i64 [[NEW_VALUE:%.*]]) #[[ATTR0]] {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], 72057594037927935
+; CHECK-NEXT:    [[TMP5:%.*]] = shl i64 [[TMP0]], 8
+; CHECK-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP5]], 8
 ; CHECK-NEXT:    [[TMP2:%.*]] = or i64 [[TMP1]], 4294967295
 ; CHECK-NEXT:    [[HWASAN_SHADOW:%.*]] = add i64 [[TMP2]], 1
 ; CHECK-NEXT:    [[TMP3:%.*]] = inttoptr i64 [[HWASAN_SHADOW]] to ptr

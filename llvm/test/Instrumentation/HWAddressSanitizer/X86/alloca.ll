@@ -24,7 +24,8 @@ define void @test_alloca() sanitize_hwaddress {
 ; CHECK-NEXT:    [[X:%.*]] = alloca { i32, [12 x i8] }, align 16
 ; CHECK-NEXT:    [[TMP5:%.*]] = xor i64 [[HWASAN_STACK_BASE_TAG]], 0
 ; CHECK-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP7:%.*]] = and i64 [[TMP6]], -9079256848778919937
+; CHECK-NEXT:    [[TMP12:%.*]] = shl i64 [[TMP6]], 7
+; CHECK-NEXT:    [[TMP7:%.*]] = ashr i64 [[TMP12]], 7
 ; CHECK-NEXT:    [[TMP8:%.*]] = shl i64 [[TMP5]], 57
 ; CHECK-NEXT:    [[TMP9:%.*]] = or i64 [[TMP7]], [[TMP8]]
 ; CHECK-NEXT:    [[X_HWASAN:%.*]] = inttoptr i64 [[TMP9]] to ptr
@@ -39,7 +40,8 @@ define void @test_alloca() sanitize_hwaddress {
 ; INLINE-SAME: () #[[ATTR0:[0-9]+]] personality ptr @__hwasan_personality_thunk {
 ; INLINE-NEXT:  entry:
 ; INLINE-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; INLINE-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], -9079256848778919937
+; INLINE-NEXT:    [[TMP23:%.*]] = shl i64 [[TMP0]], 7
+; INLINE-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP23]], 7
 ; INLINE-NEXT:    [[TMP2:%.*]] = ashr i64 [[TMP0]], 3
 ; INLINE-NEXT:    [[TMP3:%.*]] = call ptr @llvm.frameaddress.p0(i32 0)
 ; INLINE-NEXT:    [[TMP4:%.*]] = ptrtoint ptr [[TMP3]] to i64
@@ -61,14 +63,16 @@ define void @test_alloca() sanitize_hwaddress {
 ; INLINE-NEXT:    [[X:%.*]] = alloca { i32, [12 x i8] }, align 16
 ; INLINE-NEXT:    [[TMP16:%.*]] = xor i64 [[TMP2]], 0
 ; INLINE-NEXT:    [[TMP17:%.*]] = ptrtoint ptr [[X]] to i64
-; INLINE-NEXT:    [[TMP18:%.*]] = and i64 [[TMP17]], -9079256848778919937
+; INLINE-NEXT:    [[TMP30:%.*]] = shl i64 [[TMP17]], 7
+; INLINE-NEXT:    [[TMP18:%.*]] = ashr i64 [[TMP30]], 7
 ; INLINE-NEXT:    [[TMP19:%.*]] = shl i64 [[TMP16]], 57
 ; INLINE-NEXT:    [[TMP20:%.*]] = or i64 [[TMP18]], [[TMP19]]
 ; INLINE-NEXT:    [[X_HWASAN:%.*]] = inttoptr i64 [[TMP20]] to ptr
 ; INLINE-NEXT:    [[TMP21:%.*]] = trunc i64 [[TMP16]] to i8
 ; INLINE-NEXT:    [[TMP22:%.*]] = ptrtoint ptr [[X]] to i64
-; INLINE-NEXT:    [[TMP23:%.*]] = and i64 [[TMP22]], -9079256848778919937
-; INLINE-NEXT:    [[TMP24:%.*]] = lshr i64 [[TMP23]], 4
+; INLINE-NEXT:    [[TMP35:%.*]] = shl i64 [[TMP22]], 7
+; INLINE-NEXT:    [[TMP36:%.*]] = ashr i64 [[TMP35]], 7
+; INLINE-NEXT:    [[TMP24:%.*]] = ashr i64 [[TMP36]], 4
 ; INLINE-NEXT:    [[TMP25:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP24]]
 ; INLINE-NEXT:    [[TMP26:%.*]] = getelementptr i8, ptr [[TMP25]], i32 0
 ; INLINE-NEXT:    store i8 4, ptr [[TMP26]], align 1
@@ -77,8 +81,9 @@ define void @test_alloca() sanitize_hwaddress {
 ; INLINE-NEXT:    call void @use32(ptr nonnull [[X_HWASAN]])
 ; INLINE-NEXT:    [[TMP28:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; INLINE-NEXT:    [[TMP29:%.*]] = ptrtoint ptr [[X]] to i64
-; INLINE-NEXT:    [[TMP30:%.*]] = and i64 [[TMP29]], -9079256848778919937
-; INLINE-NEXT:    [[TMP31:%.*]] = lshr i64 [[TMP30]], 4
+; INLINE-NEXT:    [[TMP33:%.*]] = shl i64 [[TMP29]], 7
+; INLINE-NEXT:    [[TMP34:%.*]] = ashr i64 [[TMP33]], 7
+; INLINE-NEXT:    [[TMP31:%.*]] = ashr i64 [[TMP34]], 4
 ; INLINE-NEXT:    [[TMP32:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP31]]
 ; INLINE-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP32]], i8 [[TMP28]], i64 1, i1 false)
 ; INLINE-NEXT:    ret void
@@ -105,7 +110,8 @@ define i32 @test_simple(ptr %a) sanitize_hwaddress {
 ; CHECK-NEXT:    [[BUF_SROA_0:%.*]] = alloca { i8, [15 x i8] }, align 16
 ; CHECK-NEXT:    [[TMP5:%.*]] = xor i64 [[HWASAN_STACK_BASE_TAG]], 0
 ; CHECK-NEXT:    [[TMP6:%.*]] = ptrtoint ptr [[BUF_SROA_0]] to i64
-; CHECK-NEXT:    [[TMP7:%.*]] = and i64 [[TMP6]], -9079256848778919937
+; CHECK-NEXT:    [[TMP13:%.*]] = shl i64 [[TMP6]], 7
+; CHECK-NEXT:    [[TMP7:%.*]] = ashr i64 [[TMP13]], 7
 ; CHECK-NEXT:    [[TMP8:%.*]] = shl i64 [[TMP5]], 57
 ; CHECK-NEXT:    [[TMP9:%.*]] = or i64 [[TMP7]], [[TMP8]]
 ; CHECK-NEXT:    [[BUF_SROA_0_HWASAN:%.*]] = inttoptr i64 [[TMP9]] to ptr
@@ -124,7 +130,8 @@ define i32 @test_simple(ptr %a) sanitize_hwaddress {
 ; INLINE-SAME: (ptr [[A:%.*]]) #[[ATTR0]] personality ptr @__hwasan_personality_thunk {
 ; INLINE-NEXT:  entry:
 ; INLINE-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; INLINE-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], -9079256848778919937
+; INLINE-NEXT:    [[TMP23:%.*]] = shl i64 [[TMP0]], 7
+; INLINE-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP23]], 7
 ; INLINE-NEXT:    [[TMP2:%.*]] = ashr i64 [[TMP0]], 3
 ; INLINE-NEXT:    [[TMP3:%.*]] = call ptr @llvm.frameaddress.p0(i32 0)
 ; INLINE-NEXT:    [[TMP4:%.*]] = ptrtoint ptr [[TMP3]] to i64
@@ -146,15 +153,17 @@ define i32 @test_simple(ptr %a) sanitize_hwaddress {
 ; INLINE-NEXT:    [[BUF_SROA_0:%.*]] = alloca { i8, [15 x i8] }, align 16
 ; INLINE-NEXT:    [[TMP16:%.*]] = xor i64 [[TMP2]], 0
 ; INLINE-NEXT:    [[TMP17:%.*]] = ptrtoint ptr [[BUF_SROA_0]] to i64
-; INLINE-NEXT:    [[TMP18:%.*]] = and i64 [[TMP17]], -9079256848778919937
+; INLINE-NEXT:    [[TMP31:%.*]] = shl i64 [[TMP17]], 7
+; INLINE-NEXT:    [[TMP18:%.*]] = ashr i64 [[TMP31]], 7
 ; INLINE-NEXT:    [[TMP19:%.*]] = shl i64 [[TMP16]], 57
 ; INLINE-NEXT:    [[TMP20:%.*]] = or i64 [[TMP18]], [[TMP19]]
 ; INLINE-NEXT:    [[BUF_SROA_0_HWASAN:%.*]] = inttoptr i64 [[TMP20]] to ptr
 ; INLINE-NEXT:    call void @llvm.lifetime.start.p0(i64 16, ptr nonnull [[BUF_SROA_0]])
 ; INLINE-NEXT:    [[TMP21:%.*]] = trunc i64 [[TMP16]] to i8
 ; INLINE-NEXT:    [[TMP22:%.*]] = ptrtoint ptr [[BUF_SROA_0]] to i64
-; INLINE-NEXT:    [[TMP23:%.*]] = and i64 [[TMP22]], -9079256848778919937
-; INLINE-NEXT:    [[TMP24:%.*]] = lshr i64 [[TMP23]], 4
+; INLINE-NEXT:    [[TMP38:%.*]] = shl i64 [[TMP22]], 7
+; INLINE-NEXT:    [[TMP39:%.*]] = ashr i64 [[TMP38]], 7
+; INLINE-NEXT:    [[TMP24:%.*]] = ashr i64 [[TMP39]], 4
 ; INLINE-NEXT:    [[TMP25:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP24]]
 ; INLINE-NEXT:    [[TMP26:%.*]] = getelementptr i8, ptr [[TMP25]], i32 0
 ; INLINE-NEXT:    store i8 1, ptr [[TMP26]], align 1
@@ -163,38 +172,40 @@ define i32 @test_simple(ptr %a) sanitize_hwaddress {
 ; INLINE-NEXT:    [[TMP28:%.*]] = ptrtoint ptr [[BUF_SROA_0_HWASAN]] to i64
 ; INLINE-NEXT:    [[TMP29:%.*]] = lshr i64 [[TMP28]], 57
 ; INLINE-NEXT:    [[TMP30:%.*]] = trunc i64 [[TMP29]] to i8
-; INLINE-NEXT:    [[TMP31:%.*]] = and i64 [[TMP28]], -9079256848778919937
-; INLINE-NEXT:    [[TMP32:%.*]] = lshr i64 [[TMP31]], 4
+; INLINE-NEXT:    [[TMP44:%.*]] = shl i64 [[TMP28]], 7
+; INLINE-NEXT:    [[TMP49:%.*]] = ashr i64 [[TMP44]], 7
+; INLINE-NEXT:    [[TMP32:%.*]] = ashr i64 [[TMP49]], 4
 ; INLINE-NEXT:    [[TMP33:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP32]]
 ; INLINE-NEXT:    [[TMP34:%.*]] = load i8, ptr [[TMP33]], align 1
 ; INLINE-NEXT:    [[TMP35:%.*]] = icmp ne i8 [[TMP30]], [[TMP34]]
 ; INLINE-NEXT:    br i1 [[TMP35]], label [[TMP36:%.*]], label [[TMP50:%.*]], !prof [[PROF1:![0-9]+]]
-; INLINE:       36:
+; INLINE:       40:
 ; INLINE-NEXT:    [[TMP37:%.*]] = icmp ugt i8 [[TMP34]], 15
-; INLINE-NEXT:    br i1 [[TMP37]], label [[TMP38:%.*]], label [[TMP39:%.*]], !prof [[PROF1]]
-; INLINE:       38:
+; INLINE-NEXT:    br i1 [[TMP37]], label [[TMP56:%.*]], label [[TMP59:%.*]], !prof [[PROF1]]
+; INLINE:       42:
 ; INLINE-NEXT:    call void asm sideeffect "int3\0Anopl 80([[RAX:%.*]])", "{rdi}"(i64 [[TMP28]])
 ; INLINE-NEXT:    unreachable
-; INLINE:       39:
+; INLINE:       43:
 ; INLINE-NEXT:    [[TMP40:%.*]] = and i64 [[TMP28]], 15
 ; INLINE-NEXT:    [[TMP41:%.*]] = trunc i64 [[TMP40]] to i8
 ; INLINE-NEXT:    [[TMP42:%.*]] = add i8 [[TMP41]], 0
 ; INLINE-NEXT:    [[TMP43:%.*]] = icmp uge i8 [[TMP42]], [[TMP34]]
-; INLINE-NEXT:    br i1 [[TMP43]], label [[TMP38]], label [[TMP44:%.*]], !prof [[PROF1]]
-; INLINE:       44:
-; INLINE-NEXT:    [[TMP45:%.*]] = or i64 [[TMP31]], 15
+; INLINE-NEXT:    br i1 [[TMP43]], label [[TMP56]], label [[TMP60:%.*]], !prof [[PROF1]]
+; INLINE:       48:
+; INLINE-NEXT:    [[TMP45:%.*]] = or i64 [[TMP28]], 15
 ; INLINE-NEXT:    [[TMP46:%.*]] = inttoptr i64 [[TMP45]] to ptr
 ; INLINE-NEXT:    [[TMP47:%.*]] = load i8, ptr [[TMP46]], align 1
 ; INLINE-NEXT:    [[TMP48:%.*]] = icmp ne i8 [[TMP30]], [[TMP47]]
-; INLINE-NEXT:    br i1 [[TMP48]], label [[TMP38]], label [[TMP49:%.*]], !prof [[PROF1]]
-; INLINE:       49:
+; INLINE-NEXT:    br i1 [[TMP48]], label [[TMP56]], label [[TMP53:%.*]], !prof [[PROF1]]
+; INLINE:       53:
 ; INLINE-NEXT:    br label [[TMP50]]
-; INLINE:       50:
+; INLINE:       54:
 ; INLINE-NEXT:    store volatile i8 0, ptr [[BUF_SROA_0_HWASAN]], align 4
 ; INLINE-NEXT:    [[TMP51:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; INLINE-NEXT:    [[TMP52:%.*]] = ptrtoint ptr [[BUF_SROA_0]] to i64
-; INLINE-NEXT:    [[TMP53:%.*]] = and i64 [[TMP52]], -9079256848778919937
-; INLINE-NEXT:    [[TMP54:%.*]] = lshr i64 [[TMP53]], 4
+; INLINE-NEXT:    [[TMP57:%.*]] = shl i64 [[TMP52]], 7
+; INLINE-NEXT:    [[TMP58:%.*]] = ashr i64 [[TMP57]], 7
+; INLINE-NEXT:    [[TMP54:%.*]] = ashr i64 [[TMP58]], 4
 ; INLINE-NEXT:    [[TMP55:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP54]]
 ; INLINE-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP55]], i8 [[TMP51]], i64 1, i1 false)
 ; INLINE-NEXT:    call void @llvm.lifetime.end.p0(i64 16, ptr nonnull [[BUF_SROA_0]])

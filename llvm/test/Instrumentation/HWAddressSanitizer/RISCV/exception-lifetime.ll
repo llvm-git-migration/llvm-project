@@ -19,7 +19,8 @@ define void @test() sanitize_hwaddress personality ptr @__gxx_personality_v0 {
 ; CHECK-SAME: () #[[ATTR0:[0-9]+]] personality ptr @__hwasan_personality_thunk.__gxx_personality_v0 {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], 72057594037927935
+; CHECK-NEXT:    [[TMP22:%.*]] = shl i64 [[TMP0]], 8
+; CHECK-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP22]], 8
 ; CHECK-NEXT:    [[TMP2:%.*]] = ashr i64 [[TMP0]], 3
 ; CHECK-NEXT:    [[TMP3:%.*]] = call ptr @llvm.frameaddress.p0(i32 0)
 ; CHECK-NEXT:    [[TMP4:%.*]] = ptrtoint ptr [[TMP3]] to i64
@@ -40,7 +41,8 @@ define void @test() sanitize_hwaddress personality ptr @__gxx_personality_v0 {
 ; CHECK-NEXT:    [[X:%.*]] = alloca { i32, [12 x i8] }, align 16
 ; CHECK-NEXT:    [[TMP15:%.*]] = xor i64 [[TMP2]], 0
 ; CHECK-NEXT:    [[TMP16:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP17:%.*]] = and i64 [[TMP16]], 72057594037927935
+; CHECK-NEXT:    [[TMP29:%.*]] = shl i64 [[TMP16]], 8
+; CHECK-NEXT:    [[TMP17:%.*]] = ashr i64 [[TMP29]], 8
 ; CHECK-NEXT:    [[TMP18:%.*]] = shl i64 [[TMP15]], 56
 ; CHECK-NEXT:    [[TMP19:%.*]] = or i64 [[TMP17]], [[TMP18]]
 ; CHECK-NEXT:    [[X_HWASAN:%.*]] = inttoptr i64 [[TMP19]] to ptr
@@ -49,27 +51,29 @@ define void @test() sanitize_hwaddress personality ptr @__gxx_personality_v0 {
 ; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 16, ptr [[X]])
 ; CHECK-NEXT:    [[TMP20:%.*]] = trunc i64 [[TMP15]] to i8
 ; CHECK-NEXT:    [[TMP21:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP22:%.*]] = and i64 [[TMP21]], 72057594037927935
-; CHECK-NEXT:    [[TMP23:%.*]] = lshr i64 [[TMP22]], 4
+; CHECK-NEXT:    [[TMP37:%.*]] = shl i64 [[TMP21]], 8
+; CHECK-NEXT:    [[TMP40:%.*]] = ashr i64 [[TMP37]], 8
+; CHECK-NEXT:    [[TMP23:%.*]] = ashr i64 [[TMP40]], 4
 ; CHECK-NEXT:    [[TMP24:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP23]]
 ; CHECK-NEXT:    [[TMP25:%.*]] = getelementptr i8, ptr [[TMP24]], i32 0
 ; CHECK-NEXT:    store i8 4, ptr [[TMP25]], align 1
 ; CHECK-NEXT:    [[TMP26:%.*]] = getelementptr i8, ptr [[X]], i32 15
 ; CHECK-NEXT:    store i8 [[TMP20]], ptr [[TMP26]], align 1
 ; CHECK-NEXT:    invoke void @mayFail(ptr [[X_HWASAN]])
-; CHECK-NEXT:    to label [[INVOKE_CONT:%.*]] unwind label [[LPAD:%.*]]
+; CHECK-NEXT:            to label [[INVOKE_CONT:%.*]] unwind label [[LPAD:%.*]]
 ; CHECK:       invoke.cont:
 ; CHECK-NEXT:    [[TMP27:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; CHECK-NEXT:    [[TMP28:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP29:%.*]] = and i64 [[TMP28]], 72057594037927935
-; CHECK-NEXT:    [[TMP30:%.*]] = lshr i64 [[TMP29]], 4
+; CHECK-NEXT:    [[TMP43:%.*]] = shl i64 [[TMP28]], 8
+; CHECK-NEXT:    [[TMP44:%.*]] = ashr i64 [[TMP43]], 8
+; CHECK-NEXT:    [[TMP30:%.*]] = ashr i64 [[TMP44]], 4
 ; CHECK-NEXT:    [[TMP31:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP30]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP31]], i8 [[TMP27]], i64 1, i1 false)
 ; CHECK-NEXT:    call void @llvm.lifetime.end.p0(i64 16, ptr [[X]])
 ; CHECK-NEXT:    ret void
 ; CHECK:       lpad:
 ; CHECK-NEXT:    [[TMP32:%.*]] = landingpad { ptr, i32 }
-; CHECK-NEXT:    cleanup
+; CHECK-NEXT:            cleanup
 ; CHECK-NEXT:    [[TMP33:%.*]] = extractvalue { ptr, i32 } [[TMP32]], 0
 ; CHECK-NEXT:    call void @llvm.hwasan.check.memaccess.shortgranules(ptr [[TMP14]], ptr [[EXN_SLOT]], i32 19)
 ; CHECK-NEXT:    store ptr [[TMP33]], ptr [[EXN_SLOT]], align 8
@@ -79,8 +83,9 @@ define void @test() sanitize_hwaddress personality ptr @__gxx_personality_v0 {
 ; CHECK-NEXT:    call void @onExcept(ptr [[X_HWASAN]])
 ; CHECK-NEXT:    [[TMP35:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; CHECK-NEXT:    [[TMP36:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP37:%.*]] = and i64 [[TMP36]], 72057594037927935
-; CHECK-NEXT:    [[TMP38:%.*]] = lshr i64 [[TMP37]], 4
+; CHECK-NEXT:    [[TMP41:%.*]] = shl i64 [[TMP36]], 8
+; CHECK-NEXT:    [[TMP42:%.*]] = ashr i64 [[TMP41]], 8
+; CHECK-NEXT:    [[TMP38:%.*]] = ashr i64 [[TMP42]], 4
 ; CHECK-NEXT:    [[TMP39:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP38]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP39]], i8 [[TMP35]], i64 1, i1 false)
 ; CHECK-NEXT:    call void @llvm.lifetime.end.p0(i64 16, ptr [[X]])

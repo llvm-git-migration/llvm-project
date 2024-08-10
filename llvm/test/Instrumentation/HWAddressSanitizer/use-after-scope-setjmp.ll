@@ -36,14 +36,16 @@ define dso_local noundef i1 @_Z6targetv() sanitize_hwaddress {
 ; CHECK-NEXT:    [[BUF:%.*]] = alloca [4096 x i8], align 16
 ; CHECK-NEXT:    [[TMP17:%.*]] = xor i64 [[TMP3]], 0
 ; CHECK-NEXT:    [[TMP18:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP19:%.*]] = and i64 [[TMP18]], 72057594037927935
+; CHECK-NEXT:    [[TMP24:%.*]] = shl i64 [[TMP18]], 8
+; CHECK-NEXT:    [[TMP19:%.*]] = ashr i64 [[TMP24]], 8
 ; CHECK-NEXT:    [[TMP20:%.*]] = shl i64 [[TMP17]], 56
 ; CHECK-NEXT:    [[TMP21:%.*]] = or i64 [[TMP19]], [[TMP20]]
 ; CHECK-NEXT:    [[BUF_HWASAN:%.*]] = inttoptr i64 [[TMP21]] to ptr
 ; CHECK-NEXT:    [[TMP22:%.*]] = trunc i64 [[TMP17]] to i8
 ; CHECK-NEXT:    [[TMP23:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP24:%.*]] = and i64 [[TMP23]], 72057594037927935
-; CHECK-NEXT:    [[TMP25:%.*]] = lshr i64 [[TMP24]], 4
+; CHECK-NEXT:    [[TMP29:%.*]] = shl i64 [[TMP23]], 8
+; CHECK-NEXT:    [[TMP33:%.*]] = ashr i64 [[TMP29]], 8
+; CHECK-NEXT:    [[TMP25:%.*]] = ashr i64 [[TMP33]], 4
 ; CHECK-NEXT:    [[TMP26:%.*]] = getelementptr i8, ptr [[TMP16]], i64 [[TMP25]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP26]], i8 [[TMP22]], i64 256, i1 false)
 ; CHECK-NEXT:    [[CALL:%.*]] = call i32 @setjmp(ptr noundef @jbuf)
@@ -61,8 +63,9 @@ define dso_local noundef i1 @_Z6targetv() sanitize_hwaddress {
 ; CHECK-NEXT:    [[RETVAL_0:%.*]] = phi i1 [ true, [[WHILE_BODY]] ], [ true, [[SW_BB1]] ], [ false, [[ENTRY:%.*]] ]
 ; CHECK-NEXT:    [[TMP27:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; CHECK-NEXT:    [[TMP28:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP29:%.*]] = and i64 [[TMP28]], 72057594037927935
-; CHECK-NEXT:    [[TMP30:%.*]] = lshr i64 [[TMP29]], 4
+; CHECK-NEXT:    [[TMP34:%.*]] = shl i64 [[TMP28]], 8
+; CHECK-NEXT:    [[TMP32:%.*]] = ashr i64 [[TMP34]], 8
+; CHECK-NEXT:    [[TMP30:%.*]] = ashr i64 [[TMP32]], 4
 ; CHECK-NEXT:    [[TMP31:%.*]] = getelementptr i8, ptr [[TMP16]], i64 [[TMP30]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP31]], i8 [[TMP27]], i64 256, i1 false)
 ; CHECK-NEXT:    ret i1 [[RETVAL_0]]

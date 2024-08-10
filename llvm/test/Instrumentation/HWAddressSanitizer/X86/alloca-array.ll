@@ -20,7 +20,8 @@ define void @test_alloca() sanitize_hwaddress {
 ; CHECK-NEXT:    [[X:%.*]] = alloca { [4 x i8], [12 x i8] }, align 16
 ; CHECK-NEXT:    [[TMP6:%.*]] = xor i64 [[HWASAN_STACK_BASE_TAG]], 0
 ; CHECK-NEXT:    [[TMP7:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP8:%.*]] = and i64 [[TMP7]], -9079256848778919937
+; CHECK-NEXT:    [[TMP20:%.*]] = shl i64 [[TMP7]], 7
+; CHECK-NEXT:    [[TMP8:%.*]] = ashr i64 [[TMP20]], 7
 ; CHECK-NEXT:    [[TMP9:%.*]] = shl i64 [[TMP6]], 57
 ; CHECK-NEXT:    [[TMP10:%.*]] = or i64 [[TMP8]], [[TMP9]]
 ; CHECK-NEXT:    [[X_HWASAN:%.*]] = inttoptr i64 [[TMP10]] to ptr
@@ -29,7 +30,8 @@ define void @test_alloca() sanitize_hwaddress {
 ; CHECK-NEXT:    [[Y:%.*]] = alloca i8, i64 16, align 16
 ; CHECK-NEXT:    [[TMP12:%.*]] = xor i64 [[HWASAN_STACK_BASE_TAG]], 1
 ; CHECK-NEXT:    [[TMP13:%.*]] = ptrtoint ptr [[Y]] to i64
-; CHECK-NEXT:    [[TMP14:%.*]] = and i64 [[TMP13]], -9079256848778919937
+; CHECK-NEXT:    [[TMP21:%.*]] = shl i64 [[TMP13]], 7
+; CHECK-NEXT:    [[TMP14:%.*]] = ashr i64 [[TMP21]], 7
 ; CHECK-NEXT:    [[TMP15:%.*]] = shl i64 [[TMP12]], 57
 ; CHECK-NEXT:    [[TMP16:%.*]] = or i64 [[TMP14]], [[TMP15]]
 ; CHECK-NEXT:    [[Y_HWASAN:%.*]] = inttoptr i64 [[TMP16]] to ptr

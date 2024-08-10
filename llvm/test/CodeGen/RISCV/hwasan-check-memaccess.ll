@@ -26,7 +26,7 @@ declare void @llvm.hwasan.check.memaccess.shortgranules(ptr, ptr, i32)
 ; CHECK-NEXT: .hidden __hwasan_check_x10_2_short
 ; CHECK-NEXT: __hwasan_check_x10_2_short:
 ; CHECK-NEXT: slli    t1, a0, 8
-; CHECK-NEXT: srli    t1, t1, 12
+; CHECK-NEXT: srai    t1, t1, 12
 ; CHECK-NEXT: add     t1, t0, t1
 ; CHECK-NEXT: lbu     t1, 0(t1)
 ; CHECK-NEXT: srli    t2, a0, 56

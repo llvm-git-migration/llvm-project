@@ -13,7 +13,8 @@ define dso_local noundef i1 @_Z6targetv() sanitize_hwaddress {
 ; CHECK-SAME: () #[[ATTR0:[0-9]+]] personality ptr @__hwasan_personality_thunk {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = load i64, ptr @__hwasan_tls, align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = and i64 [[TMP0]], 72057594037927935
+; CHECK-NEXT:    [[TMP22:%.*]] = shl i64 [[TMP0]], 8
+; CHECK-NEXT:    [[TMP1:%.*]] = ashr i64 [[TMP22]], 8
 ; CHECK-NEXT:    [[TMP2:%.*]] = ashr i64 [[TMP0]], 3
 ; CHECK-NEXT:    [[TMP3:%.*]] = call ptr @llvm.frameaddress.p0(i32 0)
 ; CHECK-NEXT:    [[TMP4:%.*]] = ptrtoint ptr [[TMP3]] to i64
@@ -34,20 +35,22 @@ define dso_local noundef i1 @_Z6targetv() sanitize_hwaddress {
 ; CHECK-NEXT:    [[BUF:%.*]] = alloca [4096 x i8], align 16
 ; CHECK-NEXT:    [[TMP15:%.*]] = xor i64 [[TMP2]], 0
 ; CHECK-NEXT:    [[TMP16:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP17:%.*]] = and i64 [[TMP16]], 72057594037927935
+; CHECK-NEXT:    [[TMP27:%.*]] = shl i64 [[TMP16]], 8
+; CHECK-NEXT:    [[TMP17:%.*]] = ashr i64 [[TMP27]], 8
 ; CHECK-NEXT:    [[TMP18:%.*]] = shl i64 [[TMP15]], 56
 ; CHECK-NEXT:    [[TMP19:%.*]] = or i64 [[TMP17]], [[TMP18]]
 ; CHECK-NEXT:    [[BUF_HWASAN:%.*]] = inttoptr i64 [[TMP19]] to ptr
 ; CHECK-NEXT:    [[TMP20:%.*]] = trunc i64 [[TMP15]] to i8
 ; CHECK-NEXT:    [[TMP21:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP22:%.*]] = and i64 [[TMP21]], 72057594037927935
-; CHECK-NEXT:    [[TMP23:%.*]] = lshr i64 [[TMP22]], 4
+; CHECK-NEXT:    [[TMP32:%.*]] = shl i64 [[TMP21]], 8
+; CHECK-NEXT:    [[TMP33:%.*]] = ashr i64 [[TMP32]], 8
+; CHECK-NEXT:    [[TMP23:%.*]] = ashr i64 [[TMP33]], 4
 ; CHECK-NEXT:    [[TMP24:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP23]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP24]], i8 [[TMP20]], i64 256, i1 false)
 ; CHECK-NEXT:    [[CALL:%.*]] = call i32 @setjmp(ptr noundef @jbuf)
 ; CHECK-NEXT:    switch i32 [[CALL]], label [[WHILE_BODY:%.*]] [
-; CHECK-NEXT:    i32 1, label [[RETURN:%.*]]
-; CHECK-NEXT:    i32 2, label [[SW_BB1:%.*]]
+; CHECK-NEXT:      i32 1, label [[RETURN:%.*]]
+; CHECK-NEXT:      i32 2, label [[SW_BB1:%.*]]
 ; CHECK-NEXT:    ]
 ; CHECK:       sw.bb1:
 ; CHECK-NEXT:    br label [[RETURN]]
@@ -60,8 +63,9 @@ define dso_local noundef i1 @_Z6targetv() sanitize_hwaddress {
 ; CHECK-NEXT:    [[RETVAL_0:%.*]] = phi i1 [ true, [[WHILE_BODY]] ], [ true, [[SW_BB1]] ], [ false, [[ENTRY:%.*]] ]
 ; CHECK-NEXT:    [[TMP25:%.*]] = trunc i64 [[HWASAN_UAR_TAG]] to i8
 ; CHECK-NEXT:    [[TMP26:%.*]] = ptrtoint ptr [[BUF]] to i64
-; CHECK-NEXT:    [[TMP27:%.*]] = and i64 [[TMP26]], 72057594037927935
-; CHECK-NEXT:    [[TMP28:%.*]] = lshr i64 [[TMP27]], 4
+; CHECK-NEXT:    [[TMP30:%.*]] = shl i64 [[TMP26]], 8
+; CHECK-NEXT:    [[TMP31:%.*]] = ashr i64 [[TMP30]], 8
+; CHECK-NEXT:    [[TMP28:%.*]] = ashr i64 [[TMP31]], 4
 ; CHECK-NEXT:    [[TMP29:%.*]] = getelementptr i8, ptr [[TMP14]], i64 [[TMP28]]
 ; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP29]], i8 [[TMP25]], i64 256, i1 false)
 ; CHECK-NEXT:    ret i1 [[RETVAL_0]]

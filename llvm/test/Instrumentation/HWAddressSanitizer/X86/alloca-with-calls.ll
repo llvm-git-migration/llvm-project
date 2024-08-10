@@ -21,7 +21,8 @@ define void @test_alloca() sanitize_hwaddress {
 ; CHECK-NEXT:    [[TMP3:%.*]] = call i8 @__hwasan_generate_tag()
 ; CHECK-NEXT:    [[TMP4:%.*]] = zext i8 [[TMP3]] to i64
 ; CHECK-NEXT:    [[TMP5:%.*]] = ptrtoint ptr [[X]] to i64
-; CHECK-NEXT:    [[TMP6:%.*]] = and i64 [[TMP5]], -9079256848778919937
+; CHECK-NEXT:    [[TMP11:%.*]] = shl i64 [[TMP5]], 7
+; CHECK-NEXT:    [[TMP6:%.*]] = ashr i64 [[TMP11]], 7
 ; CHECK-NEXT:    [[TMP7:%.*]] = shl i64 [[TMP4]], 57
 ; CHECK-NEXT:    [[TMP8:%.*]] = or i64 [[TMP6]], [[TMP7]]
 ; CHECK-NEXT:    [[X_HWASAN:%.*]] = inttoptr i64 [[TMP8]] to ptr
