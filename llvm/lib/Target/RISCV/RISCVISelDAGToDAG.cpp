@@ -2147,7 +2147,8 @@ void RISCVDAGToDAGISel::Select(SDNode *Node) {
     }
     break;
   }
-  case ISD::INSERT_SUBVECTOR: {
+  case ISD::INSERT_SUBVECTOR:
+  case RISCVISD::INSERT_SUBVECTOR: {
     SDValue V = Node->getOperand(0);
     SDValue SubV = Node->getOperand(1);
     SDLoc DL(SubV);
@@ -2214,7 +2215,8 @@ void RISCVDAGToDAGISel::Select(SDNode *Node) {
     ReplaceNode(Node, Insert.getNode());
     return;
   }
-  case ISD::EXTRACT_SUBVECTOR: {
+  case ISD::EXTRACT_SUBVECTOR:
+  case RISCVISD::EXTRACT_SUBVECTOR: {
     SDValue V = Node->getOperand(0);
     auto Idx = Node->getConstantOperandVal(1);
     MVT InVT = V.getSimpleValueType();

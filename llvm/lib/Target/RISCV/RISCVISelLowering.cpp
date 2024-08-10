@@ -2348,8 +2348,7 @@ bool RISCVTargetLowering::isExtractSubvectorCheap(EVT ResVT, EVT SrcVT,
     return false;
 
   // Only support extracting a fixed from a fixed vector for now.
-  if (ResVT.isScalableVector() || SrcVT.isScalableVector() ||
-      SrcVT.isRISCVVectorTuple())
+  if (ResVT.isScalableVector() || SrcVT.isScalableVector())
     return false;
 
   EVT EltVT = ResVT.getVectorElementType();
@@ -2589,11 +2588,8 @@ unsigned RISCVTargetLowering::getSubregIndexByMVT(MVT VT, unsigned Index) {
 }
 
 unsigned RISCVTargetLowering::getRegClassIDForVecVT(MVT VT) {
-  if (VT.getVectorElementType() == MVT::i1)
-    return RISCV::VRRegClassID;
-
   if (VT.isRISCVVectorTuple()) {
-    unsigned NF = VT.getVectorNumElements();
+    unsigned NF = VT.getRISCVVectorTupleNumFields();
     unsigned RegsPerField = std::max(1U, (unsigned)VT.getSizeInBits() /
                                              (NF * RISCV::RVVBitsPerBlock));
     switch (RegsPerField) {
@@ -2630,6 +2626,8 @@ unsigned RISCVTargetLowering::getRegClassIDForVecVT(MVT VT) {
     llvm_unreachable("Invalid vector tuple type RegClass.");
   }
 
+  if (VT.getVectorElementType() == MVT::i1)
+    return RISCV::VRRegClassID;
   return getRegClassIDForLMUL(getLMUL(VT));
 }
 
@@ -2646,7 +2644,6 @@ RISCVTargetLowering::decomposeSubvectorInsertExtractToSubRegs(
                  RISCV::VRM4RegClassID > RISCV::VRM2RegClassID &&
                  RISCV::VRM2RegClassID > RISCV::VRRegClassID),
                 "Register classes not ordered");
-
   unsigned VecRegClassID = getRegClassIDForVecVT(VecVT);
   unsigned SubRegClassID = getRegClassIDForVecVT(SubVecVT);
 
@@ -7043,7 +7040,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
       MachineFrameInfo &MFI = MF.getFrameInfo();
       SDLoc DL(Op);
       MVT XLenVT = Subtarget.getXLenVT();
-      unsigned NF = VecTy.getVectorMinNumElements();
+      unsigned NF = VecTy.getRISCVVectorTupleNumFields();
       unsigned Sz = VecTy.getSizeInBits();
       unsigned NumElts = Sz / (NF * 8);
       int Log2LMUL = Log2_64(NumElts) - 3;
@@ -7064,7 +7061,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
         SDValue LoadVal = DAG.getLoad(
             MVT::getScalableVectorVT(MVT::i8, NumElts), DL, DAG.getEntryNode(),
             BasePtr, Load->getPointerInfo(), Align(8));
-        Ret = DAG.getNode(ISD::INSERT_SUBVECTOR, DL, VecTy, Ret, LoadVal,
+        Ret = DAG.getNode(RISCVISD::INSERT_SUBVECTOR, DL, VecTy, Ret, LoadVal,
                           DAG.getVectorIdxConstant(i, DL));
         BasePtr = DAG.getNode(ISD::ADD, DL, XLenVT, BasePtr, VROffset, Flag);
       }
@@ -7087,7 +7084,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
       MachineFrameInfo &MFI = MF.getFrameInfo();
       SDLoc DL(Op);
       MVT XLenVT = Subtarget.getXLenVT();
-      unsigned NF = VecTy.getVectorMinNumElements();
+      unsigned NF = VecTy.getRISCVVectorTupleNumFields();
       unsigned Sz = VecTy.getSizeInBits();
       unsigned NumElts = Sz / (NF * 8);
       int Log2LMUL = Log2_64(NumElts) - 3;
@@ -7106,7 +7103,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
 
       // Extract subregisters in a vector tuple and store them individually.
       for (unsigned i = 0; i < NF; ++i) {
-        auto Extract = DAG.getNode(ISD::EXTRACT_SUBVECTOR, DL,
+        auto Extract = DAG.getNode(RISCVISD::EXTRACT_SUBVECTOR, DL,
                                    MVT::getScalableVectorVT(MVT::i8, NumElts),
                                    StoredVal, DAG.getVectorIdxConstant(i, DL));
         Ret = DAG.getStore(Chain, DL, Extract, BasePtr, Store->getPointerInfo(),
@@ -9297,14 +9294,14 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     SDValue SubVec = Op.getOperand(2);
     SDValue Index = Op.getOperand(3);
 
-    return DAG.getNode(ISD::INSERT_SUBVECTOR, DL, Op.getValueType(), Vec,
+    return DAG.getNode(RISCVISD::INSERT_SUBVECTOR, DL, Op.getValueType(), Vec,
                        SubVec, Index);
   }
   case Intrinsic::riscv_vector_extract: {
     SDValue Vec = Op.getOperand(1);
     SDValue Index = Op.getOperand(2);
 
-    return DAG.getNode(ISD::EXTRACT_SUBVECTOR, DL, Op.getValueType(), Vec,
+    return DAG.getNode(RISCVISD::EXTRACT_SUBVECTOR, DL, Op.getValueType(), Vec,
                        Index);
   }
   case Intrinsic::thread_pointer: {
@@ -9744,7 +9741,7 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_W_CHAIN(SDValue Op,
     SmallVector<SDValue, 9> Results;
     for (unsigned int RetIdx = 0; RetIdx < NF; RetIdx++) {
       SDValue SubVec =
-          DAG.getNode(ISD::EXTRACT_SUBVECTOR, DL, ContainerVT,
+          DAG.getNode(RISCVISD::EXTRACT_SUBVECTOR, DL, ContainerVT,
                       Result.getValue(0), DAG.getVectorIdxConstant(RetIdx, DL));
       Results.push_back(convertFromScalableVector(VT, SubVec, DAG, Subtarget));
     }
@@ -9864,7 +9861,7 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_VOID(SDValue Op,
     SDValue StoredVal = DAG.getUNDEF(VecTupTy);
     for (unsigned i = 0; i < NF; i++)
       StoredVal = DAG.getNode(
-          ISD::INSERT_SUBVECTOR, DL, VecTupTy, StoredVal,
+          RISCVISD::INSERT_SUBVECTOR, DL, VecTupTy, StoredVal,
           convertToScalableVector(
               ContainerVT, FixedIntrinsic->getOperand(2 + i), DAG, Subtarget),
           DAG.getVectorIdxConstant(i, DL));
@@ -19504,7 +19501,7 @@ bool RISCV::CC_RISCV(const DataLayout &DL, RISCVABI::ABI ABI, unsigned ValNo,
     Reg = State.AllocateReg(ArgFPR32s);
   else if (ValVT == MVT::f64 && !UseGPRForF64)
     Reg = State.AllocateReg(ArgFPR64s);
-  else if (ValVT.isVector()) {
+  else if (ValVT.isVector() || ValVT.isRISCVVectorTuple()) {
     Reg = allocateRVVReg(ValVT, ValNo, FirstMaskArgument, State, TLI);
     if (!Reg) {
       // For return values, the vector must be passed fully via registers or
@@ -19555,7 +19552,8 @@ bool RISCV::CC_RISCV(const DataLayout &DL, RISCVABI::ABI ABI, unsigned ValNo,
   }
 
   assert((!UseGPRForF16_F32 || !UseGPRForF64 || LocVT == XLenVT ||
-          (TLI.getSubtarget().hasVInstructions() && ValVT.isVector())) &&
+          (TLI.getSubtarget().hasVInstructions() &&
+           (ValVT.isVector() || ValVT.isRISCVVectorTuple()))) &&
          "Expected an XLenVT or vector types at this stage");
 
   if (Reg) {
@@ -20933,6 +20931,8 @@ const char *RISCVTargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(CZERO_EQZ)
   NODE_NAME_CASE(CZERO_NEZ)
   NODE_NAME_CASE(SW_GUARDED_BRIND)
+  NODE_NAME_CASE(INSERT_SUBVECTOR)
+  NODE_NAME_CASE(EXTRACT_SUBVECTOR)
   NODE_NAME_CASE(SF_VC_XV_SE)
   NODE_NAME_CASE(SF_VC_IV_SE)
   NODE_NAME_CASE(SF_VC_VV_SE)
@@ -21867,17 +21867,17 @@ bool RISCVTargetLowering::splitValueIntoRegisterParts(
   }
 
   if (ValueVT.isRISCVVectorTuple() && PartVT.isRISCVVectorTuple()) {
-    unsigned ValNF = ValueVT.getVectorNumElements();
-    unsigned ValLMUL = std::max(1U, (unsigned)ValueVT.getSizeInBits() /
-                                        (ValNF * RISCV::RVVBitsPerBlock));
-    unsigned PartNF = PartVT.getVectorNumElements();
-    unsigned PartLMUL = std::max(1U, (unsigned)PartVT.getSizeInBits() /
-                                         (PartNF * RISCV::RVVBitsPerBlock));
+    unsigned ValNF = ValueVT.getRISCVVectorTupleNumFields();
+    unsigned ValLMUL =
+        divideCeil(ValueVT.getSizeInBits(), ValNF * RISCV::RVVBitsPerBlock);
+    unsigned PartNF = PartVT.getRISCVVectorTupleNumFields();
+    unsigned PartLMUL =
+        divideCeil(PartVT.getSizeInBits(), PartNF * RISCV::RVVBitsPerBlock);
     assert(ValNF == PartNF && ValLMUL == PartLMUL &&
-           "RISCV vector tuple type only accepts same register class type "
+           "RISC-V vector tuple type only accepts same register class type "
            "INSERT_SUBVECTOR");
 
-    Val = DAG.getNode(ISD::INSERT_SUBVECTOR, DL, PartVT, DAG.getUNDEF(PartVT),
+    Val = DAG.getNode(RISCVISD::INSERT_SUBVECTOR, DL, PartVT, DAG.getUNDEF(PartVT),
                       Val, DAG.getVectorIdxConstant(0, DL));
     Parts[0] = Val;
     return true;
