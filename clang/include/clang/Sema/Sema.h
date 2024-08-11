@@ -13058,7 +13058,8 @@ public:
       std::optional<ArrayRef<TemplateArgument>> Innermost = std::nullopt,
       bool RelativeToPrimary = false, const FunctionDecl *Pattern = nullptr,
       bool ForConstraintInstantiation = false,
-      bool SkipForSpecialization = false);
+      bool SkipForSpecialization = false,
+      MultiLevelTemplateArgumentList *Merged = nullptr);
 
   /// RAII object to handle the state changes required to synthesize
   /// a function body.
