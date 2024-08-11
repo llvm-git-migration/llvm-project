@@ -628,7 +628,8 @@ bool SystemRuntimeMacOSX::BacktraceRecordingHeadersInitialized() {
       "__introspection_dispatch_queue_info_version");
   SymbolContextList sc_list;
   m_process->GetTarget().GetImages().FindSymbolsWithNameAndType(
-      introspection_dispatch_queue_info_version, eSymbolTypeData, sc_list);
+      introspection_dispatch_queue_info_version, eSymbolTypeData,
+      SymbolContext(), sc_list);
   if (!sc_list.IsEmpty()) {
     SymbolContext sc;
     sc_list.GetContextAtIndex(0, sc);
@@ -642,7 +643,8 @@ bool SystemRuntimeMacOSX::BacktraceRecordingHeadersInitialized() {
   static ConstString introspection_dispatch_queue_info_data_offset(
       "__introspection_dispatch_queue_info_data_offset");
   m_process->GetTarget().GetImages().FindSymbolsWithNameAndType(
-      introspection_dispatch_queue_info_data_offset, eSymbolTypeData, sc_list);
+      introspection_dispatch_queue_info_data_offset, eSymbolTypeData,
+      SymbolContext(), sc_list);
   if (!sc_list.IsEmpty()) {
     SymbolContext sc;
     sc_list.GetContextAtIndex(0, sc);
@@ -656,7 +658,8 @@ bool SystemRuntimeMacOSX::BacktraceRecordingHeadersInitialized() {
   static ConstString introspection_dispatch_item_info_version(
       "__introspection_dispatch_item_info_version");
   m_process->GetTarget().GetImages().FindSymbolsWithNameAndType(
-      introspection_dispatch_item_info_version, eSymbolTypeData, sc_list);
+      introspection_dispatch_item_info_version, eSymbolTypeData,
+      SymbolContext(), sc_list);
   if (!sc_list.IsEmpty()) {
     SymbolContext sc;
     sc_list.GetContextAtIndex(0, sc);
@@ -670,7 +673,8 @@ bool SystemRuntimeMacOSX::BacktraceRecordingHeadersInitialized() {
   static ConstString introspection_dispatch_item_info_data_offset(
       "__introspection_dispatch_item_info_data_offset");
   m_process->GetTarget().GetImages().FindSymbolsWithNameAndType(
-      introspection_dispatch_item_info_data_offset, eSymbolTypeData, sc_list);
+      introspection_dispatch_item_info_data_offset, eSymbolTypeData,
+      SymbolContext(), sc_list);
   if (!sc_list.IsEmpty()) {
     SymbolContext sc;
     sc_list.GetContextAtIndex(0, sc);

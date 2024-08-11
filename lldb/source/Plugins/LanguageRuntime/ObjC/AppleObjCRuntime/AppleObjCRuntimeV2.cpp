@@ -1236,8 +1236,8 @@ size_t AppleObjCRuntimeV2::GetByteOffsetForIvar(CompilerType &parent_ast_type,
     // name we created above
     SymbolContextList sc_list;
     Target &target = m_process->GetTarget();
-    target.GetImages().FindSymbolsWithNameAndType(ivar_const_str,
-                                                  eSymbolTypeObjCIVar, sc_list);
+    target.GetImages().FindSymbolsWithNameAndType(
+        ivar_const_str, eSymbolTypeObjCIVar, SymbolContext(), sc_list);
 
     addr_t ivar_offset_address = LLDB_INVALID_ADDRESS;
 
@@ -3330,7 +3330,7 @@ bool AppleObjCRuntimeV2::GetCFBooleanValuesIfNeeded() {
       [this](ConstString sym, ConstString real_sym) -> lldb::addr_t {
     SymbolContextList sc_list;
     GetProcess()->GetTarget().GetImages().FindSymbolsWithNameAndType(
-        sym, lldb::eSymbolTypeData, sc_list);
+        sym, lldb::eSymbolTypeData, SymbolContext(), sc_list);
     if (sc_list.GetSize() == 1) {
       SymbolContext sc;
       sc_list.GetContextAtIndex(0, sc);
@@ -3338,7 +3338,7 @@ bool AppleObjCRuntimeV2::GetCFBooleanValuesIfNeeded() {
         return sc.symbol->GetLoadAddress(&GetProcess()->GetTarget());
     }
     GetProcess()->GetTarget().GetImages().FindSymbolsWithNameAndType(
-        real_sym, lldb::eSymbolTypeData, sc_list);
+        real_sym, lldb::eSymbolTypeData, SymbolContext(), sc_list);
     if (sc_list.GetSize() != 1)
       return LLDB_INVALID_ADDRESS;
 

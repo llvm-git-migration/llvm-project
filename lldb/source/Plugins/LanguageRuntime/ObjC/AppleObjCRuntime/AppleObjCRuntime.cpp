@@ -249,10 +249,12 @@ Address *AppleObjCRuntime::GetPrintForDebuggerAddr() {
     SymbolContext context;
 
     modules.FindSymbolsWithNameAndType(ConstString("_NSPrintForDebugger"),
-                                        eSymbolTypeCode, contexts);
+                                       eSymbolTypeCode, SymbolContext(),
+                                       contexts);
     if (contexts.IsEmpty()) {
       modules.FindSymbolsWithNameAndType(ConstString("_CFPrintForDebugger"),
-                                         eSymbolTypeCode, contexts);
+                                         eSymbolTypeCode, SymbolContext(),
+                                         contexts);
       if (contexts.IsEmpty())
         return nullptr;
     }
@@ -468,11 +470,11 @@ bool AppleObjCRuntime::CalculateHasNewLiteralsAndIndexing() {
 
   SymbolContextList sc_list;
 
-  target.GetImages().FindSymbolsWithNameAndType(s_method_signature,
-                                                eSymbolTypeCode, sc_list);
+  target.GetImages().FindSymbolsWithNameAndType(
+      s_method_signature, eSymbolTypeCode, SymbolContext(), sc_list);
   if (sc_list.IsEmpty())
-    target.GetImages().FindSymbolsWithNameAndType(s_arclite_method_signature,
-                                                  eSymbolTypeCode, sc_list);
+    target.GetImages().FindSymbolsWithNameAndType(
+        s_arclite_method_signature, eSymbolTypeCode, SymbolContext(), sc_list);
   return !sc_list.IsEmpty();
 }
 

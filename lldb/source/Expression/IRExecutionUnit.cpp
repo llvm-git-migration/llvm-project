@@ -791,31 +791,17 @@ IRExecutionUnit::FindInSymbols(const std::vector<ConstString> &names,
   function_options.include_symbols = true;
   function_options.include_inlines = false;
 
+  const ModuleList &images = target->GetImages();
   for (const ConstString &name : names) {
-    if (sc.module_sp) {
-      SymbolContextList sc_list;
-      sc.module_sp->FindFunctions(name, CompilerDeclContext(),
-                                  lldb::eFunctionNameTypeFull, function_options,
-                                  sc_list);
-      if (auto load_addr = resolver.Resolve(sc_list))
-        return *load_addr;
-    }
+    SymbolContextList sc_list;
+    images.FindFunctions(name, lldb::eFunctionNameTypeFull, function_options,
+                         sc, sc_list);
+    if (auto load_addr = resolver.Resolve(sc_list))
+      return *load_addr;
 
-    if (sc.target_sp) {
-      SymbolContextList sc_list;
-      sc.target_sp->GetImages().FindFunctions(name, lldb::eFunctionNameTypeFull,
-                                              function_options, sc_list);
-      if (auto load_addr = resolver.Resolve(sc_list))
-        return *load_addr;
-    }
-
-    if (sc.target_sp) {
-      SymbolContextList sc_list;
-      sc.target_sp->GetImages().FindSymbolsWithNameAndType(
-          name, lldb::eSymbolTypeAny, sc_list);
-      if (auto load_addr = resolver.Resolve(sc_list))
-        return *load_addr;
-    }
+    images.FindSymbolsWithNameAndType(name, lldb::eSymbolTypeAny, sc, sc_list);
+    if (auto load_addr = resolver.Resolve(sc_list))
+      return *load_addr;
 
     lldb::addr_t best_internal_load_address =
         resolver.GetBestInternalLoadAddress();

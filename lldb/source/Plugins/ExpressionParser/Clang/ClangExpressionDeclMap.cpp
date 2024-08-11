@@ -523,11 +523,8 @@ addr_t ClangExpressionDeclMap::GetSymbolAddress(Target &target,
                                                 lldb::SymbolType symbol_type,
                                                 lldb_private::Module *module) {
   SymbolContextList sc_list;
-
-  if (module)
-    module->FindSymbolsWithNameAndType(name, symbol_type, sc_list);
-  else
-    target.GetImages().FindSymbolsWithNameAndType(name, symbol_type, sc_list);
+  const SymbolContext sc{ModuleSP(module)};
+  target.GetImages().FindSymbolsWithNameAndType(name, symbol_type, sc, sc_list);
 
   addr_t symbol_load_addr = LLDB_INVALID_ADDRESS;
 
@@ -1251,7 +1248,7 @@ void ClangExpressionDeclMap::LookupFunction(
 
     target->GetImages().FindFunctions(
         name, eFunctionNameTypeFull | eFunctionNameTypeBase, function_options,
-        sc_list);
+        SymbolContext(), sc_list);
   }
 
   // If we found more than one function, see if we can use the frame's decl

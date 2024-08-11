@@ -285,7 +285,7 @@ public:
   /// \see Module::FindFunctions ()
   void FindFunctions(ConstString name, lldb::FunctionNameType name_type_mask,
                      const ModuleFunctionSearchOptions &options,
-                     SymbolContextList &sc_list) const;
+                     const SymbolContext &sc, SymbolContextList &sc_list) const;
 
   /// \see Module::FindFunctionSymbols ()
   void FindFunctionSymbols(ConstString name,
@@ -295,7 +295,7 @@ public:
   /// \see Module::FindFunctions ()
   void FindFunctions(const RegularExpression &name,
                      const ModuleFunctionSearchOptions &options,
-                     SymbolContextList &sc_list);
+                     const SymbolContext &sc, SymbolContextList &sc_list);
 
   /// Find global and static variables by name.
   ///
@@ -355,6 +355,7 @@ public:
 
   void FindSymbolsWithNameAndType(ConstString name,
                                   lldb::SymbolType symbol_type,
+                                  const SymbolContext &sc,
                                   SymbolContextList &sc_list) const;
 
   void FindSymbolsMatchingRegExAndType(const RegularExpression &regex,

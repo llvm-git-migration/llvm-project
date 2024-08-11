@@ -634,7 +634,8 @@ ValueObjectSP ItaniumABILanguageRuntime::GetExceptionObjectForThread(
   SymbolContext context;
 
   modules.FindSymbolsWithNameAndType(
-      ConstString("__cxa_current_exception_type"), eSymbolTypeCode, contexts);
+      ConstString("__cxa_current_exception_type"), eSymbolTypeCode,
+      SymbolContext(), contexts);
   contexts.GetContextAtIndex(0, context);
   if (!context.symbol) {
     return {};

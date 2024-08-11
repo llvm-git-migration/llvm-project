@@ -419,7 +419,8 @@ DynamicLoaderHexagonDYLD::GetStepThroughTrampolinePlan(Thread &thread,
   Target &target = thread.GetProcess()->GetTarget();
   const ModuleList &images = target.GetImages();
 
-  images.FindSymbolsWithNameAndType(sym_name, eSymbolTypeCode, target_symbols);
+  images.FindSymbolsWithNameAndType(sym_name, eSymbolTypeCode, SymbolContext(),
+                                    target_symbols);
   if (target_symbols.GetSize() == 0)
     return thread_plan_sp;
 

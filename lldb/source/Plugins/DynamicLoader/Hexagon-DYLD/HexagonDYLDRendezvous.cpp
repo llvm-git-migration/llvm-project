@@ -292,8 +292,8 @@ bool HexagonDYLDRendezvous::FindMetadata(const char *name, PThreadField field,
   Target &target = m_process->GetTarget();
 
   SymbolContextList list;
-  target.GetImages().FindSymbolsWithNameAndType(ConstString(name),
-                                                eSymbolTypeAny, list);
+  target.GetImages().FindSymbolsWithNameAndType(
+      ConstString(name), eSymbolTypeAny, SymbolContext(), list);
   if (list.IsEmpty())
     return false;
 

@@ -351,8 +351,8 @@ CommandObjectDisassemble::GetNameRanges(CommandReturnObject &result) {
 
   // Find functions matching the given name.
   SymbolContextList sc_list;
-  GetTarget().GetImages().FindFunctions(name, eFunctionNameTypeAuto,
-                                        function_options, sc_list);
+  GetTarget().GetImages().FindFunctions(
+      name, eFunctionNameTypeAuto, function_options, SymbolContext(), sc_list);
 
   std::vector<AddressRange> ranges;
   llvm::Error range_errs = llvm::Error::success();

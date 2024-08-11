@@ -519,7 +519,8 @@ DynamicLoaderPOSIXDYLD::GetStepThroughTrampolinePlan(Thread &thread,
       sym_name = ConstString(target_name);
     }
   }
-  images.FindSymbolsWithNameAndType(sym_name, eSymbolTypeCode, target_symbols);
+  images.FindSymbolsWithNameAndType(sym_name, eSymbolTypeCode, context,
+                                    target_symbols);
   if (!target_symbols.GetSize())
     return thread_plan_sp;
 

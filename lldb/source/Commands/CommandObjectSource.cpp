@@ -382,7 +382,7 @@ protected:
     ModuleList module_list =
         (m_module_list.GetSize() > 0) ? m_module_list : target.GetImages();
     module_list.FindFunctions(name, eFunctionNameTypeAuto, function_options,
-                              sc_list_funcs);
+                              SymbolContext(), sc_list_funcs);
     size_t num_matches = sc_list_funcs.GetSize();
 
     if (!num_matches) {
@@ -875,12 +875,14 @@ protected:
           target.GetImages().FindModules(module_spec, matching_modules);
 
           matching_modules.FindFunctions(name, eFunctionNameTypeAuto,
-                                         function_options, sc_list);
+                                         function_options, SymbolContext(),
+                                         sc_list);
         }
       }
     } else {
       target.GetImages().FindFunctions(name, eFunctionNameTypeAuto,
-                                       function_options, sc_list);
+                                       function_options, SymbolContext(),
+                                       sc_list);
     }
   }
 

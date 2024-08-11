@@ -1764,8 +1764,8 @@ lldb::SBSymbolContextList SBTarget::FindFunctions(const char *name,
   function_options.include_inlines = true;
 
   FunctionNameType mask = static_cast<FunctionNameType>(name_type_mask);
-  target_sp->GetImages().FindFunctions(ConstString(name), mask,
-                                       function_options, *sb_sc_list);
+  target_sp->GetImages().FindFunctions(
+      ConstString(name), mask, function_options, SymbolContext(), *sb_sc_list);
   return sb_sc_list;
 }
 
@@ -1787,22 +1787,24 @@ lldb::SBSymbolContextList SBTarget::FindGlobalFunctions(const char *name,
       switch (matchtype) {
       case eMatchTypeRegex:
         target_sp->GetImages().FindFunctions(RegularExpression(name_ref),
-                                             function_options, *sb_sc_list);
+                                             function_options, SymbolContext(),
+                                             *sb_sc_list);
         break;
       case eMatchTypeRegexInsensitive:
         target_sp->GetImages().FindFunctions(
             RegularExpression(name_ref, llvm::Regex::RegexFlags::IgnoreCase),
-            function_options, *sb_sc_list);
+            function_options, SymbolContext(), *sb_sc_list);
         break;
       case eMatchTypeStartsWith:
         regexstr = llvm::Regex::escape(name) + ".*";
         target_sp->GetImages().FindFunctions(RegularExpression(regexstr),
-                                             function_options, *sb_sc_list);
+                                             function_options, SymbolContext(),
+                                             *sb_sc_list);
         break;
       default:
-        target_sp->GetImages().FindFunctions(ConstString(name),
-                                             eFunctionNameTypeAny,
-                                             function_options, *sb_sc_list);
+        target_sp->GetImages().FindFunctions(
+            ConstString(name), eFunctionNameTypeAny, function_options,
+            SymbolContext(), *sb_sc_list);
         break;
       }
     }
@@ -2274,7 +2276,7 @@ lldb::SBSymbolContextList SBTarget::FindSymbols(const char *name,
     TargetSP target_sp(GetSP());
     if (target_sp)
       target_sp->GetImages().FindSymbolsWithNameAndType(
-          ConstString(name), symbol_type, *sb_sc_list);
+          ConstString(name), symbol_type, SymbolContext(), *sb_sc_list);
   }
   return sb_sc_list;
 }

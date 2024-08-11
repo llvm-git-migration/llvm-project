@@ -895,32 +895,14 @@ const Symbol *SymbolContext::FindBestGlobalDataSymbol(ConstString name,
     }
   };
 
-  if (module) {
-    SymbolContextList sc_list;
-    module->FindSymbolsWithNameAndType(name, eSymbolTypeAny, sc_list);
-    const Symbol *const module_symbol = ProcessMatches(sc_list, error);
-
-    if (!error.Success()) {
-      return nullptr;
-    } else if (module_symbol) {
-      return module_symbol;
-    }
+  SymbolContextList sc_list;
+  target.GetImages().FindSymbolsWithNameAndType(name, eSymbolTypeAny, *this,
+                                                sc_list);
+  const Symbol *const symbol = ProcessMatches(sc_list, error);
+  if (!error.Success()) {
+    return nullptr;
   }
-
-  {
-    SymbolContextList sc_list;
-    target.GetImages().FindSymbolsWithNameAndType(name, eSymbolTypeAny,
-                                                  sc_list);
-    const Symbol *const target_symbol = ProcessMatches(sc_list, error);
-
-    if (!error.Success()) {
-      return nullptr;
-    } else if (target_symbol) {
-      return target_symbol;
-    }
-  }
-
-  return nullptr; // no error; we just didn't find anything
+  return symbol;
 }
 
 //

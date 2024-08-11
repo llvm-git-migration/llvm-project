@@ -3541,7 +3541,8 @@ protected:
       function_options.include_symbols = true;
       function_options.include_inlines = false;
       target->GetImages().FindFunctions(function_name, eFunctionNameTypeAuto,
-                                        function_options, sc_list);
+                                        function_options, SymbolContext(),
+                                        sc_list);
     } else if (m_options.m_type == eLookupTypeAddress && target) {
       Address addr;
       if (target->GetSectionLoadList().ResolveLoadAddress(m_options.m_addr,

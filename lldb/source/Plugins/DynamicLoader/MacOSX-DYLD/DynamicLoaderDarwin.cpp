@@ -895,7 +895,7 @@ DynamicLoaderDarwin::GetStepThroughTrampolinePlan(Thread &thread,
 
         SymbolContextList code_symbols;
         images.FindSymbolsWithNameAndType(trampoline_name, eSymbolTypeCode,
-                                          code_symbols);
+                                          current_context, code_symbols);
         for (const SymbolContext &context : code_symbols) {
           AddressRange addr_range;
           context.GetAddressRange(eSymbolContextEverything, 0, false,
@@ -911,8 +911,9 @@ DynamicLoaderDarwin::GetStepThroughTrampolinePlan(Thread &thread,
         }
 
         SymbolContextList reexported_symbols;
-        images.FindSymbolsWithNameAndType(
-            trampoline_name, eSymbolTypeReExported, reexported_symbols);
+        images.FindSymbolsWithNameAndType(trampoline_name,
+                                          eSymbolTypeReExported,
+                                          current_context, reexported_symbols);
         for (const SymbolContext &context : reexported_symbols) {
           if (context.symbol) {
             Symbol *actual_symbol =
@@ -935,7 +936,7 @@ DynamicLoaderDarwin::GetStepThroughTrampolinePlan(Thread &thread,
 
         SymbolContextList indirect_symbols;
         images.FindSymbolsWithNameAndType(trampoline_name, eSymbolTypeResolver,
-                                          indirect_symbols);
+                                          current_context, indirect_symbols);
 
         for (const SymbolContext &context : indirect_symbols) {
           AddressRange addr_range;

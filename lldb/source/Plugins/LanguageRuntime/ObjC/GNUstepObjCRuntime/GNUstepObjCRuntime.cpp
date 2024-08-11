@@ -89,7 +89,8 @@ LanguageRuntime *GNUstepObjCRuntime::CreateInstance(Process *process,
   } else if (TT.isOSWindows()) {
     SymbolContextList objc_mandatory;
     images.FindSymbolsWithNameAndType(ConstString("__objc_load"),
-                                      eSymbolTypeCode, objc_mandatory);
+                                      eSymbolTypeCode, SymbolContext(),
+                                      objc_mandatory);
     if (objc_mandatory.GetSize() == 0)
       return nullptr;
   }

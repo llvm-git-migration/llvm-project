@@ -937,9 +937,9 @@ void ClangASTSource::FindObjCMethodDecls(NameSearchContext &context) {
     ConstString instance_method_name(ms.GetString());
 
     sc_list.Clear();
-    m_target->GetImages().FindFunctions(instance_method_name,
-                                        lldb::eFunctionNameTypeFull,
-                                        function_options, sc_list);
+    m_target->GetImages().FindFunctions(
+        instance_method_name, lldb::eFunctionNameTypeFull, function_options,
+        SymbolContext(), sc_list);
 
     if (sc_list.GetSize())
       break;
@@ -950,9 +950,9 @@ void ClangASTSource::FindObjCMethodDecls(NameSearchContext &context) {
     ConstString class_method_name(ms.GetString());
 
     sc_list.Clear();
-    m_target->GetImages().FindFunctions(class_method_name,
-                                        lldb::eFunctionNameTypeFull,
-                                        function_options, sc_list);
+    m_target->GetImages().FindFunctions(
+        class_method_name, lldb::eFunctionNameTypeFull, function_options,
+        SymbolContext(), sc_list);
 
     if (sc_list.GetSize())
       break;
@@ -963,9 +963,9 @@ void ClangASTSource::FindObjCMethodDecls(NameSearchContext &context) {
 
     SymbolContextList candidate_sc_list;
 
-    m_target->GetImages().FindFunctions(selector_name,
-                                        lldb::eFunctionNameTypeSelector,
-                                        function_options, candidate_sc_list);
+    m_target->GetImages().FindFunctions(
+        selector_name, lldb::eFunctionNameTypeSelector, function_options,
+        SymbolContext(), candidate_sc_list);
 
     for (const SymbolContext &candidate_sc : candidate_sc_list) {
       if (!candidate_sc.function)
