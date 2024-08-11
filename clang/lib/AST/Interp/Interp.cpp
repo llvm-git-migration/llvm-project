@@ -125,12 +125,17 @@ static bool CheckActive(InterpState &S, CodePtr OpPC, const Pointer &Ptr,
   if (Ptr.isActive())
     return true;
 
+  assert(Ptr.isField() && Ptr.getField());
+
   Pointer U = Ptr.getBase();
   Pointer C = Ptr;
   while (!U.isRoot() && U.inUnion() && !U.isActive()) {
-    C = U;
+    if (U.getField())
+      C = U;
     U = U.getBase();
   }
+  assert(C.isField());
+
   // Get the inactive field descriptor.
   const FieldDecl *InactiveField = C.getField();
   assert(InactiveField);
