@@ -280,7 +280,7 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
                                      /*isExact=*/true);
 
         auto *NewAdd = BinaryOperator::CreateAdd(NewOp, BinOp);
-        if (HasNSW && (OpBO->getOpcode() == Instruction::LShr ||
+        if (HasNSW && (HasNUW || OpBO->getOpcode() == Instruction::LShr ||
                        ShiftC->getZExtValue() < BitWidth - 1))
           NewAdd->setHasNoSignedWrap(true);
 
