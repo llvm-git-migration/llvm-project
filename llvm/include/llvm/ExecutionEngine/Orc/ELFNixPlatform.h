@@ -146,7 +146,7 @@ private:
 
     void addDSOHandleSupportPasses(MaterializationResponsibility &MR,
                                    jitlink::PassConfiguration &Config,
-                                   bool IsBootstraping);
+                                   bool IsBootstrapping);
 
     void addEHAndTLVSupportPasses(MaterializationResponsibility &MR,
                                   jitlink::PassConfiguration &Config);
@@ -155,7 +155,7 @@ private:
                                MaterializationResponsibility &MR);
 
     Error registerInitSections(jitlink::LinkGraph &G, JITDylib &JD,
-                               bool IsBootstraping);
+                               bool IsBootstrapping);
 
     Error fixTLVSectionsAndEdges(jitlink::LinkGraph &G, JITDylib &JD);
 
@@ -208,7 +208,6 @@ private:
   ObjectLinkingLayer &ObjLinkingLayer;
 
   SymbolStringPtr DSOHandleSymbol;
-  ExecutorAddr DSOHandleAddr;
   std::atomic<bool> RuntimeBootstrapped{false};
 
   ExecutorAddr orc_rt_elfnix_platform_bootstrap;
