@@ -35,6 +35,9 @@ MODULE_PASS("amdgpu-unify-metadata", AMDGPUUnifyMetadataPass())
 FUNCTION_PASS("amdgpu-codegenprepare", AMDGPUCodeGenPreparePass(*this))
 FUNCTION_PASS("amdgpu-image-intrinsic-opt",
               AMDGPUImageIntrinsicOptimizerPass(*this))
+FUNCTION_PASS("amdgpu-late-codegenprepare",
+              AMDGPULateCodeGenPreparePass(
+                *static_cast<const GCNTargetMachine *>(this)))
 FUNCTION_PASS("amdgpu-lower-kernel-arguments",
               AMDGPULowerKernelArgumentsPass(*this))
 FUNCTION_PASS("amdgpu-lower-kernel-attributes",
