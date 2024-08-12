@@ -239,6 +239,7 @@ defm: EqNoHelp<"minor-image-version">;
 def: F<"no-undefined">;
 def: F<"pic-executable">;
 defm: EqNoHelp<"plugin">;
+defm: EqNoHelp<"rpath">;
 defm: EqNoHelp<"sysroot">;
 def: F<"sort-common">;
 def: F<"start-group">;
