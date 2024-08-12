@@ -404,7 +404,7 @@ AST_MATCHER(CXXConstructExpr, isSafeSpanTwoParamConstruct) {
 
   if (Arg0Ty->isConstantArrayType()) {
     const APSInt ConstArrSize =
-        APSInt(cast<ConstantArrayType>(Arg0Ty)->getSize());
+        APSInt(cast<ConstantArrayType>(Arg0Ty.getCanonicalType())->getSize());
 
     // Check form 4:
     return Arg1CV && APSInt::compareValues(ConstArrSize, *Arg1CV) == 0;
