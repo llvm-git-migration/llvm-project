@@ -34,4 +34,5 @@ FortranParser
 FortranEvaluate
 FortranSemantics
 FortranLower
+flangFrontend
 )
