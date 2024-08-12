@@ -47,6 +47,8 @@ public:
   bool match(SDValue N, unsigned Opcode) const {
     return N->getOpcode() == Opcode;
   }
+
+  static constexpr unsigned NrExtraArgs = 0;
 };
 
 template <typename Pattern, typename MatchContext>
@@ -390,7 +392,7 @@ template <unsigned OpIdx, typename... OpndPreds> struct Operands_match {
   template <typename MatchContext>
   bool match(const MatchContext &Ctx, SDValue N) {
     // Returns false if there are more operands than predicates;
-    return N->getNumOperands() == OpIdx;
+    return N->getNumOperands() == (OpIdx + Ctx.NrExtraArgs);
   }
 };
 
@@ -464,7 +466,7 @@ struct TernaryOpc_match {
   bool match(const MatchContext &Ctx, SDValue N) {
     if (sd_context_match(N, Ctx, m_Opc(Opcode))) {
       EffectiveOperands<ExcludeChain> EO(N);
-      assert(EO.Size == 3);
+      assert(EO.Size == 3U + 2 * N->isVPOpcode());
       return ((Op0.match(Ctx, N->getOperand(EO.FirstIndex)) &&
                Op1.match(Ctx, N->getOperand(EO.FirstIndex + 1))) ||
               (Commutable && Op0.match(Ctx, N->getOperand(EO.FirstIndex + 1)) &&
@@ -516,7 +518,7 @@ struct BinaryOpc_match {
   bool match(const MatchContext &Ctx, SDValue N) {
     if (sd_context_match(N, Ctx, m_Opc(Opcode))) {
       EffectiveOperands<ExcludeChain> EO(N);
-      assert(EO.Size == 2);
+      assert(EO.Size == 2U + 2 * N->isVPOpcode());
       return (LHS.match(Ctx, N->getOperand(EO.FirstIndex)) &&
               RHS.match(Ctx, N->getOperand(EO.FirstIndex + 1))) ||
              (Commutable && LHS.match(Ctx, N->getOperand(EO.FirstIndex + 1)) &&
@@ -668,7 +670,7 @@ template <typename Opnd_P, bool ExcludeChain = false> struct UnaryOpc_match {
   bool match(const MatchContext &Ctx, SDValue N) {
     if (sd_context_match(N, Ctx, m_Opc(Opcode))) {
       EffectiveOperands<ExcludeChain> EO(N);
-      assert(EO.Size == 1);
+      assert(EO.Size == 1U + 2 * N->isVPOpcode());
       return Opnd.match(Ctx, N->getOperand(EO.FirstIndex));
     }
 
