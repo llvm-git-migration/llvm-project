@@ -23,6 +23,7 @@ These checks are put in place when compiling with the
 ``[[clang::nonblocking]]``.
 
 .. code-block:: c
+
    void process_audio(float* buffer) [[clang::nonblocking]] {
       ...
    }
@@ -55,6 +56,7 @@ callback time, such as audio callback threads or rendering loops in video game
 code.
 
 .. code-block:: console
+
    % cat example_realtime_violation.cpp
    int main() [[clang::nonblocking]] {
      int* p = new int;
@@ -69,6 +71,7 @@ context, or any function invoked by that function, the program will exit with a
 non-zero exit code.
 
 .. code-block:: console
+
    % clang -fsanitize=realtime -g example_realtime_violation.cpp
    % ./a.out
    Real-time violation: intercepted call to real-time unsafe function `malloc` in real-time context! Stack trace:
