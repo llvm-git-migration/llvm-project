@@ -151,7 +151,7 @@ public:
     }
     if (CommentText.consume_front("SNIPPET-ADDRESS")) {
       // LLVM-EXEGESIS-SNIPPET-ADDRESS <address>
-      if (!to_integer<intptr_t>(CommentText.trim(), Result->Key.SnippetAddress,
+      if (!to_integer<uintptr_t>(CommentText.trim(), Result->Key.SnippetAddress,
                                 16)) {
         errs() << "invalid comment 'LLVM-EXEGESIS-SNIPPET-ADDRESS "
                << CommentText
