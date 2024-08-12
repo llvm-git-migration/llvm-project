@@ -177,18 +177,18 @@ static void getRegisterPressures(bool AtTop,
   MachineInstr *MI = SU->getInstr();
   if (AtTop) {
     GCNDownwardRPTracker TempDownwardTracker(DownwardTracker);
-    TempDownwardTracker.advance(MI, false, DAG->getLIS());
+    TempDownwardTracker.bumpDownwardPressure(MI);
     Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
         TempDownwardTracker.getPressure().getSGPRNum();
     Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-        TempDownwardTracker.getPressure().getVGPRNum(false);
+        TempDownwardTracker.getPressure().getArchVGPRNum();
   } else {
     GCNUpwardRPTracker TempUpwardTracker(UpwardTracker);
-    TempUpwardTracker.recede(*MI);
+    TempUpwardTracker.bumpUpwardPressure(MI);
     Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
         TempUpwardTracker.getPressure().getSGPRNum();
     Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-        TempUpwardTracker.getPressure().getVGPRNum(false);
+        TempUpwardTracker.getPressure().getArchVGPRNum();
   }
 }
 
