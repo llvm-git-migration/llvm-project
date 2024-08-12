@@ -2555,6 +2555,37 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
     return true;
   }
 
+  // SCCP may have propagated C++ static variables across calls. If this happens
+  // to be the case, we may want to undo it in order to avoid redundant pointer
+  // computation of the constant, as the function method returning the constant
+  // needs to be executed anyways.
+  auto MaybeFunctionReturnConstantPtr = [](const Function *F,
+                                           GlobalVariable *GV) {
+    SmallVector<const ReturnInst *, 4> Returns;
+    for (auto &BB : llvm::reverse(*F))
+      if (auto *Ret = dyn_cast<ReturnInst>(BB.getTerminator()))
+        Returns.emplace_back(Ret);
+
+    return !Returns.empty() && all_of(Returns, [&](auto *RI) {
+      return RI->getReturnValue() == GV;
+    });
+  };
+
+  auto *PrevCI = dyn_cast_or_null<CallInst>(CI->getPrevNonDebugInstruction());
+  if (PrevCI && !isa<IntrinsicInst>(PrevCI) && PrevCI->use_empty() &&
+      PrevCI->getType()->isPointerTy()) {
+    for (auto &Arg : CI->args()) {
+      if (auto *GV = dyn_cast<GlobalVariable>(Arg);
+          GV && GV->getType()->isPointerTy()) {
+        const auto *Callee = PrevCI->getCalledFunction();
+        if (Callee && MaybeFunctionReturnConstantPtr(Callee, GV)) {
+          CI->setArgOperand(CI->getArgOperandNo(&Arg), PrevCI);
+          return true;
+        }
+      }
+    }
+  }
+
   return false;
 }
 
