@@ -65,10 +65,16 @@
 #include "llvm/Transforms/IPO/GlobalDCE.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/EarlyCSE.h"
 #include "llvm/Transforms/Scalar/FlattenCFG.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Transforms/Scalar/InferAddressSpaces.h"
+#include "llvm/Transforms/Scalar/LICM.h"
+#include "llvm/Transforms/Scalar/LoopDataPrefetch.h"
+#include "llvm/Transforms/Scalar/NaryReassociate.h"
+#include "llvm/Transforms/Scalar/SeparateConstOffsetFromGEP.h"
 #include "llvm/Transforms/Scalar/Sink.h"
+#include "llvm/Transforms/Scalar/StraightLineStrengthReduce.h"
 #include "llvm/Transforms/Scalar/StructurizeCFG.h"
 #include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/Utils/FixIrreducible.h"
@@ -1767,6 +1773,70 @@ AMDGPUCodeGenPassBuilder::AMDGPUCodeGenPassBuilder(
   // Garbage collection is not supported.
   disablePass<StackMapLivenessPass, FuncletLayoutPass,
               ShadowStackGCLoweringPass>();
+}
+
+void AMDGPUCodeGenPassBuilder::addIRPasses(AddIRPass &addPass) const {
+  // TODO: Missing AMDGPURemoveIncompatibleFunctions
+
+  addPass(AMDGPUPrintfRuntimeBindingPass());
+  if (LowerCtorDtor)
+    addPass(AMDGPUCtorDtorLoweringPass());
+
+  if (isPassEnabled(EnableImageIntrinsicOptimizer))
+    addPass(AMDGPUImageIntrinsicOptimizerPass(TM));
+
+  // This can be disabled by passing ::Disable here or on the command line
+  // with --expand-variadics-override=disable.
+  addPass(ExpandVariadicsPass(ExpandVariadicsMode::Lowering));
+
+  addPass(AMDGPUAlwaysInlinePass());
+  addPass(AlwaysInlinerPass());
+
+  // TODO: Missing OpenCLEnqueuedBlockLowering
+
+  // Runs before PromoteAlloca so the latter can account for function uses
+  if (EnableLowerModuleLDS)
+    addPass(AMDGPULowerModuleLDSPass(TM));
+
+  if (TM.getOptLevel() > CodeGenOptLevel::None)
+    addPass(InferAddressSpacesPass());
+
+  // Run atomic optimizer before Atomic Expand
+  if (TM.getOptLevel() >= CodeGenOptLevel::Less &&
+      (AMDGPUAtomicOptimizerStrategy != ScanOptions::None))
+    addPass(AMDGPUAtomicOptimizerPass(TM, AMDGPUAtomicOptimizerStrategy));
+
+  addPass(AtomicExpandPass());
+
+  if (TM.getOptLevel() > CodeGenOptLevel::None) {
+    addPass(AMDGPUPromoteAllocaPass(TM));
+    if (isPassEnabled(EnableScalarIRPasses))
+      addStraightLineScalarOptimizationPasses(addPass);
+
+    // TODO: Handle EnableAMDGPUAliasAnalysis
+
+    // TODO: May want to move later or split into an early and late one.
+    addPass(AMDGPUCodeGenPreparePass(TM));
+
+    // TODO: LICM
+  }
+
+  Base::addIRPasses(addPass);
+
+  // EarlyCSE is not always strong enough to clean up what LSR produces. For
+  // example, GVN can combine
+  //
+  //   %0 = add %a, %b
+  //   %1 = add %b, %a
+  //
+  // and
+  //
+  //   %0 = shl nsw %a, 2
+  //   %1 = shl %a, 2
+  //
+  // but EarlyCSE can do neither of them.
+  if (isPassEnabled(EnableScalarIRPasses))
+    addEarlyCSEOrGVNPass(addPass);
 }
 
 void AMDGPUCodeGenPassBuilder::addCodeGenPrepare(AddIRPass &addPass) const {
