@@ -10,7 +10,6 @@
 #define LLDB_API_SBSAVECOREOPTIONS_H
 
 #include "lldb/API/SBDefines.h"
-#include "lldb/Symbol/SaveCoreOptions.h"
 
 namespace lldb {
 
@@ -18,7 +17,7 @@ class LLDB_API SBSaveCoreOptions {
 public:
   SBSaveCoreOptions();
   SBSaveCoreOptions(const lldb::SBSaveCoreOptions &rhs);
-  ~SBSaveCoreOptions() = default;
+  ~SBSaveCoreOptions();
 
   const SBSaveCoreOptions &operator=(const lldb::SBSaveCoreOptions &rhs);
 

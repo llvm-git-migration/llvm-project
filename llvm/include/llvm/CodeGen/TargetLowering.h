@@ -1640,7 +1640,8 @@ public:
     MVT NVT = VT;
     do {
       NVT = (MVT::SimpleValueType)(NVT.SimpleTy+1);
-      assert(NVT.isInteger() == VT.isInteger() && NVT != MVT::isVoid &&
+      assert(NVT.isInteger() == VT.isInteger() &&
+             NVT.isFloatingPoint() == VT.isFloatingPoint() &&
              "Didn't find type to promote to!");
     } while (VTBits >= NVT.getScalarSizeInBits() || !isTypeLegal(NVT) ||
              getOperationAction(Op, NVT) == Promote);
@@ -3431,15 +3432,19 @@ public:
 
   /// Override the default CondCode to be used to test the result of the
   /// comparison libcall against zero.
+  /// FIXME: This can't be merged with 'RuntimeLibcallsInfo' because of the ISD.
   void setCmpLibcallCC(RTLIB::Libcall Call, ISD::CondCode CC) {
-    Libcalls.setCmpLibcallCC(Call, CC);
+    CmpLibcallCCs[Call] = CC;
   }
+
 
   /// Get the CondCode that's to be used to test the result of the comparison
   /// libcall against zero.
+  /// FIXME: This can't be merged with 'RuntimeLibcallsInfo' because of the ISD.
   ISD::CondCode getCmpLibcallCC(RTLIB::Libcall Call) const {
-    return Libcalls.getCmpLibcallCC(Call);
+    return CmpLibcallCCs[Call];
   }
+
 
   /// Set the CallingConv that should be used for the specified libcall.
   void setLibcallCallingConv(RTLIB::Libcall Call, CallingConv::ID CC) {
@@ -3629,6 +3634,10 @@ private:
 
   /// The list of libcalls that the target will use.
   RTLIB::RuntimeLibcallsInfo Libcalls;
+
+  /// The ISD::CondCode that should be used to test the result of each of the
+  /// comparison libcall against zero.
+  ISD::CondCode CmpLibcallCCs[RTLIB::UNKNOWN_LIBCALL];
 
   /// The bits of IndexedModeActions used to store the legalisation actions
   /// We store the data as   | ML | MS |  L |  S | each taking 4 bits.
@@ -3833,6 +3842,10 @@ public:
   /// Return the entry encoding for a jump table in the current function.  The
   /// returned value is a member of the MachineJumpTableInfo::JTEntryKind enum.
   virtual unsigned getJumpTableEncoding() const;
+
+  virtual MVT getJumpTableRegTy(const DataLayout &DL) const {
+    return getPointerTy(DL);
+  }
 
   virtual const MCExpr *
   LowerCustomJumpTableEntry(const MachineJumpTableInfo * /*MJTI*/,
@@ -5069,8 +5082,10 @@ public:
   //
 
   SDValue BuildSDIV(SDNode *N, SelectionDAG &DAG, bool IsAfterLegalization,
+                    bool IsAfterLegalTypes,
                     SmallVectorImpl<SDNode *> &Created) const;
   SDValue BuildUDIV(SDNode *N, SelectionDAG &DAG, bool IsAfterLegalization,
+                    bool IsAfterLegalTypes,
                     SmallVectorImpl<SDNode *> &Created) const;
   // Build sdiv by power-of-2 with conditional move instructions
   SDValue buildSDIVPow2WithCMov(SDNode *N, const APInt &Divisor,
