@@ -489,9 +489,10 @@ MultiLevelTemplateArgumentList Sema::getTemplateInstantiationArgs(
     //
     // where parameter C has a depth of 1 but the substituting argument `int`
     // has a depth of 0.
-    if (const auto *TTP = dyn_cast<TemplateTemplateParmDecl>(CurDecl))
-      HandleDefaultTempArgIntoTempTempParam(TTP, Result);
-    CurDecl = Response::UseNextDecl(CurDecl).NextDecl;
+    bool ShouldChangeDecl = !isa<TemplateTemplateParmDecl>(CurDecl);
+    if (ShouldChangeDecl)
+      CurDecl = DC ? Decl::castFromDeclContext(DC)
+                   : Response::UseNextDecl(CurDecl).NextDecl;
   }
 
   while (!CurDecl->isFileContextDecl()) {
@@ -3242,15 +3243,13 @@ bool Sema::SubstDefaultArgument(
           /*ForDefinition*/ false);
       if (addInstantiatedParametersToScope(FD, PatternFD, *LIS, TemplateArgs))
         return true;
-      const FunctionTemplateDecl *PrimaryTemplate = FD->getPrimaryTemplate();
-      if (PrimaryTemplate && PrimaryTemplate->isOutOfLine()) {
-        TemplateArgumentList *CurrentTemplateArgumentList =
-            TemplateArgumentList::CreateCopy(getASTContext(),
-                                             TemplateArgs.getInnermost());
+      // FIXME: Investigate if we shall validate every FunctionTemplateDecl
+      // along the getInstantiatedFromMemberTemplate() chain.
+      if (auto *PrimaryTemplate = FD->getPrimaryTemplate();
+          PrimaryTemplate && PrimaryTemplate->isOutOfLine())
         NewTemplateArgs = getTemplateInstantiationArgs(
             FD, FD->getDeclContext(), /*Final=*/false,
-            CurrentTemplateArgumentList->asArray(), /*RelativeToPrimary=*/true);
-      }
+            TemplateArgs.getInnermost(), /*RelativeToPrimary=*/true);
     }
 
     runWithSufficientStackSpace(Loc, [&] {
