@@ -32,6 +32,7 @@ function(add_unittest_framework_library name)
   _get_hermetic_test_compile_options(compile_options -nostdinc++)
   target_include_directories(${name}.hermetic PRIVATE ${LIBC_BUILD_DIR}/include)
   target_compile_options(${name}.hermetic PRIVATE ${compile_options})
+  target_compile_definitions(${name}.hermetic PRIVATE LIBC_HERMETIC_TEST)
 
   if(TEST_LIB_DEPENDS)
     foreach(dep IN ITEMS ${TEST_LIB_DEPENDS})
