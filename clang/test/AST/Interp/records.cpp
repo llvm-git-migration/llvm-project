@@ -1596,3 +1596,34 @@ namespace VirtDtor {
   static_assert(virt_dtor(0, "ZYX"));
 }
 #endif
+
+namespace DtorDestroysFieldsAfterSelf {
+    struct  S {
+      int a = 10;
+      constexpr ~S() {
+        a = 0;
+      }
+
+    };
+    struct F {
+      S s;
+      int a;
+      int &b;
+      constexpr F(int a, int &b) : a(a), b(b) {}
+      constexpr ~F() {
+        b += s.a;
+      }
+    };
+
+  constexpr int foo() {
+    int a = 10;
+    int b = 5;
+    {
+      F f(a, b);
+    }
+
+    return b;
+  }
+
+  static_assert(foo() == 15);
+}
