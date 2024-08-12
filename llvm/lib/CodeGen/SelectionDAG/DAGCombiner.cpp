@@ -3753,6 +3753,51 @@ SDValue DAGCombiner::foldSubToUSubSat(EVT DstVT, SDNode *N, const SDLoc &DL) {
   return SDValue();
 }
 
+template <class MatchContextClass>
+static SDValue foldSubCtlzNot(SDNode *N, SelectionDAG &DAG) {
+  const SDLoc DL(N);
+  SDValue N0 = N->getOperand(0);
+  EVT VT = N0.getValueType();
+  unsigned BitWidth = VT.getScalarSizeInBits();
+
+  MatchContextClass Matcher(DAG, DAG.getTargetLoweringInfo(), N);
+
+  APInt AndMask;
+  APInt XorMask;
+  APInt BitWidthDiff;
+
+  SDValue CtlzOp;
+  SDValue Src;
+
+  if (!sd_context_match(
+          N, Matcher,
+          m_Sub(m_Node(ISD::CTLZ, m_Value(CtlzOp)), m_ConstInt(BitWidthDiff))))
+    return SDValue();
+
+  if (sd_context_match(CtlzOp, Matcher, m_ZExt(m_Not(m_Value(Src))))) {
+    // (sub (ctlz (zero_extend (xor -1 Op)) "24"))
+    if ((BitWidth - Src.getValueType().getScalarSizeInBits()) != BitWidthDiff)
+      return SDValue();
+
+    Src = DAG.getNode(ISD::ANY_EXTEND, DL, VT, Src);
+  } else if (sd_context_match(CtlzOp, Matcher,
+                              m_And(m_Xor(m_Value(Src), m_ConstInt(XorMask)),
+                                    m_ConstInt(AndMask)))) {
+    // (sub (ctlz (and (xor -1 Op) Mask)) "24")
+    unsigned AndMaskWidth = BitWidth - BitWidthDiff.getZExtValue();
+    if (!(AndMask.isMask(AndMaskWidth) && XorMask.countr_one() >= AndMaskWidth))
+      return SDValue();
+  } else
+    return SDValue();
+
+  SDValue ShiftConst = DAG.getShiftAmountConstant(BitWidthDiff, VT, DL);
+  SDValue LShift = Matcher.getNode(ISD::SHL, DL, VT, Src, ShiftConst);
+  SDValue Not =
+      Matcher.getNode(ISD::XOR, DL, VT, LShift, DAG.getAllOnesConstant(DL, VT));
+
+  return Matcher.getNode(ISD::CTLZ_ZERO_UNDEF, DL, VT, Not);
+}
+
 // Since it may not be valid to emit a fold to zero for vector initializers
 // check if we can before folding.
 static SDValue tryFoldToZero(const SDLoc &DL, const TargetLowering &TLI, EVT VT,
@@ -3776,6 +3821,9 @@ SDValue DAGCombiner::visitSUB(SDNode *N) {
       return N->getOperand(0);
     return N;
   };
+
+  if (SDValue V = foldSubCtlzNot<EmptyMatchContext>(N, DAG))
+    return V;
 
   // fold (sub x, x) -> 0
   // FIXME: Refactor this and xor and other similar operations together.
@@ -26767,6 +26815,8 @@ SDValue DAGCombiner::visitVPOp(SDNode *N) {
       return visitVP_SELECT(N);
     case ISD::VP_MUL:
       return visitMUL<VPMatchContext>(N);
+    case ISD::VP_SUB:
+      return foldSubCtlzNot<VPMatchContext>(N, DAG);
     default:
       break;
     }
