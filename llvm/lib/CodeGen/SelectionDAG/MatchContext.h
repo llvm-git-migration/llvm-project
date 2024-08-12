@@ -46,6 +46,8 @@ public:
                                 bool LegalOnly = false) const {
     return TLI.isOperationLegalOrCustom(Op, VT, LegalOnly);
   }
+
+  static constexpr bool IsVP = false;
 };
 
 class VPMatchContext {
@@ -170,6 +172,8 @@ public:
     unsigned VPOp = ISD::getVPForBaseOpcode(Op);
     return TLI.isOperationLegalOrCustom(VPOp, VT, LegalOnly);
   }
+
+  static constexpr bool IsVP = true;
 };
 } // end anonymous namespace
 #endif
