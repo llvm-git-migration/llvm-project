@@ -5594,9 +5594,7 @@ bool Sema::CheckTemplateArgumentList(
 
     MultiLevelTemplateArgumentList MLTAL = getTemplateInstantiationArgs(
         Template, NewContext, /*Final=*/false, CanonicalConverted,
-        /*RelativeToPrimary=*/true,
-        /*Pattern=*/nullptr,
-        /*ForConceptInstantiation=*/true);
+        /*RelativeToPrimary=*/true, /*ForConceptInstantiation=*/true);
     if (EnsureTemplateArgumentListConstraints(
             Template, MLTAL,
             SourceRange(TemplateLoc, TemplateArgs.getRAngleLoc()))) {
