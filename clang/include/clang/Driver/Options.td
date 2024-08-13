@@ -1981,7 +1981,7 @@ def fparse_all_comments : Flag<["-"], "fparse-all-comments">, Group<f_clang_Grou
   Visibility<[ClangOption, CC1Option]>,
   MarshallingInfoFlag<LangOpts<"CommentOpts.ParseAllComments">>;
 def frecord_command_line : Flag<["-"], "frecord-command-line">,
-  DocBrief<[{Generate a section named ".GCC.command.line" containing the clang
+  DocBrief<[{Generate a section named ".GCC.command.line" containing the
 driver command-line. After linking, the section may contain multiple command
 lines, which will be individually terminated by null bytes. Separate arguments
 within a command line are combined with spaces; spaces and backslashes within an
