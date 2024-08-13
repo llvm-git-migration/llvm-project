@@ -498,7 +498,8 @@ struct ElementwiseOpFusionResult {
   Operation *fusedOp;
   llvm::DenseMap<Value, Value> replacements;
   static llvm::SmallDenseSet<int>
-  getPreservedProducerResults(GenericOp producer, GenericOp consumer);
+  getPreservedProducerResults(GenericOp producer, GenericOp consumer,
+                              OpOperand *fusedOperand);
 };
 FailureOr<ElementwiseOpFusionResult>
 fuseElementwiseOps(RewriterBase &rewriter, OpOperand *fusedOperand);
