@@ -39,9 +39,8 @@ define i32 @length2(ptr %X, ptr %Y) nounwind {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldrh w8, [x0]
 ; CHECK-NEXT:    ldrh w9, [x1]
-; CHECK-NEXT:    rev w8, w8
+; CHECK-NEXT:    rev16 w8, w8
 ; CHECK-NEXT:    rev w9, w9
-; CHECK-NEXT:    lsr w8, w8, #16
 ; CHECK-NEXT:    sub w0, w8, w9, lsr #16
 ; CHECK-NEXT:    ret
   %m = tail call i32 @memcmp(ptr %X, ptr %Y, i64 2) nounwind
@@ -93,9 +92,8 @@ define i1 @length2_lt(ptr %X, ptr %Y) nounwind {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldrh w8, [x0]
 ; CHECK-NEXT:    ldrh w9, [x1]
-; CHECK-NEXT:    rev w8, w8
+; CHECK-NEXT:    rev16 w8, w8
 ; CHECK-NEXT:    rev w9, w9
-; CHECK-NEXT:    lsr w8, w8, #16
 ; CHECK-NEXT:    sub w8, w8, w9, lsr #16
 ; CHECK-NEXT:    lsr w0, w8, #31
 ; CHECK-NEXT:    ret
@@ -109,9 +107,8 @@ define i1 @length2_gt(ptr %X, ptr %Y) nounwind {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldrh w8, [x0]
 ; CHECK-NEXT:    ldrh w9, [x1]
-; CHECK-NEXT:    rev w8, w8
+; CHECK-NEXT:    rev16 w8, w8
 ; CHECK-NEXT:    rev w9, w9
-; CHECK-NEXT:    lsr w8, w8, #16
 ; CHECK-NEXT:    sub w8, w8, w9, lsr #16
 ; CHECK-NEXT:    cmp w8, #0
 ; CHECK-NEXT:    cset w0, gt
@@ -536,10 +533,8 @@ define i32 @length10(ptr %X, ptr %Y) nounwind {
 ; CHECK-NEXT:  // %bb.1: // %loadbb1
 ; CHECK-NEXT:    ldrh w8, [x0, #8]
 ; CHECK-NEXT:    ldrh w9, [x1, #8]
-; CHECK-NEXT:    rev w8, w8
-; CHECK-NEXT:    rev w9, w9
-; CHECK-NEXT:    lsr w8, w8, #16
-; CHECK-NEXT:    lsr w9, w9, #16
+; CHECK-NEXT:    rev16 w8, w8
+; CHECK-NEXT:    rev16 w9, w9
 ; CHECK-NEXT:    cmp x8, x9
 ; CHECK-NEXT:    b.ne .LBB32_3
 ; CHECK-NEXT:  // %bb.2:

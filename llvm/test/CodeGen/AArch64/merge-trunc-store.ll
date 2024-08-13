@@ -10,8 +10,7 @@ define void @le_i16_to_i8(i16 %x, ptr %p0) {
 ;
 ; BE-LABEL: le_i16_to_i8:
 ; BE:       // %bb.0:
-; BE-NEXT:    rev w8, w0
-; BE-NEXT:    lsr w8, w8, #16
+; BE-NEXT:    rev16 w8, w0
 ; BE-NEXT:    strh w8, [x1]
 ; BE-NEXT:    ret
   %sh1 = lshr i16 %x, 8
@@ -31,8 +30,7 @@ define void @le_i16_to_i8_order(i16 %x, ptr %p0) {
 ;
 ; BE-LABEL: le_i16_to_i8_order:
 ; BE:       // %bb.0:
-; BE-NEXT:    rev w8, w0
-; BE-NEXT:    lsr w8, w8, #16
+; BE-NEXT:    rev16 w8, w0
 ; BE-NEXT:    strh w8, [x1]
 ; BE-NEXT:    ret
   %sh1 = lshr i16 %x, 8
@@ -47,8 +45,7 @@ define void @le_i16_to_i8_order(i16 %x, ptr %p0) {
 define void @be_i16_to_i8_offset(i16 %x, ptr %p0) {
 ; LE-LABEL: be_i16_to_i8_offset:
 ; LE:       // %bb.0:
-; LE-NEXT:    rev w8, w0
-; LE-NEXT:    lsr w8, w8, #16
+; LE-NEXT:    rev16 w8, w0
 ; LE-NEXT:    sturh w8, [x1, #11]
 ; LE-NEXT:    ret
 ;
@@ -69,8 +66,7 @@ define void @be_i16_to_i8_offset(i16 %x, ptr %p0) {
 define void @be_i16_to_i8_order(i16 %x, ptr %p0) {
 ; LE-LABEL: be_i16_to_i8_order:
 ; LE:       // %bb.0:
-; LE-NEXT:    rev w8, w0
-; LE-NEXT:    lsr w8, w8, #16
+; LE-NEXT:    rev16 w8, w0
 ; LE-NEXT:    strh w8, [x1]
 ; LE-NEXT:    ret
 ;
