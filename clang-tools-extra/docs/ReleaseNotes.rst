@@ -108,6 +108,10 @@ Changes in existing checks
   <clang-tidy/checks/readability/redundant-smartptr-get>` check to
   remove `->`, when reduntant `get()` is removed.
 
+- Added option `UseUpperCaseSuffix` to :doc:`readablility-implicit-bool-conversion
+  <clang-tidy/checks/readability/implicit-bool-conversion>` check specify the
+  case of the explicit literal
+
 Removed checks
 ^^^^^^^^^^^^^^
 
