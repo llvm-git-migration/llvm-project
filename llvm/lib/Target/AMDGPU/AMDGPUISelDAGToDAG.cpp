@@ -1806,7 +1806,7 @@ bool AMDGPUDAGToDAGISel::SelectGlobalSAddr(SDNode *N,
       // instructions to perform VALU adds with immediates or inline literals.
       unsigned NumLiterals =
           !TII->isInlineConstant(APInt(32, COffsetVal & 0xffffffff)) +
-          !TII->isInlineConstant(APInt(32, COffsetVal >> 32));
+          !TII->isInlineConstant(APInt(32, uint64_t(COffsetVal) >> 32));
       if (Subtarget->getConstantBusLimit(AMDGPU::V_ADD_U32_e64) > NumLiterals)
         return false;
     }
