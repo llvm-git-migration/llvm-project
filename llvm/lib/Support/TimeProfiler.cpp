@@ -13,6 +13,7 @@
 #include "llvm/Support/TimeProfiler.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/Path.h"
@@ -70,23 +71,23 @@ using NameAndCountAndDurationType =
 
 /// Represents an open or completed time section entry to be captured.
 struct llvm::TimeTraceProfilerEntry {
-  const TimePointType Start;
+  TimePointType Start;
   TimePointType End;
-  const std::string Name;
+  std::string Name;
   TimeTraceMetadata Metadata;
+  TimeTraceEventType EventType;
 
-  const bool AsyncEvent = false;
   TimeTraceProfilerEntry(TimePointType &&S, TimePointType &&E, std::string &&N,
-                         std::string &&Dt, bool Ae)
+                         std::string &&Dt, TimeTraceEventType Et)
       : Start(std::move(S)), End(std::move(E)), Name(std::move(N)), Metadata(),
-        AsyncEvent(Ae) {
+        EventType(Et) {
     Metadata.Detail = std::move(Dt);
   }
 
   TimeTraceProfilerEntry(TimePointType &&S, TimePointType &&E, std::string &&N,
-                         TimeTraceMetadata &&Mt, bool Ae)
+                         TimeTraceMetadata &&Mt, TimeTraceEventType Et)
       : Start(std::move(S)), End(std::move(E)), Name(std::move(N)),
-        Metadata(std::move(Mt)), AsyncEvent(Ae) {}
+        Metadata(std::move(Mt)), EventType(Et) {}
 
   // Calculate timings for FlameGraph. Cast time points to microsecond precision
   // rather than casting duration. This avoids truncation issues causing inner
@@ -116,19 +117,19 @@ struct llvm::TimeTraceProfiler {
 
   TimeTraceProfilerEntry *begin(std::string Name,
                                 llvm::function_ref<std::string()> Detail,
-                                bool AsyncEvent = false) {
+                                TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
     Stack.emplace_back(std::make_unique<TimeTraceProfilerEntry>(
         ClockType::now(), TimePointType(), std::move(Name), Detail(),
-        AsyncEvent));
+        Et));
     return Stack.back().get();
   }
 
   TimeTraceProfilerEntry *
   begin(std::string Name, llvm::function_ref<TimeTraceMetadata()> Metadata,
-        bool AsyncEvent = false) {
+        TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
     Stack.emplace_back(std::make_unique<TimeTraceProfilerEntry>(
         ClockType::now(), TimePointType(), std::move(Name), Metadata(),
-        AsyncEvent));
+        Et));
     return Stack.back().get();
   }
 
@@ -144,9 +145,22 @@ struct llvm::TimeTraceProfiler {
     // Calculate duration at full precision for overall counts.
     DurationType Duration = E.End - E.Start;
 
-    // Only include sections longer or equal to TimeTraceGranularity msec.
-    if (duration_cast<microseconds>(Duration).count() >= TimeTraceGranularity)
+    // Only include Instant Events or events with a duration longer or equal to
+    // TimeTraceGranularity msec.
+    if (E.EventType == TimeTraceEventType::InstantEvent ||
+        duration_cast<microseconds>(Duration).count() >= TimeTraceGranularity) {
       Entries.emplace_back(E);
+    } else {
+      // if the event is not included, exclude also all instant events that
+      // happened during this event.
+      for (SmallVector<TimeTraceProfilerEntry, 128>::iterator it = Entries.begin(); it != Entries.end();) {
+        if (TimeTraceEventType::InstantEvent == it->EventType &&
+            it->Start > E.Start && it->Start < E.End)
+          it = Entries.erase(it);
+        else
+          ++it;
+      }
+    }
 
     // Track total time taken by each "name", but only the topmost levels of
     // them; e.g. if there's a template instantiation that instantiates other
@@ -194,13 +208,15 @@ struct llvm::TimeTraceProfiler {
         J.attribute("pid", Pid);
         J.attribute("tid", int64_t(Tid));
         J.attribute("ts", StartUs);
-        if (E.AsyncEvent) {
+        if (E.EventType == TimeTraceEventType::AsyncEvent) {
           J.attribute("cat", E.Name);
           J.attribute("ph", "b");
           J.attribute("id", 0);
-        } else {
+        } else if (E.EventType == TimeTraceEventType::CompleteEvent) {
           J.attribute("ph", "X");
           J.attribute("dur", DurUs);
+        } else { // instant event
+          J.attribute("ph", "i");
         }
         J.attribute("name", E.Name);
         if (!E.Metadata.isEmpty()) {
@@ -215,7 +231,7 @@ struct llvm::TimeTraceProfiler {
         }
       });
 
-      if (E.AsyncEvent) {
+      if (E.EventType == TimeTraceEventType::AsyncEvent) {
         J.object([&] {
           J.attribute("pid", Pid);
           J.attribute("tid", int64_t(Tid));
@@ -406,7 +422,7 @@ TimeTraceProfilerEntry *llvm::timeTraceProfilerBegin(StringRef Name,
                                                      StringRef Detail) {
   if (TimeTraceProfilerInstance != nullptr)
     return TimeTraceProfilerInstance->begin(
-        std::string(Name), [&]() { return std::string(Detail); }, false);
+        std::string(Name), [&]() { return std::string(Detail); }, TimeTraceEventType::CompleteEvent);
   return nullptr;
 }
 
@@ -414,7 +430,7 @@ TimeTraceProfilerEntry *
 llvm::timeTraceProfilerBegin(StringRef Name,
                              llvm::function_ref<std::string()> Detail) {
   if (TimeTraceProfilerInstance != nullptr)
-    return TimeTraceProfilerInstance->begin(std::string(Name), Detail, false);
+    return TimeTraceProfilerInstance->begin(std::string(Name), Detail, TimeTraceEventType::CompleteEvent);
   return nullptr;
 }
 
@@ -422,7 +438,15 @@ TimeTraceProfilerEntry *
 llvm::timeTraceProfilerBegin(StringRef Name,
                              llvm::function_ref<TimeTraceMetadata()> Metadata) {
   if (TimeTraceProfilerInstance != nullptr)
-    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, false);
+    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, TimeTraceEventType::CompleteEvent);
+  return nullptr;
+}
+
+TimeTraceProfilerEntry *
+llvm::timeTraceInstantEventProfilerBegin(StringRef Name,
+                             llvm::function_ref<TimeTraceMetadata()> Metadata) {
+  if (TimeTraceProfilerInstance != nullptr)
+    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, TimeTraceEventType::InstantEvent);
   return nullptr;
 }
 
@@ -430,7 +454,7 @@ TimeTraceProfilerEntry *llvm::timeTraceAsyncProfilerBegin(StringRef Name,
                                                           StringRef Detail) {
   if (TimeTraceProfilerInstance != nullptr)
     return TimeTraceProfilerInstance->begin(
-        std::string(Name), [&]() { return std::string(Detail); }, true);
+        std::string(Name), [&]() { return std::string(Detail); }, TimeTraceEventType::AsyncEvent);
   return nullptr;
 }
 
