@@ -19,8 +19,10 @@ namespace LIBC_NAMESPACE_DECL {
 class FreeTrie : public FreeList2 {
 public:
   // Power-of-two range of sizes covered by a subtrie.
-  class SizeRange {
-  public:
+  struct SizeRange {
+    size_t min;
+    size_t width;
+
     SizeRange(size_t min, size_t width);
 
     /// @returns The lower half of the size range.
@@ -33,10 +35,6 @@ public:
     size_t middle() const;
 
     bool contains(size_t size) const;
-
-  private:
-    size_t min;
-    size_t width;
   };
 
   /// Push to the back of this node's free list.
@@ -50,7 +48,13 @@ public:
   /// SizeRange for this trie; the trie does not store it.
   static FreeTrie *&find(FreeTrie *&trie, size_t size, SizeRange range);
 
+  static FreeTrie **find_best_fit(FreeTrie *&trie, size_t size,
+                                  SizeRange range);
+
 private:
+  /// Return the smallest-sized free list in the trie.
+  static FreeTrie *&smallest(FreeTrie *&trie);
+
   /// Return an abitrary leaf.
   FreeTrie &leaf();
 
@@ -102,7 +106,7 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
   FreeList2::pop(list);
   FreeTrie *new_trie = static_cast<FreeTrie *>(list);
   if (new_trie) {
-    // The freelist is non-empty, so copy the trie links to the new head. 
+    // The freelist is non-empty, so copy the trie links to the new head.
     new_trie->lower = trie->lower;
     new_trie->upper = trie->upper;
     trie = new_trie;
@@ -127,17 +131,70 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
 
 FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
-  if (!trie || trie->size() == size)
-    return trie;
-  return find(size <= range.middle() ? trie->lower : trie->upper, size,
-              size <= range.middle() ? range.lower() : range.upper());
+  FreeTrie **cur = &trie;
+  while (*cur && (*cur)->size() != size) {
+    LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+    if (size <= range.middle()) {
+      cur = &(*cur)->lower;
+      range = range.lower();
+    } else {
+      cur = &(*cur)->upper;
+      range = range.upper();
+    }
+  }
+  return *cur;
+}
+
+FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
+                                   SizeRange range) {
+  LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+  FreeTrie **cur = &trie;
+  FreeTrie **skipped_upper_trie = nullptr;
+
+  // Inductively assume the best fit is in this subtrie.
+  while (*cur) {
+    LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+    size_t cur_size = (*cur)->size();
+    if (cur_size == size)
+      return cur;
+    if (size <= range.middle()) {
+      // The lower subtrie has the requested size in its range. So, if it has at
+      // least one larger entry, the best fit is in the lower subtrie. But if
+      // the lower subtrie contains only smaller sizes, the best fit is in the
+      // larger trie. So keep track of it.
+      if ((*cur)->upper)
+        skipped_upper_trie = &(*cur)->upper;
+      cur = &(*cur)->lower;
+      range = range.lower();
+    } else {
+      // The lower child is too small, so the best fit is in the upper subtrie.
+      cur = &(*cur)->upper;
+      range = range.upper();
+    }
+  }
+
+  // A lower subtrie contained size in its range, but it had only entries
+  // smaller than size. Accordingly, the best fit is the smallest entry in the
+  // corresponding upper subtrie.
+  return &FreeTrie::smallest(*skipped_upper_trie);
 }
 
 FreeTrie &FreeTrie::leaf() {
-  FreeTrie *t = this;
-  while (t->lower || t->upper)
-    t = t->lower ? t->lower : t->upper;
-  return *t;
+  FreeTrie *cur = this;
+  while (cur->lower || cur->upper)
+    cur = cur->lower ? cur->lower : cur->upper;
+  return *cur;
+}
+
+FreeTrie *&FreeTrie::smallest(FreeTrie *&trie) {
+  FreeTrie **cur = &trie;
+  FreeTrie **ret = nullptr;
+  while (*cur) {
+    if (!ret || (*cur)->size() < (*ret)->size())
+      ret = cur;
+    cur = (*cur)->lower ? &(*cur)->lower : &(*cur)->upper;
+  }
+  return *ret;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
