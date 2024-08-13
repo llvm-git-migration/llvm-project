@@ -2165,3 +2165,363 @@ define signext i32 @fcvt_h_wu_demanded_bits(i32 signext %0, ptr %1) strictfp {
   store half %4, ptr %1, align 2
   ret i32 %3
 }
+
+define dso_local void @int_uint_to_half(i32 noundef %p1, i32 noundef %p2) {
+; CHECKIZFH-LABEL: int_uint_to_half:
+; CHECKIZFH:       # %bb.0: # %entry
+; CHECKIZFH-NEXT:    addi sp, sp, -16
+; CHECKIZFH-NEXT:    .cfi_def_cfa_offset 16
+; CHECKIZFH-NEXT:    sw a0, 12(sp)
+; CHECKIZFH-NEXT:    sw a1, 8(sp)
+; CHECKIZFH-NEXT:    fcvt.h.w fa5, a0
+; CHECKIZFH-NEXT:    fsh fa5, 6(sp)
+; CHECKIZFH-NEXT:    fcvt.h.wu fa5, a1
+; CHECKIZFH-NEXT:    fsh fa5, 4(sp)
+; CHECKIZFH-NEXT:    addi sp, sp, 16
+; CHECKIZFH-NEXT:    ret
+;
+; CHECKIZHINX-LABEL: int_uint_to_half:
+; CHECKIZHINX:       # %bb.0: # %entry
+; CHECKIZHINX-NEXT:    addi sp, sp, -16
+; CHECKIZHINX-NEXT:    .cfi_def_cfa_offset 16
+; CHECKIZHINX-NEXT:    sw a0, 12(sp)
+; CHECKIZHINX-NEXT:    sw a1, 8(sp)
+; CHECKIZHINX-NEXT:    fcvt.h.w a0, a0
+; CHECKIZHINX-NEXT:    sh a0, 6(sp)
+; CHECKIZHINX-NEXT:    fcvt.h.wu a0, a1
+; CHECKIZHINX-NEXT:    sh a0, 4(sp)
+; CHECKIZHINX-NEXT:    addi sp, sp, 16
+; CHECKIZHINX-NEXT:    ret
+;
+; RV32IDZFH-LABEL: int_uint_to_half:
+; RV32IDZFH:       # %bb.0: # %entry
+; RV32IDZFH-NEXT:    addi sp, sp, -16
+; RV32IDZFH-NEXT:    .cfi_def_cfa_offset 16
+; RV32IDZFH-NEXT:    sw a0, 12(sp)
+; RV32IDZFH-NEXT:    sw a1, 8(sp)
+; RV32IDZFH-NEXT:    fcvt.h.w fa5, a0
+; RV32IDZFH-NEXT:    fsh fa5, 6(sp)
+; RV32IDZFH-NEXT:    fcvt.h.wu fa5, a1
+; RV32IDZFH-NEXT:    fsh fa5, 4(sp)
+; RV32IDZFH-NEXT:    addi sp, sp, 16
+; RV32IDZFH-NEXT:    ret
+;
+; RV64IDZFH-LABEL: int_uint_to_half:
+; RV64IDZFH:       # %bb.0: # %entry
+; RV64IDZFH-NEXT:    addi sp, sp, -16
+; RV64IDZFH-NEXT:    .cfi_def_cfa_offset 16
+; RV64IDZFH-NEXT:    sw a0, 12(sp)
+; RV64IDZFH-NEXT:    sw a1, 8(sp)
+; RV64IDZFH-NEXT:    fcvt.h.w fa5, a0
+; RV64IDZFH-NEXT:    fsh fa5, 6(sp)
+; RV64IDZFH-NEXT:    fcvt.h.wu fa5, a1
+; RV64IDZFH-NEXT:    fsh fa5, 4(sp)
+; RV64IDZFH-NEXT:    addi sp, sp, 16
+; RV64IDZFH-NEXT:    ret
+;
+; RV32IZDINXZHINX-LABEL: int_uint_to_half:
+; RV32IZDINXZHINX:       # %bb.0: # %entry
+; RV32IZDINXZHINX-NEXT:    addi sp, sp, -16
+; RV32IZDINXZHINX-NEXT:    .cfi_def_cfa_offset 16
+; RV32IZDINXZHINX-NEXT:    sw a0, 12(sp)
+; RV32IZDINXZHINX-NEXT:    sw a1, 8(sp)
+; RV32IZDINXZHINX-NEXT:    fcvt.h.w a0, a0
+; RV32IZDINXZHINX-NEXT:    sh a0, 6(sp)
+; RV32IZDINXZHINX-NEXT:    fcvt.h.wu a0, a1
+; RV32IZDINXZHINX-NEXT:    sh a0, 4(sp)
+; RV32IZDINXZHINX-NEXT:    addi sp, sp, 16
+; RV32IZDINXZHINX-NEXT:    ret
+;
+; RV64IZDINXZHINX-LABEL: int_uint_to_half:
+; RV64IZDINXZHINX:       # %bb.0: # %entry
+; RV64IZDINXZHINX-NEXT:    addi sp, sp, -16
+; RV64IZDINXZHINX-NEXT:    .cfi_def_cfa_offset 16
+; RV64IZDINXZHINX-NEXT:    sw a0, 12(sp)
+; RV64IZDINXZHINX-NEXT:    sw a1, 8(sp)
+; RV64IZDINXZHINX-NEXT:    fcvt.h.w a0, a0
+; RV64IZDINXZHINX-NEXT:    sh a0, 6(sp)
+; RV64IZDINXZHINX-NEXT:    fcvt.h.wu a0, a1
+; RV64IZDINXZHINX-NEXT:    sh a0, 4(sp)
+; RV64IZDINXZHINX-NEXT:    addi sp, sp, 16
+; RV64IZDINXZHINX-NEXT:    ret
+;
+; CHECK32-IZFHMIN-LABEL: int_uint_to_half:
+; CHECK32-IZFHMIN:       # %bb.0: # %entry
+; CHECK32-IZFHMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZFHMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZFHMIN-NEXT:    sw a0, 12(sp)
+; CHECK32-IZFHMIN-NEXT:    sw a1, 8(sp)
+; CHECK32-IZFHMIN-NEXT:    fcvt.s.w fa5, a0
+; CHECK32-IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
+; CHECK32-IZFHMIN-NEXT:    fsh fa5, 6(sp)
+; CHECK32-IZFHMIN-NEXT:    fcvt.s.wu fa5, a1
+; CHECK32-IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
+; CHECK32-IZFHMIN-NEXT:    fsh fa5, 4(sp)
+; CHECK32-IZFHMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZFHMIN-NEXT:    ret
+;
+; CHECK64-IZFHMIN-LABEL: int_uint_to_half:
+; CHECK64-IZFHMIN:       # %bb.0: # %entry
+; CHECK64-IZFHMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZFHMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZFHMIN-NEXT:    slli a2, a1, 32
+; CHECK64-IZFHMIN-NEXT:    srli a2, a2, 32
+; CHECK64-IZFHMIN-NEXT:    sext.w a3, a0
+; CHECK64-IZFHMIN-NEXT:    sw a0, 12(sp)
+; CHECK64-IZFHMIN-NEXT:    sw a1, 8(sp)
+; CHECK64-IZFHMIN-NEXT:    fcvt.s.l fa5, a3
+; CHECK64-IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
+; CHECK64-IZFHMIN-NEXT:    fsh fa5, 6(sp)
+; CHECK64-IZFHMIN-NEXT:    fcvt.s.lu fa5, a2
+; CHECK64-IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
+; CHECK64-IZFHMIN-NEXT:    fsh fa5, 4(sp)
+; CHECK64-IZFHMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZFHMIN-NEXT:    ret
+;
+; CHECK32-IZHINXMIN-LABEL: int_uint_to_half:
+; CHECK32-IZHINXMIN:       # %bb.0: # %entry
+; CHECK32-IZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZHINXMIN-NEXT:    sw a0, 12(sp)
+; CHECK32-IZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK32-IZHINXMIN-NEXT:    fcvt.s.w a0, a0
+; CHECK32-IZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK32-IZHINXMIN-NEXT:    sh a0, 6(sp)
+; CHECK32-IZHINXMIN-NEXT:    fcvt.s.wu a0, a1
+; CHECK32-IZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK32-IZHINXMIN-NEXT:    sh a0, 4(sp)
+; CHECK32-IZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZHINXMIN-NEXT:    ret
+;
+; CHECK64-IZHINXMIN-LABEL: int_uint_to_half:
+; CHECK64-IZHINXMIN:       # %bb.0: # %entry
+; CHECK64-IZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZHINXMIN-NEXT:    slli a2, a1, 32
+; CHECK64-IZHINXMIN-NEXT:    srli a2, a2, 32
+; CHECK64-IZHINXMIN-NEXT:    sext.w a3, a0
+; CHECK64-IZHINXMIN-NEXT:    sw a0, 12(sp)
+; CHECK64-IZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK64-IZHINXMIN-NEXT:    fcvt.s.l a0, a3
+; CHECK64-IZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK64-IZHINXMIN-NEXT:    sh a0, 6(sp)
+; CHECK64-IZHINXMIN-NEXT:    fcvt.s.lu a0, a2
+; CHECK64-IZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK64-IZHINXMIN-NEXT:    sh a0, 4(sp)
+; CHECK64-IZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZHINXMIN-NEXT:    ret
+;
+; CHECK32-IZDINXZHINXMIN-LABEL: int_uint_to_half:
+; CHECK32-IZDINXZHINXMIN:       # %bb.0: # %entry
+; CHECK32-IZDINXZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZDINXZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZDINXZHINXMIN-NEXT:    sw a0, 12(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.s.w a0, a0
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK32-IZDINXZHINXMIN-NEXT:    sh a0, 6(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.s.wu a0, a1
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK32-IZDINXZHINXMIN-NEXT:    sh a0, 4(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZDINXZHINXMIN-NEXT:    ret
+;
+; CHECK64-IZDINXZHINXMIN-LABEL: int_uint_to_half:
+; CHECK64-IZDINXZHINXMIN:       # %bb.0: # %entry
+; CHECK64-IZDINXZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZDINXZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZDINXZHINXMIN-NEXT:    slli a2, a1, 32
+; CHECK64-IZDINXZHINXMIN-NEXT:    srli a2, a2, 32
+; CHECK64-IZDINXZHINXMIN-NEXT:    sext.w a3, a0
+; CHECK64-IZDINXZHINXMIN-NEXT:    sw a0, 12(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.s.l a0, a3
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK64-IZDINXZHINXMIN-NEXT:    sh a0, 6(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.s.lu a0, a2
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.h.s a0, a0
+; CHECK64-IZDINXZHINXMIN-NEXT:    sh a0, 4(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZDINXZHINXMIN-NEXT:    ret
+entry:
+  %p1.addr = alloca i32, align 4
+  %p2.addr = alloca i32, align 4
+  %f1 = alloca half, align 2
+  %f2 = alloca half, align 2
+  store i32 %p1, ptr %p1.addr, align 4
+  store i32 %p2, ptr %p2.addr, align 4
+  %0 = load i32, ptr %p1.addr, align 4
+  %conv = call half @llvm.experimental.constrained.sitofp.f16.i32(i32 %0, metadata !"round.dynamic", metadata !"fpexcept.ignore") #2
+  store half %conv, ptr %f1, align 2
+  %1 = load i32, ptr %p2.addr, align 4
+  %conv1 = call half @llvm.experimental.constrained.uitofp.f16.i32(i32 %1, metadata !"round.dynamic", metadata !"fpexcept.ignore") #2
+  store half %conv1, ptr %f2, align 2
+  ret void
+}
+
+define dso_local void @half_to_int_uint(half noundef %p1) {
+; CHECKIZFH-LABEL: half_to_int_uint:
+; CHECKIZFH:       # %bb.0: # %entry
+; CHECKIZFH-NEXT:    addi sp, sp, -16
+; CHECKIZFH-NEXT:    .cfi_def_cfa_offset 16
+; CHECKIZFH-NEXT:    fsh fa0, 14(sp)
+; CHECKIZFH-NEXT:    fcvt.w.h a0, fa0, rtz
+; CHECKIZFH-NEXT:    sw a0, 8(sp)
+; CHECKIZFH-NEXT:    fcvt.wu.h a0, fa0, rtz
+; CHECKIZFH-NEXT:    sw a0, 4(sp)
+; CHECKIZFH-NEXT:    addi sp, sp, 16
+; CHECKIZFH-NEXT:    ret
+;
+; CHECKIZHINX-LABEL: half_to_int_uint:
+; CHECKIZHINX:       # %bb.0: # %entry
+; CHECKIZHINX-NEXT:    addi sp, sp, -16
+; CHECKIZHINX-NEXT:    .cfi_def_cfa_offset 16
+; CHECKIZHINX-NEXT:    sh a0, 14(sp)
+; CHECKIZHINX-NEXT:    fcvt.w.h a1, a0, rtz
+; CHECKIZHINX-NEXT:    sw a1, 8(sp)
+; CHECKIZHINX-NEXT:    fcvt.wu.h a0, a0, rtz
+; CHECKIZHINX-NEXT:    sw a0, 4(sp)
+; CHECKIZHINX-NEXT:    addi sp, sp, 16
+; CHECKIZHINX-NEXT:    ret
+;
+; RV32IDZFH-LABEL: half_to_int_uint:
+; RV32IDZFH:       # %bb.0: # %entry
+; RV32IDZFH-NEXT:    addi sp, sp, -16
+; RV32IDZFH-NEXT:    .cfi_def_cfa_offset 16
+; RV32IDZFH-NEXT:    fsh fa0, 14(sp)
+; RV32IDZFH-NEXT:    fcvt.w.h a0, fa0, rtz
+; RV32IDZFH-NEXT:    sw a0, 8(sp)
+; RV32IDZFH-NEXT:    fcvt.wu.h a0, fa0, rtz
+; RV32IDZFH-NEXT:    sw a0, 4(sp)
+; RV32IDZFH-NEXT:    addi sp, sp, 16
+; RV32IDZFH-NEXT:    ret
+;
+; RV64IDZFH-LABEL: half_to_int_uint:
+; RV64IDZFH:       # %bb.0: # %entry
+; RV64IDZFH-NEXT:    addi sp, sp, -16
+; RV64IDZFH-NEXT:    .cfi_def_cfa_offset 16
+; RV64IDZFH-NEXT:    fsh fa0, 14(sp)
+; RV64IDZFH-NEXT:    fcvt.w.h a0, fa0, rtz
+; RV64IDZFH-NEXT:    sw a0, 8(sp)
+; RV64IDZFH-NEXT:    fcvt.wu.h a0, fa0, rtz
+; RV64IDZFH-NEXT:    sw a0, 4(sp)
+; RV64IDZFH-NEXT:    addi sp, sp, 16
+; RV64IDZFH-NEXT:    ret
+;
+; RV32IZDINXZHINX-LABEL: half_to_int_uint:
+; RV32IZDINXZHINX:       # %bb.0: # %entry
+; RV32IZDINXZHINX-NEXT:    addi sp, sp, -16
+; RV32IZDINXZHINX-NEXT:    .cfi_def_cfa_offset 16
+; RV32IZDINXZHINX-NEXT:    sh a0, 14(sp)
+; RV32IZDINXZHINX-NEXT:    fcvt.w.h a1, a0, rtz
+; RV32IZDINXZHINX-NEXT:    sw a1, 8(sp)
+; RV32IZDINXZHINX-NEXT:    fcvt.wu.h a0, a0, rtz
+; RV32IZDINXZHINX-NEXT:    sw a0, 4(sp)
+; RV32IZDINXZHINX-NEXT:    addi sp, sp, 16
+; RV32IZDINXZHINX-NEXT:    ret
+;
+; RV64IZDINXZHINX-LABEL: half_to_int_uint:
+; RV64IZDINXZHINX:       # %bb.0: # %entry
+; RV64IZDINXZHINX-NEXT:    addi sp, sp, -16
+; RV64IZDINXZHINX-NEXT:    .cfi_def_cfa_offset 16
+; RV64IZDINXZHINX-NEXT:    sh a0, 14(sp)
+; RV64IZDINXZHINX-NEXT:    fcvt.w.h a1, a0, rtz
+; RV64IZDINXZHINX-NEXT:    sw a1, 8(sp)
+; RV64IZDINXZHINX-NEXT:    fcvt.wu.h a0, a0, rtz
+; RV64IZDINXZHINX-NEXT:    sw a0, 4(sp)
+; RV64IZDINXZHINX-NEXT:    addi sp, sp, 16
+; RV64IZDINXZHINX-NEXT:    ret
+;
+; CHECK32-IZFHMIN-LABEL: half_to_int_uint:
+; CHECK32-IZFHMIN:       # %bb.0: # %entry
+; CHECK32-IZFHMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZFHMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZFHMIN-NEXT:    fsh fa0, 14(sp)
+; CHECK32-IZFHMIN-NEXT:    fcvt.s.h fa5, fa0
+; CHECK32-IZFHMIN-NEXT:    fcvt.w.s a0, fa5, rtz
+; CHECK32-IZFHMIN-NEXT:    sw a0, 8(sp)
+; CHECK32-IZFHMIN-NEXT:    fcvt.wu.s a0, fa5, rtz
+; CHECK32-IZFHMIN-NEXT:    sw a0, 4(sp)
+; CHECK32-IZFHMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZFHMIN-NEXT:    ret
+;
+; CHECK64-IZFHMIN-LABEL: half_to_int_uint:
+; CHECK64-IZFHMIN:       # %bb.0: # %entry
+; CHECK64-IZFHMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZFHMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZFHMIN-NEXT:    fsh fa0, 14(sp)
+; CHECK64-IZFHMIN-NEXT:    fcvt.s.h fa5, fa0
+; CHECK64-IZFHMIN-NEXT:    fcvt.w.s a0, fa5, rtz
+; CHECK64-IZFHMIN-NEXT:    sw a0, 8(sp)
+; CHECK64-IZFHMIN-NEXT:    fcvt.s.h fa5, fa0
+; CHECK64-IZFHMIN-NEXT:    fcvt.wu.s a0, fa5, rtz
+; CHECK64-IZFHMIN-NEXT:    sw a0, 4(sp)
+; CHECK64-IZFHMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZFHMIN-NEXT:    ret
+;
+; CHECK32-IZHINXMIN-LABEL: half_to_int_uint:
+; CHECK32-IZHINXMIN:       # %bb.0: # %entry
+; CHECK32-IZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZHINXMIN-NEXT:    sh a0, 14(sp)
+; CHECK32-IZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECK32-IZHINXMIN-NEXT:    fcvt.w.s a1, a0, rtz
+; CHECK32-IZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK32-IZHINXMIN-NEXT:    fcvt.wu.s a0, a0, rtz
+; CHECK32-IZHINXMIN-NEXT:    sw a0, 4(sp)
+; CHECK32-IZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZHINXMIN-NEXT:    ret
+;
+; CHECK64-IZHINXMIN-LABEL: half_to_int_uint:
+; CHECK64-IZHINXMIN:       # %bb.0: # %entry
+; CHECK64-IZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZHINXMIN-NEXT:    sh a0, 14(sp)
+; CHECK64-IZHINXMIN-NEXT:    fcvt.s.h a1, a0
+; CHECK64-IZHINXMIN-NEXT:    fcvt.w.s a1, a1, rtz
+; CHECK64-IZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK64-IZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECK64-IZHINXMIN-NEXT:    fcvt.wu.s a0, a0, rtz
+; CHECK64-IZHINXMIN-NEXT:    sw a0, 4(sp)
+; CHECK64-IZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZHINXMIN-NEXT:    ret
+;
+; CHECK32-IZDINXZHINXMIN-LABEL: half_to_int_uint:
+; CHECK32-IZDINXZHINXMIN:       # %bb.0: # %entry
+; CHECK32-IZDINXZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK32-IZDINXZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK32-IZDINXZHINXMIN-NEXT:    sh a0, 14(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.w.s a1, a0, rtz
+; CHECK32-IZDINXZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    fcvt.wu.s a0, a0, rtz
+; CHECK32-IZDINXZHINXMIN-NEXT:    sw a0, 4(sp)
+; CHECK32-IZDINXZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK32-IZDINXZHINXMIN-NEXT:    ret
+;
+; CHECK64-IZDINXZHINXMIN-LABEL: half_to_int_uint:
+; CHECK64-IZDINXZHINXMIN:       # %bb.0: # %entry
+; CHECK64-IZDINXZHINXMIN-NEXT:    addi sp, sp, -16
+; CHECK64-IZDINXZHINXMIN-NEXT:    .cfi_def_cfa_offset 16
+; CHECK64-IZDINXZHINXMIN-NEXT:    sh a0, 14(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.s.h a1, a0
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.w.s a1, a1, rtz
+; CHECK64-IZDINXZHINXMIN-NEXT:    sw a1, 8(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECK64-IZDINXZHINXMIN-NEXT:    fcvt.wu.s a0, a0, rtz
+; CHECK64-IZDINXZHINXMIN-NEXT:    sw a0, 4(sp)
+; CHECK64-IZDINXZHINXMIN-NEXT:    addi sp, sp, 16
+; CHECK64-IZDINXZHINXMIN-NEXT:    ret
+entry:
+  %p1.addr = alloca half, align 2
+  %i1 = alloca i32, align 4
+  %i2 = alloca i32, align 4
+  store half %p1, ptr %p1.addr, align 2
+  %0 = load half, ptr %p1.addr, align 2
+  %conv = call i32 @llvm.experimental.constrained.fptosi.i32.f16(half %0, metadata !"fpexcept.ignore") #2
+  store i32 %conv, ptr %i1, align 4
+  %1 = load half, ptr %p1.addr, align 2
+  %conv1 = call i32 @llvm.experimental.constrained.fptoui.i32.f16(half %1, metadata !"fpexcept.ignore") #2
+  store i32 %conv1, ptr %i2, align 4
+  ret void
+}
