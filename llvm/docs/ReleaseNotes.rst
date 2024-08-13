@@ -151,6 +151,11 @@ Changes to the C API
   * ``LLVMX86MMXTypeInContext``
   * ``LLVMX86MMXType``
 
+ * The following functions are added:
+
+  * ``LLVMGetNamedFunctionWithLength``
+  * ``LLVMGetNamedGlobalWithLength``
+
 Changes to the CodeGen infrastructure
 -------------------------------------
 
