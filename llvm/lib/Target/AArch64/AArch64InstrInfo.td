@@ -2825,9 +2825,9 @@ def : InstAlias<"rev64 $Rd, $Rn", (REVXr GPR64:$Rd, GPR64:$Rn), 0>;
 def : Pat<(bswap (rotr GPR32:$Rn, (i64 16))), (REV16Wr GPR32:$Rn)>;
 def : Pat<(bswap (rotr GPR64:$Rn, (i64 32))), (REV32Xr GPR64:$Rn)>;
 
-// Match (srl (bswap x), C) -> revC if the upper bswap bits are known zero.
-def : Pat<(srl (bswap top16Zero:$Rn), (i64 16)), (REV16Wr GPR32:$Rn)>;
-def : Pat<(srl (bswap top32Zero:$Rn), (i64 32)), (REV32Xr GPR64:$Rn)>;
+// Match (srl (bswap x), C) -> revC.
+def : Pat<(srl (bswap GPR32:$Rn), (i64 16)), (REV16Wr GPR32:$Rn)>;
+def : Pat<(srl (bswap GPR64:$Rn), (i64 32)), (REV32Xr GPR64:$Rn)>;
 
 def : Pat<(or (and (srl GPR64:$Rn, (i64 8)), (i64 0x00ff00ff00ff00ff)),
               (and (shl GPR64:$Rn, (i64 8)), (i64 0xff00ff00ff00ff00))),
