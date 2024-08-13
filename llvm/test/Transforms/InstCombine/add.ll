@@ -2008,6 +2008,23 @@ define i8 @mul_add_common_factor_use(i8 %x, i8 %y) {
   ret i8 %a
 }
 
+; negative test - avoid creating extra uses of args
+
+define i8 @mul_add_common_factor_use2(i8 %x, i8 %y, i8 %z) {
+; CHECK-LABEL: @mul_add_common_factor_use2(
+; CHECK-NEXT:    [[M:%.*]] = mul i8 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    call void @use(i8 [[M]])
+; CHECK-NEXT:    [[N1:%.*]] = add i8 [[Y]], [[Z:%.*]]
+; CHECK-NEXT:    [[A:%.*]] = mul i8 [[N1]], [[X]]
+; CHECK-NEXT:    ret i8 [[A]]
+;
+  %m = mul i8 %x, %y
+  %n = mul i8 %x, %z
+  call void @use(i8 %m)
+  %a = add i8 %m, %n
+  ret i8 %a
+}
+
 define i8 @not_mul(i8 %x) {
 ; CHECK-LABEL: @not_mul(
 ; CHECK-NEXT:    [[TMP1:%.*]] = mul i8 [[X:%.*]], -41
