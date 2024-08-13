@@ -703,3 +703,12 @@ def FlattenedThreadIdInGroup :  DXILOp<96, flattenedThreadIdInGroup> {
   let stages = [Stages<DXIL1_0, [compute, mesh, amplification, node]>];
   let attributes = [Attributes<DXIL1_0, [ReadNone]>];
 }
+
+def WaveIsFirstLane :  DXILOp<110, waveIsFirstLane> {
+  let Doc = "returns 1 for the first lane in the wave";
+  let LLVMIntrinsic = int_dx_wave_is_first_lane;
+  let arguments = [];
+  let result = i1Ty;
+  let stages = [Stages<DXIL1_0, [all_stages]>];
+  let attributes = [Attributes<DXIL1_0, [ReadNone]>];
+}

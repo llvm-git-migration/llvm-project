@@ -2132,6 +2132,14 @@ bool SPIRVInstructionSelector::selectIntrinsic(Register ResVReg,
       Size = 0;
     BuildMI(BB, I, I.getDebugLoc(), TII.get(Op)).addUse(PtrReg).addImm(Size);
   } break;
+  case Intrinsic::spv_wave_is_first_lane: {
+    SPIRVType *IntTy = GR.getOrCreateSPIRVIntegerType(32, I, TII);
+    return BuildMI(BB, I, I.getDebugLoc(),
+                   TII.get(SPIRV::OpGroupNonUniformElect))
+        .addDef(ResVReg)
+        .addUse(GR.getSPIRVTypeID(ResType))
+        .addUse(GR.getOrCreateConstInt(3, I, IntTy, TII));
+  }
   default: {
     std::string DiagMsg;
     raw_string_ostream OS(DiagMsg);
