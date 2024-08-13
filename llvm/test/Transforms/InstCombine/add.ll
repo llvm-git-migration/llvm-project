@@ -2013,9 +2013,9 @@ define i8 @mul_add_common_factor_use(i8 %x, i8 %y) {
 define i8 @mul_add_common_factor_use2(i8 %x, i8 %y, i8 %z) {
 ; CHECK-LABEL: @mul_add_common_factor_use2(
 ; CHECK-NEXT:    [[M:%.*]] = mul i8 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    [[N:%.*]] = mul i8 [[X]], [[Z:%.*]]
 ; CHECK-NEXT:    call void @use(i8 [[M]])
-; CHECK-NEXT:    [[N1:%.*]] = add i8 [[Y]], [[Z:%.*]]
-; CHECK-NEXT:    [[A:%.*]] = mul i8 [[N1]], [[X]]
+; CHECK-NEXT:    [[A:%.*]] = add i8 [[M]], [[N]]
 ; CHECK-NEXT:    ret i8 [[A]]
 ;
   %m = mul i8 %x, %y
