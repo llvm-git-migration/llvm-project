@@ -70,20 +70,56 @@ static AffineMap getIndexingMapOfProducerOperandsInCoordinatesOfFusedOp(
   return t1.compose(fusedConsumerArgIndexMap);
 }
 
+// Checks if the given operand can be dropped, and the remaining operands 
+// of the fused producer & consumer after the fusion can still compute the 
+// bounds of the op.
+static bool isOpOperandCanBeDroppedAfterFusedLinalgs(GenericOp producer,
+                                                     GenericOp consumer,
+                                                     ArrayRef<OpOperand *> opOperandsToIgnore) {
+  SmallVector<AffineMap> indexingMaps;
+
+  SmallVector<GenericOp> ops = {producer, consumer};
+  for (auto &op : ops) {
+    for (auto &opOperand : op->getOpOperands()) {
+      if (llvm::is_contained(opOperandsToIgnore, &opOperand)) {
+        continue;
+      }
+      indexingMaps.push_back(op.getMatchingIndexingMap(&opOperand));
+    }
+  }
+  
+  // The concatanation of the remained indexing maps must be invertible, so 
+  // the bounds of the op can be still computed after dropping the selected operand.
+  // inversePermutation returns an empty AffineMap in case the concatanated indexing
+  // maps are not invertible.
+  return inversePermutation(concatAffineMaps(indexingMaps)) != AffineMap();
+}
+
 /// Returns a set of indices of the producer's results which would
 /// be preserved after the fusion.
 llvm::SmallDenseSet<int>
 ElementwiseOpFusionResult::getPreservedProducerResults(GenericOp producer,
-                                                       GenericOp consumer) {
+                                                       GenericOp consumer,
+                                                       OpOperand *fusedOperand) {
   llvm::SmallDenseSet<int> preservedProducerResults;
+  llvm::SmallVector<OpOperand*> opOperandsToIgnore;
+  
+  // The fusedOperand will be removed during the fusion
+  opOperandsToIgnore.emplace_back(fusedOperand);
+
   for (const auto &producerResult : llvm::enumerate(producer->getResults())) {
     auto *outputOperand = producer.getDpsInitOperand(producerResult.index());
+    opOperandsToIgnore.emplace_back(outputOperand);
     if (producer.payloadUsesValueFromOperand(outputOperand) ||
-        !producer.canOpOperandsBeDropped(outputOperand) ||
+        !isOpOperandCanBeDroppedAfterFusedLinalgs(producer, consumer, 
+                                                  opOperandsToIgnore) ||
         llvm::any_of(producerResult.value().getUsers(), [&](Operation *user) {
           return user != consumer.getOperation();
         })) {
       preservedProducerResults.insert(producerResult.index());
+
+      // In case the operand can't be dropped
+      opOperandsToIgnore.pop_back_val();
     }
   }
   return preservedProducerResults;
@@ -303,7 +339,8 @@ mlir::linalg::fuseElementwiseOps(RewriterBase &rewriter,
   /// Find the results of the producer that have uses outside of the consumer.
   llvm::SmallDenseSet<int> preservedProducerResults =
       ElementwiseOpFusionResult::getPreservedProducerResults(producer,
-                                                             consumer);
+                                                             consumer,
+                                                             fusedOperand);
 
   // Compute the fused operands list and indexing maps.
   SmallVector<Value> fusedInputOperands, fusedOutputOperands;
