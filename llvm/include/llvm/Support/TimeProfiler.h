@@ -83,6 +83,8 @@ namespace llvm {
 
 class raw_pwrite_stream;
 
+enum class TimeTraceEventType { CompleteEvent, InstantEvent, AsyncEvent };
+
 struct TimeTraceMetadata {
   std::string Detail;
   // Source file and line number information for the event.
@@ -152,6 +154,10 @@ timeTraceProfilerBegin(StringRef Name,
 TimeTraceProfilerEntry *timeTraceAsyncProfilerBegin(StringRef Name,
                                                     StringRef Detail);
 
+// Mark an instant event.
+TimeTraceProfilerEntry *timeTraceInstantEventProfilerBegin(StringRef Name,
+                             llvm::function_ref<TimeTraceMetadata()> Metadata);
+
 /// Manually end the last time section.
 void timeTraceProfilerEnd();
 void timeTraceProfilerEnd(TimeTraceProfilerEntry *E);
@@ -181,9 +187,18 @@ public:
       Entry = timeTraceProfilerBegin(Name, Detail);
   }
   TimeTraceScope(StringRef Name,
-                 llvm::function_ref<TimeTraceMetadata()> Metadata) {
-    if (getTimeTraceProfilerInstance() != nullptr)
+                 llvm::function_ref<TimeTraceMetadata()> Metadata, TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
+    if (getTimeTraceProfilerInstance() == nullptr)
+      return;
+    assert((Et == TimeTraceEventType::InstantEvent ||
+            Et == TimeTraceEventType::CompleteEvent) &&
+           "Event Type not supported.");
+
+    if (Et == TimeTraceEventType::CompleteEvent) {
       Entry = timeTraceProfilerBegin(Name, Metadata);
+    } else {
+      Entry = timeTraceInstantEventProfilerBegin(Name, Metadata);
+    } 
   }
   ~TimeTraceScope() {
     if (getTimeTraceProfilerInstance() != nullptr)

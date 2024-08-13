@@ -18,6 +18,7 @@
 #include "clang/AST/ASTLambda.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/EvaluatedExprVisitor.h"
@@ -63,6 +64,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/SaveAndRestore.h"
+#include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/TypeSize.h"
 #include <optional>
 
@@ -18013,6 +18015,22 @@ void Sema::MarkFunctionReferenced(SourceLocation Loc, FunctionDecl *Func,
                 std::make_pair(Func, PointOfInstantiation));
             // Notify the consumer that a function was implicitly instantiated.
             Consumer.HandleCXXImplicitFunctionInstantiation(Func);
+
+            llvm::TimeTraceScope TimeScope(
+                "DeferInstantiation",
+                [&]() {
+                  llvm::TimeTraceMetadata M;
+                  llvm::raw_string_ostream OS(M.Detail);
+                  Func->getNameForDiagnostic(OS, getPrintingPolicy(),
+                                             /*Qualified=*/true);
+                  if (llvm::isTimeTraceVerbose()) {
+                    auto Loc = SourceMgr.getExpansionLoc(Func->getLocation());
+                    M.File = SourceMgr.getFilename(Loc);
+                    M.Line = SourceMgr.getExpansionLineNumber(Loc);
+                  }
+                  return M;
+                },
+                llvm::TimeTraceEventType::InstantEvent);
           }
         }
       } else {

@@ -4941,6 +4941,23 @@ void Sema::InstantiateFunctionDefinition(SourceLocation PointOfInstantiation,
       Function->setInstantiationIsPending(true);
       PendingInstantiations.push_back(
         std::make_pair(Function, PointOfInstantiation));
+
+      llvm::TimeTraceScope TimeScope(
+          "DeferInstantiation",
+          [&]() {
+            llvm::TimeTraceMetadata M;
+            llvm::raw_string_ostream OS(M.Detail);
+            Function->getNameForDiagnostic(OS, getPrintingPolicy(),
+                                           /*Qualified=*/true);
+            if (llvm::isTimeTraceVerbose()) {
+              auto Loc = SourceMgr.getExpansionLoc(Function->getLocation());
+              M.File = SourceMgr.getFilename(Loc);
+              M.Line = SourceMgr.getExpansionLineNumber(Loc);
+            }
+            return M;
+          },
+          llvm::TimeTraceEventType::InstantEvent);
+
     } else if (TSK == TSK_ImplicitInstantiation) {
       if (AtEndOfTU && !getDiagnostics().hasErrorOccurred() &&
           !getSourceManager().isInSystemHeader(PatternDecl->getBeginLoc())) {
