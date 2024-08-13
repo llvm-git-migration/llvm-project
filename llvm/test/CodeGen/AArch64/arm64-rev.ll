@@ -27,15 +27,13 @@ entry:
 define i32 @test_rev_w_srl16(i16 %a) {
 ; CHECK-SD-LABEL: test_rev_w_srl16:
 ; CHECK-SD:       // %bb.0: // %entry
-; CHECK-SD-NEXT:    rev w8, w0
-; CHECK-SD-NEXT:    lsr w0, w8, #16
+; CHECK-SD-NEXT:    rev16 w0, w0
 ; CHECK-SD-NEXT:    ret
 ;
 ; CHECK-GI-LABEL: test_rev_w_srl16:
 ; CHECK-GI:       // %bb.0: // %entry
 ; CHECK-GI-NEXT:    and w8, w0, #0xffff
-; CHECK-GI-NEXT:    rev w8, w8
-; CHECK-GI-NEXT:    lsr w0, w8, #16
+; CHECK-GI-NEXT:    rev16 w0, w8
 ; CHECK-GI-NEXT:    ret
 entry:
   %0 = zext i16 %a to i32
@@ -48,8 +46,7 @@ define i32 @test_rev_w_srl16_load(ptr %a) {
 ; CHECK-LABEL: test_rev_w_srl16_load:
 ; CHECK:       // %bb.0: // %entry
 ; CHECK-NEXT:    ldrh w8, [x0]
-; CHECK-NEXT:    rev w8, w8
-; CHECK-NEXT:    lsr w0, w8, #16
+; CHECK-NEXT:    rev16 w0, w8
 ; CHECK-NEXT:    ret
 entry:
   %0 = load i16, ptr %a
@@ -71,8 +68,7 @@ define i32 @test_rev_w_srl16_add(i8 %a, i8 %b) {
 ; CHECK-GI:       // %bb.0: // %entry
 ; CHECK-GI-NEXT:    and w8, w1, #0xff
 ; CHECK-GI-NEXT:    add w8, w8, w0, uxtb
-; CHECK-GI-NEXT:    rev w8, w8
-; CHECK-GI-NEXT:    lsr w0, w8, #16
+; CHECK-GI-NEXT:    rev16 w0, w8
 ; CHECK-GI-NEXT:    ret
 entry:
   %0 = zext i8 %a to i32
@@ -472,8 +468,7 @@ define void @test_rev16_truncstore() {
 ; CHECK-GI-NEXT:  .LBB30_1: // %cleanup
 ; CHECK-GI-NEXT:    // =>This Inner Loop Header: Depth=1
 ; CHECK-GI-NEXT:    ldrh w8, [x8]
-; CHECK-GI-NEXT:    rev w8, w8
-; CHECK-GI-NEXT:    lsr w8, w8, #16
+; CHECK-GI-NEXT:    rev16 w8, w8
 ; CHECK-GI-NEXT:    strh w8, [x8]
 ; CHECK-GI-NEXT:    tbz wzr, #0, .LBB30_1
 ; CHECK-GI-NEXT:  .LBB30_2: // %fail
