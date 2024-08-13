@@ -227,8 +227,7 @@ protected:
   /// Default implementation that just returns success.
   template <typename... Args>
   static LogicalResult
-  verifyInvariants(function_ref<InFlightDiagnostic()> emitErrorFn,
-                   Args... args) {
+  verifyInvariants(Args... args) {
     return success();
   }
 
