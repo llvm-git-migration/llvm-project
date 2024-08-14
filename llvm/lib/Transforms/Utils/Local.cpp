@@ -868,6 +868,8 @@ CanPropagatePredecessorsForPHIs(BasicBlock *BB, BasicBlock *Succ,
 
   LLVM_DEBUG(dbgs() << "Looking to fold " << BB->getName() << " into "
                     << Succ->getName() << "\n");
+  if (isa<IndirectBrInst>(Succ->getTerminator()))
+    return false;
   // Shortcut, if there is only a single predecessor it must be BB and merging
   // is always safe
   if (Succ->getSinglePredecessor())
@@ -1028,7 +1030,8 @@ CanRedirectPredsOfEmptyBBToSucc(BasicBlock *BB, BasicBlock *Succ,
   if (!BB->hasNPredecessorsOrMore(2))
     return false;
 
-  // Get single common predecessors of both BB and Succ
+  // Get the single common predecessor of both BB and Succ. Return false
+  // when there are more than one common predecessors.
   for (BasicBlock *SuccPred : SuccPreds) {
     if (BBPreds.count(SuccPred)) {
       if (CommonPred)
@@ -1133,7 +1136,7 @@ bool llvm::TryToSimplifyUncondBranchFromEmptyBlock(BasicBlock *BB,
 
   bool BBKillable = CanPropagatePredecessorsForPHIs(BB, Succ, BBPreds);
 
-  // Even if we can not fold bB into Succ, we may be able to redirect the
+  // Even if we can not fold BB into Succ, we may be able to redirect the
   // predecessors of BB to Succ.
   bool BBPhisMergeable =
       BBKillable ||
