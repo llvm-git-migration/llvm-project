@@ -42,7 +42,7 @@ void spirv::appendModuleHeader(SmallVectorImpl<uint32_t> &header,
   // +-------------------------------------------------------------------------+
   // | Magic number                                                            |
   // +-------------------------------------------------------------------------+
-  // | Version number (bytes: 0 | major number | minor number | 0)             |
+  // | Version number (bytes: 0 | 0 | major number | minor number)             |
   // +-------------------------------------------------------------------------+
   // | Generator magic number                                                  |
   // +-------------------------------------------------------------------------+
@@ -51,7 +51,7 @@ void spirv::appendModuleHeader(SmallVectorImpl<uint32_t> &header,
   // | 0 (reserved for instruction schema)                                     |
   // +-------------------------------------------------------------------------+
   header.push_back(spirv::kMagicNumber);
-  header.push_back((majorVersion << 16) | (minorVersion << 8));
+  header.push_back((majorVersion << 8) | minorVersion);
   header.push_back(kGeneratorNumber);
   header.push_back(idBound); // <id> bound
   header.push_back(0);       // Schema (reserved word)
