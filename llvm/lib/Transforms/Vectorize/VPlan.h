@@ -912,6 +912,7 @@ public:
     switch (R->getVPDefID()) {
     case VPRecipeBase::VPDerivedIVSC:
     case VPRecipeBase::VPEVLBasedIVPHISC:
+    case VPRecipeBase::VPAliasLaneMaskSC:
     case VPRecipeBase::VPExpandSCEVSC:
     case VPRecipeBase::VPInstructionSC:
     case VPRecipeBase::VPReductionEVLSC:
@@ -1244,7 +1245,6 @@ public:
     SLPLoad,
     SLPStore,
     ActiveLaneMask,
-    AliasLaneMask,
     ExplicitVectorLength,
     /// Creates a scalar phi in a leaf VPBB with a single predecessor in VPlan.
     /// The first operand is the incoming value from the predecessor in VPlan,
@@ -2696,6 +2696,44 @@ struct VPWidenStoreEVLRecipe final : public VPWidenMemoryRecipe {
     // happen with opaque pointers.
     return Op == getAddr() && isConsecutive() && Op != getStoredValue();
   }
+};
+
+// Given a pointer A that is being stored to, and pointer B that is being
+// read from, both with unknown lengths, create a mask that disables
+// elements which could overlap across a loop iteration. For example, if A
+// is X and B is X + 2 with VF being 4, only the final two elements of the
+// loaded vector can be stored since they don't overlap with the stored
+// vector. %b.vec = load %b ; = [s, t, u, v]
+// [...]
+// store %a, %b.vec ; only u and v can be stored as their addresses don't
+// overlap with %a + (VF - 1)
+class VPAliasLaneMaskRecipe : public VPSingleDefRecipe {
+
+public:
+  VPAliasLaneMaskRecipe(VPValue *Src, VPValue *Sink)
+      : VPSingleDefRecipe(VPDef::VPAliasLaneMaskSC, {Src, Sink}) {}
+
+  ~VPAliasLaneMaskRecipe() override = default;
+
+  VPAliasLaneMaskRecipe *clone() override {
+    return new VPAliasLaneMaskRecipe(getSourceValue(), getSinkValue());
+  }
+
+  VP_CLASSOF_IMPL(VPDef::VPAliasLaneMaskSC);
+
+  void execute(VPTransformState &State) override;
+
+  /// Get the VPValue* for the pointer being read from
+  VPValue *getSourceValue() const { return getOperand(0); }
+
+  /// Get the VPValue* for the pointer being stored to
+  VPValue *getSinkValue() const { return getOperand(1); }
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Print the recipe.
+  void print(raw_ostream &O, const Twine &Indent,
+             VPSlotTracker &SlotTracker) const override;
+#endif
 };
 
 /// Recipe to expand a SCEV expression.

@@ -8909,9 +8909,8 @@ VPlanPtr LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(
                                                              *PSE.getSE());
       VPValue *Src = vputils::getOrCreateVPValueForSCEVExpr(*Plan, C.SrcStart,
                                                             *PSE.getSE());
-      VPValue *M =
-          Builder.createNaryOp(VPInstruction::AliasLaneMask, {Sink, Src}, DL,
-                               "active.lane.mask.alias");
+      VPAliasLaneMaskRecipe *M = new VPAliasLaneMaskRecipe(Src, Sink);
+      VecPreheader->appendRecipe(M);
       if (AliasMask)
         AliasMask = Builder.createAnd(AliasMask, M);
       else

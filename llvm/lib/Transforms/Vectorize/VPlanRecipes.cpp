@@ -425,60 +425,6 @@ Value *VPInstruction::generatePerPart(VPTransformState &State, unsigned Part) {
                                    {PredTy, ScalarTC->getType()},
                                    {VIVElem0, ScalarTC}, nullptr, Name);
   }
-  case VPInstruction::AliasLaneMask: {
-    // Given a pointer A that is being stored to, and pointer B that is being
-    // read from, both with unknown lengths, create a mask that disables
-    // elements which could overlap across a loop iteration. For example, if A
-    // is X and B is X + 2 with VF being 4, only the final two elements of the
-    // loaded vector can be stored since they don't overlap with the stored
-    // vector. %b.vec = load %b ; = [s, t, u, v]
-    // [...]
-    // store %a, %b.vec ; only u and v can be stored as their addresses don't
-    // overlap with %a + (VF - 1)
-    Value *ReadPtr = State.get(getOperand(0), VPIteration(Part, 0));
-    Value *StorePtr = State.get(getOperand(1), VPIteration(Part, 0));
-    unsigned ElementSize = 0;
-
-    // We expect the operands to the alias mask to be ptrtoint. Sometimes it's
-    // an add of a ptrtoint.
-    auto *ReadInsn = cast<Instruction>(ReadPtr);
-    auto *ReadCast = dyn_cast<CastInst>(ReadPtr);
-    if (ReadInsn->getOpcode() == Instruction::Add)
-      ReadCast = dyn_cast<CastInst>(ReadInsn->getOperand(0));
-
-    if (ReadCast && ReadCast->getOpcode() == Instruction::PtrToInt) {
-      Value *Ptr = ReadCast->getOperand(0);
-      for (auto *Use : Ptr->users()) {
-        if (auto *GEP = dyn_cast<GetElementPtrInst>(Use)) {
-          auto *EltVT = GEP->getSourceElementType();
-          if (EltVT->isArrayTy())
-            ElementSize = EltVT->getArrayElementType()->getScalarSizeInBits() *
-                          EltVT->getArrayNumElements();
-          else
-            ElementSize =
-                GEP->getSourceElementType()->getScalarSizeInBits() / 8;
-          break;
-        }
-      }
-    }
-    assert(ElementSize > 0 && "Couldn't get element size from pointer");
-    // Calculate how many elements the pointers differ by
-    Value *Diff = Builder.CreateSub(StorePtr, ReadPtr, "sub.diff");
-    auto *Type = Diff->getType();
-    Value *MemEltSize = ConstantInt::get(Type, ElementSize);
-    Value *DiffDiv = Builder.CreateSDiv(Diff, MemEltSize, "diff");
-    // If the difference is negative then some elements may alias
-    Value *Cmp = Builder.CreateICmp(CmpInst::Predicate::ICMP_SLT, DiffDiv,
-                                    ConstantInt::get(Type, 0), "neg.compare");
-    // Splat the compare result then OR it with a lane mask
-    Value *Splat = Builder.CreateVectorSplat(State.VF, Cmp);
-    Value *DiffMask = Builder.CreateIntrinsic(
-        Intrinsic::get_active_lane_mask,
-        {VectorType::get(Builder.getInt1Ty(), State.VF), Type},
-        {ConstantInt::get(Type, 0), DiffDiv}, nullptr, "ptr.diff.lane.mask");
-    return Builder.CreateBinOp(Instruction::BinaryOps::Or, DiffMask, Splat,
-                               Name);
-  }
   // Count the number of bits set in each lane and reduce the result to a scalar
   case VPInstruction::PopCount: {
     if (Part != 0)
@@ -894,9 +840,6 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
     break;
   case VPInstruction::ResumePhi:
     O << "resume-phi";
-    break;
-  case VPInstruction::AliasLaneMask:
-    O << "alias lane mask";
     break;
   case VPInstruction::PopCount:
     O << "popcount";
@@ -2864,6 +2807,60 @@ void VPWidenPointerInductionRecipe::print(raw_ostream &O, const Twine &Indent,
   O << " = WIDEN-POINTER-INDUCTION ";
   getStartValue()->printAsOperand(O, SlotTracker);
   O << ", " << *IndDesc.getStep();
+}
+#endif
+
+void VPAliasLaneMaskRecipe::execute(VPTransformState &State) {
+  IRBuilderBase Builder = State.Builder;
+  Value *SinkValue = State.get(getSinkValue(), 0, true);
+  Value *SourceValue = State.get(getSourceValue(), 0, true);
+
+  unsigned ElementSize = 0;
+  auto *ReadInsn = cast<Instruction>(SourceValue);
+  auto *ReadCast = dyn_cast<CastInst>(SourceValue);
+  if (ReadInsn->getOpcode() == Instruction::Add)
+    ReadCast = dyn_cast<CastInst>(ReadInsn->getOperand(0));
+
+  if (ReadCast && ReadCast->getOpcode() == Instruction::PtrToInt) {
+    Value *Ptr = ReadCast->getOperand(0);
+    for (auto *Use : Ptr->users()) {
+      if (auto *GEP = dyn_cast<GetElementPtrInst>(Use)) {
+        auto *EltVT = GEP->getSourceElementType();
+        if (EltVT->isArrayTy())
+          ElementSize = EltVT->getArrayElementType()->getScalarSizeInBits() *
+                        EltVT->getArrayNumElements();
+        else
+          ElementSize = GEP->getSourceElementType()->getScalarSizeInBits() / 8;
+        break;
+      }
+    }
+  }
+  assert(ElementSize > 0 && "Couldn't get element size from pointer");
+
+  Value *Diff = Builder.CreateSub(SourceValue, SinkValue, "sub.diff");
+  auto *Type = Diff->getType();
+  Value *MemEltSize = ConstantInt::get(Type, ElementSize);
+  Value *DiffDiv = Builder.CreateSDiv(Diff, MemEltSize, "diff");
+  // If the difference is negative then some elements may alias
+  Value *Cmp = Builder.CreateICmp(CmpInst::Predicate::ICMP_SLT, DiffDiv,
+                                  ConstantInt::get(Type, 0), "neg.compare");
+  // Splat the compare result then OR it with a lane mask
+  Value *Splat = Builder.CreateVectorSplat(State.VF, Cmp);
+  Value *DiffMask = Builder.CreateIntrinsic(
+      Intrinsic::get_active_lane_mask,
+      {VectorType::get(Builder.getInt1Ty(), State.VF), Type},
+      {ConstantInt::get(Type, 0), DiffDiv}, nullptr, "ptr.diff.lane.mask");
+  Value *Or = Builder.CreateBinOp(Instruction::BinaryOps::Or, DiffMask, Splat);
+  State.set(this, Or, 0, /*IsScalar=*/false);
+}
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+void VPAliasLaneMaskRecipe::print(raw_ostream &O, const Twine &Indent,
+                                  VPSlotTracker &SlotTracker) const {
+  O << Indent << "ALIAS-LANE-MASK ";
+  getSourceValue()->printAsOperand(O, SlotTracker);
+  O << ", ";
+  getSinkValue()->printAsOperand(O, SlotTracker);
 }
 #endif
 
