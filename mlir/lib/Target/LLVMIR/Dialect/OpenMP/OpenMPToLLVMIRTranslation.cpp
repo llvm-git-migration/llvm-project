@@ -1444,12 +1444,43 @@ convertOmpParallel(omp::ParallelOp opInst, llvm::IRBuilderBase &builder,
         auto privateVars = opInst.getPrivateVars();
         auto privateSyms = opInst.getPrivateSyms();
 
+        // Try to find a privatizer that corresponds to the LLVM value being
+        // prvatized.
         for (auto [privVar, privatizerAttr] :
              llvm::zip_equal(privateVars, *privateSyms)) {
           // Find the MLIR private variable corresponding to the LLVM value
           // being privatized.
           llvm::Value *llvmPrivVar = moduleTranslation.lookupValue(privVar);
-          if (llvmPrivVar != &vPtr)
+
+          // Check if the LLVM value being privatized matches the LLVM value
+          // mapped to privVar. In some cases, this is not trivial ...
+          auto isMatch = [](llvm::Value *vPtr, llvm::Value *llvmPrivVar) {
+            // If both values are trivially equal, we found a match.
+            if (llvmPrivVar == nullptr)
+              return false;
+
+            if (llvmPrivVar == vPtr)
+              return true;
+
+            auto *vPtrLoad = llvm::dyn_cast_if_present<llvm::LoadInst>(vPtr);
+
+            if (vPtrLoad == nullptr)
+              return false;
+
+            // Otherwise, we check if both vPtr and llvmPrivVar refer to the
+            // same memory (through a load/store pair).
+            for (auto &use : llvmPrivVar->uses()) {
+              auto *llvmPrivVarStore =
+                  llvm::dyn_cast_if_present<llvm::StoreInst>(use.getUser());
+              if (llvmPrivVarStore && (vPtrLoad->getPointerOperand() ==
+                                       llvmPrivVarStore->getPointerOperand()))
+                return true;
+            }
+
+            return false;
+          };
+
+          if (!isMatch(&vPtr, llvmPrivVar))
             continue;
 
           SymbolRefAttr privSym = llvm::cast<SymbolRefAttr>(privatizerAttr);
