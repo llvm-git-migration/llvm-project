@@ -47,13 +47,15 @@ bool FindProtocolByScheme(const char *scheme,
   return false;
 }
 
-const char *FindSchemeByProtocol(const Socket::SocketProtocol protocol) {
+} // namespace
+
+const char *
+Acceptor::FindSchemeByProtocol(const Socket::SocketProtocol protocol) {
   for (auto s : socket_schemes) {
     if (s.m_protocol == protocol)
       return s.m_scheme;
   }
   return nullptr;
-}
 }
 
 Status Acceptor::Listen(int backlog) {
