@@ -10,14 +10,16 @@ from lldbsuite.test.decorators import *
 
 
 class MemoryFindTestCase(TestBase):
+
+    NO_DEBUG_INFO_TESTCASE = True
+
     def setUp(self):
         # Call super's setUp().
         TestBase.setUp(self)
         # Find the line number to break inside main().
         self.line = line_number("main.cpp", "// break here")
 
-    def test_memory_find(self):
-        """Test the 'memory find' command."""
+    def _prepare_inferior(self):
         self.build()
         exe = self.getBuildArtifact("a.out")
         self.runCmd("file " + exe, CURRENT_EXECUTABLE_SET)
@@ -39,7 +41,10 @@ class MemoryFindTestCase(TestBase):
         # The breakpoint should have a hit count of 1.
         lldbutil.check_breakpoint(self, bpno=1, expected_hit_count=1)
 
-        # Test the memory find commands.
+    def test_memory_find(self):
+        """Test the 'memory find' command."""
+
+        self._prepare_inferior()
 
         # Empty search string should be handled.
         self.expect(
@@ -78,4 +83,23 @@ class MemoryFindTestCase(TestBase):
         self.expect(
             'memory find -s "nothere" `stringdata` `stringdata+10`',
             substrs=["data not found within the range."],
+        )
+
+    @expectedFailureWindows
+    def test_memory_find_with_holes(self):
+        self._prepare_inferior()
+
+        pagesize = self.frame().FindVariable("pagesize").GetValueAsUnsigned()
+        mem_with_holes = (
+            self.frame().FindVariable("mem_with_holes").GetValueAsUnsigned()
+        )
+        matches_var = self.frame().FindVariable("matches")
+        self.assertEqual(matches_var.GetNumChildren(), 4)
+        matches = [
+            f"data found at location: {matches_var.GetChildAtIndex(i).GetValueAsUnsigned():#x}"
+            for i in range(4)
+        ]
+        self.expect(
+            'memory find -c 5 -s "needle" `mem_with_holes` `mem_with_holes+5*pagesize`',
+            substrs=matches + ["no more matches within the range"],
         )
