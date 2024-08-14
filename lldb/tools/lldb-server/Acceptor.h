@@ -39,6 +39,9 @@ public:
 
   const char *GetSocketScheme() const;
 
+  static const char *
+  FindSchemeByProtocol(const Socket::SocketProtocol protocol);
+
   // Returns either TCP port number as string or domain socket path.
   // Empty string is returned in case of error.
   std::string GetLocalSocketId() const;
