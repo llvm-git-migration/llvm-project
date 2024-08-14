@@ -38,7 +38,7 @@ define amdgpu_ps void @global_atomic_fadd_f32_saddr_no_rtn_intrinsic(ptr addrspa
   ; GFX908_GFX11-NEXT: {{  $}}
   ; GFX908_GFX11-NEXT:   [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
   ; GFX908_GFX11-NEXT:   [[COPY1:%[0-9]+]]:sreg_32 = COPY $sgpr1
-  ; GFX908_GFX11-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64 = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
+  ; GFX908_GFX11-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64_xexec_xnull = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
   ; GFX908_GFX11-NEXT:   [[COPY2:%[0-9]+]]:vgpr_32 = COPY $vgpr0
   ; GFX908_GFX11-NEXT:   [[V_MOV_B32_e32_:%[0-9]+]]:vgpr_32 = V_MOV_B32_e32 0, implicit $exec
   ; GFX908_GFX11-NEXT:   GLOBAL_ATOMIC_ADD_F32_SADDR [[V_MOV_B32_e32_]], [[COPY2]], [[REG_SEQUENCE]], 0, 0, implicit $exec :: (volatile dereferenceable load store (s32) on %ir.ptr, addrspace 1)
@@ -50,7 +50,7 @@ define amdgpu_ps void @global_atomic_fadd_f32_saddr_no_rtn_intrinsic(ptr addrspa
   ; GFX90A_GFX940-NEXT: {{  $}}
   ; GFX90A_GFX940-NEXT:   [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
   ; GFX90A_GFX940-NEXT:   [[COPY1:%[0-9]+]]:sreg_32 = COPY $sgpr1
-  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64 = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
+  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64_xexec_xnull = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
   ; GFX90A_GFX940-NEXT:   [[COPY2:%[0-9]+]]:vgpr_32 = COPY $vgpr0
   ; GFX90A_GFX940-NEXT:   [[V_MOV_B32_e32_:%[0-9]+]]:vgpr_32 = V_MOV_B32_e32 0, implicit $exec
   ; GFX90A_GFX940-NEXT:   GLOBAL_ATOMIC_ADD_F32_SADDR [[V_MOV_B32_e32_]], [[COPY2]], [[REG_SEQUENCE]], 0, 0, implicit $exec :: (volatile dereferenceable load store (s32) on %ir.ptr, addrspace 1)
@@ -92,7 +92,7 @@ define amdgpu_ps void @global_atomic_fadd_f32_saddr_no_rtn_flat_intrinsic(ptr ad
   ; GFX908_GFX11-NEXT: {{  $}}
   ; GFX908_GFX11-NEXT:   [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
   ; GFX908_GFX11-NEXT:   [[COPY1:%[0-9]+]]:sreg_32 = COPY $sgpr1
-  ; GFX908_GFX11-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64 = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
+  ; GFX908_GFX11-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64_xexec_xnull = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
   ; GFX908_GFX11-NEXT:   [[COPY2:%[0-9]+]]:vgpr_32 = COPY $vgpr0
   ; GFX908_GFX11-NEXT:   [[V_MOV_B32_e32_:%[0-9]+]]:vgpr_32 = V_MOV_B32_e32 0, implicit $exec
   ; GFX908_GFX11-NEXT:   GLOBAL_ATOMIC_ADD_F32_SADDR [[V_MOV_B32_e32_]], [[COPY2]], [[REG_SEQUENCE]], 0, 0, implicit $exec :: (volatile dereferenceable load store (s32) on %ir.ptr, addrspace 1)
@@ -104,7 +104,7 @@ define amdgpu_ps void @global_atomic_fadd_f32_saddr_no_rtn_flat_intrinsic(ptr ad
   ; GFX90A_GFX940-NEXT: {{  $}}
   ; GFX90A_GFX940-NEXT:   [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
   ; GFX90A_GFX940-NEXT:   [[COPY1:%[0-9]+]]:sreg_32 = COPY $sgpr1
-  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64 = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
+  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64_xexec_xnull = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
   ; GFX90A_GFX940-NEXT:   [[COPY2:%[0-9]+]]:vgpr_32 = COPY $vgpr0
   ; GFX90A_GFX940-NEXT:   [[V_MOV_B32_e32_:%[0-9]+]]:vgpr_32 = V_MOV_B32_e32 0, implicit $exec
   ; GFX90A_GFX940-NEXT:   GLOBAL_ATOMIC_ADD_F32_SADDR [[V_MOV_B32_e32_]], [[COPY2]], [[REG_SEQUENCE]], 0, 0, implicit $exec :: (volatile dereferenceable load store (s32) on %ir.ptr, addrspace 1)
@@ -147,7 +147,7 @@ define amdgpu_ps void @global_atomic_fadd_f32_saddr_no_rtn_atomicrmw(ptr addrspa
   ; GFX90A_GFX940-NEXT: {{  $}}
   ; GFX90A_GFX940-NEXT:   [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
   ; GFX90A_GFX940-NEXT:   [[COPY1:%[0-9]+]]:sreg_32 = COPY $sgpr1
-  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64 = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
+  ; GFX90A_GFX940-NEXT:   [[REG_SEQUENCE:%[0-9]+]]:sreg_64_xexec_xnull = REG_SEQUENCE [[COPY]], %subreg.sub0, [[COPY1]], %subreg.sub1
   ; GFX90A_GFX940-NEXT:   [[COPY2:%[0-9]+]]:vgpr_32 = COPY $vgpr0
   ; GFX90A_GFX940-NEXT:   [[SI_PS_LIVE:%[0-9]+]]:sreg_64_xexec = SI_PS_LIVE
   ; GFX90A_GFX940-NEXT:   [[SI_IF:%[0-9]+]]:sreg_64_xexec = SI_IF [[SI_PS_LIVE]], %bb.5, implicit-def $exec, implicit-def $scc, implicit $exec
