@@ -79,3 +79,13 @@ class MemoryFindTestCase(TestBase):
             'memory find -s "nothere" `stringdata` `stringdata+10`',
             substrs=["data not found within the range."],
         )
+
+        pagesize = self.frame().FindVariable("pagesize").GetValueAsUnsigned()
+        mem_with_holes = self.frame().FindVariable("mem_with_holes").GetValueAsUnsigned()
+        matches_var = self.frame().FindVariable("matches")
+        self.assertEqual(matches_var.GetNumChildren(), 4)
+        matches = [f'data found at location: {matches_var.GetChildAtIndex(i).GetValueAsUnsigned():#x}' for i in range(4)]
+        self.expect(
+            'memory find -c 5 -s "needle" `mem_with_holes` `mem_with_holes+5*pagesize`',
+            substrs=matches + ["no more matches within the range"],
+        )
