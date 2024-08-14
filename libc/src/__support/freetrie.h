@@ -31,9 +31,8 @@ public:
     /// @returns The lower half of the size range.
     SizeRange upper() const;
 
-    /// @returns The split point between lower and upper.
-    size_t middle() const;
-
+    /// @returns Whether the range contains the given size.
+    /// Lower bound is inclusive, upper bound is exclusive.
     bool contains(size_t size) const;
   };
 
@@ -74,11 +73,7 @@ LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::lower() const {
 }
 
 LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::upper() const {
-  return {middle(), width / 2};
-}
-
-LIBC_INLINE size_t FreeTrie::SizeRange::middle() const {
-  return min + width / 2;
+  return {min + width / 2, width / 2};
 }
 
 LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
@@ -134,7 +129,7 @@ FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
   FreeTrie **cur = &trie;
   while (*cur && (*cur)->size() != size) {
     LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
-    if (size <= range.middle()) {
+    if (range.lower().contains(size)) {
       cur = &(*cur)->lower;
       range = range.lower();
     } else {
@@ -157,11 +152,10 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
     size_t cur_size = (*cur)->size();
     if (cur_size == size)
       return cur;
-    if (size <= range.middle()) {
-      // The lower subtrie has the requested size in its range. So, if it has at
-      // least one larger entry, the best fit is in the lower subtrie. But if
-      // the lower subtrie contains only smaller sizes, the best fit is in the
-      // larger trie. So keep track of it.
+    if (range.lower().contains(size)) {
+      // If the lower subtree has at least one entry >= size, the best fit is in
+      // the lower subtrie. But if the lower subtrie contains only smaller
+      // sizes, the best fit is in the larger trie. So keep track of it.
       if ((*cur)->upper)
         skipped_upper_trie = &(*cur)->upper;
       cur = &(*cur)->lower;

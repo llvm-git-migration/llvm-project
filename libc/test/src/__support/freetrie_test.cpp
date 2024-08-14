@@ -132,4 +132,23 @@ TEST(LlvmLibcFreeTrie, RootPopWithChild) {
   EXPECT_EQ(new_child3, child3);
 }
 
+TEST(LlvmLibcFreeTrie, SizeRange) {
+  FreeTrie::SizeRange range(123, 1024);
+  EXPECT_EQ(range.min, size_t{123});
+  EXPECT_EQ(range.width, size_t{1024});
+
+  EXPECT_TRUE(range.contains(123));
+  EXPECT_TRUE(range.contains(123 + 1024 - 1));
+  EXPECT_FALSE(range.contains(123 - 1));
+  EXPECT_FALSE(range.contains(123 + 1024 + 1));
+
+  FreeTrie::SizeRange lower = range.lower();
+  EXPECT_EQ(lower.min, size_t{123});
+  EXPECT_EQ(lower.width, size_t{1024 / 2});
+
+  FreeTrie::SizeRange upper = range.upper();
+  EXPECT_EQ(upper.min, size_t{123 + 1024 / 2});
+  EXPECT_EQ(upper.width, size_t{1024 / 2});
+}
+
 } // namespace LIBC_NAMESPACE_DECL
