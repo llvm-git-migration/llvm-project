@@ -96,6 +96,12 @@ public:
     return *this;
   }
 
+  bool isSubSetOf(const I64BitSet p) const {
+    I64BitSet tmp = *this;
+    tmp |= p;
+    return tmp == p;
+  }
+
   // Needed by `llvm::const_set_bits_iterator_impl`.
   int find_first() const { return min(); }
   int find_next(unsigned prev) const {
