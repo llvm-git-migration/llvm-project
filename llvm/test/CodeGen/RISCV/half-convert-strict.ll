@@ -47,6 +47,9 @@
 ; RUN: llc -mtriple=riscv64 -mattr=+zdinx,+zhinxmin -verify-machineinstrs \
 ; RUN:   -target-abi lp64 -disable-strictnode-mutation < %s \
 ; RUN:   | FileCheck -check-prefixes=CHECK64-IZDINXZHINXMIN %s
+; RUN: llc -mtriple=riscv32 -mattr=+d -verify-machineinstrs \
+; RUN:   -target-abi ilp32d -disable-strictnode-mutation < %s \
+; RUN:   | FileCheck -check-prefixes=CHECKD,RV32D %s
 
 ; NOTE: The rounding mode metadata does not effect which instruction is
 ; selected. Dynamic rounding mode is always used for operations that
