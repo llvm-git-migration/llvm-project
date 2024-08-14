@@ -134,7 +134,8 @@ ISL_C_OBJECT_TO_STRING(union_map)
 ISL_C_OBJECT_TO_STRING(union_pw_aff)
 ISL_C_OBJECT_TO_STRING(union_pw_multi_aff)
 
-static void replace(std::string &str, StringRef find, StringRef replace) {
+static void replace_substr(std::string &str, StringRef find,
+                           StringRef replace) {
   size_t pos = 0;
   while ((pos = str.find(find, pos)) != std::string::npos) {
     str.replace(pos, find.size(), replace);
@@ -143,11 +144,11 @@ static void replace(std::string &str, StringRef find, StringRef replace) {
 }
 
 static void makeIslCompatible(std::string &str) {
-  replace(str, ".", "_");
-  replace(str, "\"", "_");
-  replace(str, " ", "__");
-  replace(str, "=>", "TO");
-  replace(str, "+", "_");
+  replace(str, '.', '_');
+  replace(str, '\"', '_');
+  replace_substr(str, " ", "__");
+  replace_substr(str, "=>", "TO");
+  replace(str, '+', '_');
 }
 
 std::string polly::getIslCompatibleName(const std::string &Prefix,
