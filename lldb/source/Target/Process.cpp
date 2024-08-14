@@ -114,33 +114,6 @@ public:
   }
 };
 
-class ProcessMemoryIterator {
-public:
-  ProcessMemoryIterator(Process &process, lldb::addr_t base)
-      : m_process(process), m_base_addr(base) {}
-
-  bool IsValid() { return m_is_valid; }
-
-  uint8_t operator[](lldb::addr_t offset) {
-    if (!IsValid())
-      return 0;
-
-    uint8_t retval = 0;
-    Status error;
-    if (0 == m_process.ReadMemory(m_base_addr + offset, &retval, 1, error)) {
-      m_is_valid = false;
-      return 0;
-    }
-
-    return retval;
-  }
-
-private:
-  Process &m_process;
-  const lldb::addr_t m_base_addr;
-  bool m_is_valid = true;
-};
-
 static constexpr OptionEnumValueElement g_follow_fork_mode_values[] = {
     {
         eFollowParent,
@@ -3368,20 +3341,37 @@ lldb::addr_t Process::FindInMemory(lldb::addr_t low, lldb::addr_t high,
     return LLDB_INVALID_ADDRESS;
 
   std::vector<size_t> bad_char_heuristic(256, size);
-  ProcessMemoryIterator iterator(*this, low);
-
   for (size_t idx = 0; idx < size - 1; idx++) {
     decltype(bad_char_heuristic)::size_type bcu_idx = buf[idx];
     bad_char_heuristic[bcu_idx] = size - idx - 1;
   }
-  for (size_t s = 0; s <= (region_size - size);) {
+
+  llvm::SmallVector<uint8_t, 0> mem;
+  addr_t mem_pos = low;
+  const size_t read_size = std::max<size_t>(size, 0x10000);
+
+  for (addr_t s = low; s <= (high - size);) {
+    if (s + size >= mem.size() + mem_pos) {
+      mem.resize_for_overwrite(read_size);
+      Status error;
+      mem.resize(
+          ReadMemory(s, mem.data(), std::min(mem.size(), high - s), error));
+      mem_pos = s;
+      if (error.Fail()) {
+        MemoryRegionInfo info;
+        error = GetMemoryRegionInfo(s, info);
+        if (error.Fail())
+          return LLDB_INVALID_ADDRESS;
+        s = info.GetRange().GetRangeEnd();
+        continue;
+      }
+    }
     int64_t j = size - 1;
-    while (j >= 0 && buf[j] == iterator[s + j])
+    while (j >= 0 && buf[j] == mem[s + j - mem_pos])
       j--;
     if (j < 0)
-      return low + s;
-    else
-      s += bad_char_heuristic[iterator[s + size - 1]];
+      return s;
+    s += bad_char_heuristic[mem[s + size - 1 - mem_pos]];
   }
 
   return LLDB_INVALID_ADDRESS;
