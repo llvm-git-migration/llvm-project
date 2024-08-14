@@ -4648,7 +4648,7 @@ bool LoopVectorizationPlanner::isCandidateForEpilogueVectorization(
     return false;
 
   // Loops containing histograms are not currently supported.
-  return Legal->getHistograms().empty();
+  return !Legal->hasHistograms();
 }
 
 bool LoopVectorizationCostModel::isEpilogueVectorizationProfitable(
@@ -10073,7 +10073,7 @@ bool LoopVectorizePass::processLoop(Loop *L) {
   // If there is a histogram in the loop, do not just interleave without
   // vectorizing. The order of operations will be incorrect without the
   // histogram intrinsics, which are only used for recipes with VF > 1.
-  if (!VectorizeLoop && InterleaveLoop && !LVL.getHistograms().empty()) {
+  if (!VectorizeLoop && InterleaveLoop && LVL.hasHistograms()) {
     LLVM_DEBUG(dbgs() << "LV: Not interleaving without vectorization due "
                       << "to histogram operations.\n");
     IntDiagMsg = std::make_pair(
