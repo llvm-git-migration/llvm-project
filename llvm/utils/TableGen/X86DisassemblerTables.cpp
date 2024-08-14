@@ -268,6 +268,7 @@ static inline bool inheritsFrom(InstructionContext child,
            (VEX_LIG && inheritsFrom(child, IC_EVEX_L2_OPSIZE_KZ));
   case IC_EVEX_W:
     return (VEX_LIG && inheritsFrom(child, IC_EVEX_L_W)) ||
+           inheritsFrom(child, IC_EVEX_W_OPSIZE) ||
            (VEX_LIG && inheritsFrom(child, IC_EVEX_L2_W));
   case IC_EVEX_W_XS:
     return (VEX_LIG && inheritsFrom(child, IC_EVEX_L_W_XS)) ||
