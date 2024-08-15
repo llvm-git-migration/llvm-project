@@ -1426,6 +1426,12 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
     }
     recursivelyDeleteDeadRecipes(HeaderMask);
   }
+
+  // We build the scalar version of a CSA when VF=ElementCount::getFixed(1),
+  // which does not require an EVL.
+  if (!Plan.hasScalarVFOnly())
+    addExplicitVectorLengthForCSA(VPEVL, Plan.getCSAStates());
+
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.
   CanonicalIVPHI->replaceAllUsesWith(EVLPhi);
@@ -1433,6 +1439,51 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
   // TODO: support unroll factor > 1.
   Plan.setUF(1);
   return true;
+}
+
+void VPlanTransforms::addExplicitVectorLengthForCSA(
+    VPInstruction *VPEVL, const MapVector<PHINode *, VPCSAState *> &CSAStates,
+    bool PlanHasScalarVFOnly) {
+
+  // We build the scalar version of a CSA when VF=ElementCount::getFixed(1),
+  // which does not require an EVL.
+  if (PlanHasScalarVFOnly)
+    return;
+
+  for (auto CSA : CSAStates) {
+    VPCSAState *CSAState = CSA.second;
+
+    // CSAAnyActive is used to keep track of whether any condition on the
+    // current iteration is active. This is used to decide whether the mask
+    // should be updated. When we are using EVL, we must only consider the first
+    // EVL number of elements in the mask. Replace CSAAnyActive with the EVL
+    // specific CSAAnyActiveEVL instruction.
+    auto *VPAnyActive = CSAState->getVPAnyActive();
+    auto *VPAnyActiveEVL = new VPInstruction(
+        VPInstruction::CSAAnyActiveEVL, {VPAnyActive->getOperand(0), VPEVL},
+        VPAnyActive->getDebugLoc(), "csa.cond.anyactive");
+    VPAnyActiveEVL->insertBefore(VPAnyActive);
+    VPAnyActive->replaceAllUsesWith(VPAnyActiveEVL->getVPSingleValue());
+    VPAnyActive->eraseFromParent();
+    CSAState->setVPAnyActive(VPAnyActiveEVL);
+
+    // When we are using EVL, we must keep track of the most recent EVL when at
+    // least one lane in the mask was active. Imagine the scenario: on iteration
+    // N, there was at least one active lane in the mask. Then on all future
+    // iteration there was no active lanes in the mask. When it is time to
+    // extract the scalar from the data vector, we must use the EVL that
+    // corresponds to the EVL that was used when the mask vector was last
+    // updated. To do this, we introduce CSAVLPhi and CSAVLSel instructions
+    auto *VPVLPhi =
+        new VPInstruction(VPInstruction::CSAVLPhi, {}, {}, "csa.vl.phi");
+    auto *VPVLSel =
+        new VPInstruction(VPInstruction::CSAVLSel,
+                          {VPAnyActiveEVL, VPVLPhi, VPEVL}, {}, "csa.vl.sel");
+    VPVLPhi->insertAfter(CSAState->getPhiRecipe());
+    VPVLSel->insertAfter(VPAnyActiveEVL);
+
+    CSAState->getExtractScalarRecipe()->addOperand(VPVLSel);
+  }
 }
 
 void VPlanTransforms::dropPoisonGeneratingRecipes(
