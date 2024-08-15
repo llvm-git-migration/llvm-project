@@ -18709,9 +18709,9 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
       retType = llvm::VectorType::get(
           retType, ElementCount::getFixed(XVecTy->getNumElements()));
     }
-    if (!E->getArg(0)->getType()->hasFloatingRepresentation() &&
-        !E->getArg(0)->getType()->hasSignedIntegerRepresentation())
-      llvm_unreachable("sign operand must have a float or int representation");
+    assert((E->getArg(0)->getType()->hasFloatingRepresentation() ||
+            E->getArg(0)->getType()->hasSignedIntegerRepresentation()) &&
+           "sign operand must have a float or int representation");
 
     return Builder.CreateIntrinsic(
         retType, CGM.getHLSLRuntime().getSignIntrinsic(),
