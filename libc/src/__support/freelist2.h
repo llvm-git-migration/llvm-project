@@ -16,6 +16,11 @@ namespace LIBC_NAMESPACE_DECL {
 /// A circularly-linked FIFO list node storing a free Block. A list is a
 /// FreeList2*; nullptr is an empty list. All Blocks on a list are the same
 /// size.
+///
+/// Accessing free blocks in FIFO order maximizes the amount of time before a
+/// free block is reused. This in turn maximizes the number of opportunities for
+/// it to be coalesced with an adjacent block, which tends to reduce heap
+/// fragmentation.
 class FreeList2 {
 public:
   Block<> *block() const {

@@ -31,6 +31,9 @@ public:
     /// @returns The lower half of the size range.
     SizeRange upper() const;
 
+    /// @returns The largest size in this range.
+    size_t max() const;
+
     /// @returns Whether the range contains the given size.
     /// Lower bound is inclusive, upper bound is exclusive.
     bool contains(size_t size) const;
@@ -51,9 +54,6 @@ public:
                                   SizeRange range);
 
 private:
-  /// Return the smallest-sized free list in the trie.
-  static FreeTrie *&smallest(FreeTrie *&trie);
-
   /// Return an abitrary leaf.
   FreeTrie &leaf();
 
@@ -75,6 +75,8 @@ LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::lower() const {
 LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::upper() const {
   return {min + width / 2, width / 2};
 }
+
+size_t FreeTrie::SizeRange::max() const { return min + (width - 1); }
 
 LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
   if (size < min)
@@ -142,35 +144,65 @@ FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
 
 FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
                                    SizeRange range) {
+  if (!cur)
+    return trie;
+
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
   FreeTrie **cur = &trie;
-  FreeTrie **skipped_upper_trie = nullptr;
+  FreeTrie **best_fit = nullptr;
+  FreeTrie **deferred_upper_trie = nullptr;
 
-  // Inductively assume the best fit is in this subtrie.
-  while (*cur) {
+  // Inductively assume all better fits than the current best are in the
+  // current subtrie.
+  while (true) {
     LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+
+    // Consider whether the current node is a better fit.
     size_t cur_size = (*cur)->size();
     if (cur_size == size)
       return cur;
-    if (range.lower().contains(size)) {
-      // If the lower subtree has at least one entry >= size, the best fit is in
-      // the lower subtrie. But if the lower subtrie contains only smaller
-      // sizes, the best fit is in the larger trie. So keep track of it.
-      if ((*cur)->upper)
-        skipped_upper_trie = &(*cur)->upper;
+    if (!best_fit || cur_size < (*best_fit)->size())
+      best_fit = cur;
+
+    // Determine which subtries might contain better fits.
+    bool lower_impossible = !(*cur)->lower || range.lower().max() < size;
+    bool upper_impossible =
+        !(*cur)->upper ||
+        (best_fit && range.upper().min >= (*best_fit)->size());
+
+    if (lower_impossible && upper_impossible)
+      break;
+    if (lower_impossible) {
+      cur = &(*cur)->upper;
+      range = range.upper();
+    } else if (upper_impossible) {
       cur = &(*cur)->lower;
       range = range.lower();
     } else {
-      // The lower child is too small, so the best fit is in the upper subtrie.
-      cur = &(*cur)->upper;
-      range = range.upper();
+      // Both subtries might contain a better fit. But, any fit in the lower
+      // subtrie is better than the best fit in the upper subtrie. Accordingly,
+      // we can scan the lower subtrie, then return to the upper one if
+      // necessary.
+      cur = &(*cur)->lower;
+      range = range.lower();
+
+      // If we have already deferred a subtrie, it was an upper
+      // subtrie of its parent, and the node being deferred here is somewhere in
+      // the lower subtrie. That means that the new subtrie is strictly better
+      // than the old, and the old can be summarily ignored.
+      deferred_upper_trie = &(*cur)->upper;
     }
   }
 
-  // A lower subtrie contained size in its range, but it had only entries
-  // smaller than size. Accordingly, the best fit is the smallest entry in the
-  // corresponding upper subtrie.
-  return &FreeTrie::smallest(*skipped_upper_trie);
+  if (!deferred_upper_trie)
+    return best_fit;
+
+  // We have deferred an upper subtrie, and this is the only subtrie left that
+  // could contain a better fit, via the above analysis. It's also the case that
+  // any node within this subtrie is a fit, so just find the smallest.
+  cur = deferred_upper_trie;
+  while (*cur) {
+  }
 }
 
 FreeTrie &FreeTrie::leaf() {
@@ -178,17 +210,6 @@ FreeTrie &FreeTrie::leaf() {
   while (cur->lower || cur->upper)
     cur = cur->lower ? cur->lower : cur->upper;
   return *cur;
-}
-
-FreeTrie *&FreeTrie::smallest(FreeTrie *&trie) {
-  FreeTrie **cur = &trie;
-  FreeTrie **ret = nullptr;
-  while (*cur) {
-    if (!ret || (*cur)->size() < (*ret)->size())
-      ret = cur;
-    cur = (*cur)->lower ? &(*cur)->lower : &(*cur)->upper;
-  }
-  return *ret;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
