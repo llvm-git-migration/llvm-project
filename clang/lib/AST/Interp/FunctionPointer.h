@@ -49,7 +49,10 @@ public:
                      CharUnits::fromQuantity(getIntegerRepresentation()), {},
                      /*OnePastTheEnd=*/false, /*IsNull=*/false);
 
-    return APValue(Func->getDecl(), CharUnits::Zero(), {},
+    if (Func->getDecl())
+      return APValue(Func->getDecl(), CharUnits::Zero(), {},
+                     /*OnePastTheEnd=*/false, /*IsNull=*/false);
+    return APValue(Func->getExpr(), CharUnits::Zero(), {},
                    /*OnePastTheEnd=*/false, /*IsNull=*/false);
   }
 
