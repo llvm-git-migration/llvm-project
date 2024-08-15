@@ -85,7 +85,7 @@ LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
 }
 
 LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
-  LIBC_ASSERT(block->inner_size() >= sizeof(FreeTrie) &&
+  LIBC_ASSERT(block->inner_size_free() >= sizeof(FreeTrie) &&
               "block too small to accomodate free trie node");
   FreeTrie *node = new (block->usable_space()) FreeTrie;
   // The trie links are irrelevant for all but the first node in the free list.
