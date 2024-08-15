@@ -1052,6 +1052,9 @@ InstructionCost RISCVTTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst,
                            DstLT.second.getSizeInBits()))
     return BaseT::getCastInstrCost(Opcode, Dst, Src, CCH, CostKind, I);
 
+  // The split cost is handled by the base getCastInstrCost
+  assert((SrcLT.first == 1) && (DstLT.first == 1) && "Illegal type");
+
   int ISD = TLI->InstructionOpcodeToISD(Opcode);
   assert(ISD && "Invalid opcode");
 
