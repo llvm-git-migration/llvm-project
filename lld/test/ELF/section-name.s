@@ -41,6 +41,11 @@ _start:
 .byte 0
 .section .tdata.foo,"aGwT",@progbits,foo,comdat
 .byte 0
+.section .sdata.foo,"aw"
+.byte 0
+.section .sbss.foo,"aw",@nobits
+.byte 0
+
 
 // CHECK:      .rodata           00000002
 // CHECK-NEXT: .gcc_except_table 00000001
@@ -52,8 +57,10 @@ _start:
 // CHECK-NEXT: .data             00000002
 // CHECK-NEXT: .foo.a            00000001
 // CHECK-NEXT: .foo              00000001
+// CHECK-NEXT: .sdata            00000001
 // CHECK-NEXT: .bss              00000002
+// CHECK-NEXT: .sbss             00000001
 // CHECK-NEXT: .comment          00000008
 // CHECK-NEXT: .symtab           00000030
-// CHECK-NEXT: .shstrtab         00000084
+// CHECK-NEXT: .shstrtab         00000091
 // CHECK-NEXT: .strtab           00000008

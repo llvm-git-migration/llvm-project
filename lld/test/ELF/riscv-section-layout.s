@@ -57,5 +57,7 @@
 .section .tbss,"awT",@nobits; .space 1
 .ifdef SDATA
 .section .sdata,"aw",@progbits; .space 1
+.section .sdata.suffix,"aw",@progbits; .space 1
 .section .sbss,"aw",@nobits; .space 1
+.section .sbss.suffix,"aw",@nobits; .space 1
 .endif
