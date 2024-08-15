@@ -214,7 +214,7 @@ void VPBlockBase::deleteCFG(VPBlockBase *Entry) {
 
 VPBasicBlock::iterator VPBasicBlock::getFirstNonPhi() {
   iterator It = begin();
-  while (It != end() && It->isPhi())
+  while (It != end() && vputils::isPhi(*It))
     It++;
   return It;
 }
@@ -856,6 +856,9 @@ VPlan::~VPlan() {
     delete VPV;
   if (BackedgeTakenCount)
     delete BackedgeTakenCount;
+
+  for (std::pair<PHINode *, VPCSAState *> &S : CSAStates)
+    delete S.second;
 }
 
 VPIRBasicBlock *VPIRBasicBlock::fromBasicBlock(BasicBlock *IRBB) {
@@ -1058,7 +1061,7 @@ void VPlan::execute(VPTransformState *State) {
   VPBasicBlock *Header = getVectorLoopRegion()->getEntryBasicBlock();
   for (VPRecipeBase &R : Header->phis()) {
     // Skip phi-like recipes that generate their backedege values themselves.
-    if (isa<VPWidenPHIRecipe>(&R))
+    if (vputils::isPhiThatGeneratesBackedge(R))
       continue;
 
     if (isa<VPWidenPointerInductionRecipe>(&R) ||
