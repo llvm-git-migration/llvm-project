@@ -924,7 +924,7 @@ StackFrameList::GetStackFrameSPForStackFramePtr(StackFrame *stack_frame_ptr) {
 size_t StackFrameList::GetStatus(Stream &strm, uint32_t first_frame,
                                  uint32_t num_frames, bool show_frame_info,
                                  uint32_t num_frames_with_source,
-                                 bool show_unique,
+                                 bool show_unique, bool should_filter,
                                  const char *selected_frame_marker) {
   size_t num_frames_displayed = 0;
 
@@ -950,8 +950,8 @@ size_t StackFrameList::GetStatus(Stream &strm, uint32_t first_frame,
     buffer.insert(buffer.begin(), len, ' ');
     unselected_marker = buffer.c_str();
   }
+  bool filtered = false;
   const char *marker = nullptr;
-
   for (frame_idx = first_frame; frame_idx < last_frame; ++frame_idx) {
     frame_sp = GetFrameAtIndex(frame_idx);
     if (!frame_sp)
@@ -963,6 +963,15 @@ size_t StackFrameList::GetStatus(Stream &strm, uint32_t first_frame,
       else
         marker = unselected_marker;
     }
+
+    // Hide uninteresting frames unless it's the selected frame.
+    if (should_filter && frame_sp != selected_frame_sp)
+      if (auto recognized_frame_sp = frame_sp->GetRecognizedFrame())
+        if (recognized_frame_sp->ShouldHide()) {
+          filtered = true;
+          continue;
+        }
+
     // Check for interruption here.  If we're fetching arguments, this loop
     // can go slowly:
     Debugger &dbg = m_thread.GetProcess()->GetTarget().GetDebugger();
@@ -979,6 +988,8 @@ size_t StackFrameList::GetStatus(Stream &strm, uint32_t first_frame,
     ++num_frames_displayed;
   }
 
+  if (filtered)
+    strm << "Note: Some frames were hidden by frame recognizers\n";
   strm.IndentLess();
   return num_frames_displayed;
 }
