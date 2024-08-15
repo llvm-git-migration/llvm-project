@@ -71,27 +71,23 @@ void BPFSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
     CPU = sys::detail::getHostCPUNameForBPF();
   if (CPU == "generic" || CPU == "v1")
     return;
-  if (CPU == "v2") {
+
+  int CpuVerNum = CPU.back() - '0';
+  if (CpuVerNum >= 2)
     HasJmpExt = true;
-    return;
-  }
-  if (CPU == "v3") {
-    HasJmpExt = true;
+
+  if (CpuVerNum >= 3) {
     HasJmp32 = true;
     HasAlu32 = true;
-    return;
   }
-  if (CPU == "v4") {
-    HasJmpExt = true;
-    HasJmp32 = true;
-    HasAlu32 = true;
+
+  if (CpuVerNum >= 4) {
     HasLdsx = !Disable_ldsx;
     HasMovsx = !Disable_movsx;
     HasBswap = !Disable_bswap;
     HasSdivSmod = !Disable_sdiv_smod;
     HasGotol = !Disable_gotol;
     HasStoreImm = !Disable_StoreImm;
-    return;
   }
 }
 
