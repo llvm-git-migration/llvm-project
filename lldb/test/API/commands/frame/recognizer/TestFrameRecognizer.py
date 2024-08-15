@@ -163,6 +163,39 @@ class FrameRecognizerTestCase(TestBase):
         """
 
     @skipUnlessDarwin
+    def test_frame_recognizer_hiding(self):
+        self.build()
+
+        target, process, thread, _ = lldbutil.run_to_name_breakpoint(self, "foo")
+        frame = thread.GetSelectedFrame()
+
+        # Sanity check.
+        self.expect("thread backtrace", patterns=["frame.*main"])
+
+        self.expect("frame recognizer clear")
+        self.expect(
+            "command script import "
+            + os.path.join(self.getSourceDir(), "recognizer.py")
+        )
+
+        self.expect(
+            "frame recognizer add -l recognizer.MainFrameRecognizer -f false -s a.out -n main"
+        )
+
+        self.expect(
+            "frame recognizer list",
+            substrs=["0: recognizer.MainFrameRecognizer"],
+        )
+
+        # Now main should be hidden.
+        self.expect("thread backtrace", substrs=["foo"])
+        self.expect("thread backtrace", matching=False, patterns=["frame.*main"])
+        self.assertFalse(frame.IsHidden())
+        frame = thread.SetSelectedFrame(1);
+        self.assertIn("main", frame.name)
+        self.assertTrue(frame.IsHidden())
+        
+    @skipUnlessDarwin
     def test_frame_recognizer_multi_symbol(self):
         self.build()
         exe = self.getBuildArtifact("a.out")
