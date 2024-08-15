@@ -1542,7 +1542,9 @@ IRBuilder<>::InsertPoint OpenMPIRBuilder::createParallel(
   BasicBlock *CommonExit = nullptr;
   SetVector<Value *> Inputs, Outputs, SinkingCands, HoistingCands;
   Extractor.findAllocas(CEAC, SinkingCands, HoistingCands, CommonExit);
-  Extractor.findInputsOutputs(Inputs, Outputs, SinkingCands);
+
+  Extractor.findInputsOutputs(Inputs, Outputs, SinkingCands,
+                              /*CollectGlobalInputs=*/true);
 
   LLVM_DEBUG(dbgs() << "Before privatization: " << *OuterFn << "\n");
 
