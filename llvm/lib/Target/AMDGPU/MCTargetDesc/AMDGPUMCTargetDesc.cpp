@@ -132,7 +132,7 @@ public:
     int64_t Imm = Inst.getOperand(0).getImm();
     // Our branches take a simm16, but we need two extra bits to account for
     // the factor of 4.
-    APInt SignedOffset(18, Imm * 4, true);
+    APInt SignedOffset = APInt(16, Imm).sext(18) * 4;
     Target = (SignedOffset.sext(64) + Addr + Size).getZExtValue();
     return true;
   }
