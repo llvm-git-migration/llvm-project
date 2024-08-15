@@ -1207,9 +1207,11 @@ class FPVCSrcInputModsMatchClass <int opSize> : FPInputModsMatchClass <opSize> {
 }
 
 def FP16InputModsMatchClass : FPInputModsMatchClass<16>;
-def FPT16InputModsMatchClass : FPInputModsMatchClass<16> {
-  let Name = "RegOrImmWithFPT16InputMods";
-  let PredicateMethod = "isRegOrImmWithFPT16InputMods";
+class FPT16InputModsMatchClass<bit IsFake16> : FPInputModsMatchClass<16> {
+  let Name = !if(IsFake16, "RegOrImmWithFPFake16InputMods",
+                 "RegOrImmWithFPT16InputMods");
+  let PredicateMethod = "isRegOrImmWithFPT16InputMods<" #
+                        !if(IsFake16, "true", "false") # ">";
 }
 def FP32InputModsMatchClass : FPInputModsMatchClass<32>;
 def FP64InputModsMatchClass : FPInputModsMatchClass<64>;
@@ -1234,12 +1236,19 @@ class FPInputMods <FPInputModsMatchClass matchClass> : InputMods <matchClass> {
 }
 
 def FP16InputMods : FPInputMods<FP16InputModsMatchClass>;
-def FPT16InputMods : FPInputMods<FPT16InputModsMatchClass>;
+class FPT16InputMods<bit IsFake16> : FPInputMods<FPT16InputModsMatchClass<IsFake16>> {
+  let EncoderMethod = "getMachineOpValueT16";
+}
 def FP32InputMods : FPInputMods<FP32InputModsMatchClass>;
+def FP32T16DstInputMods : FPInputMods<FP32InputModsMatchClass> {
+  let EncoderMethod = "getMachineOpValueT16";
+}
 def FP64InputMods : FPInputMods<FP64InputModsMatchClass>;
 
-class FP16VCSrcInputMods<bit IsFake16>
-  : FPInputMods<FP16VCSrcInputModsMatchClass<IsFake16>>;
+class FPT16VCSrcInputMods<bit IsFake16 = 0>
+  : FPInputMods<FP16VCSrcInputModsMatchClass<IsFake16>> {
+let EncoderMethod = "getMachineOpValueT16";
+}
 def FP32VCSrcInputMods : FPInputMods<FP32VCSrcInputModsMatchClass>;
 
 class IntInputModsMatchClass <int opSize> : AsmOperandClass {
@@ -1251,21 +1260,38 @@ class IntVCSrcInputModsMatchClass <int opSize> : IntInputModsMatchClass <opSize>
   let Name = "RegOrInlineImmWithInt"#opSize#"InputMods";
   let PredicateMethod = "isRegOrInlineImmWithInt"#opSize#"InputMods";
 }
-def IntT16InputModsMatchClass : IntInputModsMatchClass<16> {
-  let Name = "RegOrImmWithIntT16InputMods";
-  let PredicateMethod = "isRegOrImmWithIntT16InputMods";
+class IntT16InputModsMatchClass<bit IsFake16> : IntInputModsMatchClass<16> {
+  let Name = !if(IsFake16, "RegOrImmWithIntFake16InputMods",
+                 "RegOrImmWithIntT16InputMods");
+  let PredicateMethod = "isRegOrImmWithIntT16InputMods<" #
+                        !if(IsFake16, "true", "false") # ">";
 }
 def Int32InputModsMatchClass : IntInputModsMatchClass<32>;
 def Int64InputModsMatchClass : IntInputModsMatchClass<64>;
 def Int32VCSrcInputModsMatchClass : IntVCSrcInputModsMatchClass<32>;
+class IntT16VCSrcInputModsMatchClass<bit IsFake16> : IntInputModsMatchClass<16> {
+  let Name = !if(IsFake16, "RegOrInlineImmWithIntFake16InputMods",
+                 "RegOrInlineImmWithIntT16InputMods");
+  let PredicateMethod = "isRegOrInlineImmWithIntT16InputMods<" #
+                        !if(IsFake16, "true", "false") # ">";
+}
 
 class IntInputMods <IntInputModsMatchClass matchClass> : InputMods <matchClass> {
   let PrintMethod = "printOperandAndIntInputMods";
 }
-def IntT16InputMods : IntInputMods<IntT16InputModsMatchClass>;
+class IntT16InputMods<bit IsFake16> : IntInputMods<IntT16InputModsMatchClass<IsFake16>> {
+  let EncoderMethod = "getMachineOpValueT16";
+}
 def Int32InputMods : IntInputMods<Int32InputModsMatchClass>;
+def Int32T16DstInputMods : IntInputMods<Int32InputModsMatchClass> {
+  let EncoderMethod = "getMachineOpValueT16";
+}
 def Int64InputMods : IntInputMods<Int64InputModsMatchClass>;
 def Int32VCSrcInputMods : IntInputMods<Int32VCSrcInputModsMatchClass>;
+class IntT16VCSrcInputMods<bit IsFake16 = 0>
+    : IntInputMods<IntT16VCSrcInputModsMatchClass<IsFake16>> {
+  let EncoderMethod = "getMachineOpValueT16";
+}
 
 class OpSelModsMatchClass : AsmOperandClass {
   let Name = "OpSelMods";
@@ -1299,6 +1325,23 @@ def FPVRegInputModsMatchClass : AsmOperandClass {
   let PredicateMethod = "isVRegWithInputMods";
 }
 
+def FPVRegInputMods : InputMods <FPVRegInputModsMatchClass> {
+  let PrintMethod = "printOperandAndFPInputMods";
+}
+
+def FPVRegT16DstInputMods : InputMods <FPVRegInputModsMatchClass> {
+  let PrintMethod = "printOperandAndFPInputMods";
+  let EncoderMethod = "getMachineOpValueT16";
+}
+
+class FPT16_Lo128VRegInputModsMatchClass<bit IsFake16> : AsmOperandClass {
+  let Name = !if(IsFake16, "Fake16_Lo128VRegWithFPInputMods",
+                 "T16_Lo128VRegWithFPInputMods");
+  let ParserMethod = "parseRegWithFPInputMods";
+  let PredicateMethod = "isT16_Lo128VRegWithInputMods<" #
+                        !if(IsFake16, "true", "false") # ">";
+}
+
 class FPT16VRegInputModsMatchClass<bit IsFake16> : AsmOperandClass {
   let Name = !if(IsFake16, "Fake16VRegWithFPInputMods",
                  "T16VRegWithFPInputMods");
@@ -1307,13 +1350,16 @@ class FPT16VRegInputModsMatchClass<bit IsFake16> : AsmOperandClass {
                         !if(IsFake16, "true", "false") # ">";
 }
 
-def FPVRegInputMods : InputMods <FPVRegInputModsMatchClass> {
+class FPT16_Lo128VRegInputMods<bit IsFake16 = 0>
+    : InputMods <FPT16_Lo128VRegInputModsMatchClass<IsFake16>> {
   let PrintMethod = "printOperandAndFPInputMods";
+  let EncoderMethod = "getMachineOpValueT16Lo128";
 }
 
-class FPT16VRegInputMods<bit IsFake16>
+class FPT16VRegInputMods<bit IsFake16 = 0>
     : InputMods <FPT16VRegInputModsMatchClass<IsFake16>> {
   let PrintMethod = "printOperandAndFPInputMods";
+  let EncoderMethod = "getMachineOpValueT16";
 }
 
 class IntSDWAInputModsMatchClass <int opSize> : AsmOperandClass {
@@ -1344,7 +1390,15 @@ def IntVRegInputModsMatchClass : AsmOperandClass {
   let PredicateMethod = "isVRegWithInputMods";
 }
 
-class IntT16VRegInputModsMatchClass<bit IsFake16> : AsmOperandClass {
+class IntT16_Lo128VRegInputModsMatchClass<bit IsFake16 = 0> : AsmOperandClass {
+  let Name = !if(IsFake16, "Fake16_Lo128VRegWithIntInputMods",
+                 "T16_Lo128VRegWithIntInputMods");
+  let ParserMethod = "parseRegWithIntInputMods";
+  let PredicateMethod = "isT16_Lo128VRegWithInputMods<" #
+                        !if(IsFake16, "true", "false") # ">";
+}
+
+class IntT16VRegInputModsMatchClass<bit IsFake16 = 0> : AsmOperandClass {
   let Name = !if(IsFake16, "Fake16VRegWithIntInputMods",
                  "T16VRegWithIntInputMods");
   let ParserMethod = "parseRegWithIntInputMods";
@@ -1352,13 +1406,25 @@ class IntT16VRegInputModsMatchClass<bit IsFake16> : AsmOperandClass {
                         !if(IsFake16, "true", "false") # ">";
 }
 
-class IntT16VRegInputMods<bit IsFake16>
+class IntT16_Lo128VRegInputMods<bit IsFake16 = 0>
+    : InputMods <IntT16_Lo128VRegInputModsMatchClass<IsFake16>> {
+  let PrintMethod = "printOperandAndIntInputMods";
+  let EncoderMethod = "getMachineOpValueT16Lo128";
+}
+
+class IntT16VRegInputMods<bit IsFake16 = 0>
     : InputMods <IntT16VRegInputModsMatchClass<IsFake16>> {
   let PrintMethod = "printOperandAndIntInputMods";
+  let EncoderMethod = "getMachineOpValueT16";
 }
 
 def IntVRegInputMods : InputMods <IntVRegInputModsMatchClass> {
   let PrintMethod = "printOperandAndIntInputMods";
+}
+
+def IntVRegT16DstInputMods : InputMods <IntVRegInputModsMatchClass> {
+  let PrintMethod = "printOperandAndIntInputMods";
+  let EncoderMethod = "getMachineOpValueT16";
 }
 
 class PackedFPInputModsMatchClass <int opSize> : AsmOperandClass {
@@ -1559,7 +1625,7 @@ class getSDWADstForVT<ValueType VT> {
 
 // Returns the register class to use for source 0 of VOP[12C]
 // instructions for the given VT.
-class getVOPSrc0ForVT<ValueType VT, bit IsTrue16, bit IsFake16 = 1> {
+class getVOPSrc0ForVT<ValueType VT, bit IsTrue16, bit IsFake16 = 0> {
   RegisterOperand ret =
   !cond(!eq(VT, i64)    : VSrc_b64,
         !eq(VT, f64)    : VSrc_f64,
@@ -1668,15 +1734,27 @@ class isModifierType<ValueType SrcVT> {
                 !eq(SrcVT.Value, v16bf16.Value));
 }
 
-// Return type of input modifiers operand for specified input operand
-class getSrcMod <ValueType VT, bit IsTrue16 = 0> {
-  Operand ret =  !if(!eq(VT.Size, 64),
+// Return type of input modifiers operand for specified input operand.
+// True16: If the destination is a 16-bit value, the src0 modifier must hold
+// dst's opsel bit. Use a dummy value for DstVT if getting the mod for a src operand besides 0.
+// 64-bit src types are not implemented for True16 dst.
+class getSrc0Mod <ValueType VT, ValueType DstVT, bit IsTrue16 = 0, bit IsFake16 = 0> {
+  defvar T16Dst =  !if(!eq(VT.Size, 64),
                      !if(VT.isFP, FP64InputMods, Int64InputMods),
                      !if(!eq(VT.Size, 16),
-                         !if(VT.isFP, !if(IsTrue16, FPT16InputMods, FP16InputMods),
-                                      !if(IsTrue16, IntT16InputMods, IntOpSelMods)),
+                         !if(VT.isFP, !if(IsTrue16, FPT16InputMods<IsFake16>, FP16InputMods),
+                                      !if(IsTrue16, IntT16InputMods<IsFake16>, IntOpSelMods)),
+                         !if(VT.isFP, FP32T16DstInputMods, Int32T16DstInputMods)));
+  defvar Normal =  !if(!eq(VT.Size, 64),
+                     !if(VT.isFP, FP64InputMods, Int64InputMods),
+                     !if(!eq(VT.Size, 16),
+                         !if(VT.isFP, !if(IsTrue16, FPT16InputMods<IsFake16>, FP16InputMods),
+                                      !if(IsTrue16, IntT16InputMods<IsFake16>, IntOpSelMods)),
                          !if(VT.isFP, FP32InputMods, Int32InputMods)));
+  Operand ret = !if(!and(IsTrue16, !eq(DstVT.Size, 16)), T16Dst, Normal);
 }
+
+class getSrcMod<ValueType VT, bit IsTrue16 = 0, bit IsFake16 = 0> : getSrc0Mod<VT, f128/*Dummy Arg*/, IsTrue16, IsFake16>;
 
 class getOpSelMod <ValueType VT> {
   Operand ret = !cond(!eq(VT, f16) : FP16InputMods,
@@ -1691,7 +1769,7 @@ class getSrcModDPP <ValueType VT> {
   Operand ret = !if(VT.isFP, FPVRegInputMods, IntVRegInputMods);
 }
 
-class getSrcModDPP_t16 <ValueType VT, bit IsFake16 = 1> {
+class getSrcModDPP_t16 <ValueType VT, bit IsFake16 = 0> {
   Operand ret =
       !if (VT.isFP,
            !if (!or(!eq(VT.Value, f16.Value), !eq(VT.Value, bf16.Value)),
@@ -1701,12 +1779,36 @@ class getSrcModDPP_t16 <ValueType VT, bit IsFake16 = 1> {
 }
 
 // Return type of input modifiers operand for specified input operand for DPP
-class getSrcModVOP3DPP <ValueType VT, bit IsFake16 = 1> {
+// True16: If the destination is a 16-bit value, the src0 modifier must hold
+// dst's opsel bit. Use a dummy value for DstVT if getting the mod for a src operand besides 0.
+// 64-bit src types are not implemented for True16 dst.
+class getSrc0ModVOP3DPP <ValueType VT, ValueType DstVT, bit IsFake16 = 0> {
+  defvar T16Dst =
+      !if (VT.isFP,
+           !if (!or(!eq(VT.Value, f16.Value), !eq(VT.Value, bf16.Value)),
+                FPT16VRegInputMods<IsFake16>, FPVRegT16DstInputMods),
+           !if (!eq(VT.Value, i16.Value), IntT16VRegInputMods<IsFake16>,
+                IntVRegT16DstInputMods));
+  defvar Normal =
+      !if (VT.isFP,
+           !if (!or(!eq(VT.Value, f16.Value), !eq(VT.Value, bf16.Value)),
+                FPT16VRegInputMods<IsFake16>, FPVRegInputMods),
+           !if (!eq(VT.Value, i16.Value),
+                IntT16VRegInputMods<IsFake16>,
+                IntVRegInputMods));
+  Operand ret = !if(!and(!not(IsFake16), !eq(DstVT.Size, 16)), T16Dst, Normal);
+}
+
+// GFX11 only supports VGPR src1, but the restriction is done in AsmParser
+// and GCNDPPCombine.
+class getSrcModVOP3DPP<ValueType VT, bit IsFake16 = 0> {
   Operand ret =
       !if (VT.isFP,
            !if (!or(!eq(VT.Value, f16.Value), !eq(VT.Value, bf16.Value)),
-                FP16VCSrcInputMods<IsFake16>, FP32VCSrcInputMods),
-           Int32VCSrcInputMods);
+                FPT16VCSrcInputMods<IsFake16>, FP32VCSrcInputMods),
+           !if (!eq(VT.Value, i16.Value),
+                IntT16VCSrcInputMods<IsFake16>,
+                Int32VCSrcInputMods));
 }
 
 // Return type of input modifiers operand specified input operand for SDWA
@@ -1747,9 +1849,11 @@ class getIns64 <RegisterOperand Src0RC, RegisterOperand Src1RC,
             (ins Src0Mod:$src0_modifiers, Src0RC:$src0)))
       /* else */,
         // VOP1 without modifiers
-        !if (HasClamp,
-          (ins Src0RC:$src0, Clamp0:$clamp),
-          (ins Src0RC:$src0))
+        !if(HasOMod,
+          (ins Src0RC:$src0, Clamp0:$clamp, omod0:$omod),
+          !if (HasClamp,
+            (ins Src0RC:$src0, Clamp0:$clamp),
+            (ins Src0RC:$src0)))
       /* endif */ ),
     !if (!eq(NumSrcArgs, 2),
       !if (HasModifiers,
