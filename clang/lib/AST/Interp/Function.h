@@ -20,6 +20,7 @@
 #include "clang/AST/ASTLambda.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
+#include "llvm/ADT/PointerUnion.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang {
@@ -89,15 +90,20 @@ public:
   CodePtr getCodeEnd() const { return Code.data() + Code.size(); }
 
   /// Returns the original FunctionDecl.
-  const FunctionDecl *getDecl() const { return F; }
+  const FunctionDecl *getDecl() const {
+    return Source.dyn_cast<const FunctionDecl *>();
+  }
+  const BlockExpr *getExpr() const {
+    return Source.dyn_cast<const BlockExpr *>();
+  }
 
   /// Returns the name of the function decl this code
   /// was generated for.
   const std::string getName() const {
-    if (!F)
+    if (!Source)
       return "<<expr>>";
 
-    return F->getQualifiedNameAsString();
+    return Source.get<const FunctionDecl *>()->getQualifiedNameAsString();
   }
 
   /// Returns the location.
@@ -138,13 +144,20 @@ public:
   bool isVirtual() const;
 
   /// Checks if the function is a constructor.
-  bool isConstructor() const { return isa<CXXConstructorDecl>(F); }
+  bool isConstructor() const {
+    return isa_and_nonnull<CXXConstructorDecl>(
+        Source.dyn_cast<const FunctionDecl *>());
+  }
   /// Checks if the function is a destructor.
-  bool isDestructor() const { return isa<CXXDestructorDecl>(F); }
+  bool isDestructor() const {
+    return isa_and_nonnull<CXXDestructorDecl>(
+        Source.dyn_cast<const FunctionDecl *>());
+  }
 
   /// Returns the parent record decl, if any.
   const CXXRecordDecl *getParentDecl() const {
-    if (const auto *MD = dyn_cast<CXXMethodDecl>(F))
+    if (const auto *MD = dyn_cast_if_present<CXXMethodDecl>(
+            Source.dyn_cast<const FunctionDecl *>()))
       return MD->getParent();
     return nullptr;
   }
@@ -152,7 +165,8 @@ public:
   /// Returns whether this function is a lambda static invoker,
   /// which we generate custom byte code for.
   bool isLambdaStaticInvoker() const {
-    if (const auto *MD = dyn_cast<CXXMethodDecl>(F))
+    if (const auto *MD = dyn_cast_if_present<CXXMethodDecl>(
+            Source.dyn_cast<const FunctionDecl *>()))
       return MD->isLambdaStaticInvoker();
     return false;
   }
@@ -160,7 +174,8 @@ public:
   /// Returns whether this function is the call operator
   /// of a lambda record decl.
   bool isLambdaCallOperator() const {
-    if (const auto *MD = dyn_cast<CXXMethodDecl>(F))
+    if (const auto *MD = dyn_cast_if_present<CXXMethodDecl>(
+            Source.dyn_cast<const FunctionDecl *>()))
       return clang::isLambdaCallOperator(MD);
     return false;
   }
@@ -178,9 +193,13 @@ public:
 
   bool isVariadic() const { return Variadic; }
 
-  unsigned getBuiltinID() const { return F->getBuiltinID(); }
+  unsigned getBuiltinID() const {
+    return Source.get<const FunctionDecl *>()->getBuiltinID();
+  }
 
-  bool isBuiltin() const { return F->getBuiltinID() != 0; }
+  bool isBuiltin() const {
+    return Source.get<const FunctionDecl *>()->getBuiltinID() != 0;
+  }
 
   bool isUnevaluatedBuiltin() const { return IsUnevaluatedBuiltin; }
 
@@ -197,7 +216,8 @@ public:
   }
 
   bool isThisPointerExplicit() const {
-    if (const auto *MD = dyn_cast<CXXMethodDecl>(F))
+    if (const auto *MD = dyn_cast_if_present<CXXMethodDecl>(
+            Source.dyn_cast<const FunctionDecl *>()))
       return MD->isExplicitObjectMemberFunction();
     return false;
   }
@@ -213,6 +233,10 @@ private:
            llvm::DenseMap<unsigned, ParamDescriptor> &&Params,
            llvm::SmallVectorImpl<unsigned> &&ParamOffsets, bool HasThisPointer,
            bool HasRVO, bool UnevaluatedBuiltin);
+  Function(Program &P, const BlockExpr *BE, unsigned ArgSize,
+           llvm::SmallVectorImpl<PrimType> &&ParamTypes,
+           llvm::DenseMap<unsigned, ParamDescriptor> &&Params,
+           llvm::SmallVectorImpl<unsigned> &&ParamOffsets);
 
   /// Sets the code of a function.
   void setCode(unsigned NewFrameSize, std::vector<std::byte> &&NewCode,
@@ -238,7 +262,7 @@ private:
   /// Location of the executed code.
   SourceLocation Loc;
   /// Declaration this function was compiled from.
-  const FunctionDecl *F;
+  llvm::PointerUnion<const FunctionDecl *, const BlockExpr *> Source;
   /// Local area size: storage + metadata.
   unsigned FrameSize = 0;
   /// Size of the argument stack.
