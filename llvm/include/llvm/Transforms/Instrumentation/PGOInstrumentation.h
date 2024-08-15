@@ -56,12 +56,14 @@ private:
 /// The instrumentation (profile-instr-gen) pass for IR based PGO.
 class PGOInstrumentationGen : public PassInfoMixin<PGOInstrumentationGen> {
 public:
-  PGOInstrumentationGen(bool IsCS = false) : IsCS(IsCS) {}
+  PGOInstrumentationGen(bool IsCS = false, bool IsCtxProf = false)
+      : IsCS(IsCS), IsCtxProf(IsCtxProf) {}
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM);
 
 private:
   // If this is a context sensitive instrumentation.
-  bool IsCS;
+  const bool IsCS;
+  const bool IsCtxProf;
 };
 
 /// The profile annotation (profile-instr-use) pass for IR based PGO.
