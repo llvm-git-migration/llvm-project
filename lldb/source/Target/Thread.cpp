@@ -1748,7 +1748,8 @@ std::string Thread::RunModeAsString(lldb::RunMode mode) {
 
 size_t Thread::GetStatus(Stream &strm, uint32_t start_frame,
                          uint32_t num_frames, uint32_t num_frames_with_source,
-                         bool stop_format, bool only_stacks) {
+                         bool stop_format, bool should_filter,
+                         bool only_stacks) {
 
   if (!only_stacks) {
     ExecutionContext exe_ctx(shared_from_this());
@@ -1795,7 +1796,7 @@ size_t Thread::GetStatus(Stream &strm, uint32_t start_frame,
 
     num_frames_shown = GetStackFrameList()->GetStatus(
         strm, start_frame, num_frames, show_frame_info, num_frames_with_source,
-        show_frame_unique, selected_frame_marker);
+        show_frame_unique, should_filter, selected_frame_marker);
     if (num_frames == 1)
       strm.IndentLess();
     strm.IndentLess();
@@ -1893,9 +1894,11 @@ bool Thread::GetDescription(Stream &strm, lldb::DescriptionLevel level,
 
 size_t Thread::GetStackFrameStatus(Stream &strm, uint32_t first_frame,
                                    uint32_t num_frames, bool show_frame_info,
-                                   uint32_t num_frames_with_source) {
-  return GetStackFrameList()->GetStatus(
-      strm, first_frame, num_frames, show_frame_info, num_frames_with_source);
+                                   uint32_t num_frames_with_source,
+                                   bool should_filter) {
+  return GetStackFrameList()->GetStatus(strm, first_frame, num_frames,
+                                        show_frame_info, num_frames_with_source,
+                                        /*show_unique*/ false, should_filter);
 }
 
 Unwind &Thread::GetUnwinder() {

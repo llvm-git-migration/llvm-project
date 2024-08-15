@@ -1202,6 +1202,19 @@ bool SBFrame::IsArtificial() const {
   return false;
 }
 
+bool SBFrame::IsHidden() const {
+  LLDB_INSTRUMENT_VA(this);
+
+  std::unique_lock<std::recursive_mutex> lock;
+  ExecutionContext exe_ctx(m_opaque_sp.get(), lock);
+
+  StackFrame *frame = exe_ctx.GetFramePtr();
+  if (frame)
+    return frame->IsHidden();
+
+  return false;
+}
+
 const char *SBFrame::GetFunctionName() {
   LLDB_INSTRUMENT_VA(this);
 

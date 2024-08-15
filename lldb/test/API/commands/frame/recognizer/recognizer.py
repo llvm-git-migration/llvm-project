@@ -36,3 +36,8 @@ class MyFrameRecognizer(object):
 class MyOtherFrameRecognizer(object):
     def get_recognized_arguments(self, frame):
         return []
+
+
+class MainFrameRecognizer(object):
+    def should_hide(self, frame):
+        return "main" in frame.name
