@@ -77,6 +77,10 @@ Changes to the AArch64 Backend
 Changes to the AMDGPU Backend
 -----------------------------
 
+* Removed ``llvm.amdgcn.atomic.cond.sub.u32`` and
+  ``llvm.amdgcn.atomic.csub.u32`` intrinsics. :ref:`atomicrmw <i_atomicrmw>`
+  should be used instead with ``usub_cond`` and ``usub_sat``.
+
 Changes to the ARM Backend
 --------------------------
 
