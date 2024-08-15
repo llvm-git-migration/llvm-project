@@ -23,6 +23,13 @@ intended to be able to support "stacked" pull-request. Do not create any branche
 llvm/llvm-project repository otherwise, please use a fork (see below). User branches that
 aren't associated with a pull-request **will be deleted**.
 
+Note: this is particularly necessary if using [Graphite](https://app.graphite.dev/).
+To make sure Graphite creates branches following the above pattern, use `gt config`
+then `Branch naming settings` and `Set a prefix for branch names`. Include the last
+`/`. Otherwise Graphite will fail to `gt submit`. If that happens, a simple way to
+unblock is to rename (`git -m <old name> <new name>`), and then checkout the branch
+and `gt track`.
+
 Pull Requests
 =============
 The LLVM project is using GitHub Pull Requests for Code Reviews. This document
