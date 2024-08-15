@@ -1424,6 +1424,12 @@ static Instruction *factorizeMathWithShlOps(BinaryOperator &I,
       !match(Op1, m_Shl(m_Value(Y), m_Specific(ShAmt))))
     return nullptr;
 
+  // This transform is only profitiable if both operations or one operation and
+  // the resulting add/sub can be eliminated/folded.
+  if (!(Op0->hasOneUse() && Op1->hasOneUse()) &&
+      !(isa<Constant>(X) && isa<Constant>(Y)))
+    return nullptr;
+
   // No-wrap propagates only when all ops have no-wrap.
   bool HasNSW = I.hasNoSignedWrap() && Op0->hasNoSignedWrap() &&
                 Op1->hasNoSignedWrap();
