@@ -21,78 +21,69 @@ namespace {
 
 // TODO: Split into multiple TESTs.
 TEST(DataLayoutTest, ParseErrors) {
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("^"),
-      FailedWithMessage("Unknown specifier in datalayout string"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("m:v"),
-      FailedWithMessage("Unknown mangling in datalayout string"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("^"),
+                       FailedWithMessage("unknown specifier '^'"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("m:v"),
+                       FailedWithMessage("unknown mangling specifier"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("n0"),
-      FailedWithMessage("Zero width native integer type in datalayout string"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("a1:64"),
-      FailedWithMessage("Sized aggregate specification in datalayout string"));
+      FailedWithMessage("size must be a non-zero 24-bit integer"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("a1:64"),
+                       FailedWithMessage("size component must be empty"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("a:"),
-      FailedWithMessage("Trailing separator in datalayout string"));
+      FailedWithMessage("ABI alignment component cannot be empty"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("m"),
-      FailedWithMessage("Expected mangling specifier in datalayout string"));
+      FailedWithMessage(
+          "malformed specification, must be of the form \"m:<mangling>\""));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("m."),
-      FailedWithMessage("Unexpected trailing characters after mangling "
-                        "specifier in datalayout string"));
+      FailedWithMessage(
+          "malformed specification, must be of the form \"m:<mangling>\""));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("f"),
-      FailedWithMessage(
-          "Missing alignment specification in datalayout string"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse(":32"),
-      FailedWithMessage(
-          "Expected token before separator in datalayout string"));
+      FailedWithMessage("malformed specification, must be of the form "
+                        "\"f<size>:<abi>[:<pref>]\""));
+  EXPECT_THAT_EXPECTED(DataLayout::parse(":32"),
+                       FailedWithMessage("unknown specifier ':'"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("i64:64:16"),
       FailedWithMessage(
-          "Preferred alignment cannot be less than the ABI alignment"));
+          "preferred alignment cannot be less than the ABI alignment"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("i64:16:16777216"),
-      FailedWithMessage(
-          "Invalid preferred alignment, must be a 16bit integer"));
+      FailedWithMessage("preferred alignment must be a 16-bit integer"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("i64:16777216:16777216"),
-      FailedWithMessage("Invalid ABI alignment, must be a 16bit integer"));
+      FailedWithMessage("ABI alignment must be a 16-bit integer"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("i16777216:16:16"),
-      FailedWithMessage("Invalid bit width, must be a 24-bit integer"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("v128:0:128"),
-      FailedWithMessage(
-          "ABI alignment specification must be >0 for non-aggregate types"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("i32:24:32"),
-      FailedWithMessage("Invalid ABI alignment, must be a power of 2"));
+      FailedWithMessage("size must be a non-zero 24-bit integer"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("v128:0:128"),
+                       FailedWithMessage("ABI alignment must be non-zero"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("i32:32:24"),
-      FailedWithMessage("Invalid preferred alignment, must be a power of 2"));
+      FailedWithMessage(
+          "preferred alignment must be a power of two times the byte width"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("A16777216"),
-      FailedWithMessage("Invalid address space, must be a 24-bit integer"));
+      FailedWithMessage("address space must be a 24-bit integer"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("G16777216"),
-      FailedWithMessage("Invalid address space, must be a 24-bit integer"));
+      FailedWithMessage("address space must be a 24-bit integer"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("P16777216"),
-      FailedWithMessage("Invalid address space, must be a 24-bit integer"));
+      FailedWithMessage("address space must be a 24-bit integer"));
   EXPECT_THAT_EXPECTED(
       DataLayout::parse("Fi24"),
-      FailedWithMessage("Alignment is neither 0 nor a power of 2"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("i8:16"),
-      FailedWithMessage("Invalid ABI alignment, i8 must be naturally aligned"));
-  EXPECT_THAT_EXPECTED(
-      DataLayout::parse("S24"),
-      FailedWithMessage("Alignment is neither 0 nor a power of 2"));
+      FailedWithMessage(
+          "ABI alignment must be a power of two times the byte width"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("i8:16"),
+                       FailedWithMessage("i8 must be 8-bit aligned"));
+  EXPECT_THAT_EXPECTED(DataLayout::parse("S24"),
+                       FailedWithMessage("stack natural alignment must be a "
+                                         "power of two times the byte width"));
 }
 
 TEST(DataLayout, LayoutStringFormat) {
