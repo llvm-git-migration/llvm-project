@@ -114,6 +114,15 @@ struct VPlanTransforms {
   static void createInterleaveGroups(
       const SmallPtrSetImpl<const InterleaveGroup<Instruction> *> &InterleaveGroups,
       VPRecipeBuilder &RecipeBuilder, bool ScalarEpilogueAllowed);
+
+  /// Add recipes required to make CSA work with EVL based approach. This
+  /// includes replacing \p CSAAnyActive with \p CSAAnyActiveEVL, and adding \p
+  /// CSAVLPhi and \p CSAVLSel instructions. No EVL specific recipes are added
+  /// when \p PlanHasScalarVFOnly since scalar version of a CSA does not require
+  /// an EVL.
+  static void addExplicitVectorLengthForCSA(
+      VPInstruction *VPEVL, const MapVector<PHINode *, VPCSAState *> &CSAStates,
+      bool PlanHasScalarVFOnly);
 };
 
 } // namespace llvm
