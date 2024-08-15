@@ -1193,7 +1193,7 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
                       PGOOpt->ProfileFile, PGOOpt->ProfileRemappingFile,
                       PGOOpt->FS);
   } else if (IsCtxProfGen || IsCtxProfUse) {
-    MPM.addPass(PGOInstrumentationGen(false));
+    MPM.addPass(PGOInstrumentationGen(/*IsCS=*/false, /*IsCtxProf=*/true));
     // In pre-link, we just want the instrumented IR. We use the contextual
     // profile in the post-thinlink phase.
     // The instrumentation will be removed in post-thinlink after IPO.
