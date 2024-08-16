@@ -475,6 +475,18 @@ std::vector<int>::iterator noFalsePositiveWithVectorOfPointers() {
   return iters.at(0);
 }
 
+// GH100384
+std::string_view ContainerWithAnnotatedElements() {
+  std::string_view c1 = std::vector<std::string>().at(0); // expected-warning {{object backing the pointer will be destroyed at the end of the full-expression}}
+  c1 = std::vector<std::string>().at(0); // expected-warning {{object backing the pointer}}
+
+  // no warning on constructing from gsl-pointer
+  std::string_view c2 = std::vector<std::string_view>().at(0);
+
+  std::vector<std::string> local;
+  return local.at(0); // expected-warning {{address of stack memory associated with local variable 'local' returned}}
+}
+
 void testForBug49342()
 {
   auto it = std::iter<char>{} - 2; // Used to be false positive.
