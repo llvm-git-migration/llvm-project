@@ -26,6 +26,32 @@ class Status;
 class Socket;
 class SocketAddress;
 
+#ifdef _WIN32
+typedef lldb::pipe_t shared_fd_t;
+#else
+typedef NativeSocket shared_fd_t;
+#endif
+
+class SharedSocket {
+public:
+  static const shared_fd_t kInvalidFD;
+
+  SharedSocket(Connection *conn, Status &error);
+
+  shared_fd_t GetSendableFD() { return m_fd; }
+
+  Status CompleteSending(lldb::pid_t child_pid);
+
+  static Status GetNativeSocket(shared_fd_t fd, NativeSocket &socket);
+
+private:
+#ifdef _WIN32
+  Pipe m_socket_pipe;
+  NativeSocket m_socket;
+#endif
+  shared_fd_t m_fd;
+};
+
 class ConnectionFileDescriptor : public Connection {
 public:
   typedef llvm::function_ref<void(llvm::StringRef local_socket_id)>

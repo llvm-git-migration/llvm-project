@@ -52,6 +52,94 @@
 using namespace lldb;
 using namespace lldb_private;
 
+#ifdef _WIN32
+const shared_fd_t SharedSocket::kInvalidFD = LLDB_INVALID_PIPE;
+#else
+const shared_fd_t SharedSocket::kInvalidFD = Socket::kInvalidSocketValue;
+#endif
+
+SharedSocket::SharedSocket(Connection *conn, Status &error) {
+  m_fd = kInvalidFD;
+
+  const Socket *socket =
+      static_cast<const Socket *>(conn->GetReadObject().get());
+  if (socket == nullptr) {
+    error = Status("invalid conn socket");
+    return;
+  }
+
+#ifdef _WIN32
+  m_socket = socket->GetNativeSocket();
+
+  // Create a pipe to transfer WSAPROTOCOL_INFO to the child process.
+  error = m_socket_pipe.CreateNew(true);
+  if (error.Fail())
+    return;
+
+  m_fd = m_socket_pipe.GetReadPipe();
+#else
+  m_fd = socket->GetNativeSocket();
+  error = Status();
+#endif
+}
+
+Status SharedSocket::CompleteSending(lldb::pid_t child_pid) {
+#ifdef _WIN32
+  // Transfer WSAPROTOCOL_INFO to the child process.
+  m_socket_pipe.CloseReadFileDescriptor();
+
+  WSAPROTOCOL_INFO protocol_info;
+  if (::WSADuplicateSocket(m_socket, child_pid, &protocol_info) ==
+      SOCKET_ERROR) {
+    int last_error = ::WSAGetLastError();
+    return Status("WSADuplicateSocket() failed, error: %d", last_error);
+  }
+
+  size_t num_bytes;
+  Status error =
+      m_socket_pipe.WriteWithTimeout(&protocol_info, sizeof(protocol_info),
+                                     std::chrono::seconds(10), num_bytes);
+  if (error.Fail())
+    return error;
+  if (num_bytes != sizeof(protocol_info))
+    return Status("WriteWithTimeout(WSAPROTOCOL_INFO) failed: %d bytes",
+                  num_bytes);
+#endif
+  return Status();
+}
+
+Status SharedSocket::GetNativeSocket(shared_fd_t fd, NativeSocket &socket) {
+#ifdef _WIN32
+  socket = Socket::kInvalidSocketValue;
+  // Read WSAPROTOCOL_INFO from the parent process and create NativeSocket.
+  WSAPROTOCOL_INFO protocol_info;
+  {
+    Pipe socket_pipe(fd, LLDB_INVALID_PIPE);
+    size_t num_bytes;
+    Status error =
+        socket_pipe.ReadWithTimeout(&protocol_info, sizeof(protocol_info),
+                                    std::chrono::seconds(10), num_bytes);
+    if (error.Fail())
+      return error;
+    if (num_bytes != sizeof(protocol_info)) {
+      return Status(
+          "socket_pipe.ReadWithTimeout(WSAPROTOCOL_INFO) failed: % d bytes",
+          num_bytes);
+    }
+  }
+  socket = ::WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO,
+                       FROM_PROTOCOL_INFO, &protocol_info, 0, 0);
+  if (socket == INVALID_SOCKET) {
+    return Status("WSASocket(FROM_PROTOCOL_INFO) failed: error %d",
+                  ::WSAGetLastError());
+  }
+  return Status();
+#else
+  socket = fd;
+  return Status();
+#endif
+}
+
 ConnectionFileDescriptor::ConnectionFileDescriptor(bool child_processes_inherit)
     : Connection(), m_pipe(), m_mutex(), m_shutting_down(false),
 
@@ -162,8 +250,10 @@ ConnectionFileDescriptor::Connect(llvm::StringRef path,
             .Case("unix-connect", &ConnectionFileDescriptor::ConnectNamedSocket)
             .Case("unix-abstract-connect",
                   &ConnectionFileDescriptor::ConnectAbstractSocket)
-#if LLDB_ENABLE_POSIX
+#if LLDB_ENABLE_POSIX || defined(_WIN32)
             .Case("fd", &ConnectionFileDescriptor::ConnectFD)
+#endif
+#if LLDB_ENABLE_POSIX
             .Case("file", &ConnectionFileDescriptor::ConnectFile)
             .Case("serial", &ConnectionFileDescriptor::ConnectSerialPort)
 #endif
@@ -666,7 +756,23 @@ ConnectionStatus
 ConnectionFileDescriptor::ConnectFD(llvm::StringRef s,
                                     socket_id_callback_type socket_id_callback,
                                     Status *error_ptr) {
-#if LLDB_ENABLE_POSIX
+#ifdef _WIN32
+  int64_t fd = -1;
+  if (!s.getAsInteger(0, fd)) {
+    // Assume we own fd.
+    std::unique_ptr<TCPSocket> tcp_socket =
+        std::make_unique<TCPSocket>((NativeSocket)fd, true, false);
+    m_io_sp = std::move(tcp_socket);
+    m_uri = s.str();
+    return eConnectionStatusSuccess;
+  }
+
+  if (error_ptr)
+    error_ptr->SetErrorStringWithFormat("invalid file descriptor: \"%s\"",
+                                        s.str().c_str());
+  m_io_sp.reset();
+  return eConnectionStatusError;
+#elif LLDB_ENABLE_POSIX
   // Just passing a native file descriptor within this current process that
   // is already opened (possibly from a service or other source).
   int fd = -1;
