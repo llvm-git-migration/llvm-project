@@ -10,11 +10,12 @@
 // minimum required version these obsolete tests can be removed.
 // TODO(LLVM-20) remove spurious clang diagnostic tests.
 
-// UNSUPPORTED: c++03, c++11, c++14, c++17, c++20
-
 // With clang-cl, some warnings have a 'which is a Microsoft extension' suffix
-// which break the tests.
-// XFAIL: msvc
+// which break the tests. But #102851 will turn it into an error, making the test pass.
+// However, upstream libcxx buildbots do not build clang from source while testing, so
+// this tests still expected to fail on these bots. Mark msvc as unsupported to mitigate
+// this issue.
+// UNSUPPORTED: c++03, c++11, c++14, c++17, c++20, msvc
 
 // Test the mandates
 
