@@ -3547,6 +3547,20 @@ const SCEV *ScalarEvolution::getUDivExpr(const SCEV *LHS,
     }
   }
 
+  // ((-1 + (1 smax %x))<nsw> /u %x) evaluates to zero, for any positive %x.
+  if (const auto *AE = dyn_cast<SCEVAddExpr>(LHS);
+      AE && AE->getNumOperands() == 2 && AE->hasNoSignedWrap()) {
+    if (isa<SCEVConstant>(AE->getOperand(0)) &&
+        cast<SCEVConstant>(AE->getOperand(0))->isAllOnesValue()) {
+      const auto *MME = dyn_cast<SCEVSMaxExpr>(AE->getOperand(1));
+      if (MME && MME->getNumOperands() == 2)
+        if (isa<SCEVConstant>(MME->getOperand(0)) &&
+            cast<SCEVConstant>(MME->getOperand(0))->isOne())
+          if (MME->getOperand(1) == RHS)
+            return getZero(LHS->getType());
+    }
+  }
+
   // The Insertion Point (IP) might be invalid by now (due to UniqueSCEVs
   // changes). Make sure we get a new one.
   IP = nullptr;

@@ -10,19 +10,20 @@ define void @test(i32 noundef %x) {
 ; CHECK-NEXT:  Classifying expressions for: @test
 ; CHECK-NEXT:    %g_var.promoted = load i32, ptr @g_var, align 4
 ; CHECK-NEXT:    --> %g_var.promoted U: full-set S: full-set
-; CHECK-NEXT:    %smax = call i32 @llvm.smax.i32(i32 %x, i32 1)
-; CHECK-NEXT:    --> (1 smax %x) U: [1,-2147483648) S: [1,-2147483648)
-; CHECK-NEXT:    %0 = add nsw i32 %smax, -1
-; CHECK-NEXT:    --> (-1 + (1 smax %x))<nsw> U: [0,2147483647) S: [0,2147483647)
-; CHECK-NEXT:    %1 = udiv i32 %0, %x
-; CHECK-NEXT:    --> ((-1 + (1 smax %x))<nsw> /u %x) U: [0,2147483647) S: [0,2147483647)
-; CHECK-NEXT:    %2 = add nuw nsw i32 %1, 1
-; CHECK-NEXT:    --> (1 + ((-1 + (1 smax %x))<nsw> /u %x))<nuw><nsw> U: [1,-2147483648) S: [1,-2147483648)
-;
+; CHECK-NEXT:    %add.lcssa = phi i32 [ %add, %for.body ]
+; CHECK-NEXT:    --> {(%x + %g_var.promoted),+,%x}<nw><%for.body> U: full-set S: full-set --> (%x + %g_var.promoted) U: full-set S: full-set
+; CHECK-NEXT:    %i.06 = phi i32 [ 0, %entry ], [ %add1, %for.body ]
+; CHECK-NEXT:    --> {0,+,%x}<nuw><nsw><%for.body> U: [0,1) S: [0,1) Exits: 0 LoopDispositions: { %for.body: Computable }
+; CHECK-NEXT:    %add45 = phi i32 [ %g_var.promoted, %entry ], [ %add, %for.body ]
+; CHECK-NEXT:    --> {%g_var.promoted,+,%x}<nsw><%for.body> U: full-set S: full-set Exits: %g_var.promoted LoopDispositions: { %for.body: Computable }
+; CHECK-NEXT:    %add = add nsw i32 %add45, %x
+; CHECK-NEXT:    --> {(%x + %g_var.promoted),+,%x}<nw><%for.body> U: full-set S: full-set Exits: (%x + %g_var.promoted) LoopDispositions: { %for.body: Computable }
+; CHECK-NEXT:    %add1 = add nsw i32 %i.06, %x
+; CHECK-NEXT:    --> {%x,+,%x}<nsw><%for.body> U: full-set S: full-set Exits: %x LoopDispositions: { %for.body: Computable }
 ; CHECK-NEXT:  Determining loop execution counts for: @test
-; CHECK-NEXT:  Loop %for.body: backedge-taken count is ((((-1 * (%x + %bc.resume.val)<nsw>) + (-1 * (1 umin ((-1 * (%x + %bc.resume.val)<nsw>) + (1 smax (%x + %bc.resume.val)<nsw>))))<nuw><nsw> + (1 smax (%x + %bc.resume.val)<nsw>)) /u (1 umax %x)) + (1 umin ((-1 * (%x + %bc.resume.val)<nsw>) + (1 smax (%x + %bc.resume.val)<nsw>))))
-; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is i32 -2147483647
-; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is ((((-1 * (%x + %bc.resume.val)<nsw>) + (-1 * (1 umin ((-1 * (%x + %bc.resume.val)<nsw>) + (1 smax (%x + %bc.resume.val)<nsw>))))<nuw><nsw> + (1 smax (%x + %bc.resume.val)<nsw>)) /u (1 umax %x)) + (1 umin ((-1 * (%x + %bc.resume.val)<nsw>) + (1 smax (%x + %bc.resume.val)<nsw>))))
+; CHECK-NEXT:  Loop %for.body: backedge-taken count is i32 0
+; CHECK-NEXT:  Loop %for.body: constant max backedge-taken count is i32 0
+; CHECK-NEXT:  Loop %for.body: symbolic max backedge-taken count is i32 0
 ; CHECK-NEXT:  Loop %for.body: Trip multiple is 1
 ;
 entry:
