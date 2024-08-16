@@ -99,10 +99,8 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
         for (const MachineOperand &MO : MI.operands()) {
           // Track the Fake Uses that use this register so that we can delete
           // them if we delete the corresponding load.
-          if (MO.isReg()) {
-            TRI->dumpReg(MO.getReg());
+          if (MO.isReg())
             RegFakeUses[MO.getReg()].push_back(&MI);
-          }
         }
         // Do not record FAKE_USE uses in LivePhysRegs so that we can recognize
         // otherwise-unused loads.
@@ -115,10 +113,8 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
         Register Reg = MI.getOperand(0).getReg();
         assert(Reg.isPhysical() && "VReg seen in function with NoVRegs set?");
         // Don't delete live physreg defs, or any reserved register defs.
-        if (!LivePhysRegs.available(Reg) || MRI->isReserved(Reg)) {
-          TRI->dumpReg(Reg);
+        if (!LivePhysRegs.available(Reg) || MRI->isReserved(Reg))
           continue;
-        }
         // There should be an exact match between the loaded register and the
         // FAKE_USE use. If not, this is a load that is unused by anything? It
         // should probably be deleted, but that's outside of this pass' scope.
