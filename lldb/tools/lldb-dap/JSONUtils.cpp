@@ -1163,9 +1163,9 @@ std::string VariableDescription::GetResult(llvm::StringRef context) {
 //       "properties": {
 //         "declaration": {
 //           "type": "object",
-//           "description": "The source location where the variable was declared.
-//                           This value won't be present if no declaration is
-//                           available.
+//           "description": "The source location where the variable was
+//                           declared. This value won't be present if no
+//                           declaration is available.
 //                           Superseded by `declarationLocationReference`",
 //           "properties": {
 //             "path": {

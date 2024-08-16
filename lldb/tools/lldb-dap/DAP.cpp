@@ -839,8 +839,7 @@ lldb::SBValue Variables::GetVariable(int64_t var_ref) const {
   return lldb::SBValue();
 }
 
-int64_t Variables::InsertVariable(lldb::SBValue variable,
-                                  bool is_permanent) {
+int64_t Variables::InsertVariable(lldb::SBValue variable, bool is_permanent) {
   int64_t var_ref = GetNewVariableReference(is_permanent);
   if (is_permanent)
     referenced_permanent_variables.insert(std::make_pair(var_ref, variable));

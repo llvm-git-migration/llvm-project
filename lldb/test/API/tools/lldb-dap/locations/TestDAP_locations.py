@@ -32,7 +32,9 @@ class TestDAP_locations(lldbdap_testcase.DAPTestCaseBase):
         # var1 has a declarationLocation but no valueLocation
         self.assertIn("declarationLocationReference", locals["var1"].keys())
         self.assertNotIn("valueLocationReference", locals["var1"].keys())
-        loc_var1 = self.dap_server.request_locations(locals["var1"]["declarationLocationReference"])
+        loc_var1 = self.dap_server.request_locations(
+            locals["var1"]["declarationLocationReference"]
+        )
         self.assertTrue(loc_var1["success"])
         self.assertTrue(loc_var1["body"]["source"]["path"].endswith("main.c"))
         self.assertEqual(loc_var1["body"]["line"], 2)
