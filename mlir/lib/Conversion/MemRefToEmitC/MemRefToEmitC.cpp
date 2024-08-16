@@ -177,7 +177,8 @@ void mlir::populateMemRefToEmitCTypeConversion(TypeConverter &typeConverter) {
         }
         Type convertedElementType =
             typeConverter.convertType(memRefType.getElementType());
-        if (!convertedElementType)
+        if (!convertedElementType ||
+            !emitc::isSupportedEmitCType(convertedElementType))
           return {};
         return emitc::ArrayType::get(memRefType.getShape(),
                                      convertedElementType);
