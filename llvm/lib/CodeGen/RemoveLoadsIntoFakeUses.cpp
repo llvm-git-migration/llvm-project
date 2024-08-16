@@ -53,6 +53,11 @@ public:
     MachineFunctionPass::getAnalysisUsage(AU);
   }
 
+  MachineFunctionProperties getRequiredProperties() const override {
+    return MachineFunctionProperties().set(
+        MachineFunctionProperties::Property::NoVRegs);
+  }
+
   StringRef getPassName() const override {
     return "Remove Loads Into Fake Uses";
   }
@@ -73,11 +78,6 @@ bool RemoveLoadsIntoFakeUses::runOnMachineFunction(MachineFunction &MF) {
   // this for other functions.
   if (!MF.getFunction().hasFnAttribute(Attribute::OptimizeForDebugging) ||
       skipFunction(MF.getFunction()))
-    return false;
-
-  // This implementation assumes we are post-RA.
-  if (!MF.getProperties().hasProperty(
-          MachineFunctionProperties::Property::NoVRegs))
     return false;
 
   bool AnyChanges = false;
