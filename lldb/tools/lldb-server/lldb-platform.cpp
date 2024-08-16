@@ -51,7 +51,6 @@ using namespace llvm;
 static int g_debug = 0;
 static int g_verbose = 0;
 static int g_server = 0;
-static volatile bool g_listen_gdb = true;
 
 static struct option g_long_options[] = {
     {"debug", no_argument, &g_debug, 1},
@@ -244,7 +243,7 @@ gdb_thread_proc(Acceptor *acceptor_gdb, uint16_t gdbserver_port,
   Log *log = GetLog(LLDBLog::Platform);
   GDBRemoteCommunicationServerPlatform platform(Socket::ProtocolTcp,
                                                 gdbserver_port);
-  while (g_listen_gdb) {
+  while (true) {
     Connection *conn = nullptr;
     Status error =
         acceptor_gdb->Accept(/*children_inherit_accept_socket=*/false, conn);
@@ -575,18 +574,6 @@ int main_platform(int argc, char *argv[]) {
     platform.SetConnection(std::unique_ptr<Connection>(conn));
     client_handle(platform, inferior_arguments);
   } while (g_server);
-
-  // FIXME: Make TCPSocket::CloseListenSockets() public and implement
-  // Acceptor::Close().
-  /*
-  if (acceptor_gdb && gdb_thread.IsJoinable()) {
-    g_listen_gdb = false;
-    static_cast<TCPSocket *>(acceptor_gdb->m_listener_socket_up.get())
-        ->CloseListenSockets();
-    lldb::thread_result_t result;
-    gdb_thread.Join(&result);
-  }
-  */
 
   fprintf(stderr, "lldb-server exiting...\n");
 
