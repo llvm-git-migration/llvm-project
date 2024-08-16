@@ -144,25 +144,35 @@ FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
 
 FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
                                    SizeRange range) {
-  if (!cur)
-    return trie;
+  if (!trie)
+    return &trie;
 
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
   FreeTrie **cur = &trie;
   FreeTrie **best_fit = nullptr;
   FreeTrie **deferred_upper_trie = nullptr;
+  SizeRange deferred_upper_range{0, 0};
 
   // Inductively assume all better fits than the current best are in the
   // current subtrie.
   while (true) {
     LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
 
-    // Consider whether the current node is a better fit.
-    size_t cur_size = (*cur)->size();
-    if (cur_size == size)
+    // If the current node is an exact fit, it is a best fit.
+    if ((*cur)->size() == size)
       return cur;
-    if (!best_fit || cur_size < (*best_fit)->size())
+
+    if (!best_fit || (*cur)->size() < (*best_fit)->size()) {
+      // The current node is a better fit.
       best_fit = cur;
+
+      // The old deferred upper subtrie is outclassed by the new best fit.
+      LIBC_ASSERT(!deferred_upper_trie ||
+                  deferred_upper_range.min > (*cur)->size() &&
+                      "deferred upper subtrie should be an upper sibling of an "
+                      "ancestor of the new best fit");
+      deferred_upper_trie = nullptr;
+    }
 
     // Determine which subtries might contain better fits.
     bool lower_impossible = !(*cur)->lower || range.lower().max() < size;
@@ -179,30 +189,38 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
       cur = &(*cur)->lower;
       range = range.lower();
     } else {
-      // Both subtries might contain a better fit. But, any fit in the lower
-      // subtrie is better than the best fit in the upper subtrie. Accordingly,
-      // we can scan the lower subtrie, then return to the upper one if
-      // necessary.
+      // Both subtries might contain a better fit. Any fit in the lower subtrie
+      // is better than the any fit in the upper subtrie, so scan the lower
+      // subtrie and return to the upper one if necessary.
       cur = &(*cur)->lower;
       range = range.lower();
-
-      // If we have already deferred a subtrie, it was an upper
-      // subtrie of its parent, and the node being deferred here is somewhere in
-      // the lower subtrie. That means that the new subtrie is strictly better
-      // than the old, and the old can be summarily ignored.
+      LIBC_ASSERT(!deferred_upper_trie ||
+                  range.upper().max() < deferred_upper_range.min &&
+                      "old deferred upper subtrie should be an upper sibling "
+                      "of an ancestor of the new deferred upper subtrie");
       deferred_upper_trie = &(*cur)->upper;
     }
   }
 
-  if (!deferred_upper_trie)
-    return best_fit;
-
-  // We have deferred an upper subtrie, and this is the only subtrie left that
-  // could contain a better fit, via the above analysis. It's also the case that
-  // any node within this subtrie is a fit, so just find the smallest.
+  // Scan the deferred upper subtrie and consider whether any element within
+  // provides a better fit.
   cur = deferred_upper_trie;
+  range = deferred_upper_range;
   while (*cur) {
+    if ((*cur)->size() < (*best_fit)->size())
+      best_fit = cur;
+    if ((*cur)->lower) {
+      cur = &(*cur)->lower;
+      range = range.lower();
+    } else {
+      if (best_fit && range.upper().min >= (*best_fit)->size())
+        break;
+      cur = &(*cur)->upper;
+      range = range.upper();
+    }
   }
+
+  return best_fit;
 }
 
 FreeTrie &FreeTrie::leaf() {
