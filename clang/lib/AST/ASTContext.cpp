@@ -12,7 +12,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "CXXABI.h"
-#include "Interp/Context.h"
+#include "ByteCode/Context.h"
 #include "clang/AST/APValue.h"
 #include "clang/AST/ASTConcept.h"
 #include "clang/AST/ASTMutationListener.h"

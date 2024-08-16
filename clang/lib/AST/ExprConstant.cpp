@@ -33,9 +33,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "ExprConstShared.h"
-#include "Interp/Context.h"
-#include "Interp/Frame.h"
-#include "Interp/State.h"
+#include "ByteCode/Context.h"
+#include "ByteCode/Frame.h"
+#include "ByteCode/State.h"
 #include "clang/AST/APValue.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDiagnostic.h"
