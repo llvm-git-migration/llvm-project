@@ -9,7 +9,7 @@ define i32 @test(i32 %x) {
 ; CHECK-NEXT:    %add = add nsw i32 %smax, -1
 ; CHECK-NEXT:    --> (-1 + (1 smax %x))<nsw> U: [0,2147483647) S: [0,2147483647)
 ; CHECK-NEXT:    %udiv = udiv i32 %add, %x
-; CHECK-NEXT:    --> ((-1 + (1 smax %x))<nsw> /u %x) U: [0,2147483647) S: [0,2147483647)
+; CHECK-NEXT:    --> 0 U: [0,1) S: [0,1)
 ; CHECK-NEXT:  Determining loop execution counts for: @test
 ;
 entry:
@@ -28,7 +28,7 @@ define i32 @test1(i32 %x) {
 ; CHECK-NEXT:    %add = add nsw i32 %smax, -2
 ; CHECK-NEXT:    --> (-2 + (2 smax %x))<nsw> U: [0,2147483646) S: [0,2147483646)
 ; CHECK-NEXT:    %udiv = udiv i32 %add, %x
-; CHECK-NEXT:    --> ((-2 + (2 smax %x))<nsw> /u %x) U: [0,2147483646) S: [0,2147483646)
+; CHECK-NEXT:    --> 0 U: [0,1) S: [0,1)
 ; CHECK-NEXT:  Determining loop execution counts for: @test1
 ;
 entry:
