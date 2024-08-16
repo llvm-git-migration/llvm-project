@@ -1,119 +1,102 @@
 #!/usr/bin/python3
 
 # Parsing dwarfdump's output to determine whether the location list for the
-# parameter "b" covers all of the function. The script is written in form of a
-# state machine and expects that dwarfdump output adheres to a certain order:
-# 1) The .debug_info section must appear before the .debug_loc section.
-# 2) The DW_AT_location attribute must appear before the parameter's name in the
-#    formal parameter DIE.
-#
+# parameter "b" covers all of the function. The script searches for information
+# in the input file to determine the [prologue, epilogue) range for the
+# function, the location list range for "b", and checks that the latter covers
+# the entirety of the former.
 import re
 import sys
 
-from enum import IntEnum, auto
-
 DebugInfoPattern = r"\.debug_info contents:"
-SubprogramPattern = r"^0x[0-9a-f]+:\s+DW_TAG_subprogram"
+DebugLinePattern = r"\.debug_line contents:"
 ProloguePattern = r"^\s*0x([0-9a-f]+)\s.+prologue_end"
 EpiloguePattern = r"^\s*0x([0-9a-f]+)\s.+epilogue_begin"
 FormalPattern = r"^0x[0-9a-f]+:\s+DW_TAG_formal_parameter"
-LocationPattern = r"DW_AT_location\s+\[DW_FORM_sec_offset\].*0x([a-f0-9]+)"
+LocationPattern = r"DW_AT_location\s+\[DW_FORM_([a-z_]+)\](?:.*0x([a-f0-9]+))"
 DebugLocPattern = r'\[0x([a-f0-9]+),\s+0x([a-f0-9]+)\) ".text":'
 
-# States
-class States(IntEnum):
-    LookingForDebugInfo = 0
-    LookingForSubProgram = auto()
-    LookingForFormal = auto()
-    LookingForLocation = auto()
-    DebugLocations = auto()
-    LookingForPrologue = auto()
-    LookingForEpilogue = auto()
-    AllDone = auto()
+SeenDebugInfo = False
+SeenDebugLine = False
+LocationRanges = None
+PrologueEnd = None
+EpilogueBegin = None
 
-# For each state, the state table contains 3-item sublists with the following
-# entries:
-# 1) The regex pattern we use in each state.
-# 2) The state we enter when we have a successful match for the current pattern.
-# 3) The state we enter when we do not have a successful match for the
-#    current pattern.
-StateTable = [
-    # LookingForDebugInfo
-    [DebugInfoPattern, States.LookingForSubProgram, States.LookingForDebugInfo],
-    # LookingForSubProgram
-    [SubprogramPattern, States.LookingForFormal, States.LookingForSubProgram],
-    # LookingForFormal
-    [FormalPattern, States.LookingForLocation, States.LookingForFormal],
-    # LookingForLocation
-    [LocationPattern, States.DebugLocations, States.LookingForFormal],
-    # DebugLocations
-    [DebugLocPattern, States.DebugLocations, States.LookingForPrologue],
-    # LookingForPrologue
-    [ProloguePattern, States.LookingForEpilogue, States.LookingForPrologue],
-    # LookingForEpilogue
-    [EpiloguePattern, States.AllDone, States.LookingForEpilogue],
-    # AllDone
-    [None, States.AllDone, States.AllDone],
-]
-
-# Symbolic indices
-StatePattern = 0
-NextState = 1
-FailState = 2
-
-State = States.LookingForDebugInfo
-FirstBeginOffset = -1
-ContinuousLocation = True
-LocationBreak = ()
-LocationRanges = []
-
-# Read output from file provided as command arg
+# The dwarfdump output should contain the DW_AT_location for "b" first, then the
+# line table which should contain prologue_end and epilogue_begin entries.
 with open(sys.argv[1], "r") as dwarf_dump_file:
-    for line in dwarf_dump_file:
-        if State == States.AllDone:
-            break
-        Pattern = StateTable[State][StatePattern]
-        m = re.search(Pattern, line)
-        if m:
-            # Match. Depending on the state, we extract various values.
-            if State == States.LookingForPrologue:
-                PrologueEnd = int(m.group(1), 16)
-            elif State == States.LookingForEpilogue:
-                EpilogueBegin = int(m.group(1), 16)
-            elif State == States.DebugLocations:
-                # Extract the range values
-                if FirstBeginOffset == -1:
-                    FirstBeginOffset = int(m.group(1), 16)
-                else:
-                    NewBeginOffset = int(m.group(1), 16)
-                    if NewBeginOffset != EndOffset:
-                        ContinuousLocation = False
-                        LocationBreak = (EndOffset, NewBeginOffset)
-                EndOffset = int(m.group(2), 16)
-            State = StateTable[State][NextState]
-        else:
-            State = StateTable[State][FailState]
+    dwarf_iter = iter(dwarf_dump_file)
+    for line in dwarf_iter:
+        if not SeenDebugInfo and re.match(DebugInfoPattern, line):
+            SeenDebugInfo = True
+        if not SeenDebugLine and re.match(DebugLinePattern, line):
+            SeenDebugLine = True
+        # Get the range of DW_AT_location for "b".
+        if LocationRanges is None:
+            if match := re.match(FormalPattern, line):
+                # Go until we either find DW_AT_location or reach the end of this entry.
+                location_match = None
+                while location_match is None:
+                    if (line := next(dwarf_iter, "")) == "\n":
+                        raise RuntimeError(
+                            ".debug_info output is missing DW_AT_location for 'b'"
+                        )
+                    location_match = re.search(LocationPattern, line)
+                # Variable has whole-scope location, represented by an empty tuple.
+                if location_match.group(1) == "exprloc":
+                    LocationRanges = ()
+                    continue
+                if location_match.group(1) != "sec_offset":
+                    raise RuntimeError(
+                        f"Unhandled form for DW_AT_location: DW_FORM_{location_match.group(1)}"
+                    )
+                # Variable has location range list.
+                if (
+                    debug_loc_match := re.search(DebugLocPattern, next(dwarf_iter, ""))
+                ) is None:
+                    raise RuntimeError(f"Invalid location range list for 'b'")
+                LocationRanges = (
+                    int(debug_loc_match.group(1), 16),
+                    int(debug_loc_match.group(2), 16),
+                )
+                while (
+                    debug_loc_match := re.search(DebugLocPattern, next(dwarf_iter, ""))
+                ) is not None:
+                    match_loc_start = int(debug_loc_match.group(1), 16)
+                    match_loc_end = int(debug_loc_match.group(2), 16)
+                    if match_loc_start != LocationRanges[1]:
+                        raise RuntimeError(
+                            f"Location list for 'b' is discontinuous from [0x{LocationRanges[1]:x}, 0x{match_loc_start:x})"
+                        )
+                    LocationRanges = (LocationRanges[0], match_loc_end)
+        # Get the prologue_end address.
+        elif PrologueEnd is None:
+            if match := re.match(ProloguePattern, line):
+                PrologueEnd = int(match.group(1), 16)
+        # Get the epilogue_begin address.
+        elif EpilogueBegin is None:
+            if match := re.match(EpiloguePattern, line):
+                EpilogueBegin = int(match.group(1), 16)
+                break
 
-Success = True
+if not SeenDebugInfo:
+    raise RuntimeError(".debug_info section not found.")
+if not SeenDebugLine:
+    raise RuntimeError(".debug_line section not found.")
 
-# Check that the first entry start with 0 and that the last ending address
-# in our location list is close to the high pc of the subprogram.
-if State != States.AllDone:
-    print("Error in expected sequence of DWARF information:")
-    print(" State = %d\n" % State)
-    Success = False
-elif FirstBeginOffset == -1:
-    print("Location list for 'b' not found, did the debug info format change?")
-    Success = False
-elif not ContinuousLocation:
-    print("Location list for 'b' is discontinuous from [0x%x, 0x%x)" % LocationBreak)
-    Success = False
-elif FirstBeginOffset > PrologueEnd or EndOffset < EpilogueBegin:
-    print("Location list for 'b' does not cover the whole function:")
-    print(
-        "Prologue to Epilogue = [0x%x, 0x%x), Location range = [0x%x, 0x%x)"
-        % (PrologueEnd, EpilogueBegin, FirstBeginOffset, EndOffset)
+if LocationRanges is None:
+    raise RuntimeError(".debug_info output is missing parameter 'b'")
+if PrologueEnd is None:
+    raise RuntimeError(".debug_line output is missing prologue_end")
+if EpilogueBegin is None:
+    raise RuntimeError(".debug_line output is missing epilogue_begin")
+
+if len(LocationRanges) == 2 and (
+    LocationRanges[0] > PrologueEnd or LocationRanges[1] < EpilogueBegin
+):
+    raise RuntimeError(
+        f"""Location list for 'b' does not cover the whole function:")
+    Prologue to Epilogue = [0x{PrologueEnd:x}, 0x{EpilogueBegin:x})
+    Location range = [0x{LocationRanges[0]:x}, 0x{LocationRanges[1]:x})
+"""
     )
-    Success = False
-
-sys.exit(not Success)
