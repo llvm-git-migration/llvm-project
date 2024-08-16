@@ -3547,6 +3547,25 @@ const SCEV *ScalarEvolution::getUDivExpr(const SCEV *LHS,
     }
   }
 
+  // ((-1 + (1 smax %x))<nsw> /u %x) evaluates to zero, for any positive %x.
+  if (const auto *AE = dyn_cast<SCEVAddExpr>(LHS);
+      AE && AE->getNumOperands() == 2 && AE->hasNoSignedWrap()) {
+    bool FoundMinusOne = false, FoundOneSMaxRHS = false;
+    for (const SCEV *Op : AE->operands()) {
+      if (Op->isAllOnesValue()) {
+        FoundMinusOne = true;
+      } else if (const auto *MME = dyn_cast<SCEVMinMaxExpr>(Op)) {
+        if (MME->getNumOperands() == 2 && MME->getSCEVType() == scSMaxExpr)
+          if (hasOperand(Op, RHS) && hasOperand(Op, getOne(RHS->getType())))
+            FoundOneSMaxRHS = true;
+      }
+    }
+
+    if (FoundMinusOne && FoundOneSMaxRHS)
+      // The backedge is never taken.
+      return getZero(LHS->getType());
+  }
+
   // The Insertion Point (IP) might be invalid by now (due to UniqueSCEVs
   // changes). Make sure we get a new one.
   IP = nullptr;

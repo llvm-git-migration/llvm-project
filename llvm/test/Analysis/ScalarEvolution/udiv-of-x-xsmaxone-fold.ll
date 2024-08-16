@@ -13,9 +13,9 @@ define void @test(i32 noundef %x) {
 ; CHECK-NEXT:    %0 = add nsw i32 %smax, -1
 ; CHECK-NEXT:    --> (-1 + (1 smax %x))<nsw> U: [0,2147483647) S: [0,2147483647)
 ; CHECK-NEXT:    %1 = udiv i32 %0, %x
-; CHECK-NEXT:    --> ((-1 + (1 smax %x))<nsw> /u %x) U: [0,2147483647) S: [0,2147483647)
+; CHECK-NEXT:    --> 0 U: [0,1) S: [0,1)
 ; CHECK-NEXT:    %2 = add nuw nsw i32 %1, 1
-; CHECK-NEXT:    --> (1 + ((-1 + (1 smax %x))<nsw> /u %x))<nuw><nsw> U: [1,-2147483648) S: [1,-2147483648)
+; CHECK-NEXT:    --> 1 U: [1,2) S: [1,2)
 ;
 ; CHECK:       Determining loop execution counts for: @test
 ; CHECK-NEXT:  Loop %for.body: Unpredictable backedge-taken count.
