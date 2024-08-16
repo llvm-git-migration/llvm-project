@@ -13,7 +13,7 @@ define void @test(i32 %x) {
 ; CHECK-NEXT:    %add = add nsw i32 %smax, -1
 ; CHECK-NEXT:    --> (-1 + (1 smax %x))<nsw> U: [0,2147483647) S: [0,2147483647)
 ; CHECK-NEXT:    %udiv = udiv i32 %add, %x
-; CHECK-NEXT:    --> ((-1 + (1 smax %x))<nsw> /u %x) U: [0,2147483647) S: [0,2147483647)
+; CHECK-NEXT:    --> 0 U: [0,1) S: [0,1)
 ; CHECK-NEXT:    %iv = phi i32 [ 0, %entry ], [ %iv.next, %for.body ]
 ; CHECK-NEXT:    --> {0,+,%x}<nsw><%for.body> U: full-set S: full-set Exits: <<Unknown>> LoopDispositions: { %for.body: Computable }
 ; CHECK-NEXT:    %val = phi i32 [ %g_var.promoted, %entry ], [ %add.1, %for.body ]
