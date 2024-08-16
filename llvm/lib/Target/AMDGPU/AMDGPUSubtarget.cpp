@@ -1054,8 +1054,6 @@ GCNUserSGPRUsageInfo::GCNUserSGPRUsageInfo(const Function &F,
   const CallingConv::ID CC = F.getCallingConv();
   const bool IsKernel =
       CC == CallingConv::AMDGPU_KERNEL || CC == CallingConv::SPIR_KERNEL;
-  const bool NoFlatScratchInit =
-      F.hasFnAttribute("amdgpu-no-flat-scratch-init");
 
   if (IsKernel && (!F.arg_empty() || ST.getImplicitArgNumBytes(F) != 0))
     KernargSegmentPtr = true;
@@ -1078,6 +1076,8 @@ GCNUserSGPRUsageInfo::GCNUserSGPRUsageInfo(const Function &F,
       DispatchID = true;
   }
 
+  const bool NoFlatScratchInit =
+      F.hasFnAttribute("amdgpu-no-flat-scratch-init");
   // TODO: This could be refined a lot. The attribute is a poor way of
   // detecting calls or stack objects that may require it before argument
   // lowering.

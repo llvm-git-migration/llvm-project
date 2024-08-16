@@ -12,10 +12,13 @@ define amdgpu_kernel void @is_local_vgpr(ptr addrspace(1) %ptr.ptr) {
 ; CI-NEXT:    s_load_dwordx2 s[0:1], s[6:7], 0x0
 ; CI-NEXT:    s_load_dword s2, s[6:7], 0x33
 ; CI-NEXT:    v_lshlrev_b32_e32 v2, 3, v0
+; CI-NEXT:    s_add_i32 s10, s10, s15
+; CI-NEXT:    s_mov_b32 flat_scratch_lo, s11
 ; CI-NEXT:    s_waitcnt lgkmcnt(0)
 ; CI-NEXT:    v_mov_b32_e32 v0, s0
 ; CI-NEXT:    v_mov_b32_e32 v1, s1
 ; CI-NEXT:    v_add_i32_e32 v0, vcc, v0, v2
+; CI-NEXT:    s_lshr_b32 flat_scratch_hi, s10, 8
 ; CI-NEXT:    v_addc_u32_e32 v1, vcc, 0, v1, vcc
 ; CI-NEXT:    flat_load_dwordx2 v[0:1], v[0:1] glc
 ; CI-NEXT:    s_waitcnt vmcnt(0)
@@ -82,6 +85,9 @@ define amdgpu_kernel void @is_local_sgpr(ptr %ptr) {
 ; CI-NEXT:    s_load_dwordx2 s[0:1], s[6:7], 0x0
 ; CI-NEXT:    s_waitcnt lgkmcnt(0)
 ; CI-NEXT:    s_load_dword s0, s[6:7], 0x33
+; CI-NEXT:    s_add_i32 s10, s10, s15
+; CI-NEXT:    s_lshr_b32 flat_scratch_hi, s10, 8
+; CI-NEXT:    s_mov_b32 flat_scratch_lo, s11
 ; CI-NEXT:    s_waitcnt lgkmcnt(0)
 ; CI-NEXT:    s_cmp_lg_u32 s1, s0
 ; CI-NEXT:    s_cbranch_scc1 .LBB1_2
