@@ -145,7 +145,7 @@ FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
 FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
                                    SizeRange range) {
   if (!trie)
-    return &trie;
+    return nullptr;
 
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
   FreeTrie **cur = &trie;
@@ -162,7 +162,8 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
     if ((*cur)->size() == size)
       return cur;
 
-    if (!best_fit || (*cur)->size() < (*best_fit)->size()) {
+    if ((*cur)->size() > size &&
+        (!best_fit || (*cur)->size() < (*best_fit)->size())) {
       // The current node is a better fit.
       best_fit = cur;
 
@@ -201,6 +202,9 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
       deferred_upper_trie = &(*cur)->upper;
     }
   }
+
+  if (!deferred_upper_trie)
+    return best_fit;
 
   // Scan the deferred upper subtrie and consider whether any element within
   // provides a better fit.
