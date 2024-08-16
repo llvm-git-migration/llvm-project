@@ -10,6 +10,7 @@
 #define LLVM_ANALYSIS_CTXPROFANALYSIS_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/ilist_node.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -19,6 +20,9 @@
 namespace llvm {
 
 class CtxProfAnalysis;
+
+using CtxProfFlatProfile =
+    DenseMap<GlobalValue::GUID, SmallVector<uint64_t, 16>>;
 
 /// The instrumented contextual profile, produced by the CtxProfAnalysis.
 class PGOContextualProfile {
@@ -66,6 +70,8 @@ public:
     assert(isFunctionKnown(F));
     return FuncInfo.find(getDefinedFunctionGUID(F))->second.NextCallsiteIndex++;
   }
+
+  const CtxProfFlatProfile flatten() const;
 
   bool invalidate(Module &, const PreservedAnalyses &PA,
                   ModuleAnalysisManager::Invalidator &) {
