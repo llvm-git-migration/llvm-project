@@ -140,9 +140,10 @@ add_libc_test(
     arg_list_test.cpp
   DEPENDS
     libc.src.__support.arg_list
+    libc.src.__support.macros.properties.os
 )
 
-if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
+if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX AND NOT LIBC_TARGET_OS_IS_WINDOWS)
   add_libc_test(
     big_int_test
     SUITE
