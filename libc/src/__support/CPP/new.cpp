@@ -16,15 +16,29 @@ void operator delete(void *mem, std::align_val_t) noexcept { ::free(mem); }
 void operator delete(void *mem, size_t) noexcept { ::free(mem); }
 
 void operator delete(void *mem, size_t, std::align_val_t) noexcept {
+#ifdef _WIN32
+  ::_aligned_free(mem);
+#else
   ::free(mem);
+#endif
 }
 
 void operator delete[](void *mem) noexcept { ::free(mem); }
 
-void operator delete[](void *mem, std::align_val_t) noexcept { ::free(mem); }
+void operator delete[](void *mem, std::align_val_t) noexcept {
+#ifdef _WIN32
+  ::_aligned_free(mem);
+#else
+  ::free(mem);
+#endif
+}
 
 void operator delete[](void *mem, size_t) noexcept { ::free(mem); }
 
 void operator delete[](void *mem, size_t, std::align_val_t) noexcept {
+#ifdef _WIN32
+  ::_aligned_free(mem);
+#else
   ::free(mem);
+#endif
 }

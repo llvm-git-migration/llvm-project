@@ -35,7 +35,7 @@
 #endif // UINT64_MAX
 
 // int128 / uint128 support
-#if defined(__SIZEOF_INT128__)
+#if defined(__SIZEOF_INT128__) && !defined(_WIN32)
 #define LIBC_TYPES_HAS_INT128
 #endif // defined(__SIZEOF_INT128__)
 

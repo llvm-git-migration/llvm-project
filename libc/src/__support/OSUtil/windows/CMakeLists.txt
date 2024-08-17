@@ -1,0 +1,9 @@
+add_object_library(
+  windows_util
+  SRCS
+    exit.cpp
+    io.cpp
+  HDRS
+    io.h
+  DEPENDS
+)
