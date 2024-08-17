@@ -1637,12 +1637,20 @@ specifies availability for the current target platform, the availability
 attributes are ignored. Supported platforms are:
 
 ``ios``
+``ios_app_extension``
   Apple's iOS operating system. The minimum deployment target is specified
   as part of the ``-target *arch*-apple-ios*version*`` command line argument.
   Alternatively, it can be specified by the ``-mtargetos=ios*version*``
   command-line argument.
 
+``maccatalyst``
+``maccatalyst_app_extension``
+  Apple's Mac Catalyst development environment for its macOS operating system.
+  The minimum deployment target is specified as part of the
+  ``-target *arch*-apple-ios*version*-macabi`` command line argument.
+
 ``macos``
+``macos_app_extension``
   Apple's macOS operating system. The minimum deployment target is specified
   as part of the ``-target *arch*-apple-macos*version*`` command line argument.
   Alternatively, it can be specified by the ``-mtargetos=macos*version*``
@@ -1650,18 +1658,21 @@ attributes are ignored. Supported platforms are:
   backward-compatibility reasons, but it is deprecated.
 
 ``tvos``
+``tvos_app_extension``
   Apple's tvOS operating system. The minimum deployment target is specified
   as part of the ``-target *arch*-apple-tvos*version*`` command line argument.
   Alternatively, it can be specified by the ``-mtargetos=tvos*version*``
   command-line argument.
 
 ``watchos``
+``watchos_app_extension``
   Apple's watchOS operating system. The minimum deployment target is specified
   as part of the ``-target *arch*-apple-watchos*version*`` command line argument.
   Alternatively, it can be specified by the ``-mtargetos=watchos*version*``
   command-line argument.
 
 ``visionos``
+``visionos_app_extension``
   Apple's visionOS operating system. The minimum deployment target is specified
   as part of the ``-target *arch*-apple-visionos*version*`` command line argument.
   Alternatively, it can be specified by the ``-mtargetos=visionos*version*``
