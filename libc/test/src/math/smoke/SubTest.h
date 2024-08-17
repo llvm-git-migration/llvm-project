@@ -52,6 +52,7 @@ public:
   }
 
   void test_range_errors(SubFunc func) {
+#ifndef LIBC_TARGET_OS_IS_WINDOWS
     using namespace LIBC_NAMESPACE::fputil::testing;
 
     if (ForceRoundingMode r(RoundingMode::Nearest); r.success) {
@@ -123,6 +124,7 @@ public:
                                   FE_UNDERFLOW | FE_INEXACT);
       EXPECT_MATH_ERRNO(ERANGE);
     }
+#endif
   }
 
   void test_inexact_results(SubFunc func) {

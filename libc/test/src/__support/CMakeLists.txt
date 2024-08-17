@@ -142,7 +142,7 @@ add_libc_test(
     libc.src.__support.arg_list
 )
 
-if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
+if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX AND NOT LIBC_TARGET_OS_IS_WINDOWS)
   add_libc_test(
     big_int_test
     SUITE
