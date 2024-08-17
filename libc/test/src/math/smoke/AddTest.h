@@ -53,6 +53,7 @@ public:
   }
 
   void test_range_errors(AddFunc func) {
+#ifndef _WIN32
     using namespace LIBC_NAMESPACE::fputil::testing;
 
     if (ForceRoundingMode r(RoundingMode::Nearest); r.success) {
@@ -121,6 +122,7 @@ public:
           FE_UNDERFLOW | FE_INEXACT);
       EXPECT_MATH_ERRNO(ERANGE);
     }
+#endif
   }
 
   void test_inexact_results(AddFunc func) {

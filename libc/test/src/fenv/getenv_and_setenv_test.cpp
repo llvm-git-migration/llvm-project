@@ -20,6 +20,7 @@
 
 using LlvmLibcFEnvTest = LIBC_NAMESPACE::testing::FEnvSafeTest;
 
+#ifndef _WIN32
 TEST_F(LlvmLibcFEnvTest, GetEnvAndSetEnv) {
   // We will disable all exceptions to prevent invocation of the exception
   // handler.
@@ -71,6 +72,7 @@ TEST_F(LlvmLibcFEnvTest, Set_FE_DFL_ENV) {
   int rm = LIBC_NAMESPACE::fegetround();
   EXPECT_EQ(rm, FE_TONEAREST);
 }
+#endif
 
 #ifdef _WIN32
 TEST_F(LlvmLibcFEnvTest, Windows_Set_Get_Test) {
