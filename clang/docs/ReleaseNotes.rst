@@ -1207,6 +1207,10 @@ Arm and AArch64 Support
     * Arm Neoverse-N3 (neoverse-n3).
     * Arm Neoverse-V3 (neoverse-v3).
     * Arm Neoverse-V3AE (neoverse-v3ae).
+ - Experimental support has been added for pointer authentication ABI for С/C++.
+ - Pointer authentication ABI could be enabled for AArch64 Linux via
+   ``-mabi=pauthtest` option or via specifying `pauthtest` environment part of
+   target triple.
 
 Android Support
 ^^^^^^^^^^^^^^^
