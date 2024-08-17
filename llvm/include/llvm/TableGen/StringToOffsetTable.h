@@ -26,7 +26,8 @@ class StringToOffsetTable {
   std::string AggregateString;
 
 public:
-  bool Empty() const { return StringOffset.empty(); }
+  bool empty() const { return StringOffset.empty(); }
+  size_t size() const { return AggregateString.size(); }
 
   unsigned GetOrAddStringOffset(StringRef Str, bool appendZero = true) {
     auto IterBool =
