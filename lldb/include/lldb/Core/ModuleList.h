@@ -287,6 +287,24 @@ public:
                      const ModuleFunctionSearchOptions &options,
                      SymbolContextList &sc_list) const;
 
+  /// \see Module::FindFunctions ()
+  ///
+  /// \param[in] search_hint
+  ///     If the value is NULL, then all modules will be searched in
+  ///     order. If the value is a valid pointer and if a module is specified in
+  ///     the symbol context, that module will be searched first followed by all
+  ///     other modules in the list.
+  /// \param[in] partial_result_handler
+  ///     A callback that will be called for each module in which at least one 
+  ///     match was found.
+  void FindFunctions(ConstString name, lldb::FunctionNameType name_type_mask,
+                     const ModuleFunctionSearchOptions &options,
+                     const SymbolContext *search_hint,
+                     llvm::function_ref<IterationAction(
+                         const lldb::ModuleSP &module,
+                         const SymbolContextList &partial_result)>
+                         partial_result_handler) const;
+
   /// \see Module::FindFunctionSymbols ()
   void FindFunctionSymbols(ConstString name,
                            lldb::FunctionNameType name_type_mask,
@@ -356,6 +374,31 @@ public:
   void FindSymbolsWithNameAndType(ConstString name,
                                   lldb::SymbolType symbol_type,
                                   SymbolContextList &sc_list) const;
+
+  /// Find symbols by name and SymbolType.
+  ///
+  /// \param[in] name
+  ///     A name of the symbol we are looking for.
+  ///
+  /// \param[in] symbol_type
+  ///     A SymbolType the symbol we are looking for.
+  ///
+  /// \param[in] search_hint
+  ///     If the value is NULL, then all modules will be searched in
+  ///     order. If the value is a valid pointer and if a module is specified in
+  ///     the symbol context, that module will be searched first followed by all
+  ///     other modules in the list.
+  ///
+  /// \param[in] partial_result_handler
+  ///     A callback that will be called for each module in which at least one 
+  ///     match was found.
+  void FindSymbolsWithNameAndType(ConstString name,
+                                  lldb::SymbolType symbol_type,
+                                  const SymbolContext *search_hint,
+                                  llvm::function_ref<IterationAction(
+                                      const lldb::ModuleSP &module,
+                                      const SymbolContextList &partial_result)>
+                                      partial_result_handler) const;
 
   void FindSymbolsMatchingRegExAndType(const RegularExpression &regex,
                                        lldb::SymbolType symbol_type,

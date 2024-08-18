@@ -466,6 +466,48 @@ void ModuleList::FindFunctions(ConstString name,
   }
 }
 
+void ModuleList::FindFunctions(
+    ConstString name, lldb::FunctionNameType name_type_mask,
+    const ModuleFunctionSearchOptions &options,
+    const SymbolContext *search_hint,
+    llvm::function_ref<IterationAction(const lldb::ModuleSP &module,
+                                       const SymbolContextList &partial_result)>
+        partial_result_handler) const {
+  SymbolContextList sc_list_partial{};
+  auto FindInModule = [&](const ModuleSP &module) {
+    if (!module)
+      return IterationAction::Continue;
+    module->FindFunctions(name, CompilerDeclContext(), name_type_mask, options,
+                          sc_list_partial);
+    if (!sc_list_partial.IsEmpty()) {
+      auto iteration_action = partial_result_handler(module, sc_list_partial);
+      sc_list_partial.Clear();
+      return iteration_action;
+    }
+    return IterationAction::Continue;
+  };
+
+  std::vector<ModuleSP> modules_copy;
+  {
+    std::lock_guard<std::recursive_mutex> guard(m_modules_mutex);
+    modules_copy = m_modules;
+  }
+
+  auto hinted_module = search_hint ? search_hint->module_sp : nullptr;
+  if (hinted_module) {
+    assert(std::find(modules_copy.begin(), modules_copy.end(), hinted_module) !=
+           modules_copy.end());
+    if (FindInModule(hinted_module) == IterationAction::Stop)
+      return;
+  }
+  for (const ModuleSP &module_sp : modules_copy) {
+    if (module_sp != hinted_module) {
+      if (FindInModule(module_sp) == IterationAction::Stop)
+        return;
+    }
+  }
+}
+
 void ModuleList::FindFunctionSymbols(ConstString name,
                                      lldb::FunctionNameType name_type_mask,
                                      SymbolContextList &sc_list) {
@@ -530,6 +572,44 @@ void ModuleList::FindSymbolsWithNameAndType(ConstString name,
   std::lock_guard<std::recursive_mutex> guard(m_modules_mutex);
   for (const ModuleSP &module_sp : m_modules)
     module_sp->FindSymbolsWithNameAndType(name, symbol_type, sc_list);
+}
+
+void ModuleList::FindSymbolsWithNameAndType(
+    ConstString name, lldb::SymbolType symbol_type,
+    const SymbolContext *search_hint,
+    llvm::function_ref<IterationAction(const ModuleSP &,
+                                       const SymbolContextList &)>
+        partial_result_handler) const {
+  SymbolContextList sc_list_partial{};
+  auto FindInModule = [&](const ModuleSP &module) {
+    module->FindSymbolsWithNameAndType(name, symbol_type, sc_list_partial);
+    if (!sc_list_partial.IsEmpty()) {
+      auto iteration_action = partial_result_handler(module, sc_list_partial);
+      sc_list_partial.Clear();
+      return iteration_action;
+    }
+    return IterationAction::Continue;
+  };
+
+
+  std::vector<ModuleSP> modules_copy;
+  {
+    std::lock_guard<std::recursive_mutex> guard(m_modules_mutex);
+    modules_copy = m_modules;
+  }
+  auto hinted_module = search_hint ? search_hint->module_sp : nullptr;
+  if (hinted_module) {
+    assert(std::find(modules_copy.begin(), modules_copy.end(), hinted_module) !=
+           modules_copy.end());
+    if (FindInModule(hinted_module) == IterationAction::Stop)
+      return;
+  }
+  for (const ModuleSP &module_sp : modules_copy) {
+    if (module_sp != hinted_module) {
+      if (FindInModule(module_sp) == IterationAction::Stop)
+        return;
+    }
+  }
 }
 
 void ModuleList::FindSymbolsMatchingRegExAndType(

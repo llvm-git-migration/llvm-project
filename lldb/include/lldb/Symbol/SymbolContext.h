@@ -471,7 +471,7 @@ public:
 
   typedef AdaptedIterable<collection, SymbolContext, vector_adapter>
       SymbolContextIterable;
-  SymbolContextIterable SymbolContexts() {
+  SymbolContextIterable SymbolContexts() const {
     return SymbolContextIterable(m_symbol_contexts);
   }
 };
