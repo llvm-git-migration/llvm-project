@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "node:fs/promises";
 import { LLDBDapOptions } from "./types";
 import { DisposableContext } from "./disposable-context";
 import { LLDBDapDescriptorFactory } from "./debug-adapter-factory";
@@ -17,10 +18,32 @@ function createDefaultLLDBDapOptions(): LLDBDapOptions {
       const path = vscode.workspace
         .getConfiguration("lldb-dap", session.workspaceFolder)
         .get<string>("executable-path");
-      if (path) {
-        return new vscode.DebugAdapterExecutable(path, []);
+
+      if (!path) {
+        return packageJSONExecutable;
       }
-      return packageJSONExecutable;
+
+      try {
+        const fileStats = await fs.stat(path);
+        if (!fileStats.isFile()) {
+          throw new Error(`Error: ${path} is not a file`);
+        }
+      } catch (err) {
+        const error: Error = err as Error;
+        const openSettingsAction = "Open Settings";
+        const callBackValue = await vscode.window.showErrorMessage(
+          error.message,
+          { modal: true },
+          openSettingsAction,
+        );
+        if (openSettingsAction === callBackValue) {
+          vscode.commands.executeCommand(
+            "workbench.action.openSettings",
+            "lldb-dap.executable-path",
+          );
+        }
+      }
+      return new vscode.DebugAdapterExecutable(path, []);
     },
   };
 }
