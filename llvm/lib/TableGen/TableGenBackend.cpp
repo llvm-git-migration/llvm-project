@@ -12,22 +12,76 @@
 
 #include "llvm/TableGen/TableGenBackend.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <variant>
 
 using namespace llvm;
+using namespace TableGen::Emitter;
 
 const size_t MAX_LINE_LEN = 80U;
 
-namespace llvm::TableGen::Emitter {
-ManagedStatic<cl::opt<FnT>, OptCreatorT> Action;
-void *OptCreatorT::call() {
-  return new cl::opt<FnT>(cl::desc("Action to perform:"));
+using FnT = std::variant<FnNonConstT, FnConstT>;
+
+// CommandLine options of class type are not directly supported with some
+// specific exceptions like std::string which are safe to copy. In our case,
+// the `FnT` variant object is also safe to copy. So provide a specialization
+// of `OptionValue` for `FnT` type that stores it as a copy. This is essentially
+// similar to OptionValue<std::string> specialization for strings.
+template <> struct cl::OptionValue<FnT> final : cl::OptionValueCopy<FnT> {
+  OptionValue() = default;
+
+  OptionValue(const FnT &V) { this->setValue(V); }
+
+  OptionValue<FnT> &operator=(const FnT &V) {
+    setValue(V);
+    return *this;
+  }
+
+private:
+  void anchor() override {}
+};
+
+namespace {
+struct OptCreatorT {
+  static void *call() {
+    return new cl::opt<FnT>(cl::desc("Action to perform:"));
+  }
+};
+} // namespace
+
+static ManagedStatic<cl::opt<FnT>, OptCreatorT> CallbackFunction;
+
+Opt::Opt(StringRef Name, FnNonConstT CB, StringRef Desc, bool ByDefault) {
+  if (ByDefault)
+    CallbackFunction->setInitialValue(CB);
+  CallbackFunction->getParser().addLiteralOption(Name, FnT(CB), Desc);
 }
-} // namespace llvm::TableGen::Emitter
+
+Opt::Opt(StringRef Name, FnConstT CB, StringRef Desc, bool ByDefault) {
+  if (ByDefault)
+    CallbackFunction->setInitialValue(CB);
+  CallbackFunction->getParser().addLiteralOption(Name, FnT(CB), Desc);
+}
+
+/// Apply callback specified on the command line. Returns false is no callback
+/// was applied.
+bool llvm::TableGen::Emitter::ApplyCallback(RecordKeeper &Records,
+                                            raw_ostream &OS) {
+  const FnT &CallBackFn = *CallbackFunction;
+  if (auto *Fn = std::get_if<FnNonConstT>(&CallBackFn); Fn && *Fn)
+    (*Fn)(Records, OS);
+  else if (auto *Fn = std::get_if<FnConstT>(&CallBackFn); Fn && *Fn)
+    (*Fn)(Records, OS);
+  else
+    return true;
+  return false;
+}
 
 static void printLine(raw_ostream &OS, const Twine &Prefix, char Fill,
                       StringRef Suffix) {

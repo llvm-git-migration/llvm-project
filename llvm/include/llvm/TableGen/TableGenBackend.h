@@ -14,8 +14,6 @@
 #define LLVM_TABLEGEN_TABLEGENBACKEND_H
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/ManagedStatic.h"
 #include "llvm/TableGen/Record.h"
 
 namespace llvm {
@@ -24,28 +22,37 @@ class RecordKeeper;
 class raw_ostream;
 
 namespace TableGen::Emitter {
-using FnT = void (*)(RecordKeeper &Records, raw_ostream &OS);
+// Support const and non-const forms of callback functions.
+using FnNonConstT = void (*)(RecordKeeper &Records, raw_ostream &OS);
+using FnConstT = void (*)(const RecordKeeper &Records, raw_ostream &OS);
 
-struct OptCreatorT {
-  static void *call();
-};
-
-extern ManagedStatic<cl::opt<FnT>, OptCreatorT> Action;
-
+/// Creating an `Opt` object registers the command line option \p Name with
+/// TableGen backend and associates the callback \p CB with that option. If
+/// \p ByDefault is true, then that callback is applied by default if no
+/// command line option was specified.
 struct Opt {
-  Opt(StringRef Name, FnT CB, StringRef Desc, bool ByDefault = false) {
-    if (ByDefault)
-      Action->setInitialValue(CB);
-    Action->getParser().addLiteralOption(Name, CB, Desc);
-  }
+  Opt(StringRef Name, FnNonConstT CB, StringRef Desc, bool ByDefault = false);
+  Opt(StringRef Name, FnConstT CB, StringRef Desc, bool ByDefault = false);
 };
 
+/// Convienence wrapper around `Opt` that registers `EmitterClass::run` as the
+/// callback.
 template <class EmitterC> class OptClass : Opt {
-  static void run(RecordKeeper &RK, raw_ostream &OS) { EmitterC(RK).run(OS); }
+  static constexpr bool UsesConstRef =
+      std::is_invocable_v<decltype(&EmitterC::run), const RecordKeeper &,
+                          raw_ostream>;
+  using RKType =
+      std::conditional_t<UsesConstRef, const RecordKeeper &, RecordKeeper &>;
+
+  static void run(RKType RK, raw_ostream &OS) { EmitterC(RK).run(OS); }
 
 public:
   OptClass(StringRef Name, StringRef Desc) : Opt(Name, run, Desc) {}
 };
+
+/// Apply callback for any command line option registered above. Returns false
+/// is no callback was applied.
+bool ApplyCallback(RecordKeeper &Records, raw_ostream &OS);
 
 } // namespace TableGen::Emitter
 
