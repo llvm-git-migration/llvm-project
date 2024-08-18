@@ -12,22 +12,67 @@
 
 #include "llvm/TableGen/TableGenBackend.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <variant>
 
 using namespace llvm;
+using namespace TableGen;
+using namespace Emitter;
 
 const size_t MAX_LINE_LEN = 80U;
 
-namespace llvm::TableGen::Emitter {
-ManagedStatic<cl::opt<FnT>, OptCreatorT> Action;
-void *OptCreatorT::call() {
-  return new cl::opt<FnT>(cl::desc("Action to perform:"));
+namespace {
+template <typename FnT> struct OptCreatorT {
+  static void *call() {
+    return new cl::opt<FnT>(cl::desc("Action to perform:"));
+  }
+};
+} // namespace
+
+// `ActionNonConst` and `ActionConst` will be initialized if the corresponding
+// option is seen on the command line. `DefaultAction` will be initialized to
+// the action function if an option is specified as default.
+static ManagedStatic<cl::opt<FnNonConstT>, OptCreatorT<FnNonConstT>>
+    ActionNonConst;
+static ManagedStatic<cl::opt<FnConstT>, OptCreatorT<FnConstT>> ActionConst;
+static std::variant<FnNonConstT, FnConstT> DefaultAction;
+
+Opt::Opt(StringRef Name, FnNonConstT CB, StringRef Desc, bool ByDefault) {
+  if (ByDefault)
+    DefaultAction = CB;
+  ActionNonConst->getParser().addLiteralOption(Name, CB, Desc);
 }
-} // namespace llvm::TableGen::Emitter
+
+Opt::Opt(StringRef Name, FnConstT CB, StringRef Desc, bool ByDefault) {
+  if (ByDefault)
+    DefaultAction = CB;
+  ActionConst->getParser().addLiteralOption(Name, CB, Desc);
+}
+
+/// Apply action specified on the command line. Returns false is an action
+/// was applied.
+bool llvm::TableGen::Emitter::ApplyAction(RecordKeeper &Records,
+                                          raw_ostream &OS) {
+  // Prioritize command line option if one if specified. If none was specified
+  // use the default action if one was specified.
+  if (auto Fn = ActionNonConst->getValue())
+    Fn(Records, OS);
+  else if (auto Fn = ActionConst->getValue())
+    Fn(Records, OS);
+  else if (auto *Fn = std::get_if<FnNonConstT>(&DefaultAction); Fn && *Fn)
+    (*Fn)(Records, OS);
+  else if (auto *Fn = std::get_if<FnConstT>(&DefaultAction); Fn && *Fn)
+    (*Fn)(Records, OS);
+  else
+    return true;
+  return false;
+}
 
 static void printLine(raw_ostream &OS, const Twine &Prefix, char Fill,
                       StringRef Suffix) {

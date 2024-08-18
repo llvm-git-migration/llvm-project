@@ -131,13 +131,10 @@ int llvm::TableGenMain(const char *argv0,
   std::string OutString;
   raw_string_ostream Out(OutString);
   unsigned status = 0;
-  TableGen::Emitter::FnT ActionFn = TableGen::Emitter::Action->getValue();
-  if (ActionFn)
-    ActionFn(Records, Out);
-  else if (MainFn)
-    status = MainFn(Out, Records);
-  else
-    return 1;
+  // ApplyAction will return true if it did not apply any action. In that case,
+  // attempt to apply the MainFn.
+  if (TableGen::Emitter::ApplyAction(Records, Out))
+    status = MainFn ? MainFn(Out, Records) : 1;
   Records.stopBackendTimer();
   if (status)
     return 1;
