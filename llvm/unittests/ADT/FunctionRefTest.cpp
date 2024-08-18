@@ -59,4 +59,12 @@ TEST(FunctionRefTest, SFINAE) {
   EXPECT_EQ("string", returns([] { return "hello"; }));
 }
 
+TEST(FunctionRefTest, Equality) {
+  function_ref<int()> X = [] { return 1; };
+  function_ref<int()> Y = [] { return 2; };
+  EXPECT_TRUE(!(X == Y));
+  Y = X;
+  EXPECT_EQ(X, Y);
+}
+
 } // namespace
