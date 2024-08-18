@@ -95,7 +95,7 @@ public:
 private:
   // Map set defs to their fully expanded contents. This serves as a memoization
   // cache and it makes it possible to return const references on queries.
-  using ExpandMap = std::map<Record *, RecVec>;
+  using ExpandMap = std::map<const Record *, RecVec>;
   ExpandMap Expansions;
 
   // Known DAG operators by name.

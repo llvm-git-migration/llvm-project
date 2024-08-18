@@ -209,8 +209,8 @@ struct SequenceOp : public SetTheory::Operator {
     if (To < 0 || To >= (1 << 30))
       PrintFatalError(Loc, "To out of range");
 
-    RecordKeeper &Records =
-      cast<DefInit>(Expr->getOperator())->getDef()->getRecords();
+    const RecordKeeper &Records =
+        cast<DefInit>(Expr->getOperator())->getDef()->getRecords();
 
     Step *= From <= To ? 1 : -1;
     while (true) {
@@ -311,20 +311,19 @@ const RecVec *SetTheory::expand(Record *Set) {
     return &I->second;
 
   // This is the first time we see Set. Find a suitable expander.
-  ArrayRef<std::pair<Record *, SMRange>> SC = Set->getSuperClasses();
-  for (const auto &SCPair : SC) {
+  for (const auto &[SuperClass, Locs] : Set->getSuperClasses()) {
     // Skip unnamed superclasses.
-    if (!isa<StringInit>(SCPair.first->getNameInit()))
+    if (!isa<StringInit>(SuperClass->getNameInit()))
       continue;
-    auto I = Expanders.find(SCPair.first->getName());
-    if (I != Expanders.end()) {
-      // This breaks recursive definitions.
-      RecVec &EltVec = Expansions[Set];
-      RecSet Elts;
-      I->second->expand(*this, Set, Elts);
-      EltVec.assign(Elts.begin(), Elts.end());
-      return &EltVec;
-    }
+    auto I = Expanders.find(SuperClass->getName());
+    if (I == Expanders.end())
+      continue;
+    // This breaks recursive definitions.
+    RecVec &EltVec = Expansions[Set];
+    RecSet Elts;
+    I->second->expand(*this, Set, Elts);
+    EltVec.assign(Elts.begin(), Elts.end());
+    return &EltVec;
   }
 
   // Set is not expandable.

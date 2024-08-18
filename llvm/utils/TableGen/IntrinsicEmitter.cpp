@@ -681,14 +681,14 @@ void IntrinsicEmitter::EmitIntrinsicToBuiltinMap(
   OS << "#endif\n\n";
 }
 
-static void EmitIntrinsicEnums(RecordKeeper &RK, raw_ostream &OS) {
+static void EmitIntrinsicEnums(const RecordKeeper &RK, raw_ostream &OS) {
   IntrinsicEmitter(RK).run(OS, /*Enums=*/true);
 }
 
 static TableGen::Emitter::Opt X("gen-intrinsic-enums", EmitIntrinsicEnums,
                                 "Generate intrinsic enums");
 
-static void EmitIntrinsicImpl(RecordKeeper &RK, raw_ostream &OS) {
+static void EmitIntrinsicImpl(const RecordKeeper &RK, raw_ostream &OS) {
   IntrinsicEmitter(RK).run(OS, /*Enums=*/false);
 }
 
