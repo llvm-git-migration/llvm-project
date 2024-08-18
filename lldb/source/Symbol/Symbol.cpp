@@ -261,6 +261,14 @@ void Symbol::GetDescription(
     s->PutCStringColorHighlighted(mangled_name.GetStringRef(), settings);
     s->PutCString("\"");
   }
+  if (this->m_is_debug)
+    s->PutCString(", debug");
+  if (this->m_is_external)
+    s->PutCString(", external");
+  if (this->m_is_synthetic)
+    s->PutCString(", synthetic");
+  if (this->m_is_weak)
+    s->PutCString(", weak");
 }
 
 void Symbol::Dump(Stream *s, Target *target, uint32_t index,
