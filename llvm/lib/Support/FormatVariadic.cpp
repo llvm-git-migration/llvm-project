@@ -112,10 +112,8 @@ formatv_object_base::splitLiteralAndReplacement(StringRef Fmt) {
     // undefined and that we consider it an error.
     std::size_t BC = Fmt.find_first_of('}');
     if (BC == StringRef::npos) {
-      assert(
-          false &&
-          "Unterminated brace sequence.  Escape with {{ for a literal brace.");
-      return std::make_pair(ReplacementItem{Fmt}, StringRef());
+      return std::make_pair(ReplacementItem{"Unterminated open {"},
+                            StringRef());
     }
 
     // Even if there is a closing brace, if there is another open brace before
