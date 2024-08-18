@@ -895,31 +895,51 @@ const Symbol *SymbolContext::FindBestGlobalDataSymbol(ConstString name,
     }
   };
 
-  if (module) {
-    SymbolContextList sc_list;
-    module->FindSymbolsWithNameAndType(name, eSymbolTypeAny, sc_list);
-    const Symbol *const module_symbol = ProcessMatches(sc_list, error);
+  const Symbol *result_symbol = nullptr;
+  target.GetImages().FindSymbolsWithNameAndType(
+      name, eSymbolTypeAny, this,
+      [&error, ProcessMatches, &result_symbol, &target, name,
+       this](const lldb::ModuleSP &module,
+             const SymbolContextList &partial_result) {
+        const Symbol *const processed_symbol =
+            ProcessMatches(partial_result, error);
+        if (!error.Success()) {
+          return IterationAction::Stop;
+        }
+        if (!processed_symbol)
+          return IterationAction::Continue;
+        if (module == this->module_sp) {
+          // When the found symbol is in the hinted module use it even
+          // if it's an internal one.
+          result_symbol = processed_symbol;
+          return IterationAction::Stop;
+        }
+        if (!result_symbol) {
+          result_symbol = processed_symbol;
+          return IterationAction::Continue;
+        }
+        if (result_symbol->IsExternal() && processed_symbol->IsExternal()) {
+          assert(processed_symbol != result_symbol &&
+                 "The same symbol is found in two modules");
+          StreamString ss;
+          ss.Printf("Multiple symbols were found for '%s'\n", name.AsCString());
+          result_symbol->GetDescription(&ss, eDescriptionLevelVerbose, &target);
+          ss.PutChar('\n');
+          processed_symbol->GetDescription(&ss, eDescriptionLevelVerbose,
+                                           &target);
+          ss.PutChar('\n');
+          error.SetErrorString(ss.GetData());
+          return IterationAction::Stop;
+        }
+        if (!result_symbol->IsExternal() && processed_symbol->IsExternal())
+          result_symbol = processed_symbol;
+        return IterationAction::Continue;
+      });
 
-    if (!error.Success()) {
-      return nullptr;
-    } else if (module_symbol) {
-      return module_symbol;
-    }
-  }
-
-  {
-    SymbolContextList sc_list;
-    target.GetImages().FindSymbolsWithNameAndType(name, eSymbolTypeAny,
-                                                  sc_list);
-    const Symbol *const target_symbol = ProcessMatches(sc_list, error);
-
-    if (!error.Success()) {
-      return nullptr;
-    } else if (target_symbol) {
-      return target_symbol;
-    }
-  }
-
+  if (!error.Success())
+    return nullptr;
+  if (result_symbol)
+    return result_symbol;
   return nullptr; // no error; we just didn't find anything
 }
 
