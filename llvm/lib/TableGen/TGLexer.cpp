@@ -12,6 +12,7 @@
 
 #include "TGLexer.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Config/config.h" // for strtoull()/strtoll() define
@@ -20,7 +21,6 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Error.h"
 #include <algorithm>
-#include <cctype>
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
@@ -38,6 +38,22 @@ struct PreprocessorDir {
 };
 } // end anonymous namespace
 
+/// Returns true if `C` is a valid character in an identifier. If `Position` is
+/// `First`, returns true if `C` is a valid first character of an identifier,
+/// else returns true if `C` is a valid non-first character of an identifier.
+/// Identifiers match the following regular expression:
+///   [a-zA-Z_][0-9a-zA-Z_]*
+enum IDCharPosition {
+  First = 0,
+  NotFirst = 1,
+};
+
+static bool IsValidIDChar(char C, IDCharPosition Position) {
+  if (C == '_' || isAlpha(C))
+    return true;
+  return Position != First && isDigit(C);
+}
+
 constexpr PreprocessorDir PreprocessorDirs[] = {{tgtok::Ifdef, "ifdef"},
                                                 {tgtok::Ifndef, "ifndef"},
                                                 {tgtok::Else, "else"},
@@ -51,14 +67,14 @@ static const char *lexMacroName(StringRef Str) {
 
   // Macro names start with [a-zA-Z_].
   const char *Next = Str.begin();
-  if (*Next != '_' && !isalpha(*Next))
+  if (!IsValidIDChar(*Next, First))
     return Next;
   // Eat the first character of the name.
   ++Next;
 
   // Match the rest of the identifier regex: [0-9a-zA-Z_]*
   const char *End = Str.end();
-  while (Next != End && (isalpha(*Next) || isdigit(*Next) || *Next == '_'))
+  while (Next != End && IsValidIDChar(*Next, NotFirst))
     ++Next;
   return Next;
 }
@@ -173,7 +189,7 @@ tgtok::TokKind TGLexer::LexToken(bool FileOrLineStart) {
   switch (CurChar) {
   default:
     // Handle letters: [a-zA-Z_]
-    if (isalpha(CurChar) || CurChar == '_')
+    if (IsValidIDChar(CurChar, First))
       return LexIdentifier();
 
     // Unknown character, emit an error.
@@ -250,14 +266,14 @@ tgtok::TokKind TGLexer::LexToken(bool FileOrLineStart) {
   case '0': case '1': case '2': case '3': case '4': case '5': case '6':
   case '7': case '8': case '9': {
     int NextChar = 0;
-    if (isdigit(CurChar)) {
+    if (isDigit(CurChar)) {
       // Allow identifiers to start with a number if it is followed by
       // an identifier.  This can happen with paste operations like
       // foo#8i.
       int i = 0;
       do {
         NextChar = peekNextChar(i++);
-      } while (isdigit(NextChar));
+      } while (isDigit(NextChar));
 
       if (NextChar == 'x' || NextChar == 'b') {
         // If this is [0-9]b[01] or [0-9]x[0-9A-fa-f] this is most
@@ -281,7 +297,7 @@ tgtok::TokKind TGLexer::LexToken(bool FileOrLineStart) {
       }
     }
 
-    if (isalpha(NextChar) || NextChar == '_')
+    if (IsValidIDChar(NextChar, First))
       return LexIdentifier();
 
     return LexNumber();
@@ -347,13 +363,13 @@ tgtok::TokKind TGLexer::LexString() {
 }
 
 tgtok::TokKind TGLexer::LexVarName() {
-  if (!isalpha(CurPtr[0]) && CurPtr[0] != '_')
+  if (!IsValidIDChar(CurPtr[0], First))
     return ReturnError(TokStart, "Invalid variable name");
 
   // Otherwise, we're ok, consume the rest of the characters.
   const char *VarNameStart = CurPtr++;
 
-  while (isalpha(*CurPtr) || isdigit(*CurPtr) || *CurPtr == '_')
+  while (IsValidIDChar(*CurPtr, NotFirst))
     ++CurPtr;
 
   CurStrVal.assign(VarNameStart, CurPtr);
@@ -365,7 +381,7 @@ tgtok::TokKind TGLexer::LexIdentifier() {
   const char *IdentStart = TokStart;
 
   // Match the rest of the identifier regex: [0-9a-zA-Z_]*
-  while (isalpha(*CurPtr) || isdigit(*CurPtr) || *CurPtr == '_')
+  while (IsValidIDChar(*CurPtr, NotFirst))
     ++CurPtr;
 
   // Check to see if this identifier is a reserved keyword.
@@ -500,7 +516,7 @@ tgtok::TokKind TGLexer::LexNumber() {
       Base = 16;
       do
         ++CurPtr;
-      while (isxdigit(CurPtr[0]));
+      while (isHexDigit(CurPtr[0]));
     } else if (CurPtr[0] == 'b') {
       Base = 2;
       do
@@ -515,7 +531,7 @@ tgtok::TokKind TGLexer::LexNumber() {
   // Check if it's a decimal value.
   if (Base == 0) {
     // Check for a sign without a digit.
-    if (!isdigit(CurPtr[0])) {
+    if (!isDigit(CurPtr[0])) {
       if (CurPtr[-1] == '-')
         return tgtok::minus;
       else if (CurPtr[-1] == '+')
@@ -526,7 +542,7 @@ tgtok::TokKind TGLexer::LexNumber() {
     NumStart = TokStart;
     IsMinus = CurPtr[-1] == '-';
 
-    while (isdigit(CurPtr[0]))
+    while (isDigit(CurPtr[0]))
       ++CurPtr;
   }
 
@@ -574,11 +590,11 @@ tgtok::TokKind TGLexer::LexBracket() {
 
 /// LexExclaim - Lex '!' and '![a-zA-Z]+'.
 tgtok::TokKind TGLexer::LexExclaim() {
-  if (!isalpha(*CurPtr))
+  if (!isAlpha(*CurPtr))
     return ReturnError(CurPtr - 1, "Invalid \"!operator\"");
 
   const char *Start = CurPtr++;
-  while (isalpha(*CurPtr))
+  while (isAlpha(*CurPtr))
     ++CurPtr;
 
   // Check to see which operator this is.
