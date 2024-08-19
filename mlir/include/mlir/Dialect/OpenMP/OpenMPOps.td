@@ -301,6 +301,10 @@ def WorkshareOp : OpenMP_Op<"workshare", traits = [
     block into separate units of work, and causes the threads of the team to
     share the work such that each unit is executed only once by one thread, in
     the context of its implicit task
+
+    This operation is used for the intermediate representation of the workshare
+    block before the work gets divided between the threads. See the flang
+    LowerWorkshare pass for details.
   }] # clausesDescription;
 
   let builders = [
@@ -313,10 +317,16 @@ def WorkshareLoopWrapperOp : OpenMP_Op<"workshare_loop_wrapper", traits = [
     RecursiveMemoryEffects, SingleBlock
   ], singleRegion = true> {
   let summary = "contains loop nests to be parallelized by workshare";
+  let description = [{
+    This operation wraps a loop nest that is marked for dividing into units of
+    work by an encompassing omp.workshare operation.
+  }];
+
   let builders = [
     OpBuilder<(ins), [{ build($_builder, $_state, {}); }]>
   ];
   let assemblyFormat = "$region attr-dict";
+  let hasVerifier = 1;
 }
 
 //===----------------------------------------------------------------------===//
