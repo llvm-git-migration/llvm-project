@@ -166,13 +166,13 @@
 ; LAXX-NEXT:       Implement the 'patchable-function' attribute
 ; LAXX-NEXT:       Branch relaxation pass
 ; LAXX-NEXT:       Contiguously Lay Out Funclets
+; LAXX-NEXT:       Remove Loads Into Fake Uses
 ; LAXX-NEXT:       StackMap Liveness Analysis
 ; LAXX-NEXT:       Live DEBUG_VALUE analysis
 ; LAXX-NEXT:       Machine Sanitizer Binary Metadata
 ; LAXX-NEXT:       Lazy Machine Block Frequency Analysis
 ; LAXX-NEXT:       Machine Optimization Remark Emitter
 ; LAXX-NEXT:       Stack Frame Layout Analysis
-; LAXX-NEXT:       Remove Loads Into Fake Uses
 ; LAXX-NEXT:       LoongArch pseudo instruction expansion pass
 ; LAXX-NEXT:       LoongArch atomic pseudo instruction expansion pass
 ; LAXX-NEXT:       Lazy Machine Block Frequency Analysis
