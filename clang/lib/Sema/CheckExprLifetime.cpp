@@ -328,13 +328,16 @@ static bool shouldTrackFirstArgument(const FunctionDecl *FD) {
 
 static void handleGslAnnotatedTypes(IndirectLocalPath &Path, Expr *Call,
                                     LocalVisitor Visit) {
-  auto VisitPointerArg = [&](const Decl *D, Expr *Arg, bool Value) {
+  auto VisitPointerArg = [&](const FunctionDecl *Callee, Expr *Arg) {
     // We are not interested in the temporary base objects of gsl Pointers:
     //   Temp().ptr; // Here ptr might not dangle.
     if (isa<MemberExpr>(Arg->IgnoreImpCasts()))
       return;
-    // Once we initialized a value with a reference, it can no longer dangle.
-    if (!Value) {
+    auto ReturnType = Callee->getReturnType();
+    // Once we initialized a value with a non gsl-owner reference, it can no
+    // longer dangle.
+    if (ReturnType->isReferenceType() &&
+        !isRecordWithAttr<OwnerAttr>(ReturnType->getPointeeType())) {
       for (const IndirectLocalPathEntry &PE : llvm::reverse(Path)) {
         if (PE.Kind == IndirectLocalPathEntry::GslReferenceInit)
           continue;
@@ -344,9 +347,11 @@ static void handleGslAnnotatedTypes(IndirectLocalPath &Path, Expr *Call,
         break;
       }
     }
-    Path.push_back({Value ? IndirectLocalPathEntry::GslPointerInit
-                          : IndirectLocalPathEntry::GslReferenceInit,
-                    Arg, D});
+
+    Path.push_back({!ReturnType->isReferenceType()
+                        ? IndirectLocalPathEntry::GslPointerInit
+                        : IndirectLocalPathEntry::GslReferenceInit,
+                    Arg, Callee});
     if (Arg->isGLValue())
       visitLocalsRetainedByReferenceBinding(Path, Arg, RK_ReferenceBinding,
                                             Visit,
@@ -360,21 +365,18 @@ static void handleGslAnnotatedTypes(IndirectLocalPath &Path, Expr *Call,
   if (auto *MCE = dyn_cast<CXXMemberCallExpr>(Call)) {
     const auto *MD = cast_or_null<CXXMethodDecl>(MCE->getDirectCallee());
     if (MD && shouldTrackImplicitObjectArg(MD))
-      VisitPointerArg(MD, MCE->getImplicitObjectArgument(),
-                      !MD->getReturnType()->isReferenceType());
+      VisitPointerArg(MD, MCE->getImplicitObjectArgument());
     return;
   } else if (auto *OCE = dyn_cast<CXXOperatorCallExpr>(Call)) {
     FunctionDecl *Callee = OCE->getDirectCallee();
     if (Callee && Callee->isCXXInstanceMember() &&
         shouldTrackImplicitObjectArg(cast<CXXMethodDecl>(Callee)))
-      VisitPointerArg(Callee, OCE->getArg(0),
-                      !Callee->getReturnType()->isReferenceType());
+      VisitPointerArg(Callee, OCE->getArg(0));
     return;
   } else if (auto *CE = dyn_cast<CallExpr>(Call)) {
     FunctionDecl *Callee = CE->getDirectCallee();
     if (Callee && shouldTrackFirstArgument(Callee))
-      VisitPointerArg(Callee, CE->getArg(0),
-                      !Callee->getReturnType()->isReferenceType());
+      VisitPointerArg(Callee, CE->getArg(0));
     return;
   }
 
@@ -382,7 +384,7 @@ static void handleGslAnnotatedTypes(IndirectLocalPath &Path, Expr *Call,
     const auto *Ctor = CCE->getConstructor();
     const CXXRecordDecl *RD = Ctor->getParent();
     if (CCE->getNumArgs() > 0 && RD->hasAttr<PointerAttr>())
-      VisitPointerArg(Ctor->getParamDecl(0), CCE->getArgs()[0], true);
+      VisitPointerArg(Ctor, CCE->getArgs()[0]);
   }
 }
 
