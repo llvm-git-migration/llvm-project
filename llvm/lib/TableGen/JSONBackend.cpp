@@ -26,22 +26,19 @@ namespace {
 
 class JSONEmitter {
 private:
-  RecordKeeper &Records;
+  const RecordKeeper &Records;
 
   json::Value translateInit(const Init &I);
 
 public:
-  JSONEmitter(RecordKeeper &R);
+  JSONEmitter(const RecordKeeper &R) : Records(R) {}
 
   void run(raw_ostream &OS);
 };
 
 } // end anonymous namespace
 
-JSONEmitter::JSONEmitter(RecordKeeper &R) : Records(R) {}
-
 json::Value JSONEmitter::translateInit(const Init &I) {
-
   // Init subclasses that we return as JSON primitive values of one
   // kind or another.
 
@@ -128,21 +125,18 @@ void JSONEmitter::run(raw_ostream &OS) {
   // over the classes, invoking std::map::operator[] to default-
   // construct the array for each one.
   std::map<std::string, json::Array> instance_lists;
-  for (const auto &C : Records.getClasses()) {
-    const auto Name = C.second->getNameInitAsString();
-    (void)instance_lists[Name];
-  }
+  for (const auto &[Name, ClassRec] : Records.getClasses())
+    instance_lists.emplace(ClassRec->getNameInitAsString(), json::Array());
 
   // Main iteration over the defs.
-  for (const auto &D : Records.getDefs()) {
-    const auto Name = D.second->getNameInitAsString();
-    auto &Def = *D.second;
+  for (const auto &[MapName, Def] : Records.getDefs()) {
+    const std::string Name = Def->getNameInitAsString();
 
     json::Object obj;
     json::Array fields;
 
-    for (const RecordVal &RV : Def.getValues()) {
-      if (!Def.isTemplateArg(RV.getNameInit())) {
+    for (const RecordVal &RV : Def->getValues()) {
+      if (!Def->isTemplateArg(RV.getNameInit())) {
         auto Name = RV.getNameInitAsString();
         if (RV.isNonconcreteOK())
           fields.push_back(Name);
@@ -153,38 +147,36 @@ void JSONEmitter::run(raw_ostream &OS) {
     obj["!fields"] = std::move(fields);
 
     json::Array superclasses;
-    for (const auto &SuperPair : Def.getSuperClasses())
-      superclasses.push_back(SuperPair.first->getNameInitAsString());
+    // Add this def to the instance list for each of its superclasses.
+    for (const auto &[SuperClass, Loc] : Def->getSuperClasses()) {
+      std::string SuperName = SuperClass->getNameInitAsString();
+      superclasses.push_back(SuperName);
+      instance_lists[SuperName].push_back(Name);
+    }
+
     obj["!superclasses"] = std::move(superclasses);
 
     obj["!name"] = Name;
-    obj["!anonymous"] = Def.isAnonymous();
+    obj["!anonymous"] = Def->isAnonymous();
 
     json::Array locs;
-    for (const SMLoc Loc : Def.getLoc())
+    for (const SMLoc Loc : Def->getLoc())
       locs.push_back(SrcMgr.getFormattedLocationNoOffset(Loc));
     obj["!locs"] = std::move(locs);
 
     root[Name] = std::move(obj);
-
-    // Add this def to the instance list for each of its superclasses.
-    for (const auto &SuperPair : Def.getSuperClasses()) {
-      auto SuperName = SuperPair.first->getNameInitAsString();
-      instance_lists[SuperName].push_back(Name);
-    }
   }
 
   // Make a JSON object from the std::map of instance lists.
   json::Object instanceof;
-  for (auto kv: instance_lists)
-    instanceof[kv.first] = std::move(kv.second);
+  for (auto &[ClassName, Instances] : instance_lists)
+    instanceof [ ClassName ] = std::move(Instances);
   root["!instanceof"] = std::move(instanceof);
 
   // Done. Write the output.
   OS << json::Value(std::move(root)) << "\n";
 }
 
-namespace llvm {
-
-void EmitJSON(RecordKeeper &RK, raw_ostream &OS) { JSONEmitter(RK).run(OS); }
-} // end namespace llvm
+void llvm::EmitJSON(RecordKeeper &RK, raw_ostream &OS) {
+  JSONEmitter(RK).run(OS);
+}
