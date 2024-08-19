@@ -1,7 +1,6 @@
 ; RUN: llvm-mc -triple avr -show-encoding < %s | FileCheck %s
 ; RUN: llvm-mc -filetype=obj -triple avr < %s | llvm-objdump --no-print-imm-hex -d - | FileCheck -check-prefix=CHECK-INST %s
 
-
 foo:
   sbis 4,  3
   sbis 6,  2

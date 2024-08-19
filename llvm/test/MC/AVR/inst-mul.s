@@ -2,7 +2,6 @@
 ; RUN: llvm-mc -filetype=obj -triple avr -mattr=mul < %s \
 ; RUN:     | llvm-objdump -d --mattr=mul - | FileCheck --check-prefix=INST %s
 
-
 foo:
   mul r0,  r15
   mul r15, r0

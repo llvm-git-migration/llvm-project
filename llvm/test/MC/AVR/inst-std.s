@@ -3,7 +3,6 @@
 ; RUN:     | llvm-objdump -d --mattr=sram - | FileCheck --check-prefix=INST %s
 
 foo:
-
   std Y+2, r2
   std Y+0, r0
 
