@@ -2002,6 +2002,13 @@ template <typename R, typename Compare> auto max_element(R &&Range, Compare C) {
   return std::max_element(adl_begin(Range), adl_end(Range), C);
 }
 
+/// Provide wrappers to std::mismatch which take ranges instead of having to
+/// pass begin/end explicitly.
+template <typename R1, typename R2> auto mismatch(R1 &&Range1, R2 &&Range2) {
+  return std::mismatch(adl_begin(Range1), adl_end(Range1), adl_begin(Range2),
+                       adl_end(Range2));
+}
+
 template <typename R>
 void stable_sort(R &&Range) {
   std::stable_sort(adl_begin(Range), adl_end(Range));
