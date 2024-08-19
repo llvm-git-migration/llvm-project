@@ -23,6 +23,10 @@
 #include <mutex>
 #include <unistd.h>
 
+#include <sys/syscall.h>
+
+pid_t _workaround_gettid() { return ((pid_t)syscall(SYS_gettid)); }
+
 using namespace lldb_private;
 
 namespace {
@@ -91,7 +95,7 @@ lldb::TargetSP CreateTarget(lldb::DebuggerSP &debugger_sp, ArchSpec &arch) {
 
 lldb::ThreadSP CreateThread(lldb::ProcessSP &process_sp) {
   lldb::ThreadSP thread_sp =
-      std::make_shared<DummyThread>(*process_sp.get(), gettid());
+      std::make_shared<DummyThread>(*process_sp.get(), _workaround_gettid());
   if (thread_sp == nullptr) {
     return nullptr;
   }
@@ -167,8 +171,8 @@ TEST_F(ElfCoreTest, PopulatePrStatusTest) {
   ASSERT_EQ(prstatus_opt->pr_cursig, 0);
   ASSERT_EQ(prstatus_opt->pr_sigpend, 0UL);
   ASSERT_EQ(prstatus_opt->pr_sighold, 0UL);
-  ASSERT_EQ(prstatus_opt->pr_pid, static_cast<uint32_t>(gettid()));
+  ASSERT_EQ(prstatus_opt->pr_pid, static_cast<uint32_t>(_workaround_gettid()));
   ASSERT_EQ(prstatus_opt->pr_ppid, static_cast<uint32_t>(getppid()));
   ASSERT_EQ(prstatus_opt->pr_pgrp, static_cast<uint32_t>(getpgrp()));
-  ASSERT_EQ(prstatus_opt->pr_sid, static_cast<uint32_t>(getsid(gettid())));
+  ASSERT_EQ(prstatus_opt->pr_sid, static_cast<uint32_t>(getsid(_workaround_gettid())));
 }
