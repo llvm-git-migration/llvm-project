@@ -900,6 +900,14 @@ void AMDGPUAsmPrinter::getSIProgramInfo(SIProgramInfo &ProgInfo,
 
     ProgInfo.NumVGPR = AMDGPUMCExpr::createTotalNumVGPR(
         ProgInfo.NumAccVGPR, ProgInfo.NumArchVGPR, Ctx);
+  } else if (isKernel(F.getCallingConv()) && MFI->getNumKernargPreloadedSGPRs()) {
+    // Consider cases where the total number of UserSGPRs with trailing
+    // allocated preload SGPRs, is greater than the number of explicitly
+    // referenced SGPRs.
+    const MCExpr *MaxUserSGPRs = MCBinaryExpr::createAdd(
+        CreateExpr(MFI->getNumUserSGPRs()), ExtraSGPRs, Ctx);
+    ProgInfo.NumSGPR =
+        AMDGPUMCExpr::createMax({ProgInfo.NumSGPR, MaxUserSGPRs}, Ctx);
   }
 
   // Adjust number of registers used to meet default/requested minimum/maximum
