@@ -970,8 +970,15 @@ void AMDGPUAsmPrinter::getSIProgramInfo(SIProgramInfo &ProgInfo,
     return SubGPR;
   };
 
-  ProgInfo.SGPRBlocks = GetNumGPRBlocks(ProgInfo.NumSGPRsForWavesPerEU,
-                                        IsaInfo::getSGPREncodingGranule(&STM));
+  // Consider cases where the total number of UserSGPRs plus extra SGPRs is
+  // greater than the number of explicitly referenced SGPRs.
+  const MCExpr *MaxUserSGPRs = MCBinaryExpr::createAdd(
+      CreateExpr(MFI->getNumUserSGPRs()), ExtraSGPRs, Ctx);
+
+  ProgInfo.SGPRBlocks =
+      GetNumGPRBlocks(AMDGPUMCExpr::createMax(
+                          {ProgInfo.NumSGPRsForWavesPerEU, MaxUserSGPRs}, Ctx),
+                      IsaInfo::getSGPREncodingGranule(&STM));
   ProgInfo.VGPRBlocks = GetNumGPRBlocks(ProgInfo.NumVGPRsForWavesPerEU,
                                         IsaInfo::getVGPREncodingGranule(&STM));
 
