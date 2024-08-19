@@ -357,8 +357,8 @@ hlfir::ElementalOp genElementalOp(
 
 /// Structure to describe a loop nest.
 struct LoopNest {
-  mlir::Operation *outerOp;
-  mlir::Block *body;
+  mlir::Operation *outerOp = nullptr;
+  mlir::Block *body = nullptr;
   llvm::SmallVector<mlir::Value> oneBasedIndices;
 };
 
