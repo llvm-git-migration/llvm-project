@@ -44,7 +44,7 @@ uint64_t getRedzoneSizeForGlobal(int Scale, uint64_t SizeInBytes);
 /// Generates report blocks that catch the addressing errors.
 void instrumentAddress(Module &M, IRBuilder<> &IRB, Instruction *OrigIns,
                        Instruction *InsertBefore, Value *Addr,
-                       MaybeAlign Alignment, uint32_t TypeStoreSize,
+                       MaybeAlign Alignment, TypeSize TypeStoreSize,
                        bool IsWrite, Value *SizeArgument, bool UseCalls,
                        bool Recover, int Scale, int Offset);
 
