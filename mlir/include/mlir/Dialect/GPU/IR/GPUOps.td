@@ -1198,7 +1198,7 @@ def GPU_SubgroupReduceOp : GPU_Op<"subgroup_reduce", [SameOperandsAndResultType]
   let summary = "Reduce values among subgroup.";
   let description = [{
     The `subgroup_reduce` op reduces the value of every lane (work item) across
-    a subgroup. The result is equal for all lanes.
+    a subgroup.
 
     When the reduced value is of a vector type, each vector element is reduced
     independently. Only 1-d vector types are allowed.
@@ -1208,11 +1208,21 @@ def GPU_SubgroupReduceOp : GPU_Op<"subgroup_reduce", [SameOperandsAndResultType]
     ```mlir
     %1 = gpu.subgroup_reduce add %a : (f32) -> (f32)
     %2 = gpu.subgroup_reduce add %b : (vector<4xf16>) -> (vector<4xf16>)
+    %3 = gpu.subgroup_reduce add %c cluster_size(4) : (f32) -> (f32)
     ```
 
     If `uniform` flag is set either none or all lanes of a subgroup need to execute
-    this op in convergence. The reduction operation must be one
-    of:
+    this op in convergence.
+
+    If a `cluster_size` is not provided, the reduction covers all lanes of the
+    subgroup and the result is equal for all lanes.
+
+    If a `cluster_size` is provided, the subgroup is divided into clusters of
+    `cluster_size` contiguous lanes each, a reduction is done for all lanes of
+    each cluster (in parallel), and the result is equal for all lanes in a
+    cluster.
+
+    The reduction operation must be one of:
     *  Integer types: `add`, `mul`, `minui`, `minsi`, `maxui`, `maxsi`, `and`,
        `or`, `xor`
     *  Floating point types: `add`, `mul`, `minnumf`, `maxnumf`, `minimumf`,
@@ -1222,12 +1232,32 @@ def GPU_SubgroupReduceOp : GPU_Op<"subgroup_reduce", [SameOperandsAndResultType]
   let arguments = (ins
     AnyIntegerOrFloatOr1DVector:$value,
     GPU_AllReduceOperationAttr:$op,
-    UnitAttr:$uniform
+    UnitAttr:$uniform,
+    OptionalAttr<I32Attr>:$cluster_size
   );
   let results = (outs AnyIntegerOrFloatOr1DVector:$result);
 
+  let builders = [
+    OpBuilder<(ins "Value":$value,
+               "::mlir::gpu::AllReduceOperation":$op,
+               "bool":$uniform), [{
+      build($_builder, $_state, value, op, uniform, /* cluster_size: */ nullptr);
+    }]>,
+    OpBuilder<(ins "Value":$value,
+               "::mlir::gpu::AllReduceOperation":$op,
+               "bool":$uniform,
+               "std::optional<uint32_t>":$cluster_size), [{
+      if (cluster_size)
+        build($_builder, $_state, value, op, uniform, $_builder.getI32IntegerAttr(*cluster_size));
+      else
+        build($_builder, $_state, value, op, uniform, nullptr);
+    }]>
+  ];
+
   let assemblyFormat = [{ custom<AllReduceOperation>($op) $value
-                          (`uniform` $uniform^)? attr-dict
+                          (`uniform` $uniform^)?
+                          (`cluster_size` `(` $cluster_size^ `)`)?
+                          attr-dict
                           `:` functional-type(operands, results) }];
 
   let hasFolder = 1;

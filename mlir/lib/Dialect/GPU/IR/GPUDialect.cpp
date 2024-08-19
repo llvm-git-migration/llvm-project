@@ -620,6 +620,14 @@ LogicalResult gpu::SubgroupReduceOp::verify() {
                        << "` reduction operation is not compatible with type "
                        << getType();
   }
+
+  if (auto clusterSize = getClusterSize()) {
+    uint32_t size = *clusterSize;
+    if (size < 1 || !llvm::isPowerOf2_32(size)) {
+      return emitError() << "cluster size " << size << " is not a power of two";
+    }
+  }
+
   return success();
 }
 
@@ -627,6 +635,10 @@ OpFoldResult gpu::SubgroupReduceOp::fold(FoldAdaptor /*adaptor*/) {
   if (!getUniform() && canMakeGroupOpUniform(*this)) {
     setUniform(true);
     return getResult();
+  }
+
+  if (getClusterSize() == 1) {
+    return getValue();
   }
 
   return nullptr;
