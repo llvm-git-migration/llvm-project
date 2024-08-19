@@ -2062,6 +2062,20 @@ void Writer::createECChunks() {
     if (auto thunk = dyn_cast<ECExportThunkChunk>(sym->getChunk())) {
       hexpthkSec->addChunk(thunk);
       exportThunks.push_back({thunk, thunk->target});
+    } else if (auto def = dyn_cast<DefinedRegular>(sym)) {
+      // Allow section chunk to be treated as an export thunk if it looks like
+      // one.
+      SectionChunk *chunk = def->getChunk();
+      if (!chunk->live || chunk->getMachine() != AMD64)
+        continue;
+      assert(sym->getName().starts_with("EXP+"));
+      StringRef targetName = sym->getName().substr(strlen("EXP+"));
+      Symbol *targetSym = ctx.symtab.find((targetName + "$hp_target").str());
+      if (!targetSym)
+        targetSym = ctx.symtab.find(targetName);
+      Defined *t = dyn_cast_or_null<Defined>(targetSym);
+      if (t && isArm64EC(t->getChunk()->getMachine()))
+        exportThunks.push_back({chunk, t});
     }
   }
 
