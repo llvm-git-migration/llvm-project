@@ -123,10 +123,10 @@ static bool mustParallelizeOp(Operation *op) {
         //
         // Therefore, we skip if we encounter a nested omp.workshare.
         if (isa<omp::WorkshareOp>(op))
-          WalkResult::skip();
+          return WalkResult::skip();
         if (isa<omp::WorkshareLoopWrapperOp>(op))
-          WalkResult::interrupt();
-        WalkResult::advance();
+          return WalkResult::interrupt();
+        return WalkResult::advance();
       })
       .wasInterrupted();
 }

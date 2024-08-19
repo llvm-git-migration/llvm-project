@@ -1,5 +1,8 @@
 // RUN: fir-opt --split-input-file --lower-workshare --allow-unregistered-dialect %s | FileCheck %s
 
+// Check that we cleanup unused pure operations from either the parallel or
+// single regions
+
 func.func @wsfunc() {
   %a = fir.alloca i32
   omp.parallel {
