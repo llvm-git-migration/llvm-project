@@ -1,0 +1,12 @@
+digraph "CFG for 'f' function" {
+	label="CFG for 'f' function";
+
+	Node0x5640f3daad80 [shape=record,label="{bb0:\l|  %y1 = icmp eq i32 %x, 0\l  br i1 %y1, label %bb1, label %bb2\l|{<s0>T|<s1>F}}"];
+	Node0x5640f3daad80:s0 -> Node0x5640f3d8f320;
+	Node0x5640f3daad80:s1 -> Node0x5640f3d9eb90;
+	Node0x5640f3d8f320 [shape=record,label="{bb1:\l|  br label %bb3\l}"];
+	Node0x5640f3d8f320 -> Node0x5640f3da2ea0;
+	Node0x5640f3d9eb90 [shape=record,label="{bb2:\l|  br label %bb3\l}"];
+	Node0x5640f3d9eb90 -> Node0x5640f3da2ea0;
+	Node0x5640f3da2ea0 [shape=record,label="{bb3:\l|  %y2 = phi i32 [ 0, %bb1 ], [ 1, %bb2 ]\l  ret i32 %y2\l}"];
+}
