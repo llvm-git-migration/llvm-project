@@ -1,7 +1,7 @@
 // RUN: fir-opt --split-input-file --lower-workshare --allow-unregistered-dialect %s | FileCheck %s
 
 
-// tests if the correct values are stored
+// Check if we store the correct values
 
 func.func @wsfunc() {
   omp.parallel {
