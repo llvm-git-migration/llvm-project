@@ -41,7 +41,7 @@ source_filename = "t2.c"
 ; Function Attrs: nounwind sspstrong uwtable
 define i32 @foo(i32 %b, i32 %i) local_unnamed_addr optdebug !dbg !13 {
 entry:
-  tail call void @llvm.dbg.value(metadata i32 %b, i64 0, metadata !17, metadata !20), !dbg !21
+    #dbg_value(i32 %b, !17, !20, !21)
   %c = add i32 %b, 42
   %tobool = icmp sgt i32 %c, 2, !dbg !27
   tail call void asm sideeffect "", "~{rax},~{rbx},~{rcx},~{rdx},~{rsi},~{rdi},~{rbp},~{r8},~{r9},~{r10},~{r11},~{r12},~{r13},~{r14},~{r15},~{dirflag},~{fpsr},~{flags}"()

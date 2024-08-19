@@ -62,13 +62,13 @@
 ; CHECK-NEXT:       Implement the 'patchable-function' attribute
 ; CHECK-NEXT:       Branch relaxation pass
 ; CHECK-NEXT:       Contiguously Lay Out Funclets
+; CHECK-NEXT:       Remove Loads Into Fake Uses
 ; CHECK-NEXT:       StackMap Liveness Analysis
 ; CHECK-NEXT:       Live DEBUG_VALUE analysis
 ; CHECK-NEXT:       Machine Sanitizer Binary Metadata
 ; CHECK-NEXT:       Lazy Machine Block Frequency Analysis
 ; CHECK-NEXT:       Machine Optimization Remark Emitter
 ; CHECK-NEXT:       Stack Frame Layout Analysis
-; CHECK-NEXT:       Remove Loads Into Fake Uses
 ; CHECK-NEXT:       LoongArch pseudo instruction expansion pass
 ; CHECK-NEXT:       LoongArch atomic pseudo instruction expansion pass
 ; CHECK-NEXT:       Lazy Machine Block Frequency Analysis

@@ -4,19 +4,17 @@
 ;; uses the address of bar.
 ;
 ; CHECK: define{{.*}}foo
-; CHECK: call{{.*llvm\.fake\.use.*}}%bar.addr
+; CHECK: call{{.*llvm\.fake\.use.*}}(ptr %bar.addr)
 
-define void @_Z3fooPi(i32* %bar) {
+define void @_Z3fooPi(ptr %bar) {
 entry:
-  %bar.addr = alloca i32*, align 8
-  %baz = alloca i8**, align 8
-  store i32* %bar, i32** %bar.addr, align 8
-  %0 = bitcast i32** %bar.addr to i8**
-  store i8** %0, i8*** %baz, align 8
-  %1 = load i32*, i32** %bar.addr, align 8
-  call void (...) @llvm.fake.use(i32* %1)
-  %2 = load i8**, i8*** %baz, align 8
-  call void (...) @llvm.fake.use(i8** %2)
+  %bar.addr = alloca ptr, align 8
+  %baz = alloca ptr, align 8
+  store ptr %bar, ptr %bar.addr, align 8
+  store ptr %bar.addr, ptr %baz, align 8
+  %0 = load ptr, ptr %bar.addr, align 8
+  %1 = load ptr, ptr %baz, align 8
+  call void (...) @llvm.fake.use(ptr %1)
   ret void
 }
 

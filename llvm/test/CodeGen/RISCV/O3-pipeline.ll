@@ -189,6 +189,7 @@
 ; CHECK-NEXT:       Branch relaxation pass
 ; CHECK-NEXT:       RISC-V Make Compressible
 ; CHECK-NEXT:       Contiguously Lay Out Funclets
+; CHECK-NEXT:       Remove Loads Into Fake Uses
 ; CHECK-NEXT:       StackMap Liveness Analysis
 ; CHECK-NEXT:       Live DEBUG_VALUE analysis
 ; CHECK-NEXT:       Machine Sanitizer Binary Metadata
@@ -197,7 +198,6 @@
 ; CHECK-NEXT:       Lazy Machine Block Frequency Analysis
 ; CHECK-NEXT:       Machine Optimization Remark Emitter
 ; CHECK-NEXT:       Stack Frame Layout Analysis
-; CHECK-NEXT:       Remove Loads Into Fake Uses
 ; CHECK-NEXT:       RISC-V Zcmp move merging pass
 ; CHECK-NEXT:       RISC-V Zcmp Push/Pop optimization pass
 ; CHECK-NEXT:       RISC-V Indirect Branch Tracking
