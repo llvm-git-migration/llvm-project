@@ -327,7 +327,8 @@ TEST_F(MapAllocatorCacheTest, CacheOrder) {
   for (scudo::uptr I = CacheConfig::getEntriesArraySize(); I > 0; I--) {
     scudo::uptr EntryHeaderPos;
     scudo::CachedBlock Entry =
-        Cache->retrieve(TestAllocSize, PageSize, 0, EntryHeaderPos);
+        Cache->retrieve(scudo::MaxUnusedCachePages * PageSize, TestAllocSize,
+                        PageSize, 0, EntryHeaderPos);
     EXPECT_EQ(Entry.MemMap.getBase(), MemMaps[I - 1].getBase());
   }
 
@@ -351,7 +352,8 @@ TEST_F(MapAllocatorCacheTest, MemoryLeakTest) {
   for (scudo::uptr I = CacheConfig::getDefaultMaxEntriesCount(); I > 0; I--) {
     scudo::uptr EntryHeaderPos;
     RetrievedEntries.push_back(
-        Cache->retrieve(TestAllocSize, PageSize, 0, EntryHeaderPos));
+        Cache->retrieve(scudo::MaxUnusedCachePages * PageSize, TestAllocSize,
+                        PageSize, 0, EntryHeaderPos));
     EXPECT_EQ(MemMaps[I].getBase(), RetrievedEntries.back().MemMap.getBase());
   }
 
