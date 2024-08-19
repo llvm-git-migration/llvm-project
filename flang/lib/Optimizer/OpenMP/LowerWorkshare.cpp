@@ -5,7 +5,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-// Lower omp workshare construct.
+//
+// This file implements the lowering of omp.workshare to other omp constructs.
+//
+// This pass is tasked with parallelizing the loops nested in
+// workshare_loop_wrapper while both the Fortran to mlir lowering and the hlfir
+// to fir lowering pipelines are responsible for emitting the
+// workshare_loop_wrapper ops where appropriate according to the
+// `shouldUseWorkshareLowering` function.
+//
 //===----------------------------------------------------------------------===//
 
 #include <flang/Optimizer/Builder/FIRBuilder.h>
@@ -44,25 +52,52 @@ namespace flangomp {
 using namespace mlir;
 
 namespace flangomp {
-bool shouldUseWorkshareLowering(Operation *op) {
-  // TODO this is insufficient, as we could have
-  // omp.parallel {
-  //   omp.workshare {
-  //     omp.parallel {
-  //       hlfir.elemental {}
-  //
-  // Then this hlfir.elemental shall _not_ use the lowering for workshare
-  //
-  // Standard says:
-  //   For a parallel construct, the construct is a unit of work with respect to
-  //   the workshare construct. The statements contained in the parallel
-  //   construct are executed by a new thread team.
-  //
-  // TODO similarly for single, critical, etc. Need to think through the
-  // patterns and implement this function.
-  //
-  return op->getParentOfType<omp::WorkshareOp>();
+
+// Checks for nesting pattern below as we need to avoid sharing the work of
+// statements which are nested in some constructs such as omp.critical or
+// another omp.parallel.
+//
+// omp.workshare { // `wsOp`
+//   ...
+//     omp.T { // `parent`
+//       ...
+//         `op`
+//
+template <typename T>
+static bool isNestedIn(omp::WorkshareOp wsOp, Operation *op) {
+  T parent = op->getParentOfType<T>();
+  if (!parent)
+    return false;
+  return wsOp->isProperAncestor(parent);
 }
+
+bool shouldUseWorkshareLowering(Operation *op) {
+  auto parentWorkshare = op->getParentOfType<omp::WorkshareOp>();
+
+  if (!parentWorkshare)
+    return false;
+
+  if (isNestedIn<omp::CriticalOp>(parentWorkshare, op))
+    return false;
+
+  // 2.8.3  workshare Construct
+  // For a parallel construct, the construct is a unit of work with respect to
+  // the workshare construct. The statements contained in the parallel construct
+  // are executed by a new thread team.
+  if (isNestedIn<omp::ParallelOp>(parentWorkshare, op))
+    return false;
+
+  // 2.8.2  single Construct
+  // Binding The binding thread set for a single region is the current team. A
+  // single region binds to the innermost enclosing parallel region.
+  // Description Only one of the encountering threads will execute the
+  // structured block associated with the single construct.
+  if (isNestedIn<omp::SingleOp>(parentWorkshare, op))
+    return false;
+
+  return true;
+}
+
 } // namespace flangomp
 
 namespace {
@@ -72,19 +107,27 @@ struct SingleRegion {
 };
 
 static bool mustParallelizeOp(Operation *op) {
-  // TODO as in shouldUseWorkshareLowering we be careful not to pick up
-  // workshare_loop_wrapper in nested omp.parallel ops
-  //
-  // e.g.
-  //
-  // omp.parallel {
-  //   omp.workshare {
-  //     omp.parallel {
-  //       omp.workshare {
-  //         omp.workshare_loop_wrapper {}
   return op
-      ->walk(
-          [](omp::WorkshareLoopWrapperOp) { return WalkResult::interrupt(); })
+      ->walk([&](Operation *nested) {
+        // We need to be careful not to pick up workshare_loop_wrapper in nested
+        // omp.parallel{omp.workshare} regions, i.e. make sure that `nested`
+        // binds to the workshare region we are currently handling.
+        //
+        // For example:
+        //
+        // omp.parallel {
+        //   omp.workshare { // currently handling this
+        //     omp.parallel {
+        //       omp.workshare { // nested workshare
+        //         omp.workshare_loop_wrapper {}
+        //
+        // Therefore, we skip if we encounter a nested omp.workshare.
+        if (isa<omp::WorkshareOp>(op))
+          WalkResult::skip();
+        if (isa<omp::WorkshareLoopWrapperOp>(op))
+          WalkResult::interrupt();
+        WalkResult::advance();
+      })
       .wasInterrupted();
 }
 
@@ -340,7 +383,8 @@ static void parallelizeRegion(Region &sourceRegion, Region &targetRegion,
 ///
 /// becomes
 ///
-/// omp.single {
+/// %tmp = fir.alloca
+/// omp.single copyprivate(%tmp) {
 ///   %a = fir.allocmem
 ///   fir.store %a %tmp
 /// }
@@ -352,16 +396,15 @@ static void parallelizeRegion(Region &sourceRegion, Region &targetRegion,
 /// }
 ///
 /// Note that we allocate temporary memory for values in omp.single's which need
-/// to be accessed in all threads in the closest omp.parallel
+/// to be accessed by all threads and broadcast them using single's copyprivate
 LogicalResult lowerWorkshare(mlir::omp::WorkshareOp wsOp, DominanceInfo &di) {
   Location loc = wsOp->getLoc();
   IRMapping rootMapping;
 
   OpBuilder rootBuilder(wsOp);
 
-  // TODO We need something like an scf.execute here, but that is not registered
-  // so using omp.workshare as a placeholder. We need this op as our
-  // parallelizeRegion works on regions and not blocks.
+  // This operation is just a placeholder which will be erased later. We need it
+  // because our `parallelizeRegion` function works on regions and not blocks.
   omp::WorkshareOp newOp =
       rootBuilder.create<omp::WorkshareOp>(loc, omp::WorkshareOperands());
   if (!wsOp.getNowait())
