@@ -753,6 +753,18 @@ bool FunctionAnalysisManagerCGSCCProxy::Result::invalidate(
   return false;
 }
 
+void ModuleToPostOrderCGSCCPassAdaptor::eraseIf(
+    function_ref<bool(StringRef)> Pred) {
+  StringRef PassName = Pass->name();
+  if (PassName.contains("PassManager") || PassName.ends_with("PassAdaptor")) {
+    Pass->eraseIf(Pred);
+    if (Pass->isEmpty())
+      Pass.reset();
+  } else if (Pred(PassName)) {
+    Pass.reset();
+  }
+}
+
 } // end namespace llvm
 
 /// When a new SCC is created for the graph we first update the
