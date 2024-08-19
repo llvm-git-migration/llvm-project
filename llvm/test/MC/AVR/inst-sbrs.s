@@ -2,9 +2,7 @@
 ; RUN: llvm-mc -filetype=obj -triple avr < %s \
 ; RUN:     | llvm-objdump --no-print-imm-hex -d - | FileCheck --check-prefix=INST %s
 
-
 foo:
-
   sbrs r2, 3
   sbrs r0, 7
 

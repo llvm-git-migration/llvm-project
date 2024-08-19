@@ -2,7 +2,6 @@
 ; RUN: llvm-mc -filetype=obj -triple avr -mattr=sram < %s \
 ; RUN:     | llvm-objdump -d --mattr=sram - | FileCheck --check-prefix=INST %s
 
-
 foo:
   ; Normal
 
