@@ -193,6 +193,7 @@
 ; CHECK-NEXT:      ARM block placement
 ; CHECK-NEXT:      optimise barriers pass
 ; CHECK-NEXT:      Contiguously Lay Out Funclets
+; CHECK-NEXT:      Remove Loads Into Fake Uses
 ; CHECK-NEXT:      StackMap Liveness Analysis
 ; CHECK-NEXT:      Live DEBUG_VALUE analysis
 ; CHECK-NEXT:      Machine Sanitizer Binary Metadata
@@ -201,7 +202,6 @@
 ; CHECK-NEXT:      Lazy Machine Block Frequency Analysis
 ; CHECK-NEXT:      Machine Optimization Remark Emitter
 ; CHECK-NEXT:      Stack Frame Layout Analysis
-; CHECK-NEXT:      Remove Loads Into Fake Uses
 ; CHECK-NEXT:      ReachingDefAnalysis
 ; CHECK-NEXT:      ARM fix for Cortex-A57 AES Erratum 1742098
 ; CHECK-NEXT:      ARM Branch Targets

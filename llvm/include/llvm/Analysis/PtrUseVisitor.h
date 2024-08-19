@@ -281,8 +281,6 @@ protected:
 
     // We escape pointers used by a fake_use to prevent SROA from transforming
     // them.
-    // FIXME: This is only needed typed pointers; see if there's a better way to
-    // handle this.
     case Intrinsic::fake_use:
       PI.setEscaped(&II);
       return;

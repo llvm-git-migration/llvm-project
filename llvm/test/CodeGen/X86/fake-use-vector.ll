@@ -23,15 +23,15 @@ target triple = "x86_64-unknown-unknown"
 define <4 x float> @_Z3runDv4_fDv1_x(<4 x float> %r, i64 %b.coerce) local_unnamed_addr #0 {
 entry:
   %0 = insertelement <1 x i64> undef, i64 %b.coerce, i32 0
-  %1 = bitcast i64 %b.coerce to x86_mmx
-  %2 = tail call <4 x float> @llvm.x86.sse.cvtpi2ps(<4 x float> %r, x86_mmx %1)
+  %1 = bitcast i64 %b.coerce to <1 x i64>
+  %2 = tail call <4 x float> @llvm.x86.sse.cvtpi2ps(<4 x float> %r, <1 x i64> %1)
   tail call void (...) @llvm.fake.use(<1 x i64> %0)
   tail call void (...) @llvm.fake.use(<4 x float> %r)
   ret <4 x float> %2
 }
 
 ; Function Attrs: nounwind readnone
-declare <4 x float> @llvm.x86.sse.cvtpi2ps(<4 x float>, x86_mmx)
+declare <4 x float> @llvm.x86.sse.cvtpi2ps(<4 x float>, <1 x i64>)
 
 ; Function Attrs: nounwind
 declare void @llvm.fake.use(...)
