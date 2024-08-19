@@ -273,6 +273,8 @@ Improvements to Clang's diagnostics
 - The lifetimebound and GSL analysis in clang are coherent, allowing clang to
   detect more use-after-free bugs. (#GH100549).
 
+- Clang now diagnoses dangling cases where a gsl-pointer is constructed from a gsl-owner object inside a container (#GH100384).
+
 Improvements to Clang's time-trace
 ----------------------------------
 
