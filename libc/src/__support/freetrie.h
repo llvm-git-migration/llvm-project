@@ -181,8 +181,21 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
         !(*cur)->upper ||
         (best_fit && range.upper().min >= (*best_fit)->size());
 
-    if (lower_impossible && upper_impossible)
-      break;
+    if (lower_impossible && upper_impossible) {
+      if (!deferred_upper_trie)
+        return best_fit;
+      // Scan the deferred upper subtrie and consider whether any element within
+      // provides a better fit.
+      //
+      // This can only ever be reached once. In a deferred upper subtrie, every
+      // node fits, so the scan can always summarily ignore an upper suptrie
+      // rather than deferring it.
+      cur = deferred_upper_trie;
+      range = deferred_upper_range;
+      deferred_upper_trie = nullptr;
+      continue;
+    }
+
     if (lower_impossible) {
       cur = &(*cur)->upper;
       range = range.upper();
@@ -202,29 +215,6 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
       deferred_upper_trie = &(*cur)->upper;
     }
   }
-
-  if (!deferred_upper_trie)
-    return best_fit;
-
-  // Scan the deferred upper subtrie and consider whether any element within
-  // provides a better fit.
-  cur = deferred_upper_trie;
-  range = deferred_upper_range;
-  while (*cur) {
-    if ((*cur)->size() < (*best_fit)->size())
-      best_fit = cur;
-    if ((*cur)->lower) {
-      cur = &(*cur)->lower;
-      range = range.lower();
-    } else {
-      if (best_fit && range.upper().min >= (*best_fit)->size())
-        break;
-      cur = &(*cur)->upper;
-      range = range.upper();
-    }
-  }
-
-  return best_fit;
 }
 
 FreeTrie &FreeTrie::leaf() {
