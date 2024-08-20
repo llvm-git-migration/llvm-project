@@ -52,6 +52,28 @@ public:
     return II->second;
   }
 
+  // Emit the string using string literal concatenation, for better readability
+  // and searchability.
+  void EmitStringLiteralDef(raw_ostream &OS, const Twine &Decl,
+                            const Twine &Indent = "  ") const {
+    OS << "\n"
+       << Indent << "#ifdef __GNUC__\n"
+       << Indent << "#pragma GCC diagnostic push\n"
+       << Indent << "#pragma GCC diagnostic ignored \"-Woverlength-strings\"\n"
+       << Indent << "#endif\n"
+       << Indent << Decl << " = {\n";
+    for (StringRef Str : split(AggregateString, '\0')) {
+      OS << Indent << "  \"";
+      OS.write_escaped(Str);
+      OS << "\\0\"\n";
+    }
+    OS << Indent << "};\n"
+       << Indent << "#ifdef __GNUC__\n"
+       << Indent << "#pragma GCC diagnostic pop\n"
+       << Indent << "#endif\n";
+  }
+
+  // Emit the string as one single string.
   void EmitString(raw_ostream &O) {
     // Escape the string.
     SmallString<256> Str;
