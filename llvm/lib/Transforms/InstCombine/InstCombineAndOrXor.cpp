@@ -211,23 +211,18 @@ static std::optional<std::pair<unsigned, unsigned>> getMaskedTypeForICmpPair(
   // above.
   Value *L1 = LHS->getOperand(0);
   Value *L2 = LHS->getOperand(1);
-  Value *L11, *L12, *L21, *L22;
+  Value *L11 = nullptr, *L12 = nullptr, *L21 = nullptr, *L22 = nullptr;
   // Check whether the icmp can be decomposed into a bit test.
   if (decomposeBitTestICmp(L1, L2, PredL, L11, L12, L2)) {
     L21 = L22 = L1 = nullptr;
   } else {
     // Look for ANDs in the LHS icmp.
-    if (!match(L1, m_And(m_Value(L11), m_Value(L12)))) {
-      // Any icmp can be viewed as being trivially masked; if it allows us to
-      // remove one, it's worth it.
-      L11 = L1;
-      L12 = Constant::getAllOnesValue(L1->getType());
-    }
+    match(L1, m_And(m_Value(L11), m_Value(L12)));
+    match(L2, m_And(m_Value(L21), m_Value(L22)));
 
-    if (!match(L2, m_And(m_Value(L21), m_Value(L22)))) {
-      L21 = L2;
-      L22 = Constant::getAllOnesValue(L2->getType());
-    }
+    // Check that at least one and was found.
+    if (!L11 && !L21)
+      return std::nullopt;
   }
 
   // Bail if LHS was a icmp that can't be decomposed into an equality.
@@ -252,53 +247,41 @@ static std::optional<std::pair<unsigned, unsigned>> getMaskedTypeForICmpPair(
     R1 = nullptr;
     Ok = true;
   } else {
-    if (!match(R1, m_And(m_Value(R11), m_Value(R12)))) {
-      // As before, model no mask as a trivial mask if it'll let us do an
-      // optimization.
-      R11 = R1;
-      R12 = Constant::getAllOnesValue(R1->getType());
+    if (match(R1, m_And(m_Value(R11), m_Value(R12)))) {
+      if (R11 == L11 || R11 == L12 || R11 == L21 || R11 == L22) {
+        A = R11;
+        D = R12;
+        E = R2;
+        Ok = true;
+      } else if (R12 == L11 || R12 == L12 || R12 == L21 || R12 == L22) {
+        A = R12;
+        D = R11;
+        E = R2;
+        Ok = true;
+      }
     }
 
-    if (R11 == L11 || R11 == L12 || R11 == L21 || R11 == L22) {
-      A = R11;
-      D = R12;
-      E = R2;
-      Ok = true;
-    } else if (R12 == L11 || R12 == L12 || R12 == L21 || R12 == L22) {
-      A = R12;
-      D = R11;
-      E = R2;
-      Ok = true;
+    if (match(R2, m_And(m_Value(R11), m_Value(R12)))) {
+      if (R11 == L11 || R11 == L12 || R11 == L21 || R11 == L22) {
+        A = R11;
+        D = R12;
+        E = R1;
+        Ok = true;
+      } else if (R12 == L11 || R12 == L12 || R12 == L21 || R12 == L22) {
+        A = R12;
+        D = R11;
+        E = R1;
+        Ok = true;
+      }
     }
+
+    if (!Ok)
+      return std::nullopt;
   }
 
   // Bail if RHS was a icmp that can't be decomposed into an equality.
   if (!ICmpInst::isEquality(PredR))
     return std::nullopt;
-
-  // Look for ANDs on the right side of the RHS icmp.
-  if (!Ok) {
-    if (!match(R2, m_And(m_Value(R11), m_Value(R12)))) {
-      R11 = R2;
-      R12 = Constant::getAllOnesValue(R2->getType());
-    }
-
-    if (R11 == L11 || R11 == L12 || R11 == L21 || R11 == L22) {
-      A = R11;
-      D = R12;
-      E = R1;
-      Ok = true;
-    } else if (R12 == L11 || R12 == L12 || R12 == L21 || R12 == L22) {
-      A = R12;
-      D = R11;
-      E = R1;
-      Ok = true;
-    } else {
-      return std::nullopt;
-    }
-
-    assert(Ok && "Failed to find AND on the right side of the RHS icmp.");
-  }
 
   if (L11 == A) {
     B = L12;
