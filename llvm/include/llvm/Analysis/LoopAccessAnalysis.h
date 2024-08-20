@@ -839,6 +839,12 @@ bool sortPtrAccesses(ArrayRef<Value *> VL, Type *ElemTy, const DataLayout &DL,
 bool isConsecutiveAccess(Value *A, Value *B, const DataLayout &DL,
                          ScalarEvolution &SE, bool CheckType = true);
 
+std::pair<const SCEV *, const SCEV *> getStartAndEndForAccess(
+    const Loop *Lp, const SCEV *PtrExpr, Type *AccessTy, const SCEV *MaxBECount,
+    ScalarEvolution *SE, const SCEV *&EltSizeSCEV,
+    DenseMap<std::pair<const SCEV *, Type *>,
+             std::pair<const SCEV *, const SCEV *>> *PointerBounds);
+
 class LoopAccessInfoManager {
   /// The cache.
   DenseMap<Loop *, std::unique_ptr<LoopAccessInfo>> LoopAccessInfoMap;
