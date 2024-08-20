@@ -3815,91 +3815,25 @@ define dso_local i64 @idx_scalar_dec(ptr %a, ptr %b, i64 %ii, i64 %n) {
 ; NO-EVL-NEXT:    [[CMP_NOT9:%.*]] = icmp eq i64 [[N:%.*]], 0
 ; NO-EVL-NEXT:    br i1 [[CMP_NOT9]], label [[FOR_COND_CLEANUP:%.*]], label [[FOR_BODY_PREHEADER:%.*]]
 ; NO-EVL:       for.body.preheader:
-; NO-EVL-NEXT:    [[MIN_ITERS_CHECK:%.*]] = icmp ult i64 [[N]], 8
-; NO-EVL-NEXT:    br i1 [[MIN_ITERS_CHECK]], label [[SCALAR_PH:%.*]], label [[VECTOR_PH:%.*]]
-; NO-EVL:       vector.ph:
-; NO-EVL-NEXT:    [[N_MOD_VF:%.*]] = urem i64 [[N]], 8
-; NO-EVL-NEXT:    [[N_VEC:%.*]] = sub i64 [[N]], [[N_MOD_VF]]
-; NO-EVL-NEXT:    [[IND_END:%.*]] = sub i64 [[N]], [[N_VEC]]
-; NO-EVL-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <4 x i64> poison, i64 [[N]], i64 0
-; NO-EVL-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <4 x i64> [[DOTSPLATINSERT]], <4 x i64> poison, <4 x i32> zeroinitializer
-; NO-EVL-NEXT:    [[INDUCTION:%.*]] = add <4 x i64> [[DOTSPLAT]], <i64 0, i64 -1, i64 -2, i64 -3>
-; NO-EVL-NEXT:    br label [[VECTOR_BODY:%.*]]
-; NO-EVL:       vector.body:
-; NO-EVL-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
-; NO-EVL-NEXT:    [[CSA_MASK_PHI:%.*]] = phi <4 x i1> [ zeroinitializer, [[VECTOR_PH]] ], [ [[CSA_MASK_SEL8:%.*]], [[VECTOR_BODY]] ]
-; NO-EVL-NEXT:    [[VEC_IND:%.*]] = phi <4 x i64> [ [[INDUCTION]], [[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], [[VECTOR_BODY]] ]
-; NO-EVL-NEXT:    [[CSA_DATA_PHI:%.*]] = phi <4 x i64> [ poison, [[VECTOR_PH]] ], [ [[CSA_DATA_SEL9:%.*]], [[VECTOR_BODY]] ]
-; NO-EVL-NEXT:    [[STEP_ADD:%.*]] = add <4 x i64> [[VEC_IND]], <i64 -4, i64 -4, i64 -4, i64 -4>
-; NO-EVL-NEXT:    [[TMP0:%.*]] = add <4 x i64> [[VEC_IND]], <i64 -1, i64 -1, i64 -1, i64 -1>
-; NO-EVL-NEXT:    [[TMP1:%.*]] = add <4 x i64> [[STEP_ADD]], <i64 -1, i64 -1, i64 -1, i64 -1>
-; NO-EVL-NEXT:    [[TMP2:%.*]] = extractelement <4 x i64> [[TMP0]], i32 0
-; NO-EVL-NEXT:    [[TMP3:%.*]] = getelementptr inbounds i64, ptr [[A:%.*]], i64 [[TMP2]]
-; NO-EVL-NEXT:    [[TMP4:%.*]] = extractelement <4 x i64> [[TMP1]], i32 0
-; NO-EVL-NEXT:    [[TMP5:%.*]] = getelementptr inbounds i64, ptr [[A]], i64 [[TMP4]]
-; NO-EVL-NEXT:    [[TMP6:%.*]] = getelementptr inbounds i64, ptr [[TMP3]], i32 0
-; NO-EVL-NEXT:    [[TMP7:%.*]] = getelementptr inbounds i64, ptr [[TMP6]], i32 -3
-; NO-EVL-NEXT:    [[TMP8:%.*]] = getelementptr inbounds i64, ptr [[TMP3]], i32 -4
-; NO-EVL-NEXT:    [[TMP9:%.*]] = getelementptr inbounds i64, ptr [[TMP8]], i32 -3
-; NO-EVL-NEXT:    [[WIDE_LOAD:%.*]] = load <4 x i64>, ptr [[TMP7]], align 8
-; NO-EVL-NEXT:    [[REVERSE:%.*]] = shufflevector <4 x i64> [[WIDE_LOAD]], <4 x i64> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; NO-EVL-NEXT:    [[WIDE_LOAD2:%.*]] = load <4 x i64>, ptr [[TMP9]], align 8
-; NO-EVL-NEXT:    [[REVERSE3:%.*]] = shufflevector <4 x i64> [[WIDE_LOAD2]], <4 x i64> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; NO-EVL-NEXT:    [[TMP10:%.*]] = getelementptr inbounds i64, ptr [[B:%.*]], i64 [[TMP2]]
-; NO-EVL-NEXT:    [[TMP11:%.*]] = getelementptr inbounds i64, ptr [[B]], i64 [[TMP4]]
-; NO-EVL-NEXT:    [[TMP12:%.*]] = getelementptr inbounds i64, ptr [[TMP10]], i32 0
-; NO-EVL-NEXT:    [[TMP13:%.*]] = getelementptr inbounds i64, ptr [[TMP12]], i32 -3
-; NO-EVL-NEXT:    [[TMP14:%.*]] = getelementptr inbounds i64, ptr [[TMP10]], i32 -4
-; NO-EVL-NEXT:    [[TMP15:%.*]] = getelementptr inbounds i64, ptr [[TMP14]], i32 -3
-; NO-EVL-NEXT:    [[WIDE_LOAD4:%.*]] = load <4 x i64>, ptr [[TMP13]], align 8
-; NO-EVL-NEXT:    [[REVERSE5:%.*]] = shufflevector <4 x i64> [[WIDE_LOAD4]], <4 x i64> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; NO-EVL-NEXT:    [[WIDE_LOAD6:%.*]] = load <4 x i64>, ptr [[TMP15]], align 8
-; NO-EVL-NEXT:    [[REVERSE7:%.*]] = shufflevector <4 x i64> [[WIDE_LOAD6]], <4 x i64> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
-; NO-EVL-NEXT:    [[TMP16:%.*]] = icmp sgt <4 x i64> [[REVERSE]], [[REVERSE5]]
-; NO-EVL-NEXT:    [[TMP17:%.*]] = icmp sgt <4 x i64> [[REVERSE3]], [[REVERSE7]]
-; NO-EVL-NEXT:    [[TMP18:%.*]] = call i1 @llvm.vector.reduce.or.v4i1(<4 x i1> [[TMP16]])
-; NO-EVL-NEXT:    [[TMP19:%.*]] = call i1 @llvm.vector.reduce.or.v4i1(<4 x i1> [[TMP17]])
-; NO-EVL-NEXT:    [[CSA_MASK_SEL:%.*]] = select i1 [[TMP18]], <4 x i1> [[TMP16]], <4 x i1> [[CSA_MASK_PHI]]
-; NO-EVL-NEXT:    [[CSA_MASK_SEL8]] = select i1 [[TMP19]], <4 x i1> [[TMP17]], <4 x i1> [[CSA_MASK_SEL]]
-; NO-EVL-NEXT:    [[CSA_DATA_SEL:%.*]] = select i1 [[TMP18]], <4 x i64> [[VEC_IND]], <4 x i64> [[CSA_DATA_PHI]]
-; NO-EVL-NEXT:    [[CSA_DATA_SEL9]] = select i1 [[TMP19]], <4 x i64> [[STEP_ADD]], <4 x i64> [[CSA_DATA_SEL]]
-; NO-EVL-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 8
-; NO-EVL-NEXT:    [[VEC_IND_NEXT]] = add <4 x i64> [[STEP_ADD]], <i64 -4, i64 -4, i64 -4, i64 -4>
-; NO-EVL-NEXT:    [[TMP20:%.*]] = icmp eq i64 [[INDEX_NEXT]], [[N_VEC]]
-; NO-EVL-NEXT:    br i1 [[TMP20]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP16:![0-9]+]]
-; NO-EVL:       middle.block:
-; NO-EVL-NEXT:    [[TMP21:%.*]] = select <4 x i1> [[CSA_MASK_SEL8]], <4 x i32> <i32 0, i32 1, i32 2, i32 3>, <4 x i32> zeroinitializer
-; NO-EVL-NEXT:    [[TMP22:%.*]] = call i32 @llvm.vector.reduce.umax.v4i32(<4 x i32> [[TMP21]])
-; NO-EVL-NEXT:    [[TMP23:%.*]] = extractelement <4 x i1> [[CSA_MASK_SEL8]], i64 0
-; NO-EVL-NEXT:    [[TMP24:%.*]] = icmp eq i32 [[TMP22]], 0
-; NO-EVL-NEXT:    [[TMP25:%.*]] = and i1 [[TMP23]], [[TMP24]]
-; NO-EVL-NEXT:    [[TMP26:%.*]] = select i1 [[TMP25]], i32 0, i32 -1
-; NO-EVL-NEXT:    [[CSA_EXTRACT:%.*]] = extractelement <4 x i64> [[CSA_DATA_SEL9]], i32 [[TMP26]]
-; NO-EVL-NEXT:    [[TMP27:%.*]] = icmp sge i32 [[TMP26]], 0
-; NO-EVL-NEXT:    [[TMP28:%.*]] = select i1 [[TMP27]], i64 [[CSA_EXTRACT]], i64 [[II:%.*]]
-; NO-EVL-NEXT:    [[CMP_N:%.*]] = icmp eq i64 [[N]], [[N_VEC]]
-; NO-EVL-NEXT:    br i1 [[CMP_N]], label [[FOR_COND_CLEANUP_LOOPEXIT:%.*]], label [[SCALAR_PH]]
-; NO-EVL:       scalar.ph:
-; NO-EVL-NEXT:    [[BC_RESUME_VAL:%.*]] = phi i64 [ [[IND_END]], [[MIDDLE_BLOCK]] ], [ [[N]], [[FOR_BODY_PREHEADER]] ]
 ; NO-EVL-NEXT:    br label [[FOR_BODY:%.*]]
 ; NO-EVL:       for.cond.cleanup.loopexit:
-; NO-EVL-NEXT:    [[COND_LCSSA:%.*]] = phi i64 [ [[COND:%.*]], [[FOR_BODY]] ], [ [[TMP28]], [[MIDDLE_BLOCK]] ]
+; NO-EVL-NEXT:    [[COND_LCSSA:%.*]] = phi i64 [ [[COND:%.*]], [[FOR_BODY]] ]
 ; NO-EVL-NEXT:    br label [[FOR_COND_CLEANUP]]
 ; NO-EVL:       for.cond.cleanup:
-; NO-EVL-NEXT:    [[IDX_0_LCSSA:%.*]] = phi i64 [ [[II]], [[ENTRY:%.*]] ], [ [[COND_LCSSA]], [[FOR_COND_CLEANUP_LOOPEXIT]] ]
+; NO-EVL-NEXT:    [[IDX_0_LCSSA:%.*]] = phi i64 [ [[II:%.*]], [[ENTRY:%.*]] ], [ [[COND_LCSSA]], [[FOR_COND_CLEANUP_LOOPEXIT:%.*]] ]
 ; NO-EVL-NEXT:    ret i64 [[IDX_0_LCSSA]]
 ; NO-EVL:       for.body:
-; NO-EVL-NEXT:    [[I_011:%.*]] = phi i64 [ [[SUB:%.*]], [[FOR_BODY]] ], [ [[BC_RESUME_VAL]], [[SCALAR_PH]] ]
-; NO-EVL-NEXT:    [[IDX_010:%.*]] = phi i64 [ [[COND]], [[FOR_BODY]] ], [ [[II]], [[SCALAR_PH]] ]
+; NO-EVL-NEXT:    [[I_011:%.*]] = phi i64 [ [[SUB:%.*]], [[FOR_BODY]] ], [ [[N]], [[FOR_BODY_PREHEADER]] ]
+; NO-EVL-NEXT:    [[IDX_010:%.*]] = phi i64 [ [[COND]], [[FOR_BODY]] ], [ [[II]], [[FOR_BODY_PREHEADER]] ]
 ; NO-EVL-NEXT:    [[SUB]] = add i64 [[I_011]], -1
-; NO-EVL-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i64, ptr [[A]], i64 [[SUB]]
-; NO-EVL-NEXT:    [[TMP29:%.*]] = load i64, ptr [[ARRAYIDX]], align 8
-; NO-EVL-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i64, ptr [[B]], i64 [[SUB]]
-; NO-EVL-NEXT:    [[TMP30:%.*]] = load i64, ptr [[ARRAYIDX2]], align 8
-; NO-EVL-NEXT:    [[CMP3:%.*]] = icmp sgt i64 [[TMP29]], [[TMP30]]
+; NO-EVL-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i64, ptr [[A:%.*]], i64 [[SUB]]
+; NO-EVL-NEXT:    [[TMP0:%.*]] = load i64, ptr [[ARRAYIDX]], align 8
+; NO-EVL-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i64, ptr [[B:%.*]], i64 [[SUB]]
+; NO-EVL-NEXT:    [[TMP1:%.*]] = load i64, ptr [[ARRAYIDX2]], align 8
+; NO-EVL-NEXT:    [[CMP3:%.*]] = icmp sgt i64 [[TMP0]], [[TMP1]]
 ; NO-EVL-NEXT:    [[COND]] = select i1 [[CMP3]], i64 [[I_011]], i64 [[IDX_010]]
 ; NO-EVL-NEXT:    [[CMP_NOT:%.*]] = icmp eq i64 [[SUB]], 0
-; NO-EVL-NEXT:    br i1 [[CMP_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]], !llvm.loop [[LOOP17:![0-9]+]]
+; NO-EVL-NEXT:    br i1 [[CMP_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]]
 ;
 ; DATA-LABEL: @idx_scalar_dec(
 ; DATA-NEXT:  entry:
@@ -4037,7 +3971,7 @@ define i32 @simple_csa_int_select_neg_cond(i32 %N, ptr %data) {
 ; NO-EVL-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], [[TMP5]]
 ; NO-EVL-NEXT:    [[VEC_IND_NEXT]] = add <vscale x 4 x i64> [[VEC_IND]], [[DOTSPLAT]]
 ; NO-EVL-NEXT:    [[TMP19:%.*]] = icmp eq i64 [[INDEX_NEXT]], [[N_VEC]]
-; NO-EVL-NEXT:    br i1 [[TMP19]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP18:![0-9]+]]
+; NO-EVL-NEXT:    br i1 [[TMP19]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP16:![0-9]+]]
 ; NO-EVL:       middle.block:
 ; NO-EVL-NEXT:    [[CSA_STEP:%.*]] = call <vscale x 4 x i32> @llvm.stepvector.nxv4i32()
 ; NO-EVL-NEXT:    [[TMP20:%.*]] = select <vscale x 4 x i1> [[CSA_MASK_SEL]], <vscale x 4 x i32> [[CSA_STEP]], <vscale x 4 x i32> zeroinitializer
@@ -4070,7 +4004,7 @@ define i32 @simple_csa_int_select_neg_cond(i32 %N, ptr %data) {
 ; NO-EVL-NEXT:    [[SPEC_SELECT]] = select i1 [[CMP1_NOT]], i32 [[T_010]], i32 [[TMP28]]
 ; NO-EVL-NEXT:    [[INDVARS_IV_NEXT]] = add nuw nsw i64 [[INDVARS_IV]], 1
 ; NO-EVL-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INDVARS_IV_NEXT]], [[WIDE_TRIP_COUNT]]
-; NO-EVL-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]], !llvm.loop [[LOOP19:![0-9]+]]
+; NO-EVL-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]], !llvm.loop [[LOOP17:![0-9]+]]
 ;
 ; DATA-LABEL: @simple_csa_int_select_neg_cond(
 ; DATA-NEXT:  entry:
@@ -4207,7 +4141,7 @@ define ptr @simple_csa_ptr_select(i32 %N, ptr %data) {
 ; NO-EVL-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], [[TMP5]]
 ; NO-EVL-NEXT:    [[VEC_IND_NEXT]] = add <vscale x 2 x i64> [[VEC_IND]], [[DOTSPLAT]]
 ; NO-EVL-NEXT:    [[TMP18:%.*]] = icmp eq i64 [[INDEX_NEXT]], [[N_VEC]]
-; NO-EVL-NEXT:    br i1 [[TMP18]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP20:![0-9]+]]
+; NO-EVL-NEXT:    br i1 [[TMP18]], label [[MIDDLE_BLOCK:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP18:![0-9]+]]
 ; NO-EVL:       middle.block:
 ; NO-EVL-NEXT:    [[CSA_STEP:%.*]] = call <vscale x 2 x i32> @llvm.stepvector.nxv2i32()
 ; NO-EVL-NEXT:    [[TMP19:%.*]] = select <vscale x 2 x i1> [[CSA_MASK_SEL]], <vscale x 2 x i32> [[CSA_STEP]], <vscale x 2 x i32> zeroinitializer
@@ -4241,7 +4175,7 @@ define ptr @simple_csa_ptr_select(i32 %N, ptr %data) {
 ; NO-EVL-NEXT:    [[SPEC_SELECT]] = select i1 [[CMP1]], ptr [[TMP27]], ptr [[T_010]]
 ; NO-EVL-NEXT:    [[INDVARS_IV_NEXT]] = add nuw nsw i64 [[INDVARS_IV]], 1
 ; NO-EVL-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INDVARS_IV_NEXT]], [[WIDE_TRIP_COUNT]]
-; NO-EVL-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]], !llvm.loop [[LOOP21:![0-9]+]]
+; NO-EVL-NEXT:    br i1 [[EXITCOND_NOT]], label [[FOR_COND_CLEANUP_LOOPEXIT]], label [[FOR_BODY]], !llvm.loop [[LOOP19:![0-9]+]]
 ;
 ; DATA-LABEL: @simple_csa_ptr_select(
 ; DATA-NEXT:  entry:

@@ -7279,7 +7279,16 @@ InstructionCost LoopVectorizationPlanner::cost(VPlan &Plan,
 static bool
 planContainsAdditionalSimplifications(VPlan &Plan, ElementCount VF,
                                       VPCostContext &CostCtx, Loop *TheLoop,
-                                      LoopVectorizationCostModel &CM) {
+                                      LoopVectorizationCostModel &CM,
+                                      LoopVectorizationLegality &Legal) {
+
+  // CSA cost is more complicated since there is significant overhead in the
+  // preheader and middle block. It also contains recipes that are not backed by
+  // underlying instructions in the original loop. This makes it difficult to
+  // model in the legacy cost model.
+  if (!Legal.getCSAs().empty())
+    return true;
+
   // First collect all instructions for the recipes in Plan.
   auto GetInstructionForCost = [](const VPRecipeBase *R) -> Instruction * {
     if (auto *S = dyn_cast<VPSingleDefRecipe>(R))
@@ -7391,7 +7400,7 @@ VectorizationFactor LoopVectorizationPlanner::computeBestVF() {
   assert((BestFactor.Width == LegacyVF.Width ||
           planContainsAdditionalSimplifications(getPlanFor(BestFactor.Width),
                                                 BestFactor.Width, CostCtx,
-                                                OrigLoop, CM)) &&
+                                                OrigLoop, CM, *Legal)) &&
          " VPlan cost model and legacy cost model disagreed");
   assert((BestFactor.Width.isScalar() || BestFactor.ScalarCost > 0) &&
          "when vectorizing, the scalar cost must be computed.");
