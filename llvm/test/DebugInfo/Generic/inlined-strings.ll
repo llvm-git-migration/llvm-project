@@ -17,7 +17,7 @@
 source_filename = "test/DebugInfo/Generic/global.ll"
 
 ; Function Attrs: nounwind readnone uwtable
-define signext i32 @main() #0 !dbg !9 {
+define i32 @main() #0 !dbg !9 {
 entry:
   ret i32 0, !dbg !12
 }

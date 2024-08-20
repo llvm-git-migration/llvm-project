@@ -447,17 +447,13 @@ ABIArgInfo SystemZABIInfo::classifyArgumentType(QualType Ty) const {
     // The structure is passed as an unextended integer, a float, or a double.
     if (isFPArgumentType(SingleElementTy)) {
       assert(Size == 32 || Size == 64);
-      llvm::Type *PassTy;
-      if (Size == 32)
-        PassTy = llvm::Type::getFloatTy(getVMContext());
-      else
-        PassTy = llvm::Type::getDoubleTy(getVMContext());
-      return ABIArgInfo::getDirect(PassTy);
+      return ABIArgInfo::getDirect(
+          Size == 32 ? llvm::Type::getFloatTy(getVMContext())
+                     : llvm::Type::getDoubleTy(getVMContext()));
     } else {
       llvm::IntegerType *PassTy = llvm::IntegerType::get(getVMContext(), Size);
-      if (Size <= 32)
-        return ABIArgInfo::getNoExtend(PassTy);
-      return ABIArgInfo::getDirect(PassTy);
+      return Size <= 32 ? ABIArgInfo::getNoExtend(PassTy)
+                        : ABIArgInfo::getDirect(PassTy);
     }
   }
 

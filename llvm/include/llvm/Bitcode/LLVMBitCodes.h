@@ -759,7 +759,7 @@ enum AttributeKindCodes {
   ATTR_KIND_INITIALIZES = 94,
   ATTR_KIND_HYBRID_PATCHABLE = 95,
   ATTR_KIND_SANITIZE_REALTIME = 96,
-  ATTR_KIND_NO_EXT = 96, X
+  ATTR_KIND_NO_EXT = 97,
 };
 
 enum ComdatSelectionKindCodes {

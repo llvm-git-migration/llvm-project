@@ -34,11 +34,6 @@ using namespace llvm;
 
 #define DEBUG_TYPE "systemz-lower"
 
-static cl::opt<bool> DisableIntArgExtCheck(
-    "no-argext-abi-check", cl::init(false),
-    cl::desc("Do not verify that narrow int args are properly extended per the "
-             "SystemZ ABI."));
-
 namespace {
 // Represents information about a comparison.
 struct Comparison {
@@ -1481,27 +1476,6 @@ bool SystemZTargetLowering::mayBeEmittedAsTailCall(const CallInst *CI) const {
   return CI->isTailCall();
 }
 
-// Verify that a narrow integer argument is extended to 64 bits or marked
-// 'noext' (struct in reg).
-static void VerifyIntegerArg(MVT VT, ISD::ArgFlagsTy Flags) {
-  if (VT.isInteger()) {
-    assert((VT == MVT::i32 || VT.getSizeInBits() >= 64) &&
-           "Unexpected integer argument VT.");
-    assert((VT != MVT::i32 ||
-            (Flags.isSExt() || Flags.isZExt() || Flags.isNoExt())) &&
-           "Narrow integer argument must have a valid extension type.");
-  }
-}
-
-// Verify that narrow integer arguments are extended as required by the ABI.
-static void CheckNarrowIntegerArgs(SmallVectorImpl<ISD::OutputArg> &Outs) {
-  if (!DisableIntArgExtCheck) {
-    for (unsigned i = 0; i < Outs.size(); ++i)
-      VerifyIntegerArg(Outs[i].VT, Outs[i].Flags);
-    return;
-  }
-}
-
 // Value is a value that has been passed to us in the location described by VA
 // (and so has type VA.getLocVT()).  Convert Value to VA.getValVT(), chaining
 // any loads onto Chain.
@@ -1948,8 +1922,7 @@ SystemZTargetLowering::LowerCall(CallLoweringInfo &CLI,
   if (auto *G = dyn_cast<GlobalAddressSDNode>(Callee))
     if (const Function *Fn = dyn_cast<Function>(G->getGlobal()))
       HasLocalLinkage = Fn->hasLocalLinkage();
-  if (!HasLocalLinkage && Subtarget.isTargetELF())
-    CheckNarrowIntegerArgs(Outs);
+  verifyNarrowIntegerArgs(Outs, HasLocalLinkage);
 
   // Analyze the operands of the call, assigning locations to each operand.
   SmallVector<CCValAssign, 16> ArgLocs;
@@ -2211,10 +2184,9 @@ SystemZTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                    const SDLoc &DL, SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
 
-
   // Integer args <=32 bits should have an extension attribute.
-  if (!MF.getFunction().hasLocalLinkage() && Subtarget.isTargetELF())
-    CheckNarrowIntegerArgs(const_cast<SmallVectorImpl<ISD::OutputArg> &>(Outs));
+  verifyNarrowIntegerArgs(Outs, MF.getFunction().hasLocalLinkage());
+
   // Assign locations to each returned value.
   SmallVector<CCValAssign, 16> RetLocs;
   CCState RetCCInfo(CallConv, IsVarArg, MF, RetLocs, *DAG.getContext());
@@ -9837,4 +9809,25 @@ SDValue SystemZTargetLowering::lowerVECREDUCE_ADD(SDValue Op,
   return DAG.getNode(
       ISD::EXTRACT_VECTOR_ELT, DL, VT, DAG.getBitcast(OpVT, Op),
       DAG.getConstant(OpVT.getVectorNumElements() - 1, DL, MVT::i32));
+}
+
+// Verify that narrow integer arguments are extended as required by the ABI.
+void SystemZTargetLowering::
+verifyNarrowIntegerArgs(const SmallVectorImpl<ISD::OutputArg> &Outs,
+                        bool HasLocalLinkage) const {
+  if (!getTargetMachine().Options.VerifyArgABICompliance || HasLocalLinkage ||
+      !Subtarget.isTargetELF())
+    return;
+
+  for (unsigned i = 0; i < Outs.size(); ++i) {
+    MVT VT = Outs[i].VT;
+    ISD::ArgFlagsTy Flags = Outs[i].Flags;
+    if (VT.isInteger()) {
+      assert((VT == MVT::i32 || VT.getSizeInBits() >= 64) &&
+             "Unexpected integer argument VT.");
+      assert((VT != MVT::i32 ||
+              (Flags.isSExt() || Flags.isZExt() || Flags.isNoExt())) &&
+             "Narrow integer argument must have a valid extension type.");
+    }
+  }
 }

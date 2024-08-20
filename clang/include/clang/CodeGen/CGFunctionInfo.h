@@ -192,6 +192,9 @@ public:
   static ABIArgInfo getNoExtend(llvm::IntegerType *T) {
     auto AI = ABIArgInfo(Extend);
     AI.setCoerceToType(T);
+    AI.setPaddingType(nullptr);
+    AI.setDirectOffset(0);
+    AI.setDirectAlign(0);
     return AI;
   }
 
