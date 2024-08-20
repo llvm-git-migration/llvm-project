@@ -200,7 +200,8 @@ static bool isTransitivelyUsedOutside(Value v, SingleRegion sr) {
 /// We clone pure operations in both the parallel and single blocks. this
 /// functions cleans them up if they end up with no uses
 static void cleanupBlock(Block *block) {
-  for (Operation &op : llvm::make_early_inc_range(*block))
+  for (Operation &op : llvm::make_early_inc_range(
+           llvm::make_range(block->rbegin(), block->rend())))
     if (isOpTriviallyDead(&op))
       op.erase();
 }
