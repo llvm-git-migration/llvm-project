@@ -103,28 +103,23 @@ func.func @wsfunc(%arg0: !fir.ref<!fir.array<42xi32>>) {
 // CHECK:             %[[VAL_10:.*]]:2 = hlfir.declare %[[VAL_0]](%[[VAL_9]]) {uniq_name = "array"} : (!fir.ref<!fir.array<42xi32>>, !fir.shape<1>) -> (!fir.ref<!fir.array<42xi32>>, !fir.ref<!fir.array<42xi32>>)
 // CHECK:             %[[VAL_11:.*]] = fir.load %[[VAL_1]] : !fir.ref<!fir.heap<!fir.array<42xi32>>>
 // CHECK:             %[[VAL_12:.*]]:2 = hlfir.declare %[[VAL_11]](%[[VAL_9]]) {uniq_name = ".tmp.array"} : (!fir.heap<!fir.array<42xi32>>, !fir.shape<1>) -> (!fir.heap<!fir.array<42xi32>>, !fir.heap<!fir.array<42xi32>>)
-// CHECK:             %[[VAL_13:.*]] = arith.constant true
-// CHECK:             %[[VAL_14:.*]] = arith.constant 1 : index
+// CHECK:             %[[VAL_13:.*]] = arith.constant 1 : index
 // CHECK:             omp.wsloop {
-// CHECK:               omp.loop_nest (%[[VAL_15:.*]]) : index = (%[[VAL_14]]) to (%[[VAL_7]]) inclusive step (%[[VAL_14]]) {
-// CHECK:                 %[[VAL_16:.*]] = hlfir.designate %[[VAL_10]]#0 (%[[VAL_15]])  : (!fir.ref<!fir.array<42xi32>>, index) -> !fir.ref<i32>
-// CHECK:                 %[[VAL_17:.*]] = fir.load %[[VAL_16]] : !fir.ref<i32>
-// CHECK:                 %[[VAL_18:.*]] = arith.subi %[[VAL_17]], %[[VAL_8]] : i32
-// CHECK:                 %[[VAL_19:.*]] = hlfir.designate %[[VAL_12]]#0 (%[[VAL_15]])  : (!fir.heap<!fir.array<42xi32>>, index) -> !fir.ref<i32>
-// CHECK:                 hlfir.assign %[[VAL_18]] to %[[VAL_19]] temporary_lhs : i32, !fir.ref<i32>
+// CHECK:               omp.loop_nest (%[[VAL_14:.*]]) : index = (%[[VAL_13]]) to (%[[VAL_7]]) inclusive step (%[[VAL_13]]) {
+// CHECK:                 %[[VAL_15:.*]] = hlfir.designate %[[VAL_10]]#0 (%[[VAL_14]])  : (!fir.ref<!fir.array<42xi32>>, index) -> !fir.ref<i32>
+// CHECK:                 %[[VAL_16:.*]] = fir.load %[[VAL_15]] : !fir.ref<i32>
+// CHECK:                 %[[VAL_17:.*]] = arith.subi %[[VAL_16]], %[[VAL_8]] : i32
+// CHECK:                 %[[VAL_18:.*]] = hlfir.designate %[[VAL_12]]#0 (%[[VAL_14]])  : (!fir.heap<!fir.array<42xi32>>, index) -> !fir.ref<i32>
+// CHECK:                 hlfir.assign %[[VAL_17]] to %[[VAL_18]] temporary_lhs : i32, !fir.ref<i32>
 // CHECK:                 omp.yield
 // CHECK:               }
 // CHECK:               omp.terminator
 // CHECK:             }
 // CHECK:             omp.single nowait {
-// CHECK:               %[[VAL_20:.*]] = fir.undefined tuple<!fir.heap<!fir.array<42xi32>>, i1>
-// CHECK:               %[[VAL_21:.*]] = fir.insert_value %[[VAL_20]], %[[VAL_13]], [1 : index] : (tuple<!fir.heap<!fir.array<42xi32>>, i1>, i1) -> tuple<!fir.heap<!fir.array<42xi32>>, i1>
 // CHECK:               hlfir.assign %[[VAL_12]]#0 to %[[VAL_10]]#0 : !fir.heap<!fir.array<42xi32>>, !fir.ref<!fir.array<42xi32>>
 // CHECK:               fir.freemem %[[VAL_12]]#0 : !fir.heap<!fir.array<42xi32>>
 // CHECK:               omp.terminator
 // CHECK:             }
-// CHECK:             %[[VAL_22:.*]] = fir.undefined tuple<!fir.heap<!fir.array<42xi32>>, i1>
-// CHECK:             %[[VAL_23:.*]] = fir.insert_value %[[VAL_22]], %[[VAL_13]], [1 : index] : (tuple<!fir.heap<!fir.array<42xi32>>, i1>, i1) -> tuple<!fir.heap<!fir.array<42xi32>>, i1>
 // CHECK:             omp.barrier
 // CHECK:             omp.terminator
 // CHECK:           }
@@ -168,31 +163,26 @@ func.func @wsfunc(%arg0: !fir.ref<!fir.array<42xi32>>) {
 // CHECK:           %[[VAL_12:.*]]:2 = hlfir.declare %[[VAL_0]](%[[VAL_11]]) {uniq_name = "array"} : (!fir.ref<!fir.array<42xi32>>, !fir.shape<1>) -> (!fir.ref<!fir.array<42xi32>>, !fir.ref<!fir.array<42xi32>>)
 // CHECK:           %[[VAL_13:.*]] = fir.load %[[VAL_2]] : !fir.ref<!fir.heap<!fir.array<42xi32>>>
 // CHECK:           %[[VAL_14:.*]]:2 = hlfir.declare %[[VAL_13]](%[[VAL_11]]) {uniq_name = ".tmp.array"} : (!fir.heap<!fir.array<42xi32>>, !fir.shape<1>) -> (!fir.heap<!fir.array<42xi32>>, !fir.heap<!fir.array<42xi32>>)
-// CHECK:           %[[VAL_15:.*]] = arith.constant true
-// CHECK:           %[[VAL_16:.*]] = arith.constant 1 : index
+// CHECK:           %[[VAL_15:.*]] = arith.constant 1 : index
 // CHECK:           omp.wsloop {
-// CHECK:             omp.loop_nest (%[[VAL_17:.*]]) : index = (%[[VAL_16]]) to (%[[VAL_10]]) inclusive step (%[[VAL_16]]) {
-// CHECK:               %[[VAL_18:.*]] = hlfir.designate %[[VAL_12]]#0 (%[[VAL_17]])  : (!fir.ref<!fir.array<42xi32>>, index) -> !fir.ref<i32>
-// CHECK:               %[[VAL_19:.*]] = fir.load %[[VAL_18]] : !fir.ref<i32>
-// CHECK:               %[[VAL_20:.*]] = fir.load %[[VAL_1]] : !fir.ref<i32>
-// CHECK:               %[[VAL_21:.*]] = arith.subi %[[VAL_19]], %[[VAL_20]] : i32
-// CHECK:               %[[VAL_22:.*]] = arith.subi %[[VAL_21]], %[[VAL_9]] : i32
-// CHECK:               %[[VAL_23:.*]] = hlfir.designate %[[VAL_14]]#0 (%[[VAL_17]])  : (!fir.heap<!fir.array<42xi32>>, index) -> !fir.ref<i32>
-// CHECK:               hlfir.assign %[[VAL_22]] to %[[VAL_23]] temporary_lhs : i32, !fir.ref<i32>
+// CHECK:             omp.loop_nest (%[[VAL_16:.*]]) : index = (%[[VAL_15]]) to (%[[VAL_10]]) inclusive step (%[[VAL_15]]) {
+// CHECK:               %[[VAL_17:.*]] = hlfir.designate %[[VAL_12]]#0 (%[[VAL_16]])  : (!fir.ref<!fir.array<42xi32>>, index) -> !fir.ref<i32>
+// CHECK:               %[[VAL_18:.*]] = fir.load %[[VAL_17]] : !fir.ref<i32>
+// CHECK:               %[[VAL_19:.*]] = fir.load %[[VAL_1]] : !fir.ref<i32>
+// CHECK:               %[[VAL_20:.*]] = arith.subi %[[VAL_18]], %[[VAL_19]] : i32
+// CHECK:               %[[VAL_21:.*]] = arith.subi %[[VAL_20]], %[[VAL_9]] : i32
+// CHECK:               %[[VAL_22:.*]] = hlfir.designate %[[VAL_14]]#0 (%[[VAL_16]])  : (!fir.heap<!fir.array<42xi32>>, index) -> !fir.ref<i32>
+// CHECK:               hlfir.assign %[[VAL_21]] to %[[VAL_22]] temporary_lhs : i32, !fir.ref<i32>
 // CHECK:               omp.yield
 // CHECK:             }
 // CHECK:             omp.terminator
 // CHECK:           }
 // CHECK:           omp.single nowait {
-// CHECK:             %[[VAL_24:.*]] = fir.undefined tuple<!fir.heap<!fir.array<42xi32>>, i1>
-// CHECK:             %[[VAL_25:.*]] = fir.insert_value %[[VAL_24]], %[[VAL_15]], [1 : index] : (tuple<!fir.heap<!fir.array<42xi32>>, i1>, i1) -> tuple<!fir.heap<!fir.array<42xi32>>, i1>
 // CHECK:             "test.test1"(%[[VAL_1]]) : (!fir.ref<i32>) -> ()
 // CHECK:             hlfir.assign %[[VAL_14]]#0 to %[[VAL_12]]#0 : !fir.heap<!fir.array<42xi32>>, !fir.ref<!fir.array<42xi32>>
 // CHECK:             fir.freemem %[[VAL_14]]#0 : !fir.heap<!fir.array<42xi32>>
 // CHECK:             omp.terminator
 // CHECK:           }
-// CHECK:           %[[VAL_26:.*]] = fir.undefined tuple<!fir.heap<!fir.array<42xi32>>, i1>
-// CHECK:           %[[VAL_27:.*]] = fir.insert_value %[[VAL_26]], %[[VAL_15]], [1 : index] : (tuple<!fir.heap<!fir.array<42xi32>>, i1>, i1) -> tuple<!fir.heap<!fir.array<42xi32>>, i1>
 // CHECK:           omp.barrier
 // CHECK:           return
 // CHECK:         }
