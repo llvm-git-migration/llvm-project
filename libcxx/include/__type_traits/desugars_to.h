@@ -25,6 +25,12 @@ struct __equal_tag {};
 // syntactically, the operation is equivalent to calling `a + b`
 struct __plus_tag {};
 
+// syntactically, the operation is equivalent to calling `a < b`
+struct __less_tag {};
+
+// syntactically, the operation is equivalent to calling `a > b`
+struct __greater_tag {};
+
 // syntactically, the operation is equivalent to calling `a < b`, and these expressions
 // have to be true for any `a` and `b`:
 // - `(a < b) == (b > a)`
@@ -45,6 +51,10 @@ struct __totally_ordered_less_tag {};
 // some specific semantics.
 template <class _CanonicalTag, class _Operation, class... _Args>
 inline const bool __desugars_to_v = false;
+
+template <class _Operation, class... _Args>
+inline const bool __desugars_to_v<__less_tag, _Operation, _Args...> =
+    __desugars_to_v<__totally_ordered_less_tag, _Operation, _Args...>;
 
 _LIBCPP_END_NAMESPACE_STD
 
