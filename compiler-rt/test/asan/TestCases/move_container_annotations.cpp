@@ -81,7 +81,7 @@ void TestMove(size_t capacity, size_t off_old, size_t off_new,
 
   for (int i = 0; i < 1000; i++) {
     RandomPoison(old_beg, old_end);
-    std::deque<int> poison_states(old_beg, old_end);
+    std::deque<int> poison_states = GetPoisonedState(gold_beg, old_end);
     __sanitizer_move_contiguous_container_annotations(old_beg, old_end, new_beg,
                                                       new_end);
 
@@ -93,7 +93,7 @@ void TestMove(size_t capacity, size_t off_old, size_t off_new,
     for (; cur < old_end; ++cur) {
       assert(!__asan_address_is_poisoned(cur));
     }
-    // Memory after old_beg should be the same as at the beginning.
+    // Memory after old_end should be the same as at the beginning.
     for (; cur < old_buffer_end; ++cur) {
       assert(__asan_address_is_poisoned(cur) == poison_old);
     }

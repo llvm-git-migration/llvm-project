@@ -606,6 +606,9 @@ void __sanitizer_move_contiguous_container_annotations(
         &stack);
   }
 
+  if(old_storage_beg == old_storage_end)
+    return;
+
   uptr new_internal_beg = RoundUpTo(new_storage_beg, granularity);
   uptr old_internal_beg = RoundUpTo(old_storage_beg, granularity);
   uptr new_external_beg = RoundDownTo(new_storage_beg, granularity);
