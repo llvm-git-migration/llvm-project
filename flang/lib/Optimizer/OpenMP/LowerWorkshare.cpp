@@ -136,6 +136,9 @@ static bool isSafeToParallelize(Operation *op) {
          isMemoryEffectFree(op);
 }
 
+/// Simple shallow copies suffice for our purposes in this pass, so we implement
+/// this simpler alternative to the full fledged `createCopyFunc` in the
+/// frontend
 static mlir::func::FuncOp createCopyFunc(mlir::Location loc, mlir::Type varType,
                                          fir::FirOpBuilder builder) {
   mlir::ModuleOp module = builder.getModule();
