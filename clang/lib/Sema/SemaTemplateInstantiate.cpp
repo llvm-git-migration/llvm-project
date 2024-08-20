@@ -2187,7 +2187,8 @@ namespace {
                                  LambdaScopeInfo *LSI) {
       #if 1
       CXXMethodDecl *MD = LSI->CallOperator;
-      if (MD->getParentFunctionOrMethod()) {
+      // if (MD->getParentFunctionOrMethod()) {
+      if (true) {
       #if 0
         NamedDecl *Pattern = MD;
           std::optional<ArrayRef<TemplateArgument>> Innermost;
