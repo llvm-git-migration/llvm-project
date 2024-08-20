@@ -166,12 +166,10 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
         (!best_fit || (*cur)->size() < (*best_fit)->size())) {
       // The current node is a better fit.
       best_fit = cur;
-
-      // The old deferred upper subtrie is outclassed by the new best fit.
-      LIBC_ASSERT(!deferred_upper_trie ||
-                  deferred_upper_range.min > (*cur)->size() &&
-                      "deferred upper subtrie should be an upper sibling of an "
-                      "ancestor of the new best fit");
+      LIBC_ASSERT(
+          !deferred_upper_trie ||
+          deferred_upper_range.min > (*cur)->size() &&
+              "deferred upper subtrie should be outclassed by new best fit");
       deferred_upper_trie = nullptr;
     }
 
@@ -210,8 +208,7 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
       range = range.lower();
       LIBC_ASSERT(!deferred_upper_trie ||
                   range.upper().max() < deferred_upper_range.min &&
-                      "old deferred upper subtrie should be an upper sibling "
-                      "of an ancestor of the new deferred upper subtrie");
+                      "old deferred upper subtrie should be outclassed by new");
       deferred_upper_trie = &(*cur)->upper;
     }
   }
