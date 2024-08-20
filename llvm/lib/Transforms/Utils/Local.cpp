@@ -1047,7 +1047,7 @@ CanRedirectPredsOfEmptyBBToSucc(BasicBlock *BB, BasicBlock *Succ,
 
 // Check whether removing BB will make the phis in its Succ will have too
 // many incoming entries. This function does not check whether BB is foldable
-// or not. 
+// or not.
 static bool introduceTooComplexPhi(BasicBlock *BB) {
   // Check BB only has phi and an unconditional branch
   BranchInst *Branch = dyn_cast<BranchInst>(BB->getFirstNonPHIOrDbg(true));
