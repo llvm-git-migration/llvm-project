@@ -1558,6 +1558,11 @@ ScriptInterpreterPythonImpl::CreateScriptedProcessInterface() {
   return std::make_unique<ScriptedProcessPythonInterface>(*this);
 }
 
+ScriptedStopHookInterfaceSP
+ScriptInterpreterPythonImpl::CreateScriptedStopHookInterface() {
+  return std::make_shared<ScriptedStopHookPythonInterface>(*this);
+}
+
 ScriptedThreadInterfaceSP
 ScriptInterpreterPythonImpl::CreateScriptedThreadInterface() {
   return std::make_shared<ScriptedThreadPythonInterface>(*this);
