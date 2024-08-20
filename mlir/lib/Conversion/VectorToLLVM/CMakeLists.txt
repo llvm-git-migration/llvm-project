@@ -13,10 +13,11 @@ add_mlir_conversion_library(MLIRVectorToLLVM
   Core
 
   LINK_LIBS PUBLIC
-  MLIRArithDialect
+  MLIRArithAttrToLLVMConversion
+  MLIRArithDialect  
   MLIRLLVMCommonConversion
   MLIRLLVMDialect
-  MLIRMemRefDialect
+  MLIRMemRefDialect  
   MLIRTargetLLVMIRExport
   MLIRTransforms
   MLIRVectorDialect

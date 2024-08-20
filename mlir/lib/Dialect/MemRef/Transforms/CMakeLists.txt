@@ -35,11 +35,12 @@ add_mlir_dialect_library(MLIRMemRefTransforms
   MLIRInferTypeOpInterface
   MLIRLoopLikeInterface
   MLIRMemRefDialect
+  MLIRMemRefUtils
   MLIRNVGPUDialect
   MLIRPass
   MLIRTensorDialect
   MLIRTransforms
   MLIRValueBoundsOpInterface
-  MLIRVectorDialect
+  MLIRVectorDialect  
 )
 
