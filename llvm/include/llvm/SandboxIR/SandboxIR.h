@@ -114,6 +114,7 @@ namespace sandboxir {
 class BasicBlock;
 class ConstantInt;
 class ConstantFP;
+class ConstantAggregateZero;
 class Context;
 class Function;
 class Instruction;
@@ -306,6 +307,7 @@ protected:
   friend class CatchSwitchAddHandler; // For `Val`.
   friend class ConstantArray;         // For `Val`.
   friend class ConstantStruct;        // For `Val`.
+  friend class ConstantAggregateZero; // For `Val`.
 
   /// All values point to the context.
   Context &Ctx;
@@ -931,6 +933,47 @@ public:
   static bool classof(const Value *From) {
     return From->getSubclassID() == ClassID::ConstantVector;
   }
+};
+
+class ConstantAggregateZero final : public Constant {
+  ConstantAggregateZero(llvm::ConstantAggregateZero *C, Context &Ctx)
+      : Constant(ClassID::ConstantAggregateZero, C, Ctx) {}
+  friend class Context; // For constructor.
+
+public:
+  static ConstantAggregateZero *get(Type *Ty);
+  /// If this CAZ has array or vector type, return a zero with the right element
+  /// type.
+  Constant *getSequentialElement() const;
+  /// If this CAZ has struct type, return a zero with the right element type for
+  /// the specified element.
+  Constant *getStructElement(unsigned Elt) const;
+  /// Return a zero of the right value for the specified GEP index if we can,
+  /// otherwise return null (e.g. if C is a ConstantExpr).
+  Constant *getElementValue(Constant *C) const;
+  /// Return a zero of the right value for the specified GEP index.
+  Constant *getElementValue(unsigned Idx) const;
+  /// Return the number of elements in the array, vector, or struct.
+  ElementCount getElementCount() const {
+    return cast<llvm::ConstantAggregateZero>(Val)->getElementCount();
+  }
+
+  /// For isa/dyn_cast.
+  static bool classof(const sandboxir::Value *From) {
+    return From->getSubclassID() == ClassID::ConstantAggregateZero;
+  }
+  unsigned getUseOperandNo(const Use &Use) const final {
+    llvm_unreachable("ConstantAggregateZero has no operands!");
+  }
+#ifndef NDEBUG
+  void verify() const override {
+    assert(isa<llvm::ConstantAggregateZero>(Val) && "Expected a CAZ!");
+  }
+  void dumpOS(raw_ostream &OS) const override {
+    dumpCommonPrefix(OS);
+    dumpCommonSuffix(OS);
+  }
+#endif
 };
 
 /// Iterator for `Instruction`s in a `BasicBlock.
