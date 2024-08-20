@@ -7,6 +7,7 @@
 // Limit this test to Linux since we're relying on allocator internal
 // limits (shadow memory size, allocation limits etc.)
 
+REQUIRES: shell
 // RUN: %clangxx_asan -O0 %s -o %t
 // RUN: ulimit -v 22024290304
 // RUN: not %run %t malloc 2>&1 \
