@@ -321,7 +321,7 @@ void param_ptr_to_ptr_to_ptr_top(void*** ppp) {
 
 void param_ptr_to_ptr_to_ptr_callee(void*** ppp) {
   int local = 42;
-  **ppp = &local; // no-warning FIXME
+  **ppp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'pp'}}
 }
 
 void param_ptr_to_ptr_to_ptr_caller(void** pp) {
@@ -331,7 +331,7 @@ void param_ptr_to_ptr_to_ptr_caller(void** pp) {
 void lambda_to_context_ptr_to_ptr(int **pp) {
   auto lambda = [&] {
     int local = 42;
-    *pp = &local; // no-warning FIXME
+    *pp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'pp'}}
   };
   lambda();
   (void)*pp;
@@ -734,7 +734,7 @@ void param_nested_and_transitive_top(NestedAndTransitive* nat) {
 
 void param_nested_and_transitive_callee(NestedAndTransitive* nat) {
   int local = 42;
-  *nat->next[2]->next[1]->p = &local; // no-warning FIXME
+  *nat->next[2]->next[1]->p = &local;  // expected-warning{{local variable 'local' is still referred to by the stack variable 'natCaller'}}
 }
 
 void param_nested_and_transitive_caller(NestedAndTransitive natCaller) {
