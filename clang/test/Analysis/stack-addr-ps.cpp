@@ -140,7 +140,7 @@ void write_stack_address_to(char **q) {
   char local;
   *q = &local;
   // expected-warning@-1 {{Address of stack memory associated with local \
-variable 'local' is still referred to by the stack variable 'p' upon \
+variable 'local' is still referred to by the caller variable 'p' upon \
 returning to the caller}}
 }
 
@@ -185,14 +185,14 @@ void* global_ptr;
 
 void global_direct_pointer() {
   int local = 42;
-  global_ptr = &local;
-} // expected-warning{{local variable 'local' is still referred to by the global variable 'global_ptr'}}
+  global_ptr = &local; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_ptr'}}
+}
 
 void static_direct_pointer_top() {
   int local = 42;
   static int* p = &local;
-  (void)p;
-} // expected-warning{{local variable 'local' is still referred to by the static variable 'p'}}
+  (void)p; // expected-warning{{local variable 'local' is still referred to by the static variable 'p'}}
+}
 
 void static_direct_pointer_callee() {
   int local = 42;
@@ -216,7 +216,7 @@ void lambda_to_context_direct_pointer() {
   int *p = nullptr;
   auto lambda = [&] {
     int local = 42;
-    p = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'p'}}
+    p = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'p'}}
   };
   lambda();
   (void)p;
@@ -242,7 +242,7 @@ void lambda_to_context_direct_pointer_lifetime_extended() {
   int *p = nullptr;
   auto lambda = [&] {
     int&& local = 42;
-    p = &local; // expected-warning{{'int' lifetime extended by local variable 'local' is still referred to by the stack variable 'p'}}
+    p = &local; // expected-warning{{'int' lifetime extended by local variable 'local' is still referred to by the caller variable 'p'}}
   };
   lambda();
   (void)p;
@@ -251,7 +251,7 @@ void lambda_to_context_direct_pointer_lifetime_extended() {
 template<typename Callback>
 void lambda_param_capture_direct_pointer_callee(Callback& callee) {
   int local = 42;
-  callee(local); // expected-warning{{'local' is still referred to by the stack variable 'p'}}
+  callee(local); // expected-warning{{'local' is still referred to by the caller variable 'p'}}
 }
 
 void lambda_param_capture_direct_pointer_caller() {
@@ -276,19 +276,19 @@ void** global_pp;
 void global_ptr_local_to_ptr() {
   int local = 42;
   int* p = &local;
-  global_pp = (void**)&p;
-} // expected-warning{{local variable 'p' is still referred to by the global variable 'global_pp'}}
+  global_pp = (void**)&p; // expected-warning{{local variable 'p' is still referred to by the global variable 'global_pp'}}
+}
 
 void global_ptr_to_ptr() {
   int local = 42;
-  *global_pp = &local; // no-warning FIXME
+  *global_pp = &local; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_pp'}}
 }
 
 void *** global_ppp;
 
 void global_ptr_to_ptr_to_ptr() {
   int local = 42;
-  **global_ppp = &local; // no-warning FIXME
+  **global_ppp = &local; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_ppp'}}
 }
 
 void** get_some_pp();
@@ -301,12 +301,12 @@ void static_ptr_to_ptr() {
 
 void param_ptr_to_ptr_top(void** pp) {
   int local = 42;
-  *pp = &local; // no-warning FIXME
+  *pp = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'pp'}}
 }
 
 void param_ptr_to_ptr_callee(void** pp) {
   int local = 42;
-  *pp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'p'}}
+  *pp = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'p'}}
 }
 
 void param_ptr_to_ptr_caller() {
@@ -316,12 +316,12 @@ void param_ptr_to_ptr_caller() {
 
 void param_ptr_to_ptr_to_ptr_top(void*** ppp) {
   int local = 42;
-  **ppp = &local; // no-warning FIXME
+  **ppp = &local; // expected-warning {{local variable 'local' is still referred to by the caller variable 'ppp'}}
 }
 
 void param_ptr_to_ptr_to_ptr_callee(void*** ppp) {
   int local = 42;
-  **ppp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'pp'}}
+  **ppp = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'pp'}}
 }
 
 void param_ptr_to_ptr_to_ptr_caller(void** pp) {
@@ -331,7 +331,7 @@ void param_ptr_to_ptr_to_ptr_caller(void** pp) {
 void lambda_to_context_ptr_to_ptr(int **pp) {
   auto lambda = [&] {
     int local = 42;
-    *pp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'pp'}}
+    *pp = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'pp'}}
   };
   lambda();
   (void)*pp;
@@ -339,7 +339,7 @@ void lambda_to_context_ptr_to_ptr(int **pp) {
 
 void param_ptr_to_ptr_fptr(int **pp) {
   int local = 42;
-  *pp = &local; // expected-warning{{local variable 'local' is still referred to by the stack variable 'p'}}
+  *pp = &local; // expected-warning{{local variable 'local' is still referred to by the caller variable 'p'}}
 }
 
 void param_ptr_to_ptr_fptr_caller(void (*fptr)(int**)) {
@@ -360,7 +360,7 @@ void*& global_rtp = *make_ptr_to_ptr();
 void global_ref_to_ptr() {
   int local = 42;
   int* p = &local;
-  global_rtp = p; // no-warning FIXME
+  global_rtp = p; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_rtp'}}
 }
 
 void static_ref_to_ptr() {
@@ -373,13 +373,13 @@ void static_ref_to_ptr() {
 void param_ref_to_ptr_top(void*& rp) {
   int local = 42;
   int* p = &local;
-  rp = p; // no-warning FIXME
+  rp = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'rp'}}
 }
 
 void param_ref_to_ptr_callee(void*& rp) {
   int local = 42;
   int* p = &local;
-  rp = p; // expected-warning{{local variable 'local' is still referred to by the stack variable 'p'}}
+  rp = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'p'}}
 }
 
 void param_ref_to_ptr_caller() {
@@ -415,26 +415,26 @@ void* global_aop[2];
 void global_arr_of_ptr() {
   int local = 42;
   int* p = &local;
-  global_aop[1] = p;
-} // expected-warning{{local variable 'local' is still referred to by the global variable 'global_aop'}}
+  global_aop[1] = p; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_aop'}}
+}
 
 void static_arr_of_ptr() {
   int local = 42;
   static void* arr[2];
   arr[1] = &local;
-  (void)arr[1];
-} // expected-warning{{local variable 'local' is still referred to by the static variable 'arr'}}
+  (void)arr[1]; // expected-warning{{local variable 'local' is still referred to by the static variable 'arr'}}
+}
 
 void param_arr_of_ptr_top(void* arr[2]) {
   int local = 42;
   int* p = &local;
-  arr[1] = p; // no-warning FIXME
+  arr[1] = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'arr'}}
 }
 
 void param_arr_of_ptr_callee(void* arr[2]) {
   int local = 42;
   int* p = &local;
-  arr[1] = p; // expected-warning{{local variable 'local' is still referred to by the stack variable 'arrStack'}}
+  arr[1] = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'arrStack'}}
 }
 
 void param_arr_of_ptr_caller() {
@@ -471,26 +471,26 @@ void* global_aop[2];
 void global_arr_of_ptr(int idx) {
   int local = 42;
   int* p = &local;
-  global_aop[idx] = p;
-} // expected-warning{{local variable 'local' is still referred to by the global variable 'global_aop'}}
+  global_aop[idx] = p; // expected-warning{{local variable 'local' is still referred to by the global variable 'global_aop'}}
+}
 
 void static_arr_of_ptr(int idx) {
   int local = 42;
   static void* arr[2];
   arr[idx] = &local;
-  (void)arr[idx];
-} // expected-warning{{local variable 'local' is still referred to by the static variable 'arr'}}
+  (void)arr[idx]; // expected-warning{{local variable 'local' is still referred to by the static variable 'arr'}}
+}
 
 void param_arr_of_ptr_top(void* arr[2], int idx) {
   int local = 42;
   int* p = &local;
-  arr[idx] = p; // no-warning FIXME
+  arr[idx] = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'arr'}}
 }
 
 void param_arr_of_ptr_callee(void* arr[2], int idx) {
   int local = 42;
   int* p = &local;
-  arr[idx] = p; // expected-warning{{local variable 'local' is still referred to by the stack variable 'arrStack'}}
+  arr[idx] = p; // expected-warning{{local variable 'local' is still referred to by the caller variable 'arrStack'}}
 }
 
 void param_arr_of_ptr_caller(int idx) {
@@ -516,7 +516,7 @@ S returned_struct_with_ptr_callee() {
   int local = 42;
   S s;
   s.p = &local;
-  return s; // expected-warning{{'local' is still referred to by the stack variable 's'}}
+  return s; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void returned_struct_with_ptr_caller() {
@@ -528,15 +528,15 @@ S global_s;
 
 void global_struct_with_ptr() {
   int local = 42;
-  global_s.p = &local;
-} // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
+  global_s.p = &local; // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
+}
 
 void static_struct_with_ptr() {
   int local = 42;
   static S s;
   s.p = &local;
-  (void)s.p;
-} // expected-warning{{'local' is still referred to by the static variable 's'}}
+  (void)s.p; // expected-warning{{'local' is still referred to by the static variable 's'}}
+}
 } // namespace leaking_via_struct_with_ptr
 
 namespace leaking_via_ref_to_struct_with_ptr {
@@ -548,7 +548,7 @@ S &global_s = *(new S);
 
 void global_ref_to_struct_with_ptr() {
   int local = 42;
-  global_s.p = &local; // no-warning FIXME
+  global_s.p = &local; // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
 }
 
 void static_ref_to_struct_with_ptr() {
@@ -560,12 +560,12 @@ void static_ref_to_struct_with_ptr() {
 
 void param_ref_to_struct_with_ptr_top(S &s) {
   int local = 42;
-  s.p = &local; // no-warning FIXME
+  s.p = &local; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void param_ref_to_struct_with_ptr_callee(S &s) {
   int local = 42;
-  s.p = &local; // expected-warning{{'local' is still referred to by the stack variable 'sStack'}}
+  s.p = &local; // expected-warning{{'local' is still referred to by the caller variable 'sStack'}}
 }
 
 void param_ref_to_struct_with_ptr_caller() {
@@ -576,7 +576,7 @@ void param_ref_to_struct_with_ptr_caller() {
 template<typename Callable>
 void lambda_param_capture_callee(Callable& callee) {
   int local = 42;
-  callee(local); // expected-warning{{'local' is still referred to by the stack variable 'p'}}
+  callee(local); // expected-warning{{'local' is still referred to by the caller variable 'p'}}
 }
 
 void lambda_param_capture_caller() {
@@ -616,7 +616,7 @@ S* global_s;
 
 void global_ptr_to_struct_with_ptr() {
   int local = 42;
-  global_s->p = &local; // no-warning FIXME
+  global_s->p = &local; // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
 }
 
 void static_ptr_to_struct_with_ptr_new() {
@@ -636,12 +636,12 @@ void static_ptr_to_struct_with_ptr_generated() {
 
 void param_ptr_to_struct_with_ptr_top(S* s) {
   int local = 42;
-  s->p = &local; // no-warning FIXME
+  s->p = &local; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void param_ptr_to_struct_with_ptr_callee(S* s) {
   int local = 42;
-  s->p = &local; // expected-warning{{'local' is still referred to by the stack variable 's'}}
+  s->p = &local; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void param_ptr_to_struct_with_ptr_caller() {
@@ -679,8 +679,8 @@ S global_s[2];
 
 void global_ptr_to_struct_with_ptr() {
   int local = 42;
-  global_s[1].p = &local;
-} // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
+  global_s[1].p = &local; // expected-warning{{'local' is still referred to by the global variable 'global_s'}}
+}
 
 void static_ptr_to_struct_with_ptr_new() {
   int local = 42;
@@ -699,12 +699,12 @@ void static_ptr_to_struct_with_ptr_generated() {
 
 void param_ptr_to_struct_with_ptr_top(S s[2]) {
   int local = 42;
-  s[1].p = &local; // no-warning FIXME
+  s[1].p = &local; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void param_ptr_to_struct_with_ptr_callee(S s[2]) {
   int local = 42;
-  s[1].p = &local; // expected-warning{{'local' is still referred to by the stack variable 's'}}
+  s[1].p = &local; // expected-warning{{'local' is still referred to by the caller variable 's'}}
 }
 
 void param_ptr_to_struct_with_ptr_caller() {
@@ -724,17 +724,17 @@ NestedAndTransitive global_nat;
 
 void global_nested_and_transitive() {
   int local = 42;
-  *global_nat.next[2]->next[1]->p = &local; // no-warning FIXME
+  *global_nat.next[2]->next[1]->p = &local; // expected-warning{{'local' is still referred to by the global variable 'global_nat'}}
 }
 
 void param_nested_and_transitive_top(NestedAndTransitive* nat) {
   int local = 42;
-  *nat->next[2]->next[1]->p = &local; // no-warning FIXME
+  *nat->next[2]->next[1]->p = &local; // expected-warning{{'local' is still referred to by the caller variable 'nat'}}
 }
 
 void param_nested_and_transitive_callee(NestedAndTransitive* nat) {
   int local = 42;
-  *nat->next[2]->next[1]->p = &local;  // expected-warning{{local variable 'local' is still referred to by the stack variable 'natCaller'}}
+  *nat->next[2]->next[1]->p = &local; // expected-warning{{'local' is still referred to by the caller variable 'natCaller'}}
 }
 
 void param_nested_and_transitive_caller(NestedAndTransitive natCaller) {
@@ -757,3 +757,14 @@ class CPtr {
   }
 };
 } // namespace leaking_as_member
+
+namespace leaking_via_indirect_global_invalidated {
+void** global_pp;
+void opaque();
+void global_ptr_to_ptr() {
+  int local = 42;
+  *global_pp = &local;
+  opaque();
+  *global_pp = nullptr;
+}
+} // namespace leaking_via_indirect_global_invalidated
