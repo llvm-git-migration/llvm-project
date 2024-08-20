@@ -154,6 +154,11 @@ void *lldb_private::python::LLDBSWIGPython_CastPyObjectToSBMemoryRegionInfo(
   return nullptr;
 }
 
+void *lldb_private::python::LLDBSWIGPython_CastPyObjectToSBExecutionContext(
+    PyObject *data) {
+  return nullptr;
+}
+
 lldb::ValueObjectSP
 lldb_private::python::SWIGBridge::LLDBSWIGPython_GetValueObjectSPFromSBValue(
     void *data) {
@@ -266,14 +271,6 @@ bool lldb_private::python::SWIGBridge::LLDBSWIGPythonRunScriptKeywordValue(
 void *lldb_private::python::SWIGBridge::LLDBSWIGPython_GetDynamicSetting(
     void *module, const char *setting, const lldb::TargetSP &target_sp) {
   return nullptr;
-}
-
-python::PythonObject
-lldb_private::python::SWIGBridge::LLDBSwigPythonCreateScriptedStopHook(
-    lldb::TargetSP target_sp, const char *python_class_name,
-    const char *session_dictionary_name, const StructuredDataImpl &args_impl,
-    Status &error) {
-  return python::PythonObject();
 }
 
 bool lldb_private::python::SWIGBridge::LLDBSwigPythonStopHookCallHandleStop(
