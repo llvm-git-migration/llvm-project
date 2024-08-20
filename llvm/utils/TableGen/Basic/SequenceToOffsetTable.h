@@ -125,8 +125,14 @@ public:
   /// `emitStringLiteralDef` - Print out the table as the body of an array
   /// initializer, where each element is a C string literal terminated by
   /// `\0`. Falls back to emitting a comma-separated integer list if
-  /// `EmitLongStrLiterals` is false
-  void emitStringLiteralDef(raw_ostream &OS, const llvm::Twine &Decl) const {
+  /// `EmitLongStrLiterals` is false.
+  ///
+  /// Per https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html, the warning
+  /// `-Woverlength-strings`, which could be triggered by the generated code, is
+  /// not applicable for C++. So if \p IsCPP is true, we skip generating the GCC
+  /// pragmas to ignore this warning.
+  void emitStringLiteralDef(raw_ostream &OS, const llvm::Twine &Decl,
+                            bool IsCPP = false) const {
     assert(Entries && "Call layout() before emitStringLiteralDef()");
     if (!EmitLongStrLiterals) {
       OS << Decl << " = {\n";
@@ -135,20 +141,24 @@ public:
       return;
     }
 
-    OS << "\n#ifdef __GNUC__\n"
-       << "#pragma GCC diagnostic push\n"
-       << "#pragma GCC diagnostic ignored \"-Woverlength-strings\"\n"
-       << "#endif\n"
-       << Decl << " = {\n";
+    if (!IsCPP) {
+      OS << "\n#ifdef __GNUC__\n"
+         << "#pragma GCC diagnostic push\n"
+         << "#pragma GCC diagnostic ignored \"-Woverlength-strings\"\n"
+         << "#endif\n";
+    }
+    OS << Decl << " = {\n";
     for (auto I : Seqs) {
       OS << "  /* " << I.second << " */ \"";
       OS.write_escaped(I.first);
       OS << "\\0\"\n";
     }
-    OS << "};\n"
-       << "#ifdef __GNUC__\n"
-       << "#pragma GCC diagnostic pop\n"
-       << "#endif\n\n";
+    OS << "};\n";
+    if (!IsCPP) {
+      OS << "#ifdef __GNUC__\n"
+         << "#pragma GCC diagnostic pop\n"
+         << "#endif\n\n";
+    }
   }
 
   /// emit - Print out the table as the body of an array initializer.

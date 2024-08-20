@@ -24,7 +24,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
-#include "llvm/TableGen/StringToOffsetTable.h"
 #include "llvm/TableGen/TableGenBackend.h"
 #include <algorithm>
 #include <array>
@@ -637,14 +636,16 @@ void IntrinsicEmitter::EmitIntrinsicToBuiltinMap(
 
   // Populate the string table with the names of all the builtins after
   // removing this common prefix.
-  StringToOffsetTable Table;
+  SequenceToOffsetTable<StringRef> Table;
   for (const auto &[TargetPrefix, Entry] : BuiltinMap) {
     auto &[Map, CommonPrefix] = Entry;
     for (auto &[BuiltinName, EnumName] : Map) {
       StringRef Suffix = BuiltinName.substr(CommonPrefix->size());
-      Table.GetOrAddStringOffset(Suffix);
+      Table.add(Suffix);
     }
   }
+
+  Table.layout();
 
   OS << formatv(R"(
 // Get the LLVM intrinsic that corresponds to a builtin. This is used by the
@@ -669,9 +670,8 @@ Intrinsic::getIntrinsicFor{1}Builtin(StringRef TargetPrefix,
   }
 
   if (!Table.empty()) {
-    OS << "  static constexpr char BuiltinNames[] = {\n";
-    Table.EmitCharArray(OS);
-    OS << "  };\n\n";
+    Table.emitStringLiteralDef(OS, "  static constexpr char BuiltinNames[]",
+                               /*IsCPP=*/true);
 
     OS << R"(
   struct BuiltinEntry {
@@ -704,8 +704,8 @@ Intrinsic::getIntrinsicFor{1}Builtin(StringRef TargetPrefix,
                   TargetPrefix);
     for (const auto &[BuiltinName, EnumName] : Map) {
       StringRef Suffix = BuiltinName.substr(CommonPrefix->size());
-      OS << formatv("    {{{0}, {1}}, // {2}\n", EnumName,
-                    *Table.GetStringOffset(Suffix), BuiltinName);
+      OS << formatv("    {{{0}, {1}}, // {2}\n", EnumName, Table.get(Suffix),
+                    BuiltinName);
     }
     OS << formatv("  }; // {0}Names\n\n", TargetPrefix);
   }
