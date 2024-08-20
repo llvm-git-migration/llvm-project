@@ -340,23 +340,38 @@ public:
 
   NodeSet() = default;
   NodeSet(iterator S, iterator E) : Nodes(S, E), HasRecurrence(true) {
-    Latency = 0;
-    for (const SUnit *Node : Nodes) {
-      DenseMap<SUnit *, unsigned> SuccSUnitLatency;
-      for (const SDep &Succ : Node->Succs) {
-        auto SuccSUnit = Succ.getSUnit();
-        if (!Nodes.count(SuccSUnit))
+    // Calculate the latency of this node set.
+    // Example to demonstrate the calculation:
+    // Given: N0 -> N1 -> N2 -> N0
+    // Edges:
+    // (N0 -> N1, 3)
+    // (N0 -> N1, 5)
+    // (N1 -> N2, 2)
+    // (N2 -> N0, 1)
+    // The total latency which is a lower bound of the recurrence MII is the
+    // longest patch from N0 back to N0 given only the edges of this node set.
+    // In this example, the latency is: 5 + 2 + 1 = 8.
+    //
+    // Hold a map from each SUnit in the circle to its distance from the source
+    // node.
+    DenseMap<SUnit *, unsigned> SUnitToDistance;
+    for (auto *Node : Nodes)
+      SUnitToDistance[Node] = 0;
+
+    for (unsigned I = 1, E = Nodes.size(); I <= E; ++I) {
+      SUnit *U = Nodes[I - 1];
+      SUnit *V = Nodes[I % Nodes.size()];
+      for (const SDep &Succ : U->Succs) {
+        SUnit *SuccSUnit = Succ.getSUnit();
+        if (V != SuccSUnit)
           continue;
-        unsigned CurLatency = Succ.getLatency();
-        unsigned MaxLatency = 0;
-        if (SuccSUnitLatency.count(SuccSUnit))
-          MaxLatency = SuccSUnitLatency[SuccSUnit];
-        if (CurLatency > MaxLatency)
-          SuccSUnitLatency[SuccSUnit] = CurLatency;
+        if (SUnitToDistance[U] + Succ.getLatency() > SUnitToDistance[V]) {
+          SUnitToDistance[V] = SUnitToDistance[U] + Succ.getLatency();
+        }
       }
-      for (auto SUnitLatency : SuccSUnitLatency)
-        Latency += SUnitLatency.second;
     }
+    // The latency is the distance from the source node to itself.
+    Latency = SUnitToDistance[Nodes.front()];
   }
 
   bool insert(SUnit *SU) { return Nodes.insert(SU); }
