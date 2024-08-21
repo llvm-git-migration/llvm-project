@@ -7458,9 +7458,7 @@ define <2 x half> @stofp_v2i16_v2f16(<2 x i16> %a) {
 ;
 ; CHECK-GI-FP16-LABEL: stofp_v2i16_v2f16:
 ; CHECK-GI-FP16:       // %bb.0: // %entry
-; CHECK-GI-FP16-NEXT:    // kill: def $d0 killed $d0 def $q0
-; CHECK-GI-FP16-NEXT:    mov s1, v0.s[1]
-; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]
+; CHECK-GI-FP16-NEXT:    uzp1 v0.4h, v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    scvtf v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    mov h1, v0.h[1]
 ; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]
@@ -7501,9 +7499,7 @@ define <2 x half> @utofp_v2i16_v2f16(<2 x i16> %a) {
 ;
 ; CHECK-GI-FP16-LABEL: utofp_v2i16_v2f16:
 ; CHECK-GI-FP16:       // %bb.0: // %entry
-; CHECK-GI-FP16-NEXT:    // kill: def $d0 killed $d0 def $q0
-; CHECK-GI-FP16-NEXT:    mov s1, v0.s[1]
-; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]
+; CHECK-GI-FP16-NEXT:    uzp1 v0.4h, v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    ucvtf v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    mov h1, v0.h[1]
 ; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]
@@ -8067,8 +8063,7 @@ define <2 x half> @utofp_v2i8_v2f16(<2 x i8> %a) {
 ; CHECK-GI-FP16-NEXT:    movi d1, #0x0000ff000000ff
 ; CHECK-GI-FP16-NEXT:    ushll v0.4s, v0.4h, #0
 ; CHECK-GI-FP16-NEXT:    and v0.8b, v0.8b, v1.8b
-; CHECK-GI-FP16-NEXT:    mov s1, v0.s[1]
-; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]
+; CHECK-GI-FP16-NEXT:    uzp1 v0.4h, v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    ucvtf v0.4h, v0.4h
 ; CHECK-GI-FP16-NEXT:    mov h1, v0.h[1]
 ; CHECK-GI-FP16-NEXT:    mov v0.h[1], v1.h[0]

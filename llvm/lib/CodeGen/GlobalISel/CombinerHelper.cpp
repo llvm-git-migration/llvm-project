@@ -3313,6 +3313,120 @@ static bool isConstValidTrue(const TargetLowering &TLI, unsigned ScalarSizeBits,
          isConstTrueVal(TLI, Cst, IsVector, IsFP);
 }
 
+// This combine tries to reduce the number of scalarised G_TRUNC instructions by
+// using vector truncates instead
+//
+// EXAMPLE:
+// %a(i32), %b(i32) = G_UNMERGE_VALUES %src(<2 x i32>)
+// %T_a(i16) = G_TRUNC %a(i32)
+// %T_b(i16) = G_TRUNC %b(i32)
+// %Undef(i16) = G_IMPLICIT_DEF(i16)
+// %dst(v4i16) = G_BUILD_VECTORS %T_a(i16), %T_b(i16), %Undef(i16), %Undef(i16)
+//
+// ===>
+// %Undef(<2 x i32>) = G_IMPLICIT_DEF(<2 x i32>)
+// %Mid(<4 x s32>) = G_CONCAT_VECTORS %src(<2 x i32>), %Undef(<2 x i32>)
+// %dst(<4 x s16>) = G_TRUNC %Mid(<4 x s32>)
+//
+// This will ALSO match:
+// %a(i32), %b(i32) = G_UNMERGE_VALUES %src(<2 x i32>)
+// %Undef(i32) = G_IMPLICIT_DEF(i32)
+// %dst(v4i32) = G_BUILD_VECTORS %T_a(i32), %T_b(i32), %Undef(i32), %Undef(i32)
+//
+// ===>
+// %Undef(<2 x i32>) = G_IMPLICIT_DEF(<2 x i32>)
+// %Mid(<4 x s32>) = G_CONCAT_VECTORS %src(<2 x i32>), %Undef(<2 x i32>)
+//
+bool CombinerHelper::matchUseVectorTruncate(MachineInstr &MI,
+                                            Register &MatchInfo) {
+  assert(MI.getOpcode() == TargetOpcode::G_BUILD_VECTOR &&
+         "Expected G_BUILD_VECTOR instruction\n");
+
+  unsigned NumOperands = MI.getNumOperands();
+  LLT DstTy = MRI.getType(MI.getOperand(0).getReg());
+
+  // Check the G_BUILD_VECTOR sources
+  SmallVector<MachineInstr *> TruncMIs;
+  for (unsigned i = 1; i < NumOperands; ++i) {
+    auto SrcMI = MRI.getVRegDef(MI.getOperand(i).getReg());
+    auto SrcMIOpc = SrcMI->getOpcode();
+
+    if (SrcMIOpc == TargetOpcode::G_TRUNC)
+      TruncMIs.push_back(SrcMI);
+    else if (SrcMIOpc != TargetOpcode::G_IMPLICIT_DEF)
+      return false;
+  }
+
+  if (TruncMIs.size() < 2)
+    return false;
+
+  // Check if the Trunc instructions all come from the same MI
+  auto UnmergeMI = MRI.getVRegDef(TruncMIs[0]->getOperand(1).getReg());
+  if (UnmergeMI->getOpcode() != TargetOpcode::G_UNMERGE_VALUES)
+    return false;
+
+  for (auto TruncMI : TruncMIs) {
+    auto SrcMI = MRI.getVRegDef(TruncMI->getOperand(1).getReg());
+    if (!UnmergeMI->isIdenticalTo(*SrcMI))
+      return false;
+  }
+
+  // Check the size of unmerge source
+  unsigned numOps = UnmergeMI->getNumOperands();
+  MatchInfo = UnmergeMI->getOperand(numOps - 1).getReg();
+  LLT UnmergeSrcTy = MRI.getType(MatchInfo);
+  unsigned DstTyNumElts = DstTy.getNumElements();
+  unsigned UnmergeSrcTyNumElts = UnmergeSrcTy.getNumElements();
+  if (DstTyNumElts % UnmergeSrcTyNumElts != 0)
+    return false;
+
+  // If post legalizer, ensure generated instructions are legal
+  if (!IsPreLegalize) {
+    LLT MidTy = DstTy.changeElementSize(UnmergeSrcTy.getScalarSizeInBits());
+
+    if (DstTyNumElts != UnmergeSrcTyNumElts &&
+        !isLegal({TargetOpcode::G_CONCAT_VECTORS, {MidTy, UnmergeSrcTy}}))
+      return false;
+
+    if (!isLegal({TargetOpcode::G_TRUNC, {DstTy, MidTy}}))
+      return false;
+  }
+
+  return true;
+}
+
+void CombinerHelper::applyUseVectorTruncate(MachineInstr &MI,
+                                            Register &MatchInfo) {
+  assert(MI.getOpcode() == TargetOpcode::G_BUILD_VECTOR &&
+         "Expected G_BUILD_VECTOR instruction\n");
+
+  Register MidReg;
+  Register DstReg = MI.getOperand(0).getReg();
+  LLT DstTy = MRI.getType(DstReg);
+  LLT UnmergeSrcTy = MRI.getType(MatchInfo);
+  unsigned DstTyNumElt = DstTy.getNumElements();
+  unsigned UnmergeSrcTyNumElt = UnmergeSrcTy.getNumElements();
+
+  // No need to pad vector if only G_TRUNC is needed
+  if (DstTyNumElt / UnmergeSrcTyNumElt == 1) {
+    MidReg = MatchInfo;
+  } else {
+    Register UndefReg = Builder.buildUndef(UnmergeSrcTy).getReg(0);
+    SmallVector<Register> ConcatRegs = {MatchInfo};
+    for (unsigned i = 1; i < DstTyNumElt / UnmergeSrcTyNumElt; ++i)
+      ConcatRegs.push_back(UndefReg);
+
+    MidReg = Builder
+                 .buildConcatVectors(DstTy.changeElementSize(
+                                         UnmergeSrcTy.getScalarSizeInBits()),
+                                     ConcatRegs)
+                 .getReg(0);
+  }
+
+  Builder.buildTrunc(DstReg, MidReg);
+  MI.eraseFromParent();
+}
+
 bool CombinerHelper::matchNotCmp(MachineInstr &MI,
                                  SmallVectorImpl<Register> &RegsToNegate) {
   assert(MI.getOpcode() == TargetOpcode::G_XOR);
