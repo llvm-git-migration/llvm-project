@@ -61,6 +61,7 @@ static std::optional<FloatType> parseFloatType(MLIRContext *ctx,
       .Case("f8E5M2FNUZ", b.getFloat8E5M2FNUZType())
       .Case("f8E4M3FNUZ", b.getFloat8E4M3FNUZType())
       .Case("f8E3M4", b.getFloat8E3M4Type())
+      .Case("f6E3M2FN", b.getFloat6E3M2FNType())
       .Case("bf16", b.getBF16Type())
       .Case("f16", b.getF16Type())
       .Case("f32", b.getF32Type())

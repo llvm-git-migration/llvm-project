@@ -132,6 +132,7 @@ public:
   bool isFloat8E4M3FNUZ() const;
   bool isFloat8E4M3B11FNUZ() const;
   bool isFloat8E3M4() const;
+  bool isFloat6E3M2FN() const;
   bool isBF16() const;
   bool isF16() const;
   bool isTF32() const;
