@@ -140,6 +140,15 @@ inline bool isPrint(char C) {
   return (0x20 <= UC) && (UC <= 0x7E);
 }
 
+/// Checks whether character \p C is a punctuation character.
+///
+/// Locale-independent version of the C standard library ispunct.
+inline bool isPunct(char C) {
+  static constexpr StringLiteral Punctuations =
+      R"(!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
+  return Punctuations.contains(C);
+}
+
 /// Checks whether character \p C is whitespace in the "C" locale.
 ///
 /// Locale-independent version of the C standard library isspace.

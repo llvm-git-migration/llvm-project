@@ -10,6 +10,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <cctype>
+#include <limits>
 
 using namespace llvm;
 
@@ -379,4 +381,15 @@ TEST(StringExtrasTest, arrayToStringRef) {
   roundTripTestString("foo");
   roundTripTestString("\0\n");
   roundTripTestString("\xFF\xFE");
+}
+
+TEST(StringExtrasTest, isPunct) {
+  // Loop over all valid char values and verify that llvm::isPunct matched
+  // std::ispunct(). Limit to first 256 characters in case sizeof(char) > 8.
+  int Count = 0;
+  for (char C = std::numeric_limits<char>::min(); Count < 256; ++C) {
+    EXPECT_EQ(static_cast<bool>(std::ispunct(C)), isPunct(C));
+    if (C == std::numeric_limits<char>::max())
+      break;
+  }
 }
