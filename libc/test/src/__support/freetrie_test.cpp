@@ -197,9 +197,7 @@ TEST(LlvmLibcFreeTrie, FindBestFitLowerAndUpper) {
   EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &lower);
   // The upper subtrie is examined if there are no fits found in the upper
   // subtrie.
-  EXPECT_EQ(
-      FreeTrie::find_best_fit(trie, lower_mem.block->inner_size() + 1, range),
-      &upper);
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, range.width / 2, range), &upper);
 }
 
 } // namespace LIBC_NAMESPACE_DECL

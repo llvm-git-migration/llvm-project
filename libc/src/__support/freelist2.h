@@ -47,6 +47,7 @@ private:
 };
 
 LIBC_INLINE void FreeList2::push(FreeList2 *&list, Block<> *block) {
+  LIBC_ASSERT(!block->used() && "only free blocks can be placed on free lists");
   LIBC_ASSERT(block->inner_size_free() >= sizeof(FreeList2) &&
               "block too small to accomodate free list node");
   push(list, new (block->usable_space()) FreeList2);
