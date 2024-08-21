@@ -54,12 +54,38 @@ class LibIgnore {
     char *name;
     char *real_name;  // target of symlink
     bool loaded;
+    uptr ignored_code_range_id;
   };
 
   struct LibCodeRange {
     uptr begin;
     uptr end;
   };
+
+  // Marks a range as loaded by utilizing the least significant bit of the code
+  // range. Assumes the start of the code range is 2-byte aligned.
+  struct LibLoadedCodeRange {
+    uptr begin() const { return begin_ << 1; }
+    void begin(uptr begin) {
+      CHECK_EQ(begin & 0x1, 0);
+      begin_ = begin >> 1;
+    }
+
+  private:
+    uptr begin_ : 63;
+
+  public:
+    uptr loaded : 1;
+    uptr end;
+  };
+
+  static_assert(sizeof(LibLoadedCodeRange) == 16,
+                "LibLoadedCodeRange size expected to be 16-bytes for "
+                "performance reasons.");
+
+  inline bool IsInRange(uptr pc, const LibLoadedCodeRange &range) const {
+    return (pc >= range.begin() && pc < range.end);
+  }
 
   inline bool IsInRange(uptr pc, const LibCodeRange &range) const {
     return (pc >= range.begin && pc < range.end);
@@ -68,10 +94,11 @@ class LibIgnore {
   static const uptr kMaxIgnoredRanges = 128;
   static const uptr kMaxInstrumentedRanges = 1024;
   static const uptr kMaxLibs = 1024;
+  static const uptr kInvalidCodeRangeId = ~0x0ULL;
 
   // Hot part:
   atomic_uintptr_t ignored_ranges_count_;
-  LibCodeRange ignored_code_ranges_[kMaxIgnoredRanges];
+  LibLoadedCodeRange ignored_code_ranges_[kMaxIgnoredRanges];
 
   atomic_uintptr_t instrumented_ranges_count_;
   LibCodeRange instrumented_code_ranges_[kMaxInstrumentedRanges];
@@ -90,7 +117,8 @@ class LibIgnore {
 inline bool LibIgnore::IsIgnored(uptr pc, bool *pc_in_ignored_lib) const {
   const uptr n = atomic_load(&ignored_ranges_count_, memory_order_acquire);
   for (uptr i = 0; i < n; i++) {
-    if (IsInRange(pc, ignored_code_ranges_[i])) {
+    if (ignored_code_ranges_[i].loaded &&
+        IsInRange(pc, ignored_code_ranges_[i])) {
       *pc_in_ignored_lib = true;
       return true;
     }
