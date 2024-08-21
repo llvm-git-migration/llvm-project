@@ -49,7 +49,8 @@ bool FreeStore::is_small(Block<> *block) {
 
 FreeList2 *&FreeStore::small_list(Block<> *block) {
   LIBC_ASSERT(is_small(block) && "can legal for small blocks");
-  return small_lists[block->inner_size_free() / alignof(max_align_t)];
+  return small_lists[(block->inner_size_free() - MIN_SIZE) /
+                     alignof(max_align_t)];
 }
 
 } // namespace LIBC_NAMESPACE_DECL
