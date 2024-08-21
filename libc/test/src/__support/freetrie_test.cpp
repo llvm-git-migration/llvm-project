@@ -126,7 +126,7 @@ TEST(LlvmLibcFreeTrie, PopPreservesChildren) {
   EXPECT_EQ(new_child3, child3);
 }
 
-TEST(LlvmLibcFreeTrie, FindBestFitRoot) {
+TEST(LlvmLibcFreeTrie, FindBestFitRootOnly) {
   FreeTrie::SizeRange range{0, 4096};
 
   FreeTrie *trie = nullptr;
@@ -154,11 +154,29 @@ TEST(LlvmLibcFreeTrie, FindBestFitLowerOnly) {
   BlockMem<1024> root_mem;
   FreeTrie::push(trie, root_mem.block);
   BlockMem<1024 - 1> lower_mem;
-  FreeTrie *&lower =
-      FreeTrie::find(trie, lower_mem.block->inner_size(), range);
+  FreeTrie *&lower = FreeTrie::find(trie, lower_mem.block->inner_size(), range);
   FreeTrie::push(lower, lower_mem.block);
 
   EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &lower);
+}
+
+TEST(LlvmLibcFreeTrie, FindBestFitUpperOnly) {
+  FreeTrie::SizeRange range{0, 4096};
+
+  FreeTrie *trie = nullptr;
+  BlockMem<1024> root_mem;
+  FreeTrie::push(trie, root_mem.block);
+  BlockMem<4096 - 1> upper_mem;
+  FreeTrie *&upper = FreeTrie::find(trie, upper_mem.block->inner_size(), range);
+  FreeTrie::push(upper, upper_mem.block);
+
+  EXPECT_EQ(
+      FreeTrie::find_best_fit(trie, root_mem.block->inner_size() + 1, range),
+      &upper);
+  // The upper subtrie should be skipped if it could not contain a better fit.
+  EXPECT_EQ(
+      FreeTrie::find_best_fit(trie, root_mem.block->inner_size() - 1, range),
+      &trie);
 }
 
 } // namespace LIBC_NAMESPACE_DECL

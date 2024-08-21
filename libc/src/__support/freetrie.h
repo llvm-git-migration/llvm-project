@@ -156,7 +156,7 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
   // Inductively assume all better fits than the current best are in the
   // current subtrie.
   while (true) {
-    LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+    LIBC_ASSERT(range.max() >= size && "range could not fit requested size");
 
     // If the current node is an exact fit, it is a best fit.
     if ((*cur)->size() == size)
