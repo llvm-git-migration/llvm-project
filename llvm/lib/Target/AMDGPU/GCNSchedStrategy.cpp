@@ -154,13 +154,11 @@ static bool canUsePressureDiffs(const SUnit &SU) {
   return true;
 }
 
-static void getRegisterPressures(bool AtTop,
-                                 const RegPressureTracker &RPTracker, SUnit *SU,
-                                 std::vector<unsigned> &Pressure,
-                                 std::vector<unsigned> &MaxPressure,
-                                 GCNDownwardRPTracker &DownwardTracker,
-                                 GCNUpwardRPTracker &UpwardTracker,
-                                 ScheduleDAGMI *DAG) {
+static void getRegisterPressures(
+    bool AtTop, const RegPressureTracker &RPTracker, SUnit *SU,
+    std::vector<unsigned> &Pressure, std::vector<unsigned> &MaxPressure,
+    GCNDownwardRPTracker &DownwardTracker, GCNUpwardRPTracker &UpwardTracker,
+    ScheduleDAGMI *DAG, const SIRegisterInfo *SRI) {
   // getDownwardPressure() and getUpwardPressure() make temporary changes to
   // the tracker, so we need to pass those function a non-const copy.
   RegPressureTracker &TempTracker = const_cast<RegPressureTracker &>(RPTracker);
@@ -177,18 +175,22 @@ static void getRegisterPressures(bool AtTop,
   MachineInstr *MI = SU->getInstr();
   if (AtTop) {
     GCNDownwardRPTracker TempDownwardTracker(DownwardTracker);
-    TempDownwardTracker.bumpDownwardPressure(MI);
+    TempDownwardTracker.bumpDownwardPressure(MI, SRI);
     Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
         TempDownwardTracker.getPressure().getSGPRNum();
     Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
         TempDownwardTracker.getPressure().getArchVGPRNum();
+    Pressure[AMDGPU::RegisterPressureSets::AGPR_32] =
+        TempDownwardTracker.getPressure().getAGPRNum();
   } else {
     GCNUpwardRPTracker TempUpwardTracker(UpwardTracker);
-    TempUpwardTracker.bumpUpwardPressure(MI);
+    TempUpwardTracker.bumpUpwardPressure(MI, SRI);
     Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
         TempUpwardTracker.getPressure().getSGPRNum();
     Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
         TempUpwardTracker.getPressure().getArchVGPRNum();
+    Pressure[AMDGPU::RegisterPressureSets::AGPR_32] =
+        TempDownwardTracker.getPressure().getAGPRNum();
   }
 }
 
@@ -220,7 +222,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
   // PressureDiffs.
   if (AtTop || !canUsePressureDiffs(*SU) || GCNTrackers) {
     getRegisterPressures(AtTop, RPTracker, SU, Pressure, MaxPressure,
-                         DownwardTracker, UpwardTracker, DAG);
+                         DownwardTracker, UpwardTracker, DAG, SRI);
   } else {
     // Reserve 4 slots.
     Pressure.resize(4, 0);
@@ -239,7 +241,7 @@ void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
 #ifdef EXPENSIVE_CHECKS
     std::vector<unsigned> CheckPressure, CheckMaxPressure;
     getRegisterPressures(AtTop, RPTracker, SU, CheckPressure, CheckMaxPressure,
-                         TheTracker, UpwardTracker, DAG);
+                         TheTracker, UpwardTracker, DAG, SRI);
     if (Pressure[AMDGPU::RegisterPressureSets::SReg_32] !=
             CheckPressure[AMDGPU::RegisterPressureSets::SReg_32] ||
         Pressure[AMDGPU::RegisterPressureSets::VGPR_32] !=
@@ -335,7 +337,7 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
                             ? static_cast<GCNRPTracker *>(&UpwardTracker)
                             : static_cast<GCNRPTracker *>(&DownwardTracker);
       SGPRPressure = T->getPressure().getSGPRNum();
-      VGPRPressure = T->getPressure().getVGPRNum(false);
+      VGPRPressure = T->getPressure().getArchVGPRNum();
     }
   }
   ReadyQueue &Q = Zone.Available;
