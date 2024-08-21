@@ -2084,8 +2084,14 @@ TEST(APFloatTest, getSmallestNormalized) {
   EXPECT_FALSE(test.isDenormal());
   EXPECT_TRUE(test.bitwiseIsEqual(expected));
   EXPECT_TRUE(test.isSmallestNormalized());
+
   test = APFloat::getSmallestNormalized(APFloat::Float6E3M2FN(), false);
   expected = APFloat(APFloat::Float6E3M2FN(), "0x1p-2");
+  EXPECT_FALSE(test.isNegative());
+  EXPECT_TRUE(test.isFiniteNonZero());
+  EXPECT_FALSE(test.isDenormal());
+  EXPECT_TRUE(test.bitwiseIsEqual(expected));
+  EXPECT_TRUE(test.isSmallestNormalized());
 
   test = APFloat::getSmallestNormalized(APFloat::Float4E2M1FN(), false);
   expected = APFloat(APFloat::Float4E2M1FN(), "0x1p0");
