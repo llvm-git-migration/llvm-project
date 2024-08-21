@@ -32,10 +32,10 @@ struct FixedNumOperandTraits {
     static_assert(
         !std::is_polymorphic<SubClass>::value,
         "adding virtual methods to subclasses of User breaks use lists");
-    return reinterpret_cast<Use*>(U) - ARITY;
+    return static_cast<User *>(U)->getIntrusiveOperands();
   }
   static Use *op_end(SubClass* U) {
-    return reinterpret_cast<Use*>(U);
+    return static_cast<User *>(U)->getIntrusiveOperands() + ARITY;
   }
   static unsigned operands(const User*) {
     return ARITY;
@@ -70,10 +70,11 @@ struct VariadicOperandTraits {
     static_assert(
         !std::is_polymorphic<SubClass>::value,
         "adding virtual methods to subclasses of User breaks use lists");
-    return reinterpret_cast<Use*>(U) - static_cast<User*>(U)->getNumOperands();
+    return static_cast<User *>(U)->getIntrusiveOperands();
   }
   static Use *op_end(SubClass* U) {
-    return reinterpret_cast<Use*>(U);
+    return static_cast<User *>(U)->getIntrusiveOperands() +
+           static_cast<User *>(U)->getNumOperands();
   }
   static unsigned operands(const User *U) {
     return U->getNumOperands();

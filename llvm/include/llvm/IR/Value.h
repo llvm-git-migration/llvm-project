@@ -92,27 +92,10 @@ private:
   unsigned short SubclassData;
 
 protected:
-  /// The number of operands in the subclass.
-  ///
-  /// This member is defined by this class, but not used for anything.
-  /// Subclasses can use it to store their number of operands, if they have
-  /// any.
-  ///
-  /// This is stored here to save space in User on 64-bit hosts.  Since most
-  /// instances of Value have operands, 32-bit hosts aren't significantly
-  /// affected.
-  ///
-  /// Note, this should *NOT* be used directly by any class other than User.
-  /// User uses this value to find the Use list.
-  enum : unsigned { NumUserOperandsBits = 27 };
-  unsigned NumUserOperands : NumUserOperandsBits;
-
   // Use the same type as the bitfield above so that MSVC will pack them.
   unsigned IsUsedByMD : 1;
   unsigned HasName : 1;
   unsigned HasMetadata : 1; // Has metadata attached to this?
-  unsigned HasHungOffUses : 1;
-  unsigned HasDescriptor : 1;
 
 private:
   Type *VTy;

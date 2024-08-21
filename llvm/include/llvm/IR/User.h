@@ -44,11 +44,50 @@ struct OperandTraits;
 class User : public Value {
   template <unsigned>
   friend struct HungoffOperandTraits;
+  template <typename SubClass, unsigned MINARITY>
+  friend struct VariadicOperandTraits;
+  template <typename SubClass, unsigned ARITY>
+  friend struct FixedNumOperandTraits;
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE static void *
   allocateFixedOperandUser(size_t, unsigned, unsigned);
 
 protected:
+  union Header {
+    // A `User` object, its `Header`, operands and descriptor are all allocated
+    // together (see `operator new`). Since the `User` object is after the other
+    // objects, we use the padding here to force `Header` to be the same size as
+    // a pointer so that the `User` object is aligned correctly.
+    std::size_t _padding;
+    struct Contents {
+      /// The number of operands in the subclass.
+      ///
+      /// This member is defined by this class, but not used for anything.
+      /// Subclasses can use it to store their number of operands, if they have
+      /// any.
+      ///
+      /// This is stored here to save space in User on 64-bit hosts.  Since most
+      /// instances of Value have operands, 32-bit hosts aren't significantly
+      /// affected.
+      ///
+      /// Note, this should *NOT* be used directly by any class other than User.
+      /// User uses this value to find the Use list.
+      enum : unsigned { NumUserOperandsBits = 27 };
+      unsigned NumUserOperands : NumUserOperandsBits;
+      unsigned HasHungOffUses : 1;
+      unsigned HasDescriptor : 1;
+    } contents;
+  };
+  static_assert(sizeof(Header) == sizeof(void *),
+                "Header should be the same size as a pointer");
+
+  Header::Contents &getHeader() {
+    return (reinterpret_cast<Header *>(this) - 1)->contents;
+  }
+
+  const Header::Contents &getHeader() const {
+    return (reinterpret_cast<const Header *>(this) - 1)->contents;
+  }
   /// Allocate a User with an operand pointer co-allocated.
   ///
   /// This is used for subclasses which need to allocate a variable number
@@ -72,11 +111,12 @@ protected:
 
   User(Type *ty, unsigned vty, Use *, unsigned NumOps)
       : Value(ty, vty) {
-    assert(NumOps < (1u << NumUserOperandsBits) && "Too many operands");
-    NumUserOperands = NumOps;
+    assert(NumOps < (1u << Header::Contents::NumUserOperandsBits) &&
+           "Too many operands");
+    getHeader().NumUserOperands = NumOps;
     // If we have hung off uses, then the operand list should initially be
     // null.
-    assert((!HasHungOffUses || !getOperandList()) &&
+    assert((!getHeader().HasHungOffUses || !getOperandList()) &&
            "Error in initializing hung off uses for User");
   }
 
@@ -139,40 +179,48 @@ protected:
 
 private:
   const Use *getHungOffOperands() const {
-    return *(reinterpret_cast<const Use *const *>(this) - 1);
+    return *(reinterpret_cast<const Use *const *>(&getHeader()) - 1);
   }
 
-  Use *&getHungOffOperands() { return *(reinterpret_cast<Use **>(this) - 1); }
+  Use *&getHungOffOperands() {
+    return *(reinterpret_cast<Use **>(&getHeader()) - 1);
+  }
 
   const Use *getIntrusiveOperands() const {
-    return reinterpret_cast<const Use *>(this) - NumUserOperands;
+    auto &operandInfo = getHeader();
+    return reinterpret_cast<const Use *>(&operandInfo) -
+           operandInfo.NumUserOperands;
   }
 
   Use *getIntrusiveOperands() {
-    return reinterpret_cast<Use *>(this) - NumUserOperands;
+    auto &operandInfo = getHeader();
+    return reinterpret_cast<Use *>(&operandInfo) - operandInfo.NumUserOperands;
   }
 
   void setOperandList(Use *NewList) {
-    assert(HasHungOffUses &&
+    assert(getHeader().HasHungOffUses &&
            "Setting operand list only required for hung off uses");
     getHungOffOperands() = NewList;
   }
 
 public:
   const Use *getOperandList() const {
-    return HasHungOffUses ? getHungOffOperands() : getIntrusiveOperands();
+    return getHeader().HasHungOffUses ? getHungOffOperands()
+                                      : getIntrusiveOperands();
   }
   Use *getOperandList() {
     return const_cast<Use *>(static_cast<const User *>(this)->getOperandList());
   }
 
+  unsigned getNumOperands() const { return getHeader().NumUserOperands; }
+
   Value *getOperand(unsigned i) const {
-    assert(i < NumUserOperands && "getOperand() out of range!");
+    assert(i < getNumOperands() && "getOperand() out of range!");
     return getOperandList()[i];
   }
 
   void setOperand(unsigned i, Value *Val) {
-    assert(i < NumUserOperands && "setOperand() out of range!");
+    assert(i < getNumOperands() && "setOperand() out of range!");
     assert((!isa<Constant>((const Value*)this) ||
             isa<GlobalValue>((const Value*)this)) &&
            "Cannot mutate a constant with setOperand!");
@@ -180,15 +228,13 @@ public:
   }
 
   const Use &getOperandUse(unsigned i) const {
-    assert(i < NumUserOperands && "getOperandUse() out of range!");
+    assert(i < getNumOperands() && "getOperandUse() out of range!");
     return getOperandList()[i];
   }
   Use &getOperandUse(unsigned i) {
-    assert(i < NumUserOperands && "getOperandUse() out of range!");
+    assert(i < getNumOperands() && "getOperandUse() out of range!");
     return getOperandList()[i];
   }
-
-  unsigned getNumOperands() const { return NumUserOperands; }
 
   /// Returns the descriptor co-allocated with this User instance.
   ArrayRef<const uint8_t> getDescriptor() const;
@@ -206,16 +252,18 @@ public:
   /// 1 operand before delete.
   void setGlobalVariableNumOperands(unsigned NumOps) {
     assert(NumOps <= 1 && "GlobalVariable can only have 0 or 1 operands");
-    NumUserOperands = NumOps;
+    getHeader().NumUserOperands = NumOps;
   }
 
   /// Subclasses with hung off uses need to manage the operand count
   /// themselves.  In these instances, the operand count isn't used to find the
   /// OperandList, so there's no issue in having the operand count change.
   void setNumHungOffUseOperands(unsigned NumOps) {
-    assert(HasHungOffUses && "Must have hung off uses to use this method");
-    assert(NumOps < (1u << NumUserOperandsBits) && "Too many operands");
-    NumUserOperands = NumOps;
+    assert(getHeader().HasHungOffUses &&
+           "Must have hung off uses to use this method");
+    assert(NumOps < (1u << Header::Contents::NumUserOperandsBits) &&
+           "Too many operands");
+    getHeader().NumUserOperands = NumOps;
   }
 
   /// A droppable user is a user for which uses can be dropped without affecting
@@ -233,11 +281,9 @@ public:
 
   op_iterator       op_begin()       { return getOperandList(); }
   const_op_iterator op_begin() const { return getOperandList(); }
-  op_iterator       op_end()         {
-    return getOperandList() + NumUserOperands;
-  }
+  op_iterator op_end() { return getOperandList() + getNumOperands(); }
   const_op_iterator op_end()   const {
-    return getOperandList() + NumUserOperands;
+    return getOperandList() + getNumOperands();
   }
   op_range operands() {
     return op_range(op_begin(), op_end());

@@ -329,8 +329,7 @@ For later versions of Visual Studio, no setup is required.
     <DisplayString Condition="HasName">$(Type) {*VTy} {this->getName()} {SubclassData}</DisplayString>
     <DisplayString Condition="!HasName">$(Type) {*VTy} anon {SubclassData}</DisplayString>
     <Expand>
-      <Item Name="[Inst]" Condition="SubclassID > InstructionVal">(Instruction*)this</Item>
-      <Item Name="Operands">(User*)this</Item>
+      <Item Name="[Inst]" Condition="SubclassID > InstructionVal">(llvm::Instruction*)this</Item>
       <LinkedListItems>
         <HeadPointer>UseList</HeadPointer>
         <NextPointer>Next</NextPointer>
@@ -357,15 +356,15 @@ For later versions of Visual Studio, no setup is required.
     <DisplayString Condition="HasName">$(Type) {*VTy} {this->getName()} {SubclassData}</DisplayString>
     <DisplayString Condition="!HasName">$(Type) {*VTy} anon {SubclassData}</DisplayString>
     <Expand>
-      <Item Name="[Value]">(Value*)this,nd</Item>
+      <Item Name="[Value]">(llvm::User*)this,nd</Item>
       <Item Name="[Type]">*VTy</Item>
-      <ArrayItems Condition="!HasHungOffUses">
-        <Size>NumUserOperands</Size>
-        <ValuePointer>(llvm::Use*)this - NumUserOperands</ValuePointer>
+      <ArrayItems Condition="!((llvm::User::Header*)this - 1)->contents.HasHungOffUses">
+        <Size>((llvm::User::Header*)this - 1)->contents.NumUserOperands</Size>
+        <ValuePointer>(llvm::Use*)((llvm::User::Header*)this - 1) - ((llvm::User::Header*)this - 1)->contents.NumUserOperands</ValuePointer>
       </ArrayItems>
-      <ArrayItems Condition="HasHungOffUses">
-        <Size>NumUserOperands</Size>
-        <ValuePointer>*((llvm::Use**)this - 1)</ValuePointer>
+      <ArrayItems Condition="((llvm::User::Header*)this - 1)->contents.HasHungOffUses">
+        <Size>((llvm::User::Header*)this - 1)->contents.NumUserOperands</Size>
+        <ValuePointer>*((llvm::Use**)((llvm::User::Header*)this - 1) - 1)</ValuePointer>
       </ArrayItems>
     </Expand>
   </Type>
@@ -373,7 +372,7 @@ For later versions of Visual Studio, no setup is required.
   <Type Name="llvm::Instruction">
     <DisplayString>{getOpcodeName(SubclassID - InstructionVal)}</DisplayString>
     <Expand>
-      <Item Name="[User]">(User*)this,nd</Item>
+      <Item Name="[User]">(llvm::User*)this,nd</Item>
     </Expand>
   </Type>
 
