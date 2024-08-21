@@ -372,13 +372,15 @@ private:
 
   bool Parse(std::shared_ptr<PCHContainerOperations> PCHContainerOps,
              std::unique_ptr<llvm::MemoryBuffer> OverrideMainBuffer,
-             IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS);
+             IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS,
+             unsigned PCHCountValue = 0);
 
   std::unique_ptr<llvm::MemoryBuffer> getMainBufferWithPrecompiledPreamble(
       std::shared_ptr<PCHContainerOperations> PCHContainerOps,
       CompilerInvocation &PreambleInvocationIn,
-      IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS, bool AllowRebuild = true,
-      unsigned MaxLines = 0);
+      IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS,
+      unsigned *CountValueAtFinish = nullptr,
+      bool AllowRebuild = true, unsigned MaxLines = 0);
   void RealizeTopLevelDeclsFromPreamble();
 
   /// Transfers ownership of the objects (like SourceManager) from
