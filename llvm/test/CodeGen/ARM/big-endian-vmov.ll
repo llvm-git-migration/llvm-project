@@ -10,7 +10,7 @@ define arm_aapcs_vfpcc <8 x i8> @vmov_i8() {
 ;
 ; CHECK-BE-LABEL: vmov_i8:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00000000000000Î
 ; CHECK-BE-NEXT:    bx lr
   ret <8 x i8> <i8 0, i8 0, i8 0, i8 0, i8 0, i8 0, i8 0, i8 -1>
 }
@@ -23,7 +23,7 @@ define arm_aapcs_vfpcc <4 x i16> @vmov_i16_a() {
 ;
 ; CHECK-BE-LABEL: vmov_i16_a:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xffff
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xffff000000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <4 x i16> <i16 0, i16 0, i16 0, i16 -1>
 }
@@ -36,7 +36,7 @@ define arm_aapcs_vfpcc <4 x i16> @vmov_i16_b() {
 ;
 ; CHECK-BE-LABEL: vmov_i16_b:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff000000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <4 x i16> <i16 0, i16 0, i16 0, i16 255>
 }
@@ -49,7 +49,7 @@ define arm_aapcs_vfpcc <4 x i16> @vmov_i16_c() {
 ;
 ; CHECK-BE-LABEL: vmov_i16_c:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00000000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <4 x i16> <i16 0, i16 0, i16 0, i16 65280>
 }
@@ -62,7 +62,7 @@ define arm_aapcs_vfpcc <2 x i32> @vmov_i32_a() {
 ;
 ; CHECK-BE-LABEL: vmov_i32_a:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xffffffff
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xffffffff00000000
 ; CHECK-BE-NEXT:    bx lr
   ret <2 x i32> <i32 0, i32 -1>
 }
@@ -75,7 +75,7 @@ define arm_aapcs_vfpcc <2 x i32> @vmov_i32_b() {
 ;
 ; CHECK-BE-LABEL: vmov_i32_b:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00000000
 ; CHECK-BE-NEXT:    bx lr
   ret <2 x i32> <i32 0, i32 255>
 }
@@ -88,7 +88,7 @@ define arm_aapcs_vfpcc <2 x i32> @vmov_i32_c() {
 ;
 ; CHECK-BE-LABEL: vmov_i32_c:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff0000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <2 x i32> <i32 0, i32 65280>
 }
@@ -101,7 +101,7 @@ define arm_aapcs_vfpcc <2 x i32> @vmov_i32_d() {
 ;
 ; CHECK-BE-LABEL: vmov_i32_d:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff0000
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff000000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <2 x i32> <i32 0, i32 16711680>
 }
@@ -114,7 +114,7 @@ define arm_aapcs_vfpcc <2 x i32> @vmov_i32_e() {
 ;
 ; CHECK-BE-LABEL: vmov_i32_e:
 ; CHECK-BE:       @ %bb.0:
-; CHECK-BE-NEXT:    vmov.i64 d0, #0xff000000
+; CHECK-BE-NEXT:    vmov.i64 d0, #0xff00000000000000
 ; CHECK-BE-NEXT:    bx lr
   ret <2 x i32> <i32 0, i32 4278190080>
 }
@@ -130,7 +130,8 @@ define arm_aapcs_vfpcc <1 x i64> @vmov_i64_a() {
 define arm_aapcs_vfpcc <1 x i64> @vmov_i64_b() {
 ; CHECK-LABEL: vmov_i64_b:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    vmov.i64 d0, #0xffff00ff0000ff
+; CHECK-LE: vmov.i64 d0, #0xffff00ff0000ff{{$}}
+; CHECK-BE: vmov.i64 d0, #0xff0000ff00ffff00{{$}}
 ; CHECK-NEXT:    bx lr
   ret <1 x i64> <i64 72056498804490495>
 }

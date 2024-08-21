@@ -141,7 +141,8 @@ define arm_aapcs_vfpcc <2 x i32> @v_mvni32f() nounwind {
 define arm_aapcs_vfpcc <1 x i64> @v_movi64() nounwind {
 ; CHECK-LABEL: v_movi64:
 ; CHECK:       @ %bb.0:
-; CHECK-NEXT:    vmov.i64 d0, #0xff0000ff0000ffff
+; CHECK-LE:      vmov.i64 d0, #0xff0000ff0000ffff
+; CHECK-BE:      vmov.i64 d0, #0xffffff0000ff
 ; CHECK-NEXT:    mov pc, lr
 	ret <1 x i64> < i64 18374687574888349695 >
 }
