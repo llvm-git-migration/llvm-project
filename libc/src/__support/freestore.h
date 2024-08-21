@@ -20,7 +20,9 @@ LIBC_INLINE static constexpr size_t align_up(size_t value) {
 
 class FreeStore {
 public:
-  FreeStore(Block<> *block);
+  FreeStore(FreeTrie::SizeRange range) : range(range) {}
+
+  void add(Block<> *block);
 
 private:
   static constexpr size_t MIN_SIZE = sizeof(FreeList2);
@@ -34,20 +36,22 @@ private:
 
   cpp::array<FreeList2 *, NUM_SMALL_SIZES> small_lists = {nullptr};
   FreeTrie *large_trie = nullptr;
+  FreeTrie::SizeRange range;
 };
 
-inline FreeStore::FreeStore(Block<> *block) {
+inline void FreeStore::add(Block<> *block) {
   if (is_small(block))
     FreeList2::push(small_list(block), block);
   else
-    FreeTrie::push(large_trie, block);
+    FreeTrie::push(FreeTrie::find(large_trie, block->inner_size(), range),
+                   block);
 }
 
-bool FreeStore::is_small(Block<> *block) {
+inline bool FreeStore::is_small(Block<> *block) {
   return block->inner_size_free() <= MIN_LARGE_SIZE;
 }
 
-FreeList2 *&FreeStore::small_list(Block<> *block) {
+inline FreeList2 *&FreeStore::small_list(Block<> *block) {
   LIBC_ASSERT(is_small(block) && "can legal for small blocks");
   return small_lists[(block->inner_size_free() - MIN_SIZE) /
                      alignof(max_align_t)];
