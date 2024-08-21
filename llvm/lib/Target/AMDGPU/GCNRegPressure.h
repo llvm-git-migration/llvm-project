@@ -222,7 +222,7 @@ public:
   /// to false allows for an externally managed iterator / program order.
   void recede(const MachineInstr &MI);
 
-  void bumpUpwardPressure(const MachineInstr *MI);
+  void bumpUpwardPressure(const MachineInstr *MI, const SIRegisterInfo *TRI);
 
   /// \p returns whether the tracker's state after receding MI corresponds
   /// to reported by LIS.
@@ -306,7 +306,7 @@ public:
                MachineBasicBlock::const_iterator End,
                const LiveRegSet *LiveRegsCopy = nullptr);
 
-  void bumpDownwardPressure(const MachineInstr *MI);
+  void bumpDownwardPressure(const MachineInstr *MI, const SIRegisterInfo *TRI);
 };
 
 /// \returns the LaneMask of live lanes of \p Reg at position \p SI. Only the
