@@ -91,6 +91,8 @@ IntegerType IntegerType::scaleElementBitwidth(unsigned scale) {
 //===----------------------------------------------------------------------===//
 
 unsigned FloatType::getWidth() {
+  if (llvm::isa<Float6E3M2FNType>(*this))
+    return 6;
   if (llvm::isa<Float8E5M2Type, Float8E4M3Type, Float8E4M3FNType,
                 Float8E5M2FNUZType, Float8E4M3FNUZType, Float8E4M3B11FNUZType,
                 Float8E3M4Type>(*this))
@@ -124,6 +126,8 @@ const llvm::fltSemantics &FloatType::getFloatSemantics() {
     return APFloat::Float8E4M3B11FNUZ();
   if (llvm::isa<Float8E3M4Type>(*this))
     return APFloat::Float8E3M4();
+  if (llvm::isa<Float6E3M2FNType>(*this))
+    return APFloat::Float6E3M2FN();
   if (llvm::isa<BFloat16Type>(*this))
     return APFloat::BFloat();
   if (llvm::isa<Float16Type>(*this))

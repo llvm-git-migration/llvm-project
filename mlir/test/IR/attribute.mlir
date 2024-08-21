@@ -65,6 +65,10 @@ func.func @float_attrs_pass() {
     float_attr = 2. : f8E3M4
   } : () -> ()
   "test.float_attrs"() {
+    // CHECK: float_attr = 2.000000e+00 : f6E3M2FN
+    float_attr = 2. : f6E3M2FN
+  } : () -> ()
+  "test.float_attrs"() {
     // CHECK: float_attr = 2.000000e+00 : f16
     float_attr = 2. : f16
   } : () -> ()
