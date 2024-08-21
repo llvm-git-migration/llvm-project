@@ -16,20 +16,7 @@
 #include "gtest/gtest.h"
 using namespace llvm;
 
-namespace llvm {
-
-std::ostream &operator<<(std::ostream &OS, const StringRef &S) {
-  OS << S.str();
-  return OS;
-}
-
-std::ostream &operator<<(std::ostream &OS,
-                         const std::pair<StringRef, StringRef> &P) {
-  OS << "(" << P.first << ", " << P.second << ")";
-  return OS;
-}
-
-}
+namespace {
 
 // Check that we can't accidentally assign a temporary std::string to a
 // StringRef. (Unfortunately we can't make use of the same thing with
@@ -47,8 +34,10 @@ static_assert(std::is_assignable_v<StringRef &, const char *&&>,
 static_assert(std::is_assignable_v<StringRef &, const char *&>,
               "Assigning from lvalue C string");
 
-namespace {
-TEST(StringRefTest, Construction) {
+// Test fixture.
+class StringRefTest : public testing::Test {};
+
+TEST_F(StringRefTest, Construction) {
   EXPECT_EQ("", StringRef());
   EXPECT_EQ("hello", StringRef("hello"));
   EXPECT_EQ("hello", StringRef("hello world", 5));
@@ -56,13 +45,13 @@ TEST(StringRefTest, Construction) {
   EXPECT_EQ("hello", StringRef(std::string_view("hello")));
 }
 
-TEST(StringRefTest, Conversion) {
+TEST_F(StringRefTest, Conversion) {
   EXPECT_EQ("hello", std::string(StringRef("hello")));
   EXPECT_EQ("hello", std::string_view(StringRef("hello")));
   static_assert(std::string_view(StringRef("hello")) == "hello");
 }
 
-TEST(StringRefTest, EmptyInitializerList) {
+TEST_F(StringRefTest, EmptyInitializerList) {
   StringRef S = {};
   EXPECT_TRUE(S.empty());
 
@@ -70,14 +59,14 @@ TEST(StringRefTest, EmptyInitializerList) {
   EXPECT_TRUE(S.empty());
 }
 
-TEST(StringRefTest, Iteration) {
+TEST_F(StringRefTest, Iteration) {
   StringRef S("hello");
   const char *p = "hello";
   for (const char *it = S.begin(), *ie = S.end(); it != ie; ++it, ++p)
     EXPECT_EQ(*it, *p);
 }
 
-TEST(StringRefTest, StringOps) {
+TEST_F(StringRefTest, StringOps) {
   const char *p = "hello";
 
   EXPECT_EQ(p, StringRef(p, 0).data());
@@ -131,7 +120,7 @@ TEST(StringRefTest, StringOps) {
   EXPECT_EQ( 1, StringRef("V8_q0").compare_numeric("V1_q0"));
 }
 
-TEST(StringRefTest, Operators) {
+TEST_F(StringRefTest, Operators) {
   EXPECT_EQ("", StringRef());
   EXPECT_TRUE(StringRef("aab") < StringRef("aad"));
   EXPECT_FALSE(StringRef("aab") < StringRef("aab"));
@@ -148,7 +137,7 @@ TEST(StringRefTest, Operators) {
   EXPECT_EQ('a', StringRef("aab")[1]);
 }
 
-TEST(StringRefTest, Substr) {
+TEST_F(StringRefTest, Substr) {
   StringRef Str("hello");
   EXPECT_EQ("lo", Str.substr(3));
   EXPECT_EQ("", Str.substr(100));
@@ -156,7 +145,7 @@ TEST(StringRefTest, Substr) {
   EXPECT_EQ("o", Str.substr(4, 10));
 }
 
-TEST(StringRefTest, Slice) {
+TEST_F(StringRefTest, Slice) {
   StringRef Str("hello");
   EXPECT_EQ("l", Str.slice(2, 3));
   EXPECT_EQ("ell", Str.slice(1, 4));
@@ -165,7 +154,7 @@ TEST(StringRefTest, Slice) {
   EXPECT_EQ("", Str.slice(10, 20));
 }
 
-TEST(StringRefTest, Split) {
+TEST_F(StringRefTest, Split) {
   StringRef Str("hello");
   EXPECT_EQ(std::make_pair(StringRef("hello"), StringRef("")),
             Str.split('X'));
@@ -201,7 +190,7 @@ TEST(StringRefTest, Split) {
 		    Str.rsplit("l"));
 }
 
-TEST(StringRefTest, Split2) {
+TEST_F(StringRefTest, Split2) {
   SmallVector<StringRef, 5> parts;
   SmallVector<StringRef, 5> expected;
 
@@ -334,7 +323,7 @@ TEST(StringRefTest, Split2) {
   EXPECT_TRUE(parts == expected);
 }
 
-TEST(StringRefTest, Trim) {
+TEST_F(StringRefTest, Trim) {
   StringRef Str0("hello");
   StringRef Str1(" hello ");
   StringRef Str2("  hello  ");
@@ -362,7 +351,7 @@ TEST(StringRefTest, Trim) {
   EXPECT_EQ(StringRef("x"), StringRef("\0\0x\0\0", 5).trim('\0'));
 }
 
-TEST(StringRefTest, StartsWith) {
+TEST_F(StringRefTest, StartsWith) {
   StringRef Str("hello");
   EXPECT_TRUE(Str.starts_with(""));
   EXPECT_TRUE(Str.starts_with("he"));
@@ -372,7 +361,7 @@ TEST(StringRefTest, StartsWith) {
   EXPECT_FALSE(Str.starts_with('i'));
 }
 
-TEST(StringRefTest, StartsWithInsensitive) {
+TEST_F(StringRefTest, StartsWithInsensitive) {
   StringRef Str("heLLo");
   EXPECT_TRUE(Str.starts_with_insensitive(""));
   EXPECT_TRUE(Str.starts_with_insensitive("he"));
@@ -382,7 +371,7 @@ TEST(StringRefTest, StartsWithInsensitive) {
   EXPECT_FALSE(Str.starts_with_insensitive("hi"));
 }
 
-TEST(StringRefTest, ConsumeFront) {
+TEST_F(StringRefTest, ConsumeFront) {
   StringRef Str("hello");
   EXPECT_TRUE(Str.consume_front(""));
   EXPECT_EQ("hello", Str);
@@ -398,7 +387,7 @@ TEST(StringRefTest, ConsumeFront) {
   EXPECT_TRUE(Str.consume_front(""));
 }
 
-TEST(StringRefTest, ConsumeFrontInsensitive) {
+TEST_F(StringRefTest, ConsumeFrontInsensitive) {
   StringRef Str("heLLo");
   EXPECT_TRUE(Str.consume_front_insensitive(""));
   EXPECT_EQ("heLLo", Str);
@@ -416,7 +405,7 @@ TEST(StringRefTest, ConsumeFrontInsensitive) {
   EXPECT_TRUE(Str.consume_front_insensitive(""));
 }
 
-TEST(StringRefTest, EndsWith) {
+TEST_F(StringRefTest, EndsWith) {
   StringRef Str("hello");
   EXPECT_TRUE(Str.ends_with(""));
   EXPECT_TRUE(Str.ends_with("lo"));
@@ -427,7 +416,7 @@ TEST(StringRefTest, EndsWith) {
   EXPECT_FALSE(Str.ends_with('p'));
 }
 
-TEST(StringRefTest, EndsWithInsensitive) {
+TEST_F(StringRefTest, EndsWithInsensitive) {
   StringRef Str("heLLo");
   EXPECT_TRUE(Str.ends_with_insensitive(""));
   EXPECT_TRUE(Str.ends_with_insensitive("lo"));
@@ -437,7 +426,7 @@ TEST(StringRefTest, EndsWithInsensitive) {
   EXPECT_FALSE(Str.ends_with_insensitive("hi"));
 }
 
-TEST(StringRefTest, ConsumeBack) {
+TEST_F(StringRefTest, ConsumeBack) {
   StringRef Str("hello");
   EXPECT_TRUE(Str.consume_back(""));
   EXPECT_EQ("hello", Str);
@@ -453,7 +442,7 @@ TEST(StringRefTest, ConsumeBack) {
   EXPECT_TRUE(Str.consume_back(""));
 }
 
-TEST(StringRefTest, ConsumeBackInsensitive) {
+TEST_F(StringRefTest, ConsumeBackInsensitive) {
   StringRef Str("heLLo");
   EXPECT_TRUE(Str.consume_back_insensitive(""));
   EXPECT_EQ("heLLo", Str);
@@ -471,7 +460,7 @@ TEST(StringRefTest, ConsumeBackInsensitive) {
   EXPECT_TRUE(Str.consume_back_insensitive(""));
 }
 
-TEST(StringRefTest, Find) {
+TEST_F(StringRefTest, Find) {
   StringRef Str("helloHELLO");
   StringRef LongStr("hellx xello hell ello world foo bar hello HELLO");
 
@@ -554,7 +543,7 @@ TEST(StringRefTest, Find) {
   EXPECT_EQ(StringRef::npos, Str.find_last_not_of("helo"));
 }
 
-TEST(StringRefTest, Count) {
+TEST_F(StringRefTest, Count) {
   StringRef Str("hello");
   EXPECT_EQ(2U, Str.count('l'));
   EXPECT_EQ(1U, Str.count('o'));
@@ -573,7 +562,7 @@ TEST(StringRefTest, Count) {
   EXPECT_EQ(2U, ComplexAbba.count("abba"));
 }
 
-TEST(StringRefTest, EditDistance) {
+TEST_F(StringRefTest, EditDistance) {
   StringRef Hello("hello");
   EXPECT_EQ(2U, Hello.edit_distance("hill"));
 
@@ -592,7 +581,7 @@ TEST(StringRefTest, EditDistance) {
                                        "people soiled our green "));
 }
 
-TEST(StringRefTest, EditDistanceInsensitive) {
+TEST_F(StringRefTest, EditDistanceInsensitive) {
   StringRef Hello("HELLO");
   EXPECT_EQ(2U, Hello.edit_distance_insensitive("hill"));
   EXPECT_EQ(0U, Hello.edit_distance_insensitive("hello"));
@@ -601,14 +590,14 @@ TEST(StringRefTest, EditDistanceInsensitive) {
   EXPECT_EQ(6U, Industry.edit_distance_insensitive("iNtErEsT"));
 }
 
-TEST(StringRefTest, Misc) {
+TEST_F(StringRefTest, Misc) {
   std::string Storage;
   raw_string_ostream OS(Storage);
   OS << StringRef("hello");
   EXPECT_EQ("hello", OS.str());
 }
 
-TEST(StringRefTest, Hashing) {
+TEST_F(StringRefTest, Hashing) {
   EXPECT_EQ(hash_value(std::string()), hash_value(StringRef()));
   EXPECT_EQ(hash_value(std::string()), hash_value(StringRef("")));
   std::string S = "hello world";
@@ -670,7 +659,7 @@ struct SignedPair {
   , {"-0b101010", -42}
   };
 
-TEST(StringRefTest, getAsInteger) {
+TEST_F(StringRefTest, getAsInteger) {
   uint8_t U8;
   uint16_t U16;
   uint32_t U32;
@@ -736,23 +725,20 @@ TEST(StringRefTest, getAsInteger) {
   }
 }
 
+static const char *BadStrings[] = {
+    "",                      // empty string.
+    "18446744073709551617",  // value just over max.
+    "123456789012345678901", // value way too large.
+    "4t23v",                 // illegal decimal characters.
+    "0x123W56",              // illegal hex characters.
+    "0b2",                   // illegal bin characters.
+    "08",                    // illegal oct characters.
+    "0o8",                   // illegal oct characters.
+    "-123",                  // negative unsigned value.
+    "0x",
+    "0b"};
 
-static const char* BadStrings[] = {
-    ""                      // empty string
-  , "18446744073709551617"  // value just over max
-  , "123456789012345678901" // value way too large
-  , "4t23v"                 // illegal decimal characters
-  , "0x123W56"              // illegal hex characters
-  , "0b2"                   // illegal bin characters
-  , "08"                    // illegal oct characters
-  , "0o8"                   // illegal oct characters
-  , "-123"                  // negative unsigned value
-  , "0x"
-  , "0b"
-};
-
-
-TEST(StringRefTest, getAsUnsignedIntegerBadStrings) {
+TEST_F(StringRefTest, getAsUnsignedIntegerBadStrings) {
   unsigned long long U64;
   for (size_t i = 0; i < std::size(BadStrings); ++i) {
     bool IsBadNumber = StringRef(BadStrings[i]).getAsInteger(0, U64);
@@ -779,8 +765,8 @@ struct ConsumeUnsignedPair {
     {"0x42", 66, ""},
     {"0x42-0x34", 66, "-0x34"},
     {"0b101010", 42, ""},
-    {"0429F", 042, "9F"},            // Auto-sensed octal radix, invalid digit
-    {"0x42G12", 0x42, "G12"},        // Auto-sensed hex radix, invalid digit
+    {"0429F", 042, "9F"},            // Auto-sensed octal radix, invalid digit.
+    {"0x42G12", 0x42, "G12"},        // Auto-sensed hex radix, invalid digit.
     {"0b10101020101", 42, "20101"}}; // Auto-sensed binary radix, invalid digit.
 
 struct ConsumeSignedPair {
@@ -831,7 +817,7 @@ struct ConsumeSignedPair {
     {"-0b101010", -42, ""},
     {"-0b101010-1", -42, "-1"}};
 
-TEST(StringRefTest, consumeIntegerUnsigned) {
+TEST_F(StringRefTest, consumeIntegerUnsigned) {
   uint8_t U8;
   uint16_t U16;
   uint32_t U32;
@@ -886,7 +872,7 @@ TEST(StringRefTest, consumeIntegerUnsigned) {
   }
 }
 
-TEST(StringRefTest, consumeIntegerSigned) {
+TEST_F(StringRefTest, consumeIntegerSigned) {
   int8_t S8;
   int16_t S16;
   int32_t S32;
@@ -950,7 +936,7 @@ struct GetDoubleStrings {
                      {"0x0.0000000000001P-1023", true, false, 0.0},
                     };
 
-TEST(StringRefTest, getAsDouble) {
+TEST_F(StringRefTest, getAsDouble) {
   for (const auto &Entry : DoubleStrings) {
     double Result;
     StringRef S(Entry.Str);
@@ -966,7 +952,7 @@ static const char join_result1[] = "a";
 static const char join_result2[] = "a:b:c";
 static const char join_result3[] = "a::b::c";
 
-TEST(StringRefTest, joinStrings) {
+TEST_F(StringRefTest, joinStrings) {
   std::vector<StringRef> v1;
   std::vector<std::string> v2;
   for (size_t i = 0; i < std::size(join_input); ++i) {
@@ -991,8 +977,7 @@ TEST(StringRefTest, joinStrings) {
   EXPECT_TRUE(v2_join3);
 }
 
-
-TEST(StringRefTest, AllocatorCopy) {
+TEST_F(StringRefTest, AllocatorCopy) {
   BumpPtrAllocator Alloc;
   // First test empty strings.  We don't want these to allocate anything on the
   // allocator.
@@ -1013,7 +998,7 @@ TEST(StringRefTest, AllocatorCopy) {
   EXPECT_NE(Str2.data(), Str2c.data());
 }
 
-TEST(StringRefTest, Drop) {
+TEST_F(StringRefTest, Drop) {
   StringRef Test("StringRefTest::Drop");
 
   StringRef Dropped = Test.drop_front(5);
@@ -1035,7 +1020,7 @@ TEST(StringRefTest, Drop) {
   EXPECT_TRUE(Dropped.empty());
 }
 
-TEST(StringRefTest, Take) {
+TEST_F(StringRefTest, Take) {
   StringRef Test("StringRefTest::Take");
 
   StringRef Taken = Test.take_front(5);
@@ -1057,7 +1042,7 @@ TEST(StringRefTest, Take) {
   EXPECT_TRUE(Taken.empty());
 }
 
-TEST(StringRefTest, FindIf) {
+TEST_F(StringRefTest, FindIf) {
   StringRef Punct("Test.String");
   StringRef NoPunct("ABCDEFG");
   StringRef Empty;
@@ -1073,7 +1058,7 @@ TEST(StringRefTest, FindIf) {
   EXPECT_EQ(StringRef::npos, Empty.find_if_not(IsAlpha));
 }
 
-TEST(StringRefTest, TakeWhileUntil) {
+TEST_F(StringRefTest, TakeWhileUntil) {
   StringRef Test("String With 1 Number");
 
   StringRef Taken = Test.take_while([](char c) { return ::isdigit(c); });
@@ -1093,7 +1078,7 @@ TEST(StringRefTest, TakeWhileUntil) {
   EXPECT_EQ("", Taken);
 }
 
-TEST(StringRefTest, DropWhileUntil) {
+TEST_F(StringRefTest, DropWhileUntil) {
   StringRef Test("String With 1 Number");
 
   StringRef Taken = Test.drop_while([](char c) { return ::isdigit(c); });
@@ -1113,7 +1098,7 @@ TEST(StringRefTest, DropWhileUntil) {
   EXPECT_EQ("", Taken);
 }
 
-TEST(StringRefTest, StringLiteral) {
+TEST_F(StringRefTest, StringLiteral) {
   constexpr StringRef StringRefs[] = {"Foo", "Bar"};
   EXPECT_EQ(StringRef("Foo"), StringRefs[0]);
   EXPECT_EQ(3u, (std::integral_constant<size_t, StringRefs[0].size()>::value));
@@ -1129,25 +1114,25 @@ TEST(StringRefTest, StringLiteral) {
 
 // Check gtest prints StringRef as a string instead of a container of chars.
 // The code is in utils/unittest/googletest/internal/custom/gtest-printers.h
-TEST(StringRefTest, GTestPrinter) {
+TEST_F(StringRefTest, GTestPrinter) {
   EXPECT_EQ(R"("foo")", ::testing::PrintToString(StringRef("foo")));
 }
 
-TEST(StringRefTest, LFLineEnding) {
+TEST_F(StringRefTest, LFLineEnding) {
   constexpr StringRef Cases[] = {"\nDoggo\nPupper", "Floofer\n", "Woofer"};
   EXPECT_EQ(StringRef("\n"), Cases[0].detectEOL());
   EXPECT_EQ(StringRef("\n"), Cases[1].detectEOL());
   EXPECT_EQ(StringRef("\n"), Cases[2].detectEOL());
 }
 
-TEST(StringRefTest, CRLineEnding) {
+TEST_F(StringRefTest, CRLineEnding) {
   constexpr StringRef Cases[] = {"\rDoggo\rPupper", "Floofer\r", "Woo\rfer\n"};
   EXPECT_EQ(StringRef("\r"), Cases[0].detectEOL());
   EXPECT_EQ(StringRef("\r"), Cases[1].detectEOL());
   EXPECT_EQ(StringRef("\r"), Cases[2].detectEOL());
 }
 
-TEST(StringRefTest, CRLFLineEnding) {
+TEST_F(StringRefTest, CRLFLineEnding) {
   constexpr StringRef Cases[] = {"\r\nDoggo\r\nPupper", "Floofer\r\n",
                                  "Woofer\r\nSubWoofer\n"};
   EXPECT_EQ(StringRef("\r\n"), Cases[0].detectEOL());
@@ -1155,7 +1140,7 @@ TEST(StringRefTest, CRLFLineEnding) {
   EXPECT_EQ(StringRef("\r\n"), Cases[2].detectEOL());
 }
 
-TEST(StringRefTest, LFCRLineEnding) {
+TEST_F(StringRefTest, LFCRLineEnding) {
   constexpr StringRef Cases[] = {"\n\rDoggo\n\rPupper", "Floofer\n\r",
                                  "Woofer\n\rSubWoofer\n"};
   EXPECT_EQ(StringRef("\n\r"), Cases[0].detectEOL());
