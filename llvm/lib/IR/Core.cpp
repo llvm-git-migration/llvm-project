@@ -1328,8 +1328,12 @@ LLVMValueRef LLVMMDNode(LLVMValueRef *Vals, unsigned Count) {
   return LLVMMDNodeInContext(LLVMGetGlobalContext(), Vals, Count);
 }
 
-LLVMValueRef LLVMMetadataAsValue(LLVMContextRef C, LLVMMetadataRef MD) {
-  return wrap(MetadataAsValue::get(*unwrap(C), unwrap(MD)));
+LLVMValueRef LLVMMetadataAsValue(LLVMContextRef C, LLVMMetadataRef Metadata) {
+  auto *MD = unwrap(Metadata);
+  if (auto *VAM = dyn_cast<ValueAsMetadata>(MD))
+    return wrap(VAM->getValue());
+  else
+    return wrap(MetadataAsValue::get(*unwrap(C), MD));
 }
 
 LLVMMetadataRef LLVMValueAsMetadata(LLVMValueRef Val) {
@@ -2261,8 +2265,8 @@ LLVMValueRef LLVMGetInitializer(LLVMValueRef GlobalVar) {
 }
 
 void LLVMSetInitializer(LLVMValueRef GlobalVar, LLVMValueRef ConstantVal) {
-  unwrap<GlobalVariable>(GlobalVar)
-    ->setInitializer(unwrap<Constant>(ConstantVal));
+  unwrap<GlobalVariable>(GlobalVar)->setInitializer(
+      ConstantVal ? unwrap<Constant>(ConstantVal) : nullptr);
 }
 
 LLVMBool LLVMIsThreadLocal(LLVMValueRef GlobalVar) {
@@ -2445,7 +2449,8 @@ LLVMValueRef LLVMGetPersonalityFn(LLVMValueRef Fn) {
 }
 
 void LLVMSetPersonalityFn(LLVMValueRef Fn, LLVMValueRef PersonalityFn) {
-  unwrap<Function>(Fn)->setPersonalityFn(unwrap<Constant>(PersonalityFn));
+  unwrap<Function>(Fn)->setPersonalityFn(
+      PersonalityFn ? unwrap<Constant>(PersonalityFn) : nullptr);
 }
 
 unsigned LLVMGetIntrinsicID(LLVMValueRef Fn) {
