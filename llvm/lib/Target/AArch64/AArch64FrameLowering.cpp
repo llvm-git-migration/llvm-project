@@ -3363,7 +3363,7 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
       MIB.addReg(AArch64::SP);
       if (RPI.Offset >= -8 && RPI.Offset <= 7)
         MIB.addImm(RPI.Offset);
-      else{
+      else {
         // When stack offset out of range for st1b scalar + imm variant,
         // store offset in register for use in scalar + scalar variant.
         Register ScratchReg = findScratchNonCalleeSaveRegister(&MBB);
@@ -3547,7 +3547,7 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
       MIB.addReg(AArch64::SP);
       if (RPI.Offset >= -8 && RPI.Offset <= 7)
         MIB.addImm(RPI.Offset);
-      else{
+      else {
         // When stack offset out of range for ld1b scalar + imm variant,
         // store offset in register for use in scalar + scalar variant.
         Register ScratchReg = findScratchNonCalleeSaveRegister(&MBB);
