@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/CallPromotionUtils.h"
+#include "llvm/Analysis/CtxProfAnalysis.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
@@ -14,7 +15,12 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/NoFolder.h"
+#include "llvm/IR/PassInstrumentation.h"
+#include "llvm/ProfileData/PGOCtxProfReader.h"
+#include "llvm/Support/JSON.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Testing/Support/SupportHelpers.h"
 #include "gtest/gtest.h"
 
 using namespace llvm;
@@ -455,4 +461,176 @@ declare void @_ZN5Base35func3Ev(ptr)
   // Promotion inserts 3 icmp instructions and 2 or instructions, and removes
   // 1 call instruction from the entry block.
   EXPECT_EQ(F->front().size(), OrigEntryBBSize + 4);
+}
+
+using namespace llvm::ctx_profile;
+
+class ContextManager final {
+  std::vector<std::unique_ptr<char[]>> Nodes;
+  std::map<GUID, const ContextNode *> Roots;
+
+public:
+  ContextNode *createNode(GUID Guid, uint32_t NrCounters, uint32_t NrCallsites,
+                          ContextNode *Next = nullptr) {
+    auto AllocSize = ContextNode::getAllocSize(NrCounters, NrCallsites);
+    auto *Mem = Nodes.emplace_back(std::make_unique<char[]>(AllocSize)).get();
+    std::memset(Mem, 0, AllocSize);
+    auto *Ret = new (Mem) ContextNode(Guid, NrCounters, NrCallsites, Next);
+    return Ret;
+  }
+};
+
+TEST(CallPromotionUtilsTest, PromoteWithIcmpAndCtxProf) {
+  LLVMContext C;
+  std::unique_ptr<Module> M = parseIR(C,
+                                      R"IR(
+define i32 @testfunc1(ptr %d) !guid !0 {
+  call void @llvm.instrprof.increment(ptr null, i64 0, i32 1, i32 0)
+  call void @llvm.instrprof.callsite(ptr null, i64 0, i32 1, i32 0, ptr %d)
+  %call = call i32 %d()
+  ret i32 %call
+}
+
+define i32 @f1() !guid !1 {
+  call void @llvm.instrprof.increment(ptr null, i64 0, i32 1, i32 0)
+  ret i32 2
+}
+
+define i32 @f2() !guid !2 {
+  call void @llvm.instrprof.increment(ptr null, i64 0, i32 1, i32 0)
+  call void @llvm.instrprof.callsite(ptr null, i64 0, i32 1, i32 0, ptr @f4)
+  %r = call i32 @f4()
+  ret i32 %r
+}
+
+define i32 @testfunc2(ptr %p) !guid !4 {
+  call void @llvm.instrprof.increment(ptr null, i64 0, i32 1, i32 0)
+  call void @llvm.instrprof.callsite(ptr null, i64 0, i32 1, i32 0, ptr @testfunc1)
+  %r = call i32 @testfunc1(ptr %p)
+  ret i32 %r
+}
+
+declare i32 @f3()
+
+define i32 @f4() !guid !3 {
+  ret i32 3
+}
+
+!0 = !{i64 1000}
+!1 = !{i64 1001}
+!2 = !{i64 1002}
+!3 = !{i64 1004}
+!4 = !{i64 1005}
+)IR");
+
+  // Synthesize a profile. The profile is nonsensical, but the goal is to check
+  // that new BBs are created with IDs and the right counter values.
+  ContextManager Mgr;
+  auto BuildTree = [&](const std::vector<uint32_t> &CalleeEntrycounts) {
+    auto *Entry = Mgr.createNode(1000, 1, 1);
+    // Set the entrycount to 1 so it's not 0. We don't care about it, really,
+    // for this test but we generally assume it's not 0.
+    Entry->counters()[0] = 1;
+    auto *F1 = Mgr.createNode(1001, 1, 0);
+    auto *F2 = Mgr.createNode(1002, 1, 1, F1);
+    auto *F3 = Mgr.createNode(1003, 1, 0, F2);
+    auto *F4 = Mgr.createNode(1004, 1, 0);
+
+    F1->counters()[0] = CalleeEntrycounts[0];
+    F2->counters()[0] = CalleeEntrycounts[1];
+    F3->counters()[0] = CalleeEntrycounts[2];
+    F4->counters()[0] = CalleeEntrycounts[3];
+    F2->subContexts()[0] = F4;
+    Entry->subContexts()[0] = F3; // which chains F2 and F1
+    return Entry;
+  };
+  // We'll be interested in f2. the entry counts for it are: 11 in the first
+  // context; and 102 in the second.
+  // The total number of times the indirect callsite is exercised is:
+  // 10+11+12 = 35 in the first case; and 101+102+103 = 306 in the
+  // second.
+  // This means that the direct/indirect call counters will be: 11/22 in the
+  // first case and 102/204 in the second. Meaning, the "Counters" for the
+  // GUID=1002 context will look like [1, 11, 22] and [1, 102, 204],
+  // respectivelly (the first "1" being the entrycount which we set to 1 above)
+  auto *Entry1 = BuildTree({10, 11, 12, 13});
+  auto *SubTree2 = BuildTree({101, 102, 103, 104});
+  auto *Entry2 = Mgr.createNode(1005, 1, 1);
+  Entry2->counters()[0] = 2;
+  Entry2->subContexts()[0] = SubTree2;
+
+  llvm::unittest::TempFile ProfileFile("ctx_profile", "", "", /*Unique*/ true);
+  {
+    std::error_code EC;
+    raw_fd_stream Out(ProfileFile.path(), EC);
+    ASSERT_FALSE(EC);
+    {
+      PGOCtxProfileWriter Writer(Out);
+      Writer.write(*Entry1);
+      Writer.write(*Entry2);
+    }
+  }
+
+  ModuleAnalysisManager MAM;
+  MAM.registerPass([&]() { return CtxProfAnalysis(ProfileFile.path()); });
+  MAM.registerPass([&]() { return PassInstrumentationAnalysis(); });
+  auto &CtxProf = MAM.getResult<CtxProfAnalysis>(*M);
+  auto *Caller = M->getFunction("testfunc1");
+  ASSERT_TRUE(!!Caller);
+  auto *Callee = M->getFunction("f2");
+  ASSERT_TRUE(!!Callee);
+  auto *IndirectCS = [&]() -> CallBase * {
+    for (auto &BB : *Caller)
+      for (auto &I : BB)
+        if (auto *CB = dyn_cast<CallBase>(&I); CB && CB->isIndirectCall())
+          return CB;
+    return nullptr;
+  }();
+  ASSERT_TRUE(!!IndirectCS);
+  promoteCallWithIfThenElse(*IndirectCS, *Callee, CtxProf);
+
+  std::string Str;
+  raw_string_ostream OS(Str);
+  CtxProfAnalysisPrinterPass Printer(
+      OS, CtxProfAnalysisPrinterPass::PrintMode::JSON);
+  Printer.run(*M, MAM);
+  const char *Expected = R"(
+  [
+  {
+    "Guid": 1000,
+    "Counters": [1, 11, 22],
+    "Callsites": [
+      [{ "Guid": 1001,
+          "Counters": [10]}, 
+        { "Guid": 1003,
+          "Counters": [12]
+        }], 
+        [{ "Guid": 1002,
+          "Counters": [11],
+          "Callsites": [
+          [{ "Guid": 1004,
+            "Counters": [13] }]]}]]
+  },
+  {
+    "Guid": 1005,
+    "Counters": [2],
+    "Callsites": [
+      [{ "Guid": 1000,
+         "Counters": [1, 102, 204],
+         "Callsites": [
+            [{ "Guid": 1001,
+               "Counters": [101]}, 
+             { "Guid": 1003,
+               "Counters": [103]}],
+            [{ "Guid": 1002,
+               "Counters": [102],
+               "Callsites": [
+            [{ "Guid": 1004,
+               "Counters": [104]}]]}]]}]]}
+])";
+  auto ExpectedJSON = json::parse(Expected);
+  ASSERT_TRUE(!!ExpectedJSON);
+  auto ProducedJSON = json::parse(Str);
+  ASSERT_TRUE(!!ProducedJSON);
+  EXPECT_EQ(*ProducedJSON, *ExpectedJSON);
 }
