@@ -379,23 +379,22 @@ define i64 @cttz_i64_zero_test(i64 %n) {
 ;
 ; X86-CMOV-LABEL: cttz_i64_zero_test:
 ; X86-CMOV:       # %bb.0:
-; X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-CMOV-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; X86-CMOV-NOT:     rep
-; X86-CMOV-NEXT:    bsfl {{[0-9]+}}(%esp), %ecx
+; X86-CMOV-NEXT:    bsfl {{[0-9]+}}(%esp), %eax
 ; X86-CMOV-NEXT:    movl $32, %edx
-; X86-CMOV-NEXT:    cmovnel %ecx, %edx
+; X86-CMOV-NEXT:    cmovnel %eax, %edx
 ; X86-CMOV-NEXT:    addl $32, %edx
-; X86-CMOV-NOT:     rep
-; X86-CMOV-NEXT:    bsfl %eax, %eax
+; X86-CMOV-NEXT:    rep bsfl %ecx, %eax
+; X86-CMOV-NEXT:    testl %ecx, %ecx
 ; X86-CMOV-NEXT:    cmovel %edx, %eax
 ; X86-CMOV-NEXT:    xorl %edx, %edx
 ; X86-CMOV-NEXT:    retl
 ;
 ; X64-LABEL: cttz_i64_zero_test:
 ; X64:       # %bb.0:
-; X64-NEXT:    bsfq %rdi, %rcx
 ; X64-NEXT:    movl $64, %eax
-; X64-NEXT:    cmovneq %rcx, %rax
+; X64-NEXT:    rep bsfq %rdi, %rax
 ; X64-NEXT:    retq
 ;
 ; X86-CLZ-LABEL: cttz_i64_zero_test:
@@ -670,11 +669,12 @@ define i64 @cttz_i32_sext(i32 %x) {
 ; X86-NOCMOV-NEXT:    je .LBB12_1
 ; X86-NOCMOV-NEXT:  # %bb.2: # %cond.false
 ; X86-NOCMOV-NEXT:    rep bsfl %eax, %eax
-; X86-NOCMOV-NEXT:    xorl %edx, %edx
-; X86-NOCMOV-NEXT:    retl
+; X86-NOCMOV-NEXT:    jmp .LBB12_3
 ; X86-NOCMOV-NEXT:  .LBB12_1:
 ; X86-NOCMOV-NEXT:    movl $32, %eax
-; X86-NOCMOV-NEXT:    xorl %edx, %edx
+; X86-NOCMOV-NEXT:  .LBB12_3: # %cond.end
+; X86-NOCMOV-NEXT:    movl %eax, %edx
+; X86-NOCMOV-NEXT:    sarl $31, %edx
 ; X86-NOCMOV-NEXT:    retl
 ;
 ; X86-CMOV-LABEL: cttz_i32_sext:
@@ -691,6 +691,7 @@ define i64 @cttz_i32_sext(i32 %x) {
 ; X64-NEXT:    movabsq $4294967296, %rax # imm = 0x100000000
 ; X64-NEXT:    orq %rdi, %rax
 ; X64-NEXT:    rep bsfq %rax, %rax
+; X64-NEXT:    movl %eax, %eax
 ; X64-NEXT:    retq
 ;
 ; X86-CLZ-LABEL: cttz_i32_sext:
@@ -748,6 +749,7 @@ define i64 @cttz_i32_zext(i32 %x) {
 ; X64-NEXT:    movabsq $4294967296, %rax # imm = 0x100000000
 ; X64-NEXT:    orq %rdi, %rax
 ; X64-NEXT:    rep bsfq %rax, %rax
+; X64-NEXT:    movl %eax, %eax
 ; X64-NEXT:    retq
 ;
 ; X86-CLZ-LABEL: cttz_i32_zext:
