@@ -40,6 +40,7 @@ if(LLVM_LIBC_FULL_BUILD)
       fake_heap.s
       freelist_heap_test.cpp
       freelist_malloc_test.cpp
+      freestore_test.cpp
     DEPENDS
       libc.src.__support.CPP.span
       libc.src.__support.freelist_heap
