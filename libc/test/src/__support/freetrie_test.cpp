@@ -88,6 +88,8 @@ TEST(LlvmLibcFreeTrie, Find) {
 }
 
 TEST(LlvmLibcFreeTrie, PopPreservesChildren) {
+  FreeTrie::SizeRange range{0, 4096};
+
   // Build the following trie:
   // 1 -> 2
   //   lower:
@@ -106,42 +108,57 @@ TEST(LlvmLibcFreeTrie, PopPreservesChildren) {
   FreeTrie *trie = nullptr;
   FreeTrie::push(trie, block1);
   FreeTrie::push(trie, block2);
-  FreeTrie *&child3 = FreeTrie::find(trie, block3->inner_size(), {0, 4096});
+  FreeTrie *&child3 = FreeTrie::find(trie, block3->inner_size(), range);
   FreeTrie::push(child3, block3);
-  FreeTrie *&child4 = FreeTrie::find(trie, block4->inner_size(), {0, 4096});
+  FreeTrie *&child4 = FreeTrie::find(trie, block4->inner_size(), range);
   FreeTrie::push(child4, block4);
 
   // Popping an element from the root preserves the child links.
   FreeTrie::pop(trie);
-  FreeTrie *&new_child4 = FreeTrie::find(trie, block4->inner_size(), {0, 4096});
+  FreeTrie *&new_child4 = FreeTrie::find(trie, block4->inner_size(), range);
   EXPECT_EQ(new_child4, child4);
 
   // Popping the last element from the root moves a leaf (block4) to the root
   // and sets its children.
   FreeTrie::pop(trie);
   EXPECT_EQ(trie, child4);
-  FreeTrie *&new_child3 = FreeTrie::find(trie, block3->inner_size(), {0, 4096});
+  FreeTrie *&new_child3 = FreeTrie::find(trie, block3->inner_size(), range);
   EXPECT_EQ(new_child3, child3);
 }
 
 TEST(LlvmLibcFreeTrie, FindBestFitRoot) {
+  FreeTrie::SizeRange range{0, 4096};
+
   FreeTrie *trie = nullptr;
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, 123, {0, 4096}),
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, 123, range),
             static_cast<FreeTrie **>(nullptr));
 
   BlockMem<1024> block_mem;
   Block<> *block = block_mem.block;
   FreeTrie::push(trie, block);
 
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, {0, 4096}), &trie);
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size() - 1, {0, 4096}),
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &trie);
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size() - 1, range),
             &trie);
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size(), {0, 4096}),
-            &trie);
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size() + 1, {0, 4096}),
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size(), range), &trie);
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, block->inner_size() + 1, range),
             static_cast<FreeTrie **>(nullptr));
-  EXPECT_EQ(FreeTrie::find_best_fit(trie, 4096 - 1, {0, 4096}),
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, range.width - 1, range),
             static_cast<FreeTrie **>(nullptr));
+}
+
+TEST(LlvmLibcFreeTrie, FindBestFitLowerOnly) {
+  FreeTrie::SizeRange range{0, 4096};
+
+  FreeTrie *trie = nullptr;
+  BlockMem<1024> root_mem;
+  FreeTrie::push(trie, root_mem.block);
+  BlockMem<1024 - 1> lower_mem;
+  FreeTrie *&lower =
+      FreeTrie::find(trie, lower_mem.block->inner_size(), range);
+  FreeTrie::push(lower, lower_mem.block);
+
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &lower);
 }
 
 } // namespace LIBC_NAMESPACE_DECL
