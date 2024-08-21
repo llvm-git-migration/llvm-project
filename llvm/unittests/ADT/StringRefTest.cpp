@@ -72,9 +72,18 @@ TEST(StringRefTest, EmptyInitializerList) {
 
 TEST(StringRefTest, Iteration) {
   StringRef S("hello");
-  const char *p = "hello";
-  for (const char *it = S.begin(), *ie = S.end(); it != ie; ++it, ++p)
-    EXPECT_EQ(*it, *p);
+  constexpr StringLiteral CS("hello");
+
+  // Note: Cannot use literal strings in equal() as iteration over a literal
+  // string includes the null terminator.
+  constexpr std::string_view RefFwd("hello");
+  constexpr std::string_view RefRev("olleh");
+
+  EXPECT_TRUE(equal(S, RefFwd));
+  EXPECT_TRUE(equal(CS, RefFwd));
+  // reverse() builds an iterator range using StringRef::rbegin()/rend().
+  EXPECT_TRUE(equal(reverse(S), RefRev));
+  EXPECT_TRUE(equal(reverse(CS), RefRev));
 }
 
 TEST(StringRefTest, StringOps) {
