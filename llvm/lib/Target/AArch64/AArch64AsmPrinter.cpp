@@ -160,6 +160,9 @@ public:
   // adrp-add followed by PAC sign)
   void LowerMOVaddrPAC(const MachineInstr &MI);
 
+  // Emit the sequence for LOADgotAUTH (load+auth pointer from signed ELF GOT)
+  void LowerLOADgotAUTH(const MachineInstr &MI);
+
   /// tblgen'erated driver function for lowering simple MI->MC
   /// pseudo instructions.
   bool lowerPseudoInstExpansion(const MachineInstr *MI, MCInst &Inst);
@@ -2168,6 +2171,10 @@ void AArch64AsmPrinter::LowerMOVaddrPAC(const MachineInstr &MI) {
   };
 
   const bool IsGOTLoad = MI.getOpcode() == AArch64::LOADgotPAC;
+  const bool IsELFSignedGOT = MI.getParent()
+                                  ->getParent()
+                                  ->getInfo<AArch64FunctionInfo>()
+                                  ->hasELFSignedGOT();
   MachineOperand GAOp = MI.getOperand(0);
   const uint64_t KeyC = MI.getOperand(1).getImm();
   assert(KeyC <= AArch64PACKey::LAST &&
@@ -2184,9 +2191,17 @@ void AArch64AsmPrinter::LowerMOVaddrPAC(const MachineInstr &MI) {
   // Emit:
   // target materialization:
   // - via GOT:
-  //     adrp x16, :got:target
-  //     ldr x16, [x16, :got_lo12:target]
-  //     add offset to x16 if offset != 0
+  //   - unsigned GOT:
+  //       adrp x16, :got:target
+  //       ldr x16, [x16, :got_lo12:target]
+  //       add offset to x16 if offset != 0
+  //   - ELF signed GOT:
+  //       adrp x17, :got:target
+  //       add x17, x17, :got_auth_lo12:target
+  //       ldr x16, [x17]
+  //       aut{i|d}a x16, x17
+  //       check+trap sequence (if no FPAC)
+  //       add offset to x16 if offset != 0
   //
   // - direct:
   //     adrp x16, target
@@ -2229,13 +2244,81 @@ void AArch64AsmPrinter::LowerMOVaddrPAC(const MachineInstr &MI) {
   MCInstLowering.lowerOperand(GAMOLo, GAMCLo);
 
   EmitAndIncrement(
-      MCInstBuilder(AArch64::ADRP).addReg(AArch64::X16).addOperand(GAMCHi));
+      MCInstBuilder(AArch64::ADRP)
+          .addReg(IsGOTLoad && IsELFSignedGOT ? AArch64::X17 : AArch64::X16)
+          .addOperand(GAMCHi));
 
   if (IsGOTLoad) {
-    EmitAndIncrement(MCInstBuilder(AArch64::LDRXui)
-                         .addReg(AArch64::X16)
-                         .addReg(AArch64::X16)
-                         .addOperand(GAMCLo));
+    if (IsELFSignedGOT) {
+      EmitAndIncrement(MCInstBuilder(AArch64::ADDXri)
+                           .addReg(AArch64::X17)
+                           .addReg(AArch64::X17)
+                           .addOperand(GAMCLo)
+                           .addImm(0));
+
+      EmitAndIncrement(MCInstBuilder(AArch64::LDRXui)
+                           .addReg(AArch64::X16)
+                           .addReg(AArch64::X17)
+                           .addImm(0));
+
+      assert(GAOp.isGlobal());
+      assert(GAOp.getGlobal()->getValueType() != nullptr);
+      unsigned AuthOpcode = GAOp.getGlobal()->getValueType()->isFunctionTy()
+                                ? AArch64::AUTIA
+                                : AArch64::AUTDA;
+
+      EmitAndIncrement(MCInstBuilder(AuthOpcode)
+                           .addReg(AArch64::X16)
+                           .addReg(AArch64::X16)
+                           .addReg(AArch64::X17));
+
+      // The logic in the following if statement is partially taken from
+      // emitPtrauthAuthResign.
+      if (!STI->hasFPAC()) {
+        auto AuthKey = (AuthOpcode == AArch64::AUTIA ? AArch64PACKey::IA
+                                                     : AArch64PACKey::DA);
+        unsigned XPACOpc = getXPACOpcodeForKey(AuthKey);
+        MCSymbol *SuccessSym = createTempSymbol("auth_success_");
+
+        // XPAC has tied src/dst: use x17 as a temporary copy.
+        //  mov x17, x16
+        EmitAndIncrement(MCInstBuilder(AArch64::ORRXrs)
+                             .addReg(AArch64::X17)
+                             .addReg(AArch64::XZR)
+                             .addReg(AArch64::X16)
+                             .addImm(0));
+
+        //  xpaci x17
+        EmitAndIncrement(
+            MCInstBuilder(XPACOpc).addReg(AArch64::X17).addReg(AArch64::X17));
+
+        //  cmp x16, x17
+        EmitAndIncrement(MCInstBuilder(AArch64::SUBSXrs)
+                             .addReg(AArch64::XZR)
+                             .addReg(AArch64::X16)
+                             .addReg(AArch64::X17)
+                             .addImm(0));
+
+        //  b.eq Lsuccess
+        EmitAndIncrement(
+            MCInstBuilder(AArch64::Bcc)
+                .addImm(AArch64CC::EQ)
+                .addExpr(MCSymbolRefExpr::create(SuccessSym, OutContext)));
+
+        // Trapping sequences do a 'brk'.
+        //  brk #<0xc470 + aut key>
+        EmitAndIncrement(MCInstBuilder(AArch64::BRK).addImm(0xc470 | AuthKey));
+
+        // If the auth check succeeds, we can continue.
+        // Lsuccess:
+        OutStreamer->emitLabel(SuccessSym);
+      }
+    } else {
+      EmitAndIncrement(MCInstBuilder(AArch64::LDRXui)
+                           .addReg(AArch64::X16)
+                           .addReg(AArch64::X16)
+                           .addOperand(GAMCLo));
+    }
   } else {
     EmitAndIncrement(MCInstBuilder(AArch64::ADDXri)
                          .addReg(AArch64::X16)
@@ -2316,6 +2399,53 @@ void AArch64AsmPrinter::LowerMOVaddrPAC(const MachineInstr &MI) {
   if (DiscReg != AArch64::XZR)
     MIB.addReg(DiscReg);
   EmitAndIncrement(MIB);
+
+  assert(STI->getInstrInfo()->getInstSizeInBytes(MI) >= InstsEmitted * 4);
+}
+
+void AArch64AsmPrinter::LowerLOADgotAUTH(const MachineInstr &MI) {
+  unsigned InstsEmitted = 0;
+  auto EmitAndIncrement = [this, &InstsEmitted](const MCInst &Inst) {
+    EmitToStreamer(*OutStreamer, Inst);
+    ++InstsEmitted;
+  };
+
+  Register DstReg = MI.getOperand(0).getReg();
+  const MachineOperand &GAMO = MI.getOperand(1);
+  assert(GAMO.getOffset() == 0);
+
+  MachineOperand GAHiOp(GAMO);
+  MachineOperand GALoOp(GAMO);
+  GAHiOp.addTargetFlag(AArch64II::MO_PAGE);
+  GALoOp.addTargetFlag(AArch64II::MO_PAGEOFF | AArch64II::MO_NC);
+
+  MCOperand GAMCHi, GAMCLo;
+  MCInstLowering.lowerOperand(GAHiOp, GAMCHi);
+  MCInstLowering.lowerOperand(GALoOp, GAMCLo);
+
+  EmitAndIncrement(
+      MCInstBuilder(AArch64::ADRP).addReg(AArch64::X16).addOperand(GAMCHi));
+
+  EmitAndIncrement(MCInstBuilder(AArch64::ADDXri)
+                       .addReg(AArch64::X16)
+                       .addReg(AArch64::X16)
+                       .addOperand(GAMCLo)
+                       .addImm(0));
+
+  EmitAndIncrement(MCInstBuilder(AArch64::LDRXui)
+                       .addReg(DstReg)
+                       .addReg(AArch64::X16)
+                       .addImm(0));
+
+  assert(GAMO.isGlobal());
+  assert(GAMO.getGlobal()->getValueType() != nullptr);
+  unsigned AuthOpcode = GAMO.getGlobal()->getValueType()->isFunctionTy()
+                            ? AArch64::AUTIA
+                            : AArch64::AUTDA;
+  EmitAndIncrement(MCInstBuilder(AuthOpcode)
+                       .addReg(DstReg)
+                       .addReg(DstReg)
+                       .addReg(AArch64::X16));
 
   assert(STI->getInstrInfo()->getInstSizeInBytes(MI) >= InstsEmitted * 4);
 }
@@ -2482,6 +2612,10 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
   case AArch64::LOADgotPAC:
   case AArch64::MOVaddrPAC:
     LowerMOVaddrPAC(*MI);
+    return;
+
+  case AArch64::LOADgotAUTH:
+    LowerLOADgotAUTH(*MI);
     return;
 
   case AArch64::BRA:
