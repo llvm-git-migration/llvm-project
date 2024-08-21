@@ -109,6 +109,7 @@ public:
 
   /// \brief Replace all entries with \p Block as single entry.
   void setSingleEntry(BlockT *Block) {
+    assert(contains(Block));
     Entries.clear();
     Entries.push_back(Block);
   }
@@ -198,26 +199,16 @@ public:
   //@{
   using const_entry_iterator =
       typename SmallVectorImpl<BlockT *>::const_iterator;
-  const_entry_iterator entry_begin() const {
-    return const_entry_iterator{Entries.begin()};
-  }
-  const_entry_iterator entry_end() const {
-    return const_entry_iterator{Entries.end()};
-  }
-
-  using const_reverse_entry_iterator =
-      typename SmallVectorImpl<BlockT *>::const_reverse_iterator;
-  const_reverse_entry_iterator entry_rbegin() const {
-    return const_reverse_entry_iterator{Entries.rbegin()};
-  }
-  const_reverse_entry_iterator entry_rend() const {
-    return const_reverse_entry_iterator{Entries.rend()};
-  }
-
+  const_entry_iterator entry_begin() const { return Entries.begin(); }
+  const_entry_iterator entry_end() const { return Entries.end(); }
   size_t getNumEntries() const { return Entries.size(); }
   iterator_range<const_entry_iterator> entries() const {
-    return llvm::make_range(Entries.begin(), Entries.end());
+    return llvm::make_range(entry_begin(), entry_end());
   }
+  using const_reverse_entry_iterator =
+      typename SmallVectorImpl<BlockT *>::const_reverse_iterator;
+  const_reverse_entry_iterator entry_rbegin() const { return Entries.rbegin(); }
+  const_reverse_entry_iterator entry_rend() const { return Entries.rend(); }
   //@}
 
   Printable printEntries(const ContextT &Ctx) const {

@@ -6,6 +6,31 @@
 //
 //===----------------------------------------------------------------------===//
 //
+// INPUT CFG: The blocks H and B form an irreducible cycle with two headers.
+//
+//                        Entry
+//                       /     \
+//                      v       v
+//                      H ----> B
+//                      ^      /|
+//                       `----' |
+//                              v
+//                             Exit
+//
+// OUTPUT CFG: Converted to a natural loop with a new header N.
+//
+//                        Entry
+//                          |
+//                          v
+//                          N <---.
+//                         / \     \
+//                        /   \     |
+//                       v     v    /
+//                       H --> B --'
+//                             |
+//                             v
+//                            Exit
+//
 // To convert an irreducible cycle C to a natural loop L:
 //
 // 1. Add a new node N to C.
@@ -22,41 +47,34 @@
 // Thus, L is a strongly connected component dominated by N, and hence L is a
 // natural loop with header N.
 //
-// INPUT CFG: The blocks H and B form an irreducible loop with two headers.
+// When an irreducible cycle C with header H is transformed into a loop, the
+// following invariants hold:
 //
-//                        Entry
-//                       /     \
-//                      v       v
-//                      H ----> B
-//                      ^      /|
-//                       `----' |
-//                              v
-//                             Exit
+// 1. No new subcycles are "discovered" in the set (C-H). The only internal
+//    edges that are redirected by the transform are incident on H. Any subcycle
+//    S in (C-H), already existed prior to this transform, and is already in the
+//    list of children for this cycle C.
 //
-// OUTPUT CFG:
+// 2. Subcycles of C are not modified by the transform. For some subcycle S of
+//    C, edges incident on the entries of S are either internal to C, or they
+//    are now redirected through N, which is outside of S. So the list of
+//    entries to S does not change. Since the transform only adds a block
+//    outside S, and redirects edges that are not internal to S, the list of
+//    blocks in S does not change.
 //
-//                        Entry
-//                          |
-//                          v
-//                          N <---.
-//                         / \     \
-//                        /   \     |
-//                       v     v    /
-//                       H --> B --'
-//                             |
-//                             v
-//                            Exit
+// 3. Similarly, any natural loop L included in C is not affected, with one
+//    exception: L is "destroyed" by the transform iff its header is H. The
+//    backedges of such a loop are now redirected to N instead, and hence the
+//    body of this loop gets merged into the new loop with header N.
 //
-//
-// The actual transformation is handled by function CreateControlFlowHub, which
-// takes a set of incoming blocks (the predecessors) and outgoing blocks (the
-// entries). The function also moves every PHINode in an outgoing block to the
-// hub. Since the hub dominates all the outgoing blocks, each such PHINode
-// continues to dominate its uses. Since every entry the cycle has at least two
-// predecessors, every value used in the entry (or later) but defined in a
-// predecessor (or earlier) is represented by a PHINode in a entry. Hence the
-// above handling of PHINodes is sufficient and no further processing is
-// required to restore SSA.
+// The actual transformation is handled by the ControlFlowHub, which redirects
+// specified control flow edges through a set of guard blocks. This also moves
+// every PHINode in an outgoing block to the hub. Since the hub dominates all
+// the outgoing blocks, each such PHINode continues to dominate its uses. Since
+// every header in an SCC has at least two predecessors, every value used in the
+// header (or later) but defined in a predecessor (or earlier) is represented by
+// a PHINode in a header. Hence the above handling of PHINodes is sufficient and
+// no further processing is required to restore SSA.
 //
 // Limitation: The pass cannot handle switch statements and indirect
 //             branches. Both must be lowered to plain branches first.
@@ -119,8 +137,9 @@ static void reconnectChildLoops(LoopInfo &LI, Loop *ParentLoop, Loop *NewLoop,
   // Any candidate is a child iff its header is owned by the new loop. Move all
   // the children to a new vector.
   auto FirstChild = std::partition(
-      CandidateLoops.begin(), CandidateLoops.end(),
-      [&](Loop *L) { return !NewLoop->contains(L->getHeader()); });
+      CandidateLoops.begin(), CandidateLoops.end(), [&](Loop *L) {
+        return NewLoop == L || !NewLoop->contains(L->getHeader());
+      });
   SmallVector<Loop *, 8> ChildLoops(FirstChild, CandidateLoops.end());
   CandidateLoops.erase(FirstChild, CandidateLoops.end());
 
@@ -154,81 +173,22 @@ static void reconnectChildLoops(LoopInfo &LI, Loop *ParentLoop, Loop *NewLoop,
   }
 }
 
-// Given a set of blocks and headers in an irreducible SCC, convert it into a
-// natural loop. Also insert this new loop at its appropriate place in the
-// hierarchy of loops.
-static bool fixIrreducible(Cycle &C, CycleInfo &CI, DominatorTree &DT,
-                           LoopInfo *LI) {
-  if (C.isReducible())
-    return false;
+static void updateLoopInfo(LoopInfo &LI, Cycle &C,
+                           ArrayRef<BasicBlock *> GuardBlocks) {
+  // The parent loop is a natural loop L mapped to the cycle header H as long as
+  // H is not also the header of L. In the latter case, L is destroyed and we
+  // seek its parent instead.
+  BasicBlock *CycleHeader = C.getHeader();
+  Loop *ParentLoop = LI.getLoopFor(CycleHeader);
+  if (ParentLoop && ParentLoop->getHeader() == CycleHeader)
+    ParentLoop = ParentLoop->getParentLoop();
 
-  SetVector<BasicBlock *> Predecessors;
-
-  // Redirect internal edges incident on the header.
-  BasicBlock *OldHeader = C.getHeader();
-  for (BasicBlock *P : predecessors(OldHeader)) {
-    if (C.contains(P))
-      Predecessors.insert(P);
-  }
-
-  // Redirect external incoming edges. This includes the edges on the header.
-  for (BasicBlock *E : C.entries()) {
-    for (BasicBlock *P : predecessors(E)) {
-      if (!C.contains(P))
-        Predecessors.insert(P);
-    }
-  }
-
-  LLVM_DEBUG(
-      dbgs() << "Found predecessors:";
-      for (auto P : Predecessors) {
-        dbgs() << " " << P->getName();
-      }
-      dbgs() << "\n");
-
-  // Redirect all the backedges through a "hub" consisting of a series
-  // of guard blocks that manage the flow of control from the
-  // predecessors to the headers.
-  ControlFlowHub CHub;
-  for (BasicBlock *P : Predecessors) {
-    auto *Branch = cast<BranchInst>(P->getTerminator());
-    BasicBlock *Succ0 = Branch->getSuccessor(0);
-    Succ0 = Headers.count(Succ0) ? Succ0 : nullptr;
-    BasicBlock *Succ1 =
-        Branch->isUnconditional() ? nullptr : Branch->getSuccessor(1);
-    Succ1 = Succ1 && Headers.count(Succ1) ? Succ1 : nullptr;
-    CHub.addBranch(P, Succ0, Succ1);
-
-    LLVM_DEBUG(dbgs() << "Added branch: " << P->getName() << " -> "
-                      << (Succ0 ? Succ0->getName() : "") << " "
-                      << (Succ1 ? Succ1->getName() : "") << "\n");
-  }
-
-  SmallVector<BasicBlock *, 8> GuardBlocks;
-  DomTreeUpdater DTU(DT, DomTreeUpdater::UpdateStrategy::Eager);
-  CHub.finalize(&DTU, GuardBlocks, "irr");
-#if defined(EXPENSIVE_CHECKS)
-  assert(DT.verify(DominatorTree::VerificationLevel::Full));
-#else
-  assert(DT.verify(DominatorTree::VerificationLevel::Fast));
-#endif
-
-  for (auto *G : GuardBlocks) {
-    LLVM_DEBUG(dbgs() << "added guard block: " << G->getName() << "\n");
-    CI.addBlockToCycle(G, &C);
-  }
-  C.setSingleEntry(GuardBlocks[0]);
-
-  if (!LI)
-    return true;
-
-  Loop *ParentLoop = LI->getLoopFor(OldHeader);
   // Create a new loop from the now-transformed cycle
-  auto *NewLoop = LI->AllocateLoop();
+  auto *NewLoop = LI.AllocateLoop();
   if (ParentLoop) {
     ParentLoop->addChildLoop(NewLoop);
   } else {
-    LI->addTopLevelLoop(NewLoop);
+    LI.addTopLevelLoop(NewLoop);
   }
 
   // Add the guard blocks to the new loop. The first guard block is
@@ -237,16 +197,16 @@ static bool fixIrreducible(Cycle &C, CycleInfo &CI, DominatorTree &DT,
   // header. Since the new loop is already in LoopInfo, the new blocks
   // are also propagated up the chain of parent loops.
   for (auto *G : GuardBlocks) {
-    LLVM_DEBUG(dbgs() << "added guard block: " << G->getName() << "\n");
-    NewLoop->addBasicBlockToLoop(G, *LI);
+    LLVM_DEBUG(dbgs() << "added guard block to loop: " << G->getName() << "\n");
+    NewLoop->addBasicBlockToLoop(G, LI);
   }
 
   for (auto *BB : C.blocks()) {
     NewLoop->addBlockEntry(BB);
-    if (LI->getLoopFor(BB) == ParentLoop) {
+    if (LI.getLoopFor(BB) == ParentLoop) {
       LLVM_DEBUG(dbgs() << "moved block from parent: " << BB->getName()
                         << "\n");
-      LI->changeLoopFor(BB, NewLoop);
+      LI.changeLoopFor(BB, NewLoop);
     } else {
       LLVM_DEBUG(dbgs() << "added block from child: " << BB->getName() << "\n");
     }
@@ -254,16 +214,111 @@ static bool fixIrreducible(Cycle &C, CycleInfo &CI, DominatorTree &DT,
   LLVM_DEBUG(dbgs() << "header for new loop: "
                     << NewLoop->getHeader()->getName() << "\n");
 
-  reconnectChildLoops(*LI, ParentLoop, NewLoop, OldHeader);
+  reconnectChildLoops(LI, ParentLoop, NewLoop, C.getHeader());
 
+  LLVM_DEBUG(dbgs() << "Verify new loop.\n"; NewLoop->print(dbgs()));
   NewLoop->verifyLoop();
   if (ParentLoop) {
+    LLVM_DEBUG(dbgs() << "Verify parent loop.\n"; ParentLoop->print(dbgs()));
     ParentLoop->verifyLoop();
   }
-#if defined(EXPENSIVE_CHECKS)
-  LI->verify(DT);
-#endif // EXPENSIVE_CHECKS
+}
 
+// Given a set of blocks and headers in an irreducible SCC, convert it into a
+// natural loop. Also insert this new loop at its appropriate place in the
+// hierarchy of loops.
+static bool fixIrreducible(Cycle &C, CycleInfo &CI, DominatorTree &DT,
+                           LoopInfo *LI) {
+  if (C.isReducible())
+    return false;
+  LLVM_DEBUG(dbgs() << "Processing cycle:\n" << CI.print(&C) << "\n";);
+
+  ControlFlowHub CHub;
+  SetVector<BasicBlock *> Predecessors;
+
+  // Redirect internal edges incident on the header.
+  BasicBlock *Header = C.getHeader();
+  for (BasicBlock *P : predecessors(Header)) {
+    if (C.contains(P))
+      Predecessors.insert(P);
+  }
+
+  for (BasicBlock *P : Predecessors) {
+    auto *Branch = cast<BranchInst>(P->getTerminator());
+    // Exactly one of the two successors is the header.
+    BasicBlock *Succ0 = Branch->getSuccessor(0) == Header ? Header : nullptr;
+    BasicBlock *Succ1 = Succ0 ? nullptr : Header;
+    if (!Succ0)
+      assert(Branch->getSuccessor(1) == Header);
+    assert(Succ0 || Succ1);
+    CHub.addBranch(P, Succ0, Succ1);
+
+    LLVM_DEBUG(dbgs() << "Added internal branch: " << P->getName() << " -> "
+                      << (Succ0 ? Succ0->getName() : "") << " "
+                      << (Succ1 ? Succ1->getName() : "") << "\n");
+  }
+
+  // Redirect external incoming edges. This includes the edges on the header.
+  Predecessors.clear();
+  for (BasicBlock *E : C.entries()) {
+    for (BasicBlock *P : predecessors(E)) {
+      if (!C.contains(P))
+        Predecessors.insert(P);
+    }
+  }
+
+  for (BasicBlock *P : Predecessors) {
+    auto *Branch = cast<BranchInst>(P->getTerminator());
+    BasicBlock *Succ0 = Branch->getSuccessor(0);
+    Succ0 = C.contains(Succ0) ? Succ0 : nullptr;
+    BasicBlock *Succ1 =
+        Branch->isUnconditional() ? nullptr : Branch->getSuccessor(1);
+    Succ1 = Succ1 && C.contains(Succ1) ? Succ1 : nullptr;
+    CHub.addBranch(P, Succ0, Succ1);
+
+    LLVM_DEBUG(dbgs() << "Added external branch: " << P->getName() << " -> "
+                      << (Succ0 ? Succ0->getName() : "") << " "
+                      << (Succ1 ? Succ1->getName() : "") << "\n");
+  }
+
+  // Redirect all the backedges through a "hub" consisting of a series
+  // of guard blocks that manage the flow of control from the
+  // predecessors to the headers.
+  SmallVector<BasicBlock *> GuardBlocks;
+
+  // Minor optimization: The cycle entries are discovered in an order that is
+  // the opposite of the order in which these blocks appear as branch targets.
+  // This results in a lot of condition inversions in the control flow out of
+  // the new ControlFlowHub, which can be mitigated if the orders match. So we
+  // reverse the entries when adding them to the hub.
+  SetVector<BasicBlock *> Entries;
+  Entries.insert(C.entry_rbegin(), C.entry_rend());
+
+  DomTreeUpdater DTU(DT, DomTreeUpdater::UpdateStrategy::Eager);
+  CHub.finalize(&DTU, GuardBlocks, "irr");
+#if defined(EXPENSIVE_CHECKS)
+  assert(DT.verify(DominatorTree::VerificationLevel::Full));
+#else
+  assert(DT.verify(DominatorTree::VerificationLevel::Fast));
+#endif
+
+  // If we are updating LoopInfo, do that now before modifying the cycle. This
+  // ensures that the first guard block is the header of a new natural loop.
+  if (LI)
+    updateLoopInfo(*LI, C, GuardBlocks);
+
+  for (auto *G : GuardBlocks) {
+    LLVM_DEBUG(dbgs() << "added guard block to cycle: " << G->getName()
+                      << "\n");
+    CI.addBlockToCycle(G, &C);
+  }
+  C.setSingleEntry(GuardBlocks[0]);
+
+  C.verifyCycle();
+  if (Cycle *Parent = C.getParentCycle())
+    Parent->verifyCycle();
+
+  LLVM_DEBUG(dbgs() << "Finished one cycle:\n"; CI.print(dbgs()););
   return true;
 }
 
@@ -275,15 +330,23 @@ static bool FixIrreducibleImpl(Function &F, CycleInfo &CI, DominatorTree &DT,
   assert(hasOnlySimpleTerminator(F) && "Unsupported block terminator.");
 
   bool Changed = false;
-  SmallVector<Cycle *> Worklist{CI.toplevel_cycles()};
-
-  while (!Worklist.empty()) {
-    Cycle *C = Worklist.pop_back_val();
-    Changed |= fixIrreducible(*C, CI, DT, LI);
-    append_range(Worklist, C->children());
+  for (Cycle *TopCycle : CI.toplevel_cycles()) {
+    for (Cycle *C : depth_first(TopCycle)) {
+      Changed |= fixIrreducible(*C, CI, DT, LI);
+    }
   }
 
-  return Changed;
+  if (!Changed)
+    return false;
+
+#if defined(EXPENSIVE_CHECKS)
+  CI.verify();
+  if (LI) {
+    LI.verify(DT);
+  }
+#endif // EXPENSIVE_CHECKS
+
+  return true;
 }
 
 bool FixIrreducible::runOnFunction(Function &F) {
