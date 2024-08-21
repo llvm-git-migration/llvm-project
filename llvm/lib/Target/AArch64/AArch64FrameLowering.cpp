@@ -3229,7 +3229,13 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
       Alignment = Align(16);
       break;
     case RegPairInfo::ZPR:
-      StrOpc = RPI.isPaired() ? AArch64::ST1B_2Z_IMM : AArch64::STR_ZXI;
+      if (RPI.isPaired())
+        // When stack offset out of range for st1b scalar + imm variant,
+        // use scalar + scalar variant.
+        StrOpc = RPI.Offset >= -8 && RPI.Offset <= 7 ? AArch64::ST1B_2Z_IMM
+                                                     : AArch64::ST1B_2Z;
+      else
+        StrOpc = AArch64::STR_ZXI;
       Size = 16;
       Alignment = Align(16);
       break;
@@ -3354,10 +3360,21 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
           MachinePointerInfo::getFixedStack(MF, FrameIdxReg2),
           MachineMemOperand::MOStore, Size, Alignment));
       MIB.addReg(PnReg);
-      MIB.addReg(AArch64::SP)
-          .addImm(RPI.Offset) // [sp, #offset*scale],
-                              // where factor*scale is implicit
-          .setMIFlag(MachineInstr::FrameSetup);
+      MIB.addReg(AArch64::SP);
+      if (RPI.Offset >= -8 && RPI.Offset <= 7)
+        MIB.addImm(RPI.Offset);
+      else{
+        // When stack offset out of range for st1b scalar + imm variant,
+        // store offset in register for use in scalar + scalar variant.
+        Register ScratchReg = findScratchNonCalleeSaveRegister(&MBB);
+        assert(ScratchReg != AArch64::NoRegister);
+        BuildMI(MBB, std::prev(MI), DL, TII.get(AArch64::MOVZXi), ScratchReg)
+            .addImm(RPI.Offset)
+            .addImm(/*2*scale*/ 5)
+            .setMIFlags(MachineInstr::FrameSetup);
+        MIB.addReg(ScratchReg, RegState::Kill);
+      }
+      MIB.setMIFlag(MachineInstr::FrameSetup);
       MIB.addMemOperand(MF.getMachineMemOperand(
           MachinePointerInfo::getFixedStack(MF, FrameIdxReg1),
           MachineMemOperand::MOStore, Size, Alignment));
@@ -3470,7 +3487,13 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
       Alignment = Align(16);
       break;
     case RegPairInfo::ZPR:
-      LdrOpc = RPI.isPaired() ? AArch64::LD1B_2Z_IMM : AArch64::LDR_ZXI;
+      if (RPI.isPaired())
+        // When stack offset out of range for st1b scalar + imm variant,
+        // use scalar + scalar variant.
+        LdrOpc = RPI.Offset >= -8 && RPI.Offset <= 7 ? AArch64::LD1B_2Z_IMM
+                                                     : AArch64::LD1B_2Z;
+      else
+        LdrOpc = AArch64::LDR_ZXI;
       Size = 16;
       Alignment = Align(16);
       break;
@@ -3521,10 +3544,21 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
           MachinePointerInfo::getFixedStack(MF, FrameIdxReg2),
           MachineMemOperand::MOLoad, Size, Alignment));
       MIB.addReg(PnReg);
-      MIB.addReg(AArch64::SP)
-          .addImm(RPI.Offset) // [sp, #offset*scale]
-                              // where factor*scale is implicit
-          .setMIFlag(MachineInstr::FrameDestroy);
+      MIB.addReg(AArch64::SP);
+      if (RPI.Offset >= -8 && RPI.Offset <= 7)
+        MIB.addImm(RPI.Offset);
+      else{
+        // When stack offset out of range for ld1b scalar + imm variant,
+        // store offset in register for use in scalar + scalar variant.
+        Register ScratchReg = findScratchNonCalleeSaveRegister(&MBB);
+        assert(ScratchReg != AArch64::NoRegister);
+        BuildMI(MBB, std::prev(MBBI), DL, TII.get(AArch64::MOVZXi), ScratchReg)
+            .addImm(RPI.Offset)
+            .addImm(/*2*scale*/ 5)
+            .setMIFlags(MachineInstr::FrameDestroy);
+        MIB.addReg(ScratchReg, RegState::Kill);
+      }
+      MIB.setMIFlag(MachineInstr::FrameDestroy);
       MIB.addMemOperand(MF.getMachineMemOperand(
           MachinePointerInfo::getFixedStack(MF, FrameIdxReg1),
           MachineMemOperand::MOLoad, Size, Alignment));
