@@ -21,7 +21,6 @@ add_llvm_target(DirectXCodeGen
   DXContainerGlobals.cpp
   DXILFinalizeLinkage.cpp
   DXILIntrinsicExpansion.cpp
-  DXILMetadata.cpp
   DXILOpBuilder.cpp
   DXILOpLowering.cpp
   DXILPrepare.cpp
