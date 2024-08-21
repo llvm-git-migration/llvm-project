@@ -140,12 +140,6 @@ class PaperInfo:
     First version of LLVM in which this paper/issue was resolved.
     """
 
-    labels: Optional[List[str]]
-    """
-    List of labels to associate to the issue in the status-tracking table. Supported labels are
-    'format', 'ranges', 'spaceship', 'flat_containers', 'concurrency TS' and 'DR'.
-    """
-
     original: Optional[object]
     """
     Object from which this PaperInfo originated. This is used to track the CSV row or Github issue that
@@ -156,31 +150,28 @@ class PaperInfo:
                        status: PaperStatus,
                        meeting: Optional[str] = None,
                        first_released_version: Optional[str] = None,
-                       labels: Optional[List[str]] = None,
                        original: Optional[object] = None):
         self.paper_number = paper_number
         self.paper_name = paper_name
         self.status = status
         self.meeting = meeting
         self.first_released_version = first_released_version
-        self.labels = labels
         self.original = original
 
-    def for_printing(self) -> Tuple[str, str, str, str, str, str]:
+    def for_printing(self) -> Tuple[str, str, str, str, str]:
         return (
             f'`{self.paper_number} <https://wg21.link/{self.paper_number}>`__',
             self.paper_name,
             self.meeting if self.meeting is not None else '',
             self.status.to_csv_entry(),
             self.first_released_version if self.first_released_version is not None else '',
-            ' '.join(f'|{label}|' for label in self.labels) if self.labels is not None else '',
         )
 
     def __repr__(self) -> str:
         return repr(self.original) if self.original is not None else repr(self.for_printing())
 
     @staticmethod
-    def from_csv_row(row: Tuple[str, str, str, str, str, str]):# -> PaperInfo:
+    def from_csv_row(row: Tuple[str, str, str, str, str]):# -> PaperInfo:
         """
         Given a row from one of our status-tracking CSV files, create a PaperInfo object representing that row.
         """
@@ -195,7 +186,6 @@ class PaperInfo:
             status=PaperStatus.from_csv_entry(row[3]),
             meeting=row[2] or None,
             first_released_version=row[4] or None,
-            labels=[l.strip('|') for l in row[5].split(' ') if l] or None,
             original=row,
         )
 
@@ -210,17 +200,12 @@ class PaperInfo:
             raise RuntimeError(f"Issue doesn't have a title that we know how to parse: {issue}")
         paper = match.group(1)
 
-        # Handle labels
-        valid_labels = ('format', 'ranges', 'spaceship', 'flat_containers', 'concurrency TS', 'DR')
-        labels = [label for label in issue['labels'] if label in valid_labels]
-
         return PaperInfo(
             paper_number=paper,
             paper_name=issue['title'],
             status=PaperStatus.from_github_issue(issue),
             meeting=issue.get('meeting Voted', None),
             first_released_version=None, # TODO
-            labels=labels if labels else None,
             original=issue,
         )
 
