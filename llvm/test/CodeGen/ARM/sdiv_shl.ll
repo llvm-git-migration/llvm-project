@@ -53,20 +53,21 @@ define void @sdiv_shl(ptr %x, ptr %y) nounwind {
 ; BE:       @ %bb.0: @ %entry
 ; BE-NEXT:    adr r2, .LCPI0_0
 ; BE-NEXT:    vld1.64 {d18, d19}, [r1]
-; BE-NEXT:    adr r1, .LCPI0_1
+; BE-NEXT:    vmov.i32        q10, #0x0
+; BE-NEXT:    adr     r1, .LCPI0_1
 ; BE-NEXT:    vld1.64 {d16, d17}, [r2:128]
 ; BE-NEXT:    vrev64.16 q8, q8
 ; BE-NEXT:    vrev64.16 q9, q9
-; BE-NEXT:    vneg.s16 q8, q8
-; BE-NEXT:    vld1.64 {d20, d21}, [r1:128]
-; BE-NEXT:    adr r1, .LCPI0_2
-; BE-NEXT:    vshr.s16 q11, q9, #15
-; BE-NEXT:    vrev64.16 q10, q10
-; BE-NEXT:    vshl.u16 q8, q11, q8
+; BE-NEXT:    vsub.i16        q8, q10, q8
 ; BE-NEXT:    vld1.64 {d22, d23}, [r1:128]
-; BE-NEXT:    vneg.s16 q10, q10
+; BE-NEXT:    adr r1, .LCPI0_2
+; BE-NEXT:    vshr.s16 q12, q9, #15
 ; BE-NEXT:    vrev64.16 q11, q11
-; BE-NEXT:    vadd.i16 q8, q9, q8
+; BE-NEXT:    vshl.u16 q8, q12, q8
+; BE-NEXT:    vsub.i16 q10, q10, q11
+; BE-NEXT:    vld1.64 {d22, d23}, [r1:128]
+; BE-NEXT:    vadd.i16  q8, q9, q8
+; BE-NEXT:    vrev64.16 q11, q11
 ; BE-NEXT:    vshl.s16 q8, q8, q10
 ; BE-NEXT:    vbit q8, q9, q11
 ; BE-NEXT:    vrev64.16 q8, q8

@@ -293,13 +293,14 @@ define arm_aapcs_vfpcc <4 x i32> @zext16_masked_v4i32_align2_other(ptr %dest, <4
 ;
 ; CHECK-BE-LABEL: zext16_masked_v4i32_align2_other:
 ; CHECK-BE:       @ %bb.0: @ %entry
-; CHECK-BE-NEXT:    vrev64.32 q1, q0
-; CHECK-BE-NEXT:    vmovlb.u16 q0, q1
-; CHECK-BE-NEXT:    vmovlb.s16 q1, q1
+; CHECK-BE-NEXT:    vmov.i32        q1, #0xffff
+; CHECK-BE-NEXT:    vrev64.32       q2, q0
+; CHECK-BE-NEXT:    vand    q0, q2, q1
+; CHECK-BE-NEXT:    vmovlb.s16      q1, q2
 ; CHECK-BE-NEXT:    vpt.s32 gt, q1, zr
-; CHECK-BE-NEXT:    vldrht.u32 q1, [r0]
-; CHECK-BE-NEXT:    vpsel q1, q1, q0
-; CHECK-BE-NEXT:    vrev64.32 q0, q1
+; CHECK-BE-NEXT:    vldrht.u32      q1, [r0]
+; CHECK-BE-NEXT:    vpsel   q1, q1, q0
+; CHECK-BE-NEXT:    vrev64.32       q0, q1
 ; CHECK-BE-NEXT:    bx lr
 entry:
   %c = icmp sgt <4 x i16> %a, zeroinitializer
@@ -2071,12 +2072,14 @@ define arm_aapcs_vfpcc <4 x i32> @multi_user_zext(ptr %dest, <4 x i32> %a) {
 ; CHECK-BE-NEXT:    vpush {d8, d9}
 ; CHECK-BE-NEXT:    vrev64.32 q1, q0
 ; CHECK-BE-NEXT:    vpt.s32 gt, q1, zr
-; CHECK-BE-NEXT:    vldrht.u32 q0, [r0]
-; CHECK-BE-NEXT:    vrev64.32 q4, q0
-; CHECK-BE-NEXT:    vmov r1, r0, d8
-; CHECK-BE-NEXT:    vmov r3, r2, d9
+; CHECK-BE-NEXT:    vldrht.u32 q4, [r0]
+; CHECK-BE-NEXT:    vrev64.32 q0, q4
+; CHECK-BE-NEXT:    vmov r1, r0, d0
+; CHECK-BE-NEXT:    vmov r3, r2, d1
 ; CHECK-BE-NEXT:    bl foo
-; CHECK-BE-NEXT:    vmov q0, q4
+; CHECK-BE-NEXT:    vmov.i32 q0, #0xffff
+; CHECK-BE-NEXT:    vand    q1, q4, q0
+; CHECK-BE-NEXT:    vrev64.32 q0, q1
 ; CHECK-BE-NEXT:    vpop {d8, d9}
 ; CHECK-BE-NEXT:    pop {r7, pc}
 entry:

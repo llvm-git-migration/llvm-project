@@ -65,7 +65,6 @@ define arm_aapcs_vfpcc <4 x i32> @test_vmovlbq_u16(<8 x i16> %a) {
 ; BE-LABEL: test_vmovlbq_u16:
 ; BE:       @ %bb.0: @ %entry
 ; BE-NEXT:    vrev64.16 q1, q0
-; BE-NEXT:    vmovlb.u16 q1, q1
 ; BE-NEXT:    vrev64.32 q0, q1
 ; BE-NEXT:    bx lr
 entry:
@@ -138,7 +137,6 @@ define arm_aapcs_vfpcc <4 x i32> @test_vmovltq_u16(<8 x i16> %a) {
 ; BE:       @ %bb.0: @ %entry
 ; BE-NEXT:    vrev64.16 q1, q0
 ; BE-NEXT:    vmovlt.u16 q1, q1
-; BE-NEXT:    vrev64.32 q0, q1
 ; BE-NEXT:    bx lr
 entry:
   %0 = shufflevector <8 x i16> %a, <8 x i16> undef, <4 x i32> <i32 1, i32 3, i32 5, i32 7>
