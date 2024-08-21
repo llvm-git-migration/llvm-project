@@ -114,7 +114,7 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
 
   FreeTrie &l = trie->leaf();
   if (&l == trie) {
-    // The last element of the trie was remved.
+    // If the root is a leaf, then removing it empties the trie.
     trie = nullptr;
     return;
   }

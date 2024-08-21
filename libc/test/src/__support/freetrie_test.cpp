@@ -153,9 +153,10 @@ TEST(LlvmLibcFreeTrie, FindBestFitLowerOnly) {
   FreeTrie *trie = nullptr;
   BlockMem<1024> root_mem;
   FreeTrie::push(trie, root_mem.block);
-  BlockMem<1024 - 1> lower_mem;
-  FreeTrie *&lower = FreeTrie::find(trie, lower_mem.block->inner_size(), range);
-  FreeTrie::push(lower, lower_mem.block);
+  BlockMem<512> lower_mem;
+  Block<> *lower_block = lower_mem.block;
+  FreeTrie *&lower = FreeTrie::find(trie, lower_block->inner_size(), range);
+  FreeTrie::push(lower, lower_block);
 
   EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &lower);
 }
@@ -177,6 +178,28 @@ TEST(LlvmLibcFreeTrie, FindBestFitUpperOnly) {
   EXPECT_EQ(
       FreeTrie::find_best_fit(trie, root_mem.block->inner_size() - 1, range),
       &trie);
+}
+
+TEST(LlvmLibcFreeTrie, FindBestFitLowerAndUpper) {
+  FreeTrie::SizeRange range{0, 4096};
+
+  FreeTrie *trie = nullptr;
+  BlockMem<1024> root_mem;
+  FreeTrie::push(trie, root_mem.block);
+  BlockMem<128> lower_mem;
+  FreeTrie *&lower = FreeTrie::find(trie, lower_mem.block->inner_size(), range);
+  FreeTrie::push(lower, lower_mem.block);
+  BlockMem<4096 - 1> upper_mem;
+  FreeTrie *&upper = FreeTrie::find(trie, upper_mem.block->inner_size(), range);
+  FreeTrie::push(upper, upper_mem.block);
+
+  // The lower subtrie is examined first.
+  EXPECT_EQ(FreeTrie::find_best_fit(trie, 0, range), &lower);
+  // The upper subtrie is examined if there are no fits found in the upper
+  // subtrie.
+  EXPECT_EQ(
+      FreeTrie::find_best_fit(trie, lower_mem.block->inner_size() + 1, range),
+      &upper);
 }
 
 } // namespace LIBC_NAMESPACE_DECL
