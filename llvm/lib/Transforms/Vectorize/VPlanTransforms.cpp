@@ -892,8 +892,9 @@ void VPlanTransforms::clearReductionWrapFlags(VPlan &Plan) {
   }
 }
 
-/// Try to simplify recipe \p R.
-static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
+/// Try to simplify recipe \p R. Returns candidates for further simplification.
+static SmallVector<VPRecipeBase *> simplifyRecipe(VPRecipeBase &R,
+                                                  VPTypeAnalysis &TypeInfo) {
   using namespace llvm::VPlanPatternMatch;
 
   if (auto *Blend = dyn_cast<VPBlendRecipe>(&R)) {
@@ -908,11 +909,11 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
     if (UniqueValues.size() == 1) {
       Blend->replaceAllUsesWith(*UniqueValues.begin());
       Blend->eraseFromParent();
-      return;
+      return {};
     }
 
     if (Blend->isNormalized())
-      return;
+      return {};
 
     // Normalize the blend so its first incomming value is used as the initial
     // value with the others blended into it.
@@ -936,7 +937,7 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
     Blend->replaceAllUsesWith(NewBlend);
     Blend->eraseFromParent();
     recursivelyDeleteDeadRecipes(DeadMask);
-    return;
+    return {};
   }
 
   VPValue *A;
@@ -944,18 +945,19 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
     VPValue *Trunc = R.getVPSingleValue();
     Type *TruncTy = TypeInfo.inferScalarType(Trunc);
     Type *ATy = TypeInfo.inferScalarType(A);
+    VPWidenCastRecipe *VPC = nullptr;
     if (TruncTy == ATy) {
       Trunc->replaceAllUsesWith(A);
     } else {
       // Don't replace a scalarizing recipe with a widened cast.
       if (isa<VPReplicateRecipe>(&R))
-        return;
+        return {};
       if (ATy->getScalarSizeInBits() < TruncTy->getScalarSizeInBits()) {
 
         unsigned ExtOpcode = match(R.getOperand(0), m_SExt(m_VPValue()))
                                  ? Instruction::SExt
                                  : Instruction::ZExt;
-        auto *VPC =
+        VPC =
             new VPWidenCastRecipe(Instruction::CastOps(ExtOpcode), A, TruncTy);
         if (auto *UnderlyingExt = R.getOperand(0)->getUnderlyingValue()) {
           // UnderlyingExt has distinct return type, used to retain legacy cost.
@@ -964,7 +966,7 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
         VPC->insertBefore(&R);
         Trunc->replaceAllUsesWith(VPC);
       } else if (ATy->getScalarSizeInBits() > TruncTy->getScalarSizeInBits()) {
-        auto *VPC = new VPWidenCastRecipe(Instruction::Trunc, A, TruncTy);
+        VPC = new VPWidenCastRecipe(Instruction::Trunc, A, TruncTy);
         VPC->insertBefore(&R);
         Trunc->replaceAllUsesWith(VPC);
       }
@@ -984,6 +986,9 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
         assert(TypeInfo.inferScalarType(VPV) == TypeInfo2.inferScalarType(VPV));
     }
 #endif
+    if (VPC)
+      return {VPC};
+    return {};
   }
 
   // Simplify (X && Y) || (X && !Y) -> X.
@@ -996,11 +1001,12 @@ static void simplifyRecipe(VPRecipeBase &R, VPTypeAnalysis &TypeInfo) {
                          m_LogicalAnd(m_VPValue(X1), m_Not(m_VPValue(Y1))))) &&
       X == X1 && Y == Y1) {
     R.getVPSingleValue()->replaceAllUsesWith(X);
-    return;
+    return {};
   }
 
   if (match(&R, m_c_Mul(m_VPValue(A), m_SpecificInt(1))))
-    return R.getVPSingleValue()->replaceAllUsesWith(A);
+    R.getVPSingleValue()->replaceAllUsesWith(A);
+  return {};
 }
 
 /// Try to simplify the recipes in \p Plan.
@@ -1009,8 +1015,16 @@ static void simplifyRecipes(VPlan &Plan, LLVMContext &Ctx) {
       Plan.getEntry());
   VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType(), Ctx);
   for (VPBasicBlock *VPBB : VPBlockUtils::blocksOnly<VPBasicBlock>(RPOT)) {
-    for (VPRecipeBase &R : make_early_inc_range(*VPBB)) {
-      simplifyRecipe(R, TypeInfo);
+    // Populate a Worklist, as simplifyRecipe might return a new recipe that we
+    // need to re-process.
+    SmallVector<VPRecipeBase *> Worklist;
+    for (auto &R : VPBB->getRecipeList())
+      Worklist.push_back(&R);
+
+    while (!Worklist.empty()) {
+      VPRecipeBase *R = Worklist.pop_back_val();
+      for (VPRecipeBase *Cand : simplifyRecipe(*R, TypeInfo))
+        Worklist.push_back(Cand);
     }
   }
 }
