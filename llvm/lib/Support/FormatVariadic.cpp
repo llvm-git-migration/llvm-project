@@ -35,8 +35,7 @@ bool formatv_object_base::consumeFieldLayout(StringRef &Spec, AlignStyle &Where,
 
   if (Spec.size() > 1) {
     // A maximum of 2 characters at the beginning can be used for something
-    // other
-    // than the width.
+    // other than the width.
     // If Spec[1] is a loc char, then Spec[0] is a pad char and Spec[2:...]
     // contains the width.
     // Otherwise, if Spec[0] is a loc char, then Spec[1:...] contains the width.
@@ -143,16 +142,19 @@ formatv_object_base::splitLiteralAndReplacement(StringRef Fmt) {
   return std::make_pair(ReplacementItem{Fmt}, StringRef());
 }
 
-SmallVector<ReplacementItem, 2>
+std::pair<SmallVector<ReplacementItem, 2>, size_t>
 formatv_object_base::parseFormatString(StringRef Fmt) {
   SmallVector<ReplacementItem, 2> Replacements;
+  size_t NumExpectedParams = 0;
   ReplacementItem I;
   while (!Fmt.empty()) {
     std::tie(I, Fmt) = splitLiteralAndReplacement(Fmt);
     if (I.Type != ReplacementType::Empty)
       Replacements.push_back(I);
+    if (I.Type == ReplacementType::Format)
+      NumExpectedParams = std::max(NumExpectedParams, I.Index + 1);
   }
-  return Replacements;
+  return {Replacements, NumExpectedParams};
 }
 
 void support::detail::format_adapter::anchor() {}
