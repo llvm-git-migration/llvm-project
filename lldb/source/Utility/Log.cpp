@@ -343,7 +343,7 @@ void Log::WriteHeader(llvm::raw_ostream &OS, llvm::StringRef file,
     llvm::SmallString<12> format_str;
     llvm::raw_svector_ostream format_os(format_str);
     format_os << "{0,-" << llvm::alignTo<16>(thread_name.size()) << "} ";
-    OS << llvm::formatv(format_str.c_str(), thread_name);
+    OS << llvm::formatvv(format_str.c_str(), thread_name);
   }
 
   if (options.Test(LLDB_LOG_OPTION_BACKTRACE))

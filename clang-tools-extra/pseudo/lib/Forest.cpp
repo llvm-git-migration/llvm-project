@@ -63,6 +63,7 @@ std::string ForestNode::dump(const Grammar &G) const {
 std::string ForestNode::dumpRecursive(const Grammar &G,
                                       bool Abbreviated) const {
   using llvm::formatv;
+  using llvm::formatvv;
   Token::Index MaxToken = 0;
   // Count visits of nodes so we can mark those seen multiple times.
   llvm::DenseMap<const ForestNode *, /*VisitCount*/ unsigned> VisitCounts;
@@ -128,9 +129,9 @@ std::string ForestNode::dumpRecursive(const Grammar &G,
         }
 
         if (End == KEnd)
-          Result += formatv(RangeFormat.c_str(), P->startTokenIndex(), "end");
+          Result += formatvv(RangeFormat.c_str(), P->startTokenIndex(), "end");
         else
-          Result += formatv(RangeFormat.c_str(), P->startTokenIndex(), End);
+          Result += formatvv(RangeFormat.c_str(), P->startTokenIndex(), End);
         Result += LineDec.Prefix;
         Result += LineDec.First;
         if (ElidedParent) {

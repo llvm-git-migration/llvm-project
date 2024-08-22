@@ -230,7 +230,7 @@ llvm::Error JSONTransport::run(MessageHandler &handler) {
 void JSONTransport::sendMessage(llvm::json::Value msg) {
   outputBuffer.clear();
   llvm::raw_svector_ostream os(outputBuffer);
-  os << llvm::formatv(prettyOutput ? "{0:2}\n" : "{0}", msg);
+  os << llvm::formatvv(prettyOutput ? "{0:2}\n" : "{0}", msg);
   out << "Content-Length: " << outputBuffer.size() << "\r\n\r\n"
       << outputBuffer;
   out.flush();

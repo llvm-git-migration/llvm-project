@@ -333,7 +333,7 @@ static DiagnosedSilenceableFailure containsAll(ArrayRef<unsigned> reference,
         })) {
       continue;
     }
-    return emitSilenceableFailure(loc) << llvm::formatv(message, value);
+    return emitSilenceableFailure(loc) << llvm::formatvv(message, value);
   }
   return DiagnosedSilenceableFailure::success();
 }

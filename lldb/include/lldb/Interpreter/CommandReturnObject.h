@@ -118,17 +118,17 @@ public:
 
   template <typename... Args>
   void AppendMessageWithFormatv(const char *format, Args &&... args) {
-    AppendMessage(llvm::formatv(format, std::forward<Args>(args)...).str());
+    AppendMessage(llvm::formatvv(format, std::forward<Args>(args)...).str());
   }
 
   template <typename... Args>
   void AppendWarningWithFormatv(const char *format, Args &&... args) {
-    AppendWarning(llvm::formatv(format, std::forward<Args>(args)...).str());
+    AppendWarning(llvm::formatvv(format, std::forward<Args>(args)...).str());
   }
 
   template <typename... Args>
   void AppendErrorWithFormatv(const char *format, Args &&... args) {
-    AppendError(llvm::formatv(format, std::forward<Args>(args)...).str());
+    AppendError(llvm::formatvv(format, std::forward<Args>(args)...).str());
   }
 
   void SetError(const Status &error, const char *fallback_error_cstr = nullptr);

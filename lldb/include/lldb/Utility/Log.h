@@ -237,7 +237,7 @@ public:
   template <typename... Args>
   void Format(llvm::StringRef file, llvm::StringRef function,
               const char *format, Args &&... args) {
-    Format(file, function, llvm::formatv(format, std::forward<Args>(args)...));
+    Format(file, function, llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   template <typename... Args>
@@ -245,8 +245,8 @@ public:
                    llvm::StringRef function, const char *format,
                    Args &&... args) {
     Format(file, function,
-           llvm::formatv(format, llvm::toString(std::move(error)),
-                         std::forward<Args>(args)...));
+           llvm::formatvv(format, llvm::toString(std::move(error)),
+                          std::forward<Args>(args)...));
   }
 
   void Formatf(llvm::StringRef file, llvm::StringRef function,

@@ -46,7 +46,7 @@ inline decltype(fmt_consume(llvm::Error::success())) wrap(llvm::Error &&V) {
 template <typename... Ts>
 void log(Logger::Level L, const char *Fmt, Ts &&... Vals) {
   detail::logImpl(L, Fmt,
-                  llvm::formatv(Fmt, detail::wrap(std::forward<Ts>(Vals))...));
+                  llvm::formatvv(Fmt, detail::wrap(std::forward<Ts>(Vals))...));
 }
 
 llvm::Error error(std::error_code, std::string &&);
@@ -79,13 +79,13 @@ template <typename... Ts>
 llvm::Error error(std::error_code EC, const char *Fmt, Ts &&... Vals) {
   // We must render the formatv_object eagerly, while references are valid.
   return detail::error(
-      EC, llvm::formatv(Fmt, detail::wrap(std::forward<Ts>(Vals))...).str());
+      EC, llvm::formatvv(Fmt, detail::wrap(std::forward<Ts>(Vals))...).str());
 }
 // Overload with no error_code conversion, the error will be inconvertible.
 template <typename... Ts> llvm::Error error(const char *Fmt, Ts &&... Vals) {
   return detail::error(
       llvm::inconvertibleErrorCode(),
-      llvm::formatv(Fmt, detail::wrap(std::forward<Ts>(Vals))...).str());
+      llvm::formatvv(Fmt, detail::wrap(std::forward<Ts>(Vals))...).str());
 }
 // Overload to avoid formatv complexity for simple strings.
 inline llvm::Error error(std::error_code EC, std::string Msg) {

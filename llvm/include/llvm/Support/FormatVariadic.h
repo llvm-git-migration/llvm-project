@@ -66,6 +66,7 @@ struct ReplacementItem {
 class formatv_object_base {
 protected:
   StringRef Fmt;
+  bool ValidateNumArgs;
   ArrayRef<support::detail::format_adapter *> Adapters;
 
   static bool consumeFieldLayout(StringRef &Spec, AlignStyle &Where,
@@ -74,9 +75,9 @@ protected:
   static std::pair<ReplacementItem, StringRef>
   splitLiteralAndReplacement(StringRef Fmt);
 
-  formatv_object_base(StringRef Fmt,
+  formatv_object_base(StringRef Fmt, bool ValidateNumArgs,
                       ArrayRef<support::detail::format_adapter *> Adapters)
-      : Fmt(Fmt), Adapters(Adapters) {}
+      : Fmt(Fmt), ValidateNumArgs(ValidateNumArgs), Adapters(Adapters) {}
 
   formatv_object_base(formatv_object_base const &rhs) = delete;
   formatv_object_base(formatv_object_base &&rhs) = default;
@@ -87,9 +88,11 @@ public:
     // Fail formatv() call if the number of replacement parameters provided
     // does not match the expected number after parsing the format string.
     // Assert in debug builds.
-    assert(NumExpectedParams == Adapters.size() &&
-           "Mismatch between replacement parameters expected and provided");
-    if (NumExpectedParams != Adapters.size()) {
+    if (ValidateNumArgs && NumExpectedParams != Adapters.size()) {
+      errs() << "Invalid format() in formatv: " << Fmt << "\n";
+      assert(0 &&
+             "Mismatch between replacement parameters expected and provided");
+
       S << "formatv() error: " << NumExpectedParams
         << " replacement parameters expected, but " << Adapters.size()
         << " provided";
@@ -166,8 +169,8 @@ template <typename Tuple> class formatv_object : public formatv_object_base {
   };
 
 public:
-  formatv_object(StringRef Fmt, Tuple &&Params)
-      : formatv_object_base(Fmt, ParameterPointers),
+  formatv_object(StringRef Fmt, bool ValidateNumArgs, Tuple &&Params)
+      : formatv_object_base(Fmt, ValidateNumArgs, ParameterPointers),
         Parameters(std::move(Params)) {
     ParameterPointers = std::apply(create_adapters(), Parameters);
   }
@@ -264,15 +267,31 @@ public:
 // assertion.  Otherwise, it will try to do something reasonable, but in general
 // the details of what that is are undefined.
 //
-template <typename... Ts>
-inline auto formatv(const char *Fmt, Ts &&...Vals)
+
+// formatv() with a literal string as as the format.
+template <size_t N, typename... Ts>
+inline auto formatv(const char (&Fmt)[N], Ts &&...Vals)
     -> formatv_object<decltype(std::make_tuple(
         support::detail::build_format_adapter(std::forward<Ts>(Vals))...))> {
   using ParamTuple = decltype(std::make_tuple(
       support::detail::build_format_adapter(std::forward<Ts>(Vals))...));
   return formatv_object<ParamTuple>(
-      Fmt, std::make_tuple(support::detail::build_format_adapter(
-               std::forward<Ts>(Vals))...));
+      Fmt, /*ValidateNumArgs=*/true,
+      std::make_tuple(
+          support::detail::build_format_adapter(std::forward<Ts>(Vals))...));
+}
+
+// formatvv() with a variable string as as the format.
+template <typename... Ts>
+inline auto formatvv(const char *Fmt, Ts &&...Vals)
+    -> formatv_object<decltype(std::make_tuple(
+        support::detail::build_format_adapter(std::forward<Ts>(Vals))...))> {
+  using ParamTuple = decltype(std::make_tuple(
+      support::detail::build_format_adapter(std::forward<Ts>(Vals))...));
+  return formatv_object<ParamTuple>(
+      Fmt, /*ValidateNumArgs=*/false,
+      std::make_tuple(
+          support::detail::build_format_adapter(std::forward<Ts>(Vals))...));
 }
 
 } // end namespace llvm

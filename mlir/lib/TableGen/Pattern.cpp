@@ -27,6 +27,7 @@ using namespace mlir;
 using namespace tblgen;
 
 using llvm::formatv;
+using llvm::formatvv;
 
 //===----------------------------------------------------------------------===//
 // DagLeaf
@@ -295,7 +296,7 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
   switch (kind) {
   case Kind::Attr: {
     assert(index < 0);
-    auto repl = formatv(fmt, name);
+    auto repl = formatvv(fmt, name);
     LLVM_DEBUG(llvm::dbgs() << repl << " (Attr)\n");
     return std::string(repl);
   }
@@ -306,11 +307,11 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
     // index, then return the full variadic operand_range. Otherwise, return
     // the value itself.
     if (operand->isVariableLength() && !getVariadicSubIndex().has_value()) {
-      auto repl = formatv(fmt, name);
+      auto repl = formatvv(fmt, name);
       LLVM_DEBUG(llvm::dbgs() << repl << " (VariadicOperand)\n");
       return std::string(repl);
     }
-    auto repl = formatv(fmt, formatv("(*{0}.begin())", name));
+    auto repl = formatvv(fmt, formatv("(*{0}.begin())", name));
     LLVM_DEBUG(llvm::dbgs() << repl << " (SingleOperand)\n");
     return std::string(repl);
   }
@@ -322,7 +323,7 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
           std::string(formatv("{0}.getODSResults({1})", name, index));
       if (!op->getResult(index).isVariadic())
         v = std::string(formatv("(*{0}.begin())", v));
-      auto repl = formatv(fmt, v);
+      auto repl = formatvv(fmt, v);
       LLVM_DEBUG(llvm::dbgs() << repl << " (SingleResult)\n");
       return std::string(repl);
     }
@@ -331,7 +332,7 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
     // means we want to capture the op itself.
     if (op->getNumResults() == 0) {
       LLVM_DEBUG(llvm::dbgs() << name << " (Op)\n");
-      return formatv(fmt, name);
+      return formatvv(fmt, name);
     }
 
     // We are referencing all results of the multi-result op. A specific result
@@ -344,7 +345,7 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
       if (!op->getResult(i).isVariadic()) {
         v = std::string(formatv("(*{0}.begin())", v));
       }
-      values.push_back(std::string(formatv(fmt, v)));
+      values.push_back(std::string(formatvv(fmt, v)));
     }
     auto repl = llvm::join(values, separator);
     LLVM_DEBUG(llvm::dbgs() << repl << " (VariadicResult)\n");
@@ -353,7 +354,7 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
   case Kind::Value: {
     assert(index < 0);
     assert(op == nullptr);
-    auto repl = formatv(fmt, name);
+    auto repl = formatvv(fmt, name);
     LLVM_DEBUG(llvm::dbgs() << repl << " (Value)\n");
     return std::string(repl);
   }
@@ -362,13 +363,13 @@ std::string SymbolInfoMap::SymbolInfo::getValueAndRangeUse(
     assert(index < getSize());
     if (index >= 0) {
       std::string repl =
-          formatv(fmt, std::string(formatv("{0}[{1}]", name, index)));
+          formatvv(fmt, std::string(formatv("{0}[{1}]", name, index)));
       LLVM_DEBUG(llvm::dbgs() << repl << " (MultipleValues)\n");
       return repl;
     }
     // If it doesn't specify certain element, unpack them all.
     auto repl =
-        formatv(fmt, std::string(formatv("{0}.begin(), {0}.end()", name)));
+        formatvv(fmt, std::string(formatv("{0}.begin(), {0}.end()", name)));
     LLVM_DEBUG(llvm::dbgs() << repl << " (MultipleValues)\n");
     return std::string(repl);
   }
@@ -383,13 +384,13 @@ std::string SymbolInfoMap::SymbolInfo::getAllRangeUse(
   case Kind::Attr:
   case Kind::Operand: {
     assert(index < 0 && "only allowed for symbol bound to result");
-    auto repl = formatv(fmt, name);
+    auto repl = formatvv(fmt, name);
     LLVM_DEBUG(llvm::dbgs() << repl << " (Operand/Attr)\n");
     return std::string(repl);
   }
   case Kind::Result: {
     if (index >= 0) {
-      auto repl = formatv(fmt, formatv("{0}.getODSResults({1})", name, index));
+      auto repl = formatvv(fmt, formatv("{0}.getODSResults({1})", name, index));
       LLVM_DEBUG(llvm::dbgs() << repl << " (SingleResult)\n");
       return std::string(repl);
     }
@@ -401,7 +402,7 @@ std::string SymbolInfoMap::SymbolInfo::getAllRangeUse(
 
     for (int i = 0, e = op->getNumResults(); i < e; ++i) {
       values.push_back(std::string(
-          formatv(fmt, formatv("{0}.getODSResults({1})", name, i))));
+          formatvv(fmt, formatv("{0}.getODSResults({1})", name, i))));
     }
     auto repl = llvm::join(values, separator);
     LLVM_DEBUG(llvm::dbgs() << repl << " (VariadicResult)\n");
@@ -410,7 +411,7 @@ std::string SymbolInfoMap::SymbolInfo::getAllRangeUse(
   case Kind::Value: {
     assert(index < 0 && "only allowed for symbol bound to result");
     assert(op == nullptr);
-    auto repl = formatv(fmt, formatv("{{{0}}", name));
+    auto repl = formatvv(fmt, formatv("{{{0}}", name));
     LLVM_DEBUG(llvm::dbgs() << repl << " (Value)\n");
     return std::string(repl);
   }
@@ -419,12 +420,12 @@ std::string SymbolInfoMap::SymbolInfo::getAllRangeUse(
     assert(index < getSize());
     if (index >= 0) {
       std::string repl =
-          formatv(fmt, std::string(formatv("{0}[{1}]", name, index)));
+          formatvv(fmt, std::string(formatv("{0}[{1}]", name, index)));
       LLVM_DEBUG(llvm::dbgs() << repl << " (MultipleValues)\n");
       return repl;
     }
     auto repl =
-        formatv(fmt, std::string(formatv("{0}.begin(), {0}.end()", name)));
+        formatvv(fmt, std::string(formatv("{0}.begin(), {0}.end()", name)));
     LLVM_DEBUG(llvm::dbgs() << repl << " (MultipleValues)\n");
     return std::string(repl);
   }

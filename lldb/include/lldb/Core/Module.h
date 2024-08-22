@@ -781,24 +781,24 @@ public:
   // own and keeps the output a bit more consistent.
   template <typename... Args>
   void LogMessage(Log *log, const char *format, Args &&...args) {
-    LogMessage(log, llvm::formatv(format, std::forward<Args>(args)...));
+    LogMessage(log, llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   template <typename... Args>
   void LogMessageVerboseBacktrace(Log *log, const char *format,
                                   Args &&...args) {
     LogMessageVerboseBacktrace(
-        log, llvm::formatv(format, std::forward<Args>(args)...));
+        log, llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   template <typename... Args>
   void ReportWarning(const char *format, Args &&...args) {
-    ReportWarning(llvm::formatv(format, std::forward<Args>(args)...));
+    ReportWarning(llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   template <typename... Args>
   void ReportError(const char *format, Args &&...args) {
-    ReportError(llvm::formatv(format, std::forward<Args>(args)...));
+    ReportError(llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   // Only report an error once when the module is first detected to be modified
@@ -806,7 +806,7 @@ public:
   template <typename... Args>
   void ReportErrorIfModifyDetected(const char *format, Args &&...args) {
     ReportErrorIfModifyDetected(
-        llvm::formatv(format, std::forward<Args>(args)...));
+        llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   void ReportWarningOptimization(std::optional<lldb::user_id_t> debugger_id);

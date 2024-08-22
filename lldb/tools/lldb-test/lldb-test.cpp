@@ -337,7 +337,7 @@ llvm::SmallVector<CompilerContext, 4> parseCompilerContext() {
 template <typename... Args>
 static Error make_string_error(const char *Format, Args &&... args) {
   return llvm::make_error<llvm::StringError>(
-      llvm::formatv(Format, std::forward<Args>(args)...).str(),
+      llvm::formatvv(Format, std::forward<Args>(args)...).str(),
       llvm::inconvertibleErrorCode());
 }
 

@@ -1797,7 +1797,7 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
   os << formatv("::llvm::SmallVector<::mlir::NamedAttribute, 4> "
                 "tblgen_attrs; (void)tblgen_attrs;\n");
 
-  const char *addAttrCmd =
+  const char addAttrCmd[] =
       "if (auto tmpAttr = {1}) {\n"
       "  tblgen_attrs.emplace_back(rewriter.getStringAttr(\"{0}\"), "
       "tmpAttr);\n}\n";
@@ -1876,7 +1876,7 @@ void PatternEmitter::createAggregateLocalVarsForOpArgs(
     const auto *sameVariadicSize =
         resultOp.getTrait("::mlir::OpTrait::SameVariadicOperandSize");
     if (!sameVariadicSize) {
-      const char *setSizes = R"(
+      const char setSizes[] = R"(
         tblgen_attrs.emplace_back(rewriter.getStringAttr("operandSegmentSizes"),
           rewriter.getDenseI32ArrayAttr({{ {0} }));
           )";

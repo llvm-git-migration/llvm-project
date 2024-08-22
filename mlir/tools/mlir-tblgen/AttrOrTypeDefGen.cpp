@@ -326,7 +326,7 @@ void DefGen::emitVerifierDecl() {
                          "emitError"}}));
 }
 
-static const char *const patternParameterVerificationCode = R"(
+static const char patternParameterVerificationCode[] = R"(
 if (!({0})) {
   emitError() << "failed to verify '{1}': {2}";
   return ::mlir::failure();
@@ -800,7 +800,7 @@ void DefGenerator::emitTypeDefList(ArrayRef<AttrOrTypeDef> defs) {
 /// {0}: the dialect fully qualified class name.
 /// {1}: the optional code for the dynamic attribute parser dispatch.
 /// {2}: the optional code for the dynamic attribute printer dispatch.
-static const char *const dialectDefaultAttrPrinterParserDispatch = R"(
+static const char dialectDefaultAttrPrinterParserDispatch[] = R"(
 /// Parse an attribute registered to this dialect.
 ::mlir::Attribute {0}::parseAttribute(::mlir::DialectAsmParser &parser,
                                       ::mlir::Type type) const {{
@@ -827,7 +827,7 @@ void {0}::printAttribute(::mlir::Attribute attr,
 )";
 
 /// The code block for dynamic attribute parser dispatch boilerplate.
-static const char *const dialectDynamicAttrParserDispatch = R"(
+static const char dialectDynamicAttrParserDispatch[] = R"(
   {
     ::mlir::Attribute genAttr;
     auto parseResult = parseOptionalDynamicAttr(attrTag, parser, genAttr);
@@ -840,7 +840,7 @@ static const char *const dialectDynamicAttrParserDispatch = R"(
 )";
 
 /// The code block for dynamic type printer dispatch boilerplate.
-static const char *const dialectDynamicAttrPrinterDispatch = R"(
+static const char dialectDynamicAttrPrinterDispatch[] = R"(
   if (::mlir::succeeded(printIfDynamicAttr(attr, printer)))
     return;
 )";
@@ -849,7 +849,7 @@ static const char *const dialectDynamicAttrPrinterDispatch = R"(
 /// {0}: the dialect fully qualified class name.
 /// {1}: the optional code for the dynamic type parser dispatch.
 /// {2}: the optional code for the dynamic type printer dispatch.
-static const char *const dialectDefaultTypePrinterParserDispatch = R"(
+static const char dialectDefaultTypePrinterParserDispatch[] = R"(
 /// Parse a type registered to this dialect.
 ::mlir::Type {0}::parseType(::mlir::DialectAsmParser &parser) const {{
   ::llvm::SMLoc typeLoc = parser.getCurrentLocation();
@@ -873,7 +873,7 @@ void {0}::printType(::mlir::Type type,
 )";
 
 /// The code block for dynamic type parser dispatch boilerplate.
-static const char *const dialectDynamicTypeParserDispatch = R"(
+static const char dialectDynamicTypeParserDispatch[] = R"(
   {
     auto parseResult = parseOptionalDynamicType(mnemonic, parser, genType);
     if (parseResult.has_value()) {
@@ -885,7 +885,7 @@ static const char *const dialectDynamicTypeParserDispatch = R"(
 )";
 
 /// The code block for dynamic type printer dispatch boilerplate.
-static const char *const dialectDynamicTypePrinterDispatch = R"(
+static const char dialectDynamicTypePrinterDispatch[] = R"(
   if (::mlir::succeeded(printIfDynamicType(type, printer)))
     return;
 )";
@@ -918,7 +918,7 @@ void DefGenerator::emitParsePrintDispatch(ArrayRef<AttrOrTypeDef> defs) {
   parse.body() << "  return "
                   "::mlir::AsmParser::KeywordSwitch<::mlir::"
                   "OptionalParseResult>(parser)\n";
-  const char *const getValueForMnemonic =
+  static const char getValueForMnemonic[] =
       R"(    .Case({0}::getMnemonic(), [&](llvm::StringRef, llvm::SMLoc) {{
       value = {0}::{1};
       return ::mlir::success(!!value);
@@ -929,7 +929,7 @@ void DefGenerator::emitParsePrintDispatch(ArrayRef<AttrOrTypeDef> defs) {
   // printer.
   printer.body() << "  return ::llvm::TypeSwitch<::mlir::" << valueType
                  << ", ::llvm::LogicalResult>(def)";
-  const char *const printValue = R"(    .Case<{0}>([&](auto t) {{
+  static const char printValue[] = R"(    .Case<{0}>([&](auto t) {{
       printer << {0}::getMnemonic();{1}
       return ::mlir::success();
     })
@@ -1048,7 +1048,7 @@ getAllTypeConstraints(const llvm::RecordKeeper &records) {
 
 static void emitTypeConstraintDecls(const llvm::RecordKeeper &records,
                                     raw_ostream &os) {
-  static const char *const typeConstraintDecl = R"(
+  static const char typeConstraintDecl[] = R"(
 bool {0}(::mlir::Type type);
 )";
 
@@ -1058,7 +1058,7 @@ bool {0}(::mlir::Type type);
 
 static void emitTypeConstraintDefs(const llvm::RecordKeeper &records,
                                    raw_ostream &os) {
-  static const char *const typeConstraintDef = R"(
+  static const char typeConstraintDef[] = R"(
 bool {0}(::mlir::Type type) {
   return ({1});
 }

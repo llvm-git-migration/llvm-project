@@ -106,7 +106,7 @@ tblgen::findDialectToGenerate(ArrayRef<Dialect> dialects) {
 /// {0}: The name of the dialect class.
 /// {1}: The dialect namespace.
 /// {2}: The dialect parent class.
-static const char *const dialectDeclBeginStr = R"(
+static const char dialectDeclBeginStr[] = R"(
 class {0} : public ::mlir::{2} {
   explicit {0}(::mlir::MLIRContext *context);
 
@@ -121,11 +121,11 @@ public:
 
 /// Registration for a single dependent dialect: to be inserted in the ctor
 /// above for each dependent dialect.
-const char *const dialectRegistrationTemplate =
+static const char dialectRegistrationTemplate[] =
     "getContext()->loadDialect<{0}>();";
 
 /// The code block for the attribute parser/printer hooks.
-static const char *const attrParserDecl = R"(
+static const char attrParserDecl[] = R"(
   /// Parse an attribute registered to this dialect.
   ::mlir::Attribute parseAttribute(::mlir::DialectAsmParser &parser,
                                    ::mlir::Type type) const override;
@@ -136,7 +136,7 @@ static const char *const attrParserDecl = R"(
 )";
 
 /// The code block for the type parser/printer hooks.
-static const char *const typeParserDecl = R"(
+static const char typeParserDecl[] = R"(
   /// Parse a type registered to this dialect.
   ::mlir::Type parseType(::mlir::DialectAsmParser &parser) const override;
 
@@ -146,14 +146,14 @@ static const char *const typeParserDecl = R"(
 )";
 
 /// The code block for the canonicalization pattern registration hook.
-static const char *const canonicalizerDecl = R"(
+static const char canonicalizerDecl[] = R"(
   /// Register canonicalization patterns.
   void getCanonicalizationPatterns(
       ::mlir::RewritePatternSet &results) const override;
 )";
 
 /// The code block for the constant materializer hook.
-static const char *const constantMaterializerDecl = R"(
+static const char constantMaterializerDecl[] = R"(
   /// Materialize a single constant operation from a given attribute value with
   /// the desired resultant type.
   ::mlir::Operation *materializeConstant(::mlir::OpBuilder &builder,
@@ -163,7 +163,7 @@ static const char *const constantMaterializerDecl = R"(
 )";
 
 /// The code block for the operation attribute verifier hook.
-static const char *const opAttrVerifierDecl = R"(
+static const char opAttrVerifierDecl[] = R"(
     /// Provides a hook for verifying dialect attributes attached to the given
     /// op.
     ::llvm::LogicalResult verifyOperationAttribute(
@@ -171,7 +171,7 @@ static const char *const opAttrVerifierDecl = R"(
 )";
 
 /// The code block for the region argument attribute verifier hook.
-static const char *const regionArgAttrVerifierDecl = R"(
+static const char regionArgAttrVerifierDecl[] = R"(
     /// Provides a hook for verifying dialect attributes attached to the given
     /// op's region argument.
     ::llvm::LogicalResult verifyRegionArgAttribute(
@@ -180,7 +180,7 @@ static const char *const regionArgAttrVerifierDecl = R"(
 )";
 
 /// The code block for the region result attribute verifier hook.
-static const char *const regionResultAttrVerifierDecl = R"(
+static const char regionResultAttrVerifierDecl[] = R"(
     /// Provides a hook for verifying dialect attributes attached to the given
     /// op's region result.
     ::llvm::LogicalResult verifyRegionResultAttribute(
@@ -189,14 +189,14 @@ static const char *const regionResultAttrVerifierDecl = R"(
 )";
 
 /// The code block for the op interface fallback hook.
-static const char *const operationInterfaceFallbackDecl = R"(
+static const char operationInterfaceFallbackDecl[] = R"(
     /// Provides a hook for op interface.
     void *getRegisteredInterfaceForOp(mlir::TypeID interfaceID,
                                       mlir::OperationName opName) override;
 )";
 
 /// The code block for the discardable attribute helper.
-static const char *const discardableAttrHelperDecl = R"(
+static const char discardableAttrHelperDecl[] = R"(
     /// Helper to manage the discardable attribute `{1}`.
     class {0}AttrHelper {{
       ::mlir::StringAttr name;
@@ -322,7 +322,7 @@ static bool emitDialectDecls(const llvm::RecordKeeper &recordKeeper,
 ///      initialize(), such as dependent dialect registration.
 /// {2}: The dialect parent class.
 /// {3}: Extra members to initialize
-static const char *const dialectConstructorStr = R"(
+static const char dialectConstructorStr[] = R"(
 {0}::{0}(::mlir::MLIRContext *context)
     : ::mlir::{2}(getDialectNamespace(), context, ::mlir::TypeID::get<{0}>())
     {3}
@@ -335,7 +335,7 @@ static const char *const dialectConstructorStr = R"(
 /// The code block to generate a default destructor definition.
 ///
 /// {0}: The name of the dialect class.
-static const char *const dialectDestructorStr = R"(
+static const char dialectDestructorStr[] = R"(
 {0}::~{0}() = default;
 
 )";
