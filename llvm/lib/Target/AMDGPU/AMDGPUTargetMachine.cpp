@@ -760,8 +760,11 @@ void AMDGPUTargetMachine::registerPassBuilderCallbacks(PassBuilder &PB) {
         // module is partitioned for codegen.
         if (EnableLowerModuleLDS)
           PM.addPass(AMDGPULowerModuleLDSPass(*this));
+
+        AMDGPUAttributorOptions Opts;
+        Opts.IsClosedWorld = true;
         if (EnableAMDGPUAttributor && Level != OptimizationLevel::O0)
-          PM.addPass(AMDGPUAttributorPass(*this));
+          PM.addPass(AMDGPUAttributorPass(*this, Opts));
       });
 
   PB.registerRegClassFilterParsingCallback(
