@@ -12,7 +12,6 @@ import os
 
 
 class TestDAP_locations(lldbdap_testcase.DAPTestCaseBase):
-    @skipIfWindows
     def test_locations(self):
         """
         Tests the 'locations' request.
