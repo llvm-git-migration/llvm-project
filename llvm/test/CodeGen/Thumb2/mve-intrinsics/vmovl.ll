@@ -65,7 +65,8 @@ define arm_aapcs_vfpcc <4 x i32> @test_vmovlbq_u16(<8 x i16> %a) {
 ; BE-LABEL: test_vmovlbq_u16:
 ; BE:       @ %bb.0: @ %entry
 ; BE-NEXT:    vrev64.16 q1, q0
-; BE-NEXT:    vmovlb.u16 q1, q1
+; BE-NEXT:   vmov.i32 q0, #0xffff
+; BE-NEXT:   vand q1, q1, q0
 ; BE-NEXT:    vrev64.32 q0, q1
 ; BE-NEXT:    bx lr
 entry:
@@ -137,7 +138,9 @@ define arm_aapcs_vfpcc <4 x i32> @test_vmovltq_u16(<8 x i16> %a) {
 ; BE-LABEL: test_vmovltq_u16:
 ; BE:       @ %bb.0: @ %entry
 ; BE-NEXT:    vrev64.16 q1, q0
-; BE-NEXT:    vmovlt.u16 q1, q1
+; BE-NEXT:    vrev32.16 q0, q1
+; BE-NEXT:    vmov.i32 q1, #0xffff
+; BE-NEXT:    vand    q1, q0, q1
 ; BE-NEXT:    vrev64.32 q0, q1
 ; BE-NEXT:    bx lr
 entry:
