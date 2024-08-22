@@ -83,7 +83,20 @@ protected:
 
 public:
   void format(raw_ostream &S) const {
-    for (auto &R : parseFormatString(Fmt)) {
+    const auto [Replacements, NumExpectedParams] = parseFormatString(Fmt);
+    // Fail formatv() call if the number of replacement parameters provided
+    // does not match the expected number after parsing the format string.
+    // Assert in debug builds.
+    assert(NumExpectedParams == Adapters.size() &&
+           "Mismatch between replacement parameters expected and provided");
+    if (NumExpectedParams != Adapters.size()) {
+      S << "formatv() error: " << NumExpectedParams
+        << " replacement parameters expected, but " << Adapters.size()
+        << " provided";
+      return;
+    }
+
+    for (const auto &R : Replacements) {
       if (R.Type == ReplacementType::Empty)
         continue;
       if (R.Type == ReplacementType::Literal) {
@@ -101,7 +114,11 @@ public:
       Align.format(S, R.Options);
     }
   }
-  static SmallVector<ReplacementItem, 2> parseFormatString(StringRef Fmt);
+
+  // Parse format string and return the array of replacement items as well as
+  // the number of values we expect to be supplied to the formatv() call.
+  static std::pair<SmallVector<ReplacementItem, 2>, size_t>
+  parseFormatString(StringRef Fmt);
 
   static std::optional<ReplacementItem> parseReplacementItem(StringRef Spec);
 
