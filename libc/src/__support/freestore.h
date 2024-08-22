@@ -20,8 +20,7 @@ LIBC_INLINE static constexpr size_t align_up(size_t value) {
 
 class FreeStore {
 public:
-  FreeStore(FreeTrie::SizeRange range) : range(range) {}
-
+  void set_range(FreeTrie::SizeRange range);
   void insert(Block<> *block);
   Block<> *remove_best_fit(size_t size);
 
@@ -39,10 +38,17 @@ private:
 
   cpp::array<FreeList2 *, NUM_SMALL_SIZES> small_lists = {nullptr};
   FreeTrie *large_trie = nullptr;
-  FreeTrie::SizeRange range;
+  FreeTrie::SizeRange range = {0, 0};
 };
 
+inline void FreeStore::set_range(FreeTrie::SizeRange range) {
+  LIBC_ASSERT(!large_trie && "cannot change the range of a preexisting trie");
+  this->range = range;
+}
+
 inline void FreeStore::insert(Block<> *block) {
+  if (block->inner_size_free() < MIN_SIZE)
+    return;
   if (is_small(block))
     FreeList2::push(small_list(block), block);
   else
