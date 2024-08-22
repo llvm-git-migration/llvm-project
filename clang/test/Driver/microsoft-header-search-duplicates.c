@@ -1,0 +1,90 @@
+// Test that the cl-like driver and the gcc-like driver, when in Microsoft
+// compatibility mode, retain user header search paths that are duplicated in
+// system header search paths.
+// See header-search-duplicates.c for gcc compatible behavior.
+
+// RUN: rm -rf %t
+// RUN: split-file %s %t
+
+// Test the clang driver to validate that the Microsoft compatible behavior is
+// enabled when the -fms-compatibility option is used. The -nostdinc option
+// is used to suppress default search paths to ease testing.
+// RUN: %clang \
+// RUN:     -v -fsyntax-only -fms-compatibility -nostdinc \
+// RUN:     -I%t/include/w \
+// RUN:     -isystem %t/include/z \
+// RUN:     -I%t/include/x \
+// RUN:     -isystem %t/include/y \
+// RUN:     -isystem %t/include/x \
+// RUN:     -I%t/include/w \
+// RUN:     -isystem %t/include/y \
+// RUN:     -isystem %t/include/z \
+// RUN:     %t/test.c 2>&1 | FileCheck -DPWD=%t %t/test.c
+
+// Test the clang-cl driver to validate that the Microsoft compatible behavior
+// is enabled by default. The -nobuiltininc option is used instead of -nostdinc
+// or /X because the latter two suppress all system include paths (including
+// those specified by -isystem and -imsvc). The -imsvc option is used because
+// the -nobuiltininc option suppresses search paths specified by -isystem.
+// RUN: %clang_cl \
+// RUN:     -v -fsyntax-only -nobuiltininc \
+// RUN:     -I%t/include/w \
+// RUN:     -imsvc %t/include/z \
+// RUN:     -I%t/include/x \
+// RUN:     -imsvc %t/include/y \
+// RUN:     -imsvc %t/include/x \
+// RUN:     -I%t/include/w \
+// RUN:     -imsvc %t/include/y \
+// RUN:     -imsvc %t/include/z \
+// RUN:     %t/test.c 2>&1 | FileCheck -DPWD=%t %t/test.c
+
+#--- test.c
+#include <a.h>
+#include <b.h>
+#include <c.h>
+
+// The expected behavior is that user search paths are ordered before system
+// search paths and that search paths that duplicate an earlier search path
+// (regardless of user/system concerns) are ignored.
+// CHECK:      ignoring duplicate directory "[[PWD]]/include/w"
+// CHECK-NEXT: ignoring duplicate directory "[[PWD]]/include/x"
+// CHECK-NEXT: ignoring duplicate directory "[[PWD]]/include/y"
+// CHECK-NEXT: ignoring duplicate directory "[[PWD]]/include/z"
+// CHECK-NOT:   as it is a non-system directory that duplicates a system directory
+// CHECK:      #include <...> search starts here:
+// CHECK-NEXT: [[PWD]]/include/w
+// CHECK-NEXT: [[PWD]]/include/x
+// CHECK-NEXT: [[PWD]]/include/z
+// CHECK-NEXT: [[PWD]]/include/y
+// CHECK-NEXT: End of search list.
+
+#--- include/w/b.h
+#define INCLUDE_W_B_H
+#include_next <b.h>
+
+#--- include/w/c.h
+#define INCLUDE_W_C_H
+#include_next <c.h>
+
+#--- include/x/a.h
+#define INCLUDE_X_A_H
+#include_next <a.h>
+
+#--- include/x/b.h
+#if !defined(INCLUDE_W_B_H)
+#error 'include/w/b.h' should have been included before 'include/x/b.h'!
+#endif
+
+#--- include/x/c.h
+#define INCLUDE_X_C_H
+
+#--- include/y/a.h
+#if !defined(INCLUDE_X_A_H)
+#error 'include/x/a.h' should have been included before 'include/y/a.h'!
+#endif
+
+#--- include/z/c.h
+#include_next <c.h>
+#if !defined(INCLUDE_X_C_H)
+#error 'include/x/c.h' should have been included before 'include/z/c.h'!
+#endif
