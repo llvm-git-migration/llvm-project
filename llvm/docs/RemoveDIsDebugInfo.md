@@ -172,6 +172,24 @@ If you are trying to insert at the start of a block, or purposfully skip debug i
 
 `LLVMPositionBuilder` and `LLVMPositionBuilderBefore` are unchanged. They insert before the indicated instruction but after any attached debug records.
 
+`LLVMGetFirstDbgRecord`, `LLVMGetLastDbgRecord`, `LLVMGetNextDbgRecord` and `LLVMGetPreviousDbgRecord` can be used for iterating over debug records in instructions (provided as `LLVMValueRef`).
+
+```c
+LLVMDbgRecordRef DbgRec;
+for (DbgRec = LLVMGetFirstDbgRecord(Add); DbgRec;
+     DbgRec = LLVMGetNextDbgRecord(DbgRec)) {
+  // do something with DbgRec
+}
+```
+
+```c
+LLVMDbgRecordRef DbgRec;
+for (DbgRec = LLVMGetLastDbgRecord(Add); DbgRec;
+     DbgRec = LLVMGetPreviousDbgRecord(DbgRec)) {
+  // do something with DbgRec
+}
+````
+
 # The new "Debug Record" model
 
 Below is a brief overview of the new representation that replaces debug intrinsics; for an instructive guide on updating old code, see [here](#how-to-update-existing-code).
