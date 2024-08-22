@@ -61,7 +61,7 @@ static void print_usage(void) {
   fprintf(stderr, "  * --test-diagnostic-handler\n");
   fprintf(stderr,
           "    Read bitcode file from stdin with a diagnostic handler set\n\n");
-  fprintf(stderr, "  * --test-dibuilder\n");
+  fprintf(stderr, "  * --test-dibuilder-debuginfo-format\n");
   fprintf(stderr,
           "    Run tests for the DIBuilder C API - print generated module\n\n");
 }
