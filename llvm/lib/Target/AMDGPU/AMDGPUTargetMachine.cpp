@@ -761,7 +761,8 @@ void AMDGPUTargetMachine::registerPassBuilderCallbacks(PassBuilder &PB) {
         if (EnableLowerModuleLDS)
           PM.addPass(AMDGPULowerModuleLDSPass(*this));
         if (EnableAMDGPUAttributor && Level != OptimizationLevel::O0)
-          PM.addPass(AMDGPUAttributorPass(*this));
+          PM.addPass(
+              AMDGPUAttributorPass(*this, AMDGPUAttributorOptions{true}));
       });
 
   PB.registerRegClassFilterParsingCallback(
