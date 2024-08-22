@@ -31,9 +31,14 @@ class Constraint;
 class DagLeaf;
 
 // Format into a std::string
-template <typename... Parameters>
-std::string strfmt(const char *fmt, Parameters &&...parameters) {
+template <size_t N, typename... Parameters>
+std::string strfmt(const char (&fmt)[N], Parameters &&...parameters) {
   return llvm::formatv(fmt, std::forward<Parameters>(parameters)...).str();
+}
+
+template <typename... Parameters>
+std::string strfmtv(const char *fmt, Parameters &&...parameters) {
+  return llvm::formatvv(fmt, std::forward<Parameters>(parameters)...).str();
 }
 
 // Simple RAII helper for defining ifdef-undef-endif scopes.

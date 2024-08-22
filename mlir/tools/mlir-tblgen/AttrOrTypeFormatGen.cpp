@@ -138,21 +138,21 @@ public:
 //===----------------------------------------------------------------------===//
 
 /// Default parser for attribute or type parameters.
-static const char *const defaultParameterParser =
+static const char defaultParameterParser[] =
     "::mlir::FieldParser<$0>::parse($_parser)";
 
 /// Default printer for attribute or type parameters.
-static const char *const defaultParameterPrinter =
+static const char defaultParameterPrinter[] =
     "$_printer.printStrippedAttrOrType($_self)";
 
 /// Qualified printer for attribute or type parameters: it does not elide
 /// dialect and mnemonic.
-static const char *const qualifiedParameterPrinter = "$_printer << $_self";
+static const char qualifiedParameterPrinter[] = "$_printer << $_self";
 
 /// Print an error when failing to parse an element.
 ///
 /// $0: The parameter C++ class name.
-static const char *const parserErrorStr =
+static const char parserErrorStr[] =
     "$_parser.emitError($_parser.getCurrentLocation(), ";
 
 /// Code format to parse a variable. Separate by lines because variable parsers
@@ -164,7 +164,7 @@ static const char *const parserErrorStr =
 /// {3}: Name of the attribute or type.
 /// {4}: C++ class of the parameter.
 /// {5}: Optional code to preload the dialect for this variable.
-static const char *const variableParser = R"(
+static const char variableParser[] = R"(
 // Parse variable '{0}'{5}
 _result_{0} = {1};
 if (::mlir::failed(_result_{0})) {{
@@ -500,12 +500,12 @@ void DefFormat::genStructParser(StructDirective *el, FmtContext &ctx,
   // Loop declaration for struct parser with only required parameters.
   //
   // $0: Number of expected parameters.
-  const char *const loopHeader = R"(
+  static const char loopHeader[] = R"(
   for (unsigned odsStructIndex = 0; odsStructIndex < $0; ++odsStructIndex) {
 )";
 
   // Loop body start for struct parser.
-  const char *const loopStart = R"(
+  static const char loopStart[] = R"(
     ::llvm::StringRef _paramKey;
     if ($_parser.parseKeyword(&_paramKey)) {
       $_parser.emitError($_parser.getCurrentLocation(),
@@ -518,7 +518,7 @@ void DefFormat::genStructParser(StructDirective *el, FmtContext &ctx,
   // Struct parser loop end. Check for duplicate or unknown struct parameters.
   //
   // {0}: Code template for printing an error.
-  const char *const loopEnd = R"({{
+  static const char loopEnd[] = R"({{
   {0}"duplicate or unknown struct parameter name: ") << _paramKey;
   return {{};
 }
@@ -527,7 +527,7 @@ void DefFormat::genStructParser(StructDirective *el, FmtContext &ctx,
   // Struct parser loop terminator. Parse a comma except on the last element.
   //
   // {0}: Number of elements in the struct.
-  const char *const loopTerminator = R"(
+  static const char loopTerminator[] = R"(
   if ((odsStructIndex != {0} - 1) && odsParser.parseComma())
     return {{};
 }
@@ -536,7 +536,7 @@ void DefFormat::genStructParser(StructDirective *el, FmtContext &ctx,
   // Check that a mandatory parameter was parse.
   //
   // {0}: Name of the parameter.
-  const char *const checkParam = R"(
+  static const char checkParam[] = R"(
     if (!_seen_{0}) {
       {1}"struct is missing required parameter: ") << "{0}";
       return {{};
@@ -544,7 +544,7 @@ void DefFormat::genStructParser(StructDirective *el, FmtContext &ctx,
 )";
 
   // First iteration of the loop parsing an optional struct.
-  const char *const optionalStructFirst = R"(
+  static const char optionalStructFirst[] = R"(
   ::llvm::StringRef _paramKey;
   if (!$_parser.parseOptionalKeyword(&_paramKey)) {
     if (!_loop_body(_paramKey)) return {};

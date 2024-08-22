@@ -161,7 +161,7 @@ class FuzzyFind : public Command {
     }
     Request.AnyScope = Request.Scopes.empty();
     // FIXME(kbobyrev): Print symbol final scores to see the distribution.
-    static const auto *OutputFormat = "{0,-4} | {1,-40} | {2,-25}\n";
+    static const char OutputFormat[] = "{0,-4} | {1,-40} | {2,-25}\n";
     llvm::outs() << llvm::formatv(OutputFormat, "Rank", "Symbol ID",
                                   "Symbol Name");
     size_t Rank = 0;

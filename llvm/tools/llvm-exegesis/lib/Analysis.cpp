@@ -94,7 +94,7 @@ static void writeMeasurementValue(raw_ostream &OS, const double Value) {
   static constexpr StringLiteral SimpleFloatFormat = StringLiteral("{0:F}");
 
   writeEscaped<Tag>(
-      OS, formatv(SimpleFloatFormat.data(), Value).sstr<SerializationLen>());
+      OS, formatvv(SimpleFloatFormat.data(), Value).sstr<SerializationLen>());
 }
 
 template <typename EscapeTag, EscapeTag Tag>

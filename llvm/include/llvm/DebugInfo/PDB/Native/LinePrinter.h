@@ -61,10 +61,10 @@ public:
   void printLine(const Twine &T);
   void print(const Twine &T);
   template <typename... Ts> void formatLine(const char *Fmt, Ts &&...Items) {
-    printLine(formatv(Fmt, std::forward<Ts>(Items)...));
+    printLine(formatvv(Fmt, std::forward<Ts>(Items)...));
   }
   template <typename... Ts> void format(const char *Fmt, Ts &&...Items) {
-    print(formatv(Fmt, std::forward<Ts>(Items)...));
+    print(formatvv(Fmt, std::forward<Ts>(Items)...));
   }
 
   void formatBinary(StringRef Label, ArrayRef<uint8_t> Data,

@@ -111,7 +111,7 @@ static void addPartialRegisters(
 
     lldb_private::DynamicRegisterInfo::Register partial_reg{
         lldb_private::ConstString(
-            llvm::formatv(partial_reg_format, it.index()).str()),
+            llvm::formatvv(partial_reg_format, it.index()).str()),
         lldb_private::ConstString(),
         lldb_private::ConstString("supplementary registers"),
         partial_reg_size,

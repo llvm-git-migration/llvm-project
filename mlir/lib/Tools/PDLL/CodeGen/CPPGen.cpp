@@ -105,7 +105,7 @@ void CodeGen::generate(const ast::Module &astModule, ModuleOp module) {
 
 void CodeGen::generate(pdl::PatternOp pattern, StringRef patternName,
                        StringSet<> &nativeFunctions) {
-  const char *patternClassStartStr = R"(
+  const char patternClassStartStr[] = R"(
 struct {0} : ::mlir::PDLPatternModule {{
   template <typename... ConfigsT>
   {0}(::mlir::MLIRContext *context, ConfigsT &&...configs)

@@ -435,7 +435,7 @@ public:
       if (!cur_func)
         cur_func = "<UNKNOWN>";
       ReportInterruption(InterruptionReport(
-          cur_func, llvm::formatv(formatv, std::forward<Args>(args)...)));
+          cur_func, llvm::formatvv(formatv, std::forward<Args>(args)...)));
     }
     return ret_val;
   }
@@ -466,7 +466,7 @@ public:
                        Args &&...args)
         : InterruptionReport(
               function_name,
-              llvm::formatv(format, std::forward<Args>(args)...)) {}
+              llvm::formatvv(format, std::forward<Args>(args)...)) {}
 
     std::string m_function_name;
     std::string m_description;

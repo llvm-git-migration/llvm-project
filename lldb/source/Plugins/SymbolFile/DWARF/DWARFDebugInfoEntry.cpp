@@ -49,7 +49,7 @@ bool DWARFDebugInfoEntry::Extract(const DWARFDataExtractor &data,
     unit.GetSymbolFileDWARF().GetObjectFile()->GetModule()->ReportError(
         "[{0:x16}]: {1}, please file a bug and "
         "attach the file at the start of this error message",
-        static_cast<uint64_t>(m_offset), llvm::formatv(fmt, vals...));
+        static_cast<uint64_t>(m_offset), llvm::formatvv(fmt, vals...));
     *offset_ptr = std::numeric_limits<lldb::offset_t>::max();
     return false;
   };

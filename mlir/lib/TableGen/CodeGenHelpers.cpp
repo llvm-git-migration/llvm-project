@@ -110,7 +110,7 @@ StringRef StaticVerifierFunctionEmitter::getRegionConstraintFn(
 
 /// Code for a type constraint. These may be called on the type of either
 /// operands or results.
-static const char *const typeConstraintCode = R"(
+static const char typeConstraintCode[] = R"(
 static ::llvm::LogicalResult {0}(
     ::mlir::Operation *op, ::mlir::Type type, ::llvm::StringRef valueKind,
     unsigned valueIndex) {
@@ -128,7 +128,7 @@ static ::llvm::LogicalResult {0}(
 ///
 /// TODO: Unique constraints for adaptors. However, most Adaptor::verify
 /// functions are stripped anyways.
-static const char *const attrConstraintCode = R"(
+static const char attrConstraintCode[] = R"(
 static ::llvm::LogicalResult {0}(
     ::mlir::Attribute attr, ::llvm::StringRef attrName, llvm::function_ref<::mlir::InFlightDiagnostic()> emitError) {{
   if (attr && !({1}))
@@ -145,7 +145,7 @@ static ::llvm::LogicalResult {0}(
 )";
 
 /// Code for a successor constraint.
-static const char *const successorConstraintCode = R"(
+static const char successorConstraintCode[] = R"(
 static ::llvm::LogicalResult {0}(
     ::mlir::Operation *op, ::mlir::Block *successor,
     ::llvm::StringRef successorName, unsigned successorIndex) {
@@ -159,7 +159,7 @@ static ::llvm::LogicalResult {0}(
 
 /// Code for a region constraint. Callers will need to pass in the region's name
 /// for emitting an error message.
-static const char *const regionConstraintCode = R"(
+static const char regionConstraintCode[] = R"(
 static ::llvm::LogicalResult {0}(
     ::mlir::Operation *op, ::mlir::Region &region, ::llvm::StringRef regionName,
     unsigned regionIndex) {
@@ -175,7 +175,7 @@ static ::llvm::LogicalResult {0}(
 /// Code for a pattern type or attribute constraint.
 ///
 /// {3}: "Type type" or "Attribute attr".
-static const char *const patternAttrOrTypeConstraintCode = R"(
+static const char patternAttrOrTypeConstraintCode[] = R"(
 static ::llvm::LogicalResult {0}(
     ::mlir::PatternRewriter &rewriter, ::mlir::Operation *op, ::mlir::{3},
     ::llvm::StringRef failureStr) {
@@ -194,9 +194,9 @@ void StaticVerifierFunctionEmitter::emitConstraints(
   FmtContext ctx;
   ctx.addSubst("_op", "*op").withSelf(selfName);
   for (auto &it : constraints) {
-    os << formatv(codeTemplate, it.second,
-                  tgfmt(it.first.getConditionTemplate(), &ctx),
-                  escapeString(it.first.getSummary()));
+    os << formatvv(codeTemplate, it.second,
+                   tgfmt(it.first.getConditionTemplate(), &ctx),
+                   escapeString(it.first.getSummary()));
   }
 }
 

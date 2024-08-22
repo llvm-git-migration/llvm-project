@@ -674,12 +674,12 @@ static bool DumpValueWithLLVMFormat(Stream &s, llvm::StringRef options,
       bool success = false;
       int64_t integer = valobj.GetValueAsSigned(0, &success);
       if (success)
-        formatted = llvm::formatv(llvm_format.data(), integer);
+        formatted = llvm::formatvv(llvm_format.data(), integer);
     } else {
       bool success = false;
       uint64_t integer = valobj.GetValueAsUnsigned(0, &success);
       if (success)
-        formatted = llvm::formatv(llvm_format.data(), integer);
+        formatted = llvm::formatvv(llvm_format.data(), integer);
     }
   }
 

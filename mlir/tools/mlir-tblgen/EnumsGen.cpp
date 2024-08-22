@@ -81,7 +81,7 @@ static void emitParserPrinter(const EnumAttr &enumAttr, StringRef qualName,
       nonKeywordCases.set(index);
 
   // Generate the parser and the start of the printer for the enum.
-  const char *parsedAndPrinterStart = R"(
+  static const char parsedAndPrinterStart[] = R"(
 namespace mlir {
 template <typename T, typename>
 struct FieldParser;
@@ -177,7 +177,7 @@ static void emitDenseMapInfo(StringRef qualName, std::string underlyingType,
     underlyingType =
         std::string(formatv("std::underlying_type_t<{0}>", qualName));
 
-  const char *const mapInfo = R"(
+  static const char mapInfo[] = R"(
 namespace llvm {
 template<> struct DenseMapInfo<{0}> {{
   using StorageInfo = ::llvm::DenseMapInfo<{1}>;
@@ -252,7 +252,7 @@ static void emitOperators(const Record &enumDef, raw_ostream &os) {
   StringRef enumName = enumAttr.getEnumClassName();
   std::string underlyingType = std::string(enumAttr.getUnderlyingType());
   int64_t validBits = enumDef.getValueAsInt("validBits");
-  const char *const operators = R"(
+  static const char operators[] = R"(
 inline constexpr {0} operator|({0} a, {0} b) {{
   return static_cast<{0}>(static_cast<{1}>(a) | static_cast<{1}>(b));
 }
@@ -331,7 +331,7 @@ static void emitSymToStrFnForBitEnum(const Record &enumDef, raw_ostream &os) {
 
   // Add case string if the value has all case bits, and remove them to avoid
   // printing again. Used only for groups, when printBitEnumPrimaryGroups is 1.
-  const char *const formatCompareRemove = R"(
+  static const char formatCompareRemove[] = R"(
   if ({0}u == ({0}u & val)) {{
     strs.push_back("{1}");
     val &= ~static_cast<{2}>({0});
@@ -339,7 +339,7 @@ static void emitSymToStrFnForBitEnum(const Record &enumDef, raw_ostream &os) {
 )";
   // Add case string if the value has all case bits. Used for individual bit
   // cases, and for groups when printBitEnumPrimaryGroups is 0.
-  const char *const formatCompare = R"(
+  static const char formatCompare[] = R"(
   if ({0}u == ({0}u & val))
     strs.push_back("{1}");
 )";
@@ -594,7 +594,7 @@ static void emitEnumDecl(const Record &enumDef, raw_ostream &os) {
 
   // Generate a generic `stringifyEnum` function that forwards to the method
   // specified by the user.
-  const char *const stringifyEnumStr = R"(
+  static const char stringifyEnumStr[] = R"(
 inline {0} stringifyEnum({1} enumValue) {{
   return {2}(enumValue);
 }
@@ -603,7 +603,7 @@ inline {0} stringifyEnum({1} enumValue) {{
 
   // Generate a generic `symbolizeEnum` function that forwards to the method
   // specified by the user.
-  const char *const symbolizeEnumStr = R"(
+  static const char symbolizeEnumStr[] = R"(
 template <typename EnumType>
 ::std::optional<EnumType> symbolizeEnum(::llvm::StringRef);
 
@@ -614,7 +614,7 @@ inline ::std::optional<{0}> symbolizeEnum<{0}>(::llvm::StringRef str) {
 )";
   os << formatv(symbolizeEnumStr, enumName, strToSymFnName);
 
-  const char *const attrClassDecl = R"(
+  static const char attrClassDecl[] = R"(
 class {1} : public ::mlir::{2} {
 public:
   using ValueType = {0};

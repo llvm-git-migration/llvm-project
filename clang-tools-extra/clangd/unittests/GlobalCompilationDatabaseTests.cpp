@@ -179,7 +179,7 @@ TEST_F(OverlayCDBTest, ExpandedResponseFiles) {
 }
 
 TEST(GlobalCompilationDatabaseTest, DiscoveryWithNestedCDBs) {
-  const char *const CDBOuter =
+  const char CDBOuter[] =
       R"cdb(
       [
         {
@@ -199,7 +199,7 @@ TEST(GlobalCompilationDatabaseTest, DiscoveryWithNestedCDBs) {
         }
       ]
       )cdb";
-  const char *const CDBInner =
+  const char CDBInner[] =
       R"cdb(
       [
         {
@@ -317,7 +317,7 @@ TEST(GlobalCompilationDatabaseTest, BuildDir) {
         .CommandLine;
   };
   EXPECT_THAT(Command("x/foo.cc"), IsEmpty());
-  const char *const CDB =
+  const char CDB[] =
       R"cdb(
       [
         {
@@ -456,7 +456,7 @@ TEST(GlobalCompilationDatabaseTest, InferenceWithResponseFile) {
   OutStream << "-DXYZZY";
   OutStream.close();
 
-  const char *const CDB =
+  const char CDB[] =
       R"cdb(
       [
         {

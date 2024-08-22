@@ -35,7 +35,7 @@ static Error ErrorFromHResult(HRESULT Result, const char *Str, Ts &&... Args) {
   SmallString<64> MessageStorage;
   StringRef Context;
   if (sizeof...(Args) > 0) {
-    MessageStorage = formatv(Str, std::forward<Ts>(Args)...).str();
+    MessageStorage = formatvv(Str, std::forward<Ts>(Args)...).str();
     Context = MessageStorage;
   } else
     Context = Str;

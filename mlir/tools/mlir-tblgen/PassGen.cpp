@@ -37,7 +37,7 @@ static std::vector<Pass> getPasses(const llvm::RecordKeeper &recordKeeper) {
   return passes;
 }
 
-const char *const passHeader = R"(
+const char passHeader[] = R"(
 //===----------------------------------------------------------------------===//
 // {0}
 //===----------------------------------------------------------------------===//
@@ -51,7 +51,7 @@ const char *const passHeader = R"(
 ///
 /// {0}: The def name of the pass record.
 /// {1}: The pass constructor call.
-const char *const passRegistrationCode = R"(
+const char passRegistrationCode[] = R"(
 //===----------------------------------------------------------------------===//
 // {0} Registration
 //===----------------------------------------------------------------------===//
@@ -74,7 +74,7 @@ inline void register{0}Pass() {{
 /// group.
 ///
 /// {0}: The name of the pass group.
-const char *const passGroupRegistrationCode = R"(
+const char passGroupRegistrationCode[] = R"(
 //===----------------------------------------------------------------------===//
 // {0} Registration
 //===----------------------------------------------------------------------===//
@@ -175,7 +175,7 @@ static void emitRegistrations(llvm::ArrayRef<Pass> passes, raw_ostream &os) {
 /// {2): The command line argument for the pass.
 /// {3}: The summary for the pass.
 /// {4}: The dependent dialects registration.
-const char *const baseClassBegin = R"(
+const char baseClassBegin[] = R"(
 template <typename DerivedT>
 class {0}Base : public {1} {
 public:
@@ -226,39 +226,39 @@ public:
 
 /// Registration for a single dependent dialect, to be inserted for each
 /// dependent dialect in the `getDependentDialects` above.
-const char *const dialectRegistrationTemplate = "registry.insert<{0}>();";
+const char dialectRegistrationTemplate[] = "registry.insert<{0}>();";
 
-const char *const friendDefaultConstructorDeclTemplate = R"(
+const char friendDefaultConstructorDeclTemplate[] = R"(
 namespace impl {{
   std::unique_ptr<::mlir::Pass> create{0}();
 } // namespace impl
 )";
 
-const char *const friendDefaultConstructorWithOptionsDeclTemplate = R"(
+const char friendDefaultConstructorWithOptionsDeclTemplate[] = R"(
 namespace impl {{
   std::unique_ptr<::mlir::Pass> create{0}(const {0}Options &options);
 } // namespace impl
 )";
 
-const char *const friendDefaultConstructorDefTemplate = R"(
+const char friendDefaultConstructorDefTemplate[] = R"(
   friend std::unique_ptr<::mlir::Pass> create{0}() {{
     return std::make_unique<DerivedT>();
   }
 )";
 
-const char *const friendDefaultConstructorWithOptionsDefTemplate = R"(
+const char friendDefaultConstructorWithOptionsDefTemplate[] = R"(
   friend std::unique_ptr<::mlir::Pass> create{0}(const {0}Options &options) {{
     return std::make_unique<DerivedT>(options);
   }
 )";
 
-const char *const defaultConstructorDefTemplate = R"(
+const char defaultConstructorDefTemplate[] = R"(
 std::unique_ptr<::mlir::Pass> create{0}() {{
   return impl::create{0}();
 }
 )";
 
-const char *const defaultConstructorWithOptionsDefTemplate = R"(
+const char defaultConstructorWithOptionsDefTemplate[] = R"(
 std::unique_ptr<::mlir::Pass> create{0}(const {0}Options &options) {{
   return impl::create{0}(options);
 }
@@ -376,7 +376,7 @@ static void emitPass(const Pass &pass, raw_ostream &os) {
 // TODO: Drop old pass declarations.
 // The old pass base class is being kept until all the passes have switched to
 // the new decls/defs design.
-const char *const oldPassDeclBegin = R"(
+const char oldPassDeclBegin[] = R"(
 template <typename DerivedT>
 class {0}Base : public {1} {
 public:

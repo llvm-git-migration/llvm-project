@@ -51,7 +51,7 @@ protected:
                                          double PartialProfileRatio = 0.0,
                                          uint64_t HotNumCounts = 3,
                                          uint64_t ColdNumCounts = 10) {
-    const char *ModuleString =
+    const char ModuleString[] =
         "define i32 @g(i32 %x) !prof !21 {{\n"
         "  ret i32 0\n"
         "}\n"
@@ -91,7 +91,7 @@ protected:
         "!22 = !{{!\"function_entry_count\", i64 100}\n"
         "!23 = !{{!\"branch_weights\", i32 64, i32 4}\n"
         "{0}";
-    const char *SummaryString =
+    const char SummaryString[] =
         "!llvm.module.flags = !{{!1}\n"
         "!1 = !{{i32 1, !\"ProfileSummary\", !2}\n"
         "!2 = !{{!3, !4, !5, !6, !7, !8, !9, !10, !11, !12}\n"

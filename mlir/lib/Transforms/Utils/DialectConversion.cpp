@@ -37,7 +37,8 @@ static void logSuccess(llvm::ScopedPrinter &os, StringRef fmt, Args &&...args) {
     os.startLine() << "} -> SUCCESS";
     if (!fmt.empty())
       os.getOStream() << " : "
-                      << llvm::formatv(fmt.data(), std::forward<Args>(args)...);
+                      << llvm::formatvv(fmt.data(),
+                                        std::forward<Args>(args)...);
     os.getOStream() << "\n";
   });
 }
@@ -48,7 +49,7 @@ static void logFailure(llvm::ScopedPrinter &os, StringRef fmt, Args &&...args) {
   LLVM_DEBUG({
     os.unindent();
     os.startLine() << "} -> FAILURE : "
-                   << llvm::formatv(fmt.data(), std::forward<Args>(args)...)
+                   << llvm::formatvv(fmt.data(), std::forward<Args>(args)...)
                    << "\n";
   });
 }

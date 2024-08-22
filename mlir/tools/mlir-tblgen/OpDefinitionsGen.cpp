@@ -67,7 +67,7 @@ static const char *const resultSegmentAttrName = "resultSegmentSizes";
 /// {2}: The upper bound on the sorted subrange.
 /// {3}: Code snippet to get the array of named attributes.
 /// {4}: "Named" to get the named attribute.
-static const char *const subrangeGetAttr =
+static const char subrangeGetAttr[] =
     "::mlir::impl::get{4}AttrFromSortedRange({3}.begin() + {1}, {3}.end() - "
     "{2}, {0})";
 
@@ -81,7 +81,7 @@ static const char *const subrangeGetAttr =
 /// {2}: The total number of variadic operands/results.
 /// {3}: The total number of actual values.
 /// {4}: "operand" or "result".
-static const char *const sameVariadicSizeValueRangeCalcCode = R"(
+static const char sameVariadicSizeValueRangeCalcCode[] = R"(
   bool isVariadic[] = {{{0}};
   int prevVariadicCount = 0;
   for (unsigned i = 0; i < index; ++i)
@@ -103,7 +103,7 @@ static const char *const sameVariadicSizeValueRangeCalcCode = R"(
 /// of an op with variadic operands/results. Note that this logic is assumes
 /// the op has an attribute specifying the size of each operand/result segment
 /// (variadic or not).
-static const char *const attrSizedSegmentValueRangeCalcCode = R"(
+static const char attrSizedSegmentValueRangeCalcCode[] = R"(
   unsigned start = 0;
   for (unsigned i = 0; i < index; ++i)
     start += sizeAttr[i];
@@ -112,18 +112,18 @@ static const char *const attrSizedSegmentValueRangeCalcCode = R"(
 /// The code snippet to initialize the sizes for the value range calculation.
 ///
 /// {0}: The code to get the attribute.
-static const char *const adapterSegmentSizeAttrInitCode = R"(
+static const char adapterSegmentSizeAttrInitCode[] = R"(
   assert({0} && "missing segment size attribute for op");
   auto sizeAttr = ::llvm::cast<::mlir::DenseI32ArrayAttr>({0});
 )";
-static const char *const adapterSegmentSizeAttrInitCodeProperties = R"(
+static const char adapterSegmentSizeAttrInitCodeProperties[] = R"(
   ::llvm::ArrayRef<int32_t> sizeAttr = {0};
 )";
 
 /// The code snippet to initialize the sizes for the value range calculation.
 ///
 /// {0}: The code to get the attribute.
-static const char *const opSegmentSizeAttrInitCode = R"(
+static const char opSegmentSizeAttrInitCode[] = R"(
   auto sizeAttr = ::llvm::cast<::mlir::DenseI32ArrayAttr>({0});
 )";
 
@@ -133,7 +133,7 @@ static const char *const opSegmentSizeAttrInitCode = R"(
 /// {0}: The name of the segment attribute.
 /// {1}: The index of the main operand.
 /// {2}: The range type of adaptor.
-static const char *const variadicOfVariadicAdaptorCalcCode = R"(
+static const char variadicOfVariadicAdaptorCalcCode[] = R"(
   auto tblgenTmpOperands = getODSOperands({1});
   auto sizes = {0}();
 
@@ -149,7 +149,7 @@ static const char *const variadicOfVariadicAdaptorCalcCode = R"(
 ///
 /// {0}: The begin iterator of the actual values.
 /// {1}: The call to generate the start and length of the value range.
-static const char *const valueRangeReturnCode = R"(
+static const char valueRangeReturnCode[] = R"(
   auto valueRange = {1};
   return {{std::next({0}, valueRange.first),
            std::next({0}, valueRange.first + valueRange.second)};
@@ -157,7 +157,7 @@ static const char *const valueRangeReturnCode = R"(
 
 /// Parse operand/result segment_size property.
 /// {0}: Number of elements in the segment array
-static const char *const parseTextualSegmentSizeFormat = R"(
+static const char parseTextualSegmentSizeFormat[] = R"(
   size_t i = 0;
   auto parseElem = [&]() -> ::mlir::ParseResult {
     if (i >= {0})
@@ -177,7 +177,7 @@ static const char *const parseTextualSegmentSizeFormat = R"(
   return success();
 )";
 
-static const char *const printTextualSegmentSize = R"(
+static const char printTextualSegmentSize[] = R"(
   [&]() {
     $_printer << '[';
     ::llvm::interleaveComma($_storage, $_printer);
@@ -186,12 +186,12 @@ static const char *const printTextualSegmentSize = R"(
 )";
 
 /// Read operand/result segment_size from bytecode.
-static const char *const readBytecodeSegmentSizeNative = R"(
+static const char readBytecodeSegmentSizeNative[] = R"(
   if ($_reader.getBytecodeVersion() >= /*kNativePropertiesODSSegmentSize=*/6)
     return $_reader.readSparseArray(::llvm::MutableArrayRef($_storage));
 )";
 
-static const char *const readBytecodeSegmentSizeLegacy = R"(
+static const char readBytecodeSegmentSizeLegacy[] = R"(
   if ($_reader.getBytecodeVersion() < /*kNativePropertiesODSSegmentSize=*/6) {
     auto &$_storage = prop.$_propName;
     ::mlir::DenseI32ArrayAttr attr;
@@ -205,13 +205,13 @@ static const char *const readBytecodeSegmentSizeLegacy = R"(
 )";
 
 /// Write operand/result segment_size to bytecode.
-static const char *const writeBytecodeSegmentSizeNative = R"(
+static const char writeBytecodeSegmentSizeNative[] = R"(
   if ($_writer.getBytecodeVersion() >= /*kNativePropertiesODSSegmentSize=*/6)
     $_writer.writeSparseArray(::llvm::ArrayRef($_storage));
 )";
 
 /// Write operand/result segment_size to bytecode.
-static const char *const writeBytecodeSegmentSizeLegacy = R"(
+static const char writeBytecodeSegmentSizeLegacy[] = R"(
 if ($_writer.getBytecodeVersion() < /*kNativePropertiesODSSegmentSize=*/6) {
   auto &$_storage = prop.$_propName;
   $_writer.writeAttribute(::mlir::DenseI32ArrayAttr::get($_ctxt, $_storage));
@@ -222,7 +222,7 @@ if ($_writer.getBytecodeVersion() < /*kNativePropertiesODSSegmentSize=*/6) {
 ///
 /// {0}: Some text, or a class name.
 /// {1}: Some text.
-static const char *const opCommentHeader = R"(
+static const char opCommentHeader[] = R"(
 //===----------------------------------------------------------------------===//
 // {0} {1}
 //===----------------------------------------------------------------------===//
@@ -375,10 +375,10 @@ public:
   // Get the call to get an operand or segment of operands.
   Formatter getOperand(unsigned index) const {
     return [this, index](raw_ostream &os) -> raw_ostream & {
-      return os << formatv(op.getOperand(index).isVariadic()
-                               ? "this->getODSOperands({0})"
-                               : "(*this->getODSOperands({0}).begin())",
-                           index);
+      return os << formatvv(op.getOperand(index).isVariadic()
+                                ? "this->getODSOperands({0})"
+                                : "(*this->getODSOperands({0}).begin())",
+                            index);
     };
   }
 
@@ -387,10 +387,10 @@ public:
     return [this, index](raw_ostream &os) -> raw_ostream & {
       if (!emitForOp)
         return os << "<no results should be generated>";
-      return os << formatv(op.getResult(index).isVariadic()
-                               ? "this->getODSResults({0})"
-                               : "(*this->getODSResults({0}).begin())",
-                           index);
+      return os << formatvv(op.getResult(index).isVariadic()
+                                ? "this->getODSResults({0})"
+                                : "(*this->getODSResults({0}).begin())",
+                            index);
     };
   }
 
@@ -822,7 +822,7 @@ static void genNativeTraitAttrVerifier(MethodBody &body,
   // {1}: Expected number of elements.
   // {2}: "operand" or "result".
   // {3}: Emit error prefix.
-  const char *const checkAttrSizedValueSegmentsCode = R"(
+  const char checkAttrSizedValueSegmentsCode[] = R"(
   {
     auto sizeAttr = ::llvm::cast<::mlir::DenseI32ArrayAttr>(tblgen_{0});
     auto numElements = sizeAttr.asArrayRef().size();
@@ -893,7 +893,7 @@ genAttributeVerifier(const OpOrAdaptorHelper &emitHelper, FmtContext &ctx,
   // {2}: Emit error prefix.
   // {3}: Attribute name.
   // {4}: Attribute/constraint description.
-  const char *const verifyAttrInline = R"(
+  const char verifyAttrInline[] = R"(
   if ({0} && !({1}))
     return {2}"attribute '{3}' failed to satisfy constraint: {4}");
 )";
@@ -903,7 +903,7 @@ genAttributeVerifier(const OpOrAdaptorHelper &emitHelper, FmtContext &ctx,
   // {0}: Unique constraint name.
   // {1}: Attribute variable name.
   // {2}: Attribute name.
-  const char *const verifyAttrUnique = R"(
+  const char verifyAttrUnique[] = R"(
   if (::mlir::failed({0}(*this, {1}, "{2}")))
     return ::mlir::failure();
 )";
@@ -914,7 +914,7 @@ genAttributeVerifier(const OpOrAdaptorHelper &emitHelper, FmtContext &ctx,
   // {0}: Code to get the name of the attribute.
   // {1}: The emit error prefix.
   // {2}: The name of the attribute.
-  const char *const findRequiredAttr = R"(
+  const char findRequiredAttr[] = R"(
 while (true) {{
   if (namedAttrIt == namedAttrRange.end())
     return {1}"requires attribute '{2}'");
@@ -927,13 +927,13 @@ while (true) {{
   //
   // {0}: Code to get the name of the attribute.
   // {1}: The name of the attribute.
-  const char *const checkOptionalAttr = R"(
+  const char checkOptionalAttr[] = R"(
   else if (namedAttrIt->getName() == {0}) {{
     tblgen_{1} = namedAttrIt->getValue();
   })";
 
   // Emit the start of the loop for checking trailing attributes.
-  const char *const checkTrailingAttrs = R"(while (true) {
+  const char checkTrailingAttrs[] = R"(while (true) {
   if (namedAttrIt == namedAttrRange.end()) {
     break;
   })";
@@ -1192,7 +1192,7 @@ void OpEmitter::genAttrNameGetters() {
     if (attributes.empty()) {
       method->body() << "  return {};";
     } else {
-      const char *const getAttrName = R"(
+      const char getAttrName[] = R"(
   assert(index < {0} && "invalid attribute index");
   assert(name.getStringRef() == getOperationName() && "invalid operation name");
   assert(name.isRegistered() && "Operation isn't registered, missing a "
@@ -1205,7 +1205,7 @@ void OpEmitter::genAttrNameGetters() {
 
   // Generate the <attr>AttrName methods, that expose the attribute names to
   // users.
-  const char *attrNameMethodBody = "  return getAttributeNameForIndex({0});";
+  const char attrNameMethodBody[] = "  return getAttributeNameForIndex({0});";
   for (auto [index, attr] :
        llvm::enumerate(llvm::make_first_range(attributes))) {
     std::string name = op.getGetterName(attr);
@@ -1373,18 +1373,18 @@ void OpEmitter::genPropertiesSupport() {
     return ::mlir::failure();
   }
     )decl";
-  const char *propFromAttrFmt = R"decl(
+  const char propFromAttrFmt[] = R"decl(
       auto setFromAttr = [] (auto &propStorage, ::mlir::Attribute propAttr,
                ::llvm::function_ref<::mlir::InFlightDiagnostic()> emitError) -> ::mlir::LogicalResult {{
         {0}
       };
       {2};
 )decl";
-  const char *attrGetNoDefaultFmt = R"decl(;
+  const char attrGetNoDefaultFmt[] = R"decl(;
       if (attr && ::mlir::failed(setFromAttr(prop.{0}, attr, emitError)))
         return ::mlir::failure();
 )decl";
-  const char *attrGetDefaultFmt = R"decl(;
+  const char attrGetDefaultFmt[] = R"decl(;
       if (attr) {{
         if (::mlir::failed(setFromAttr(prop.{0}, attr, emitError)))
           return ::mlir::failure();
@@ -1471,7 +1471,7 @@ void OpEmitter::genPropertiesSupport() {
 
   getPropMethod << "    ::mlir::SmallVector<::mlir::NamedAttribute> attrs;\n"
                 << "    ::mlir::Builder odsBuilder{ctx};\n";
-  const char *propToAttrFmt = R"decl(
+  const char propToAttrFmt[] = R"decl(
     {
       const auto &propStorage = prop.{0};
       auto attr = [&]() -> ::mlir::Attribute {{
@@ -1514,7 +1514,7 @@ void OpEmitter::genPropertiesSupport() {
 
   // Hashing for the property
 
-  const char *propHashFmt = R"decl(
+  const char propHashFmt[] = R"decl(
   auto hash_{0} = [] (const auto &propStorage) -> llvm::hash_code {
     return {1};
   };
@@ -1555,17 +1555,18 @@ void OpEmitter::genPropertiesSupport() {
       });
   hashMethod << ");\n";
 
-  const char *getInherentAttrMethodFmt = R"decl(
+  const char getInherentAttrMethodFmt[] = R"decl(
     if (name == "{0}")
       return prop.{0};
 )decl";
-  const char *setInherentAttrMethodFmt = R"decl(
+  const char setInherentAttrMethodFmt[] = R"decl(
     if (name == "{0}") {{
-       prop.{0} = ::llvm::dyn_cast_or_null<std::remove_reference_t<decltype(prop.{0})>>(value);
+       prop.{0} = ::llvm::dyn_cast_or_null<
+                        std::remove_reference_t<decltype(prop.{0})>>(value);
        return;
     }
 )decl";
-  const char *populateInherentAttrsMethodFmt = R"decl(
+  const char populateInherentAttrsMethodFmt[] = R"decl(
     if (prop.{0}) attrs.append("{0}", prop.{0});
 )decl";
   for (const auto &attrOrProp : attrOrProperties) {
@@ -1980,7 +1981,7 @@ void OpEmitter::genAttrSetters() {
     // std::optional<>).
     StringRef paramStr = isUnitAttr ? "attrValue" : "*attrValue";
     if (!useProperties) {
-      const char *optionalCodeBody = R"(
+      const char optionalCodeBody[] = R"(
     if (attrValue)
       return (*this)->setAttr({0}AttrName(), {1});
     (*this)->removeAttr({0}AttrName());)";
@@ -1988,7 +1989,7 @@ void OpEmitter::genAttrSetters() {
           optionalCodeBody, getterName,
           constBuildAttrFromParam(baseAttr, fctx, paramStr));
     } else {
-      const char *optionalCodeBody = R"(
+      const char optionalCodeBody[] = R"(
     auto &odsProp = getProperties().{0};
     if (attrValue)
       odsProp = {1};
@@ -2768,11 +2769,10 @@ void OpEmitter::genInferredTypeCollectiveParamBuilder() {
          << "u && \"mismatched number of return types\");";
   body << "\n    " << builderOpState << ".addTypes(inferredReturnTypes);";
 
-  body << formatv(R"(
-  } else {{
+  body << R"(
+  } else {
     ::llvm::report_fatal_error("Failed to infer result type(s).");
-  })",
-                  opClass.getClassName(), builderOpState);
+  })";
 }
 
 void OpEmitter::genUseOperandAsResultTypeSeparateParamBuilder() {
@@ -3502,7 +3502,7 @@ void OpEmitter::genSideEffectInterfaceMethods() {
   // {2}: The side effect stage.
   // {3}: Does this side effect act on every single value of resource.
   // {4}: The resource class.
-  const char *addEffectCode =
+  const char addEffectCode[] =
       "  effects.emplace_back({0}::get(), {1}{2}, {3}, {4}::get());\n";
 
   for (auto &it : interfaceEffects) {
@@ -3745,7 +3745,7 @@ void OpEmitter::genOperandResultVerifier(MethodBody &body,
   //
   // {0}: Value index.
   // {1}: "operand" or "result"
-  const char *const verifyOptional = R"(
+  const char verifyOptional[] = R"(
     if (valueGroup{0}.size() > 1) {
       return emitOpError("{1} group starting at #") << index
           << " requires 0 or 1 element, but found " << valueGroup{0}.size();
@@ -3756,7 +3756,7 @@ void OpEmitter::genOperandResultVerifier(MethodBody &body,
   // {0}: Value index.
   // {1}: Type constraint function.
   // {2}: "operand" or "result"
-  const char *const verifyValues = R"(
+  const char verifyValues[] = R"(
     for (auto v : valueGroup{0}) {
       if (::mlir::failed({1}(*this, v.getType(), "{2}", index++)))
         return ::mlir::failure();
@@ -3819,7 +3819,7 @@ void OpEmitter::genRegionVerifier(MethodBody &body) {
   /// {1}: The region constraint.
   /// {2}: The region's name.
   /// {3}: The region description.
-  const char *const verifyRegion = R"(
+  const char verifyRegion[] = R"(
     for (auto &region : {0})
       if (::mlir::failed({1}(*this, region, "{2}", index++)))
         return ::mlir::failure();
@@ -3827,7 +3827,7 @@ void OpEmitter::genRegionVerifier(MethodBody &body) {
   /// Get a single region.
   ///
   /// {0}: The region's index.
-  const char *const getSingleRegion =
+  const char getSingleRegion[] =
       "::llvm::MutableArrayRef((*this)->getRegion({0}))";
 
   // If we have no regions, there is nothing more to do.
@@ -3855,7 +3855,7 @@ void OpEmitter::genRegionVerifier(MethodBody &body) {
 }
 
 void OpEmitter::genSuccessorVerifier(MethodBody &body) {
-  const char *const verifySuccessor = R"(
+  const char verifySuccessor[] = R"(
     for (auto *successor : {0})
       if (::mlir::failed({1}(*this, successor, "{2}", index++)))
         return ::mlir::failure();
@@ -3863,7 +3863,7 @@ void OpEmitter::genSuccessorVerifier(MethodBody &body) {
   /// Get a single successor.
   ///
   /// {0}: The successor's name.
-  const char *const getSingleSuccessor = "::llvm::MutableArrayRef({0}())";
+  const char getSingleSuccessor[] = "::llvm::MutableArrayRef({0}())";
 
   // If we have no successors, there is nothing more to do.
   const auto canSkip = [](const NamedSuccessor &successor) {
@@ -3881,8 +3881,8 @@ void OpEmitter::genSuccessorVerifier(MethodBody &body) {
       continue;
 
     auto getSuccessor =
-        formatv(successor.isVariadic() ? "{0}()" : getSingleSuccessor,
-                successor.name, it.index())
+        formatvv(successor.isVariadic() ? "{0}()" : getSingleSuccessor,
+                 successor.name, it.index())
             .str();
     auto constraintFn =
         staticVerifierEmitter.getSuccessorConstraintFn(successor.constraint);
@@ -4123,7 +4123,7 @@ OpOperandAdaptorEmitter::OpOperandAdaptorEmitter(
         comparatorOs << "        rhs." << name << " == this->" << name
                      << " &&\n";
         // Emit accessors using the interface type.
-        const char *accessorFmt = R"decl(;
+        const char accessorFmt[] = R"decl(;
     {0} get{1}() const {
       auto &propStorage = this->{2};
       return {3};
@@ -4169,7 +4169,7 @@ OpOperandAdaptorEmitter::OpOperandAdaptorEmitter(
 
       // Emit accessors using the interface type.
       if (attr) {
-        const char *accessorFmt = R"decl(
+        const char accessorFmt[] = R"decl(
     auto get{0}() {
       auto &propStorage = this->{1};
       return ::llvm::{2}<{3}>(propStorage);
@@ -4597,7 +4597,7 @@ static bool emitOpDecls(const RecordKeeper &recordKeeper, raw_ostream &os) {
   Dialect dialect = Operator(defs.front()).getDialect();
   NamespaceEmitter ns(os, dialect);
 
-  const char *const opRegistrationHook =
+  const char opRegistrationHook[] =
       "void register{0}Operations{1}({2}::{0} *dialect);\n";
   os << formatv(opRegistrationHook, dialect.getCppClassName(), "",
                 dialect.getCppNamespace());
@@ -4621,7 +4621,7 @@ static void emitOpDefShard(const RecordKeeper &recordKeeper,
   IfDefScope scope(shardGuard, os);
 
   // Emit the op registration hook in the first shard.
-  const char *const opRegistrationHook =
+  const char opRegistrationHook[] =
       "void {0}::register{1}Operations{2}({0}::{1} *dialect) {{\n";
   if (shardIndex == 0) {
     os << formatv(opRegistrationHook, dialect.getCppNamespace(),

@@ -46,7 +46,7 @@ public:
 
   void printLine(const llvm::Twine &T) { line() << T; }
   template <typename... Ts> void formatLine(const char *Fmt, Ts &&... Items) {
-    printLine(llvm::formatv(Fmt, std::forward<Ts>(Items)...));
+    printLine(llvm::formatvv(Fmt, std::forward<Ts>(Items)...));
   }
 
   void formatBinary(llvm::StringRef Label, llvm::ArrayRef<uint8_t> Data,

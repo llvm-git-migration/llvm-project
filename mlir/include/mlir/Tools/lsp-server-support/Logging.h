@@ -32,15 +32,15 @@ public:
   /// after a call to `initialize`.
   template <typename... Ts>
   static void debug(const char *fmt, Ts &&...vals) {
-    log(Level::Debug, fmt, llvm::formatv(fmt, std::forward<Ts>(vals)...));
+    log(Level::Debug, fmt, llvm::formatvv(fmt, std::forward<Ts>(vals)...));
   }
   template <typename... Ts>
   static void info(const char *fmt, Ts &&...vals) {
-    log(Level::Info, fmt, llvm::formatv(fmt, std::forward<Ts>(vals)...));
+    log(Level::Info, fmt, llvm::formatvv(fmt, std::forward<Ts>(vals)...));
   }
   template <typename... Ts>
   static void error(const char *fmt, Ts &&...vals) {
-    log(Level::Error, fmt, llvm::formatv(fmt, std::forward<Ts>(vals)...));
+    log(Level::Error, fmt, llvm::formatvv(fmt, std::forward<Ts>(vals)...));
   }
 
 private:

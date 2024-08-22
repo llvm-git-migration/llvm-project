@@ -443,7 +443,7 @@ static bool shouldFormatSymbolNameAttr(const NamedAttribute *attr) {
 ///
 /// {0}: The name of the attribute.
 /// {1}: The type for the attribute.
-const char *const attrParserCode = R"(
+const char attrParserCode[] = R"(
   if (parser.parseCustomAttributeWithFallback({0}Attr, {1})) {{
     return ::mlir::failure();
   }
@@ -453,12 +453,12 @@ const char *const attrParserCode = R"(
 ///
 /// {0}: The name of the attribute.
 /// {1}: The type for the attribute.
-const char *const genericAttrParserCode = R"(
+const char genericAttrParserCode[] = R"(
   if (parser.parseAttribute({0}Attr, {1}))
     return ::mlir::failure();
 )";
 
-const char *const optionalAttrParserCode = R"(
+const char optionalAttrParserCode[] = R"(
   ::mlir::OptionalParseResult parseResult{0}Attr =
     parser.parseOptionalAttribute({0}Attr, {1});
   if (parseResult{0}Attr.has_value() && failed(*parseResult{0}Attr))
@@ -469,11 +469,11 @@ const char *const optionalAttrParserCode = R"(
 /// The code snippet used to generate a parser call for a symbol name attribute.
 ///
 /// {0}: The name of the attribute.
-const char *const symbolNameAttrParserCode = R"(
+const char symbolNameAttrParserCode[] = R"(
   if (parser.parseSymbolName({0}Attr))
     return ::mlir::failure();
 )";
-const char *const optionalSymbolNameAttrParserCode = R"(
+const char optionalSymbolNameAttrParserCode[] = R"(
   // Parsing an optional symbol name doesn't fail, so no need to check the
   // result.
   (void)parser.parseOptionalSymbolName({0}Attr);
@@ -488,7 +488,7 @@ const char *const optionalSymbolNameAttrParserCode = R"(
 /// {4}: The set of allowed enum keywords.
 /// {5}: The error message on failure when the enum isn't present.
 /// {6}: The attribute assignment expression
-const char *const enumAttrParserCode = R"(
+const char enumAttrParserCode[] = R"(
   {
     ::llvm::StringRef attrStr;
     ::mlir::NamedAttrList attrStorage;
@@ -524,7 +524,7 @@ const char *const enumAttrParserCode = R"(
 /// {1}: The C++ class name of the operation
 /// {2}: The property's parser code with appropriate substitutions performed
 /// {3}: The description of the expected property for the error message.
-const char *const propertyParserCode = R"(
+const char propertyParserCode[] = R"(
   auto {0}PropLoc = parser.getCurrentLocation();
   auto {0}PropParseResult = [&](auto& propStorage) -> ::mlir::ParseResult {{
     {2}
@@ -539,7 +539,7 @@ const char *const propertyParserCode = R"(
 /// {0}: The name of the property
 /// {1}: The C++ class name of the operation
 /// {2}: The property's parser code with appropriate substitutions performed
-const char *const optionalPropertyParserCode = R"(
+const char optionalPropertyParserCode[] = R"(
   auto {0}PropParseResult = [&](auto& propStorage) -> ::mlir::OptionalParseResult {{
     {2}
     return ::mlir::success();
@@ -552,12 +552,12 @@ const char *const optionalPropertyParserCode = R"(
 /// The code snippet used to generate a parser call for an operand.
 ///
 /// {0}: The name of the operand.
-const char *const variadicOperandParserCode = R"(
+const char variadicOperandParserCode[] = R"(
   {0}OperandsLoc = parser.getCurrentLocation();
   if (parser.parseOperandList({0}Operands))
     return ::mlir::failure();
 )";
-const char *const optionalOperandParserCode = R"(
+const char optionalOperandParserCode[] = R"(
   {
     {0}OperandsLoc = parser.getCurrentLocation();
     ::mlir::OpAsmParser::UnresolvedOperand operand;
@@ -570,7 +570,7 @@ const char *const optionalOperandParserCode = R"(
     }
   }
 )";
-const char *const operandParserCode = R"(
+const char operandParserCode[] = R"(
   {0}OperandsLoc = parser.getCurrentLocation();
   if (parser.parseOperand({0}RawOperand))
     return ::mlir::failure();
@@ -579,8 +579,7 @@ const char *const operandParserCode = R"(
 /// operand.
 ///
 /// {0}: The name of the operand.
-/// {1}: The name of segment size attribute.
-const char *const variadicOfVariadicOperandParserCode = R"(
+const char variadicOfVariadicOperandParserCode[] = R"(
   {
     {0}OperandsLoc = parser.getCurrentLocation();
     int32_t curSize = 0;
@@ -598,7 +597,7 @@ const char *const variadicOfVariadicOperandParserCode = R"(
 /// The code snippet used to generate a parser call for a type list.
 ///
 /// {0}: The name for the type list.
-const char *const variadicOfVariadicTypeParserCode = R"(
+const char variadicOfVariadicTypeParserCode[] = R"(
   do {
     if (parser.parseOptionalLParen())
       break;
@@ -607,11 +606,11 @@ const char *const variadicOfVariadicTypeParserCode = R"(
       return ::mlir::failure();
   } while (succeeded(parser.parseOptionalComma()));
 )";
-const char *const variadicTypeParserCode = R"(
+const char variadicTypeParserCode[] = R"(
   if (parser.parseTypeList({0}Types))
     return ::mlir::failure();
 )";
-const char *const optionalTypeParserCode = R"(
+const char optionalTypeParserCode[] = R"(
   {
     ::mlir::Type optionalType;
     ::mlir::OptionalParseResult parseResult =
@@ -623,7 +622,7 @@ const char *const optionalTypeParserCode = R"(
     }
   }
 )";
-const char *const typeParserCode = R"(
+const char typeParserCode[] = R"(
   {
     {0} type;
     if (parser.parseCustomTypeWithFallback(type))
@@ -631,7 +630,7 @@ const char *const typeParserCode = R"(
     {1}RawType = type;
   }
 )";
-const char *const qualifiedTypeParserCode = R"(
+const char qualifiedTypeParserCode[] = R"(
   if (parser.parseType({1}RawType))
     return ::mlir::failure();
 )";
@@ -640,7 +639,7 @@ const char *const qualifiedTypeParserCode = R"(
 ///
 /// {0}: The name for the input type list.
 /// {1}: The name for the result type list.
-const char *const functionalTypeParserCode = R"(
+const char functionalTypeParserCode[] = R"(
   ::mlir::FunctionType {0}__{1}_functionType;
   if (parser.parseType({0}__{1}_functionType))
     return ::mlir::failure();
@@ -651,7 +650,7 @@ const char *const functionalTypeParserCode = R"(
 /// The code snippet used to generate a parser call to infer return types.
 ///
 /// {0}: The operation class name
-const char *const inferReturnTypesParserCode = R"(
+const char inferReturnTypesParserCode[] = R"(
   ::llvm::SmallVector<::mlir::Type> inferredReturnTypes;
   if (::mlir::failed({0}::inferReturnTypes(parser.getContext(),
       result.location, result.operands,
@@ -665,7 +664,7 @@ const char *const inferReturnTypesParserCode = R"(
 /// The code snippet used to generate a parser call for a region list.
 ///
 /// {0}: The name for the region list.
-const char *regionListParserCode = R"(
+const char regionListParserCode[] = R"(
   {
     std::unique_ptr<::mlir::Region> region;
     auto firstRegionResult = parser.parseOptionalRegion(region);
@@ -688,7 +687,7 @@ const char *regionListParserCode = R"(
 /// The code snippet used to ensure a list of regions have terminators.
 ///
 /// {0}: The name of the region list.
-const char *regionListEnsureTerminatorParserCode = R"(
+const char regionListEnsureTerminatorParserCode[] = R"(
   for (auto &region : {0}Regions)
     ensureTerminator(*region, parser.getBuilder(), result.location);
 )";
@@ -696,7 +695,7 @@ const char *regionListEnsureTerminatorParserCode = R"(
 /// The code snippet used to ensure a list of regions have a block.
 ///
 /// {0}: The name of the region list.
-const char *regionListEnsureSingleBlockParserCode = R"(
+const char regionListEnsureSingleBlockParserCode[] = R"(
   for (auto &region : {0}Regions)
     if (region->empty()) region->emplaceBlock();
 )";
@@ -704,7 +703,7 @@ const char *regionListEnsureSingleBlockParserCode = R"(
 /// The code snippet used to generate a parser call for an optional region.
 ///
 /// {0}: The name of the region.
-const char *optionalRegionParserCode = R"(
+const char optionalRegionParserCode[] = R"(
   {
      auto parseResult = parser.parseOptionalRegion(*{0}Region);
      if (parseResult.has_value() && failed(*parseResult))
@@ -715,7 +714,7 @@ const char *optionalRegionParserCode = R"(
 /// The code snippet used to generate a parser call for a region.
 ///
 /// {0}: The name of the region.
-const char *regionParserCode = R"(
+const char regionParserCode[] = R"(
   if (parser.parseRegion(*{0}Region))
     return ::mlir::failure();
 )";
@@ -723,21 +722,21 @@ const char *regionParserCode = R"(
 /// The code snippet used to ensure a region has a terminator.
 ///
 /// {0}: The name of the region.
-const char *regionEnsureTerminatorParserCode = R"(
+const char regionEnsureTerminatorParserCode[] = R"(
   ensureTerminator(*{0}Region, parser.getBuilder(), result.location);
 )";
 
 /// The code snippet used to ensure a region has a block.
 ///
 /// {0}: The name of the region.
-const char *regionEnsureSingleBlockParserCode = R"(
+const char regionEnsureSingleBlockParserCode[] = R"(
   if ({0}Region->empty()) {0}Region->emplaceBlock();
 )";
 
 /// The code snippet used to generate a parser call for a successor list.
 ///
 /// {0}: The name for the successor list.
-const char *successorListParserCode = R"(
+const char successorListParserCode[] = R"(
   {
     ::mlir::Block *succ;
     auto firstSucc = parser.parseOptionalSuccessor(succ);
@@ -759,7 +758,7 @@ const char *successorListParserCode = R"(
 /// The code snippet used to generate a parser call for a successor.
 ///
 /// {0}: The name of the successor.
-const char *successorParserCode = R"(
+const char successorParserCode[] = R"(
   if (parser.parseSuccessor({0}Successor))
     return ::mlir::failure();
 )";
@@ -767,7 +766,7 @@ const char *successorParserCode = R"(
 /// The code snippet used to generate a parser for OIList
 ///
 /// {0}: literal keyword corresponding to a case for oilist
-const char *oilistParserCode = R"(
+const char oilistParserCode[] = R"(
   if ({0}Clause) {
     return parser.emitError(parser.getNameLoc())
           << "`{0}` clause can appear at most once in the expansion of the "
@@ -1122,7 +1121,7 @@ static void genCustomDirectiveParser(CustomDirective *dir, MethodBody &body,
             "      {0}Operands.append(subRange.begin(), subRange.end());\n"
             "      {0}OperandGroupSizes.push_back(subRange.size());\n"
             "    }\n",
-            var->name, var->constraint.getVariadicOfVariadicSegmentSizeAttr());
+            var->name);
       }
     } else if (auto *dir = dyn_cast<TypeDirective>(param)) {
       ArgumentLengthKind lengthKind;
@@ -1233,9 +1232,9 @@ static void genAttrParser(AttributeVariable *attr, MethodBody &body,
 
   // Check to see if we should parse this as a symbol name attribute.
   if (shouldFormatSymbolNameAttr(var)) {
-    body << formatv(parseAsOptional ? optionalSymbolNameAttrParserCode
-                                    : symbolNameAttrParserCode,
-                    var->name);
+    body << formatvv(parseAsOptional ? optionalSymbolNameAttrParserCode
+                                     : symbolNameAttrParserCode,
+                     var->name);
   } else {
 
     // If this attribute has a buildable type, use that when parsing the
@@ -1299,7 +1298,7 @@ if (!dict) {
   // {0}: fromAttribute call
   // {1}: property name
   // {2}: isRequired
-  const char *propFromAttrFmt = R"decl(
+  const char propFromAttrFmt[] = R"decl(
 auto setFromAttr = [] (auto &propStorage, ::mlir::Attribute propAttr,
          ::llvm::function_ref<::mlir::InFlightDiagnostic()> emitError) -> ::mlir::LogicalResult {{
   {0};
@@ -1575,9 +1574,7 @@ void OperationFormat::genElementParser(FormatElement *element, MethodBody &body,
     ArgumentLengthKind lengthKind = getArgumentLengthKind(operand->getVar());
     StringRef name = operand->getVar()->name;
     if (lengthKind == ArgumentLengthKind::VariadicOfVariadic)
-      body << llvm::formatv(
-          variadicOfVariadicOperandParserCode, name,
-          operand->getVar()->constraint.getVariadicOfVariadicSegmentSizeAttr());
+      body << llvm::formatv(variadicOfVariadicOperandParserCode, name);
     else if (lengthKind == ArgumentLengthKind::Variadic)
       body << llvm::formatv(variadicOperandParserCode, name);
     else if (lengthKind == ArgumentLengthKind::Optional)
@@ -1587,21 +1584,21 @@ void OperationFormat::genElementParser(FormatElement *element, MethodBody &body,
 
   } else if (auto *region = dyn_cast<RegionVariable>(element)) {
     bool isVariadic = region->getVar()->isVariadic();
-    body << llvm::formatv(isVariadic ? regionListParserCode : regionParserCode,
-                          region->getVar()->name);
+    body << llvm::formatvv(isVariadic ? regionListParserCode : regionParserCode,
+                           region->getVar()->name);
     if (hasImplicitTermTrait)
-      body << llvm::formatv(isVariadic ? regionListEnsureTerminatorParserCode
-                                       : regionEnsureTerminatorParserCode,
-                            region->getVar()->name);
+      body << llvm::formatvv(isVariadic ? regionListEnsureTerminatorParserCode
+                                        : regionEnsureTerminatorParserCode,
+                             region->getVar()->name);
     else if (hasSingleBlockTrait)
-      body << llvm::formatv(isVariadic ? regionListEnsureSingleBlockParserCode
-                                       : regionEnsureSingleBlockParserCode,
-                            region->getVar()->name);
+      body << llvm::formatvv(isVariadic ? regionListEnsureSingleBlockParserCode
+                                        : regionEnsureSingleBlockParserCode,
+                             region->getVar()->name);
 
   } else if (auto *successor = dyn_cast<SuccessorVariable>(element)) {
     bool isVariadic = successor->getVar()->isVariadic();
-    body << formatv(isVariadic ? successorListParserCode : successorParserCode,
-                    successor->getVar()->name);
+    body << formatvv(isVariadic ? successorListParserCode : successorParserCode,
+                     successor->getVar()->name);
 
     /// Directives.
   } else if (auto *attrDict = dyn_cast<AttrDictDirective>(element)) {
@@ -1656,12 +1653,12 @@ void OperationFormat::genElementParser(FormatElement *element, MethodBody &body,
           dir->shouldBeQualified() ? qualifiedTypeParserCode : typeParserCode;
       TypeSwitch<FormatElement *>(dir->getArg())
           .Case<OperandVariable, ResultVariable>([&](auto operand) {
-            body << formatv(parserCode,
-                            operand->getVar()->constraint.getCppType(),
-                            listName);
+            body << formatvv(parserCode,
+                             operand->getVar()->constraint.getCppType(),
+                             listName);
           })
           .Default([&](auto operand) {
-            body << formatv(parserCode, "::mlir::Type", listName);
+            body << formatvv(parserCode, "::mlir::Type", listName);
           });
     }
   } else if (auto *dir = dyn_cast<FunctionalTypeDirective>(element)) {
@@ -1954,7 +1951,7 @@ void OperationFormat::genParserVariadicSegmentResolution(Operator &op,
 // operation that has the SingleBlockImplicitTerminator trait.
 ///
 /// {0}: The name of the region.
-const char *regionSingleBlockImplicitTerminatorPrinterCode = R"(
+const char regionSingleBlockImplicitTerminatorPrinterCode[] = R"(
   {
     bool printTerminator = true;
     if (auto *term = {0}.empty() ? nullptr : {0}.begin()->getTerminator()) {{
@@ -1972,7 +1969,7 @@ const char *regionSingleBlockImplicitTerminatorPrinterCode = R"(
 ///
 /// {0}: The name of the enum attribute.
 /// {1}: The name of the enum attributes symbolToString function.
-const char *enumAttrBeginPrinterCode = R"(
+const char enumAttrBeginPrinterCode[] = R"(
   {
     auto caseValue = {0}();
     auto caseValueStr = {1}(caseValue);

@@ -66,7 +66,7 @@ public:
 
   template <typename... Args>
   static Status createWithFormat(const char *format, Args &&...args) {
-    return Status(llvm::formatv(format, std::forward<Args>(args)...));
+    return Status(llvm::formatvv(format, std::forward<Args>(args)...));
   }
 
   ~Status();
@@ -167,7 +167,7 @@ public:
 
   template <typename... Args>
   void SetErrorStringWithFormatv(const char *format, Args &&... args) {
-    SetErrorString(llvm::formatv(format, std::forward<Args>(args)...).str());
+    SetErrorString(llvm::formatvv(format, std::forward<Args>(args)...).str());
   }
 
   /// Test for success condition.

@@ -520,7 +520,7 @@ struct format_tuple {
   explicit format_tuple(const char *Fmt) : Fmt(Fmt) {}
 
   template <typename... Ts> auto operator()(Ts &&... Values) const {
-    return formatv(Fmt, std::forward<Ts>(Values)...);
+    return formatvv(Fmt, std::forward<Ts>(Values)...);
   }
 };
 
@@ -536,12 +536,12 @@ TEST(FormatVariadicTest, BigTest) {
             .08215f, (void *)nullptr, 0, 6.62E-34, -908234908423,
             908234908422234, std::numeric_limits<double>::infinity(), 0x0)};
   // Test long string formatting with many edge cases combined.
-  const char *Intro =
+  const char Intro[] =
       "There are {{{0}} items in the tuple, and {{{1}} tuple(s) in the array.";
-  const char *Header =
+  const char Header[] =
       "{0,6}|{1,8}|{2,=10}|{3,=10}|{4,=13}|{5,7}|{6,7}|{7,10}|{8,"
       "-7}|{9,10}|{10,16}|{11,17}|{12,6}|{13,4}";
-  const char *Line =
+  const char Line[] =
       "{0,6}|{1,8:X}|{2,=10}|{3,=10:5}|{4,=13}|{5,7:3}|{6,7:P2}|{7,"
       "10:X8}|{8,-7:N}|{9,10:E4}|{10,16:N}|{11,17:D}|{12,6}|{13,"
       "4:X}";
@@ -719,7 +719,7 @@ TEST(FormatVariadicTest, FormatError) {
 }
 
 TEST(FormatVariadicTest, FormatErrorNumArgMismatch) {
-#ifndef NDEBUG
+#ifdef NDEBUG // Disable the test in debug builds where it will assert.
   EXPECT_EQ(
       formatv("{0}", 0, 1).str(),
       "formatv() error: 1 replacement parameters expected, but 2 provided");

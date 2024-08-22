@@ -2986,7 +2986,7 @@ Error DWARFLinker::link() {
 
     int64_t InputTotal = 0;
     int64_t OutputTotal = 0;
-    const char *FormatStr = "{0,-45} {1,10}b  {2,10}b {3,8:P}\n";
+    const char FormatStr[] = "{0,-45} {1,10}b  {2,10}b {3,8:P}\n";
 
     // Print header.
     outs() << ".debug_info section size (in bytes)\n";

@@ -135,7 +135,7 @@ private:
   void sendMessage(llvm::json::Value Message) {
     OutputBuffer.clear();
     llvm::raw_svector_ostream OS(OutputBuffer);
-    OS << llvm::formatv(Pretty ? "{0:2}" : "{0}", Message);
+    OS << llvm::formatvv(Pretty ? "{0:2}" : "{0}", Message);
     Out << "Content-Length: " << OutputBuffer.size() << "\r\n\r\n"
         << OutputBuffer;
     Out.flush();

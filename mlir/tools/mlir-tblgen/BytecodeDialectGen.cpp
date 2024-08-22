@@ -87,14 +87,14 @@ static std::string getCType(Record *def) {
     if (def->isAnonymous())
       PrintFatalError(def->getLoc(), "Unable to determine cType");
 
-    return formatv(format.c_str(), def->getName().str());
+    return formatvv(format.c_str(), def->getName().str());
   }
-  return formatv(format.c_str(), cType.str());
+  return formatvv(format.c_str(), cType.str());
 }
 
 void Generator::emitParseDispatch(StringRef kind, ArrayRef<Record *> vec) {
   mlir::raw_indented_ostream os(output);
-  char const *head =
+  char const head[] =
       R"(static {0} read{0}(MLIRContext* context, DialectBytecodeReader &reader))";
   os << formatv(head, capitalize(kind));
   auto funScope = os.scope(" {\n", "}\n\n");
@@ -130,7 +130,7 @@ void Generator::emitParse(StringRef kind, Record &x) {
   if (x.getNameInitAsString() == "ReservedOrDead")
     return;
 
-  char const *head =
+  char const head[] =
       R"(static {0} read{1}(MLIRContext* context, DialectBytecodeReader &reader) )";
   mlir::raw_indented_ostream os(output);
   std::string returnType = getCType(&x);
@@ -297,7 +297,7 @@ void Generator::emitPrint(StringRef kind, StringRef type,
   if (type == "ReservedOrDead")
     return;
 
-  char const *head =
+  char const head[] =
       R"(static void write({0} {1}, DialectBytecodeWriter &writer) )";
   mlir::raw_indented_ostream os(output);
   os << formatv(head, type, kind);
@@ -401,7 +401,7 @@ void Generator::emitPrintHelper(Record *memberRec, StringRef kind,
 
 void Generator::emitPrintDispatch(StringRef kind, ArrayRef<std::string> vec) {
   mlir::raw_indented_ostream os(output);
-  char const *head = R"(static LogicalResult write{0}({0} {1},
+  char const head[] = R"(static LogicalResult write{0}({0} {1},
                                 DialectBytecodeWriter &writer))";
   os << formatv(head, capitalize(kind), kind);
   auto funScope = os.scope(" {\n", "}\n\n");

@@ -50,8 +50,8 @@ std::string buildSpecialMemberDeclarations(const CXXRecordDecl &Class) {
     bool Delete = !D || D->isDeleted();
     OS << llvm::formatv(
         "{0} = {1};\n",
-        llvm::formatv(MemberPattern, Class.getName(),
-                      llvm::formatv(ParmPattern, Class.getName())),
+        llvm::formatvv(MemberPattern, Class.getName(),
+                       llvm::formatvv(ParmPattern, Class.getName())),
         Delete ? "delete" : "default");
   };
   auto PrintMembers = [&](const Members &M, const char *MemberPattern) {

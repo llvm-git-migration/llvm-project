@@ -33,7 +33,7 @@ Value mlir::x86vector::avx2::inline_asm::mm256BlendPsAsm(
     ImplicitLocOpBuilder &b, Value v1, Value v2, uint8_t mask) {
   auto asmDialectAttr =
       LLVM::AsmDialectAttr::get(b.getContext(), LLVM::AsmDialect::AD_Intel);
-  const auto *asmTp = "vblendps $0, $1, $2, {0}";
+  const char asmTp[] = "vblendps $0, $1, $2, {0}";
   const auto *asmCstr =
       "=x,x,x"; // Careful: constraint parser is very brittle: no ws!
   SmallVector<Value> asmVals{v1, v2};
