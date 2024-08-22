@@ -3683,6 +3683,33 @@ LLVMValueRef LLVMInstructionClone(LLVMValueRef Inst);
 LLVMValueRef LLVMIsATerminatorInst(LLVMValueRef Inst);
 
 /**
+ * Obtain the first debug record attached to a instruction.
+ *
+ * The returned debug record can be used as an iterator. You will likely
+ * eventually call into LLVMGetNextDbgRecord() with it.
+ *
+ * @see llvm::Instruction::getDbgRecordRange()
+ */
+LLVMDbgRecordRef LLVMGetFirstDbgRecord(LLVMValueRef Inst);
+
+/**
+ * Obtain the last debug record attached to a instruction.
+ *
+ * @see llvm::Instruction::getDbgRecordRange()
+ */
+LLVMDbgRecordRef LLVMGetLastDbgRecord(LLVMValueRef Inst);
+
+/**
+ * Advance a debug record iterator.
+ */
+LLVMDbgRecordRef LLVMGetNextDbgRecord(LLVMDbgRecordRef DbgRecord);
+
+/**
+ * Go backwards in a debug record iterator.
+ */
+LLVMDbgRecordRef LLVMGetPreviousDbgRecord(LLVMDbgRecordRef DbgRecord);
+
+/**
  * @defgroup LLVMCCoreValueInstructionCall Call Sites and Invocations
  *
  * Functions in this group apply to instructions that refer to call
