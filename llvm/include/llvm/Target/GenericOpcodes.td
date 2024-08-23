@@ -1141,7 +1141,7 @@ def G_RESET_FPMODE : GenericInstruction {
 //------------------------------------------------------------------------------
 // Opcodes for LLVM Intrinsics
 //------------------------------------------------------------------------------
-def G_INTRINSIC_FPTRUNC_ROUND : GenericInstruction {
+def G_FPTRUNC_ROUND : GenericInstruction {
   let OutOperandList = (outs type0:$dst);
   let InOperandList = (ins type1:$src1, i32imm:$round_mode);
   let hasSideEffects = false;

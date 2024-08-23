@@ -419,3 +419,6 @@ def gi_frameindex_to_targetframeindex : GICustomOperandRenderer<"renderFrameInde
 
 def gi_fp_pow2_to_exponent : GICustomOperandRenderer<"renderFPPow2ToExponent">,
   GISDNodeXFormEquiv<FPPow2ToExponentXForm>;
+
+def gi_as_hw_round_mode : GICustomOperandRenderer<"renderRoundMode">,
+  GISDNodeXFormEquiv<as_hw_round_mode>;

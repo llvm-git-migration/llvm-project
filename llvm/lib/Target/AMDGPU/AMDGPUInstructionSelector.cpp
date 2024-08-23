@@ -5595,6 +5595,12 @@ void AMDGPUInstructionSelector::renderFPPow2ToExponent(MachineInstrBuilder &MIB,
   MIB.addImm(ExpVal);
 }
 
+void AMDGPUInstructionSelector::renderRoundMode(MachineInstrBuilder &MIB,
+                                                const MachineInstr &MI,
+                                                int OpIdx) const {
+  MIB.addImm((MI.getOperand(OpIdx).getImm() + 3) % 4);
+}
+
 bool AMDGPUInstructionSelector::isInlineImmediate(const APInt &Imm) const {
   return TII.isInlineConstant(Imm);
 }

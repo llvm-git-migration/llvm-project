@@ -2522,8 +2522,7 @@ bool IRTranslator::translateKnownIntrinsic(const CallInst &CI, Intrinsic::ID ID,
 
     // Add the Rounding mode as an integer
     MIRBuilder
-        .buildInstr(TargetOpcode::G_INTRINSIC_FPTRUNC_ROUND,
-                    {getOrCreateVReg(CI)},
+        .buildInstr(TargetOpcode::G_FPTRUNC_ROUND, {getOrCreateVReg(CI)},
                     {getOrCreateVReg(*CI.getArgOperand(0))}, Flags)
         .addImm((int)*RoundMode);
 
