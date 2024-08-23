@@ -61,7 +61,12 @@ inline void FreeStore::remove(Block<> *block) {
   LIBC_ASSERT(block->inner_size_free() >= MIN_SIZE &&
               "block too small to have been present");
   if (is_small(block)) {
-    auto *list = static_cast<FreeList2 *>(block->usable_space());
+    FreeList2 *block_list = static_cast<FreeList2 *>(block->usable_space());
+    FreeList2 *&list = small_list(block);
+    if (block_list == list)
+      FreeList2::pop(list);
+    else
+      FreeList2::pop(block_list);
   } else {
     auto *trie = static_cast<FreeTrie *>(block->usable_space());
   }
