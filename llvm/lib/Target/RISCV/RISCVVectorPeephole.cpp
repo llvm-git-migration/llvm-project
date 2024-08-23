@@ -365,8 +365,10 @@ bool RISCVVectorPeephole::convertVMergeToVMv(MachineInstr &MI) const {
   MI.removeOperand(1);  // Passthru operand
   MI.tieOperands(0, 1); // Tie false to dest
   MI.removeOperand(3);  // Mask operand
-  MI.addOperand(
-      MachineOperand::CreateImm(RISCVII::TAIL_UNDISTURBED_MASK_UNDISTURBED));
+  int64_t Policy = RISCVII::TAIL_UNDISTURBED_MASK_UNDISTURBED;
+  if (PassthruReg == RISCV::NoRegister)
+    Policy |= RISCVII::TAIL_AGNOSTIC;
+  MI.addOperand(MachineOperand::CreateImm(Policy));
 
   // vmv.v.v doesn't have a mask operand, so we may be able to inflate the
   // register class for the destination and passthru operands e.g. VRNoV0 -> VR
@@ -520,10 +522,12 @@ bool RISCVVectorPeephole::foldVMV_V_V(MachineInstr &MI) {
                                               *Src->getParent()->getParent()));
   }
 
-  // Use a conservative tu,mu policy, RISCVInsertVSETVLI will relax it if
-  // passthru is undef.
-  Src->getOperand(RISCVII::getVecPolicyOpNum(Src->getDesc()))
-      .setImm(RISCVII::TAIL_UNDISTURBED_MASK_UNDISTURBED);
+  // If MI had a ta policy and the VL didn't increase, we can preserve it.
+  int64_t Policy = RISCVII::TAIL_UNDISTURBED_MASK_UNDISTURBED;
+  if ((MI.getOperand(5).getImm() & RISCVII::TAIL_AGNOSTIC) &&
+      isVLKnownLE(MI.getOperand(3), SrcVL))
+    Policy |= RISCVII::TAIL_AGNOSTIC;
+  Src->getOperand(RISCVII::getVecPolicyOpNum(Src->getDesc())).setImm(Policy);
 
   MRI->replaceRegWith(MI.getOperand(0).getReg(), Src->getOperand(0).getReg());
   MI.eraseFromParent();
