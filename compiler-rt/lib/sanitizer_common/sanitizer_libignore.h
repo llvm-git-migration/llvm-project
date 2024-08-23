@@ -71,10 +71,10 @@ class LibIgnore {
       begin_ = begin >> 1;
     }
 
-  private:
+   private:
     uptr begin_ : 63;
 
-  public:
+   public:
     uptr loaded : 1;
     uptr end;
   };

@@ -92,9 +92,10 @@ void LibIgnore::OnLibraryLoaded(const char *name) {
       }
     }
     if (lib->loaded && !loaded) {
-      VReport(1, "%s: library '%s' that was matched against called_from_lib"
-             " suppression '%s' is unloaded\n",
-             SanitizerToolName, lib->name, lib->templ);
+      VReport(1,
+              "%s: library '%s' that was matched against called_from_lib"
+              " suppression '%s' is unloaded\n",
+              SanitizerToolName, lib->name, lib->templ);
       // The library is unloaded so mark the ignored code range as unloaded.
       CHECK_NE(lib->ignored_code_range_id, kInvalidCodeRangeId);
       ignored_code_ranges_[lib->ignored_code_range_id].loaded = 0;

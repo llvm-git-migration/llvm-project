@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
 #else  // #ifdef LIB
 
-#include "ignore_lib_lib.h"
+#  include "ignore_lib_lib.h"
 
 #endif  // #ifdef LIB
 
@@ -49,4 +49,3 @@ int main(int argc, char **argv) {
 // CHECK: Matched called_from_lib suppression 'ignore_lib3.so'
 // CHECK: library '{{.*}}ignore_lib3.so' that was matched against called_from_lib suppression 'ignore_lib3.so' is unloaded
 // CHECK: OK
-
