@@ -22,6 +22,7 @@ class FreeStore {
 public:
   void set_range(FreeTrie::SizeRange range);
   void insert(Block<> *block);
+  void remove(Block<> *block);
   Block<> *remove_best_fit(size_t size);
 
 private:
@@ -34,7 +35,7 @@ private:
   static bool is_small(size_t size);
 
   FreeList2 *&small_list(Block<> *block);
-  FreeList2 *&small_list(size_t size);
+  FreeList2 **best_small_fit(size_t size);
 
   cpp::array<FreeList2 *, NUM_SMALL_SIZES> small_lists = {nullptr};
   FreeTrie *large_trie = nullptr;
@@ -56,24 +57,32 @@ inline void FreeStore::insert(Block<> *block) {
                    block);
 }
 
+inline void FreeStore::remove(Block<> *block) {
+  LIBC_ASSERT(block->inner_size_free() >= MIN_SIZE &&
+              "block too small to have been present");
+  if (is_small(block)) {
+    auto *list = static_cast<FreeList2 *>(block->usable_space());
+  } else {
+    auto *trie = static_cast<FreeTrie *>(block->usable_space());
+  }
+}
+
 inline Block<> *FreeStore::remove_best_fit(size_t size) {
   if (is_small(size)) {
-    for (FreeList2 *&list : small_lists) {
-      if (!list || list->size() < size)
-        continue;
-      Block<> *block = list->block();
-      FreeList2::pop(list);
-      return block;
-    }
-    return nullptr;
-  } else {
-    FreeTrie **best_fit = FreeTrie::find_best_fit(large_trie, size, range);
-    if (!best_fit)
+    FreeList2 **list = best_small_fit(size);
+    if (!list)
       return nullptr;
-    Block<> *block = (*best_fit)->block();
-    FreeTrie::pop(*best_fit);
+    Block<> *block = (*list)->block();
+    FreeList2::pop(*list);
     return block;
   }
+
+  FreeTrie **best_fit = FreeTrie::find_best_fit(large_trie, size, range);
+  if (!best_fit)
+    return nullptr;
+  Block<> *block = (*best_fit)->block();
+  FreeTrie::pop(*best_fit);
+  return block;
 }
 
 inline bool FreeStore::is_small(Block<> *block) {
@@ -90,6 +99,13 @@ inline FreeList2 *&FreeStore::small_list(Block<> *block) {
   LIBC_ASSERT(is_small(block) && "only legal for small blocks");
   return small_lists[(block->inner_size_free() - MIN_SIZE) /
                      alignof(max_align_t)];
+}
+
+inline FreeList2 **FreeStore::best_small_fit(size_t size) {
+  for (FreeList2 *&list : small_lists)
+    if (list && list->size() >= size)
+      return &list;
+  return nullptr;
 }
 
 } // namespace LIBC_NAMESPACE_DECL
