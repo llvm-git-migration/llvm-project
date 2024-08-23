@@ -95,9 +95,22 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
   case MachineOperand::MO_Metadata:
     StableHashBailingMetadataUnsupported++;
     return 0;
-  case MachineOperand::MO_GlobalAddress:
-    StableHashBailingGlobalAddress++;
-    return 0;
+  case MachineOperand::MO_GlobalAddress: {
+    const GlobalValue *GV = MO.getGlobal();
+    if (GV->hasPrivateLinkage() || !GV->hasName()) {
+      StableHashBailingGlobalAddress++;
+      return 0;
+    }
+    auto Name = GV->getName();
+    // Use the content hash of the outlined function.
+    auto Pos = Name.find_last_of(".content.");
+    if (Pos != StringRef::npos) {
+      assert(Name.starts_with("OUTLINED_FUNCTION"));
+      Name = Name.substr(Pos);
+    }
+    return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
+                               xxh3_64bits(Name), MO.getOffset());
+  }
   case MachineOperand::MO_TargetIndex: {
     if (const char *Name = MO.getTargetIndexName())
       return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
@@ -142,7 +155,6 @@ stable_hash llvm::stableHashValue(const MachineOperand &MO) {
     llvm::transform(
         MO.getShuffleMask(), std::back_inserter(ShuffleMaskHashes),
         [](int S) -> llvm::stable_hash { return llvm::stable_hash(S); });
-
     return stable_hash_combine(MO.getType(), MO.getTargetFlags(),
                                stable_hash_combine(ShuffleMaskHashes));
   }
