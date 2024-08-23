@@ -1640,6 +1640,11 @@ LogicalResult CppEmitter::emitType(Location loc, Type type) {
   }
   if (auto fType = dyn_cast<FloatType>(type)) {
     switch (fType.getWidth()) {
+    case 16:
+      if (llvm::isa<Float16Type>(type))
+        return (os << "_Float16"), success();
+      else
+        return (os << "__bf16"), success();
     case 32:
       return (os << "float"), success();
     case 64:
