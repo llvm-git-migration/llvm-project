@@ -497,12 +497,11 @@ def LD_pseudo
 }
 
 // STORE instructions
-class STORE<BPFWidthModifer SizeOp, string OpcodeStr, list<dag> Pattern>
-    : TYPE_LD_ST<BPF_MEM.Value, SizeOp.Value,
+class STORE<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list<dag> Pattern>
+    : TYPE_LD_ST<ModOp.Value, SizeOp.Value,
                  (outs),
                  (ins GPR:$src, MEMri:$addr),
-                 "*("#OpcodeStr#" *)($addr) = $src",
-                 Pattern> {
+                 AsmString, Pattern> {
   bits<4> src;
   bits<20> addr;
 
@@ -513,7 +512,7 @@ class STORE<BPFWidthModifer SizeOp, string OpcodeStr, list<dag> Pattern>
 }
 
 class STOREi64<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
-    : STORE<Opc, OpcodeStr, [(OpNode GPR:$src, ADDRri:$addr)]>;
+    : STORE<Opc, BPF_MEM, "*("#OpcodeStr#" *)($addr) = $src", [(OpNode GPR:$src, ADDRri:$addr)]>;
 
 let Predicates = [BPFNoALU32] in {
   def STW : STOREi64<BPF_W, "u32", truncstorei32>;
@@ -567,12 +566,11 @@ let Predicates = [BPFHasALU32, BPFHasStoreImm] in {
 }
 
 // LOAD instructions
-class LOAD<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, list<dag> Pattern>
+class LOAD<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list<dag> Pattern>
     : TYPE_LD_ST<ModOp.Value, SizeOp.Value,
                  (outs GPR:$dst),
                  (ins MEMri:$addr),
-                 "$dst = *("#OpcodeStr#" *)($addr)",
-                 Pattern> {
+                 AsmString, Pattern> {
   bits<4> dst;
   bits<20> addr;
 
@@ -583,7 +581,8 @@ class LOAD<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, list<
 }
 
 class LOADi64<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, PatFrag OpNode>
-    : LOAD<SizeOp, ModOp, OpcodeStr, [(set i64:$dst, (OpNode ADDRri:$addr))]>;
+    : LOAD<SizeOp, ModOp, "$dst = *("#OpcodeStr#" *)($addr)",
+           [(set i64:$dst, (OpNode ADDRri:$addr))]>;
 
 let isCodeGenOnly = 1 in {
   class CORE_LD<RegisterClass RegClass, string Sz>
@@ -1163,12 +1162,11 @@ def : Pat<(i32 (trunc GPR:$src)),
 def : Pat<(i64 (anyext GPR32:$src)),
           (INSERT_SUBREG (i64 (IMPLICIT_DEF)), GPR32:$src, sub_32)>;
 
-class STORE32<BPFWidthModifer SizeOp, string OpcodeStr, list<dag> Pattern>
-    : TYPE_LD_ST<BPF_MEM.Value, SizeOp.Value,
+class STORE32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list<dag> Pattern>
+    : TYPE_LD_ST<ModOp.Value, SizeOp.Value,
                  (outs),
                  (ins GPR32:$src, MEMri:$addr),
-                 "*("#OpcodeStr#" *)($addr) = $src",
-                 Pattern> {
+                 AsmString, Pattern> {
   bits<4> src;
   bits<20> addr;
 
@@ -1179,7 +1177,8 @@ class STORE32<BPFWidthModifer SizeOp, string OpcodeStr, list<dag> Pattern>
 }
 
 class STOREi32<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
-    : STORE32<Opc, OpcodeStr, [(OpNode GPR32:$src, ADDRri:$addr)]>;
+    : STORE32<Opc, BPF_MEM, "*("#OpcodeStr#" *)($addr) = $src",
+              [(OpNode GPR32:$src, ADDRri:$addr)]>;
 
 let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
   def STW32 : STOREi32<BPF_W, "u32", store>;
@@ -1187,12 +1186,11 @@ let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
   def STB32 : STOREi32<BPF_B, "u8", truncstorei8>;
 }
 
-class LOAD32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, list<dag> Pattern>
+class LOAD32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list<dag> Pattern>
     : TYPE_LD_ST<ModOp.Value, SizeOp.Value,
                 (outs GPR32:$dst),
                 (ins MEMri:$addr),
-                "$dst = *("#OpcodeStr#" *)($addr)",
-                Pattern> {
+                AsmString, Pattern> {
   bits<4> dst;
   bits<20> addr;
 
@@ -1203,7 +1201,8 @@ class LOAD32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, lis
 }
 
 class LOADi32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, PatFrag OpNode>
-    : LOAD32<SizeOp, ModOp, OpcodeStr, [(set i32:$dst, (OpNode ADDRri:$addr))]>;
+    : LOAD32<SizeOp, ModOp, "$dst = *("#OpcodeStr#" *)($addr)",
+             [(set i32:$dst, (OpNode ADDRri:$addr))]>;
 
 let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
   def LDW32 : LOADi32<BPF_W, BPF_MEM, "u32", load>;
