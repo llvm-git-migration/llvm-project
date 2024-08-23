@@ -6585,6 +6585,8 @@ static Function *createOutlinedFunction(
       ParameterTypes.push_back(Arg->getType());
   }
 
+  // Save insert point.
+  IRBuilder<>::InsertPointGuard IPG(Builder);
   auto BB = Builder.GetInsertBlock();
   auto M = BB->getModule();
   auto FuncType = FunctionType::get(Builder.getVoidTy(), ParameterTypes,
@@ -6620,9 +6622,6 @@ static Function *createOutlinedFunction(
                           OutlinedSP, DL.getInlinedAt()));
     }
   }
-
-  // Save insert point.
-  auto OldInsertPoint = Builder.saveIP();
 
   // Generate the region into the function.
   BasicBlock *EntryBB = BasicBlock::Create(Builder.getContext(), "entry", Func);
@@ -6728,9 +6727,6 @@ static Function *createOutlinedFunction(
   // Replace all of our deferred Input values, currently just Globals.
   for (auto Deferred : DeferredReplacement)
     ReplaceValue(std::get<0>(Deferred), std::get<1>(Deferred), Func);
-
-  // Restore insert point.
-  Builder.restoreIP(OldInsertPoint);
 
   return Func;
 }
