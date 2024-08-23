@@ -1073,6 +1073,48 @@ static llvm::StringRef canonicalizePlatformName(llvm::StringRef Platform) {
              .Case("ShaderModel", "shadermodel")
              .Default(Platform);
 }
+static llvm::ArrayRef<llvm::StringRef> equivalentPlatformNames(llvm::StringRef Platform) {
+    // Apple's API_AVAILABLE macro expands roughly like this.
+    // API_AVAILABLE(ios(17.0))
+    // __attribute__((availability(__API_AVAILABLE_PLATFORM_ios(17.0)))
+    // __attribute__((availability(ios,introduced=17.0)))
+    // In other words, the platform name in API_AVAILABLE has to be backed by an
+    // __API_AVAILABLE_PLATFORM_ macro. The __API_AVAILABLE_PLATFORM_ macros
+    // aren't consistent with using the canonical platform name, source spelling
+    // name, or one of the other supported names (i.e. one of the keys in
+    // canonicalizePlatformName that's neither). This function maps each
+    // platform name to the equivalent platform names to facilitate finding the
+    // platform name that has an __API_AVAILABLE_PLATFORM_ macro for use with
+    // API_AVAILABLE.
+    return llvm::StringSwitch<llvm::ArrayRef<llvm::StringRef>>(Platform)
+             .Case("ios", {"ios", "iOS"})
+             .Case("iOS", {"ios", "iOS"})
+             .Case("macos", {"macos", "macOS"})
+             .Case("macOS", {"macos", "macOS"})
+             .Case("tvos", {"tvos", "tvOS"})
+             .Case("tvOS", {"tvos", "tvOS"})
+             .Case("watchos", {"watchos", "watchOS"})
+             .Case("watchOS", {"watchos", "watchOS"})
+             .Case("ios_app_extension", {"iOSApplicationExtension", "ios_app_extension"})
+             .Case("iOSApplicationExtension", {"iOSApplicationExtension", "ios_app_extension"})
+             .Case("macos_app_extension", {"macOSApplicationExtension", "macos_app_extension"})
+             .Case("macOSApplicationExtension", {"macOSApplicationExtension", "macos_app_extension"})
+             .Case("tvos_app_extension", {"tvOSApplicationExtension", "tvos_app_extension"})
+             .Case("tvOSApplicationExtension", {"tvOSApplicationExtension", "tvos_app_extension"})
+             .Case("watchos_app_extension", {"watchOSApplicationExtension", "watchos_app_extension"})
+             .Case("watchOSApplicationExtension", {"watchOSApplicationExtension", "watchos_app_extension"})
+             .Case("maccatalyst", {"macCatalyst", "maccatalyst"})
+             .Case("macCatalyst", {"macCatalyst", "maccatalyst"})
+             .Case("maccatalyst_app_extension", {"macCatalystApplicationExtension", "maccatalyst_app_extension"})
+             .Case("macCatalystApplicationExtension", {"macCatalystApplicationExtension", "maccatalyst_app_extension"})
+             .Case("xros", {"visionos", "visionOS", "xros"})
+             .Case("visionOS", {"visionos", "visionOS", "xros"})
+             .Case("visionos", {"visionos", "visionOS", "xros"})
+             .Case("xros_app_extension", {"visionOSApplicationExtension", "visionos_app_extension", "xros_app_extension"})
+             .Case("visionOSApplicationExtension", {"visionOSApplicationExtension", "visionos_app_extension", "xros_app_extension"})
+             .Case("visionos_app_extension", {"visionOSApplicationExtension", "visionos_app_extension", "xros_app_extension"})
+             .Default({Platform});
+}
 static llvm::Triple::EnvironmentType getEnvironmentType(llvm::StringRef Environment) {
     return llvm::StringSwitch<llvm::Triple::EnvironmentType>(Environment)
              .Case("pixel", llvm::Triple::Pixel)
