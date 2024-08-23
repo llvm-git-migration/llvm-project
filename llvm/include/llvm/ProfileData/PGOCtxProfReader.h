@@ -74,6 +74,11 @@ public:
     Iter->second.emplace(Other.guid(), std::move(Other));
   }
 
+  void ingestAllContexts(uint32_t CSId, CallTargetMapTy &&Other) {
+    auto [_, Inserted] = callsites().try_emplace(CSId, std::move(Other));
+    assert(Inserted);
+  }
+
   void resizeCounters(uint32_t Size) { Counters.resize(Size); }
 
   bool hasCallsite(uint32_t I) const {
