@@ -150,7 +150,6 @@ PGOContextualProfile CtxProfAnalysis::run(Module &M,
   // If we made it this far, the Result is valid - which we mark by setting
   // .Profiles.
   // Trim first the roots that aren't in this module.
-  DenseSet<GlobalValue::GUID> ProfiledGUIDs;
   for (auto &[RootGuid, _] : llvm::make_early_inc_range(*MaybeCtx))
     if (!Result.FuncInfo.contains(RootGuid))
       MaybeCtx->erase(RootGuid);
