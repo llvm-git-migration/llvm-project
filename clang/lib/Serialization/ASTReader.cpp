@@ -23,6 +23,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclFriend.h"
 #include "clang/AST/DeclGroup.h"
+#include "clang/AST/DeclID.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
@@ -7891,6 +7892,11 @@ Decl *ASTReader::getPredefinedDecl(PredefinedDeclIDs ID) {
     if (Context.TypePackElementDecl)
       return Context.TypePackElementDecl;
     NewLoaded = Context.getTypePackElementDecl();
+    break;
+  case PREDEF_DECL_TYPE_LIST_DEDUP_ID:
+    if (Context.TypeListDedupDecl)
+      return Context.TypeListDedupDecl;
+    NewLoaded = Context.getTypeListDedupDecl();
     break;
   }
 
