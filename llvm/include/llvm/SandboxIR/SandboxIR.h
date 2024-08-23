@@ -109,6 +109,7 @@
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
+#include "llvm/SandboxIR/Module.h"
 #include "llvm/SandboxIR/Tracker.h"
 #include "llvm/SandboxIR/Type.h"
 #include "llvm/SandboxIR/Use.h"
@@ -138,6 +139,7 @@ class ConstantPtrAuth;
 class ConstantExpr;
 class Context;
 class Function;
+class Module;
 class Instruction;
 class VAArgInst;
 class FreezeInst;
@@ -346,6 +348,7 @@ protected:
   friend class NoCFIValue;            // For `Val`.
   friend class ConstantPtrAuth;       // For `Val`.
   friend class ConstantExpr;          // For `Val`.
+  friend class Module;                // For `Val`.
 
   /// All values point to the context.
   Context &Ctx;
@@ -1317,7 +1320,10 @@ public:
   GlobalWithNodeAPI(Value::ClassID ID, LLVMParentT *C, Context &Ctx)
       : ParentT(ID, C, Ctx) {}
 
-  // TODO: Missing getParent(). Should be added once Module is available.
+  Module *getParent() const {
+    llvm::Module *LLVMM = cast<LLVMGlobalT>(this->Val)->getParent();
+    return this->Ctx.getModule(LLVMM);
+  }
 
   using iterator = mapped_iterator<
       decltype(static_cast<LLVMGlobalT *>(nullptr)->getIterator()), LLVMGVToGV>;
@@ -4478,6 +4484,9 @@ protected:
   DenseMap<llvm::Value *, std::unique_ptr<sandboxir::Value>>
       LLVMValueToValueMap;
 
+  /// Maps an LLVM Module to the corresponding sandboxir::Module.
+  DenseMap<llvm::Module *, std::unique_ptr<Module>> LLVMModuleToModuleMap;
+
   /// Type has a protected destructor to prohibit the user from managing the
   /// lifetime of the Type objects. Context is friend of Type, and this custom
   /// deleter can destroy Type.
@@ -4621,6 +4630,10 @@ public:
     return getValue(const_cast<llvm::Value *>(V));
   }
 
+  Module *getModule(llvm::Module *LLVMM) const;
+
+  Module *getOrCreateModule(llvm::Module *LLVMM);
+
   Type *getType(llvm::Type *LLVMTy) {
     if (LLVMTy == nullptr)
       return nullptr;
@@ -4634,7 +4647,12 @@ public:
   /// Create a sandboxir::Function for an existing LLVM IR \p F, including all
   /// blocks and instructions.
   /// This is the main API function for creating Sandbox IR.
+  /// Note: this will not fully populate its parent module. The only globals
+  /// that will be available are those used within the function.
   Function *createFunction(llvm::Function *F);
+
+  /// Create a sandboxir::Module corresponding to \p LLVMM.
+  Module *createModule(llvm::Module *LLVMM);
 
   /// \Returns the number of values registered with Context.
   size_t getNumValues() const { return LLVMValueToValueMap.size(); }
@@ -4659,6 +4677,10 @@ public:
   /// For isa/dyn_cast.
   static bool classof(const sandboxir::Value *From) {
     return From->getSubclassID() == ClassID::Function;
+  }
+
+  Module *getParent() {
+    return Ctx.getModule(cast<llvm::Function>(Val)->getParent());
   }
 
   Argument *getArg(unsigned Idx) const {
