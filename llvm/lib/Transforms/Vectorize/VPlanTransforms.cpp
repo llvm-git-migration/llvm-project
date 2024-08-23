@@ -716,7 +716,7 @@ void VPlanTransforms::optimizeForVFAndUF(VPlan &Plan, ElementCount BestVF,
 }
 
 #ifndef NDEBUG
-static VPRegionBlock *GetReplicateRegion(VPRecipeBase *R) {
+static VPRegionBlock *getReplicateRegion(VPRecipeBase *R) {
   auto *Region = dyn_cast_or_null<VPRegionBlock>(R->getParent()->getParent());
   if (Region && Region->isReplicator()) {
     assert(Region->getNumSuccessors() == 1 &&
@@ -749,9 +749,9 @@ static bool properlyDominates(const VPRecipeBase *A, const VPRecipeBase *B,
   if (ParentA == ParentB)
     return LocalComesBefore(A, B);
 
-  assert(!GetReplicateRegion(const_cast<VPRecipeBase *>(A)) &&
+  assert(!getReplicateRegion(const_cast<VPRecipeBase *>(A)) &&
          "No replicate regions expected at this point");
-  assert(!GetReplicateRegion(const_cast<VPRecipeBase *>(B)) &&
+  assert(!getReplicateRegion(const_cast<VPRecipeBase *>(B)) &&
          "No replicate regions expected at this point");
   return VPDT.properlyDominates(ParentA, ParentB);
 }
@@ -1100,10 +1100,11 @@ void VPlanTransforms::truncateToMinimalBitwidths(
         ResultVPV->replaceAllUsesWith(Ext);
         Ext->setOperand(0, ResultVPV);
         assert(OldResSizeInBits > NewResSizeInBits && "Nothing to shrink?");
-      } else
+      } else {
         assert(
             match(&R, m_Binary<Instruction::ICmp>(m_VPValue(), m_VPValue())) &&
             "Only ICmps should not need extending the result.");
+      }
 
       assert(!isa<VPWidenStoreRecipe>(&R) && "stores cannot be narrowed");
       if (isa<VPWidenLoadRecipe>(&R))
@@ -1242,7 +1243,7 @@ static VPActiveLaneMaskPHIRecipe *addVPLaneMaskPhiAndUpdateExitBranch(
 
   // Now create the ActiveLaneMaskPhi recipe in the main loop using the
   // preheader ActiveLaneMask instruction.
-  auto LaneMaskPhi = new VPActiveLaneMaskPHIRecipe(EntryALM, DebugLoc());
+  auto *LaneMaskPhi = new VPActiveLaneMaskPHIRecipe(EntryALM, DebugLoc());
   LaneMaskPhi->insertAfter(CanonicalIVPHI);
 
   // Create the active lane mask for the next iteration of the loop before the
@@ -1318,7 +1319,7 @@ void VPlanTransforms::addActiveLaneMask(
          "DataAndControlFlowWithoutRuntimeCheck implies "
          "UseActiveLaneMaskForControlFlow");
 
-  auto FoundWidenCanonicalIVUser =
+  auto *FoundWidenCanonicalIVUser =
       find_if(Plan.getCanonicalIV()->users(),
               [](VPUser *U) { return isa<VPWidenCanonicalIVRecipe>(U); });
   assert(FoundWidenCanonicalIVUser &&
@@ -1468,14 +1469,13 @@ void VPlanTransforms::dropPoisonGeneratingRecipes(
   // Collect recipes in the backward slice of `Root` that may generate a poison
   // value that is used after vectorization.
   SmallPtrSet<VPRecipeBase *, 16> Visited;
-  auto collectPoisonGeneratingInstrsInBackwardSlice([&](VPRecipeBase *Root) {
+  auto CollectPoisonGeneratingInstrsInBackwardSlice([&](VPRecipeBase *Root) {
     SmallVector<VPRecipeBase *, 16> Worklist;
     Worklist.push_back(Root);
 
     // Traverse the backward slice of Root through its use-def chain.
     while (!Worklist.empty()) {
-      VPRecipeBase *CurRec = Worklist.back();
-      Worklist.pop_back();
+      VPRecipeBase *CurRec = Worklist.pop_back_val();
 
       if (!Visited.insert(CurRec).second)
         continue;
@@ -1521,8 +1521,8 @@ void VPlanTransforms::dropPoisonGeneratingRecipes(
       }
 
       // Add new definitions to the worklist.
-      for (VPValue *operand : CurRec->operands())
-        if (VPRecipeBase *OpDef = operand->getDefiningRecipe())
+      for (VPValue *Operand : CurRec->operands())
+        if (VPRecipeBase *OpDef = Operand->getDefiningRecipe())
           Worklist.push_back(OpDef);
     }
   });
@@ -1538,7 +1538,7 @@ void VPlanTransforms::dropPoisonGeneratingRecipes(
         VPRecipeBase *AddrDef = WidenRec->getAddr()->getDefiningRecipe();
         if (AddrDef && WidenRec->isConsecutive() &&
             BlockNeedsPredication(UnderlyingInstr.getParent()))
-          collectPoisonGeneratingInstrsInBackwardSlice(AddrDef);
+          CollectPoisonGeneratingInstrsInBackwardSlice(AddrDef);
       } else if (auto *InterleaveRec = dyn_cast<VPInterleaveRecipe>(&Recipe)) {
         VPRecipeBase *AddrDef = InterleaveRec->getAddr()->getDefiningRecipe();
         if (AddrDef) {
@@ -1554,7 +1554,7 @@ void VPlanTransforms::dropPoisonGeneratingRecipes(
           }
 
           if (NeedPredication)
-            collectPoisonGeneratingInstrsInBackwardSlice(AddrDef);
+            CollectPoisonGeneratingInstrsInBackwardSlice(AddrDef);
         }
       }
     }
