@@ -15,19 +15,30 @@
 
 int A_constructed = 0;
 
-struct A
-{
-    A() {++A_constructed;}
-    ~A() {--A_constructed;}
+struct A {
+  A() { ++A_constructed; }
+  ~A() { --A_constructed; }
 };
 
-int main(int, char**)
-{
-    char buf[sizeof(A)];
+TEST_CONSTEXPR_CXX26 void test_direct_call() {
+  assert(::operator new(sizeof(int), &A_constructed) == &A_constructed);
 
-    A* ap = new(buf) A;
-    assert((char*)ap == buf);
-    assert(A_constructed == 1);
+  char ch = '*';
+  assert(::operator new(1, &ch) == &ch);
+  assert(ch == '*');
+}
 
+#if TEST_STD_VER >= 26
+static_assert((test_direct_call(), true));
+#endif
+
+int main(int, char**) {
+  char buf[sizeof(A)];
+
+  A* ap = new (buf) A;
+  assert((char*)ap == buf);
+  assert(A_constructed == 1);
+
+  test_direct_call();
   return 0;
 }
