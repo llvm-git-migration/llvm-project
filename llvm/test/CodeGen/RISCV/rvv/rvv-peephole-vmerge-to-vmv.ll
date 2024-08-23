@@ -4,7 +4,7 @@
 define <vscale x 1 x i64> @undef_passthru(<vscale x 1 x i64> %false, <vscale x 1 x i64> %true, i64 %vl) {
 ; CHECK-LABEL: undef_passthru:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli zero, a0, e64, m1, tu, ma
+; CHECK-NEXT:    vsetvli zero, a0, e64, m1, ta, ma
 ; CHECK-NEXT:    vmv.v.v v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 1 x i64> @llvm.riscv.vmerge.nxv1i64.nxv1i64(<vscale x 1 x i64> poison, <vscale x 1 x i64> %false, <vscale x 1 x i64> %true, <vscale x 1 x i1> splat (i1 true), i64 %vl)
