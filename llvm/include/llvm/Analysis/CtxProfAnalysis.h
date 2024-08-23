@@ -62,6 +62,16 @@ public:
   bool isFunctionKnown(const Function &F) const {
     return getDefinedFunctionGUID(F) != 0;
   }
+  
+  uint32_t getNrCounters(const Function &F) const {
+    assert(isFunctionKnown(F));
+    return FuncInfo.find(getDefinedFunctionGUID(F))->second.NextCounterIndex;
+  }
+
+  uint32_t getNrCallsites(const Function &F) const {
+    assert(isFunctionKnown(F));
+    return FuncInfo.find(getDefinedFunctionGUID(F))->second.NextCallsiteIndex;
+  }
 
   uint32_t allocateNextCounterIndex(const Function &F) {
     assert(isFunctionKnown(F));

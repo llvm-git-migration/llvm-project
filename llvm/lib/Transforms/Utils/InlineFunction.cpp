@@ -23,6 +23,7 @@
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/CaptureTracking.h"
+#include "llvm/Analysis/CtxProfAnalysis.h"
 #include "llvm/Analysis/IndirectCallVisitor.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/MemoryProfileInfo.h"
@@ -46,6 +47,7 @@
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/EHPersonalities.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/InstrTypes.h"
@@ -71,6 +73,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <deque>
 #include <iterator>
 #include <limits>
 #include <optional>
@@ -2114,6 +2117,165 @@ inlineRetainOrClaimRVCalls(CallBase &CB, objcarc::ARCInstKind RVCallKind,
       Builder.CreateCall(IFn, RetOpnd, "");
     }
   }
+}
+
+static const std::pair<std::vector<int64_t>, std::vector<int64_t>>
+remapIndices(Function &Caller, BasicBlock *StartBB,
+             CtxProfAnalysis::Result &CtxProf, uint32_t CalleeCounters,
+             uint32_t CalleeCallsites) {
+  // We'll allocate a new ID to imported callsite counters and callsites. We're
+  // using -1 to indicate a counter we delete. Most likely the entry, for
+  // example, will be deleted - we don't want 2 IDs in the same BB, and the
+  // entry would have been cloned in the callsite's old BB.
+  std::vector<int64_t> CalleeCounterMap;
+  std::vector<int64_t> CalleeCallsiteMap;
+  CalleeCounterMap.resize(CalleeCounters, -1);
+  CalleeCallsiteMap.resize(CalleeCallsites, -1);
+
+  auto RewriteInstrIfNeeded = [&](InstrProfIncrementInst &Ins) -> bool {
+    if (Ins.getNameValue() == &Caller)
+      return false;
+    const auto OldID = static_cast<uint32_t>(Ins.getIndex()->getZExtValue());
+    if (CalleeCounterMap[OldID] == -1)
+      CalleeCounterMap[OldID] = CtxProf.allocateNextCounterIndex(Caller);
+    const auto NewID = static_cast<uint32_t>(CalleeCounterMap[OldID]);
+
+    Ins.setNameValue(&Caller);
+    Ins.setIndex(NewID);
+    return true;
+  };
+
+  auto RewriteCallsiteInsIfNeeded = [&](InstrProfCallsite &Ins)-> bool {
+    if (Ins.getNameValue() == &Caller)
+      return false;
+    const auto OldID = static_cast<uint32_t>(Ins.getIndex()->getZExtValue());
+    if (CalleeCallsiteMap[OldID] == -1)
+      CalleeCallsiteMap[OldID] = CtxProf.allocateNextCallsiteIndex(Caller);
+    const auto NewID = static_cast<uint32_t>(CalleeCallsiteMap[OldID]);
+
+    Ins.setNameValue(&Caller);
+    Ins.setIndex(NewID);
+    return true;
+  };
+
+  std::deque<BasicBlock*> Worklist;
+  DenseSet<const BasicBlock*> Seen;
+  // We will traverse the BBs starting from the callsite BB. The callsite BB
+  // will have at least a BB ID - maybe its own, and in any case the one coming
+  // from the cloned function's entry BB. The other BBs we'll start seeing from
+  // there on may or may not have BB IDs. BBs with IDs belonging to our caller
+  // are definitely not coming from the imported function and form a boundary
+  // past which we don't need to traverse anymore. BBs may have no
+  // instrumentation, in which case we'll traverse past them.
+  // An invariant we'll keep is that a BB will have at most 1 BB ID. For
+  // example, the callsite BB will delete the callee BB's instrumentation. This
+  // doesn't result in information loss: the entry BB of the caller will have
+  // the same count as the callsite's BB.
+  // At the end of this traversal, all the callee's instrumentation would be
+  // mapped into the caller's instrumentation index space. Some of the callee's
+  // counters may be deleted (as mentioned, this should result in no loss of
+  // information).
+  Worklist.push_back(StartBB);
+  while (!Worklist.empty()) {
+    auto *BB = Worklist.front();
+    Worklist.pop_front();
+    bool Changed = false;
+    auto *BBID = CtxProfAnalysis::getBBInstrumentation(*BB);
+    if (BBID) {
+      Changed |= RewriteInstrIfNeeded(*BBID);
+      // this may be the entryblock from the inlined callee, coming into a BB
+      // that didn't have instrumentation because of MST decisions. Let's make
+      // sure it's placed accordingly. This is a noop elsewhere.
+      BBID->moveBefore(&*BB->getFirstInsertionPt());
+    }
+    for (auto &I : llvm::make_early_inc_range(*BB)) {
+      if (auto *Inc = dyn_cast<InstrProfIncrementInst>(&I)) {
+        if (Inc != BBID) {
+          Inc->eraseFromParent();
+          Changed = true;
+        }
+      } else if (auto *CS = dyn_cast<InstrProfCallsite>(&I)) {
+        Changed |= RewriteCallsiteInsIfNeeded(*CS);
+      }
+    }
+    if (!BBID || Changed)
+      for (auto *Succ : successors(BB))
+        if (Seen.insert(Succ).second)
+          Worklist.push_back(Succ);
+  }
+  return {std::move(CalleeCounterMap), std::move(CalleeCallsiteMap)};
+}
+
+llvm::InlineResult llvm::InlineFunction(CallBase &CB, InlineFunctionInfo &IFI,
+                                        CtxProfAnalysis::Result &CtxProf,
+                                        bool MergeAttributes,
+                                        AAResults *CalleeAAR,
+                                        bool InsertLifetime,
+                                        Function *ForwardVarArgsTo) {
+  auto &Caller = *CB.getCaller();
+  auto &Callee = *CB.getCalledFunction();
+  auto *StartBB = CB.getParent();
+
+  const auto CalleeGUID = AssignGUIDPass::getGUID(Callee);
+  auto *CallsiteIDIns = CtxProfAnalysis::getCallsiteInstrumentation(CB);
+  const auto CallsiteID =
+      static_cast<uint32_t>(CallsiteIDIns->getIndex()->getZExtValue());
+
+  const auto CalleeCounters = CtxProf.getNrCounters(Callee);
+  const auto CalleeCallsites = CtxProf.getNrCallsites(Callee);
+
+  auto Ret = InlineFunction(CB, IFI, MergeAttributes, CalleeAAR, InsertLifetime,
+                            ForwardVarArgsTo);
+  if (!Ret.isSuccess())
+    return Ret;
+
+  // We don't have that callsite anymore.
+  CallsiteIDIns->eraseFromParent();
+
+  // Assinging Maps and then capturing references into it in the lambda because
+  // captured structured bindings are a C++20 extension. We do also need a
+  // capture here, though.
+  const auto Maps =
+      remapIndices(Caller, StartBB, CtxProf, CalleeCounters, CalleeCallsites);
+  const auto &[CalleeCounterMap, _] = Maps;
+  // We'll have to grow the counters vector by this much. The callsites are a
+  // map, so we don't need to do that.
+  const uint32_t NewCounters =
+      llvm::count_if(CalleeCounterMap, [](auto V) { return V != -1; });
+
+  auto Updater = [&](PGOCtxProfContext &Ctx) {
+    assert(Ctx.guid() == AssignGUIDPass::getGUID(Caller));
+    Ctx.resizeCounters(Ctx.counters().size() + NewCounters);
+    // If the callsite wasn't exercised in this context, the value of the
+    // counters coming from it is 0 and so we're done.
+    auto CSIt = Ctx.callsites().find(CallsiteID);
+    if (CSIt == Ctx.callsites().end())
+      return;
+    auto CalleeCtxIt = CSIt->second.find(CalleeGUID);
+    // The callsite was exercised, but not with this callee (so presumably this
+    // is an indirect callsite). Again we're done.
+    if (CalleeCtxIt == CSIt->second.end())
+      return;
+    const auto &[CalleeCounterMap, CalleeCallsiteMap] = Maps;
+    auto &CalleeCtx = CalleeCtxIt->second;
+    assert(CalleeCtx.guid() == CalleeGUID);
+
+    for (auto I = 0U; I < CalleeCtx.counters().size(); ++I) {
+      const int64_t NewIndex = CalleeCounterMap[I];
+      if (NewIndex >= 0)
+        Ctx.counters()[NewIndex] = CalleeCtx.counters()[I];
+    }
+    for (auto &[I, OtherSet] : CalleeCtx.callsites()) {
+      const int64_t NewCSIdx = CalleeCallsiteMap[I];
+      if (NewCSIdx >= 0)
+        Ctx.ingestAllContexts(NewCSIdx, std::move(OtherSet));
+    }
+    auto Deleted = Ctx.callsites().erase(CallsiteID);
+    assert(Deleted);
+    (void)Deleted;
+  };
+  CtxProf.update(Updater, &Caller);
+  return Ret;
 }
 
 /// This function inlines the called function into the basic block of the
