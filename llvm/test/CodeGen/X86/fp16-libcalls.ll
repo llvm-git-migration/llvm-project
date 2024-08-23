@@ -259,6 +259,73 @@ define void @test_half_pow(half %a0, half %a1, ptr %p0) nounwind {
   ret void
 }
 
+define half @test_half_powi(half %a0, i32 %a1) {
+; F16C-LABEL: test_half_powi:
+; F16C:       # %bb.0:
+; F16C-NEXT:    pushq %rax
+; F16C-NEXT:    .cfi_def_cfa_offset 16
+; F16C-NEXT:    vpextrw $0, %xmm0, %eax
+; F16C-NEXT:    vmovd %eax, %xmm0
+; F16C-NEXT:    vcvtph2ps %xmm0, %xmm0
+; F16C-NEXT:    callq __powisf2@PLT
+; F16C-NEXT:    vcvtps2ph $4, %xmm0, %xmm0
+; F16C-NEXT:    vmovd %xmm0, %eax
+; F16C-NEXT:    vpinsrw $0, %eax, %xmm0, %xmm0
+; F16C-NEXT:    popq %rax
+; F16C-NEXT:    .cfi_def_cfa_offset 8
+; F16C-NEXT:    retq
+;
+; FP16-LABEL: test_half_powi:
+; FP16:       # %bb.0:
+; FP16-NEXT:    pushq %rax
+; FP16-NEXT:    .cfi_def_cfa_offset 16
+; FP16-NEXT:    vcvtsh2ss %xmm0, %xmm0, %xmm0
+; FP16-NEXT:    callq __powisf2@PLT
+; FP16-NEXT:    vcvtss2sh %xmm0, %xmm0, %xmm0
+; FP16-NEXT:    popq %rax
+; FP16-NEXT:    .cfi_def_cfa_offset 8
+; FP16-NEXT:    retq
+;
+; X64-LABEL: test_half_powi:
+; X64:       # %bb.0:
+; X64-NEXT:    pushq %rbx
+; X64-NEXT:    .cfi_def_cfa_offset 16
+; X64-NEXT:    .cfi_offset %rbx, -16
+; X64-NEXT:    movl %edi, %ebx
+; X64-NEXT:    callq __extendhfsf2@PLT
+; X64-NEXT:    movl %ebx, %edi
+; X64-NEXT:    callq __powisf2@PLT
+; X64-NEXT:    callq __truncsfhf2@PLT
+; X64-NEXT:    popq %rbx
+; X64-NEXT:    .cfi_def_cfa_offset 8
+; X64-NEXT:    retq
+;
+; X86-LABEL: test_half_powi:
+; X86:       # %bb.0:
+; X86-NEXT:    pushl %esi
+; X86-NEXT:    .cfi_def_cfa_offset 8
+; X86-NEXT:    subl $8, %esp
+; X86-NEXT:    .cfi_def_cfa_offset 16
+; X86-NEXT:    .cfi_offset %esi, -8
+; X86-NEXT:    pinsrw $0, {{[0-9]+}}(%esp), %xmm0
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
+; X86-NEXT:    pextrw $0, %xmm0, %eax
+; X86-NEXT:    movw %ax, (%esp)
+; X86-NEXT:    calll __extendhfsf2
+; X86-NEXT:    movl %esi, {{[0-9]+}}(%esp)
+; X86-NEXT:    fstps (%esp)
+; X86-NEXT:    calll __powisf2
+; X86-NEXT:    fstps (%esp)
+; X86-NEXT:    calll __truncsfhf2
+; X86-NEXT:    addl $8, %esp
+; X86-NEXT:    .cfi_def_cfa_offset 8
+; X86-NEXT:    popl %esi
+; X86-NEXT:    .cfi_def_cfa_offset 4
+; X86-NEXT:    retl
+  %res = call half @llvm.powi(half %a0, i32 %a1)
+  ret half %res
+}
+
 define void @test_half_sin(half %a0, ptr %p0) nounwind {
 ; F16C-LABEL: test_half_sin:
 ; F16C:       # %bb.0:
