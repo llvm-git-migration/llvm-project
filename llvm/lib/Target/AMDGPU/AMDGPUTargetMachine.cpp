@@ -28,6 +28,7 @@
 #include "AMDGPUTargetObjectFile.h"
 #include "AMDGPUTargetTransformInfo.h"
 #include "AMDGPUUnifyDivergentExitNodes.h"
+#include "GCNDPPCombine.h"
 #include "GCNIterativeScheduler.h"
 #include "GCNSchedStrategy.h"
 #include "GCNVOPDUtils.h"
@@ -396,7 +397,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeAMDGPUTarget() {
   initializeR600VectorRegMergerPass(*PR);
   initializeGlobalISel(*PR);
   initializeAMDGPUDAGToDAGISelLegacyPass(*PR);
-  initializeGCNDPPCombinePass(*PR);
+  initializeGCNDPPCombineLegacyPass(*PR);
   initializeSILowerI1CopiesLegacyPass(*PR);
   initializeAMDGPUGlobalISelDivergenceLoweringPass(*PR);
   initializeSILowerWWMCopiesPass(*PR);
@@ -1260,7 +1261,7 @@ void GCNPassConfig::addMachineSSAOptimization() {
   // XXX - Can we get away without running DeadMachineInstructionElim again?
   addPass(&SIFoldOperandsID);
   if (EnableDPPCombine)
-    addPass(&GCNDPPCombineID);
+    addPass(&GCNDPPCombineLegacyID);
   addPass(&SILoadStoreOptimizerID);
   if (isPassEnabled(EnableSDWAPeephole)) {
     addPass(&SIPeepholeSDWAID);
