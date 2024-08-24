@@ -1,28 +1,27 @@
 ; This test asserts that we don't emit both
 ; successful and unsuccessful message about vectorization.
 
-; RUN: opt -passes=loop-vectorize -debug -disable-output -pass-remarks-missed=loop-vectorize %s 2>&1 | FileCheck %s
+; REQUIRES: asserts
+; RUN: opt -passes=loop-vectorize -debug -disable-output < %s 2>&1 | FileCheck %s
 ; CHECK-NOT: LV: We can vectorize this loop
 ; CHECK: LV: Not vectorizing: Cannot prove legality
 ; CHECK-NOT: LV: We can vectorize this loop
-
-target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-Fn32"
 
 @a = global [32000 x i32] zeroinitializer, align 4
 @b = global [32000 x i32] zeroinitializer, align 4
 
 define void @foo() {
 entry:
-  %.pre = load i32, ptr getelementptr inbounds (i8, ptr @a, i64 4), align 4
-  %.pre17 = load i32, ptr @a, align 4
+  %load_a_gep = load i32, ptr getelementptr inbounds (i8, ptr @a, i64 4), align 4
+  %val_a = load i32, ptr @a, align 4
   br label %for.body
 
 for.cond.cleanup:                                 ; preds = %for.body
   ret void
 
 for.body:                                         ; preds = %entry, %for.body
-  %0 = phi i32 [ %.pre17, %entry ], [ %add6, %for.body ]
-  %1 = phi i32 [ %.pre, %entry ], [ %2, %for.body ]
+  %0 = phi i32 [ %val_a, %entry ], [ %add6, %for.body ]
+  %1 = phi i32 [ %load_a_gep, %entry ], [ %2, %for.body ]
   %indvars.iv = phi i64 [ 1, %entry ], [ %indvars.iv.next, %for.body ]
   %arrayidx = getelementptr inbounds [32000 x i32], ptr @a, i64 0, i64 %indvars.iv
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
