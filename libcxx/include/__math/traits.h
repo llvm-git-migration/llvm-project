@@ -38,7 +38,12 @@ _LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI boo
 #endif
 }
 
-_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool signbit(float __x) _NOEXCEPT {
+_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI
+#ifdef _LIBCPP_PREFERRED_OVERLOAD
+_LIBCPP_PREFERRED_OVERLOAD
+#endif
+    bool
+    signbit(float __x) _NOEXCEPT {
 // TODO(LLVM 22): Remove `__builtin_copysign`-workaround once support for Clang 19 is dropped.
 #if !__has_constexpr_builtin(__builtin_signbit) && _LIBCPP_STD_VER >= 23
   return __builtin_copysign(1.0, __x) == -1.0;
@@ -47,7 +52,12 @@ _LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI boo
 #endif
 }
 
-_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool signbit(double __x) _NOEXCEPT {
+_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI
+#ifdef _LIBCPP_PREFERRED_OVERLOAD
+_LIBCPP_PREFERRED_OVERLOAD
+#endif
+    bool
+    signbit(double __x) _NOEXCEPT {
 // TODO(LLVM 22): Remove `__builtin_copysign`-workaround once support for Clang 19 is dropped.
 #if !__has_constexpr_builtin(__builtin_signbit) && _LIBCPP_STD_VER >= 23
   return __builtin_copysign(1.0, __x) == -1.0;
@@ -56,7 +66,12 @@ _LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI boo
 #endif
 }
 
-_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI bool signbit(long double __x) _NOEXCEPT {
+_LIBCPP_NODISCARD inline _LIBCPP_CONSTEXPR_SINCE_CXX23 _LIBCPP_HIDE_FROM_ABI
+#ifdef _LIBCPP_PREFERRED_OVERLOAD
+_LIBCPP_PREFERRED_OVERLOAD
+#endif
+    bool
+    signbit(long double __x) _NOEXCEPT {
 // TODO(LLVM 22): Remove `__builtin_copysign`-workaround once support for Clang 19 is dropped.
 #if !__has_constexpr_builtin(__builtin_signbit) && _LIBCPP_STD_VER >= 23
   return __builtin_copysign(1.0, __x) == -1.0;
