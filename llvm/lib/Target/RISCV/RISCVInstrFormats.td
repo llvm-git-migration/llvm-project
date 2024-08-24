@@ -158,6 +158,14 @@ def OPC_SYSTEM    : RISCVOpcode<"SYSTEM",    0b1110011>;
 def OPC_OP_VE     : RISCVOpcode<"OP_VE",     0b1110111>;
 def OPC_CUSTOM_3  : RISCVOpcode<"CUSTOM_3",  0b1111011>;
 
+class EEW <bits<2> val> {
+  bits<2> Value = val;
+}
+def EEW1     : EEW<0>;
+def EEWSEWx1 : EEW<1>;
+def EEWSEWx2 : EEW<2>;
+def EEWSEWx4 : EEW<3>;
+
 class RVInstCommon<dag outs, dag ins, string opcodestr, string argstr,
                    list<dag> pattern, InstFormat format> : Instruction {
   let Namespace = "RISCV";
@@ -226,6 +234,9 @@ class RVInstCommon<dag outs, dag ins, string opcodestr, string argstr,
 
   bit ActiveElementsAffectResult = 0;
   let TSFlags{23} = ActiveElementsAffectResult;
+
+  EEW DestEEW = EEWSEWx1;
+  let TSFlags{25-24} = DestEEW.Value;
 }
 
 class RVInst<dag outs, dag ins, string opcodestr, string argstr,
