@@ -1323,6 +1323,27 @@ bool MachineInstr::isSafeToMove(bool &SawStore) const {
   return true;
 }
 
+bool MachineInstr::wouldBeTriviallyDead() const {
+  // Technically speaking inline asm without side effects and no defs can still
+  // be deleted. But there is so much bad inline asm code out there, we should
+  // let them be.
+  if (isInlineAsm())
+    return false;
+
+  // Don't delete frame allocation labels.
+  // FIXME: Why is LOCAL_ESCAPE not considered in MachineInstr::isLabel?
+  if (getOpcode() == TargetOpcode::LOCAL_ESCAPE)
+    return false;
+
+  // If we can move an instruction, we can remove it.  Otherwise, it has
+  // a side-effect of some sort.
+  bool SawStore = false;
+  if (!isSafeToMove(SawStore) && !isPHI())
+    return false;
+
+  return true;
+}
+
 static bool MemOperandsHaveAlias(const MachineFrameInfo &MFI, AAResults *AA,
                                  bool UseTBAA, const MachineMemOperand *MMOa,
                                  const MachineMemOperand *MMOb) {
