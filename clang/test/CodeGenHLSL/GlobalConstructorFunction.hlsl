@@ -25,7 +25,7 @@ void main(unsigned GI : SV_GroupIndex) {}
 //CHECK-NEXT: entry:
 //CHECK-NEXT:   call void @"?call_me_first@@YAXXZ"()
 //CHECK-NEXT:   call void @"?then_call_me@@YAXXZ"()
-//CHECK-NEXT:   %0 = call i32 @llvm.dx.flattened.thread.id.in.group()
+//CHECK-NEXT:   %0 = call i32 @llvm.[[ICF:dx]].flattened.thread.id.in.group()
 //CHECK-NEXT:   call void @"?main@@YAXI@Z"(i32 %0)
 //CHECK-NEXT:   call void @"?call_me_last@@YAXXZ"(
 //CHECK-NEXT:   ret void

@@ -12,7 +12,7 @@ void main(unsigned GI : SV_GroupIndex) {
 
 //CHECK: define void @main() #[[#ENTRY_ATTR:]] {
 //CHECK-NEXT: entry:
-//CHECK-NEXT:   %0 = call i32 @llvm.dx.flattened.thread.id.in.group()
+//CHECK-NEXT:   %0 = call i32 @llvm.[[ICF:dx]].flattened.thread.id.in.group()
 //CHECK-NEXT:   call void @"?main@@YAXI@Z"(i32 %0)
 //CHECK-NEXT:   ret void
 //CHECK-NEXT: }

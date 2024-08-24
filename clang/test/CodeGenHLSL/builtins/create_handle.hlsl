@@ -4,4 +4,4 @@ void fn() {
   (void)__builtin_hlsl_create_handle(0);
 }
 
-// CHECK: call ptr @llvm.dx.create.handle(i8 0)
+// CHECK: call ptr @llvm.[[ICF:dx]].create.handle(i8 0)
