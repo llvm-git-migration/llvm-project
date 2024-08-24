@@ -18,3 +18,12 @@ body: |
     %y:gpr = ADDI $x0, 1
     %z:vr = PseudoVMV_V_V_M1 %passthru, %x, 4, 5 /* e32 */, 0 /* tu, mu */
 ...
+---
+name: different_eew
+body: |
+  bb.0:
+    ; CHECK-LABEL: name: different_eew
+    ; CHECK: %x:vr = PseudoVADD_VV_MF4 $noreg, $noreg, $noreg, 4, 4 /* e16 */, 0 /* tu, mu */
+    %x:vr = PseudoVADD_VV_MF4 $noreg, $noreg, $noreg, 4, 4 /* e16 */, 0 /* tu, mu */
+    %y:vr = PseudoVMV_V_V_MF8 $noreg, %x, 4, 3 /* e8 */, 0 /* tu, mu */
+...
