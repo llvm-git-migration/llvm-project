@@ -24,11 +24,12 @@
 namespace clang {
 
 IncrementalCUDADeviceParser::IncrementalCUDADeviceParser(
-    Interpreter &Interp, std::unique_ptr<CompilerInstance> Instance,
-    IncrementalParser &HostParser, llvm::LLVMContext &LLVMCtx,
+    std::unique_ptr<CompilerInstance> Instance, IncrementalParser &HostParser,
+    llvm::LLVMContext &LLVMCtx,
     llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> FS,
     llvm::Error &Err)
-    : IncrementalParser(Interp, std::move(Instance), LLVMCtx, Err),
+    : IncrementalParser(std::move(Instance), LLVMCtx, Err,
+                        /*InterpreterCallbacks=*/nullptr),
       HostParser(HostParser), VFS(FS) {
   if (Err)
     return;

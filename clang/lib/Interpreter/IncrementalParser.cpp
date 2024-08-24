@@ -32,12 +32,13 @@
 namespace clang {
 
 class IncrementalASTConsumer final : public ASTConsumer {
-  Interpreter &Interp;
+  InterpreterCallbacks *CB;
   std::unique_ptr<ASTConsumer> Consumer;
 
 public:
-  IncrementalASTConsumer(Interpreter &InterpRef, std::unique_ptr<ASTConsumer> C)
-      : Interp(InterpRef), Consumer(std::move(C)) {}
+  IncrementalASTConsumer(std::unique_ptr<ASTConsumer> C,
+                         InterpreterCallbacks *CB)
+      : CB(CB), Consumer(std::move(C)) {}
 
   bool HandleTopLevelDecl(DeclGroupRef DGR) override final {
     if (DGR.isNull())
@@ -45,10 +46,10 @@ public:
     if (!Consumer)
       return true;
 
-    for (Decl *D : DGR)
-      if (auto *TSD = llvm::dyn_cast<TopLevelStmtDecl>(D);
-          TSD && TSD->isSemiMissing())
-        TSD->setStmt(Interp.SynthesizeExpr(cast<Expr>(TSD->getStmt())));
+    if (CB)
+      for (Decl *D : DGR)
+        if (auto *TLSD = llvm::dyn_cast<TopLevelStmtDecl>(D))
+          CB->ProcessingTopLevelStmtDecl(TLSD);
 
     return Consumer->HandleTopLevelDecl(DGR);
   }
@@ -199,10 +200,9 @@ CodeGenerator *IncrementalParser::getCodeGen() const {
 
 IncrementalParser::IncrementalParser() {}
 
-IncrementalParser::IncrementalParser(Interpreter &Interp,
-                                     std::unique_ptr<CompilerInstance> Instance,
+IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
                                      llvm::LLVMContext &LLVMCtx,
-                                     llvm::Error &Err)
+                                     llvm::Error &Err, InterpreterCallbacks *CB)
     : CI(std::move(Instance)) {
   llvm::ErrorAsOutParameter EAO(&Err);
   Act = std::make_unique<IncrementalAction>(*CI, LLVMCtx, Err);
@@ -214,7 +214,7 @@ IncrementalParser::IncrementalParser(Interpreter &Interp,
     CachedInCodeGenModule = GenModule();
 
   std::unique_ptr<ASTConsumer> IncrConsumer =
-      std::make_unique<IncrementalASTConsumer>(Interp, CI->takeASTConsumer());
+      std::make_unique<IncrementalASTConsumer>(CI->takeASTConsumer(), CB);
   CI->setASTConsumer(std::move(IncrConsumer));
   Consumer = &CI->getASTConsumer();
   P.reset(

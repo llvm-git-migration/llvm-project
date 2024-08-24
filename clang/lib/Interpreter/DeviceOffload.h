@@ -22,8 +22,8 @@ namespace clang {
 class IncrementalCUDADeviceParser : public IncrementalParser {
 public:
   IncrementalCUDADeviceParser(
-      Interpreter &Interp, std::unique_ptr<CompilerInstance> Instance,
-      IncrementalParser &HostParser, llvm::LLVMContext &LLVMCtx,
+      std::unique_ptr<CompilerInstance> Instance, IncrementalParser &HostParser,
+      llvm::LLVMContext &LLVMCtx,
       llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> VFS,
       llvm::Error &Err);
 

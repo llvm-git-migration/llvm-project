@@ -3,7 +3,6 @@
 // RUN: cat %s | clang-repl -Xcc -xc  | FileCheck %s
 // RUN: cat %s | clang-repl -Xcc -std=c++11 | FileCheck %s
 
-// Fails with `Symbols not found: [ __clang_Interpreter_SetValueNoAlloc ]`.
 // UNSUPPORTED: hwasan
 
 const char* c_str = "Hello, world!"; c_str
@@ -11,7 +10,7 @@ const char* c_str = "Hello, world!"; c_str
 char c = 'a'; c
 // CHECK: (char) 'a'
 
-const char* c_str = "Goodbye, world!"; c_str
+c_str = "Goodbye, world!"; c_str
 // CHECK-NEXT: (const char *) "Goodbye, world!"
 
 const char* c_null_str = 0; c_null_str
@@ -57,17 +56,17 @@ int foo() { return 42; } foo()
 void bar() {} bar()
 
 struct ConstLiteral{};
-const char * caas__runtime__PrintValueRuntime(const ConstLiteral *) { \
-  return "ConstLiteral";                                      \
+const char * caas__runtime__PrintValueRuntime(const struct ConstLiteral *) { \
+  return "ConstLiteral";                                                \
 }
-ConstLiteral CL; CL
+struct ConstLiteral CL; CL
 // CHECK-NEXT: ConstLiteral
 
 struct Point{int x; int y};
-const char * caas__runtime__PrintValueRuntime(const Point *p) { \
-  char[11 + 11 + 4 + 1] result;                         \
-  sprintf(result, "(%d, %d)", p->x, p->y);              \
-  return strdup(result);                                \
+const char * caas__runtime__PrintValueRuntime(const struct Point *p) { \
+  char[11 + 11 + 4 + 1] result;                                        \
+  sprintf(result, "(%d, %d)", p->x, p->y);                             \
+  return strdup(result);                                               \
 }
 
 Point P {1,2}; P

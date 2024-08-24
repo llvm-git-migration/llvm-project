@@ -261,18 +261,18 @@ const ASTContext &Value::getASTContext() const {
   return getInterpreter().getASTContext();
 }
 
-void Value::dump() const { print(llvm::outs()); }
+void Value::dump() { print(llvm::outs()); }
 
 void Value::printType(llvm::raw_ostream &Out) const {
-  Out << ReplPrintTypeImpl(*this);
+  Out << Interp->ValueTypeToString(*this);
 }
 
-void Value::printData(llvm::raw_ostream &Out) const {
-  Out << ReplPrintDataImpl(*this);
+void Value::printData(llvm::raw_ostream &Out) {
+  Out << Interp->ValueDataToString(*this);
 }
 // FIXME: We do not support the multiple inheritance case where one of the base
 // classes has a pretty-printer and the other does not.
-void Value::print(llvm::raw_ostream &Out) const {
+void Value::print(llvm::raw_ostream &Out) {
   assert(OpaqueType != nullptr && "Can't print default Value");
 
   // Don't even try to print a void or an invalid type, it doesn't make sense.

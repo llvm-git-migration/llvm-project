@@ -34,7 +34,7 @@ class CompilerInstance;
 class Parser;
 
 class IncrementalAction;
-class Interpreter;
+class InterpreterCallbacks;
 /// Provides support for incremental compilation. Keeps track of the state
 /// changes between the subsequent incremental input.
 ///
@@ -66,9 +66,9 @@ protected:
   IncrementalParser();
 
 public:
-  IncrementalParser(Interpreter &Interp,
-                    std::unique_ptr<CompilerInstance> Instance,
-                    llvm::LLVMContext &LLVMCtx, llvm::Error &Err);
+  IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
+                    llvm::LLVMContext &LLVMCtx, llvm::Error &Err,
+                    InterpreterCallbacks *CB);
   virtual ~IncrementalParser();
 
   CompilerInstance *getCI() { return CI.get(); }

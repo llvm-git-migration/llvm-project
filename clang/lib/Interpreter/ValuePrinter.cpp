@@ -9,6 +9,8 @@
 // This file implements routines for value printing in clang-repl.
 //
 //===----------------------------------------------------------------------===//
+
+#include "IncrementalParser.h"
 #include "InterpreterUtils.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -19,8 +21,10 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
+
 #include <cassert>
 #include <string>
 
@@ -216,7 +220,8 @@ static void BuildWrapperBody(Interpreter &Interp, Sema &S, ASTContext &Ctx,
   Expr *OverldExpr = UnresolvedLookupExpr::Create(
       Ctx, /*NamingClass=*/nullptr, NestedNameSpecifierLoc(),
       clang::DeclarationNameInfo(RuntimeCallName, SourceLocation()),
-      /*RequiresADL*/ false, R.begin(), R.end(), /*KnownDependent=*/false);
+      /*RequiresADL=*/false, R.begin(), R.end(), /*KnownDependent=*/false,
+      /*KnownInstantiationDependent=*/false);
 
   if (const auto *AT = llvm::dyn_cast<AutoType>(QT.getTypePtr())) {
     if (AT->isDeduced())
@@ -300,50 +305,6 @@ static std::string CreateUniqName(std::string Base) {
   Base += std::to_string(I);
   I += 1;
   return Base;
-}
-
-static std::string SynthesizeRuntimePrint(const Value &V) {
-  Interpreter &Interp = const_cast<Interpreter &>(V.getInterpreter());
-  Sema &S = Interp.getCompilerInstance()->getSema();
-  ASTContext &Ctx = S.getASTContext();
-
-  // Only include this header once and on demand. Because it's very heavy.
-  static bool Included = false;
-  if (!Included) {
-    Included = true;
-    llvm::cantFail(
-        Interp.Parse("#include <__clang_interpreter_runtime_printvalue.h>"));
-  }
-  // Lookup std::string.
-  NamespaceDecl *Std = LookupNamespace(S, "std");
-  assert(Std && "Cannot find namespace std");
-  Decl *StdStringDecl = LookupNamed(S, "string", Std);
-  assert(StdStringDecl && "Cannot find std::string");
-  const auto *StdStringTyDecl = llvm::dyn_cast<TypeDecl>(StdStringDecl);
-  assert(StdStringTyDecl && "Cannot find type of std::string");
-
-  // Create the wrapper function.
-  DeclarationName DeclName = &Ctx.Idents.get(CreateUniqName(WrapperName));
-  QualType RetTy(StdStringTyDecl->getTypeForDecl(), 0);
-  QualType FnTy =
-      Ctx.getFunctionType(RetTy, {}, FunctionProtoType::ExtProtoInfo());
-  auto *WrapperFD = FunctionDecl::Create(
-      Ctx, Ctx.getTranslationUnitDecl(), SourceLocation(), SourceLocation(),
-      DeclName, FnTy, Ctx.getTrivialTypeSourceInfo(FnTy), SC_None);
-
-  void *ValPtr = V.getPtr();
-  if (!V.isManuallyAlloc())
-    ValPtr = V.getPtrAddress();
-
-  BuildWrapperBody(Interp, S, Ctx, WrapperFD, V.getType(), ValPtr);
-
-  auto AddrOrErr = CompileDecl(Interp, WrapperFD);
-  if (!AddrOrErr)
-    llvm::logAllUnhandledErrors(AddrOrErr.takeError(), llvm::errs(),
-                                "Fail to get symbol address");
-  if (auto *Main = AddrOrErr->toPtr<std::string (*)()>())
-    return (*Main)();
-  return "Error to print the value!";
 }
 
 REPL_EXTERNAL_VISIBILITY std::string PrintValueRuntime(const void *Ptr) {
@@ -463,7 +424,7 @@ REPL_EXTERNAL_VISIBILITY std::string PrintValueRuntime(const char **Val) {
 }
 
 namespace clang {
-std::string ReplPrintDataImpl(const Value &V) {
+std::string Interpreter::ValueDataToString(const Value &V) {
   QualType QT = V.getType();
   QualType DesugaredTy = QT.getDesugaredType(V.getASTContext());
   QualType NonRefTy = DesugaredTy.getNonReferenceType();
@@ -500,10 +461,58 @@ std::string ReplPrintDataImpl(const Value &V) {
       return PrintAddress(V.getPtr(), '@');
 
   // All fails then generate a runtime call, this is slow.
-  return SynthesizeRuntimePrint(V);
+  Sema &S = getCompilerInstance()->getSema();
+  ASTContext &Ctx = S.getASTContext();
+
+  QualType RetTy;
+  if (Ctx.getLangOpts().CPlusPlus && !StdString) {
+
+    // Only include the header on demand because it's very heavy.
+    if (llvm::Error E = ParseAndExecute(
+            "#include <__clang_interpreter_runtime_printvalue.h>")) {
+      llvm::logAllUnhandledErrors(std::move(E), llvm::errs(), "Parsing failed");
+      return "{Internal error}";
+    }
+
+    // Find and cache std::string.
+    NamespaceDecl *Std = LookupNamespace(S, "std");
+    assert(Std && "Cannot find namespace std");
+    Decl *StdStringDecl = LookupNamed(S, "string", Std);
+    assert(StdStringDecl && "Cannot find std::string");
+    const auto *StdStringTyDecl = llvm::dyn_cast<TypeDecl>(StdStringDecl);
+    assert(StdStringTyDecl && "Cannot find type of std::string");
+    RetTy = QualType(StdStringTyDecl->getTypeForDecl(), /*Quals=*/0);
+  } else {
+    RetTy = Ctx.getPointerType(Ctx.CharTy.withConst());
+  }
+
+  // Create the wrapper function.
+  DeclarationName DeclName = &Ctx.Idents.get(CreateUniqName(WrapperName));
+  QualType FnTy =
+      Ctx.getFunctionType(RetTy, {}, FunctionProtoType::ExtProtoInfo());
+  auto *WrapperFD = FunctionDecl::Create(
+      Ctx, Ctx.getTranslationUnitDecl(), SourceLocation(), SourceLocation(),
+      DeclName, FnTy, Ctx.getTrivialTypeSourceInfo(FnTy), SC_None);
+
+  void *ValPtr = V.getPtr();
+
+  // FIXME: We still need to understand why we have to get the pointer to the
+  // underlying Value storage for this to work reliabily...
+  if (!V.isManuallyAlloc())
+    ValPtr = V.getPtrAddress();
+
+  BuildWrapperBody(*this, S, Ctx, WrapperFD, V.getType(), ValPtr);
+
+  auto AddrOrErr = CompileDecl(*this, WrapperFD);
+  if (!AddrOrErr)
+    llvm::logAllUnhandledErrors(AddrOrErr.takeError(), llvm::errs(),
+                                "Fail to get symbol address");
+  if (auto *Main = AddrOrErr->toPtr<std::string (*)()>())
+    return (*Main)();
+  return "Unable to print the value!";
 }
 
-std::string ReplPrintTypeImpl(const Value &V) {
+std::string Interpreter::ValueTypeToString(const Value &V) const {
   ASTContext &Ctx = const_cast<ASTContext &>(V.getASTContext());
   QualType QT = V.getType();
 
@@ -514,4 +523,27 @@ std::string ReplPrintTypeImpl(const Value &V) {
 
   return QTStr;
 }
+
+llvm::Expected<llvm::orc::ExecutorAddr>
+Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
+  assert(CXXRD && "Cannot compile a destructor for a nullptr");
+  if (auto Dtor = Dtors.find(CXXRD); Dtor != Dtors.end())
+    return Dtor->getSecond();
+
+  if (CXXRD->hasIrrelevantDestructor())
+    return llvm::orc::ExecutorAddr{};
+
+  CXXDestructorDecl *DtorRD =
+      getCompilerInstance()->getSema().LookupDestructor(CXXRD);
+
+  llvm::StringRef Name =
+      IncrParser->GetMangledName(GlobalDecl(DtorRD, Dtor_Base));
+  auto AddrOrErr = getSymbolAddress(Name);
+  if (!AddrOrErr)
+    return AddrOrErr.takeError();
+
+  Dtors[CXXRD] = *AddrOrErr;
+  return AddrOrErr;
+}
+
 } // namespace clang

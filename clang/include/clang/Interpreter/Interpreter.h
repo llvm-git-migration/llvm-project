@@ -78,22 +78,26 @@ private:
   llvm::StringRef CudaSDKPath;
 };
 
-/// Generate glue code between the Interpreter's built-in runtime and user code.
-class RuntimeInterfaceBuilder {
-public:
-  virtual ~RuntimeInterfaceBuilder() = default;
+class Interpreter;
+/// Provides a callback class allowing to listen to interpreter events and to
+/// specialize some operations.
+class InterpreterCallbacks {
+  Interpreter &Interp;
 
-  using TransformExprFunction = ExprResult(RuntimeInterfaceBuilder *Builder,
-                                           Expr *, ArrayRef<Expr *>);
-  virtual TransformExprFunction *getPrintValueTransformer() = 0;
+public:
+  InterpreterCallbacks(Interpreter &I) : Interp(I) {}
+  virtual ~InterpreterCallbacks();
+  virtual void ProcessingTopLevelStmtDecl(TopLevelStmtDecl *D);
 };
 
 /// Provides top-level interfaces for incremental compilation and execution.
 class Interpreter {
+  friend Value;
+
   std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
+  std::unique_ptr<InterpreterCallbacks> InterpreterCB;
   std::unique_ptr<IncrementalParser> IncrParser;
   std::unique_ptr<IncrementalExecutor> IncrExecutor;
-  std::unique_ptr<RuntimeInterfaceBuilder> RuntimeIB;
 
   // An optional parser for CUDA offloading
   std::unique_ptr<IncrementalParser> DeviceParser;
@@ -105,10 +109,16 @@ class Interpreter {
   // printing happens, it's in an invalid state.
   Value LastValue;
 
-  // Add a call to an Expr to report its result. We query the function from
-  // RuntimeInterfaceBuilder once and store it as a function pointer to avoid
-  // frequent virtual function calls.
-  RuntimeInterfaceBuilder::TransformExprFunction *AddPrintValueCall = nullptr;
+  // The cached declaration of std::string used as a return type for the built
+  // trampoline. This is done in C++ to simplify the memory management for
+  // user-defined printing functions.
+  Decl *StdString = nullptr;
+
+  // A cache for the compiled destructors used to for de-allocation of managed
+  // clang::Values.
+  llvm::DenseMap<CXXRecordDecl *, llvm::orc::ExecutorAddr> Dtors;
+
+  std::array<Expr *, 4> ValuePrintingInfo = {0};
 
 protected:
   // Derived classes can use an extended interface of the Interpreter.
@@ -123,23 +133,8 @@ protected:
   // JIT engine. In particular, it doesn't run cleanup or destructors.
   void ResetExecutor();
 
-  // Lazily construct the RuntimeInterfaceBuilder. The provided instance will be
-  // used for the entire lifetime of the interpreter. The default implementation
-  // targets the in-process __clang_Interpreter runtime. Override this to use a
-  // custom runtime.
-  virtual std::unique_ptr<RuntimeInterfaceBuilder> FindRuntimeInterface();
-
 public:
   virtual ~Interpreter();
-
-  // class SynthesizingCodeRAII {
-
-  // };
-
-  // SynthesizingCodeRAII EnterCodeSynthesisScope() {
-
-  // }
-
   static llvm::Expected<std::unique_ptr<Interpreter>>
   create(std::unique_ptr<CompilerInstance> CI);
   static llvm::Expected<std::unique_ptr<Interpreter>>
@@ -154,7 +149,6 @@ public:
   llvm::Expected<PartialTranslationUnit &> Parse(llvm::StringRef Code);
   llvm::Error Execute(PartialTranslationUnit &T);
   llvm::Error ParseAndExecute(llvm::StringRef Code, Value *V = nullptr);
-  llvm::Expected<llvm::orc::ExecutorAddr> CompileDtorCall(CXXRecordDecl *CXXRD);
 
   /// Undo N previous incremental inputs.
   llvm::Error Undo(unsigned N = 1);
@@ -176,13 +170,17 @@ public:
   llvm::Expected<llvm::orc::ExecutorAddr>
   getSymbolAddressFromLinkerName(llvm::StringRef LinkerName) const;
 
-  enum InterfaceKind { NoAlloc, WithAlloc, CopyArray, NewTag };
-
-  const llvm::SmallVectorImpl<Expr *> &getValuePrintingInfo() const {
-    return ValuePrintingInfo;
+  InterpreterCallbacks *getInterpreterCallbacks() {
+    return InterpreterCB.get();
+  }
+  const InterpreterCallbacks *getInterpreterCallbacks() const {
+    return const_cast<Interpreter *>(this)->getInterpreterCallbacks();
+  }
+  void setInterpreterCallbacks(std::unique_ptr<InterpreterCallbacks> CB) {
+    InterpreterCB = std::move(CB);
   }
 
-  Expr *SynthesizeExpr(Expr *E);
+  llvm::Expected<Expr *> SynthesizeExpr(Expr *E);
 
   std::unique_ptr<llvm::Module> GenModule();
 
@@ -190,11 +188,14 @@ private:
   size_t getEffectivePTUSize() const;
   void markUserCodeStart();
 
-  llvm::DenseMap<CXXRecordDecl *, llvm::orc::ExecutorAddr> Dtors;
-
-  llvm::SmallVector<Expr *, 4> ValuePrintingInfo;
-
   std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder;
+
+  std::string ValueDataToString(const Value &V);
+  std::string ValueTypeToString(const Value &V) const;
+
+  // When we deallocate clang::Value we need to run the destructor of the type.
+  // This function forces emission of the needed dtor.
+  llvm::Expected<llvm::orc::ExecutorAddr> CompileDtorCall(CXXRecordDecl *CXXRD);
 };
 } // namespace clang
 

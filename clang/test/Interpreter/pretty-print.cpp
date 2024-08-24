@@ -139,9 +139,32 @@ std::unordered_map<int, int> m2 = { {1,2}, {3,4}};
 m2
 // CHECK-NEXT: (std::unordered_map<int, int> &) { [[Num:[0-9]+]] => [[Num:[0-9]+]], [[Num:[0-9]+]] => [[Num:[0-9]+]] }
 
-struct MyType {};
-namespace caas { namespace runtime { std::string PrintValueRuntime(const MyType*) { return "My pretty printer!"; } }}
-MyType{}
+struct MyDate {  \
+  unsigned year; \
+  char month;    \
+  char day;      \
+};
+
+#include <string>
+
+namespace caas { namespace runtime {                                    \
+    std::string PrintValueRuntime(const MyDate* d) {                    \
+      std::string result;                                               \
+      result = std::to_string(d->year) + '-';                           \
+      switch(d->month) { default: result += "invalid month"; break;     \
+      case 1: result += "Jan"; break; case 2: result += "Feb"; break;   \
+      case 3: result += "Mar"; break; case 4: result += "Apr"; break;   \
+      case 5: result += "May"; break; case 6: result += "Jun"; break;   \
+      case 7: result += "Jul"; break; case 8: result += "Aug"; break;   \
+      case 9: result += "Sep"; break; case 10: result += "Oct"; break;  \
+      case 11: result += "Nov"; break; case 12: result += "Dec"; break; \
+      }                                                                 \
+      result += '-';                                                    \
+      result += std::to_string(d->day);                                 \
+      return result;                                                    \
+    }                                                                   \
+  }}
+MyDate{2024, 8, 23}
 // CHECK-NEXT: (MyType) My pretty printer!
 %quit
 
