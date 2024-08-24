@@ -413,7 +413,7 @@ def executeBuiltinEcho(cmd, shenv):
         for arg in args[:-1]:
             stdout.write(encode(maybeUnescape(arg)))
             stdout.write(encode(" "))
-        stdout.write(encode(maybeUnescape(args[-1])))
+        stdout.write(encode(maybeUnescape(str(args[-1]))))
     if write_newline:
         stdout.write(encode("\n"))
 
