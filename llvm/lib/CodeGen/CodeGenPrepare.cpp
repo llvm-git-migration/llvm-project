@@ -2686,6 +2686,47 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
     return true;
   }
 
+  // SCCP may have propagated C++ static variables across calls. If this happens
+  // to be the case, we may want to undo it in order to avoid redundant pointer
+  // computation of the constant, as the function method returning the constant
+  // needs to be executed anyways.
+  auto GetUniformReturnValue = [](const Function *F) -> Constant * {
+    if (!F->getReturnType()->isPointerTy())
+      return nullptr;
+
+    Constant *UniformValue = nullptr;
+    for (auto &BB : llvm::reverse(*F)) {
+      if (auto *RI = dyn_cast<ReturnInst>(BB.getTerminator())) {
+        if (auto *V = dyn_cast_or_null<GlobalVariable>(RI->getReturnValue())) {
+          if (!UniformValue)
+            UniformValue = V;
+          else if (V != UniformValue)
+            return nullptr;
+        } else {
+          return nullptr;
+        }
+      }
+    }
+
+    return UniformValue;
+  };
+
+  if (Constant *RV = GetUniformReturnValue(CI->getCalledFunction())) {
+    bool MadeChange = false;
+    const auto &DT = getDT(*CI->getFunction());
+    for (Use &U : make_early_inc_range(RV->uses())) {
+      auto *I = dyn_cast<Instruction>(U.getUser());
+      if (!I || I->getParent() != CI->getParent())
+        continue;
+      if (DT.dominates(CI, I)) {
+        U.set(CI);
+        MadeChange = true;
+      }
+    }
+
+    return MadeChange;
+  }
+
   return false;
 }
 

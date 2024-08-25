@@ -38,7 +38,7 @@ landing_pad:                                      ; preds = %ctor
 define i32 @getI() {
 ; CHECK-LABEL: @getI(
 ; CHECK-NEXT:    [[GETS_PTR:%.*]] = call nonnull align 1 dereferenceable(1) ptr @getS()
-; CHECK-NEXT:    [[GETI:%.*]] = call i32 @S_getI(ptr nonnull align 1 dereferenceable(1) @g_getS)
+; CHECK-NEXT:    [[GETI:%.*]] = call i32 @S_getI(ptr nonnull align 1 dereferenceable(1) [[GETS_PTR]])
 ; CHECK-NEXT:    ret i32 [[GETI]]
 ;
   %getS_ptr = call nonnull align 1 dereferenceable(1) ptr @getS()
