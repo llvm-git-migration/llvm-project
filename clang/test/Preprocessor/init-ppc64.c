@@ -137,6 +137,8 @@
 // PPC64:#define __PTRDIFF_TYPE__ long int
 // PPC64:#define __PTRDIFF_WIDTH__ 64
 // PPC64:#define __REGISTER_PREFIX__
+// PPC64:#define __RSQRTEF__ 1
+// PPC64:#define __RSQRTE__ 1
 // PPC64:#define __SCHAR_MAX__ 127
 // PPC64:#define __SHRT_MAX__ 32767
 // PPC64:#define __SIG_ATOMIC_MAX__ 2147483647
@@ -1110,3 +1112,11 @@
 // RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc64-unknown-freebsd < /dev/null | FileCheck -match-full-lines -check-prefix PPC64-FREEBSD %s
 // RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc64le-unknown-freebsd < /dev/null | FileCheck -match-full-lines -check-prefix PPC64-FREEBSD %s
 // PPC64-FREEBSD-NOT: #define __LONG_DOUBLE_128__ 1
+
+// RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc64-unknown-linux-gnu -target-feature -hard-float -xc /dev/null | FileCheck --check-prefix=PPC64-SOFTFLT %s
+// RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc64le-unknown-linux-gnu -target-feature -hard-float -xc /dev/null | FileCheck --check-prefix=PPC64-SOFTFLT %s
+// PPC64-SOFTFLT:#define _SOFT_DOUBLE 1
+// PPC64-SOFTFLT:#define _SOFT_FLOAT 1
+// PPC64-SOFTFLT:#define __NO_FPRS__ 1
+// PPC64-SOFTFLT-NOT:#define __RSQRTE__ 1
+// PPC64-SOFTFLT-NOT:#define __RSQRTEF__ 1
