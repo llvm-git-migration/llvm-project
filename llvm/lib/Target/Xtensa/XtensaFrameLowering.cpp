@@ -28,6 +28,11 @@ XtensaFrameLowering::XtensaFrameLowering(const XtensaSubtarget &STI)
       TII(*STI.getInstrInfo()), TRI(STI.getRegisterInfo()) {}
 
 bool XtensaFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   return MF.getTarget().Options.DisableFramePointerElim(MF) ||
          MFI.hasVarSizedObjects();

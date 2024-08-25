@@ -91,6 +91,11 @@ const MipsFrameLowering *MipsFrameLowering::create(const MipsSubtarget &ST) {
 // if it needs dynamic stack realignment, if frame pointer elimination is
 // disabled, or if the frame address is taken.
 bool MipsFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   const TargetRegisterInfo *TRI = STI.getRegisterInfo();
 

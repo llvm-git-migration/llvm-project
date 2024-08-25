@@ -833,6 +833,11 @@ void SystemZELFFrameLowering::inlineStackProbe(
 }
 
 bool SystemZELFFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   return (MF.getTarget().Options.DisableFramePointerElim(MF) ||
           MF.getFrameInfo().hasVarSizedObjects());
 }
@@ -1450,6 +1455,11 @@ void SystemZXPLINKFrameLowering::inlineStackProbe(
 }
 
 bool SystemZXPLINKFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   return (MF.getFrameInfo().hasVarSizedObjects());
 }
 

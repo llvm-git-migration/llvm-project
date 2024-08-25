@@ -233,6 +233,11 @@ void AVRFrameLowering::emitEpilogue(MachineFunction &MF,
 // Notice that strictly this is not a frame pointer because it contains SP after
 // frame allocation instead of having the original SP in function entry.
 bool AVRFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const AVRMachineFunctionInfo *FuncInfo = MF.getInfo<AVRMachineFunctionInfo>();
 
   return (FuncInfo->getHasSpills() || FuncInfo->getHasAllocas() ||

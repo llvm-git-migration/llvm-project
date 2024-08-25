@@ -478,6 +478,11 @@ bool AArch64FrameLowering::canUseRedZone(const MachineFunction &MF) const {
 /// hasFP - Return true if the specified function should have a dedicated frame
 /// pointer register.
 bool AArch64FrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   const TargetRegisterInfo *RegInfo = MF.getSubtarget().getRegisterInfo();
 

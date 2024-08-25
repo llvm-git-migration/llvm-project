@@ -34,6 +34,11 @@ static Register getFPReg(const CSKYSubtarget &STI) { return CSKY::R8; }
 static Register getBPReg(const CSKYSubtarget &STI) { return CSKY::R7; }
 
 bool CSKYFrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const TargetRegisterInfo *RegInfo = MF.getSubtarget().getRegisterInfo();
 
   const MachineFrameInfo &MFI = MF.getFrameInfo();

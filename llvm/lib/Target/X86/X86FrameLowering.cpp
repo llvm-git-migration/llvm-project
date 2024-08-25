@@ -95,6 +95,11 @@ bool X86FrameLowering::needsFrameIndexResolution(
 /// pointer register.  This is true if the function has variable sized allocas
 /// or if frame pointer elimination is disabled.
 bool X86FrameLowering::hasFP(const MachineFunction &MF) const {
+  // Naked functions have no stack frame pushed, so we don't have a frame
+  // pointer.
+  if (MF.getFunction().hasFnAttribute(Attribute::Naked))
+    return false;
+
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   return (MF.getTarget().Options.DisableFramePointerElim(MF) ||
           TRI->hasStackRealignment(MF) || MFI.hasVarSizedObjects() ||
