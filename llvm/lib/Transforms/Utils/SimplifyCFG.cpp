@@ -7852,6 +7852,15 @@ static bool removeUndefIntroducingPredecessor(BasicBlock *BB,
         Instruction *T = Predecessor->getTerminator();
         IRBuilder<> Builder(T);
         if (BranchInst *BI = dyn_cast<BranchInst>(T)) {
+          // Prevent multiple conditions cases
+          if (dyn_cast<CmpInst>(BI->getCondition()) &&
+              !pred_empty(Predecessor)) {
+            BranchInst *Pred_BI = dyn_cast<BranchInst>(
+                (*pred_begin(Predecessor))->getTerminator());
+            if (Pred_BI && dyn_cast<CmpInst>(BI->getCondition())) {
+              continue;
+            }
+          }
           BB->removePredecessor(Predecessor);
           // Turn unconditional branches into unreachables and remove the dead
           // destination from conditional branches.
