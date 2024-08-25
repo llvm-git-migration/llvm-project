@@ -977,3 +977,9 @@
 
 // RUN: %clang_cc1 -E -dM -triple=powerpc-unknown-openbsd -x c++ < /dev/null | FileCheck -match-full-lines -check-prefix PPC-OPENBSD-CXX %s
 // PPC-OPENBSD-CXX: #define __STDCPP_DEFAULT_NEW_ALIGNMENT__ 16UL
+
+// RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc-unknown-linux-gnu -target-feature -hard-float < /dev/null | FileCheck -match-full-lines -check-prefix PPC-SOFTFLT %s
+//
+// PPC-SOFTFLT:#define _SOFT_DOUBLE 1
+// PPC-SOFTFLT:#define _SOFT_FLOAT 1
+// PPC-SOFTFLT:#define __NO_FPRS__ 1
