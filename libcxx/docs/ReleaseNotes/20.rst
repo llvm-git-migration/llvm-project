@@ -38,7 +38,7 @@ What's New in Libc++ 20.0.0?
 Implemented Papers
 ------------------
 
-- TODO
+- P2747R2 - ``constexpr`` placement new  (`Github <https://github.com/llvm/llvm-project/issues/105427>`__)
 
 
 Improvements and New Features
