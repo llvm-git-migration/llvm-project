@@ -18,86 +18,75 @@
 #include "test_macros.h"
 #include "type_algorithms.h"
 
+#if TEST_STD_VER >= 23
+#  define COMPILE_OR_RUNTIME_ASSERT(expr) static_assert(expr);
+#else
+#  define COMPILE_OR_RUNTIME_ASSERT(expr) assert(expr);
+#endif
+
 struct TestFloat {
   template <class T>
-  static TEST_CONSTEXPR_CXX23 bool test() {
-    assert(!std::signbit(T(0)));
-    assert(std::signbit(-T(0)));
-    assert(std::signbit(std::numeric_limits<T>::lowest()));
-    assert(!std::signbit(std::numeric_limits<T>::min()));
-    assert(!std::signbit(std::numeric_limits<T>::denorm_min()));
-    assert(!std::signbit(std::numeric_limits<T>::max()));
-    assert(!std::signbit(std::numeric_limits<T>::infinity()));
-    assert(std::signbit(-std::numeric_limits<T>::infinity()));
-    assert(!std::signbit(std::numeric_limits<T>::quiet_NaN()));
-    assert(!std::signbit(std::numeric_limits<T>::signaling_NaN()));
-
-    return true;
+  static void test() {
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(T(0)));
+    COMPILE_OR_RUNTIME_ASSERT(std::signbit(-T(0)));
+    COMPILE_OR_RUNTIME_ASSERT(std::signbit(std::numeric_limits<T>::lowest()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::min()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::denorm_min()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::max()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::infinity()));
+    COMPILE_OR_RUNTIME_ASSERT(std::signbit(-std::numeric_limits<T>::infinity()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::quiet_NaN()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::signaling_NaN()));
   }
 
   template <class T>
-  TEST_CONSTEXPR_CXX23 void operator()() {
+  void operator()() {
     test<T>();
-#if TEST_STD_VER >= 23
-    static_assert(test<T>());
-#endif
   }
 };
 
 struct TestUnsignedIntAndFixedWidthChar {
   template <class T>
-  static TEST_CONSTEXPR_CXX23 bool test() {
-    assert(!std::signbit(std::numeric_limits<T>::max()));
-    assert(!std::signbit(std::numeric_limits<T>::lowest()));
-    assert(!std::signbit(T(0)));
-
-    return true;
+  static void test() {
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::max()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::lowest()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(T(0)));
   }
 
   template <class T>
-  TEST_CONSTEXPR_CXX23 void operator()() {
+  void operator()() {
     test<T>();
-#if TEST_STD_VER >= 23
-    static_assert(test<T>());
-#endif
   }
 };
 
 struct TestSignedIntAndVariableWidthChar {
   template <class T>
-  static TEST_CONSTEXPR_CXX23 bool test() {
-    assert(!std::signbit(std::numeric_limits<T>::max()));
-    assert(std::signbit(std::numeric_limits<T>::lowest()));
-    assert(!std::signbit(T(0)));
-
-    return true;
+  static void test() {
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<T>::max()));
+    COMPILE_OR_RUNTIME_ASSERT(std::signbit(std::numeric_limits<T>::lowest()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(T(0)));
   }
 
 // Plain `char` on PowerPC and ARM defaults to be a `unsigned char` (contrary to
 // e.g. x86) and therefore `std::lowest()` returns 0.
 #if defined(__arm__) || defined(__powerpc__)
   template <>
-  TEST_CONSTEXPR_CXX23 bool test<char>() {
-    assert(!std::signbit(std::numeric_limits<char>::max()));
-    assert(!std::signbit(std::numeric_limits<char>::lowest()));
-    assert(!std::signbit(char(0)));
-
-    return true;
+  void test<char>() {
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<char>::max()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(std::numeric_limits<char>::lowest()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(char(0)));
   }
 #endif
 
   template <class T>
-  TEST_CONSTEXPR_CXX23 void operator()() {
+  void operator()() {
     test<T>();
-#if TEST_STD_VER >= 23
-    static_assert(test<T>());
-#endif
   }
 };
 
 template <typename T>
 struct ConvertibleTo {
-  operator T() const { return T(); }
+  TEST_CONSTEXPR_CXX23 operator T() const { return T(); }
 };
 
 int main(int, char**) {
@@ -111,9 +100,9 @@ int main(int, char**) {
   // whether overloads for all cv-unqualified floating-point types are working
   // as expected.
   {
-    assert(!std::signbit(ConvertibleTo<float>()));
-    assert(!std::signbit(ConvertibleTo<double>()));
-    assert(!std::signbit(ConvertibleTo<long double>()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(ConvertibleTo<float>()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(ConvertibleTo<double>()));
+    COMPILE_OR_RUNTIME_ASSERT(!std::signbit(ConvertibleTo<long double>()));
   }
 
   return 0;
