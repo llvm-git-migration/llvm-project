@@ -17,9 +17,6 @@
 #include "clang/CodeGen/CodeGenAction.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/FrontendTool/Utils.h"
-#include "clang/Interpreter/Interpreter.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Option/ArgList.h"
@@ -31,212 +28,23 @@
 
 namespace clang {
 
-class IncrementalASTConsumer final : public ASTConsumer {
-  InterpreterCallbacks *CB;
-  std::unique_ptr<ASTConsumer> Consumer;
-
-public:
-  IncrementalASTConsumer(std::unique_ptr<ASTConsumer> C,
-                         InterpreterCallbacks *CB)
-      : CB(CB), Consumer(std::move(C)) {}
-
-  bool HandleTopLevelDecl(DeclGroupRef DGR) override final {
-    if (DGR.isNull())
-      return true;
-    if (!Consumer)
-      return true;
-
-    if (CB)
-      for (Decl *D : DGR)
-        if (auto *TLSD = llvm::dyn_cast<TopLevelStmtDecl>(D))
-          CB->ProcessingTopLevelStmtDecl(TLSD);
-
-    return Consumer->HandleTopLevelDecl(DGR);
-  }
-  void HandleTranslationUnit(ASTContext &Ctx) override final {
-    Consumer->HandleTranslationUnit(Ctx);
-  }
-  void HandleInlineFunctionDefinition(FunctionDecl *D) override final {
-    Consumer->HandleInlineFunctionDefinition(D);
-  }
-  void HandleInterestingDecl(DeclGroupRef D) override final {
-    Consumer->HandleInterestingDecl(D);
-  }
-  void HandleTagDeclDefinition(TagDecl *D) override final {
-    Consumer->HandleTagDeclDefinition(D);
-  }
-  void HandleTagDeclRequiredDefinition(const TagDecl *D) override final {
-    Consumer->HandleTagDeclRequiredDefinition(D);
-  }
-  void HandleCXXImplicitFunctionInstantiation(FunctionDecl *D) override final {
-    Consumer->HandleCXXImplicitFunctionInstantiation(D);
-  }
-  void HandleTopLevelDeclInObjCContainer(DeclGroupRef D) override final {
-    Consumer->HandleTopLevelDeclInObjCContainer(D);
-  }
-  void HandleImplicitImportDecl(ImportDecl *D) override final {
-    Consumer->HandleImplicitImportDecl(D);
-  }
-  void CompleteTentativeDefinition(VarDecl *D) override final {
-    Consumer->CompleteTentativeDefinition(D);
-  }
-  void CompleteExternalDeclaration(DeclaratorDecl *D) override final {
-    Consumer->CompleteExternalDeclaration(D);
-  }
-  void AssignInheritanceModel(CXXRecordDecl *RD) override final {
-    Consumer->AssignInheritanceModel(RD);
-  }
-  void HandleCXXStaticMemberVarInstantiation(VarDecl *D) override final {
-    Consumer->HandleCXXStaticMemberVarInstantiation(D);
-  }
-  void HandleVTable(CXXRecordDecl *RD) override final {
-    Consumer->HandleVTable(RD);
-  }
-  ASTMutationListener *GetASTMutationListener() override final {
-    return Consumer->GetASTMutationListener();
-  }
-  ASTDeserializationListener *GetASTDeserializationListener() override final {
-    return Consumer->GetASTDeserializationListener();
-  }
-  void PrintStats() override final { Consumer->PrintStats(); }
-  bool shouldSkipFunctionBody(Decl *D) override final {
-    return Consumer->shouldSkipFunctionBody(D);
-  }
-  static bool classof(const clang::ASTConsumer *) { return true; }
-};
-
-/// A custom action enabling the incremental processing functionality.
-///
-/// The usual \p FrontendAction expects one call to ExecuteAction and once it
-/// sees a call to \p EndSourceFile it deletes some of the important objects
-/// such as \p Preprocessor and \p Sema assuming no further input will come.
-///
-/// \p IncrementalAction ensures it keep its underlying action's objects alive
-/// as long as the \p IncrementalParser needs them.
-///
-class IncrementalAction : public WrapperFrontendAction {
-private:
-  bool IsTerminating = false;
-
-public:
-  IncrementalAction(CompilerInstance &CI, llvm::LLVMContext &LLVMCtx,
-                    llvm::Error &Err)
-      : WrapperFrontendAction([&]() {
-          llvm::ErrorAsOutParameter EAO(&Err);
-          std::unique_ptr<FrontendAction> Act;
-          switch (CI.getFrontendOpts().ProgramAction) {
-          default:
-            Err = llvm::createStringError(
-                std::errc::state_not_recoverable,
-                "Driver initialization failed. "
-                "Incremental mode for action %d is not supported",
-                CI.getFrontendOpts().ProgramAction);
-            return Act;
-          case frontend::ASTDump:
-            [[fallthrough]];
-          case frontend::ASTPrint:
-            [[fallthrough]];
-          case frontend::ParseSyntaxOnly:
-            Act = CreateFrontendAction(CI);
-            break;
-          case frontend::PluginAction:
-            [[fallthrough]];
-          case frontend::EmitAssembly:
-            [[fallthrough]];
-          case frontend::EmitBC:
-            [[fallthrough]];
-          case frontend::EmitObj:
-            [[fallthrough]];
-          case frontend::PrintPreprocessedInput:
-            [[fallthrough]];
-          case frontend::EmitLLVMOnly:
-            Act.reset(new EmitLLVMOnlyAction(&LLVMCtx));
-            break;
-          }
-          return Act;
-        }()) {}
-  FrontendAction *getWrapped() const { return WrappedAction.get(); }
-  TranslationUnitKind getTranslationUnitKind() override {
-    return TU_Incremental;
-  }
-
-  void ExecuteAction() override {
-    CompilerInstance &CI = getCompilerInstance();
-    assert(CI.hasPreprocessor() && "No PP!");
-
-    // Use a code completion consumer?
-    CodeCompleteConsumer *CompletionConsumer = nullptr;
-    if (CI.hasCodeCompletionConsumer())
-      CompletionConsumer = &CI.getCodeCompletionConsumer();
-
-    Preprocessor &PP = CI.getPreprocessor();
-    PP.EnterMainSourceFile();
-
-    if (!CI.hasSema())
-      CI.createSema(getTranslationUnitKind(), CompletionConsumer);
-  }
-
-  // Do not terminate after processing the input. This allows us to keep various
-  // clang objects alive and to incrementally grow the current TU.
-  void EndSourceFile() override {
-    // The WrappedAction can be nullptr if we issued an error in the ctor.
-    if (IsTerminating && getWrapped())
-      WrapperFrontendAction::EndSourceFile();
-  }
-
-  void FinalizeAction() {
-    assert(!IsTerminating && "Already finalized!");
-    IsTerminating = true;
-    EndSourceFile();
-  }
-};
-
-CodeGenerator *IncrementalParser::getCodeGen() const {
-  FrontendAction *WrappedAct = Act->getWrapped();
-  if (!WrappedAct->hasIRSupport())
-    return nullptr;
-  return static_cast<CodeGenAction *>(WrappedAct)->getCodeGenerator();
-}
-
 IncrementalParser::IncrementalParser() {}
 
 IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
-                                     llvm::LLVMContext &LLVMCtx,
-                                     llvm::Error &Err, InterpreterCallbacks *CB)
+                                     llvm::Error &Err,
+                                     std::unique_ptr<clang::ASTConsumer> C)
     : CI(std::move(Instance)) {
   llvm::ErrorAsOutParameter EAO(&Err);
-  Act = std::make_unique<IncrementalAction>(*CI, LLVMCtx, Err);
-  if (Err)
-    return;
-  CI->ExecuteAction(*Act);
 
-  if (getCodeGen())
-    CachedInCodeGenModule = GenModule();
-
-  std::unique_ptr<ASTConsumer> IncrConsumer =
-      std::make_unique<IncrementalASTConsumer>(CI->takeASTConsumer(), CB);
-  CI->setASTConsumer(std::move(IncrConsumer));
+  CI->setASTConsumer(std::move(C));
   Consumer = &CI->getASTConsumer();
   P.reset(
       new Parser(CI->getPreprocessor(), CI->getSema(), /*SkipBodies=*/false));
   P->Initialize();
-
-  // An initial PTU is needed as CUDA includes some headers automatically
-  auto PTU = ParseOrWrapTopLevelDecl();
-  if (auto E = PTU.takeError()) {
-    consumeError(std::move(E)); // FIXME
-    return;                     // PTU.takeError();
-  }
-
-  if (getCodeGen()) {
-    PTU->TheModule = GenModule();
-    assert(PTU->TheModule && "Failed to create initial PTU");
-  }
 }
 
 IncrementalParser::~IncrementalParser() {
   P.reset();
-  Act->FinalizeAction();
 }
 
 llvm::Expected<PartialTranslationUnit &>
@@ -356,33 +164,7 @@ IncrementalParser::Parse(llvm::StringRef input) {
            "Lexer must be EOF when starting incremental parse!");
   }
 
-  if (std::unique_ptr<llvm::Module> M = GenModule())
-    PTU->TheModule = std::move(M);
-
   return PTU;
-}
-
-std::unique_ptr<llvm::Module> IncrementalParser::GenModule() {
-  static unsigned ID = 0;
-  if (CodeGenerator *CG = getCodeGen()) {
-    // Clang's CodeGen is designed to work with a single llvm::Module. In many
-    // cases for convenience various CodeGen parts have a reference to the
-    // llvm::Module (TheModule or Module) which does not change when a new
-    // module is pushed. However, the execution engine wants to take ownership
-    // of the module which does not map well to CodeGen's design. To work this
-    // around we created an empty module to make CodeGen happy. We should make
-    // sure it always stays empty.
-    assert((!CachedInCodeGenModule ||
-            (CachedInCodeGenModule->empty() &&
-             CachedInCodeGenModule->global_empty() &&
-             CachedInCodeGenModule->alias_empty() &&
-             CachedInCodeGenModule->ifunc_empty())) &&
-           "CodeGen wrote to a readonly module");
-    std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
-    CG->StartModule("incr_module_" + std::to_string(ID++), M->getContext());
-    return M;
-  }
-  return nullptr;
 }
 
 void IncrementalParser::CleanUpPTU(PartialTranslationUnit &PTU) {
@@ -417,12 +199,6 @@ void IncrementalParser::CleanUpPTU(PartialTranslationUnit &PTU) {
         !D->getLangOpts().CPlusPlus)
       getCI()->getSema().IdResolver.RemoveDecl(ND);
   }
-}
-
-llvm::StringRef IncrementalParser::GetMangledName(GlobalDecl GD) const {
-  CodeGenerator *CG = getCodeGen();
-  assert(CG);
-  return CG->GetMangledName(GD);
 }
 
 } // end namespace clang

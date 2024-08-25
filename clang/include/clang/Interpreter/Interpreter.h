@@ -38,6 +38,7 @@ class ThreadSafeContext;
 namespace clang {
 
 class CompilerInstance;
+class CodeGenerator;
 
 class IncrementalExecutor;
 class IncrementalParser;
@@ -78,29 +79,24 @@ private:
   llvm::StringRef CudaSDKPath;
 };
 
-class Interpreter;
-/// Provides a callback class allowing to listen to interpreter events and to
-/// specialize some operations.
-class InterpreterCallbacks {
-  Interpreter &Interp;
-
-public:
-  InterpreterCallbacks(Interpreter &I) : Interp(I) {}
-  virtual ~InterpreterCallbacks();
-  virtual void ProcessingTopLevelStmtDecl(TopLevelStmtDecl *D);
-};
+class IncrementalAction;
+class InProcessPrintingASTConsumer;
 
 /// Provides top-level interfaces for incremental compilation and execution.
 class Interpreter {
-  friend Value;
+  friend class Value;
+  friend InProcessPrintingASTConsumer;
 
   std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
-  std::unique_ptr<InterpreterCallbacks> InterpreterCB;
+  /// Long-lived, incremental parsing action.
+  std::unique_ptr<IncrementalAction> Act;
   std::unique_ptr<IncrementalParser> IncrParser;
   std::unique_ptr<IncrementalExecutor> IncrExecutor;
 
   // An optional parser for CUDA offloading
   std::unique_ptr<IncrementalParser> DeviceParser;
+
+  std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder;
 
   unsigned InitPTUSize = 0;
 
@@ -120,10 +116,15 @@ class Interpreter {
 
   std::array<Expr *, 4> ValuePrintingInfo = {0};
 
+  /// When CodeGen is created the first llvm::Module gets cached in many places
+  /// and we must keep it alive.
+  std::unique_ptr<llvm::Module> CachedInCodeGenModule;
+
 protected:
   // Derived classes can use an extended interface of the Interpreter.
   Interpreter(std::unique_ptr<CompilerInstance> CI, llvm::Error &Err,
-              std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder = nullptr);
+              std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder = nullptr,
+              std::unique_ptr<clang::ASTConsumer> Consumer = nullptr);
 
   // Create the internal IncrementalExecutor, or re-create it after calling
   // ResetExecutor().
@@ -170,32 +171,29 @@ public:
   llvm::Expected<llvm::orc::ExecutorAddr>
   getSymbolAddressFromLinkerName(llvm::StringRef LinkerName) const;
 
-  InterpreterCallbacks *getInterpreterCallbacks() {
-    return InterpreterCB.get();
-  }
-  const InterpreterCallbacks *getInterpreterCallbacks() const {
-    return const_cast<Interpreter *>(this)->getInterpreterCallbacks();
-  }
-  void setInterpreterCallbacks(std::unique_ptr<InterpreterCallbacks> CB) {
-    InterpreterCB = std::move(CB);
-  }
-
-  llvm::Expected<Expr *> SynthesizeExpr(Expr *E);
-
   std::unique_ptr<llvm::Module> GenModule();
 
 private:
   size_t getEffectivePTUSize() const;
   void markUserCodeStart();
 
-  std::unique_ptr<llvm::orc::LLJITBuilder> JITBuilder;
+  /// @}
+  /// @name Value and pretty printing support
+  /// @{
 
   std::string ValueDataToString(const Value &V);
   std::string ValueTypeToString(const Value &V) const;
 
+  llvm::Expected<Expr *> AttachValuePrinting(Expr *E);
+
   // When we deallocate clang::Value we need to run the destructor of the type.
   // This function forces emission of the needed dtor.
   llvm::Expected<llvm::orc::ExecutorAddr> CompileDtorCall(CXXRecordDecl *CXXRD);
+
+  /// @}
+  /// @name Code generation
+  /// @{
+  CodeGenerator *getCodeGen() const;
 };
 } // namespace clang
 
