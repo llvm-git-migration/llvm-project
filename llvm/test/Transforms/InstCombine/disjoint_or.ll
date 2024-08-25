@@ -4,10 +4,9 @@
 define i32 @fold_xor_with_disjoint_or(i32 %a, i1 %c) {
 ; CHECK-LABEL: define i32 @fold_xor_with_disjoint_or(
 ; CHECK-SAME: i32 [[A:%.*]], i1 [[C:%.*]]) {
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], i32 0, i32 4
 ; CHECK-NEXT:    [[SHL:%.*]] = shl i32 [[A]], 4
-; CHECK-NEXT:    [[OR:%.*]] = or disjoint i32 [[S]], [[SHL]]
-; CHECK-NEXT:    [[XOR:%.*]] = xor i32 [[OR]], 4
+; CHECK-NEXT:    [[TMP1:%.*]] = select i1 [[C]], i32 4, i32 0
+; CHECK-NEXT:    [[XOR:%.*]] = or disjoint i32 [[TMP1]], [[SHL]]
 ; CHECK-NEXT:    ret i32 [[XOR]]
 ;
   %s = select i1 %c, i32 0, i32 4
@@ -20,10 +19,9 @@ define i32 @fold_xor_with_disjoint_or(i32 %a, i1 %c) {
 define <2 x i32> @fold_xor_with_disjoint_or_vec(<2 x i32> %a, i1 %c) {
 ; CHECK-LABEL: define <2 x i32> @fold_xor_with_disjoint_or_vec(
 ; CHECK-SAME: <2 x i32> [[A:%.*]], i1 [[C:%.*]]) {
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[C]], <2 x i32> zeroinitializer, <2 x i32> <i32 4, i32 4>
 ; CHECK-NEXT:    [[SHL:%.*]] = shl <2 x i32> [[A]], <i32 4, i32 4>
-; CHECK-NEXT:    [[OR:%.*]] = or disjoint <2 x i32> [[S]], [[SHL]]
-; CHECK-NEXT:    [[XOR:%.*]] = xor <2 x i32> [[OR]], <i32 4, i32 4>
+; CHECK-NEXT:    [[TMP1:%.*]] = select i1 [[C]], <2 x i32> <i32 4, i32 4>, <2 x i32> zeroinitializer
+; CHECK-NEXT:    [[XOR:%.*]] = or disjoint <2 x i32> [[TMP1]], [[SHL]]
 ; CHECK-NEXT:    ret <2 x i32> [[XOR]]
 ;
   %s = select i1 %c, <2 x i32> <i32 0, i32 0>, <2 x i32> <i32 4, i32 4>

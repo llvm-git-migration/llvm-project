@@ -4056,6 +4056,25 @@ Instruction *InstCombinerImpl::visitOr(BinaryOperator &I) {
   return nullptr;
 }
 
+static Instruction *foldXorToOr(BinaryOperator &I,
+                                InstCombiner::BuilderTy &Builder) {
+  assert(I.getOpcode() == Instruction::Xor);
+  Value *A, *B, *C, *D, *E;
+
+  // ((select C, A, B) | E) ^ D) -> (select C, A ^ D, B ^ D) | E)
+  if (match(&I,
+            m_c_Xor(m_c_DisjointOr(m_Select(m_Value(C), m_Value(A), m_Value(B)),
+                                   m_Value(E)),
+                    m_Value(D)))) {
+    Value *XorAB = Builder.CreateXor(A, D);
+    Value *XorBD = Builder.CreateXor(B, D);
+    Value *S = Builder.CreateSelect(C, XorAB, XorBD);
+    return BinaryOperator::CreateDisjointOr(S, E);
+  }
+
+  return nullptr;
+}
+
 /// A ^ B can be specified using other logic ops in a variety of patterns. We
 /// can fold these early and efficiently by morphing an existing instruction.
 static Instruction *foldXorToXor(BinaryOperator &I,
@@ -4657,6 +4676,9 @@ Instruction *InstCombinerImpl::visitXor(BinaryOperator &I) {
 
   if (Instruction *NewXor = foldXorToXor(I, Builder))
     return NewXor;
+
+  if (Instruction *NewOr = foldXorToOr(I, Builder))
+    return NewOr;
 
   // (A&B)^(A&C) -> A&(B^C) etc
   if (Value *V = foldUsingDistributiveLaws(I))
