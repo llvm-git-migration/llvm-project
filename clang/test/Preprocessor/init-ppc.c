@@ -325,6 +325,8 @@
 // PPC:#define __PTRDIFF_TYPE__ long int
 // PPC:#define __PTRDIFF_WIDTH__ 32
 // PPC:#define __REGISTER_PREFIX__
+// PPC:#define __RSQRTE__ 1
+// PPC:#define __RSQRTEF__ 1
 // PPC:#define __SCHAR_MAX__ 127
 // PPC:#define __SHRT_MAX__ 32767
 // PPC:#define __SIG_ATOMIC_MAX__ 2147483647
@@ -977,3 +979,11 @@
 
 // RUN: %clang_cc1 -E -dM -triple=powerpc-unknown-openbsd -x c++ < /dev/null | FileCheck -match-full-lines -check-prefix PPC-OPENBSD-CXX %s
 // PPC-OPENBSD-CXX: #define __STDCPP_DEFAULT_NEW_ALIGNMENT__ 16UL
+
+// RUN: %clang_cc1 -E -dM -ffreestanding -triple=powerpc-unknown-linux-gnu -target-feature -hard-float < /dev/null | FileCheck -match-full-lines -check-prefix PPC-SOFTFLT %s
+//
+// PPC-SOFTFLT:#define _SOFT_DOUBLE 1
+// PPC-SOFTFLT:#define _SOFT_FLOAT 1
+// PPC-SOFTFLT:#define __NO_FPRS__ 1
+// PPC-SOFTFLT-NOT:#define __RSQRTE__ 1
+// PPC-SOFTFLT-NOT:#define __RSQRTEF__ 1
