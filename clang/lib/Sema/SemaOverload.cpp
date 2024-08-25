@@ -7425,6 +7425,13 @@ void Sema::AddMethodCandidate(DeclAccessPair FoundDecl, QualType ObjectType,
                                /*ExplicitArgs*/ nullptr, ObjectType,
                                ObjectClassification, Args, CandidateSet,
                                SuppressUserConversions, false, PO);
+  } else if (UsingDecl *UD = dyn_cast<UsingDecl>(Decl)) {
+    for (auto *Shadow : UD->shadows()) {
+      AddMethodCandidate(cast<CXXMethodDecl>(Shadow->getTargetDecl()),
+                         FoundDecl, ActingContext, ObjectType,
+                         ObjectClassification, Args, CandidateSet,
+                         SuppressUserConversions, false, std::nullopt, PO);
+    }
   } else {
     AddMethodCandidate(cast<CXXMethodDecl>(Decl), FoundDecl, ActingContext,
                        ObjectType, ObjectClassification, Args, CandidateSet,
