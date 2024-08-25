@@ -35,7 +35,7 @@ class FrameRecognizerTestCase(TestBase):
 
         self.expect(
             "frame recognizer list",
-            substrs=["0: recognizer.MyFrameRecognizer, module a.out, symbol foo"],
+            substrs=["0: recognizer.MyFrameRecognizer, module a.out, demangled symbol foo"],
         )
 
         self.runCmd(
@@ -45,8 +45,8 @@ class FrameRecognizerTestCase(TestBase):
         self.expect(
             "frame recognizer list",
             substrs=[
-                "1: recognizer.MyOtherFrameRecognizer, module a.out, symbol bar (regexp)",
-                "0: recognizer.MyFrameRecognizer, module a.out, symbol foo",
+                "1: recognizer.MyOtherFrameRecognizer, module a.out, demangled symbol regex bar",
+                "0: recognizer.MyFrameRecognizer, module a.out, demangled symbol foo",
             ],
         )
 
@@ -56,7 +56,7 @@ class FrameRecognizerTestCase(TestBase):
         self.expect(
             "frame recognizer list",
             substrs=[
-                "1: recognizer.MyOtherFrameRecognizer, module a.out, symbol bar (regexp)"
+                "1: recognizer.MyOtherFrameRecognizer, module a.out, demangled symbol bar (regexp)"
             ],
         )
         self.expect(
@@ -79,7 +79,7 @@ class FrameRecognizerTestCase(TestBase):
         self.expect(
             "frame recognizer list",
             substrs=[
-                "1: recognizer.MyOtherFrameRecognizer, module a.out, symbol bar (regexp)"
+                "1: recognizer.MyOtherFrameRecognizer, module a.out, demangled symbol regexp bar"
             ],
         )
         self.expect(
@@ -224,7 +224,7 @@ class FrameRecognizerTestCase(TestBase):
         self.expect(
             "frame recognizer list",
             substrs=[
-                "recognizer.MyFrameRecognizer, module a.out, symbol foo, symbol bar"
+                "recognizer.MyFrameRecognizer, module a.out, demangled symbol foo, bar"
             ],
         )
 
@@ -279,7 +279,7 @@ class FrameRecognizerTestCase(TestBase):
         self.expect(
             "frame recognizer list",
             substrs=[
-                "recognizer.MyFrameRecognizer, module a.out, symbol foo, symbol bar"
+                "recognizer.MyFrameRecognizer, module a.out, demangled symbol foo, bar"
             ],
         )
 
@@ -305,7 +305,7 @@ class FrameRecognizerTestCase(TestBase):
 
         self.expect(
             "frame recognizer list",
-            substrs=["recognizer.MyFrameRecognizer, module a.out, symbol bar"],
+            substrs=["recognizer.MyFrameRecognizer, module a.out, demangled symbol bar"],
         )
 
         # Now the new target should also recognize the frame.
