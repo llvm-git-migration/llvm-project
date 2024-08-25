@@ -55,7 +55,7 @@ if( LIBCLC_STANDALONE_BUILD OR CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DI
   # Import required tools
   if( NOT EXISTS ${LIBCLC_CUSTOM_LLVM_TOOLS_BINARY_DIR} )
     foreach( tool IN ITEMS clang llvm-as llvm-link opt )
-      find_program( LLVM_TOOL_${tool} ${tool} PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH )
+      find_program( LLVM_TOOL_${tool} ${tool} PATHS ${LLVM_TOOLS_BINARY_DIR} )
       set( ${tool}_exe ${LLVM_TOOL_${tool}} )
       set( ${tool}_target )
     endforeach()
@@ -104,7 +104,7 @@ foreach( tool IN ITEMS clang opt llvm-as llvm-link )
 endforeach()
 
 # llvm-spirv is an optional dependency, used to build spirv-* targets.
-find_program( LLVM_SPIRV llvm-spirv PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH )
+find_program( LLVM_SPIRV llvm-spirv PATHS ${LLVM_TOOLS_BINARY_DIR} )
 
 if( LLVM_SPIRV )
   add_executable( libclc::llvm-spirv IMPORTED GLOBAL )
