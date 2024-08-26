@@ -28084,6 +28084,79 @@ TEST_F(FormatTest, BreakBinaryOperations) {
                Style);
 }
 
+TEST_F(FormatTest, WrappingNamespaceBodyWithNewlines) {
+  FormatStyle Style = getLLVMStyle();
+  Style.FixNamespaceComments = false;
+  Style.ShortNamespaceLines = 0;
+  Style.WrapNamespaceBodyWithNewlines = true;
+
+  // Empty namespace
+  verifyFormat("namespace N {};", Style);
+
+  // Single namespace
+  verifyFormat("namespace N {\n\n"
+               "int f1(int a) { return 2 * a; }\n\n"
+               "};", Style);
+
+  // Nested namespace
+  verifyFormat("namespace N1 {\n"
+               "namespace N2 {\n"
+               "namespace N3 {\n\n"
+               "int f1() {\n"
+               "  int a = 1;\n"
+               "  return a;\n"
+               "}\n\n"
+               "}\n"
+               "}\n"
+               "}", Style);
+
+  Style.WrapNamespaceBodyWithNewlines = false;
+
+  // Empty namespace
+  verifyFormat("namespace N {};", Style);
+
+  // Single namespace
+  verifyFormat("namespace N {\n"
+               "int f1(int a) { return 2 * a; }\n"
+               "};", Style);
+
+  // Nested namespace
+  verifyFormat("namespace N1 {\n"
+               "namespace N2 {\n"
+               "namespace N3 {\n"
+               "int f1() {\n"
+               "  int a = 1;\n"
+               "  return a;\n"
+               "}\n"
+               "}\n"
+               "}\n"
+               "}", Style);
+}
+
+TEST_F(FormatTest, WrappingNamespaceBodyWithNewlinesWithCompactNamespaces) {
+  FormatStyle Style = getLLVMStyle();
+  Style.FixNamespaceComments = false;
+  Style.CompactNamespaces = true;
+  Style.WrapNamespaceBodyWithNewlines = true;
+
+
+  verifyFormat("namespace N1 { namespace N2 { namespace N3 {\n\n"
+               "int f1() {\n"
+               "  int a = 1;\n"
+               "  return a;\n"
+               "}\n\n"
+               "}}}", Style);
+
+  Style.WrapNamespaceBodyWithNewlines = false;
+
+  verifyFormat("namespace N1 { namespace N2 { namespace N3 {\n"
+               "int f1() {\n"
+               "  int a = 1;\n"
+               "  return a;\n"
+               "}\n"
+               "}}}", Style);
+}
+
 } // namespace
 } // namespace test
 } // namespace format

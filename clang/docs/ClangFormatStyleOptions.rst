@@ -6652,6 +6652,23 @@ the configuration (without a prefix: ``Auto``).
 
   For example: BOOST_PP_STRINGIZE
 
+.. _WrapNamespaceBodyWithNewlines:
+
+**WrapNamespaceBodyWithNewlines** (``Boolean``) :versionbadge:`clang-format 19` :ref:`¶ <WrapNamespaceBodyWithNewlines>`
+  Insert a newline at the begging and at the end of namespace definition
+
+  .. code-block:: c++
+
+    false:                           vs.      true:
+
+    namespace a {                             namespace a {
+    namespace b {                             namespace b {
+      function();
+    }                                         function();
+    }
+                                              }
+                                              }
+
 .. END_FORMAT_STYLE_OPTIONS
 
 Adding additional style options

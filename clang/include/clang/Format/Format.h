@@ -5057,6 +5057,21 @@ struct FormatStyle {
   /// \version 11
   std::vector<std::string> WhitespaceSensitiveMacros;
 
+  /// Insert a newline at the begging and at the end of namespace definition
+  /// \code
+  ///   false:                           vs.      true:
+  ///
+  ///   namespace a {                             namespace a {
+  ///   namespace b {                             namespace b {
+  ///     function();
+  ///   }                                         function();
+  ///   }
+  ///                                             }
+  ///                                             }
+  /// \endcode
+  /// \version 19
+  bool WrapNamespaceBodyWithNewlines;
+
   bool operator==(const FormatStyle &R) const {
     return AccessModifierOffset == R.AccessModifierOffset &&
            AlignAfterOpenBracket == R.AlignAfterOpenBracket &&
@@ -5234,7 +5249,8 @@ struct FormatStyle {
            TypenameMacros == R.TypenameMacros && UseTab == R.UseTab &&
            VerilogBreakBetweenInstancePorts ==
                R.VerilogBreakBetweenInstancePorts &&
-           WhitespaceSensitiveMacros == R.WhitespaceSensitiveMacros;
+           WhitespaceSensitiveMacros == R.WhitespaceSensitiveMacros &&
+           WrapNamespaceBodyWithNewlines == R.WrapNamespaceBodyWithNewlines;
   }
 
   std::optional<FormatStyle> GetLanguageStyle(LanguageKind Language) const;
