@@ -54,7 +54,7 @@ public:
   /// Finds the free trie for a given size. This may be a referance to a nullptr
   /// at the correct place in the trie structure. The caller must provide the
   /// SizeRange for this trie; the trie does not store it.
-  static InsertPos *&find(FreeTrie *&trie, size_t size, SizeRange range);
+  static InsertPos find(FreeTrie *&trie, size_t size, SizeRange range);
 
   static FreeTrie **find_best_fit(FreeTrie *&trie, size_t size,
                                   SizeRange range);
