@@ -20,7 +20,6 @@ algorithm type_traits
 algorithm utility
 algorithm version
 any atomic
-any chrono
 any concepts
 any cstddef
 any cstdint
@@ -87,7 +86,6 @@ bit version
 bitset climits
 bitset concepts
 bitset cstddef
-bitset cstdint
 bitset cstdlib
 bitset cstring
 bitset cwchar
@@ -95,6 +93,7 @@ bitset initializer_list
 bitset iosfwd
 bitset limits
 bitset new
+bitset optional
 bitset stdexcept
 bitset string
 bitset string_view
@@ -115,15 +114,21 @@ charconv new
 charconv type_traits
 charconv version
 chrono bit
+chrono charconv
+chrono cmath
 chrono compare
 chrono concepts
 chrono cstddef
 chrono cstdint
 chrono cstring
 chrono ctime
+chrono format
 chrono forward_list
 chrono limits
+chrono locale
+chrono ostream
 chrono ratio
+chrono sstream
 chrono stdexcept
 chrono string
 chrono string_view
@@ -194,6 +199,9 @@ condition_variable type_traits
 condition_variable typeinfo
 condition_variable version
 coroutine compare
+coroutine cstddef
+coroutine cstdint
+coroutine cstring
 coroutine iosfwd
 coroutine limits
 coroutine type_traits
@@ -359,7 +367,6 @@ functional vector
 functional version
 future atomic
 future cerrno
-future chrono
 future cstddef
 future cstdint
 future cstdlib
@@ -684,6 +691,7 @@ ranges optional
 ranges span
 ranges tuple
 ranges type_traits
+ranges variant
 ranges version
 ratio climits
 ratio cstdint
@@ -886,15 +894,7 @@ syncstream shared_mutex
 syncstream streambuf
 syncstream string
 system_error cerrno
-system_error compare
-system_error cstddef
-system_error cstdint
-system_error cstring
-system_error limits
-system_error stdexcept
 system_error string
-system_error type_traits
-system_error version
 thread array
 thread atomic
 thread cctype
@@ -999,6 +999,7 @@ valarray functional
 valarray initializer_list
 valarray limits
 valarray new
+valarray optional
 valarray stdexcept
 valarray type_traits
 valarray version
