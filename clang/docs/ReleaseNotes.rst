@@ -254,6 +254,8 @@ Improvements to Clang's diagnostics
   compilation speed with modules. This warning is disabled by default and it needs
   to be explicitly enabled or by ``-Weverything``.
 
+- Clang now diagnoses the use of attribute names reserved by the C++ standard. (#GH92196).
+
 Improvements to Clang's time-trace
 ----------------------------------
 

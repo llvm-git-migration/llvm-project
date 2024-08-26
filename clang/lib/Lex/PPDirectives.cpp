@@ -177,6 +177,26 @@ static bool isLanguageDefinedBuiltin(const SourceManager &SourceMgr,
   return false;
 }
 
+static bool isReservedAttrName(Preprocessor &PP, IdentifierInfo *II) {
+  const LangOptions &Lang = PP.getLangOpts();
+  const StringRef Name = II->getName();
+
+  if (Lang.CPlusPlus26)
+    return Name == "indeterminate";
+  if (Lang.CPlusPlus23)
+    return Name == "assume";
+  if (Lang.CPlusPlus20)
+    return Name == "no_unique_address";
+  if (Lang.CPlusPlus17)
+    return Name == "fallthrough" || Name == "nodiscard" ||
+           Name == "maybe_unused";
+  if (Lang.CPlusPlus14)
+    return Name == "deprecated";
+  if (Lang.CPlusPlus11)
+    return Name == "noreturn" || Name == "carries_dependency";
+  return false;
+}
+
 static MacroDiag shouldWarnOnMacroDef(Preprocessor &PP, IdentifierInfo *II) {
   const LangOptions &Lang = PP.getLangOpts();
   StringRef Text = II->getName();
@@ -185,6 +205,8 @@ static MacroDiag shouldWarnOnMacroDef(Preprocessor &PP, IdentifierInfo *II) {
   if (II->isKeyword(Lang))
     return MD_KeywordDef;
   if (Lang.CPlusPlus11 && (Text == "override" || Text == "final"))
+    return MD_KeywordDef;
+  if (isReservedAttrName(PP, II))
     return MD_KeywordDef;
   return MD_NoWarn;
 }
