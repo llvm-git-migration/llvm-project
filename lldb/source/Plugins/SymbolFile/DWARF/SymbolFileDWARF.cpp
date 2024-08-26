@@ -2737,10 +2737,18 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
   if (results.AlreadySearched(this))
     return;
 
+  auto type_basename = query.GetTypeBasename();
+
+  if (Log *log = GetLog(DWARFLog::Lookups)) {
+    GetObjectFile()->GetModule()->LogMessage(
+        log, "SymbolFileDWARF::FindTypes(type_basename=\"{0}\")",
+        type_basename);
+  }
+
   std::lock_guard<std::recursive_mutex> guard(GetModuleMutex());
 
   bool have_index_match = false;
-  m_index->GetTypes(query.GetTypeBasename(), [&](DWARFDIE die) {
+  m_index->GetTypes(type_basename, [&](DWARFDIE die) {
     // Check the language, but only if we have a language filter.
     if (query.HasLanguage()) {
       if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
