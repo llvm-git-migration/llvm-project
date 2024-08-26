@@ -293,9 +293,10 @@ define arm_aapcs_vfpcc <4 x i32> @zext16_masked_v4i32_align2_other(ptr %dest, <4
 ;
 ; CHECK-BE-LABEL: zext16_masked_v4i32_align2_other:
 ; CHECK-BE:       @ %bb.0: @ %entry
-; CHECK-BE-NEXT:    vrev64.32 q1, q0
-; CHECK-BE-NEXT:    vmovlb.u16 q0, q1
-; CHECK-BE-NEXT:    vmovlb.s16 q1, q1
+; CHECK-BE-NEXT:    vmov.i32 q1, #0xffff
+; CHECK-BE-NEXT:    vrev64.32 q2, q0
+; CHECK-BE-NEXT:    vand q0, q2, q1
+; CHECK-BE-NEXT:    vmovlb.s16 q1, q2
 ; CHECK-BE-NEXT:    vpt.s32 gt, q1, zr
 ; CHECK-BE-NEXT:    vldrht.u32 q1, [r0]
 ; CHECK-BE-NEXT:    vpsel q1, q1, q0
