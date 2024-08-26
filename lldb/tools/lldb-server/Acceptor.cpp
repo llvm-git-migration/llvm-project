@@ -23,76 +23,107 @@ using namespace lldb_private::lldb_server;
 using namespace llvm;
 
 Status Acceptor::Listen(int backlog) {
-  return m_listener_socket_up->Listen(StringRef(m_name), backlog);
-}
+  if (m_socket_protocol == Socket::ProtocolTcp) {
+    // Update the url with the second port to listen on.
+    m_name += llvm::formatv(",{0}", m_gdbserver_port);
+  }
 
-Status Acceptor::Accept(const bool child_processes_inherit, Connection *&conn) {
-  Socket *conn_socket = nullptr;
-  auto error = m_listener_socket_up->Accept(conn_socket);
-  if (error.Success())
-    conn = new ConnectionFileDescriptor(conn_socket);
+  Status error = m_listener_socket_up->Listen(StringRef(m_name), backlog);
+  if (error.Fail())
+    return error;
 
+  if (m_socket_protocol == Socket::ProtocolTcp) {
+    if (m_platform_port == 0 || m_gdbserver_port == 0) {
+      TCPSocket *tcp_socket =
+          static_cast<TCPSocket *>(m_listener_socket_up.get());
+      std::set<uint16_t> ports = tcp_socket->GetLocalPortNumbers();
+      std::set<uint16_t>::iterator port_i = ports.begin();
+      while (m_platform_port == 0 || m_gdbserver_port == 0) {
+        if (port_i == ports.end())
+          return Status("cannot resolve ports");
+        if (m_platform_port == 0 && *port_i != m_gdbserver_port) {
+          m_platform_port = *port_i;
+        } else if (m_gdbserver_port == 0 && *port_i != m_platform_port) {
+          m_gdbserver_port = *port_i;
+        }
+        ++port_i;
+      }
+    }
+    assert(m_platform_port);
+    assert(m_gdbserver_port);
+    assert(m_platform_port != m_gdbserver_port);
+  }
   return error;
 }
 
-Socket::SocketProtocol Acceptor::GetSocketProtocol() const {
-  return m_listener_socket_up->GetSocketProtocol();
+std::string Acceptor::GetLocalSocketId() const {
+  if (m_socket_protocol == Socket::ProtocolTcp) {
+    return (m_platform_port != 0) ? llvm::to_string(m_platform_port) : "";
+  } else {
+    return m_name;
+  }
 }
 
-const char *Acceptor::GetSocketScheme() const {
-  return Socket::FindSchemeByProtocol(GetSocketProtocol());
+Status Acceptor::Accept(Socket *&conn_socket, AcceptorConn &conn) {
+  conn_socket = nullptr;
+  conn = ConnUnknown;
+  Status error = m_listener_socket_up->Accept(conn_socket);
+  if (error.Fail())
+    return error;
+  if (conn_socket->GetSocketProtocol() == Socket::ProtocolTcp) {
+    TCPSocket *tcp_socket = static_cast<TCPSocket *>(conn_socket);
+    uint16_t port = tcp_socket->GetLocalPortNumber();
+    if (port == m_platform_port)
+      conn = ConnTCPPlatform;
+    else if (port == m_gdbserver_port)
+      conn = ConnTCPGdbServer;
+    else {
+      delete conn_socket;
+      return Status("unexpected TCP socket port");
+    }
+  } else {
+    conn = ConnNamed;
+  }
+  return Status();
 }
 
-std::string Acceptor::GetLocalSocketId() const { return m_local_socket_id(); }
-
-std::unique_ptr<Acceptor> Acceptor::Create(StringRef name,
-                                           const bool child_processes_inherit,
-                                           Status &error) {
+Acceptor::Acceptor(StringRef name, uint16_t gdbserver_port,
+                   const bool child_processes_inherit, Status &error)
+    : m_platform_port(0), m_gdbserver_port(gdbserver_port) {
   error.Clear();
 
-  Socket::SocketProtocol socket_protocol = Socket::ProtocolUnixDomain;
+  m_socket_protocol = Socket::ProtocolUnixDomain;
   // Try to match socket name as URL - e.g., tcp://localhost:5555
   if (std::optional<URI> res = URI::Parse(name)) {
     if (!Socket::FindProtocolByScheme(res->scheme.str().c_str(),
-                                      socket_protocol))
+                                      m_socket_protocol)) {
       error.SetErrorStringWithFormat("Unknown protocol scheme \"%s\"",
                                      res->scheme.str().c_str());
-    else
-      name = name.drop_front(res->scheme.size() + strlen("://"));
+      return;
+    }
+    name = name.drop_front(res->scheme.size() + strlen("://"));
+    if (m_socket_protocol == Socket::ProtocolTcp && res->port) {
+      m_platform_port = *(res->port);
+    }
   } else {
     // Try to match socket name as $host:port - e.g., localhost:5555
-    if (!llvm::errorToBool(Socket::DecodeHostAndPort(name).takeError()))
-      socket_protocol = Socket::ProtocolTcp;
-  }
-
-  if (error.Fail())
-    return std::unique_ptr<Acceptor>();
-
-  std::unique_ptr<Socket> listener_socket_up =
-      Socket::Create(socket_protocol, child_processes_inherit, error);
-
-  LocalSocketIdFunc local_socket_id;
-  if (error.Success()) {
-    if (listener_socket_up->GetSocketProtocol() == Socket::ProtocolTcp) {
-      TCPSocket *tcp_socket =
-          static_cast<TCPSocket *>(listener_socket_up.get());
-      local_socket_id = [tcp_socket]() {
-        auto local_port = tcp_socket->GetLocalPortNumber();
-        return (local_port != 0) ? llvm::to_string(local_port) : "";
-      };
-    } else {
-      const std::string socket_name = std::string(name);
-      local_socket_id = [socket_name]() { return socket_name; };
+    llvm::Expected<Socket::HostAndPort> host_port =
+        Socket::DecodeHostAndPort(name);
+    if (!llvm::errorToBool(host_port.takeError())) {
+      m_socket_protocol = Socket::ProtocolTcp;
+      m_platform_port = host_port->port;
     }
-
-    return std::unique_ptr<Acceptor>(
-        new Acceptor(std::move(listener_socket_up), name, local_socket_id));
   }
 
-  return std::unique_ptr<Acceptor>();
-}
+  if (m_socket_protocol == Socket::ProtocolTcp && m_platform_port != 0 &&
+      m_platform_port == m_gdbserver_port) {
+    error.SetErrorStringWithFormat("The same ports \"%s\" and %u",
+                                   name.str().c_str(), m_gdbserver_port);
+    return;
+  }
 
-Acceptor::Acceptor(std::unique_ptr<Socket> &&listener_socket, StringRef name,
-                   const LocalSocketIdFunc &local_socket_id)
-    : m_listener_socket_up(std::move(listener_socket)), m_name(name.str()),
-      m_local_socket_id(local_socket_id) {}
+  m_name = name.str();
+
+  m_listener_socket_up =
+      Socket::Create(m_socket_protocol, child_processes_inherit, error);
+}
