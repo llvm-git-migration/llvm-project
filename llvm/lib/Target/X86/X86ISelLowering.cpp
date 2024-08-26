@@ -599,7 +599,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
   setOperationAction(ISD::STRICT_FP_EXTEND, MVT::f64, Legal);
 
   auto setF16Action = [&] (MVT VT, LegalizeAction Action) {
-    setOperationAction(ISD::FABS, VT, Action);
+    // Expand instead of Promote to clear sign bit by bitcasting to i16.
+    setOperationAction(ISD::FABS, VT, Expand);
     setOperationAction(ISD::FNEG, VT, Action);
     setOperationAction(ISD::FCOPYSIGN, VT, Expand);
     setOperationAction(ISD::FREM, VT, Action);
