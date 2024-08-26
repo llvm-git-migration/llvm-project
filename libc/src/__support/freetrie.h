@@ -45,6 +45,8 @@ public:
     FreeTrie **trie;
   };
 
+  FreeTrie *&self();
+
   /// Push to the back of this node's free list.
   static void push(InsertPos pos, Block<> *block);
 
@@ -70,6 +72,11 @@ private:
 
   FreeTrie *parent;
 };
+
+inline FreeTrie *&FreeTrie::self() {
+  LIBC_ASSERT(parent && "reference in parent not defined on root");
+  return parent->lower == this ? parent->lower : parent->upper;
+}
 
 LIBC_INLINE FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
     : min(min), width(width) {
