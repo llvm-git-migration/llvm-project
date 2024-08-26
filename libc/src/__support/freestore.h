@@ -69,6 +69,10 @@ inline void FreeStore::remove(Block<> *block) {
       FreeList2::pop(block_list);
   } else {
     auto *trie = static_cast<FreeTrie *>(block->usable_space());
+    if (trie == large_trie) {
+      FreeTrie2::pop(large_trie);
+    } else {
+    }
   }
 }
 

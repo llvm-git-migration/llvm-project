@@ -1,4 +1,5 @@
-//===-- Interface for freetrie --------------------------------------------===//
+//===-- Interface for freetrie
+//--------------------------------------------===//freetrie.h
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -39,8 +40,13 @@ public:
     bool contains(size_t size) const;
   };
 
+  struct InsertPos {
+    FreeTrie *parent;
+    FreeTrie **trie;
+  };
+
   /// Push to the back of this node's free list.
-  static void push(FreeTrie *&trie, Block<> *block);
+  static void push(InsertPos pos, Block<> *block);
 
   /// Pop from the front of this node's free list.
   static void pop(FreeTrie *&trie);
@@ -48,7 +54,7 @@ public:
   /// Finds the free trie for a given size. This may be a referance to a nullptr
   /// at the correct place in the trie structure. The caller must provide the
   /// SizeRange for this trie; the trie does not store it.
-  static FreeTrie *&find(FreeTrie *&trie, size_t size, SizeRange range);
+  static InsertPos *&find(FreeTrie *&trie, size_t size, SizeRange range);
 
   static FreeTrie **find_best_fit(FreeTrie *&trie, size_t size,
                                   SizeRange range);
@@ -61,6 +67,8 @@ private:
   FreeTrie *lower;
   // The child subtrie covering the upper half of this subtrie's size range.
   FreeTrie *upper;
+
+  FreeTrie *parent;
 };
 
 LIBC_INLINE FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
@@ -86,16 +94,18 @@ LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
   return true;
 }
 
-LIBC_INLINE void FreeTrie::push(FreeTrie *&trie, Block<> *block) {
+LIBC_INLINE void FreeTrie::push(InsertPos pos, Block<> *block) {
   LIBC_ASSERT(block->inner_size_free() >= sizeof(FreeTrie) &&
               "block too small to accomodate free trie node");
   FreeTrie *node = new (block->usable_space()) FreeTrie;
   // The trie links are irrelevant for all but the first node in the free list.
-  if (!trie)
+  if (!*pos.trie) {
     node->lower = node->upper = nullptr;
-  FreeList2 *list = trie;
+    node->parent = pos.parent;
+  }
+  FreeList2 *list = *pos.trie;
   FreeList2::push(list, node);
-  trie = static_cast<FreeTrie *>(list);
+  *pos.trie = static_cast<FreeTrie *>(list);
 }
 
 LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
@@ -106,6 +116,7 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
     // The freelist is non-empty, so copy the trie links to the new head.
     new_trie->lower = trie->lower;
     new_trie->upper = trie->upper;
+    new_trie->parent = trie->parent;
     trie = new_trie;
     return;
   }
@@ -123,23 +134,26 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
   // no relationship between the size of the root and its children.
   l.lower = trie->lower;
   l.upper = trie->upper;
+  l.parent = trie->parent;
   trie = &l;
 }
 
-FreeTrie *&FreeTrie::find(FreeTrie *&trie, size_t size, SizeRange range) {
+FreeTrie::InsertPos FreeTrie::find(FreeTrie *&trie, size_t size,
+                                   SizeRange range) {
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
-  FreeTrie **cur = &trie;
-  while (*cur && (*cur)->size() != size) {
+  InsertPos pos = {nullptr, &trie};
+  while (*pos.trie && (*pos.trie)->size() != size) {
     LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
+    pos.parent = *pos.trie;
     if (range.lower().contains(size)) {
-      cur = &(*cur)->lower;
+      pos.trie = &(*pos.trie)->lower;
       range = range.lower();
     } else {
-      cur = &(*cur)->upper;
+      pos.trie = &(*pos.trie)->upper;
       range = range.upper();
     }
   }
-  return *cur;
+  return pos;
 }
 
 FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
