@@ -1181,7 +1181,7 @@ define <vscale x 2 x i32> @true_tied_dest_vmerge_implicit_passthru(<vscale x 2 x
 define <vscale x 2 x i32> @true_mask_vmerge_implicit_passthru(<vscale x 2 x i32> %passthru, <vscale x 2 x i32> %x, <vscale x 2 x i32> %y, <vscale x 2 x i1> %m, i64 %avl) {
 ; CHECK-LABEL: true_mask_vmerge_implicit_passthru:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli zero, a0, e32, m1, ta, mu
+; CHECK-NEXT:    vsetvli zero, a0, e32, m1, tu, mu
 ; CHECK-NEXT:    vadd.vv v8, v9, v10, v0.t
 ; CHECK-NEXT:    ret
   %a = call <vscale x 2 x i32> @llvm.riscv.vadd.mask.nxv2i32.nxv2i32(<vscale x 2 x i32> %passthru, <vscale x 2 x i32> %x, <vscale x 2 x i32> %y, <vscale x 2 x i1> %m, i64 %avl, i64 0)

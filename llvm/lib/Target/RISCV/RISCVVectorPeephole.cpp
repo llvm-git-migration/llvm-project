@@ -358,7 +358,23 @@ bool RISCVVectorPeephole::convertVMergeToVMv(MachineInstr &MI) const {
     return false;
 
   assert(MI.getOperand(4).isReg() && MI.getOperand(4).getReg() == RISCV::V0);
-  if (!isAllOnesMask(V0Defs.lookup(&MI)))
+  auto TrueHasSameMask = [&]() {
+    MachineInstr *True = MRI->getVRegDef(MI.getOperand(3).getReg());
+    if (!True)
+      return false;
+    const RISCV::RISCVMaskedPseudoInfo *Info =
+        RISCV::getMaskedPseudoInfo(True->getOpcode());
+    if (!Info)
+      return false;
+    if (True->getOperand(1).getReg() != RISCV::NoRegister &&
+        TRI->lookThruCopyLike(True->getOperand(1).getReg(), MRI) !=
+            TRI->lookThruCopyLike(FalseReg, MRI))
+      return false;
+    return V0Defs.lookup(True)->getOperand(1).getReg() ==
+           V0Defs.lookup(&MI)->getOperand(1).getReg();
+  };
+
+  if (!isAllOnesMask(V0Defs.lookup(&MI)) && !TrueHasSameMask())
     return false;
 
   MI.setDesc(TII->get(NewOpc));
