@@ -231,7 +231,7 @@ std::unique_ptr<Socket> Socket::Create(const SocketProtocol protocol,
     socket_up =
         std::make_unique<DomainSocket>(true, child_processes_inherit);
 #else
-    error.SetErrorString(
+    error = Status::FromErrorString(
         "Unix domain sockets are not supported on this platform.");
 #endif
     break;
@@ -240,7 +240,7 @@ std::unique_ptr<Socket> Socket::Create(const SocketProtocol protocol,
     socket_up =
         std::make_unique<AbstractSocket>(child_processes_inherit);
 #else
-    error.SetErrorString(
+    error = Status::FromErrorString(
         "Abstract domain sockets are not supported on this platform.");
 #endif
     break;
@@ -422,7 +422,7 @@ void Socket::SetLastError(Status &error) {
 #if defined(_WIN32)
   error.SetError(::WSAGetLastError(), lldb::eErrorTypeWin32);
 #else
-  error.SetErrorToErrno();
+  error = Status::FromErrno();
 #endif
 }
 

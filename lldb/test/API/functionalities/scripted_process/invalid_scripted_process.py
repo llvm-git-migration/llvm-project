@@ -15,7 +15,7 @@ class InvalidScriptedProcess(ScriptedProcess):
     def read_memory_at_address(
         self, addr: int, size: int, error: lldb.SBError
     ) -> lldb.SBData:
-        error.SetErrorString("This is an invalid scripted process!")
+        error = Status::FromErrorString("This is an invalid scripted process!")
         return lldb.SBData()
 
     def get_loaded_images(self):

@@ -688,7 +688,7 @@ Status NativeProcessNetBSD::PopulateMemoryRegionCache() {
   if (vm == NULL) {
     m_supports_mem_region = LazyBool::eLazyBoolNo;
     Status error;
-    error.SetErrorString("not supported");
+    error = Status::FromErrorString("not supported");
     return error;
   }
   for (i = 0; i < count; i++) {
@@ -728,7 +728,7 @@ Status NativeProcessNetBSD::PopulateMemoryRegionCache() {
                   "for memory region metadata retrieval");
     m_supports_mem_region = LazyBool::eLazyBoolNo;
     Status error;
-    error.SetErrorString("not supported");
+    error = Status::FromErrorString("not supported");
     return error;
   }
   LLDB_LOG(log, "read {0} memory region entries from process {1}",

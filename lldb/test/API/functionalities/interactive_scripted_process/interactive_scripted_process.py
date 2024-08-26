@@ -63,7 +63,7 @@ class MultiplexedScriptedProcess(PassthroughScriptedProcess):
 
     def create_breakpoint(self, addr, error, pid=None):
         if not self.multiplexer:
-            error.SetErrorString("Multiplexer is not set.")
+            error = Status::FromErrorString("Multiplexer is not set.")
         return self.multiplexer.create_breakpoint(addr, error, self.get_process_id())
 
     def get_scripted_thread_plugin(self) -> str:
@@ -245,17 +245,17 @@ class MultiplexerScriptedProcess(PassthroughScriptedProcess):
 
     def create_breakpoint(self, addr, error, pid=None):
         if not self.driving_target:
-            error.SetErrorString("%s has no driving target." % self.__class__.__name__)
+            error = Status::FromErrorString("%s has no driving target." % self.__class__.__name__)
             return False
 
         def create_breakpoint_with_name(target, load_addr, name, error):
             addr = lldb.SBAddress(load_addr, target)
             if not addr.IsValid():
-                error.SetErrorString("Invalid breakpoint address %s" % hex(load_addr))
+                error = Status::FromErrorString("Invalid breakpoint address %s" % hex(load_addr))
                 return False
             bkpt = target.BreakpointCreateBySBAddress(addr)
             if not bkpt.IsValid():
-                error.SetErrorString(
+                error = Status::FromErrorString(
                     "Failed to create breakpoint at address %s"
                     % hex(addr.GetLoadAddress())
                 )
