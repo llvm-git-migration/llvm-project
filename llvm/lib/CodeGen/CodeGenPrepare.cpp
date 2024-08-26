@@ -2671,7 +2671,8 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
   }
 
   // From here on out we're working with named functions.
-  if (!CI->getCalledFunction())
+  auto *Callee = CI->getCalledFunction();
+  if (!Callee)
     return false;
 
   // Lower all default uses of _chk calls.  This is very similar
@@ -2684,6 +2685,52 @@ bool CodeGenPrepare::optimizeCallInst(CallInst *CI, ModifyDT &ModifiedDT) {
     replaceAllUsesWith(CI, V, FreshBBs, IsHugeFunc);
     CI->eraseFromParent();
     return true;
+  }
+
+  // SCCP may have propagated, among other things, C++ static variables across
+  // calls. If this happens to be the case, we may want to undo it in order to
+  // avoid redundant pointer computation of the constant, as the function method
+  // returning the constant needs to be executed anyways.
+  auto GetUniformReturnValue = [](const Function *F) -> Constant * {
+    if (!F->getReturnType()->isPointerTy())
+      return nullptr;
+
+    Constant *UniformValue = nullptr;
+    for (auto &BB : *F) {
+      if (auto *RI = dyn_cast<ReturnInst>(BB.getTerminator())) {
+        if (auto *V = dyn_cast<GlobalVariable>(RI->getReturnValue())) {
+          if (!UniformValue)
+            UniformValue = V;
+          else if (V != UniformValue)
+            return nullptr;
+        } else {
+          return nullptr;
+        }
+      }
+    }
+
+    return UniformValue;
+  };
+
+  if (!Callee->isInterposable() && !Callee->hasDLLImportStorageClass()) {
+    if (Constant *RV = GetUniformReturnValue(Callee)) {
+      bool MadeChange = false;
+      const auto &DT = getDT(*CI->getFunction());
+      for (Use &U : make_early_inc_range(RV->uses())) {
+        auto *I = dyn_cast<Instruction>(U.getUser());
+        if (!I || I->getParent() != CI->getParent()) {
+          // Limit to the same basic block to avoid extending the call-site live
+          // range, which otherwise could increase register pressure.
+          continue;
+        }
+        if (DT.dominates(CI, I)) {
+          U.set(CI);
+          MadeChange = true;
+        }
+      }
+
+      return MadeChange;
+    }
   }
 
   return false;
