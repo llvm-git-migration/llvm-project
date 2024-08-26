@@ -1196,9 +1196,8 @@ define arm_aapcs_vfpcc <16 x i8> @test(<16 x i8> %i) {
 ; CHECKBE-LABEL: test:
 ; CHECKBE:       @ %bb.0: @ %entry
 ; CHECKBE-NEXT:    vmov.i64 q1, #0xff00ff000000ff00
-; CHECKBE-NEXT:    vrev64.8 q2, q1
-; CHECKBE-NEXT:    vrev64.8 q1, q0
-; CHECKBE-NEXT:    vorr q1, q1, q2
+; CHECKBE-NEXT:    vrev64.8 q2, q0
+; CHECKBE-NEXT:    vorr q1, q2, q1
 ; CHECKBE-NEXT:    vrev64.8 q0, q1
 ; CHECKBE-NEXT:    bx lr
 entry:
@@ -1216,9 +1215,8 @@ define arm_aapcs_vfpcc <8 x i16> @test2(<8 x i16> %i) {
 ; CHECKBE-LABEL: test2:
 ; CHECKBE:       @ %bb.0: @ %entry
 ; CHECKBE-NEXT:    vmov.i64 q1, #0xffff0000ffffffff
-; CHECKBE-NEXT:    vrev64.16 q2, q1
-; CHECKBE-NEXT:    vrev64.16 q1, q0
-; CHECKBE-NEXT:    vorr q1, q1, q2
+; CHECKBE-NEXT:    vrev64.16 q2, q0
+; CHECKBE-NEXT:    vorr q1, q2, q1
 ; CHECKBE-NEXT:    vrev64.16 q0, q1
 ; CHECKBE-NEXT:    bx lr
 entry:
