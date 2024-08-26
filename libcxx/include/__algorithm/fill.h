@@ -14,6 +14,7 @@
 #include <__config>
 #include <__iterator/iterator_traits.h>
 #include <__iterator/segmented_iterator.h>
+#include <__type_traits/enable_if.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
