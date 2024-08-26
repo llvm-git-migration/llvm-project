@@ -96,6 +96,11 @@ void test() {
   CHECK_ALWAYS_LOCK_FREE(double);
   CHECK_ALWAYS_LOCK_FREE(long double);
 #if __has_attribute(vector_size) && defined(_LIBCPP_VERSION)
+  // Ignore diagnostic about vector types changing the ABI on some targets, since
+  // that is irrelevant for this test.
+  TEST_DIAGNOSTIC_PUSH
+  TEST_CLANG_DIAGNOSTIC_IGNORED("-Wpsabi")
+  TEST_GCC_DIAGNOSTIC_IGNORED("-Wpsabi")
   CHECK_ALWAYS_LOCK_FREE(int __attribute__((vector_size(1 * sizeof(int)))));
   CHECK_ALWAYS_LOCK_FREE(int __attribute__((vector_size(2 * sizeof(int)))));
   CHECK_ALWAYS_LOCK_FREE(int __attribute__((vector_size(4 * sizeof(int)))));
@@ -111,6 +116,7 @@ void test() {
   CHECK_ALWAYS_LOCK_FREE(double __attribute__((vector_size(4 * sizeof(double)))));
   CHECK_ALWAYS_LOCK_FREE(double __attribute__((vector_size(16 * sizeof(double)))));
   CHECK_ALWAYS_LOCK_FREE(double __attribute__((vector_size(32 * sizeof(double)))));
+  TEST_DIAGNOSTIC_POP
 #endif // __has_attribute(vector_size) && defined(_LIBCPP_VERSION)
   CHECK_ALWAYS_LOCK_FREE(struct Empty{});
   CHECK_ALWAYS_LOCK_FREE(struct OneInt { int i; });
