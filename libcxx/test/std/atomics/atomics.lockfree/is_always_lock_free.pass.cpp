@@ -15,6 +15,10 @@
 //
 // static constexpr bool is_always_lock_free;
 
+// Ignore diagnostic about vector types changing the ABI on some targets, since
+// that is irrelevant for this test.
+// ADDITIONAL_COMPILE_FLAGS: -Wno-psabi
+
 #include <atomic>
 #include <cassert>
 #include <concepts>
