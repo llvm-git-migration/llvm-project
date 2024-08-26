@@ -86,7 +86,6 @@ bit version
 bitset climits
 bitset concepts
 bitset cstddef
-bitset cstdint
 bitset cstdlib
 bitset cstring
 bitset cwchar
@@ -94,6 +93,7 @@ bitset initializer_list
 bitset iosfwd
 bitset limits
 bitset new
+bitset optional
 bitset stdexcept
 bitset string
 bitset string_view
@@ -1006,6 +1006,7 @@ valarray functional
 valarray initializer_list
 valarray limits
 valarray new
+valarray optional
 valarray stdexcept
 valarray type_traits
 valarray version
