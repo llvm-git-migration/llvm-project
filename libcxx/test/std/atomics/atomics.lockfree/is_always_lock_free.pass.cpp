@@ -15,6 +15,10 @@
 //
 // static constexpr bool is_always_lock_free;
 
+// Ignore diagnostic about vector types changing the ABI on some targets, since
+// that is irrelevant for this test.
+// ADDITIONAL_COMPILE_FLAGS: -Wno-psabi
+
 #include <atomic>
 #include <cassert>
 #include <concepts>
@@ -27,7 +31,8 @@ template <typename T>
 void check_always_lock_free(std::atomic<T> const& a) {
   using InfoT = LockFreeStatusInfo<T>;
 
-  constexpr std::same_as<const bool> decltype(auto) is_always_lock_free = std::atomic<T>::is_always_lock_free;
+  constexpr auto is_always_lock_free = std::atomic<T>::is_always_lock_free;
+  ASSERT_SAME_TYPE(decltype(is_always_lock_free), bool const);
 
   // If we know the status of T for sure, validate the exact result of the function.
   if constexpr (InfoT::status_known) {
@@ -45,7 +50,8 @@ void check_always_lock_free(std::atomic<T> const& a) {
 
   // In all cases, also sanity-check it based on the implication always-lock-free => lock-free.
   if (is_always_lock_free) {
-    std::same_as<bool> decltype(auto) is_lock_free = a.is_lock_free();
+    auto is_lock_free = a.is_lock_free();
+    ASSERT_SAME_TYPE(decltype(is_always_lock_free), bool const);
     assert(is_lock_free);
   }
   ASSERT_NOEXCEPT(a.is_lock_free());
