@@ -24,6 +24,7 @@ body: |
     ; GFX78-NEXT: [[OR:%[0-9]+]]:_(s32) = G_OR [[AND]], [[SHL]]
     ; GFX78-NEXT: [[BITCAST:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR]](s32)
     ; GFX78-NEXT: S_NOP 0, implicit [[BITCAST]](<2 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v2s16
     ; GFX9: liveins: $vgpr0, $vgpr1
     ; GFX9-NEXT: {{  $}}
@@ -72,6 +73,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST2:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR2]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<6 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>), [[BITCAST2]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<6 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v3s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX9-NEXT: {{  $}}
@@ -124,6 +126,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST1:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR1]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<4 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<4 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v4s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2, $vgpr3
     ; GFX9-NEXT: {{  $}}
@@ -194,6 +197,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST4:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR4]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<10 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>), [[BITCAST2]](<2 x s16>), [[BITCAST3]](<2 x s16>), [[BITCAST4]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<10 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v5s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2, $vgpr3, $vgpr4
     ; GFX9-NEXT: {{  $}}
@@ -284,6 +288,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST6:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR6]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<14 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>), [[BITCAST2]](<2 x s16>), [[BITCAST3]](<2 x s16>), [[BITCAST4]](<2 x s16>), [[BITCAST5]](<2 x s16>), [[BITCAST6]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<14 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v7s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2, $vgpr3, $vgpr4, $vgpr5, $vgpr6
     ; GFX9-NEXT: {{  $}}
@@ -370,6 +375,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST3:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR3]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<8 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>), [[BITCAST2]](<2 x s16>), [[BITCAST3]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<8 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v8s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2, $vgpr3, $vgpr4, $vgpr5, $vgpr6, $vgpr7
     ; GFX9-NEXT: {{  $}}
@@ -484,6 +490,7 @@ body: |
     ; GFX78-NEXT: [[BITCAST7:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR7]](s32)
     ; GFX78-NEXT: [[CONCAT_VECTORS:%[0-9]+]]:_(<16 x s16>) = G_CONCAT_VECTORS [[BITCAST]](<2 x s16>), [[BITCAST1]](<2 x s16>), [[BITCAST2]](<2 x s16>), [[BITCAST3]](<2 x s16>), [[BITCAST4]](<2 x s16>), [[BITCAST5]](<2 x s16>), [[BITCAST6]](<2 x s16>), [[BITCAST7]](<2 x s16>)
     ; GFX78-NEXT: S_NOP 0, implicit [[CONCAT_VECTORS]](<16 x s16>)
+    ;
     ; GFX9-LABEL: name: build_vector_v16s16
     ; GFX9: liveins: $vgpr0, $vgpr1, $vgpr2, $vgpr3, $vgpr4, $vgpr5, $vgpr6, $vgpr7, $vgpr8, $vgpr9, $vgpr10, $vgpr11, $vgpr12, $vgpr13, $vgpr14, $vgpr15
     ; GFX9-NEXT: {{  $}}

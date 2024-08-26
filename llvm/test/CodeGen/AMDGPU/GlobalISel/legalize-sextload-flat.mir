@@ -13,6 +13,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(p0) = COPY $vgpr0_vgpr1
     ; SI-NEXT: [[SEXTLOAD:%[0-9]+]]:_(s32) = G_SEXTLOAD [[COPY]](p0) :: (load (s8))
     ; SI-NEXT: $vgpr0 = COPY [[SEXTLOAD]](s32)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i32_i8
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -35,6 +36,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(p0) = COPY $vgpr0_vgpr1
     ; SI-NEXT: [[SEXTLOAD:%[0-9]+]]:_(s32) = G_SEXTLOAD [[COPY]](p0) :: (load (s16))
     ; SI-NEXT: $vgpr0 = COPY [[SEXTLOAD]](s32)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i32_i16
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -57,6 +59,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(p0) = COPY $vgpr0_vgpr1
     ; SI-NEXT: [[SEXTLOAD:%[0-9]+]]:_(s32) = G_SEXTLOAD [[COPY]](p0) :: (load (s8))
     ; SI-NEXT: $vgpr0 = COPY [[SEXTLOAD]](s32)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i31_i8
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -81,6 +84,7 @@ body: |
     ; SI-NEXT: [[SEXTLOAD:%[0-9]+]]:_(s32) = G_SEXTLOAD [[COPY]](p0) :: (load (s8))
     ; SI-NEXT: [[SEXT:%[0-9]+]]:_(s64) = G_SEXT [[SEXTLOAD]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[SEXT]](s64)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i64_i8
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -105,6 +109,7 @@ body: |
     ; SI-NEXT: [[SEXTLOAD:%[0-9]+]]:_(s32) = G_SEXTLOAD [[COPY]](p0) :: (load (s16))
     ; SI-NEXT: [[SEXT:%[0-9]+]]:_(s64) = G_SEXT [[SEXTLOAD]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[SEXT]](s64)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i64_i16
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -129,6 +134,7 @@ body: |
     ; SI-NEXT: [[LOAD:%[0-9]+]]:_(s32) = G_LOAD [[COPY]](p0) :: (load (s32))
     ; SI-NEXT: [[SEXT:%[0-9]+]]:_(s64) = G_SEXT [[LOAD]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[SEXT]](s64)
+    ;
     ; VI-LABEL: name: test_sextload_flat_i64_i32
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}

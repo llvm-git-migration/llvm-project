@@ -19,6 +19,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[INT:%[0-9]+]]:_(s32) = nnan ninf nsz G_INTRINSIC intrinsic(@llvm.amdgcn.rsq.clamp), [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[INT]](s32)
+    ;
     ; VI-LABEL: name: test_rsq_clamp_flags_ieee_on_f32
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -51,6 +52,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[INT:%[0-9]+]]:_(s32) = nnan ninf nsz G_INTRINSIC intrinsic(@llvm.amdgcn.rsq.clamp), [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[INT]](s32)
+    ;
     ; VI-LABEL: name: test_rsq_clamp_flags_ieee_off_f32
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}

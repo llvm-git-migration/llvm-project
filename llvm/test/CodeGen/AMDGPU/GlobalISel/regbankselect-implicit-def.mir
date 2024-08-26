@@ -185,6 +185,7 @@ body: |
     ; FAST-NEXT: [[COPY2:%[0-9]+]]:vcc(s1) = COPY [[TRUNC]](s1)
     ; FAST-NEXT: [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY2]](s1), [[COPY]], [[COPY1]]
     ; FAST-NEXT: S_ENDPGM 0, implicit [[SELECT]](s32)
+    ;
     ; GREEDY-LABEL: name: test_implicit_def_s1_explicit_vcc_use_0
     ; GREEDY: liveins: $vgpr0, $vgpr1
     ; GREEDY-NEXT: {{  $}}
@@ -211,6 +212,7 @@ body: |
     ; FAST-NEXT: [[TRUNC:%[0-9]+]]:sgpr(s1) = G_TRUNC [[DEF]](s32)
     ; FAST-NEXT: [[COPY:%[0-9]+]]:vcc(s1) = COPY [[TRUNC]](s1)
     ; FAST-NEXT: S_ENDPGM 0, implicit [[COPY]](s1)
+    ;
     ; GREEDY-LABEL: name: test_implicit_def_s1_explicit_vcc_use_1
     ; GREEDY: [[DEF:%[0-9]+]]:vcc(s1) = G_IMPLICIT_DEF
     ; GREEDY-NEXT: S_ENDPGM 0, implicit [[DEF]](s1)

@@ -25,6 +25,7 @@ body: |
     ; GFX6-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX6-NEXT: [[FMAD:%[0-9]+]]:_(s32) = G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX6-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX7-LABEL: name: test_fmad_s32_flush
     ; GFX7: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX7-NEXT: {{  $}}
@@ -33,6 +34,7 @@ body: |
     ; GFX7-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX7-NEXT: [[FMAD:%[0-9]+]]:_(s32) = G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX7-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX101-LABEL: name: test_fmad_s32_flush
     ; GFX101: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX101-NEXT: {{  $}}
@@ -41,6 +43,7 @@ body: |
     ; GFX101-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX101-NEXT: [[FMAD:%[0-9]+]]:_(s32) = G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX101-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX103-LABEL: name: test_fmad_s32_flush
     ; GFX103: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX103-NEXT: {{  $}}
@@ -76,6 +79,7 @@ body: |
     ; GFX6-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX6-NEXT: [[FMAD:%[0-9]+]]:_(s32) = nnan G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX6-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX7-LABEL: name: test_fmad_s32_flags_flush
     ; GFX7: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX7-NEXT: {{  $}}
@@ -84,6 +88,7 @@ body: |
     ; GFX7-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX7-NEXT: [[FMAD:%[0-9]+]]:_(s32) = nnan G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX7-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX101-LABEL: name: test_fmad_s32_flags_flush
     ; GFX101: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX101-NEXT: {{  $}}
@@ -92,6 +97,7 @@ body: |
     ; GFX101-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY $vgpr2
     ; GFX101-NEXT: [[FMAD:%[0-9]+]]:_(s32) = nnan G_FMAD [[COPY]], [[COPY1]], [[COPY2]]
     ; GFX101-NEXT: $vgpr0 = COPY [[FMAD]](s32)
+    ;
     ; GFX103-LABEL: name: test_fmad_s32_flags_flush
     ; GFX103: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX103-NEXT: {{  $}}
@@ -132,6 +138,7 @@ body: |
     ; GFX6-NEXT: [[FMAD1:%[0-9]+]]:_(s32) = G_FMAD [[UV1]], [[UV3]], [[UV5]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v2s32_flush
     ; GFX7: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX7-NEXT: {{  $}}
@@ -145,6 +152,7 @@ body: |
     ; GFX7-NEXT: [[FMAD1:%[0-9]+]]:_(s32) = G_FMAD [[UV1]], [[UV3]], [[UV5]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v2s32_flush
     ; GFX101: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX101-NEXT: {{  $}}
@@ -158,6 +166,7 @@ body: |
     ; GFX101-NEXT: [[FMAD1:%[0-9]+]]:_(s32) = G_FMAD [[UV1]], [[UV3]], [[UV5]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v2s32_flush
     ; GFX103: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX103-NEXT: {{  $}}
@@ -205,6 +214,7 @@ body: |
     ; GFX6-NEXT: [[FMAD2:%[0-9]+]]:_(s32) = G_FMAD [[UV2]], [[UV5]], [[UV8]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v3s32_flush
     ; GFX7: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX7-NEXT: {{  $}}
@@ -219,6 +229,7 @@ body: |
     ; GFX7-NEXT: [[FMAD2:%[0-9]+]]:_(s32) = G_FMAD [[UV2]], [[UV5]], [[UV8]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v3s32_flush
     ; GFX101: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX101-NEXT: {{  $}}
@@ -233,6 +244,7 @@ body: |
     ; GFX101-NEXT: [[FMAD2:%[0-9]+]]:_(s32) = G_FMAD [[UV2]], [[UV5]], [[UV8]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v3s32_flush
     ; GFX103: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX103-NEXT: {{  $}}
@@ -283,6 +295,7 @@ body: |
     ; GFX6-NEXT: [[FMAD3:%[0-9]+]]:_(s32) = G_FMAD [[UV3]], [[UV7]], [[UV11]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32), [[FMAD3]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v4s32_flush
     ; GFX7: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX7-NEXT: {{  $}}
@@ -298,6 +311,7 @@ body: |
     ; GFX7-NEXT: [[FMAD3:%[0-9]+]]:_(s32) = G_FMAD [[UV3]], [[UV7]], [[UV11]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32), [[FMAD3]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v4s32_flush
     ; GFX101: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX101-NEXT: {{  $}}
@@ -313,6 +327,7 @@ body: |
     ; GFX101-NEXT: [[FMAD3:%[0-9]+]]:_(s32) = G_FMAD [[UV3]], [[UV7]], [[UV11]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FMAD]](s32), [[FMAD1]](s32), [[FMAD2]](s32), [[FMAD3]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v4s32_flush
     ; GFX103: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX103-NEXT: {{  $}}
@@ -359,6 +374,7 @@ body: |
     ; GFX6-NEXT: [[FMUL:%[0-9]+]]:_(s32) = G_FMUL [[COPY]], [[COPY1]]
     ; GFX6-NEXT: [[FADD:%[0-9]+]]:_(s32) = G_FADD [[FMUL]], [[COPY2]]
     ; GFX6-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX7-LABEL: name: test_fmad_s32_denorm
     ; GFX7: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX7-NEXT: {{  $}}
@@ -368,6 +384,7 @@ body: |
     ; GFX7-NEXT: [[FMUL:%[0-9]+]]:_(s32) = G_FMUL [[COPY]], [[COPY1]]
     ; GFX7-NEXT: [[FADD:%[0-9]+]]:_(s32) = G_FADD [[FMUL]], [[COPY2]]
     ; GFX7-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX101-LABEL: name: test_fmad_s32_denorm
     ; GFX101: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX101-NEXT: {{  $}}
@@ -377,6 +394,7 @@ body: |
     ; GFX101-NEXT: [[FMUL:%[0-9]+]]:_(s32) = G_FMUL [[COPY]], [[COPY1]]
     ; GFX101-NEXT: [[FADD:%[0-9]+]]:_(s32) = G_FADD [[FMUL]], [[COPY2]]
     ; GFX101-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX103-LABEL: name: test_fmad_s32_denorm
     ; GFX103: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX103-NEXT: {{  $}}
@@ -413,6 +431,7 @@ body: |
     ; GFX6-NEXT: [[FMUL:%[0-9]+]]:_(s32) = nnan G_FMUL [[COPY]], [[COPY1]]
     ; GFX6-NEXT: [[FADD:%[0-9]+]]:_(s32) = nnan G_FADD [[FMUL]], [[COPY2]]
     ; GFX6-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX7-LABEL: name: test_fmad_s32_flags_denorm
     ; GFX7: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX7-NEXT: {{  $}}
@@ -422,6 +441,7 @@ body: |
     ; GFX7-NEXT: [[FMUL:%[0-9]+]]:_(s32) = nnan G_FMUL [[COPY]], [[COPY1]]
     ; GFX7-NEXT: [[FADD:%[0-9]+]]:_(s32) = nnan G_FADD [[FMUL]], [[COPY2]]
     ; GFX7-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX101-LABEL: name: test_fmad_s32_flags_denorm
     ; GFX101: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX101-NEXT: {{  $}}
@@ -431,6 +451,7 @@ body: |
     ; GFX101-NEXT: [[FMUL:%[0-9]+]]:_(s32) = nnan G_FMUL [[COPY]], [[COPY1]]
     ; GFX101-NEXT: [[FADD:%[0-9]+]]:_(s32) = nnan G_FADD [[FMUL]], [[COPY2]]
     ; GFX101-NEXT: $vgpr0 = COPY [[FADD]](s32)
+    ;
     ; GFX103-LABEL: name: test_fmad_s32_flags_denorm
     ; GFX103: liveins: $vgpr0, $vgpr1, $vgpr2
     ; GFX103-NEXT: {{  $}}
@@ -473,6 +494,7 @@ body: |
     ; GFX6-NEXT: [[FADD1:%[0-9]+]]:_(s32) = G_FADD [[FMUL1]], [[UV5]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v2s32_denorm
     ; GFX7: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX7-NEXT: {{  $}}
@@ -488,6 +510,7 @@ body: |
     ; GFX7-NEXT: [[FADD1:%[0-9]+]]:_(s32) = G_FADD [[FMUL1]], [[UV5]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v2s32_denorm
     ; GFX101: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX101-NEXT: {{  $}}
@@ -503,6 +526,7 @@ body: |
     ; GFX101-NEXT: [[FADD1:%[0-9]+]]:_(s32) = G_FADD [[FMUL1]], [[UV5]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v2s32_denorm
     ; GFX103: liveins: $vgpr0_vgpr1, $vgpr2_vgpr3, $vgpr4_vgpr5
     ; GFX103-NEXT: {{  $}}
@@ -553,6 +577,7 @@ body: |
     ; GFX6-NEXT: [[FADD2:%[0-9]+]]:_(s32) = G_FADD [[FMUL2]], [[UV8]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v3s32_denorm
     ; GFX7: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX7-NEXT: {{  $}}
@@ -570,6 +595,7 @@ body: |
     ; GFX7-NEXT: [[FADD2:%[0-9]+]]:_(s32) = G_FADD [[FMUL2]], [[UV8]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v3s32_denorm
     ; GFX101: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX101-NEXT: {{  $}}
@@ -587,6 +613,7 @@ body: |
     ; GFX101-NEXT: [[FADD2:%[0-9]+]]:_(s32) = G_FADD [[FMUL2]], [[UV8]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v3s32_denorm
     ; GFX103: liveins: $vgpr0_vgpr1_vgpr2, $vgpr3_vgpr4_vgpr5, $vgpr6_vgpr7_vgpr8
     ; GFX103-NEXT: {{  $}}
@@ -641,6 +668,7 @@ body: |
     ; GFX6-NEXT: [[FADD3:%[0-9]+]]:_(s32) = G_FADD [[FMUL3]], [[UV11]]
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32), [[FADD3]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX7-LABEL: name: test_fmad_v4s32_denorm
     ; GFX7: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX7-NEXT: {{  $}}
@@ -660,6 +688,7 @@ body: |
     ; GFX7-NEXT: [[FADD3:%[0-9]+]]:_(s32) = G_FADD [[FMUL3]], [[UV11]]
     ; GFX7-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32), [[FADD3]](s32)
     ; GFX7-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX101-LABEL: name: test_fmad_v4s32_denorm
     ; GFX101: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX101-NEXT: {{  $}}
@@ -679,6 +708,7 @@ body: |
     ; GFX101-NEXT: [[FADD3:%[0-9]+]]:_(s32) = G_FADD [[FMUL3]], [[UV11]]
     ; GFX101-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[FADD]](s32), [[FADD1]](s32), [[FADD2]](s32), [[FADD3]](s32)
     ; GFX101-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<4 x s32>)
+    ;
     ; GFX103-LABEL: name: test_fmad_v4s32_denorm
     ; GFX103: liveins: $vgpr0_vgpr1_vgpr2_vgpr3, $vgpr4_vgpr5_vgpr6_vgpr7, $vgpr8_vgpr9_vgpr10_vgpr11
     ; GFX103-NEXT: {{  $}}

@@ -89,7 +89,6 @@ body:             |
     S_BRANCH %bb.1
 
   bb.1:
-  ; predecessors: %bb.0
     successors: %bb.6
 
     %10:sreg_32 = S_MOV_B32 16
@@ -100,7 +99,6 @@ body:             |
     S_BRANCH %bb.6
 
   bb.2:
-  ; predecessors: %bb.6
     successors: %bb.5
 
     %20:sreg_64 = PHI %6:sreg_64, %bb.6
@@ -110,7 +108,6 @@ body:             |
     S_BRANCH %bb.5
 
   bb.3:
-  ; predecessors: %bb.5
     successors: %bb.4, %bb.7
 
     %22:vreg_1 = PHI %7:vreg_1, %bb.5
@@ -122,13 +119,11 @@ body:             |
     S_BRANCH %bb.4
 
   bb.4:
-  ; predecessors: %bb.3
     successors: %bb.7
 
     S_BRANCH %bb.7
 
   bb.5:
-  ; predecessors: %bb.0, %bb.2
     successors: %bb.3
 
     %7:vreg_1 = PHI %17:vreg_1, %bb.0, %21:vreg_1, %bb.2
@@ -136,7 +131,6 @@ body:             |
     S_BRANCH %bb.3
 
   bb.6:
-  ; predecessors: %bb.1, %bb.6
     successors: %bb.2, %bb.6
 
     %5:sreg_64 = PHI %12:sreg_64, %bb.1, %6:sreg_64, %bb.6
@@ -146,7 +140,6 @@ body:             |
     S_BRANCH %bb.2
 
   bb.7:
-  ; predecessors: %bb.3, %bb.4
 
     SI_END_CF %24:sreg_64, implicit-def dead $exec, implicit-def dead $scc, implicit $exec
     S_ENDPGM 0

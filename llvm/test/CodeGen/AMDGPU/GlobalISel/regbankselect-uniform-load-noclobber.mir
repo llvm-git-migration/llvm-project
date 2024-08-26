@@ -38,6 +38,7 @@ body: |
     ; GFX7-NEXT: %out_addr_plus_48:sgpr(p1) = G_PTR_ADD %out_addr, %cst48(s64)
     ; GFX7-NEXT: G_STORE %load12_15(<4 x s32>), %out_addr_plus_48(p1) :: (store (<4 x s32>), align 4, addrspace 1)
     ; GFX7-NEXT: S_ENDPGM 0
+    ;
     ; GFX1010-LABEL: name: test_uniform_load_without_noclobber
     ; GFX1010: liveins: $sgpr0_sgpr1, $sgpr2_sgpr3
     ; GFX1010-NEXT: {{  $}}
@@ -112,6 +113,7 @@ body: |
     ; GFX7-NEXT: %out_plus_16:sgpr(p1) = G_PTR_ADD %out, %cst_16(s64)
     ; GFX7-NEXT: G_STORE %load4_7(<4 x s32>), %out_plus_16(p1) :: (store (<4 x s32>), align 32, addrspace 1)
     ; GFX7-NEXT: S_ENDPGM 0
+    ;
     ; GFX1010-LABEL: name: test_s_load_constant_v8i32_align1
     ; GFX1010: liveins: $sgpr0_sgpr1, $sgpr2_sgpr3
     ; GFX1010-NEXT: {{  $}}

@@ -14,6 +14,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_s32
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -37,6 +38,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s64) = COPY $vgpr0_vgpr1
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s64)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_s64
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -63,6 +65,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[UV1]](s32)
     ; SI-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FPTOUI]](s32), [[FPTOUI1]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; VI-LABEL: name: test_fptoui_v2s32_to_v2s32
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -92,6 +95,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[UV1]](s64)
     ; SI-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[FPTOUI]](s32), [[FPTOUI1]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; VI-LABEL: name: test_fptoui_v2s64_to_v2s32
     ; VI: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; VI-NEXT: {{  $}}
@@ -120,6 +124,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s16
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -147,6 +152,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_to_s16
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -171,6 +177,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s64) = COPY $vgpr0_vgpr1
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s64)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s64_to_s16
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -228,6 +235,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[FMA]](s64)
     ; SI-NEXT: [[MV1:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI1]](s32), [[FPTOUI]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[MV1]](s64)
+    ;
     ; VI-LABEL: name: test_fptoui_s64_s64
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -290,6 +298,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[FMA]](s64)
     ; SI-NEXT: [[MV1:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI1]](s32), [[FPTOUI]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[MV1]](s64)
+    ;
     ; VI-LABEL: name: test_fptoui_s64_s64_flags
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -379,6 +388,7 @@ body: |
     ; SI-NEXT: [[MV3:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI3]](s32), [[FPTOUI2]](s32)
     ; SI-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s64>) = G_BUILD_VECTOR [[MV1]](s64), [[MV3]](s64)
     ; SI-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<2 x s64>)
+    ;
     ; VI-LABEL: name: test_fptoui_v2s64_to_v2s64
     ; VI: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; VI-NEXT: {{  $}}
@@ -427,6 +437,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[FMA]](s32)
     ; SI-NEXT: [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI1]](s32), [[FPTOUI]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[MV]](s64)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_to_s64
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -475,6 +486,7 @@ body: |
     ; SI-NEXT: [[MV1:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI3]](s32), [[FPTOUI2]](s32)
     ; SI-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s64>) = G_BUILD_VECTOR [[MV]](s64), [[MV1]](s64)
     ; SI-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<2 x s64>)
+    ;
     ; VI-LABEL: name: test_fptoui_v2s32_to_v2s64
     ; VI: liveins: $vgpr0_vgpr1
     ; VI-NEXT: {{  $}}
@@ -517,6 +529,7 @@ body: |
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[TRUNC]](s16)
     ; SI-NEXT: [[ZEXT:%[0-9]+]]:_(s64) = G_ZEXT [[FPTOUI]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[ZEXT]](s64)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s64
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -552,6 +565,7 @@ body: |
     ; SI-NEXT: [[ZEXT1:%[0-9]+]]:_(s64) = G_ZEXT [[FPTOUI1]](s32)
     ; SI-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s64>) = G_BUILD_VECTOR [[ZEXT]](s64), [[ZEXT1]](s64)
     ; SI-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[BUILD_VECTOR]](<2 x s64>)
+    ;
     ; VI-LABEL: name: test_fptoui_v2s16_to_v2s64
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -586,6 +600,7 @@ body: |
     ; SI-NEXT: [[FPTOSI:%[0-9]+]]:_(s32) = G_FPTOSI [[FPEXT]](s32)
     ; SI-NEXT: [[TRUNC1:%[0-9]+]]:_(s1) = G_TRUNC [[FPTOSI]](s32)
     ; SI-NEXT: S_ENDPGM 0, implicit [[TRUNC1]](s1)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s1
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -614,6 +629,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s15
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -642,6 +658,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s17
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -676,6 +693,7 @@ body: |
     ; SI-NEXT: [[FPTOUI1:%[0-9]+]]:_(s32) = G_FPTOUI [[FMA]](s32)
     ; SI-NEXT: [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[FPTOUI1]](s32), [[FPTOUI]](s32)
     ; SI-NEXT: $vgpr0_vgpr1 = COPY [[MV]](s64)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_to_s33
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -710,6 +728,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s7
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -738,6 +757,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s8
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -766,6 +786,7 @@ body: |
     ; SI-NEXT: [[FPEXT:%[0-9]+]]:_(s32) = G_FPEXT [[TRUNC]](s16)
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[FPEXT]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s16_to_s9
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -792,6 +813,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_to_s15
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
@@ -816,6 +838,7 @@ body: |
     ; SI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; SI-NEXT: [[FPTOUI:%[0-9]+]]:_(s32) = G_FPTOUI [[COPY]](s32)
     ; SI-NEXT: $vgpr0 = COPY [[FPTOUI]](s32)
+    ;
     ; VI-LABEL: name: test_fptoui_s32_to_s17
     ; VI: liveins: $vgpr0
     ; VI-NEXT: {{  $}}
