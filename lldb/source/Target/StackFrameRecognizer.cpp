@@ -66,14 +66,15 @@ void StackFrameRecognizerManager::AddRecognizer(
     Mangled::NamePreference symbol_mangling, bool first_instruction_only) {
   m_recognizers.push_front({(uint32_t)m_recognizers.size(), recognizer, false,
                             module, RegularExpressionSP(), symbols,
-                            RegularExpressionSP(), symbol_mangling, first_instruction_only});
+                            RegularExpressionSP(), symbol_mangling,
+                            first_instruction_only});
   BumpGeneration();
 }
 
 void StackFrameRecognizerManager::AddRecognizer(
     StackFrameRecognizerSP recognizer, RegularExpressionSP module,
-    RegularExpressionSP symbol,
-    Mangled::NamePreference symbol_mangling, bool first_instruction_only) {
+    RegularExpressionSP symbol, Mangled::NamePreference symbol_mangling,
+    bool first_instruction_only) {
   m_recognizers.push_front({(uint32_t)m_recognizers.size(), recognizer, true,
                             ConstString(), module, std::vector<ConstString>(),
                             symbol, symbol_mangling, first_instruction_only});

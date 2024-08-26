@@ -35,7 +35,9 @@ class FrameRecognizerTestCase(TestBase):
 
         self.expect(
             "frame recognizer list",
-            substrs=["0: recognizer.MyFrameRecognizer, module a.out, demangled symbol foo"],
+            substrs=[
+                "0: recognizer.MyFrameRecognizer, module a.out, demangled symbol foo"
+            ],
         )
 
         self.runCmd(
@@ -305,7 +307,9 @@ class FrameRecognizerTestCase(TestBase):
 
         self.expect(
             "frame recognizer list",
-            substrs=["recognizer.MyFrameRecognizer, module a.out, demangled symbol bar"],
+            substrs=[
+                "recognizer.MyFrameRecognizer, module a.out, demangled symbol bar"
+            ],
         )
 
         # Now the new target should also recognize the frame.
