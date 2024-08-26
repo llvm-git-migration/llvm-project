@@ -2737,10 +2737,19 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
   if (results.AlreadySearched(this))
     return;
 
+  auto type_basename = query.GetTypeBasename();
+
+  Log *log = GetLog(DWARFLog::Lookups);
+  if (log) {
+    GetObjectFile()->GetModule()->LogMessage(
+        log, "SymbolFileDWARF::FindTypes(type_basename=\"{0}\")",
+        type_basename);
+  }
+
   std::lock_guard<std::recursive_mutex> guard(GetModuleMutex());
 
   bool have_index_match = false;
-  m_index->GetTypes(query.GetTypeBasename(), [&](DWARFDIE die) {
+  m_index->GetTypes(type_basename, [&](DWARFDIE die) {
     // Check the language, but only if we have a language filter.
     if (query.HasLanguage()) {
       if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
@@ -2779,7 +2788,19 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
     return !results.Done(query); // Keep iterating if we aren't done.
   });
 
-  if (results.Done(query))
+  auto CheckIsDoneAndLog = [&results, &query, log, type_basename, this] {
+    if (results.Done(query)) {
+      if (log) {
+        GetObjectFile()->GetModule()->LogMessage(
+            log, "SymbolFileDWARF::FindTypes(type_basename=\"{0}\") => {1}",
+            type_basename, results.GetTypeMap().GetSize());
+      }
+      return true;
+    }
+    return false;
+  };
+
+  if (CheckIsDoneAndLog())
     return;
 
   // With -gsimple-template-names, a templated type's DW_AT_name will not
@@ -2834,7 +2855,7 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
         }
         return !results.Done(query); // Keep iterating if we aren't done.
       });
-      if (results.Done(query))
+      if (CheckIsDoneAndLog())
         return;
     }
   }
@@ -2847,8 +2868,11 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
   for (const auto &pair : m_external_type_modules) {
     if (ModuleSP external_module_sp = pair.second) {
       external_module_sp->FindTypes(query, results);
-      if (results.Done(query))
+      if (results.Done(query)) {
+        // don't use CheckIsDoneAndLog because the results are already logged
+        // in the nested FindTypes call
         return;
+      }
     }
   }
 }
