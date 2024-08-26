@@ -579,7 +579,7 @@ public:
   LogicalResult
   matchAndRewrite(gpu::SubgroupReduceOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    if (op.getClusterSize())
+    if (op.getClusterSize() || op.getClusterStride() != 1)
       return rewriter.notifyMatchFailure(
           op, "lowering for clustered reduce not implemented");
 

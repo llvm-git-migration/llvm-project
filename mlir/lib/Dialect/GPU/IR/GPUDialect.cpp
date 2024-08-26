@@ -629,6 +629,12 @@ LogicalResult gpu::SubgroupReduceOp::verify() {
     }
   }
 
+  uint32_t stride = getClusterStride();
+  if (!llvm::isPowerOf2_32(stride)) {
+    return emitOpError() << "cluster stride " << stride
+                         << " is not a power of two";
+  }
+
   return success();
 }
 
