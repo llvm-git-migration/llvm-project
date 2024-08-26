@@ -24,7 +24,7 @@ public:
     size_t min;
     size_t width;
 
-    SizeRange(size_t min, size_t width);
+    constexpr SizeRange(size_t min, size_t width);
 
     /// @returns The lower half of the size range.
     SizeRange lower() const;
@@ -78,7 +78,7 @@ inline FreeTrie *&FreeTrie::self() {
   return parent->lower == this ? parent->lower : parent->upper;
 }
 
-LIBC_INLINE FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
+LIBC_INLINE constexpr FreeTrie::SizeRange::SizeRange(size_t min, size_t width)
     : min(min), width(width) {
   LIBC_ASSERT(!(width & (width - 1)) && "width must be a power of two");
 }
@@ -91,7 +91,9 @@ LIBC_INLINE FreeTrie::SizeRange FreeTrie::SizeRange::upper() const {
   return {min + width / 2, width / 2};
 }
 
-size_t FreeTrie::SizeRange::max() const { return min + (width - 1); }
+LIBC_INLINE size_t FreeTrie::SizeRange::max() const {
+  return min + (width - 1);
+}
 
 LIBC_INLINE bool FreeTrie::SizeRange::contains(size_t size) const {
   if (size < min)
@@ -145,8 +147,8 @@ LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
   trie = &l;
 }
 
-FreeTrie::InsertPos FreeTrie::find(FreeTrie *&trie, size_t size,
-                                   SizeRange range) {
+LIBC_INLINE FreeTrie::InsertPos FreeTrie::find(FreeTrie *&trie, size_t size,
+                                               SizeRange range) {
   LIBC_ASSERT(range.contains(size) && "requested size out of trie range");
   InsertPos pos = {nullptr, &trie};
   while (*pos.trie && (*pos.trie)->size() != size) {
@@ -163,8 +165,8 @@ FreeTrie::InsertPos FreeTrie::find(FreeTrie *&trie, size_t size,
   return pos;
 }
 
-FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
-                                   SizeRange range) {
+LIBC_INLINE FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
+                                               SizeRange range) {
   if (!trie)
     return nullptr;
 
@@ -235,7 +237,7 @@ FreeTrie **FreeTrie::find_best_fit(FreeTrie *&trie, size_t size,
   }
 }
 
-FreeTrie &FreeTrie::leaf() {
+LIBC_INLINE FreeTrie &FreeTrie::leaf() {
   FreeTrie *cur = this;
   while (cur->lower || cur->upper)
     cur = cur->lower ? cur->lower : cur->upper;
