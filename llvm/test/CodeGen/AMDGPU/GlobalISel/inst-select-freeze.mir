@@ -18,6 +18,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s1_vgpr_to_vgpr
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -45,6 +46,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $agpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s1_vgpr_to_agpr
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -75,6 +77,7 @@ body: |
     ; GFX6-NEXT: [[V_CMP_EQ_U32_e64_:%[0-9]+]]:sreg_64 = V_CMP_EQ_U32_e64 [[COPY]], [[COPY1]], implicit $exec
     ; GFX6-NEXT: [[COPY2:%[0-9]+]]:sreg_64_xexec = COPY [[V_CMP_EQ_U32_e64_]]
     ; GFX6-NEXT: S_ENDPGM 0, implicit [[COPY2]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s1_vcc
     ; GFX10: liveins: $vgpr0, $vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -105,6 +108,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s16_vgpr_to_vgpr
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -132,6 +136,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_vgpr_to_vgpr
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -157,6 +162,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
     ; GFX6-NEXT: $sgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_sgpr_to_sgpr
     ; GFX10: liveins: $sgpr0
     ; GFX10-NEXT: {{  $}}
@@ -182,6 +188,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_sgpr_to_vgpr
     ; GFX10: liveins: $sgpr0
     ; GFX10-NEXT: {{  $}}
@@ -207,6 +214,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $agpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_vgpr_to_agpr
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -232,6 +240,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:sreg_32 = COPY $sgpr0
     ; GFX6-NEXT: $agpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_sgpr_to_agpr
     ; GFX10: liveins: $sgpr0
     ; GFX10-NEXT: {{  $}}
@@ -257,6 +266,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:agpr_32 = COPY $agpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_agpr_to_vgpr
     ; GFX10: liveins: $agpr0
     ; GFX10-NEXT: {{  $}}
@@ -282,6 +292,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:agpr_32 = COPY $agpr0
     ; GFX6-NEXT: $agpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s32_agpr_to_agpr
     ; GFX10: liveins: $agpr0
     ; GFX10-NEXT: {{  $}}
@@ -307,6 +318,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s64
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -332,6 +344,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_128 = COPY $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s128
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX10-NEXT: {{  $}}
@@ -357,6 +370,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_256 = COPY $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_256
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7
     ; GFX10-NEXT: {{  $}}
@@ -382,6 +396,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_512 = COPY $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_s512
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15
     ; GFX10-NEXT: {{  $}}
@@ -407,6 +422,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v2s32
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -432,6 +448,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_96 = COPY $vgpr0_vgpr1_vgpr2
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v3s32
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2
     ; GFX10-NEXT: {{  $}}
@@ -457,6 +474,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_128 = COPY $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v4s32
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX10-NEXT: {{  $}}
@@ -482,6 +500,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_160 = COPY $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v5s32
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4
     ; GFX10-NEXT: {{  $}}
@@ -507,6 +526,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_256 = COPY $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v8s32
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7
     ; GFX10-NEXT: {{  $}}
@@ -532,6 +552,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_512 = COPY $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v16s32
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9_vgpr10_vgpr11_vgpr12_vgpr13_vgpr14_vgpr15
     ; GFX10-NEXT: {{  $}}
@@ -557,6 +578,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v2s16
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -582,6 +604,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v4s16
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -607,6 +630,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_96 = COPY $vgpr0_vgpr1_vgpr2
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v6s16
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2
     ; GFX10-NEXT: {{  $}}
@@ -632,6 +656,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_128 = COPY $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v8s16
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX10-NEXT: {{  $}}
@@ -657,6 +682,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_128 = COPY $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2_vgpr3 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_v2s64
     ; GFX10: liveins: $vgpr0_vgpr1_vgpr2_vgpr3
     ; GFX10-NEXT: {{  $}}
@@ -682,6 +708,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p0
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -707,6 +734,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p1
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -732,6 +760,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p2
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -757,6 +786,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p3
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -782,6 +812,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p4
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}
@@ -807,6 +838,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vgpr_32 = COPY $vgpr0
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p5
     ; GFX10: liveins: $vgpr0
     ; GFX10-NEXT: {{  $}}
@@ -832,6 +864,7 @@ body: |
     ; GFX6-NEXT: {{  $}}
     ; GFX6-NEXT: [[COPY:%[0-9]+]]:vreg_64 = COPY $vgpr0_vgpr1
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[COPY]]
+    ;
     ; GFX10-LABEL: name: test_freeze_p999
     ; GFX10: liveins: $vgpr0_vgpr1
     ; GFX10-NEXT: {{  $}}

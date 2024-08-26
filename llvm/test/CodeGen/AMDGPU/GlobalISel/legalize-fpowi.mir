@@ -34,6 +34,7 @@ body: |
     ; GFX6-NEXT: [[FPTRUNC:%[0-9]+]]:_(s16) = G_FPTRUNC [[FMUL]](s32)
     ; GFX6-NEXT: [[ANYEXT:%[0-9]+]]:_(s32) = G_ANYEXT [[FPTRUNC]](s16)
     ; GFX6-NEXT: $vgpr0 = COPY [[ANYEXT]](s32)
+    ;
     ; GFX9-LABEL: name: test_fpowi_s16_s32_flags
     ; GFX9: liveins: $vgpr0, $vgpr1
     ; GFX9-NEXT: {{  $}}
@@ -91,6 +92,7 @@ body: |
     ; GFX6-NEXT: [[SELECT3:%[0-9]+]]:_(s32) = nnan G_SELECT [[FCMP1]](s1), [[C7]], [[C2]]
     ; GFX6-NEXT: [[FMUL1:%[0-9]+]]:_(s32) = nnan G_FMUL [[INT2]], [[SELECT3]]
     ; GFX6-NEXT: $vgpr0 = COPY [[FMUL1]](s32)
+    ;
     ; GFX9-LABEL: name: test_fpowi_s32_s32_flags
     ; GFX9: liveins: $vgpr0, $vgpr1
     ; GFX9-NEXT: {{  $}}

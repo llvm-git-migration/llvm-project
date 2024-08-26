@@ -25,6 +25,7 @@ body: |
     ; WAVE64-NEXT: [[COPY1:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY1]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align1
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -59,6 +60,7 @@ body: |
     ; WAVE64-NEXT: [[COPY1:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY1]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align2
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -93,6 +95,7 @@ body: |
     ; WAVE64-NEXT: [[COPY1:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY1]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align4
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -127,6 +130,7 @@ body: |
     ; WAVE64-NEXT: [[COPY1:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY1]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align8
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -161,6 +165,7 @@ body: |
     ; WAVE64-NEXT: [[COPY1:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY1]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align16
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -197,6 +202,7 @@ body: |
     ; WAVE64-NEXT: [[C1:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 -2048
     ; WAVE64-NEXT: [[PTRMASK:%[0-9]+]]:sgpr(p5) = G_PTRMASK [[PTR_ADD]], [[C1]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTRMASK]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align32
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -235,6 +241,7 @@ body: |
     ; WAVE64-NEXT: [[C1:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 -4096
     ; WAVE64-NEXT: [[PTRMASK:%[0-9]+]]:sgpr(p5) = G_PTRMASK [[PTR_ADD]], [[C1]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTRMASK]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align64
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -273,6 +280,7 @@ body: |
     ; WAVE64-NEXT: [[C1:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 -8192
     ; WAVE64-NEXT: [[PTRMASK:%[0-9]+]]:sgpr(p5) = G_PTRMASK [[PTR_ADD]], [[C1]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTRMASK]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_align128
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -306,6 +314,7 @@ body: |
     ; WAVE64-NEXT: [[COPY:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_constant_align4
     ; WAVE32: [[C:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 32
     ; WAVE32-NEXT: [[C1:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 5
@@ -338,6 +347,7 @@ body: |
     ; WAVE64-NEXT: [[COPY:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_constant_align8
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -372,6 +382,7 @@ body: |
     ; WAVE64-NEXT: [[COPY:%[0-9]+]]:sgpr(p5) = COPY $sp_reg
     ; WAVE64-NEXT: [[PTR_ADD:%[0-9]+]]:sgpr(p5) = G_PTR_ADD [[COPY]], [[SHL]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTR_ADD]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_constant_align16
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}
@@ -408,6 +419,7 @@ body: |
     ; WAVE64-NEXT: [[C2:%[0-9]+]]:sgpr(s32) = G_CONSTANT i32 -2048
     ; WAVE64-NEXT: [[PTRMASK:%[0-9]+]]:sgpr(p5) = G_PTRMASK [[PTR_ADD]], [[C2]](s32)
     ; WAVE64-NEXT: S_ENDPGM 0, implicit [[PTRMASK]](p5)
+    ;
     ; WAVE32-LABEL: name: test_dyn_stackalloc_sgpr_constant_align32
     ; WAVE32: liveins: $sgpr0
     ; WAVE32-NEXT: {{  $}}

@@ -40,6 +40,7 @@ body: |
   ; FAST-NEXT:   [[ZEXT1:%[0-9]+]]:sgpr(s32) = G_ZEXT [[TRUNC3]](s1)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:sgpr(s32) = G_SELECT [[ZEXT1]](s32), [[C]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_scc_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -152,6 +153,7 @@ body: |
   ; FAST-NEXT:   [[ZEXT2:%[0-9]+]]:sgpr(s32) = G_ZEXT [[TRUNC5]](s1)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:sgpr(s32) = G_SELECT [[ZEXT2]](s32), [[COPY]], [[COPY1]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_scc_scc_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.3(0x40000000)
@@ -275,6 +277,7 @@ body: |
   ; FAST-NEXT:   [[COPY6:%[0-9]+]]:vgpr(s32) = COPY [[COPY]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY6]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_scc_vcc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -369,6 +372,7 @@ body: |
   ; FAST-NEXT:   [[COPY6:%[0-9]+]]:vgpr(s32) = COPY [[COPY1]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY6]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_vcc_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -461,6 +465,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_vcc_vcc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -553,6 +558,7 @@ body: |
   ; FAST-NEXT:   [[ZEXT1:%[0-9]+]]:sgpr(s32) = G_ZEXT [[TRUNC3]](s1)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:sgpr(s32) = G_SELECT [[ZEXT1]](s32), [[C]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_s_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -647,6 +653,7 @@ body: |
   ; FAST-NEXT:   [[ZEXT1:%[0-9]+]]:sgpr(s32) = G_ZEXT [[TRUNC3]](s1)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:sgpr(s32) = G_SELECT [[ZEXT1]](s32), [[C]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_scc_s_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -743,6 +750,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[COPY]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY3]](s1), [[COPY4]], [[COPY5]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_scc_v_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -840,6 +848,7 @@ body: |
   ; FAST-NEXT:   [[COPY4:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY3]](s1), [[COPY4]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_v_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -933,6 +942,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_vcc_s_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1024,6 +1034,7 @@ body: |
   ; FAST-NEXT:   [[COPY6:%[0-9]+]]:vgpr(s32) = COPY [[COPY]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY6]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_s_vcc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1120,6 +1131,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT1:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY4]](s1), [[COPY5]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT1]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_vcc_v_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1220,6 +1232,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT1:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY4]](s1), [[COPY5]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT1]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_v_vcc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1317,6 +1330,7 @@ body: |
   ; FAST-NEXT:   [[COPY4:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY3]](s1), [[COPY4]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_v_s_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1412,6 +1426,7 @@ body: |
   ; FAST-NEXT:   [[COPY5:%[0-9]+]]:vgpr(s32) = COPY [[COPY]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY3]](s1), [[COPY4]], [[COPY5]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_s_v_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1507,6 +1522,7 @@ body: |
   ; FAST-NEXT:   [[COPY4:%[0-9]+]]:vgpr(s32) = COPY [[C]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[COPY3]](s1), [[COPY4]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_v_v_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1600,6 +1616,7 @@ body: |
   ; FAST-NEXT:   [[ZEXT1:%[0-9]+]]:sgpr(s32) = G_ZEXT [[TRUNC3]](s1)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:sgpr(s32) = G_SELECT [[ZEXT1]](s32), [[C]], [[COPY]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_s_s_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
@@ -1696,6 +1713,7 @@ body: |
   ; FAST-NEXT:   [[COPY6:%[0-9]+]]:vgpr(s32) = COPY [[C2]](s32)
   ; FAST-NEXT:   [[SELECT:%[0-9]+]]:vgpr(s32) = G_SELECT [[PHI]](s1), [[COPY5]], [[COPY6]]
   ; FAST-NEXT:   S_SETPC_B64 undef $sgpr30_sgpr31, implicit [[SELECT]](s32)
+  ;
   ; GREEDY-LABEL: name: phi_s1_vcc_result_scc_scc_sbranch
   ; GREEDY: bb.0:
   ; GREEDY-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)

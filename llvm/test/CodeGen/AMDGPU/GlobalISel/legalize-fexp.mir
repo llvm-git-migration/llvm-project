@@ -37,6 +37,7 @@ body: |
     ; GFX6-NEXT: [[SELECT1:%[0-9]+]]:_(s32) = G_SELECT [[FCMP1]](s1), [[C5]], [[SELECT]]
     ; GFX6-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY [[SELECT1]](s32)
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY1]](s32)
+    ;
     ; GFX8-LABEL: name: test_fexp_s32
     ; GFX8: liveins: $vgpr0
     ; GFX8-NEXT: {{  $}}
@@ -68,6 +69,7 @@ body: |
     ; GFX8-NEXT: [[SELECT1:%[0-9]+]]:_(s32) = G_SELECT [[FCMP1]](s1), [[C6]], [[SELECT]]
     ; GFX8-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY [[SELECT1]](s32)
     ; GFX8-NEXT: $vgpr0 = COPY [[COPY1]](s32)
+    ;
     ; GFX9-LABEL: name: test_fexp_s32
     ; GFX9: liveins: $vgpr0
     ; GFX9-NEXT: {{  $}}
@@ -131,6 +133,7 @@ body: |
     ; GFX6-NEXT: [[SELECT1:%[0-9]+]]:_(s32) = nnan G_SELECT [[FCMP1]](s1), [[C5]], [[SELECT]]
     ; GFX6-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY [[SELECT1]](s32)
     ; GFX6-NEXT: $vgpr0 = COPY [[COPY1]](s32)
+    ;
     ; GFX8-LABEL: name: test_fexp_s32_nnan
     ; GFX8: liveins: $vgpr0
     ; GFX8-NEXT: {{  $}}
@@ -162,6 +165,7 @@ body: |
     ; GFX8-NEXT: [[SELECT1:%[0-9]+]]:_(s32) = nnan G_SELECT [[FCMP1]](s1), [[C6]], [[SELECT]]
     ; GFX8-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY [[SELECT1]](s32)
     ; GFX8-NEXT: $vgpr0 = COPY [[COPY1]](s32)
+    ;
     ; GFX9-LABEL: name: test_fexp_s32_nnan
     ; GFX9: liveins: $vgpr0
     ; GFX9-NEXT: {{  $}}
@@ -242,6 +246,7 @@ body: |
     ; GFX6-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY [[SELECT3]](s32)
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[COPY1]](s32), [[COPY2]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX8-LABEL: name: test_fexp_v2s32
     ; GFX8: liveins: $vgpr0_vgpr1
     ; GFX8-NEXT: {{  $}}
@@ -294,6 +299,7 @@ body: |
     ; GFX8-NEXT: [[COPY2:%[0-9]+]]:_(s32) = COPY [[SELECT3]](s32)
     ; GFX8-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s32>) = G_BUILD_VECTOR [[COPY1]](s32), [[COPY2]](s32)
     ; GFX8-NEXT: $vgpr0_vgpr1 = COPY [[BUILD_VECTOR]](<2 x s32>)
+    ;
     ; GFX9-LABEL: name: test_fexp_v2s32
     ; GFX9: liveins: $vgpr0_vgpr1
     ; GFX9-NEXT: {{  $}}
@@ -406,6 +412,7 @@ body: |
     ; GFX6-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[SELECT5]](s32)
     ; GFX6-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[COPY1]](s32), [[COPY2]](s32), [[COPY3]](s32)
     ; GFX6-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX8-LABEL: name: test_fexp_v3s32
     ; GFX8: liveins: $vgpr0_vgpr1_vgpr2
     ; GFX8-NEXT: {{  $}}
@@ -477,6 +484,7 @@ body: |
     ; GFX8-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[SELECT5]](s32)
     ; GFX8-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[COPY1]](s32), [[COPY2]](s32), [[COPY3]](s32)
     ; GFX8-NEXT: $vgpr0_vgpr1_vgpr2 = COPY [[BUILD_VECTOR]](<3 x s32>)
+    ;
     ; GFX9-LABEL: name: test_fexp_v3s32
     ; GFX9: liveins: $vgpr0_vgpr1_vgpr2
     ; GFX9-NEXT: {{  $}}
@@ -558,6 +566,7 @@ body: |
     ; GFX6-NEXT: [[FPTRUNC:%[0-9]+]]:_(s16) = G_FPTRUNC [[INT]](s32)
     ; GFX6-NEXT: [[ANYEXT:%[0-9]+]]:_(s32) = G_ANYEXT [[FPTRUNC]](s16)
     ; GFX6-NEXT: $vgpr0 = COPY [[ANYEXT]](s32)
+    ;
     ; GFX8-LABEL: name: test_fexp_s16
     ; GFX8: liveins: $vgpr0
     ; GFX8-NEXT: {{  $}}
@@ -570,6 +579,7 @@ body: |
     ; GFX8-NEXT: [[FPTRUNC:%[0-9]+]]:_(s16) = G_FPTRUNC [[INT]](s32)
     ; GFX8-NEXT: [[ANYEXT:%[0-9]+]]:_(s32) = G_ANYEXT [[FPTRUNC]](s16)
     ; GFX8-NEXT: $vgpr0 = COPY [[ANYEXT]](s32)
+    ;
     ; GFX9-LABEL: name: test_fexp_s16
     ; GFX9: liveins: $vgpr0
     ; GFX9-NEXT: {{  $}}
@@ -615,6 +625,7 @@ body: |
     ; GFX6-NEXT: [[OR:%[0-9]+]]:_(s32) = G_OR [[ZEXT]], [[SHL]]
     ; GFX6-NEXT: [[BITCAST:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR]](s32)
     ; GFX6-NEXT: $vgpr0 = COPY [[BITCAST]](<2 x s16>)
+    ;
     ; GFX8-LABEL: name: test_fexp_v2s16
     ; GFX8: liveins: $vgpr0
     ; GFX8-NEXT: {{  $}}
@@ -635,6 +646,7 @@ body: |
     ; GFX8-NEXT: [[OR:%[0-9]+]]:_(s32) = G_OR [[ZEXT]], [[SHL]]
     ; GFX8-NEXT: [[BITCAST:%[0-9]+]]:_(<2 x s16>) = G_BITCAST [[OR]](s32)
     ; GFX8-NEXT: $vgpr0 = COPY [[BITCAST]](<2 x s16>)
+    ;
     ; GFX9-LABEL: name: test_fexp_v2s16
     ; GFX9: liveins: $vgpr0
     ; GFX9-NEXT: {{  $}}
