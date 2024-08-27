@@ -239,7 +239,7 @@ NativeRegisterContextLinux_arm64::ReadRegister(const RegisterInfo *reg_info,
   Status error;
 
   if (!reg_info) {
-    error.SetErrorString("reg_info NULL");
+    error = Status::FromErrorString("reg_info NULL");
     return error;
   }
 
@@ -849,7 +849,7 @@ Status NativeRegisterContextLinux_arm64::WriteAllRegisterValues(
 
   Status error;
   if (!data_sp) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_arm64::%s invalid data_sp provided",
         __FUNCTION__);
     return error;
@@ -857,17 +857,18 @@ Status NativeRegisterContextLinux_arm64::WriteAllRegisterValues(
 
   const uint8_t *src = data_sp->GetBytes();
   if (src == nullptr) {
-    error.SetErrorStringWithFormat("NativeRegisterContextLinux_arm64::%s "
-                                   "DataBuffer::GetBytes() returned a null "
-                                   "pointer",
-                                   __FUNCTION__);
+    error = Status::FromErrorStringWithFormat(
+        "NativeRegisterContextLinux_arm64::%s "
+        "DataBuffer::GetBytes() returned a null "
+        "pointer",
+        __FUNCTION__);
     return error;
   }
 
   uint64_t reg_data_min_size =
       GetGPRBufferSize() + GetFPRSize() + 2 * (sizeof(RegisterSetType));
   if (data_sp->GetByteSize() < reg_data_min_size) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_arm64::%s data_sp contained insufficient "
         "register data bytes, expected at least %" PRIu64 ", actual %" PRIu64,
         __FUNCTION__, reg_data_min_size, data_sp->GetByteSize());
@@ -896,9 +897,10 @@ Status NativeRegisterContextLinux_arm64::WriteAllRegisterValues(
       ::memcpy(GetSVEHeader(), src, GetSVEHeaderSize());
       if (!sve::vl_valid(m_sve_header.vl)) {
         m_sve_header_is_valid = false;
-        error.SetErrorStringWithFormat("NativeRegisterContextLinux_arm64::%s "
-                                       "Invalid SVE header in data_sp",
-                                       __FUNCTION__);
+        error = Status::FromErrorStringWithFormat(
+            "NativeRegisterContextLinux_arm64::%s "
+            "Invalid SVE header in data_sp",
+            __FUNCTION__);
         return error;
       }
       m_sve_header_is_valid = true;

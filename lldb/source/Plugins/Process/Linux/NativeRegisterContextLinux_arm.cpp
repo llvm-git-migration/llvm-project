@@ -104,7 +104,7 @@ NativeRegisterContextLinux_arm::ReadRegister(const RegisterInfo *reg_info,
   Status error;
 
   if (!reg_info) {
-    error.SetErrorString("reg_info NULL");
+    error = Status::FromErrorString("reg_info NULL");
     return error;
   }
 
@@ -160,8 +160,8 @@ NativeRegisterContextLinux_arm::ReadRegister(const RegisterInfo *reg_info,
     break;
   default:
     assert(false && "Unhandled data size.");
-    error.SetErrorStringWithFormat("unhandled byte size: %" PRIu32,
-                                   reg_info->byte_size);
+    error = Status::FromErrorStringWithFormat("unhandled byte size: %" PRIu32,
+                                              reg_info->byte_size);
     break;
   }
 
@@ -223,14 +223,14 @@ Status NativeRegisterContextLinux_arm::WriteAllRegisterValues(
   Status error;
 
   if (!data_sp) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_arm::%s invalid data_sp provided",
         __FUNCTION__);
     return error;
   }
 
   if (data_sp->GetByteSize() != REG_CONTEXT_SIZE) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_arm::%s data_sp contained mismatched "
         "data size, expected %" PRIu64 ", actual %" PRIu64,
         __FUNCTION__, (uint64_t)REG_CONTEXT_SIZE, data_sp->GetByteSize());
@@ -239,10 +239,11 @@ Status NativeRegisterContextLinux_arm::WriteAllRegisterValues(
 
   const uint8_t *src = data_sp->GetBytes();
   if (src == nullptr) {
-    error.SetErrorStringWithFormat("NativeRegisterContextLinux_arm::%s "
-                                   "DataBuffer::GetBytes() returned a null "
-                                   "pointer",
-                                   __FUNCTION__);
+    error = Status::FromErrorStringWithFormat(
+        "NativeRegisterContextLinux_arm::%s "
+        "DataBuffer::GetBytes() returned a null "
+        "pointer",
+        __FUNCTION__);
     return error;
   }
   ::memcpy(&m_gpr_arm, src, GetRegisterInfoInterface().GetGPRSize());
