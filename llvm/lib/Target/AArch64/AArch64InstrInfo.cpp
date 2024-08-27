@@ -9048,10 +9048,8 @@ AArch64InstrInfo::getOutliningCandidateInfo(
     }
 
     // If we dropped all of the candidates, bail out here.
-    if (RepeatedSequenceLocs.size() < 2) {
-      RepeatedSequenceLocs.clear();
+    if (RepeatedSequenceLocs.size() < 2)
       return std::nullopt;
-    }
   }
 
   // Does every candidate's MBB contain a call? If so, then we might have a call
@@ -9076,10 +9074,8 @@ AArch64InstrInfo::getOutliningCandidateInfo(
 
     if (ModStackToSaveLR) {
       // We can't fix up the stack. Bail out.
-      if (!AllStackInstrsSafe) {
-        RepeatedSequenceLocs.clear();
+      if (!AllStackInstrsSafe)
         return std::nullopt;
-      }
 
       // Save + restore LR.
       NumBytesToCreateFrame += 8;
