@@ -7811,6 +7811,59 @@ static SDValue visitORCommutative(SelectionDAG &DAG, SDValue N0, SDValue N1,
     }
   }
 
+  /* TMP coment
+
+    it should combine for example this pattern into
+
+    (or (icmp ult B0 B1)
+        (and (icmp ult A0 A1)
+             (icmp eq B0 B1)))
+
+             -->
+
+     (usubo_carry B0 B1 (usubo_carry A0 A1 0):1):1
+   */
+  SDValue B0;
+  SDValue B1;
+  SDValue A0;
+  SDValue A1;
+  SDValue BEq;
+  ISD::CondCode BCondCode;
+  ISD::CondCode ACondCode;
+  if (sd_match(N0, m_SetCC(m_Value(B0), m_Value(B1), m_CondCode(BCondCode))) &&
+      (BCondCode != ISD::SETNE && BCondCode != ISD::SETEQ) &&
+      sd_match(N1,
+               m_And(m_SetCC(m_Value(A0), m_Value(A1), m_CondCode(ACondCode)),
+                     m_Value(BEq))) &&
+      (ACondCode != ISD::SETNE && ACondCode != ISD::SETEQ) &&
+      isSignedIntSetCC(BCondCode) == isSignedIntSetCC(ACondCode) &&
+      // TODO? include other CondCodes. but it would increase code complexity
+      sd_match(BEq, m_c_SetCC(m_Specific(B0), m_Specific(B1),
+                              m_SpecificCondCode(ISD::SETEQ)))) {
+
+    if (isTrueWhenEqual(BCondCode))
+      std::swap(B0, B1);
+
+    if (isTrueWhenEqual(ACondCode))
+      std::swap(A0, A1);
+
+    unsigned OpCode = BCondCode == isSignedIntSetCC(BCondCode)
+                          ? ISD::SSUBO_CARRY
+                          : ISD::USUBO_CARRY;
+
+    EVT AVT = A0.getValueType();
+    SDVTList AOverflowOpVT = DAG.getVTList(AVT, MVT::i1);
+    SDValue ACarry = DAG.getNode(OpCode, DL, AOverflowOpVT, A0, A1,
+                                 DAG.getConstant(0, DL, MVT::i1))
+                         .getValue(1);
+
+    EVT BVT = B0.getValueType();
+    SDVTList BOverflowOpVT = DAG.getVTList(BVT, MVT::i1);
+    SDValue BCarry =
+        DAG.getNode(OpCode, DL, BOverflowOpVT, B0, B1, ACarry).getValue(1);
+    return BCarry;
+  }
+
   return SDValue();
 }
 
