@@ -26,7 +26,6 @@
 
 #include "VPlan.h"
 #include "llvm/ADT/SmallSet.h"
-#include "llvm/Analysis/LoopAccessAnalysis.h"
 #include "llvm/Support/InstructionCost.h"
 
 namespace llvm {
@@ -369,7 +368,8 @@ public:
   /// and the vector loop should be entered even if the pointers alias across a
   /// loop iteration.
   void plan(ElementCount UserVF, unsigned UserIC,
-       std::optional<ArrayRef<PointerDiffInfo>> DiffChecks, bool &HasAliasMask);
+            std::optional<ArrayRef<PointerDiffInfo>> DiffChecks,
+            bool &HasAliasMask);
 
   /// Use the VPlan-native path to plan how to best vectorize, return the best
   /// VF and its cost.

@@ -7002,7 +7002,8 @@ LoopVectorizationPlanner::planInVPlanNativePath(ElementCount UserVF) {
   return VectorizationFactor::Disabled();
 }
 
-void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
+void LoopVectorizationPlanner::plan(
+    ElementCount UserVF, unsigned UserIC,
     std::optional<ArrayRef<PointerDiffInfo>> RTChecks, bool &HasAliasMask) {
   assert(OrigLoop->isInnermost() && "Inner loop expected.");
   CM.collectValuesToIgnore();
@@ -7012,8 +7013,6 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC,
   if (!MaxFactors) // Cases that should not to be vectorized nor interleaved.
     return;
 
-  // VPlan needs the aliasing pointers as Values and not SCEVs, so expand them
-  // here and put them into a list.
   ArrayRef<PointerDiffInfo> DiffChecks;
   if (RTChecks.has_value() && useActiveLaneMask(CM.getTailFoldingStyle(true)))
     DiffChecks = *RTChecks;
@@ -10000,11 +9999,13 @@ bool LoopVectorizePass::processLoop(Loop *L) {
 
   bool AddBranchWeights =
       hasBranchWeightMD(*L->getLoopLatch()->getTerminator());
-  GeneratedRTChecks Checks(*PSE.getSE(), DT, LI, TTI,
-                           F->getDataLayout(), AddBranchWeights);
+  GeneratedRTChecks Checks(*PSE.getSE(), DT, LI, TTI, F->getDataLayout(),
+                           AddBranchWeights);
 
   // Plan how to best vectorize.
-  LVP.plan(UserVF, UserIC, LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks(), Checks.HasAliasMask);
+  LVP.plan(UserVF, UserIC,
+           LVL.getLAI()->getRuntimePointerChecking()->getDiffChecks(),
+           Checks.HasAliasMask);
   VectorizationFactor VF = LVP.computeBestVF();
   if (Checks.HasAliasMask)
     LoopsAliasMasked++;
