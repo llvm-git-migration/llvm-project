@@ -91,7 +91,9 @@ InstrProfCorrelator::Context::get(std::unique_ptr<MemoryBuffer> Buffer,
 }
 
 llvm::Expected<std::unique_ptr<InstrProfCorrelator>>
-InstrProfCorrelator::get(StringRef Filename, ProfCorrelatorKind FileKind) {
+InstrProfCorrelator::get(StringRef Filename, ProfCorrelatorKind FileKind,
+                         const object::BuildIDFetcher *BIDFetcher,
+                         const std::optional<ArrayRef<object::BuildID>> BIs) {
   if (FileKind == DEBUG_INFO) {
     auto DsymObjectsOrErr =
         object::MachOObjectFile::findDsymObjectMembers(Filename);
@@ -113,11 +115,36 @@ InstrProfCorrelator::get(StringRef Filename, ProfCorrelatorKind FileKind) {
     return get(std::move(*BufferOrErr), FileKind);
   }
   if (FileKind == BINARY) {
-    auto BufferOrErr = errorOrToExpected(MemoryBuffer::getFile(Filename));
-    if (auto Err = BufferOrErr.takeError())
-      return std::move(Err);
+    if (!Filename.empty()) {
+      auto BufferOrErr = errorOrToExpected(MemoryBuffer::getFile(Filename));
+      if (auto Err = BufferOrErr.takeError())
+        return std::move(Err);
+      return get(std::move(*BufferOrErr), FileKind);
+    } else if (BIDFetcher) {
+      if (BIs->size() > 1)
+        return make_error<InstrProfError>(
+            instrprof_error::unable_to_correlate_profile,
+            "unsupported profile binary correlation when there are multiple "
+            "build IDs in a binary");
 
-    return get(std::move(*BufferOrErr), FileKind);
+      std::optional<std::string> Path = BIDFetcher->fetch(BIs->front());
+      if (Path) {
+        auto BufferOrErr = errorOrToExpected(MemoryBuffer::getFile(*Path));
+        if (auto Err = BufferOrErr.takeError())
+          return std::move(Err);
+        return get(std::move(*BufferOrErr), BINARY);
+      } else {
+        return make_error<InstrProfError>(
+            instrprof_error::unable_to_correlate_profile,
+            "Missing build ID: " +
+                llvm::toHex(BIs->front(), /*LowerCase=*/true));
+      }
+    } else {
+      return make_error<InstrProfError>(
+          instrprof_error::unable_to_correlate_profile,
+          "unsupported profile binary correlation when provided with a file "
+          "name and build id fetcher");
+    }
   }
   return make_error<InstrProfError>(
       instrprof_error::unable_to_correlate_profile,
