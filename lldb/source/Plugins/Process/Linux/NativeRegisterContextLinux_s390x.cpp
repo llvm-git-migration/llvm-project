@@ -367,14 +367,14 @@ Status NativeRegisterContextLinux_s390x::WriteAllRegisterValues(
   Status error;
 
   if (!data_sp) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_s390x::%s invalid data_sp provided",
         __FUNCTION__);
     return error;
   }
 
   if (data_sp->GetByteSize() != REG_CONTEXT_SIZE) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_s390x::%s data_sp contained mismatched "
         "data size, expected %" PRIu64 ", actual %" PRIu64,
         __FUNCTION__, REG_CONTEXT_SIZE, data_sp->GetByteSize());
@@ -383,10 +383,11 @@ Status NativeRegisterContextLinux_s390x::WriteAllRegisterValues(
 
   const uint8_t *src = data_sp->GetBytes();
   if (src == nullptr) {
-    error.SetErrorStringWithFormat("NativeRegisterContextLinux_s390x::%s "
-                                   "DataBuffer::GetBytes() returned a null "
-                                   "pointer",
-                                   __FUNCTION__);
+    error = Status::FromErrorStringWithFormat(
+        "NativeRegisterContextLinux_s390x::%s "
+        "DataBuffer::GetBytes() returned a null "
+        "pointer",
+        __FUNCTION__);
     return error;
   }
 

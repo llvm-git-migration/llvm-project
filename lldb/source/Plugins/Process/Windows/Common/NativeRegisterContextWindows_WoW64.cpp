@@ -315,7 +315,7 @@ NativeRegisterContextWindows_WoW64::ReadRegister(const RegisterInfo *reg_info,
                                                  RegisterValue &reg_value) {
   Status error;
   if (!reg_info) {
-    error.SetErrorString("reg_info NULL");
+    error = Status::FromErrorString("reg_info NULL");
     return error;
   }
 
@@ -323,9 +323,10 @@ NativeRegisterContextWindows_WoW64::ReadRegister(const RegisterInfo *reg_info,
   if (reg == LLDB_INVALID_REGNUM) {
     // This is likely an internal register for lldb use only and should not be
     // directly queried.
-    error.SetErrorStringWithFormat("register \"%s\" is an internal-only lldb "
-                                   "register, cannot read directly",
-                                   reg_info->name);
+    error = Status::FromErrorStringWithFormat(
+        "register \"%s\" is an internal-only lldb "
+        "register, cannot read directly",
+        reg_info->name);
     return error;
   }
 
@@ -343,7 +344,7 @@ Status NativeRegisterContextWindows_WoW64::WriteRegister(
   Status error;
 
   if (!reg_info) {
-    error.SetErrorString("reg_info NULL");
+    error = Status::FromErrorString("reg_info NULL");
     return error;
   }
 
@@ -351,9 +352,10 @@ Status NativeRegisterContextWindows_WoW64::WriteRegister(
   if (reg == LLDB_INVALID_REGNUM) {
     // This is likely an internal register for lldb use only and should not be
     // directly written.
-    error.SetErrorStringWithFormat("register \"%s\" is an internal-only lldb "
-                                   "register, cannot write directly",
-                                   reg_info->name);
+    error = Status::FromErrorStringWithFormat(
+        "register \"%s\" is an internal-only lldb "
+        "register, cannot write directly",
+        reg_info->name);
     return error;
   }
 
@@ -385,14 +387,14 @@ Status NativeRegisterContextWindows_WoW64::WriteAllRegisterValues(
   Status error;
   const size_t data_size = REG_CONTEXT_SIZE;
   if (!data_sp) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextWindows_WoW64::%s invalid data_sp provided",
         __FUNCTION__);
     return error;
   }
 
   if (data_sp->GetByteSize() != data_size) {
-    error.SetErrorStringWithFormatv(
+    error = Status::FromErrorStringWithFormatv(
         "data_sp contained mismatched data size, expected {0}, actual {1}",
         data_size, data_sp->GetByteSize());
     return error;

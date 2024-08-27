@@ -93,7 +93,7 @@ Status NativeRegisterContextLinux_loongarch64::ReadRegister(
   Status error;
 
   if (!reg_info) {
-    error.SetErrorString("reg_info NULL");
+    error = Status::FromErrorString("reg_info NULL");
     return error;
   }
 
@@ -204,14 +204,14 @@ Status NativeRegisterContextLinux_loongarch64::WriteAllRegisterValues(
   Status error;
 
   if (!data_sp) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_loongarch64::%s invalid data_sp provided",
         __FUNCTION__);
     return error;
   }
 
   if (data_sp->GetByteSize() != REG_CONTEXT_SIZE) {
-    error.SetErrorStringWithFormat(
+    error = Status::FromErrorStringWithFormat(
         "NativeRegisterContextLinux_loongarch64::%s data_sp contained "
         "mismatched data size, expected %" PRIu64 ", actual %" PRIu64,
         __FUNCTION__, REG_CONTEXT_SIZE, data_sp->GetByteSize());
@@ -220,10 +220,11 @@ Status NativeRegisterContextLinux_loongarch64::WriteAllRegisterValues(
 
   const uint8_t *src = data_sp->GetBytes();
   if (src == nullptr) {
-    error.SetErrorStringWithFormat("NativeRegisterContextLinux_loongarch64::%s "
-                                   "DataBuffer::GetBytes() returned a null "
-                                   "pointer",
-                                   __FUNCTION__);
+    error = Status::FromErrorStringWithFormat(
+        "NativeRegisterContextLinux_loongarch64::%s "
+        "DataBuffer::GetBytes() returned a null "
+        "pointer",
+        __FUNCTION__);
     return error;
   }
   ::memcpy(GetGPRBuffer(), src, GetRegisterInfoInterface().GetGPRSize());
