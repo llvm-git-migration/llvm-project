@@ -12,65 +12,6 @@ void SSAIfConv::runOnMachineFunction(MachineFunction &MF) {
   ClobberedRegUnits.resize(TRI->getNumRegUnits());
 }
 
-/// canSpeculateInstrs - Returns true if all the instructions in MBB can safely
-/// be speculated. The terminators are not considered.
-///
-/// If instructions use any values that are defined in the head basic block,
-/// the defining instructions are added to InsertAfter.
-///
-/// Any clobbered regunits are added to ClobberedRegUnits.
-///
-bool SSAIfConv::canSpeculateInstrs(MachineBasicBlock *MBB) {
-  // Reject any live-in physregs. It's probably CPSR/EFLAGS, and very hard to
-  // get right.
-  if (!MBB->livein_empty()) {
-    LLVM_DEBUG(dbgs() << printMBBReference(*MBB) << " has live-ins.\n");
-    return false;
-  }
-
-  unsigned InstrCount = 0;
-
-  // Check all instructions, except the terminators. It is assumed that
-  // terminators never have side effects or define any used register values.
-  for (MachineInstr &MI :
-       llvm::make_range(MBB->begin(), MBB->getFirstTerminator())) {
-    if (MI.isDebugInstr())
-      continue;
-
-    if (++InstrCount > BlockInstrLimit && !Stress) {
-      LLVM_DEBUG(dbgs() << printMBBReference(*MBB) << " has more than "
-                        << BlockInstrLimit << " instructions.\n");
-      return false;
-    }
-
-    // There shouldn't normally be any phis in a single-predecessor block.
-    if (MI.isPHI()) {
-      LLVM_DEBUG(dbgs() << "Can't hoist: " << MI);
-      return false;
-    }
-
-    // Don't speculate loads. Note that it may be possible and desirable to
-    // speculate GOT or constant pool loads that are guaranteed not to trap,
-    // but we don't support that for now.
-    if (MI.mayLoad()) {
-      LLVM_DEBUG(dbgs() << "Won't speculate load: " << MI);
-      return false;
-    }
-
-    // We never speculate stores, so an AA pointer isn't necessary.
-    bool DontMoveAcrossStore = true;
-    if (!MI.isSafeToMove(DontMoveAcrossStore)) {
-      LLVM_DEBUG(dbgs() << "Can't speculate: " << MI);
-      return false;
-    }
-
-    // Check for any dependencies on Head instructions.
-    if (!InstrDependenciesAllowIfConv(&MI))
-      return false;
-  }
-  return true;
-}
-
 /// Check that there is no dependencies preventing if conversion.
 ///
 /// If instruction uses any values that are defined in the head basic block,
@@ -114,7 +55,8 @@ bool SSAIfConv::InstrDependenciesAllowIfConv(MachineInstr *I) {
 ///
 /// Any clobbered regunits are added to ClobberedRegUnits.
 ///
-bool SSAIfConv::canPredicateInstrs(MachineBasicBlock *MBB) {
+bool SSAIfConv::canPredicateInstrs(MachineBasicBlock *MBB,
+                                   ifcvt::PredicationStrategy &Predicate) {
   // Reject any live-in physregs. It's probably CPSR/EFLAGS, and very hard to
   // get right.
   if (!MBB->livein_empty()) {
@@ -144,41 +86,14 @@ bool SSAIfConv::canPredicateInstrs(MachineBasicBlock *MBB) {
       return false;
     }
 
-    // Check that instruction is predicable
-    if (!TII->isPredicable(*I)) {
-      LLVM_DEBUG(dbgs() << "Isn't predicable: " << *I);
+    if (!Predicate.canPredicate(*I))
       return false;
-    }
-
-    // Check that instruction is not already predicated.
-    if (TII->isPredicated(*I) && !TII->canPredicatePredicatedInstr(*I)) {
-      LLVM_DEBUG(dbgs() << "Is already predicated: " << *I);
-      return false;
-    }
 
     // Check for any dependencies on Head instructions.
     if (!InstrDependenciesAllowIfConv(&(*I)))
       return false;
   }
   return true;
-}
-
-// Apply predicate to all instructions in the machine block.
-void SSAIfConv::PredicateBlock(MachineBasicBlock *MBB, bool ReversePredicate) {
-  auto Condition = Cond;
-  if (ReversePredicate) {
-    bool CanRevCond = !TII->reverseBranchCondition(Condition);
-    assert(CanRevCond && "Reversed predicate is not supported");
-    (void)CanRevCond;
-  }
-  // Terminators don't need to be predicated as they will be removed.
-  for (MachineBasicBlock::iterator I = MBB->begin(),
-                                   E = MBB->getFirstTerminator();
-       I != E; ++I) {
-    if (I->isDebugInstr())
-      continue;
-    TII->PredicateInstruction(*I, Condition);
-  }
 }
 
 /// Find an insertion point in Head for the speculated instructions. The
@@ -257,7 +172,8 @@ bool SSAIfConv::findInsertionPoint() {
 /// canConvertIf - analyze the sub-cfg rooted in MBB, and return true if it is
 /// a potential candidate for if-conversion. Fill out the internal state.
 ///
-bool SSAIfConv::canConvertIf(MachineBasicBlock *MBB, bool Predicate) {
+bool SSAIfConv::canConvertIf(MachineBasicBlock *MBB,
+                             ifcvt::PredicationStrategy &Predicate) {
   Head = MBB;
   TBB = FBB = Tail = nullptr;
 
@@ -297,14 +213,6 @@ bool SSAIfConv::canConvertIf(MachineBasicBlock *MBB, bool Predicate) {
                       << printMBBReference(*Tail) << '\n');
   }
 
-  // This is a triangle or a diamond.
-  // Skip if we cannot predicate and there are no phis skip as there must be
-  // side effects that can only be handled with predication.
-  if (!Predicate && (Tail->empty() || !Tail->front().isPHI())) {
-    LLVM_DEBUG(dbgs() << "No phis in tail.\n");
-    return false;
-  }
-
   // The branch we're looking to eliminate must be analyzable.
   Cond.clear();
   if (TII->analyzeBranch(*Head, TBB, FBB, Cond)) {
@@ -328,6 +236,10 @@ bool SSAIfConv::canConvertIf(MachineBasicBlock *MBB, bool Predicate) {
   // analyzeBranch doesn't set FBB on a fall-through branch.
   // Make sure it is always set.
   FBB = TBB == Succ0 ? Succ1 : Succ0;
+
+  // early exit
+  if (!Predicate.canConvertIf(Head, TBB, FBB, Tail, Cond))
+    return false;
 
   // Any phis in the tail block must be convertible to selects.
   PHIs.clear();
@@ -359,17 +271,10 @@ bool SSAIfConv::canConvertIf(MachineBasicBlock *MBB, bool Predicate) {
   // Check that the conditional instructions can be speculated.
   InsertAfter.clear();
   ClobberedRegUnits.reset();
-  if (Predicate) {
-    if (TBB != Tail && !canPredicateInstrs(TBB))
-      return false;
-    if (FBB != Tail && !canPredicateInstrs(FBB))
-      return false;
-  } else {
-    if (TBB != Tail && !canSpeculateInstrs(TBB))
-      return false;
-    if (FBB != Tail && !canSpeculateInstrs(FBB))
-      return false;
-  }
+  if (TBB != Tail && !canPredicateInstrs(TBB, Predicate))
+    return false;
+  if (FBB != Tail && !canPredicateInstrs(FBB, Predicate))
+    return false;
 
   // Try to find a valid insertion point for the speculated instructions in the
   // head basic block.
@@ -503,7 +408,7 @@ void SSAIfConv::rewritePHIOperands() {
 /// Any basic blocks that need to be erased will be added to RemoveBlocks.
 ///
 void SSAIfConv::convertIf(SmallVectorImpl<MachineBasicBlock *> &RemoveBlocks,
-                          bool Predicate) {
+                          ifcvt::PredicationStrategy &Predicate) {
   assert(Head && Tail && TBB && FBB && "Call canConvertIf first.");
 
   // Update statistics.
@@ -514,13 +419,11 @@ void SSAIfConv::convertIf(SmallVectorImpl<MachineBasicBlock *> &RemoveBlocks,
 
   // Move all instructions into Head, except for the terminators.
   if (TBB != Tail) {
-    if (Predicate)
-      PredicateBlock(TBB, /*ReversePredicate=*/false);
+    Predicate.predicateBlock(TBB, Cond, /*ReversePredicate=*/false);
     Head->splice(InsertionPoint, TBB, TBB->begin(), TBB->getFirstTerminator());
   }
   if (FBB != Tail) {
-    if (Predicate)
-      PredicateBlock(FBB, /*ReversePredicate=*/true);
+    Predicate.predicateBlock(FBB, Cond, /*ReversePredicate=*/true);
     Head->splice(InsertionPoint, FBB, FBB->begin(), FBB->getFirstTerminator());
   }
   // Are there extra Tail predecessors?

@@ -360,15 +360,60 @@ bool EarlyIfConverter::shouldConvertIf() {
   return ShouldConvert;
 }
 
+struct IfSpeculate : ifcvt::PredicationStrategy {
+  const TargetInstrInfo *TII;
+  IfSpeculate(const TargetInstrInfo *TII) : TII(TII) {}
+
+  bool canConvertIf(MachineBasicBlock *Head, MachineBasicBlock *TBB,
+                    MachineBasicBlock *FBB, MachineBasicBlock *Tail,
+                    ArrayRef<MachineOperand> Cond) override {
+    // This is a triangle or a diamond.
+    // Skip if we cannot predicate and there are no phis skip as there must be
+    // side effects that can only be handled with predication.
+    if (Tail->empty() || !Tail->front().isPHI()) {
+      LLVM_DEBUG(dbgs() << "No phis in tail.\n");
+      return false;
+    }
+    return true;
+  }
+
+  /// Returns true if the instruction can safely speculated
+  bool canPredicate(const MachineInstr &MI) override {
+    // Don't speculate loads. Note that it may be possible and desirable to
+    // speculate GOT or constant pool loads that are guaranteed not to trap,
+    // but we don't support that for now.
+    if (MI.mayLoad()) {
+      LLVM_DEBUG(dbgs() << "Won't speculate load: " << MI);
+      return false;
+    }
+
+    // We never speculate stores, so an AA pointer isn't necessary.
+    bool DontMoveAcrossStore = true;
+    if (!MI.isSafeToMove(DontMoveAcrossStore)) {
+      LLVM_DEBUG(dbgs() << "Can't speculate: " << MI);
+      return false;
+    }
+    return true;
+  }
+
+  bool predicateBlock(MachineBasicBlock *MBB, ArrayRef<MachineOperand> Cond,
+                      bool Reverse) override {
+    return true;
+  }
+
+  ~IfSpeculate() override = default;
+};
+
 /// Attempt repeated if-conversion on MBB, return true if successful.
 ///
 bool EarlyIfConverter::tryConvertIf(MachineBasicBlock *MBB) {
+  IfSpeculate Predicate{TII};
   bool Changed = false;
-  while (IfConv.canConvertIf(MBB) && shouldConvertIf()) {
+  while (IfConv.canConvertIf(MBB, Predicate) && shouldConvertIf()) {
     // If-convert MBB and update analyses.
     invalidateTraces();
     SmallVector<MachineBasicBlock *, 4> RemoveBlocks;
-    IfConv.convertIf(RemoveBlocks);
+    IfConv.convertIf(RemoveBlocks, Predicate);
     Changed = true;
     updateDomTree(DomTree, IfConv, RemoveBlocks);
     for (MachineBasicBlock *MBB : RemoveBlocks)
@@ -504,14 +549,56 @@ bool EarlyIfPredicator::shouldConvertIf() {
                                   FCycle, FExtra, TrueProbability);
 }
 
+struct IfPredicator : ifcvt::PredicationStrategy {
+  const TargetInstrInfo *TII;
+  IfPredicator(const TargetInstrInfo *TII) : TII(TII) {}
+
+  bool canPredicate(const MachineInstr &I) override {
+    // Check that instruction is predicable
+    if (!TII->isPredicable(I)) {
+      LLVM_DEBUG(dbgs() << "Isn't predicable: " << I);
+      return false;
+    }
+
+    // Check that instruction is not already predicated.
+    if (TII->isPredicated(I) && !TII->canPredicatePredicatedInstr(I)) {
+      LLVM_DEBUG(dbgs() << "Is already predicated: " << I);
+      return false;
+    }
+    return true;
+  }
+  bool predicateBlock(MachineBasicBlock *MBB, ArrayRef<MachineOperand> Cond,
+                      bool Reverse) override {
+    SmallVector<MachineOperand> Condition{Cond.begin(), Cond.end()};
+    if (Reverse) {
+      bool CanRevCond = !TII->reverseBranchCondition(Condition);
+      assert(CanRevCond && "Reversed predicate is not supported");
+      (void)CanRevCond;
+    }
+    // Terminators don't need to be predicated as they will be removed.
+    for (MachineBasicBlock::iterator I = MBB->begin(),
+                                     E = MBB->getFirstTerminator();
+         I != E; ++I) {
+      if (I->isDebugInstr())
+        continue;
+      TII->PredicateInstruction(*I, Condition);
+    }
+
+    return true;
+  }
+
+  ~IfPredicator() override = default;
+};
+
 /// Attempt repeated if-conversion on MBB, return true if successful.
 ///
 bool EarlyIfPredicator::tryConvertIf(MachineBasicBlock *MBB) {
+  IfPredicator Predicate{TII};
   bool Changed = false;
-  while (IfConv.canConvertIf(MBB, /*Predicate*/ true) && shouldConvertIf()) {
+  while (IfConv.canConvertIf(MBB, Predicate) && shouldConvertIf()) {
     // If-convert MBB and update analyses.
     SmallVector<MachineBasicBlock *, 4> RemoveBlocks;
-    IfConv.convertIf(RemoveBlocks, /*Predicate*/ true);
+    IfConv.convertIf(RemoveBlocks, Predicate);
     Changed = true;
     updateDomTree(DomTree, IfConv, RemoveBlocks);
     for (MachineBasicBlock *MBB : RemoveBlocks)

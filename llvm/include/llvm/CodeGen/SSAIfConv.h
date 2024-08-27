@@ -26,6 +26,22 @@
 // Head block, and phis in the Tail block are converted to select instructions.
 //
 namespace llvm {
+class SSAIfConv;
+
+namespace ifcvt {
+struct PredicationStrategy {
+  virtual bool canConvertIf(MachineBasicBlock *Head, MachineBasicBlock *TBB,
+                            MachineBasicBlock *FBB, MachineBasicBlock *Tail,
+                            ArrayRef<MachineOperand> Cond) {
+    return true;
+  }
+  virtual bool canPredicate(const MachineInstr &I) = 0;
+  virtual bool predicateBlock(MachineBasicBlock *Succ,
+                              ArrayRef<MachineOperand> Cond, bool Reverse) = 0;
+  virtual ~PredicationStrategy() = default;
+};
+} // namespace ifcvt
+
 class SSAIfConv {
   const TargetInstrInfo *TII;
   const TargetRegisterInfo *TRI;
@@ -113,12 +129,9 @@ private:
   MachineBasicBlock::iterator InsertionPoint;
 
   /// Return true if all non-terminator instructions in MBB can be safely
-  /// speculated.
-  bool canSpeculateInstrs(MachineBasicBlock *MBB);
-
-  /// Return true if all non-terminator instructions in MBB can be safely
   /// predicated.
-  bool canPredicateInstrs(MachineBasicBlock *MBB);
+  bool canPredicateInstrs(MachineBasicBlock *MBB,
+                          ifcvt::PredicationStrategy &Predicate);
 
   /// Scan through instruction dependencies and update InsertAfter array.
   /// Return false if any dependency is incompatible with if conversion.
@@ -145,12 +158,12 @@ public:
   /// initialize the internal state, and return true.
   /// If predicate is set try to predicate the block otherwise try to
   /// speculatively execute it.
-  bool canConvertIf(MachineBasicBlock *MBB, bool Predicate = false);
+  bool canConvertIf(MachineBasicBlock *MBB, ifcvt::PredicationStrategy &S);
 
   /// convertIf - If-convert the last block passed to canConvertIf(), assuming
   /// it is possible. Add any blocks that are to be erased to RemoveBlocks.
   void convertIf(SmallVectorImpl<MachineBasicBlock *> &RemoveBlocks,
-                 bool Predicate = false);
+                 ifcvt::PredicationStrategy &S);
 };
 } // namespace llvm
 
