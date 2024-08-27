@@ -175,6 +175,104 @@ define void @test_half_fabs(half %a0, ptr %p0) nounwind {
   ret void
 }
 
+define void @test_half_fneg(half %a0, ptr %p0) nounwind {
+; F16C-LABEL: test_half_fneg:
+; F16C:       # %bb.0:
+; F16C-NEXT:    vpextrw $0, %xmm0, %eax
+; F16C-NEXT:    vmovd %eax, %xmm0
+; F16C-NEXT:    vcvtph2ps %xmm0, %xmm0
+; F16C-NEXT:    vxorps {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0, %xmm0
+; F16C-NEXT:    vcvtps2ph $4, %xmm0, %xmm0
+; F16C-NEXT:    vmovd %xmm0, %eax
+; F16C-NEXT:    movw %ax, (%rdi)
+; F16C-NEXT:    retq
+;
+; FP16-LABEL: test_half_fneg:
+; FP16:       # %bb.0:
+; FP16-NEXT:    vpbroadcastw {{.*#+}} xmm1 = [-0.0E+0,-0.0E+0,-0.0E+0,-0.0E+0,-0.0E+0,-0.0E+0,-0.0E+0,-0.0E+0]
+; FP16-NEXT:    vpxor %xmm1, %xmm0, %xmm0
+; FP16-NEXT:    vmovsh %xmm0, (%rdi)
+; FP16-NEXT:    retq
+;
+; X64-LABEL: test_half_fneg:
+; X64:       # %bb.0:
+; X64-NEXT:    pushq %rbx
+; X64-NEXT:    movq %rdi, %rbx
+; X64-NEXT:    callq __extendhfsf2@PLT
+; X64-NEXT:    pxor {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm0
+; X64-NEXT:    callq __truncsfhf2@PLT
+; X64-NEXT:    pextrw $0, %xmm0, %eax
+; X64-NEXT:    movw %ax, (%rbx)
+; X64-NEXT:    popq %rbx
+; X64-NEXT:    retq
+;
+; X86-LABEL: test_half_fneg:
+; X86:       # %bb.0:
+; X86-NEXT:    pushl %esi
+; X86-NEXT:    subl $8, %esp
+; X86-NEXT:    pinsrw $0, {{[0-9]+}}(%esp), %xmm0
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %esi
+; X86-NEXT:    pextrw $0, %xmm0, %eax
+; X86-NEXT:    movw %ax, (%esp)
+; X86-NEXT:    calll __extendhfsf2
+; X86-NEXT:    fstps {{[0-9]+}}(%esp)
+; X86-NEXT:    movd {{.*#+}} xmm0 = mem[0],zero,zero,zero
+; X86-NEXT:    pxor {{\.?LCPI[0-9]+_[0-9]+}}, %xmm0
+; X86-NEXT:    movd %xmm0, (%esp)
+; X86-NEXT:    calll __truncsfhf2
+; X86-NEXT:    pextrw $0, %xmm0, %eax
+; X86-NEXT:    movw %ax, (%esi)
+; X86-NEXT:    addl $8, %esp
+; X86-NEXT:    popl %esi
+; X86-NEXT:    retl
+  %res = fneg half %a0
+  store half %res, ptr %p0, align 2
+  ret void
+}
+
+define void @test_half_fcopysign(half %a0, half %a1, ptr %p0) nounwind {
+; F16C-LABEL: test_half_fcopysign:
+; F16C:       # %bb.0:
+; F16C-NEXT:    vpextrw $0, %xmm1, %eax
+; F16C-NEXT:    andl $32768, %eax # imm = 0x8000
+; F16C-NEXT:    vpextrw $0, %xmm0, %ecx
+; F16C-NEXT:    andl $32767, %ecx # imm = 0x7FFF
+; F16C-NEXT:    orl %eax, %ecx
+; F16C-NEXT:    movw %cx, (%rdi)
+; F16C-NEXT:    retq
+;
+; FP16-LABEL: test_half_fcopysign:
+; FP16:       # %bb.0:
+; FP16-NEXT:    vpbroadcastw {{.*#+}} xmm2 = [NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN]
+; FP16-NEXT:    vpternlogd $202, %xmm1, %xmm0, %xmm2
+; FP16-NEXT:    vmovsh %xmm2, (%rdi)
+; FP16-NEXT:    retq
+;
+; X64-LABEL: test_half_fcopysign:
+; X64:       # %bb.0:
+; X64-NEXT:    pextrw $0, %xmm1, %eax
+; X64-NEXT:    andl $32768, %eax # imm = 0x8000
+; X64-NEXT:    pextrw $0, %xmm0, %ecx
+; X64-NEXT:    andl $32767, %ecx # imm = 0x7FFF
+; X64-NEXT:    orl %eax, %ecx
+; X64-NEXT:    movw %cx, (%rdi)
+; X64-NEXT:    retq
+;
+; X86-LABEL: test_half_fcopysign:
+; X86:       # %bb.0:
+; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; X86-NEXT:    movzwl {{[0-9]+}}(%esp), %ecx
+; X86-NEXT:    andl $32768, %ecx # imm = 0x8000
+; X86-NEXT:    movzwl {{[0-9]+}}(%esp), %edx
+; X86-NEXT:    andl $32767, %edx # imm = 0x7FFF
+; X86-NEXT:    orl %ecx, %edx
+; X86-NEXT:    movw %dx, (%eax)
+; X86-NEXT:    retl
+  %res = call half @llvm.copysign.half(half %a0, half %a1)
+  store half %res, ptr %p0, align 2
+  ret void
+}
+
 define void @test_half_pow(half %a0, half %a1, ptr %p0) nounwind {
 ; F16C-LABEL: test_half_pow:
 ; F16C:       # %bb.0:
