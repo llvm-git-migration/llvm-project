@@ -26,7 +26,7 @@ public:
   Block<> *remove_best_fit(size_t size);
 
 private:
-  static constexpr size_t MIN_SIZE = sizeof(FreeList2);
+  static constexpr size_t MIN_SIZE = sizeof(FreeList);
   static constexpr size_t MIN_LARGE_SIZE = sizeof(FreeTrie);
   static constexpr size_t NUM_SMALL_SIZES =
       (align_up(MIN_LARGE_SIZE) - align_up(MIN_SIZE)) / alignof(max_align_t);
@@ -34,10 +34,10 @@ private:
   static bool is_small(Block<> *block);
   static bool is_small(size_t size);
 
-  FreeList2 *&small_list(Block<> *block);
-  FreeList2 **best_small_fit(size_t size);
+  FreeList *&small_list(Block<> *block);
+  FreeList **best_small_fit(size_t size);
 
-  cpp::array<FreeList2 *, NUM_SMALL_SIZES> small_lists = {nullptr};
+  cpp::array<FreeList *, NUM_SMALL_SIZES> small_lists = {nullptr};
   FreeTrie *large_trie = nullptr;
   FreeTrie::SizeRange range = {0, 0};
 };
@@ -51,7 +51,7 @@ inline void FreeStore::insert(Block<> *block) {
   if (block->inner_size_free() < MIN_SIZE)
     return;
   if (is_small(block))
-    FreeList2::push(small_list(block), block);
+    FreeList::push(small_list(block), block);
   else
     FreeTrie::push(FreeTrie::find(large_trie, block->inner_size(), range),
                    block);
@@ -61,13 +61,13 @@ inline void FreeStore::remove(Block<> *block) {
   LIBC_ASSERT(block->inner_size_free() >= MIN_SIZE &&
               "block too small to have been present");
   if (is_small(block)) {
-    FreeList2 *block_list =
-        reinterpret_cast<FreeList2 *>(block->usable_space());
-    FreeList2 *&list = small_list(block);
+    FreeList *block_list =
+        reinterpret_cast<FreeList *>(block->usable_space());
+    FreeList *&list = small_list(block);
     if (block_list == list)
-      FreeList2::pop(list);
+      FreeList::pop(list);
     else
-      FreeList2::pop(block_list);
+      FreeList::pop(block_list);
   } else {
     auto *trie = reinterpret_cast<FreeTrie *>(block->usable_space());
     if (trie == large_trie) {
@@ -80,11 +80,11 @@ inline void FreeStore::remove(Block<> *block) {
 
 inline Block<> *FreeStore::remove_best_fit(size_t size) {
   if (is_small(size)) {
-    FreeList2 **list = best_small_fit(size);
+    FreeList **list = best_small_fit(size);
     if (!list)
       return nullptr;
     Block<> *block = (*list)->block();
-    FreeList2::pop(*list);
+    FreeList::pop(*list);
     return block;
   }
 
@@ -106,14 +106,14 @@ inline bool FreeStore::is_small(size_t size) {
   return size - sizeof(Block<>::offset_type) < MIN_LARGE_SIZE;
 }
 
-inline FreeList2 *&FreeStore::small_list(Block<> *block) {
+inline FreeList *&FreeStore::small_list(Block<> *block) {
   LIBC_ASSERT(is_small(block) && "only legal for small blocks");
   return small_lists[(block->inner_size_free() - MIN_SIZE) /
                      alignof(max_align_t)];
 }
 
-inline FreeList2 **FreeStore::best_small_fit(size_t size) {
-  for (FreeList2 *&list : small_lists)
+inline FreeList **FreeStore::best_small_fit(size_t size) {
+  for (FreeList *&list : small_lists)
     if (list && list->size() >= size)
       return &list;
   return nullptr;

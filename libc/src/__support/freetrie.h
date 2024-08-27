@@ -10,14 +10,14 @@
 #ifndef LLVM_LIBC_SRC___SUPPORT_FREETRIE_H
 #define LLVM_LIBC_SRC___SUPPORT_FREETRIE_H
 
-#include "freelist2.h"
+#include "freelist.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
 /// A trie node containing a free list. The subtrie contains a contiguous
 /// SizeRange of freelists.There is no relationship between the size of this
 /// free list and the size ranges of the subtries.
-class FreeTrie : public FreeList2 {
+class FreeTrie : public FreeList {
 public:
   // Power-of-two range of sizes covered by a subtrie.
   struct SizeRange {
@@ -112,14 +112,14 @@ LIBC_INLINE void FreeTrie::push(InsertPos pos, Block<> *block) {
     node->lower = node->upper = nullptr;
     node->parent = pos.parent;
   }
-  FreeList2 *list = *pos.trie;
-  FreeList2::push(list, node);
+  FreeList *list = *pos.trie;
+  FreeList::push(list, node);
   *pos.trie = static_cast<FreeTrie *>(list);
 }
 
 LIBC_INLINE void FreeTrie::pop(FreeTrie *&trie) {
-  FreeList2 *list = trie;
-  FreeList2::pop(list);
+  FreeList *list = trie;
+  FreeList::pop(list);
   FreeTrie *new_trie = static_cast<FreeTrie *>(list);
   if (new_trie) {
     // The freelist is non-empty, so copy the trie links to the new head.

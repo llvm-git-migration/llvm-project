@@ -8,12 +8,12 @@
 
 #include <stddef.h>
 
-#include "src/__support/freelist2.h"
+#include "src/__support/freelist.h"
 #include "test/UnitTest/Test.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
-TEST(LlvmLibcFreeList2, PushPop) {
+TEST(LlvmLibcFreeList, PushPop) {
   cpp::byte mem1[1024];
   optional<Block<> *> maybeBlock = Block<>::init(mem1);
   ASSERT_TRUE(maybeBlock.has_value());
@@ -24,20 +24,20 @@ TEST(LlvmLibcFreeList2, PushPop) {
   ASSERT_TRUE(maybeBlock.has_value());
   Block<> *block2 = *maybeBlock;
 
-  FreeList2 *list = nullptr;
-  FreeList2::push(list, block1);
-  ASSERT_NE(list, static_cast<FreeList2*>(nullptr));
+  FreeList *list = nullptr;
+  FreeList::push(list, block1);
+  ASSERT_NE(list, static_cast<FreeList *>(nullptr));
   EXPECT_EQ(list->block(), block1);
 
-  FreeList2::push(list, block2);
+  FreeList::push(list, block2);
   EXPECT_EQ(list->block(), block1);
 
-  FreeList2::pop(list);
-  ASSERT_NE(list, static_cast<FreeList2*>(nullptr));
+  FreeList::pop(list);
+  ASSERT_NE(list, static_cast<FreeList *>(nullptr));
   EXPECT_EQ(list->block(), block2);
 
-  FreeList2::pop(list);
-  ASSERT_EQ(list, static_cast<FreeList2*>(nullptr));
+  FreeList::pop(list);
+  ASSERT_EQ(list, static_cast<FreeList *>(nullptr));
 }
 
 } // namespace LIBC_NAMESPACE_DECL

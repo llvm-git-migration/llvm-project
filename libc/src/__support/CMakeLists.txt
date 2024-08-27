@@ -17,7 +17,7 @@ add_header_library(
 add_header_library(
   freelist
   HDRS
-    freelist2.h
+    freelist.h
   DEPENDS
     libc.src.__support.fixedvector
     libc.src.__support.CPP.array

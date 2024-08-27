@@ -20,7 +20,7 @@ if(NOT LIBC_TARGET_ARCHITECTURE_IS_NVPTX)
     SUITE
       libc-support-tests
     SRCS
-      freelist2_test.cpp
+      freelist_test.cpp
       #freetrie_test.cpp
     DEPENDS
       libc.src.__support.CPP.array
