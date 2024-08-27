@@ -895,7 +895,10 @@ def ProcessorFeatures {
                                      FeatureLSE, FeaturePAuth, FeatureFPAC,
                                      FeatureRAS, FeatureRCPC, FeatureRDM,
                                      FeatureBF16, FeatureDotProd, FeatureMatMulInt8, FeatureSSBS];
-  list<SubtargetFeature> AppleM4 = [HasV9_2aOps, FeatureSHA2, FeatureFPARMv8,
+  // Technically apple-m4 is ARMv9.2a, but a quirk of LLVM defines v9.0 as
+  // requiring SVE, which is optional according to the Arm ARM and not
+  // supported by the core. ARMv8.7a is the next closest choice.
+  list<SubtargetFeature> AppleM4 = [HasV8_7aOps, FeatureSHA2, FeatureFPARMv8,
                                     FeatureNEON, FeaturePerfMon, FeatureSHA3,
                                     FeatureFullFP16, FeatureFP16FML,
                                     FeatureAES, FeatureBF16,
