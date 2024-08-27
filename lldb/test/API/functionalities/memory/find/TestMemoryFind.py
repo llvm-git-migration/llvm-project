@@ -10,7 +10,6 @@ from lldbsuite.test.decorators import *
 
 
 class MemoryFindTestCase(TestBase):
-
     NO_DEBUG_INFO_TESTCASE = True
 
     def setUp(self):
