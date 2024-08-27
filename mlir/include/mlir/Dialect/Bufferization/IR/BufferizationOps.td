@@ -540,6 +540,11 @@ def Bufferization_ToMemrefOp : Bufferization_Op<"to_memref", [
       return !getReadOnly();
     }
 
+    bool mustBufferizeInPlace(OpOperand &opOperand,
+                              const AnalysisState &state) {
+      return true;
+    }
+
     AliasingValueList getAliasingValues(
         OpOperand &opOperand, const AnalysisState &state) const {
       return {};
