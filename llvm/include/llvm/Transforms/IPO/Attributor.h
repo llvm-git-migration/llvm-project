@@ -5818,7 +5818,10 @@ struct AAPointerInfo : public AbstractAttribute {
     static void set_difference(const RangeList &L, const RangeList &R,
                                RangeList &D) {
       std::set_difference(L.begin(), L.end(), R.begin(), R.end(),
-                          std::back_inserter(D), RangeTy::OffsetLessThan);
+                          std::back_inserter(D),
+                          [](const RangeTy &L, const RangeTy &R) {
+                            return (L.Offset < R.Offset) || (L != R);
+                          });
     }
 
     unsigned size() const { return Ranges.size(); }
