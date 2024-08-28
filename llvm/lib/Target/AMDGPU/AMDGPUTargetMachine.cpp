@@ -35,6 +35,7 @@
 #include "R600TargetMachine.h"
 #include "SIFixSGPRCopies.h"
 #include "SIFoldOperands.h"
+#include "SILoadStoreOptimizer.h"
 #include "SIMachineFunctionInfo.h"
 #include "SIMachineScheduler.h"
 #include "TargetInfo/AMDGPUTargetInfo.h"
@@ -416,7 +417,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeAMDGPUTarget() {
   initializeSIShrinkInstructionsPass(*PR);
   initializeSIOptimizeExecMaskingPreRAPass(*PR);
   initializeSIOptimizeVGPRLiveRangePass(*PR);
-  initializeSILoadStoreOptimizerPass(*PR);
+  initializeSILoadStoreOptimizerLegacyPass(*PR);
   initializeAMDGPUCtorDtorLoweringLegacyPass(*PR);
   initializeAMDGPUAlwaysInlinePass(*PR);
   initializeAMDGPUSwLowerLDSLegacyPass(*PR);
@@ -1274,7 +1275,7 @@ void GCNPassConfig::addMachineSSAOptimization() {
   addPass(&SIFoldOperandsLegacyID);
   if (EnableDPPCombine)
     addPass(&GCNDPPCombineID);
-  addPass(&SILoadStoreOptimizerID);
+  addPass(&SILoadStoreOptimizerLegacyID);
   if (isPassEnabled(EnableSDWAPeephole)) {
     addPass(&SIPeepholeSDWAID);
     addPass(&EarlyMachineLICMID);
