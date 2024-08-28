@@ -14,22 +14,11 @@
 #include "lldb/Utility/StreamString.h"
 
 using namespace lldb_private;
-
-void DiagnosticManager::Dump(Log *log) {
-  if (!log)
-    return;
-
-  std::string str = GetString();
-
-  // GetString() puts a separator after each diagnostic. We want to remove the
-  // last '\n' because log->PutCString will add one for us.
-
-  if (str.size() && str.back() == '\n') {
-    str.pop_back();
-  }
-
-  log->PutCString(str.c_str());
+char DetailedExpressionError::ID;
+std::string DetailedExpressionError::message() const {
+  return m_detail.rendered;
 }
+
 
 static const char *StringForSeverity(lldb::Severity severity) {
   switch (severity) {
@@ -44,9 +33,13 @@ static const char *StringForSeverity(lldb::Severity severity) {
   llvm_unreachable("switch needs another case for lldb::Severity enum");
 }
 
-std::string DiagnosticManager::GetString(char separator) {
-  std::string ret;
-  llvm::raw_string_ostream stream(ret);
+
+void DiagnosticManager::Dump(Log *log) {
+  if (!log)
+    return;
+
+  std::string str;
+  llvm::raw_string_ostream stream(str);
 
   for (const auto &diagnostic : Diagnostics()) {
     llvm::StringRef severity = StringForSeverity(diagnostic->GetSeverity());
@@ -59,10 +52,45 @@ std::string DiagnosticManager::GetString(char separator) {
 
     if (severity_pos != llvm::StringRef::npos)
       stream << message.drop_front(severity_pos + severity.size());
-    stream << separator;
+    stream << '\n';
   }
 
-  return ret;
+  // We want to remove the last '\n' because log->PutCString will add
+  // one for us.
+
+  if (str.size() && str.back() == '\n')
+    str.pop_back();
+
+  log->PutString(str);
+}
+
+llvm::Error Diagnostic::GetAsError() const {
+  return llvm::make_error<DetailedExpressionError>(m_detail);
+}
+
+llvm::Error
+DiagnosticManager::GetAsError(lldb::ExpressionResults result) const {
+  llvm::Error diags = Status::FromExpressionError(result, "").takeError();
+  for (const auto &diagnostic : m_diagnostics)
+    diags = llvm::joinErrors(std::move(diags), diagnostic->GetAsError());
+  return diags;
+}
+
+llvm::Error
+DiagnosticManager::GetAsError(llvm::Twine msg) const {
+  llvm::Error diags = llvm::createStringError(msg);
+  for (const auto &diagnostic : m_diagnostics)
+    diags = llvm::joinErrors(std::move(diags), diagnostic->GetAsError());
+  return diags;
+}
+
+void DiagnosticManager::AddDiagnostic(llvm::StringRef message,
+                                      lldb::Severity severity,
+                                      DiagnosticOrigin origin,
+                                      uint32_t compiler_id) {
+  m_diagnostics.emplace_back(std::make_unique<Diagnostic>(
+      origin, compiler_id,
+      DiagnosticDetail{{}, severity, message.str(), message.str()}));
 }
 
 size_t DiagnosticManager::Printf(lldb::Severity severity, const char *format,
@@ -84,4 +112,14 @@ void DiagnosticManager::PutString(lldb::Severity severity,
   if (str.empty())
     return;
   AddDiagnostic(str, severity, eDiagnosticOriginLLDB);
+}
+
+void Diagnostic::AppendMessage(llvm::StringRef message,
+                               bool precede_with_newline) {
+  if (precede_with_newline) {
+    m_detail.message.push_back('\n');
+    m_detail.rendered.push_back('\n');
+  }
+  m_detail.message += message;
+  m_detail.rendered += message;
 }

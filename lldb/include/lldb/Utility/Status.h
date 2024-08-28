@@ -144,6 +144,7 @@ public:
   Status &operator=(Status &&);
   /// FIXME: Replace this with a takeError() method.
   llvm::Error ToError() const;
+  llvm::Error takeError() const { return std::move(m_error); }
   /// Don't call this function in new code. Redesign the API instead.
   Status clone() const { return Status(ToError()); }
 
