@@ -177,8 +177,11 @@ public:
   /// Avoid using this in new code. Migrate APIs to llvm::Expected instead.
   static Status FromError(llvm::Error error);
 
-  /// FIXME: Replace this with a takeError() method.
+  /// FIXME: Replace all uses with takeError() instead.
   llvm::Error ToError() const;
+
+  llvm::Error takeError() { return std::move(m_error); }
+  
   /// Don't call this function in new code. Instead, redesign the API
   /// to use llvm::Expected instead of Status.
   Status Clone() const { return Status(ToError()); }
