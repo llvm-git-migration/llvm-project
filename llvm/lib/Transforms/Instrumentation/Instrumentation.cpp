@@ -32,7 +32,7 @@ class DiagnosticInfoInstrumentation : public DiagnosticInfo {
 public:
   DiagnosticInfoInstrumentation(const Twine &DiagMsg,
                                 DiagnosticSeverity Severity = DS_Warning)
-      : DiagnosticInfo(DK_Linker, Severity), Msg(DiagMsg) {}
+      : DiagnosticInfo(DK_OptimizationRemarkMissed, Severity), Msg(DiagMsg) {}
   void print(DiagnosticPrinter &DP) const override { DP << Msg; }
 };
 } // namespace
