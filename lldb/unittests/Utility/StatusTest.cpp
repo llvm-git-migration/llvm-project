@@ -55,7 +55,7 @@ TEST(StatusTest, ErrorCodeConstructor) {
   llvm::Error list = llvm::joinErrors(llvm::createStringError("foo"),
                                       llvm::createStringError("bar"));
   Status foobar = Status::FromError(std::move(list));
-  EXPECT_EQ(std::string("foo\nbar"), std::string(foobar.AsCString()));
+  EXPECT_EQ(std::string("foo\nbar\n"), std::string(foobar.AsCString()));
 }
 
 TEST(StatusTest, ErrorConversion) {

@@ -328,18 +328,20 @@ UserExpression::Evaluate(ExecutionContext &exe_ctx,
     }
 
     if (!parse_success) {
-      std::string msg;
-      {
-        llvm::raw_string_ostream os(msg);
-        if (!diagnostic_manager.Diagnostics().empty())
-          os << diagnostic_manager.GetString();
-        else
-          os << "expression failed to parse (no further compiler diagnostics)";
-        if (target->GetEnableNotifyAboutFixIts() && fixed_expression &&
-            !fixed_expression->empty())
-          os << "\nfixed expression suggested:\n  " << *fixed_expression;
+      if (target->GetEnableNotifyAboutFixIts() && fixed_expression &&
+          !fixed_expression->empty()) {
+        std::string fixit =
+            "fixed expression suggested:\n  " + *fixed_expression;
+        diagnostic_manager.AddDiagnostic(fixit, lldb::eSeverityInfo,
+                                         eDiagnosticOriginLLDB);
       }
-      error = Status::FromExpressionError(execution_results, msg);
+      if (diagnostic_manager.Diagnostics().empty())
+        error = Status::FromExpressionError(
+            execution_results,
+            "expression failed to parse (no further compiler diagnostics)");
+      else
+        error =
+            Status::FromError(diagnostic_manager.GetAsError(execution_results));
     }
   }
 
@@ -351,7 +353,7 @@ UserExpression::Evaluate(ExecutionContext &exe_ctx,
       LLDB_LOG(log, "== [UserExpression::Evaluate] Expression may not run, but "
                     "is not constant ==");
 
-      if (!diagnostic_manager.Diagnostics().size())
+      if (diagnostic_manager.Diagnostics().empty())
         error = Status::FromExpressionError(
             lldb::eExpressionSetupError,
             "expression needed to run but couldn't");
@@ -380,12 +382,12 @@ UserExpression::Evaluate(ExecutionContext &exe_ctx,
         LLDB_LOG(log, "== [UserExpression::Evaluate] Execution completed "
                       "abnormally ==");
 
-        if (!diagnostic_manager.Diagnostics().size())
+        if (diagnostic_manager.Diagnostics().empty())
           error = Status::FromExpressionError(
               execution_results, "expression failed to execute, unknown error");
         else
-          error = Status::FromExpressionError(execution_results,
-                                              diagnostic_manager.GetString());
+          error = Status::FromError(
+              diagnostic_manager.GetAsError(execution_results));
       } else {
         if (expr_result) {
           result_valobj_sp = expr_result->GetValueObject();
