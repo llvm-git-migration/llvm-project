@@ -361,8 +361,12 @@ static bool implicitObjectParamIsLifetimeBound(const FunctionDecl *FD) {
     if (ATL.getAttrAs<LifetimeBoundAttr>())
       return true;
   }
-
   return isNormalAsisgnmentOperator(FD);
+}
+
+bool isFirstTemplateArgumentGSLPointer(const TemplateArgumentList &TAs) {
+  return TAs.size() > 0 && TAs[0].getKind() == TemplateArgument::Type &&
+         isRecordWithAttr<PointerAttr>(TAs[0].getAsType());
 }
 
 // Visit lifetimebound or gsl-pointer arguments.
@@ -465,13 +469,26 @@ static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
       if (shouldTrackFirstArgument(Callee)) {
         VisitGSLPointerArg(Callee, Args[0],
                            !Callee->getReturnType()->isReferenceType());
-      } else if (auto *CCE = dyn_cast<CXXConstructExpr>(Call);
-                 CCE &&
-                 CCE->getConstructor()->getParent()->hasAttr<PointerAttr>()) {
-        VisitGSLPointerArg(CCE->getConstructor()->getParamDecl(0), Args[0],
-                           true);
+      } else if (auto *Ctor = dyn_cast<CXXConstructExpr>(Call)) {
+        const auto *ClassD = Ctor->getConstructor()->getParent();
+        // Constructing the Container<GSLPointer> case (e.g.
+        // std::optional<string_view>) case.
+        if (const auto *CTSD =
+                dyn_cast<ClassTemplateSpecializationDecl>(ClassD)) {
+          if (isFirstTemplateArgumentGSLPointer(CTSD->getTemplateArgs()) &&
+              CTSD->hasAttr<OwnerAttr>()) {
+            VisitGSLPointerArg(Ctor->getConstructor()->getParamDecl(0), Args[0],
+                               true);
+            return;
+          }
+        }
+        // Constructing the GSLPointer (e.g. std::string_view) case.
+        if (ClassD->hasAttr<PointerAttr>())
+          VisitGSLPointerArg(Ctor->getConstructor()->getParamDecl(0), Args[0],
+                             true);
       }
     }
+  }
   }
 }
 
