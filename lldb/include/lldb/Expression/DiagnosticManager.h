@@ -39,6 +39,7 @@ struct DiagnosticDetail {
     unsigned line = 0;
     uint16_t column = 0;
     uint16_t length = 0;
+    bool hidden = false;
     bool in_user_input = false;
   };
   /// Contains {{}, 1, 3, 3, true} in the example above.
@@ -64,7 +65,7 @@ public:
   ExpressionError(lldb::ExpressionResults result, std::string msg,
                   std::vector<DiagnosticDetail> details = {});
   std::string message() const override;
-  llvm::ArrayRef<DiagnosticDetail> GetDetail() const { return m_details; }
+  llvm::ArrayRef<DiagnosticDetail> GetDetails() const { return m_details; }
   std::error_code convertToErrorCode() const override;
   void log(llvm::raw_ostream &OS) const override;
   std::unique_ptr<CloneableError> Clone() const override;
