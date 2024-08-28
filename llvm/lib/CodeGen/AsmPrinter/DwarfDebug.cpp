@@ -2145,14 +2145,16 @@ static std::pair<DebugLoc, bool> findPrologueEndLoc(const MachineFunction *MF) {
   for (const auto &MBB : *MF) {
     for (const auto &MI : MBB) {
       if (!MI.isMetaInstruction()) {
-        if (!MI.getFlag(MachineInstr::FrameSetup) && MI.getDebugLoc()) {
+        if (!MI.getFlag(MachineInstr::FrameSetup) &&
+            !MI.getDebugLoc().isImplicitCode()) {
           // Scan forward to try to find a non-zero line number. The
           // prologue_end marks the first breakpoint in the function after the
           // frame setup, and a compiler-generated line 0 location is not a
           // meaningful breakpoint. If none is found, return the first
           // location after the frame setup.
-          if (MI.getDebugLoc().getLine())
+          if (MI.getDebugLoc().getLine()) {
             return std::make_pair(MI.getDebugLoc(), IsEmptyPrologue);
+          }
 
           LineZeroLoc = MI.getDebugLoc();
         }

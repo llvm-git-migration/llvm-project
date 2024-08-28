@@ -958,7 +958,7 @@ void ModuleSanitizerCoverage::InjectCoverageAtBlock(Function &F, BasicBlock &BB,
 
   InstrumentationIRBuilder IRB(&*IP);
   if (EntryLoc)
-    IRB.SetCurrentDebugLocation(EntryLoc);
+    IRB.SetCurrentImplicitDebugLocation(EntryLoc);
   if (Options.TracePC) {
     IRB.CreateCall(SanCovTracePC)
         ->setCannotMerge(); // gets the PC using GET_CALLER_PC.

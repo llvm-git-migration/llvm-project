@@ -46,5 +46,5 @@ entry:
 !6 = !DILocation(line: 192, scope: !3)
 !7 = !DILocation(line: 0, scope: !3)
 
-; CHECK:       [[DBG1]] = !DILocation(line: 192, scope: !3)
-; CHECK:       [[DBG2]] = !DILocation(line: 0, scope: !3)
+; CHECK:       [[DBG1]] = !DILocation(line: 192, scope: !3, isImplicitCode: true)
+; CHECK:       [[DBG2]] = !DILocation(line: 0, scope: !3, isImplicitCode: true)

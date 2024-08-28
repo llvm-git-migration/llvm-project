@@ -194,14 +194,28 @@ static inline uint32_t scaleBranchCount(uint64_t Count, uint64_t Scale) {
 // if the enclosing function does.
 struct InstrumentationIRBuilder : IRBuilder<> {
   static void ensureDebugInfo(IRBuilder<> &IRB, const Function &F) {
-    if (IRB.getCurrentDebugLocation())
+    if (DebugLoc L = IRB.getCurrentDebugLocation()) {
+      if (!L.isImplicitCode()) {
+        L.setImplicitCode(true);
+        IRB.SetCurrentDebugLocation(L);
+      }
       return;
-    if (DISubprogram *SP = F.getSubprogram())
-      IRB.SetCurrentDebugLocation(DILocation::get(SP->getContext(), 0, 0, SP));
+    }
+    if (DISubprogram *SP = F.getSubprogram()) {
+      DebugLoc L = DILocation::get(SP->getContext(), 0, 0, SP, nullptr,
+                                   /*ImplicitCode=*/true);
+      IRB.SetCurrentDebugLocation(L);
+    }
   }
 
   explicit InstrumentationIRBuilder(Instruction *IP) : IRBuilder<>(IP) {
     ensureDebugInfo(*this, *IP->getFunction());
+  }
+
+  void SetCurrentImplicitDebugLocation(DebugLoc L) {
+    if (!L.isImplicitCode())
+      L.setImplicitCode(true);
+    SetCurrentDebugLocation(L);
   }
 };
 } // end namespace llvm

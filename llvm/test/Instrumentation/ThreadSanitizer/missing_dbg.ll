@@ -51,5 +51,5 @@ entry:
 !5 = !{}
 !7 = distinct !DISubprogram(name: "foo", scope: !1, file: !1, line: 195, type: !4, scopeLine: 199, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagLocalToUnit | DISPFlagDefinition | DISPFlagOptimized, unit: !0)
 
-; CHECK:       [[DBG1]] = !DILocation(line: 0, scope: !3)
-; CHECK:       [[DBG2]] = !DILocation(line: 0, scope: !7)
+; CHECK:       [[DBG1]] = !DILocation(line: 0, scope: !3, isImplicitCode: true)
+; CHECK:       [[DBG2]] = !DILocation(line: 0, scope: !7, isImplicitCode: true)
