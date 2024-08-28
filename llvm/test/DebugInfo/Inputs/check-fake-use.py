@@ -14,7 +14,7 @@ ProloguePattern = r"^\s*0x([0-9a-f]+)\s.+prologue_end"
 EpiloguePattern = r"^\s*0x([0-9a-f]+)\s.+epilogue_begin"
 FormalPattern = r"^0x[0-9a-f]+:\s+DW_TAG_formal_parameter"
 LocationPattern = r"DW_AT_location\s+\[DW_FORM_([a-z_]+)\](?:.*0x([a-f0-9]+))"
-DebugLocPattern = r'\[0x([a-f0-9]+),\s+0x([a-f0-9]+)\) ".text":'
+DebugLocPattern = r'\[0x([a-f0-9]+),\s+0x([a-f0-9]+)\) ".text": (.+)$'
 
 SeenDebugInfo = False
 SeenDebugLine = False
@@ -64,9 +64,14 @@ with open(sys.argv[1], "r") as dwarf_dump_file:
                 ) is not None:
                     match_loc_start = int(debug_loc_match.group(1), 16)
                     match_loc_end = int(debug_loc_match.group(2), 16)
+                    match_expr = debug_loc_match.group(3)
                     if match_loc_start != LocationRanges[1]:
                         raise RuntimeError(
                             f"Location list for 'b' is discontinuous from [0x{LocationRanges[1]:x}, 0x{match_loc_start:x})"
+                        )
+                    if "stack_value" in match_expr:
+                        raise RuntimeError(
+                            f"Location list for 'b' contains a stack_value expression: {match_expr}"
                         )
                     LocationRanges = (LocationRanges[0], match_loc_end)
         # Get the prologue_end address.

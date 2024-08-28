@@ -2,10 +2,13 @@
 
 ; Make sure the fake use of 'b' at the end of 'foo' causes location information for 'b'
 ; to extend all the way to the end of the function.
+; Duplicates `DebugInfo/X86/fake-use.ll` for global-isel.
 
-; RUN: %llc_dwarf -O2 -filetype=obj -dwarf-linkage-names=Abstract < %s | llvm-dwarfdump --debug-info --debug-line -v - -o %t
+; RUN: %llc_dwarf -O2 --global-isel=1 -mtriple=aarch64--linux-gnu -filetype=obj -dwarf-linkage-names=Abstract < %s | llvm-dwarfdump --debug-info --debug-line -v - -o %t
 ; RUN: %python %p/../Inputs/check-fake-use.py %t
-; RUN: sed -e 's,call void (...) @llvm.fake.use,;,' %s | %llc_dwarf - -O2 -filetype=obj -dwarf-linkage-names=Abstract | llvm-dwarfdump --debug-info --debug-line -v - -o %t
+; RUN: sed -e 's,call void (...) @llvm.fake.use,;,' %s \
+; RUN:   | %llc_dwarf - -O2 --global-isel=1 -mtriple=aarch64--linux-gnu -filetype=obj -dwarf-linkage-names=Abstract \
+; RUN:   | llvm-dwarfdump --debug-info --debug-line -v - -o %t
 ; RUN: not %python %p/../Inputs/check-fake-use.py %t
 
 ; Generated with:
@@ -35,7 +38,6 @@ entry:
     #dbg_value(i32 %b, !17, !20, !21)
   %c = add i32 %b, 42
   %tobool = icmp sgt i32 %c, 2, !dbg !27
-  tail call void asm sideeffect "", "~{rax},~{rbx},~{rcx},~{rdx},~{rsi},~{rdi},~{rbp},~{r8},~{r9},~{r10},~{r11},~{r12},~{r13},~{r14},~{r15},~{dirflag},~{fpsr},~{flags}"()
   tail call void (...) @bar() #2, !dbg !32
   %idxprom = sext i32 %i to i64, !dbg !22
   %arrayidx = getelementptr inbounds [10 x i32], [10 x i32]* @glob, i64 0, i64 %idxprom, !dbg !22
