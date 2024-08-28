@@ -425,7 +425,7 @@ public:
   ~CommandObjectMultiwordItaniumABI_Demangle() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     bool demangled_any = false;
     bool error_any = false;
     for (auto &entry : command.entries()) {

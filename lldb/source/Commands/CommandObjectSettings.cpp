@@ -169,7 +169,7 @@ insert-before or insert-after.");
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     Args cmd_args(command);
 
@@ -251,7 +251,7 @@ public:
   ~CommandObjectSettingsShow() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishResult);
 
     if (!args.empty()) {
@@ -332,7 +332,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     FileSpec file_spec(m_options.m_filename);
     FileSystem::Instance().Resolve(file_spec);
     std::string path(file_spec.GetPath());
@@ -423,7 +423,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     FileSpec file(m_options.m_filename);
     FileSystem::Instance().Resolve(file);
     CommandInterpreterRunOptions options;
@@ -478,7 +478,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishResult);
 
     const size_t argc = args.GetArgumentCount();
@@ -560,7 +560,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
 
@@ -665,7 +665,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
 
@@ -754,7 +754,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
 
@@ -847,7 +847,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
 
@@ -929,7 +929,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
     Args cmd_args(command);
@@ -1021,7 +1021,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
     const size_t argc = command.GetArgumentCount();
 

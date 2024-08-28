@@ -168,7 +168,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.GetArgumentCount() == 1) {
       const char *platform_name = args.GetArgumentAtIndex(0);
       if (platform_name && platform_name[0]) {
@@ -210,7 +210,7 @@ public:
   ~CommandObjectPlatformList() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &ostrm = result.GetOutputStream();
     ostrm.Printf("Available platforms:\n");
 
@@ -247,7 +247,7 @@ public:
   ~CommandObjectPlatformStatus() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &ostrm = result.GetOutputStream();
 
     Target *target = GetDebugger().GetSelectedTarget().get();
@@ -281,7 +281,7 @@ public:
   ~CommandObjectPlatformConnect() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &ostrm = result.GetOutputStream();
 
     PlatformSP platform_sp(
@@ -328,7 +328,7 @@ public:
   ~CommandObjectPlatformDisconnect() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -387,7 +387,7 @@ public:
   ~CommandObjectPlatformSettings() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -421,7 +421,7 @@ public:
 
   ~CommandObjectPlatformMkDir() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -469,7 +469,7 @@ public:
 
   ~CommandObjectPlatformFOpen() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -522,7 +522,7 @@ public:
 
   ~CommandObjectPlatformFClose() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -564,7 +564,7 @@ public:
 
   ~CommandObjectPlatformFRead() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -658,7 +658,7 @@ public:
 
   ~CommandObjectPlatformFWrite() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -812,7 +812,7 @@ public:
           GetCommandInterpreter(), lldb::eDiskFileCompletion, request, nullptr);
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // If the number of arguments is incorrect, issue an error message.
     if (args.GetArgumentCount() != 2) {
       result.AppendError("required arguments missing; specify both the "
@@ -861,7 +861,7 @@ public:
 
   ~CommandObjectPlatformGetSize() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // If the number of arguments is incorrect, issue an error message.
     if (args.GetArgumentCount() != 1) {
       result.AppendError("required argument missing; specify the source file "
@@ -909,7 +909,7 @@ public:
 
   ~CommandObjectPlatformGetPermissions() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // If the number of arguments is incorrect, issue an error message.
     if (args.GetArgumentCount() != 1) {
       result.AppendError("required argument missing; specify the source file "
@@ -956,7 +956,7 @@ public:
 
   ~CommandObjectPlatformFileExists() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // If the number of arguments is incorrect, issue an error message.
     if (args.GetArgumentCount() != 1) {
       result.AppendError("required argument missing; specify the source file "
@@ -1017,7 +1017,7 @@ public:
           nullptr);
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const char *src = args.GetArgumentAtIndex(0);
     const char *dst = args.GetArgumentAtIndex(1);
 
@@ -1071,7 +1071,7 @@ public:
   Options *GetOptions() override { return &m_all_options; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = GetDebugger().GetSelectedTarget().get();
     PlatformSP platform_sp;
     if (target) {
@@ -1220,7 +1220,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = GetDebugger().GetSelectedTarget().get();
     PlatformSP platform_sp;
     if (target) {
@@ -1468,7 +1468,7 @@ public:
   ~CommandObjectPlatformProcessInfo() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = GetDebugger().GetSelectedTarget().get();
     PlatformSP platform_sp;
     if (target) {
@@ -1538,7 +1538,7 @@ public:
 
   ~CommandObjectPlatformProcessAttach() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     PlatformSP platform_sp(
         GetDebugger().GetPlatformList().GetSelectedPlatform());
     if (platform_sp) {
@@ -1675,7 +1675,7 @@ public:
 
   Options *GetOptions() override { return &m_options; }
 
-  void DoExecute(llvm::StringRef raw_command_line,
+  void DoExecute(llvm::StringRef raw_command_line, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     ExecutionContext exe_ctx = GetCommandInterpreter().GetExecutionContext();
     m_options.NotifyOptionParsingStarting(&exe_ctx);
@@ -1773,7 +1773,7 @@ public:
         GetCommandInterpreter(), lldb::eDiskFileCompletion, request, nullptr);
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.GetArgumentCount() != 2) {
       result.AppendError("platform target-install takes two arguments");
       return;

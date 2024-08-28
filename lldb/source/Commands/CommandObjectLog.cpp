@@ -160,7 +160,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.GetArgumentCount() < 2) {
       result.AppendErrorWithFormat(
           "%s takes a log channel and one or more log types.\n",
@@ -254,7 +254,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.empty()) {
       result.AppendErrorWithFormat(
           "%s takes a log channel and one or more log types.\n",
@@ -299,7 +299,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     std::string output;
     llvm::raw_string_ostream output_stream(output);
     if (args.empty()) {
@@ -369,7 +369,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.empty()) {
       result.AppendErrorWithFormat(
           "%s takes a log channel and one or more log types.\n",
@@ -424,7 +424,7 @@ public:
   ~CommandObjectLogTimerEnable() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusFailed);
 
     if (args.GetArgumentCount() == 0) {
@@ -459,7 +459,7 @@ public:
   ~CommandObjectLogTimerDisable() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Timer::DumpCategoryTimes(result.GetOutputStream());
     Timer::SetDisplayDepth(0);
     result.SetStatus(eReturnStatusSuccessFinishResult);
@@ -481,7 +481,7 @@ public:
   ~CommandObjectLogTimerDump() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Timer::DumpCategoryTimes(result.GetOutputStream());
     result.SetStatus(eReturnStatusSuccessFinishResult);
 
@@ -503,7 +503,7 @@ public:
   ~CommandObjectLogTimerReset() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Timer::ResetCategoryTimes();
     result.SetStatus(eReturnStatusSuccessFinishResult);
 
@@ -534,7 +534,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusFailed);
 
     if (args.GetArgumentCount() == 1) {

@@ -340,7 +340,11 @@ public:
       return false;
   }
 
+  /// \param offset_in_command is on what column \c args_string
+  /// appears, if applicable. This enables diagnostics that refer back
+  /// to the user input.
   virtual void Execute(const char *args_string,
+                       std::optional<uint16_t> offset_in_command,
                        CommandReturnObject &result) = 0;
 
 protected:
@@ -421,10 +425,14 @@ public:
 
   ~CommandObjectParsed() override = default;
 
-  void Execute(const char *args_string, CommandReturnObject &result) override;
+  void Execute(const char *args_string,
+               std::optional<uint16_t> offset_in_command,
+               CommandReturnObject &result) override;
 
 protected:
-  virtual void DoExecute(Args &command, CommandReturnObject &result) = 0;
+  virtual void DoExecute(Args &command,
+                         std::optional<uint16_t> offset_in_command,
+                         CommandReturnObject &result) = 0;
 
   bool WantsRawCommandString() override { return false; }
 };
@@ -438,10 +446,13 @@ public:
 
   ~CommandObjectRaw() override = default;
 
-  void Execute(const char *args_string, CommandReturnObject &result) override;
+  void Execute(const char *args_string,
+               std::optional<uint16_t> offset_in_command,
+               CommandReturnObject &result) override;
 
 protected:
   virtual void DoExecute(llvm::StringRef command,
+                         std::optional<uint16_t> offset_in_command,
                          CommandReturnObject &result) = 0;
 
   bool WantsRawCommandString() override { return true; }

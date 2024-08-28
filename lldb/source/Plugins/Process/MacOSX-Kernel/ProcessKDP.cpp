@@ -867,7 +867,7 @@ public:
 
   ~CommandObjectProcessKDPPacketSend() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (!m_command_byte.GetOptionValue().OptionWasSet()) {
       result.AppendError(
           "the --command option must be set to a valid command byte");

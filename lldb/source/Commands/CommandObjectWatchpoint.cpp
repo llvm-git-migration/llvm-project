@@ -200,7 +200,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     if (ProcessSP process_sp = target.GetProcessSP()) {
@@ -285,7 +285,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (!CheckTargetForWatchpointOperations(target, result))
       return;
@@ -354,7 +354,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (!CheckTargetForWatchpointOperations(target, result))
       return;
@@ -463,7 +463,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (!CheckTargetForWatchpointOperations(target, result))
       return;
@@ -583,7 +583,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (!CheckTargetForWatchpointOperations(target, result))
       return;
@@ -702,7 +702,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (!CheckTargetForWatchpointOperations(target, result))
       return;
@@ -803,7 +803,7 @@ protected:
     return variable_list.GetSize() - old_size;
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     StackFrame *frame = m_exe_ctx.GetFramePtr();
 
@@ -985,7 +985,7 @@ Examples:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(llvm::StringRef raw_command,
+  void DoExecute(llvm::StringRef raw_command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     auto exe_ctx = GetCommandInterpreter().GetExecutionContext();
     m_option_group.NotifyOptionParsingStarting(

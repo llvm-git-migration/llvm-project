@@ -62,7 +62,7 @@ CommandObjectThreadTraceExportCTF::CommandOptions::GetDefinitions() {
   return llvm::ArrayRef(g_thread_trace_export_ctf_options);
 }
 
-void CommandObjectThreadTraceExportCTF::DoExecute(Args &command,
+void CommandObjectThreadTraceExportCTF::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                                   CommandReturnObject &result) {
   const TraceSP &trace_sp = m_exe_ctx.GetTargetSP()->GetTrace();
   Process *process = m_exe_ctx.GetProcessPtr();

@@ -353,7 +353,7 @@ are no syntax errors may indicate that a function was declared but never called.
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     const WatchpointList &watchpoints = target.GetWatchpointList();
@@ -448,7 +448,7 @@ public:
   ~CommandObjectWatchpointCommandDelete() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     const WatchpointList &watchpoints = target.GetWatchpointList();
@@ -503,7 +503,7 @@ public:
   ~CommandObjectWatchpointCommandList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     const WatchpointList &watchpoints = target.GetWatchpointList();

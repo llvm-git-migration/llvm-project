@@ -121,7 +121,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Thread *thread = m_exe_ctx.GetThreadPtr();
     StackFrameSP frame_sp = thread->GetSelectedFrame(SelectMostRelevantFrame);
 
@@ -194,7 +194,7 @@ public:
   ~CommandObjectFrameInfo() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     m_exe_ctx.GetFrameRef().DumpUsingSettingsFormat(&result.GetOutputStream());
     result.SetStatus(eReturnStatusSuccessFinishResult);
   }
@@ -265,7 +265,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // No need to check "thread" for validity as eCommandRequiresThread ensures
     // it is valid
     Thread *thread = m_exe_ctx.GetThreadPtr();
@@ -494,7 +494,7 @@ protected:
     return std::nullopt;
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // No need to check "frame" for validity as eCommandRequiresFrame ensures
     // it is valid
     StackFrame *frame = m_exe_ctx.GetFramePtr();
@@ -796,7 +796,7 @@ private:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override;
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 
 public:
   CommandObjectFrameRecognizerAdd(CommandInterpreter &interpreter)
@@ -852,7 +852,7 @@ Process 1234 stopped
   ~CommandObjectFrameRecognizerAdd() override = default;
 };
 
-void CommandObjectFrameRecognizerAdd::DoExecute(Args &command,
+void CommandObjectFrameRecognizerAdd::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                                 CommandReturnObject &result) {
 #if LLDB_ENABLE_PYTHON
   if (m_options.m_class_name.empty()) {
@@ -923,7 +923,7 @@ public:
   ~CommandObjectFrameRecognizerClear() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     GetTarget().GetFrameRecognizerManager().RemoveAllRecognizers();
     result.SetStatus(eReturnStatusSuccessFinishResult);
   }
@@ -990,7 +990,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.GetArgumentCount() == 0) {
       if (!m_interpreter.Confirm(
               "About to delete all frame recognizers, do you want to do that?",
@@ -1037,7 +1037,7 @@ public:
   ~CommandObjectFrameRecognizerList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     bool any_printed = false;
     GetTarget().GetFrameRecognizerManager().ForEach(
         [&result,
@@ -1081,7 +1081,7 @@ public:
   ~CommandObjectFrameRecognizerInfo() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const char *frame_index_str = command.GetArgumentAtIndex(0);
     uint32_t frame_index;
     if (!llvm::to_integer(frame_index_str, frame_index)) {

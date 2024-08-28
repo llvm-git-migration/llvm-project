@@ -24,7 +24,7 @@ CommandObjectGUI::CommandObjectGUI(CommandInterpreter &interpreter)
 
 CommandObjectGUI::~CommandObjectGUI() = default;
 
-void CommandObjectGUI::DoExecute(Args &args, CommandReturnObject &result) {
+void CommandObjectGUI::DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) {
 #if LLDB_ENABLE_CURSES
   Debugger &debugger = GetDebugger();
 

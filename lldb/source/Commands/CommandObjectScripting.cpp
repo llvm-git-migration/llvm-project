@@ -78,7 +78,7 @@ public:
   };
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     // Try parsing the language option but when the command contains a raw part
     // separated by the -- delimiter.
@@ -181,7 +181,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &s = result.GetOutputStream();
     s.Printf("Available scripted extension templates:");
 

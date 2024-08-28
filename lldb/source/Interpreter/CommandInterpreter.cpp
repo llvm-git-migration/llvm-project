@@ -1887,7 +1887,8 @@ bool CommandInterpreter::HandleCommand(const char *command_line,
                                        CommandReturnObject &result,
                                        bool force_repeat_command) {
   std::string command_string(command_line);
-  std::string original_command_string(command_line);
+  std::string original_command_string(command_string);
+  std::string real_original_command_string(command_string);
 
   Log *log = GetLog(LLDBLog::Commands);
   llvm::PrettyStackTraceFormat stack_trace("HandleCommand(command = \"%s\")",
@@ -2076,7 +2077,11 @@ bool CommandInterpreter::HandleCommand(const char *command_line,
     }
 
     ElapsedTime elapsed(execute_time);
-    cmd_obj->Execute(remainder.c_str(), result);
+    size_t nchar = real_original_command_string.find(remainder);
+    std::optional<uint16_t> pos_in_cmd;
+    if (nchar != std::string::npos)
+      pos_in_cmd = nchar + GetDebugger().GetPrompt().size();
+    cmd_obj->Execute(remainder.c_str(), pos_in_cmd, result);
   }
 
   LLDB_LOGF(log, "HandleCommand, command %s",

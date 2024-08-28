@@ -412,7 +412,7 @@ public:
   Options *GetOptions() override { return &m_all_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Process *process = m_exe_ctx.GetProcessPtr();
     bool synchronous_execution = m_interpreter.GetSynchronous();
 
@@ -650,7 +650,7 @@ public:
 
   ~CommandObjectThreadContinue() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     bool synchronous_execution = m_interpreter.GetSynchronous();
 
     Process *process = m_exe_ctx.GetProcessPtr();
@@ -884,7 +884,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     bool synchronous_execution = m_interpreter.GetSynchronous();
 
     Target *target = &GetTarget();
@@ -1180,7 +1180,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Process *process = m_exe_ctx.GetProcessPtr();
     if (process == nullptr) {
       result.AppendError("no process");
@@ -1249,7 +1249,7 @@ public:
   ~CommandObjectThreadList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &strm = result.GetOutputStream();
     result.SetStatus(eReturnStatusSuccessFinishNoResult);
     Process *process = m_exe_ctx.GetProcessPtr();
@@ -1533,7 +1533,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     // I am going to handle this by hand, because I don't want you to have to
     // say:
@@ -1690,7 +1690,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     RegisterContext *reg_ctx = m_exe_ctx.GetRegisterContext();
     StackFrame *frame = m_exe_ctx.GetFramePtr();
     Thread *thread = m_exe_ctx.GetThreadPtr();
@@ -1827,7 +1827,7 @@ public:
 
   Options *GetOptions() override { return &m_options; }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // If we are reporting all threads, dispatch to the Process to do that:
     if (command.GetArgumentCount() == 0 && m_options.m_tids.empty()) {
       Stream &strm = result.GetOutputStream();
@@ -1858,7 +1858,7 @@ public:
           result.GetOutputStream() << tmp_strm.GetString();
         }
       }
-      return CommandObjectIterateOverThreads::DoExecute(command, result);
+      return CommandObjectIterateOverThreads::DoExecute(command, {}, result);
     }
   }
 
@@ -1910,7 +1910,7 @@ public:
     m_exe_ctx.GetThreadPtr()->AutoCompleteThreadPlans(request);
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Thread *thread = m_exe_ctx.GetThreadPtr();
     if (args.GetArgumentCount() != 1) {
       result.AppendErrorWithFormat("Too many arguments, expected one - the "
@@ -1962,7 +1962,7 @@ public:
 
   ~CommandObjectThreadPlanPrune() override = default;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Process *process = m_exe_ctx.GetProcessPtr();
 
     if (args.GetArgumentCount() == 0) {
@@ -2182,7 +2182,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     ThreadSP thread_sp = GetSingleThreadFromArgs(m_exe_ctx, args, result);
     if (!thread_sp) {
       result.AppendError("invalid thread\n");
@@ -2364,7 +2364,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     ThreadSP thread_sp = GetSingleThreadFromArgs(m_exe_ctx, args, result);
     if (!thread_sp) {
       result.AppendError("invalid thread\n");

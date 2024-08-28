@@ -59,7 +59,9 @@ public:
   std::optional<std::string> GetRepeatCommand(Args &current_command_args,
                                               uint32_t index) override;
 
-  void Execute(const char *args_string, CommandReturnObject &result) override;
+  void Execute(const char *args_string,
+               std::optional<uint16_t> offset_in_command,
+               CommandReturnObject &result) override;
 
   bool IsRemovable() const override { return m_can_be_removed; }
 
@@ -129,7 +131,9 @@ public:
   ///     Execute is called) and \a GetProxyCommandObject returned null.
   virtual llvm::StringRef GetUnsupportedError();
 
-  void Execute(const char *args_string, CommandReturnObject &result) override;
+  void Execute(const char *args_string,
+               std::optional<uint16_t> offset_in_command,
+               CommandReturnObject &result) override;
 
 protected:
   // These two want to iterate over the subcommand dictionary.

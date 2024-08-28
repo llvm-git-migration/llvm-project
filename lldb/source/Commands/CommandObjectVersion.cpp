@@ -22,7 +22,7 @@ CommandObjectVersion::CommandObjectVersion(CommandInterpreter &interpreter)
 
 CommandObjectVersion::~CommandObjectVersion() = default;
 
-void CommandObjectVersion::DoExecute(Args &args, CommandReturnObject &result) {
+void CommandObjectVersion::DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) {
   result.AppendMessageWithFormat("%s\n", lldb_private::GetVersion());
   result.SetStatus(eReturnStatusSuccessFinishResult);
 }

@@ -61,7 +61,7 @@ bool CommandObjectQuit::ShouldAskForConfirmation(bool &is_a_detach) {
   return should_prompt;
 }
 
-void CommandObjectQuit::DoExecute(Args &command, CommandReturnObject &result) {
+void CommandObjectQuit::DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) {
   bool is_a_detach = true;
   if (ShouldAskForConfirmation(is_a_detach)) {
     StreamString message;

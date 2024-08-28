@@ -54,7 +54,7 @@ llvm::Expected<std::string> CommandObjectRegexCommand::SubstituteVariables(
   return output.str();
 }
 
-void CommandObjectRegexCommand::DoExecute(llvm::StringRef command,
+void CommandObjectRegexCommand::DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                                           CommandReturnObject &result) {
   EntryCollection::const_iterator pos, end = m_entries.end();
   for (pos = m_entries.begin(); pos != end; ++pos) {

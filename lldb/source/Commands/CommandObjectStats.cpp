@@ -27,7 +27,7 @@ public:
   ~CommandObjectStatsEnable() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (DebuggerStats::GetCollectingStats()) {
       result.AppendError("statistics already enabled");
       return;
@@ -48,7 +48,7 @@ public:
   ~CommandObjectStatsDisable() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (!DebuggerStats::GetCollectingStats()) {
       result.AppendError("need to enable statistics before disabling them");
       return;
@@ -135,7 +135,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = nullptr;
     if (!m_options.m_all_targets)
       target = m_exe_ctx.GetTargetPtr();

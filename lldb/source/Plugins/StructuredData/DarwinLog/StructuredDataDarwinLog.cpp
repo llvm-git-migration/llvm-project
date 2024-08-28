@@ -769,7 +769,7 @@ protected:
     result.AppendWarning(stream.GetString());
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command,                std::optional<uint16_t> offset_in_command,CommandReturnObject &result) override {
     // First off, set the global sticky state of enable/disable based on this
     // command execution.
     s_is_explicitly_enabled = m_enable;
@@ -863,7 +863,7 @@ public:
                             "plugin structured-data darwin-log status") {}
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command,               std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     auto &stream = result.GetOutputStream();
 
     // Figure out if we've got a process.  If so, we can tell if DarwinLog is
