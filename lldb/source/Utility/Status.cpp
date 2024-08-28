@@ -8,6 +8,7 @@
 
 #include "lldb/Utility/Status.h"
 
+#include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/VASPrintf.h"
@@ -279,8 +280,6 @@ ErrorType Status::GetType() const {
     else if (error.convertToErrorCode().category() == lldb_generic_category() ||
              error.convertToErrorCode() == llvm::inconvertibleErrorCode())
       result = eErrorTypeGeneric;
-    else
-      result = eErrorTypeInvalid;
   });
   return result;
 }
