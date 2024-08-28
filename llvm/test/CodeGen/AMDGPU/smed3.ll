@@ -581,10 +581,24 @@ bb:
   ret void
 }
 
+; FIXME: Why the bfe on VI?
+
 ; GCN-LABEL: {{^}}s_test_smed3_i8_pat_0:
-; GCN: s_sext_i32_i8
-; GCN: s_sext_i32_i8
-; GCN: s_sext_i32_i8
+
+; VI: s_bfe_i32
+; VI: s_bfe_i32
+; VI: s_bfe_i32
+; VI: s_sext_i32_i16
+; VI: s_sext_i32_i16
+; VI: s_sext_i32_i16
+
+; SI: s_sext_i32_i8
+; SI: s_sext_i32_i8
+; SI: s_sext_i32_i8
+
+; GFX9: s_sext_i32_i16
+; GFX9: s_sext_i32_i16
+; GFX9: s_sext_i32_i16
 ; GCN: v_med3_i32 v{{[0-9]+}}, s{{[0-9]+}}, v{{[0-9]+}}, v{{[0-9]+}}
 define amdgpu_kernel void @s_test_smed3_i8_pat_0(ptr addrspace(1) %arg, [8 x i32], i8 %x, [8 x i32], i8 %y, [8 x i32], i8 %z) #1 {
 bb:

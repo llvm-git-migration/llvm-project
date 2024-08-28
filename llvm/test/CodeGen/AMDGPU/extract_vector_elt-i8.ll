@@ -53,7 +53,8 @@ define amdgpu_kernel void @extract_vector_elt_v2i8(ptr addrspace(1) %out, <2 x i
 ; VI-NEXT:    s_mov_b32 s3, 0x1100f000
 ; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    v_lshrrev_b16_e64 v1, 8, s4
+; VI-NEXT:    s_lshr_b32 s5, s4, 8
+; VI-NEXT:    v_mov_b32_e32 v1, s5
 ; VI-NEXT:    v_mov_b32_e32 v0, s4
 ; VI-NEXT:    buffer_store_byte v1, off, s[0:3], 0
 ; VI-NEXT:    s_waitcnt vmcnt(0)
@@ -341,8 +342,9 @@ define amdgpu_kernel void @dynamic_extract_vector_elt_v2i8(ptr addrspace(1) %out
 ; VI-NEXT:    s_mov_b32 s2, -1
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
 ; VI-NEXT:    s_lshl_b32 s4, s4, 3
-; VI-NEXT:    v_mov_b32_e32 v0, s5
-; VI-NEXT:    v_lshrrev_b16_e32 v0, s4, v0
+; VI-NEXT:    s_and_b32 s5, s5, 0xffff
+; VI-NEXT:    s_lshr_b32 s4, s5, s4
+; VI-NEXT:    v_mov_b32_e32 v0, s4
 ; VI-NEXT:    buffer_store_byte v0, off, s[0:3], 0
 ; VI-NEXT:    s_waitcnt vmcnt(0)
 ; VI-NEXT:    s_endpgm

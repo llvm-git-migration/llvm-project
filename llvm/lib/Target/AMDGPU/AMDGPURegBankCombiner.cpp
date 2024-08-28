@@ -89,6 +89,9 @@ public:
   void applyMed3(MachineInstr &MI, Med3MatchInfo &MatchInfo) const;
   void applyClamp(MachineInstr &MI, Register &Reg) const;
 
+  bool matchPromote16to32(MachineInstr &MI) const;
+  void applyPromote16to32(MachineInstr &MI) const;
+
 private:
   SIModeRegisterDefaults getMode() const;
   bool getIEEE() const;
@@ -346,6 +349,116 @@ bool AMDGPURegBankCombinerImpl::matchFPMed3ToClamp(MachineInstr &MI,
   }
 
   return false;
+}
+
+bool AMDGPURegBankCombinerImpl::matchPromote16to32(MachineInstr &MI) const {
+  Register Dst = MI.getOperand(0).getReg();
+  LLT DstTy = MRI.getType(Dst);
+  const auto *RB = MRI.getRegBankOrNull(Dst);
+
+  // Only promote uniform instructions.
+  if (RB->getID() != AMDGPU::SGPRRegBankID)
+    return false;
+
+  // Promote only if:
+  //    - We have 16 bit insts (not true 16 bit insts).
+  //    - We don't have packed instructions (for vector types only).
+  // TODO: For vector types, the set of packed operations is more limited, so
+  // may want to promote some anyway.
+  return STI.has16BitInsts() &&
+         (DstTy.isVector() ? !STI.hasVOP3PInsts() : true);
+}
+
+static unsigned getExtOpcodeForPromotedOp(MachineInstr &MI) {
+  switch (MI.getOpcode()) {
+  case AMDGPU::G_ASHR:
+    return AMDGPU::G_SEXT;
+  case AMDGPU::G_ADD:
+  case AMDGPU::G_SUB:
+  case AMDGPU::G_FSHR:
+    return AMDGPU::G_ZEXT;
+  case AMDGPU::G_AND:
+  case AMDGPU::G_OR:
+  case AMDGPU::G_XOR:
+  case AMDGPU::G_SHL:
+  case AMDGPU::G_SELECT:
+  case AMDGPU::G_MUL:
+    // operation result won't be influenced by garbage high bits.
+    // TODO: are all of those cases correct, and are there more?
+    return AMDGPU::G_ANYEXT;
+  case AMDGPU::G_ICMP: {
+    return CmpInst::isSigned(cast<GICmp>(MI).getCond()) ? AMDGPU::G_SEXT
+                                                        : AMDGPU::G_ZEXT;
+  }
+  default:
+    llvm_unreachable("unexpected opcode!");
+  }
+}
+
+void AMDGPURegBankCombinerImpl::applyPromote16to32(MachineInstr &MI) const {
+  const unsigned Opc = MI.getOpcode();
+  assert(Opc == AMDGPU::G_ADD || Opc == AMDGPU::G_SUB || Opc == AMDGPU::G_SHL ||
+         Opc == AMDGPU::G_LSHR || Opc == AMDGPU::G_ASHR ||
+         Opc == AMDGPU::G_AND || Opc == AMDGPU::G_OR || Opc == AMDGPU::G_XOR ||
+         Opc == AMDGPU::G_MUL || Opc == AMDGPU::G_SELECT ||
+         Opc == AMDGPU::G_ICMP);
+
+  Register Dst = MI.getOperand(0).getReg();
+
+  bool IsSelectOrCmp = (Opc == AMDGPU::G_SELECT || Opc == AMDGPU::G_ICMP);
+  Register LHS = MI.getOperand(IsSelectOrCmp + 1).getReg();
+  Register RHS = MI.getOperand(IsSelectOrCmp + 2).getReg();
+
+  assert(MRI.getType(Dst) == LLT::scalar(16));
+  assert(MRI.getType(LHS) == LLT::scalar(16));
+  assert(MRI.getType(RHS) == LLT::scalar(16));
+
+  assert(MRI.getRegBankOrNull(Dst)->getID() == AMDGPU::SGPRRegBankID);
+  assert(MRI.getRegBankOrNull(LHS)->getID() == AMDGPU::SGPRRegBankID);
+  assert(MRI.getRegBankOrNull(RHS)->getID() == AMDGPU::SGPRRegBankID);
+  const RegisterBank &RB = *MRI.getRegBankOrNull(Dst);
+
+  LLT S32 = LLT::scalar(32);
+
+  B.setInstrAndDebugLoc(MI);
+  const unsigned ExtOpc = getExtOpcodeForPromotedOp(MI);
+  LHS = B.buildInstr(ExtOpc, {S32}, {LHS}).getReg(0);
+  RHS = B.buildInstr(ExtOpc, {S32}, {RHS}).getReg(0);
+
+  MRI.setRegBank(LHS, RB);
+  MRI.setRegBank(RHS, RB);
+
+  MachineInstr *NewInst;
+  if (IsSelectOrCmp)
+    NewInst = B.buildInstr(Opc, {Dst}, {MI.getOperand(1), LHS, RHS});
+  else
+    NewInst = B.buildInstr(Opc, {S32}, {LHS, RHS});
+
+  if (Opc != AMDGPU::G_ICMP) {
+    Register Dst32 = NewInst->getOperand(0).getReg();
+    MRI.setRegBank(Dst32, RB);
+    B.buildTrunc(Dst, Dst32);
+  }
+
+  switch (Opc) {
+  case AMDGPU::G_ADD:
+  case AMDGPU::G_SHL:
+    NewInst->setFlag(MachineInstr::NoUWrap);
+    NewInst->setFlag(MachineInstr::NoSWrap);
+    break;
+  case AMDGPU::G_SUB:
+    if (MI.getFlag(MachineInstr::NoUWrap))
+      NewInst->setFlag(MachineInstr::NoUWrap);
+    NewInst->setFlag(MachineInstr::NoSWrap);
+    break;
+  case AMDGPU::G_MUL:
+    NewInst->setFlag(MachineInstr::NoUWrap);
+    if (MI.getFlag(MachineInstr::NoUWrap))
+      NewInst->setFlag(MachineInstr::NoUWrap);
+    break;
+  }
+
+  MI.eraseFromParent();
 }
 
 void AMDGPURegBankCombinerImpl::applyClamp(MachineInstr &MI,
