@@ -43,7 +43,7 @@ char CloneableError::ID;
 char CloneableECError::ID;
 char MachKernelError::ID;
 char Win32Error::ID;
-char ExpressionError::ID;
+char ExpressionErrorBase::ID;
 
 namespace {
 /// A std::error_code category for eErrorTypeGeneric.
@@ -54,21 +54,6 @@ class LLDBGenericCategory : public std::error_category {
 LLDBGenericCategory &lldb_generic_category() {
   static LLDBGenericCategory g_generic_category;
   return g_generic_category;
-}
-
-/// A std::error_code category for eErrorTypeExpression.
-class ExpressionCategory : public std::error_category {
-  const char *name() const noexcept override {
-    return "LLDBExpressionCategory";
-  }
-  std::string message(int __ev) const override {
-    return ExpressionResultAsCString(
-        static_cast<lldb::ExpressionResults>(__ev));
-  };
-};
-ExpressionCategory &expression_category() {
-  static ExpressionCategory g_expression_category;
-  return g_expression_category;
 }
 } // namespace
 
@@ -130,12 +115,6 @@ Status Status::FromErrorStringWithFormat(const char *format, ...) {
   }
   va_end(args);
   return Status(string);
-}
-
-Status Status::FromExpressionError(lldb::ExpressionResults result,
-                                   std::string msg) {
-  return Status(llvm::make_error<ExpressionError>(
-      std::error_code(result, expression_category()), msg));
 }
 
 /// Creates a deep copy of all known errors and converts all other
@@ -211,10 +190,6 @@ std::unique_ptr<CloneableError> Win32Error::Clone() const {
   return std::make_unique<Win32Error>(convertToErrorCode());
 }
 
-std::unique_ptr<CloneableError> ExpressionError::Clone() const {
-  return std::make_unique<ExpressionError>(convertToErrorCode(), message());
-}
-
 // Get the error value as a NULL C string. The error string will be fetched and
 // cached on demand. The cached error string value will remain until the error
 // value is changed or cleared.
@@ -268,7 +243,7 @@ ErrorType Status::GetType() const {
       result = eErrorTypeMachKernel;
     else if (error.isA<Win32Error>())
       result = eErrorTypeWin32;
-    else if (error.isA<ExpressionError>())
+    else if (error.isA<ExpressionErrorBase>())
       result = eErrorTypeExpression;
     else if (error.convertToErrorCode().category() == std::generic_category())
       result = eErrorTypePOSIX;

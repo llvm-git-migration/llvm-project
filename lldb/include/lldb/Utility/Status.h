@@ -75,18 +75,13 @@ public:
   static char ID;
 };
 
-class ExpressionError
-    : public llvm::ErrorInfo<ExpressionError, CloneableECError> {
+class ExpressionErrorBase
+    : public llvm::ErrorInfo<ExpressionErrorBase, CloneableECError> {
 public:
-  using llvm::ErrorInfo<ExpressionError, CloneableECError>::ErrorInfo;
-  ExpressionError(std::error_code ec, std::string msg = {})
-      : ErrorInfo(ec), m_string(msg) {}
-  std::unique_ptr<CloneableError> Clone() const override;
-  std::string message() const override { return m_string; }
+  using llvm::ErrorInfo<ExpressionErrorBase, CloneableECError>::ErrorInfo;
+  ExpressionErrorBase(std::error_code ec, std::string msg = {})
+      : ErrorInfo(ec) {}
   static char ID;
-
-protected:
-  std::string m_string;
 };
 
 /// \class Status Status.h "lldb/Utility/Status.h" An error handling class.
@@ -160,9 +155,6 @@ public:
     return Status(llvm::formatv(format, std::forward<Args>(args)...));
   }
 
-  static Status FromExpressionError(lldb::ExpressionResults result,
-                                    std::string msg);
-
   /// Set the current error to errno.
   ///
   /// Update the error value to be \c errno and update the type to be \c
@@ -175,8 +167,11 @@ public:
   /// Avoid using this in new code. Migrate APIs to llvm::Expected instead.
   static Status FromError(llvm::Error error);
 
-  /// FIXME: Replace this with a takeError() method.
+  /// FIXME: Replace all uses with takeError() instead.
   llvm::Error ToError() const;
+
+  llvm::Error takeError() { return std::move(m_error); }
+
   /// Don't call this function in new code. Instead, redesign the API
   /// to use llvm::Expected instead of Status.
   Status Clone() const { return Status(ToError()); }
