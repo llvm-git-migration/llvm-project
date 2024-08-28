@@ -2836,6 +2836,8 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
   /// call.
   const Function *F = BB->getParent();
   SmallVector<BasicBlock *, 4> TailCallBBs;
+  // Record the call instructions so we can insert any fake uses
+  // that need to be preserved before them.
   SmallVector<CallInst *, 4> CallInsts;
   if (PN) {
     for (unsigned I = 0, E = PN->getNumIncomingValues(); I != E; ++I) {
@@ -2848,6 +2850,7 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
           TLI->mayBeEmittedAsTailCall(CI) &&
           attributesPermitTailCall(F, CI, RetI, *TLI)) {
         TailCallBBs.push_back(PredBB);
+        CallInsts.push_back(CI);
       } else {
         // Consider the cases in which the phi value is indirectly produced by
         // the tail call, for example when encountering memset(), memmove(),
@@ -2867,12 +2870,11 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
             isIntrinsicOrLFToBeTailCalled(TLInfo, CI) &&
             IncomingVal == CI->getArgOperand(0) &&
             TLI->mayBeEmittedAsTailCall(CI) &&
-            attributesPermitTailCall(F, CI, RetI, *TLI))
+            attributesPermitTailCall(F, CI, RetI, *TLI)) {
           TailCallBBs.push_back(PredBB);
+          CallInsts.push_back(CI);
+        }
       }
-      // Record the call instruction so we can insert any fake uses
-      // that need to be preserved before it.
-      CallInsts.push_back(CI);
     }
   } else {
     SmallPtrSet<BasicBlock *, 4> VisitedBBs;
@@ -2889,8 +2891,6 @@ bool CodeGenPrepare::dupRetToEnableTailCallOpts(BasicBlock *BB,
               (isIntrinsicOrLFToBeTailCalled(TLInfo, CI) &&
                V == CI->getArgOperand(0))) {
             TailCallBBs.push_back(Pred);
-            // Record the call instruction so we can insert any fake uses
-            // that need to be preserved before it.
             CallInsts.push_back(CI);
           }
         }
