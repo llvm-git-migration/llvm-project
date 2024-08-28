@@ -799,6 +799,7 @@ Thread *CommandObject::GetDefaultThread() {
 }
 
 void CommandObjectParsed::Execute(const char *args_string,
+                                  std::optional<uint16_t> offset_in_command,
                                   CommandReturnObject &result) {
   bool handled = false;
   Args cmd_args(args_string);
@@ -832,7 +833,7 @@ void CommandObjectParsed::Execute(const char *args_string,
           return;
         }
         m_interpreter.IncreaseCommandUsage(*this);
-        DoExecute(cmd_args, result);
+        DoExecute(cmd_args, {}, result);
       }
     }
 
@@ -841,6 +842,7 @@ void CommandObjectParsed::Execute(const char *args_string,
 }
 
 void CommandObjectRaw::Execute(const char *args_string,
+                               std::optional<uint16_t> offset_in_command,
                                CommandReturnObject &result) {
   bool handled = false;
   if (HasOverrideCallback()) {
@@ -853,7 +855,7 @@ void CommandObjectRaw::Execute(const char *args_string,
   }
   if (!handled) {
     if (CheckRequirements(result))
-      DoExecute(args_string, result);
+      DoExecute(args_string,offset_in_command, result);
 
     Cleanup();
   }

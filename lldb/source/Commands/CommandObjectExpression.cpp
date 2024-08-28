@@ -398,10 +398,104 @@ CanBeUsedForElementCountPrinting(ValueObject &valobj) {
   return Status();
 }
 
-bool CommandObjectExpression::EvaluateExpression(llvm::StringRef expr,
-                                                 Stream &output_stream,
-                                                 Stream &error_stream,
-                                                 CommandReturnObject &result) {
+static llvm::raw_ostream &PrintSeverity(Stream &stream, lldb::Severity severity) {
+  llvm::HighlightColor color;
+  llvm::StringRef text;
+  switch (severity) {
+  case eSeverityError:
+    color = llvm::HighlightColor::Error;
+    text = "error: ";
+    break;
+  case eSeverityWarning:
+    color = llvm::HighlightColor::Warning;
+    text = "warning: ";
+    break;
+  case eSeverityInfo:
+    color = llvm::HighlightColor::Remark;
+    text = "note: ";
+    break;
+  }
+  return llvm::WithColor(stream.AsRawOstream(), color, llvm::ColorMode::Enable)
+         << text;
+}
+
+std::string
+CommandObjectExpression::RenderError(std::optional<uint16_t> offset_in_command,
+                                     Status error) {
+  if (error.GetDetails().empty())
+    return {};
+
+  StreamString stream(true);
+  if (!offset_in_command) {
+    for (const Status::Detail &detail : error.GetDetails()) {
+      PrintSeverity(stream, detail.severity);
+      stream << detail.rendered << '\n';
+    }
+    return stream.GetData();
+  }
+
+  // Print a line with caret indicator(s) below the lldb prompt + command.
+  const size_t padding = *offset_in_command;
+  stream << std::string(padding, ' ');
+
+  size_t offset = 1;
+  std::vector<Status::Detail> remaining_details, other_details;
+  for (const Status::Detail &detail : error.GetDetails()) {
+    if (!detail.source_location) {
+      other_details.push_back(detail);
+      continue;
+    }
+
+    auto &loc = *detail.source_location;
+    remaining_details.push_back(detail);
+    if (offset > loc.column)
+      continue;
+    stream << std::string(loc.column - offset, ' ') << '^';
+    if (loc.length > 1)
+      stream << std::string(loc.length - 1, '~');
+    offset = loc.column + 1;
+  }
+  stream << '\n';
+
+  // Work through each detail in reverse order using the vector/stack.
+  for (auto detail = remaining_details.rbegin();
+       detail != remaining_details.rend();
+       ++detail, remaining_details.pop_back()) {
+    // Get the information to print this detail and remove it from the stack.
+    // Print all the lines for all the other messages first.
+    stream << std::string(padding, ' ');
+    size_t offset = 1;
+    for (auto &remaining_detail :
+         llvm::ArrayRef(remaining_details).drop_back(1)) {
+      uint16_t column = remaining_detail.source_location->column;
+      stream << std::string(column - offset, ' ') << "│";
+      offset = column + 1;
+    }
+
+    // Print the line connecting the ^ with the error message.
+    uint16_t column = detail->source_location->column;
+    if (offset <= column)
+      stream << std::string(column - offset, ' ') << "╰─ ";
+
+    // Print a colorized string based on the message's severity type.
+    PrintSeverity(stream, detail->severity);
+
+    // Finally, print the message and start a new line.
+    stream << detail->message << '\n';
+  }
+
+  // Print the non-located details.
+  for (const Status::Detail &detail : other_details) {
+    PrintSeverity(stream, detail.severity);
+    stream << detail.message << '\n';
+  }
+
+  return stream.GetData();
+}
+
+bool CommandObjectExpression::EvaluateExpression(
+    llvm::StringRef expr, std::optional<uint16_t> offset_in_command,
+    Stream &output_stream, Stream &error_stream, CommandReturnObject &result) {
   // Don't use m_exe_ctx as this might be called asynchronously after the
   // command object DoExecute has finished when doing multi-line expression
   // that use an input reader...
@@ -486,6 +580,22 @@ bool CommandObjectExpression::EvaluateExpression(llvm::StringRef expr,
 
         result.SetStatus(eReturnStatusSuccessFinishResult);
       } else {
+        //llvm::StringRef command = line.empty() ? m_repeat_command : line;
+        std::string error =
+            RenderError(offset_in_command, result_valobj_sp->GetError());
+        if (!error.empty()) {
+//          // Check whether the developer just hit [Return] to repeat a command.
+//          if (line.empty()) {
+//            // Build a recreation of the prompt and the last command.
+//            std::string prompt_and_command(GetDebugger().GetPrompt());
+//            prompt_and_command += m_repeat_command;
+// 
+//            // Print the last command the developer entered for the caret line.
+//            PrintCommandOutput(io_handler, prompt_and_command, false);
+          error_stream.PutCString(error.c_str());
+        }
+        else{
+
         const char *error_cstr = result_valobj_sp->GetError().AsCString();
         if (error_cstr && error_cstr[0]) {
           const size_t error_cstr_len = strlen(error_cstr);
@@ -498,7 +608,7 @@ bool CommandObjectExpression::EvaluateExpression(llvm::StringRef expr,
         } else {
           error_stream.PutCString("error: unknown error\n");
         }
-
+        }
         result.SetStatus(eReturnStatusFailed);
       }
     }
@@ -518,7 +628,7 @@ void CommandObjectExpression::IOHandlerInputComplete(IOHandler &io_handler,
 
   CommandReturnObject return_obj(
       GetCommandInterpreter().GetDebugger().GetUseColor());
-  EvaluateExpression(line.c_str(), *output_sp, *error_sp, return_obj);
+  EvaluateExpression(line.c_str(), {}, *output_sp, *error_sp, return_obj);
   if (output_sp)
     output_sp->Flush();
   if (error_sp)
@@ -586,7 +696,7 @@ GetExprOptions(ExecutionContext &ctx,
   return expr_options;
 }
 
-void CommandObjectExpression::DoExecute(llvm::StringRef command,
+void CommandObjectExpression::DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                                         CommandReturnObject &result) {
   m_fixed_expression.clear();
   auto exe_ctx = GetCommandInterpreter().GetExecutionContext();
@@ -666,7 +776,7 @@ void CommandObjectExpression::DoExecute(llvm::StringRef command,
   }
 
   Target &target = GetTarget();
-  if (EvaluateExpression(expr, result.GetOutputStream(),
+  if (EvaluateExpression(expr, offset_in_command, result.GetOutputStream(),
                          result.GetErrorStream(), result)) {
 
     if (!m_fixed_expression.empty() && target.GetEnableNotifyAboutFixIts()) {

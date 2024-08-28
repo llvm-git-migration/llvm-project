@@ -19,7 +19,7 @@ public:
   ~CommandObjectLanguage() override;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result);
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result);
 };
 } // namespace lldb_private
 

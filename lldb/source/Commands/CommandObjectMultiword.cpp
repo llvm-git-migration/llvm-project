@@ -160,6 +160,7 @@ llvm::Error CommandObjectMultiword::RemoveUserSubcommand(llvm::StringRef cmd_nam
 }
 
 void CommandObjectMultiword::Execute(const char *args_string,
+                                     std::optional<uint16_t> offset_in_command,
                                      CommandReturnObject &result) {
   Args args(args_string);
   const size_t argc = args.GetArgumentCount();
@@ -188,7 +189,7 @@ void CommandObjectMultiword::Execute(const char *args_string,
     // the processed arguments.
 
     args.Shift();
-    sub_cmd_obj->Execute(args_string, result);
+    sub_cmd_obj->Execute(args_string, {}, result);
     return;
   }
 
@@ -428,10 +429,10 @@ llvm::StringRef CommandObjectProxy::GetUnsupportedError() {
   return "command is not implemented";
 }
 
-void CommandObjectProxy::Execute(const char *args_string,
+void CommandObjectProxy::Execute(const char *args_string,                       std::optional<uint16_t> offset_in_command,
                                  CommandReturnObject &result) {
   if (CommandObject *proxy_command = GetProxyCommandObject())
-    proxy_command->Execute(args_string, result);
+    proxy_command->Execute(args_string, offset_in_command, result);
   else
     result.AppendError(GetUnsupportedError());
 }

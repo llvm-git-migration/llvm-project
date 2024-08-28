@@ -40,7 +40,7 @@ public:
   bool WantsCompletion() override { return true; }
 
 private:
-  void DoExecute(llvm::StringRef command, CommandReturnObject &result) override;
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 
   OptionGroupOptions m_option_group;
   OptionGroupFormat m_format_options = lldb::eFormatDefault;

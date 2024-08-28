@@ -319,9 +319,8 @@ are no syntax errors may indicate that a function was declared but never called.
     bool m_stop_on_error;
     bool m_use_dummy;
   };
-
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = m_options.m_use_dummy ? GetDummyTarget() : GetTarget();
 
     const BreakpointList &breakpoints = target.GetBreakpointList();
@@ -479,7 +478,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = m_options.m_use_dummy ? GetDummyTarget() : GetTarget();
 
     const BreakpointList &breakpoints = target.GetBreakpointList();
@@ -546,7 +545,7 @@ public:
   ~CommandObjectBreakpointCommandList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     const BreakpointList &breakpoints = target.GetBreakpointList();

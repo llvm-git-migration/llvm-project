@@ -136,6 +136,7 @@ Options *CommandAlias::GetOptions() {
 }
 
 void CommandAlias::Execute(const char *args_string,
+                                                  std::optional<uint16_t> offset_in_command,
                            CommandReturnObject &result) {
   llvm_unreachable("CommandAlias::Execute is not to be called");
 }

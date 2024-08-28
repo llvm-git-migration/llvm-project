@@ -48,7 +48,8 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
+                 CommandReturnObject &result) override {
     result.SetStatus(eReturnStatusSuccessFinishResult);
     result.AppendMessage("I did nothing");
   }

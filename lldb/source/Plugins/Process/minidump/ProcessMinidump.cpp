@@ -794,8 +794,8 @@ public:
   ~CommandObjectProcessMinidumpDump() override = default;
 
   Options *GetOptions() override { return &m_option_group; }
-
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     if (argc > 0) {
       result.AppendErrorWithFormat("'%s' take no arguments, only options",

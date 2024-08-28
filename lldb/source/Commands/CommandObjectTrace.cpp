@@ -102,7 +102,7 @@ public:
   ~CommandObjectTraceSave() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.size() != 1) {
       result.AppendError("a single path to a directory where the trace bundle "
                          "will be created is required");
@@ -190,7 +190,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.size() != 1) {
       result.AppendError("a single path to a JSON file containing a the "
                          "description of the trace bundle is required");
@@ -271,7 +271,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Status error;
     // TODO: fill in the dumping code here!
     if (error.Success()) {
@@ -338,7 +338,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Status error;
     if (command.empty()) {
       result.AppendError(

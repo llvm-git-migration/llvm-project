@@ -63,7 +63,7 @@ CommandObjectHelp::CommandOptions::GetDefinitions() {
   return llvm::ArrayRef(g_help_options);
 }
 
-void CommandObjectHelp::DoExecute(Args &command, CommandReturnObject &result) {
+void CommandObjectHelp::DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) {
   CommandObject::CommandMap::iterator pos;
   CommandObject *cmd_obj;
   const size_t argc = command.GetArgumentCount();

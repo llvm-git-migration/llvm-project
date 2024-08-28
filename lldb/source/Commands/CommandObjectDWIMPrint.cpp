@@ -50,7 +50,7 @@ CommandObjectDWIMPrint::CommandObjectDWIMPrint(CommandInterpreter &interpreter)
 
 Options *CommandObjectDWIMPrint::GetOptions() { return &m_option_group; }
 
-void CommandObjectDWIMPrint::DoExecute(StringRef command,
+void CommandObjectDWIMPrint::DoExecute(StringRef command,std::optional<uint16_t> offset_in_command,
                                        CommandReturnObject &result) {
   m_option_group.NotifyOptionParsingStarting(&m_exe_ctx);
   OptionsWithRaw args{command};

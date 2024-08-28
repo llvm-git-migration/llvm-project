@@ -22,7 +22,7 @@ public:
   ~CommandObjectQuit() override;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override;
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 
   bool ShouldAskForConfirmation(bool &is_a_detach);
 };

@@ -67,6 +67,9 @@ public:
 
   void HandleCompletion(CompletionRequest &request) override;
 
+  static std::string RenderError(std::optional<uint16_t> offset_in_command,
+                                 Status error);
+
 protected:
   // IOHandler::Delegate functions
   void IOHandlerInputComplete(IOHandler &io_handler,
@@ -75,7 +78,7 @@ protected:
   bool IOHandlerIsInputComplete(IOHandler &io_handler,
                                 StringList &lines) override;
 
-  void DoExecute(llvm::StringRef command, CommandReturnObject &result) override;
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 
   /// Evaluates the given expression.
   /// \param output_stream The stream to which the evaluation result will be
@@ -87,8 +90,10 @@ protected:
   ///               whether the expression produced any result.
   /// \return Returns true iff the expression was successfully evaluated,
   ///         executed and the result could be printed to the output stream.
-  bool EvaluateExpression(llvm::StringRef expr, Stream &output_stream,
-                          Stream &error_stream, CommandReturnObject &result);
+  bool EvaluateExpression(llvm::StringRef expr,
+                          std::optional<uint16_t> offset_in_command,
+                          Stream &output_stream, Stream &error_stream,
+                          CommandReturnObject &result);
 
   void GetMultilineExpression();
 
