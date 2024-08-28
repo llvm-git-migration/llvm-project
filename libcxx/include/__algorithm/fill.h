@@ -9,6 +9,7 @@
 #ifndef _LIBCPP___ALGORITHM_FILL_H
 #define _LIBCPP___ALGORITHM_FILL_H
 
+#include <__algorithm/fill_n.h>
 #include <__algorithm/for_each.h>
 #include <__config>
 #include <__iterator/iterator_traits.h>
@@ -22,9 +23,6 @@
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 // fill isn't specialized for std::memset, because the compiler already optimizes the loop to a call to std::memset.
-template <class _OutputIterator, class _Size, class _Tp>
-inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _OutputIterator
-fill_n(_OutputIterator __first, _Size __n, const _Tp& __value);
 
 template < class _ForwardIterator,
            class _Tp,

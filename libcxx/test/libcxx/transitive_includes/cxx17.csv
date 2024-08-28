@@ -48,6 +48,7 @@ array initializer_list
 array iterator
 array limits
 array new
+array optional
 array stdexcept
 array type_traits
 array utility
@@ -211,7 +212,6 @@ deque concepts
 deque cstddef
 deque cstdint
 deque cstdlib
-deque cstring
 deque cwchar
 deque functional
 deque initializer_list
@@ -219,6 +219,7 @@ deque iosfwd
 deque iterator
 deque limits
 deque new
+deque optional
 deque stdexcept
 deque tuple
 deque type_traits
@@ -349,6 +350,7 @@ functional iosfwd
 functional limits
 functional memory
 functional new
+functional optional
 functional stdexcept
 functional tuple
 functional type_traits
@@ -842,6 +844,7 @@ string iosfwd
 string iterator
 string limits
 string new
+string optional
 string stdexcept
 string string_view
 string tuple
@@ -863,6 +866,7 @@ string_view iosfwd
 string_view iterator
 string_view limits
 string_view new
+string_view optional
 string_view stdexcept
 string_view type_traits
 string_view version
@@ -1027,6 +1031,7 @@ vector iosfwd
 vector limits
 vector locale
 vector new
+vector optional
 vector stdexcept
 vector string
 vector string_view
