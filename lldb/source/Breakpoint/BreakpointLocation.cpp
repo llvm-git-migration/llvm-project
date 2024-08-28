@@ -264,9 +264,9 @@ bool BreakpointLocation::ConditionSaysStop(ExecutionContext &exe_ctx,
     if (!m_user_expression_sp->Parse(diagnostics, exe_ctx,
                                      eExecutionPolicyOnlyWhenNeeded, true,
                                      false)) {
-      error = Status::FromErrorStringWithFormat(
-          "Couldn't parse conditional expression:\n%s",
-          diagnostics.GetString().c_str());
+      error = Status::FromError(
+          diagnostics.GetAsError("Couldn't parse conditional expression:"));
+
       m_user_expression_sp.reset();
       return true;
     }
@@ -324,8 +324,8 @@ bool BreakpointLocation::ConditionSaysStop(ExecutionContext &exe_ctx,
     }
   } else {
     ret = false;
-    error = Status::FromErrorStringWithFormat(
-        "Couldn't execute expression:\n%s", diagnostics.GetString().c_str());
+    error = Status::FromError(
+        diagnostics.GetAsError("Couldn't execute expression:"));
   }
 
   return ret;
