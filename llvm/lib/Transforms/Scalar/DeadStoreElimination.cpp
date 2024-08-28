@@ -48,6 +48,7 @@
 #include "llvm/Analysis/MustExecute.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
@@ -560,7 +561,8 @@ static void shortenAssignment(Instruction *Inst, Value *OriginalDest,
 
 static bool tryToShorten(Instruction *DeadI, int64_t &DeadStart,
                          uint64_t &DeadSize, int64_t KillingStart,
-                         uint64_t KillingSize, bool IsOverwriteEnd) {
+                         uint64_t KillingSize, bool IsOverwriteEnd,
+                         const TargetTransformInfo &TTI) {
   auto *DeadIntrinsic = cast<AnyMemIntrinsic>(DeadI);
   Align PrefAlign = DeadIntrinsic->getDestAlign().valueOrOne();
 
@@ -612,6 +614,24 @@ static bool tryToShorten(Instruction *DeadI, int64_t &DeadStart,
   assert(DeadSize > ToRemoveSize && "Can't remove more than original size");
 
   uint64_t NewSize = DeadSize - ToRemoveSize;
+
+  // Check that we aren't going to pessimize codegen by lowering the length. I.e
+  // a memcpy(dst, src, 8) is more efficient than memcpy(dst, src, 7).
+  // These checks are relatively conservative. We bail out if:
+  // 1) We are removing less than 1 store (measured by targets load/store Vec
+  //    width).
+  // 2) We are saving a load/store (assuming loads/stores occur per pow2 block)
+  // 3) We aren't preventing this from going below inline thresh
+  // 4) We are shrinking by less than half of the initial size.
+  uint64_t PrefVecWidth =
+      TTI.getLoadStoreVecRegBitWidth(DeadIntrinsic->getDestAddressSpace()) / 8U;
+  uint64_t InlineThresh = TTI.getMaxMemIntrinsicInlineSizeThreshold();
+  if (ToRemoveSize < PrefVecWidth &&
+      popcount(DeadSize) < popcount(DeadSize - ToRemoveSize) &&
+      (DeadSize <= InlineThresh) == (DeadSize - ToRemoveSize <= InlineThresh) &&
+      ToRemoveSize < DeadSize / 2U)
+    return false;
+
   if (auto *AMI = dyn_cast<AtomicMemIntrinsic>(DeadI)) {
     // When shortening an atomic memory intrinsic, the newly shortened
     // length must remain an integer multiple of the element size.
@@ -654,7 +674,8 @@ static bool tryToShorten(Instruction *DeadI, int64_t &DeadStart,
 }
 
 static bool tryToShortenEnd(Instruction *DeadI, OverlapIntervalsTy &IntervalMap,
-                            int64_t &DeadStart, uint64_t &DeadSize) {
+                            int64_t &DeadStart, uint64_t &DeadSize,
+                            const TargetTransformInfo &TTI) {
   if (IntervalMap.empty() || !isShortenableAtTheEnd(DeadI))
     return false;
 
@@ -672,7 +693,7 @@ static bool tryToShortenEnd(Instruction *DeadI, OverlapIntervalsTy &IntervalMap,
       // be non negative due to preceding checks.
       KillingSize >= DeadSize - (uint64_t)(KillingStart - DeadStart)) {
     if (tryToShorten(DeadI, DeadStart, DeadSize, KillingStart, KillingSize,
-                     true)) {
+                     true, TTI)) {
       IntervalMap.erase(OII);
       return true;
     }
@@ -682,7 +703,8 @@ static bool tryToShortenEnd(Instruction *DeadI, OverlapIntervalsTy &IntervalMap,
 
 static bool tryToShortenBegin(Instruction *DeadI,
                               OverlapIntervalsTy &IntervalMap,
-                              int64_t &DeadStart, uint64_t &DeadSize) {
+                              int64_t &DeadStart, uint64_t &DeadSize,
+                              const TargetTransformInfo &TTI) {
   if (IntervalMap.empty() || !isShortenableAtTheBeginning(DeadI))
     return false;
 
@@ -701,7 +723,7 @@ static bool tryToShortenBegin(Instruction *DeadI,
     assert(KillingSize - (uint64_t)(DeadStart - KillingStart) < DeadSize &&
            "Should have been handled as OW_Complete");
     if (tryToShorten(DeadI, DeadStart, DeadSize, KillingStart, KillingSize,
-                     false)) {
+                     false, TTI)) {
       IntervalMap.erase(OII);
       return true;
     }
@@ -824,6 +846,7 @@ struct DSEState {
   DominatorTree &DT;
   PostDominatorTree &PDT;
   const TargetLibraryInfo &TLI;
+  const TargetTransformInfo &TTI;
   const DataLayout &DL;
   const LoopInfo &LI;
 
@@ -868,9 +891,9 @@ struct DSEState {
 
   DSEState(Function &F, AliasAnalysis &AA, MemorySSA &MSSA, DominatorTree &DT,
            PostDominatorTree &PDT, const TargetLibraryInfo &TLI,
-           const LoopInfo &LI)
+           const TargetTransformInfo &TTI, const LoopInfo &LI)
       : F(F), AA(AA), EI(DT, &LI), BatchAA(AA, &EI), MSSA(MSSA), DT(DT),
-        PDT(PDT), TLI(TLI), DL(F.getDataLayout()), LI(LI) {
+        PDT(PDT), TLI(TLI), TTI(TTI), DL(F.getDataLayout()), LI(LI) {
     // Collect blocks with throwing instructions not modeled in MemorySSA and
     // alloc-like objects.
     unsigned PO = 0;
@@ -2066,10 +2089,10 @@ struct DSEState {
       uint64_t DeadSize = Loc.Size.getValue();
       GetPointerBaseWithConstantOffset(Ptr, DeadStart, DL);
       OverlapIntervalsTy &IntervalMap = OI.second;
-      Changed |= tryToShortenEnd(DeadI, IntervalMap, DeadStart, DeadSize);
+      Changed |= tryToShortenEnd(DeadI, IntervalMap, DeadStart, DeadSize, TTI);
       if (IntervalMap.empty())
         continue;
-      Changed |= tryToShortenBegin(DeadI, IntervalMap, DeadStart, DeadSize);
+      Changed |= tryToShortenBegin(DeadI, IntervalMap, DeadStart, DeadSize, TTI);
     }
     return Changed;
   }
@@ -2137,10 +2160,11 @@ struct DSEState {
 static bool eliminateDeadStores(Function &F, AliasAnalysis &AA, MemorySSA &MSSA,
                                 DominatorTree &DT, PostDominatorTree &PDT,
                                 const TargetLibraryInfo &TLI,
+                                const TargetTransformInfo &TTI,
                                 const LoopInfo &LI) {
   bool MadeChange = false;
 
-  DSEState State(F, AA, MSSA, DT, PDT, TLI, LI);
+  DSEState State(F, AA, MSSA, DT, PDT, TLI, TTI, LI);
   // For each store:
   for (unsigned I = 0; I < State.MemDefs.size(); I++) {
     MemoryDef *KillingDef = State.MemDefs[I];
@@ -2332,12 +2356,13 @@ static bool eliminateDeadStores(Function &F, AliasAnalysis &AA, MemorySSA &MSSA,
 PreservedAnalyses DSEPass::run(Function &F, FunctionAnalysisManager &AM) {
   AliasAnalysis &AA = AM.getResult<AAManager>(F);
   const TargetLibraryInfo &TLI = AM.getResult<TargetLibraryAnalysis>(F);
+  const TargetTransformInfo &TTI = AM.getResult<TargetIRAnalysis>(F);
   DominatorTree &DT = AM.getResult<DominatorTreeAnalysis>(F);
   MemorySSA &MSSA = AM.getResult<MemorySSAAnalysis>(F).getMSSA();
   PostDominatorTree &PDT = AM.getResult<PostDominatorTreeAnalysis>(F);
   LoopInfo &LI = AM.getResult<LoopAnalysis>(F);
 
-  bool Changed = eliminateDeadStores(F, AA, MSSA, DT, PDT, TLI, LI);
+  bool Changed = eliminateDeadStores(F, AA, MSSA, DT, PDT, TLI, TTI, LI);
 
 #ifdef LLVM_ENABLE_STATS
   if (AreStatisticsEnabled())

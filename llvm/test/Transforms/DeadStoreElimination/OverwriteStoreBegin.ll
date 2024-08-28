@@ -23,8 +23,8 @@ define void @write4to7_weird_element_type(ptr nocapture %p) {
 ; CHECK-LABEL: @write4to7_weird_element_type(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[ARRAYIDX0:%.*]] = getelementptr inbounds i32, ptr [[P:%.*]], i64 1
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[ARRAYIDX0]], i64 4
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP1]], i8 0, i64 24, i1 false)
+; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[ARRAYIDX0]], i64 4
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 24, i1 false)
 ; CHECK-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds i32, ptr [[P]], i64 1
 ; CHECK-NEXT:    store i32 1, ptr [[ARRAYIDX1]], align 4
 ; CHECK-NEXT:    ret void
@@ -119,8 +119,7 @@ entry:
 define void @write0to7(ptr nocapture %p) {
 ; CHECK-LABEL: @write0to7(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[P:%.*]], i64 8
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 24, i1 false)
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[P:%.*]], i8 0, i64 32, i1 false)
 ; CHECK-NEXT:    store i64 1, ptr [[P]], align 8
 ; CHECK-NEXT:    ret void
 ;
@@ -135,8 +134,7 @@ entry:
 define void @write0to7_atomic(ptr nocapture %p) {
 ; CHECK-LABEL: @write0to7_atomic(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[P:%.*]], i64 8
-; CHECK-NEXT:    call void @llvm.memset.element.unordered.atomic.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 24, i32 4)
+; CHECK-NEXT:    call void @llvm.memset.element.unordered.atomic.p0.i64(ptr align 4 [[P:%.*]], i8 0, i64 32, i32 4)
 ; CHECK-NEXT:    store atomic i64 1, ptr [[P]] unordered, align 8
 ; CHECK-NEXT:    ret void
 ;
@@ -236,8 +234,7 @@ define void @write2to10(ptr nocapture %p) {
 ; CHECK-LABEL: @write2to10(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[ARRAYIDX0:%.*]] = getelementptr inbounds i32, ptr [[P:%.*]], i64 1
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[ARRAYIDX0]], i64 4
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 28, i1 false)
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[ARRAYIDX0]], i8 0, i64 32, i1 false)
 ; CHECK-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i16, ptr [[P]], i64 1
 ; CHECK-NEXT:    store i64 1, ptr [[ARRAYIDX2]], align 8
 ; CHECK-NEXT:    ret void
@@ -254,8 +251,7 @@ define void @write2to10_atomic(ptr nocapture %p) {
 ; CHECK-LABEL: @write2to10_atomic(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[ARRAYIDX0:%.*]] = getelementptr inbounds i32, ptr [[P:%.*]], i64 1
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[ARRAYIDX0]], i64 4
-; CHECK-NEXT:    call void @llvm.memset.element.unordered.atomic.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 28, i32 4)
+; CHECK-NEXT:    call void @llvm.memset.element.unordered.atomic.p0.i64(ptr align 4 [[ARRAYIDX0]], i8 0, i64 32, i32 4)
 ; CHECK-NEXT:    [[ARRAYIDX2:%.*]] = getelementptr inbounds i16, ptr [[P]], i64 1
 ; CHECK-NEXT:    store atomic i64 1, ptr [[ARRAYIDX2]] unordered, align 8
 ; CHECK-NEXT:    ret void
@@ -360,8 +356,7 @@ define void @ow_begin_align1(ptr nocapture %p) {
 ; CHECK-LABEL: @ow_begin_align1(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[P1:%.*]] = getelementptr inbounds i8, ptr [[P:%.*]], i64 1
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[P1]], i64 7
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[TMP0]], i8 0, i64 25, i1 false)
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 1 [[P1]], i8 0, i64 32, i1 false)
 ; CHECK-NEXT:    store i64 1, ptr [[P]], align 1
 ; CHECK-NEXT:    ret void
 ;
@@ -376,8 +371,7 @@ define void @ow_end_align4(ptr nocapture %p) {
 ; CHECK-LABEL: @ow_end_align4(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[P1:%.*]] = getelementptr inbounds i8, ptr [[P:%.*]], i64 1
-; CHECK-NEXT:    [[TMP0:%.*]] = getelementptr inbounds i8, ptr [[P1]], i64 4
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 28, i1 false)
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[P1]], i8 0, i64 32, i1 false)
 ; CHECK-NEXT:    store i64 1, ptr [[P]], align 1
 ; CHECK-NEXT:    ret void
 ;

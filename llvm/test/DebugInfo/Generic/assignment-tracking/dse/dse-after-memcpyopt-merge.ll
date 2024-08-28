@@ -33,18 +33,13 @@ define dso_local void @_Z1fv() local_unnamed_addr !dbg !7 {
 ; CHECK-NEXT:    [[ARRAYIDX3_I:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 1, !dbg [[DBG35:![0-9]+]]
 ; CHECK-NEXT:      #dbg_assign(float 0.000000e+00, [[META12]], !DIExpression(DW_OP_LLVM_fragment, 32, 32), [[META34]], ptr [[ARRAYIDX3_I]], !DIExpression(), [[META25]])
 ; CHECK-NEXT:    [[ARRAYIDX5_I:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 0, !dbg [[DBG36:![0-9]+]]
-; CHECK-NEXT:      #dbg_assign(float 0.000000e+00, [[META12]], !DIExpression(DW_OP_LLVM_fragment, 0, 32), [[META37:![0-9]+]], ptr poison, !DIExpression(), [[META25]])
-; CHECK-NEXT:    [[ARRAYIDX7_I:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 3, !dbg [[DBG38:![0-9]+]]
-; CHECK-NEXT:      #dbg_assign(float 0.000000e+00, [[META12]], !DIExpression(DW_OP_LLVM_fragment, 96, 32), [[META39:![0-9]+]], ptr poison, !DIExpression(), [[META25]])
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast ptr [[ARRAYIDX5_I]] to ptr, !dbg [[DBG40:![0-9]+]]
-; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds i8, ptr [[TMP0]], i64 4, !dbg [[DBG41:![0-9]+]]
-; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP1]], i8 0, i64 8, i1 false), !dbg [[DBG41]], !DIAssignID [[META34]]
-; CHECK-NEXT:    [[ARRAYIDX7:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 3, !dbg [[META25]]
-; CHECK-NEXT:    store float 0.000000e+00, ptr [[ARRAYIDX7]], align 4, !dbg [[META25]], !DIAssignID [[DIASSIGNID42:![0-9]+]]
-; CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 0, !dbg [[META25]]
-; CHECK-NEXT:    store float 0.000000e+00, ptr [[ARRAYIDX]], align 4, !dbg [[META25]], !DIAssignID [[DIASSIGNID43:![0-9]+]]
-; CHECK-NEXT:    call void @_Z3escP1v(ptr nonnull [[G]]), !dbg [[DBG40]]
-; CHECK-NEXT:    ret void, !dbg [[DBG44:![0-9]+]]
+; CHECK-NEXT:      #dbg_assign(float 0.000000e+00, [[META12]], !DIExpression(DW_OP_LLVM_fragment, 0, 32), [[META34]], ptr [[ARRAYIDX5_I]], !DIExpression(), [[META25]])
+; CHECK-NEXT:    [[ARRAYIDX7_I:%.*]] = getelementptr inbounds [[STRUCT_V]], ptr [[G]], i64 0, i32 0, i64 3, !dbg [[DBG37:![0-9]+]]
+; CHECK-NEXT:      #dbg_assign(float 0.000000e+00, [[META12]], !DIExpression(DW_OP_LLVM_fragment, 96, 32), [[META34]], ptr [[ARRAYIDX7_I]], !DIExpression(), [[META25]])
+; CHECK-NEXT:    [[TMP0:%.*]] = bitcast ptr [[ARRAYIDX5_I]] to ptr, !dbg [[DBG38:![0-9]+]]
+; CHECK-NEXT:    call void @llvm.memset.p0.i64(ptr align 4 [[TMP0]], i8 0, i64 16, i1 false), !dbg [[DBG39:![0-9]+]], !DIAssignID [[META34]]
+; CHECK-NEXT:    call void @_Z3escP1v(ptr nonnull [[G]]), !dbg [[DBG38]]
+; CHECK-NEXT:    ret void, !dbg [[DBG40:![0-9]+]]
 ;
 entry:
   %g = alloca %struct.v, align 4, !DIAssignID !23
@@ -174,12 +169,8 @@ declare void @llvm.memset.p0.i64(ptr nocapture writeonly, i8, i64, i1 immarg)
 ; CHECK: [[META34]] = distinct !DIAssignID()
 ; CHECK: [[DBG35]] = !DILocation(line: 5, column: 12, scope: [[META27]], inlinedAt: [[META33]])
 ; CHECK: [[DBG36]] = !DILocation(line: 5, column: 5, scope: [[META27]], inlinedAt: [[META33]])
-; CHECK: [[META37]] = distinct !DIAssignID()
-; CHECK: [[DBG38]] = !DILocation(line: 6, column: 5, scope: [[META27]], inlinedAt: [[META33]])
-; CHECK: [[META39]] = distinct !DIAssignID()
-; CHECK: [[DBG40]] = !DILocation(line: 14, column: 3, scope: [[DBG8]])
-; CHECK: [[DBG41]] = !DILocation(line: 5, column: 17, scope: [[META27]], inlinedAt: [[META33]])
-; CHECK: [[DIASSIGNID42]] = distinct !DIAssignID()
-; CHECK: [[DIASSIGNID43]] = distinct !DIAssignID()
-; CHECK: [[DBG44]] = !DILocation(line: 15, column: 1, scope: [[DBG8]])
+; CHECK: [[DBG37]] = !DILocation(line: 6, column: 5, scope: [[META27]], inlinedAt: [[META33]])
+; CHECK: [[DBG38]] = !DILocation(line: 14, column: 3, scope: [[DBG8]])
+; CHECK: [[DBG39]] = !DILocation(line: 5, column: 17, scope: [[META27]], inlinedAt: [[META33]])
+; CHECK: [[DBG40]] = !DILocation(line: 15, column: 1, scope: [[DBG8]])
 ;.
