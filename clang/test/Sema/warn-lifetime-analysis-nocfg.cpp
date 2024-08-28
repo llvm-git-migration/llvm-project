@@ -158,17 +158,26 @@ auto begin(C &c) -> decltype(c.begin());
 template<typename T, int N>
 T *begin(T (&array)[N]);
 
+using size_t = decltype(sizeof(0));
+
+template<typename T>
+struct initializer_list {
+  const T* ptr; size_t sz;
+};
 template <typename T>
 struct vector {
   typedef __gnu_cxx::basic_iterator<T> iterator;
   iterator begin();
   iterator end();
   const T *data() const;
+  vector();
+  vector(initializer_list<T> __l);
   T &at(int n);
 };
 
 template<typename T>
 struct basic_string_view {
+  basic_string_view();
   basic_string_view(const T *);
   const T *begin() const;
 };
@@ -203,11 +212,21 @@ template<typename T>
 struct optional {
   optional();
   optional(const T&);
+
+  template<typename U = T>
+	optional(U&& t);
+
+  template<typename U>
+	optional(optional<U>&& __t);
+
   T &operator*() &;
   T &&operator*() &&;
   T &value() &;
   T &&value() &&;
 };
+template<typename T>
+optional<T> make_optional(T&&);
+
 
 template<typename T>
 struct stack {
@@ -499,3 +518,28 @@ std::string_view test2(int i, std::optional<std::string_view> a) {
   return std::move(a.value());
 }
 }
+
+namespace GH100526 {
+void test() {
+  std::vector<std::string_view> t1 = {std::string()}; // expected-warning {{object backing the pointer will be destroyed at the end}}
+  std::optional<std::string_view> t2 = std::string(); // expected-warning {{object backing the pointer}}
+
+  std::string s;
+  // This is a tricky use-after-free case, what it does:
+  //   1. make_optional creates a temporary "optional<string>"" object
+  //   2. the temporary object owns the underlying string which is copied from s.
+  //   3. the t3 object holds the view to the underlying string of the temporary object.
+  std::optional<std::string_view> t3 = std::make_optional(s); // expected-warning {{object backing the pointer}}
+
+  // FIXME: should work for assignment cases
+  t1 = {std::string()};
+  t2 = std::string();
+
+  // no warning on copying pointers.
+  std::vector<std::string_view> n1 = {std::string_view()};
+  std::optional<std::string_view> n2 = {std::string_view()};
+  std::optional<std::string_view> n3 = std::make_optional(std::string_view());
+
+}
+
+} // namespace GH100526
