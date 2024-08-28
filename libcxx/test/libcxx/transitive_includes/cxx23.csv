@@ -27,6 +27,7 @@ array cwchar
 array initializer_list
 array limits
 array new
+array optional
 array stdexcept
 array version
 atomic cstddef
@@ -139,11 +140,11 @@ cwctype cctype
 deque compare
 deque cstddef
 deque cstdint
-deque cstring
 deque cwchar
 deque initializer_list
 deque limits
 deque new
+deque optional
 deque stdexcept
 deque tuple
 deque version
@@ -235,6 +236,7 @@ functional cstring
 functional initializer_list
 functional limits
 functional new
+functional optional
 functional tuple
 functional typeinfo
 functional unordered_map
@@ -588,6 +590,7 @@ string initializer_list
 string iosfwd
 string limits
 string new
+string optional
 string stdexcept
 string string_view
 string tuple
@@ -602,6 +605,7 @@ string_view initializer_list
 string_view iosfwd
 string_view limits
 string_view new
+string_view optional
 string_view stdexcept
 string_view version
 strstream istream
@@ -715,6 +719,7 @@ vector cwchar
 vector initializer_list
 vector limits
 vector new
+vector optional
 vector stdexcept
 vector string
 vector string_view
