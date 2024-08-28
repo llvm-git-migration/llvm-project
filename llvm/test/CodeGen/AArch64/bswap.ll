@@ -6,7 +6,8 @@
 define i16 @bswap_i16(i16 %a){
 ; CHECK-LABEL: bswap_i16:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    rev16 w0, w0
+; CHECK-NEXT:    rev w8, w0
+; CHECK-NEXT:    lsr w0, w8, #16
 ; CHECK-NEXT:    ret
     %3 = call i16 @llvm.bswap.i16(i16 %a)
     ret i16 %3
