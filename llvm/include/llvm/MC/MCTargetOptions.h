@@ -96,7 +96,14 @@ public:
   std::string AsSecureLogFile;
 
   const char *Argv0 = nullptr;
+
+  // Deprecated: Use FlatCommandlineArgs instead
+  // Arguments here are interpreted as coming from clang, formated and end up in LF_BUILDINFO as CommandLineArgs 
   ArrayRef<std::string> CommandLineArgs;
+
+  // Arguments here end up in LF_BUILDINFO as CommandLineArgs without any additional formating
+  // If empty falls back to CommandLineArgs
+  std::string CommandlineArgsFlat;
 
   /// Additional paths to search for `.include` directives when using the
   /// integrated assembler.

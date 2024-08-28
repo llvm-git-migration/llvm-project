@@ -893,6 +893,8 @@ static TypeIndex getStringIdTypeIdx(GlobalTypeTableBuilder &TypeTable,
   return TypeTable.writeLeafType(SIR);
 }
 
+// This just exists for backwards compatability for the deprecated MCTargetOptions::CommandLineArgs
+// It assumed a clang compiler frontend
 static std::string flattenCommandLine(ArrayRef<std::string> Args,
                                       StringRef MainFilename) {
   std::string FlatCmdLine;
@@ -950,9 +952,16 @@ void CodeViewDebug::emitBuildInfo() {
   if (Asm->TM.Options.MCOptions.Argv0 != nullptr) {
     BuildInfoArgs[BuildInfoRecord::BuildTool] =
         getStringIdTypeIdx(TypeTable, Asm->TM.Options.MCOptions.Argv0);
-    BuildInfoArgs[BuildInfoRecord::CommandLine] = getStringIdTypeIdx(
-        TypeTable, flattenCommandLine(Asm->TM.Options.MCOptions.CommandLineArgs,
-                                      MainSourceFile->getFilename()));
+
+    if (!Asm->TM.Options.MCOptions.CommandlineArgsFlat.empty()) {
+      BuildInfoArgs[BuildInfoRecord::CommandLine] = getStringIdTypeIdx(
+          TypeTable, Asm->TM.Options.MCOptions.CommandlineArgsFlat);
+    } else {
+      BuildInfoArgs[BuildInfoRecord::CommandLine] = getStringIdTypeIdx(
+          TypeTable,
+          flattenCommandLine(Asm->TM.Options.MCOptions.CommandLineArgs,
+                             MainSourceFile->getFilename()));
+    }
   }
   BuildInfoRecord BIR(BuildInfoArgs);
   TypeIndex BuildInfoIndex = TypeTable.writeLeafType(BIR);
