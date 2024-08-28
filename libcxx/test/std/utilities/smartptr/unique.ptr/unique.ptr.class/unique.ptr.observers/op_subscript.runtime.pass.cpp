@@ -40,7 +40,7 @@ struct WithNonTrivialDtor {
   TEST_CONSTEXPR_CXX23 friend bool operator==(WithNonTrivialDtor const& x, WithNonTrivialDtor const& y) {
     return x.padding == y.padding;
   }
-  ~WithNonTrivialDtor() {}
+  TEST_CONSTEXPR_CXX23 ~WithNonTrivialDtor() {}
 };
 
 template <class T>
