@@ -15,10 +15,6 @@
 
 using namespace lldb_private;
 char DetailedExpressionError::ID;
-std::string DetailedExpressionError::message() const {
-  return m_detail.rendered;
-}
-
 
 static const char *StringForSeverity(lldb::Severity severity) {
   switch (severity) {
@@ -33,6 +29,9 @@ static const char *StringForSeverity(lldb::Severity severity) {
   llvm_unreachable("switch needs another case for lldb::Severity enum");
 }
 
+std::string DetailedExpressionError::message() const {
+  return std::string(StringForSeverity(m_detail.severity)) + m_detail.rendered;
+}
 
 void DiagnosticManager::Dump(Log *log) {
   if (!log)

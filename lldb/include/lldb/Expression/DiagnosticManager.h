@@ -59,8 +59,9 @@ class DetailedExpressionError
 
 public:
   using llvm::ErrorInfo<DetailedExpressionError, llvm::ECError>::ErrorInfo;
-  DetailedExpressionError(DiagnosticDetail detail) {}
+  DetailedExpressionError(DiagnosticDetail detail) : m_detail(detail) {}
   std::string message() const override;
+  DiagnosticDetail GetDetail() const { return m_detail; }
   static char ID;
 };
 
