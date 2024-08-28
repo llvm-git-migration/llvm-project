@@ -266,6 +266,8 @@ Improvements to Clang's diagnostics
   compilation speed with modules. This warning is disabled by default and it needs
   to be explicitly enabled or by ``-Weverything``.
 
+- Clang now respects lifetimebound attribute for the assignment operator parameter. (#GH106372).
+
 Improvements to Clang's time-trace
 ----------------------------------
 
