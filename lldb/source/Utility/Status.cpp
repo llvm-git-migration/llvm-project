@@ -11,6 +11,7 @@
 #include "lldb/Utility/LLDBLog.h"
 #include "lldb/Utility/Log.h"
 #include "lldb/Utility/VASPrintf.h"
+#include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/lldb-defines.h"
 #include "lldb/lldb-enumerations.h"
 #include "llvm/ADT/SmallString.h"
@@ -147,6 +148,9 @@ static llvm::Error cloneError(llvm::Error &error) {
     else if (error.isA<ExpressionError>())
       info.push_back(std::make_unique<ExpressionError>(
           error.convertToErrorCode(), error.message()));
+    else if (error.isA<DetailedExpressionError>())
+      info.push_back(std::make_unique<DetailedExpressionError>(
+          static_cast<const DetailedExpressionError *>(&error)->GetDetail()));
     else
       info.push_back(std::make_unique<llvm::StringError>(
           error.message(), error.convertToErrorCode(), true));
@@ -270,8 +274,6 @@ ErrorType Status::GetType() const {
     else if (error.convertToErrorCode().category() == generic_category() ||
              error.convertToErrorCode() == llvm::inconvertibleErrorCode())
       result = eErrorTypeGeneric;
-    else
-      result = eErrorTypeInvalid;
   });
   return result;
 }
