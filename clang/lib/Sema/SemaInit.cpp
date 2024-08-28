@@ -6807,36 +6807,36 @@ static AssignmentAction getAssignmentAction(const InitializedEntity &Entity,
   case InitializedEntity::EK_Exception:
   case InitializedEntity::EK_Base:
   case InitializedEntity::EK_Delegating:
-    return AssignmentAction::AA_Initializing;
+    return AssignmentAction::Initializing;
 
   case InitializedEntity::EK_Parameter:
     if (Entity.getDecl() &&
         isa<ObjCMethodDecl>(Entity.getDecl()->getDeclContext()))
-      return AssignmentAction::AA_Sending;
+      return AssignmentAction::Sending;
 
-    return AssignmentAction::AA_Passing;
+    return AssignmentAction::Passing;
 
   case InitializedEntity::EK_Parameter_CF_Audited:
     if (Entity.getDecl() &&
       isa<ObjCMethodDecl>(Entity.getDecl()->getDeclContext()))
-      return AssignmentAction::AA_Sending;
+      return AssignmentAction::Sending;
 
-    return !Diagnose ? AssignmentAction::AA_Passing
-                     : AssignmentAction::AA_Passing_CFAudited;
+    return !Diagnose ? AssignmentAction::Passing
+                     : AssignmentAction::Passing_CFAudited;
 
   case InitializedEntity::EK_Result:
   case InitializedEntity::EK_StmtExprResult: // FIXME: Not quite right.
-    return AssignmentAction::AA_Returning;
+    return AssignmentAction::Returning;
 
   case InitializedEntity::EK_Temporary:
   case InitializedEntity::EK_RelatedResult:
     // FIXME: Can we tell apart casting vs. converting?
-    return AssignmentAction::AA_Casting;
+    return AssignmentAction::Casting;
 
   case InitializedEntity::EK_TemplateParameter:
     // This is really initialization, but refer to it as conversion for
     // consistency with CheckConvertedConstantExpression.
-    return AssignmentAction::AA_Converting;
+    return AssignmentAction::Converting;
 
   case InitializedEntity::EK_Member:
   case InitializedEntity::EK_ParenAggInitMember:
@@ -6848,7 +6848,7 @@ static AssignmentAction getAssignmentAction(const InitializedEntity &Entity,
   case InitializedEntity::EK_LambdaToBlockConversionBlockElement:
   case InitializedEntity::EK_LambdaCapture:
   case InitializedEntity::EK_CompoundLiteralInit:
-    return AssignmentAction::AA_Initializing;
+    return AssignmentAction::Initializing;
   }
 
   llvm_unreachable("Invalid EntityKind!");

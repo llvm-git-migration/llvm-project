@@ -3152,7 +3152,7 @@ Sema::ActOnIndirectGotoStmt(SourceLocation GotoLoc, SourceLocation StarLoc,
       return StmtError();
     E = ExprRes.get();
     if (DiagnoseAssignmentResult(ConvTy, StarLoc, DestTy, ETy, E,
-                                 AssignmentAction::AA_Passing))
+                                 AssignmentAction::Passing))
       return StmtError();
   }
 

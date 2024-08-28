@@ -796,7 +796,7 @@ bool SemaARM::CheckNeonBuiltinFunctionCall(const TargetInfo &TI,
       return true;
     if (SemaRef.DiagnoseAssignmentResult(ConvTy, Arg->getBeginLoc(), LHSTy,
                                          RHSTy, RHS.get(),
-                                         AssignmentAction::AA_Assigning))
+                                         AssignmentAction::Assigning))
       return true;
   }
 
@@ -922,7 +922,7 @@ bool SemaARM::CheckARMBuiltinExclusiveCall(unsigned BuiltinID,
     CastNeeded = CK_BitCast;
     Diag(DRE->getBeginLoc(), diag::ext_typecheck_convert_discards_qualifiers)
         << PointerArg->getType() << Context.getPointerType(AddrType)
-        << AssignmentAction::AA_Passing << PointerArg->getSourceRange();
+        << AssignmentAction::Passing << PointerArg->getSourceRange();
   }
 
   // Finally, do the cast and replace the argument with the corrected version.

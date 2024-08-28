@@ -207,14 +207,14 @@ class TemplateDeductionInfo;
 // AssignmentAction - This is used by all the assignment diagnostic functions
 // to represent what is actually causing the operation
 enum class AssignmentAction : unsigned {
-  AA_Assigning,
-  AA_Passing,
-  AA_Returning,
-  AA_Converting,
-  AA_Initializing,
-  AA_Sending,
-  AA_Casting,
-  AA_Passing_CFAudited
+  Assigning,
+  Passing,
+  Returning,
+  Converting,
+  Initializing,
+  Sending,
+  Casting,
+  Passing_CFAudited
 };
 inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
                                              const AssignmentAction &AA) {

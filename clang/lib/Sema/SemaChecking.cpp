@@ -4881,7 +4881,7 @@ bool Sema::BuiltinFPClassification(CallExpr *TheCall, unsigned NumArgs,
       return false;
 
     ExprResult Res = PerformImplicitConversion(Arg, Context.IntTy,
-                                               AssignmentAction::AA_Passing);
+                                               AssignmentAction::Passing);
 
     if (Res.isInvalid())
       return true;
