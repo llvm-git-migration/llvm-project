@@ -95,15 +95,11 @@ public:
   std::string SplitDwarfFile;
   std::string AsSecureLogFile;
 
-  const char *Argv0 = nullptr;
+  // This will be set as compiler path in LF_BUILDINFO
+  std::string Argv0;
 
-  // Deprecated: Use FlatCommandlineArgs instead
-  // Arguments here are interpreted as coming from clang, formated and end up in LF_BUILDINFO as CommandLineArgs 
-  ArrayRef<std::string> CommandLineArgs;
-
-  // Arguments here end up in LF_BUILDINFO as CommandLineArgs without any additional formating
-  // If empty falls back to CommandLineArgs
-  std::string CommandlineArgsFlat;
+  // This will be set as commandline arguments in LF_BUILDINFO
+  std::string CommandlineArgs;
 
   /// Additional paths to search for `.include` directives when using the
   /// integrated assembler.

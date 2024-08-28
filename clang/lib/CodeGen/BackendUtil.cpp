@@ -521,8 +521,7 @@ static bool initTargetOptions(DiagnosticsEngine &Diags,
       Options.MCOptions.IASSearchPaths.push_back(
           Entry.IgnoreSysRoot ? Entry.Path : HSOpts.Sysroot + Entry.Path);
   Options.MCOptions.Argv0 = CodeGenOpts.Argv0;
-  Options.MCOptions.CommandLineArgs = CodeGenOpts.CommandLineArgs;
-  Options.MCOptions.CommandlineArgsFlat = flattenClangCommandLine(
+  Options.MCOptions.CommandlineArgs = flattenClangCommandLine(
       CodeGenOpts.CommandLineArgs, CodeGenOpts.MainFileName);
   Options.MCOptions.AsSecureLogFile = CodeGenOpts.AsSecureLogFile;
   Options.MCOptions.PPCUseFullRegisterNames =
