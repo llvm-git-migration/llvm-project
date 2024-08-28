@@ -54,13 +54,18 @@ struct DiagnosticDetail {
 /// An llvm::Error used to communicate diagnostics in Status. Multiple
 /// diagnostics may be chained in an llvm::ErrorList.
 class DetailedExpressionError
-    : public llvm::ErrorInfo<DetailedExpressionError, llvm::ECError> {
+    : public llvm::ErrorInfo<DetailedExpressionError, CloneableError> {
   DiagnosticDetail m_detail;
 
 public:
-  using llvm::ErrorInfo<DetailedExpressionError, llvm::ECError>::ErrorInfo;
+  using llvm::ErrorInfo<DetailedExpressionError, CloneableError>::ErrorInfo;
   DetailedExpressionError(DiagnosticDetail detail) : m_detail(detail) {}
   std::string message() const override;
+  DiagnosticDetail GetDetail() const { return m_detail; }
+  std::error_code convertToErrorCode() const override;
+  void log(llvm::raw_ostream &OS) const override;
+  std::unique_ptr<CloneableError> Clone() const override;
+
   static char ID;
 };
 

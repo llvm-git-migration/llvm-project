@@ -36,6 +36,18 @@ std::string DetailedExpressionError::message() const {
   return str;
 }
 
+std::error_code DetailedExpressionError::convertToErrorCode() const {
+  return llvm::inconvertibleErrorCode();
+}
+
+void DetailedExpressionError::log(llvm::raw_ostream &OS) const {
+  OS << message();
+}
+
+std::unique_ptr<CloneableError> DetailedExpressionError::Clone() const {
+  return std::make_unique<DetailedExpressionError>(m_detail);
+}
+
 std::string DiagnosticManager::GetString(char separator) {
   std::string str;
   llvm::raw_string_ostream stream(str);
