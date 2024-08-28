@@ -22212,6 +22212,22 @@ static SDValue performExtendCombine(SDNode *N,
       N->getOperand(0)->getOpcode() == ISD::SETCC)
     return performSignExtendSetCCCombine(N, DCI, DAG);
 
+  // If we see (any_extend (bswap ...)) with bswap returning an i16, we know
+  // that the top half of the result register must be unused, due to the
+  // any_extend. This means that we can replace this pattern with (rev16
+  // (any_extend ...)). This saves a machine instruction compared to (lsr (rev
+  // ...)), which is what this pattern would otherwise be lowered to.
+  if (N->getOpcode() == ISD::ANY_EXTEND &&
+      N->getOperand(0).getOpcode() == ISD::BSWAP &&
+      N->getOperand(0).getValueType().isScalarInteger() &&
+      N->getOperand(0).getValueType().getFixedSizeInBits() == 16) {
+    SDNode *BswapNode = N->getOperand(0).getNode();
+    SDValue NewAnyExtend = DAG.getNode(ISD::ANY_EXTEND, SDLoc(BswapNode),
+                                       EVT(MVT::i32), BswapNode->getOperand(0));
+    return DAG.getNode(AArch64ISD::REV16, SDLoc(N), N->getValueType(0),
+                       NewAnyExtend);
+  }
+
   return SDValue();
 }
 
