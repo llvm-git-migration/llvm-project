@@ -18049,21 +18049,18 @@ void Sema::MarkFunctionReferenced(SourceLocation Loc, FunctionDecl *Func,
             // Notify the consumer that a function was implicitly instantiated.
             Consumer.HandleCXXImplicitFunctionInstantiation(Func);
 
-            llvm::TimeTraceScope TimeScope(
-                "DeferInstantiation",
-                [&]() {
-                  llvm::TimeTraceMetadata M;
-                  llvm::raw_string_ostream OS(M.Detail);
-                  Func->getNameForDiagnostic(OS, getPrintingPolicy(),
-                                             /*Qualified=*/true);
-                  if (llvm::isTimeTraceVerbose()) {
-                    auto Loc = SourceMgr.getExpansionLoc(Func->getLocation());
-                    M.File = SourceMgr.getFilename(Loc);
-                    M.Line = SourceMgr.getExpansionLineNumber(Loc);
-                  }
-                  return M;
-                },
-                llvm::TimeTraceEventType::InstantEvent);
+            llvm::timeTraceProfilerInsert("DeferInstantiation", [&]() {
+              llvm::TimeTraceMetadata M;
+              llvm::raw_string_ostream OS(M.Detail);
+              Func->getNameForDiagnostic(OS, getPrintingPolicy(),
+                                         /*Qualified=*/true);
+              if (llvm::isTimeTraceVerbose()) {
+                auto Loc = SourceMgr.getExpansionLoc(Func->getLocation());
+                M.File = SourceMgr.getFilename(Loc);
+                M.Line = SourceMgr.getExpansionLineNumber(Loc);
+              }
+              return M;
+            });
           }
         }
       } else {

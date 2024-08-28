@@ -69,25 +69,20 @@ using NameAndCountAndDurationType =
 
 } // anonymous namespace
 
-/// Represents an open or completed time section entry to be captured.
+/// Represents an entry to be captured.
 struct llvm::TimeTraceProfilerEntry {
-  TimePointType Start;
-  TimePointType End;
-  std::string Name;
+  const TimePointType Start;
+  const std::string Name;
   TimeTraceMetadata Metadata;
-  TimeTraceEventType EventType;
 
-  TimeTraceProfilerEntry(TimePointType &&S, TimePointType &&E, std::string &&N,
-                         std::string &&Dt, TimeTraceEventType Et)
-      : Start(std::move(S)), End(std::move(E)), Name(std::move(N)), Metadata(),
-        EventType(Et) {
+  TimeTraceProfilerEntry(TimePointType &&S, std::string &&N, std::string &&Dt)
+      : Start(std::move(S)), Name(std::move(N)), Metadata() {
     Metadata.Detail = std::move(Dt);
   }
 
-  TimeTraceProfilerEntry(TimePointType &&S, TimePointType &&E, std::string &&N,
-                         TimeTraceMetadata &&Mt, TimeTraceEventType Et)
-      : Start(std::move(S)), End(std::move(E)), Name(std::move(N)),
-        Metadata(std::move(Mt)), EventType(Et) {}
+  TimeTraceProfilerEntry(TimePointType &&S, std::string &&N,
+                         TimeTraceMetadata &&Mt)
+      : Start(std::move(S)), Name(std::move(N)), Metadata(std::move(Mt)) {}
 
   // Calculate timings for FlameGraph. Cast time points to microsecond precision
   // rather than casting duration. This avoids truncation issues causing inner
@@ -98,10 +93,127 @@ struct llvm::TimeTraceProfilerEntry {
         .count();
   }
 
+  virtual void writeEvent(json::OStream &J, sys::Process::Pid Pid, uint64_t Tid,
+                          TimePointType StartTime) const {
+    J.object([&] {
+      J.attribute("pid", Pid);
+      J.attribute("tid", int64_t(Tid));
+      J.attribute("ts", getFlameGraphStartUs(StartTime));
+      writeAdditionalEventFileds(J);
+      J.attribute("name", Name);
+      if (!Metadata.isEmpty()) {
+        J.attributeObject("args", [&] {
+          if (!Metadata.Detail.empty())
+            J.attribute("detail", Metadata.Detail);
+          if (!Metadata.File.empty())
+            J.attribute("file", Metadata.File);
+          if (Metadata.Line > 0)
+            J.attribute("line", Metadata.Line);
+        });
+      }
+    });
+  }
+
+  virtual void writeAdditionalEventFileds(json::OStream &J) const {}
+
+  virtual ~TimeTraceProfilerEntry() = default;
+};
+
+struct llvm::InstantEvent : llvm::TimeTraceProfilerEntry {
+  InstantEvent(TimePointType &&S, std::string &&N, std::string &&Dt)
+      : TimeTraceProfilerEntry(std::move(S), std::move(N), std::move(Dt)) {}
+
+  InstantEvent(TimePointType &&S, std::string &&N, TimeTraceMetadata &&Mt)
+      : TimeTraceProfilerEntry(std::move(S), std::move(N), std::move(Mt)) {}
+
+  void writeAdditionalEventFileds(json::OStream &J) const override {
+    J.attribute("ph", "i");
+  }
+};
+
+struct llvm::DurableEvent : llvm::TimeTraceProfilerEntry {
+  DurableEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+               std::string &&Dt)
+      : TimeTraceProfilerEntry(std::move(S), std::move(N), std::move(Dt)),
+        InstantEvents{}, End(std::move(E)) {}
+
+  DurableEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+               TimeTraceMetadata &&Mt)
+      : TimeTraceProfilerEntry(std::move(S), std::move(N), std::move(Mt)),
+        InstantEvents{}, End(std::move(E)) {}
+
+  virtual void writeEvent(json::OStream &J, sys::Process::Pid Pid, uint64_t Tid,
+                          TimePointType StartTime) const override {
+    TimeTraceProfilerEntry::writeEvent(J, Pid, Tid, StartTime);
+    writeInstantEvents(J, Pid, Tid, StartTime);
+  }
+
+  void writeInstantEvents(json::OStream &J, sys::Process::Pid Pid, uint64_t Tid,
+                          TimePointType StartTime) const {
+    for (auto IE : InstantEvents) {
+      IE->writeEvent(J, Pid, Tid, StartTime);
+    }
+  }
+
+  virtual void writeAdditionalEventFileds(json::OStream &J) const override {}
+
   ClockType::rep getFlameGraphDurUs() const {
     return (time_point_cast<microseconds>(End) -
             time_point_cast<microseconds>(Start))
         .count();
+  }
+
+  std::vector<std::shared_ptr<InstantEvent>> InstantEvents;
+  TimePointType End;
+};
+
+struct llvm::CompleteEvent : llvm::DurableEvent {
+  CompleteEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+                std::string &&Dt)
+      : DurableEvent(std::move(S), std::move(E), std::move(N), std::move(Dt)) {}
+
+  CompleteEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+                TimeTraceMetadata &&Mt)
+      : DurableEvent(std::move(S), std::move(E), std::move(N), std::move(Mt)) {}
+
+  virtual void writeAdditionalEventFileds(json::OStream &J) const override {
+    J.attribute("ph", "X");
+    J.attribute("dur", getFlameGraphDurUs());
+  }
+};
+
+struct llvm::AsyncEvent : llvm::DurableEvent {
+  AsyncEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+             std::string &&Dt)
+      : DurableEvent(std::move(S), std::move(E), std::move(N), std::move(Dt)) {}
+
+  AsyncEvent(TimePointType &&S, TimePointType &&E, std::string &&N,
+             TimeTraceMetadata &&Mt)
+      : DurableEvent(std::move(S), std::move(E), std::move(N), std::move(Mt)) {}
+
+  void writeEvent(json::OStream &J, sys::Process::Pid Pid, uint64_t Tid,
+                  TimePointType StartTime) const override {
+    DurableEvent::writeEvent(J, Pid, Tid, StartTime);
+    writeEndEvent(J, Pid, Tid, StartTime);
+  }
+
+  void writeEndEvent(json::OStream &J, sys::Process::Pid Pid, uint64_t Tid,
+                     TimePointType StartTime) const {
+    J.object([&] {
+      J.attribute("pid", Pid);
+      J.attribute("tid", int64_t(Tid));
+      J.attribute("ts", getFlameGraphStartUs(StartTime) + getFlameGraphDurUs());
+      J.attribute("cat", Name);
+      J.attribute("ph", "e");
+      J.attribute("id", 0);
+      J.attribute("name", Name);
+    });
+  }
+
+  void writeAdditionalEventFileds(json::OStream &J) const override {
+    J.attribute("cat", Name);
+    J.attribute("ph", "b");
+    J.attribute("id", 0);
   }
 };
 
@@ -114,52 +226,68 @@ struct llvm::TimeTraceProfiler {
         TimeTraceVerbose(TimeTraceVerbose) {
     llvm::get_thread_name(ThreadName);
   }
-
-  TimeTraceProfilerEntry *begin(std::string Name,
-                                llvm::function_ref<std::string()> Detail,
-                                TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
-    Stack.emplace_back(std::make_unique<TimeTraceProfilerEntry>(
-        ClockType::now(), TimePointType(), std::move(Name), Detail(),
-        Et));
-    return Stack.back().get();
+  std::shared_ptr<DurableEvent> begin(std::string Name,
+                                      llvm::function_ref<std::string()> Detail,
+                                      bool AsyncEventType) {
+    if (AsyncEventType) {
+      Stack.emplace_back(std::make_shared<AsyncEvent>(
+          ClockType::now(), TimePointType(), std::move(Name), Detail()));
+    } else {
+      Stack.emplace_back(std::make_shared<CompleteEvent>(
+          ClockType::now(), TimePointType(), std::move(Name), Detail()));
+    }
+    return Stack.back();
   }
 
-  TimeTraceProfilerEntry *
+  std::shared_ptr<DurableEvent>
   begin(std::string Name, llvm::function_ref<TimeTraceMetadata()> Metadata,
-        TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
-    Stack.emplace_back(std::make_unique<TimeTraceProfilerEntry>(
-        ClockType::now(), TimePointType(), std::move(Name), Metadata(),
-        Et));
-    return Stack.back().get();
+        bool AsyncEventType) {
+
+    if (AsyncEventType) {
+      Stack.emplace_back(std::make_shared<AsyncEvent>(
+          ClockType::now(), TimePointType(), std::move(Name), Metadata()));
+    } else {
+      Stack.emplace_back(std::make_shared<CompleteEvent>(
+          ClockType::now(), TimePointType(), std::move(Name), Metadata()));
+    }
+    return Stack.back();
+  }
+
+  void insert(std::string Name, llvm::function_ref<std::string()> Detail) {
+    if (Stack.empty())
+      return;
+
+    Stack.back().get()->InstantEvents.emplace_back(
+        std::make_shared<InstantEvent>(ClockType::now(), std::move(Name),
+                                       Detail()));
+  }
+
+  void insert(std::string Name,
+              llvm::function_ref<TimeTraceMetadata()> Metadata) {
+    if (Stack.empty())
+      return;
+
+    Stack.back().get()->InstantEvents.emplace_back(
+        std::make_shared<InstantEvent>(ClockType::now(), std::move(Name),
+                                       Metadata()));
   }
 
   void end() {
     assert(!Stack.empty() && "Must call begin() first");
-    end(*Stack.back());
+    end(Stack.back());
   }
 
-  void end(TimeTraceProfilerEntry &E) {
+  void end(std::shared_ptr<DurableEvent> &E) {
     assert(!Stack.empty() && "Must call begin() first");
-    E.End = ClockType::now();
+    E->End = ClockType::now();
 
     // Calculate duration at full precision for overall counts.
-    DurationType Duration = E.End - E.Start;
+    DurationType Duration = E->End - E->Start;
 
-    // Only include Instant Events or events with a duration longer or equal to
+    // Only include events with a duration longer or equal to
     // TimeTraceGranularity msec.
-    if (E.EventType == TimeTraceEventType::InstantEvent ||
-        duration_cast<microseconds>(Duration).count() >= TimeTraceGranularity) {
+    if (duration_cast<microseconds>(Duration).count() >= TimeTraceGranularity) {
       Entries.emplace_back(E);
-    } else {
-      // if the event is not included, exclude also all instant events that
-      // happened during this event.
-      for (SmallVector<TimeTraceProfilerEntry, 128>::iterator it = Entries.begin(); it != Entries.end();) {
-        if (TimeTraceEventType::InstantEvent == it->EventType &&
-            it->Start > E.Start && it->Start < E.End)
-          it = Entries.erase(it);
-        else
-          ++it;
-      }
     }
 
     // Track total time taken by each "name", but only the topmost levels of
@@ -168,18 +296,17 @@ struct llvm::TimeTraceProfiler {
     // happens to be the ones that don't have any currently open entries above
     // itself.
     if (llvm::none_of(llvm::drop_begin(llvm::reverse(Stack)),
-                      [&](const std::unique_ptr<TimeTraceProfilerEntry> &Val) {
-                        return Val->Name == E.Name;
+                      [&](const std::shared_ptr<DurableEvent> &Val) {
+                        return Val->Name == E->Name;
                       })) {
-      auto &CountAndTotal = CountAndTotalPerName[E.Name];
+      auto &CountAndTotal = CountAndTotalPerName[E->Name];
       CountAndTotal.first++;
       CountAndTotal.second += Duration;
     };
 
-    llvm::erase_if(Stack,
-                   [&](const std::unique_ptr<TimeTraceProfilerEntry> &Val) {
-                     return Val.get() == &E;
-                   });
+    llvm::erase_if(Stack, [&](const std::shared_ptr<DurableEvent> &Val) {
+      return Val.get() == E.get();
+    });
   }
 
   // Write events from this TimeTraceProfilerInstance and
@@ -200,54 +327,13 @@ struct llvm::TimeTraceProfiler {
     J.arrayBegin();
 
     // Emit all events for the main flame graph.
-    auto writeEvent = [&](const auto &E, uint64_t Tid) {
-      auto StartUs = E.getFlameGraphStartUs(StartTime);
-      auto DurUs = E.getFlameGraphDurUs();
-
-      J.object([&] {
-        J.attribute("pid", Pid);
-        J.attribute("tid", int64_t(Tid));
-        J.attribute("ts", StartUs);
-        if (E.EventType == TimeTraceEventType::AsyncEvent) {
-          J.attribute("cat", E.Name);
-          J.attribute("ph", "b");
-          J.attribute("id", 0);
-        } else if (E.EventType == TimeTraceEventType::CompleteEvent) {
-          J.attribute("ph", "X");
-          J.attribute("dur", DurUs);
-        } else { // instant event
-          J.attribute("ph", "i");
-        }
-        J.attribute("name", E.Name);
-        if (!E.Metadata.isEmpty()) {
-          J.attributeObject("args", [&] {
-            if (!E.Metadata.Detail.empty())
-              J.attribute("detail", E.Metadata.Detail);
-            if (!E.Metadata.File.empty())
-              J.attribute("file", E.Metadata.File);
-            if (E.Metadata.Line > 0)
-              J.attribute("line", E.Metadata.Line);
-          });
-        }
-      });
-
-      if (E.EventType == TimeTraceEventType::AsyncEvent) {
-        J.object([&] {
-          J.attribute("pid", Pid);
-          J.attribute("tid", int64_t(Tid));
-          J.attribute("ts", StartUs + DurUs);
-          J.attribute("cat", E.Name);
-          J.attribute("ph", "e");
-          J.attribute("id", 0);
-          J.attribute("name", E.Name);
-        });
-      }
-    };
-    for (const TimeTraceProfilerEntry &E : Entries)
-      writeEvent(E, this->Tid);
+    for (const auto &E : Entries) {
+      E->writeEvent(J, Pid, this->Tid, StartTime);
+    }
     for (const TimeTraceProfiler *TTP : Instances.List)
-      for (const TimeTraceProfilerEntry &E : TTP->Entries)
-        writeEvent(E, TTP->Tid);
+      for (const auto &E : TTP->Entries) {
+        E->writeEvent(J, Pid, TTP->Tid, StartTime);
+      }
 
     // Emit totals by section name as additional "thread" events, sorted from
     // longest one.
@@ -335,8 +421,8 @@ struct llvm::TimeTraceProfiler {
     J.objectEnd();
   }
 
-  SmallVector<std::unique_ptr<TimeTraceProfilerEntry>, 16> Stack;
-  SmallVector<TimeTraceProfilerEntry, 128> Entries;
+  SmallVector<std::shared_ptr<DurableEvent>, 16> Stack;
+  SmallVector<std::shared_ptr<DurableEvent>, 128> Entries;
   StringMap<CountAndDurationType> CountAndTotalPerName;
   // System clock time when the session was begun.
   const time_point<system_clock> BeginningOfTime;
@@ -418,43 +504,47 @@ Error llvm::timeTraceProfilerWrite(StringRef PreferredFileName,
   return Error::success();
 }
 
-TimeTraceProfilerEntry *llvm::timeTraceProfilerBegin(StringRef Name,
-                                                     StringRef Detail) {
+std::shared_ptr<DurableEvent> llvm::timeTraceProfilerBegin(StringRef Name,
+                                                           StringRef Detail) {
   if (TimeTraceProfilerInstance != nullptr)
     return TimeTraceProfilerInstance->begin(
-        std::string(Name), [&]() { return std::string(Detail); }, TimeTraceEventType::CompleteEvent);
+        std::string(Name), [&]() { return std::string(Detail); }, false);
   return nullptr;
 }
 
-TimeTraceProfilerEntry *
+std::shared_ptr<DurableEvent>
 llvm::timeTraceProfilerBegin(StringRef Name,
                              llvm::function_ref<std::string()> Detail) {
   if (TimeTraceProfilerInstance != nullptr)
-    return TimeTraceProfilerInstance->begin(std::string(Name), Detail, TimeTraceEventType::CompleteEvent);
+    return TimeTraceProfilerInstance->begin(std::string(Name), Detail, false);
   return nullptr;
 }
 
-TimeTraceProfilerEntry *
+std::shared_ptr<DurableEvent>
 llvm::timeTraceProfilerBegin(StringRef Name,
                              llvm::function_ref<TimeTraceMetadata()> Metadata) {
   if (TimeTraceProfilerInstance != nullptr)
-    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, TimeTraceEventType::CompleteEvent);
+    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, false);
   return nullptr;
 }
 
-TimeTraceProfilerEntry *
-llvm::timeTraceInstantEventProfilerBegin(StringRef Name,
-                             llvm::function_ref<TimeTraceMetadata()> Metadata) {
+void llvm::timeTraceProfilerInsert(StringRef Name, StringRef Detail) {
   if (TimeTraceProfilerInstance != nullptr)
-    return TimeTraceProfilerInstance->begin(std::string(Name), Metadata, TimeTraceEventType::InstantEvent);
-  return nullptr;
+    TimeTraceProfilerInstance->insert(std::string(Name),
+                                      [&]() { return std::string(Detail); });
 }
 
-TimeTraceProfilerEntry *llvm::timeTraceAsyncProfilerBegin(StringRef Name,
-                                                          StringRef Detail) {
+void llvm::timeTraceProfilerInsert(
+    StringRef Name, llvm::function_ref<TimeTraceMetadata()> Metadata) {
+  if (TimeTraceProfilerInstance != nullptr)
+    TimeTraceProfilerInstance->insert(std::string(Name), Metadata);
+}
+
+std::shared_ptr<DurableEvent>
+llvm::timeTraceAsyncProfilerBegin(StringRef Name, StringRef Detail) {
   if (TimeTraceProfilerInstance != nullptr)
     return TimeTraceProfilerInstance->begin(
-        std::string(Name), [&]() { return std::string(Detail); }, TimeTraceEventType::AsyncEvent);
+        std::string(Name), [&]() { return std::string(Detail); }, true);
   return nullptr;
 }
 
@@ -463,7 +553,7 @@ void llvm::timeTraceProfilerEnd() {
     TimeTraceProfilerInstance->end();
 }
 
-void llvm::timeTraceProfilerEnd(TimeTraceProfilerEntry *E) {
+void llvm::timeTraceProfilerEnd(std::shared_ptr<DurableEvent> &E) {
   if (TimeTraceProfilerInstance != nullptr)
-    TimeTraceProfilerInstance->end(*E);
+    TimeTraceProfilerInstance->end(E);
 }

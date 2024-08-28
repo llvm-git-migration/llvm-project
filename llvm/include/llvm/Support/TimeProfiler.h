@@ -94,12 +94,16 @@ struct TimeTraceMetadata {
   bool isEmpty() const { return Detail.empty() && File.empty(); }
 };
 
+struct TimeTraceProfilerEntry;
+struct InstantEvent;
+struct DurableEvent;
+struct CompleteEvent;
+struct AsyncEvent;
+
 struct TimeTraceProfiler;
 TimeTraceProfiler *getTimeTraceProfilerInstance();
 
 bool isTimeTraceVerbose();
-
-struct TimeTraceProfilerEntry;
 
 /// Initialize the time trace profiler.
 /// This sets up the global \p TimeTraceProfilerInstance
@@ -136,13 +140,13 @@ Error timeTraceProfilerWrite(StringRef PreferredFileName,
 /// Profiler copies the string data, so the pointers can be given into
 /// temporaries. Time sections can be hierarchical; every Begin must have a
 /// matching End pair but they can nest.
-TimeTraceProfilerEntry *timeTraceProfilerBegin(StringRef Name,
-                                               StringRef Detail);
-TimeTraceProfilerEntry *
+std::shared_ptr<DurableEvent> timeTraceProfilerBegin(StringRef Name,
+                                                     StringRef Detail);
+std::shared_ptr<DurableEvent>
 timeTraceProfilerBegin(StringRef Name,
                        llvm::function_ref<std::string()> Detail);
 
-TimeTraceProfilerEntry *
+std::shared_ptr<DurableEvent>
 timeTraceProfilerBegin(StringRef Name,
                        llvm::function_ref<TimeTraceMetadata()> MetaData);
 
@@ -151,16 +155,17 @@ timeTraceProfilerBegin(StringRef Name,
 /// separately from other traces. See
 /// https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.jh64i9l3vwa1
 /// for more details.
-TimeTraceProfilerEntry *timeTraceAsyncProfilerBegin(StringRef Name,
-                                                    StringRef Detail);
+std::shared_ptr<DurableEvent> timeTraceAsyncProfilerBegin(StringRef Name,
+                                                          StringRef Detail);
 
 // Mark an instant event.
-TimeTraceProfilerEntry *timeTraceInstantEventProfilerBegin(StringRef Name,
+void timeTraceProfilerInsert(StringRef Name,
                              llvm::function_ref<TimeTraceMetadata()> Metadata);
+void timeTraceProfilerInsert(StringRef Name, StringRef Detail);
 
 /// Manually end the last time section.
 void timeTraceProfilerEnd();
-void timeTraceProfilerEnd(TimeTraceProfilerEntry *E);
+void timeTraceProfilerEnd(std::shared_ptr<DurableEvent> &E);
 
 /// The TimeTraceScope is a helper class to call the begin and end functions
 /// of the time trace profiler.  When the object is constructed, it begins
@@ -187,18 +192,9 @@ public:
       Entry = timeTraceProfilerBegin(Name, Detail);
   }
   TimeTraceScope(StringRef Name,
-                 llvm::function_ref<TimeTraceMetadata()> Metadata, TimeTraceEventType Et = TimeTraceEventType::CompleteEvent) {
-    if (getTimeTraceProfilerInstance() == nullptr)
-      return;
-    assert((Et == TimeTraceEventType::InstantEvent ||
-            Et == TimeTraceEventType::CompleteEvent) &&
-           "Event Type not supported.");
-
-    if (Et == TimeTraceEventType::CompleteEvent) {
+                 llvm::function_ref<TimeTraceMetadata()> Metadata) {
+    if (getTimeTraceProfilerInstance() != nullptr)
       Entry = timeTraceProfilerBegin(Name, Metadata);
-    } else {
-      Entry = timeTraceInstantEventProfilerBegin(Name, Metadata);
-    } 
   }
   ~TimeTraceScope() {
     if (getTimeTraceProfilerInstance() != nullptr)
@@ -206,7 +202,7 @@ public:
   }
 
 private:
-  TimeTraceProfilerEntry *Entry = nullptr;
+  std::shared_ptr<DurableEvent> Entry = nullptr;
 };
 
 } // end namespace llvm

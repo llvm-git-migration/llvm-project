@@ -160,7 +160,7 @@ namespace sema {
 class SemaPPCallbacks : public PPCallbacks {
   Sema *S = nullptr;
   llvm::SmallVector<SourceLocation, 8> IncludeStack;
-  llvm::SmallVector<llvm::TimeTraceProfilerEntry *, 8> ProfilerStack;
+  llvm::SmallVector<std::shared_ptr<llvm::DurableEvent>, 8> ProfilerStack;
 
 public:
   void set(Sema &S) { this->S = &S; }
@@ -192,8 +192,10 @@ public:
     }
     case ExitFile:
       if (!IncludeStack.empty()) {
-        if (llvm::timeTraceProfilerEnabled())
-          llvm::timeTraceProfilerEnd(ProfilerStack.pop_back_val());
+        if (llvm::timeTraceProfilerEnabled()) {
+          auto E = ProfilerStack.pop_back_val();
+          llvm::timeTraceProfilerEnd(E);
+        }
 
         S->DiagnoseNonDefaultPragmaAlignPack(
             Sema::PragmaAlignPackDiagnoseKind::ChangedStateAtExit,

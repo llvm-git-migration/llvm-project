@@ -57,7 +57,7 @@ TEST(TimeProfiler, Begin_End_Smoke) {
 TEST(TimeProfiler, Async_Begin_End_Smoke) {
   setupProfiler();
 
-  auto *Profiler = timeTraceAsyncProfilerBegin("event", "detail");
+  auto Profiler = timeTraceAsyncProfilerBegin("event", "detail");
   timeTraceProfilerEnd(Profiler);
 
   std::string json = teardownProfiler();
