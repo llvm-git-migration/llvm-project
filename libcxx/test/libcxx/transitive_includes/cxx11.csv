@@ -20,6 +20,7 @@ algorithm utility
 algorithm version
 any atomic
 any chrono
+any climits
 any concepts
 any cstddef
 any cstdint
@@ -63,6 +64,7 @@ atomic ratio
 atomic type_traits
 atomic version
 barrier atomic
+barrier climits
 barrier concepts
 barrier cstddef
 barrier cstdint
@@ -139,6 +141,7 @@ cmath type_traits
 cmath version
 codecvt atomic
 codecvt cctype
+codecvt climits
 codecvt clocale
 codecvt concepts
 codecvt cstddef
@@ -205,6 +208,7 @@ cwchar cwctype
 cwctype cctype
 deque algorithm
 deque atomic
+deque climits
 deque compare
 deque concepts
 deque cstddef
@@ -311,6 +315,7 @@ forward_list typeinfo
 forward_list version
 fstream atomic
 fstream cctype
+fstream climits
 fstream clocale
 fstream concepts
 fstream cstddef
@@ -335,6 +340,7 @@ fstream typeinfo
 fstream version
 functional array
 functional atomic
+functional climits
 functional concepts
 functional cstddef
 functional cstdint
@@ -357,6 +363,7 @@ functional version
 future atomic
 future cerrno
 future chrono
+future climits
 future cstddef
 future cstdint
 future cstdlib
@@ -381,6 +388,7 @@ iomanip version
 ios atomic
 ios cctype
 ios cerrno
+ios climits
 ios clocale
 ios concepts
 ios cstddef
@@ -408,6 +416,7 @@ iostream streambuf
 iostream version
 istream bitset
 istream cerrno
+istream climits
 istream concepts
 istream cstddef
 istream cstdint
@@ -473,6 +482,7 @@ list version
 locale atomic
 locale cctype
 locale cerrno
+locale climits
 locale clocale
 locale concepts
 locale cstdarg
@@ -522,6 +532,7 @@ mdspan limits
 mdspan span
 mdspan version
 memory atomic
+memory climits
 memory compare
 memory concepts
 memory cstddef
@@ -612,6 +623,7 @@ optional version
 ostream atomic
 ostream bitset
 ostream cerrno
+ostream climits
 ostream concepts
 ostream cstddef
 ostream cstdint
@@ -687,6 +699,7 @@ ratio type_traits
 ratio version
 regex atomic
 regex cctype
+regex climits
 regex clocale
 regex compare
 regex concepts
@@ -775,6 +788,7 @@ span type_traits
 span version
 sstream bitset
 sstream cerrno
+sstream climits
 sstream cstddef
 sstream cstdint
 sstream cstring
@@ -943,6 +957,7 @@ typeinfo cstdlib
 typeinfo type_traits
 unordered_map algorithm
 unordered_map bit
+unordered_map climits
 unordered_map cmath
 unordered_map compare
 unordered_map concepts
@@ -959,6 +974,7 @@ unordered_map stdexcept
 unordered_map tuple
 unordered_map type_traits
 unordered_map version
+unordered_set climits
 unordered_set cmath
 unordered_set compare
 unordered_set concepts

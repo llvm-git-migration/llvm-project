@@ -12,6 +12,7 @@ algorithm optional
 algorithm ratio
 algorithm tuple
 algorithm version
+any climits
 any cstddef
 any cstdint
 any cstring
@@ -36,6 +37,7 @@ atomic ctime
 atomic limits
 atomic ratio
 atomic version
+barrier climits
 barrier cstddef
 barrier cstdint
 barrier cstring
@@ -90,6 +92,7 @@ cmath initializer_list
 cmath limits
 cmath version
 codecvt cctype
+codecvt climits
 codecvt clocale
 codecvt cstddef
 codecvt cstdint
@@ -115,6 +118,7 @@ concepts cstddef
 concepts version
 condition_variable atomic
 condition_variable cerrno
+condition_variable climits
 condition_variable cstddef
 condition_variable cstdint
 condition_variable cstring
@@ -136,6 +140,7 @@ ctgmath ccomplex
 ctgmath cmath
 cwchar cwctype
 cwctype cctype
+deque climits
 deque compare
 deque cstddef
 deque cstdint
@@ -184,6 +189,7 @@ filesystem version
 format array
 format cctype
 format cerrno
+format climits
 format clocale
 format cmath
 format cstddef
@@ -211,6 +217,7 @@ forward_list new
 forward_list tuple
 forward_list version
 fstream cctype
+fstream climits
 fstream clocale
 fstream cstddef
 fstream cstdint
@@ -229,6 +236,7 @@ fstream tuple
 fstream typeinfo
 fstream version
 functional array
+functional climits
 functional cstddef
 functional cstdint
 functional cstring
@@ -241,6 +249,7 @@ functional unordered_map
 functional vector
 functional version
 future cerrno
+future climits
 future cstddef
 future cstdint
 future cstdlib
@@ -260,6 +269,7 @@ iomanip istream
 iomanip version
 ios cctype
 ios cerrno
+ios climits
 ios clocale
 ios cstddef
 ios cstdint
@@ -285,6 +295,7 @@ iostream streambuf
 iostream version
 istream bitset
 istream cerrno
+istream climits
 istream cstddef
 istream cstdint
 istream cstring
@@ -326,6 +337,7 @@ list tuple
 list version
 locale cctype
 locale cerrno
+locale climits
 locale clocale
 locale cstddef
 locale cstdint
@@ -344,6 +356,7 @@ locale string
 locale tuple
 locale typeinfo
 locale version
+map climits
 map compare
 map cstddef
 map cstdint
@@ -362,6 +375,7 @@ mdspan cstddef
 mdspan limits
 mdspan span
 mdspan version
+memory climits
 memory compare
 memory cstddef
 memory cstdint
@@ -380,6 +394,7 @@ memory_resource new
 memory_resource tuple
 memory_resource version
 mutex cerrno
+mutex climits
 mutex cstddef
 mutex cstdint
 mutex ctime
@@ -415,6 +430,7 @@ optional new
 optional version
 ostream bitset
 ostream cerrno
+ostream climits
 ostream cstddef
 ostream cstdint
 ostream cstring
@@ -473,6 +489,7 @@ ratio climits
 ratio cstdint
 ratio version
 regex cctype
+regex climits
 regex clocale
 regex compare
 regex cstddef
@@ -503,6 +520,7 @@ semaphore ctime
 semaphore limits
 semaphore ratio
 semaphore version
+set climits
 set compare
 set cstddef
 set cstdint
@@ -530,6 +548,7 @@ span stdexcept
 span version
 sstream bitset
 sstream cerrno
+sstream climits
 sstream cstddef
 sstream cstdint
 sstream cstring
@@ -625,6 +644,7 @@ thread array
 thread atomic
 thread cctype
 thread cerrno
+thread climits
 thread clocale
 thread compare
 thread cstddef
@@ -658,6 +678,7 @@ typeindex typeinfo
 typeindex version
 typeinfo cstddef
 typeinfo cstdint
+unordered_map climits
 unordered_map compare
 unordered_map cstddef
 unordered_map cstdint
@@ -669,6 +690,7 @@ unordered_map optional
 unordered_map stdexcept
 unordered_map tuple
 unordered_map version
+unordered_set climits
 unordered_set compare
 unordered_set cstddef
 unordered_set cstdint
