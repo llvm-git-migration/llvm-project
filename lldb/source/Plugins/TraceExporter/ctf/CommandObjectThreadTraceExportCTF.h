@@ -48,7 +48,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override;
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 
   CommandOptions m_options;
 };

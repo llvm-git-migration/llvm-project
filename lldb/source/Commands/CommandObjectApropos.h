@@ -23,7 +23,7 @@ public:
   ~CommandObjectApropos() override;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override;
+  void DoExecute(Args &command,               std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 };
 
 } // namespace lldb_private

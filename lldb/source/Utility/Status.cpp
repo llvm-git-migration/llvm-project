@@ -196,11 +196,9 @@ void Status::Clear() {
   m_string.clear();
 }
 
-// Access the error value.
 Status::ValueType Status::GetError() const { return m_code; }
-
-// Access the error type.
 ErrorType Status::GetType() const { return m_type; }
+llvm::ArrayRef<Status::Detail> Status::GetDetails() const { return m_details; }
 
 // Returns true if this object contains a value that describes an error or
 // otherwise non-success result.

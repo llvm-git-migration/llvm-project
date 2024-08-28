@@ -247,7 +247,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     FileSpec core_file(m_core_file.GetOptionValue().GetCurrentValue());
     FileSpec remote_file(m_remote_file.GetOptionValue().GetCurrentValue());
@@ -472,7 +472,7 @@ public:
   ~CommandObjectTargetList() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &strm = result.GetOutputStream();
 
     bool show_stopped_process_status = false;
@@ -498,7 +498,7 @@ public:
   ~CommandObjectTargetSelect() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (args.GetArgumentCount() == 1) {
       const char *target_identifier = args.GetArgumentAtIndex(0);
       uint32_t target_idx = LLDB_INVALID_INDEX32;
@@ -582,7 +582,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = args.GetArgumentCount();
     std::vector<TargetSP> delete_target_list;
     TargetList &target_list = GetDebugger().GetTargetList();
@@ -670,7 +670,7 @@ public:
   ~CommandObjectTargetShowLaunchEnvironment() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = m_exe_ctx.GetTargetPtr();
     Environment env = target->GetEnvironment();
 
@@ -829,7 +829,7 @@ protected:
     }
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = m_exe_ctx.GetTargetPtr();
     const size_t argc = args.GetArgumentCount();
     Stream &s = result.GetOutputStream();
@@ -1026,7 +1026,7 @@ public:
   ~CommandObjectTargetModulesSearchPathsAdd() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     const size_t argc = command.GetArgumentCount();
     if (argc & 1) {
@@ -1073,7 +1073,7 @@ public:
   ~CommandObjectTargetModulesSearchPathsClear() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     bool notify = true;
     target.GetImageSearchPathList().Clear(notify);
@@ -1147,7 +1147,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     size_t argc = command.GetArgumentCount();
     // check for at least 3 arguments and an odd number of parameters
@@ -1202,7 +1202,7 @@ public:
   ~CommandObjectTargetModulesSearchPathsList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     target.GetImageSearchPathList().Dump(&result.GetOutputStream());
     result.SetStatus(eReturnStatusSuccessFinishResult);
@@ -1224,7 +1224,7 @@ public:
   ~CommandObjectTargetModulesSearchPathsQuery() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     if (command.GetArgumentCount() != 1) {
       result.AppendError("query requires one argument\n");
@@ -1896,7 +1896,7 @@ public:
   ~CommandObjectTargetModulesDumpObjfile() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     uint32_t addr_byte_size = target.GetArchitecture().GetAddressByteSize();
@@ -1997,7 +1997,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     uint32_t num_dumped = 0;
     Mangled::NamePreference name_preference =
@@ -2095,7 +2095,7 @@ public:
   ~CommandObjectTargetModulesDumpSections() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     uint32_t num_dumped = 0;
 
@@ -2179,7 +2179,7 @@ public:
   ~CommandObjectTargetModulesDumpClangPCMInfo() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.GetArgumentCount() != 1) {
       result.AppendErrorWithFormat("'%s' takes exactly one pcm path argument.",
                                    m_cmd_name.c_str());
@@ -2236,7 +2236,7 @@ public:
   ~CommandObjectTargetModulesDumpClangAST() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     const ModuleList &module_list = target.GetImages();
@@ -2307,7 +2307,7 @@ public:
   ~CommandObjectTargetModulesDumpSymfile() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     uint32_t num_dumped = 0;
 
@@ -2390,7 +2390,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = m_exe_ctx.GetTargetPtr();
     uint32_t total_num_dumped = 0;
 
@@ -2531,7 +2531,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     uint32_t num_dumped = 0;
 
@@ -2724,7 +2724,7 @@ protected:
   OptionGroupUUID m_uuid_option_group;
   OptionGroupFile m_symbol_file;
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     bool flush = false;
 
@@ -2874,7 +2874,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     const bool load = m_load_option.GetOptionValue().GetCurrentValue();
     const bool set_pc = m_pc_option.GetOptionValue().GetCurrentValue();
@@ -3164,7 +3164,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     const bool use_global_module_list = m_options.m_use_global_module_list;
     // Define a local module list here to ensure it lives longer than any
@@ -3508,7 +3508,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = m_exe_ctx.GetTargetPtr();
     Process *process = m_exe_ctx.GetProcessPtr();
     ABI *abi = nullptr;
@@ -4054,7 +4054,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     bool syntax_error = false;
     uint32_t i;
@@ -4558,7 +4558,7 @@ protected:
     return true;
   }
 
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target *target = m_exe_ctx.GetTargetPtr();
     result.SetStatus(eReturnStatusFailed);
     bool flush = false;
@@ -4941,7 +4941,7 @@ protected:
     io_handler.SetIsDone(true);
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     m_stop_hook_sp.reset();
 
     Target &target = GetTarget();
@@ -5080,7 +5080,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     // FIXME: see if we can use the breakpoint id style parser?
     size_t num_args = command.GetArgumentCount();
@@ -5134,7 +5134,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     // FIXME: see if we can use the breakpoint id style parser?
     size_t num_args = command.GetArgumentCount();
@@ -5178,7 +5178,7 @@ public:
   ~CommandObjectTargetStopHookList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     size_t num_hooks = target.GetNumStopHooks();
@@ -5243,7 +5243,7 @@ public:
   ~CommandObjectTargetDumpTypesystem() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // Go over every scratch TypeSystem and dump to the command output.
     for (lldb::TypeSystemSP ts : GetTarget().GetScratchTypeSystems())
       if (ts)
@@ -5268,7 +5268,7 @@ public:
   ~CommandObjectTargetDumpSectionLoadList() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     target.GetSectionLoadList().Dump(result.GetOutputStream(), &target);
     result.SetStatus(eReturnStatusSuccessFinishResult);

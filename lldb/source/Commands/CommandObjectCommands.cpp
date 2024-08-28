@@ -110,7 +110,7 @@ protected:
     OptionValueBoolean m_cmd_relative_to_command_file;
   };
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command,                std::optional<uint16_t> offset_in_command,CommandReturnObject &result) override {
     if (command.GetArgumentCount() != 1) {
       result.AppendErrorWithFormat(
           "'%s' takes exactly one executable filename argument.\n",
@@ -370,7 +370,7 @@ other command as far as there is only one alias command match.");
   ~CommandObjectCommandsAlias() override = default;
 
 protected:
-  void DoExecute(llvm::StringRef raw_command_line,
+  void DoExecute(llvm::StringRef raw_command_line, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     if (raw_command_line.empty()) {
       result.AppendError("'command alias' requires at least two arguments");
@@ -625,7 +625,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args,                std::optional<uint16_t> offset_in_command,CommandReturnObject &result) override {
     CommandObject::CommandMap::iterator pos;
     CommandObject *cmd_obj;
 
@@ -701,7 +701,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args,                std::optional<uint16_t> offset_in_command,CommandReturnObject &result) override {
     CommandObject::CommandMap::iterator pos;
 
     if (args.empty()) {
@@ -825,7 +825,7 @@ protected:
     }
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     if (argc == 0) {
       result.AppendError("usage: 'command regex <command-name> "
@@ -1082,7 +1082,7 @@ public:
   bool WantsCompletion() override { return true; }
 
 protected:
-  void DoExecute(llvm::StringRef raw_command_line,
+  void DoExecute(llvm::StringRef raw_command_line, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     ScriptInterpreter *scripter = GetDebugger().GetScriptInterpreter();
 
@@ -1190,7 +1190,7 @@ public:
   }
 
 protected:
-  void DoExecute(llvm::StringRef raw_command_line,
+  void DoExecute(llvm::StringRef raw_command_line, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     ScriptInterpreter *scripter = GetDebugger().GetScriptInterpreter();
 
@@ -1931,7 +1931,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &args,
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     ScriptInterpreter *scripter = GetDebugger().GetScriptInterpreter();
 
@@ -2023,7 +2023,7 @@ protected:
     bool silent = false;
   };
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.empty()) {
       result.AppendError("command script import needs one or more arguments");
       return;
@@ -2250,7 +2250,7 @@ protected:
     io_handler.SetIsDone(true);
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (GetDebugger().GetScriptLanguage() != lldb::eScriptLanguagePython) {
       result.AppendError("only scripting language supported for scripted "
                          "commands is currently Python");
@@ -2373,7 +2373,7 @@ public:
 
   ~CommandObjectCommandsScriptList() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     m_interpreter.GetHelp(result, CommandInterpreter::eCommandTypesUserDef);
 
     result.SetStatus(eReturnStatusSuccessFinishResult);
@@ -2391,7 +2391,7 @@ public:
   ~CommandObjectCommandsScriptClear() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     m_interpreter.RemoveAllUser();
 
     result.SetStatus(eReturnStatusSuccessFinishResult);
@@ -2420,7 +2420,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
 
     llvm::StringRef root_cmd = command[0].ref();
     size_t num_args = command.GetArgumentCount();
@@ -2604,7 +2604,7 @@ protected:
     std::string m_long_help;
     bool m_overwrite = false;
   };
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     size_t num_args = command.GetArgumentCount();
 
     if (num_args == 0) {
@@ -2684,7 +2684,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     size_t num_args = command.GetArgumentCount();
 
     if (num_args == 0) {

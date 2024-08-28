@@ -26,7 +26,7 @@ CommandObjectApropos::CommandObjectApropos(CommandInterpreter &interpreter)
 
 CommandObjectApropos::~CommandObjectApropos() = default;
 
-void CommandObjectApropos::DoExecute(Args &args, CommandReturnObject &result) {
+void CommandObjectApropos::DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) {
   const size_t argc = args.GetArgumentCount();
 
   if (argc == 1) {

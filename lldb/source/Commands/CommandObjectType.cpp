@@ -276,7 +276,7 @@ public:
                        Status *error = nullptr);
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override;
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override;
 };
 
 static const char *g_synth_addreader_instructions =
@@ -389,7 +389,7 @@ private:
   bool Execute_PythonClass(Args &command, CommandReturnObject &result);
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     WarnOnPotentialUnquotedUnsignedType(command, result);
 
     if (m_options.handwrite_python)
@@ -640,7 +640,7 @@ pointers to floats.  Nor will it change the default display for Afloat and Bfloa
   ~CommandObjectTypeFormatAdd() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1) {
@@ -810,7 +810,7 @@ public:
 protected:
   virtual bool FormatterSpecificDeletion(ConstString typeCS) { return false; }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc != 1) {
@@ -921,7 +921,7 @@ public:
 protected:
   virtual void FormatterSpecificDeletion() {}
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (m_options.m_delete_all) {
       DataVisualization::Categories::ForEach(
           [this](const TypeCategoryImplSP &category_sp) -> bool {
@@ -1047,7 +1047,7 @@ protected:
     return regex == nullptr || s == regex->GetText() || regex->Execute(s);
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     std::unique_ptr<RegularExpression> category_regex;
@@ -1518,7 +1518,7 @@ Alternatively, the -o option can be used when providing a simple one-line Python
 (lldb) type summary add JustADemo -o "value = valobj.GetChildMemberWithName('value'); return 'My value is ' + value.GetValue();")");
 }
 
-void CommandObjectTypeSummaryAdd::DoExecute(Args &command,
+void CommandObjectTypeSummaryAdd::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                             CommandReturnObject &result) {
   WarnOnPotentialUnquotedUnsignedType(command, result);
 
@@ -1718,7 +1718,7 @@ public:
   ~CommandObjectTypeCategoryDefine() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1) {
@@ -1803,7 +1803,7 @@ public:
   ~CommandObjectTypeCategoryEnable() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1 && m_options.m_language == lldb::eLanguageTypeUnknown) {
@@ -1854,7 +1854,7 @@ public:
   ~CommandObjectTypeCategoryDelete() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1) {
@@ -1945,7 +1945,7 @@ public:
   ~CommandObjectTypeCategoryDisable() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1 && m_options.m_language == lldb::eLanguageTypeUnknown) {
@@ -2001,7 +2001,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     std::unique_ptr<RegularExpression> regex;
@@ -2439,7 +2439,7 @@ all children of my_foo as if no filter was defined:"
   ~CommandObjectTypeFilterAdd() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc < 1) {
@@ -2598,7 +2598,7 @@ public:
     return m_cmd_help_long;
   }
 
-  void DoExecute(llvm::StringRef raw_command_line,
+  void DoExecute(llvm::StringRef raw_command_line, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     if (raw_command_line.empty()) {
       result.AppendError(
@@ -2725,7 +2725,7 @@ public:
   ~CommandObjectFormatterInfo() override = default;
 
 protected:
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command, std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     TargetSP target_sp = GetDebugger().GetSelectedTarget();
     Thread *thread = GetDefaultThread();

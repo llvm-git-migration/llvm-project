@@ -27,7 +27,7 @@ public:
   ~CommandObjectSessionSave() override = default;
 
 protected:
-  void DoExecute(Args &args, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     llvm::StringRef file_path;
 
     if (!args.empty())
@@ -117,7 +117,7 @@ protected:
     OptionValueBoolean m_clear;
   };
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (m_options.m_clear.GetCurrentValue() &&
         m_options.m_clear.OptionWasSet()) {
       m_interpreter.GetCommandHistory().Clear();

@@ -147,7 +147,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Stream &strm = result.GetOutputStream();
     RegisterContext *reg_ctx = m_exe_ctx.GetRegisterContext();
 
@@ -333,7 +333,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     DataExtractor reg_data;
     RegisterContext *reg_ctx = m_exe_ctx.GetRegisterContext();
 
@@ -424,7 +424,7 @@ different for the same register when connected to different debug servers.)");
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.GetArgumentCount() != 1) {
       result.AppendError("register info takes exactly 1 argument: <reg-name>");
       return;

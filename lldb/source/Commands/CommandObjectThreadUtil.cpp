@@ -32,7 +32,7 @@ CommandObjectMultipleThreads::CommandObjectMultipleThreads(
   AddSimpleArgumentList(eArgTypeThreadIndex, eArgRepeatStar);
 }
 
-void CommandObjectIterateOverThreads::DoExecute(Args &command,
+void CommandObjectIterateOverThreads::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                                 CommandReturnObject &result) {
   result.SetStatus(m_success_return);
 
@@ -164,7 +164,7 @@ bool CommandObjectIterateOverThreads::BucketThread(
   return true;
 }
 
-void CommandObjectMultipleThreads::DoExecute(Args &command,
+void CommandObjectMultipleThreads::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                              CommandReturnObject &result) {
   Process &process = m_exe_ctx.GetProcessRef();
 

@@ -538,7 +538,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &args, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target =
         m_dummy_options.m_use_dummy ? GetDummyTarget() : GetTarget();
 
@@ -839,7 +839,7 @@ public:
   Options *GetOptions() override { return &m_options; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = m_dummy_opts.m_use_dummy ? GetDummyTarget() : GetTarget();
 
     std::unique_lock<std::recursive_mutex> lock;
@@ -903,7 +903,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     std::unique_lock<std::recursive_mutex> lock;
@@ -1010,7 +1010,7 @@ the second re-enables the first location.");
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
     std::unique_lock<std::recursive_mutex> lock;
     target.GetBreakpointList().GetListMutex(lock);
@@ -1148,7 +1148,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = m_options.m_use_dummy ? GetDummyTarget() : GetTarget();
 
     const BreakpointList &breakpoints =
@@ -1267,7 +1267,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     // The following are the various types of breakpoints that could be
@@ -1416,7 +1416,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = m_options.m_use_dummy ? GetDummyTarget() : GetTarget();
     result.Clear();
     
@@ -1669,7 +1669,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
 
     const size_t argc = command.GetArgumentCount();
     if (argc == 0) {
@@ -1758,7 +1758,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (!m_name_options.m_name.OptionWasSet()) {
       result.AppendError("No name option provided.");
       return;
@@ -1832,7 +1832,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (!m_name_options.m_name.OptionWasSet()) {
       result.AppendError("No name option provided.");
       return;
@@ -1896,7 +1896,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target =
         m_name_options.m_use_dummy ? GetDummyTarget() : GetTarget();
 
@@ -2209,7 +2209,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     std::unique_lock<std::recursive_mutex> lock;
@@ -2319,7 +2319,7 @@ public:
   };
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     std::unique_lock<std::recursive_mutex> lock;

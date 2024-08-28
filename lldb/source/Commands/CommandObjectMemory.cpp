@@ -348,7 +348,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // No need to check "target" for validity as eCommandRequiresTarget ensures
     // it is valid
     Target *target = m_exe_ctx.GetTargetPtr();
@@ -980,7 +980,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // No need to check "process" for validity as eCommandRequiresProcess
     // ensures it is valid
     Process *process = m_exe_ctx.GetProcessPtr();
@@ -1232,7 +1232,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // No need to check "process" for validity as eCommandRequiresProcess
     // ensures it is valid
     Process *process = m_exe_ctx.GetProcessPtr();
@@ -1536,7 +1536,7 @@ public:
   }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
 
     if (argc == 0 || argc > 1) {
@@ -1687,7 +1687,7 @@ protected:
     }
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     ProcessSP process_sp = m_exe_ctx.GetProcessSP();
     if (!process_sp) {
       m_prev_end_addr = LLDB_INVALID_ADDRESS;

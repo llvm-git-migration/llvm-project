@@ -438,7 +438,7 @@ CommandObjectDisassemble::GetRangesForSelectedMode(
   return CommandObjectDisassemble::GetPCRanges();
 }
 
-void CommandObjectDisassemble::DoExecute(Args &command,
+void CommandObjectDisassemble::DoExecute(Args &command, std::optional<uint16_t> offset_in_command,
                                          CommandReturnObject &result) {
   Target &target = GetTarget();
 

@@ -532,7 +532,7 @@ protected:
     return true;
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     uint32_t addr_byte_size = target.GetArchitecture().GetAddressByteSize();
@@ -904,7 +904,7 @@ protected:
     }
   }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     Target &target = GetTarget();
 
     if (!m_options.symbol_name.empty()) {
@@ -1205,7 +1205,7 @@ public:
   ~CommandObjectSourceCacheDump() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // Dump the debugger source cache.
     result.GetOutputStream() << "Debugger Source File Cache\n";
     SourceManager::SourceFileCache &cache = GetDebugger().GetSourceFileCache();
@@ -1231,7 +1231,7 @@ public:
   ~CommandObjectSourceCacheClear() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     // Clear the debugger cache.
     SourceManager::SourceFileCache &cache = GetDebugger().GetSourceFileCache();
     cache.Clear();

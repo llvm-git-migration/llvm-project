@@ -42,7 +42,7 @@ public:
   ~CommandObjectMemoryTagRead() override = default;
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if ((command.GetArgumentCount() < 1) || (command.GetArgumentCount() > 2)) {
       result.AppendError(
           "wrong number of arguments; expected at least <address-expression>, "
@@ -194,7 +194,7 @@ public:
   Options *GetOptions() override { return &m_option_group; }
 
 protected:
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     if (command.GetArgumentCount() < 2) {
       result.AppendError("wrong number of arguments; expected "
                          "<address-expression> <tag> [<tag> [...]]");

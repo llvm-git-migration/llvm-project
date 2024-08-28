@@ -5506,7 +5506,7 @@ public:
 
   Options *GetOptions() override { return &m_option_group; }
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     if (argc == 0) {
       ProcessGDBRemote *process =
@@ -5556,7 +5556,7 @@ public:
 
   ~CommandObjectProcessGDBRemotePacketHistory() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     ProcessGDBRemote *process =
         (ProcessGDBRemote *)m_interpreter.GetExecutionContext().GetProcessPtr();
     if (process) {
@@ -5581,7 +5581,7 @@ public:
 
   ~CommandObjectProcessGDBRemotePacketXferSize() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     if (argc == 0) {
       result.AppendErrorWithFormat("'%s' takes an argument to specify the max "
@@ -5623,7 +5623,7 @@ public:
 
   ~CommandObjectProcessGDBRemotePacketSend() override = default;
 
-  void DoExecute(Args &command, CommandReturnObject &result) override {
+  void DoExecute(Args &command, std::optional<uint16_t> offset_in_command, CommandReturnObject &result) override {
     const size_t argc = command.GetArgumentCount();
     if (argc == 0) {
       result.AppendErrorWithFormat(
@@ -5671,7 +5671,7 @@ public:
 
   ~CommandObjectProcessGDBRemotePacketMonitor() override = default;
 
-  void DoExecute(llvm::StringRef command,
+  void DoExecute(llvm::StringRef command,std::optional<uint16_t> offset_in_command,
                  CommandReturnObject &result) override {
     if (command.empty()) {
       result.AppendErrorWithFormat("'%s' takes a command string argument",
