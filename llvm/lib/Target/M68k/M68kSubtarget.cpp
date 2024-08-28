@@ -127,6 +127,24 @@ M68kSubtarget &M68kSubtarget::initializeSubtargetDependencies(
 //  ---------------------+------------+------------+------------+-------------
 //      data global big* |   pc-rel   |  @GOTPCREL |  absolute  |  @GOTPCREL
 //  ---------------------+------------+------------+------------+-------------
+//                       |          Large          |
+//                       +-------------------------+
+//                       |   Static   |    PIC     |
+//  ---------------------+------------+------------+
+//                branch |   pc-rel   |   pc-rel   |
+//  ---------------------+------------+------------+
+//           call global |    @PLT    |    @PLT    |
+//  ---------------------+------------+------------+
+//         call internal |   pc-rel   |   pc-rel   |
+//  ---------------------+------------+------------+
+//            data local |  absolute  |  @GOTOFF   |
+//  ---------------------+------------+------------+
+//       data local big* |  absolute  |  @GOTOFF   |
+//  ---------------------+------------+------------+
+//           data global |  absolute  |  @GOTPCREL |
+//  ---------------------+------------+------------+
+//      data global big* |  absolute  |  @GOTPCREL |
+//  ---------------------+------------+------------+
 //
 // * Big data potentially cannot be reached within 16 bit offset and requires
 //   special handling for old(x00 and x10) CPUs. Normally these symbols go into
@@ -171,6 +189,13 @@ M68kSubtarget::classifyLocalReference(const GlobalValue *GV) const {
       return M68kII::MO_ABSOLUTE_ADDRESS;
     }
   }
+  case CodeModel::Large: {
+    if (isPositionIndependent()) {
+      return M68kII::MO_GOTOFF;
+    } else {
+      return M68kII::MO_ABSOLUTE_ADDRESS;
+    }
+  }
   }
 }
 
@@ -209,6 +234,12 @@ unsigned char M68kSubtarget::classifyGlobalReference(const GlobalValue *GV,
 
     if (atLeastM68020())
       return M68kII::MO_PC_RELATIVE_ADDRESS;
+
+    return M68kII::MO_ABSOLUTE_ADDRESS;
+  }
+  case CodeModel::Large: {
+    if (isPositionIndependent())
+      return M68kII::MO_GOTPCREL;
 
     return M68kII::MO_ABSOLUTE_ADDRESS;
   }
