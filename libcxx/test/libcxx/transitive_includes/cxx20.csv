@@ -353,7 +353,6 @@ functional cstdint
 functional cstdlib
 functional cstring
 functional exception
-functional initializer_list
 functional iosfwd
 functional limits
 functional memory
