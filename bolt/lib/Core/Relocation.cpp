@@ -1009,6 +1009,19 @@ uint64_t Relocation::getRelative() {
   }
 }
 
+uint64_t Relocation::getIRelative() {
+  switch (Arch) {
+  default:
+    llvm_unreachable("Unsupported architecture");
+  case Triple::aarch64:
+    return ELF::R_AARCH64_IRELATIVE;
+  case Triple::riscv64:
+    llvm_unreachable("not implemented");
+  case Triple::x86_64:
+    return ELF::R_X86_64_IRELATIVE;
+  }
+}
+
 size_t Relocation::emit(MCStreamer *Streamer) const {
   const size_t Size = getSizeForType(Type);
   const auto *Value = createExpr(Streamer);
