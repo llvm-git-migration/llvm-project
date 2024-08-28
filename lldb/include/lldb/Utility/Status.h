@@ -9,6 +9,7 @@
 #ifndef LLDB_UTILITY_STATUS_H
 #define LLDB_UTILITY_STATUS_H
 
+#include "lldb/Utility/FileSpec.h"
 #include "lldb/lldb-defines.h"
 #include "lldb/lldb-enumerations.h"
 #include "llvm/ADT/StringRef.h"
@@ -47,7 +48,34 @@ public:
   /// into ValueType.
   typedef uint32_t ValueType;
 
-  Status();
+  /// A customizable "detail" for an error. For example, expression
+  /// evaluation failures often have more than one diagnostic that the
+  /// UI layer might want to render differently.
+  ///
+  /// Running example:
+  ///   (lldb) expr 1+x
+  ///   error: <user expression 0>:1:3: use of undeclared identifier 'foo'
+  ///   1+foo
+  ///     ^
+  struct Detail {
+    struct SourceLocation {
+      FileSpec file;
+      unsigned line = 0;
+      uint16_t column = 0;
+      uint16_t length = 0;
+      bool in_user_input = false;
+    };
+    /// Contains {{}, 1, 3, 3, true} in the example above.
+    std::optional<SourceLocation> source_location;
+    /// Contains eSeverityError in the example above.
+    lldb::Severity severity = lldb::eSeverityInfo;
+    /// Contains "use of undeclared identifier 'x'" in the example above.
+    std::string message;
+    /// Contains the fully rendered error message.
+    std::string rendered;
+  };
+
+  Status() = default;
 
   /// Initialize the error object with a generic success value.
   ///
@@ -57,7 +85,8 @@ public:
   /// \param[in] type
   ///     The type for \a err.
   explicit Status(ValueType err, lldb::ErrorType type = lldb::eErrorTypeGeneric,
-                  std::string msg = {});
+                  std::string msg = {})
+      : m_code(err), m_type(type), m_string(std::move(msg)) {}
 
   Status(std::error_code EC);
 
@@ -81,6 +110,12 @@ public:
   static Status FromExpressionError(lldb::ExpressionResults result,
                                     std::string msg) {
     return Status(result, lldb::eErrorTypeExpression, msg);
+  }
+
+  static Status
+  FromExpressionErrorDetails(lldb::ExpressionResults result,
+                             llvm::SmallVectorImpl<Detail> &&details) {
+    return Status(result, lldb::eErrorTypeExpression, std::move(details));
   }
 
   /// Set the current error to errno.
@@ -144,13 +179,24 @@ public:
   ///     success (non-erro), \b false otherwise.
   bool Success() const;
 
+  /// Get the list of details for this error. If this is non-empty,
+  /// clients can use this to render more appealing error messages
+  /// from the details. If you just want a pre-rendered string, use
+  /// AsCString() instead. Currently details are only used for
+  /// eErrorTypeExpression.
+  llvm::ArrayRef<Detail> GetDetails() const;
+
 protected:
+  /// Separate so the main constructor doesn't need to deal with the array.
+  Status(ValueType err, lldb::ErrorType type,
+         llvm::SmallVectorImpl<Detail> &&details);
   /// Status code as an integer value.
   ValueType m_code = 0;
   /// The type of the above error code.
   lldb::ErrorType m_type = lldb::eErrorTypeInvalid;
   /// A string representation of the error code.
   mutable std::string m_string;
+  llvm::SmallVector<Detail, 0> m_details;
 };
 
 } // namespace lldb_private

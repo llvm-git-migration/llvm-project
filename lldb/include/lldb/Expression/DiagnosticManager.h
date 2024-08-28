@@ -12,6 +12,8 @@
 #include "lldb/lldb-defines.h"
 #include "lldb/lldb-types.h"
 
+#include "lldb/Utility/Status.h"
+
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -49,37 +51,28 @@ public:
     }
   }
 
-  Diagnostic(llvm::StringRef message, lldb::Severity severity,
-             DiagnosticOrigin origin, uint32_t compiler_id)
-      : m_message(message), m_severity(severity), m_origin(origin),
-        m_compiler_id(compiler_id) {}
-
-  Diagnostic(const Diagnostic &rhs)
-      : m_message(rhs.m_message), m_severity(rhs.m_severity),
-        m_origin(rhs.m_origin), m_compiler_id(rhs.m_compiler_id) {}
+  Diagnostic(DiagnosticOrigin origin, uint32_t compiler_id,
+             Status::Detail detail)
+      : m_origin(origin), m_compiler_id(compiler_id), m_detail(detail) {}
 
   virtual ~Diagnostic() = default;
 
   virtual bool HasFixIts() const { return false; }
 
-  lldb::Severity GetSeverity() const { return m_severity; }
+  lldb::Severity GetSeverity() const { return m_detail.severity; }
 
   uint32_t GetCompilerID() const { return m_compiler_id; }
 
-  llvm::StringRef GetMessage() const { return m_message; }
+  llvm::StringRef GetMessage() const { return m_detail.message; }
+  Status::Detail GetDetail() const { return m_detail; }
 
-  void AppendMessage(llvm::StringRef message,
-                     bool precede_with_newline = true) {
-    if (precede_with_newline)
-      m_message.push_back('\n');
-    m_message += message;
-  }
+  void AppendMessage(llvm::StringRef message, bool precede_with_newline = true);
 
 protected:
-  std::string m_message;
-  lldb::Severity m_severity;
   DiagnosticOrigin m_origin;
-  uint32_t m_compiler_id; // Compiler-specific diagnostic ID
+  /// Compiler-specific diagnostic ID.
+  uint32_t m_compiler_id;
+  Status::Detail m_detail;
 };
 
 typedef std::vector<std::unique_ptr<Diagnostic>> DiagnosticList;
@@ -102,10 +95,7 @@ public:
 
   void AddDiagnostic(llvm::StringRef message, lldb::Severity severity,
                      DiagnosticOrigin origin,
-                     uint32_t compiler_id = LLDB_INVALID_COMPILER_ID) {
-    m_diagnostics.emplace_back(
-        std::make_unique<Diagnostic>(message, severity, origin, compiler_id));
-  }
+                     uint32_t compiler_id = LLDB_INVALID_COMPILER_ID);
 
   void AddDiagnostic(std::unique_ptr<Diagnostic> diagnostic) {
     if (diagnostic)
@@ -130,12 +120,16 @@ public:
       m_diagnostics.back()->AppendMessage(str);
   }
 
-  // Returns a string containing errors in this format:
-  //
-  // "error: error text\n
-  // warning: warning text\n
-  // remark text\n"
+  /// Returns a string containing errors in this format:
+  ///
+  ///     "error: error text\n
+  ///     warning: warning text\n
+  ///     remark text\n"
+  LLVM_DEPRECATED("Use GetAsStatus instead", "GetAsStatus()")
   std::string GetString(char separator = '\n');
+
+  /// Copies the diagnostics into an lldb::Status.
+  Status GetAsStatus(lldb::ExpressionResults result);
 
   void Dump(Log *log);
 

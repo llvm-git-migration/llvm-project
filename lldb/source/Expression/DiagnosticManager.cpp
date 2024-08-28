@@ -65,6 +65,23 @@ std::string DiagnosticManager::GetString(char separator) {
   return ret;
 }
 
+Status DiagnosticManager::GetAsStatus(lldb::ExpressionResults result) {
+  llvm::SmallVector<Status::Detail, 0> details;
+  details.reserve(m_diagnostics.size());
+  for (const auto &diagnostic : m_diagnostics)
+    details.push_back(diagnostic->GetDetail());
+  return Status::FromExpressionErrorDetails(result, std::move(details));
+}
+
+void DiagnosticManager::AddDiagnostic(llvm::StringRef message,
+                                      lldb::Severity severity,
+                                      DiagnosticOrigin origin,
+                                      uint32_t compiler_id) {
+  m_diagnostics.emplace_back(std::make_unique<Diagnostic>(
+      origin, compiler_id,
+      Status::Detail{{}, severity, message.str(), message.str()}));
+}
+
 size_t DiagnosticManager::Printf(lldb::Severity severity, const char *format,
                                  ...) {
   StreamString ss;
@@ -84,4 +101,14 @@ void DiagnosticManager::PutString(lldb::Severity severity,
   if (str.empty())
     return;
   AddDiagnostic(str, severity, eDiagnosticOriginLLDB);
+}
+
+void Diagnostic::AppendMessage(llvm::StringRef message,
+                               bool precede_with_newline) {
+  if (precede_with_newline) {
+    m_detail.message.push_back('\n');
+    m_detail.rendered.push_back('\n');
+  }
+  m_detail.message += message;
+  m_detail.rendered += message;
 }

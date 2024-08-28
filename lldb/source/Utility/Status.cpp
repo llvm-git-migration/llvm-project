@@ -37,10 +37,9 @@ class raw_ostream;
 using namespace lldb;
 using namespace lldb_private;
 
-Status::Status() {}
-
-Status::Status(ValueType err, ErrorType type, std::string msg)
-    : m_code(err), m_type(type), m_string(std::move(msg)) {}
+Status::Status(ValueType err, ErrorType type,
+               llvm::SmallVectorImpl<Status::Detail> &&details)
+    : m_code(err), m_type(type), m_details(std::move(details)) {}
 
 // This logic is confusing because c++ calls the traditional (posix) errno codes
 // "generic errors", while we use the term "generic" to mean completely
@@ -133,6 +132,19 @@ static std::string RetrieveWin32ErrorString(uint32_t error_code) {
 }
 #endif
 
+static const char *StringForSeverity(lldb::Severity severity) {
+  switch (severity) {
+  // this should be exhaustive
+  case lldb::eSeverityError:
+    return "error: ";
+  case lldb::eSeverityWarning:
+    return "warning: ";
+  case lldb::eSeverityInfo:
+    return "";
+  }
+  llvm_unreachable("switch needs another case for lldb::Severity enum");
+}
+
 // Get the error value as a NULL C string. The error string will be fetched and
 // cached on demand. The cached error string value will remain until the error
 // value is changed or cleared.
@@ -159,6 +171,11 @@ const char *Status::AsCString(const char *default_error_str) const {
 #endif
       break;
 
+    case eErrorTypeExpression: {
+      llvm::raw_string_ostream stream(m_string);
+      for (const auto &detail : m_details)
+        stream << StringForSeverity(detail.severity) << detail.rendered << '\n';
+    } break;
     default:
       break;
     }
