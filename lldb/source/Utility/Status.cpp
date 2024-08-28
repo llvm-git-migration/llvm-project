@@ -226,6 +226,12 @@ const char *Status::AsCString(const char *default_error_str) const {
     if (!m_string.empty() && m_string[m_string.size() - 1] == '\n')
       m_string.pop_back();
 
+  // FIXME: Workaround for ErrorList[ExpressionError, ...].
+  while (!m_string.empty() && m_string[0] == '\n')
+    m_string = std::string(m_string.data() + 1, m_string.size() - 1);
+  if (!m_string.empty() && m_string[m_string.size() - 1] != '\n')
+    m_string += '\n';
+
   if (m_string.empty()) {
     if (default_error_str)
       m_string.assign(default_error_str);
