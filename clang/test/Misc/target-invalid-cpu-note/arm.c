@@ -88,6 +88,7 @@
 // CHECK-SAME: {{^}}, cortex-x1c
 // CHECK-SAME: {{^}}, neoverse-n1
 // CHECK-SAME: {{^}}, neoverse-n2
+// CHECK-SAME: {{^}}, neoverse-n3
 // CHECK-SAME: {{^}}, neoverse-v1
 // CHECK-SAME: {{^}}, cyclone
 // CHECK-SAME: {{^}}, exynos-m3
