@@ -14,6 +14,10 @@
 #include "lldb/Utility/StreamString.h"
 
 using namespace lldb_private;
+char DetailedExpressionError::ID;
+std::string DetailedExpressionError::message() const {
+  return m_detail.rendered;
+}
 
 void DiagnosticManager::Dump(Log *log) {
   if (!log)
@@ -65,6 +69,27 @@ std::string DiagnosticManager::GetString(char separator) {
   return ret;
 }
 
+llvm::Error Diagnostic::GetAsError() const {
+  return llvm::make_error<DetailedExpressionError>(m_detail);
+}
+
+llvm::Error
+DiagnosticManager::GetAsError(lldb::ExpressionResults result) const {
+  llvm::Error diags = Status::FromExpressionError(result, "").takeError();
+  for (const auto &diagnostic : m_diagnostics)
+    diags = llvm::joinErrors(std::move(diags), diagnostic->GetAsError());
+  return diags;
+}
+
+void DiagnosticManager::AddDiagnostic(llvm::StringRef message,
+                                      lldb::Severity severity,
+                                      DiagnosticOrigin origin,
+                                      uint32_t compiler_id) {
+  m_diagnostics.emplace_back(std::make_unique<Diagnostic>(
+      origin, compiler_id,
+      DiagnosticDetail{{}, severity, message.str(), message.str()}));
+}
+
 size_t DiagnosticManager::Printf(lldb::Severity severity, const char *format,
                                  ...) {
   StreamString ss;
@@ -84,4 +109,14 @@ void DiagnosticManager::PutString(lldb::Severity severity,
   if (str.empty())
     return;
   AddDiagnostic(str, severity, eDiagnosticOriginLLDB);
+}
+
+void Diagnostic::AppendMessage(llvm::StringRef message,
+                               bool precede_with_newline) {
+  if (precede_with_newline) {
+    m_detail.message.push_back('\n');
+    m_detail.rendered.push_back('\n');
+  }
+  m_detail.message += message;
+  m_detail.rendered += message;
 }
