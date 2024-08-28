@@ -250,8 +250,6 @@ ErrorType Status::GetType() const {
     else if (error.convertToErrorCode().category() == lldb_generic_category() ||
              error.convertToErrorCode() == llvm::inconvertibleErrorCode())
       result = eErrorTypeGeneric;
-    else
-      result = eErrorTypeInvalid;
   });
   return result;
 }
