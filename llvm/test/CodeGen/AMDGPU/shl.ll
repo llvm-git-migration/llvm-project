@@ -317,11 +317,12 @@ define amdgpu_kernel void @shl_i16_v_compute_s(ptr addrspace(1) %out, ptr addrsp
 ; VI-NEXT:    s_mov_b32 s1, s7
 ; VI-NEXT:    s_mov_b32 s3, s11
 ; VI-NEXT:    buffer_load_ushort v0, off, s[0:3], 0
-; VI-NEXT:    s_add_i32 s12, s12, 3
+; VI-NEXT:    s_and_b32 s0, s12, 0xffff
+; VI-NEXT:    s_add_i32 s0, s0, 3
 ; VI-NEXT:    s_mov_b32 s8, s4
 ; VI-NEXT:    s_mov_b32 s9, s5
 ; VI-NEXT:    s_waitcnt vmcnt(0)
-; VI-NEXT:    v_lshlrev_b32_e32 v0, s12, v0
+; VI-NEXT:    v_lshlrev_b32_e32 v0, s0, v0
 ; VI-NEXT:    buffer_store_short v0, off, s[8:11], 0
 ; VI-NEXT:    s_endpgm
 ;
