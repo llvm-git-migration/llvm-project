@@ -45,6 +45,7 @@ public:
                       const ConcatInputSection *ib);
   bool equalsVariable(const ConcatInputSection *ia,
                       const ConcatInputSection *ib);
+  void applySafeThunksToRange(size_t begin, size_t end);
 
   // ICF needs a copy of the inputs vector because its equivalence-class
   // segregation algorithm destroys the proper sequence.
@@ -251,6 +252,38 @@ void ICF::forEachClassRange(size_t begin, size_t end,
   }
 }
 
+// Given a range of identical icfInputs's, replace address significant functions
+// with a thunk that is just a direct branch to the first function in the
+// series. This way we end up we keep only one main body of the function but we
+// still retain address uniqueness of rellevant functions by having them be a
+// direct branch thunk rather than contain a full copy of the actual function
+// body.
+void ICF::applySafeThunksToRange(size_t begin, size_t end) {
+  // If we need to create a unique ICF thunk, use the first section as the
+  // section that all thunks will branch to.
+  ConcatInputSection *masterIsec = icfInputs[begin];
+
+  uint32_t keepUniqueCount = masterIsec->keepUnique ? 1 : 0;
+  for (size_t i = begin + 1; i < end; ++i) {
+    ConcatInputSection *isec = icfInputs[i];
+    if (isec->keepUnique)
+      ++keepUniqueCount;
+
+    // We create thunks for the 2nd, 3rd, ... keepUnique sections. The first
+    // keepUnique section we leave as is - as it will not end up sharing an
+    // address with any other keepUnique section.
+    if (keepUniqueCount >= 2 && isec->keepUnique) {
+      ConcatInputSection *thunk =
+          makeSyntheticInputSection(isec->getSegName(), isec->getName());
+      target->initICFSafeThunkBody(thunk, masterIsec);
+
+      thunk->foldIdentical(isec);
+
+      addInputSection(thunk);
+    }
+  }
+}
+
 // Split icfInputs into shards, then parallelize invocation of FUNC on subranges
 // with matching equivalence class
 void ICF::forEachClass(llvm::function_ref<void(size_t, size_t)> func) {
@@ -335,9 +368,20 @@ void ICF::run() {
   forEachClass([&](size_t begin, size_t end) {
     if (end - begin < 2)
       return;
+    bool useSafeThunks = config->icfLevel == ICFLevel::safe_thunks;
+
+    // For ICF level safe_thunks, replace keepUnique function bodies with
+    // thunks. For all other ICF levles, directly merge the functions.
+    if (useSafeThunks)
+      applySafeThunksToRange(begin, end);
+
     ConcatInputSection *beginIsec = icfInputs[begin];
-    for (size_t i = begin + 1; i < end; ++i)
+    for (size_t i = begin + 1; i < end; ++i) {
+      // When using safe_thunks, keepUnique inputs are already handeled above
+      if (useSafeThunks && icfInputs[i]->keepUnique)
+        continue;
       beginIsec->foldIdentical(icfInputs[i]);
+    }
   });
 }
 
@@ -421,11 +465,22 @@ void macho::foldIdenticalSections(bool onlyCfStrings) {
     // can still fold it.
     bool hasFoldableFlags = (isSelRefsSection(isec) ||
                              sectionType(isec->getFlags()) == MachO::S_REGULAR);
+
+    bool isCodeSec = isCodeSection(isec);
+
+    // When keepUnique is true, the section is not foldable. Unless we are at
+    // icf level safe_thunks, in which case we still want to fold code sections.
+    // When using safe_thunks we'll apply the safe_thunks logic at merge time
+    // based on the 'keepUnique' flag.
+    bool noUniqueRequirement =
+        !isec->keepUnique ||
+        ((config->icfLevel == ICFLevel::safe_thunks) && isCodeSec);
+
     // FIXME: consider non-code __text sections as foldable?
     bool isFoldable = (!onlyCfStrings || isCfStringSection(isec)) &&
-                      (isCodeSection(isec) || isFoldableWithAddendsRemoved ||
+                      (isCodeSec || isFoldableWithAddendsRemoved ||
                        isGccExceptTabSection(isec)) &&
-                      !isec->keepUnique && !isec->hasAltEntry &&
+                      noUniqueRequirement && !isec->hasAltEntry &&
                       !isec->shouldOmitFromOutput() && hasFoldableFlags;
     if (isFoldable) {
       foldable.push_back(isec);

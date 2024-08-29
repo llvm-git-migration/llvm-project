@@ -41,6 +41,9 @@ struct ARM64 : ARM64Common {
                             Symbol *objcMsgSend) const override;
   void populateThunk(InputSection *thunk, Symbol *funcSym) override;
   void applyOptimizationHints(uint8_t *, const ObjFile &) const override;
+
+  virtual void initICFSafeThunkBody(InputSection *thunk,
+                                    InputSection *branchTarget) const override;
 };
 
 } // namespace
@@ -174,6 +177,23 @@ void ARM64::populateThunk(InputSection *thunk, Symbol *funcSym) {
                              /*pcrel=*/true, /*length=*/2,
                              /*offset=*/0, /*addend=*/0,
                              /*referent=*/funcSym);
+}
+// Just a single direct branch to the target function.
+static constexpr uint32_t icfSafeThunkCode[] = {
+    0x94000000, // 08: b    target
+};
+
+void ARM64::initICFSafeThunkBody(InputSection *thunk,
+                                 InputSection *branchTarget) const {
+  // The base data here will not be itself modified, we'll just be adding a
+  // reloc below. So we can directly use the constexpr above as the data.
+  thunk->data = {reinterpret_cast<const uint8_t *>(icfSafeThunkCode),
+                 sizeof(icfSafeThunkCode)};
+
+  thunk->relocs.emplace_back(/*type=*/ARM64_RELOC_BRANCH26,
+                             /*pcrel=*/true, /*length=*/2,
+                             /*offset=*/0, /*addend=*/0,
+                             /*referent=*/branchTarget);
 }
 
 ARM64::ARM64() : ARM64Common(LP64()) {
