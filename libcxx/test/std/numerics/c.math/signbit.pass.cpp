@@ -11,6 +11,9 @@
 // We don't control the implementation on windows
 // UNSUPPORTED: windows
 
+// These compilers don't support constexpr `__builtin_signbit` yet.
+// UNSUPPORTED: clang-17, clang-18, clang-19, gcc-14, apple-clang-16, apple-clang-17
+
 #include <cassert>
 #include <cmath>
 #include <limits>
