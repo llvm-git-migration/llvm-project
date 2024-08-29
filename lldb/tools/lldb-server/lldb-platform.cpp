@@ -18,6 +18,7 @@
 #if !defined(_WIN32)
 #include <sys/wait.h>
 #endif
+#include <atomic>
 #include <fstream>
 #include <optional>
 
@@ -50,6 +51,9 @@ using namespace llvm;
 static int g_debug = 0;
 static int g_verbose = 0;
 static int g_server = 0;
+static std::atomic<lldb::pid_t> g_single_pid = LLDB_INVALID_PROCESS_ID;
+static std::atomic<bool> g_main_loop = true;
+static std::unique_ptr<Acceptor> g_acceptor_up;
 
 static struct option g_long_options[] = {
     {"debug", no_argument, &g_debug, 1},
@@ -126,13 +130,11 @@ static void client_handle(GDBRemoteCommunicationServerPlatform &platform,
 
   if (args.GetArgumentCount() > 0) {
     lldb::pid_t pid = LLDB_INVALID_PROCESS_ID;
-    std::optional<uint16_t> port;
     std::string socket_name;
-    Status error = platform.LaunchGDBServer(args,
-                                            "", // hostname
-                                            pid, port, socket_name);
+    Status error = platform.LaunchGDBServer(args, pid, socket_name,
+                                            SharedSocket::kInvalidFD);
     if (error.Success())
-      platform.SetPendingGdbServer(pid, *port, socket_name);
+      platform.SetPendingGdbServer(socket_name);
     else
       fprintf(stderr, "failed to start gdbserver: %s\n", error.AsCString());
   }
@@ -150,12 +152,15 @@ static void client_handle(GDBRemoteCommunicationServerPlatform &platform,
   printf("Disconnected.\n");
 }
 
-static GDBRemoteCommunicationServerPlatform::PortMap gdbserver_portmap;
-static std::mutex gdbserver_portmap_mutex;
-
 static void spawn_process_reaped(lldb::pid_t pid, int signal, int status) {
-  std::lock_guard<std::mutex> guard(gdbserver_portmap_mutex);
-  gdbserver_portmap.FreePortForProcess(pid);
+  if (g_single_pid != LLDB_INVALID_PROCESS_ID && g_single_pid == pid) {
+    // If not running as a server and the platform connection is closed
+    if (g_main_loop) {
+      g_main_loop = false;
+      if (g_acceptor_up)
+        g_acceptor_up->BreakAccept();
+    }
+  }
 }
 
 static Status spawn_process(const char *progname, const Socket *conn_socket,
@@ -176,6 +181,10 @@ static Status spawn_process(const char *progname, const Socket *conn_socket,
   self_args.AppendArgument(llvm::StringRef("platform"));
   self_args.AppendArgument(llvm::StringRef("--child-platform-fd"));
   self_args.AppendArgument(llvm::to_string(shared_socket.GetSendableFD()));
+#ifndef _WIN32
+  launch_info.AppendDuplicateFileAction((int)shared_socket.GetSendableFD(),
+                                        (int)shared_socket.GetSendableFD());
+#endif
   if (gdb_port) {
     self_args.AppendArgument(llvm::StringRef("--gdbserver-port"));
     self_args.AppendArgument(llvm::to_string(gdb_port));
@@ -229,16 +238,14 @@ static Status spawn_process(const char *progname, const Socket *conn_socket,
   LLDB_LOG(GetLog(LLDBLog::Platform), "lldb-platform launched '{0}', pid={1}",
            cmd, child_pid);
 
-  {
-    std::lock_guard<std::mutex> guard(gdbserver_portmap_mutex);
-    gdbserver_portmap.AssociatePortWithProcess(gdb_port, child_pid);
-  }
-
   error = shared_socket.CompleteSending(child_pid);
   if (error.Fail()) {
     Host::Kill(child_pid, SIGTERM);
     return error;
   }
+
+  if (!g_server)
+    g_single_pid = child_pid;
 
   return Status();
 }
@@ -264,8 +271,7 @@ int main_platform(int argc, char *argv[]) {
 
   shared_fd_t fd = SharedSocket::kInvalidFD;
 
-  int min_gdbserver_port = 0;
-  int max_gdbserver_port = 0;
+  uint16_t gdbserver_port = 0;
   uint16_t port_offset = 0;
 
   FileSpec socket_file;
@@ -331,20 +337,12 @@ int main_platform(int argc, char *argv[]) {
         option_error = 2;
         break;
       }
-      if (portnum < LOW_PORT || portnum > HIGH_PORT) {
-        WithColor::error() << llvm::formatv(
-            "port number {0} is not in the "
-            "valid user port range of {1} - {2}\n",
-            portnum, LOW_PORT, HIGH_PORT);
-        option_error = 1;
-        break;
-      }
+      // Note the condition gdbserver_port > HIGH_PORT is valid in case of using
+      // --child-platform-fd. Check gdbserver_port later.
       if (ch == 'P')
-        gdbserver_portmap.AllowPort(portnum);
-      else if (ch == 'm')
-        min_gdbserver_port = portnum;
-      else
-        max_gdbserver_port = portnum;
+        gdbserver_port = portnum;
+      else if (gdbserver_port == 0)
+        gdbserver_port = portnum;
     } break;
 
     case 2: {
@@ -366,18 +364,6 @@ int main_platform(int argc, char *argv[]) {
   if (!LLDBServerUtilities::SetupLogging(log_file, log_channels, 0))
     return -1;
 
-  // Make a port map for a port range that was specified.
-  if (min_gdbserver_port && min_gdbserver_port < max_gdbserver_port) {
-    gdbserver_portmap = GDBRemoteCommunicationServerPlatform::PortMap(
-        min_gdbserver_port, max_gdbserver_port);
-  } else if (min_gdbserver_port || max_gdbserver_port) {
-    WithColor::error() << llvm::formatv(
-        "--min-gdbserver-port ({0}) is not lower than "
-        "--max-gdbserver-port ({1})\n",
-        min_gdbserver_port, max_gdbserver_port);
-    option_error = 3;
-  }
-
   // Print usage and exit if no listening port is specified.
   if (listen_host_port.empty() && fd == SharedSocket::kInvalidFD)
     show_usage = true;
@@ -393,12 +379,19 @@ int main_platform(int argc, char *argv[]) {
   lldb_private::Args inferior_arguments;
   inferior_arguments.SetArguments(argc, const_cast<const char **>(argv));
 
+  Log *log = GetLog(LLDBLog::Platform);
+
   if (fd != SharedSocket::kInvalidFD) {
     // Child process will handle the connection and exit.
-    Log *log = GetLog(LLDBLog::Platform);
     if (!listen_host_port.empty()) {
       LLDB_LOGF(log, "lldb-platform child: "
                      "ambiguous parameters --listen and --child-platform-fd");
+      return socket_error;
+    }
+
+    if (gdbserver_port == 0) {
+      LLDB_LOGF(log, "lldb-platform child: "
+                     "--gdbserver-port is missing.");
       return socket_error;
     }
 
@@ -409,10 +402,10 @@ int main_platform(int argc, char *argv[]) {
       return socket_error;
     }
 
-    GDBRemoteCommunicationServerPlatform platform(Socket::ProtocolTcp, "tcp");
+    GDBRemoteCommunicationServerPlatform platform(Socket::ProtocolTcp,
+                                                  gdbserver_port);
     if (port_offset > 0)
       platform.SetPortOffset(port_offset);
-    platform.SetPortMap(std::move(gdbserver_portmap));
     platform.SetConnection(
         std::unique_ptr<Connection>(new ConnectionFileDescriptor(
             new TCPSocket(socket, /*should_close=*/true,
@@ -421,27 +414,36 @@ int main_platform(int argc, char *argv[]) {
     return 0;
   }
 
-  const bool children_inherit_listen_socket = false;
+  if (gdbserver_port != 0 &&
+      (gdbserver_port < LOW_PORT || gdbserver_port > HIGH_PORT)) {
+    WithColor::error() << llvm::formatv("port number {0} is not in the "
+                                        "valid user port range of {1} - {2}\n",
+                                        gdbserver_port, LOW_PORT, HIGH_PORT);
+    exit(1);
+  }
+
   // the test suite makes many connections in parallel, let's not miss any.
   // The highest this should get reasonably is a function of the number
   // of target CPUs. For now, let's just use 100.
   const int backlog = 100;
 
-  std::unique_ptr<Acceptor> acceptor_up(Acceptor::Create(
-      listen_host_port, children_inherit_listen_socket, error));
+  g_acceptor_up = std::make_unique<Acceptor>(listen_host_port, gdbserver_port,
+                                             backlog, error);
   if (error.Fail()) {
     fprintf(stderr, "failed to create acceptor: %s", error.AsCString());
     exit(socket_error);
   }
 
-  error = acceptor_up->Listen(backlog);
-  if (error.Fail()) {
-    printf("failed to listen: %s\n", error.AsCString());
+  if (g_server && g_acceptor_up->GetSocketProtocol() != Socket::ProtocolTcp) {
+    fprintf(stderr,
+            "ambiguous parameters --server --listen %s\n"
+            "The protocol must be tcp for the server mode.",
+            listen_host_port.c_str());
     exit(socket_error);
   }
   if (socket_file) {
     error =
-        save_socket_id_to_file(acceptor_up->GetLocalSocketId(), socket_file);
+        save_socket_id_to_file(g_acceptor_up->GetLocalSocketId(), socket_file);
     if (error.Fail()) {
       fprintf(stderr, "failed to write socket id to %s: %s\n",
               socket_file.GetPath().c_str(), error.AsCString());
@@ -449,69 +451,78 @@ int main_platform(int argc, char *argv[]) {
     }
   }
 
+  gdbserver_port = g_acceptor_up->GetGdbServerPort();
+  lldb_private::Args gdb_inferior_arguments(inferior_arguments);
+
   GDBRemoteCommunicationServerPlatform platform(
-      acceptor_up->GetSocketProtocol(), acceptor_up->GetSocketScheme());
+      g_acceptor_up->GetSocketProtocol(), gdbserver_port);
   if (port_offset > 0)
     platform.SetPortOffset(port_offset);
 
   do {
-    const bool children_inherit_accept_socket = true;
-    Connection *conn = nullptr;
-    error = acceptor_up->Accept(children_inherit_accept_socket, conn);
+    Socket *conn_socket = nullptr;
+    Acceptor::AcceptorConn conn = Acceptor::ConnUnknown;
+    error = g_acceptor_up->Accept(conn_socket, conn);
+    if (!g_main_loop)
+      break;
     if (error.Fail()) {
       WithColor::error() << error.AsCString() << '\n';
       exit(socket_error);
     }
-    printf("Connection established.\n");
 
-    if (g_server) {
-      std::optional<uint16_t> available_port;
+    if (conn == Acceptor::ConnNamed) {
+      printf("Connection established.\n");
+      platform.SetConnection(std::unique_ptr<Connection>(
+          new ConnectionFileDescriptor(conn_socket)));
+      client_handle(platform, inferior_arguments);
+      g_main_loop = false;
+    } else if (conn == Acceptor::ConnTCPGdbServer) {
+      printf("Gdb connection established.\n");
       {
-        std::lock_guard<std::mutex> guard(gdbserver_portmap_mutex);
-        auto port = gdbserver_portmap.GetNextAvailablePort();
-        if (port)
-          available_port = *port;
-        else
-          llvm::consumeError(port.takeError());
-      }
-      if (!available_port) {
-        fprintf(stderr,
-                "no available gdbserver port for connection - dropping...\n");
-      } else {
-        const Socket *conn_socket =
-            static_cast<const Socket *>(conn->GetReadObject().get());
-        error =
-            spawn_process(progname, conn_socket, *available_port, port_offset,
-                          inferior_arguments, log_file, log_channels);
-        if (error.Fail()) {
-          {
-
-            std::lock_guard<std::mutex> guard(gdbserver_portmap_mutex);
-            gdbserver_portmap.FreePort(*available_port);
+        SharedSocket shared_socket(conn_socket, error);
+        if (error.Success()) {
+          lldb::pid_t child_pid = LLDB_INVALID_PROCESS_ID;
+          std::string socket_name;
+          error = platform.LaunchGDBServer(gdb_inferior_arguments, child_pid,
+                                           socket_name,
+                                           shared_socket.GetSendableFD());
+          if (error.Success() && child_pid != LLDB_INVALID_PROCESS_ID) {
+            error = shared_socket.CompleteSending(child_pid);
+            if (error.Success()) {
+              // Use gdb inferior arguments once.
+              gdb_inferior_arguments.Clear();
+            } else {
+              Host::Kill(child_pid, SIGTERM);
+              LLDB_LOGF(log, "gdbserver CompleteSending failed: %s",
+                        error.AsCString());
+            }
           }
-          LLDB_LOGF(GetLog(LLDBLog::Platform), "spawn_process failed: %s",
+        } else
+          LLDB_LOGF(log, "gdbserver SharedSocket failed: %s",
                     error.AsCString());
-          WithColor::error()
-              << "spawn_process failed: " << error.AsCString() << "\n";
-        }
       }
-      // Parent doesn't need a connection to the lldb client
-      delete conn;
-
-      // Parent will continue to listen for new connections.
-      continue;
-    } else {
+      delete conn_socket;
+    } else if (conn == Acceptor::ConnTCPPlatform) {
       // If not running as a server, this process will not accept
       // connections while a connection is active.
-      acceptor_up.reset();
-
-      // When not running in server mode, use all available ports
-      platform.SetPortMap(std::move(gdbserver_portmap));
+      if (g_server || g_single_pid == LLDB_INVALID_PROCESS_ID) {
+        printf("Platform connection established.\n");
+        error =
+            spawn_process(progname, conn_socket, gdbserver_port, port_offset,
+                          inferior_arguments, log_file, log_channels);
+        if (error.Fail()) {
+          LLDB_LOGF(log, "spawn_process failed: %s", error.AsCString());
+          WithColor::error()
+              << "spawn_process failed: " << error.AsCString() << "\n";
+          if (!g_server)
+            g_main_loop = false;
+        }
+      }
+      delete conn_socket;
     }
+  } while (g_main_loop);
 
-    platform.SetConnection(std::unique_ptr<Connection>(conn));
-    client_handle(platform, inferior_arguments);
-  } while (g_server);
+  g_acceptor_up.reset();
 
   fprintf(stderr, "lldb-server exiting...\n");
 
