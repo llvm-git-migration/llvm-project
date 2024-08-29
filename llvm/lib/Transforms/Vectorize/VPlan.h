@@ -3496,6 +3496,11 @@ public:
     return LiveOuts;
   }
 
+  void removeLiveOut(PHINode *PN) {
+    delete LiveOuts[PN];
+    LiveOuts.erase(PN);
+  }
+
   VPValue *getSCEVExpansion(const SCEV *S) const {
     return SCEVToExpansion.lookup(S);
   }
