@@ -8,11 +8,11 @@
 #ifndef LLDB_TOOLS_LLDB_SERVER_ACCEPTOR_H
 #define LLDB_TOOLS_LLDB_SERVER_ACCEPTOR_H
 
+#include "lldb/Host/MainLoop.h"
 #include "lldb/Host/Socket.h"
-#include "lldb/Utility/Connection.h"
-#include "lldb/Utility/Status.h"
 
-#include <functional>
+#include <atomic>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -25,33 +25,46 @@ namespace lldb_server {
 
 class Acceptor {
 public:
+  enum AcceptorConn {
+    ConnUnknown,
+    ConnNamed,
+    ConnTCPPlatform,
+    ConnTCPGdbServer
+  };
+
   virtual ~Acceptor() = default;
 
   Status Listen(int backlog);
 
-  Status Accept(const bool child_processes_inherit, Connection *&conn);
+  Status Accept(Socket *&conn_socket, AcceptorConn &conn);
+  void BreakAccept();
 
-  static std::unique_ptr<Acceptor> Create(llvm::StringRef name,
-                                          const bool child_processes_inherit,
-                                          Status &error);
+  static std::unique_ptr<Acceptor>
+  Create(std::string &name, uint16_t gdbserver_port, Status &error);
 
-  Socket::SocketProtocol GetSocketProtocol() const;
+  Socket::SocketProtocol GetSocketProtocol() const {
+    return m_socket_protocol;
+  };
 
-  const char *GetSocketScheme() const;
+  uint16_t GetPlatformPort() const { return m_platform_port; };
+  uint16_t GetGdbServerPort() const { return m_gdbserver_port; };
 
   // Returns either TCP port number as string or domain socket path.
   // Empty string is returned in case of error.
   std::string GetLocalSocketId() const;
 
 private:
-  typedef std::function<std::string()> LocalSocketIdFunc;
+  Acceptor(Socket::SocketProtocol socket_protocol, const std::string &name,
+           uint16_t platform_port, uint16_t gdbserver_port);
 
-  Acceptor(std::unique_ptr<Socket> &&listener_socket, llvm::StringRef name,
-           const LocalSocketIdFunc &local_socket_id);
-
-  const std::unique_ptr<Socket> m_listener_socket_up;
+  const Socket::SocketProtocol m_socket_protocol;
   const std::string m_name;
-  const LocalSocketIdFunc m_local_socket_id;
+  uint16_t m_platform_port;
+  uint16_t m_gdbserver_port;
+  std::atomic<bool> m_break_loop;
+  MainLoop m_accept_loop;
+  std::unique_ptr<Socket> m_named_socket;
+  std::map<NativeSocket, SocketAddress> m_listen_sockets;
 };
 
 } // namespace lldb_server

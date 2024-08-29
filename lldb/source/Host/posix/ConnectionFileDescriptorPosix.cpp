@@ -162,8 +162,10 @@ ConnectionFileDescriptor::Connect(llvm::StringRef path,
             .Case("unix-connect", &ConnectionFileDescriptor::ConnectNamedSocket)
             .Case("unix-abstract-connect",
                   &ConnectionFileDescriptor::ConnectAbstractSocket)
-#if LLDB_ENABLE_POSIX
+#if LLDB_ENABLE_POSIX || defined(_WIN32)
             .Case("fd", &ConnectionFileDescriptor::ConnectFD)
+#endif
+#if LLDB_ENABLE_POSIX
             .Case("file", &ConnectionFileDescriptor::ConnectFile)
             .Case("serial", &ConnectionFileDescriptor::ConnectSerialPort)
 #endif
@@ -667,7 +669,22 @@ ConnectionStatus
 ConnectionFileDescriptor::ConnectFD(llvm::StringRef s,
                                     socket_id_callback_type socket_id_callback,
                                     Status *error_ptr) {
-#if LLDB_ENABLE_POSIX
+#ifdef _WIN32
+  int64_t fd = -1;
+  if (!s.getAsInteger(0, fd)) {
+    // Assume we own fd.
+    std::unique_ptr<TCPSocket> tcp_socket =
+        std::make_unique<TCPSocket>((NativeSocket)fd, true, false);
+    m_io_sp = std::move(tcp_socket);
+    m_uri = s.str();
+    return eConnectionStatusSuccess;
+  }
+  if (error_ptr)
+    *error_ptr = Status::FromErrorStringWithFormat(
+        "invalid file descriptor: \"%s\"", s.str().c_str());
+  m_io_sp.reset();
+  return eConnectionStatusError;
+#elif LLDB_ENABLE_POSIX
   // Just passing a native file descriptor within this current process that
   // is already opened (possibly from a service or other source).
   int fd = -1;
