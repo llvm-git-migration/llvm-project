@@ -32,27 +32,8 @@
 #include <winsock2.h>
 #endif
 
-#ifdef _WIN32
-#define CLOSE_SOCKET closesocket
-typedef const char *set_socket_option_arg_type;
-#else
-#include <unistd.h>
-#define CLOSE_SOCKET ::close
-typedef const void *set_socket_option_arg_type;
-#endif
-
 using namespace lldb;
 using namespace lldb_private;
-
-static Status GetLastSocketError() {
-  std::error_code EC;
-#ifdef _WIN32
-  EC = llvm::mapWindowsError(WSAGetLastError());
-#else
-  EC = std::error_code(errno, std::generic_category());
-#endif
-  return EC;
-}
 
 static const int kType = SOCK_STREAM;
 
@@ -212,7 +193,7 @@ Status TCPSocket::Listen(llvm::StringRef name, int backlog) {
         reinterpret_cast<set_socket_option_arg_type>(&option_value);
     if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, option_value_p,
                      sizeof(option_value)) == -1) {
-      CLOSE_SOCKET(fd);
+      CloseSocket(fd);
       continue;
     }
 
@@ -228,8 +209,8 @@ Status TCPSocket::Listen(llvm::StringRef name, int backlog) {
       err = ::listen(fd, backlog);
 
     if (err == -1) {
-      error = GetLastSocketError();
-      CLOSE_SOCKET(fd);
+      error = GetLastError();
+      CloseSocket(fd);
       continue;
     }
 
@@ -250,7 +231,7 @@ Status TCPSocket::Listen(llvm::StringRef name, int backlog) {
 
 void TCPSocket::CloseListenSockets() {
   for (auto socket : m_listen_sockets)
-    CLOSE_SOCKET(socket.first);
+    CloseSocket(socket.first);
   m_listen_sockets.clear();
 }
 
@@ -295,7 +276,7 @@ Status TCPSocket::Accept(Socket *&conn_socket) {
     lldb_private::SocketAddress &AddrIn = m_listen_sockets[listen_sock];
     if (!AddrIn.IsAnyAddr() && AcceptAddr != AddrIn) {
       if (sock != kInvalidSocketValue) {
-        CLOSE_SOCKET(sock);
+        CloseSocket(sock);
         sock = kInvalidSocketValue;
       }
       llvm::errs() << llvm::formatv(

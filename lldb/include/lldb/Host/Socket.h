@@ -34,9 +34,11 @@ namespace lldb_private {
 #if defined(_WIN32)
 typedef SOCKET NativeSocket;
 typedef lldb::pipe_t shared_fd_t;
+typedef const char *set_socket_option_arg_type;
 #else
 typedef int NativeSocket;
 typedef NativeSocket shared_fd_t;
+typedef const void *set_socket_option_arg_type;
 #endif
 class Socket;
 class TCPSocket;
@@ -132,12 +134,8 @@ public:
   // If this Socket is connected then return the URI used to connect.
   virtual std::string GetRemoteConnectionURI() const { return ""; };
 
-protected:
-  Socket(SocketProtocol protocol, bool should_close,
-         bool m_child_process_inherit);
-
-  virtual size_t Send(const void *buf, const size_t num_bytes);
-
+  static int CloseSocket(NativeSocket sockfd);
+  static Status GetLastError();
   static void SetLastError(Status &error);
   static NativeSocket CreateSocket(const int domain, const int type,
                                    const int protocol,
@@ -145,6 +143,12 @@ protected:
   static NativeSocket AcceptSocket(NativeSocket sockfd, struct sockaddr *addr,
                                    socklen_t *addrlen,
                                    bool child_processes_inherit, Status &error);
+
+protected:
+  Socket(SocketProtocol protocol, bool should_close,
+         bool m_child_process_inherit);
+
+  virtual size_t Send(const void *buf, const size_t num_bytes);
 
   SocketProtocol m_protocol;
   NativeSocket m_socket;
