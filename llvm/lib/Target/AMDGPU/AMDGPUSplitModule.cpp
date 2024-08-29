@@ -486,6 +486,27 @@ void SplitGraph::Node::visitAllDependencies(
   }
 }
 
+/// Checks if \p I has MD_callees and if it does, parse it and put the function
+/// in \p Callees.
+///
+/// \returns true if there was metadata and it was parsed correctly. false if
+/// there was no MD or if it contained unknown entries.
+static bool handleCalleesMD(const Instruction &I,
+                            SmallVector<Function *> &Callees) {
+  auto *MD = I.getMetadata(LLVMContext::MD_callees);
+  if (!MD)
+    return false;
+
+  for (const auto &Op : MD->operands()) {
+    Function *Callee = mdconst::extract_or_null<Function>(Op);
+    if (!Callee)
+      return false;
+    Callees.push_back(Callee);
+  }
+
+  return true;
+}
+
 void SplitGraph::buildGraph(CallGraph &CG) {
   SplitModuleTimer SMT("buildGraph", "graph construction");
   LLVM_DEBUG(
@@ -522,6 +543,8 @@ void SplitGraph::buildGraph(CallGraph &CG) {
       LLVM_DEBUG(dbgs() << "  [!] callgraph is incomplete for " << Fn.getName()
                         << " - analyzing function\n");
 
+      SmallVector<Function *> KnownCallees;
+
       bool HasIndirectCall = false;
       for (const auto &Inst : instructions(Fn)) {
         // look at all calls without a direct callee.
@@ -536,6 +559,9 @@ void SplitGraph::buildGraph(CallGraph &CG) {
             continue;
           }
 
+          if (handleCalleesMD(Inst, KnownCallees))
+            continue;
+
           // everything else is handled conservatively.
           HasIndirectCall = true;
         }
@@ -544,7 +570,8 @@ void SplitGraph::buildGraph(CallGraph &CG) {
       if (HasIndirectCall) {
         LLVM_DEBUG(dbgs() << "    indirect call found\n");
         FnsWithIndirectCalls.push_back(&Fn);
-      }
+      } else if (!KnownCallees.empty())
+        DirectCallees.insert(KnownCallees.begin(), KnownCallees.end());
     }
 
     Node &N = getNode(Cache, Fn);
