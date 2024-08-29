@@ -1,4 +1,4 @@
-; RUN: llvm-split -o %t %s -j 2 -mtriple amdgcn-amd-amdhsa
+; RUN: llvm-split -o %t %s -j 2 -mtriple amdgcn-amd-amdhsa -amdgpu-module-splitting-no-externalize-address-taken
 ; RUN: llvm-dis -o - %t0 | FileCheck --check-prefix=CHECK0 --implicit-check-not=define %s
 ; RUN: llvm-dis -o - %t1 | FileCheck --check-prefix=CHECK1 --implicit-check-not=define %s
 
@@ -7,18 +7,14 @@
 ;   - B calls @PerryThePlatypus
 ;   - C calls @Perry, an alias of @PerryThePlatypus
 ;
-; We should see through the alias and put B/C in the same
-; partition.
-;
-; Additionally, @PerryThePlatypus gets externalized as
-; the alias counts as taking its address.
+; We should see through the alias and treat C as-if it called PerryThePlatypus directly.
 
-; CHECK0: define amdgpu_kernel void @A
+; CHECK0: define internal void @PerryThePlatypus()
+; CHECK0: define amdgpu_kernel void @C
 
-; CHECK1: @Perry = internal alias ptr (), ptr @PerryThePlatypus
-; CHECK1: define hidden void @PerryThePlatypus()
+; CHECK1: define internal void @PerryThePlatypus()
+; CHECK1: define amdgpu_kernel void @A
 ; CHECK1: define amdgpu_kernel void @B
-; CHECK1: define amdgpu_kernel void @C
 
 @Perry = internal alias ptr(), ptr @PerryThePlatypus
 
