@@ -1046,6 +1046,7 @@ def formatOutput(title, data, limit=None):
 def executeScriptInternal(
     test, litConfig, tmpBase, commands, cwd, debug=True
 ) -> Tuple[str, str, int, Optional[str]]:
+    print("executeScriptInternal")
     cmds = []
     for i, ln in enumerate(commands):
         # Within lit, we try to always add '%dbg(...)' to command lines in order
@@ -1166,10 +1167,23 @@ def executeScriptInternal(
                 str(result.timeoutReached),
             )
 
+        if litConfig.update_tests:
+            for test_updater in litConfig.test_updaters:
+                try:
+                    update_output = test_updater(result)
+                except Exception as e:
+                    out += f"Exception occurred in test updater: {e}"
+                    continue
+                if update_output:
+                    for line in update_output.splitlines():
+                        out += f"# {line}\n"
+                    break
+
     return out, err, exitCode, timeoutInfo
 
 
 def executeScript(test, litConfig, tmpBase, commands, cwd):
+    print("executeScript")
     bashPath = litConfig.getBashPath()
     isWin32CMDEXE = litConfig.isWindows and not bashPath
     script = tmpBase + ".script"

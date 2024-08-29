@@ -1,0 +1,4 @@
+# RUN: cp %S/1.in %S/my-file.expected
+# RUN: cp %S/2.in %S/my-file.txt
+# RUN: diff %S/my-file.expected %S/my-file.txt
+

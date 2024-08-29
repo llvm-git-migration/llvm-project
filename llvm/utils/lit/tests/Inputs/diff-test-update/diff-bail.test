@@ -1,0 +1,6 @@
+# RUN: diff %S/1.in %S/2.in
+
+# RUN: cp %S/1.in %t.1
+# RUN: cp %S/2.in %t.2
+# RUN: diff %t.1 %t.2
+
