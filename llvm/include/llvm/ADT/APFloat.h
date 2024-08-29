@@ -195,6 +195,12 @@ struct APFloatBase {
     // improved range compared to half (16-bit) formats, at (potentially)
     // greater throughput than single precision (32-bit) formats.
     S_FloatTF32,
+    // 8-bit floating point number with (all the) 8 bits for the exponent
+    // like in FP32. There are no zeroes, no infinities, and no denormal values.
+    // NaN is represented with all bits set to 1. Bias is 127.
+    // This represents the scale data type in the MX specification from
+    // https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf
+    S_Float8E8M0FN,
     // 6-bit floating point number with bit layout S1E3M2. Unlike IEEE-754
     // types, there are no infinity or NaN values. The format is detailed in
     // https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf
@@ -229,6 +235,7 @@ struct APFloatBase {
   static const fltSemantics &Float8E4M3B11FNUZ() LLVM_READNONE;
   static const fltSemantics &Float8E3M4() LLVM_READNONE;
   static const fltSemantics &FloatTF32() LLVM_READNONE;
+  static const fltSemantics &Float8E8M0FN() LLVM_READNONE;
   static const fltSemantics &Float6E3M2FN() LLVM_READNONE;
   static const fltSemantics &Float6E2M3FN() LLVM_READNONE;
   static const fltSemantics &Float4E2M1FN() LLVM_READNONE;
@@ -652,6 +659,7 @@ private:
   APInt convertFloat8E4M3B11FNUZAPFloatToAPInt() const;
   APInt convertFloat8E3M4APFloatToAPInt() const;
   APInt convertFloatTF32APFloatToAPInt() const;
+  APInt convertFloat8E8M0FNAPFloatToAPInt() const;
   APInt convertFloat6E3M2FNAPFloatToAPInt() const;
   APInt convertFloat6E2M3FNAPFloatToAPInt() const;
   APInt convertFloat4E2M1FNAPFloatToAPInt() const;
@@ -672,6 +680,7 @@ private:
   void initFromFloat8E4M3B11FNUZAPInt(const APInt &api);
   void initFromFloat8E3M4APInt(const APInt &api);
   void initFromFloatTF32APInt(const APInt &api);
+  void initFromFloat8E8M0FNAPInt(const APInt &api);
   void initFromFloat6E3M2FNAPInt(const APInt &api);
   void initFromFloat6E2M3FNAPInt(const APInt &api);
   void initFromFloat4E2M1FNAPInt(const APInt &api);
@@ -1088,6 +1097,26 @@ public:
     case APFloat::S_Float6E2M3FN:
     case APFloat::S_Float4E2M1FN:
       return false;
+    }
+  }
+
+  static bool hasZero(const fltSemantics &Sem) {
+    switch (SemanticsToEnum(Sem)) {
+    default:
+      return true;
+    // The Float8E8M0FN does not have an encoding for Zeroes.
+    case APFloat::S_Float8E8M0FN:
+      return false;
+    }
+  }
+
+  static bool hasExponentOnly(const fltSemantics &Sem) {
+    switch (SemanticsToEnum(Sem)) {
+    default:
+      return false;
+    // The Float8E8M0FN has exponent only and no significand.
+    case APFloat::S_Float8E8M0FN:
+      return true;
     }
   }
 
