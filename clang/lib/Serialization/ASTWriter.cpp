@@ -1115,13 +1115,13 @@ void ASTWriter::WriteBlockInfoBlock() {
 }
 
 /// Prepares a path for being written to an AST file by converting it
-/// to an absolute path and removing nested './'s.
+/// to an absolute path and removing nested './'s and '../'s.
 ///
 /// \return \c true if the path was changed.
 static bool cleanPathForOutput(FileManager &FileMgr,
                                SmallVectorImpl<char> &Path) {
   bool Changed = FileMgr.makeAbsolutePath(Path);
-  return Changed | llvm::sys::path::remove_dots(Path);
+  return Changed | llvm::sys::path::remove_dots(Path, true);
 }
 
 /// Adjusts the given filename to only write out the portion of the
@@ -4770,6 +4770,23 @@ bool ASTWriter::PreparePathForOutput(SmallVectorImpl<char> &Path) {
   if (PathPtr != PathBegin) {
     Path.erase(Path.begin(), Path.begin() + (PathPtr - PathBegin));
     Changed = true;
+  }
+
+  // If we are generating a normal PCH (EG. not a C++ module).
+  if (!WritingModule) {
+    // Use the vfs overlay if it exists to translate paths.
+    auto &FileSys =
+        Context->getSourceManager().getFileManager().getVirtualFileSystem();
+
+    if (auto *RFS = dyn_cast<llvm::vfs::RedirectingFileSystem>(&FileSys)) {
+      if (auto Result = RFS->lookupPath(PathStr)) {
+        if (std::optional<StringRef> Redirect = Result->getExternalRedirect()) {
+          PathStr = *Redirect;
+          Path.assign(PathStr.data(), PathStr.data() + PathStr.size());
+          Changed = true;
+        }
+      }
+    }
   }
 
   return Changed;
