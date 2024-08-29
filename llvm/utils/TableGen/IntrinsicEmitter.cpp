@@ -379,10 +379,10 @@ static bool compareFnAttributes(const CodeGenIntrinsic *L,
     return TieL < TieR;
 
   // Try to order by readonly/readnone attribute.
-  uint32_t LK = L->ME.toIntValue();
-  uint32_t RK = R->ME.toIntValue();
-  if (LK != RK)
-    return LK > RK;
+  uint32_t LME = L->ME.toIntValue();
+  uint32_t RME = R->ME.toIntValue();
+  if (LME != RME)
+    return LME > RME;
 
   return Default;
 }
@@ -472,7 +472,8 @@ static AttributeSet getIntrinsicArgAttributeSet(LLVMContext &C, unsigned ID) {
   }
   OS << R"(
   }
-} // getIntrinsicArgAttributeSet)";
+} // getIntrinsicArgAttributeSet
+)";
 
   // Compute unique function attribute sets.
   std::map<const CodeGenIntrinsic *, unsigned, FnAttributeComparator>
@@ -481,9 +482,33 @@ static AttributeSet getIntrinsicArgAttributeSet(LLVMContext &C, unsigned ID) {
 static AttributeSet getIntrinsicFnAttributeSet(LLVMContext &C, unsigned ID) {
   switch (ID) {
     default: llvm_unreachable("Invalid attribute set number");)";
-  for (const CodeGenIntrinsic &Intrinsic : Ints) {
+
+  auto getEffectiveME = [](const CodeGenIntrinsic &Int) {
+    MemoryEffects ME = Int.ME;
+    // TODO: IntrHasSideEffects should affect not only readnone intrinsics.
+    if (ME.doesNotAccessMemory() && Int.hasSideEffects)
+      ME = MemoryEffects::unknown();
+    return ME;
+  };
+
+  // Returns true is `Int` has a non-empty set of function attributes.
+  // Note that NoUnwind = !canThrow, so we need to negate its sense for testing
+  // if the intrinsic has NoUnwind attribute.
+  auto hasFnAttributes = [&getEffectiveME](const CodeGenIntrinsic &Int) {
+    if (!Int.canThrow || Int.isNoReturn || Int.isNoCallback || Int.isNoSync ||
+        Int.isNoFree || Int.isWillReturn || Int.isCold || Int.isNoDuplicate ||
+        Int.isNoMerge || Int.isConvergent || Int.isSpeculatable ||
+        Int.isStrictFP)
+      return true;
+
+    return getEffectiveME(Int) != MemoryEffects::unknown();
+  };
+
+  for (const CodeGenIntrinsic &Int : Ints) {
+    if (!hasFnAttributes(Int))
+      continue;
     unsigned ID = UniqFnAttributes.size();
-    if (!UniqFnAttributes.try_emplace(&Intrinsic, ID).second)
+    if (!UniqFnAttributes.try_emplace(&Int, ID).second)
       continue;
     OS << formatv(R"(
   case {0}:
@@ -493,44 +518,42 @@ static AttributeSet getIntrinsicFnAttributeSet(LLVMContext &C, unsigned ID) {
     auto addAttribute = [&OS](StringRef Attr) {
       OS << formatv("      Attribute::get(C, Attribute::{0}),\n", Attr);
     };
-    if (!Intrinsic.canThrow)
+    if (!Int.canThrow)
       addAttribute("NoUnwind");
-    if (Intrinsic.isNoReturn)
+    if (Int.isNoReturn)
       addAttribute("NoReturn");
-    if (Intrinsic.isNoCallback)
+    if (Int.isNoCallback)
       addAttribute("NoCallback");
-    if (Intrinsic.isNoSync)
+    if (Int.isNoSync)
       addAttribute("NoSync");
-    if (Intrinsic.isNoFree)
+    if (Int.isNoFree)
       addAttribute("NoFree");
-    if (Intrinsic.isWillReturn)
+    if (Int.isWillReturn)
       addAttribute("WillReturn");
-    if (Intrinsic.isCold)
+    if (Int.isCold)
       addAttribute("Cold");
-    if (Intrinsic.isNoDuplicate)
+    if (Int.isNoDuplicate)
       addAttribute("NoDuplicate");
-    if (Intrinsic.isNoMerge)
+    if (Int.isNoMerge)
       addAttribute("NoMerge");
-    if (Intrinsic.isConvergent)
+    if (Int.isConvergent)
       addAttribute("Convergent");
-    if (Intrinsic.isSpeculatable)
+    if (Int.isSpeculatable)
       addAttribute("Speculatable");
-    if (Intrinsic.isStrictFP)
+    if (Int.isStrictFP)
       addAttribute("StrictFP");
 
-    MemoryEffects ME = Intrinsic.ME;
-    // TODO: IntrHasSideEffects should affect not only readnone intrinsics.
-    if (ME.doesNotAccessMemory() && Intrinsic.hasSideEffects)
-      ME = MemoryEffects::unknown();
+    const MemoryEffects ME = getEffectiveME(Int);
     if (ME != MemoryEffects::unknown()) {
       OS << formatv("      // {0}\n", ME);
       OS << formatv("      Attribute::getWithMemoryEffects(C, "
                     "MemoryEffects::createFromIntValue({0})),\n",
                     ME.toIntValue());
     }
-    OS << "    });\n";
+    OS << "    });";
   }
-  OS << R"(  }
+  OS << R"(
+  }
 } // getIntrinsicFnAttributeSet
 
 AttributeList Intrinsic::getAttributes(LLVMContext &C, ID id) {
@@ -585,11 +608,7 @@ AttributeList Intrinsic::getAttributes(LLVMContext &C, ID id) {
           NumAttrs++, AttrIdx, ArgAttrID);
     }
 
-    if (!Int.canThrow ||
-        (Int.ME != MemoryEffects::unknown() && !Int.hasSideEffects) ||
-        Int.isNoReturn || Int.isNoCallback || Int.isNoSync || Int.isNoFree ||
-        Int.isWillReturn || Int.isCold || Int.isNoDuplicate || Int.isNoMerge ||
-        Int.isConvergent || Int.isSpeculatable || Int.isStrictFP) {
+    if (hasFnAttributes(Int)) {
       unsigned FnAttrID = UniqFnAttributes.find(&Int)->second;
       OS << formatv("      AS[{0}] = {{AttributeList::FunctionIndex, "
                     "getIntrinsicFnAttributeSet(C, {1})};\n",
