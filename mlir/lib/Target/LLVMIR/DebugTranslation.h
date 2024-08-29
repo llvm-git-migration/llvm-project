@@ -14,11 +14,13 @@
 #ifndef MLIR_LIB_TARGET_LLVMIR_DEBUGTRANSLATION_H_
 #define MLIR_LIB_TARGET_LLVMIR_DEBUGTRANSLATION_H_
 
+#include "mlir/Dialect/LLVMIR/LLVMAttrs.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/Location.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/IR/DIBuilder.h"
+#include "llvm/IR/Metadata.h"
 
 namespace mlir {
 class Operation;
@@ -75,6 +77,7 @@ private:
   llvm::DIDerivedType *translateImpl(DIDerivedTypeAttr attr);
   llvm::DIStringType *translateImpl(DIStringTypeAttr attr);
   llvm::DIFile *translateImpl(DIFileAttr attr);
+  llvm::DIImportedEntity *translateImpl(DIImportedEntityAttr attr);
   llvm::DILabel *translateImpl(DILabelAttr attr);
   llvm::DILexicalBlock *translateImpl(DILexicalBlockAttr attr);
   llvm::DILexicalBlockFile *translateImpl(DILexicalBlockFileAttr attr);
@@ -90,26 +93,25 @@ private:
   llvm::DISubroutineType *translateImpl(DISubroutineTypeAttr attr);
   llvm::DIType *translateImpl(DITypeAttr attr);
 
-  /// Currently, DIImportedEntityAttr does not have a scope field to avoid a
-  /// cyclic dependency.  The scope information is obtained from the entity
-  /// which holds the list of DIImportedEntityAttr. This requires that scope
-  /// information be passed to translate function.
-  llvm::DIImportedEntity *translate(DIImportedEntityAttr attr, llvm::DIScope *);
-
   /// Attributes that support self recursion need to implement an additional
   /// method to hook into `translateRecursive`.
   /// - `<temp llvm type> translateTemporaryImpl(<mlir type>)`:
   ///   Create a temporary translation of the DI attr without recursively
   ///   translating any nested DI attrs.
-  llvm::DIType *translateRecursive(DIRecursiveTypeAttrInterface attr);
+  llvm::DINode *translateRecursive(DIRecursiveTypeAttrInterface attr);
 
   /// Translate the given attribute to a temporary llvm debug metadata of the
   /// corresponding type.
   llvm::TempDICompositeType translateTemporaryImpl(DICompositeTypeAttr attr);
+  llvm::TempDISubprogram translateTemporaryImpl(DISubprogramAttr attr);
 
   /// Constructs a string metadata node from the string attribute. Returns
   /// nullptr if `stringAttr` is null or contains and empty string.
   llvm::MDString *getMDStringOrNull(StringAttr stringAttr);
+
+  /// Constructs a tuple metadata node from the `elements`. Returns nullptr if
+  /// `elements` is empty.
+  llvm::MDTuple *getMDTupleOrNull(ArrayRef<DINodeAttr> elements);
 
   /// Constructs a DIExpression metadata node from the DIExpressionAttr. Returns
   /// nullptr if `DIExpressionAttr` is null.
@@ -125,8 +127,8 @@ private:
   /// metadata.
   DenseMap<Attribute, llvm::DINode *> attrToNode;
 
-  /// A mapping between recursive ID and the translated DIType.
-  llvm::MapVector<DistinctAttr, llvm::DIType *> recursiveTypeMap;
+  /// A mapping between recursive ID and the translated DINode.
+  llvm::MapVector<DistinctAttr, llvm::DINode *> recursiveNodeMap;
 
   /// A mapping between a distinct ID and the translated LLVM metadata node.
   /// This helps identify attrs that should translate into the same LLVM debug
