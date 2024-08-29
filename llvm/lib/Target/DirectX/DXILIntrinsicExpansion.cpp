@@ -441,8 +441,7 @@ bool DXILIntrinsicExpansionLegacy::runOnModule(Module &M) {
   return expansionIntrinsics(M);
 }
 
-void DXILIntrinsicExpansionLegacy::getAnalysisUsage(
-    AnalysisUsage &AU) const {
+void DXILIntrinsicExpansionLegacy::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addPreserved<DXILResourceWrapperPass>();
 }
 
