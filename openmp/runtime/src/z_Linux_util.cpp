@@ -71,6 +71,9 @@
 #if KMP_OS_NETBSD
 #include <sched.h>
 #endif
+#if KMP_OS_OPENBSD
+#include <pthread_np.h>
+#endif
 #elif KMP_OS_SOLARIS
 #include <libproc.h>
 #include <procfs.h>
@@ -878,10 +881,19 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
     KMP_SYSFAIL("pthread_create", status);
   }
 
-#ifdef LIBOMP_HAVE_LINUX_PTHREAD_SETNAME
+#if defined(LIBOMP_HAVE_PTHREAD_SETNAME_NP) ||                                 \
+    defined(LIBOMP_HAVE_PTHREAD_SET_NAME_NP)
   // Rename worker threads for improved debuggability
   if (!KMP_UBER_GTID(gtid)) {
+#if KMP_OS_LINUX
     pthread_setname_np(handle, "openmp_worker");
+#elif KMP_OS_FREEBSD || KMP_OS_OPENBSD || KMP_OS_DRAGONFLY
+    pthread_set_name_np(handle, "openmp_worker");
+#elif KMP_OS_NETBSD
+    pthread_setname_np(handle, "%s", const_cast<char *>("openmp_worker"));
+#elif KMP_OS_DARWIN
+    pthread_setname_np("openmp_worker");
+#endif
   }
 #endif
 
