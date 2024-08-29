@@ -1,0 +1,5 @@
+# RUN: cp %S/Inputs/*.c %S/LitTests
+# RUN: cp %S/Inputs/*.c.expected %S/LitTests
+# RUN: not %{lit} %S/LitTests
+# RUN: not %{lit} %S/LitTests --update-tests
+# RUN: %{lit} %S/LitTests

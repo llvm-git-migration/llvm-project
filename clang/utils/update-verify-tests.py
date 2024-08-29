@@ -21,6 +21,9 @@ from UpdateVerifyTests.core import check_expectations
 Example usage:
   clang -verify [file] | python3 update-verify-tests.py
   clang -verify=check [file] | python3 update-verify-tests.py --prefix check
+
+This can also be invoked automatically by lit for failing '-verify' tests in Sema by running:
+  llvm-lit --update-tests clang/test/Sema
 """
 
 
