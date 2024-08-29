@@ -103,6 +103,15 @@ static cl::opt<bool> NoExternalizeGlobals(
     cl::desc("disables externalization of global variable with local linkage; "
              "may cause globals to be duplicated which increases binary size"));
 
+static cl::opt<bool> NoExternalizeOnAddrTaken(
+    "amdgpu-module-splitting-no-externalize-address-taken", cl::Hidden,
+    cl::desc(
+        "disables externalization of functions whose addresses are taken"));
+
+static cl::opt<bool> InlineAsmIsIndirectCall(
+    "amdgpu-module-splitting-inline-asm-is-indirect-call", cl::Hidden,
+    cl::desc("consider inline assembly as na indirect call"));
+
 static cl::opt<std::string>
     ModuleDotCfgOutput("amdgpu-module-splitting-print-module-dotcfg",
                        cl::Hidden,
@@ -482,6 +491,9 @@ void SplitGraph::buildGraph(CallGraph &CG) {
       dbgs()
       << "[build graph] constructing graph representation of the input\n");
 
+  // FIXME(?): Is the callgraph really worth using if we have to iterate the
+  // function again whenever it fails to give us enough information?
+
   // We build the graph by just iterating all functions in the module and
   // working on their direct callees. At the end, all nodes should be linked
   // together as expected.
@@ -492,28 +504,67 @@ void SplitGraph::buildGraph(CallGraph &CG) {
       continue;
 
     // Look at direct callees and create the necessary edges in the graph.
-    bool HasIndirectCall = false;
-    Node &N = getNode(Cache, Fn);
+    SetVector<const Function *> DirectCallees;
+    bool CallsExternal = false;
     for (auto &CGEntry : *CG[&Fn]) {
       auto *CGNode = CGEntry.second;
-      auto *Callee = CGNode->getFunction();
-      if (!Callee) {
-        // TODO: Don't consider inline assembly as indirect calls.
-        if (CGNode == CG.getCallsExternalNode())
-          HasIndirectCall = true;
-        continue;
-      }
-
-      if (!Callee->isDeclaration())
-        createEdge(N, getNode(Cache, *Callee), EdgeKind::DirectCall);
+      if (auto *Callee = CGNode->getFunction()) {
+        if (!Callee->isDeclaration())
+          DirectCallees.insert(Callee);
+      } else if (CGNode == CG.getCallsExternalNode())
+        CallsExternal = true;
     }
 
     // Keep track of this function if it contains an indirect call and/or if it
     // can be indirectly called.
-    if (HasIndirectCall) {
-      LLVM_DEBUG(dbgs() << "indirect call found in " << Fn.getName() << "\n");
-      FnsWithIndirectCalls.push_back(&Fn);
+    if (CallsExternal) {
+      LLVM_DEBUG(dbgs() << "  [!] callgraph is incomplete for " << Fn.getName()
+                        << " - analyzing function\n");
+
+      bool HasIndirectCall = false;
+      for (const auto &BB : Fn) {
+        for (const auto &Inst : BB) {
+          // look at all calls without a direct callee.
+          if (const auto *CB = dyn_cast<CallBase>(&Inst);
+              CB && !CB->getCalledFunction()) {
+            // inline assembly can be ignored, unless InlineAsmIsIndirectCall is
+            // true.
+            if (CB->isInlineAsm()) {
+              if (InlineAsmIsIndirectCall)
+                HasIndirectCall = true;
+              LLVM_DEBUG(dbgs() << "    found inline assembly\n");
+              continue;
+            }
+
+            // see through calls of aliases
+            const Value *CalledV = CB->getCalledOperand();
+            if (isa<GlobalAlias>(CalledV)) {
+              if (const auto *RealFn = dyn_cast<Function>(
+                      CalledV->stripPointerCastsAndAliases());
+                  RealFn && !RealFn->isDeclaration()) {
+                LLVM_DEBUG(dbgs()
+                           << "    resolved call to " << RealFn->getName()
+                           << " in: " << Inst << '\n');
+                DirectCallees.insert(RealFn);
+                continue;
+              }
+            }
+
+            // everything else is handled conservatively.
+            HasIndirectCall = true;
+          }
+        }
+      }
+
+      if (HasIndirectCall) {
+        LLVM_DEBUG(dbgs() << "    indirect call found\n");
+        FnsWithIndirectCalls.push_back(&Fn);
+      }
     }
+
+    Node &N = getNode(Cache, Fn);
+    for (const auto *Callee : DirectCallees)
+      createEdge(N, getNode(Cache, *Callee), EdgeKind::DirectCall);
 
     if (canBeIndirectlyCalled(Fn))
       IndirectlyCallableFns.push_back(&Fn);
@@ -1326,13 +1377,23 @@ static void splitAMDGPUModule(
   //
   // Additionally, it guides partitioning to not duplicate this function if it's
   // called directly at some point.
-  for (auto &Fn : M) {
-    if (Fn.hasAddressTaken()) {
-      if (Fn.hasLocalLinkage()) {
-        LLVM_DEBUG(dbgs() << "[externalize] " << Fn.getName()
-                          << " because its address is taken\n");
+  //
+  // TODO: Could we be smarter about this ? This makes all functions whose
+  // addresses are taken non-copyable. We should probably model this type of
+  // constraint in the graph and use it to guide splitting, instead of
+  // externalizing like this. Maybe non-copyable should really mean "keep one
+  // visible copy, then internalize all other copies" for some functions?
+  if (!NoExternalizeOnAddrTaken) {
+    for (auto &Fn : M) {
+      // TODO: Should aliases count? Probably not but they're so rare I'm not
+      // sure it's worth fixing.
+      if (Fn.hasAddressTaken()) {
+        if (Fn.hasLocalLinkage()) {
+          LLVM_DEBUG(dbgs() << "[externalize] " << Fn.getName()
+                            << " because its address is taken\n");
+        }
+        externalize(Fn);
       }
-      externalize(Fn);
     }
   }
 
@@ -1368,7 +1429,8 @@ static void splitAMDGPUModule(
     dbgs() << "[graph] nodes:\n";
     for (const SplitGraph::Node *N : SG.nodes()) {
       dbgs() << "  - [" << N->getID() << "]: " << N->getName() << " "
-             << (N->isGraphEntryPoint() ? "(entry)" : "") << "\n";
+             << (N->isGraphEntryPoint() ? "(entry)" : "") << " "
+             << (N->isNonCopyable() ? "(noncopyable)" : "") << "\n";
     }
   });
 
