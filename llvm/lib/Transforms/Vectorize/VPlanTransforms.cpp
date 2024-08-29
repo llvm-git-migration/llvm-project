@@ -1120,6 +1120,49 @@ void VPlanTransforms::truncateToMinimalBitwidths(
          "some entries in MinBWs haven't been processed");
 }
 
+/// Remove BranchOnCond recipes with constant conditions together with removing
+/// dead edges to their successors. Remove blocks that become dead (no remaining
+/// predecessors())
+static void simplifyCFG(VPlan &Plan) {
+  using namespace llvm::VPlanPatternMatch;
+  SmallVector<VPBasicBlock *> WorkList;
+  for (VPBasicBlock *VPBB : VPBlockUtils::blocksOnly<VPBasicBlock>(
+           vp_depth_first_deep(Plan.getEntry()))) {
+    VPRecipeBase *Term = VPBB->getTerminator();
+    if (!Term || !match(Term, m_BranchOnCond(m_True())))
+      continue;
+    WorkList.push_back(VPBB);
+  }
+
+  SetVector<VPBasicBlock *> PossiblyDeadBlocks;
+  for (VPBasicBlock *VPBB : WorkList) {
+    VPRecipeBase *Term = VPBB->getTerminator();
+    VPBasicBlock *DeadSucc = cast<VPBasicBlock>(VPBB->getSuccessors()[1]);
+    VPBlockUtils::disconnectBlocks(VPBB, DeadSucc);
+    PossiblyDeadBlocks.insert(DeadSucc);
+    Term->eraseFromParent();
+  }
+  for (VPBasicBlock *VPBB : PossiblyDeadBlocks) {
+    if (VPBB->getNumPredecessors() != 0)
+      continue;
+    // The block doesn't have any predecessors, remove it.
+    //
+    // To do so, first remove all recipes in the block. At the moment, recipes
+    // with users outside the block must be live-outs. Those are removed.
+    SmallVector<PHINode *> DeadLiveOuts;
+    for (VPRecipeBase &R : make_early_inc_range(reverse(*VPBB))) {
+      if (auto *V = dyn_cast<VPSingleDefRecipe>(&R)) {
+        for (VPUser *U : to_vector(V->users())) {
+          auto *LO = cast<VPLiveOut>(U);
+          Plan.removeLiveOut(LO->getPhi());
+        }
+      }
+      R.eraseFromParent();
+    }
+    delete VPBB;
+  }
+}
+
 void VPlanTransforms::optimize(VPlan &Plan, ScalarEvolution &SE) {
   removeRedundantCanonicalIVs(Plan);
   removeRedundantInductionCasts(Plan);
@@ -1132,6 +1175,7 @@ void VPlanTransforms::optimize(VPlan &Plan, ScalarEvolution &SE) {
 
   removeRedundantExpandSCEVRecipes(Plan);
   mergeBlocksIntoPredecessors(Plan);
+  simplifyCFG(Plan);
 }
 
 // Add a VPActiveLaneMaskPHIRecipe and related recipes to \p Plan and replace

@@ -1007,9 +1007,19 @@ void VPlan::execute(VPTransformState *State) {
          "middle block has unexpected successors");
   VPBasicBlock *ScalarPhVPBB = cast<VPBasicBlock>(
       MiddleSuccs.size() == 1 ? MiddleSuccs[0] : MiddleSuccs[1]);
-  assert(!isa<VPIRBasicBlock>(ScalarPhVPBB) &&
-         "scalar preheader cannot be wrapped already");
-  replaceVPBBWithIRVPBB(ScalarPhVPBB, ScalarPh);
+  if (!isa<VPIRBasicBlock>(ScalarPhVPBB)) {
+    assert(!isa<VPIRBasicBlock>(ScalarPhVPBB) &&
+           "scalar preheader cannot be wrapped already");
+    replaceVPBBWithIRVPBB(ScalarPhVPBB, ScalarPh);
+  } else {
+    // There is no edge to the scalar pre-header in VPlan. Phis in ScalarPh have
+    // been created during skeleton construction, so remove the incoming values
+    // from the middle block here.
+    // TODO: Remove this once phis in the scalar preheader are managed in VPlan
+    // directly.
+    for (auto &Phi : ScalarPh->phis())
+      Phi.removeIncomingValue(MiddleBB);
+  }
   replaceVPBBWithIRVPBB(MiddleVPBB, MiddleBB);
 
   // Disconnect the middle block from its single successor (the scalar loop
