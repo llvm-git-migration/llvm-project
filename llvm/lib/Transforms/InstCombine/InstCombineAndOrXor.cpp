@@ -4706,6 +4706,13 @@ Instruction *InstCombinerImpl::visitXor(BinaryOperator &I) {
     return Xor;
 
   Value *X, *Y;
+
+  // (A | B) ^ C -> (A ^ C) ^ B
+  if (match(Op0, m_OneUse(m_c_DisjointOr(m_Value(X), m_Value(Y))))) {
+    Value *XorAC = Builder.CreateXor(X, Op1);
+    return BinaryOperator::CreateXor(XorAC, Y);
+  }
+
   Constant *C1;
   if (match(Op1, m_Constant(C1))) {
     Constant *C2;
