@@ -100,6 +100,6 @@ void FUNC4(Derived4* p) {
 // CHECK: %[[T5:[0-9]+]] = load ptr, ptr %[[VFN]]
 // CHECK: %[[T6:[0-9]+]] = ptrtoint ptr %[[VFN]] to i64
 // CHECK: %[[T7:[0-9]+]] = call i64 @llvm.ptrauth.blend(i64 %[[T6]], i64 426)
-// CHECK: call void %[[T5]](ptr noundef nonnull align {{[0-9]+}} dereferenceable(8) %{{.*}}) [ "ptrauth"(i32 0, i64 %[[T7]]) ]
+// CHECK: call void %[[T5]](ptr noundef nonnull readonly align {{[0-9]+}} dereferenceable(8) %{{.*}}) [ "ptrauth"(i32 0, i64 %[[T7]]) ]
   p->abc();
 }
