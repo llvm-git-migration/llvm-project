@@ -20,8 +20,8 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/PrettyDeclStackTrace.h"
-#include "clang/AST/TypeOrdering.h"
 #include "clang/AST/TypeLoc.h"
+#include "clang/AST/TypeOrdering.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Sema/EnterExpressionEvaluationContext.h"
@@ -4686,7 +4686,8 @@ bool Sema::InstantiateDefaultArgument(SourceLocation CallLoc, FunctionDecl *FD,
   NamedDecl *Pattern = FD;
   std::optional<ArrayRef<TemplateArgument>> Innermost;
 
-  if (FD->isCXXClassMember() && !isGenericLambdaCallOperatorOrStaticInvokerSpecialization(FD)) {
+  if (FD->isCXXClassMember() &&
+      !isGenericLambdaCallOperatorOrStaticInvokerSpecialization(FD)) {
     if (FunctionTemplateDecl *FTD = FD->getPrimaryTemplate()) {
       Pattern = FTD->getFirstDecl();
       Innermost = FD->getTemplateSpecializationArgs()->asArray();
