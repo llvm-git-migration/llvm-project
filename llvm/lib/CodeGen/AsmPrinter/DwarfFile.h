@@ -38,7 +38,7 @@ struct RangeSpan {
   const MCSymbol *Begin;
   const MCSymbol *End;
 
-  bool operator==(const RangeSpan& Other) const {
+  bool operator==(const RangeSpan &Other) const {
     return Begin == Other.Begin && End == Other.End;
   }
 };
