@@ -95,10 +95,8 @@ public:
   std::string SplitDwarfFile;
   std::string AsSecureLogFile;
 
-  // This will be set as compiler path in LF_BUILDINFO
+  // Used for codeview debug info. These will be set as compiler path and commandline arguments in LF_BUILDINFO
   std::string Argv0;
-
-  // This will be set as commandline arguments in LF_BUILDINFO
   std::string CommandlineArgs;
 
   /// Additional paths to search for `.include` directives when using the

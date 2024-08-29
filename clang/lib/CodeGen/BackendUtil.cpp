@@ -344,7 +344,7 @@ static std::string flattenClangCommandLine(ArrayRef<std::string> Args,
     if (Arg.starts_with("-object-file-name") || Arg == MainFilename) {
       continue;
     }
-    // Skip fmessage-length for reproduciability.
+    // Skip fmessage-length for reproducibility.
     if (Arg.starts_with("-fmessage-length")) {
       continue;
     }
