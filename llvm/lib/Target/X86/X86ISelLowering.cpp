@@ -31103,7 +31103,7 @@ static SDValue LowerATOMIC_FENCE(SDValue Op, const X86Subtarget &Subtarget,
   // cross-thread fence.
   if (FenceOrdering == AtomicOrdering::SequentiallyConsistent &&
       FenceSSID == SyncScope::System) {
-    if (Subtarget.hasMFence())
+    if (!Subtarget.avoidMFence() && Subtarget.hasMFence())
       return DAG.getNode(X86ISD::MFENCE, dl, MVT::Other, Op.getOperand(0));
 
     SDValue Chain = Op.getOperand(0);
