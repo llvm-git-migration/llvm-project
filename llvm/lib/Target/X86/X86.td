@@ -819,7 +819,8 @@ def ProcessorFeatures {
     TuningSlow3OpsLEA,
     TuningSlowDivide64,
     TuningSlowIncDec,
-    TuningInsertVZEROUPPER
+    TuningInsertVZEROUPPER,
+    TuningAvoidMFENCE
   ];
 
   list<SubtargetFeature> X86_64V2Features = !listconcat(X86_64V1Features, [
@@ -835,7 +836,8 @@ def ProcessorFeatures {
     TuningFastSHLDRotate,
     TuningFast15ByteNOP,
     TuningPOPCNTFalseDeps,
-    TuningInsertVZEROUPPER
+    TuningInsertVZEROUPPER,
+    TuningAvoidMFENCE
   ];
 
   list<SubtargetFeature> X86_64V3Features = !listconcat(X86_64V2Features, [
@@ -854,7 +856,8 @@ def ProcessorFeatures {
     TuningPOPCNTFalseDeps,
     TuningLZCNTFalseDeps,
     TuningInsertVZEROUPPER,
-    TuningAllowLight256Bit
+    TuningAllowLight256Bit,
+    TuningAvoidMFENCE
   ];
 
   list<SubtargetFeature> X86_64V4Features = !listconcat(X86_64V3Features, [
@@ -878,7 +881,8 @@ def ProcessorFeatures {
     TuningFastGather,
     TuningPOPCNTFalseDeps,
     TuningInsertVZEROUPPER,
-    TuningAllowLight256Bit
+    TuningAllowLight256Bit,
+    TuningAvoidMFENCE
   ];
 
   // Nehalem
@@ -1677,8 +1681,7 @@ def : ProcModel<"nocona", GenericPostRAModel, [
 ],
 [
   TuningSlowUAMem16,
-  TuningInsertVZEROUPPER,
-  TuningAvoidMFENCE
+  TuningInsertVZEROUPPER
 ]>;
 
 // Intel Core 2 Solo/Duo.
