@@ -8,3 +8,5 @@
 static_assert(_rotl(0x01, 5) == 32);
 
 static_assert(alignof(__unaligned int) == 1, "");
+
+static_assert(__noop() == 0, "");
