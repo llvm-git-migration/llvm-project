@@ -141,6 +141,7 @@ class VectorLegalizer {
   SDValue ExpandSELECT(SDNode *Node);
   std::pair<SDValue, SDValue> ExpandLoad(SDNode *N);
   SDValue ExpandStore(SDNode *N);
+  SDValue ExpandBF16Arith(SDNode *Node);
   SDValue ExpandFNEG(SDNode *Node);
   SDValue ExpandFABS(SDNode *Node);
   SDValue ExpandFCOPYSIGN(SDNode *Node);
@@ -1070,6 +1071,10 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
     break;
   case ISD::FMINNUM:
   case ISD::FMAXNUM:
+    if (SDValue Expanded = ExpandBF16Arith(Node)) {
+      Results.push_back(Expanded);
+      return;
+    }
     if (SDValue Expanded = TLI.expandFMINNUM_FMAXNUM(Node, DAG)) {
       Results.push_back(Expanded);
       return;
@@ -1077,6 +1082,10 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
     break;
   case ISD::FMINIMUM:
   case ISD::FMAXIMUM:
+    if (SDValue Expanded = ExpandBF16Arith(Node)) {
+      Results.push_back(Expanded);
+      return;
+    }
     Results.push_back(TLI.expandFMINIMUM_FMAXIMUM(Node, DAG));
     return;
   case ISD::SMIN:
@@ -1197,6 +1206,24 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
   case ISD::UCMP:
     Results.push_back(TLI.expandCMP(Node, DAG));
     return;
+
+  case ISD::FADD:
+  case ISD::FMUL:
+  case ISD::FMA:
+  case ISD::FDIV:
+  case ISD::FCEIL:
+  case ISD::FFLOOR:
+  case ISD::FNEARBYINT:
+  case ISD::FRINT:
+  case ISD::FROUND:
+  case ISD::FROUNDEVEN:
+  case ISD::FTRUNC:
+  case ISD::FSQRT:
+    if (SDValue Expanded = ExpandBF16Arith(Node)) {
+      Results.push_back(Expanded);
+      return;
+    }
+    break;
   }
 
   SDValue Unrolled = DAG.UnrollVectorOp(Node);
@@ -1874,6 +1901,11 @@ void VectorLegalizer::ExpandFSUB(SDNode *Node,
       TLI.isOperationLegalOrCustom(ISD::FADD, VT))
     return; // Defer to LegalizeDAG
 
+  if (SDValue Expanded = ExpandBF16Arith(Node)) {
+    Results.push_back(Expanded);
+    return;
+  }
+
   SDValue Tmp = DAG.UnrollVectorOp(Node);
   Results.push_back(Tmp);
 }
@@ -2132,6 +2164,67 @@ bool VectorLegalizer::tryExpandVecMathCall(
     return false;
 
   return tryExpandVecMathCall(Node, LC, Results);
+}
+
+// Try to lower BFloat arithmetic by performing the same operation on operands
+// that have been promoted to Float32, the result of which is then truncated.
+// If promotion requires non-legal types the operation is split with the
+// promotion occuring during a successive call to this function.
+SDValue VectorLegalizer::ExpandBF16Arith(SDNode *Node) {
+  EVT VT = Node->getValueType(0);
+  if (VT.getVectorElementType() != MVT::bf16)
+    return SDValue();
+
+  SDLoc DL(Node);
+  const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+  unsigned Opcode = Node->getOpcode();
+
+  // Can we promote to float and try again?
+
+  EVT PromoteVT = VT.changeVectorElementType(MVT::f32);
+  if (TLI.isTypeLegal(PromoteVT)) {
+    // Don't expand if the result is likely to be unrolled anyway.
+    if (!TLI.isOperationLegalOrCustom(Opcode, PromoteVT))
+      return SDValue();
+
+    SmallVector<SDValue, 4> Ops;
+    for (const SDValue &V : Node->op_values())
+      Ops.push_back(DAG.getNode(ISD::FP_EXTEND, DL, PromoteVT, V));
+
+    SDValue PromotedOp = DAG.getNode(Opcode, DL, PromoteVT, Ops);
+    return DAG.getNode(ISD::FP_ROUND, DL, VT, PromotedOp,
+                       DAG.getIntPtrConstant(0, DL, true));
+  }
+
+  // Can we split the vector and try again?
+
+  if (VT.getVectorMinNumElements() == 1)
+    return SDValue();
+
+  EVT LoVT, HiVT;
+  std::tie(LoVT, HiVT) = DAG.GetSplitDestVTs(VT);
+
+  // Restrict expansion to cases where both parts can be concatenated.
+  if (LoVT != HiVT || !TLI.isTypeLegal(LoVT))
+    return SDValue();
+
+  // Don't expand if the result is likely to be unrolled anyway.
+  if (!TLI.isOperationLegalOrCustom(Opcode, LoVT) &&
+      !TLI.isOperationLegalOrCustom(Opcode,
+                                    LoVT.changeVectorElementType(MVT::f32)))
+    return SDValue();
+
+  SmallVector<SDValue, 4> LoOps, HiOps;
+  for (const SDValue &V : Node->op_values()) {
+    SDValue Lo, Hi;
+    std::tie(Lo, Hi) = DAG.SplitVector(V, DL, LoVT, HiVT);
+    LoOps.push_back(Lo);
+    HiOps.push_back(Hi);
+  }
+
+  SDValue SplitOpLo = DAG.getNode(Opcode, DL, LoVT, LoOps);
+  SDValue SplitOpHi = DAG.getNode(Opcode, DL, HiVT, HiOps);
+  return DAG.getNode(ISD::CONCAT_VECTORS, DL, VT, SplitOpLo, SplitOpHi);
 }
 
 void VectorLegalizer::UnrollStrictFPOp(SDNode *Node,

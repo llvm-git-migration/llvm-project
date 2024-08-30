@@ -652,90 +652,46 @@ define <2 x half> @test_atomicrmw_fmin_v2f16_seq_cst_align4(ptr %ptr, <2 x half>
 define <2 x bfloat> @test_atomicrmw_fmin_v2bf16_seq_cst_align4(ptr %ptr, <2 x bfloat> %value) #0 {
 ; NOLSE-LABEL: test_atomicrmw_fmin_v2bf16_seq_cst_align4:
 ; NOLSE:       // %bb.0:
-; NOLSE-NEXT:    // kill: def $d0 killed $d0 def $q0
-; NOLSE-NEXT:    mov h1, v0.h[1]
-; NOLSE-NEXT:    fmov w10, s0
-; NOLSE-NEXT:    mov w8, #32767 // =0x7fff
-; NOLSE-NEXT:    lsl w10, w10, #16
-; NOLSE-NEXT:    fmov w9, s1
-; NOLSE-NEXT:    fmov s1, w10
-; NOLSE-NEXT:    lsl w9, w9, #16
-; NOLSE-NEXT:    fmov s0, w9
+; NOLSE-NEXT:    movi v1.4s, #1
+; NOLSE-NEXT:    movi v2.4s, #127, msl #8
+; NOLSE-NEXT:    shll v0.4s, v0.4h, #16
 ; NOLSE-NEXT:  .LBB7_1: // %atomicrmw.start
 ; NOLSE-NEXT:    // =>This Inner Loop Header: Depth=1
-; NOLSE-NEXT:    ldaxr w9, [x0]
-; NOLSE-NEXT:    fmov s2, w9
-; NOLSE-NEXT:    mov h3, v2.h[1]
-; NOLSE-NEXT:    fmov w11, s2
-; NOLSE-NEXT:    lsl w11, w11, #16
-; NOLSE-NEXT:    fmov w10, s3
-; NOLSE-NEXT:    fmov s3, w11
-; NOLSE-NEXT:    lsl w10, w10, #16
-; NOLSE-NEXT:    fminnm s3, s3, s1
-; NOLSE-NEXT:    fmov s2, w10
-; NOLSE-NEXT:    fminnm s2, s2, s0
-; NOLSE-NEXT:    fmov w11, s3
-; NOLSE-NEXT:    ubfx w13, w11, #16, #1
-; NOLSE-NEXT:    add w11, w11, w8
-; NOLSE-NEXT:    fmov w10, s2
-; NOLSE-NEXT:    add w11, w13, w11
-; NOLSE-NEXT:    lsr w11, w11, #16
-; NOLSE-NEXT:    ubfx w12, w10, #16, #1
-; NOLSE-NEXT:    add w10, w10, w8
-; NOLSE-NEXT:    fmov s3, w11
-; NOLSE-NEXT:    add w10, w12, w10
-; NOLSE-NEXT:    lsr w10, w10, #16
-; NOLSE-NEXT:    fmov s2, w10
-; NOLSE-NEXT:    mov v3.h[1], v2.h[0]
-; NOLSE-NEXT:    fmov w10, s3
-; NOLSE-NEXT:    stlxr w11, w10, [x0]
-; NOLSE-NEXT:    cbnz w11, .LBB7_1
+; NOLSE-NEXT:    ldaxr w8, [x0]
+; NOLSE-NEXT:    fmov s3, w8
+; NOLSE-NEXT:    shll v3.4s, v3.4h, #16
+; NOLSE-NEXT:    fminnm v3.4s, v3.4s, v0.4s
+; NOLSE-NEXT:    ushr v4.4s, v3.4s, #16
+; NOLSE-NEXT:    and v4.16b, v4.16b, v1.16b
+; NOLSE-NEXT:    add v3.4s, v4.4s, v3.4s
+; NOLSE-NEXT:    addhn v3.4h, v3.4s, v2.4s
+; NOLSE-NEXT:    fmov w9, s3
+; NOLSE-NEXT:    stlxr w10, w9, [x0]
+; NOLSE-NEXT:    cbnz w10, .LBB7_1
 ; NOLSE-NEXT:  // %bb.2: // %atomicrmw.end
-; NOLSE-NEXT:    fmov d0, x9
+; NOLSE-NEXT:    fmov d0, x8
 ; NOLSE-NEXT:    ret
 ;
 ; LSE-LABEL: test_atomicrmw_fmin_v2bf16_seq_cst_align4:
 ; LSE:       // %bb.0:
-; LSE-NEXT:    // kill: def $d0 killed $d0 def $q0
-; LSE-NEXT:    mov h1, v0.h[1]
-; LSE-NEXT:    fmov w10, s0
-; LSE-NEXT:    mov w8, #32767 // =0x7fff
+; LSE-NEXT:    movi v1.4s, #1
+; LSE-NEXT:    movi v2.4s, #127, msl #8
+; LSE-NEXT:    shll v3.4s, v0.4h, #16
 ; LSE-NEXT:    ldr s0, [x0]
-; LSE-NEXT:    lsl w10, w10, #16
-; LSE-NEXT:    fmov w9, s1
-; LSE-NEXT:    fmov s2, w10
-; LSE-NEXT:    lsl w9, w9, #16
-; LSE-NEXT:    fmov s1, w9
 ; LSE-NEXT:  .LBB7_1: // %atomicrmw.start
 ; LSE-NEXT:    // =>This Inner Loop Header: Depth=1
-; LSE-NEXT:    mov h3, v0.h[1]
-; LSE-NEXT:    fmov w10, s0
-; LSE-NEXT:    lsl w10, w10, #16
-; LSE-NEXT:    fmov w9, s3
-; LSE-NEXT:    fmov s4, w10
-; LSE-NEXT:    lsl w9, w9, #16
-; LSE-NEXT:    fminnm s4, s4, s2
-; LSE-NEXT:    fmov s3, w9
-; LSE-NEXT:    fminnm s3, s3, s1
-; LSE-NEXT:    fmov w10, s4
-; LSE-NEXT:    ubfx w12, w10, #16, #1
-; LSE-NEXT:    add w10, w10, w8
-; LSE-NEXT:    fmov w9, s3
-; LSE-NEXT:    add w10, w12, w10
-; LSE-NEXT:    lsr w10, w10, #16
-; LSE-NEXT:    ubfx w11, w9, #16, #1
-; LSE-NEXT:    add w9, w9, w8
-; LSE-NEXT:    fmov s4, w10
-; LSE-NEXT:    add w9, w11, w9
-; LSE-NEXT:    lsr w9, w9, #16
-; LSE-NEXT:    fmov s3, w9
-; LSE-NEXT:    fmov w9, s0
-; LSE-NEXT:    mov v4.h[1], v3.h[0]
-; LSE-NEXT:    mov w11, w9
-; LSE-NEXT:    fmov w10, s4
-; LSE-NEXT:    casal w11, w10, [x0]
-; LSE-NEXT:    fmov s0, w11
-; LSE-NEXT:    cmp w11, w9
+; LSE-NEXT:    shll v4.4s, v0.4h, #16
+; LSE-NEXT:    fmov w8, s0
+; LSE-NEXT:    fminnm v4.4s, v4.4s, v3.4s
+; LSE-NEXT:    mov w10, w8
+; LSE-NEXT:    ushr v5.4s, v4.4s, #16
+; LSE-NEXT:    and v5.16b, v5.16b, v1.16b
+; LSE-NEXT:    add v4.4s, v5.4s, v4.4s
+; LSE-NEXT:    addhn v4.4h, v4.4s, v2.4s
+; LSE-NEXT:    fmov w9, s4
+; LSE-NEXT:    casal w10, w9, [x0]
+; LSE-NEXT:    fmov s0, w10
+; LSE-NEXT:    cmp w10, w8
 ; LSE-NEXT:    b.ne .LBB7_1
 ; LSE-NEXT:  // %bb.2: // %atomicrmw.end
 ; LSE-NEXT:    // kill: def $d0 killed $d0 killed $q0
