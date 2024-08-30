@@ -1874,8 +1874,8 @@ public:
 
   ~CommandObjectScriptingObjectParsed() override = default;
 
-  Status GetOptionsError() { return m_options_error; }
-  Status GetArgsError() { return m_args_error; }
+  Status GetOptionsError() { return m_options_error.clone(); }
+  Status GetArgsError() { return m_args_error.clone(); }
   bool WantsCompletion() override { return true; }
 
   bool IsRemovable() const override { return true; }
