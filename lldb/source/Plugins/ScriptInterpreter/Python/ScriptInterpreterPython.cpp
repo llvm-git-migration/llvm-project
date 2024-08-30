@@ -1110,7 +1110,7 @@ Status ScriptInterpreterPythonImpl::ExecuteMultipleLines(
           options.GetEnableIO(), m_debugger, /*result=*/nullptr);
 
   if (!io_redirect_or_error)
-    return Status(io_redirect_or_error.takeError());
+    return Status::FromError(io_redirect_or_error.takeError());
 
   ScriptInterpreterIORedirect &io_redirect = **io_redirect_or_error;
 
@@ -1144,7 +1144,7 @@ Status ScriptInterpreterPythonImpl::ExecuteMultipleLines(
             E.Restore();
           return error;
         });
-    return Status(std::move(error));
+    return Status::FromError(std::move(error));
   }
 
   return Status();
