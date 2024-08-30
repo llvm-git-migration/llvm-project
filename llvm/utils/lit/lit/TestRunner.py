@@ -1005,6 +1005,44 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
     return exitCode
 
 
+def reFindLast(r, s):
+    matches = r.findall(s)
+    if not matches:
+        return None
+    return matches[-1]
+
+
+def findColor(s, curr_color):
+    m = reFindLast(color_re, s)
+    if not m:
+        return curr_color
+    # "\33[0m" means "reset all formatting". Sometimes the 0 is skipped.
+    if m == "\33[m" or m == "\33[0m":
+        return None
+    return m
+
+
+def escapeColor(s, f):
+    if not f:
+        return s
+    return f"\33[0m{s}{f}"
+
+
+color_re = re.compile("\33\\[[^m]*m")
+
+
+def formatLines(lines):
+    curr_color = None
+    out = ""
+    for line in lines:
+        out += escapeColor("# | ", curr_color)
+        out += line + "\n"
+        curr_color = findColor(line, curr_color)
+    if curr_color:
+        out += "\33[0m"  # prevent unterminated formatting from leaking
+    return out
+
+
 def formatOutput(title, data, limit=None):
     if not data.strip():
         return ""
@@ -1016,7 +1054,7 @@ def formatOutput(title, data, limit=None):
     ndashes = 30
     # fmt: off
     out =  f"# .---{title}{'-' * (ndashes - 4 - len(title))}\n"
-    out += f"# | " + "\n# | ".join(data.splitlines()) + "\n"
+    out += formatLines(data.splitlines())
     out += f"# `---{msg}{'-' * (ndashes - 4 - len(msg))}\n"
     # fmt: on
     return out
