@@ -23,8 +23,8 @@ def get_verify_prefixes(command):
         prefixes.add(prefix)
     return prefixes
 
-    
-def verify_test_updater(result):
+
+def verify_test_updater(result, test):
     if not result.stderr:
         return None
     prefixes = get_verify_prefixes(result.command)
@@ -34,4 +34,3 @@ def verify_test_updater(result):
         return f"update-verify-test: not updating because of multiple prefixes - {prefixes}"
     [prefix] = prefixes
     return check_expectations(result.stderr.splitlines(), prefix)
-
