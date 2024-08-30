@@ -505,14 +505,9 @@ bool Compiler<Emitter>::VisitCastExpr(const CastExpr *CE) {
   case CK_MemberPointerToBoolean: {
     PrimType PtrT = classifyPrim(SubExpr->getType());
 
-    // Just emit p != nullptr for this.
     if (!this->visit(SubExpr))
       return false;
-
-    if (!this->emitNull(PtrT, nullptr, CE))
-      return false;
-
-    return this->emitNE(PtrT, CE);
+    return this->emitIsNonNull(PtrT, CE);
   }
 
   case CK_IntegralComplexToBoolean:
