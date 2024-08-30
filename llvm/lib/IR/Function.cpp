@@ -72,6 +72,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <variant>
 
 using namespace llvm;
 using ProfileCount = Function::ProfileCount;
@@ -1381,28 +1382,15 @@ static void DecodeIITType(unsigned &NextElt, ArrayRef<unsigned char> Infos,
 
 void Intrinsic::getIntrinsicInfoTableEntries(ID id,
                                              SmallVectorImpl<IITDescriptor> &T){
-  // Check to see if the intrinsic's type was expressible by the table.
-  unsigned TableVal = IIT_Table[id-1];
-
-  // Decode the TableVal into an array of IITValues.
-  SmallVector<unsigned char, 8> IITValues;
+  std::variant<SmallVector<unsigned char, 8>, unsigned> Decode =
+      decodeIITFixedEncoding(id);
   ArrayRef<unsigned char> IITEntries;
   unsigned NextElt = 0;
-  if ((TableVal >> 31) != 0) {
-    // This is an offset into the IIT_LongEncodingTable.
+  if (unsigned *LongEncodingOffset = std::get_if<1>(&Decode)) {
     IITEntries = IIT_LongEncodingTable;
-
-    // Strip sentinel bit.
-    NextElt = (TableVal << 1) >> 1;
+    NextElt = *LongEncodingOffset;
   } else {
-    // Decode the TableVal into an array of IITValues.  If the entry was encoded
-    // into a single word in the table itself, decode it now.
-    do {
-      IITValues.push_back(TableVal & 0xF);
-      TableVal >>= 4;
-    } while (TableVal);
-
-    IITEntries = IITValues;
+    IITEntries = std::get<0>(Decode);
     NextElt = 0;
   }
 
