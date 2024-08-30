@@ -99,7 +99,9 @@ class MxRegClass<list<ValueType> regTypes, int alignment, dag regList>
     : RegisterClass<"M68k", regTypes, alignment, regList>;
 
 // Data Registers
+let Size = 16 in
 def DR8  : MxRegClass<[i8],  16, (sequence "BD%u", 0, 7)>;
+
 def DR16 : MxRegClass<[i16], 16, (sequence "WD%u", 0, 7)>;
 def DR32 : MxRegClass<[i32], 32, (sequence "D%u",  0, 7)>;
 
