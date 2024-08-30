@@ -20,16 +20,17 @@
 
 using namespace llvm;
 
-void clang::EmitClangCommentCommandInfo(RecordKeeper &Records,
+void clang::EmitClangCommentCommandInfo(const RecordKeeper &Records,
                                         raw_ostream &OS) {
   emitSourceFileHeader("A list of commands useable in documentation comments",
                        OS, Records);
 
   OS << "namespace {\n"
         "const CommandInfo Commands[] = {\n";
-  std::vector<Record *> Tags = Records.getAllDerivedDefinitions("Command");
+  const std::vector<const Record *> &Tags =
+      Records.getAllDerivedDefinitions("Command");
   for (size_t i = 0, e = Tags.size(); i != e; ++i) {
-    Record &Tag = *Tags[i];
+    const Record &Tag = *Tags[i];
     OS << "  { "
        << "\"" << Tag.getValueAsString("Name") << "\", "
        << "\"" << Tag.getValueAsString("EndCommandName") << "\", " << i << ", "
@@ -62,7 +63,7 @@ void clang::EmitClangCommentCommandInfo(RecordKeeper &Records,
 
   std::vector<StringMatcher::StringPair> Matches;
   for (size_t i = 0, e = Tags.size(); i != e; ++i) {
-    Record &Tag = *Tags[i];
+    const Record &Tag = *Tags[i];
     std::string Name = std::string(Tag.getValueAsString("Name"));
     std::string Return;
     raw_string_ostream(Return) << "return &Commands[" << i << "];";
@@ -112,7 +113,7 @@ static std::string MangleName(StringRef Str) {
   return Mangled;
 }
 
-void clang::EmitClangCommentCommandList(RecordKeeper &Records,
+void clang::EmitClangCommentCommandList(const RecordKeeper &Records,
                                         raw_ostream &OS) {
   emitSourceFileHeader("A list of commands useable in documentation comments",
                        OS, Records);
@@ -121,11 +122,7 @@ void clang::EmitClangCommentCommandList(RecordKeeper &Records,
      << "#  define COMMENT_COMMAND(NAME)\n"
      << "#endif\n";
 
-  std::vector<Record *> Tags = Records.getAllDerivedDefinitions("Command");
-  for (size_t i = 0, e = Tags.size(); i != e; ++i) {
-    Record &Tag = *Tags[i];
-    std::string MangledName = MangleName(Tag.getValueAsString("Name"));
-
-    OS << "COMMENT_COMMAND(" << MangledName << ")\n";
-  }
+  for (const Record *Tag : Records.getAllDerivedDefinitions("Command"))
+    OS << "COMMENT_COMMAND(" << MangleName(Tag->getValueAsString("Name"))
+       << ")\n";
 }

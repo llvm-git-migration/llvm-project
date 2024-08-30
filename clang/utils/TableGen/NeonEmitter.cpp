@@ -57,7 +57,7 @@ namespace {
 // While globals are generally bad, this one allows us to perform assertions
 // liberally and somehow still trace them back to the def they indirectly
 // came from.
-static Record *CurrentRecord = nullptr;
+static const Record *CurrentRecord = nullptr;
 static void assert_with_loc(bool Assertion, const std::string &Str) {
   if (!Assertion) {
     if (CurrentRecord)
@@ -306,7 +306,7 @@ public:
 /// a particular typespec and prototype.
 class Intrinsic {
   /// The Record this intrinsic was created from.
-  Record *R;
+  const Record *R;
   /// The unmangled name.
   std::string Name;
   /// The input and output typespecs. InTS == OutTS except when
@@ -367,14 +367,15 @@ class Intrinsic {
   }
 
 public:
-  Intrinsic(Record *R, StringRef Name, StringRef Proto, TypeSpec OutTS,
+  Intrinsic(const Record *R, StringRef Name, StringRef Proto, TypeSpec OutTS,
             TypeSpec InTS, ClassKind CK, ListInit *Body, NeonEmitter &Emitter,
-            StringRef ArchGuard, StringRef TargetGuard, bool IsUnavailable, bool BigEndianSafe)
+            StringRef ArchGuard, StringRef TargetGuard, bool IsUnavailable,
+            bool BigEndianSafe)
       : R(R), Name(Name.str()), OutTS(OutTS), InTS(InTS), CK(CK), Body(Body),
-        ArchGuard(ArchGuard.str()), TargetGuard(TargetGuard.str()), IsUnavailable(IsUnavailable),
-        BigEndianSafe(BigEndianSafe), PolymorphicKeyType(0), NeededEarly(false),
-        UseMacro(false), BaseType(OutTS, "."), InBaseType(InTS, "."),
-        Emitter(Emitter) {
+        ArchGuard(ArchGuard.str()), TargetGuard(TargetGuard.str()),
+        IsUnavailable(IsUnavailable), BigEndianSafe(BigEndianSafe),
+        PolymorphicKeyType(0), NeededEarly(false), UseMacro(false),
+        BaseType(OutTS, "."), InBaseType(InTS, "."), Emitter(Emitter) {
     // Modify the TypeSpec per-argument to get a concrete Type, and create
     // known variables for each.
     // Types[0] is the return value.
@@ -406,7 +407,7 @@ public:
   }
 
   /// Get the Record that this intrinsic is based off.
-  Record *getRecord() const { return R; }
+  const Record *getRecord() const { return R; }
   /// Get the set of Intrinsics that this intrinsic calls.
   /// this is the set of immediate dependencies, NOT the
   /// transitive closure.
@@ -543,12 +544,12 @@ private:
 //===----------------------------------------------------------------------===//
 
 class NeonEmitter {
-  RecordKeeper &Records;
+  const RecordKeeper &Records;
   DenseMap<Record *, ClassKind> ClassMap;
   std::map<std::string, std::deque<Intrinsic>> IntrinsicMap;
   unsigned UniqueNumber;
 
-  void createIntrinsic(Record *R, SmallVectorImpl<Intrinsic *> &Out);
+  void createIntrinsic(const Record *R, SmallVectorImpl<Intrinsic *> &Out);
   void genBuiltinsDef(raw_ostream &OS, SmallVectorImpl<Intrinsic *> &Defs);
   void genStreamingSVECompatibleList(raw_ostream &OS,
                                      SmallVectorImpl<Intrinsic *> &Defs);
@@ -566,7 +567,7 @@ public:
   /// Called by Intrinsic - returns a globally-unique number.
   unsigned getUniqueNumber() { return UniqueNumber++; }
 
-  NeonEmitter(RecordKeeper &R) : Records(R), UniqueNumber(0) {
+  NeonEmitter(const RecordKeeper &R) : Records(R), UniqueNumber(0) {
     Record *SI = R.getClass("SInst");
     Record *II = R.getClass("IInst");
     Record *WI = R.getClass("WInst");
@@ -1944,7 +1945,7 @@ Intrinsic &NeonEmitter::getIntrinsic(StringRef Name, ArrayRef<Type> Types,
   return *GoodVec.front();
 }
 
-void NeonEmitter::createIntrinsic(Record *R,
+void NeonEmitter::createIntrinsic(const Record *R,
                                   SmallVectorImpl<Intrinsic *> &Out) {
   std::string Name = std::string(R->getValueAsString("Name"));
   std::string Proto = std::string(R->getValueAsString("Prototype"));
@@ -2161,7 +2162,7 @@ void NeonEmitter::genIntrinsicRangeCheckCode(raw_ostream &OS,
 
     std::string LowerBound, UpperBound;
 
-    Record *R = Def->getRecord();
+    const Record *R = Def->getRecord();
     if (R->getValueAsBit("isVXAR")) {
       //VXAR takes an immediate in the range [0, 63]
       LowerBound = "0";
@@ -2232,10 +2233,8 @@ void NeonEmitter::genIntrinsicRangeCheckCode(raw_ostream &OS,
 /// 2. the SemaChecking code for the type overload checking.
 /// 3. the SemaChecking code for validation of intrinsic immediate arguments.
 void NeonEmitter::runHeader(raw_ostream &OS) {
-  std::vector<Record *> RV = Records.getAllDerivedDefinitions("Inst");
-
   SmallVector<Intrinsic *, 128> Defs;
-  for (auto *R : RV)
+  for (const Record *R : Records.getAllDerivedDefinitions("Inst"))
     createIntrinsic(R, Defs);
 
   // Generate shared BuiltinsXXX.def
@@ -2394,8 +2393,7 @@ void NeonEmitter::run(raw_ostream &OS) {
         "__nodebug__))\n\n";
 
   SmallVector<Intrinsic *, 128> Defs;
-  std::vector<Record *> RV = Records.getAllDerivedDefinitions("Inst");
-  for (auto *R : RV)
+  for (const Record *R : Records.getAllDerivedDefinitions("Inst"))
     createIntrinsic(R, Defs);
 
   for (auto *I : Defs)
@@ -2502,8 +2500,7 @@ void NeonEmitter::runFP16(raw_ostream &OS) {
         "__nodebug__))\n\n";
 
   SmallVector<Intrinsic *, 128> Defs;
-  std::vector<Record *> RV = Records.getAllDerivedDefinitions("Inst");
-  for (auto *R : RV)
+  for (const Record *R : Records.getAllDerivedDefinitions("Inst"))
     createIntrinsic(R, Defs);
 
   for (auto *I : Defs)
@@ -2611,8 +2608,7 @@ void NeonEmitter::runBF16(raw_ostream &OS) {
         "__nodebug__))\n\n";
 
   SmallVector<Intrinsic *, 128> Defs;
-  std::vector<Record *> RV = Records.getAllDerivedDefinitions("Inst");
-  for (auto *R : RV)
+  for (const Record *R : Records.getAllDerivedDefinitions("Inst"))
     createIntrinsic(R, Defs);
 
   for (auto *I : Defs)
@@ -2666,26 +2662,26 @@ void NeonEmitter::runBF16(raw_ostream &OS) {
   OS << "#endif\n";
 }
 
-void clang::EmitNeon(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitNeon(const RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).run(OS);
 }
 
-void clang::EmitFP16(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitFP16(const RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runFP16(OS);
 }
 
-void clang::EmitBF16(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitBF16(const RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runBF16(OS);
 }
 
-void clang::EmitNeonSema(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitNeonSema(const RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runHeader(OS);
 }
 
-void clang::EmitVectorTypes(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitVectorTypes(const RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runVectorTypes(OS);
 }
 
-void clang::EmitNeonTest(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitNeonTest(const RecordKeeper &Records, raw_ostream &OS) {
   llvm_unreachable("Neon test generation no longer implemented!");
 }
