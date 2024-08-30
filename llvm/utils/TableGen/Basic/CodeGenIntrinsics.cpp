@@ -26,15 +26,13 @@ using namespace llvm;
 //===----------------------------------------------------------------------===//
 
 CodeGenIntrinsicTable::CodeGenIntrinsicTable(const RecordKeeper &RC) {
-  std::vector<Record *> IntrProperties =
-      RC.getAllDerivedDefinitions("IntrinsicProperty");
-
   std::vector<const Record *> DefaultProperties;
-  for (const Record *Rec : IntrProperties)
+  for (const Record *Rec : RC.getAllDerivedDefinitions("IntrinsicProperty"))
     if (Rec->getValueAsBit("IsDefault"))
       DefaultProperties.push_back(Rec);
 
-  std::vector<Record *> Defs = RC.getAllDerivedDefinitions("Intrinsic");
+  const std::vector<const Record *> &Defs =
+      RC.getAllDerivedDefinitions("Intrinsic");
   Intrinsics.reserve(Defs.size());
 
   for (const Record *Def : Defs)
