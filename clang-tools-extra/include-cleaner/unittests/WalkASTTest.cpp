@@ -534,6 +534,8 @@ TEST(WalkAST, Enums) {
   testWalk(R"(namespace ns { enum E { A = 42 }; }
               struct S { using ns::E::A; };)",
            "int e = S::^A;");
+  testWalk(R"(namespace ns { enum E { $explicit^A = 42 }; })",
+           "namespace z = ns; int e = z::^A;");
 }
 
 TEST(WalkAST, InitializerList) {

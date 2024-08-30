@@ -147,7 +147,8 @@ public:
     // If it's an enum constant, it must be due to prior decl. Report references
     // to it when qualifier isn't a type.
     if (llvm::isa<EnumConstantDecl>(FD)) {
-      if (!DRE->getQualifier() || DRE->getQualifier()->getAsNamespace())
+      if (!DRE->getQualifier() || DRE->getQualifier()->getAsNamespace() ||
+          DRE->getQualifier()->getAsNamespaceAlias())
         report(DRE->getLocation(), FD);
     }
     return true;
