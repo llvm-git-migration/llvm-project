@@ -21,8 +21,8 @@ def get_verify_prefixes(command):
             prefix = "expected"
         prefixes.add(prefix)
     return prefixes
-
-def verify_test_updater(result):
+    
+def verify_test_updater(result, test):
     if not result.stderr:
         return None
     prefixes = get_verify_prefixes(result.command)
