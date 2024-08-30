@@ -15,6 +15,7 @@
 #include "VPlanVerifier.h"
 #include "VPlan.h"
 #include "VPlanCFG.h"
+#include "VPlanUtils.h"
 #include "VPlanDominatorTree.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallPtrSet.h"

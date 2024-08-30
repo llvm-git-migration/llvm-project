@@ -259,7 +259,7 @@ for.body:                                         ; preds = %for.body.preheader,
 }
 
 ; This function is generated from the following C/C++ program:
-; int simple_csa_int_select(int N, int *data) {
+; int simple_csa_int_select_induction_cmp(int N, int *data) {
 ;   int t = -1;
 ;   for (int i = 0; i < N; i++) {
 ;     if (i < data[i])
@@ -1373,13 +1373,13 @@ for.body:                                         ; preds = %for.body.preheader,
 }
 
 ; This function is generated from the following C/C++ program:
-; int csa_in_series_int_select(int N, int *data0, int *data1) {
+; int csa_in_series_int_select_induction_cmp(int N, int *data0, int *data1) {
 ;   int t = -1;
 ;   int s = -1;
 ;   for (int i = 0; i < N; i++) {
-;     if (a < data0[i])
+;     if (i < data0[i])
 ;       t = data0[i];
-;     if (a < data1[i])
+;     if (i < data1[i])
 ;       s = data1[i];
 ;   }
 ;   return t | s; // use t and s
