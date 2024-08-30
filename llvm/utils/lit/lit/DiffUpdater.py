@@ -21,7 +21,7 @@ def get_source_and_target(a, b):
 def filter_flags(args):
     return [arg for arg in args if not arg.startswith("-")]
 
-def diff_test_updater(result):
+def diff_test_updater(result, test):
     args = filter_flags(result.command.args)
     if len(args) != 3:
         return None
