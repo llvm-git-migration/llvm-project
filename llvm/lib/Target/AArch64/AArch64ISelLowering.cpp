@@ -1663,12 +1663,32 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
     for (auto VT : {MVT::nxv2bf16, MVT::nxv4bf16, MVT::nxv8bf16}) {
       setOperationAction(ISD::BITCAST, VT, Custom);
       setOperationAction(ISD::CONCAT_VECTORS, VT, Custom);
+      setOperationAction(ISD::FCEIL, VT, Custom);
+      setOperationAction(ISD::FDIV, VT, Custom);
+      setOperationAction(ISD::FFLOOR, VT, Custom);
+      setOperationAction(ISD::FMA, VT, Custom);
+      setOperationAction(ISD::FMAXIMUM, VT, Custom);
+      setOperationAction(ISD::FMAXNUM, VT, Custom);
+      setOperationAction(ISD::FMINIMUM, VT, Custom);
+      setOperationAction(ISD::FMINNUM, VT, Custom);
+      setOperationAction(ISD::FNEARBYINT, VT, Custom);
       setOperationAction(ISD::FP_EXTEND, VT, Custom);
       setOperationAction(ISD::FP_ROUND, VT, Custom);
+      setOperationAction(ISD::FRINT, VT, Custom);
+      setOperationAction(ISD::FROUND, VT, Custom);
+      setOperationAction(ISD::FROUNDEVEN, VT, Custom);
+      setOperationAction(ISD::FSQRT, VT, Custom);
+      setOperationAction(ISD::FTRUNC, VT, Custom);
       setOperationAction(ISD::MLOAD, VT, Custom);
       setOperationAction(ISD::INSERT_SUBVECTOR, VT, Custom);
       setOperationAction(ISD::SPLAT_VECTOR, VT, Legal);
       setOperationAction(ISD::VECTOR_SPLICE, VT, Custom);
+
+      if (!Subtarget->hasSVEB16B16()) {
+        setOperationAction(ISD::FADD, VT, Custom);
+        setOperationAction(ISD::FMUL, VT, Custom);
+        setOperationAction(ISD::FSUB, VT, Custom);
+      }
     }
 
     setOperationAction(ISD::INTRINSIC_WO_CHAIN, MVT::i8, Custom);
@@ -7051,32 +7071,58 @@ SDValue AArch64TargetLowering::LowerOperation(SDValue Op,
   case ISD::UMULO:
     return LowerXALUO(Op, DAG);
   case ISD::FADD:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FADD_PRED);
   case ISD::FSUB:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FSUB_PRED);
   case ISD::FMUL:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMUL_PRED);
   case ISD::FMA:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMA_PRED);
   case ISD::FDIV:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FDIV_PRED);
   case ISD::FNEG:
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FNEG_MERGE_PASSTHRU);
   case ISD::FCEIL:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FCEIL_MERGE_PASSTHRU);
   case ISD::FFLOOR:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FFLOOR_MERGE_PASSTHRU);
   case ISD::FNEARBYINT:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FNEARBYINT_MERGE_PASSTHRU);
   case ISD::FRINT:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FRINT_MERGE_PASSTHRU);
   case ISD::FROUND:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FROUND_MERGE_PASSTHRU);
   case ISD::FROUNDEVEN:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FROUNDEVEN_MERGE_PASSTHRU);
   case ISD::FTRUNC:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FTRUNC_MERGE_PASSTHRU);
   case ISD::FSQRT:
+    if (Op.getScalarValueType() == MVT::bf16)
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FSQRT_MERGE_PASSTHRU);
   case ISD::FABS:
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FABS_MERGE_PASSTHRU);
@@ -7242,12 +7288,20 @@ SDValue AArch64TargetLowering::LowerOperation(SDValue Op,
   case ISD::SUB:
     return LowerToScalableOp(Op, DAG);
   case ISD::FMAXIMUM:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMAX_PRED);
   case ISD::FMAXNUM:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMAXNM_PRED);
   case ISD::FMINIMUM:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMIN_PRED);
   case ISD::FMINNUM:
+    if (Op.getScalarValueType() == MVT::bf16 && !Subtarget->hasSVEB16B16())
+      return LowerBFloatOp(Op, DAG);
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMINNM_PRED);
   case ISD::VSELECT:
     return LowerFixedLengthVectorSelectToSVE(Op, DAG);
@@ -28464,6 +28518,40 @@ SDValue AArch64TargetLowering::LowerFixedLengthInsertVectorElt(
                                  Op.getOperand(1), Op.getOperand(2));
 
   return convertFromScalableVector(DAG, VT, ScalableRes);
+}
+
+// Lower bfloat16 operations by upcasting to float32, performing the operation
+// and then downcasting the result back to bfloat16.
+SDValue AArch64TargetLowering::LowerBFloatOp(SDValue Op,
+                                             SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT VT = Op.getValueType();
+  assert(isTypeLegal(VT) && VT.isScalableVector() && "Unexpected type!");
+
+  // Split the vector and try again.
+  if (VT == MVT::nxv8bf16) {
+    SmallVector<SDValue, 4> LoOps, HiOps;
+    for (const SDValue &V : Op->op_values()) {
+      LoOps.push_back(DAG.getExtractSubvector(DL, MVT::nxv4bf16, V, 0));
+      HiOps.push_back(DAG.getExtractSubvector(DL, MVT::nxv4bf16, V, 4));
+    }
+
+    unsigned Opc = Op.getOpcode();
+    SDValue SplitOpLo = DAG.getNode(Opc, DL, MVT::nxv4bf16, LoOps);
+    SDValue SplitOpHi = DAG.getNode(Opc, DL, MVT::nxv4bf16, HiOps);
+    return DAG.getNode(ISD::CONCAT_VECTORS, DL, VT, SplitOpLo, SplitOpHi);
+  }
+
+  // Promote to float and try again.
+  EVT PromoteVT = VT.changeVectorElementType(MVT::f32);
+
+  SmallVector<SDValue, 4> Ops;
+  for (const SDValue &V : Op->op_values())
+    Ops.push_back(DAG.getNode(ISD::FP_EXTEND, DL, PromoteVT, V));
+
+  SDValue PromotedOp = DAG.getNode(Op.getOpcode(), DL, PromoteVT, Ops);
+  return DAG.getNode(ISD::FP_ROUND, DL, VT, PromotedOp,
+                     DAG.getIntPtrConstant(0, DL, true));
 }
 
 // Convert vector operation 'Op' to an equivalent predicated operation whereby

@@ -191,6 +191,9 @@ public:
     return getValueType().getSimpleVT();
   }
 
+  /// Return the scalar ValueType of the referenced return value.
+  EVT getScalarValueType() const { return getValueType().getScalarType(); }
+
   /// Returns the size of the value in bits.
   ///
   /// If the value type is a scalable vector type, the scalable property will

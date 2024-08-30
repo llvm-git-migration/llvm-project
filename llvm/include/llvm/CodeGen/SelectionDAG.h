@@ -1565,6 +1565,12 @@ public:
   SDValue getSetFPEnv(SDValue Chain, const SDLoc &dl, SDValue Ptr, EVT MemVT,
                       MachineMemOperand *MMO);
 
+  SDValue getExtractSubvector(const SDLoc &DL, EVT VT, SDValue V,
+                              uint64_t Idx) {
+    return getNode(ISD::EXTRACT_SUBVECTOR, DL, VT, V,
+                   getVectorIdxConstant(Idx, DL));
+  }
+
   /// Construct a node to track a Value* through the backend.
   SDValue getSrcValue(const Value *v);
 
