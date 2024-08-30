@@ -15,6 +15,7 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
@@ -23,6 +24,7 @@
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -146,9 +148,24 @@ public:
     //
     // If it's an enum constant, it must be due to prior decl. Report references
     // to it when qualifier isn't a type.
-    if (llvm::isa<EnumConstantDecl>(FD)) {
-      if (!DRE->getQualifier() || DRE->getQualifier()->getAsNamespace())
-        report(DRE->getLocation(), FD);
+    auto QualifierIsNamepsaceOrNone = [&DRE]() {
+      const auto *Qual = DRE->getQualifier();
+      if (!Qual)
+        return true;
+      switch (Qual->getKind()) {
+      case NestedNameSpecifier::Namespace:
+      case NestedNameSpecifier::NamespaceAlias:
+      case NestedNameSpecifier::Global:
+        return true;
+      case NestedNameSpecifier::TypeSpec:
+      case NestedNameSpecifier::TypeSpecWithTemplate:
+      case NestedNameSpecifier::Super:
+      case NestedNameSpecifier::Identifier:
+        return false;
+      }
+    };
+    if (llvm::isa<EnumConstantDecl>(FD) && QualifierIsNamepsaceOrNone()) {
+      report(DRE->getLocation(), FD);
     }
     return true;
   }
