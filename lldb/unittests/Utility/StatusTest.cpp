@@ -27,15 +27,15 @@ TEST(StatusTest, Formatv) {
 }
 
 TEST(StatusTest, ErrorConstructor) {
-  EXPECT_TRUE(Status(llvm::Error::success()).Success());
+  EXPECT_TRUE(Status::FromError(llvm::Error::success()).Success());
 
-  Status eagain(
+  Status eagain = Status::FromError(
       llvm::errorCodeToError(std::error_code(EAGAIN, std::generic_category())));
   EXPECT_TRUE(eagain.Fail());
   EXPECT_EQ(eErrorTypePOSIX, eagain.GetType());
   EXPECT_EQ(Status::ValueType(EAGAIN), eagain.GetError());
 
-  Status foo(llvm::make_error<llvm::StringError>(
+  Status foo = Status::FromError(llvm::make_error<llvm::StringError>(
       "foo", llvm::inconvertibleErrorCode()));
   EXPECT_TRUE(foo.Fail());
   EXPECT_EQ(eErrorTypeGeneric, foo.GetType());
