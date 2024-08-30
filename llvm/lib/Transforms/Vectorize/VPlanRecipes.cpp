@@ -3576,29 +3576,3 @@ void VPEVLBasedIVPHIRecipe::print(raw_ostream &O, const Twine &Indent,
 }
 #endif
 
-bool vputils::isPhi(const VPRecipeBase &R) {
-  if (R.isPhi())
-    return true;
-  if (auto *VPInst = dyn_cast<VPInstruction>(&R))
-    return VPInst->getOpcode() == VPInstruction::CSAMaskPhi ||
-           VPInst->getOpcode() == VPInstruction::CSAVLPhi;
-  return false;
-}
-
-bool vputils::isPhiThatGeneratesBackedge(const VPRecipeBase &R) {
-  if (isa<VPWidenPHIRecipe, VPCSAHeaderPHIRecipe>(&R))
-    return true;
-  if (auto *VPInst = dyn_cast<VPInstruction>(&R))
-    return VPInst->getOpcode() == VPInstruction::CSAMaskPhi ||
-           VPInst->getOpcode() == VPInstruction::CSAVLPhi;
-  return false;
-}
-
-bool vputils::isHeaderPhi(const VPRecipeBase &R) {
-  if (isa<VPHeaderPHIRecipe, VPWidenPHIRecipe>(&R))
-    return true;
-  if (auto *VPInst = dyn_cast<VPInstruction>(&R))
-    return VPInst->getOpcode() == VPInstruction::CSAMaskPhi ||
-           VPInst->getOpcode() == VPInstruction::CSAVLPhi;
-  return false;
-}
