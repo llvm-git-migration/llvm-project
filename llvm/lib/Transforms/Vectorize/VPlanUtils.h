@@ -45,6 +45,17 @@ inline bool isUniformAfterVectorization(const VPValue *VPV) {
 
 /// Return true if \p V is a header mask in \p Plan.
 bool isHeaderMask(const VPValue *V, VPlan &Plan);
+
+/// Returns true for PHI-like recipes.
+bool isPhi(const VPRecipeBase &R);
+
+/// Returns true for PHI-like recipes that generate their own backedge
+bool isPhiThatGeneratesBackedge(const VPRecipeBase &R);
+
+/// Returns true for PHI-like recipes that exists in vector loop header basic
+/// block
+bool isHeaderPhi(const VPRecipeBase &R);
+
 } // end namespace llvm::vputils
 
 #endif
