@@ -61,7 +61,6 @@ bool vputils::isHeaderMask(const VPValue *V, VPlan &Plan) {
          IsWideCanonicalIV(A) && B == Plan.getOrCreateBackedgeTakenCount();
 }
 
-
 bool vputils::isPhi(const VPRecipeBase &R) {
   if (R.isPhi())
     return true;
