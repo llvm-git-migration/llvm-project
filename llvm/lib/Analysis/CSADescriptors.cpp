@@ -1,4 +1,4 @@
-//=== llvm/Analysis/CSADescriptors.cpp - CSA Descriptors -*- C++ -*-===//
+//===----------- CSADescriptors..cpp - CSA Descriptors ----------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -19,43 +19,43 @@ using namespace llvm::PatternMatch;
 
 #define DEBUG_TYPE "csa-descriptors"
 
+/// Return CSADescriptor that describes a CSA that matches one of these
+/// patterns:
+///   phi loop_inv, (select cmp, value, phi)
+///   phi loop_inv, (select cmp, phi, value)
+///   phi (select cmp, value, phi), loop_inv
+///   phi (select cmp, phi, value), loop_inv
+/// If the CSA does not match any of these paterns, return a CSADescriptor
+/// that describes an InvalidCSA.
 CSADescriptor CSADescriptor::isCSAPhi(PHINode *Phi, Loop *TheLoop) {
-  // Return CSADescriptor that describes a CSA that matches one of these
-  // patterns:
-  //   phi loop_inv, (select cmp, value, phi)
-  //   phi loop_inv, (select cmp, phi, value)
-  //   phi (select cmp, value, phi), loop_inv
-  //   phi (select cmp, phi, value), loop_inv
-  // If the CSA does not match any of these paterns, return a CSADescriptor
-  // that describes an InvalidCSA.
 
   // Must be a scalar
   Type *Type = Phi->getType();
   if (!Type->isIntegerTy() && !Type->isFloatingPointTy() &&
       !Type->isPointerTy())
-    return CSADescriptor();
+    return {};
 
   // Match phi loop_inv, (select cmp, value, phi)
   //    or phi loop_inv, (select cmp, phi, value)
   //    or phi (select cmp, value, phi), loop_inv
   //    or phi (select cmp, phi, value), loop_inv
   if (Phi->getNumIncomingValues() != 2)
-    return CSADescriptor();
-  auto SelectInstIt = find_if(Phi->incoming_values(), [&Phi](Use &U) {
+    return {};
+  auto SelectInstIt = find_if(Phi->incoming_values(), [&Phi](const Use &U) {
     return match(U.get(), m_Select(m_Value(), m_Specific(Phi), m_Value())) ||
            match(U.get(), m_Select(m_Value(), m_Value(), m_Specific(Phi)));
   });
   if (SelectInstIt == Phi->incoming_values().end())
-    return CSADescriptor();
+    return {};
   auto LoopInvIt = find_if(Phi->incoming_values(), [&](Use &U) {
     return U.get() != *SelectInstIt && TheLoop->isLoopInvariant(U.get());
   });
   if (LoopInvIt == Phi->incoming_values().end())
-    return CSADescriptor();
+    return {};
 
   // Phi or Sel must be used only outside the loop,
   // excluding if Phi use Sel or Sel use Phi
-  auto IsOnlyUsedOutsideLoop = [=](Value *V, Value *Ignore) {
+  auto IsOnlyUsedOutsideLoop = [&](Value *V, Value *Ignore) {
     return all_of(V->users(), [Ignore, TheLoop](User *U) {
       if (U == Ignore)
         return true;
@@ -64,10 +64,11 @@ CSADescriptor CSADescriptor::isCSAPhi(PHINode *Phi, Loop *TheLoop) {
       return true;
     });
   };
-  auto *Sel = cast<SelectInst>(SelectInstIt->get());
-  auto *LoopInv = LoopInvIt->get();
-  if (!IsOnlyUsedOutsideLoop(Phi, Sel) || !IsOnlyUsedOutsideLoop(Sel, Phi))
-    return CSADescriptor();
+  Instruction *Select = cast<SelectInst>(SelectInstIt->get());
+  Value *LoopInv = LoopInvIt->get();
+  if (!IsOnlyUsedOutsideLoop(Phi, Select) ||
+      !IsOnlyUsedOutsideLoop(Select, Phi))
+    return {};
 
-  return CSADescriptor(Phi, Sel, LoopInv);
+  return {Phi, Select, LoopInv};
 }

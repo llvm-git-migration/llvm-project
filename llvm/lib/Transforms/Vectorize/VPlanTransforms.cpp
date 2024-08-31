@@ -1427,8 +1427,11 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
     recursivelyDeleteDeadRecipes(HeaderMask);
   }
 
-  addExplicitVectorLengthForCSA(VPEVL, Plan.getCSAStates(),
-                                Plan.hasScalarVFOnly());
+
+  // We build the scalar version of a CSA when VF=ElementCount::getFixed(1),
+  // which does not require an EVL.
+  if (!Plan.hasScalarVFOnly())
+    addExplicitVectorLengthForCSA(VPEVL, Plan.getCSAStates());
 
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.
@@ -1440,17 +1443,8 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
 }
 
 void VPlanTransforms::addExplicitVectorLengthForCSA(
-    VPInstruction *VPEVL, const MapVector<PHINode *, VPCSAState *> &CSAStates,
-    bool PlanHasScalarVFOnly) {
-
-  // We build the scalar version of a CSA when VF=ElementCount::getFixed(1),
-  // which does not require an EVL.
-  if (PlanHasScalarVFOnly)
-    return;
-
-  for (auto CSA : CSAStates) {
-    VPCSAState *CSAState = CSA.second;
-
+    VPInstruction *VPEVL, const MapVector<PHINode *, VPCSAState *> &CSAStates) {
+  for (auto &[_, CSAState] : CSAStates) {
     // CSAAnyActive is used to keep track of whether any condition on the
     // current iteration is active. This is used to decide whether the mask
     // should be updated. When we are using EVL, we must only consider the first
