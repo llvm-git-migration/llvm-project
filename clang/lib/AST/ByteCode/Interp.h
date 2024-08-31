@@ -1045,7 +1045,7 @@ inline bool CmpHelperEQ<MemberPointer>(InterpState &S, CodePtr OpPC,
     if (MP.isWeak()) {
       const SourceInfo &Loc = S.Current->getSource(OpPC);
       S.FFDiag(Loc, diag::note_constexpr_mem_pointer_weak_comparison)
-          << MP.getMemberFunction();
+          << MP.toDiagnosticString(S.getASTContext());
       return false;
     }
   }
@@ -2828,7 +2828,7 @@ inline bool GetIntPtr(InterpState &S, CodePtr OpPC, const Descriptor *Desc) {
   return true;
 }
 
-inline bool GetMemberPtr(InterpState &S, CodePtr OpPC, const Decl *D) {
+inline bool GetMemberPtr(InterpState &S, CodePtr OpPC, const ValueDecl *D) {
   S.Stk.push<MemberPointer>(D);
   return true;
 }
