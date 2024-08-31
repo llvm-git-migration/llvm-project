@@ -73,7 +73,7 @@ void BPFSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
     HasJmpExt = true;
     return;
   }
-  if (CPU == "v3") {
+  if (CPU.empty() || CPU == "v3") {
     HasJmpExt = true;
     HasJmp32 = true;
     HasAlu32 = true;

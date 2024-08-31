@@ -38,16 +38,22 @@ void BPFTargetInfo::getTargetDefines(const LangOptions &Opts,
 
   Builder.defineMacro("__BPF_FEATURE_ADDR_SPACE_CAST");
 
-  if (CPU.empty() || CPU == "generic" || CPU == "v1") {
+  if (CPU == "generic" || CPU == "v1") {
     Builder.defineMacro("__BPF_CPU_VERSION__", "1");
     return;
   }
 
-  std::string CpuVerNumStr = CPU.substr(1);
-  Builder.defineMacro("__BPF_CPU_VERSION__", CpuVerNumStr);
+  int CpuVerNum;
+  if (CPU.empty()) {
+    Builder.defineMacro("__BPF_CPU_VERSION__", "3");
+    CpuVerNum = 3;
+  } else {
+    std::string CpuVerNumStr = CPU.substr(1);
+    Builder.defineMacro("__BPF_CPU_VERSION__", CpuVerNumStr);
+    CpuVerNum = std::stoi(CpuVerNumStr);
+  }
   Builder.defineMacro("__BPF_FEATURE_MAY_GOTO");
 
-  int CpuVerNum = std::stoi(CpuVerNumStr);
   if (CpuVerNum >= 2)
     Builder.defineMacro("__BPF_FEATURE_JMP_EXT");
 
