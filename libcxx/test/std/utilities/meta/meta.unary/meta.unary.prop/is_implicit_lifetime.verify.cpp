@@ -25,13 +25,3 @@ static_assert(!std::is_implicit_lifetime<IncompleteStruct>::value);
 
 // expected-error@*:* {{atomic types are not supported in '__builtin_is_implicit_lifetime'}}
 static_assert(!std::is_implicit_lifetime<_Atomic int>::value);
-
-#if 0
-// FIXME: "variable length arrays in C++ are a Clang extension"
-void test(int n) {
-  int varArr[n];
-  using VarArrT = decltype(varArr);
-  // expected-error@*:* {{variable length arrays are not supported in '__builtin_is_implicit_lifetime'}}
-  static_assert(std::is_implicit_lifetime<VarArrT>::value);
-}
-#endif
