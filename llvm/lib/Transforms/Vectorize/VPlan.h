@@ -4184,7 +4184,6 @@ public:
   /// Return true if all visited instruction can be combined.
   bool isCompletelySLP() const { return CompletelySLP; }
 };
-
 } // end namespace llvm
 
 #endif // LLVM_TRANSFORMS_VECTORIZE_VPLAN_H

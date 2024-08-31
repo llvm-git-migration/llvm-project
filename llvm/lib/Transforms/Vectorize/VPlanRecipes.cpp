@@ -680,8 +680,7 @@ Value *VPInstruction::generate(VPTransformState &State) {
       State.set(this, InitMask, Part);
       return InitMask;
     }
-    Value *V = State.get(this, Part - 1);
-    return V;
+    return State.get(this, Part - 1);
   }
   case VPInstruction::CSAInitData: {
     if (Part == 0) {
@@ -690,8 +689,7 @@ Value *VPInstruction::generate(VPTransformState &State) {
       State.set(this, InitData, Part);
       return InitData;
     }
-    Value *V = State.get(this, Part - 1);
-    return V;
+    return State.get(this, Part - 1);
   }
   case VPInstruction::CSAMaskPhi: {
     if (Part == 0) {
@@ -2409,7 +2407,7 @@ void VPCSAExtractScalarRecipe::execute(VPTransformState &State) {
     // inactive, which would also cause the reduction to have value 0.
     Value *MaybeLastIdx = State.Builder.CreateIntMaxReduce(ActiveLaneIdxs);
     Value *IsLaneZeroActive =
-        State.Builder.CreateExtractElement(MaskSel, (uint64_t)0);
+        State.Builder.CreateExtractElement(MaskSel, static_cast<uint64_t>(0));
     Value *Zero = ConstantInt::get(MaybeLastIdx->getType(), 0);
     Value *MaybeLastIdxEQZero = State.Builder.CreateICmpEQ(MaybeLastIdx, Zero);
     Value *And = State.Builder.CreateAnd(IsLaneZeroActive, MaybeLastIdxEQZero);
