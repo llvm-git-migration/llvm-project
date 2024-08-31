@@ -8703,7 +8703,8 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     auto CheckPerRegistersShuffle = [&](MutableArrayRef<int> Mask,
                                         SmallVectorImpl<unsigned> &Indices)
         -> std::optional<TTI::ShuffleKind> {
-      if (NumElts <= EltsPerVector)
+      if (NumElts <= EltsPerVector ||
+          all_of(Mask, [](int I) { return I == PoisonMaskElem; }))
         return std::nullopt;
       int OffsetReg0 =
           alignDown(std::accumulate(Mask.begin(), Mask.end(), INT_MAX,
