@@ -599,8 +599,8 @@ lldb::SBValue FindVariable(uint64_t variablesReference, llvm::StringRef name) {
 // argument (or neither), from which we need to set the target.source-map.
 void SetSourceMapFromArguments(const llvm::json::Object &arguments) {
   const char *sourceMapHelp =
-      "source must be be an object of key-value strings "
-      "key as the source and replacement path as the value.\n";
+      "source must be be an object of key-value strings. "
+      "e.g sourceMap: { \"/path/to/source\": \"/path/to/destination\" }.\n";
 
   std::string sourceMapCommand;
   llvm::raw_string_ostream strm(sourceMapCommand);
@@ -609,7 +609,7 @@ void SetSourceMapFromArguments(const llvm::json::Object &arguments) {
 
   // sourceMap is the new, more general form of sourcePath and overrides it.
   const auto *sourceMap = arguments.getObject("sourceMap");
-  if (sourceMap) {
+  if (sourceMap && !sourceMap->empty()) {
     for (const auto &[key, value] : *sourceMap) {
       const auto mapFrom = llvm::StringRef(key);
       if (mapFrom.empty()) {
@@ -1836,7 +1836,8 @@ lldb::SBError LaunchProcess(const llvm::json::Object &request) {
   std::vector<std::string> envs;
   envs.reserve(envMap.size());
   for (const auto &[key, value] : envMap) {
-    envs.emplace_back(key + '=' + value);
+    if (!key.empty())
+      envs.emplace_back(key + '=' + value);
   }
 
   if (!envs.empty())

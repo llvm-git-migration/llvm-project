@@ -1399,7 +1399,11 @@ CreateRunInTerminalReverseRequest(const llvm::json::Object &launch_request,
       GetStringObject(*launch_request_arguments, "env");
   llvm::json::Object environment;
   for (const auto &[key, value] : envMap) {
-    environment.try_emplace(key, value);
+    if (key.empty())
+      g_dap.SendOutput(OutputType::Stderr,
+                       "empty environment variable for value: \"" + value + '\"');
+    else
+      environment.try_emplace(key, value);
   }
   run_in_terminal_args.try_emplace("env",
                                    llvm::json::Value(std::move(environment)));
