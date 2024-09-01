@@ -599,27 +599,28 @@ lldb::SBValue FindVariable(uint64_t variablesReference, llvm::StringRef name) {
 // argument (or neither), from which we need to set the target.source-map.
 void SetSourceMapFromArguments(const llvm::json::Object &arguments) {
   const char *sourceMapHelp =
-      "source must be be an array of two-element arrays, "
-      "each containing a source and replacement path string.\n";
+      "source must be be an object of key-value strings "
+      "key as the source and replacement path as the value.\n";
 
   std::string sourceMapCommand;
   llvm::raw_string_ostream strm(sourceMapCommand);
   strm << "settings set target.source-map ";
-  auto sourcePath = GetString(arguments, "sourcePath");
+  const auto sourcePath = GetString(arguments, "sourcePath");
 
   // sourceMap is the new, more general form of sourcePath and overrides it.
-  auto sourceMap = arguments.getArray("sourceMap");
+  const auto *sourceMap = arguments.getObject("sourceMap");
   if (sourceMap) {
-    for (const auto &value : *sourceMap) {
-      auto mapping = value.getAsArray();
-      if (mapping == nullptr || mapping->size() != 2 ||
-          (*mapping)[0].kind() != llvm::json::Value::String ||
-          (*mapping)[1].kind() != llvm::json::Value::String) {
+    for (const auto &[key, value] : *sourceMap) {
+      const auto mapFrom = llvm::StringRef(key);
+      if (mapFrom.empty()) {
+        return;
+      }
+      if (value.kind() != llvm::json::Value::String) {
         g_dap.SendOutput(OutputType::Console, llvm::StringRef(sourceMapHelp));
         return;
       }
-      auto mapFrom = GetAsString((*mapping)[0]);
-      auto mapTo = GetAsString((*mapping)[1]);
+
+      const llvm::StringRef mapTo = GetAsString(value);
       strm << "\"" << mapFrom << "\" \"" << mapTo << "\" ";
     }
   } else {
