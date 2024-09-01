@@ -1288,8 +1288,8 @@ RankedTensorType GatherOp::inferResultType(RankedTensorType sourceType,
 }
 
 static LogicalResult
-verifyGatherOrScatterDims(Operation *op, ArrayRef<int64_t> dims, int64_t rank,
-                          StringRef gatherOrScatter, StringRef sourceOrDest) {
+verifyGatherOrScatterDims(Operation *op, ArrayRef<int64_t> dims, ArrayRef<int64_t> indices,
+                          int64_t rank, StringRef gatherOrScatter, StringRef sourceOrDest) {
   if (dims.empty())
     return op->emitOpError(gatherOrScatter) << "_dims must be non-empty";
 
@@ -1297,6 +1297,9 @@ verifyGatherOrScatterDims(Operation *op, ArrayRef<int64_t> dims, int64_t rank,
   if (numGatherDims > rank)
     return op->emitOpError(gatherOrScatter)
            << "_dims overflow " << sourceOrDest << " rank";
+  if (indices.empty() || indices.back() != numGatherDims)
+    return op->emitOpError(gatherOrScatter)
+           << "_dims length must match the size of last dimension of indices";
   for (int64_t val : dims) {
     if (val < 0)
       return op->emitOpError(gatherOrScatter)
@@ -1316,8 +1319,8 @@ verifyGatherOrScatterDims(Operation *op, ArrayRef<int64_t> dims, int64_t rank,
 LogicalResult GatherOp::verify() {
   int64_t sourceRank = getSourceType().getRank();
   ArrayRef<int64_t> gatherDims = getGatherDims();
-  if (failed(verifyGatherOrScatterDims(getOperation(), gatherDims, sourceRank,
-                                       "gather", "source")))
+  if (failed(verifyGatherOrScatterDims(getOperation(), gatherDims, getIndicesType().getShape(),
+                                       sourceRank, "gather", "source")))
     return failure();
 
   RankedTensorType expectedResultType = GatherOp::inferResultType(
@@ -3530,8 +3533,8 @@ void ScatterOp::getAsmResultNames(
 LogicalResult ScatterOp::verify() {
   int64_t destRank = getDestType().getRank();
   ArrayRef<int64_t> scatterDims = getScatterDims();
-  if (failed(verifyGatherOrScatterDims(getOperation(), scatterDims, destRank,
-                                       "scatter", "dest")))
+  if (failed(verifyGatherOrScatterDims(getOperation(), scatterDims, getIndicesType().getShape(),
+                                       destRank, "scatter", "dest")))
     return failure();
 
   if (!getUnique())
