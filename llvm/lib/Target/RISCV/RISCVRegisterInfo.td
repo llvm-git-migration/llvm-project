@@ -664,5 +664,9 @@ def FRM    : RISCVReg<0, "frm">;
 // Shadow Stack register
 def SSP    : RISCVReg<0, "ssp">;
 
-// Dummy VCIX state register
+// Dummy VCIX state register and its register class
 def VCIX_STATE : RISCVReg<0, "vcix_state">;
+def : RISCVRegisterClass<[XLenVT], 32, (add VCIX_STATE)> {
+  let RegInfos = XLenRI;
+  let isAllocatable = 0;
+}

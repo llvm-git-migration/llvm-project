@@ -8,12 +8,12 @@
 define void @test_reorder(<vscale x 1 x i64> %vreg) {
 ; CHECK-LABEL: test_reorder:
 ; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    vsetivli zero, 0, e64, m1, ta, ma
+; CHECK-NEXT:    sf.vc.iv 0, 0, v8, 0
 ; CHECK-NEXT:    #APP
 ; CHECK-NEXT:    sf.vc.vv 3, 0, v8, v8
 ; CHECK-EMPTY:
 ; CHECK-NEXT:    #NO_APP
-; CHECK-NEXT:    vsetivli zero, 0, e64, m1, ta, ma
-; CHECK-NEXT:    sf.vc.iv 0, 0, v8, 0
 ; CHECK-NEXT:    ret
 entry:
   call void @llvm.riscv.sf.vc.iv.se.iXLen.nxv1i64.iXLen.iXLen(iXLen 0, iXLen 0, <vscale x 1 x i64> %vreg, iXLen 0, iXLen 0)
