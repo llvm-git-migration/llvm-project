@@ -2801,17 +2801,21 @@ static bool hoistMulAddAssociation(Instruction &I, Loop &L,
   return true;
 }
 
-/// Reassociate associative binary expressions of the form
+/// Reassociate binary expressions of the form
 ///
-/// 1. "(LV op C1) op C2" ==> "LV op (C1 op C2)"
+/// 1. "(LV op C1) op C2" ==> "LV op (C1 op C2)" if op is an associative BinOp
 ///
-/// where op is an associative binary op, LV is a loop variant, and C1 and C2
-/// are loop invariants that we want to hoist.
+/// where LV is a loop variant, and C1 and C2 are loop invariants that we want
+/// to hoist.
+///
+/// 2. "(C1 op LV) op C2" ==> "LV op (C1 op C2)" if op is a commutative BinOp
+///
+/// where LV is a loop variant, and C1 and C2 are loop invariants that we want
+/// to hoist.
 ///
 /// TODO: This can be extended to more cases such as
-/// 2. "C1 op (C2 op LV)" ==> "(C1 op C2) op LV"
-/// 3. "(C1 op LV) op C2" ==> "LV op (C1 op C2)" if op is commutative
-/// 4. "C1 op (LV op C2)" ==> "(C1 op C2) op LV" if op is commutative
+/// 1. "C1 op (C2 op LV)" ==> "(C1 op C2) op LV" if op an associative BinOp
+/// 2. "C1 op (LV op C2)" ==> "(C1 op C2) op LV" if op is a commutative BinOp
 static bool hoistBOAssociation(Instruction &I, Loop &L,
                                ICFLoopSafetyInfo &SafetyInfo,
                                MemorySSAUpdater &MSSAU, AssumptionCache *AC,
@@ -2819,15 +2823,24 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
   using namespace PatternMatch;
 
   // Transform "(LV op C1) op C2" ==> "LV op (C1 op C2)"
+  // and       "(C1 op LV) op C2" ==> "LV op (C1 op C2)"
   Value *LV, *C1, *C2;
   if (!match(&I, m_BinOp(m_BinOp(m_Value(LV), m_Value(C1)), m_Value(C2))) ||
-      L.isLoopInvariant(LV) || !L.isLoopInvariant(C1) || !L.isLoopInvariant(C2))
+      !L.isLoopInvariant(C2))
     return false;
   auto *BO = cast<BinaryOperator>(&I),
        *BO0 = cast<BinaryOperator>(BO->getOperand(0));
   Instruction::BinaryOps Opcode = BO->getOpcode();
-  if (BO0->getOpcode() != Opcode || !BO->isAssociative() ||
-      !BO0->isAssociative())
+  if (BO0->getOpcode() != Opcode)
+    return false;
+  if (!L.isLoopInvariant(LV) && L.isLoopInvariant(C1)) {
+    if (!BO->isAssociative() || !BO0->isAssociative())
+      return false;
+  } else if (L.isLoopInvariant(LV) && !L.isLoopInvariant(C1)) {
+    if (!BO->isCommutative() || !BO0->isCommutative())
+      return false;
+    std::swap(LV, C1);
+  } else
     return false;
 
   // TODO: Only hoist ADDs and MULs for now.
