@@ -200,8 +200,6 @@ define <vscale x 1 x i64> @undef_passthru(<vscale x 1 x i64> %passthru, <vscale 
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m1, tu, ma
 ; CHECK-NEXT:    vadd.vv v8, v9, v10
-; CHECK-NEXT:    vsetvli zero, zero, e64, m1, ta, ma
-; CHECK-NEXT:    vmv.v.v v8, v8
 ; CHECK-NEXT:    ret
   %a = call <vscale x 1 x i64> @llvm.riscv.vadd.nxv1i64.nxv1i64(<vscale x 1 x i64> %passthru, <vscale x 1 x i64> %x, <vscale x 1 x i64> %y, iXLen %avl)
   %b = call <vscale x 1 x i64> @llvm.riscv.vmv.v.v.nxv1i64(<vscale x 1 x i64> undef, <vscale x 1 x i64> %a, iXLen %avl)

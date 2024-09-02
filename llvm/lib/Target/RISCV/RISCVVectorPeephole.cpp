@@ -503,30 +503,32 @@ bool RISCVVectorPeephole::foldVMV_V_V(MachineInstr &MI) {
   if (getSEWLMULRatio(MI) != getSEWLMULRatio(*Src))
     return false;
 
-  // Src needs to have the same passthru as VMV_V_V
-  MachineOperand &SrcPassthru = Src->getOperand(1);
-  if (SrcPassthru.getReg() != RISCV::NoRegister &&
-      SrcPassthru.getReg() != Passthru.getReg())
-    return false;
+  if (Passthru.getReg() != RISCV::NoRegister) {
+    // Src needs to have the same passthru as VMV_V_V
+    MachineOperand &SrcPassthru = Src->getOperand(1);
+    if (SrcPassthru.getReg() != RISCV::NoRegister &&
+	SrcPassthru.getReg() != Passthru.getReg())
+      return false;
 
-  // Src VL will have already been reduced if legal (see tryToReduceVL),
-  // so we don't need to handle a smaller source VL here.  However, the
-  // user's VL may be larger
-  MachineOperand &SrcVL = Src->getOperand(RISCVII::getVLOpNum(Src->getDesc()));
-  if (!isVLKnownLE(SrcVL, MI.getOperand(3)))
-    return false;
+    // Src VL will have already been reduced if legal (see tryToReduceVL),
+    // so we don't need to handle a smaller source VL here.  However, the
+    // user's VL may be larger
+    MachineOperand &SrcVL = Src->getOperand(RISCVII::getVLOpNum(Src->getDesc()));
+    if (!isVLKnownLE(SrcVL, MI.getOperand(3)))
+      return false;
 
-  // If the new passthru doesn't dominate Src, try to move Src so it does.
-  if (!ensureDominates(Passthru, *Src))
-    return false;
+    // If the new passthru doesn't dominate Src, try to move Src so it does.
+    if (!ensureDominates(Passthru, *Src))
+      return false;
 
-  if (SrcPassthru.getReg() != Passthru.getReg()) {
-    SrcPassthru.setReg(Passthru.getReg());
-    // If Src is masked then its passthru needs to be in VRNoV0.
-    if (Passthru.getReg() != RISCV::NoRegister)
-      MRI->constrainRegClass(Passthru.getReg(),
-                             TII->getRegClass(Src->getDesc(), 1, TRI,
-                                              *Src->getParent()->getParent()));
+    if (SrcPassthru.getReg() != Passthru.getReg()) {
+      SrcPassthru.setReg(Passthru.getReg());
+      // If Src is masked then its passthru needs to be in VRNoV0.
+      if (Passthru.getReg() != RISCV::NoRegister)
+	MRI->constrainRegClass(Passthru.getReg(),
+                               TII->getRegClass(Src->getDesc(), 1, TRI,
+						*Src->getParent()->getParent()));
+    }
   }
 
   // Use a conservative tu,mu policy, RISCVInsertVSETVLI will relax it if
