@@ -507,13 +507,14 @@ bool RISCVVectorPeephole::foldVMV_V_V(MachineInstr &MI) {
     // Src needs to have the same passthru as VMV_V_V
     MachineOperand &SrcPassthru = Src->getOperand(1);
     if (SrcPassthru.getReg() != RISCV::NoRegister &&
-	SrcPassthru.getReg() != Passthru.getReg())
+        SrcPassthru.getReg() != Passthru.getReg())
       return false;
 
     // Src VL will have already been reduced if legal (see tryToReduceVL),
     // so we don't need to handle a smaller source VL here.  However, the
     // user's VL may be larger
-    MachineOperand &SrcVL = Src->getOperand(RISCVII::getVLOpNum(Src->getDesc()));
+    MachineOperand &SrcVL =
+        Src->getOperand(RISCVII::getVLOpNum(Src->getDesc()));
     if (!isVLKnownLE(SrcVL, MI.getOperand(3)))
       return false;
 
@@ -525,9 +526,10 @@ bool RISCVVectorPeephole::foldVMV_V_V(MachineInstr &MI) {
       SrcPassthru.setReg(Passthru.getReg());
       // If Src is masked then its passthru needs to be in VRNoV0.
       if (Passthru.getReg() != RISCV::NoRegister)
-	MRI->constrainRegClass(Passthru.getReg(),
-                               TII->getRegClass(Src->getDesc(), 1, TRI,
-						*Src->getParent()->getParent()));
+        MRI->constrainRegClass(
+            Passthru.getReg(),
+            TII->getRegClass(Src->getDesc(), 1, TRI,
+                             *Src->getParent()->getParent()));
     }
   }
 
