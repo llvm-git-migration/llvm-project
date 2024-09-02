@@ -5326,3 +5326,22 @@ define i1 @pr94897(i32 range(i32 -2147483648, 0) %x) {
   %cmp = icmp ugt i32 %shl, -50331648
   ret i1 %cmp
 }
+
+define i1 @test_icmp_inttoptr(i64 %x, i64 %y) {
+; CHECK-LABEL: @test_icmp_inttoptr(
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
+  %xptr = inttoptr i64 %x to ptr
+  %yptr = inttoptr i64 %y to ptr
+  %cmp = icmp eq ptr %xptr, %yptr
+  ret i1 %cmp
+}
+
+define i1 @test_icmp_inttoptr_constant(i64 %x) {
+; CHECK-LABEL: @test_icmp_inttoptr_constant(
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X:%.*]], 42
+; CHECK-NEXT:    ret i1 [[CMP]]
+  %xptr = inttoptr i64 %x to ptr
+  %cmp = icmp eq ptr %xptr, inttoptr (i64 42 to ptr)
+  ret i1 %cmp
+}
