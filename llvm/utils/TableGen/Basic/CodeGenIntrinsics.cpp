@@ -96,17 +96,18 @@ CodeGenIntrinsic::CodeGenIntrinsic(const Record *R,
                                   TargetPrefix + ".'!");
   }
 
-  if (auto *Types = R->getValue("Types")) {
-    auto *TypeList = cast<ListInit>(Types->getValue());
-    isOverloaded = R->getValueAsBit("isOverloaded");
+  const Record *TypeInfo = R->getValueAsDef("TypeInfo");
+  assert(TypeInfo->isSubClassOf("TypeInfoGen"));
 
-    unsigned I = 0;
-    for (unsigned E = R->getValueAsListInit("RetTypes")->size(); I < E; ++I)
-      IS.RetTys.push_back(TypeList->getElementAsRecord(I));
+  isOverloaded = TypeInfo->getValueAsBit("isOverloaded");
+  const ListInit *TypeList = TypeInfo->getValueAsListInit("Types");
 
-    for (unsigned E = TypeList->size(); I < E; ++I)
-      IS.ParamTys.push_back(TypeList->getElementAsRecord(I));
-  }
+  unsigned I = 0;
+  for (unsigned E = R->getValueAsListInit("RetTypes")->size(); I < E; ++I)
+    IS.RetTys.push_back(TypeList->getElementAsRecord(I));
+
+  for (unsigned E = TypeList->size(); I < E; ++I)
+    IS.ParamTys.push_back(TypeList->getElementAsRecord(I));
 
   // Parse the intrinsic properties.
   ListInit *PropList = R->getValueAsListInit("IntrProperties");
