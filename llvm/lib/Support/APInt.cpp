@@ -31,14 +31,6 @@ using namespace llvm;
 
 #define DEBUG_TYPE "apint"
 
-/// A utility function for allocating memory, checking for allocation failures,
-/// and ensuring the contents are zeroed.
-inline static uint64_t* getClearedMemory(unsigned numWords) {
-  uint64_t *result = new uint64_t[numWords];
-  memset(result, 0, numWords * sizeof(uint64_t));
-  return result;
-}
-
 /// A utility function for allocating memory and checking for allocation
 /// failure.  The content is not zeroed.
 inline static uint64_t* getMemory(unsigned numWords) {
@@ -74,11 +66,14 @@ inline static unsigned getDigit(char cdigit, uint8_t radix) {
 
 
 void APInt::initSlowCase(uint64_t val, bool isSigned) {
-  U.pVal = getClearedMemory(getNumWords());
-  U.pVal[0] = val;
-  if (isSigned && int64_t(val) < 0)
-    for (unsigned i = 1; i < getNumWords(); ++i)
-      U.pVal[i] = WORDTYPE_MAX;
+  if (isSigned && int64_t(val) < 0) {
+    U.pVal = new WordType[getNumWords()];
+    U.pVal[0] = val;
+    memset(&U.pVal[1], 0xFF, sizeof(WordType) * (getNumWords() - 1));
+  } else {
+    U.pVal = new WordType[getNumWords()]();
+    U.pVal[0] = val;
+  }
   clearUnusedBits();
 }
 
@@ -93,7 +88,7 @@ void APInt::initFromArray(ArrayRef<uint64_t> bigVal) {
     U.VAL = bigVal[0];
   else {
     // Get memory, cleared to 0
-    U.pVal = getClearedMemory(getNumWords());
+    U.pVal = new WordType[getNumWords()]();
     // Calculate the number of words to copy
     unsigned words = std::min<unsigned>(bigVal.size(), getNumWords());
     // Copy the words from bigVal to pVal
@@ -2105,7 +2100,7 @@ void APInt::fromString(unsigned numbits, StringRef str, uint8_t radix) {
   if (isSingleWord())
     U.VAL = 0;
   else
-    U.pVal = getClearedMemory(getNumWords());
+    U.pVal = new WordType[getNumWords()]();
 
   // Figure out if we can shift instead of multiply
   unsigned shift = (radix == 16 ? 4 : radix == 8 ? 3 : radix == 2 ? 1 : 0);
