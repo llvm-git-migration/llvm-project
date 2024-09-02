@@ -2816,40 +2816,41 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
                                ICFLoopSafetyInfo &SafetyInfo,
                                MemorySSAUpdater &MSSAU, AssumptionCache *AC,
                                DominatorTree *DT) {
-  auto *BO = dyn_cast<BinaryOperator>(&I);
-  if (!BO || !BO->isAssociative())
+  using namespace PatternMatch;
+
+  // Transform "(LV op C1) op C2" ==> "LV op (C1 op C2)"
+  Value *LV, *C1, *C2;
+  if (!match(&I, m_BinOp(m_BinOp(m_Value(LV), m_Value(C1)), m_Value(C2))) ||
+      L.isLoopInvariant(LV) || !L.isLoopInvariant(C1) || !L.isLoopInvariant(C2))
+    return false;
+  auto *BO = cast<BinaryOperator>(&I),
+       *BO0 = cast<BinaryOperator>(BO->getOperand(0));
+  Instruction::BinaryOps Opcode = BO->getOpcode();
+  if (BO0->getOpcode() != Opcode || !BO->isAssociative())
     return false;
 
-  // Only fold ADDs for now.
-  Instruction::BinaryOps Opcode = BO->getOpcode();
+  // TODO: Only hoist ADDs for now.
   if (Opcode != Instruction::Add)
     return false;
 
-  auto *BO0 = dyn_cast<BinaryOperator>(BO->getOperand(0));
-  if (!BO0 || BO0->getOpcode() != Opcode || !BO0->isAssociative() ||
-      BO0->hasNUsesOrMore(3))
-    return false;
-
-  // Transform: "(LV op C1) op C2" ==> "LV op (C1 op C2)"
-  Value *LV = BO0->getOperand(0);
-  Value *C1 = BO0->getOperand(1);
-  Value *C2 = BO->getOperand(1);
-
-  if (L.isLoopInvariant(LV) || !L.isLoopInvariant(C1) || !L.isLoopInvariant(C2))
+  // This is a heuristic to ensure that code-size doesn't blow up.
+  if (BO0->hasNUsesOrMore(3))
     return false;
 
   auto *Preheader = L.getLoopPreheader();
   assert(Preheader && "Loop is not in simplify form?");
 
-  auto *Inv = BinaryOperator::Create(Opcode, C1, C2, "invariant.op",
-                                     Preheader->getTerminator()->getIterator());
+  IRBuilder<> Builder(Preheader->getTerminator());
+  auto *Inv = Builder.CreateBinOp(Opcode, C1, C2, "invariant.op");
+
   auto *NewBO = BinaryOperator::Create(
       Opcode, LV, Inv, BO->getName() + ".reass", BO->getIterator());
 
   // Copy NUW for ADDs if both instructions have it.
-  if (Opcode == Instruction::Add && BO->hasNoUnsignedWrap() &&
-      BO0->hasNoUnsignedWrap()) {
-    Inv->setHasNoUnsignedWrap(true);
+  if (BO->hasNoUnsignedWrap() && BO0->hasNoUnsignedWrap()) {
+    // If the constant-folder didn't kick in, and a new Instruction was created.
+    if (auto *I = dyn_cast<Instruction>(Inv))
+      I->setHasNoUnsignedWrap(true);
     NewBO->setHasNoUnsignedWrap(true);
   }
 
