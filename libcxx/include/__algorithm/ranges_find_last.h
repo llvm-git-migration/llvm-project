@@ -14,6 +14,7 @@
 #include <__functional/invoke.h>
 #include <__functional/ranges_operations.h>
 #include <__iterator/concepts.h>
+<<<<<<< HEAD
 #include <__iterator/indirectly_comparable.h>
 #include <__iterator/next.h>
 #include <__iterator/prev.h>
@@ -23,6 +24,15 @@
 #include <__ranges/subrange.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
+=======
+#include <__iterator/projected.h>
+#include <__ranges/access.h>
+#include <__ranges/concepts.h>
+#include <__ranges/dangling.h>
+#include <__utility/forward.h>
+#include <__utility/move.h>
+#include <optional>
+>>>>>>> cfed7b885225 (Algorithms for ranges_find_last, find_last_if, and find_last_if_not)
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -31,12 +41,17 @@
 _LIBCPP_PUSH_MACROS
 #include <__undef_macros>
 
+<<<<<<< HEAD
 #if _LIBCPP_STD_VER >= 23
+=======
+#if _LIBCPP_STD_VER >= 20
+>>>>>>> cfed7b885225 (Algorithms for ranges_find_last, find_last_if, and find_last_if_not)
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace ranges {
 
+<<<<<<< HEAD
 template <class _Iter, class _Sent, class _Pred, class _Proj>
 _LIBCPP_HIDE_FROM_ABI constexpr subrange<_Iter>
 __find_last_impl(_Iter __first, _Sent __last, _Pred __pred, _Proj& __proj) {
@@ -159,11 +174,51 @@ inline constexpr auto find_last        = __find_last{};
 inline constexpr auto find_last_if     = __find_last_if{};
 inline constexpr auto find_last_if_not = __find_last_if_not{};
 } // namespace __cpo
+=======
+namespace __find_last {
+
+struct __fn {
+  template <forward_iterator _Ip, sentinel_for<_Ip> _Sp, class _Tp, class _Proj = identity>
+    requires indirect_binary_predicate<ranges::equal_to, projected<_Ip, _Proj>, const _Tp*>
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr subrange<_Ip>
+  operator()(_Ip __first, _Sp __last, const _Tp& __value, _Proj __proj = {}) const {
+    std::optional<_Ip> __found;
+    for (; __first != __last; ++__first) {
+      if (std::invoke(__proj, *__first) == __value) {
+        __found = __first;
+      }
+    }
+    if (!__found)
+      return {__first, __first};
+    return {*__found, std::ranges::next(*__found, __last)};
+  }
+
+  template <forward_range _Rp, class _Tp, class _Proj = identity>
+    requires indirect_binary_predicate<ranges::equal_to, projected<iterator_t<_Rp>, _Proj>, const _Tp*>
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr borrowed_subrange_t<_Rp>
+  operator()(_Rp&& __r, const _Tp& __value, _Proj __proj = {}) const {
+    return this->operator()(ranges::begin(__r), ranges::end(__r), __value, std::ref(__proj));
+  }
+};
+
+} // namespace __find_last
+
+inline namespace __cpo {
+inline constexpr auto find_last        = __find_last::__fn{};
+inline constexpr auto find_last_if     = __find_last::__fn{};
+inline constexpr auto find_last_if_not = __find_last::__fn{};
+} // namespace __cpo
+
+>>>>>>> cfed7b885225 (Algorithms for ranges_find_last, find_last_if, and find_last_if_not)
 } // namespace ranges
 
 _LIBCPP_END_NAMESPACE_STD
 
+<<<<<<< HEAD
 #endif // _LIBCPP_STD_VER >= 23
+=======
+#endif // _LIBCPP_STD_VER >= 20
+>>>>>>> cfed7b885225 (Algorithms for ranges_find_last, find_last_if, and find_last_if_not)
 
 _LIBCPP_POP_MACROS
 
