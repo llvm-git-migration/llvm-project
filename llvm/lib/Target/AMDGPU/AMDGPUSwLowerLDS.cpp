@@ -1218,6 +1218,8 @@ bool AMDGPUSwLowerLDS::run() {
     for (auto &K : FuncLDSAccessInfo.NonKernelToLDSAccessMap) {
       Function *Func = K.first;
       DenseSet<GlobalVariable *> &LDSGlobals = K.second;
+      if (Func->isDeclaration() || LDSGlobals.empty())
+        continue;
       SetVector<GlobalVariable *> OrderedLDSGlobals = sortByName(
           std::vector<GlobalVariable *>(LDSGlobals.begin(), LDSGlobals.end()));
       lowerNonKernelLDSAccesses(Func, OrderedLDSGlobals, NKLDSParams);
@@ -1225,6 +1227,8 @@ bool AMDGPUSwLowerLDS::run() {
     for (Function *Func : FuncLDSAccessInfo.NonKernelsWithLDSArgument) {
       auto &K = FuncLDSAccessInfo.NonKernelToLDSAccessMap;
       if (K.find(Func) != K.end())
+        continue;
+      if (Func->isDeclaration())
         continue;
       SetVector<llvm::GlobalVariable *> Vec;
       lowerNonKernelLDSAccesses(Func, Vec, NKLDSParams);
