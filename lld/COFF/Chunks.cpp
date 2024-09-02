@@ -422,6 +422,16 @@ void SectionChunk::applyRelocation(uint8_t *off,
                                    const coff_relocation &rel) const {
   auto *sym = dyn_cast_or_null<Defined>(file->getSymbol(rel.SymbolTableIndex));
 
+  // On ARM64EC, the __imp_ symbol references the auxiliary IAT, while the
+  // __imp_aux_ symbol references the regular IAT. However, x86_64 code expects
+  // both to reference the regular IAT, so adjust the symbol if necessary.
+  if (sym && getMachine() == AMD64 && isArm64EC(file->ctx.config.machine)) {
+    if (auto impSym = dyn_cast<DefinedImportData>(sym)) {
+      if (impSym->file->impchkThunk && sym == impSym->file->impECSym)
+        sym = impSym->file->impSym;
+    }
+  }
+
   // Get the output section of the symbol for this relocation.  The output
   // section is needed to compute SECREL and SECTION relocations used in debug
   // info.
