@@ -2826,7 +2826,8 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
   auto *BO = cast<BinaryOperator>(&I),
        *BO0 = cast<BinaryOperator>(BO->getOperand(0));
   Instruction::BinaryOps Opcode = BO->getOpcode();
-  if (BO0->getOpcode() != Opcode || !BO->isAssociative())
+  if (BO0->getOpcode() != Opcode || !BO->isAssociative() ||
+      !BO0->isAssociative())
     return false;
 
   // TODO: Only hoist ADDs for now.
@@ -2847,7 +2848,8 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
       Opcode, LV, Inv, BO->getName() + ".reass", BO->getIterator());
 
   // Copy NUW for ADDs if both instructions have it.
-  if (BO->hasNoUnsignedWrap() && BO0->hasNoUnsignedWrap()) {
+  if (Opcode == Instruction::Add && BO->hasNoUnsignedWrap() &&
+      BO0->hasNoUnsignedWrap()) {
     // If the constant-folder didn't kick in, and a new Instruction was created.
     if (auto *I = dyn_cast<Instruction>(Inv))
       I->setHasNoUnsignedWrap(true);
