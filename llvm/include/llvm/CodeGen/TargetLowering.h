@@ -1957,19 +1957,24 @@ public:
                           unsigned *Fast = nullptr) const;
 
   /// Returns the target specific optimal type for load and store operations as
-  /// a result of memset, memcpy, and memmove lowering.
-  /// It returns EVT::Other if the type should be determined using generic
-  /// target-independent logic.
+  /// a result of memset, memcpy, and memmove lowering. It returns EVT::Other if
+  /// the type should be determined using generic target-independent logic.
+  ///
+  /// The PreferIntScalar parameter is a hint from the caller; if true *and* the
+  /// implementation returns a float or vector type, the caller will discard the
+  /// result and proceed as if EVT::Other had been returned.
   virtual EVT
   getOptimalMemOpType(const MemOp &Op,
-                      const AttributeList & /*FuncAttributes*/) const {
+                      const AttributeList & /*FuncAttributes*/,
+                      bool /*PreferIntScalar*/) const {
     return MVT::Other;
   }
 
   /// LLT returning variant.
   virtual LLT
   getOptimalMemOpLLT(const MemOp &Op,
-                     const AttributeList & /*FuncAttributes*/) const {
+                     const AttributeList & /*FuncAttributes*/,
+                     bool /*PreferIntScalar*/) const {
     return LLT();
   }
 

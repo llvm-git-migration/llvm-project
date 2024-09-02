@@ -326,7 +326,8 @@ public:
   bool isLegalICmpImmediate(int64_t Imm) const override;
 
   EVT getOptimalMemOpType(const MemOp &Op,
-                          const AttributeList &FuncAttributes) const override;
+                          const AttributeList &FuncAttributes,
+                          bool PreferIntScalar) const override;
 
   bool allowsMemoryAccess(LLVMContext &Context, const DataLayout &DL, EVT VT,
                           unsigned AddrSpace, Align Alignment,

@@ -114,7 +114,8 @@ private:
                           SelectionDAG &DAG) const override;
 
   EVT getOptimalMemOpType(const MemOp &Op,
-                          const AttributeList &FuncAttributes) const override {
+                          const AttributeList &FuncAttributes,
+                          bool PreferIntScalar) const override {
     return Op.size() >= 8 ? MVT::i64 : MVT::i32;
   }
 

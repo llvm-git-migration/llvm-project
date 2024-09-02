@@ -783,7 +783,8 @@ public:
       unsigned *Fast = nullptr) const override;
 
   EVT getOptimalMemOpType(const MemOp &Op,
-                          const AttributeList &FuncAttributes) const override;
+                          const AttributeList &FuncAttributes,
+                          bool PreferIntScalar) const override;
 
   bool splitValueIntoRegisterParts(
       SelectionDAG & DAG, const SDLoc &DL, SDValue Val, SDValue *Parts,
