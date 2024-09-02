@@ -2834,8 +2834,8 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
       !BO0->isAssociative())
     return false;
 
-  // TODO: Only hoist ADDs for now.
-  if (Opcode != Instruction::Add)
+  // TODO: Only hoist ADDs and MULs for now.
+  if (Opcode != Instruction::Add && Opcode != Instruction::Mul)
     return false;
 
   // This is a heuristic to ensure that code-size doesn't blow up.
