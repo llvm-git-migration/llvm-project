@@ -779,6 +779,21 @@ bool VPInstruction::isSingleScalar() const {
          getOpcode() == VPInstruction::ExplicitVectorLength;
 }
 
+bool VPInstruction::isPhi() const {
+  return getOpcode() == VPInstruction::CSAMaskPhi ||
+         getOpcode() == VPInstruction::CSAVLPhi;
+}
+
+bool VPInstruction::isHeaderPhi() const {
+  return getOpcode() == VPInstruction::CSAMaskPhi ||
+         getOpcode() == VPInstruction::CSAVLPhi;
+}
+
+bool VPInstruction::isPhiThatGeneratesBackedge() const {
+  return getOpcode() == VPInstruction::CSAMaskPhi ||
+         getOpcode() == VPInstruction::CSAVLPhi;
+}
+
 #if !defined(NDEBUG)
 bool VPInstruction::isFPMathOp() const {
   // Inspired by FPMathOperator::classof. Notable differences are that we don't

@@ -854,8 +854,27 @@ public:
   bool mayHaveSideEffects() const;
 
   /// Returns true for PHI-like recipes.
-  bool isPhi() const {
+  virtual bool isPhi() const {
+    assert(getVPDefID() != VPInstructionSC &&
+           "VPInstructions implement this function themselves");
     return getVPDefID() >= VPFirstPHISC && getVPDefID() <= VPLastPHISC;
+  }
+
+  /// Returns true for PHI-like recipes that exists in vector loop header basic
+  /// block
+  virtual bool isHeaderPhi() const {
+    assert(getVPDefID() != VPInstructionSC &&
+           "VPInstructions implement this function themselves");
+    return (getVPDefID() >= VPFirstHeaderPHISC &&
+            getVPDefID() <= VPLastHeaderPHISC) ||
+           getVPDefID() == VPWidenPHISC;
+  }
+
+  /// Returns true for PHI-like recipes that generate their own backedge
+  virtual bool isPhiThatGeneratesBackedge() const {
+    assert(getVPDefID() != VPInstructionSC &&
+           "VPInstructions implement this function themselves");
+    return getVPDefID() == VPWidenPHISC || getVPDefID() == VPCSAHeaderPHISC;
   }
 
   /// Returns true if the recipe may read from memory.
@@ -1437,6 +1456,16 @@ public:
   /// Returns true if this VPInstruction's operands are single scalars and the
   /// result is also a single scalar.
   bool isSingleScalar() const;
+
+  /// Returns true for PHI-like recipes.
+  bool isPhi() const override;
+
+  /// Returns true for PHI-like recipes that exists in vector loop header basic
+  /// block
+  bool isHeaderPhi() const override;
+
+  /// Returns true for PHI-like recipes that generate their own backedge
+  bool isPhiThatGeneratesBackedge() const override;
 };
 
 /// A recipe to wrap on original IR instruction not to be modified during
