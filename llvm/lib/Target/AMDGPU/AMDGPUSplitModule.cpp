@@ -110,7 +110,7 @@ static cl::opt<bool> NoExternalizeOnAddrTaken(
 
 static cl::opt<bool> InlineAsmIsIndirectCall(
     "amdgpu-module-splitting-inline-asm-is-indirect-call", cl::Hidden,
-    cl::desc("consider inline assembly as na indirect call"));
+    cl::desc("consider inline assembly as an indirect call"));
 
 static cl::opt<std::string>
     ModuleDotCfgOutput("amdgpu-module-splitting-print-module-dotcfg",
