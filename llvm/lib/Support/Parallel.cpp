@@ -113,7 +113,7 @@ public:
 
 private:
   bool hasSequentialTasks() const {
-    return !WorkQueueSequential.empty() && !SequentialQueueIsLocked;
+    return !WorkQueueSequential.empty() && (getThreadIndex() == 0);
   }
 
   bool hasGeneralTasks() const { return !WorkQueue.empty(); }
@@ -128,24 +128,15 @@ private:
       });
       if (Stop)
         break;
-      bool Sequential = hasSequentialTasks();
-      if (Sequential)
-        SequentialQueueIsLocked = true;
-      else
-        assert(hasGeneralTasks());
-
-      auto &Queue = Sequential ? WorkQueueSequential : WorkQueue;
+      auto &Queue = hasSequentialTasks() ? WorkQueueSequential : WorkQueue;
       auto Task = std::move(Queue.back());
       Queue.pop_back();
       Lock.unlock();
       Task();
-      if (Sequential)
-        SequentialQueueIsLocked = false;
     }
   }
 
   std::atomic<bool> Stop{false};
-  std::atomic<bool> SequentialQueueIsLocked{false};
   std::deque<std::function<void()>> WorkQueue;
   std::deque<std::function<void()>> WorkQueueSequential;
   std::mutex Mutex;
