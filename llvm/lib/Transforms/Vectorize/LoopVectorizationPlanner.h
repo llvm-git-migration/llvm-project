@@ -161,8 +161,8 @@ public:
     return tryInsertInstruction(
         new VPInstruction(Opcode, Operands, WrapFlags, DL, Name));
   }
-  VPValue *createNot(VPValue *Operand, DebugLoc DL = {},
-                     const Twine &Name = "") {
+  VPInstruction *createNot(VPValue *Operand, DebugLoc DL = {},
+                           const Twine &Name = "") {
     return createInstruction(VPInstruction::Not, {Operand}, DL, Name);
   }
 
@@ -201,6 +201,17 @@ public:
   /// TODO: add createFCmp when needed.
   VPValue *createICmp(CmpInst::Predicate Pred, VPValue *A, VPValue *B,
                       DebugLoc DL = {}, const Twine &Name = "");
+
+  VPInstruction *createCSAInitMask(DebugLoc DL = {}, const Twine &Name = "");
+  VPInstruction *createCSAInitData(VPValue *InitScalar, DebugLoc DL = {},
+                                   const Twine &Name = "");
+  VPInstruction *createCSAMaskPhi(VPValue *InitMask, DebugLoc DL = {},
+                                  const Twine &Name = "");
+  VPInstruction *createCSAAnyActive(VPValue *Cond, DebugLoc DL = {},
+                                    const Twine &Name = "");
+  VPInstruction *createCSAMaskSel(VPValue *Cond, VPValue *MaskPhi,
+                                  VPValue *AnyActive, DebugLoc DL = {},
+                                  const Twine &Name = "");
 
   //===--------------------------------------------------------------------===//
   // RAII helpers.

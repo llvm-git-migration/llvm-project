@@ -6972,6 +6972,32 @@ VPValue *VPBuilder::createICmp(CmpInst::Predicate Pred, VPValue *A, VPValue *B,
       new VPInstruction(Instruction::ICmp, Pred, A, B, DL, Name));
 }
 
+VPInstruction *VPBuilder::createCSAInitMask(DebugLoc DL, const Twine &Name) {
+  return createInstruction(VPInstruction::CSAInitMask, {}, DL, Name);
+}
+
+VPInstruction *VPBuilder::createCSAInitData(VPValue *InitScalar, DebugLoc DL,
+                                            const Twine &Name) {
+  return createInstruction(VPInstruction::CSAInitData, {InitScalar}, DL, Name);
+}
+
+VPInstruction *VPBuilder::createCSAMaskPhi(VPValue *InitMask, DebugLoc DL,
+                                           const Twine &Name) {
+  return createInstruction(VPInstruction::CSAMaskPhi, {InitMask}, DL, Name);
+}
+
+VPInstruction *VPBuilder::createCSAAnyActive(VPValue *Cond, DebugLoc DL,
+                                             const Twine &Name) {
+  return createInstruction(VPInstruction::CSAAnyActive, {Cond}, DL, Name);
+}
+
+VPInstruction *VPBuilder::createCSAMaskSel(VPValue *Cond, VPValue *MaskPhi,
+                                           VPValue *AnyActive, DebugLoc DL,
+                                           const Twine &Name) {
+  return createInstruction(VPInstruction::CSAMaskSel,
+                           {Cond, MaskPhi, AnyActive}, DL, Name);
+}
+
 // This function will select a scalable VF if the target supports scalable
 // vectors and a fixed one otherwise.
 // TODO: we could return a pair of values that specify the max VF and
@@ -8663,16 +8689,12 @@ addCSAPreprocessRecipes(const LoopVectorizationLegality::CSAList &CSAs,
       continue;
     }
 
-    auto *VPInitMask =
-        new VPInstruction(VPInstruction::CSAInitMask, {}, DL, "csa.init.mask");
-    auto *VPInitData = new VPInstruction(VPInstruction::CSAInitData,
-                                         {VPInitScalar}, DL, "csa.init.data");
-    PreheaderVPBB->appendRecipe(VPInitMask);
-    PreheaderVPBB->appendRecipe(VPInitData);
+    VPBuilder PHB(PreheaderVPBB);
+    auto *VPInitMask = PHB.createCSAInitMask(DL, "csa.init.mask");
+    auto *VPInitData = PHB.createCSAInitData(VPInitScalar, DL, "csa.init.data");
 
-    auto *VPMaskPhi = new VPInstruction(VPInstruction::CSAMaskPhi, {VPInitMask},
-                                        DL, "csa.mask.phi");
-    HeaderVPBB->appendRecipe(VPMaskPhi);
+    VPBuilder HB(HeaderVPBB);
+    auto *VPMaskPhi = HB.createCSAMaskPhi(VPInitMask, DL, "csa.mask.phi");
 
     auto *S = new VPCSAState(VPInitScalar, VPInitData, VPMaskPhi);
     Plan.addCSAState(CSA.first, S);
@@ -8711,22 +8733,22 @@ addCSAPostprocessRecipes(VPRecipeBuilder &RecipeBuilder,
     // In that case, we must use the negation of WidenedCond.
     // i.e. select cond new_val old_val versus select cond.not old_val new_val
     VPValue *CondToUse = WidenedCond;
+    VPBuilder B;
     if (cast<SelectInst>(CSA.second.getAssignment())->getTrueValue() ==
         CSA.first) {
-      auto *VPNotCond = new VPInstruction(VPInstruction::Not, WidenedCond, DL);
+      auto *VPNotCond = B.createNot(WidenedCond, DL);
       VPNotCond->insertBefore(
           GetVPValue(CSA.second.getAssignment())->getDefiningRecipe());
       CondToUse = VPNotCond;
     }
 
-    auto *VPAnyActive = new VPInstruction(
-        VPInstruction::CSAAnyActive, {CondToUse}, DL, "csa.cond.anyactive");
+    auto *VPAnyActive =
+        B.createCSAAnyActive(CondToUse, DL, "csa.cond.anyactive");
     VPAnyActive->insertBefore(
         GetVPValue(CSA.second.getAssignment())->getDefiningRecipe());
 
-    auto *VPMaskSel = new VPInstruction(
-        VPInstruction::CSAMaskSel,
-        {CondToUse, CSAState->getVPMaskPhi(), VPAnyActive}, DL, "csa.mask.sel");
+    auto *VPMaskSel = B.createCSAMaskSel(CondToUse, CSAState->getVPMaskPhi(),
+                                         VPAnyActive, DL, "csa.mask.sel");
     VPMaskSel->insertAfter(VPAnyActive);
     VPDataUpdate->setVPNewMaskAndVPAnyActive(VPMaskSel, VPAnyActive);
     VPCSAExtractScalarRecipe *ExtractScalarRecipe =
