@@ -9,9 +9,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Sema/SemaHLSL.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/Builtins.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
@@ -22,6 +25,8 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/DXILABI.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -1579,6 +1584,23 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
   case Builtin::BI__builtin_elementwise_bitreverse: {
     if (CheckUnsignedIntRepresentation(&SemaRef, TheCall))
       return true;
+    break;
+  }
+  case Builtin::BI__builtin_hlsl_elementwise_asuint: {
+    if (SemaRef.checkArgCount(TheCall, 1))
+      return true;
+
+    ExprResult A = TheCall->getArg(0);
+    QualType ArgTyA = A.get()->getType();
+
+    if(ArgTyA->isVectorType()){
+      auto VecTy = TheCall->getArg(0)->getType()->getAs<VectorType>();
+      auto ReturnType = this->getASTContext().getVectorType(TheCall->getCallReturnType(this->getASTContext()), VecTy->getNumElements(),
+                                          VectorKind::Generic);
+
+      TheCall->setType(ReturnType);
+    }
+
     break;
   }
   case Builtin::BI__builtin_elementwise_acos:
