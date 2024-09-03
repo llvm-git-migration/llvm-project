@@ -80,6 +80,7 @@
 #include "llvm/Transforms/Instrumentation/PGOForceFunctionAttrs.h"
 #include "llvm/Transforms/Instrumentation/PGOInstrumentation.h"
 #include "llvm/Transforms/Scalar/ADCE.h"
+#include "llvm/Transforms/Scalar/ARMWidenStrings.h"
 #include "llvm/Transforms/Scalar/AlignmentFromAssumptions.h"
 #include "llvm/Transforms/Scalar/AnnotationRemarks.h"
 #include "llvm/Transforms/Scalar/BDCE.h"
@@ -1512,6 +1513,11 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   // Populates the VFABI attribute with the scalar-to-vector mappings
   // from the TargetLibraryInfo.
   OptimizePM.addPass(InjectTLIMappings());
+
+  bool IsARM = TM && TM->getTargetTriple().isARM();
+  // Optimizes memcpy by padding arrays to exploit alignment
+  if (IsARM && Level.getSizeLevel() == 0 && Level.getSpeedupLevel() > 1)
+    OptimizePM.addPass(ARMWidenStringsPass());
 
   addVectorPasses(Level, OptimizePM, /* IsFullLTO */ false);
 
