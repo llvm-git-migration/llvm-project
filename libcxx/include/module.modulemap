@@ -393,6 +393,11 @@ module std_cstdbool [system] {
 }
 module std_cstddef [system] {
   header "cstddef"
+  module byte         { header "__cstddef/byte.h" }
+  module max_align_t  { header "__cstddef/max_align_t.h" }
+  module nullptr_t    { header "__cstddef/nullptr_t.h" }
+  module ptrdiff_t    { header "__cstddef/ptrdiff_t.h" }
+  module size_t       { header "__cstddef/size_t.h" }
   export *
 }
 module std_cstdint [system] {
@@ -1998,7 +2003,10 @@ module std_private_type_traits_is_swappable                              [system
 module std_private_type_traits_is_trivial                                [system] { header "__type_traits/is_trivial.h" }
 module std_private_type_traits_is_trivially_assignable                   [system] { header "__type_traits/is_trivially_assignable.h" }
 module std_private_type_traits_is_trivially_constructible                [system] { header "__type_traits/is_trivially_constructible.h" }
-module std_private_type_traits_is_trivially_copyable                     [system] { header "__type_traits/is_trivially_copyable.h" }
+module std_private_type_traits_is_trivially_copyable                     [system] {
+  header "__type_traits/is_trivially_copyable.h"
+  export std_private_type_traits_integral_constant
+}
 module std_private_type_traits_is_trivially_destructible                 [system] { header "__type_traits/is_trivially_destructible.h" }
 module std_private_type_traits_is_trivially_lexicographically_comparable [system] { header "__type_traits/is_trivially_lexicographically_comparable.h" }
 module std_private_type_traits_is_trivially_relocatable                  [system] { header "__type_traits/is_trivially_relocatable.h" }
