@@ -134,6 +134,7 @@ private:
   /// Set of dialect namespaces that we have attempted to import implementation
   /// modules for.
   llvm::StringSet<> loadedDialectModules;
+
 };
 
 } // namespace python
