@@ -2822,10 +2822,11 @@ bool Compiler<Emitter>::VisitCXXNewExpr(const CXXNewExpr *E) {
   std::optional<PrimType> ElemT = classify(ElementType);
   unsigned PlacementArgs = E->getNumPlacementArgs();
   bool IsNoThrow = false;
+  const Expr *PlacementDest = nullptr;
 
   // FIXME: Better diagnostic. diag::note_constexpr_new_placement
   if (PlacementArgs != 0) {
-    // The only new-placement list we support is of the form (std::nothrow).
+    // new-placement list of the form (std::nothrow).
     //
     // FIXME: There is no restriction on this, but it's not clear that any
     // other form makes any sense. We get here for cases such as:
@@ -2835,27 +2836,37 @@ bool Compiler<Emitter>::VisitCXXNewExpr(const CXXNewExpr *E) {
     // (which should presumably be valid only if N is a multiple of
     // alignof(int), and in any case can't be deallocated unless N is
     // alignof(X) and X has new-extended alignment).
-    if (PlacementArgs != 1 || !E->getPlacementArg(0)->getType()->isNothrowT())
+    if (PlacementArgs == 1) {
+      const Expr *Arg1 = E->getPlacementArg(0);
+      if (Arg1->getType()->isNothrowT()) {
+        if (!this->discard(Arg1))
+          return false;
+        IsNoThrow = true;
+      } else {
+        // If we have a placement-new destination, we'll later use that instead
+        // of allocating.
+        PlacementDest = Arg1;
+      }
+    } else {
       return this->emitInvalid(E);
-
-    if (!this->discard(E->getPlacementArg(0)))
-      return false;
-    IsNoThrow = true;
+    }
   }
 
   const Descriptor *Desc;
-  if (ElemT) {
-    if (E->isArray())
-      Desc = nullptr; // We're not going to use it in this case.
-    else
-      Desc = P.createDescriptor(E, *ElemT, Descriptor::InlineDescMD,
-                                /*IsConst=*/false, /*IsTemporary=*/false,
-                                /*IsMutable=*/false);
-  } else {
-    Desc = P.createDescriptor(
-        E, ElementType.getTypePtr(),
-        E->isArray() ? std::nullopt : Descriptor::InlineDescMD,
-        /*IsConst=*/false, /*IsTemporary=*/false, /*IsMutable=*/false, Init);
+  if (!PlacementDest) {
+    if (ElemT) {
+      if (E->isArray())
+        Desc = nullptr; // We're not going to use it in this case.
+      else
+        Desc = P.createDescriptor(E, *ElemT, Descriptor::InlineDescMD,
+                                  /*IsConst=*/false, /*IsTemporary=*/false,
+                                  /*IsMutable=*/false);
+    } else {
+      Desc = P.createDescriptor(
+          E, ElementType.getTypePtr(),
+          E->isArray() ? std::nullopt : Descriptor::InlineDescMD,
+          /*IsConst=*/false, /*IsTemporary=*/false, /*IsMutable=*/false, Init);
+    }
   }
 
   if (E->isArray()) {
@@ -2872,26 +2883,42 @@ bool Compiler<Emitter>::VisitCXXNewExpr(const CXXNewExpr *E) {
 
     PrimType SizeT = classifyPrim(Stripped->getType());
 
-    if (!this->visit(Stripped))
-      return false;
-
-    if (ElemT) {
-      // N primitive elements.
-      if (!this->emitAllocN(SizeT, *ElemT, E, IsNoThrow, E))
+    if (PlacementDest) {
+      if (!this->visit(PlacementDest))
+        return false;
+      if (!this->visit(Stripped))
+        return false;
+      if (!this->emitCheckNewTypeMismatchArray(SizeT, E, E))
         return false;
     } else {
-      // N Composite elements.
-      if (!this->emitAllocCN(SizeT, Desc, IsNoThrow, E))
+      if (!this->visit(Stripped))
         return false;
+
+      if (ElemT) {
+        // N primitive elements.
+        if (!this->emitAllocN(SizeT, *ElemT, E, IsNoThrow, E))
+          return false;
+      } else {
+        // N Composite elements.
+        if (!this->emitAllocCN(SizeT, Desc, IsNoThrow, E))
+          return false;
+      }
     }
 
     if (Init && !this->visitInitializer(Init))
       return false;
 
   } else {
-    // Allocate just one element.
-    if (!this->emitAlloc(Desc, E))
-      return false;
+    if (PlacementDest) {
+      if (!this->visit(PlacementDest))
+        return false;
+      if (!this->emitCheckNewTypeMismatch(E, E))
+        return false;
+    } else {
+      // Allocate just one element.
+      if (!this->emitAlloc(Desc, E))
+        return false;
+    }
 
     if (Init) {
       if (ElemT) {

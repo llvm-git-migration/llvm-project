@@ -986,6 +986,51 @@ void diagnoseEnumValue(InterpState &S, CodePtr OpPC, const EnumDecl *ED,
   }
 }
 
+bool CheckNewTypeMismatch(InterpState &S, CodePtr OpPC, const Expr *E,
+                          std::optional<uint64_t> ArraySize) {
+  const Pointer &Ptr = S.Stk.peek<Pointer>();
+
+  if (!CheckStore(S, OpPC, Ptr))
+    return false;
+
+  const auto *NewExpr = cast<CXXNewExpr>(E);
+  QualType StorageType = Ptr.getType();
+
+  if (isa_and_nonnull<CXXNewExpr>(Ptr.getFieldDesc()->asExpr())) {
+    // FIXME: Are there other cases where this is a problem?
+    StorageType = StorageType->getPointeeType();
+  }
+
+  const ASTContext &ASTCtx = S.getASTContext();
+  QualType AllocType;
+  if (ArraySize) {
+    AllocType = ASTCtx.getConstantArrayType(
+        NewExpr->getAllocatedType(),
+        APInt(64, static_cast<uint64_t>(*ArraySize), false), nullptr,
+        ArraySizeModifier::Normal, 0);
+  } else {
+    AllocType = NewExpr->getAllocatedType();
+  }
+
+  unsigned StorageSize = 1;
+  unsigned AllocSize = 1;
+  if (const auto *CAT = dyn_cast<ConstantArrayType>(AllocType))
+    AllocSize = CAT->getZExtSize();
+  if (const auto *CAT = dyn_cast<ConstantArrayType>(StorageType))
+    StorageSize = CAT->getZExtSize();
+
+  if (AllocSize > StorageSize ||
+      !ASTCtx.hasSimilarType(ASTCtx.getBaseElementType(AllocType),
+                             ASTCtx.getBaseElementType(StorageType))) {
+    S.FFDiag(S.Current->getLocation(OpPC),
+             diag::note_constexpr_placement_new_wrong_type)
+        << StorageType << AllocType;
+    return false;
+  }
+
+  return true;
+}
+
 bool Interpret(InterpState &S, APValue &Result) {
   // The current stack frame when we started Interpret().
   // This is being used by the ops to determine wheter
