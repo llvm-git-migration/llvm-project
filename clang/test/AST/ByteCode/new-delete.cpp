@@ -241,12 +241,10 @@ namespace std {
 
 
 
-/// FIXME: The new interpreter produces the wrong diagnostic.
 namespace PlacementNew {
   constexpr int foo() { // both-error {{never produces a constant expression}}
     char c[sizeof(int)];
-    new (c) int{12}; // ref-note {{this placement new expression is not supported in constant expressions before C++2c}} \
-                     // expected-note {{subexpression not valid in a constant expression}}
+    new (c) int{12}; // both-note {{this placement new expression is not supported in constant expressions before C++2c}}
     return 0;
   }
 }
@@ -309,12 +307,11 @@ namespace placement_new_delete {
   constexpr bool bad(int which) {
     switch (which) {
     case 0:
-      delete new (placement_new_arg{}) int; // ref-note {{this placement new expression is not supported in constant expressions}} \
-                                            // expected-note {{subexpression not valid in a constant expression}}
+      delete new (placement_new_arg{}) int; // both-note {{this placement new expression is not supported in constant expressions}}
       break;
 
     case 1:
-      delete new ClassSpecificNew; // ref-note {{call to class-specific 'operator new'}}
+      delete new ClassSpecificNew; // both-note {{call to class-specific 'operator new'}}
       break;
 
     case 2:
@@ -328,8 +325,7 @@ namespace placement_new_delete {
     case 4:
       // FIXME: This technically follows the standard's rules, but it seems
       // unreasonable to expect implementations to support this.
-      delete new (std::align_val_t{64}) Overaligned; // ref-note {{this placement new expression is not supported in constant expressions}} \
-                                                     // expected-note {{subexpression not valid in a constant expression}}
+      delete new (std::align_val_t{64}) Overaligned; // both-note {{this placement new expression is not supported in constant expressions}}
       break;
     }
 
@@ -337,7 +333,7 @@ namespace placement_new_delete {
   }
   static_assert(bad(0)); // both-error {{constant expression}} \
                          // both-note {{in call}}
-  static_assert(bad(1)); // ref-error {{constant expression}} ref-note {{in call}}
+  static_assert(bad(1)); // both-error {{constant expression}} both-note {{in call}}
   static_assert(bad(2)); // ref-error {{constant expression}} ref-note {{in call}}
   static_assert(bad(3)); // ref-error {{constant expression}} ref-note {{in call}}
   static_assert(bad(4)); // both-error {{constant expression}} \
