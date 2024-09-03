@@ -7979,6 +7979,7 @@ ExprResult Sema::ActOnStartCXXMemberReference(Scope *S, Expr *Base,
         return ExprError();
       }
 
+      bool IsDependent;
       Result = BuildOverloadedArrowExpr(
           Base, OpLoc,
           // When in a template specialization and on the first loop iteration,
@@ -7987,7 +7988,17 @@ ExprResult Sema::ActOnStartCXXMemberReference(Scope *S, Expr *Base,
           // and giving a diagnostic with a fixit attached to the error itself.
           (FirstIteration && CurFD && CurFD->isFunctionTemplateSpecialization())
               ? nullptr
-              : &NoArrowOperatorFound);
+              : &NoArrowOperatorFound,
+          IsDependent);
+
+      if (IsDependent) {
+        // BuildOverloadedArrowExpr sets IsDependent to indicate that we need
+        // to build a dependent overloaded arrow expression.
+        assert(BaseType->isDependentType());
+        BaseType = Context.DependentTy;
+        break;
+      }
+
       if (Result.isInvalid()) {
         if (NoArrowOperatorFound) {
           if (FirstIteration) {
@@ -8006,12 +8017,6 @@ ExprResult Sema::ActOnStartCXXMemberReference(Scope *S, Expr *Base,
           }
         }
         return ExprError();
-      } else if (Result.isUnset()) {
-        // BuildOverloadedArrowExpr returns an empty expression to indicate
-        // that we need to build a dependent overloaded arrow expression.
-        assert(BaseType->isDependentType());
-        BaseType = Context.DependentTy;
-        break;
       }
 
       Base = Result.get();
