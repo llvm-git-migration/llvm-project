@@ -1121,6 +1121,8 @@ Bug Fixes to C++ Support
   Fixes (#GH85992).
 - Fixed a crash-on-invalid bug involving extraneous template parameter with concept substitution. (#GH73885)
 - Fixed assertion failure by skipping the analysis of an invalid field declaration. (#GH99868)
+- Fix handling of ``_`` as the name of a lambda's init capture variable. (#GH107024)
+
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
