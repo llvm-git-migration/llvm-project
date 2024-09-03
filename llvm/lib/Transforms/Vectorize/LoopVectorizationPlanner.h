@@ -174,8 +174,8 @@ public:
         new VPInstruction(Opcode, Operands, WrapFlags, DL, Name));
   }
 
-  VPValue *createNot(VPValue *Operand, DebugLoc DL = {},
-                     const Twine &Name = "") {
+  VPInstruction *createNot(VPValue *Operand, DebugLoc DL = {},
+                           const Twine &Name = "") {
     return createInstruction(VPInstruction::Not, {Operand}, DL, Name);
   }
 
@@ -223,6 +223,33 @@ public:
   VPInstruction *createPtrAdd(VPValue *Ptr, VPValue *Offset, DebugLoc DL,
                               const Twine &Name = "") {
     return createInstruction(VPInstruction::PtrAdd, {Ptr, Offset}, DL, Name);
+  }
+
+  VPInstruction *createCSAInitMask(DebugLoc DL, const Twine &Name) {
+    return createInstruction(VPInstruction::CSAInitMask, {}, DL, Name);
+  }
+
+  VPInstruction *createCSAInitData(VPValue *InitScalar, DebugLoc DL,
+                                   const Twine &Name) {
+    return createInstruction(VPInstruction::CSAInitData, {InitScalar}, DL,
+                             Name);
+  }
+
+  VPInstruction *createCSAMaskPhi(VPValue *InitMask, DebugLoc DL,
+                                  const Twine &Name) {
+    return createInstruction(VPInstruction::CSAMaskPhi, {InitMask}, DL, Name);
+  }
+
+  VPInstruction *createCSAAnyActive(VPValue *Cond, DebugLoc DL,
+                                    const Twine &Name) {
+    return createInstruction(VPInstruction::CSAAnyActive, {Cond}, DL, Name);
+  }
+
+  VPInstruction *createCSAMaskSel(VPValue *Cond, VPValue *MaskPhi,
+                                  VPValue *AnyActive, DebugLoc DL,
+                                  const Twine &Name) {
+    return createInstruction(VPInstruction::CSAMaskSel,
+                             {Cond, MaskPhi, AnyActive}, DL, Name);
   }
 
   VPDerivedIVRecipe *createDerivedIV(InductionDescriptor::InductionKind Kind,
