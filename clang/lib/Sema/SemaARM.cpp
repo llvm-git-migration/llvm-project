@@ -1341,4 +1341,17 @@ void SemaARM::handleInterruptAttr(Decl *D, const ParsedAttr &AL) {
                  ARMInterruptAttr(getASTContext(), AL, Kind));
 }
 
+void SemaARM::handleInterruptSaveFPAttr(Decl *D, const ParsedAttr &AL) {
+  handleARMInterruptAttr(D, AL);
+
+  bool VFP = SemaRef.Context.getTargetInfo().hasFeature("vfp");
+
+  if (!VFP) {
+    SemaRef.Diag(D->getLocation(), diag::warn_arm_interrupt_save_fp_without_vfp_unit);
+    return;
+  }
+
+  D->addAttr(::new (SemaRef.Context) ARMSaveFPAttr(SemaRef.Context, AL));
+}
+
 } // namespace clang
