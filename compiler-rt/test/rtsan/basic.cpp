@@ -1,5 +1,5 @@
 // RUN: %clangxx -fsanitize=realtime %s -o %t
-// RUN: not %run %t 2>&1 | FileCheck %s
+// RUN: %env_rtsan_opts=abort_on_error=0 not %run %t 2>&1 | FileCheck %s
 // UNSUPPORTED: ios
 
 // Intent: Ensure that an intercepted call in a [[clang::nonblocking]] function
