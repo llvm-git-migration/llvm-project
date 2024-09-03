@@ -2816,15 +2816,19 @@ static bool hoistBOAssociation(Instruction &I, Loop &L,
                                ICFLoopSafetyInfo &SafetyInfo,
                                MemorySSAUpdater &MSSAU, AssumptionCache *AC,
                                DominatorTree *DT) {
-  using namespace PatternMatch;
+  auto *BO = dyn_cast<BinaryOperator>(&I);
+  if (!BO)
+    return false;
+  auto *BO0 = dyn_cast<BinaryOperator>(BO->getOperand(0));
+  if (!BO0)
+    return false;
+  Value *LV = BO0->getOperand(0), *C1 = BO0->getOperand(1),
+        *C2 = BO->getOperand(1);
 
   // Transform "(LV op C1) op C2" ==> "LV op (C1 op C2)"
-  Value *LV, *C1, *C2;
-  if (!match(&I, m_BinOp(m_BinOp(m_Value(LV), m_Value(C1)), m_Value(C2))) ||
-      L.isLoopInvariant(LV) || !L.isLoopInvariant(C1) || !L.isLoopInvariant(C2))
+  if (L.isLoopInvariant(LV) || !L.isLoopInvariant(C1) || !L.isLoopInvariant(C2))
     return false;
-  auto *BO = cast<BinaryOperator>(&I),
-       *BO0 = cast<BinaryOperator>(BO->getOperand(0));
+
   Instruction::BinaryOps Opcode = BO->getOpcode();
   if (BO0->getOpcode() != Opcode || !BO->isAssociative() ||
       !BO0->isAssociative())
