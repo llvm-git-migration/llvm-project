@@ -45,6 +45,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/Allocator.h"
@@ -522,37 +523,35 @@ void SplitGraph::buildGraph(CallGraph &CG) {
                         << " - analyzing function\n");
 
       bool HasIndirectCall = false;
-      for (const auto &BB : Fn) {
-        for (const auto &Inst : BB) {
-          // look at all calls without a direct callee.
-          if (const auto *CB = dyn_cast<CallBase>(&Inst);
-              CB && !CB->getCalledFunction()) {
-            // inline assembly can be ignored, unless InlineAsmIsIndirectCall is
-            // true.
-            if (CB->isInlineAsm()) {
-              if (InlineAsmIsIndirectCall)
-                HasIndirectCall = true;
-              LLVM_DEBUG(dbgs() << "    found inline assembly\n");
+      for (const auto &Inst : instructions(Fn)) {
+        // look at all calls without a direct callee.
+        if (const auto *CB = dyn_cast<CallBase>(&Inst);
+            CB && !CB->getCalledFunction()) {
+          // inline assembly can be ignored, unless InlineAsmIsIndirectCall is
+          // true.
+          if (CB->isInlineAsm()) {
+            if (InlineAsmIsIndirectCall)
+              HasIndirectCall = true;
+            LLVM_DEBUG(dbgs() << "    found inline assembly\n");
+            continue;
+          }
+
+          // see through calls of aliases
+          const Value *CalledV = CB->getCalledOperand();
+          if (isa<GlobalAlias>(CalledV)) {
+            if (const auto *RealFn = dyn_cast<Function>(
+                    CalledV->stripPointerCastsAndAliases());
+                RealFn && !RealFn->isDeclaration()) {
+              LLVM_DEBUG(dbgs()
+                          << "    resolved call to " << RealFn->getName()
+                          << " in: " << Inst << '\n');
+              DirectCallees.insert(RealFn);
               continue;
             }
-
-            // see through calls of aliases
-            const Value *CalledV = CB->getCalledOperand();
-            if (isa<GlobalAlias>(CalledV)) {
-              if (const auto *RealFn = dyn_cast<Function>(
-                      CalledV->stripPointerCastsAndAliases());
-                  RealFn && !RealFn->isDeclaration()) {
-                LLVM_DEBUG(dbgs()
-                           << "    resolved call to " << RealFn->getName()
-                           << " in: " << Inst << '\n');
-                DirectCallees.insert(RealFn);
-                continue;
-              }
-            }
-
-            // everything else is handled conservatively.
-            HasIndirectCall = true;
           }
+
+          // everything else is handled conservatively.
+          HasIndirectCall = true;
         }
       }
 
