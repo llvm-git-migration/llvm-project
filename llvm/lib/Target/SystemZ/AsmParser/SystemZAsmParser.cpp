@@ -757,25 +757,28 @@ void SystemZOperand::print(raw_ostream &OS) const {
 
 // Parse one register of the form %<prefix><number>.
 bool SystemZAsmParser::parseRegister(Register &Reg, bool RestoreOnFailure) {
-  Reg.StartLoc = Parser.getTok().getLoc();
-
-  // Eat the % prefix.
-  if (Parser.getTok().isNot(AsmToken::Percent))
-    return Error(Parser.getTok().getLoc(), "register expected");
   const AsmToken &PercentTok = Parser.getTok();
-  Parser.Lex();
+  bool HasPercent = PercentTok.is(AsmToken::Percent);
+
+  Reg.StartLoc = PercentTok.getLoc();
+
+  // If we encounter a %, ignore it. This code handles registers with and
+  // without the prefix, unprefixed registers can occur in cfi directives.
+  if (HasPercent) {
+    Parser.Lex(); // Eat percent token.
+  }
 
   // Expect a register name.
   if (Parser.getTok().isNot(AsmToken::Identifier)) {
-    if (RestoreOnFailure)
+    if (RestoreOnFailure && HasPercent)
       getLexer().UnLex(PercentTok);
-    return Error(Reg.StartLoc, "invalid register");
+    return Error(Reg.StartLoc, HasPercent ? "invalid register" : "register expected");
   }
 
   // Check that there's a prefix.
   StringRef Name = Parser.getTok().getString();
   if (Name.size() < 2) {
-    if (RestoreOnFailure)
+    if (RestoreOnFailure && HasPercent)
       getLexer().UnLex(PercentTok);
     return Error(Reg.StartLoc, "invalid register");
   }
@@ -783,7 +786,7 @@ bool SystemZAsmParser::parseRegister(Register &Reg, bool RestoreOnFailure) {
 
   // Treat the rest of the register name as a register number.
   if (Name.substr(1).getAsInteger(10, Reg.Num)) {
-    if (RestoreOnFailure)
+    if (RestoreOnFailure && HasPercent)
       getLexer().UnLex(PercentTok);
     return Error(Reg.StartLoc, "invalid register");
   }
@@ -800,7 +803,7 @@ bool SystemZAsmParser::parseRegister(Register &Reg, bool RestoreOnFailure) {
   else if (Prefix == 'c' && Reg.Num < 16)
     Reg.Group = RegCR;
   else {
-    if (RestoreOnFailure)
+    if (RestoreOnFailure && HasPercent)
       getLexer().UnLex(PercentTok);
     return Error(Reg.StartLoc, "invalid register");
   }
