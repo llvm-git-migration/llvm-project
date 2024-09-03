@@ -40,8 +40,9 @@ define void @print_partial_reduction(ptr %a, ptr %b) {
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<%8> = compute-reduction-result ir<[[ACC]]>, ir<%add>
-; CHECK-NEXT:   EMIT vp<%9> = icmp eq ir<0>, vp<%1>
-; CHECK-NEXT:   EMIT branch-on-cond vp<%9>
+; CHECK-NEXT:   EMIT vp<%9> = extract-from-end vp<%8>, ir<1>
+; CHECK-NEXT:   EMIT vp<%10> = icmp eq ir<0>, vp<%1>
+; CHECK-NEXT:   EMIT branch-on-cond vp<%10>
 ; CHECK-NEXT: Successor(s): ir-bb<for.cond.cleanup.loopexit>, scalar.ph
 ; CHECK-EMPTY:
 ; CHECK-NEXT: ir-bb<for.cond.cleanup.loopexit>:
@@ -50,7 +51,7 @@ define void @print_partial_reduction(ptr %a, ptr %b) {
 ; CHECK-NEXT: scalar.ph:
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
-; CHECK-NEXT: Live-out i32 %add.lcssa = vp<%8>
+; CHECK-NEXT: Live-out i32 %add.lcssa = vp<%9>
 ; CHECK-NEXT: }
 ;
 entry:
