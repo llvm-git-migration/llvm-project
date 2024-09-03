@@ -19,6 +19,7 @@
 
 using namespace llvm;
 using namespace llvm::object;
+using namespace llvm::COFF;
 
 using namespace lld::coff;
 
