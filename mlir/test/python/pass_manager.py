@@ -154,22 +154,23 @@ def testRunPipeline():
 run(testRunPipeline)
 
 
-# CHECK-LABEL: TEST: testRunPipelineError
-@run
-def testRunPipelineError():
-    with Context() as ctx:
-        ctx.allow_unregistered_dialects = True
-        op = Operation.parse('"test.op"() : () -> ()')
-        pm = PassManager.parse("any(cse)")
-        try:
-            pm.run(op)
-        except MLIRError as e:
-            # CHECK: Exception: <
-            # CHECK:   Failure while executing pass pipeline:
-            # CHECK:   error: "-":1:1: 'test.op' op trying to schedule a pass on an unregistered operation
-            # CHECK:    note: "-":1:1: see current operation: "test.op"() : () -> ()
-            # CHECK: >
-            log(f"Exception: <{e}>")
+# Uncomment when fixed https://github.com/pybind/pybind11/issues/5346
+# COM: # CHECK-LABEL: TEST: testRunPipelineError
+# @run
+# def testRunPipelineError():
+#     with Context() as ctx:
+#         ctx.allow_unregistered_dialects = True
+#         op = Operation.parse('"test.op"() : () -> ()')
+#         pm = PassManager.parse("any(cse)")
+#         try:
+#             pm.run(op)
+#         except MLIRError as e:
+#             # COM: CHECK: Exception: <
+#             # COM: CHECK:   Failure while executing pass pipeline:
+#             # COM: CHECK:   error: "-":1:1: 'test.op' op trying to schedule a pass on an unregistered operation
+#             # COM: CHECK:    note: "-":1:1: see current operation: "test.op"() : () -> ()
+#             # COM: CHECK: >
+#             log(f"Exception: <{e}>")
 
 
 # CHECK-LABEL: TEST: testPostPassOpInvalidation

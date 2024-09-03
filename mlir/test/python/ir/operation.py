@@ -751,29 +751,30 @@ def create_invalid_operation():
     return op
 
 
-# CHECK-LABEL: TEST: testInvalidOperationStrSoftFails
-@run
-def testInvalidOperationStrSoftFails():
-    ctx = Context()
-    with Location.unknown(ctx):
-        invalid_op = create_invalid_operation()
-        # Verify that we fallback to the generic printer for safety.
-        # CHECK: "builtin.module"() ({
-        # CHECK: }) : () -> ()
-        print(invalid_op)
-        try:
-            invalid_op.verify()
-        except MLIRError as e:
-            # CHECK: Exception: <
-            # CHECK:   Verification failed:
-            # CHECK:   error: unknown: 'builtin.module' op requires one region
-            # CHECK:    note: unknown: see current operation:
-            # CHECK:     "builtin.module"() ({
-            # CHECK:     ^bb0:
-            # CHECK:     }, {
-            # CHECK:     }) : () -> ()
-            # CHECK: >
-            print(f"Exception: <{e}>")
+# Uncomment when fixed https://github.com/pybind/pybind11/issues/5346
+# COM: # CHECK-LABEL: TEST: testInvalidOperationStrSoftFails
+# @run
+# def testInvalidOperationStrSoftFails():
+#     ctx = Context()
+#     with Location.unknown(ctx):
+#         invalid_op = create_invalid_operation()
+#         # Verify that we fallback to the generic printer for safety.
+#         # COM: CHECK: "builtin.module"() ({
+#         # COM: CHECK: }) : () -> ()
+#         print(invalid_op)
+#         try:
+#             invalid_op.verify()
+#         except MLIRError as e:
+#             # COM: CHECK: Exception: <
+#             # COM: CHECK:   Verification failed:
+#             # COM: CHECK:   error: unknown: 'builtin.module' op requires one region
+#             # COM: CHECK:    note: unknown: see current operation:
+#             # COM: CHECK:     "builtin.module"() ({
+#             # COM: CHECK:     ^bb0:
+#             # COM: CHECK:     }, {
+#             # COM: CHECK:     }) : () -> ()
+#             # COM: CHECK: >
+#             print(f"Exception: <{e}>")
 
 
 # CHECK-LABEL: TEST: testInvalidModuleStrSoftFails
@@ -1006,16 +1007,17 @@ def testOperationParse():
         assert isinstance(m, ModuleOp)
         assert type(o) is OpView
 
-        # Parsing specific operation.
-        m = ModuleOp.parse("module {}")
-        assert isinstance(m, ModuleOp)
-        try:
-            ModuleOp.parse('"test.foo"() : () -> ()')
-        except MLIRError as e:
-            # CHECK: error: Expected a 'builtin.module' op, got: 'test.foo'
-            print(f"error: {e}")
-        else:
-            assert False, "expected error"
+        # Uncomment when fixed https://github.com/pybind/pybind11/issues/5346
+        # # Parsing specific operation.
+        # m = ModuleOp.parse("module {}")
+        # assert isinstance(m, ModuleOp)
+        # try:
+        #     ModuleOp.parse('"test.foo"() : () -> ()')
+        # except MLIRError as e:
+        #     # COM: CHECK: error: Expected a 'builtin.module' op, got: 'test.foo'
+        #     print(f"error: {e}")
+        # else:
+        #     assert False, "expected error"
 
         o = Operation.parse('"test.foo"() : () -> ()', source_name="my-source-string")
         # CHECK: op_with_source_name: "test.foo"() : () -> () loc("my-source-string":1:1)
