@@ -786,4 +786,18 @@ def Free : Opcode {
   let Args = [ArgBool];
 }
 
+def CheckNewTypeMismatch : Opcode {
+  let Args = [ArgExpr];
+}
+
+def InvalidNewDeleteExpr : Opcode {
+  let Args = [ArgExpr];
+}
+
+def CheckNewTypeMismatchArray : Opcode {
+  let Types = [IntegerTypeClass];
+  let Args = [ArgExpr];
+  let HasGroup = 1;
+}
+
 def IsConstantContext: Opcode;
