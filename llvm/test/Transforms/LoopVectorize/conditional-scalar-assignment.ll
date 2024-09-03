@@ -2981,7 +2981,7 @@ for.body:                                         ; preds = %for.body.preheader,
 ;   }
 ;   return t; // use t
 ; }
-define ptr @simple_csa_ptr_select(i32 %N, ptr %data, i32 %a) {
+define ptr @simple_csa_ptr_select(i32 %N, ptr %data, i64 %a) {
 ; EVL-LABEL: @simple_csa_ptr_select(
 ; EVL-NEXT:  entry:
 ; EVL-NEXT:    [[CMP9:%.*]] = icmp sgt i32 [[N:%.*]], 0
@@ -3002,7 +3002,7 @@ define ptr @simple_csa_ptr_select(i32 %N, ptr %data, i32 %a) {
 ; EVL-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[ARRAYIDX]], align 8
 ; EVL-NEXT:    [[TMP1:%.*]] = load i32, ptr [[TMP0]], align 4
 ; EVL-NEXT:    [[TMP2:%.*]] = sext i32 [[TMP1]] to i64
-; EVL-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[INDVARS_IV]], [[TMP2]]
+; EVL-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[A:%.*]], [[TMP2]]
 ; EVL-NEXT:    [[SPEC_SELECT]] = select i1 [[CMP1]], ptr [[TMP0]], ptr [[T_010]]
 ; EVL-NEXT:    [[INDVARS_IV_NEXT]] = add nuw nsw i64 [[INDVARS_IV]], 1
 ; EVL-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INDVARS_IV_NEXT]], [[WIDE_TRIP_COUNT]]
@@ -3028,7 +3028,7 @@ define ptr @simple_csa_ptr_select(i32 %N, ptr %data, i32 %a) {
 ; NO-EVL-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[ARRAYIDX]], align 8
 ; NO-EVL-NEXT:    [[TMP1:%.*]] = load i32, ptr [[TMP0]], align 4
 ; NO-EVL-NEXT:    [[TMP2:%.*]] = sext i32 [[TMP1]] to i64
-; NO-EVL-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[INDVARS_IV]], [[TMP2]]
+; NO-EVL-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[A:%.*]], [[TMP2]]
 ; NO-EVL-NEXT:    [[SPEC_SELECT]] = select i1 [[CMP1]], ptr [[TMP0]], ptr [[T_010]]
 ; NO-EVL-NEXT:    [[INDVARS_IV_NEXT]] = add nuw nsw i64 [[INDVARS_IV]], 1
 ; NO-EVL-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INDVARS_IV_NEXT]], [[WIDE_TRIP_COUNT]]
@@ -3054,7 +3054,7 @@ define ptr @simple_csa_ptr_select(i32 %N, ptr %data, i32 %a) {
 ; DATA-NEXT:    [[TMP0:%.*]] = load ptr, ptr [[ARRAYIDX]], align 8
 ; DATA-NEXT:    [[TMP1:%.*]] = load i32, ptr [[TMP0]], align 4
 ; DATA-NEXT:    [[TMP2:%.*]] = sext i32 [[TMP1]] to i64
-; DATA-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[INDVARS_IV]], [[TMP2]]
+; DATA-NEXT:    [[CMP1:%.*]] = icmp slt i64 [[A:%.*]], [[TMP2]]
 ; DATA-NEXT:    [[SPEC_SELECT]] = select i1 [[CMP1]], ptr [[TMP0]], ptr [[T_010]]
 ; DATA-NEXT:    [[INDVARS_IV_NEXT]] = add nuw nsw i64 [[INDVARS_IV]], 1
 ; DATA-NEXT:    [[EXITCOND_NOT:%.*]] = icmp eq i64 [[INDVARS_IV_NEXT]], [[WIDE_TRIP_COUNT]]
