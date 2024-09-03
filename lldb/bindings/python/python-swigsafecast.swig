@@ -34,7 +34,7 @@ PythonObject SWIGBridge::ToSWIGWrapper(lldb::BreakpointSP breakpoint_sp) {
 }
 
 PythonObject SWIGBridge::ToSWIGWrapper(const Status& status) {
-  return ToSWIGHelper(new lldb::SBError(status), SWIGTYPE_p_lldb__SBError);
+  return ToSWIGHelper(new lldb::SBError(status.Clone()), SWIGTYPE_p_lldb__SBError);
 }
 
 PythonObject SWIGBridge::ToSWIGWrapper(std::unique_ptr<lldb::SBStructuredData> data_sb) {
