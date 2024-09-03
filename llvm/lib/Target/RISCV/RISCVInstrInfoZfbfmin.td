@@ -30,7 +30,7 @@ def riscv_fpround_bf16
 let Predicates = [HasStdExtZfbfmin] in {
 def FCVT_BF16_S : FPUnaryOp_r_frm<0b0100010, 0b01000, FPR16, FPR32, "fcvt.bf16.s">,
                   Sched<[WriteFCvtF32ToF16, ReadFCvtF32ToF16]>;
-def FCVT_S_BF16 : FPUnaryOp_r_frm<0b0100000, 0b00110, FPR32, FPR16, "fcvt.s.bf16">,
+def FCVT_S_BF16 : FPUnaryOp_r_frmlegacy<0b0100000, 0b00110, FPR32, FPR16, "fcvt.s.bf16">,
                   Sched<[WriteFCvtF16ToF32, ReadFCvtF16ToF32]>;
 } // Predicates = [HasStdExtZfbfmin]
 
@@ -50,7 +50,7 @@ def : StPat<store, FSH, FPR16, bf16>;
 def : Pat<(bf16 (riscv_fpround_bf16 FPR32:$rs1)),
           (FCVT_BF16_S FPR32:$rs1, FRM_DYN)>;
 def : Pat<(fpextend (bf16 FPR16:$rs1)),
-          (FCVT_S_BF16 FPR16:$rs1, FRM_DYN)>;
+          (FCVT_S_BF16 FPR16:$rs1, FRM_RNE)>;
 
 // Moves (no conversion)
 def : Pat<(bf16 (riscv_fmv_h_x GPR:$src)), (FMV_H_X GPR:$src)>;
@@ -63,10 +63,6 @@ let Predicates = [HasStdExtZfbfmin] in {
 // rounding mode has no effect for bf16->f32.
 def : Pat<(i32 (any_fp_to_sint (bf16 FPR16:$rs1))), (FCVT_W_S (FCVT_S_BF16 $rs1, FRM_RNE), FRM_RTZ)>;
 def : Pat<(i32 (any_fp_to_uint (bf16 FPR16:$rs1))), (FCVT_WU_S (FCVT_S_BF16 $rs1, FRM_RNE), FRM_RTZ)>;
-
-// [u]int->bf16. Match GCC and default to using dynamic rounding mode.
-def : Pat<(bf16 (any_sint_to_fp (i32 GPR:$rs1))), (FCVT_BF16_S (FCVT_S_W $rs1, FRM_DYN), FRM_DYN)>;
-def : Pat<(bf16 (any_uint_to_fp (i32 GPR:$rs1))), (FCVT_BF16_S (FCVT_S_WU $rs1, FRM_DYN), FRM_DYN)>;
 }
 
 let Predicates = [HasStdExtZfbfmin, IsRV64] in {
@@ -74,10 +70,6 @@ let Predicates = [HasStdExtZfbfmin, IsRV64] in {
 // rounding mode has no effect for bf16->f32.
 def : Pat<(i64 (any_fp_to_sint (bf16 FPR16:$rs1))), (FCVT_L_S (FCVT_S_BF16 $rs1, FRM_RNE), FRM_RTZ)>;
 def : Pat<(i64 (any_fp_to_uint (bf16 FPR16:$rs1))), (FCVT_LU_S (FCVT_S_BF16 $rs1, FRM_RNE), FRM_RTZ)>;
-
-// [u]int->bf16. Match GCC and default to using dynamic rounding mode.
-def : Pat<(bf16 (any_sint_to_fp (i64 GPR:$rs1))), (FCVT_BF16_S (FCVT_S_L $rs1, FRM_DYN), FRM_DYN)>;
-def : Pat<(bf16 (any_uint_to_fp (i64 GPR:$rs1))), (FCVT_BF16_S (FCVT_S_LU $rs1, FRM_DYN), FRM_DYN)>;
 }
 
 let Predicates = [HasStdExtZfbfmin, HasStdExtD] in {
