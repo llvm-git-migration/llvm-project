@@ -23,6 +23,7 @@
 #include <__mdspan/extents.h>
 #include <__type_traits/is_constructible.h>
 #include <__type_traits/is_convertible.h>
+#include <__type_traits/is_integral.h>
 #include <__type_traits/is_nothrow_constructible.h>
 #include <__utility/as_const.h>
 #include <__utility/integer_sequence.h>
