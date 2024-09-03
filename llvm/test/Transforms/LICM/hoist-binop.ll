@@ -26,11 +26,11 @@ loop:
 define void @add_one_use_comm(i64 %c1, i64 %c2) {
 ; CHECK-LABEL: @add_one_use_comm(
 ; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[INVARIANT_OP:%.*]] = add i64 [[C1:%.*]], [[C2:%.*]]
 ; CHECK-NEXT:    br label [[LOOP:%.*]]
 ; CHECK:       loop:
-; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[LOOP]] ]
-; CHECK-NEXT:    [[STEP_ADD:%.*]] = add i64 [[C1:%.*]], [[INDEX]]
-; CHECK-NEXT:    [[INDEX_NEXT]] = add i64 [[STEP_ADD]], [[INDEX]]
+; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT_REASS:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[INDEX_NEXT_REASS]] = add i64 [[INDEX]], [[INVARIANT_OP]]
 ; CHECK-NEXT:    br label [[LOOP]]
 ;
 entry:
@@ -39,7 +39,7 @@ entry:
 loop:
   %index = phi i64 [ 0, %entry ], [ %index.next, %loop ]
   %step.add = add i64 %c1, %index
-  %index.next = add i64 %step.add, %index
+  %index.next = add i64 %step.add, %c2
   br label %loop
 }
 
