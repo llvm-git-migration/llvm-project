@@ -45,6 +45,9 @@ public:
                   ConversionPatternRewriter &rewriter) const override {
     auto tensorType = cast<RankedTensorType>(extractOp.getTensor().getType());
 
+    if (!tensorType.getElementType().isIntOrFloat())
+      return rewriter.notifyMatchFailure(extractOp,
+                                         "only integers and floats supported");
     if (!tensorType.hasStaticShape())
       return rewriter.notifyMatchFailure(extractOp, "non-static tensor");
 

@@ -29,6 +29,16 @@ func.func @tensor_extract_constant(%a : index, %b: index, %c: index) -> i32 {
 
 // -----
 
+// CHECK-LABEL: tensor_extract_unsupported_type
+func.func @tensor_extract_unsupported_type(%a : index) {
+  %cst = arith.constant dense<[1, 2]> : tensor<2xindex>
+  // CHECK: tensor.extract
+  %extract = tensor.extract %cst[%a] : tensor<2xindex>
+  return
+}
+
+// -----
+
 //===----------------------------------------------------------------------===//
 // Type conversion
 //===----------------------------------------------------------------------===//
