@@ -357,8 +357,11 @@ static bool runIPSCCP(
     LLVM_DEBUG(dbgs() << "Found that GV '" << GV->getName()
                       << "' is constant!\n");
     while (!GV->use_empty()) {
-      StoreInst *SI = cast<StoreInst>(GV->user_back());
-      SI->eraseFromParent();
+      auto User = GV->user_back();
+      // We can remove LoadInst at here, because we already replace user of this
+      // to constant.
+      if (isa<StoreInst>(User) || isa<LoadInst>(User))
+        cast<Instruction>(User)->eraseFromParent();
     }
 
     // Try to create a debug constant expression for the global variable
