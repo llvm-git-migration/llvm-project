@@ -28,6 +28,52 @@ namespace lldb_private {
 
 const char *ExpressionResultAsCString(lldb::ExpressionResults result);
 
+/// Going a bit against the spirit of llvm::Error,
+/// lldb_private::Status need to store errors long-term and sometimes
+/// copy them. This base class defines an interface for this
+/// operation.
+class CloneableError
+    : public llvm::ErrorInfo<CloneableError, llvm::StringError> {
+public:
+  using llvm::ErrorInfo<CloneableError, llvm::StringError>::ErrorInfo;
+  CloneableError(std::error_code ec, const llvm::Twine &msg = {})
+      : ErrorInfo(msg, ec) {}
+  virtual std::unique_ptr<CloneableError> Clone() const = 0;
+  static char ID;
+};
+
+/// FIXME: Move these declarations closer to where they're used.
+class MachKernelError
+    : public llvm::ErrorInfo<MachKernelError, CloneableError> {
+public:
+  using llvm::ErrorInfo<MachKernelError, CloneableError>::ErrorInfo;
+  MachKernelError(std::error_code ec, const llvm::Twine &msg = {})
+      : ErrorInfo(msg, ec) {}
+  std::string message() const override;
+  std::unique_ptr<CloneableError> Clone() const override;
+  static char ID;
+};
+
+class Win32Error : public llvm::ErrorInfo<Win32Error, CloneableError> {
+public:
+  using llvm::ErrorInfo<Win32Error, CloneableError>::ErrorInfo;
+  Win32Error(std::error_code ec, const llvm::Twine &msg = {})
+      : ErrorInfo(msg, ec) {}
+  std::string message() const override;
+  std::unique_ptr<CloneableError> Clone() const override;
+  static char ID;
+};
+
+class ExpressionError
+    : public llvm::ErrorInfo<ExpressionError, CloneableError> {
+public:
+  using llvm::ErrorInfo<ExpressionError, CloneableError>::ErrorInfo;
+  ExpressionError(std::error_code ec, std::string msg = {})
+      : ErrorInfo(msg, ec) {}
+  std::unique_ptr<CloneableError> Clone() const override;
+  static char ID;
+};
+
 /// \class Status Status.h "lldb/Utility/Status.h" An error handling class.
 ///
 /// This class is designed to be able to hold any error code that can be
@@ -100,9 +146,7 @@ public:
   }
 
   static Status FromExpressionError(lldb::ExpressionResults result,
-                                    std::string msg) {
-    return Status(result, lldb::eErrorTypeExpression, msg);
-  }
+                                    std::string msg);
 
   /// Set the current error to errno.
   ///
@@ -115,6 +159,7 @@ public:
   const Status &operator=(Status &&);
   /// Avoid using this in new code. Migrate APIs to llvm::Expected instead.
   static Status FromError(llvm::Error error);
+
   /// FIXME: Replace this with a takeError() method.
   llvm::Error ToError() const;
   /// Don't call this function in new code. Instead, redesign the API
@@ -170,12 +215,8 @@ public:
   bool Success() const;
 
 protected:
-  Status(llvm::Error error);
-  /// Status code as an integer value.
-  ValueType m_code = 0;
-  /// The type of the above error code.
-  lldb::ErrorType m_type = lldb::eErrorTypeInvalid;
-  /// A string representation of the error code.
+  Status(llvm::Error error) : m_error(std::move(error)) {}
+  mutable llvm::Error m_error;
   mutable std::string m_string;
 };
 
