@@ -12509,6 +12509,34 @@ private:
 
 /// ------------------------ Address Space  ------------------------------------
 namespace {
+
+template <typename InstType>
+static bool makeChange(Attributor &A, InstType *MemInst, const Use &U,
+                       Value *OriginalValue, PointerType *NewPtrTy,
+                       bool UseOriginalValue) {
+  if (U.getOperandNo() != InstType::getPointerOperandIndex())
+    return false;
+
+  auto *TTI = A.getInfoCache().getAnalysisResultForFunction<TargetIRAnalysis>(
+      *MemInst->getFunction());
+  if (!TTI)
+    return false;
+
+  unsigned OldAS = MemInst->getPointerAddressSpace();
+  if (MemInst->isVolatile() && !TTI->hasVolatileVariant(MemInst, OldAS))
+    return false;
+
+  if (UseOriginalValue) {
+    A.changeUseAfterManifest(const_cast<Use &>(U), *OriginalValue);
+    return true;
+  }
+
+  Instruction *CastInst = new AddrSpaceCastInst(OriginalValue, NewPtrTy);
+  CastInst->insertBefore(MemInst);
+  A.changeUseAfterManifest(const_cast<Use &>(U), *CastInst);
+  return true;
+}
+
 struct AAAddressSpaceImpl : public AAAddressSpace {
   AAAddressSpaceImpl(const IRPosition &IRP, Attributor &A)
       : AAAddressSpace(IRP, A) {}
@@ -12552,24 +12580,14 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
             getAssociatedType()->getPointerAddressSpace())
       return ChangeStatus::UNCHANGED;
 
-    Type *NewPtrTy = PointerType::get(getAssociatedType()->getContext(),
-                                      static_cast<uint32_t>(getAddressSpace()));
+    PointerType *NewPtrTy =
+        PointerType::get(getAssociatedType()->getContext(),
+                         static_cast<uint32_t>(getAddressSpace()));
     bool UseOriginalValue =
         OriginalValue->getType()->getPointerAddressSpace() ==
         static_cast<uint32_t>(getAddressSpace());
 
     bool Changed = false;
-
-    auto MakeChange = [&](Instruction *I, Use &U) {
-      Changed = true;
-      if (UseOriginalValue) {
-        A.changeUseAfterManifest(U, *OriginalValue);
-        return;
-      }
-      Instruction *CastInst = new AddrSpaceCastInst(OriginalValue, NewPtrTy);
-      CastInst->insertBefore(cast<Instruction>(I));
-      A.changeUseAfterManifest(U, *CastInst);
-    };
 
     auto Pred = [&](const Use &U, bool &) {
       if (U.get() != AssociatedValue)
@@ -12581,12 +12599,13 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
       // CGSCC if the AA is run on CGSCC instead of the entire module.
       if (!A.isRunOn(Inst->getFunction()))
         return true;
-      if (isa<LoadInst>(Inst))
-        MakeChange(Inst, const_cast<Use &>(U));
-      if (isa<StoreInst>(Inst)) {
-        // We only make changes if the use is the pointer operand.
-        if (U.getOperandNo() == 1)
-          MakeChange(Inst, const_cast<Use &>(U));
+      if (auto *LI = dyn_cast<LoadInst>(Inst)) {
+        Changed |=
+            makeChange(A, LI, U, OriginalValue, NewPtrTy, UseOriginalValue);
+      }
+      if (auto *SI = dyn_cast<StoreInst>(Inst)) {
+        Changed |=
+            makeChange(A, SI, U, OriginalValue, NewPtrTy, UseOriginalValue);
       }
       return true;
     };
