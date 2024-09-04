@@ -811,6 +811,12 @@ class AMDGPUDimAtomicFloatProfile<string opmod, AMDGPUDimProps dim,
   let RetTypes = [llvm_anyfloat_ty];
 }
 
+class AMDGPUDimAtomicAnyProfile<string opmod, AMDGPUDimProps dim,
+                                  list<AMDGPUArg> dataargs>
+    : AMDGPUDimAtomicProfile<opmod, dim, dataargs> {
+  let RetTypes = [llvm_any_ty];
+}
+
 class AMDGPUDimGetResInfoProfile<AMDGPUDimProps dim>
     : AMDGPUDimProfile<"GET_RESINFO", dim> {
   let RetTypes = [llvm_anyfloat_ty];
@@ -1023,26 +1029,31 @@ defset list<AMDGPUImageDimIntrinsic> AMDGPUImageDimIntrinsics = {
 //////////////////////////////////////////////////////////////////////////
 defset list<AMDGPUImageDimIntrinsic> AMDGPUImageDimAtomicIntrinsics = {
   multiclass AMDGPUImageDimAtomicX<string opmod, list<AMDGPUArg> dataargs,
-                                   int isFloat = 0> {
+                                   int isFloat = 0, int isAny = 0> {
         foreach dim = AMDGPUDims.All in {
           def !strconcat(NAME, "_", dim.Name): AMDGPUImageDimIntrinsic<
               !if (isFloat, AMDGPUDimAtomicFloatProfile<opmod, dim, dataargs>,
-                   AMDGPUDimAtomicProfile<opmod, dim, dataargs>),
+                   !if (isAny, AMDGPUDimAtomicAnyProfile<opmod, dim, dataargs>,
+                        AMDGPUDimAtomicProfile<opmod, dim, dataargs>)),
               [], [SDNPMemOperand]>;
         }
   }
 
-  multiclass AMDGPUImageDimAtomic<string opmod, int isFloat = 0> {
+  multiclass AMDGPUImageDimAtomic<string opmod, int isFloat = 0, int isAny = 0 > {
     defm ""
         : AMDGPUImageDimAtomicX<opmod, [AMDGPUArg<LLVMMatchType<0>, "vdata">],
-                                isFloat>;
+                                isFloat, isAny>;
   }
 
   multiclass AMDGPUImageDimFloatAtomic<string opmod> {
     defm "" : AMDGPUImageDimAtomic<opmod, 1 /*isFloat*/>;
   }
 
-  defm int_amdgcn_image_atomic_swap : AMDGPUImageDimAtomic<"ATOMIC_SWAP">;
+  multiclass AMDGPUImageDimAnyAtomic<string opmod> {
+    defm "" : AMDGPUImageDimAtomic<opmod, 0 /*isFloat*/, 1 /*isAny*/>;
+  }
+
+  defm int_amdgcn_image_atomic_swap : AMDGPUImageDimAnyAtomic<"ATOMIC_SWAP">;
   defm int_amdgcn_image_atomic_add : AMDGPUImageDimAtomic<"ATOMIC_ADD">;
   defm int_amdgcn_image_atomic_sub : AMDGPUImageDimAtomic<"ATOMIC_SUB">;
   defm int_amdgcn_image_atomic_smin : AMDGPUImageDimAtomic<"ATOMIC_SMIN">;
