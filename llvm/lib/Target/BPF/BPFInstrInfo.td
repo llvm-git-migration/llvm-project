@@ -864,26 +864,50 @@ class XFALU32<BPFWidthModifer SizeOp, BPFArithOp Opc, string OpcodeStr,
 
 let Constraints = "$dst = $val" in {
   let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
-    def XFADDW32 : XFALU32<BPF_W, BPF_ADD, "u32", "add", atomic_load_add_i32>;
-    def XFANDW32 : XFALU32<BPF_W, BPF_AND, "u32", "and", atomic_load_and_i32>;
-    def XFORW32  : XFALU32<BPF_W, BPF_OR,  "u32", "or",  atomic_load_or_i32>;
-    def XFXORW32 : XFALU32<BPF_W, BPF_XOR, "u32", "xor", atomic_load_xor_i32>;
+    def XFADDW32 : XFALU32<BPF_W, BPF_ADD, "u32", "add", atomic_load_add_i32_seq_cst>;
+    def XFANDW32 : XFALU32<BPF_W, BPF_AND, "u32", "and", atomic_load_and_i32_seq_cst>;
+    def XFORW32  : XFALU32<BPF_W, BPF_OR,  "u32", "or",  atomic_load_or_i32_seq_cst>;
+    def XFXORW32 : XFALU32<BPF_W, BPF_XOR, "u32", "xor", atomic_load_xor_i32_seq_cst>;
   }
 
   let Predicates = [BPFHasALU32] in {
-    def XFADDD : XFALU64<BPF_DW, BPF_ADD, "u64", "add", atomic_load_add_i64>;
+    def XFADDD : XFALU64<BPF_DW, BPF_ADD, "u64", "add", atomic_load_add_i64_seq_cst>;
   }
-  def XFANDD : XFALU64<BPF_DW, BPF_AND, "u64", "and", atomic_load_and_i64>;
-  def XFORD  : XFALU64<BPF_DW, BPF_OR,  "u64", "or",  atomic_load_or_i64>;
-  def XFXORD : XFALU64<BPF_DW, BPF_XOR, "u64", "xor", atomic_load_xor_i64>;
+  def XFANDD : XFALU64<BPF_DW, BPF_AND, "u64", "and", atomic_load_and_i64_seq_cst>;
+  def XFORD  : XFALU64<BPF_DW, BPF_OR,  "u64", "or",  atomic_load_or_i64_seq_cst>;
+  def XFXORD : XFALU64<BPF_DW, BPF_XOR, "u64", "xor", atomic_load_xor_i64_seq_cst>;
+}
+
+let Predicates = [BPFHasALU32] in {
+    def : Pat<(atomic_load_add_i32_monotonic ADDRri:$addr, GPR32:$val),
+              (XADDW32 ADDRri:$addr, GPR32:$val)>;
+    def : Pat<(atomic_load_add_i64_monotonic ADDRri:$addr, GPR:$val),
+              (XADDD ADDRri:$addr, GPR:$val)>;
 }
 
 // atomic_load_sub can be represented as a neg followed
 // by an atomic_load_add.
-def : Pat<(atomic_load_sub_i32 ADDRri:$addr, GPR32:$val),
+def : Pat<(atomic_load_sub_i32_seq_cst ADDRri:$addr, GPR32:$val),
           (XFADDW32 ADDRri:$addr, (NEG_32 GPR32:$val))>;
-def : Pat<(atomic_load_sub_i64 ADDRri:$addr, GPR:$val),
+def : Pat<(atomic_load_sub_i64_seq_cst ADDRri:$addr, GPR:$val),
           (XFADDD ADDRri:$addr, (NEG_64 GPR:$val))>;
+def : Pat<(atomic_load_sub_i32_monotonic ADDRri:$addr, GPR32:$val),
+          (XADDW32 ADDRri:$addr, (NEG_32 GPR32:$val))>;
+def : Pat<(atomic_load_sub_i64_monotonic ADDRri:$addr, GPR:$val),
+          (XADDD ADDRri:$addr, (NEG_64 GPR:$val))>;
+
+def : Pat<(atomic_load_and_i32_monotonic ADDRri:$addr, GPR32:$val),
+          (XANDW32 ADDRri:$addr, GPR32:$val)>;
+def : Pat<(atomic_load_and_i64_monotonic ADDRri:$addr, GPR:$val),
+          (XANDD ADDRri:$addr, GPR:$val)>;
+def : Pat<(atomic_load_or_i32_monotonic ADDRri:$addr, GPR32:$val),
+          (XORW32 ADDRri:$addr, GPR32:$val)>;
+def : Pat<(atomic_load_or_i64_monotonic ADDRri:$addr, GPR:$val),
+          (XORD ADDRri:$addr, GPR:$val)>;
+def : Pat<(atomic_load_xor_i32_monotonic ADDRri:$addr, GPR32:$val),
+          (XXORW32 ADDRri:$addr, GPR32:$val)>;
+def : Pat<(atomic_load_xor_i64_monotonic ADDRri:$addr, GPR:$val),
+          (XXORD ADDRri:$addr, GPR:$val)>;
 
 // Atomic Exchange
 class XCHG<BPFWidthModifer SizeOp, string OpcodeStr, PatFrag OpNode>
