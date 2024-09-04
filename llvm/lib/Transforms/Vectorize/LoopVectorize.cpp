@@ -9355,7 +9355,10 @@ void LoopVectorizationPlanner::adjustRecipesForReductions(
                                   m_VPValue(), m_VPValue())) ||
                  (isa<VPReplicateRecipe>(&User) &&
                   cast<VPReplicateRecipe>(&User)->getUnderlyingValue() ==
-                      IntermediateStore);
+                      IntermediateStore &&
+                  cast<VPReplicateRecipe>(&User)
+                      ->getOperand(1)
+                      ->isDefinedOutsideVectorRegions());
         });
 
     // Adjust AnyOf reductions; replace the reduction phi for the selected value
