@@ -529,10 +529,9 @@ protected:
     }
   }
 
-  void initUnitialized([[maybe_unused]] unsigned NumBuckets) {
+  void initUnitialized() {
     BucketT *B = getBuckets();
     BucketT *E = getBucketsEnd();
-    //assert(E - B == NumBuckets);
     for (; B != E; ++B) {
       B->setKeyConstructed(false);
       B->setValueConstructed(false);
@@ -1078,7 +1077,7 @@ private:
         allocate_buffer(sizeof(BucketT) * Num, alignof(BucketT)));
     // update NumBuckets only if reallocation is successful
     NumBuckets = Num;
-    this->BaseT::initUnitialized(Num);
+    this->BaseT::initUnitialized();
     return true;
   }
 };
@@ -1260,8 +1259,7 @@ public:
 
   void initFromCtor(unsigned InitBuckets) {
     Small = true;
-    this->BaseT::initUnitialized(
-        std::max<unsigned>(InitBuckets, InlineBuckets));
+    this->BaseT::initUnitialized();
     init(InitBuckets);
   }
 
@@ -1433,7 +1431,7 @@ private:
                     allocate_buffer(sizeof(BucketT) * Num, alignof(BucketT))),
                 Num};
     Small = false;
-    this->BaseT::initUnitialized(Num);
+    this->BaseT::initUnitialized();
   }
 };
 
