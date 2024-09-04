@@ -547,19 +547,22 @@ void test() {
 
 namespace GH100526 {
 void test() {
-  std::vector<std::string_view> t1 = {std::string()}; // expected-warning {{object backing the pointer will be destroyed at the end}}
-  std::optional<std::string_view> t2 = std::string(); // expected-warning {{object backing the pointer}}
+  std::vector<std::string_view> v1({std::string()}); // expected-warning {{object backing the pointer will be destroyed at the end}}
+  std::vector<std::string_view> v2({std::string(), std::string_view()}); // expected-warning {{object backing the pointer will be destroyed at the end}}
+  std::vector<std::string_view> v3({std::string_view(), std::string()}); // expected-warning {{object backing the pointer will be destroyed at the end}}
+
+  std::optional<std::string_view> o1 = std::string(); // expected-warning {{object backing the pointer}}
 
   std::string s;
   // This is a tricky use-after-free case, what it does:
   //   1. make_optional creates a temporary "optional<string>"" object
   //   2. the temporary object owns the underlying string which is copied from s.
   //   3. the t3 object holds the view to the underlying string of the temporary object.
-  std::optional<std::string_view> t3 = std::make_optional(s); // expected-warning {{object backing the pointer}}
+  std::optional<std::string_view> o2 = std::make_optional(s); // expected-warning {{object backing the pointer}}
 
   // FIXME: should work for assignment cases
-  t1 = {std::string()};
-  t2 = std::string();
+  v1 = {std::string()};
+  o1 = std::string();
 
   // no warning on copying pointers.
   std::vector<std::string_view> n1 = {std::string_view()};
