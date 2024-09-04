@@ -240,6 +240,17 @@ static bool hasPossibleIncompatibleOps(const Function *F) {
           (cast<CallInst>(I).isInlineAsm() || isa<IntrinsicInst>(I) ||
            isSMEABIRoutineCall(cast<CallInst>(I))))
         return true;
+
+      if (auto *CB = dyn_cast<CallBase>(&I)) {
+        SMEAttrs CallerAttrs(*CB->getCaller()),
+            CalleeAttrs(*CB->getCalledFunction());
+        // When trying to determine if we can inline callees, we must check
+        // that for agnostic-ZA functions, they don't call any functions
+        // that are not agnostic-ZA, as that would require inserting of
+        // save/restore code.
+        if (CallerAttrs.requiresPreservingAllZAState(CalleeAttrs))
+          return true;
+      }
     }
   }
   return false;
@@ -261,7 +272,13 @@ bool AArch64TTIImpl::areInlineCompatible(const Function *Caller,
 
   if (CallerAttrs.requiresLazySave(CalleeAttrs) ||
       CallerAttrs.requiresSMChange(CalleeAttrs) ||
-      CallerAttrs.requiresPreservingZT0(CalleeAttrs)) {
+      CallerAttrs.requiresPreservingZT0(CalleeAttrs) ||
+      CallerAttrs.requiresPreservingAllZAState(CalleeAttrs)) {
+    if (hasPossibleIncompatibleOps(Callee))
+      return false;
+  }
+
+  if (CalleeAttrs.hasAgnosticZAInterface()) {
     if (hasPossibleIncompatibleOps(Callee))
       return false;
   }
