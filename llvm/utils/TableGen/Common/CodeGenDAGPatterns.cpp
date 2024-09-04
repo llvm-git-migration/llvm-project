@@ -24,6 +24,7 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/TypeSize.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
@@ -1600,18 +1601,13 @@ static TreePatternNode &getOperandNum(unsigned OpNo, TreePatternNode &N,
     return N;
   }
 
-  OpNo -= NumResults;
-
-  if (OpNo >= N.getNumChildren()) {
-    std::string S;
-    raw_string_ostream OS(S);
-    OS << "Invalid operand number in type constraint " << (OpNo + NumResults)
-       << " ";
-    N.print(OS);
-    PrintFatalError(S);
+  if (OpNo - NumResults >= N.getNumChildren()) {
+    PrintFatalError([&N, OpNo](raw_ostream &OS) {
+      OS << formatv("Invalid operand number {0} in type constraint ", OpNo);
+      N.print(OS);
+    });
   }
-
-  return N.getChild(OpNo);
+  return N.getChild(OpNo - NumResults);
 }
 
 /// ApplyTypeConstraint - Given a node in a pattern, apply this type
