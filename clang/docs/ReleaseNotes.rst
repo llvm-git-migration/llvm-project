@@ -278,6 +278,8 @@ Improvements to Clang's diagnostics
 - The lifetimebound and GSL analysis in clang are coherent, allowing clang to
   detect more use-after-free bugs. (#GH100549).
 
+- Clang now diagnoses cases where a dangling `GSLOwner<GSLPointer>`` object is constructed, e.g. `std::vector<string_view> v = {std::string}` (#GH100526).
+
 Improvements to Clang's time-trace
 ----------------------------------
 

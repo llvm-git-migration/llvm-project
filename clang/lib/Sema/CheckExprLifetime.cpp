@@ -361,12 +361,21 @@ static bool implicitObjectParamIsLifetimeBound(const FunctionDecl *FD) {
     if (ATL.getAttrAs<LifetimeBoundAttr>())
       return true;
   }
+
   return isNormalAsisgnmentOperator(FD);
 }
 
-bool isFirstTemplateArgumentGSLPointer(const TemplateArgumentList &TAs) {
-  return TAs.size() > 0 && TAs[0].getKind() == TemplateArgument::Type &&
-         isRecordWithAttr<PointerAttr>(TAs[0].getAsType());
+// Returns true if the given Record decl is a form of `GSLOwner<GSLPointer>`
+// type, e.g. std::vector<string_view>, std::optional<string_view>.
+static bool isContainerOfGSLPointer(const CXXRecordDecl *Container) {
+  if (const auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(Container)) {
+    if (!CTSD->hasAttr<OwnerAttr>()) // Container must be a GSL owner type.
+      return false;
+    const auto &TAs = CTSD->getTemplateArgs();
+    return TAs.size() > 0 && TAs[0].getKind() == TemplateArgument::Type &&
+           isRecordWithAttr<PointerAttr>(TAs[0].getAsType());
+  }
+  return false;
 }
 
 // Visit lifetimebound or gsl-pointer arguments.
@@ -471,24 +480,14 @@ static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
                            !Callee->getReturnType()->isReferenceType());
       } else if (auto *Ctor = dyn_cast<CXXConstructExpr>(Call)) {
         const auto *ClassD = Ctor->getConstructor()->getParent();
-        // Constructing the Container<GSLPointer> case (e.g.
-        // std::optional<string_view>) case.
-        if (const auto *CTSD =
-                dyn_cast<ClassTemplateSpecializationDecl>(ClassD)) {
-          if (isFirstTemplateArgumentGSLPointer(CTSD->getTemplateArgs()) &&
-              CTSD->hasAttr<OwnerAttr>()) {
-            VisitGSLPointerArg(Ctor->getConstructor()->getParamDecl(0), Args[0],
-                               true);
-            return;
-          }
-        }
-        // Constructing the GSLPointer (e.g. std::string_view) case.
-        if (ClassD->hasAttr<PointerAttr>())
+        // Two cases:
+        //  a GSL pointer, e.g. std::string_view
+        //  a container of GSL pointer, e.g. std::vector<string_view>
+        if (ClassD->hasAttr<PointerAttr>() || isContainerOfGSLPointer(ClassD))
           VisitGSLPointerArg(Ctor->getConstructor()->getParamDecl(0), Args[0],
                              true);
       }
     }
-  }
   }
 }
 
