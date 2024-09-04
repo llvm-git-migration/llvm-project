@@ -134,6 +134,17 @@ public:
 
   bool validateGlobalRegisterVariable(StringRef RegName, unsigned RegSize,
                                       bool &HasSizeMismatch) const override;
+
+  bool
+  checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const override {
+    if (ISAInfo->hasExtension("zicfilp"))
+      return true;
+    return TargetInfo::checkCFProtectionBranchSupported(Diags);
+  }
+
+  CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const override {
+    return CFBranchLabelSchemeKind::FuncSig;
+  }
 };
 class LLVM_LIBRARY_VISIBILITY RISCV32TargetInfo : public RISCVTargetInfo {
 public:

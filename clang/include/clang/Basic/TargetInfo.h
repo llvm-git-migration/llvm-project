@@ -16,6 +16,7 @@
 
 #include "clang/Basic/AddressSpaces.h"
 #include "clang/Basic/BitmaskEnum.h"
+#include "clang/Basic/CFProtectionOptions.h"
 #include "clang/Basic/CodeGenOptions.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangOptions.h"
@@ -1726,6 +1727,9 @@ public:
   /// Check if the target supports CFProtection branch.
   virtual bool
   checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const;
+
+  /// Get the target default CFBranchLabelScheme scheme
+  virtual CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const;
 
   /// Check if the target supports CFProtection return.
   virtual bool
