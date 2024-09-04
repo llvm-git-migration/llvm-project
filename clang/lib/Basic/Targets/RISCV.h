@@ -131,6 +131,13 @@ public:
   bool supportsCpuInit() const override { return getTriple().isOSLinux(); }
   bool validateCpuSupports(StringRef Feature) const override;
   bool isValidFeatureName(StringRef Name) const override;
+
+  bool
+  checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const override {
+    if (ISAInfo->hasExtension("zicfilp"))
+      return true;
+    return TargetInfo::checkCFProtectionBranchSupported(Diags);
+  }
 };
 class LLVM_LIBRARY_VISIBILITY RISCV32TargetInfo : public RISCVTargetInfo {
 public:
