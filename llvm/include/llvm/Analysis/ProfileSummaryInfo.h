@@ -42,7 +42,7 @@ class ProfileSummaryInfo {
 private:
   const Module *M;
   std::unique_ptr<ProfileSummary> Summary;
-  void computeThresholds();
+
   // Count thresholds to answer isHotCount and isColdCount queries.
   std::optional<uint64_t> HotCountThreshold, ColdCountThreshold;
   // True if the working set size of the code is considered huge,
@@ -62,6 +62,14 @@ private:
 public:
   ProfileSummaryInfo(const Module &M) : M(&M) { refresh(); }
   ProfileSummaryInfo(ProfileSummaryInfo &&Arg) = default;
+
+  /// Replace the summary with the provided one.
+  void overrideSummary(std::unique_ptr<ProfileSummary> NewSummary) {
+    Summary.swap(NewSummary);
+  }
+
+  /// Compute the hot and cold thresholds.
+  void computeThresholds();
 
   /// If no summary is present, attempt to refresh.
   void refresh();
