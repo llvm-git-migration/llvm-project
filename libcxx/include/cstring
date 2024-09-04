@@ -75,7 +75,7 @@ size_t strlen(const char* s);
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-using ::size_t _LIBCPP_USING_IF_EXISTS;
+using ::size_t;
 using ::memcpy _LIBCPP_USING_IF_EXISTS;
 using ::memmove _LIBCPP_USING_IF_EXISTS;
 using ::strcpy _LIBCPP_USING_IF_EXISTS;

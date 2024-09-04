@@ -158,15 +158,15 @@ Types:
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-using ::int8_t _LIBCPP_USING_IF_EXISTS;
-using ::int16_t _LIBCPP_USING_IF_EXISTS;
-using ::int32_t _LIBCPP_USING_IF_EXISTS;
-using ::int64_t _LIBCPP_USING_IF_EXISTS;
+using ::int8_t;
+using ::int16_t;
+using ::int32_t;
+using ::int64_t;
 
-using ::uint8_t _LIBCPP_USING_IF_EXISTS;
-using ::uint16_t _LIBCPP_USING_IF_EXISTS;
-using ::uint32_t _LIBCPP_USING_IF_EXISTS;
-using ::uint64_t _LIBCPP_USING_IF_EXISTS;
+using ::uint8_t;
+using ::uint16_t;
+using ::uint32_t;
+using ::uint64_t;
 
 using ::int_least8_t _LIBCPP_USING_IF_EXISTS;
 using ::int_least16_t _LIBCPP_USING_IF_EXISTS;
