@@ -46,6 +46,10 @@ void PrintNote(const Twine &Msg) {
   WithColor::note() << Msg << "\n";
 }
 
+void PrintNote(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintMsg(WithColor::note());
+}
+
 void PrintNote(ArrayRef<SMLoc> NoteLoc, const Twine &Msg) {
   PrintMessage(NoteLoc, SourceMgr::DK_Note, Msg);
 }
@@ -100,6 +104,10 @@ void PrintWarning(const char *Loc, const Twine &Msg) {
 
 void PrintError(const Twine &Msg) { WithColor::error() << Msg << "\n"; }
 
+void PrintError(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintMsg(WithColor::error());
+}
+
 void PrintError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg) {
   PrintMessage(ErrorLoc, SourceMgr::DK_Error, Msg);
 }
@@ -124,6 +132,13 @@ void PrintError(const RecordVal *RecVal, const Twine &Msg) {
 
 void PrintFatalError(const Twine &Msg) {
   PrintError(Msg);
+  // The following call runs the file cleanup handlers.
+  sys::RunInterruptHandlers();
+  std::exit(1);
+}
+
+void PrintFatalError(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintError(PrintMsg);
   // The following call runs the file cleanup handlers.
   sys::RunInterruptHandlers();
   std::exit(1);
