@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -fsyntax-only -verify %s -std=c++1z -triple=x86_64-linux-gnu
+// RUN: %clang_cc1 -fsyntax-only -verify %s -std=c++1z -triple=x86_64-linux-gnu -fexperimental-new-constant-interpreter
 
 template <typename U, typename V>
 struct S1 {
