@@ -20,10 +20,7 @@ mc_LIKE_TOOLS = [
 ERROR_RE = re.compile(r"(warning|error): .*")
 ERROR_CHECK_RE = re.compile(r"# COM: .*")
 OUTPUT_SKIPPED_RE = re.compile(r"(.text)")
-COMMENT = {
-        "asm" : "//",
-        "dasm" : "#"
-        }
+COMMENT = {"asm": "//", "dasm": "#"}
 
 
 def invoke_tool(exe, cmd_args, testline, verbose=False):
@@ -32,7 +29,7 @@ def invoke_tool(exe, cmd_args, testline, verbose=False):
     else:
         args = cmd_args
 
-    cmd = "echo \"" + testline + "\" | " + exe + " " + args
+    cmd = 'echo "' + testline + '" | ' + exe + " " + args
     if verbose:
         print("Command: ", cmd)
     out = subprocess.check_output(cmd, shell=True)
@@ -44,14 +41,15 @@ def invoke_tool(exe, cmd_args, testline, verbose=False):
 # and treat all others as tests
 def isTestLine(input_line, mc_mode):
     # Skip comment lines
-    if input_line.strip(' \t\r').startswith(COMMENT[mc_mode]):
+    if input_line.strip(" \t\r").startswith(COMMENT[mc_mode]):
         return False
-    elif input_line.strip(' \t\r') == '':
+    elif input_line.strip(" \t\r") == "":
         return False
     # skip any CHECK lines.
     elif common.CHECK_RE.match(input_line):
         return False
     return True
+
 
 def hasErr(err):
     if err is None or len(err) == 0:
@@ -60,11 +58,12 @@ def hasErr(err):
         return True
     return False
 
+
 def getErrString(err):
     if err is None or len(err) == 0:
         return ""
 
-    lines = err.split('\n')
+    lines = err.split("\n")
     # take the first match
     for line in lines:
         s = ERROR_RE.search(line)
@@ -72,40 +71,46 @@ def getErrString(err):
             return s.group(0)
     return ""
 
+
 def getOutputString(out):
     if out is None or len(out) == 0:
         return ""
-    lines = out.split('\n')
+    lines = out.split("\n")
     output = ""
 
     for line in lines:
         if OUTPUT_SKIPPED_RE.search(line):
             continue
-        if line.strip('\t ') == '':
+        if line.strip("\t ") == "":
             continue
-        output += line.lstrip('\t ')
+        output += line.lstrip("\t ")
     return output
+
 
 def should_add_line_to_output(input_line, prefix_set, mc_mode):
     # special check line
-    if mc_mode == 'dasm' and ERROR_CHECK_RE.search(input_line):
+    if mc_mode == "dasm" and ERROR_CHECK_RE.search(input_line):
         return False
     else:
-        return common.should_add_line_to_output(input_line, prefix_set, comment_marker=COMMENT[mc_mode])
+        return common.should_add_line_to_output(
+            input_line, prefix_set, comment_marker=COMMENT[mc_mode]
+        )
 
 
 def getStdCheckLine(prefix, output, mc_mode):
-    lines = output.split('\n')
+    lines = output.split("\n")
     output = ""
     for line in lines:
-        output += COMMENT[mc_mode] + ' ' + prefix + ": " + line + '\n'
+        output += COMMENT[mc_mode] + " " + prefix + ": " + line + "\n"
     return output
 
+
 def getErrCheckLine(prefix, output, mc_mode):
-    if mc_mode == 'asm':
-        return COMMENT[mc_mode] + ' ' + prefix + ": " + output + '\n'
-    elif mc_mode == 'dasm':
-        return COMMENT[mc_mode] + ' COM: ' + prefix + ": " + output + '\n'
+    if mc_mode == "asm":
+        return COMMENT[mc_mode] + " " + prefix + ": " + output + "\n"
+    elif mc_mode == "dasm":
+        return COMMENT[mc_mode] + " COM: " + prefix + ": " + output + "\n"
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -132,9 +137,9 @@ def main():
     for ti in common.itertests(
         initial_args.tests, parser, script_name="utils/" + script_name
     ):
-        if ti.path.endswith('.s'):
+        if ti.path.endswith(".s"):
             mc_mode = "asm"
-        elif ti.path.endswith('.txt'):
+        elif ti.path.endswith(".txt"):
             mc_mode = "dasm"
         else:
             common.warn("Expected .s and .txt, Skipping file : ", ti.path)
@@ -195,7 +200,6 @@ def main():
                     march_in_cmd,
                 )
             )
-        
 
         # find all test line from input
         testlines = [l for l in ti.input_lines if isTestLine(l, mc_mode)]
@@ -232,7 +236,7 @@ def main():
                 raw_output[-1].append(out)
 
             common.debug("Collect raw tool lines:", str(len(raw_output[-1])))
-            
+
             raw_prefixes.append(prefixes)
 
         output_lines = []
@@ -255,7 +259,7 @@ def main():
                     o = getErrString(out)
                 else:
                     o = getOutputString(out)
-                
+
                 prefixes = raw_prefixes[run_id]
 
                 for p in prefixes:
@@ -273,7 +277,9 @@ def main():
                             # conflict, discard
                             p_dict[p] = None, []
 
-            p_dict_sorted = dict(sorted(p_dict.items(), key=lambda item: -len(item[1][1])))
+            p_dict_sorted = dict(
+                sorted(p_dict.items(), key=lambda item: -len(item[1][1]))
+            )
 
             # prefix is selected and generated with most shared output lines
             # each run_id can only be used once
@@ -299,7 +305,7 @@ def main():
                     else:
                         gen_prefix += getStdCheckLine(prefix, o, mc_mode)
 
-            generated_prefixes.append(gen_prefix.rstrip('\n'))
+            generated_prefixes.append(gen_prefix.rstrip("\n"))
 
         # write output
         prefix_id = 0
