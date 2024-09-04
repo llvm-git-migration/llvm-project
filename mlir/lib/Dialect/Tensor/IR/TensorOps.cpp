@@ -4360,15 +4360,19 @@ Value UnPackOp::createDestinationTensor(OpBuilder &b, Location loc,
                                         Value source,
                                         ArrayRef<OpFoldResult> innerTileSizes,
                                         ArrayRef<int64_t> innerDimsPos,
-                                        ArrayRef<int64_t> outerDimsPerm) {
+                                        ArrayRef<int64_t> outerDimsPerm,
+                                        SmallVector<OpFoldResult> mixedSizes) {
+  auto srcType = llvm::cast<RankedTensorType>(source.getType());
+  auto elemType = srcType.getElementType();
+  if (!mixedSizes.empty()) {
+    return b.create<tensor::EmptyOp>(loc, mixedSizes, elemType);
+  }
+
   AffineExpr sym0, sym1;
   bindSymbols(b.getContext(), sym0, sym1);
   auto dimMul = [&](OpFoldResult v1, OpFoldResult v2) -> OpFoldResult {
     return affine::makeComposedFoldedAffineApply(b, loc, sym0 * sym1, {v1, v2});
   };
-
-  SmallVector<OpFoldResult> mixedSizes;
-  auto srcType = llvm::cast<RankedTensorType>(source.getType());
   for (auto i :
        llvm::seq<unsigned>(0, srcType.getRank() - innerTileSizes.size())) {
     if (srcType.isDynamicDim(i))
@@ -4384,7 +4388,6 @@ Value UnPackOp::createDestinationTensor(OpBuilder &b, Location loc,
   for (auto [dimPos, tileSize] : llvm::zip_equal(innerDimsPos, innerTileSizes))
     mixedSizes[dimPos] = dimMul(mixedSizes[dimPos], tileSize);
 
-  auto elemType = srcType.getElementType();
   return b.create<tensor::EmptyOp>(loc, mixedSizes, elemType);
 }
 

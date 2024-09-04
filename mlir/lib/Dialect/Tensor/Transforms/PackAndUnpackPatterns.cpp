@@ -439,6 +439,11 @@ struct FoldConsumerUnPackWithProducerLinalgTransposeOp
     if (failed(maybePerm))
       return failure();
 
+    SmallVector<SmallVector<OpFoldResult>> unpackOpResultDims;
+    if (failed(reifyResultShapes(rewriter, unPackOp, unpackOpResultDims))) {
+      return failure();
+    }
+
     SmallVector<int64_t> inverseTransposePerm =
         invertPermutationVector(maybePerm.value());
     auto outerDimsPerm = unPackOp.getOuterDimsPerm();
@@ -448,13 +453,13 @@ struct FoldConsumerUnPackWithProducerLinalgTransposeOp
     SmallVector<int64_t> newOuterDimsPermVec;
     SmallVector<int64_t> newInnerDimsPosVec;
     SmallVector<OpFoldResult> newMixedInnerTilesVec;
-
     if (!checkAndPermute(inverseTransposePerm, outerDimsPerm,
-                         newOuterDimsPermVec, destRank))
+                         newOuterDimsPermVec, destRank)) {
       return rewriter.notifyMatchFailure(
           unPackOp,
           "Cannot fold in tensor.unpack if a tile dimension was transposed "
           "with a non-tile dimension in linalg.transpose.");
+    }
 
     // Process transpose operation for tiled inner dimensions
     for (unsigned int i = destRank; i < inverseTransposePerm.size(); ++i) {
@@ -465,7 +470,8 @@ struct FoldConsumerUnPackWithProducerLinalgTransposeOp
 
     Value output = unPackOp.createDestinationTensor(
         rewriter, unPackOp.getLoc(), linalgOp->getOperand(0),
-        newMixedInnerTilesVec, newInnerDimsPosVec, newOuterDimsPermVec);
+        newMixedInnerTilesVec, newInnerDimsPosVec, newOuterDimsPermVec,
+        unpackOpResultDims[0]);
 
     rewriter.replaceOpWithNewOp<UnPackOp>(
         unPackOp, linalgOp->getOperand(0), output, newInnerDimsPosVec,
