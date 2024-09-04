@@ -12,7 +12,7 @@ define <3 x i32> @fptoui_v3f32_to_v3i32(<3 x float> %in, ptr %dst) {
 
 define <3 x i16> @fptoui_v3f32_to_v3i16(<3 x float> %in, ptr %dst) {
 ; CHECK-LABEL: 'fptoui_v3f32_to_v3i16'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %conv = fptoui <3 x float> %in to <3 x i16>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = fptoui <3 x float> %in to <3 x i16>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x i16> %conv
 ;
   %conv = fptoui <3 x float> %in to <3 x i16>
@@ -21,7 +21,7 @@ define <3 x i16> @fptoui_v3f32_to_v3i16(<3 x float> %in, ptr %dst) {
 
 define <3 x i8> @fptoui_v3f32_to_v3i8(<3 x float> %in, ptr %dst) {
 ; CHECK-LABEL: 'fptoui_v3f32_to_v3i8'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %conv = fptoui <3 x float> %in to <3 x i8>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = fptoui <3 x float> %in to <3 x i8>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x i8> %conv
 ;
   %conv = fptoui <3 x float> %in to <3 x i8>
@@ -39,7 +39,7 @@ define <3 x i32> @fptosi_v3f32_to_v3i32(<3 x float> %in, ptr %dst) {
 
 define <3 x i16> @fptosi_v3f32_to_v3i16(<3 x float> %in, ptr %dst) {
 ; CHECK-LABEL: 'fptosi_v3f32_to_v3i16'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %conv = fptosi <3 x float> %in to <3 x i16>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = fptosi <3 x float> %in to <3 x i16>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x i16> %conv
 ;
   %conv = fptosi <3 x float> %in to <3 x i16>
@@ -48,7 +48,7 @@ define <3 x i16> @fptosi_v3f32_to_v3i16(<3 x float> %in, ptr %dst) {
 
 define <3 x i8> @fptosi_v3f32_to_v3i8(<3 x float> %in, ptr %dst) {
 ; CHECK-LABEL: 'fptosi_v3f32_to_v3i8'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %conv = fptosi <3 x float> %in to <3 x i8>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = fptosi <3 x float> %in to <3 x i8>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x i8> %conv
 ;
   %conv = fptosi <3 x float> %in to <3 x i8>
@@ -66,7 +66,7 @@ define <3 x float> @uitofp_v3i32_to_v3f32(<3 x i32> %in, ptr %dst) {
 
 define <3 x float> @uitofp_v3i16_to_v3f32(<3 x i16> %in, ptr %dst) {
 ; CHECK-LABEL: 'uitofp_v3i16_to_v3f32'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %conv = uitofp <3 x i16> %in to <3 x float>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = uitofp <3 x i16> %in to <3 x float>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x float> %conv
 ;
   %conv = uitofp <3 x i16> %in to <3 x float>
@@ -75,7 +75,7 @@ define <3 x float> @uitofp_v3i16_to_v3f32(<3 x i16> %in, ptr %dst) {
 
 define <3 x float> @uitofp_v3i8_to_v3f32(<3 x i8> %in, ptr %dst) {
 ; CHECK-LABEL: 'uitofp_v3i8_to_v3f32'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %conv = uitofp <3 x i8> %in to <3 x float>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %conv = uitofp <3 x i8> %in to <3 x float>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x float> %conv
 ;
   %conv = uitofp <3 x i8> %in to <3 x float>
@@ -93,7 +93,7 @@ define <3 x float> @sitofp_v3i32_to_v3f32(<3 x i32> %in, ptr %dst) {
 
 define <3 x float> @sitofp_v3i16_to_v3f32(<3 x i16> %in, ptr %dst) {
 ; CHECK-LABEL: 'sitofp_v3i16_to_v3f32'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %conv = sitofp <3 x i16> %in to <3 x float>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %conv = sitofp <3 x i16> %in to <3 x float>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x float> %conv
 ;
   %conv = sitofp <3 x i16> %in to <3 x float>
@@ -102,7 +102,7 @@ define <3 x float> @sitofp_v3i16_to_v3f32(<3 x i16> %in, ptr %dst) {
 
 define <3 x float> @sitofp_v3i8_to_v3f32(<3 x i8> %in, ptr %dst) {
 ; CHECK-LABEL: 'sitofp_v3i8_to_v3f32'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %conv = sitofp <3 x i8> %in to <3 x float>
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %conv = sitofp <3 x i8> %in to <3 x float>
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <3 x float> %conv
 ;
   %conv = sitofp <3 x i8> %in to <3 x float>
