@@ -43,14 +43,14 @@ private:
   // Initialize class variables.
   void initialize(MachineFunction &MFParm);
 
-  void processAtomicInsts();
+  bool processAtomicInsts();
 
 public:
   // Main entry point for this pass.
   bool runOnMachineFunction(MachineFunction &MF) override {
     if (!skipFunction(MF.getFunction())) {
       initialize(MF);
-      processAtomicInsts();
+      return processAtomicInsts();
     }
     return false;
   }
@@ -152,22 +152,91 @@ static bool hasLiveDefs(const MachineInstr &MI, const TargetRegisterInfo *TRI) {
   return false;
 }
 
-void BPFMIPreEmitChecking::processAtomicInsts() {
-  for (MachineBasicBlock &MBB : *MF) {
-    for (MachineInstr &MI : MBB) {
-      if (MI.getOpcode() != BPF::XADDW && MI.getOpcode() != BPF::XADDD)
-        continue;
+bool BPFMIPreEmitChecking::processAtomicInsts() {
+  if (!MF->getSubtarget<BPFSubtarget>().getHasJmp32()) {
+    // Only check for cpu version 1 and 2.
+    for (MachineBasicBlock &MBB : *MF) {
+      for (MachineInstr &MI : MBB) {
+        if (MI.getOpcode() != BPF::XADDW && MI.getOpcode() != BPF::XADDD)
+          continue;
 
-      LLVM_DEBUG(MI.dump());
-      if (hasLiveDefs(MI, TRI)) {
-        DebugLoc Empty;
-        const DebugLoc &DL = MI.getDebugLoc();
-        const Function &F = MF->getFunction();
-        F.getContext().diagnose(DiagnosticInfoUnsupported{
-            F, "Invalid usage of the XADD return value", DL});
+        LLVM_DEBUG(MI.dump());
+        if (hasLiveDefs(MI, TRI)) {
+          DebugLoc Empty;
+          const DebugLoc &DL = MI.getDebugLoc();
+          const Function &F = MF->getFunction();
+          F.getContext().diagnose(DiagnosticInfoUnsupported{
+              F, "Invalid usage of the XADD return value", DL});
+        }
       }
     }
   }
+
+  // Check return values of atomic_fetch_and_{add,and,or,xor}.
+  // If the return is not used, the atomic_fetch_and_<op> instruction
+  // is replaced with atomic_<op> instruction.
+  MachineInstr *ToErase = nullptr;
+  bool Changed = false;
+  const BPFInstrInfo *TII = MF->getSubtarget<BPFSubtarget>().getInstrInfo();
+  for (MachineBasicBlock &MBB : *MF) {
+    for (MachineInstr &MI : MBB) {
+      if (ToErase) {
+        ToErase->eraseFromParent();
+        ToErase = nullptr;
+      }
+
+      if (MI.getOpcode() != BPF::XADDW32 && MI.getOpcode() != BPF::XADDD &&
+          MI.getOpcode() != BPF::XANDW32 && MI.getOpcode() != BPF::XANDD &&
+          MI.getOpcode() != BPF::XXORW32 && MI.getOpcode() != BPF::XXORD &&
+          MI.getOpcode() != BPF::XORW32 && MI.getOpcode() != BPF::XORD)
+        continue;
+
+      if (!hasLiveDefs(MI, TRI))
+        continue;
+
+      LLVM_DEBUG(dbgs() << "Transforming "; MI.dump());
+      unsigned newOpcode;
+      switch (MI.getOpcode()) {
+      case BPF::XADDW32:
+        newOpcode = BPF::XFADDW32;
+        break;
+      case BPF::XADDD:
+        newOpcode = BPF::XFADDD;
+        break;
+      case BPF::XANDW32:
+        newOpcode = BPF::XFANDW32;
+        break;
+      case BPF::XANDD:
+        newOpcode = BPF::XFANDD;
+        break;
+      case BPF::XXORW32:
+        newOpcode = BPF::XFXORW32;
+        break;
+      case BPF::XXORD:
+        newOpcode = BPF::XFXORD;
+        break;
+      case BPF::XORW32:
+        newOpcode = BPF::XFORW32;
+        break;
+      case BPF::XORD:
+        newOpcode = BPF::XFORD;
+        break;
+      default:
+        llvm_unreachable("Incorrect Atomic Instruction Opcode");
+      }
+
+      BuildMI(MBB, MI, MI.getDebugLoc(), TII->get(newOpcode))
+          .add(MI.getOperand(0))
+          .add(MI.getOperand(1))
+          .add(MI.getOperand(2))
+          .add(MI.getOperand(3));
+
+      ToErase = &MI;
+      Changed = true;
+    }
+  }
+
+  return Changed;
 }
 
 } // namespace
