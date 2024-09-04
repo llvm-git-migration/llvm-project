@@ -22219,11 +22219,11 @@ static SDValue performExtendCombine(SDNode *N,
   // ...)), which is what this pattern would otherwise be lowered to.
   if (N->getOpcode() == ISD::ANY_EXTEND &&
       N->getOperand(0).getOpcode() == ISD::BSWAP &&
-      N->getOperand(0).getValueType().isScalarInteger() &&
-      N->getOperand(0).getValueType().getFixedSizeInBits() == 16) {
+      N->getOperand(0).getValueType() == MVT::i16) {
     SDNode *BswapNode = N->getOperand(0).getNode();
-    SDValue NewAnyExtend = DAG.getNode(ISD::ANY_EXTEND, SDLoc(BswapNode),
-                                       EVT(MVT::i32), BswapNode->getOperand(0));
+    SDValue NewAnyExtend =
+        DAG.getNode(ISD::ANY_EXTEND, SDLoc(BswapNode), N->getValueType(0),
+                    BswapNode->getOperand(0));
     return DAG.getNode(AArch64ISD::REV16, SDLoc(N), N->getValueType(0),
                        NewAnyExtend);
   }
