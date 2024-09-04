@@ -40,10 +40,20 @@ static void PrintMessage(ArrayRef<SMLoc> Loc, SourceMgr::DiagKind Kind,
                         "instantiated from multiclass");
 }
 
+[[noreturn]] inline static void exit() {
+  // The following call runs the file cleanup handlers.
+  sys::RunInterruptHandlers();
+  std::exit(1);
+}
+
 // Functions to print notes.
 
 void PrintNote(const Twine &Msg) {
   WithColor::note() << Msg << "\n";
+}
+
+void PrintNote(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintMsg(WithColor::note());
 }
 
 void PrintNote(ArrayRef<SMLoc> NoteLoc, const Twine &Msg) {
@@ -54,34 +64,26 @@ void PrintNote(ArrayRef<SMLoc> NoteLoc, const Twine &Msg) {
 
 void PrintFatalNote(const Twine &Msg) {
   PrintNote(Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 void PrintFatalNote(ArrayRef<SMLoc> NoteLoc, const Twine &Msg) {
   PrintNote(NoteLoc, Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // This method takes a Record and uses the source location
 // stored in it.
 void PrintFatalNote(const Record *Rec, const Twine &Msg) {
   PrintNote(Rec->getLoc(), Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // This method takes a RecordVal and uses the source location
 // stored in it.
 void PrintFatalNote(const RecordVal *RecVal, const Twine &Msg) {
   PrintNote(RecVal->getLoc(), Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // Functions to print warnings.
@@ -99,6 +101,10 @@ void PrintWarning(const char *Loc, const Twine &Msg) {
 // Functions to print errors.
 
 void PrintError(const Twine &Msg) { WithColor::error() << Msg << "\n"; }
+
+void PrintError(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintMsg(WithColor::error());
+}
 
 void PrintError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg) {
   PrintMessage(ErrorLoc, SourceMgr::DK_Error, Msg);
@@ -124,34 +130,31 @@ void PrintError(const RecordVal *RecVal, const Twine &Msg) {
 
 void PrintFatalError(const Twine &Msg) {
   PrintError(Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
+}
+
+void PrintFatalError(function_ref<void(raw_ostream &OS)> PrintMsg) {
+  PrintError(PrintMsg);
+  exit();
 }
 
 void PrintFatalError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg) {
   PrintError(ErrorLoc, Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // This method takes a Record and uses the source location
 // stored in it.
 void PrintFatalError(const Record *Rec, const Twine &Msg) {
   PrintError(Rec->getLoc(), Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // This method takes a RecordVal and uses the source location
 // stored in it.
 void PrintFatalError(const RecordVal *RecVal, const Twine &Msg) {
   PrintError(RecVal->getLoc(), Msg);
-  // The following call runs the file cleanup handlers.
-  sys::RunInterruptHandlers();
-  std::exit(1);
+  exit();
 }
 
 // Check an assertion: Obtain the condition value and be sure it is true.
