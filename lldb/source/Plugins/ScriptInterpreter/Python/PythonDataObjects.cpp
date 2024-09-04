@@ -973,6 +973,9 @@ PythonException::PythonException(const char *caller) {
         PyErr_Clear();
       }
       Py_XDECREF(repr);
+      Py_INCREF(m_exception);
+      if (m_traceback)
+        Py_INCREF(m_traceback);
     } else {
       PyErr_Clear();
     }
@@ -993,8 +996,8 @@ void PythonException::Restore() {
 }
 
 PythonException::~PythonException() {
-  Py_XDECREF(m_exception_type);
   Py_XDECREF(m_exception);
+  Py_XDECREF(m_exception_type);
   Py_XDECREF(m_traceback);
   Py_XDECREF(m_repr_bytes);
 }
