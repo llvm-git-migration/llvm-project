@@ -84,6 +84,7 @@ class NullabilityChecker
                      check::PostCall, check::PostStmt<ExplicitCastExpr>,
                      check::PostObjCMessage, check::DeadSymbols, eval::Assume,
                      check::Location, check::Event<ImplicitNullDerefEvent>,
+                     /*EventDispatcher<ImplicitNullDerefEvent>,*/
                      check::BeginFunction> {
 
 public:
