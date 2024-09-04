@@ -53,18 +53,6 @@ bool SCCPSolver::isOverdefined(const ValueLatticeElement &LV) {
   return !LV.isUnknownOrUndef() && !SCCPSolver::isConstant(LV);
 }
 
-static bool canRemoveInstruction(Instruction *I) {
-  if (wouldInstructionBeTriviallyDead(I))
-    return true;
-
-  // Some instructions can be handled but are rejected above. Catch
-  // those cases by falling through to here.
-  // TODO: Mark globals as being constant earlier, so
-  // TODO: wouldInstructionBeTriviallyDead() knows that atomic loads
-  // TODO: are safe to remove.
-  return isa<LoadInst>(I);
-}
-
 bool SCCPSolver::tryToReplaceWithConstant(Value *V) {
   Constant *Const = getConstantOrNull(V);
   if (!Const)
@@ -75,7 +63,7 @@ bool SCCPSolver::tryToReplaceWithConstant(Value *V) {
   // those uses cannot be updated with a constant.
   CallBase *CB = dyn_cast<CallBase>(V);
   if (CB && ((CB->isMustTailCall() &&
-              !canRemoveInstruction(CB)) ||
+              !wouldInstructionBeTriviallyDead(CB)) ||
              CB->getOperandBundle(LLVMContext::OB_clang_arc_attachedcall))) {
     Function *F = CB->getCalledFunction();
 
@@ -92,6 +80,7 @@ bool SCCPSolver::tryToReplaceWithConstant(Value *V) {
 
   // Replaces all of the uses of a variable with uses of the constant.
   V->replaceAllUsesWith(Const);
+
   return true;
 }
 
@@ -243,7 +232,7 @@ bool SCCPSolver::simplifyInstsInBlock(BasicBlock &BB,
     if (Inst.getType()->isVoidTy())
       continue;
     if (tryToReplaceWithConstant(&Inst)) {
-      if (canRemoveInstruction(&Inst))
+      if (wouldInstructionBeTriviallyDead(&Inst))
         Inst.eraseFromParent();
 
       MadeChanges = true;
@@ -1943,6 +1932,17 @@ void SCCPInstVisitor::solve() {
       // Notify all instructions in this basic block that they are newly
       // executable.
       visit(BB);
+    }
+  }
+
+  // If GlobalVariable is the constant, set it constant.
+  for (const auto &I : getTrackedGlobals()) {
+    const ValueLatticeElement &LV = I.second;
+    if (SCCPSolver::isOverdefined(LV))
+      continue;
+    if (SCCPSolver::isConstant(LV)) {
+      GlobalVariable *GV = I.first;
+      GV->setConstant(true);
     }
   }
 }
