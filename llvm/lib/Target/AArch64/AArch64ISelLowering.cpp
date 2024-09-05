@@ -22217,6 +22217,9 @@ static SDValue performExtendCombine(SDNode *N,
   // any_extend. This means that we can replace this pattern with (rev16
   // (any_extend ...)). This saves a machine instruction compared to (lsr (rev
   // ...)), which is what this pattern would otherwise be lowered to.
+  // Only apply this optimisation if any_extend in original pattern to i32 or i64,
+  // because this type will become the input type to REV16 in the new pattern, so
+  // must be a legitimate REV16 input type. 
   if (N->getOpcode() == ISD::ANY_EXTEND &&
       N->getOperand(0).getOpcode() == ISD::BSWAP &&
       N->getOperand(0).getValueType() == MVT::i16 &&
