@@ -64,14 +64,16 @@ static lto::Config createConfig() {
   c.Options.BBAddrMap = config->ltoBBAddrMap;
 
   // Check if basic block sections must be used.
-  // Allowed values for --lto-basic-block-sections are "all", "labels",
+  // Allowed values for --lto-basic-block-sections are "all",
   // "<file name specifying basic block ids>", or none.  This is the equivalent
   // of -fbasic-block-sections= flag in clang.
   if (!config->ltoBasicBlockSections.empty()) {
     if (config->ltoBasicBlockSections == "all") {
       c.Options.BBSections = BasicBlockSection::All;
     } else if (config->ltoBasicBlockSections == "labels") {
-      c.Options.BBSections = BasicBlockSection::Labels;
+      c.Options.BBAddrMap = true;
+      warn("'--lto-basic-block-sections=labels' is deprecated. Please use "
+           "'-fbasic-block-address-map' instead.");
     } else if (config->ltoBasicBlockSections == "none") {
       c.Options.BBSections = BasicBlockSection::None;
     } else {
