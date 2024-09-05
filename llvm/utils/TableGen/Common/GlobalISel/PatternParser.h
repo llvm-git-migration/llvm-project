@@ -26,6 +26,8 @@ class Init;
 class Record;
 class StringRef;
 class StringInit;
+class CodeGenIntrinsicMap;
+struct CodeGenIntrinsic;
 
 namespace gi {
 class InstructionPattern;
@@ -38,12 +40,14 @@ class PatFrag;
 class PatternParser {
   const CodeGenTarget &CGT;
   ArrayRef<SMLoc> DiagLoc;
+  CodeGenIntrinsicMap &Intrinsics;
 
   mutable SmallPtrSet<const PatFrag *, 2> SeenPatFrags;
 
 public:
-  PatternParser(const CodeGenTarget &CGT, ArrayRef<SMLoc> DiagLoc)
-      : CGT(CGT), DiagLoc(DiagLoc) {}
+  PatternParser(const CodeGenTarget &CGT, ArrayRef<SMLoc> DiagLoc,
+                CodeGenIntrinsicMap &Intrinsics)
+      : CGT(CGT), DiagLoc(DiagLoc), Intrinsics(Intrinsics) {}
 
   /// Parses a list of patterns such as:
   ///   (Operator (Pattern1 ...), (Pattern2 ...))
@@ -110,6 +114,11 @@ private:
   /// \param Def PatFrag def to parsee.
   /// \return the parsed PatFrag on success, nullptr on failure.
   const PatFrag *parsePatFrag(const Record *Def);
+
+  /// Cached `CodeGenIntrinsics` objects.
+  /// \param Def The definition Record for the intrinsic.
+  /// \return Pointer to a `CodeGenIntrinsic` for that intrinsic.
+  const CodeGenIntrinsic *getCodeGenIntrinsic(const Record *Def);
 };
 
 } // namespace gi

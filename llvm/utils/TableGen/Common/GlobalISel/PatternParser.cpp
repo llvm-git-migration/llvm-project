@@ -104,15 +104,6 @@ getInstrForIntrinsic(const CodeGenTarget &CGT, const CodeGenIntrinsic *I) {
   return CGT.getInstruction(RK.getDef(Opc));
 }
 
-static const CodeGenIntrinsic *getCodeGenIntrinsic(Record *R) {
-  // Intrinsics need to have a static lifetime because the match table keeps
-  // references to CodeGenIntrinsic objects.
-  static CodeGenIntrinsicMap *AllIntrinsics;
-  if (!AllIntrinsics)
-    AllIntrinsics = new CodeGenIntrinsicMap(R->getRecords());
-  return &(*AllIntrinsics)[R];
-}
-
 std::unique_ptr<Pattern>
 PatternParser::parseInstructionPattern(const Init &Arg, StringRef Name) {
   const DagInit *DagPat = dyn_cast<DagInit>(&Arg);
@@ -453,6 +444,10 @@ const PatFrag *PatternParser::parsePatFrag(const Record *Def) {
   ParsedPatFrags[Def] = std::move(NewPatFrag);
   SeenPatFrags.insert(Res);
   return Res;
+}
+
+const CodeGenIntrinsic *PatternParser::getCodeGenIntrinsic(const Record *Def) {
+  return &Intrinsics[Def];
 }
 
 } // namespace gi

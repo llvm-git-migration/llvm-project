@@ -637,8 +637,9 @@ public:
   CombineRuleBuilder(const CodeGenTarget &CGT,
                      SubtargetFeatureInfoMap &SubtargetFeatures,
                      Record &RuleDef, unsigned ID,
-                     std::vector<RuleMatcher> &OutRMs)
-      : Parser(CGT, RuleDef.getLoc()), CGT(CGT),
+                     std::vector<RuleMatcher> &OutRMs,
+                     CodeGenIntrinsicMap &Intrinsics)
+      : Parser(CGT, RuleDef.getLoc(), Intrinsics), CGT(CGT),
         SubtargetFeatures(SubtargetFeatures), RuleDef(RuleDef), RuleID(ID),
         OutRMs(OutRMs) {}
 
@@ -2369,6 +2370,7 @@ class GICombinerEmitter final : public GlobalISelMatchTableExecutorEmitter {
   StringRef Name;
   const CodeGenTarget &Target;
   Record *Combiner;
+  CodeGenIntrinsicMap &Intrinsics;
   unsigned NextRuleID = 0;
 
   // List all combine rules (ID, name) imported.
@@ -2412,7 +2414,8 @@ class GICombinerEmitter final : public GlobalISelMatchTableExecutorEmitter {
 
 public:
   explicit GICombinerEmitter(RecordKeeper &RK, const CodeGenTarget &Target,
-                             StringRef Name, Record *Combiner);
+                             StringRef Name, Record *Combiner,
+                             CodeGenIntrinsicMap &Intrinsics);
   ~GICombinerEmitter() {}
 
   void run(raw_ostream &OS);
@@ -2635,8 +2638,10 @@ void GICombinerEmitter::emitRunCustomAction(raw_ostream &OS) {
 
 GICombinerEmitter::GICombinerEmitter(RecordKeeper &RK,
                                      const CodeGenTarget &Target,
-                                     StringRef Name, Record *Combiner)
-    : Records(RK), Name(Name), Target(Target), Combiner(Combiner) {}
+                                     StringRef Name, Record *Combiner,
+                                     CodeGenIntrinsicMap &Intrinsics)
+    : Records(RK), Name(Name), Target(Target), Combiner(Combiner),
+      Intrinsics(Intrinsics) {}
 
 MatchTable
 GICombinerEmitter::buildMatchTable(MutableArrayRef<RuleMatcher> Rules) {
@@ -2699,7 +2704,7 @@ void GICombinerEmitter::gatherRules(
 
     AllCombineRules.emplace_back(NextRuleID, Rec->getName().str());
     CombineRuleBuilder CRB(Target, SubtargetFeatures, *Rec, NextRuleID++,
-                           ActiveRules);
+                           ActiveRules, Intrinsics);
 
     if (!CRB.parseAll()) {
       assert(ErrorsPrinted && "Parsing failed without errors!");
@@ -2802,13 +2807,15 @@ static void EmitGICombiner(RecordKeeper &RK, raw_ostream &OS) {
   EnablePrettyStackTrace();
   CodeGenTarget Target(RK);
 
+  CodeGenIntrinsicMap Intrinsics(RK);
+
   if (SelectedCombiners.empty())
     PrintFatalError("No combiners selected with -combiners");
   for (const auto &Combiner : SelectedCombiners) {
     Record *CombinerDef = RK.getDef(Combiner);
     if (!CombinerDef)
       PrintFatalError("Could not find " + Combiner);
-    GICombinerEmitter(RK, Target, Combiner, CombinerDef).run(OS);
+    GICombinerEmitter(RK, Target, Combiner, CombinerDef, Intrinsics).run(OS);
   }
 }
 
