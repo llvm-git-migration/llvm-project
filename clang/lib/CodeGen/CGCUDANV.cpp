@@ -840,10 +840,10 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
       FatBinStr = new llvm::GlobalVariable(
           CGM.getModule(), CGM.Int8Ty,
           /*isConstant=*/true, llvm::GlobalValue::ExternalLinkage, nullptr,
-          "__hip_fatbin" +
-	    (CGM.getLangOpts().CUID.empty() ? ""
-	      : "_" + CGM.getContext().getCUIDHash()),
-	  nullptr, llvm::GlobalVariable::NotThreadLocal);
+          "__hip_fatbin" + (CGM.getLangOpts().CUID.empty()
+                                ? ""
+                                : "_" + CGM.getContext().getCUIDHash()),
+          nullptr, llvm::GlobalVariable::NotThreadLocal);
       cast<llvm::GlobalVariable>(FatBinStr)->setSection(FatbinConstantName);
     }
 
