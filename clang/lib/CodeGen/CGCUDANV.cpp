@@ -840,10 +840,10 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
       FatBinStr = new llvm::GlobalVariable(
           CGM.getModule(), CGM.Int8Ty,
           /*isConstant=*/true, llvm::GlobalValue::ExternalLinkage, nullptr,
-          "__hip_fatbin" +
-	    (CGM.getLangOpts().CUID.empty() ? ""
-	      : "_" + CGM.getContext().getCUIDHash()),
-	  nullptr, llvm::GlobalVariable::NotThreadLocal);
+          "__hip_fatbin" + (CGM.getLangOpts().CUID.empty()
+                                ? ""
+                                : "_" + CGM.getContext().getCUIDHash()),
+          nullptr, llvm::GlobalVariable::NotThreadLocal);
       cast<llvm::GlobalVariable>(FatBinStr)->setSection(FatbinConstantName);
     }
 
@@ -906,7 +906,10 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
     GpuBinaryHandle = new llvm::GlobalVariable(
         TheModule, PtrTy, /*isConstant=*/false, Linkage,
         /*Initializer=*/
-        llvm::ConstantPointerNull::get(PtrTy), "__hip_gpubin_handle");
+        CudaGpuBinary ? llvm::ConstantPointerNull::get(PtrTy) : nullptr,
+        CudaGpuBinary
+            ? "__hip_gpubin_handle"
+            : "__hip_gpubin_handle_" + CGM.getContext().getCUIDHash());
     GpuBinaryHandle->setAlignment(CGM.getPointerAlign().getAsAlign());
     // Prevent the weak symbol in different shared libraries being merged.
     if (Linkage != llvm::GlobalValue::InternalLinkage)
