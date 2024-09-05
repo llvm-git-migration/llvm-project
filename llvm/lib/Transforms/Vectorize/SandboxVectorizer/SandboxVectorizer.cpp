@@ -14,10 +14,6 @@ using namespace llvm;
 #define SV_NAME "sandbox-vectorizer"
 #define DEBUG_TYPE "SBVec"
 
-cl::opt<bool>
-    SBVecDisable("sbvec-disable", cl::init(false), cl::Hidden,
-                 cl::desc("Disable the Sandbox Vectorization passes"));
-
 PreservedAnalyses SandboxVectorizerPass::run(Function &F,
                                              FunctionAnalysisManager &AM) {
   TTI = &AM.getResult<TargetIRAnalysis>(F);
@@ -32,27 +28,10 @@ PreservedAnalyses SandboxVectorizerPass::run(Function &F,
 }
 
 bool SandboxVectorizerPass::runImpl(Function &F) {
-  if (SBVecDisable)
-    return false;
-
-  // If the target claims to have no vector registers don't attempt
-  // vectorization.
-  if (!TTI->getNumberOfRegisters(TTI->getRegisterClassForType(true))) {
-    LLVM_DEBUG(dbgs() << "SBVec: Target has no vector registers, abort.\n");
-    return false;
-  }
-
-  // Don't vectorize when the attribute NoImplicitFloat is used.
-  if (F.hasFnAttribute(Attribute::NoImplicitFloat))
-    return false;
-
+  LLVM_DEBUG(dbgs() << "SBVec: Analyzing " << F.getName() << ".\n");
   sandboxir::Context Ctx(F.getContext());
-
-  LLVM_DEBUG(dbgs() << "SBVec: Analyzing blocks in " << F.getName() << ".\n");
-
   // Create SandboxIR for `F`.
   sandboxir::Function &SBF = *Ctx.createFunction(&F);
-
   // TODO: Initialize SBVec Pass Manager
   (void)SBF;
 
