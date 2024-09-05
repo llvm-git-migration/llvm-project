@@ -297,11 +297,14 @@ void Parser::ParseGNUAttributes(ParsedAttributes &Attrs,
         FindLocsWithCommonFileID(PP, AttrTokLoc, Loc)) {
       CharSourceRange ExpansionRange = SM.getExpansionRange(AttrTokLoc);
       StringRef FoundName =
-          Lexer::getSourceText(ExpansionRange, SM, PP.getLangOpts());
+          Lexer::getSourceText(ExpansionRange, SM, PP.getLangOpts())
+              .split('(')
+              .first;
       IdentifierInfo *MacroII = PP.getIdentifierInfo(FoundName);
 
       for (unsigned i = OldNumAttrs; i < Attrs.size(); ++i)
-        Attrs[i].setMacroIdentifier(MacroII, ExpansionRange.getBegin());
+        Attrs[i].setMacroIdentifier(MacroII, ExpansionRange.getBegin(),
+                                    SM.isInSystemMacro(AttrTokLoc));
 
       if (LateAttrs) {
         for (unsigned i = OldNumLateAttrs; i < LateAttrs->size(); ++i)
@@ -5054,6 +5057,17 @@ void Parser::ParseLexedCAttribute(LateParsedAttribute &LA, bool EnterScope,
   // Dispatch based on the attribute and parse it
   ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, nullptr, nullptr,
                         SourceLocation(), ParsedAttr::Form::GNU(), nullptr);
+
+  const auto &SM = PP.getSourceManager();
+  CharSourceRange ExpansionRange = SM.getExpansionRange(LA.AttrNameLoc);
+  StringRef FoundName =
+      Lexer::getSourceText(ExpansionRange, SM, PP.getLangOpts())
+          .split('(')
+          .first;
+  IdentifierInfo *MacroII = PP.getIdentifierInfo(FoundName);
+  for (unsigned i = 0; i < Attrs.size(); ++i)
+    Attrs[i].setMacroIdentifier(MacroII, ExpansionRange.getBegin(),
+                                SM.isInSystemMacro(LA.AttrNameLoc));
 
   for (auto *D : LA.Decls)
     Actions.ActOnFinishDelayedAttribute(getCurScope(), D, Attrs);
