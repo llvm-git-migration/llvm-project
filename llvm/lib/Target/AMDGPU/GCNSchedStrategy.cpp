@@ -190,7 +190,7 @@ static void getRegisterPressures(
     Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
         TempUpwardTracker.getPressure().getArchVGPRNum();
     Pressure[AMDGPU::RegisterPressureSets::AGPR_32] =
-        TempDownwardTracker.getPressure().getAGPRNum();
+        TempUpwardTracker.getPressure().getAGPRNum();
   }
 }
 
