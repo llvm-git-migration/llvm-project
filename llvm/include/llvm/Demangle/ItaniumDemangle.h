@@ -5737,6 +5737,7 @@ Node *AbstractManglingParser<Derived, Alloc>::parseTemplateParamDecl(
   }
 
   if (consumeIf("Tk")) {
+    ScopedOverride<bool> SaveInConstraintExpr(InConstraintExpr, true);
     Node *Constraint = getDerived().parseName();
     if (!Constraint)
       return nullptr;
