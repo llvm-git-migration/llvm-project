@@ -1017,6 +1017,11 @@ PassBuilder::buildModuleInlinerPipeline(OptimizationLevel Level,
   IP.EnableDeferral = false;
 
   MPM.addPass(ModuleInlinerPass(IP, UseInlineAdvisor, Phase));
+  if (!UseCtxProfile.empty()) {
+    MPM.addPass(GlobalOptPass());
+    MPM.addPass(GlobalDCEPass());
+    MPM.addPass(PGOCtxProfFlatteningPass());
+  }
 
   MPM.addPass(createModuleToFunctionPassAdaptor(
       buildFunctionSimplificationPipeline(Level, Phase),
@@ -1744,11 +1749,14 @@ ModulePassManager PassBuilder::buildThinLTODefaultPipeline(
     MPM.addPass(GlobalDCEPass());
     return MPM;
   }
-
-  // Add the core simplification pipeline.
-  MPM.addPass(buildModuleSimplificationPipeline(
-      Level, ThinOrFullLTOPhase::ThinLTOPostLink));
-
+  if (!UseCtxProfile.empty()) {
+    MPM.addPass(
+        buildModuleInlinerPipeline(Level, ThinOrFullLTOPhase::ThinLTOPostLink));
+  } else {
+    // Add the core simplification pipeline.
+    MPM.addPass(buildModuleSimplificationPipeline(
+        Level, ThinOrFullLTOPhase::ThinLTOPostLink));
+  }
   // Now add the optimization pipeline.
   MPM.addPass(buildModuleOptimizationPipeline(
       Level, ThinOrFullLTOPhase::ThinLTOPostLink));
