@@ -43,7 +43,7 @@ for header in public_headers:
 """)
 
 print(f"""\
-//--- __std_clang_module.compile.pass.mm
+//--- import_std.compile.pass.mm
 // RUN: %{{cxx}} %s %{{flags}} %{{compile_flags}} -fmodules -fcxx-modules -fmodules-cache-path=%t -fsyntax-only
 
 // REQUIRES: clang-modules-build
