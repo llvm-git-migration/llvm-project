@@ -3,7 +3,9 @@
 ; RUN: llc -mtriple=aarch64 -global-isel %s -o - | FileCheck %s --check-prefixes=CHECK,CHECK-GI
 
 ; ====== Scalar Tests =====
-define i16 @bswap_i16_to_i16(i16 %a){
+
+; ====== Scalar bswap.i16 Tests =====
+define i16 @bswap_i16_to_i16_anyext(i16 %a){
 ; CHECK-SD-LABEL: bswap_i16_to_i16:
 ; CHECK-SD:       // %bb.0:
 ; CHECK-SD-NEXT:    rev16 w0, w0
@@ -19,7 +21,23 @@ define i16 @bswap_i16_to_i16(i16 %a){
 }
 declare i16 @llvm.bswap.i16(i16)
 
-define i32 @bswap_i16_to_i32(i16 %a){
+; The zext here is optimised to an any_extend during isel.
+define i64 @bswap_i16_to_i64_anyext(i16 %a) {
+    %3 = call i16 @llvm.bswap.i16(i16 %a)
+    %4 = zext i16 %3 to i64
+    %5 = shl i64 %5, 48
+    ret i64 %5
+}
+
+; The zext here is optimised to an any_extend during isel..
+define i128 @bswap_i16_to_i128_anyext(i16 %a) {
+    %3 = call i16 @llvm.bswap.i16(i16 %a)
+    %4 = zext i16 %3 to i128
+    %5 = shl i128 %4, 112
+    ret i128 %d
+}
+
+define i32 @bswap_i16_to_i32_zext(i16 %a){
 ; CHECK-LABEL: bswap_i16_to_i32:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    rev w8, w0
@@ -30,6 +48,7 @@ define i32 @bswap_i16_to_i32(i16 %a){
   ret i32 %4
 }
 
+; ====== Other scalar bswap tests =====
 define i32 @bswap_i32(i32 %a){
 ; CHECK-LABEL: bswap_i32:
 ; CHECK:       // %bb.0:
