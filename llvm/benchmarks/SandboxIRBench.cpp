@@ -89,6 +89,32 @@ static std::string generateBBWalkIR(unsigned Size) {
   return SS.str();
 }
 
+template <IR IRTy> static void SBoxIRCreation(benchmark::State &State) {
+  static_assert(IRTy != IR::LLVM, "Expected SBox and SBoxTr");
+  LLVMContext LLVMCtx;
+  unsigned NumInstrs = State.range(0);
+  std::unique_ptr<llvm::Module> LLVMM;
+  std::string IRStr = generateBBWalkIR(NumInstrs);
+  LLVMM = parseIR(LLVMCtx, IRStr.c_str());
+  llvm::Function *LLVMF = &*LLVMM->getFunction("foo");
+  llvm::BasicBlock *LLVMBB = &*LLVMF->begin();
+
+  for (auto _ : State) {
+    State.PauseTiming();
+    sandboxir::Context Ctx(LLVMCtx);
+    if constexpr (IRTy == IR::SBoxTr)
+      Ctx.save();
+    State.ResumeTiming();
+
+    sandboxir::Function *F = Ctx.createFunction(LLVMF);
+    benchmark::DoNotOptimize(F);
+    State.PauseTiming();
+    if constexpr (IRTy == IR::SBoxTr)
+      Ctx.accept();
+    State.ResumeTiming();
+  }
+}
+
 template <IR IRTy> static void BBWalk(benchmark::State &State) {
   LLVMContext LLVMCtx;
   sandboxir::Context Ctx(LLVMCtx);
@@ -188,6 +214,10 @@ template <IR IRTy> static void RUOW(benchmark::State &State) {
     Call->replaceUsesOfWith(Arg0, Arg1);
   finalize<IRTy>(Ctx);
 }
+
+// Measure the time it takes to create Sandbox IR without/with tracking.
+BENCHMARK(SBoxIRCreation<IR::SBox>)->Args({10})->Args({100})->Args({1000});
+BENCHMARK(SBoxIRCreation<IR::SBoxTr>)->Args({10})->Args({100})->Args({1000});
 
 BENCHMARK(GetType<IR::LLVM>);
 BENCHMARK(GetType<IR::SBoxNoTracking>);
