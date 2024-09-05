@@ -14,6 +14,7 @@
 #include "Clauses.h"
 
 #include "flang/Lower/PFTBuilder.h"
+#include "flang/Lower/SymbolMap.h"
 #include "flang/Parser/tools.h"
 #include "flang/Semantics/tools.h"
 #include "llvm/Frontend/OpenMP/OMPIRBuilder.h"
@@ -619,9 +620,28 @@ bool ClauseProcessor::processCopyin() const {
               checkAndCopyHostAssociateVar(&*mem, &insPt);
             break;
           }
-          if (semantics::IsAllocatableOrObjectPointer(&sym->GetUltimate()))
-            TODO(converter.getCurrentLocation(),
-                 "pointer or allocatable variables in Copyin clause");
+          if (semantics::IsAllocatable(sym->GetUltimate())) {
+            // copyin should copy the association of the allocatable
+
+            fir::FirOpBuilder &builder = converter.getFirOpBuilder();
+            const Fortran::semantics::Symbol &hsym = sym->GetUltimate();
+
+            Fortran::lower::SymbolBox hsb =
+                converter.lookupOneLevelUpSymbol(hsym);
+            assert(hsb && "Host symbol box not found");
+
+            Fortran::lower::SymbolBox sb = converter.shallowLookupSymbol(*sym);
+            assert(sb && "Host-associated symbol box not found");
+            assert(hsb.getAddr() != sb.getAddr() &&
+                   "Host and associated symbol boxes are the same");
+
+            mlir::Location loc = converter.genLocation(sym->name());
+            mlir::OpBuilder::InsertionGuard ipGuard{builder};
+            builder.setInsertionPointAfter(sb.getAddr().getDefiningOp());
+            builder.create<hlfir::AssignOp>(loc, hsb.getAddr(), sb.getAddr(),
+                                            true, false, false);
+          }
+
           assert(sym->has<semantics::HostAssocDetails>() &&
                  "No host-association found");
           checkAndCopyHostAssociateVar(sym);

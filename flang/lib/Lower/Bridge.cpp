@@ -1175,7 +1175,7 @@ private:
 
   /// Find the symbol in the inner-most level of the local map or return null.
   Fortran::lower::SymbolBox
-  shallowLookupSymbol(const Fortran::semantics::Symbol &sym) {
+  shallowLookupSymbol(const Fortran::semantics::Symbol &sym) override {
     if (Fortran::lower::SymbolBox v = localSymbols.shallowLookupSymbol(sym))
       return v;
     return {};
