@@ -15,6 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/CodeGen/MachineLICM.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
@@ -117,7 +118,7 @@ STATISTIC(NumNotHoistedDueToHotness,
 namespace {
   enum HoistResult { NotHoisted = 1, Hoisted = 2, ErasedMI = 4 };
 
-  class MachineLICMBase : public MachineFunctionPass {
+  class MachineLICMBase {
     const TargetInstrInfo *TII = nullptr;
     const TargetLoweringBase *TLI = nullptr;
     const TargetRegisterInfo *TRI = nullptr;
@@ -126,6 +127,8 @@ namespace {
     TargetSchedModel SchedModel;
     bool PreRegAlloc = false;
     bool HasProfileData = false;
+    Pass* LegacyPass;
+    MachineFunctionAnalysisManager* MFAM;
 
     // Various analyses that we use...
     AliasAnalysis *AA = nullptr;               // Alias analysis info.
@@ -182,22 +185,17 @@ namespace {
     unsigned SpeculationState = SpeculateUnknown;
 
   public:
-    MachineLICMBase(char &PassID, bool PreRegAlloc)
-        : MachineFunctionPass(PassID), PreRegAlloc(PreRegAlloc) {}
+    MachineLICMBase(bool PreRegAlloc, Pass* LegacyPass, MachineFunctionAnalysisManager* MFAM, AliasAnalysis* AA,
+                    MachineBlockFrequencyInfo *MBFI, MachineLoopInfo *MLI,
+                    MachineDominatorTree *DT)
+        : PreRegAlloc(PreRegAlloc), LegacyPass(LegacyPass), MFAM(MFAM), AA(AA), MBFI(MBFI), MLI(MLI), DT(DT) {
+          assert((LegacyPass || MFAM) && "LegacyPass or MFAM must be provided");
+          assert(!(LegacyPass && MFAM) && "LegacyPass and MFAM cannot be provided at the same time");
+        }
 
-    bool runOnMachineFunction(MachineFunction &MF) override;
+    bool run(MachineFunction &MF);
 
-    void getAnalysisUsage(AnalysisUsage &AU) const override {
-      AU.addRequired<MachineLoopInfoWrapperPass>();
-      if (DisableHoistingToHotterBlocks != UseBFI::None)
-        AU.addRequired<MachineBlockFrequencyInfoWrapperPass>();
-      AU.addRequired<MachineDominatorTreeWrapperPass>();
-      AU.addRequired<AAResultsWrapperPass>();
-      AU.addPreserved<MachineLoopInfoWrapperPass>();
-      MachineFunctionPass::getAnalysisUsage(AU);
-    }
-
-    void releaseMemory() override {
+    void releaseMemory() {
       RegSeen.clear();
       RegPressure.clear();
       RegLimit.clear();
@@ -296,19 +294,36 @@ namespace {
     MachineBasicBlock *getCurPreheader(MachineLoop *CurLoop,
                                        MachineBasicBlock *CurPreheader);
   };
+  class MachineLICMBaseLegacy : public MachineFunctionPass {
+    bool PreRegAlloc;
+    public:
+      MachineLICMBaseLegacy(char& ID, bool PreRegAlloc) : MachineFunctionPass(ID), PreRegAlloc(PreRegAlloc) {}
 
-  class MachineLICM : public MachineLICMBase {
+      bool runOnMachineFunction(MachineFunction &MF) override;
+
+      void getAnalysisUsage(AnalysisUsage &AU) const override {
+      AU.addRequired<MachineLoopInfoWrapperPass>();
+      if (DisableHoistingToHotterBlocks != UseBFI::None)
+        AU.addRequired<MachineBlockFrequencyInfoWrapperPass>();
+      AU.addRequired<MachineDominatorTreeWrapperPass>();
+      AU.addRequired<AAResultsWrapperPass>();
+      AU.addPreserved<MachineLoopInfoWrapperPass>();
+      MachineFunctionPass::getAnalysisUsage(AU);
+    }
+  };
+
+  class MachineLICM : public MachineLICMBaseLegacy {
   public:
     static char ID;
-    MachineLICM() : MachineLICMBase(ID, false) {
+    MachineLICM() : MachineLICMBaseLegacy(ID, false) {
       initializeMachineLICMPass(*PassRegistry::getPassRegistry());
     }
   };
 
-  class EarlyMachineLICM : public MachineLICMBase {
+  class EarlyMachineLICM : public MachineLICMBaseLegacy {
   public:
     static char ID;
-    EarlyMachineLICM() : MachineLICMBase(ID, true) {
+    EarlyMachineLICM() : MachineLICMBaseLegacy(ID, true) {
       initializeEarlyMachineLICMPass(*PassRegistry::getPassRegistry());
     }
   };
@@ -339,10 +354,23 @@ INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
 INITIALIZE_PASS_END(EarlyMachineLICM, "early-machinelicm",
                     "Early Machine Loop Invariant Code Motion", false, false)
 
-bool MachineLICMBase::runOnMachineFunction(MachineFunction &MF) {
+bool MachineLICMBaseLegacy::runOnMachineFunction(MachineFunction &MF) {
   if (skipFunction(MF.getFunction()))
     return false;
 
+  MachineBlockFrequencyInfo *MBFI =
+      DisableHoistingToHotterBlocks != UseBFI::None
+          ? &getAnalysis<MachineBlockFrequencyInfoWrapperPass>().getMBFI()
+          : nullptr;
+  MachineLoopInfo *MLI = &getAnalysis<MachineLoopInfoWrapperPass>().getLI();
+  MachineDominatorTree *DT =
+      &getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree();
+  AliasAnalysis *AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+  MachineLICMBase Impl(PreRegAlloc, this, nullptr, AA, MBFI, MLI, DT);
+  return Impl.run(MF);
+}
+
+bool MachineLICMBase::run(MachineFunction &MF) {
   Changed = FirstInLoop = false;
   const TargetSubtargetInfo &ST = MF.getSubtarget();
   TII = ST.getInstrInfo();
@@ -352,6 +380,11 @@ bool MachineLICMBase::runOnMachineFunction(MachineFunction &MF) {
   MRI = &MF.getRegInfo();
   SchedModel.init(&ST);
 
+  // FIXME: Remove this assignment or convert to an assert?
+  // MachineLICM and PostRAMachineLICM were distinguished by introducing
+  // EarlyMachineLICM and MachineLICM respectively to avoid "using an unreliable
+  // MRI::isSSA() check to determine whether register allocation has happened"
+  // (See 4a7c8e7).
   PreRegAlloc = MRI->isSSA();
   HasProfileData = MF.getFunction().hasProfileData();
 
@@ -371,12 +404,6 @@ bool MachineLICMBase::runOnMachineFunction(MachineFunction &MF) {
       RegLimit[i] = TRI->getRegPressureSetLimit(MF, i);
   }
 
-  // Get our Loop information...
-  if (DisableHoistingToHotterBlocks != UseBFI::None)
-    MBFI = &getAnalysis<MachineBlockFrequencyInfoWrapperPass>().getMBFI();
-  MLI = &getAnalysis<MachineLoopInfoWrapperPass>().getLI();
-  DT = &getAnalysis<MachineDominatorTreeWrapperPass>().getDomTree();
-  AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
 
   if (HoistConstLoads)
     InitializeLoadsHoistableLoops();
@@ -1704,7 +1731,7 @@ MachineLICMBase::getCurPreheader(MachineLoop *CurLoop,
         return nullptr;
       }
 
-      CurPreheader = Pred->SplitCriticalEdge(CurLoop->getHeader(), *this);
+      CurPreheader = Pred->SplitCriticalEdge(CurLoop->getHeader(), LegacyPass, MFAM, nullptr);
       if (!CurPreheader) {
         CurPreheader = reinterpret_cast<MachineBasicBlock *>(-1);
         return nullptr;
@@ -1730,4 +1757,29 @@ bool MachineLICMBase::isTgtHotterThanSrc(MachineBasicBlock *SrcBlock,
 
   // Compare the block frequency ratio with the threshold
   return Ratio > BlockFrequencyRatioThreshold;
+}
+
+template <typename DerivedT, bool PreRegAlloc>
+PreservedAnalyses MachineLICMBasePass<DerivedT, PreRegAlloc>::run(
+    MachineFunction &MF, MachineFunctionAnalysisManager &MFAM) {
+  if (MF.getFunction().hasOptNone())
+    return PreservedAnalyses::all();
+
+  auto &FAM = MFAM.getResult<FunctionAnalysisManagerMachineFunctionProxy>(MF)
+                  .getManager();
+
+  auto *DT = &MFAM.getResult<MachineDominatorTreeAnalysis>(MF);
+  auto *MLI = &MFAM.getResult<MachineLoopAnalysis>(MF);
+  auto *MBFI = DisableHoistingToHotterBlocks != UseBFI::None
+                   ? &MFAM.getResult<MachineBlockFrequencyAnalysis>(MF)
+                   : nullptr;
+  auto *AA = &FAM.getResult<AAManager>(MF.getFunction());
+
+  bool Changed =
+      MachineLICMBase(PreRegAlloc, nullptr, &MFAM, AA, MBFI, MLI, DT).run(MF);
+  if (!Changed)
+    return PreservedAnalyses::all();
+  auto PA = getMachineFunctionPassPreservedAnalyses();
+  PA.preserve<MachineLoopAnalysis>();
+  return PA;
 }

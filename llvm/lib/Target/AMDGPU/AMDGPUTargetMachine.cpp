@@ -55,6 +55,7 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/RegAllocRegistry.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
+#include "llvm/CodeGen/MachineLICM.h"
 #include "llvm/IR/IntrinsicsAMDGPU.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
