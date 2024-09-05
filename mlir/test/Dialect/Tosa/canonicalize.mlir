@@ -889,3 +889,17 @@ func.func nested @do_not_fold_reciprocal_int() -> tensor<3x600x1200xi32> {
   %2 = "tosa.reciprocal"(%1): (tensor<3x600x1200xi32>) -> tensor<3x600x1200xi32>
   return %2 : tensor<3x600x1200xi32>
 }
+
+// -----
+
+// COM: this has a use case in --tosa-remove-redundant-transposes.
+// CHECK-LABEL: @fold_transpose_into_reshape
+// CHECK: %[[VAL_0:.*]] = tosa.reshape %arg0 {new_shape = array<i64: 1, 1, 1, 64>} : (tensor<64xf32>) -> tensor<1x1x1x64xf32>
+// CHECK-NOT: tosa.transpose
+// CHECK: return %[[VAL_0]]
+func.func @fold_transpose_into_reshape(%arg0: tensor<64xf32>) -> tensor<1x1x1x64xf32> {
+    %0 = "tosa.const"() <{value = dense<[0, 2, 3, 1]> : tensor<4xi32>}> : () -> tensor<4xi32>
+    %1 = tosa.reshape %arg0 {new_shape = array<i64: 1, 64, 1, 1>} : (tensor<64xf32>) -> tensor<1x64x1x1xf32>
+    %2 = tosa.transpose %1, %0 : (tensor<1x64x1x1xf32>, tensor<4xi32>) -> tensor<1x1x1x64xf32>
+    return %2 : tensor<1x1x1x64xf32>
+}
