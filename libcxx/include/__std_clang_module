@@ -126,9 +126,6 @@
 #include <limits>
 #include <list>
 #if !defined(_LIBCPP_HAS_NO_LOCALIZATION)
-#  include <locale.h>
-#endif
-#if !defined(_LIBCPP_HAS_NO_LOCALIZATION)
 #  include <locale>
 #endif
 #include <map>
@@ -172,7 +169,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdexcept>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #if !defined(_LIBCPP_HAS_NO_THREADS)
