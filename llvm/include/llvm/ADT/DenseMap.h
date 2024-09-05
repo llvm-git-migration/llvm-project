@@ -171,17 +171,7 @@ public:
     // If the capacity of the array is huge, and the # elements used is small,
     // shrink the array.
     if (getNumEntries() * 4 < getNumBuckets() && getNumBuckets() > 64) {
-#ifdef LLVM_EH_ENABLED
-      // catch bad_alloc during assign of empty key in shrink_and_clear
-      try {
-        shrink_and_clear();
-      } catch (std::bad_alloc &) {
-        // catch bad_alloc, but simply ignore, we must not throw bad_alloc in
-        // destruction
-      }
-#else
       shrink_and_clear();
-#endif
       return;
     }
 
@@ -189,17 +179,7 @@ public:
     if (std::is_trivially_destructible<ValueT>::value) {
       // Use a simpler loop when values don't need destruction.
       for (BucketT *P = getBuckets(), *E = getBucketsEnd(); P != E; ++P) {
-#ifdef LLVM_EH_ENABLED
-        // catch bad_alloc during assign of empty key in shrink_and_clear
-        try {
-          P->getFirst() = EmptyKey;
-        } catch (std::bad_alloc &) {
-          // catch bad_alloc, but simply ignore, we must not throw bad_alloc in
-          // destruction
-        }
-#else
         P->getFirst() = EmptyKey;
-#endif
       }
     } else {
       for (BucketT *P = getBuckets(), *E = getBucketsEnd(); P != E; ++P) {
@@ -208,17 +188,7 @@ public:
             P->getSecond().~ValueT();
             P->setValueConstructed(false);
           }
-#ifdef LLVM_EH_ENABLED
-          // catch bad_alloc during assign of empty key in shrink_and_clear
-          try {
-            P->getFirst() = EmptyKey;
-          } catch (std::bad_alloc &) {
-            // catch bad_alloc, but simply ignore, we must not throw bad_alloc
-            // in destruction
-          }
-#else
           P->getFirst() = EmptyKey;
-#endif
         }
       }
     }
@@ -583,7 +553,7 @@ protected:
         (void)FoundVal; // silence warning.
         assert(!FoundVal && "Key already in new map?");
         DestBucket->getFirst() = std::move(B->getFirst());
-        new (&DestBucket->getSecond()) ValueT(std::move(B->getSecond()));
+        ::new (&DestBucket->getSecond()) ValueT(std::move(B->getSecond()));
         DestBucket->setValueConstructed(true);
         incrementNumEntries();
       }
@@ -1232,7 +1202,7 @@ public:
 
     // The hard part of moving the small buckets across is done, just move
     // the TmpRep into its new home.
-    new (SmallSide.getLargeRep()) LargeRep(std::move(TmpRep));
+    ::new (SmallSide.getLargeRep()) LargeRep(std::move(TmpRep));
     SmallSide.Small = false;
   }
 
@@ -1302,9 +1272,9 @@ public:
             !KeyInfoT::isEqual(P->getFirst(), TombstoneKey)) {
           assert(size_t(TmpEnd - TmpBegin) < InlineBuckets &&
                  "Too many inline buckets!");
-          new (&TmpEnd->getFirst()) KeyT(std::move(P->getFirst()));
+          ::new (&TmpEnd->getFirst()) KeyT(std::move(P->getFirst()));
           TmpEnd->setKeyConstructed(true);
-          new (&TmpEnd->getSecond()) ValueT(std::move(P->getSecond()));
+          ::new (&TmpEnd->getSecond()) ValueT(std::move(P->getSecond()));
           TmpEnd->setValueConstructed(true);
           ++TmpEnd;
         }
