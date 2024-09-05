@@ -289,6 +289,7 @@ collectVirtualRegUses(SmallVectorImpl<RegisterMaskPair> &RegMaskPairs,
   }
 }
 
+/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
 static LaneBitmask getRegLanes(ArrayRef<RegisterMaskPair> RegUnits,
                                Register RegUnit) {
   auto I = llvm::find_if(RegUnits, [RegUnit](const RegisterMaskPair Other) {
@@ -299,6 +300,7 @@ static LaneBitmask getRegLanes(ArrayRef<RegisterMaskPair> RegUnits,
   return I->LaneMask;
 }
 
+/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
 static LaneBitmask getLanesWithProperty(
     const LiveIntervals &LIS, const MachineRegisterInfo &MRI,
     bool TrackLaneMasks, Register RegUnit, SlotIndex Pos,
@@ -326,6 +328,7 @@ static LaneBitmask getLanesWithProperty(
   return Property(*LR, Pos) ? LaneBitmask::getAll() : LaneBitmask::getNone();
 }
 
+/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
 /// Helper to find a vreg use between two indices [PriorUseIdx, NextUseIdx).
 /// The query starts with a lane bitmask which gets lanes/bits removed for every
 /// use we find.
@@ -351,6 +354,35 @@ static LaneBitmask findUseBetween(unsigned Reg, LaneBitmask LastUseMask,
     }
   }
   return LastUseMask;
+}
+
+/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
+static LaneBitmask getLiveLanesAt(const LiveIntervals &LIS,
+                                  const MachineRegisterInfo &MRI,
+                                  bool TrackLaneMasks, Register RegUnit,
+                                  SlotIndex Pos) {
+  return getLanesWithProperty(
+      LIS, MRI, TrackLaneMasks, RegUnit, Pos, LaneBitmask::getAll(),
+      [](const LiveRange &LR, SlotIndex Pos) { return LR.liveAt(Pos); });
+}
+
+// Copy/paste from RegisterPressure.cpp (RegisterOperands::adjustLaneLiveness)
+static void adjustDefLaneLiveness(SmallVectorImpl<RegisterMaskPair> &Defs,
+                                  SlotIndex &Pos, const LiveIntervals &LIS,
+                                  const MachineRegisterInfo &MRI) {
+  for (auto *I = Defs.begin(); I != Defs.end();) {
+    LaneBitmask LiveAfter =
+        getLiveLanesAt(LIS, MRI, true, I->RegUnit, Pos.getDeadSlot());
+    // If the def is all that is live after the instruction, then in case
+    // of a subregister def we need a read-undef flag.
+    LaneBitmask ActualDef = I->LaneMask & LiveAfter;
+    if (ActualDef.none()) {
+      I = Defs.erase(I);
+    } else {
+      I->LaneMask = ActualDef;
+      ++I;
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -417,6 +449,7 @@ void GCNRPTracker::reset(const MachineRegisterInfo &MRI_,
 }
 
 void GCNRPTracker::bumpDeadDefs(ArrayRef<RegisterMaskPair> DeadDefs) {
+  GCNRegPressure TempPressure = CurPressure;
   for (const RegisterMaskPair &P : DeadDefs) {
     Register Reg = P.RegUnit;
     if (!Reg.isVirtual())
@@ -426,16 +459,9 @@ void GCNRPTracker::bumpDeadDefs(ArrayRef<RegisterMaskPair> DeadDefs) {
     CurPressure.inc(Reg, LiveMask, BumpedMask, *MRI);
   }
   MaxPressure = max(MaxPressure, CurPressure);
-  for (const RegisterMaskPair &P : DeadDefs) {
-    Register Reg = P.RegUnit;
-    if (!Reg.isVirtual())
-      continue;
-    LaneBitmask LiveMask = LiveRegs[Reg];
-    LaneBitmask BumpedMask = LiveMask | P.LaneMask;
-    CurPressure.inc(Reg, BumpedMask, LiveMask, *MRI);
-  }
+  CurPressure = TempPressure;
 }
-
+/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
 LaneBitmask GCNRPTracker::getLastUsedLanes(Register RegUnit,
                                            SlotIndex Pos) const {
   return getLanesWithProperty(
@@ -520,7 +546,7 @@ void GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
 
   RegOpers.collect(*MI, *TRI, *MRI, true, /*IgnoreDead=*/true);
   assert(RegOpers.DeadDefs.empty());
-  RegOpers.adjustLaneLiveness(LIS, *MRI, SlotIdx);
+  adjustDefLaneLiveness(RegOpers.Defs, SlotIdx, LIS, *MRI);
   RegOpers.detectDeadDefs(*MI, LIS);
 
   // Boost max pressure for all dead defs together.
@@ -537,11 +563,7 @@ void GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
     LaneBitmask DefLanes = P.LaneMask;
     LaneBitmask LiveBefore = (LiveAfter & ~DefLanes) | UseLanes;
 
-    // There may be parts of the register that were dead before the
-    // instruction, but became live afterwards. Similarly, some parts
-    // may have been killed in this instruction.
     CurPressure.inc(Reg, LiveAfter, LiveAfter & LiveBefore, *MRI);
-    CurPressure.inc(Reg, LiveAfter, ~LiveAfter & LiveBefore, *MRI);
     MaxPressure = max(MaxPressure, CurPressure);
   }
   // Generate liveness for uses.
@@ -549,19 +571,8 @@ void GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
     Register Reg = P.RegUnit;
     if (!Reg.isVirtual())
       continue;
-    // If this register was also in a def operand, we've handled it
-    // with defs.
-    if (getRegLanes(RegOpers.Defs, Reg).any())
-      continue;
     LaneBitmask LiveAfter = LiveRegs[Reg];
-    SlotIndex CurrIdx =
-        LastTrackedMI ? LIS.getInstructionIndex(*LastTrackedMI).getRegSlot()
-                      : LIS.getMBBEndIdx(MI->getParent());
-    ;
-    LaneBitmask LastUseMask = findUseBetween(Reg, P.LaneMask, SlotIdx, CurrIdx,
-                                             *MRI, TRI, &LIS, true);
-    LastUseMask &= ~LiveAfter;
-    LaneBitmask LiveBefore = (LiveAfter | LastUseMask);
+    LaneBitmask LiveBefore = LiveAfter | P.LaneMask;
     CurPressure.inc(Reg, LiveAfter, LiveBefore, *MRI);
   }
   MaxPressure = max(MaxPressure, CurPressure);
@@ -682,8 +693,13 @@ bool GCNDownwardRPTracker::advance(MachineInstr *MI, bool UseInternalIterator,
                                    LiveIntervals *TheLIS) {
   if (UseInternalIterator && NextMI == MBBEnd)
     return false;
+
   advanceBeforeNext(MI, UseInternalIterator, TheLIS);
   advanceToNext(MI, UseInternalIterator);
+  if (!UseInternalIterator) {
+    // We must remove any dead def lanes from the current RP
+    advanceBeforeNext(MI, true, TheLIS);
+  }
   return true;
 }
 
