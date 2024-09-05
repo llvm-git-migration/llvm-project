@@ -1,5 +1,8 @@
 include "llvm/TableGen/SearchableTable.td"
-include "llvm/IR/Intrinsics.td"
+include "llvm/Target/Target.td"
+
+// Dummy target to pacify SearchTableEmitter code.
+def DummyTarget : Target;
 
 def AMDGPUImageDMaskIntrinsicTable : GenericTable {
   let FilterClass = "AMDGPUImageDMaskIntrinsic";
