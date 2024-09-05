@@ -3952,12 +3952,7 @@ void DAGTypeLegalizer::ExpandIntRes_FP_TO_XINT(SDNode *N, SDValue &Lo,
     Op = GetPromotedFloat(Op);
 
   if (getTypeAction(Op.getValueType()) == TargetLowering::TypeSoftPromoteHalf) {
-    EVT OFPVT = Op.getValueType();
-    EVT NFPVT = TLI.getTypeToTransformTo(*DAG.getContext(), OFPVT);
-    Op = GetSoftPromotedHalf(Op);
-    Op = DAG.getNode(OFPVT == MVT::f16 ? ISD::FP16_TO_FP : ISD::BF16_TO_FP, dl,
-                     NFPVT, Op);
-    Op = DAG.getNode(IsSigned ? ISD::FP_TO_SINT : ISD::FP_TO_UINT, dl, VT, Op);
+    Op = SoftPromoteHalfOp_FP_TO_XINT(N);
     SplitInteger(Op, Lo, Hi);
     return;
   }
