@@ -462,14 +462,16 @@ static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
     }
   }
 
-  for (unsigned I = 0,
-                N = std::min<unsigned>(Callee->getNumParams(), Args.size());
-       I != N; ++I) {
-    if (CheckCoroCall || Callee->getParamDecl(I)->hasAttr<LifetimeBoundAttr>())
-      VisitLifetimeBoundArg(Callee->getParamDecl(I), Args[I]);
+  const FunctionDecl *CanonCallee = Callee->getCanonicalDecl();
+  const unsigned int NP =
+      std::min(Callee->getNumParams(), CanonCallee->getNumParams());
+  for (unsigned I = 0, N = std::min<unsigned>(NP, Args.size()); I != N; ++I) {
+    if (CheckCoroCall ||
+        CanonCallee->getParamDecl(I)->hasAttr<LifetimeBoundAttr>())
+      VisitLifetimeBoundArg(CanonCallee->getParamDecl(I), Args[I]);
     else if (EnableGSLAnalysis && I == 0) {
-      if (shouldTrackFirstArgument(Callee)) {
-        VisitGSLPointerArg(Callee, Args[0]);
+      if (shouldTrackFirstArgument(CanonCallee)) {
+        VisitGSLPointerArg(CanonCallee, Args[0]);
       } else if (auto *CCE = dyn_cast<CXXConstructExpr>(Call);
                  CCE &&
                  CCE->getConstructor()->getParent()->hasAttr<PointerAttr>()) {
