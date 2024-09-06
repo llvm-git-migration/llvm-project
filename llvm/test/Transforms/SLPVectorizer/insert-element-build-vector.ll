@@ -3,9 +3,6 @@
 ; RUN: opt -S -passes=slp-vectorizer -slp-threshold=0 < %s | FileCheck %s --check-prefixes=CHECK,NOTHRESHOLD
 ; RUN: opt -S -passes=slp-vectorizer -slp-threshold=-10000 -slp-min-tree-size=0 < %s | FileCheck %s --check-prefixes=CHECK,MINTREESIZE
 
-target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.8.0"
-
 define <4 x float> @simple_select(<4 x float> %a, <4 x float> %b, <4 x i32> %c) #0 {
 ; CHECK-LABEL: @simple_select(
 ; CHECK-NEXT:    [[TMP1:%.*]] = icmp ne <4 x i32> [[C:%.*]], zeroinitializer
