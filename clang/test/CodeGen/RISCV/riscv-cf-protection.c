@@ -1,18 +1,58 @@
-// RUN: not %clang --target=riscv32 -fcf-protection=branch -c %s \
+// RUN: %clang --target=riscv32 -menable-experimental-extensions \
+// RUN:   -march=rv32i_zicfilp1p0 -mcf-branch-label-scheme=unlabeled -c %s \
 // RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-UNLABELED-SCHEME-UNUSED %s
+
+// RUN: %clang --target=riscv32 -menable-experimental-extensions \
+// RUN:   -march=rv32i_zicfilp1p0 -mcf-branch-label-scheme=func-sig -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
+
+// RUN: not %clang --target=riscv32 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=unlabeled -c %s -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-BRANCH-PROT-INVALID %s
 
-// RUN: not %clang --target=riscv32 -fcf-protection=branch -c %s \
-// RUN:   -o /dev/null 2>&1 \
+// RUN: not %clang --target=riscv32 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=func-sig -c %s -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-BRANCH-PROT-INVALID %s
 
-// RUN: not %clang --target=riscv64 -fcf-protection=branch -c %s \
+// RUN: %clang --target=riscv32 -mcf-branch-label-scheme=unlabeled -c %s \
 // RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-UNLABELED-SCHEME-UNUSED %s
+
+// RUN: %clang --target=riscv32 -mcf-branch-label-scheme=func-sig -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
+
+// RUN: %clang --target=riscv64 -menable-experimental-extensions \
+// RUN:   -march=rv64i_zicfilp1p0 -mcf-branch-label-scheme=unlabeled -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-UNLABELED-SCHEME-UNUSED %s
+
+// RUN: %clang --target=riscv64 -menable-experimental-extensions \
+// RUN:   -march=rv64i_zicfilp1p0 -mcf-branch-label-scheme=func-sig -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
+
+// RUN: not %clang --target=riscv64 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=unlabeled -c %s -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-BRANCH-PROT-INVALID %s
 
-// RUN: not %clang --target=riscv64 -fcf-protection=branch -c %s \
-// RUN:   -o /dev/null 2>&1 \
+// RUN: not %clang --target=riscv64 -fcf-protection=branch \
+// RUN:   -mcf-branch-label-scheme=func-sig -c %s -o /dev/null 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-BRANCH-PROT-INVALID %s
+
+// RUN: %clang --target=riscv64 -mcf-branch-label-scheme=unlabeled -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-UNLABELED-SCHEME-UNUSED %s
+
+// RUN: %clang --target=riscv64 -mcf-branch-label-scheme=func-sig -c %s \
+// RUN:   -o /dev/null 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-FUNC-SIG-SCHEME-UNUSED %s
 
 // CHECK-BRANCH-PROT-INVALID: error: option 'cf-protection=branch' cannot be
 // CHECK-BRANCH-PROT-INVALID-SAME: specified on this target
+// CHECK-UNLABELED-SCHEME-UNUSED: warning: argument unused during compilation:
+// CHECK-UNLABELED-SCHEME-UNUSED-SAME: '-mcf-branch-label-scheme=unlabeled'
+// CHECK-FUNC-SIG-SCHEME-UNUSED: warning: argument unused during compilation:
+// CHECK-FUNC-SIG-SCHEME-UNUSED-SAME: '-mcf-branch-label-scheme=func-sig'

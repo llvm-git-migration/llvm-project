@@ -1688,6 +1688,19 @@ void CompilerInvocationBase::GenerateCodeGenArgs(const CodeGenOptions &Opts,
   else if (Opts.CFProtectionBranch)
     GenerateArg(Consumer, OPT_fcf_protection_EQ, "branch");
 
+  if (Opts.CFProtectionBranch) {
+    switch (Opts.getCFBranchLabelScheme()) {
+    case CFBranchLabelSchemeKind::Default:
+      break;
+    case CFBranchLabelSchemeKind::Unlabeled:
+      GenerateArg(Consumer, OPT_mcf_branch_label_scheme_EQ, "unlabeled");
+      break;
+    case CFBranchLabelSchemeKind::FuncSig:
+      GenerateArg(Consumer, OPT_mcf_branch_label_scheme_EQ, "func-sig");
+      break;
+    }
+  }
+
   if (Opts.FunctionReturnThunks)
     GenerateArg(Consumer, OPT_mfunction_return_EQ, "thunk-extern");
 
@@ -2020,6 +2033,20 @@ bool CompilerInvocation::ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args,
       Opts.CFProtectionBranch = 1;
     else if (Name != "none")
       Diags.Report(diag::err_drv_invalid_value) << A->getAsString(Args) << Name;
+  }
+
+  if (const Arg *A = Args.getLastArg(OPT_mcf_branch_label_scheme_EQ)) {
+    if (Opts.CFProtectionBranch) {
+      const StringRef Scheme = A->getValue();
+      if (Scheme == "unlabeled")
+        Opts.setCFBranchLabelScheme(CFBranchLabelSchemeKind::Unlabeled);
+      else if (Scheme == "func-sig")
+        Opts.setCFBranchLabelScheme(CFBranchLabelSchemeKind::FuncSig);
+      else
+        Diags.Report(diag::err_drv_invalid_value)
+            << A->getAsString(Args) << Scheme;
+    } else
+      Diags.Report(diag::warn_drv_unused_argument) << A->getAsString(Args);
   }
 
   if (const Arg *A = Args.getLastArg(OPT_mfunction_return_EQ)) {
@@ -3949,6 +3976,16 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
     StringRef Name = A->getValue();
     if (Name == "full" || Name == "branch") {
       Opts.CFProtectionBranch = 1;
+    }
+  }
+
+  if (const Arg *A = Args.getLastArg(OPT_mcf_branch_label_scheme_EQ)) {
+    if (Opts.CFProtectionBranch) {
+      const StringRef Scheme = A->getValue();
+      if (Scheme == "unlabeled")
+        Opts.setCFBranchLabelScheme(CFBranchLabelSchemeKind::Unlabeled);
+      else if (Scheme == "func-sig")
+        Opts.setCFBranchLabelScheme(CFBranchLabelSchemeKind::FuncSig);
     }
   }
 
