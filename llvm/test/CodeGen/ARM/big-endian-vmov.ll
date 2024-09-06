@@ -219,6 +219,7 @@ define arm_aapcs_vfpcc <8 x i16> @vmvn_v16i8_m1() {
   ret <8 x i16> <i16 65535, i16 65534, i16 65535, i16 65534, i16 65535, i16 65534, i16 65535, i16 65534>
 }
 
+; FIXME: This is incorrect for BE
 define arm_aapcs_vfpcc <8 x i16> @and_v8i16_m1(<8 x i16> %a) {
 ; CHECK-LE-LABEL: and_v8i16_m1:
 ; CHECK-LE:       @ %bb.0:
