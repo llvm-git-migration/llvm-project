@@ -1535,6 +1535,14 @@ bool CheckUnsignedIntRepresentation(Sema *S, CallExpr *TheCall) {
                                   checkAllUnsignedTypes);
 }
 
+bool CheckIntRepresentation(Sema *S, CallExpr *TheCall) {
+  auto checkAllIntTypes = [](clang::QualType PassedType) -> bool {
+    return !PassedType->hasIntegerRepresentation();
+  };
+  return CheckArgsTypesAreCorrect(S, TheCall, S->Context.IntTy,
+				  checkAllIntTypes);
+}
+
 void SetElementTypeAsReturnType(Sema *S, CallExpr *TheCall,
                                 QualType ReturnType) {
   auto *VecTyA = TheCall->getArg(0)->getType()->getAs<VectorType>();
