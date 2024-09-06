@@ -1465,25 +1465,6 @@ bool CheckVectorElementCallArgs(Sema *S, CallExpr *TheCall) {
   return true;
 }
 
-bool CheckArgTypeWithoutImplicits(
-    Sema *S, Expr *Arg, QualType ExpectedType,
-    llvm::function_ref<bool(clang::QualType PassedType)> Check) {
-
-  QualType ArgTy = Arg->IgnoreImpCasts()->getType();
-
-  clang::QualType BaseType =
-      ArgTy->isVectorType()
-          ? ArgTy->getAs<clang::VectorType>()->getElementType()
-          : ArgTy;
-
-  if (Check(BaseType)) {
-    S->Diag(Arg->getBeginLoc(), diag::err_typecheck_convert_incompatible)
-        << ArgTy << ExpectedType << 1 << 0 << 0;
-    return true;
-  }
-  return false;
-}
-
 bool CheckArgsTypesAreCorrect(
     Sema *S, CallExpr *TheCall, QualType ExpectedType,
     llvm::function_ref<bool(clang::QualType PassedType)> Check) {
@@ -1510,12 +1491,16 @@ bool CheckAllArgsHaveFloatRepresentation(Sema *S, CallExpr *TheCall) {
                                   checkAllFloatTypes);
 }
 
-bool CheckArgIsFloatOrIntWithoutImplicits(Sema *S, Expr *Arg) {
+bool CheckNotFloatAndInt(Sema *S, CallExpr *TheCall) {
   auto checkFloat = [](clang::QualType PassedType) -> bool {
-    return !PassedType->isFloat32Type() && !PassedType->isIntegerType();
+    clang::QualType BaseType =
+        PassedType->isVectorType()
+            ? PassedType->getAs<clang::VectorType>()->getElementType()
+            : PassedType;
+    return !(BaseType->isFloat32Type() || BaseType->isIntegerType());
   };
 
-  return CheckArgTypeWithoutImplicits(S, Arg, S->Context.FloatTy, checkFloat);
+  return CheckArgsTypesAreCorrect(S, TheCall, S->Context.FloatTy, checkFloat);
 }
 
 bool CheckFloatOrHalfRepresentations(Sema *S, CallExpr *TheCall) {
@@ -1676,8 +1661,7 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     if (SemaRef.checkArgCount(TheCall, 1))
       return true;
 
-    Expr *Arg = TheCall->getArg(0);
-    if (CheckArgIsFloatOrIntWithoutImplicits(&SemaRef, Arg))
+    if (CheckNotFloatAndInt(&SemaRef, TheCall))
       return true;
 
     break;
