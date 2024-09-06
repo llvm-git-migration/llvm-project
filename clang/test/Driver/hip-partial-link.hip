@@ -15,12 +15,10 @@
 // RUN: llvm-nm  %t.1.o | FileCheck -check-prefix=OBJ1 %s
 // OBJ1:  B __hip_cuid_[[ID:[0-9a-f]+]]
 // OBJ1:  U __hip_fatbin_[[ID]]
-// OBJ1:  U __hip_gpubin_handle_[[ID]]
 
 // RUN: llvm-nm  %t.2.o | FileCheck -check-prefix=OBJ2 %s
 // OBJ2:  B __hip_cuid_[[ID:[0-9a-f]+]]
 // OBJ2:  U __hip_fatbin_[[ID]]
-// OBJ2:  U __hip_gpubin_handle_[[ID]]
 
 // Link %t.1.o and %t.2.o by -r and then link with %t.main.o
 
@@ -30,8 +28,6 @@
 // RUN:   2>&1 | FileCheck -check-prefix=LD-R %s
 // LD-R: Found undefined HIP fatbin symbol: __hip_fatbin_[[ID1:[0-9a-f]+]]
 // LD-R: Found undefined HIP fatbin symbol: __hip_fatbin_[[ID2:[0-9a-f]+]]
-// LD-R: Found undefined HIP gpubin handle symbol: __hip_gpubin_handle_[[ID1]]
-// LD-R: Found undefined HIP gpubin handle symbol: __hip_gpubin_handle_[[ID2]]
 // LD-R: "{{.*}}/clang-offload-bundler" {{.*}}-unbundle
 // LD-R: "{{.*}}/lld" -flavor gnu -m elf64_amdgpu
 // LD-R: "{{.*}}/clang-offload-bundler"
@@ -43,8 +39,6 @@
 // OBJ:  B __hip_cuid_[[ID2:[0-9a-f]+]]
 // OBJ:  R __hip_fatbin_[[ID1]]
 // OBJ:  R __hip_fatbin_[[ID2]]
-// OBJ:  D __hip_gpubin_handle_[[ID1]]
-// OBJ:  D __hip_gpubin_handle_[[ID2]]
 
 // RUN: %clang -v --target=x86_64-unknown-linux-gnu --no-offload-new-driver \
 // RUN:   --hip-link -fgpu-rdc --offload-arch=gfx906 \
@@ -60,8 +54,6 @@
 // RUN:   2>&1 | FileCheck -check-prefix=STATIC %s
 // STATIC: Found undefined HIP fatbin symbol: __hip_fatbin_[[ID1:[0-9a-f]+]]
 // STATIC: Found undefined HIP fatbin symbol: __hip_fatbin_[[ID2:[0-9a-f]+]]
-// STATIC: Found undefined HIP gpubin handle symbol: __hip_gpubin_handle_[[ID1]]
-// STATIC: Found undefined HIP gpubin handle symbol: __hip_gpubin_handle_[[ID2]]
 // STATIC: "{{.*}}/clang-offload-bundler" {{.*}}-unbundle
 // STATIC: "{{.*}}/lld" -flavor gnu -m elf64_amdgpu
 // STATIC: "{{.*}}/clang-offload-bundler"
