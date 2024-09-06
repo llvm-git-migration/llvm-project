@@ -2760,9 +2760,19 @@ void DAGTypeLegalizer::ExpandIntegerResult(SDNode *N, unsigned ResNo) {
   LLVM_DEBUG(dbgs() << "Expand integer result: "; N->dump(&DAG));
   SDValue Lo, Hi;
   Lo = Hi = SDValue();
+  bool NeedCustomLower = true;
+
+  // Skip the following function 'CustomLowerNode' when the operand had done
+  // `SoftenFloatResult`.
+  if (N->getOpcode() == ISD::BITCAST &&
+      getTypeAction(N->getOperand(0).getValueType()) ==
+          TargetLowering::TypeSoftenFloat &&
+      N->getValueType(ResNo) ==
+          GetSoftenedFloat(N->getOperand(0)).getValueType())
+    NeedCustomLower = false;
 
   // See if the target wants to custom expand this node.
-  if (CustomLowerNode(N, N->getValueType(ResNo), true))
+  if (NeedCustomLower && CustomLowerNode(N, N->getValueType(ResNo), true))
     return;
 
   switch (N->getOpcode()) {
