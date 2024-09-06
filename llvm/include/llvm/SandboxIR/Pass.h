@@ -49,10 +49,10 @@ public:
   ClassID getSubclassID() const { return SubclassID; }
 #ifndef NDEBUG
   friend raw_ostream &operator<<(raw_ostream &OS, const Pass &Pass) {
-    Pass.dump(OS);
+    Pass.dumpOS(OS);
     return OS;
   }
-  void dump(raw_ostream &OS) const { OS << Name << " " << Flag; }
+  void dumpOS(raw_ostream &OS) const { OS << Name << " " << Flag; }
   LLVM_DUMP_METHOD void dump() const;
 #endif
 };

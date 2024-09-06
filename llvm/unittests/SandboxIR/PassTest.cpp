@@ -64,4 +64,20 @@ define void @foo() {
   // Check runOnFunction();
   TPass.runOnFunction(*F);
   EXPECT_EQ(BBCnt, 1u);
+#ifndef NDEBUG
+  {
+    // Check dump().
+    std::string Buff;
+    llvm::raw_string_ostream SS(Buff);
+    TPass.dumpOS(SS);
+    EXPECT_EQ(Buff, "FunctionPass");
+  }
+  {
+    // Check operator<<().
+    std::string Buff;
+    llvm::raw_string_ostream SS(Buff);
+    SS << TPass;
+    EXPECT_EQ(Buff, "FunctionPass");
+  }
+#endif
 }

@@ -13,7 +13,7 @@ using namespace llvm::sandboxir;
 
 #ifndef NDEBUG
 void Pass::dump() const {
-  dump(dbgs());
+  dumpOS(dbgs());
   dbgs() << "\n";
 }
 #endif // NDEBUG
