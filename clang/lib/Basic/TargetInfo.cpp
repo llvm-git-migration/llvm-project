@@ -192,6 +192,11 @@ void TargetInfo::resetDataLayout(StringRef DL, const char *ULP) {
   UserLabelPrefix = ULP;
 }
 
+CFBranchLabelSchemeKind TargetInfo::getDefaultCFBranchLabelScheme() const {
+  // if this hook is called, the target should override it
+  llvm::report_fatal_error("not implemented");
+}
+
 bool
 TargetInfo::checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const {
   Diags.Report(diag::err_opt_not_valid_on_target) << "cf-protection=branch";

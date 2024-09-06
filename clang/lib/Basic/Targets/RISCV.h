@@ -138,6 +138,10 @@ public:
       return true;
     return TargetInfo::checkCFProtectionBranchSupported(Diags);
   }
+
+  CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const override {
+    return CFBranchLabelSchemeKind::FuncSig;
+  };
 };
 class LLVM_LIBRARY_VISIBILITY RISCV32TargetInfo : public RISCVTargetInfo {
 public:

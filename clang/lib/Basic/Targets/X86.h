@@ -273,6 +273,10 @@ public:
     return TargetInfo::checkCFProtectionBranchSupported(Diags);
   };
 
+  CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const override {
+    return CFBranchLabelSchemeKind::Unlabeled;
+  };
+
   virtual bool validateOperandSize(const llvm::StringMap<bool> &FeatureMap,
                                    StringRef Constraint, unsigned Size) const;
 

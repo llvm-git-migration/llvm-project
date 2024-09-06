@@ -817,6 +817,9 @@ def err_drv_experimental_crel : Error<
   "-Wa,--allow-experimental-crel must be specified to use -Wa,--crel. "
   "CREL is experimental and uses a non-standard section type code">;
 
+def warn_drv_opt_ignored_by_other : Warning<"ignoring option '%0' due to '%1'">,
+  InGroup<OptionIgnored>;
+
 def warn_android_unversioned_fallback : Warning<
   "using unversioned Android target directory %0 for target %1; unversioned "
   "directories will not be used in Clang 19 -- provide a versioned directory "
