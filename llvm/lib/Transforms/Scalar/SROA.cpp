@@ -3522,6 +3522,10 @@ private:
            "Unexpected intrinsic!");
     LLVM_DEBUG(dbgs() << "    original: " << II << "\n");
 
+    // Do not record invariant group intrinsics for deletion.
+    if (II.isLaunderOrStripInvariantGroup())
+      return true;
+
     // Record this instruction for deletion.
     Pass.DeadInsts.push_back(&II);
 
@@ -3531,9 +3535,6 @@ private:
       OldPtr->dropDroppableUsesIn(II);
       return true;
     }
-
-    if (II.isLaunderOrStripInvariantGroup())
-      return true;
 
     assert(II.getArgOperand(1) == OldPtr);
     // Lifetime intrinsics are only promotable if they cover the whole alloca.

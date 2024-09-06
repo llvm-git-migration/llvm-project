@@ -138,10 +138,13 @@ end:
   ret void
 }
 
+; Conservatively do not split the alloca. 
 define void @partial_promotion_of_alloca() {
 ; CHECK-LABEL: @partial_promotion_of_alloca(
 ; CHECK-NEXT:    [[STRUCT_PTR_SROA_2:%.*]] = alloca i32, align 4
+; CHECK-NEXT:    [[STRUCT_PTR:%.*]] = alloca [[T:%.*]], align 4
 ; CHECK-NEXT:    store volatile i32 0, ptr [[STRUCT_PTR_SROA_2]], align 4
+; CHECK-NEXT:    [[BARR:%.*]] = call ptr @llvm.launder.invariant.group.p0(ptr [[STRUCT_PTR]])
 ; CHECK-NEXT:    [[STRUCT_PTR_SROA_2_0_STRUCT_PTR_SROA_2_4_LOAD_VAL:%.*]] = load volatile i32, ptr [[STRUCT_PTR_SROA_2]], align 4
 ; CHECK-NEXT:    ret void
 ;
@@ -152,6 +155,19 @@ define void @partial_promotion_of_alloca() {
   store volatile i32 0, ptr %volatile_field_ptr, align 4, !invariant.group !0
   %barr = call ptr @llvm.launder.invariant.group.p0(ptr %struct_ptr)
   %load_val = load volatile i32, ptr %volatile_field_ptr, align 4, !invariant.group !0
+  ret void
+}
+
+define void @memcpy_after_laundering_alloca(ptr %ptr) {
+; CHECK-LABEL: @memcpy_after_laundering_alloca(
+; CHECK-NEXT:    [[ALLOCA:%.*]] = alloca { i64, i64 }, align 8
+; CHECK-NEXT:    [[LAUNDER:%.*]] = call ptr @llvm.launder.invariant.group.p0(ptr [[ALLOCA]])
+; CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr [[LAUNDER]], ptr [[PTR:%.*]], i64 16, i1 false)
+; CHECK-NEXT:    ret void
+;
+  %alloca = alloca { i64, i64 }, align 8
+  %launder = call ptr @llvm.launder.invariant.group.p0(ptr %alloca)
+  call void @llvm.memcpy.p0.p0.i64(ptr %launder, ptr %ptr, i64 16, i1 false)
   ret void
 }
 
