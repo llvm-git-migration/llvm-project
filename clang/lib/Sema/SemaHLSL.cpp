@@ -1510,9 +1510,9 @@ bool CheckAllArgsHaveFloatRepresentation(Sema *S, CallExpr *TheCall) {
                                   checkAllFloatTypes);
 }
 
-bool CheckArgIsFloatOrIntWithoutImplicits(Sema *S, Expr *Arg) {
+bool CheckNotFloatAndIntWithoutImplicits(Sema *S, Expr *Arg) {
   auto checkFloat = [](clang::QualType PassedType) -> bool {
-    return !PassedType->isFloat32Type() && !PassedType->isIntegerType();
+    return !(PassedType->isFloat32Type() || PassedType->isIntegerType());
   };
 
   return CheckArgTypeWithoutImplicits(S, Arg, S->Context.FloatTy, checkFloat);
@@ -1677,7 +1677,7 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
 
     Expr *Arg = TheCall->getArg(0);
-    if (CheckArgIsFloatOrIntWithoutImplicits(&SemaRef, Arg))
+    if (CheckNotFloatAndIntWithoutImplicits(&SemaRef, Arg))
       return true;
 
     break;
