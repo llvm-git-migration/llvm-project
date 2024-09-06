@@ -132,7 +132,7 @@
      (defined(__MINGW32__) && defined(__clang__)))
 // Clang compilers older then 15 do not support gnu style attributes on
 // namespaces.
-#if defined(__clang__) && _clang_major__ < 15
+#if defined(__clang__) && __clang_major__ < 15
 #define LLVM_LIBRARY_VISIBILITY [[gnu::visibility("hidden")]]
 #else
 #define LLVM_LIBRARY_VISIBILITY LLVM_ATTRIBUTE_VISIBILITY_HIDDEN
