@@ -130,7 +130,8 @@
 
 #if (!(defined(_WIN32) || defined(__CYGWIN__)) ||                              \
      (defined(__MINGW32__) && defined(__clang__)))
-// Clang compilers older then 15 do not support gnu style attributes on namespaces
+// Clang compilers older then 15 do not support gnu style attributes on
+// namespaces.
 #if defined(__clang__) && _clang_major__ < 15
 #define LLVM_LIBRARY_VISIBILITY [[gnu::visibility("hidden")]]
 #else
