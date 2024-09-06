@@ -1746,7 +1746,6 @@ void AsmPrinter::emitFunctionBody() {
       if (!MI.isPosition() && !MI.isImplicitDef() && !MI.isKill() &&
           !MI.isDebugInstr()) {
         HasAnyRealCode = true;
-        ++NumInstsInFunction;
       }
 
       // If there is a pre-instruction symbol, emit a label for it here.
@@ -1844,13 +1843,31 @@ void AsmPrinter::emitFunctionBody() {
         // actual initialization is needed.
         break;
       default:
+        assert(!MI.isMetaInstruction() &&
+               "Meta instructions should be already handled here");
         emitInstruction(&MI);
-        if (CanDoExtraAnalysis) {
-          MCInst MCI;
-          MCI.setOpcode(MI.getOpcode());
-          auto Name = OutStreamer->getMnemonic(MCI);
-          auto I = MnemonicCounts.insert({Name, 0u});
-          I.first->second++;
+
+        auto CountInstruction = [&](const MachineInstr &MI) {
+          // Skip Meta instructions inside bundles.
+          if (MI.isMetaInstruction())
+            return;
+          ++NumInstsInFunction;
+          if (CanDoExtraAnalysis) {
+            MCInst MCI;
+            MCI.setOpcode(MI.getOpcode());
+            auto Name = OutStreamer->getMnemonic(MCI);
+            assert(!Name.empty() && "Missing mnemonic for opcode");
+            ++MnemonicCounts[Name];
+          }
+        };
+        if (!MI.isBundle()) {
+          CountInstruction(MI);
+          break;
+        }
+        // Separately count all the instructions in a bundle.
+        for (auto It = std::next(MI.getIterator());
+             It != MBB.end() && It->isInsideBundle(); ++It) {
+          CountInstruction(*It);
         }
         break;
       }
