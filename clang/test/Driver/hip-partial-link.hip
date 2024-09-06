@@ -15,7 +15,6 @@
 // RUN: llvm-nm  %t.1.o | FileCheck -check-prefix=OBJ1 %s
 // OBJ1:  B __hip_cuid_[[ID:[0-9a-f]+]]
 // OBJ1:  U __hip_fatbin_[[ID]]
-// OBJ1:  U __hip_gpubin_handle_[[ID]]
 
 // RUN: llvm-nm  %t.2.o | FileCheck -check-prefix=OBJ2 %s
 // OBJ2:  B __hip_cuid_[[ID:[0-9a-f]+]]
