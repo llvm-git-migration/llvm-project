@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TRANSFORMS_VECTORIZE_SANDBOXVECTORIZER_PASS_H
-#define LLVM_TRANSFORMS_VECTORIZE_SANDBOXVECTORIZER_PASS_H
+#ifndef LLVM_SANDBOXIR_PASS_H
+#define LLVM_SANDBOXIR_PASS_H
 
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
@@ -79,4 +79,4 @@ public:
 
 } // namespace llvm::sandboxir
 
-#endif // LLVM_TRANSFORMS_VECTORIZE_SANDBOXVECTORIZER_PASS_H
+#endif // LLVM_SANDBOXIR_PASS_H
