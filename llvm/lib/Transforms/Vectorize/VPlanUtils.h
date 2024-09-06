@@ -24,7 +24,8 @@ bool onlyFirstPartUsed(const VPValue *Def);
 /// pre-header already contains a recipe expanding \p Expr, return it. If not,
 /// create a new one.
 VPValue *getOrCreateVPValueForSCEVExpr(VPlan &Plan, const SCEV *Expr,
-                                       ScalarEvolution &SE);
+                                       ScalarEvolution &SE,
+                                       bool SaveUDivMode = false);
 
 /// Returns true if \p VPV is uniform after vectorization.
 inline bool isUniformAfterVectorization(const VPValue *VPV) {

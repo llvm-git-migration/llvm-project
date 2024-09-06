@@ -2932,6 +2932,8 @@ void VPExpandSCEVRecipe::execute(VPTransformState &State) {
   assert(!State.Instance && "cannot be used in per-lane");
   const DataLayout &DL = State.CFG.PrevBB->getDataLayout();
   SCEVExpander Exp(SE, DL, "induction");
+  if (SafeUDivMode)
+    Exp.setSafeUDivMode();
 
   Value *Res = Exp.expandCodeFor(Expr, Expr->getType(),
                                  &*State.Builder.GetInsertPoint());

@@ -23,7 +23,8 @@ bool vputils::onlyFirstPartUsed(const VPValue *Def) {
 }
 
 VPValue *vputils::getOrCreateVPValueForSCEVExpr(VPlan &Plan, const SCEV *Expr,
-                                                ScalarEvolution &SE) {
+                                                ScalarEvolution &SE,
+                                                bool SafeUDivMode) {
   if (auto *Expanded = Plan.getSCEVExpansion(Expr))
     return Expanded;
   VPValue *Expanded = nullptr;
@@ -32,7 +33,7 @@ VPValue *vputils::getOrCreateVPValueForSCEVExpr(VPlan &Plan, const SCEV *Expr,
   else if (auto *E = dyn_cast<SCEVUnknown>(Expr))
     Expanded = Plan.getOrAddLiveIn(E->getValue());
   else {
-    Expanded = new VPExpandSCEVRecipe(Expr, SE);
+    Expanded = new VPExpandSCEVRecipe(Expr, SE, SafeUDivMode);
     Plan.getPreheader()->appendRecipe(Expanded->getDefiningRecipe());
   }
   Plan.addSCEVExpansion(Expr, Expanded);

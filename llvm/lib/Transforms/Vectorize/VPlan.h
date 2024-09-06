@@ -2771,9 +2771,15 @@ class VPExpandSCEVRecipe : public VPSingleDefRecipe {
   const SCEV *Expr;
   ScalarEvolution &SE;
 
+  /// When set to true, set SafeUDivMode when expanding the SCEV to avoid
+  /// introducing UB.
+  bool SafeUDivMode;
+
 public:
-  VPExpandSCEVRecipe(const SCEV *Expr, ScalarEvolution &SE)
-      : VPSingleDefRecipe(VPDef::VPExpandSCEVSC, {}), Expr(Expr), SE(SE) {}
+  VPExpandSCEVRecipe(const SCEV *Expr, ScalarEvolution &SE,
+                     bool SafeUDivMode = false)
+      : VPSingleDefRecipe(VPDef::VPExpandSCEVSC, {}), Expr(Expr), SE(SE),
+        SafeUDivMode(SafeUDivMode) {}
 
   ~VPExpandSCEVRecipe() override = default;
 
