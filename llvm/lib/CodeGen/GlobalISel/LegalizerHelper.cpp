@@ -7364,19 +7364,22 @@ LegalizerHelper::lowerFPTOINT_SAT(MachineInstr &MI) {
   bool AreExactFloatBounds = !(MinStatus & APFloat::opStatus::opInexact) &&
                              !(MaxStatus & APFloat::opStatus::opInexact);
 
-  // If the integer bounds are exactly representable as floats and min/max are
-  // legal, emit a min+max+fptoi sequence. Otherwise we have to use a sequence
-  // of comparisons and selects.
-  bool MinMaxLegal = LI.isLegal({TargetOpcode::G_FMINNUM, SrcTy}) &&
-                     LI.isLegal({TargetOpcode::G_FMAXNUM, SrcTy});
-  if (AreExactFloatBounds && MinMaxLegal) {
+  // If the integer bounds are exactly representable as floats, emit a
+  // min+max+fptoi sequence. Otherwise we have to use a sequence of comparisons
+  // and selects.
+  if (AreExactFloatBounds) {
     // Clamp Src by MinFloat from below. If Src is NaN the result is MinFloat.
-    auto Max = MIRBuilder.buildFMaxNum(
-        SrcTy, Src, MIRBuilder.buildFConstant(SrcTy, MinFloat));
+    auto MaxC = MIRBuilder.buildFConstant(SrcTy, MinFloat);
+    auto MaxP = MIRBuilder.buildFCmp(CmpInst::FCMP_ULT,
+                                     SrcTy.changeElementSize(1), Src, MaxC);
+    auto Max = MIRBuilder.buildSelect(SrcTy, MaxP, Src, MaxC);
     // Clamp by MaxFloat from above. NaN cannot occur.
-    auto Min = MIRBuilder.buildFMinNum(
-        SrcTy, Max, MIRBuilder.buildFConstant(SrcTy, MaxFloat),
-        MachineInstr::FmNoNans);
+    auto MinC = MIRBuilder.buildFConstant(SrcTy, MaxFloat);
+    auto MinP =
+        MIRBuilder.buildFCmp(CmpInst::FCMP_OGT, SrcTy.changeElementSize(1), Max,
+                             MinC, MachineInstr::FmNoNans);
+    auto Min =
+        MIRBuilder.buildSelect(SrcTy, MinP, Max, MinC, MachineInstr::FmNoNans);
     // Convert clamped value to integer. In the unsigned case we're done,
     // because we mapped NaN to MinFloat, which will cast to zero.
     if (!IsSigned) {
