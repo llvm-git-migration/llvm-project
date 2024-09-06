@@ -112,3 +112,13 @@ TEST(AffineExprTest, divisorOfNegativeFloorDiv) {
   OpBuilder b(&ctx);
   ASSERT_EQ(b.getAffineDimExpr(0).floorDiv(-1).getLargestKnownDivisor(), 1);
 }
+
+TEST(AffineExprTest, d0PlusD0FloorDivNeg2) {
+  // Regression test for a bug where this was rewritten to d0 mod -2. We do not
+  // support a negative RHS for mod in LowerAffinePass.
+  MLIRContext ctx;
+  OpBuilder b(&ctx);
+  auto d0 = b.getAffineDimExpr(0);
+  auto sum = d0 + d0.floorDiv(-2) * 2;
+  ASSERT_EQ(toString(sum), "d0 + (d0 floordiv -2) * 2");
+}
