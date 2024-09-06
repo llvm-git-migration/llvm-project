@@ -671,6 +671,15 @@ void RISCV::relocateAlloc(InputSectionBase &sec, uint8_t *buf) const {
       errorOrWarn(sec.getLocation(rel.offset) +
                   ": R_RISCV_SET_ULEB128 not paired with R_RISCV_SUB_SET128");
       return;
+    case R_RISCV_PC_INDIRECT:
+      if (Defined *def = dyn_cast<Defined>(rel.sym);
+          def->section && def->section != &sec) {
+        errorOrWarn(sec.getLocation(rel.offset) +
+                    ": R_RISCV_PCREL_LO12 relocation points to a symbol '" +
+                    rel.sym->getName() + "' in a different section '" +
+                    def->section->name + "'");
+      }
+      break;
     default:
       break;
     }
