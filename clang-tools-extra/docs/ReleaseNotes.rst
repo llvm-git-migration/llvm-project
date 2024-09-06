@@ -108,6 +108,12 @@ Changes in existing checks
   <clang-tidy/checks/bugprone/casting-through-void>` check to suggest replacing
   the offending code with ``reinterpret_cast``, to more clearly express intent.
 
+- Improved :doc:`bugprone-return-const-ref-from-parameter
+  <clang-tidy/checks/bugprone/return-const-ref-from-parameter>` check to
+  diagnose potential dangling references when returning a ``const &`` parameter
+  by using the conditional operator ``cond ? var1 : var2``.
+  
+
 - Improved :doc:`modernize-use-std-format
   <clang-tidy/checks/modernize/use-std-format>` check to support replacing
   member function calls too.
