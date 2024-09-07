@@ -117,6 +117,7 @@ typedef struct user_fpregs elf_fpregset_t;
 #if SANITIZER_LINUX
 #if SANITIZER_GLIBC
 #include <fstab.h>
+#include <linux/filter.h>
 #include <net/if_ppp.h>
 #include <netax25/ax25.h>
 #include <netipx/ipx.h>
@@ -531,6 +532,7 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
 
   unsigned struct_audio_buf_info_sz = sizeof(struct audio_buf_info);
   unsigned struct_ppp_stats_sz = sizeof(struct ppp_stats);
+  unsigned struct_sock_fprog_sz = sizeof(struct sock_fprog);
 #endif  // SANITIZER_GLIBC
 
 #if !SANITIZER_ANDROID && !SANITIZER_APPLE
