@@ -1323,7 +1323,7 @@ public:
     return I->getKind() == IK_DefInit;
   }
 
-  static DefInit *get(Record*);
+  static DefInit *get(const Record *);
 
   Init *convertInitializerTo(RecTy *Ty) const override;
 
@@ -1673,7 +1673,7 @@ private:
   RecordKeeper &TrackedRecords;
 
   // The DefInit corresponding to this record.
-  DefInit *CorrespondingDefInit = nullptr;
+  mutable DefInit *CorrespondingDefInit = nullptr;
 
   // Unique record ID.
   unsigned ID;
@@ -1740,7 +1740,7 @@ public:
   RecordRecTy *getType();
 
   /// get the corresponding DefInit.
-  DefInit *getDefInit();
+  DefInit *getDefInit() const;
 
   bool isClass() const { return Kind == RK_Class; }
 

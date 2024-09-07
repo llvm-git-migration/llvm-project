@@ -2235,9 +2235,7 @@ Init *VarBitInit::resolveReferences(Resolver &R) const {
 DefInit::DefInit(Record *D)
     : TypedInit(IK_DefInit, D->getType()), Def(D) {}
 
-DefInit *DefInit::get(Record *R) {
-  return R->getDefInit();
-}
+DefInit *DefInit::get(const Record *R) { return R->getDefInit(); }
 
 Init *DefInit::convertInitializerTo(RecTy *Ty) const {
   if (auto *RRT = dyn_cast<RecordRecTy>(Ty))
@@ -2808,10 +2806,10 @@ RecordRecTy *Record::getType() {
   return RecordRecTy::get(TrackedRecords, DirectSCs);
 }
 
-DefInit *Record::getDefInit() {
+DefInit *Record::getDefInit() const {
   if (!CorrespondingDefInit) {
-    CorrespondingDefInit =
-        new (TrackedRecords.getImpl().Allocator) DefInit(this);
+    CorrespondingDefInit = new (TrackedRecords.getImpl().Allocator)
+        DefInit(const_cast<Record *>(this));
   }
   return CorrespondingDefInit;
 }
