@@ -17,6 +17,7 @@
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SetVector.h"
 #include <optional>
 
@@ -67,6 +68,15 @@ public:
     const Decl *D = CE->getCalleeDecl();
     if (D && D->hasBody())
       return VisitBody(D->getBody());
+    else if (!VisitLambdaBody) {
+      for (unsigned i = 0; i < CE->getNumArgs(); ++i) {
+        auto *Arg = CE->getArg(i);
+        VisitLambdaBody = true;
+        auto Restore = llvm::make_scope_exit([&] { VisitLambdaBody = false; });
+        if (VisitChildren(Arg))
+          return true;
+      }
+    }
     return false;
   }
 
@@ -113,12 +123,22 @@ public:
 
   // Return false since the contents of lambda isn't necessarily executed.
   // If it is executed, VisitCallExpr above will visit its body.
-  bool VisitLambdaExpr(const LambdaExpr *) { return false; }
+  // Allow returning true for a lambda if it's a function argument to another
+  // function without body / definition.
+  bool VisitLambdaExpr(const LambdaExpr *E) {
+    if (VisitLambdaBody) {
+      VisitLambdaBody = false;
+      auto Restore = llvm::make_scope_exit([&] { VisitLambdaBody = true; });
+      return VisitChildren(E);
+    }
+    return false;
+  }
 
 private:
   const TemplateArgumentList *ArgList{nullptr};
   const CXXRecordDecl *ClassDecl;
   llvm::DenseSet<const Stmt *> VisitedBody;
+  bool VisitLambdaBody{false};
 };
 
 class RefCntblBaseVirtualDtorChecker
