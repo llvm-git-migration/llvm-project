@@ -11,7 +11,7 @@
 
 namespace llvm {
 class Record;
-int CompareOptionRecords(Record *const *Av, Record *const *Bv);
+int CompareOptionRecords(const Record *A, const Record *B);
 } // namespace llvm
 
 #endif // LLVM_UTILS_TABLEGEN_COMMON_OPTEMITTER_H
