@@ -8,68 +8,42 @@
 
 #include "OptEmitter.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/Option/OptStrCmp.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
-#include <cctype>
-#include <cstring>
-
-namespace llvm {
-
-// Ordering on Info. The logic should match with the consumer-side function in
-// llvm/Option/OptTable.h.
-// FIXME: Make this take StringRefs instead of null terminated strings to
-// simplify callers.
-static int StrCmpOptionName(const char *A, const char *B) {
-  const char *X = A, *Y = B;
-  char a = tolower(*A), b = tolower(*B);
-  while (a == b) {
-    if (a == '\0')
-      return strcmp(A, B);
-
-    a = tolower(*++X);
-    b = tolower(*++Y);
-  }
-
-  if (a == '\0') // A is a prefix of B.
-    return 1;
-  if (b == '\0') // B is a prefix of A.
-    return -1;
-
-  // Otherwise lexicographic.
-  return (a < b) ? -1 : 1;
-}
 
 // Returns true if A is ordered before B.
-bool CompareOptionRecords(const Record *A, const Record *B) {
+// Note: Keep this in sync with `operator <` for OptTable::Info in OptTable.cpp.
+bool llvm::IsOptionRecordsLess(const Record *A, const Record *B) {
+  if (A == B)
+    return false;
+
   // Sentinel options precede all others and are only ordered by precedence.
-  bool ASent = A->getValueAsDef("Kind")->getValueAsBit("Sentinel");
-  bool BSent = B->getValueAsDef("Kind")->getValueAsBit("Sentinel");
+  const Record *AKind = A->getValueAsDef("Kind");
+  const Record *BKind = B->getValueAsDef("Kind");
+
+  bool ASent = AKind->getValueAsBit("Sentinel");
+  bool BSent = BKind->getValueAsBit("Sentinel");
   if (ASent != BSent)
     return ASent;
 
   // Compare options by name, unless they are sentinels.
-  if (!ASent)
-    if (int Cmp = StrCmpOptionName(A->getValueAsString("Name").str().c_str(),
-                                   B->getValueAsString("Name").str().c_str()))
+  if (!ASent) {
+    if (int Cmp = opt::StrCmpOptionName(A->getValueAsString("Name"),
+                                        B->getValueAsString("Name")))
       return Cmp < 0;
 
-  if (!ASent) {
     std::vector<StringRef> APrefixes = A->getValueAsListOfStrings("Prefixes");
     std::vector<StringRef> BPrefixes = B->getValueAsListOfStrings("Prefixes");
-
-    for (std::vector<StringRef>::const_iterator APre = APrefixes.begin(),
-                                                AEPre = APrefixes.end(),
-                                                BPre = BPrefixes.begin(),
-                                                BEPre = BPrefixes.end();
-         APre != AEPre && BPre != BEPre; ++APre, ++BPre) {
-      if (int Cmp = StrCmpOptionName(APre->str().c_str(), BPre->str().c_str()))
+    for (const auto &[APre, BPre] : zip(APrefixes, BPrefixes)) {
+      if (int Cmp = opt::StrCmpOptionName(APre, BPre))
         return Cmp < 0;
     }
   }
 
   // Then by the kind precedence;
-  int APrec = A->getValueAsDef("Kind")->getValueAsInt("Precedence");
-  int BPrec = B->getValueAsDef("Kind")->getValueAsInt("Precedence");
+  int APrec = AKind->getValueAsInt("Precedence");
+  int BPrec = BKind->getValueAsInt("Precedence");
   if (APrec == BPrec && A->getValueAsListOfStrings("Prefixes") ==
                             B->getValueAsListOfStrings("Prefixes")) {
     PrintError(A->getLoc(), Twine("Option is equivalent to"));
@@ -78,5 +52,3 @@ bool CompareOptionRecords(const Record *A, const Record *B) {
   }
   return APrec < BPrec;
 }
-
-} // namespace llvm
