@@ -67,10 +67,6 @@ BufferizeTypeConverter::BufferizeTypeConverter() {
                               ValueRange inputs, Location loc) -> Value {
     assert(inputs.size() == 1 && "expected exactly one input");
 
-    // Unranked to ranked casts must be explicit.
-    if (auto inputType = dyn_cast<UnrankedMemRefType>(inputs[0].getType()))
-      return nullptr;
-
     if (auto inputType = dyn_cast<MemRefType>(inputs[0].getType())) {
       // MemRef to MemRef cast.
       assert(inputType != type && "expected different types");

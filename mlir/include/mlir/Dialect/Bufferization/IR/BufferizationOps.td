@@ -402,7 +402,7 @@ def Bufferization_ToTensorOp : Bufferization_Op<"to_tensor", [
 
     ```mlir
     // Produces a value of tensor<4x?xf32> type.
-    %t = bufferization.to_tensor %m : memref<4x?xf32, #layout, 0>
+    %t = bufferization.to_tensor %m : memref<4x?xf32, #layout, 0> -> tensor<4x?xf32>
     ```
 
     If the `writable` unit attribute is set, the produced tensor is considered
@@ -425,7 +425,7 @@ def Bufferization_ToTensorOp : Bufferization_Op<"to_tensor", [
     Example:
 
     ```
-    %t = bufferization.to_tensor %m restrict writable : memref<4xf32>
+    %t = bufferization.to_tensor %m restrict writable : memref<4xf32> -> tensor<4xf32>
 
     // %t is writable, so the tensor.insert may bufferize in-place in the
     // absence of other conflicts.
@@ -498,10 +498,8 @@ def Bufferization_ToMemrefOp : Bufferization_Op<"to_memref", [
     SameOperandsAndResultShape,
     SameOperandsAndResultElementType,
     Pure,
-    TypesMatchWith<"type of 'tensor' is the tensor equivalent of 'memref'",
-                   "memref", "tensor",
-                   "memref::getTensorTypeFromMemRefType($_self)",
-                   "bufferization::detail::tensorTypesMatchUpToEncoding">
+    AllShapesMatch<["memref", "tensor"]>,
+    AllElementTypesMatch<["memref", "tensor"]>
   ]> {
   let summary = "cast a tensor to memref";
   let description = [{
@@ -509,7 +507,7 @@ def Bufferization_ToMemrefOp : Bufferization_Op<"to_memref", [
 
     ```mlir
     // Result type is memref<4x?xf32, #layout, 0>
-    %m = bufferization.to_memref %t : memref<4x?xf32, #layout, 0>
+    %m = bufferization.to_memref %t : tensor<4x?xf32> -> memref<4x?xf32, #layout, 0>
     ```
 
     This operation is a specialized variant of the built-in
