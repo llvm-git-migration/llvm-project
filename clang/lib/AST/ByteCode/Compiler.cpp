@@ -114,7 +114,8 @@ public:
 
   LoopScope(Compiler<Emitter> *Ctx, LabelTy BreakLabel, LabelTy ContinueLabel)
       : LabelScope<Emitter>(Ctx), OldBreakLabel(Ctx->BreakLabel),
-        OldContinueLabel(Ctx->ContinueLabel) {
+        OldContinueLabel(Ctx->ContinueLabel),
+        OldLabelVarScope(Ctx->LabelVarScope) {
     this->Ctx->BreakLabel = BreakLabel;
     this->Ctx->ContinueLabel = ContinueLabel;
   }
@@ -122,11 +123,13 @@ public:
   ~LoopScope() {
     this->Ctx->BreakLabel = OldBreakLabel;
     this->Ctx->ContinueLabel = OldContinueLabel;
+    this->Ctx->LabelVarScope = OldLabelVarScope;
   }
 
 private:
   OptLabelTy OldBreakLabel;
   OptLabelTy OldContinueLabel;
+  VariableScope<Emitter> *OldLabelVarScope;
 };
 
 // Sets the context for a switch scope, mapping labels.
@@ -140,7 +143,8 @@ public:
               OptLabelTy DefaultLabel)
       : LabelScope<Emitter>(Ctx), OldBreakLabel(Ctx->BreakLabel),
         OldDefaultLabel(this->Ctx->DefaultLabel),
-        OldCaseLabels(std::move(this->Ctx->CaseLabels)) {
+        OldCaseLabels(std::move(this->Ctx->CaseLabels)),
+        OldLabelVarScope(Ctx->LabelVarScope) {
     this->Ctx->BreakLabel = BreakLabel;
     this->Ctx->DefaultLabel = DefaultLabel;
     this->Ctx->CaseLabels = std::move(CaseLabels);
@@ -150,12 +154,14 @@ public:
     this->Ctx->BreakLabel = OldBreakLabel;
     this->Ctx->DefaultLabel = OldDefaultLabel;
     this->Ctx->CaseLabels = std::move(OldCaseLabels);
+    this->Ctx->LabelVarScope = OldLabelVarScope;
   }
 
 private:
   OptLabelTy OldBreakLabel;
   OptLabelTy OldDefaultLabel;
   CaseMap OldCaseLabels;
+  VariableScope<Emitter> *OldLabelVarScope;
 };
 
 template <class Emitter> class StmtExprScope final {
@@ -4734,7 +4740,9 @@ bool Compiler<Emitter>::visitBreakStmt(const BreakStmt *S) {
   if (!BreakLabel)
     return false;
 
-  this->emitCleanup();
+  for (VariableScope<Emitter> *C = VarScope; C != LabelVarScope;
+       C = C->getParent())
+    C->emitDestruction();
   return this->jump(*BreakLabel);
 }
 
@@ -4743,7 +4751,9 @@ bool Compiler<Emitter>::visitContinueStmt(const ContinueStmt *S) {
   if (!ContinueLabel)
     return false;
 
-  this->emitCleanup();
+  for (VariableScope<Emitter> *C = VarScope; C != LabelVarScope;
+       C = C->getParent())
+    C->emitDestruction();
   return this->jump(*ContinueLabel);
 }
 
