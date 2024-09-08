@@ -1272,6 +1272,16 @@ static bool upgradeIntrinsicFunction1(Function *F, Function *&NewFn,
         // nvvm.bitcast.{f2i,i2f,ll2d,d2ll}
         Expand =
             Name == "f2i" || Name == "i2f" || Name == "ll2d" || Name == "d2ll";
+      else if (Name.consume_front("ptr.gen.to."))
+        // nvvm.ptr.gen.to.{local,shared,global,constant}
+        Expand = Name.starts_with("local") || Name.starts_with("shared") ||
+                 Name.starts_with("global") || Name.starts_with("constant");
+      else if (Name.consume_front("ptr."))
+        // nvvm.ptr.{local,shared,global,constant}.to.gen
+        Expand =
+            (Name.consume_front("local") || Name.consume_front("shared") ||
+             Name.consume_front("global") || Name.consume_front("constant")) &&
+            Name.starts_with(".to.gen");
       else
         Expand = false;
 
@@ -4266,6 +4276,17 @@ void llvm::UpgradeIntrinsicCall(CallBase *CI, Function *NewFn) {
                  (Name == "f2i" || Name == "i2f" || Name == "ll2d" ||
                   Name == "d2ll")) {
         Rep = Builder.CreateBitCast(CI->getArgOperand(0), CI->getType());
+      } else if ((Name.consume_front("ptr.gen.to.") &&
+                  (Name.starts_with("local") || Name.starts_with("shared") ||
+                   Name.starts_with("global") ||
+                   Name.starts_with("constant"))) ||
+                 (Name.consume_front("ptr.") &&
+                  (Name.consume_front("local") ||
+                   Name.consume_front("shared") ||
+                   Name.consume_front("global") ||
+                   Name.consume_front("constant")) &&
+                  Name.starts_with(".to.gen"))) {
+        Rep = Builder.CreateAddrSpaceCast(CI->getArgOperand(0), CI->getType());
       } else {
         Intrinsic::ID IID = shouldUpgradeNVPTXBF16Intrinsic(Name);
         if (IID != Intrinsic::not_intrinsic &&
