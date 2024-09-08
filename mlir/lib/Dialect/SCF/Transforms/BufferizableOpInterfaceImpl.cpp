@@ -203,7 +203,8 @@ struct ExecuteRegionOpInterface
     for (const auto &it : llvm::enumerate(executeRegionOp->getResultTypes())) {
       if (isa<TensorType>(it.value())) {
         newResults.push_back(rewriter.create<bufferization::ToTensorOp>(
-            executeRegionOp.getLoc(), newOp->getResult(it.index())));
+            executeRegionOp.getLoc(), it.value(),
+            newOp->getResult(it.index())));
       } else {
         newResults.push_back(newOp->getResult(it.index()));
       }
