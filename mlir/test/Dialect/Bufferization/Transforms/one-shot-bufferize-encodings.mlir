@@ -131,3 +131,22 @@ func.func @materialize_in_destination(%arg0: tensor<128xf32, 1>) -> tensor<128xf
 //       CHECK:     memref.copy %[[v0]], %[[alloc]] : memref<128xf32, strided<[?], offset: ?>, 1> to memref<128xf32, 2>
 //       CHECK:     %[[v1:.+]] = bufferization.to_tensor %[[alloc]] : memref<128xf32, 2> -> tensor<128xf32, 2 : i64>
 //       CHECK:     return %[[v1]] : tensor<128xf32, 2 : i64>
+
+// -----
+
+func.func @scf_for_iter_arg(%arg0: tensor<128xf32, 1>, %arg1: index, %arg2: index, %arg3: index, %arg4: f32) -> tensor<128xf32, 1> {
+  %0 = scf.for %i = %arg1 to %arg2 step %arg3 iter_args(%iter = %arg0) -> tensor<128xf32, 1> {
+    %0 = tensor.insert %arg4 into %iter[%i] : tensor<128xf32, 1>
+    scf.yield %0 : tensor<128xf32, 1>
+  }
+  return %0 : tensor<128xf32, 1>
+}
+
+// -----
+
+func.func @scf_execute_region(%arg0: tensor<128xf32, 1>) -> tensor<128xf32, 1> {
+  %0 = scf.execute_region -> tensor<128xf32, 1> {
+    scf.yield %arg0 : tensor<128xf32, 1>
+  }
+  return %0 : tensor<128xf32, 1>
+}
