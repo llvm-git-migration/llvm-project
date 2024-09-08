@@ -128,7 +128,9 @@ LogicalResult ConstantOp::verify() {
   Type type = getType();
 
   // Try to find the referenced function.
-  auto fn = (*this)->getParentOfType<ModuleOp>().lookupSymbol<FuncOp>(fnName);
+  SymbolTable symbolTable(
+      (*this)->getParentWithTrait<mlir::OpTrait::SymbolTable>());
+  auto fn = symbolTable.lookup<FuncOp>(fnName);
   if (!fn)
     return emitOpError() << "reference to undefined function '" << fnName
                          << "'";
