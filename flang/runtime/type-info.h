@@ -91,7 +91,7 @@ public:
 
   // Creates a pointer descriptor from this component description, possibly
   // with subscripts
-  RT_API_ATTRS void CreatePointerDescriptor(Descriptor &,
+  RT_API_ATTRS void CreateTargetDescriptor(Descriptor &,
       const Descriptor &container, Terminator &,
       const SubscriptValue * = nullptr) const;
 
@@ -126,14 +126,16 @@ public:
   enum class Which : std::uint8_t {
     None = 0,
     ScalarAssignment = 1,
-    ElementalAssignment = 2,
-    ReadFormatted = 3,
-    ReadUnformatted = 4,
-    WriteFormatted = 5,
-    WriteUnformatted = 6,
-    ElementalFinal = 7,
-    AssumedRankFinal = 8,
-    ScalarFinal = 9,
+    ScalarAllocatableAssignment = 2,
+    ScalarPointerAssignment = 3,
+    ElementalAssignment = 4,
+    ReadFormatted = 5,
+    ReadUnformatted = 6,
+    WriteFormatted = 7,
+    WriteUnformatted = 8,
+    ElementalFinal = 9,
+    AssumedRankFinal = 10,
+    ScalarFinal = 11,
     // higher-ranked final procedures follow
   };
 
