@@ -91,6 +91,12 @@ void BTFTypeDerived::completeType(BTFDebug &BDebug) {
 
   // The base type for PTR/CONST/VOLATILE could be void.
   const DIType *ResolvedType = DTy->getBaseType();
+  if (ResolvedType) {
+    const auto *DerivedTy = dyn_cast<DIDerivedType>(ResolvedType);
+    if (DerivedTy && DerivedTy->getTag() == dwarf::DW_TAG_atomic_type)
+      ResolvedType = DerivedTy->getBaseType();
+  }
+
   if (!ResolvedType) {
     assert((Kind == BTF::BTF_KIND_PTR || Kind == BTF::BTF_KIND_CONST ||
             Kind == BTF::BTF_KIND_VOLATILE) &&
@@ -800,6 +806,10 @@ void BTFDebug::visitDerivedType(const DIDerivedType *DTy, uint32_t &TypeId,
                                 bool CheckPointer, bool SeenPointer) {
   unsigned Tag = DTy->getTag();
 
+  if (Tag == dwarf::DW_TAG_atomic_type)
+    return visitTypeEntry(DTy->getBaseType(), TypeId, CheckPointer,
+                          SeenPointer);
+
   /// Try to avoid chasing pointees, esp. structure pointees which may
   /// unnecessary bring in a lot of types.
   if (CheckPointer && !SeenPointer) {
@@ -1444,8 +1454,15 @@ void BTFDebug::processGlobals(bool ProcessingMapDef) {
       DIGlobal = GVE->getVariable();
       if (SecName.starts_with(".maps"))
         visitMapDefType(DIGlobal->getType(), GVTypeId);
-      else
-        visitTypeEntry(DIGlobal->getType(), GVTypeId, false, false);
+      else {
+        const DIType *Ty = DIGlobal->getType();
+        if (Ty) {
+          auto *DTy = dyn_cast<DIDerivedType>(Ty);
+          if (DTy && DTy->getTag() == dwarf::DW_TAG_atomic_type)
+            Ty = DTy->getBaseType();
+        }
+        visitTypeEntry(Ty, GVTypeId, false, false);
+      }
       break;
     }
 
