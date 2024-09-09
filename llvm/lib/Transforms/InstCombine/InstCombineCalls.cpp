@@ -1526,6 +1526,30 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
     return &CI;
   }
 
+  LibFunc Func = NotLibFunc;
+  if (TLI.getLibFunc(CI, Func)) {
+    switch (Func) {
+    default:
+      break;
+    case LibFunc_fmod:
+    case LibFunc_fmodf:
+    case LibFunc_fmodl: {
+      // fmod(x,y) can set errno if y == 0 or x == +/-inf.
+      KnownFPClass Known0 = computeKnownFPClass(CI.getOperand(0), fcInf, &CI);
+      if (Known0.isKnownNeverInfinity()) {
+        KnownFPClass Known1 =
+            computeKnownFPClass(CI.getOperand(1), fcZero, &CI);
+        if (Known1.isKnownNeverZero()) {
+          CI.replaceAllUsesWith(
+              Builder.CreateFRemFMF(CI.getOperand(0), CI.getOperand(1), &CI));
+          return eraseInstFromFunction(CI);
+        }
+      }
+      break;
+    }
+    }
+  }
+
   IntrinsicInst *II = dyn_cast<IntrinsicInst>(&CI);
   if (!II) return visitCallBase(CI);
 
