@@ -1069,9 +1069,27 @@ void ImportFile::parse() {
   // DLL functions just like regular non-DLL functions.)
   if (hdr->getType() == llvm::COFF::IMPORT_CODE) {
     if (ctx.config.machine != ARM64EC) {
-      thunkSym = ctx.symtab.addImportThunk(name, impSym, hdr->Machine);
+      ImportThunkChunk *chunk;
+      switch (hdr->Machine) {
+      case AMD64:
+        chunk = make<ImportThunkChunkX64>(ctx, impSym);
+        break;
+      case I386:
+        chunk = make<ImportThunkChunkX86>(ctx, impSym);
+        break;
+      case ARM64:
+        chunk = make<ImportThunkChunkARM64>(ctx, impSym);
+        break;
+      case ARMNT:
+        chunk = make<ImportThunkChunkARM>(ctx, impSym);
+        break;
+      default:
+        llvm_unreachable("unknown machine type");
+      }
+      thunkSym = ctx.symtab.addImportThunk(name, impSym, chunk);
     } else {
-      thunkSym = ctx.symtab.addImportThunk(name, impSym, AMD64);
+      thunkSym = ctx.symtab.addImportThunk(
+          name, impSym, make<ImportThunkChunkX64>(ctx, impSym));
       // FIXME: Add aux IAT symbols.
     }
   }
