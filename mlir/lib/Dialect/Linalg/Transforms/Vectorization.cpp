@@ -1079,6 +1079,32 @@ vectorizeTensorExtract(RewriterBase &rewriter, VectorizationState &state,
       continue;
     }
 
+    auto idxType = dyn_cast<VectorType>(idx.getType());
+
+    if (idxType && idxType.getShape().size() == resultType.getShape().size()) {
+      auto maxElement = std::max_element(resultType.getShape().begin(),
+                                         resultType.getShape().end());
+      auto maxElementDim =
+          std::distance(resultType.getShape().begin(), maxElement);
+      // This means that the result type is not all unit dims expect innermost
+      // dim and we insert a transpose op to make it all unit dims expect
+      // innermost dim.
+      if (maxElementDim != resultType.getShape().size() - 1) {
+        SmallVector<int64_t> transposition = llvm::to_vector<16>(
+            llvm::seq<int64_t>(0, resultType.getShape().size()));
+        std::swap(transposition.back(), transposition[maxElementDim]);
+        auto transposeOp =
+            rewriter.create<vector::TransposeOp>(loc, idx, transposition);
+        auto indexAs1dVector = rewriter.create<vector::ShapeCastOp>(
+            loc,
+            VectorType::get(*maxElement, rewriter.getIndexType(),
+                            resultType.getScalableDims().back()),
+            transposeOp);
+        transferReadIdxs.push_back(rewriter.create<vector::ExtractElementOp>(
+            loc, indexAs1dVector, zero));
+        continue;
+      }
+    }
     auto indexAs1dVector = rewriter.create<vector::ShapeCastOp>(
         loc,
         VectorType::get(resultType.getShape().back(), rewriter.getIndexType(),
