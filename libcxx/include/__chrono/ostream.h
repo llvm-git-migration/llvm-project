@@ -33,6 +33,7 @@
 #include <__format/format_functions.h>
 #include <__fwd/ostream.h>
 #include <ratio>
+#include <sstream>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header

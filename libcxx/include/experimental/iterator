@@ -53,11 +53,13 @@ namespace std {
 */
 
 #include <__memory/addressof.h>
+#include <__string/char_traits.h>
 #include <__type_traits/decay.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <experimental/__config>
 #include <iterator>
+#include <ostream>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
