@@ -170,7 +170,7 @@ define dso_local float @flw_stack(float %a) nounwind {
 ; RV32IZFINX-NEXT:    addi sp, sp, -16
 ; RV32IZFINX-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32IZFINX-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
-; RV32IZFINX-NEXT:    mv s0, a0
+; RV32IZFINX-NEXT:    fmv.s s0, a0
 ; RV32IZFINX-NEXT:    addi a0, sp, 4
 ; RV32IZFINX-NEXT:    call notdead
 ; RV32IZFINX-NEXT:    lw a0, 4(sp)
@@ -185,7 +185,7 @@ define dso_local float @flw_stack(float %a) nounwind {
 ; RV64IZFINX-NEXT:    addi sp, sp, -32
 ; RV64IZFINX-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64IZFINX-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
-; RV64IZFINX-NEXT:    mv s0, a0
+; RV64IZFINX-NEXT:    fmv.s s0, a0
 ; RV64IZFINX-NEXT:    addi a0, sp, 12
 ; RV64IZFINX-NEXT:    call notdead
 ; RV64IZFINX-NEXT:    lw a0, 12(sp)

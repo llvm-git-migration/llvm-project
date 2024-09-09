@@ -471,6 +471,14 @@ void RISCVInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     return;
   }
 
+  if (RISCV::GPRF32RegClass.contains(DstReg, SrcReg)) {
+    assert(STI.hasStdExtZfinx());
+    BuildMI(MBB, MBBI, DL, get(RISCV::FSGNJ_S_INX), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc))
+        .addReg(SrcReg, getKillRegState(KillSrc));
+    return;
+  }
+
   if (RISCV::GPRPairRegClass.contains(DstReg, SrcReg)) {
     // Emit an ADDI for both parts of GPRPair.
     BuildMI(MBB, MBBI, DL, get(RISCV::ADDI),
@@ -595,6 +603,9 @@ void RISCVInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
   } else if (RISCV::GPRF16RegClass.hasSubClassEq(RC)) {
     Opcode = RISCV::SH_INX;
     IsScalableVector = false;
+  } else if (RISCV::GPRF32RegClass.hasSubClassEq(RC)) {
+    Opcode = RISCV::SW_INX;
+    IsScalableVector = false;
   } else if (RISCV::GPRPairRegClass.hasSubClassEq(RC)) {
     Opcode = RISCV::PseudoRV32ZdinxSD;
     IsScalableVector = false;
@@ -680,6 +691,9 @@ void RISCVInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
     IsScalableVector = false;
   } else if (RISCV::GPRF16RegClass.hasSubClassEq(RC)) {
     Opcode = RISCV::LH_INX;
+    IsScalableVector = false;
+  } else if (RISCV::GPRF32RegClass.hasSubClassEq(RC)) {
+    Opcode = RISCV::LW_INX;
     IsScalableVector = false;
   } else if (RISCV::GPRPairRegClass.hasSubClassEq(RC)) {
     Opcode = RISCV::PseudoRV32ZdinxLD;

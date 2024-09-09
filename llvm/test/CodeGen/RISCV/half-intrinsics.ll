@@ -153,8 +153,8 @@ define half @powi_f16(half %a, i32 %b) nounwind {
 ; RV64IZHINX:       # %bb.0:
 ; RV64IZHINX-NEXT:    addi sp, sp, -16
 ; RV64IZHINX-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
-; RV64IZHINX-NEXT:    sext.w a1, a1
 ; RV64IZHINX-NEXT:    fcvt.s.h a0, a0
+; RV64IZHINX-NEXT:    sext.w a1, a1
 ; RV64IZHINX-NEXT:    call __powisf2
 ; RV64IZHINX-NEXT:    fcvt.h.s a0, a0
 ; RV64IZHINX-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
@@ -233,8 +233,8 @@ define half @powi_f16(half %a, i32 %b) nounwind {
 ; RV64IZHINXMIN:       # %bb.0:
 ; RV64IZHINXMIN-NEXT:    addi sp, sp, -16
 ; RV64IZHINXMIN-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
-; RV64IZHINXMIN-NEXT:    sext.w a1, a1
 ; RV64IZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; RV64IZHINXMIN-NEXT:    sext.w a1, a1
 ; RV64IZHINXMIN-NEXT:    call __powisf2
 ; RV64IZHINXMIN-NEXT:    fcvt.h.s a0, a0
 ; RV64IZHINXMIN-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
@@ -533,10 +533,10 @@ define half @sincos_f16(half %a) nounwind {
 ; RV32IZHINX-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32IZHINX-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
-; RV32IZHINX-NEXT:    mv a0, s0
+; RV32IZHINX-NEXT:    fmv.s a0, s0
 ; RV32IZHINX-NEXT:    call sinf
 ; RV32IZHINX-NEXT:    fcvt.h.s s1, a0
-; RV32IZHINX-NEXT:    mv a0, s0
+; RV32IZHINX-NEXT:    fmv.s a0, s0
 ; RV32IZHINX-NEXT:    call cosf
 ; RV32IZHINX-NEXT:    fcvt.h.s a0, a0
 ; RV32IZHINX-NEXT:    fadd.h a0, s1, a0
@@ -553,10 +553,10 @@ define half @sincos_f16(half %a) nounwind {
 ; RV64IZHINX-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64IZHINX-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; RV64IZHINX-NEXT:    fcvt.s.h s0, a0
-; RV64IZHINX-NEXT:    mv a0, s0
+; RV64IZHINX-NEXT:    fmv.s a0, s0
 ; RV64IZHINX-NEXT:    call sinf
 ; RV64IZHINX-NEXT:    fcvt.h.s s1, a0
-; RV64IZHINX-NEXT:    mv a0, s0
+; RV64IZHINX-NEXT:    fmv.s a0, s0
 ; RV64IZHINX-NEXT:    call cosf
 ; RV64IZHINX-NEXT:    fcvt.h.s a0, a0
 ; RV64IZHINX-NEXT:    fadd.h a0, s1, a0
@@ -775,10 +775,10 @@ define half @sincos_f16(half %a) nounwind {
 ; RV32IZHINXMIN-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32IZHINXMIN-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
-; RV32IZHINXMIN-NEXT:    mv a0, s0
+; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
 ; RV32IZHINXMIN-NEXT:    call sinf
 ; RV32IZHINXMIN-NEXT:    fcvt.h.s s1, a0
-; RV32IZHINXMIN-NEXT:    mv a0, s0
+; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
 ; RV32IZHINXMIN-NEXT:    call cosf
 ; RV32IZHINXMIN-NEXT:    fcvt.h.s a0, a0
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h a0, a0
@@ -798,10 +798,10 @@ define half @sincos_f16(half %a) nounwind {
 ; RV64IZHINXMIN-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64IZHINXMIN-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; RV64IZHINXMIN-NEXT:    fcvt.s.h s0, a0
-; RV64IZHINXMIN-NEXT:    mv a0, s0
+; RV64IZHINXMIN-NEXT:    fmv.s a0, s0
 ; RV64IZHINXMIN-NEXT:    call sinf
 ; RV64IZHINXMIN-NEXT:    fcvt.h.s s1, a0
-; RV64IZHINXMIN-NEXT:    mv a0, s0
+; RV64IZHINXMIN-NEXT:    fmv.s a0, s0
 ; RV64IZHINXMIN-NEXT:    call cosf
 ; RV64IZHINXMIN-NEXT:    fcvt.h.s a0, a0
 ; RV64IZHINXMIN-NEXT:    fcvt.s.h a0, a0
