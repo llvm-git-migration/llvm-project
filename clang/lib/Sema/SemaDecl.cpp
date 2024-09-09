@@ -12295,6 +12295,14 @@ bool Sema::CheckFunctionDeclaration(Scope *S, FunctionDecl *NewFD,
     bool UsesZA = Attr && Attr->isNewZA();
     bool UsesZT0 = Attr && Attr->isNewZT0();
 
+    if (UsesZA || UsesZT0) {
+      if (const auto *FPT = NewFD->getType()->getAs<FunctionProtoType>()) {
+        FunctionProtoType::ExtProtoInfo EPI = FPT->getExtProtoInfo();
+        if (EPI.AArch64SMEAttributes & FunctionType::SME_AgnosticZAStateMask)
+          Diag(NewFD->getLocation(), diag::err_sme_unimplemented_agnostic_new);
+      }
+    }
+
     if (NewFD->hasAttr<ArmLocallyStreamingAttr>()) {
       if (NewFD->getReturnType()->isSizelessVectorType())
         Diag(NewFD->getLocation(),
