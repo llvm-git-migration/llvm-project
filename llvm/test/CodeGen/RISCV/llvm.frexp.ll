@@ -62,8 +62,10 @@ define { half, i32 } @test_frexp_f16_i32(half %a) nounwind {
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    call __truncsfhf2
 ; RV32IZFINXZDINX-NEXT:    lw a1, 8(sp)
+; RV32IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w def $x10
 ; RV32IZFINXZDINX-NEXT:    lui a2, 1048560
 ; RV32IZFINXZDINX-NEXT:    or a0, a0, a2
+; RV32IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w killed $x10
 ; RV32IZFINXZDINX-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZFINXZDINX-NEXT:    addi sp, sp, 16
 ; RV32IZFINXZDINX-NEXT:    ret
@@ -77,8 +79,10 @@ define { half, i32 } @test_frexp_f16_i32(half %a) nounwind {
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    call __truncsfhf2
 ; RV64IZFINXZDINX-NEXT:    ld a1, 0(sp)
+; RV64IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w def $x10
 ; RV64IZFINXZDINX-NEXT:    lui a2, 1048560
 ; RV64IZFINXZDINX-NEXT:    or a0, a0, a2
+; RV64IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w killed $x10
 ; RV64IZFINXZDINX-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IZFINXZDINX-NEXT:    addi sp, sp, 16
 ; RV64IZFINXZDINX-NEXT:    ret
@@ -157,8 +161,10 @@ define half @test_frexp_f16_i32_only_use_fract(half %a) nounwind {
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 8
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    call __truncsfhf2
+; RV32IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w def $x10
 ; RV32IZFINXZDINX-NEXT:    lui a1, 1048560
 ; RV32IZFINXZDINX-NEXT:    or a0, a0, a1
+; RV32IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w killed $x10
 ; RV32IZFINXZDINX-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZFINXZDINX-NEXT:    addi sp, sp, 16
 ; RV32IZFINXZDINX-NEXT:    ret
@@ -171,8 +177,10 @@ define half @test_frexp_f16_i32_only_use_fract(half %a) nounwind {
 ; RV64IZFINXZDINX-NEXT:    mv a1, sp
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    call __truncsfhf2
+; RV64IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w def $x10
 ; RV64IZFINXZDINX-NEXT:    lui a1, 1048560
 ; RV64IZFINXZDINX-NEXT:    or a0, a0, a1
+; RV64IZFINXZDINX-NEXT:    # kill: def $x10_w killed $x10_w killed $x10
 ; RV64IZFINXZDINX-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IZFINXZDINX-NEXT:    addi sp, sp, 16
 ; RV64IZFINXZDINX-NEXT:    ret
@@ -638,25 +646,25 @@ define { <4 x float>, <4 x i32> } @test_frexp_v4f32_v4i32(<4 x float> %a) nounwi
 ; RV32IZFINXZDINX-NEXT:    sw s2, 32(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s3, 28(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s4, 24(sp) # 4-byte Folded Spill
-; RV32IZFINXZDINX-NEXT:    mv s0, a4
-; RV32IZFINXZDINX-NEXT:    mv s1, a3
-; RV32IZFINXZDINX-NEXT:    mv s2, a2
-; RV32IZFINXZDINX-NEXT:    mv a2, a1
+; RV32IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV32IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV32IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV32IZFINXZDINX-NEXT:    mv s3, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 8
-; RV32IZFINXZDINX-NEXT:    mv a0, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s4, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s4, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 12
-; RV32IZFINXZDINX-NEXT:    mv a0, s2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s2, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s2, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV32IZFINXZDINX-NEXT:    mv a0, s1
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s1, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s1, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 20
-; RV32IZFINXZDINX-NEXT:    mv a0, s0
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    lw a1, 20(sp)
 ; RV32IZFINXZDINX-NEXT:    lw a2, 16(sp)
@@ -688,25 +696,25 @@ define { <4 x float>, <4 x i32> } @test_frexp_v4f32_v4i32(<4 x float> %a) nounwi
 ; RV64IZFINXZDINX-NEXT:    sd s2, 48(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s3, 40(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s4, 32(sp) # 8-byte Folded Spill
-; RV64IZFINXZDINX-NEXT:    mv s0, a4
-; RV64IZFINXZDINX-NEXT:    mv s1, a3
-; RV64IZFINXZDINX-NEXT:    mv s2, a2
-; RV64IZFINXZDINX-NEXT:    mv a2, a1
+; RV64IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV64IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV64IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV64IZFINXZDINX-NEXT:    mv s3, a0
 ; RV64IZFINXZDINX-NEXT:    mv a1, sp
-; RV64IZFINXZDINX-NEXT:    mv a0, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s4, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s4, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 8
-; RV64IZFINXZDINX-NEXT:    mv a0, s2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s2, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s2, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV64IZFINXZDINX-NEXT:    mv a0, s1
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s1, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s1, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 24
-; RV64IZFINXZDINX-NEXT:    mv a0, s0
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    ld a1, 24(sp)
 ; RV64IZFINXZDINX-NEXT:    ld a2, 16(sp)
@@ -922,25 +930,25 @@ define <4 x float> @test_frexp_v4f32_v4i32_only_use_fract(<4 x float> %a) nounwi
 ; RV32IZFINXZDINX-NEXT:    sw s2, 32(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s3, 28(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s4, 24(sp) # 4-byte Folded Spill
-; RV32IZFINXZDINX-NEXT:    mv s0, a4
-; RV32IZFINXZDINX-NEXT:    mv s1, a3
-; RV32IZFINXZDINX-NEXT:    mv s2, a2
-; RV32IZFINXZDINX-NEXT:    mv a2, a1
+; RV32IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV32IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV32IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV32IZFINXZDINX-NEXT:    mv s3, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 8
-; RV32IZFINXZDINX-NEXT:    mv a0, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s4, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s4, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 12
-; RV32IZFINXZDINX-NEXT:    mv a0, s2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s2, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s2, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV32IZFINXZDINX-NEXT:    mv a0, s1
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV32IZFINXZDINX-NEXT:    call frexpf
-; RV32IZFINXZDINX-NEXT:    mv s1, a0
+; RV32IZFINXZDINX-NEXT:    fmv.s s1, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 20
-; RV32IZFINXZDINX-NEXT:    mv a0, s0
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    sw a0, 12(s3)
 ; RV32IZFINXZDINX-NEXT:    sw s1, 8(s3)
@@ -964,25 +972,25 @@ define <4 x float> @test_frexp_v4f32_v4i32_only_use_fract(<4 x float> %a) nounwi
 ; RV64IZFINXZDINX-NEXT:    sd s2, 48(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s3, 40(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s4, 32(sp) # 8-byte Folded Spill
-; RV64IZFINXZDINX-NEXT:    mv s0, a4
-; RV64IZFINXZDINX-NEXT:    mv s1, a3
-; RV64IZFINXZDINX-NEXT:    mv s2, a2
-; RV64IZFINXZDINX-NEXT:    mv a2, a1
+; RV64IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV64IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV64IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV64IZFINXZDINX-NEXT:    mv s3, a0
 ; RV64IZFINXZDINX-NEXT:    mv a1, sp
-; RV64IZFINXZDINX-NEXT:    mv a0, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s4, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s4, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 8
-; RV64IZFINXZDINX-NEXT:    mv a0, s2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s2, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s2, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV64IZFINXZDINX-NEXT:    mv a0, s1
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV64IZFINXZDINX-NEXT:    call frexpf
-; RV64IZFINXZDINX-NEXT:    mv s1, a0
+; RV64IZFINXZDINX-NEXT:    fmv.s s1, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 24
-; RV64IZFINXZDINX-NEXT:    mv a0, s0
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    sw a0, 12(s3)
 ; RV64IZFINXZDINX-NEXT:    sw s1, 8(s3)
@@ -1172,22 +1180,22 @@ define <4 x i32> @test_frexp_v4f32_v4i32_only_use_exp(<4 x float> %a) nounwind {
 ; RV32IZFINXZDINX-NEXT:    sw s1, 36(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s2, 32(sp) # 4-byte Folded Spill
 ; RV32IZFINXZDINX-NEXT:    sw s3, 28(sp) # 4-byte Folded Spill
-; RV32IZFINXZDINX-NEXT:    mv s0, a4
-; RV32IZFINXZDINX-NEXT:    mv s1, a3
-; RV32IZFINXZDINX-NEXT:    mv s2, a2
-; RV32IZFINXZDINX-NEXT:    mv a2, a1
+; RV32IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV32IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV32IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV32IZFINXZDINX-NEXT:    mv s3, a0
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 12
-; RV32IZFINXZDINX-NEXT:    mv a0, a2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV32IZFINXZDINX-NEXT:    mv a0, s2
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 20
-; RV32IZFINXZDINX-NEXT:    mv a0, s1
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    addi a1, sp, 24
-; RV32IZFINXZDINX-NEXT:    mv a0, s0
+; RV32IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV32IZFINXZDINX-NEXT:    call frexpf
 ; RV32IZFINXZDINX-NEXT:    lw a0, 24(sp)
 ; RV32IZFINXZDINX-NEXT:    lw a1, 20(sp)
@@ -1213,22 +1221,22 @@ define <4 x i32> @test_frexp_v4f32_v4i32_only_use_exp(<4 x float> %a) nounwind {
 ; RV64IZFINXZDINX-NEXT:    sd s1, 56(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s2, 48(sp) # 8-byte Folded Spill
 ; RV64IZFINXZDINX-NEXT:    sd s3, 40(sp) # 8-byte Folded Spill
-; RV64IZFINXZDINX-NEXT:    mv s0, a4
-; RV64IZFINXZDINX-NEXT:    mv s1, a3
-; RV64IZFINXZDINX-NEXT:    mv s2, a2
-; RV64IZFINXZDINX-NEXT:    mv a2, a1
+; RV64IZFINXZDINX-NEXT:    fmv.s s0, a4
+; RV64IZFINXZDINX-NEXT:    fmv.s s1, a3
+; RV64IZFINXZDINX-NEXT:    fmv.s s2, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a2, a1
 ; RV64IZFINXZDINX-NEXT:    mv s3, a0
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 8
-; RV64IZFINXZDINX-NEXT:    mv a0, a2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, a2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 16
-; RV64IZFINXZDINX-NEXT:    mv a0, s2
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s2
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 24
-; RV64IZFINXZDINX-NEXT:    mv a0, s1
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s1
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    addi a1, sp, 32
-; RV64IZFINXZDINX-NEXT:    mv a0, s0
+; RV64IZFINXZDINX-NEXT:    fmv.s a0, s0
 ; RV64IZFINXZDINX-NEXT:    call frexpf
 ; RV64IZFINXZDINX-NEXT:    ld a0, 32(sp)
 ; RV64IZFINXZDINX-NEXT:    ld a1, 24(sp)

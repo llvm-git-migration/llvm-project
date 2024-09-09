@@ -1003,12 +1003,12 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV32IZFINX:       # %bb.0: # %entry
 ; RV32IZFINX-NEXT:    addi sp, sp, -16
 ; RV32IZFINX-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32IZFINX-NEXT:    li a0, 0
+; RV32IZFINX-NEXT:    fmv.s a0, zero
 ; RV32IZFINX-NEXT:    call dummy
 ; RV32IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV32IZFINX-NEXT:    beqz a0, .LBB17_3
 ; RV32IZFINX-NEXT:  # %bb.1: # %if.end
-; RV32IZFINX-NEXT:    li a0, 0
+; RV32IZFINX-NEXT:    fmv.s a0, zero
 ; RV32IZFINX-NEXT:    call dummy
 ; RV32IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV32IZFINX-NEXT:    beqz a0, .LBB17_3
@@ -1024,12 +1024,12 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV64IZFINX:       # %bb.0: # %entry
 ; RV64IZFINX-NEXT:    addi sp, sp, -16
 ; RV64IZFINX-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
-; RV64IZFINX-NEXT:    li a0, 0
+; RV64IZFINX-NEXT:    fmv.s a0, zero
 ; RV64IZFINX-NEXT:    call dummy
 ; RV64IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV64IZFINX-NEXT:    beqz a0, .LBB17_3
 ; RV64IZFINX-NEXT:  # %bb.1: # %if.end
-; RV64IZFINX-NEXT:    li a0, 0
+; RV64IZFINX-NEXT:    fmv.s a0, zero
 ; RV64IZFINX-NEXT:    call dummy
 ; RV64IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV64IZFINX-NEXT:    beqz a0, .LBB17_3
