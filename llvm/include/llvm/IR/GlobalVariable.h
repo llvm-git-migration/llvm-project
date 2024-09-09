@@ -39,6 +39,8 @@ class DIGlobalVariableExpression;
 class GlobalVariable : public GlobalObject, public ilist_node<GlobalVariable> {
   friend class SymbolTableListTraits<GlobalVariable>;
 
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{1};
+
   AttributeSet Attrs;
 
   // Is this a global constant?
@@ -75,9 +77,7 @@ public:
   }
 
   // allocate space for exactly one operand
-  void *operator new(size_t s) {
-    return User::operator new(s, 1);
-  }
+  void *operator new(size_t s) { return User::operator new(s, AllocMarker); }
 
   // delete space for exactly one operand as created in the corresponding new operator
   void operator delete(void *ptr){
