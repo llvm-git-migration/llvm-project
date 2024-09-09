@@ -446,7 +446,7 @@ bool PPCRegisterInfo::isAsmClobberable(const MachineFunction &MF,
                                        MCRegister PhysReg) const {
   // CTR and LR registers are always reserved, but they are asm clobberable.
   if (PhysReg == PPC::CTR || PhysReg == PPC::CTR8 || PhysReg == PPC::LR ||
-      PhysReg == PPC::LR)
+      PhysReg == PPC::LR8)
     return true;
 
   return !getReservedRegs(MF).test(PhysReg);
