@@ -5071,10 +5071,6 @@ def : Pat<(v1f64 (fmaxnum (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
 def : Pat<(v1f64 (fminnum (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
           (FMINNMDrr FPR64:$Rn, FPR64:$Rm)>;
 
-def : Pat<(v1f64 (fmaxnum_ieee (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
-          (FMAXNMDrr FPR64:$Rn, FPR64:$Rm)>;
-def : Pat<(v1f64 (fminnum_ieee (v1f64 FPR64:$Rn), (v1f64 FPR64:$Rm))),
-          (FMINNMDrr FPR64:$Rn, FPR64:$Rm)>;
 def : Pat<(fminnum_ieee (f64 FPR64:$a), (f64 FPR64:$b)),
           (FMINNMDrr FPR64:$a, FPR64:$b)>;
 def : Pat<(fminnum_ieee (f32 FPR32:$a), (f32 FPR32:$b)),
