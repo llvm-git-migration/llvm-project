@@ -259,19 +259,18 @@ for.body:                                         ; preds = %entry, %for.body
     ret void
 }
 
-; // g) Dependence::Unknown
-; // Different stride lengths
-; void test_unknown_dep(int n, int* A) {
+; // g) Dependence::NoDep
+; // Different stride lengths that don't overlap.
+; void test_nodep(int n, int* A) {
 ;   for(int i=0; i < n; ++i) {
 ;       A[(i+1)*4] = 10;
 ;       A[i] = 100;
 ;   }
 ; }
 
-; CHECK: remark: source.c:83:7: loop not vectorized: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
-; CHECK: Unknown data dependence. Memory location is the same as accessed at source.c:82:7
+; CHECK-NOT: remark: source.c:{{0-9]+}}:{{[0-9]+}}:
 
-define void @test_unknown_dep(i64 %n, ptr nocapture %A) !dbg !214 {
+define void @test_no_overlap(i64 %n, ptr nocapture %A) !dbg !214 {
 entry:
   %cmp8 = icmp sgt i64 %n, 0
   br i1 %cmp8, label %for.body, label %for.cond.cleanup
@@ -368,25 +367,12 @@ for.body:                                         ; preds = %entry, %for.body
 ; YAML-NEXT: Args:
 ; YAML-NEXT:   - String:          loop not vectorized
 ; YAML-NEXT: ...
-; YAML-NEXT: --- !Analysis
-; YAML-NEXT: Pass:            loop-vectorize
-; YAML-NEXT: Name:            UnsafeDep
-; YAML-NEXT: DebugLoc:        { File: source.c, Line: 83, Column: 7 }
-; YAML-NEXT: Function:        test_unknown_dep
-; YAML-NEXT: Args:
-; YAML-NEXT:   - String:          'loop not vectorized: '
-; YAML-NEXT:   - String:          'unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop'
-; YAML-NEXT:   - String:          "\nUnknown data dependence."
-; YAML-NEXT:   - String:          ' Memory location is the same as accessed at '
-; YAML-NEXT:   - Location:        'source.c:82:7'
-; YAML-NEXT:     DebugLoc:        { File: source.c, Line: 82, Column: 7 }
-; YAML-NEXT: ...
 ; YAML-NEXT: --- !Missed
 ; YAML-NEXT: Pass:            loop-vectorize
-; YAML-NEXT: Name:            MissedDetails
-; YAML-NEXT: Function:        test_unknown_dep
+; YAML-NEXT: Name:            VectorizationNotBeneficial
+; YAML-NEXT: Function:        test_no_overlap
 ; YAML-NEXT: Args:
-; YAML-NEXT:   - String:          loop not vectorized
+; YAML-NEXT:   - String:          the cost-model indicates that vectorization is not beneficial
 ; YAML-NEXT: ...
 
 
