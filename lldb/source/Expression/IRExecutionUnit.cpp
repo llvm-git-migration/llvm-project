@@ -277,6 +277,9 @@ void IRExecutionUnit::GetRunnableInfo(Status &error, lldb::addr_t &func_addr,
       .setMCJITMemoryManager(std::make_unique<MemoryManager>(*this))
       .setOptLevel(llvm::CodeGenOptLevel::Less);
 
+  if (triple.isRISCV64())
+    builder.setCodeModel(llvm::CodeModel::Large);
+
   llvm::StringRef mArch;
   llvm::StringRef mCPU;
   llvm::SmallVector<std::string, 0> mAttrs;
