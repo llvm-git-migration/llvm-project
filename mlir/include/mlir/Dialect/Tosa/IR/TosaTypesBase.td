@@ -151,9 +151,6 @@ def Tosa_Int8Like : Tosa_TypeLike<[Tosa_Int8], "signless-integer-8-bit-like">;
 //===----------------------------------------------------------------------===//
 // Attribute predicates and classes.
 //===----------------------------------------------------------------------===//
-class DenseArrayMaxCt<int n> : AttrConstraint<
-    CPred<"::llvm::cast<::mlir::DenseArrayAttr>($_self).size() <= " # n>,
-    "with at least " # n # " elements">;
 
 def Tosa_Fp32ArrayAttr2 : ConfinedAttr<DenseF32ArrayAttr, [DenseArrayCount<2>]>;
 def Tosa_Fp32ArrayAttr3 : ConfinedAttr<DenseF32ArrayAttr, [DenseArrayCount<3>]>;
@@ -170,6 +167,8 @@ def Tosa_IntArrayAttr6 : ConfinedAttr<DenseI64ArrayAttr, [DenseArrayCount<6>]>;
 def Tosa_IntArrayAttrUpto2 : ConfinedAttr<DenseI64ArrayAttr, [DenseArrayMaxCt<2>]>;
 def Tosa_IntArrayAttrUpto4 : ConfinedAttr<DenseI64ArrayAttr, [DenseArrayMaxCt<4>]>;
 def Tosa_IntArrayAttrUpto5 : ConfinedAttr<DenseI64ArrayAttr, [DenseArrayMaxCt<5>]>;
+
+def Tosa_IntArrayAttrAtLeast4 : ConfinedAttr<DenseI64ArrayAttr, [DenseArrayMinCt<4>]>;
 
 def Tosa_FloatAttr : Attr<CPred<"::llvm::isa<::mlir::FloatAttr>($_self)">,
                           "arbitrary float attribute"> {
