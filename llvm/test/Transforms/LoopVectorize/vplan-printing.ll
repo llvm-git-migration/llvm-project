@@ -10,7 +10,7 @@ define void @print_call_and_memory(i64 %n, ptr noalias %y, ptr noalias %x) nounw
 ; CHECK-LABEL: Checking a loop in 'print_call_and_memory'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -28,13 +28,13 @@ define void @print_call_and_memory(i64 %n, ptr noalias %y, ptr noalias %x) nounw
 ; CHECK-NEXT:   vp<[[VEC_PTR2:%.+]]> = vector-pointer ir<%arrayidx2>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR2]]>, ir<%call>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:    EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:    EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:    EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT:  Successor(s): ir-bb<for.end.loopexit>, scalar.ph
 ; CHECK-EMPTY:
@@ -68,7 +68,7 @@ define void @print_widen_gep_and_select(i64 %n, ptr noalias %y, ptr noalias %x, 
 ; CHECK-LABEL: Checking a loop in 'print_widen_gep_and_select'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -89,13 +89,13 @@ define void @print_widen_gep_and_select(i64 %n, ptr noalias %y, ptr noalias %x, 
 ; CHECK-NEXT:   vp<[[VEC_PTR2:%.+]]> = vector-pointer ir<%arrayidx2>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR2]]>, ir<%add>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:    EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:    EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:    EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT:  Successor(s): ir-bb<for.end.loopexit>, scalar.ph
 ; CHECK-EMPTY:
@@ -131,7 +131,7 @@ define float @print_reduction(i64 %n, ptr noalias %y) {
 ; CHECK-LABEL: Checking a loop in 'print_reduction'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -147,14 +147,15 @@ define float @print_reduction(i64 %n, ptr noalias %y) {
 ; CHECK-NEXT:   WIDEN ir<%lv> = load vp<[[VEC_PTR]]>
 ; CHECK-NEXT:   REDUCE ir<%red.next> = ir<%red> + fast reduce.fadd (ir<%lv>)
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<[[RED_RES:%.+]]> = compute-reduction-result ir<%red>, ir<%red.next>
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[RED_EX:%.+]]> = extract-from-end vp<[[RED_RES]]>, ir<1>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<for.end>, scalar.ph
 ; CHECK-EMPTY:
@@ -164,7 +165,7 @@ define float @print_reduction(i64 %n, ptr noalias %y) {
 ; CHECK-NEXT: scalar.ph
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
-; CHECK-NEXT: Live-out float %red.next.lcssa = vp<[[RED_RES]]>
+; CHECK-NEXT: Live-out float %red.next.lcssa = vp<[[RED_EX]]>
 ; CHECK-NEXT: }
 ;
 entry:
@@ -188,7 +189,7 @@ define void @print_reduction_with_invariant_store(i64 %n, ptr noalias %y, ptr no
 ; CHECK-LABEL: Checking a loop in 'print_reduction_with_invariant_store'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -204,14 +205,14 @@ define void @print_reduction_with_invariant_store(i64 %n, ptr noalias %y, ptr no
 ; CHECK-NEXT:   WIDEN ir<%lv> = load vp<[[VEC_PTR]]>
 ; CHECK-NEXT:   REDUCE ir<%red.next> = ir<%red> + fast reduce.fadd (ir<%lv>) (with final reduction value stored in invariant address sank outside of loop)
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<[[RED_RES:.+]]> = compute-reduction-result ir<%red>, ir<%red.next>
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<for.end>, scalar.ph
 ; CHECK-EMPTY:
@@ -244,7 +245,7 @@ define void @print_replicate_predicated_phi(i64 %n, ptr %x) {
 ; CHECK-LABEL: Checking a loop in 'print_replicate_predicated_phi'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: vp<[[TC:%.+]]> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: ir-bb<entry>:
@@ -283,13 +284,13 @@ define void @print_replicate_predicated_phi(i64 %n, ptr %x) {
 ; CHECK-NEXT:   vp<[[VEC_PTR:%.+]]> = vector-pointer ir<%idx>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR]]>, ir<%d>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq vp<[[TC]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq vp<[[TC]]>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<for.end>, scalar.ph
 ; CHECK-EMPTY:
@@ -331,7 +332,7 @@ define void @print_interleave_groups(i32 %C, i32 %D) {
 ; CHECK-LABEL: Checking a loop in 'print_interleave_groups'
 ; CHECK:       VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<256> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -356,13 +357,13 @@ define void @print_interleave_groups(i32 %C, i32 %D) {
 ; CHECK-NEXT:     store ir<2> to index 2
 ; CHECK-NEXT:     store ir<%AB.3> to index 3
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<256>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<256>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<for.end>, scalar.ph
 ; CHECK-EMPTY:
@@ -408,7 +409,7 @@ define float @print_fmuladd_strict(ptr %a, ptr %b, i64 %n) {
 ; CHECK-LABEL: Checking a loop in 'print_fmuladd_strict'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -428,14 +429,15 @@ define float @print_fmuladd_strict(ptr %a, ptr %b, i64 %n) {
 ; CHECK-NEXT:   EMIT vp<[[FMUL:%.+]]> = fmul nnan ninf nsz ir<%l.a>, ir<%l.b>
 ; CHECK-NEXT:   REDUCE ir<[[MULADD:%.+]]> = ir<%sum.07> + nnan ninf nsz reduce.fadd (vp<[[FMUL]]>)
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT:   No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<[[RED_RES:%.+]]> = compute-reduction-result ir<%sum.07>, ir<[[MULADD]]>
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[RED_EX:%.+]]> = extract-from-end vp<[[RED_RES]]>, ir<1>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<for.end>, scalar.ph
 ; CHECK-EMPTY:
@@ -445,7 +447,7 @@ define float @print_fmuladd_strict(ptr %a, ptr %b, i64 %n) {
 ; CHECK-NEXT: scalar.ph
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
-; CHECK-NEXT: Live-out float %muladd.lcssa = vp<[[RED_RES]]>
+; CHECK-NEXT: Live-out float %muladd.lcssa = vp<[[RED_EX]]>
 ; CHECK-NEXT:}
 
 entry:
@@ -471,7 +473,7 @@ define void @debug_loc_vpinstruction(ptr nocapture %asd, ptr nocapture %bsd) !db
 ; CHECK-LABEL: Checking a loop in 'debug_loc_vpinstruction'
 ; CHECK:    VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<128> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -514,13 +516,13 @@ define void @debug_loc_vpinstruction(ptr nocapture %asd, ptr nocapture %bsd) !db
 ; CHECK-NEXT:    vp<[[VEC_PTR2:%.+]]> = vector-pointer ir<%isd>
 ; CHECK-NEXT:    WIDEN store vp<[[VEC_PTR2]]>, ir<%ysd.0>
 ; CHECK-NEXT:    EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:    EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:    EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT:  No successors
 ; CHECK-NEXT:}
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<128>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<128>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -597,7 +599,7 @@ define void @print_expand_scev(i64 %y, ptr %ptr) {
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq vp<[[TC]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq vp<[[TC]]>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<loop.exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -632,7 +634,7 @@ define i32 @print_exit_value(ptr %ptr, i32 %off) {
 ; CHECK-LABEL: Checking a loop in 'print_exit_value'
 ; CHECK: VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<1000> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -648,13 +650,14 @@ define i32 @print_exit_value(ptr %ptr, i32 %off) {
 ; CHECK-NEXT:     vp<[[VEC_PTR:%.+]]> = vector-pointer ir<%gep>
 ; CHECK-NEXT:     WIDEN store vp<[[VEC_PTR]]>, ir<0>
 ; CHECK-NEXT:     EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:     EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:     EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT:   No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<1000>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[EXIT:%.+]]> = extract-from-end ir<%add>, ir<1>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<1000>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -664,7 +667,7 @@ define i32 @print_exit_value(ptr %ptr, i32 %off) {
 ; CHECK-NEXT: scalar.ph
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
-; CHECK-NEXT: Live-out i32 %lcssa = ir<%add>
+; CHECK-NEXT: Live-out i32 %lcssa = vp<[[EXIT]]>
 ; CHECK-NEXT: }
 ;
 entry:
@@ -688,7 +691,7 @@ define void @print_fast_math_flags(i64 %n, ptr noalias %y, ptr noalias %x, ptr %
 ; CHECK-LABEL: Checking a loop in 'print_fast_math_flags'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -708,13 +711,13 @@ define void @print_fast_math_flags(i64 %n, ptr noalias %y, ptr noalias %x, ptr %
 ; CHECK-NEXT:   vp<[[VEC_PTR:%.+]]> = vector-pointer ir<%gep.x>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR]]>, ir<%div>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -749,7 +752,7 @@ define void @print_exact_flags(i64 %n, ptr noalias %x) {
 ; CHECK-LABEL: Checking a loop in 'print_exact_flags'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -768,13 +771,13 @@ define void @print_exact_flags(i64 %n, ptr noalias %x) {
 ; CHECK-NEXT:   vp<[[VEC_PTR2:%.+]]> = vector-pointer ir<%gep.x>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR2]]>, ir<%add>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -808,7 +811,7 @@ define void @print_call_flags(ptr readonly %src, ptr noalias %dest, i64 %n) {
 ; CHECK-LABEL: Checking a loop in 'print_call_flags'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -848,13 +851,13 @@ define void @print_call_flags(ptr readonly %src, ptr noalias %dest, i64 %n) {
 ; CHECK-NEXT:    vp<[[VEC_PTR2:%.+]]> = vector-pointer ir<%st.addr>
 ; CHECK-NEXT:    WIDEN store vp<[[VEC_PTR2]]>, ir<%st.value>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<end>, scalar.ph
 ; CHECK-EMPTY:
@@ -898,7 +901,7 @@ define void @print_disjoint_flags(i64 %n, ptr noalias %x) {
 ; CHECK-LABEL: Checking a loop in 'print_disjoint_flags'
 ; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT: Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT: Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT: Live-in ir<%n> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT: vector.ph:
@@ -917,13 +920,13 @@ define void @print_disjoint_flags(i64 %n, ptr noalias %x) {
 ; CHECK-NEXT:   vp<[[VEC_PTR:%.+]]> = vector-pointer ir<%gep.x>
 ; CHECK-NEXT:   WIDEN store vp<[[VEC_PTR]]>, ir<%add>
 ; CHECK-NEXT:   EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
-; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT: No successors
 ; CHECK-NEXT: }
 ; CHECK-NEXT: Successor(s): middle.block
 ; CHECK-EMPTY:
 ; CHECK-NEXT: middle.block:
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<%n>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -957,7 +960,7 @@ define void @zext_nneg(ptr noalias %p, ptr noalias %p1) {
 ; CHECK-LABEL: LV: Checking a loop in 'zext_nneg'
 ; CHECK:       VPlan 'Initial VPlan for VF={4},UF>=1' {
 ; CHECK-NEXT:  Live-in vp<[[VFxUF:%.]]> = VF * UF
-; CHECK-NEXT:  Live-in vp<[[VEC_TC:%.+]]> = vector-trip-count
+; CHECK-NEXT:  Live-in vp<[[VTC:%.+]]> = vector-trip-count
 ; CHECK-NEXT:  Live-in ir<1000> = original trip-count
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  vector.ph:
@@ -973,7 +976,7 @@ define void @zext_nneg(ptr noalias %p, ptr noalias %p1) {
 ; CHECK-NEXT:    WIDEN-CAST ir<%zext> = zext nneg ir<%l>
 ; CHECK-NEXT:    REPLICATE store ir<%zext>, ir<%p1>
 ; CHECK-NEXT:    EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>
-; CHECK-NEXT:    EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VEC_TC]]>
+; CHECK-NEXT:    EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
 ; CHECK-NEXT:  No successors
 ; CHECK-NEXT: }
 ;
@@ -1025,7 +1028,7 @@ define i16 @print_first_order_recurrence_and_result(ptr %ptr) {
 ; CHECK-NEXT: middle.block:
 ; CHECK-NEXT:   EMIT vp<[[RESUME_1:%.+]]> = extract-from-end ir<%for.1.next>, ir<1>
 ; CHECK-NEXT:   EMIT vp<[[FOR_RESULT:%.+]]> = extract-from-end ir<%for.1.next>, ir<2>
-; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<1000>, vp<[[VEC_TC]]>
+; CHECK-NEXT:   EMIT vp<[[CMP:%.+]]> = icmp eq ir<1000>, vp<[[VTC]]>
 ; CHECK-NEXT:   EMIT branch-on-cond vp<[[CMP]]>
 ; CHECK-NEXT: Successor(s): ir-bb<exit>, scalar.ph
 ; CHECK-EMPTY:
@@ -1036,8 +1039,8 @@ define i16 @print_first_order_recurrence_and_result(ptr %ptr) {
 ; CHECK-NEXT:   EMIT vp<[[RESUME_P:%.*]]> = resume-phi vp<[[RESUME_1]]>, ir<22>
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
-; CHECK-NEXT:   Live-out i16 %for.1.lcssa = vp<[[FOR_RESULT]]>
 ; CHECK-NEXT:   Live-out i16 %for.1 = vp<[[RESUME_P]]>
+; CHECK-NEXT:   Live-out i16 %for.1.lcssa = vp<[[FOR_RESULT]]>
 ; CHECK-NEXT: }
 ;
 entry:
