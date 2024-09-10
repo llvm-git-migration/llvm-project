@@ -66,6 +66,9 @@ protected:
   // whether cpu v4 insns are enabled.
   bool HasLdsx, HasMovsx, HasBswap, HasSdivSmod, HasGotol, HasStoreImm;
 
+  // whether cpu v5 insns are enabled.
+  bool HasLoadAcquire, HasStoreRelease;
+
   std::unique_ptr<CallLowering> CallLoweringInfo;
   std::unique_ptr<InstructionSelector> InstSelector;
   std::unique_ptr<LegalizerInfo> Legalizer;
@@ -92,6 +95,8 @@ public:
   bool hasSdivSmod() const { return HasSdivSmod; }
   bool hasGotol() const { return HasGotol; }
   bool hasStoreImm() const { return HasStoreImm; }
+  bool hasLoadAcquire() const { return HasLoadAcquire; }
+  bool hasStoreRelease() const { return HasStoreRelease; }
 
   bool isLittleEndian() const { return IsLittleEndian; }
 
