@@ -100,21 +100,25 @@ static bool isST(unsigned Opcode) {
 }
 
 static bool isSTX32(unsigned Opcode) {
-  return Opcode == BPF::STB32 || Opcode == BPF::STH32 || Opcode == BPF::STW32;
+  return Opcode == BPF::STB32 || Opcode == BPF::STH32 || Opcode == BPF::STW32 ||
+         Opcode == BPF::STBREL32 || Opcode == BPF::STHREL32 ||
+         Opcode == BPF::STWREL32;
 }
 
 static bool isSTX64(unsigned Opcode) {
   return Opcode == BPF::STB || Opcode == BPF::STH || Opcode == BPF::STW ||
-         Opcode == BPF::STD;
+         Opcode == BPF::STD || Opcode == BPF::STDREL;
 }
 
 static bool isLDX32(unsigned Opcode) {
-  return Opcode == BPF::LDB32 || Opcode == BPF::LDH32 || Opcode == BPF::LDW32;
+  return Opcode == BPF::LDB32 || Opcode == BPF::LDH32 || Opcode == BPF::LDW32 ||
+         Opcode == BPF::LDBACQ32 || Opcode == BPF::LDHACQ32 ||
+         Opcode == BPF::LDWACQ32;
 }
 
 static bool isLDX64(unsigned Opcode) {
   return Opcode == BPF::LDB || Opcode == BPF::LDH || Opcode == BPF::LDW ||
-         Opcode == BPF::LDD;
+         Opcode == BPF::LDD || Opcode == BPF::LDDACQ;
 }
 
 static bool isLDSX(unsigned Opcode) {
