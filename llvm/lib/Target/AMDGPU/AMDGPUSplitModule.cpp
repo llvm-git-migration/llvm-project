@@ -43,9 +43,9 @@
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/Allocator.h"
@@ -534,20 +534,6 @@ void SplitGraph::buildGraph(CallGraph &CG) {
               HasIndirectCall = true;
             LLVM_DEBUG(dbgs() << "    found inline assembly\n");
             continue;
-          }
-
-          // see through calls of aliases
-          const Value *CalledV = CB->getCalledOperand();
-          if (isa<GlobalAlias>(CalledV)) {
-            if (const auto *RealFn = dyn_cast<Function>(
-                    CalledV->stripPointerCastsAndAliases());
-                RealFn && !RealFn->isDeclaration()) {
-              LLVM_DEBUG(dbgs()
-                          << "    resolved call to " << RealFn->getName()
-                          << " in: " << Inst << '\n');
-              DirectCallees.insert(RealFn);
-              continue;
-            }
           }
 
           // everything else is handled conservatively.
