@@ -8652,17 +8652,16 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
       unsigned ScaleFactor = 1;
       for (auto *User : Phi->users()) {
         if (auto *I = dyn_cast<Instruction>(User)) {
-            PartialReductionChain Chain;
-            if (CM.getInstructionsPartialReduction(I, Chain)) {
-                ScaleFactor = Chain.ScaleFactor;
-                break;
-            }
+          PartialReductionChain Chain;
+          if (CM.getInstructionsPartialReduction(I, Chain)) {
+            ScaleFactor = Chain.ScaleFactor;
+            break;
+          }
         }
       }
-      PhiRecipe = new VPReductionPHIRecipe(Phi, RdxDesc, *StartV,
-                                           CM.isInLoopReduction(Phi),
-                                           CM.useOrderedReductions(RdxDesc),
-                                           ScaleFactor);
+      PhiRecipe = new VPReductionPHIRecipe(
+          Phi, RdxDesc, *StartV, CM.isInLoopReduction(Phi),
+          CM.useOrderedReductions(RdxDesc), ScaleFactor);
     } else {
       // TODO: Currently fixed-order recurrences are modeled as chains of
       // first-order recurrences. If there are no users of the intermediate
@@ -8711,8 +8710,7 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
 }
 
 VPRecipeBase *
-VPRecipeBuilder::tryToCreatePartialReduction(
-                                             PartialReductionChain &Chain,
+VPRecipeBuilder::tryToCreatePartialReduction(PartialReductionChain &Chain,
                                              ArrayRef<VPValue *> Operands) {
   return new VPPartialReductionRecipe(
       *Chain.Reduction, make_range(Operands.begin(), Operands.end()),
@@ -9106,8 +9104,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
 
       PartialReductionChain Chain;
       if (CM.getInstructionsPartialReduction(Instr, Chain))
-        Recipe =
-            RecipeBuilder.tryToCreatePartialReduction(Chain, Operands);
+        Recipe = RecipeBuilder.tryToCreatePartialReduction(Chain, Operands);
 
       if (!Recipe)
         Recipe =
