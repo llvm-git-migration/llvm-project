@@ -8647,9 +8647,22 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
           Legal->getReductionVars().find(Phi)->second;
       assert(RdxDesc.getRecurrenceStartValue() ==
              Phi->getIncomingValueForBlock(OrigLoop->getLoopPreheader()));
+
+      // If the PHI is used by a partial reduction, set the scale factor
+      unsigned ScaleFactor = 1;
+      for (auto *User : Phi->users()) {
+        if (auto *I = dyn_cast<Instruction>(User)) {
+            PartialReductionChain Chain;
+            if (CM.getInstructionsPartialReduction(I, Chain)) {
+                ScaleFactor = Chain.ScaleFactor;
+                break;
+            }
+        }
+      }
       PhiRecipe = new VPReductionPHIRecipe(Phi, RdxDesc, *StartV,
                                            CM.isInLoopReduction(Phi),
-                                           CM.useOrderedReductions(RdxDesc));
+                                           CM.useOrderedReductions(RdxDesc),
+                                           ScaleFactor);
     } else {
       // TODO: Currently fixed-order recurrences are modeled as chains of
       // first-order recurrences. If there are no users of the intermediate
@@ -8698,7 +8711,7 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
 }
 
 VPRecipeBase *
-VPRecipeBuilder::tryToCreatePartialReduction(VFRange &Range,
+VPRecipeBuilder::tryToCreatePartialReduction(
                                              PartialReductionChain &Chain,
                                              ArrayRef<VPValue *> Operands) {
   return new VPPartialReductionRecipe(
@@ -9094,7 +9107,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
       PartialReductionChain Chain;
       if (CM.getInstructionsPartialReduction(Instr, Chain))
         Recipe =
-            RecipeBuilder.tryToCreatePartialReduction(Range, Chain, Operands);
+            RecipeBuilder.tryToCreatePartialReduction(Chain, Operands);
 
       if (!Recipe)
         Recipe =
@@ -9119,9 +9132,6 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
       } else
         VPBB->appendRecipe(Recipe);
     }
-
-    for (auto &Recipe : *VPBB)
-      Recipe.postInsertionOp();
 
     VPBlockUtils::insertBlockAfter(new VPBasicBlock(), VPBB);
     VPBB = cast<VPBasicBlock>(VPBB->getSingleSuccessor());
