@@ -32,16 +32,6 @@ entry:
   ret <8 x half> %c
 }
 
-define <1 x double> @max_v1f64(<1 x double> %a, <1 x double> %b) {
-; AARCH64-LABEL: max_v1f64:
-; AARCH64:       // %bb.0: // %entry
-; AARCH64-NEXT:    fmaxnm d0, d0, d1
-; AARCH64-NEXT:    ret
-entry:
-  %c = call nnan <1 x double> @llvm.maximumnum.v1f64(<1 x double> %a, <1 x double> %b)
-  ret <1 x double> %c
-}
-
 define double @max_f64(double %a, double %b) {
 ; AARCH64-LABEL: max_f64:
 ; AARCH64:       // %bb.0: // %entry
@@ -101,16 +91,6 @@ define <8 x half> @min_v8f16(<8 x half> %a, <8 x half> %b) {
 entry:
   %c = call nnan <8 x half> @llvm.minimumnum.v4f16(<8 x half> %a, <8 x half> %b)
   ret <8 x half> %c
-}
-
-define <1 x double> @min_v1f64(<1 x double> %a, <1 x double> %b) {
-; AARCH64-LABEL: min_v1f64:
-; AARCH64:       // %bb.0: // %entry
-; AARCH64-NEXT:    fminnm d0, d0, d1
-; AARCH64-NEXT:    ret
-entry:
-  %c = call nnan <1 x double> @llvm.minimumnum.v1f64(<1 x double> %a, <1 x double> %b)
-  ret <1 x double> %c
 }
 
 define double @min_f64(double %a, double %b) {

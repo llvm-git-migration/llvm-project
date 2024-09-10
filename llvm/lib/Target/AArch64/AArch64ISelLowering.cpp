@@ -1196,6 +1196,7 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
           ISD::FEXP10,            ISD::FRINT,          ISD::FROUND,
           ISD::FROUNDEVEN,        ISD::FTRUNC,         ISD::FMINNUM,
           ISD::FMAXNUM,           ISD::FMINIMUM,       ISD::FMAXIMUM,
+          ISD::FMAXNUM_IEEE,      ISD::FMINNUM_IEEE,
           ISD::STRICT_FADD,       ISD::STRICT_FSUB,    ISD::STRICT_FMUL,
           ISD::STRICT_FDIV,       ISD::STRICT_FMA,     ISD::STRICT_FCEIL,
           ISD::STRICT_FFLOOR,     ISD::STRICT_FSQRT,   ISD::STRICT_FRINT,
@@ -1204,9 +1205,6 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
           ISD::STRICT_FMINIMUM,   ISD::STRICT_FMAXIMUM})
       setOperationAction(Op, MVT::v1f64, Expand);
     // clang-format on
-
-    for (auto Op : {ISD::FMAXNUM_IEEE, ISD::FMINNUM_IEEE})
-      setOperationAction(Op, MVT::v1f64, Legal);
 
     for (auto Op :
          {ISD::FP_TO_SINT, ISD::FP_TO_UINT, ISD::SINT_TO_FP, ISD::UINT_TO_FP,
@@ -1938,10 +1936,10 @@ void AArch64TargetLowering::addTypeForNEON(MVT VT) {
       (VT.getVectorElementType() != MVT::f16 || Subtarget->hasFullFP16()))
     for (unsigned Opcode :
          {ISD::FMINIMUM, ISD::FMAXIMUM, ISD::FMINNUM, ISD::FMAXNUM,
-          ISD::STRICT_FMINIMUM, ISD::STRICT_FMAXIMUM, ISD::STRICT_FMINNUM,
-          ISD::STRICT_FMAXNUM, ISD::STRICT_FADD, ISD::STRICT_FSUB,
-          ISD::STRICT_FMUL, ISD::STRICT_FDIV, ISD::STRICT_FMA,
-          ISD::STRICT_FSQRT})
+          ISD::FMINNUM_IEEE, ISD::FMAXNUM_IEEE, ISD::STRICT_FMINIMUM,
+          ISD::STRICT_FMAXIMUM, ISD::STRICT_FMINNUM, ISD::STRICT_FMAXNUM,
+          ISD::STRICT_FADD, ISD::STRICT_FSUB, ISD::STRICT_FMUL,
+          ISD::STRICT_FDIV, ISD::STRICT_FMA, ISD::STRICT_FSQRT})
       setOperationAction(Opcode, VT, Legal);
 
   // Strict fp extend and trunc are legal
