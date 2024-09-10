@@ -1,0 +1,3 @@
+RUN: llvm-cxxfilt -n _ZN3FooIiE6methodITk4TrueIT_EiEEvS3_ | FileCheck %s
+
+CHECK: void Foo<int>::method<int>(T)
