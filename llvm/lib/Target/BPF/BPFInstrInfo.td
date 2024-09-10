@@ -60,6 +60,8 @@ def BPFHasSdivSmod : Predicate<"Subtarget->hasSdivSmod()">;
 def BPFNoMovsx : Predicate<"!Subtarget->hasMovsx()">;
 def BPFNoBswap : Predicate<"!Subtarget->hasBswap()">;
 def BPFHasStoreImm : Predicate<"Subtarget->hasStoreImm()">;
+def BPFHasLoadAcquire : Predicate<"Subtarget->hasLoadAcquire()">;
+def BPFHasStoreRelease : Predicate<"Subtarget->hasStoreRelease()">;
 
 class ImmediateAsmOperand<string name> : AsmOperandClass {
   let Name = name;
@@ -514,12 +516,26 @@ class STORE<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list
 class STOREi64<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
     : STORE<Opc, BPF_MEM, "*("#OpcodeStr#" *)($addr) = $src", [(OpNode GPR:$src, ADDRri:$addr)]>;
 
+class STORE_RELEASEi64<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
+    : STORE<Opc, BPF_MEMREL, "store_release(("#OpcodeStr#" *)($addr), $src)",
+            [(OpNode GPR:$src, ADDRri:$addr)]>;
+
 let Predicates = [BPFNoALU32] in {
   def STW : STOREi64<BPF_W, "u32", truncstorei32>;
   def STH : STOREi64<BPF_H, "u16", truncstorei16>;
   def STB : STOREi64<BPF_B, "u8", truncstorei8>;
 }
 def STD : STOREi64<BPF_DW, "u64", store>;
+
+class releasing_store<PatFrag base>
+  : PatFrag<(ops node:$val, node:$ptr), (base node:$val, node:$ptr)> {
+  let IsAtomic = 1;
+  let IsAtomicOrderingRelease = 1;
+}
+
+let Predicates = [BPFHasStoreRelease] in {
+  def STDREL : STORE_RELEASEi64<BPF_DW, "u64", releasing_store<atomic_store_64>>;
+}
 
 class STORE_imm<BPFWidthModifer SizeOp,
                 string OpcodeStr, dag Pattern>
@@ -584,6 +600,11 @@ class LOADi64<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, Pa
     : LOAD<SizeOp, ModOp, "$dst = *("#OpcodeStr#" *)($addr)",
            [(set i64:$dst, (OpNode ADDRri:$addr))]>;
 
+class LOAD_ACQUIREi64<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr,
+                      PatFrag OpNode>
+    : LOAD<SizeOp, ModOp, "$dst = load_acquire(("#OpcodeStr#" *)($addr))",
+           [(set i64:$dst, (OpNode ADDRri:$addr))]>;
+
 let isCodeGenOnly = 1 in {
   class CORE_LD<RegisterClass RegClass, string Sz>
                 : TYPE_LD_ST<BPF_MEM.Value, BPF_W.Value,
@@ -620,6 +641,16 @@ let Predicates = [BPFHasLdsx] in {
 }
 
 def LDD : LOADi64<BPF_DW, BPF_MEM, "u64", load>;
+
+class acquiring_load<PatFrags base>
+    : PatFrag<(ops node:$ptr), (base node:$ptr)> {
+  let IsAtomic = 1;
+  let IsAtomicOrderingAcquire = 1;
+}
+
+let Predicates = [BPFHasLoadAcquire] in {
+  def LDDACQ : LOAD_ACQUIREi64<BPF_DW, BPF_MEMACQ, "u64", acquiring_load<atomic_load_64>>;
+}
 
 class BRANCH<BPFJumpOp Opc, string OpcodeStr, list<dag> Pattern>
     : TYPE_ALU_JMP<Opc.Value, BPF_K.Value,
@@ -1086,10 +1117,20 @@ class STOREi32<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
     : STORE32<Opc, BPF_MEM, "*("#OpcodeStr#" *)($addr) = $src",
               [(OpNode GPR32:$src, ADDRri:$addr)]>;
 
+class STORE_RELEASEi32<BPFWidthModifer Opc, string OpcodeStr, PatFrag OpNode>
+    : STORE32<Opc, BPF_MEMREL, "store_release(("#OpcodeStr#" *)($addr), $src)",
+              [(OpNode GPR32:$src, ADDRri:$addr)]>;
+
 let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
   def STW32 : STOREi32<BPF_W, "u32", store>;
   def STH32 : STOREi32<BPF_H, "u16", truncstorei16>;
   def STB32 : STOREi32<BPF_B, "u8", truncstorei8>;
+
+  let Predicates = [BPFHasStoreRelease] in {
+    def STWREL32 : STORE_RELEASEi32<BPF_W, "u32", releasing_store<atomic_store_32>>;
+    def STHREL32 : STORE_RELEASEi32<BPF_H, "u16", releasing_store<atomic_store_16>>;
+    def STBREL32 : STORE_RELEASEi32<BPF_B, "u8", releasing_store<atomic_store_8>>;
+  }
 }
 
 class LOAD32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string AsmString, list<dag> Pattern>
@@ -1110,10 +1151,21 @@ class LOADi32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr, Pa
     : LOAD32<SizeOp, ModOp, "$dst = *("#OpcodeStr#" *)($addr)",
              [(set i32:$dst, (OpNode ADDRri:$addr))]>;
 
+class LOAD_ACQUIREi32<BPFWidthModifer SizeOp, BPFModeModifer ModOp, string OpcodeStr,
+                      PatFrag OpNode>
+    : LOAD32<SizeOp, ModOp, "$dst = load_acquire(("#OpcodeStr#" *)($addr))",
+             [(set i32:$dst, (OpNode ADDRri:$addr))]>;
+
 let Predicates = [BPFHasALU32], DecoderNamespace = "BPFALU32" in {
   def LDW32 : LOADi32<BPF_W, BPF_MEM, "u32", load>;
   def LDH32 : LOADi32<BPF_H, BPF_MEM, "u16", zextloadi16>;
   def LDB32 : LOADi32<BPF_B, BPF_MEM, "u8", zextloadi8>;
+
+  let Predicates = [BPFHasLoadAcquire] in {
+    def LDWACQ32 : LOAD_ACQUIREi32<BPF_W, BPF_MEMACQ, "u32", acquiring_load<atomic_load_32>>;
+    def LDHACQ32 : LOAD_ACQUIREi32<BPF_H, BPF_MEMACQ, "u16", acquiring_load<atomic_load_az_16>>;
+    def LDBACQ32 : LOAD_ACQUIREi32<BPF_B, BPF_MEMACQ, "u8", acquiring_load<atomic_load_az_8>>;
+  }
 }
 
 let Predicates = [BPFHasALU32] in {
