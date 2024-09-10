@@ -106,7 +106,7 @@ public:
   void fillValidCPUList(SmallVectorImpl<StringRef> &Values) const override;
 
   bool setCPU(const std::string &Name) override {
-    if (Name == "v3" || Name == "v4") {
+    if (Name == "v3" || Name == "v4" || Name == "v5") {
       HasAlu32 = true;
     }
 
