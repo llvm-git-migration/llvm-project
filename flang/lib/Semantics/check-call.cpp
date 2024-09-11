@@ -1363,6 +1363,14 @@ static bool CheckElementalConformance(parser::ContextualMessages &messages,
     const auto &dummy{proc.dummyArguments.at(index++)};
     if (arg) {
       if (const auto *expr{arg->UnwrapExpr()}) {
+        if (const auto *actualLastSymbol{evaluate::GetLastSymbol(arg)}) {
+          actualLastSymbol = &ResolveAssociations(*actualLastSymbol);
+          if (IsAssumedSizeArray(*actualLastSymbol)) {
+            evaluate::SayWithDeclaration(messages, *actualLastSymbol,
+                "Whole assumed-size array '%s' may not be used as an argument to an elemental procedure"_err_en_US,
+                actualLastSymbol->name());
+          }
+        }
         if (auto argShape{evaluate::GetShape(context, *expr)}) {
           if (GetRank(*argShape) > 0) {
             std::string argName{"actual argument ("s + expr->AsFortran() +
