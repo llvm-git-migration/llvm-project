@@ -10455,6 +10455,11 @@ bool Sema::CheckFunctionTemplateSpecialization(
   // Mark the prior declaration as an explicit specialization, so that later
   // clients know that this is an explicit specialization.
   if (!isFriend) {
+    SmallVector<TemplateParameterList *, 4> TPL;
+    for (unsigned I = 0; I < FD->getNumTemplateParameterLists(); ++I)
+      TPL.push_back(FD->getTemplateParameterList(I));
+    Specialization->setTemplateParameterListsInfo(Context, TPL);
+
     // Since explicit specializations do not inherit '=delete' from their
     // primary function template - check if the 'specialization' that was
     // implicitly generated (during template argument deduction for partial

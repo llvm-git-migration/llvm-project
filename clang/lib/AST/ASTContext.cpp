@@ -444,7 +444,7 @@ const RawComment *ASTContext::getRawCommentForAnyRedecl(
     return CommentlessRedeclChains.lookup(CanonicalD);
   }();
 
-  for (const auto Redecl : D->redecls()) {
+  for (const auto Redecl : CanonicalD->redecls()) {
     assert(Redecl);
     // Skip all redeclarations that have been checked previously.
     if (LastCheckedRedecl) {
