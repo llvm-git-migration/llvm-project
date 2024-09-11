@@ -108,6 +108,7 @@ def Tosa_Conv2DOp : Tosa_InferShapedTypeOp<"conv2d"> {
     Tosa_IntArrayAttr4:$pad,
     Tosa_IntArrayAttr2:$stride,
     Tosa_IntArrayAttr2:$dilation,
+    OptionalAttr<I64Attr>:$group,
     OptionalAttr<Tosa_ConvOpQuantizationAttr>:$quantization_info,
     DefaultValuedOptionalAttr<BoolAttr, "false">:$local_bound
   );
@@ -116,7 +117,7 @@ def Tosa_Conv2DOp : Tosa_InferShapedTypeOp<"conv2d"> {
     Tosa_Tensor4D:$output
   );
 
-  let builders = [Tosa_ConvOpQuantInfoBuilder];
+  let builders = [Tosa_ConvOpQuantInfoBuilder, Tosa_ConvOpGroupQuantBuilder];
   let hasVerifier = 1;
 }
 
