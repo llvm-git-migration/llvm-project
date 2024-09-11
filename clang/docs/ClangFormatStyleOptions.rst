@@ -409,6 +409,21 @@ the configuration (without a prefix: ``Auto``).
       int     *p;
       int (*f)();
 
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
+
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
     put all assignment operators to the right of the left hand side.
@@ -550,6 +565,21 @@ the configuration (without a prefix: ``Auto``).
       int     &r;
       int     *p;
       int (*f)();
+
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
 
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
@@ -693,6 +723,21 @@ the configuration (without a prefix: ``Auto``).
       int     *p;
       int (*f)();
 
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
+
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
     put all assignment operators to the right of the left hand side.
@@ -835,6 +880,21 @@ the configuration (without a prefix: ``Auto``).
       int     &r;
       int     *p;
       int (*f)();
+
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
 
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
@@ -1098,6 +1158,21 @@ the configuration (without a prefix: ``Auto``).
       int     *p;
       int (*f)();
 
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
+
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
     put all assignment operators to the right of the left hand side.
@@ -1238,6 +1313,21 @@ the configuration (without a prefix: ``Auto``).
       int     *p;
       int (*f)();
 
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
+
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
     put all assignment operators to the right of the left hand side.
@@ -1377,6 +1467,21 @@ the configuration (without a prefix: ``Auto``).
       int     &r;
       int     *p;
       int (*f)();
+
+  * ``bool AlignFunctionDeclarations`` Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    are aligned.
+
+    .. code-block:: c++
+
+      true:
+      unsigned int f1(void);
+      void         f2(void);
+      size_t       f3(void);
+
+      false:
+      unsigned int f1(void);
+      void f2(void);
+      size_t f3(void);
 
   * ``bool PadOperators`` Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     operators are left-padded to the same length as long ones in order to
