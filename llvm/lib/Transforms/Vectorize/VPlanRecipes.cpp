@@ -1318,7 +1318,7 @@ void VPWidenEVLRecipe::print(raw_ostream &O, const Twine &Indent,
                              VPSlotTracker &SlotTracker) const {
   O << Indent << "WIDEN-VP ";
   printAsOperand(O, SlotTracker);
-  O << " = " << Instruction::getOpcodeName(getOpcode());
+  O << " = vp." << Instruction::getOpcodeName(getOpcode());
   printFlags(O);
   printOperands(O, SlotTracker);
 }
@@ -2331,7 +2331,7 @@ void VPWidenLoadEVLRecipe::execute(VPTransformState &State) {
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void VPWidenLoadEVLRecipe::print(raw_ostream &O, const Twine &Indent,
                                  VPSlotTracker &SlotTracker) const {
-  O << Indent << "WIDEN ";
+  O << Indent << "WIDEN-VP ";
   printAsOperand(O, SlotTracker);
   O << " = vp.load ";
   printOperands(O, SlotTracker);
@@ -2431,7 +2431,7 @@ void VPWidenStoreEVLRecipe::execute(VPTransformState &State) {
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void VPWidenStoreEVLRecipe::print(raw_ostream &O, const Twine &Indent,
                                   VPSlotTracker &SlotTracker) const {
-  O << Indent << "WIDEN vp.store ";
+  O << Indent << "WIDEN-VP vp.store ";
   printOperands(O, SlotTracker);
 }
 #endif
