@@ -300,6 +300,8 @@ Improvements to Clang's diagnostics
 
 - Clang now diagnoses cases where a dangling ``GSLOwner<GSLPointer>`` object is constructed, e.g. ``std::vector<string_view> v = {std::string()};`` (#GH100526).
 
+- Clang now diagnoses cases where a dangling ``GSLOwner<GSLPointer>`` object is assigned, e.g. ``v = {std::string()};`` (#GH100526).
+
 Improvements to Clang's time-trace
 ----------------------------------
 

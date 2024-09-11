@@ -601,17 +601,23 @@ void test() {
   std::optional<std::string_view> o4 = std::optional<std::string_view>(s); 
 
   // FIXME: should work for assignment cases
-  v1 = {std::string()};
-  o1 = std::string();
+  v1 = {std::string()}; // expected-warning {{object backing the pointer}}
+  o1 = std::string(); // expected-warning {{object backing the pointer}}
 
   // no warning on copying pointers.
   std::vector<std::string_view> n1 = {std::string_view()};
+  n1 = {std::string_view()};
   std::optional<std::string_view> n2 = {std::string_view()};
+  n2 = {std::string_view()};
   std::optional<std::string_view> n3 = std::string_view();
+  n3 = std::string_view();
   std::optional<std::string_view> n4 = std::make_optional(std::string_view());
+  n4 = std::make_optional(std::string_view());
   const char* b = "";
   std::optional<std::string_view> n5 = std::make_optional(b);
+  n5 = std::make_optional(b);
   std::optional<std::string_view> n6 = std::make_optional("test");
+  n6 = std::make_optional("test");
 }
 
 std::vector<std::string_view> test2(int i) {

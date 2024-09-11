@@ -982,7 +982,8 @@ static bool shouldRunGSLAssignmentAnalysis(const Sema &SemaRef,
       diag::warn_dangling_lifetime_pointer_assignment, SourceLocation());
   return (EnableGSLAssignmentWarnings &&
           (isRecordWithAttr<PointerAttr>(Entity.LHS->getType()) ||
-           isAssignmentOperatorLifetimeBound(Entity.AssignmentOperator)));
+           isAssignmentOperatorLifetimeBound(Entity.AssignmentOperator) ||
+           isContainerOfPointer(Entity.LHS->getType()->getAsRecordDecl())));
 }
 
 static void checkExprLifetimeImpl(Sema &SemaRef,
