@@ -12571,8 +12571,35 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
   void initialize(Attributor &A) override {
     assert(getAssociatedType()->isPtrOrPtrVectorTy() &&
            "Associated value is not a pointer");
-    if (getAssociatedType()->getPointerAddressSpace())
+    // If the pointer already has non-flat address space, we assume it is the
+    // correct one.
+    if (getAssociatedType()->getPointerAddressSpace()) {
+      [[maybe_unused]] bool R =
+          takeAddressSpace(getAssociatedType()->getPointerAddressSpace());
+      assert(R && "the take should happen");
       indicateOptimisticFixpoint();
+      return;
+    }
+    // If the pointer is an addrspacecast, it has to be from a non-flat to flat.
+    // We assume the source address space is the correct one.
+    Value *V = &getAssociatedValue();
+    if (auto *ASCI = dyn_cast<AddrSpaceCastInst>(V)) {
+      assert(ASCI->getDestAddressSpace() == 0 &&
+             "The destination address space should be a flat address space");
+      [[maybe_unused]] bool R = takeAddressSpace(ASCI->getSrcAddressSpace());
+      assert(R && "the take should happen");
+      indicateOptimisticFixpoint();
+      return;
+    }
+    if (auto *C = dyn_cast<ConstantExpr>(V)) {
+      if (C->getOpcode() == Instruction::AddrSpaceCast) {
+        [[maybe_unused]] bool R = takeAddressSpace(
+            C->getOperand(0)->getType()->getPointerAddressSpace());
+        assert(R && "the take should happen");
+        indicateOptimisticFixpoint();
+        return;
+      }
+    }
   }
 
   ChangeStatus updateImpl(Attributor &A) override {
@@ -12582,6 +12609,23 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
     auto Pred = [&](Value &Obj) {
       if (isa<UndefValue>(&Obj))
         return true;
+      // If an argument in generic address space has addrspace cast uses, and
+      // those casts are same, then we take the dst addrspace.
+      if (auto *Arg = dyn_cast<Argument>(&Obj)) {
+        if (Arg->getType()->getPointerAddressSpace() == 0) {
+          unsigned CastAddrSpace = 0;
+          for (auto *U : Arg->users()) {
+            auto *ASCI = dyn_cast<AddrSpaceCastInst>(U);
+            if (!ASCI)
+              continue;
+            if (CastAddrSpace && CastAddrSpace != ASCI->getDestAddressSpace())
+              return false;
+            CastAddrSpace = ASCI->getDestAddressSpace();
+          }
+          if (CastAddrSpace)
+            return takeAddressSpace(CastAddrSpace);
+        }
+      }
       return takeAddressSpace(Obj.getType()->getPointerAddressSpace());
     };
 
@@ -12594,16 +12638,18 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
 
   /// See AbstractAttribute::manifest(...).
   ChangeStatus manifest(Attributor &A) override {
-    Value *AssociatedValue = &getAssociatedValue();
-    Value *OriginalValue = peelAddrspacecast(AssociatedValue);
-    if (getAddressSpace() == NoAddressSpace ||
-        getAddressSpace() == getAssociatedType()->getPointerAddressSpace())
+    unsigned NewAS = getAddressSpace();
+
+    if (NewAS == NoAddressSpace ||
+        NewAS == getAssociatedType()->getPointerAddressSpace())
       return ChangeStatus::UNCHANGED;
 
+    Value *AssociatedValue = &getAssociatedValue();
+    Value *OriginalValue = peelAddrspacecast(AssociatedValue);
     PointerType *NewPtrTy =
-        PointerType::get(getAssociatedType()->getContext(), getAddressSpace());
+        PointerType::get(getAssociatedType()->getContext(), NewAS);
     bool UseOriginalValue =
-        OriginalValue->getType()->getPointerAddressSpace() == getAddressSpace();
+        OriginalValue->getType()->getPointerAddressSpace() == NewAS;
 
     bool Changed = false;
 
@@ -12664,11 +12710,16 @@ private:
   }
 
   static Value *peelAddrspacecast(Value *V) {
-    if (auto *I = dyn_cast<AddrSpaceCastInst>(V))
-      return peelAddrspacecast(I->getPointerOperand());
+    if (auto *I = dyn_cast<AddrSpaceCastInst>(V)) {
+      assert(I->getSrcAddressSpace() && "there should not be AS 0 -> AS X");
+      return I->getPointerOperand();
+    }
     if (auto *C = dyn_cast<ConstantExpr>(V))
-      if (C->getOpcode() == Instruction::AddrSpaceCast)
-        return peelAddrspacecast(C->getOperand(0));
+      if (C->getOpcode() == Instruction::AddrSpaceCast) {
+        assert(C->getOperand(0)->getType()->getPointerAddressSpace() &&
+               "there should not be AS 0 -> AS X");
+        return C->getOperand(0);
+      }
     return V;
   }
 };
