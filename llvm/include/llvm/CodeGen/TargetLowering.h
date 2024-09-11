@@ -4401,6 +4401,10 @@ public:
   /// Return true if the target supports ptrauth operand bundles.
   virtual bool supportPtrAuthBundles() const { return false; }
 
+  /// Return true if the target supports FCOPYSIGN nodes with operands of
+  /// mismatched types.
+  virtual bool supportMismatchCopysign() const { return true; }
+
   /// Perform necessary initialization to handle a subset of CSRs explicitly
   /// via copies. This function is called at the beginning of instruction
   /// selection.

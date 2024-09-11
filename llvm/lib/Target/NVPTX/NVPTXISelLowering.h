@@ -596,6 +596,8 @@ public:
   // instruction, so we say that ctlz is cheap to speculate.
   bool isCheapToSpeculateCtlz(Type *Ty) const override { return true; }
 
+  bool supportMismatchCopysign() const override { return false; }
+
   AtomicExpansionKind shouldCastAtomicLoadInIR(LoadInst *LI) const override {
     return AtomicExpansionKind::None;
   }

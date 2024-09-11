@@ -17686,7 +17686,11 @@ SDValue DAGCombiner::visitFSQRT(SDNode *N) {
 /// copysign(x, fp_extend(y)) -> copysign(x, y)
 /// copysign(x, fp_round(y)) -> copysign(x, y)
 /// Operands to the functions are the type of X and Y respectively.
-static inline bool CanCombineFCOPYSIGN_EXTEND_ROUND(EVT XTy, EVT YTy) {
+static inline bool CanCombineFCOPYSIGN_EXTEND_ROUND(EVT XTy, EVT YTy,
+                                                    const TargetLowering &TLI) {
+  if (!TLI.supportMismatchCopysign())
+    return false;
+
   // Always fold no-op FP casts.
   if (XTy == YTy)
     return true;
@@ -17701,14 +17705,15 @@ static inline bool CanCombineFCOPYSIGN_EXTEND_ROUND(EVT XTy, EVT YTy) {
   return !YTy.isVector() || EnableVectorFCopySignExtendRound;
 }
 
-static inline bool CanCombineFCOPYSIGN_EXTEND_ROUND(SDNode *N) {
+static inline bool CanCombineFCOPYSIGN_EXTEND_ROUND(SDNode *N,
+                                                    const TargetLowering &TLI) {
   SDValue N1 = N->getOperand(1);
   if (N1.getOpcode() != ISD::FP_EXTEND &&
       N1.getOpcode() != ISD::FP_ROUND)
     return false;
   EVT N1VT = N1->getValueType(0);
   EVT N1Op0VT = N1->getOperand(0).getValueType();
-  return CanCombineFCOPYSIGN_EXTEND_ROUND(N1VT, N1Op0VT);
+  return CanCombineFCOPYSIGN_EXTEND_ROUND(N1VT, N1Op0VT, TLI);
 }
 
 SDValue DAGCombiner::visitFCOPYSIGN(SDNode *N) {
@@ -17752,7 +17757,7 @@ SDValue DAGCombiner::visitFCOPYSIGN(SDNode *N) {
 
   // copysign(x, fp_extend(y)) -> copysign(x, y)
   // copysign(x, fp_round(y)) -> copysign(x, y)
-  if (CanCombineFCOPYSIGN_EXTEND_ROUND(N))
+  if (CanCombineFCOPYSIGN_EXTEND_ROUND(N, TLI))
     return DAG.getNode(ISD::FCOPYSIGN, DL, VT, N0, N1.getOperand(0));
 
   // We only take the sign bit from the sign operand.
@@ -18105,8 +18110,7 @@ SDValue DAGCombiner::visitFP_ROUND(SDNode *N) {
   // eliminate the fp_round on Y.  The second step requires an additional
   // predicate to match the implementation above.
   if (N0.getOpcode() == ISD::FCOPYSIGN && N0->hasOneUse() &&
-      CanCombineFCOPYSIGN_EXTEND_ROUND(VT,
-                                       N0.getValueType())) {
+      CanCombineFCOPYSIGN_EXTEND_ROUND(VT, N0.getValueType(), TLI)) {
     SDValue Tmp = DAG.getNode(ISD::FP_ROUND, SDLoc(N0), VT,
                               N0.getOperand(0), N1);
     AddToWorklist(Tmp.getNode());
