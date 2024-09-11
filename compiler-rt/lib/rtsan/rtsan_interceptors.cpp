@@ -64,13 +64,15 @@ INTERCEPTOR(int, open, const char *path, int oflag, ...) {
   // O_NONBLOCK
   __rtsan_expect_not_realtime("open");
 
-  va_list args;
-  va_start(args, oflag);
-  const mode_t mode = va_arg(args, int);
-  va_end(args);
+  if (oflag & O_CREAT) {
+    va_list args;
+    va_start(args, oflag);
+    const mode_t mode = va_arg(args, int);
+    va_end(args);
+    return REAL(open)(path, oflag, mode);
+  }
 
-  const int result = REAL(open)(path, oflag, mode);
-  return result;
+  return REAL(open)(path, oflag);
 }
 
 INTERCEPTOR(int, openat, int fd, const char *path, int oflag, ...) {
@@ -78,13 +80,15 @@ INTERCEPTOR(int, openat, int fd, const char *path, int oflag, ...) {
   // O_NONBLOCK
   __rtsan_expect_not_realtime("openat");
 
-  va_list args;
-  va_start(args, oflag);
-  mode_t mode = va_arg(args, int);
-  va_end(args);
+  if (oflag & O_CREAT) {
+    va_list args;
+    va_start(args, oflag);
+    const mode_t mode = va_arg(args, int);
+    va_end(args);
+    return REAL(openat)(fd, path, oflag, mode);
+  }
 
-  const int result = REAL(openat)(fd, path, oflag, mode);
-  return result;
+  return REAL(openat)(fd, path, oflag);
 }
 
 INTERCEPTOR(int, creat, const char *path, mode_t mode) {
