@@ -919,7 +919,8 @@ static void createSyntheticSymbols() {
   }
 
   if (ctx.isPic ||
-      config->unresolvedSymbols == UnresolvedPolicy::ImportDynamic) {
+      config->unresolvedSymbols == UnresolvedPolicy::ImportDynamic ||
+      !config->isStatic) {
     // For PIC code, or when dynamically importing addresses, we create
     // synthetic functions that apply relocations.  These get called from
     // __wasm_call_ctors before the user-level constructors.
