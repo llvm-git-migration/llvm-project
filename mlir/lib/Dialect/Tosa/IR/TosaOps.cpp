@@ -383,6 +383,19 @@ static void buildConvOpWithQuantInfo(OpBuilder &builder, OperationState &result,
   }
 }
 
+// Handles grouped convolution
+static void buildConvOpWithQuantInfo(OpBuilder &builder, OperationState &result,
+                                     Type outputType, Value input, Value weight,
+                                     Value bias, DenseI64ArrayAttr pad,
+                                     DenseI64ArrayAttr stride,
+                                     DenseI64ArrayAttr dilation,
+                                     mlir::IntegerAttr group) {
+  buildConvOpWithQuantInfo(builder, result, outputType, input, weight, bias,
+                           pad, stride, dilation);
+  if (group)
+    result.addAttribute("group", group);
+}
+
 /// Handles tosa.transpose_conv2d which has outpad and output shape attributes.
 static void buildTransConvOpWithQuantInfo(
     OpBuilder &builder, OperationState &result, Type outputType, Value input,
