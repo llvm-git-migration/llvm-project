@@ -17,6 +17,7 @@
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SetVector.h"
 #include <optional>
 
@@ -67,6 +68,48 @@ public:
     const Decl *D = CE->getCalleeDecl();
     if (D && D->hasBody())
       return VisitBody(D->getBody());
+    else {
+      auto name = safeGetName(D);
+      if (name == "ensureOnMainThread" || name == "ensureOnMainRunLoop") {
+        for (unsigned i = 0; i < CE->getNumArgs(); ++i) {
+          auto *Arg = CE->getArg(i);
+          if (FindLabmda(Arg))
+            return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  bool FindLabmda(const Expr *E) {
+    while (E) {
+      if (auto *TempE = dyn_cast<MaterializeTemporaryExpr>(E)) {
+        E = TempE->getSubExpr();
+        continue;
+      }
+      if (auto *TempE = dyn_cast<CXXBindTemporaryExpr>(E)) {
+        E = TempE->getSubExpr();
+        continue;
+      }
+      if (auto *ParenE = dyn_cast<ParenExpr>(E)) {
+        E = ParenE->getSubExpr();
+        continue;
+      }
+      if (auto *CastE = dyn_cast<CastExpr>(E)) {
+        E = CastE->getSubExpr();
+        continue;
+      }
+      if (auto *ConstructE = dyn_cast<CXXConstructExpr>(E)) {
+        for (unsigned i = 0; i < ConstructE->getNumArgs(); ++i) {
+          auto *Arg = ConstructE->getArg(i);
+          if (auto *Lambda = dyn_cast<LambdaExpr>(Arg)) {
+            if (VisitBody(Lambda->getBody()))
+              return true;
+          }
+        }
+      }
+      break;
+    }
     return false;
   }
 
@@ -113,7 +156,9 @@ public:
 
   // Return false since the contents of lambda isn't necessarily executed.
   // If it is executed, VisitCallExpr above will visit its body.
-  bool VisitLambdaExpr(const LambdaExpr *) { return false; }
+  // Allow returning true for a lambda if it's a function argument to another
+  // function without body / definition.
+  bool VisitLambdaExpr(const LambdaExpr *E) { return false; }
 
 private:
   const TemplateArgumentList *ArgList{nullptr};
