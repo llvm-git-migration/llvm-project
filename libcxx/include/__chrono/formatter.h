@@ -49,6 +49,7 @@
 #include <cmath>
 #include <ctime>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string_view>
 
