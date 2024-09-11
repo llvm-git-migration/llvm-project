@@ -758,15 +758,6 @@ def anyext_trunc_fold: GICombineRule <
   (apply [{ Helper.replaceSingleDefInstWithReg(*${root}, ${matchinfo}); }])
 >;
 
-// Fold (zext (trunc x)) -> x if the source type is same as the destination type
-// and truncated bits are known to be zero.
-def zext_trunc_fold: GICombineRule <
-  (defs root:$root, register_matchinfo:$matchinfo),
-  (match (wip_match_opcode G_ZEXT):$root,
-         [{ return Helper.matchCombineZextTrunc(*${root}, ${matchinfo}); }]),
-  (apply [{ Helper.replaceSingleDefInstWithReg(*${root}, ${matchinfo}); }])
->;
-
 def not_cmp_fold_matchinfo : GIDefMatchData<"SmallVector<Register, 4>">;
 def not_cmp_fold : GICombineRule<
   (defs root:$d, not_cmp_fold_matchinfo:$info),
@@ -1894,6 +1885,15 @@ class integer_of_opcode<Instruction castOpcode> : GICombineRule <
 
 def integer_of_truncate : integer_of_opcode<G_TRUNC>;
 
+/// Transform zext of truncate to x or and(x, mask).
+def zext_of_truncate : GICombineRule <
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (G_TRUNC $trunc, $src):$TruncMI,
+         (G_ZEXT $root, $trunc):$ZextMI,
+         [{ return Helper.matchCombineZextTrunc(*${ZextMI}, *${TruncMI}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${ZextMI}, ${matchinfo}); }])>;
+
+
 def cast_combines: GICombineGroup<[
   truncate_of_zext,
   truncate_of_sext,
@@ -1915,7 +1915,8 @@ def cast_combines: GICombineGroup<[
   narrow_binop_and,
   narrow_binop_or,
   narrow_binop_xor,
-  integer_of_truncate
+  integer_of_truncate,
+  zext_of_truncate
 ]>;
 
 
@@ -1951,7 +1952,7 @@ def const_combines : GICombineGroup<[constant_fold_fp_ops, const_ptradd_to_i2p,
 
 def known_bits_simplifications : GICombineGroup<[
   redundant_and, redundant_sext_inreg, redundant_or, urem_pow2_to_mask,
-  zext_trunc_fold, icmp_to_true_false_known_bits, icmp_to_lhs_known_bits,
+  icmp_to_true_false_known_bits, icmp_to_lhs_known_bits,
   sext_inreg_to_zext_inreg]>;
 
 def width_reduction_combines : GICombineGroup<[reduce_shl_of_extend,
