@@ -243,3 +243,15 @@ define void @foo(ptr addrspace(3) %val) {
   ret void
 }
 
+define void @kernel_argument_promotion_pattern(ptr %p, i32 %val) {
+; CHECK-LABEL: define void @kernel_argument_promotion_pattern(
+; CHECK-SAME: ptr [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[P_CAST_0:%.*]] = addrspacecast ptr [[P]] to ptr addrspace(1)
+; CHECK-NEXT:    store i32 [[VAL]], ptr addrspace(1) [[P_CAST_0]], align 4
+; CHECK-NEXT:    ret void
+;
+  %p.cast.0 = addrspacecast ptr %p to ptr addrspace(1)
+  %p.cast.1 = addrspacecast ptr addrspace(1) %p.cast.0 to ptr
+  store i32 %val, ptr %p.cast.1
+  ret void
+}

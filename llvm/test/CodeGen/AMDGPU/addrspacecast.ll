@@ -215,11 +215,14 @@ define amdgpu_kernel void @use_flat_to_constant_addrspacecast(ptr %ptr) #0 {
 }
 
 ; HSA-LABEL: {{^}}cast_0_group_to_flat_addrspacecast:
+; CI: s_load_dword [[APERTURE:s[0-9]+]], s[4:5], 0x10
+; CI-DAG: v_mov_b32_e32 v[[HI:[0-9]+]], [[APERTURE]]
+
+; GFX9-DAG: s_mov_b64 s[{{[0-9]+}}:[[HI:[0-9]+]]], src_shared_base
 
 ; HSA-DAG: v_mov_b32_e32 v[[LO:[0-9]+]], 0{{$}}
-; HSA-DAG: v_mov_b32_e32 v[[HI:[0-9]+]], 0{{$}}
 ; HSA-DAG: v_mov_b32_e32 v[[K:[0-9]+]], 7{{$}}
-; HSA: flat_store_dword v[[[LO]]:[[HI]]], v[[K]]
+; HSA: {{flat|global}}_store_dword v[[[LO]]:[[HI]]], v[[K]]
 define amdgpu_kernel void @cast_0_group_to_flat_addrspacecast() #0 {
   %cast = addrspacecast ptr addrspace(3) null to ptr
   store volatile i32 7, ptr %cast
@@ -259,10 +262,14 @@ define amdgpu_kernel void @cast_neg1_flat_to_group_addrspacecast() #0 {
 
 ; FIXME: Shouldn't need to enable queue ptr
 ; HSA-LABEL: {{^}}cast_0_private_to_flat_addrspacecast:
+; CI: s_load_dword [[APERTURE:s[0-9]+]], s[4:5], 0x11
+; CI-DAG: v_mov_b32_e32 v[[HI:[0-9]+]], [[APERTURE]]
+
+; GFX9-DAG: s_mov_b64 s[{{[0-9]+}}:[[HI:[0-9]+]]], src_private_base
+
 ; HSA-DAG: v_mov_b32_e32 v[[LO:[0-9]+]], 0{{$}}
-; HSA-DAG: v_mov_b32_e32 v[[HI:[0-9]+]], 0{{$}}
 ; HSA-DAG: v_mov_b32_e32 v[[K:[0-9]+]], 7{{$}}
-; HSA: flat_store_dword v[[[LO]]:[[HI]]], v[[K]]
+; HSA: {{flat|global}}_store_dword v[[[LO]]:[[HI]]], v[[K]]
 define amdgpu_kernel void @cast_0_private_to_flat_addrspacecast() #0 {
   %cast = addrspacecast ptr addrspace(5) null to ptr
   store volatile i32 7, ptr %cast
