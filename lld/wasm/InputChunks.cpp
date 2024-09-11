@@ -378,7 +378,7 @@ void InputChunk::generateRelocationCode(raw_ostream &os) const {
     uint64_t offset = getVA(rel.Offset) - getInputSectionOffset();
 
     Symbol *sym = file->getSymbol(rel);
-    if (!ctx.isPic && sym->isDefined())
+    if (!ctx.isPic && !sym->hasGOTIndex())
       continue;
 
     LLVM_DEBUG(dbgs() << "gen reloc: type=" << relocTypeToString(rel.Type)
