@@ -387,9 +387,6 @@ public:
   /// Transform anyext(trunc(x)) to x.
   bool matchCombineAnyExtTrunc(MachineInstr &MI, Register &Reg);
 
-  /// Transform zext(trunc(x)) to x.
-  bool matchCombineZextTrunc(MachineInstr &MI, Register &Reg);
-
   /// Transform trunc (shl x, K) to shl (trunc x), K
   ///    if K < VT.getScalarSizeInBits().
   ///
@@ -908,6 +905,10 @@ public:
 
   bool matchCastOfBuildVector(const MachineInstr &CastMI,
                               const MachineInstr &BVMI, BuildFnTy &MatchInfo);
+
+  /// Transform zext of truncate to x or and(x, mask).
+  bool matchCombineZextTrunc(const MachineInstr &ZextMI,
+                             const MachineInstr &TruncMI, BuildFnTy &MatchInfo);
 
 private:
   /// Checks for legality of an indexed variant of \p LdSt.
