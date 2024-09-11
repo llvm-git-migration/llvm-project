@@ -60,9 +60,11 @@ def OpenMP_MapBoundsType : OpenMP_Type<"MapBounds", "map_bounds_ty"> {
 // to clauses, which will be forwarded to all operations that include them.
 //
 // An `OpenMP_Op` can inhibit the inheritance of `traits`, `arguments`,
-// `{opt,req}assemblyFormat`, `description` and `extraClassDeclaration` fields
-// from any given `OpenMP_Clause` by setting to 1 the corresponding "skip"
-// template argument bit.
+// `description` and `extraClassDeclaration` fields from any given
+// `OpenMP_Clause` by setting to 1 the corresponding "skip" template argument
+// bit. Additionally, the `skipAssemblyFormat` bit inhibits the inheritance of
+// fields used to populate `OpenMP_Op`'s `assemblyFormat` (i.e.
+// `reqAssemblyFormat` and `optAssemblyFormat`).
 class OpenMP_Clause<bit skipTraits, bit skipArguments, bit skipAssemblyFormat,
                     bit skipDescription, bit skipExtraClassDeclaration> {
   bit ignoreTraits = skipTraits;
