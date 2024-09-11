@@ -241,6 +241,20 @@ struct FormatStyle {
     ///   int (*f)();
     /// \endcode
     bool AlignFunctionPointers;
+    /// Only for ``AlignConsecutiveDeclarations``. Whether function declarations
+    /// are aligned.
+    /// \code
+    ///   true:
+    ///   unsigned int f1(void);
+    ///   void         f2(void);
+    ///   size_t       f3(void);
+    ///
+    ///   false:
+    ///   unsigned int f1(void);
+    ///   void f2(void);
+    ///   size_t f3(void);
+    /// \endcode
+    bool AlignFunctionDeclarations;
     /// Only for ``AlignConsecutiveAssignments``.  Whether short assignment
     /// operators are left-padded to the same length as long ones in order to
     /// put all assignment operators to the right of the left hand side.
@@ -265,6 +279,7 @@ struct FormatStyle {
              AcrossComments == R.AcrossComments &&
              AlignCompound == R.AlignCompound &&
              AlignFunctionPointers == R.AlignFunctionPointers &&
+             AlignFunctionDeclarations == R.AlignFunctionDeclarations &&
              PadOperators == R.PadOperators;
     }
     bool operator!=(const AlignConsecutiveStyle &R) const {
