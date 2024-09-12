@@ -3311,6 +3311,7 @@ public:
     assert(!isReplicator() && "should only get pre-header of loop regions");
     return getSinglePredecessor()->getExitingBasicBlock();
   }
+  void clearEntry() { Entry = nullptr; }
 
   /// An indicator whether this region is to generate multiple replicated
   /// instances of output IR corresponding to its VPBlockBases.
