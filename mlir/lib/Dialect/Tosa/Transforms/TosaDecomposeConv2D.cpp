@@ -14,6 +14,7 @@
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Utils/ConversionUtils.h"
+#include "mlir/IR/Matchers.h"
 
 using namespace mlir;
 using namespace mlir::tosa;
@@ -59,18 +60,26 @@ struct Conv2DIsFullyConnected : public OpRewritePattern<tosa::Conv2DOp> {
     for (const auto &it : llvm::enumerate(padAttr))
       pad[it.index() + 2] = it.value();
 
+    Type inputETy = inputType.getElementType();
     if (llvm::any_of(pad, [](int64_t p) { return p != 0; })) {
-      Type inputETy = inputType.getElementType();
       Attribute zeroAttr = rewriter.getZeroAttr(inputETy);
-      if (op.getQuantizationInfo()) {
-        auto quantizationInfo = op.getQuantizationInfo();
-        int64_t iZp = quantizationInfo->getInputZp();
-
-        if (!validIntegerRange(cast<IntegerType>(inputETy), iZp))
+      int64_t iZp;
+      const bool hasZp = inputETy.isInteger(8);
+      if (hasZp) {
+        Type inputETy = inputType.getElementType();
+        ElementsAttr inputZpAttr;
+        if (!matchPattern(op.getInputZp(), m_Constant(&inputZpAttr)))
           return rewriter.notifyMatchFailure(
-              op, "tosa.conv op quantization has zp outside of input range");
+              op, "bail out if the actual value of zero points cannot be "
+                  "determined");
 
-        zeroAttr = rewriter.getIntegerAttr(inputETy, iZp);
+        if (tosa::getZeroPoint(inputZpAttr, iZp).succeeded()) {
+          if (!validIntegerRange(cast<IntegerType>(inputETy), iZp))
+            return rewriter.notifyMatchFailure(
+                op, "tosa.conv op quantization has zp outside of input range");
+
+          zeroAttr = rewriter.getIntegerAttr(inputETy, iZp);
+        }
       }
 
       llvm::SmallVector<int64_t> newShape(inputType.getShape());
@@ -125,13 +134,43 @@ struct Conv2DIsFullyConnected : public OpRewritePattern<tosa::Conv2DOp> {
     auto fullyConnectedShapeType =
         RankedTensorType::get(fullyConnectedShape, resultType.getElementType());
 
+    // Get and verify explicit zero points.
+    int64_t iZp;
+    int64_t wZp;
+    const bool hasZp = inputETy.isInteger(8);
+    if (hasZp) {
+      ElementsAttr inputZpAttr;
+      ElementsAttr weightZpAttr;
+      if (!matchPattern(op.getInputZp(), m_Constant(&inputZpAttr)) ||
+          !matchPattern(op.getWeightZp(), m_Constant(&weightZpAttr)))
+        return rewriter.notifyMatchFailure(
+            op,
+            "bail out if the actual value of zero points cannot be determined");
+
+      if (tosa::getZeroPoint(inputZpAttr, iZp).failed() ||
+          tosa::verifyZeroPoint<tosa::DepthwiseConv2DOp>(
+              getElementTypeOrSelf(inputZpAttr), iZp)
+              .failed())
+        return rewriter.notifyMatchFailure(
+            op, "input zero point must be zero for non-int8 integer types");
+
+      if (tosa::getZeroPoint(weightZpAttr, wZp).failed() ||
+          tosa::verifyZeroPoint<tosa::DepthwiseConv2DOp>(
+              getElementTypeOrSelf(weightZpAttr), wZp)
+              .failed())
+        return rewriter.notifyMatchFailure(
+            op, "weight zero point must be zero for non-int8 integer types");
+    }
+
     Value fullyConnectedValue;
-    if (op.getQuantizationInfo()) {
+    if (hasZp) {
+      auto zeroPointAttr =
+          rewriter.getAttr<tosa::ConvOpQuantizationAttr>(iZp, wZp);
       fullyConnectedValue =
           rewriter
               .create<tosa::FullyConnectedOp>(
                   op.getLoc(), fullyConnectedShapeType, reshapedInput,
-                  reshapedWeight, op.getBias(), *op.getQuantizationInfo())
+                  reshapedWeight, op.getBias(), zeroPointAttr)
               .getResult();
     } else {
       fullyConnectedValue = rewriter
