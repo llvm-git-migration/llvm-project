@@ -26,6 +26,7 @@
 #include "llvm/Analysis/InlineCost.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/MustExecute.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/AttributeMask.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Constant.h"
@@ -3292,6 +3293,27 @@ const ArrayRef<Function *>
 InformationCache::getIndirectlyCallableFunctions(Attributor &A) const {
   assert(A.isClosedWorldModule() && "Cannot see all indirect callees!");
   return IndirectlyCallableFunctions;
+}
+
+unsigned InformationCache::getFlatAddressSpace(const Function *F) {
+  if (!F)
+    return getAssumedFlatAddressSpace();
+  auto *TTI = getAnalysisResultForFunction<TargetIRAnalysis>(*F);
+  if (!TTI)
+    return getAssumedFlatAddressSpace();
+  return TTI->getFlatAddressSpace();
+}
+
+unsigned InformationCache::getAssumedFlatAddressSpace() const {
+  if (targetIsGPU()) {
+    if (TargetTriple.isAMDGPU() || TargetTriple.isNVPTX()) {
+      // We use 0 here directly instead of enumeration such that we don't need
+      // to include the target headers.
+      return 0;
+    }
+    llvm_unreachable("unknown GPU target");
+  }
+  return ~0U;
 }
 
 void Attributor::recordDependence(const AbstractAttribute &FromAA,

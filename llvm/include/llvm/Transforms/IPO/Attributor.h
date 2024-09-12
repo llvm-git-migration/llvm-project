@@ -1332,7 +1332,7 @@ struct InformationCache {
   bool stackIsAccessibleByOtherThreads() { return !targetIsGPU(); }
 
   /// Return true if the target is a GPU.
-  bool targetIsGPU() {
+  bool targetIsGPU() const {
     return TargetTriple.isAMDGPU() || TargetTriple.isNVPTX();
   }
 
@@ -1340,6 +1340,8 @@ struct InformationCache {
   /// closed world modules (see isClosedWorldModule).
   const ArrayRef<Function *>
   getIndirectlyCallableFunctions(Attributor &A) const;
+
+  unsigned getFlatAddressSpace(const Function *F);
 
 private:
   struct FunctionInfo {
@@ -1382,6 +1384,9 @@ private:
   /// This method needs to be called for all function that might be looked at
   /// through the information cache interface *prior* to looking at them.
   void initializeInformationCache(const Function &F, FunctionInfo &FI);
+
+  /// Return the assumed flat address space.
+  unsigned getAssumedFlatAddressSpace() const;
 
   /// The datalayout used in the module.
   const DataLayout &DL;
@@ -6267,8 +6272,8 @@ struct AAAddressSpace : public StateWrapper<BooleanState, AbstractAttribute> {
     return (AA->getIdAddr() == &ID);
   }
 
-  // No address space which indicates the associated value is dead.
-  static const uint32_t NoAddressSpace = ~0U;
+  // Invalid address space which indicates the associated value is dead.
+  static const uint32_t InvalidAddressSpace = ~0U;
 
   /// Unique ID (due to the unique address)
   static const char ID;
