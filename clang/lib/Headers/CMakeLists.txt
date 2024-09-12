@@ -87,6 +87,7 @@ set(hlsl_h
 set(hlsl_subdir_files
   hlsl/hlsl_basic_types.h
   hlsl/hlsl_intrinsics.h
+  hlsl/hlsl_details.h
   )
 set(hlsl_files
   ${hlsl_h}
