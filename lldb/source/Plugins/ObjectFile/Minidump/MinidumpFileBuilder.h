@@ -175,6 +175,13 @@ private:
   std::unordered_set<lldb::addr_t> m_saved_stack_ranges;
   lldb::FileUP m_core_file;
   lldb_private::SaveCoreOptions m_save_core_options; 
-  static const std::unordered_set<lldb::StopReason> thread_stop_reasons;
+  // Non const so we don't introduce an issue with the default copy assignment 
+  // operator, in the future we also want to be able to define these in the 
+  // save core options.
+  std::unordered_set<lldb::StopReason> m_thread_stop_reasons {
+    lldb::StopReason::eStopReasonException,
+    lldb::StopReason::eStopReasonSignal,
+    lldb::StopReason::eStopReasonBreakpoint
+  };
 };
 #endif // LLDB_SOURCE_PLUGINS_OBJECTFILE_MINIDUMP_MINIDUMPFILEBUILDER_H
