@@ -629,4 +629,8 @@ std::optional<std::string_view> test3(int i) {
   return sv; // fine
 }
 
+std::optional<int*> test4(int a) {
+  return std::make_optional(nullptr); // fine
+}
+
 } // namespace GH100526
