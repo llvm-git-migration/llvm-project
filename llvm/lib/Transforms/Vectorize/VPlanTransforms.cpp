@@ -523,7 +523,7 @@ static void removeDeadRecipes(VPlan &Plan) {
 static VPScalarIVStepsRecipe *
 createScalarIVSteps(VPlan &Plan, InductionDescriptor::InductionKind Kind,
                     Instruction::BinaryOps InductionOpcode,
-                    FPMathOperator *FPBinOp, ScalarEvolution &SE,
+                    FPMathOperator *FPBinOp, LLVMContext &Ctx,
                     Instruction *TruncI, VPValue *StartV, VPValue *Step,
                     VPBasicBlock::iterator IP) {
   VPBasicBlock *HeaderVPBB = Plan.getVectorLoopRegion()->getEntryBasicBlock();
@@ -535,8 +535,7 @@ createScalarIVSteps(VPlan &Plan, InductionDescriptor::InductionKind Kind,
   }
 
   // Truncate base induction if needed.
-  VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType(),
-                          SE.getContext());
+  VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType(), Ctx);
   Type *ResultTy = TypeInfo.inferScalarType(BaseIV);
   if (TruncI) {
     Type *TruncTy = TruncI->getType();
@@ -576,7 +575,7 @@ createScalarIVSteps(VPlan &Plan, InductionDescriptor::InductionKind Kind,
 /// if any of its users needs scalar values, by providing them scalar steps
 /// built on the canonical scalar IV and update the original IV's users. This is
 /// an optional optimization to reduce the needs of vector extracts.
-static void legalizeAndOptimizeInductions(VPlan &Plan, ScalarEvolution &SE) {
+static void legalizeAndOptimizeInductions(VPlan &Plan, LLVMContext &Ctx) {
   SmallVector<VPRecipeBase *> ToRemove;
   VPBasicBlock *HeaderVPBB = Plan.getVectorLoopRegion()->getEntryBasicBlock();
   bool HasOnlyVectorVFs = !Plan.hasVF(ElementCount::getFixed(1));
@@ -594,7 +593,7 @@ static void legalizeAndOptimizeInductions(VPlan &Plan, ScalarEvolution &SE) {
       VPValue *StepV = PtrIV->getOperand(1);
       VPScalarIVStepsRecipe *Steps = createScalarIVSteps(
           Plan, InductionDescriptor::IK_IntInduction, Instruction::Add, nullptr,
-          SE, nullptr, StartV, StepV, InsertPt);
+          Ctx, nullptr, StartV, StepV, InsertPt);
 
       auto *Recipe = new VPInstruction(VPInstruction::PtrAdd,
                                        {PtrIV->getStartValue(), Steps},
@@ -618,7 +617,7 @@ static void legalizeAndOptimizeInductions(VPlan &Plan, ScalarEvolution &SE) {
     const InductionDescriptor &ID = WideIV->getInductionDescriptor();
     VPScalarIVStepsRecipe *Steps = createScalarIVSteps(
         Plan, ID.getKind(), ID.getInductionOpcode(),
-        dyn_cast_or_null<FPMathOperator>(ID.getInductionBinOp()), SE,
+        dyn_cast_or_null<FPMathOperator>(ID.getInductionBinOp()), Ctx,
         WideIV->getTruncInst(), WideIV->getStartValue(), WideIV->getStepValue(),
         InsertPt);
 
@@ -1119,12 +1118,12 @@ void VPlanTransforms::truncateToMinimalBitwidths(
          "some entries in MinBWs haven't been processed");
 }
 
-void VPlanTransforms::optimize(VPlan &Plan, ScalarEvolution &SE) {
+void VPlanTransforms::optimize(VPlan &Plan, LLVMContext &Ctx) {
   removeRedundantCanonicalIVs(Plan);
   removeRedundantInductionCasts(Plan);
 
-  simplifyRecipes(Plan, SE.getContext());
-  legalizeAndOptimizeInductions(Plan, SE);
+  simplifyRecipes(Plan, Ctx);
+  legalizeAndOptimizeInductions(Plan, Ctx);
   removeDeadRecipes(Plan);
 
   createAndOptimizeReplicateRegions(Plan);
