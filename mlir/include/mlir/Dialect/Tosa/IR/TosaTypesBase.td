@@ -288,4 +288,6 @@ def Rank1TosaShape : TosaShapeOfRank<1>;
 def Rank2TosaShape : TosaShapeOfRank<2>;
 def Rank4TosaShape : TosaShapeOfRank<4>;
 
+def Tosa_ZeroPointTensor : TosaTensorRankOf<[Tosa_AnyNumber], [1]>;
+
 #endif // TOSA_TYPES_BASE
