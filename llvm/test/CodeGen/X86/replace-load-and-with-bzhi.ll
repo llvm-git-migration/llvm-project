@@ -15,7 +15,7 @@ define i32 @f32_bzhi(i32 %x, i32 %y) local_unnamed_addr {
 ;
 ; CHECK32-LABEL: f32_bzhi:
 ; CHECK32:       # %bb.0: # %entry
-; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; CHECK32-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
 ; CHECK32-NEXT:    bzhil %eax, {{[0-9]+}}(%esp), %eax
 ; CHECK32-NEXT:    retl
 entry:
@@ -34,7 +34,7 @@ define i32 @f32_bzhi_partial(i32 %x, i32 %y) local_unnamed_addr {
 ;
 ; CHECK32-LABEL: f32_bzhi_partial:
 ; CHECK32:       # %bb.0: # %entry
-; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %eax
+; CHECK32-NEXT:    movzbl {{[0-9]+}}(%esp), %eax
 ; CHECK32-NEXT:    bzhil %eax, {{[0-9]+}}(%esp), %eax
 ; CHECK32-NEXT:    retl
 entry:
