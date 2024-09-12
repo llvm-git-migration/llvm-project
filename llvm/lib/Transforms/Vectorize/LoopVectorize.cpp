@@ -4490,6 +4490,7 @@ static bool willGenerateVectors(VPlan &Plan, ElementCount VF,
       case VPDef::VPWidenCallSC:
       case VPDef::VPWidenCanonicalIVSC:
       case VPDef::VPWidenCastSC:
+      case VPDef::VPWidenCastEVLSC:
       case VPDef::VPWidenGEPSC:
       case VPDef::VPWidenSC:
       case VPDef::VPWidenSelectSC:
