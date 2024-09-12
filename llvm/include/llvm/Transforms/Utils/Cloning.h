@@ -175,6 +175,12 @@ void CloneFunctionInto(Function *NewFunc, const Function *OldFunc,
                        ValueMapTypeRemapper *TypeMapper = nullptr,
                        ValueMaterializer *Materializer = nullptr);
 
+void CloneFunctionAttributesInto(Function *NewFunc, const Function *OldFunc,
+                                 ValueToValueMapTy &VMap,
+                                 bool ModuleLevelChanges,
+                                 ValueMapTypeRemapper *TypeMapper = nullptr,
+                                 ValueMaterializer *Materializer = nullptr);
+
 void CloneAndPruneIntoFromInst(Function *NewFunc, const Function *OldFunc,
                                const Instruction *StartingInst,
                                ValueToValueMapTy &VMap, bool ModuleLevelChanges,
