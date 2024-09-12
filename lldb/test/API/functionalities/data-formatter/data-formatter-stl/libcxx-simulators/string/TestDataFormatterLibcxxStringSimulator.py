@@ -27,7 +27,7 @@ class LibcxxStringDataFormatterSimulatorTestCase(TestBase):
 
 
 for v in [None, "ALTERNATE_LAYOUT"]:
-    for r in range(5):
+    for r in range(6):
         name = "test_r%d" % r
         defines = ["REVISION=%d" % r]
         if v:
