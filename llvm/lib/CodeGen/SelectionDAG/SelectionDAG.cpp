@@ -5435,7 +5435,12 @@ bool SelectionDAG::isBaseWithConstantOffset(SDValue Op) const {
 
 bool SelectionDAG::isKnownNeverNaN(SDValue Op, bool SNaN, unsigned Depth) const {
   // If we're told that NaNs won't happen, assume they won't.
-  if (getTarget().Options.NoNaNsFPMath || Op->getFlags().hasNoNaNs())
+  if (getTarget().Options.NoNaNsFPMath)
+    return true;
+  SDNodeFlags OpFlags = Op->getFlags();
+  if (SNaN && OpFlags.hasNoSNaNs())
+    return true;
+  if (OpFlags.hasNoSNaNs() && OpFlags.hasNoQNaNs())
     return true;
 
   if (Depth >= MaxRecursionDepth)
@@ -5569,9 +5574,37 @@ bool SelectionDAG::isKnownNeverZeroFloat(SDValue Op) const {
   assert(Op.getValueType().isFloatingPoint() &&
          "Floating point type expected");
 
+  SDNodeFlags OpFlags = Op->getFlags();
+  if (OpFlags.hasNoPosZeros() && OpFlags.hasNoNegZeros())
+    return true;
+
   // If the value is a constant, we can obviously see if it is a zero or not.
   return ISD::matchUnaryFpPredicate(
       Op, [](ConstantFPSDNode *C) { return !C->isZero(); });
+}
+
+bool SelectionDAG::isKnownNeverPosZeroFloat(SDValue Op) const {
+  assert(Op.getValueType().isFloatingPoint() && "Floating point type expected");
+
+  SDNodeFlags OpFlags = Op->getFlags();
+  if (OpFlags.hasNoPosZeros())
+    return true;
+
+  // If the value is a constant, we can obviously see if it is a zero or not.
+  return ISD::matchUnaryFpPredicate(
+      Op, [](ConstantFPSDNode *C) { return !C->isZero() || C->isNegative(); });
+}
+
+bool SelectionDAG::isKnownNeverNegZeroFloat(SDValue Op) const {
+  assert(Op.getValueType().isFloatingPoint() && "Floating point type expected");
+
+  SDNodeFlags OpFlags = Op->getFlags();
+  if (OpFlags.hasNoNegZeros())
+    return true;
+
+  // If the value is a constant, we can obviously see if it is a zero or not.
+  return ISD::matchUnaryFpPredicate(
+      Op, [](ConstantFPSDNode *C) { return !C->isZero() || !C->isNegative(); });
 }
 
 bool SelectionDAG::isKnownNeverZero(SDValue Op, unsigned Depth) const {

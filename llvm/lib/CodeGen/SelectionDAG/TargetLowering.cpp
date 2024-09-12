@@ -8563,6 +8563,8 @@ SDValue TargetLowering::expandFMINIMUMNUM_FMAXIMUMNUM(SDNode *Node,
   bool IsMax = Opc == ISD::FMAXIMUMNUM;
   const TargetOptions &Options = DAG.getTarget().Options;
   SDNodeFlags Flags = Node->getFlags();
+  SDNodeFlags LHSFlagsOrig = LHS->getFlags();
+  SDNodeFlags RHSFlagsOrig = RHS->getFlags();
 
   unsigned NewOp =
       Opc == ISD::FMINIMUMNUM ? ISD::FMINNUM_IEEE : ISD::FMAXNUM_IEEE;
@@ -8597,7 +8599,11 @@ SDValue TargetLowering::expandFMINIMUMNUM_FMAXIMUMNUM(SDNode *Node,
   if ((Flags.hasNoNaNs() ||
        (DAG.isKnownNeverSNaN(LHS) && DAG.isKnownNeverSNaN(RHS))) &&
       (Flags.hasNoSignedZeros() || DAG.isKnownNeverZeroFloat(LHS) ||
-       DAG.isKnownNeverZeroFloat(RHS))) {
+       DAG.isKnownNeverZeroFloat(RHS) ||
+       (DAG.isKnownNeverPosZeroFloat(LHS) &&
+        DAG.isKnownNeverPosZeroFloat(RHS)) ||
+       (DAG.isKnownNeverNegZeroFloat(LHS) &&
+        DAG.isKnownNeverNegZeroFloat(RHS)))) {
     unsigned IEEE2008Op = Opc == ISD::FMINIMUMNUM ? ISD::FMINNUM : ISD::FMAXNUM;
     if (isOperationLegalOrCustom(IEEE2008Op, VT))
       return DAG.getNode(IEEE2008Op, DL, VT, LHS, RHS, Flags);
@@ -8606,22 +8612,44 @@ SDValue TargetLowering::expandFMINIMUMNUM_FMAXIMUMNUM(SDNode *Node,
   // If only one operand is NaN, override it with another operand.
   if (!Flags.hasNoNaNs() && !DAG.isKnownNeverNaN(LHS)) {
     LHS = DAG.getSelectCC(DL, LHS, LHS, RHS, LHS, ISD::SETUO);
+    SDNodeFlags LHSFlags = LHS->getFlags();
+    SDNodeFlags RHSFlags = RHS->getFlags();
+    if (RHSFlags.hasNoSNaNs())
+      LHSFlags.setNoSNaNs(true);
+    if (RHSFlags.hasNoQNaNs())
+      LHSFlags.setNoQNaNs(true);
+    LHSFlags.setNoPosZeros(LHSFlagsOrig.hasNoPosZeros());
+    LHSFlags.setNoNegZeros(LHSFlagsOrig.hasNoNegZeros());
+    LHS->setFlags(LHSFlags);
   }
   if (!Flags.hasNoNaNs() && !DAG.isKnownNeverNaN(RHS)) {
     RHS = DAG.getSelectCC(DL, RHS, RHS, LHS, RHS, ISD::SETUO);
+    SDNodeFlags LHSFlags = LHS->getFlags();
+    SDNodeFlags RHSFlags = RHS->getFlags();
+    if (LHSFlags.hasNoSNaNs())
+      RHSFlags.setNoSNaNs(true);
+    if (LHSFlags.hasNoQNaNs())
+      RHSFlags.setNoQNaNs(true);
+    RHSFlags.setNoPosZeros(RHSFlagsOrig.hasNoPosZeros());
+    RHSFlags.setNoNegZeros(RHSFlagsOrig.hasNoNegZeros());
+    RHS->setFlags(RHSFlags);
   }
 
   SDValue MinMax =
       DAG.getSelectCC(DL, LHS, RHS, LHS, RHS, IsMax ? ISD::SETGT : ISD::SETLT);
   // If MinMax is NaN, let's quiet it.
-  if (!Flags.hasNoNaNs() && !DAG.isKnownNeverNaN(LHS) &&
-      !DAG.isKnownNeverNaN(RHS)) {
+  if (!Flags.hasNoNaNs() && !DAG.isKnownNeverSNaN(LHS) &&
+      !DAG.isKnownNeverSNaN(RHS)) {
     MinMax = DAG.getNode(ISD::FCANONICALIZE, DL, VT, MinMax, Flags);
   }
 
   // Fixup signed zero behavior.
   if (Options.NoSignedZerosFPMath || Flags.hasNoSignedZeros() ||
-      DAG.isKnownNeverZeroFloat(LHS) || DAG.isKnownNeverZeroFloat(RHS)) {
+      DAG.isKnownNeverZeroFloat(LHS) || DAG.isKnownNeverZeroFloat(RHS) ||
+      (DAG.isKnownNeverPosZeroFloat(LHS) &&
+       DAG.isKnownNeverPosZeroFloat(RHS)) ||
+      (DAG.isKnownNeverNegZeroFloat(LHS) &&
+       DAG.isKnownNeverNegZeroFloat(RHS))) {
     return MinMax;
   }
   SDValue TestZero =
