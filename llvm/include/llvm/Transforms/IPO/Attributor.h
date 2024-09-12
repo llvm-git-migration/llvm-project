@@ -6267,9 +6267,6 @@ struct AAAddressSpace : public StateWrapper<BooleanState, AbstractAttribute> {
     return (AA->getIdAddr() == &ID);
   }
 
-  // No address space which indicates the associated value is dead.
-  static const uint32_t NoAddressSpace = ~0U;
-
   /// Unique ID (due to the unique address)
   static const char ID;
 };
