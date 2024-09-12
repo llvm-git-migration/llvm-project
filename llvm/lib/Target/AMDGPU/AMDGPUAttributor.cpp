@@ -38,6 +38,11 @@ static cl::opt<unsigned> IndirectCallSpecializationThreshold(
         "A threshold controls whether an indirect call will be specialized"),
     cl::init(3));
 
+static cl::opt<bool>
+    DisableInternalization("amdgpu-disable-internalization",
+                           cl::desc("Disable function internalization."),
+                           cl::Hidden, cl::init(true));
+
 #define AMDGPU_ATTRIBUTE(Name, Str) Name##_POS,
 
 enum ImplicitArgumentPositions {
@@ -1031,9 +1036,32 @@ static void addPreloadKernArgHint(Function &F, TargetMachine &TM) {
 
 static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM,
                     AMDGPUAttributorOptions Options) {
+  bool Changed = false;
+
+  DenseMap<Function *, Function *> InternalizedMap;
+  if (!DisableInternalization) {
+    auto IsCalled = [](Function &F) {
+      for (const User *U : F.users())
+        if (!isa<BlockAddress>(U))
+          return true;
+      return false;
+    };
+
+    SmallPtrSet<Function *, 16> InternalizeFns;
+    for (Function &F : M) {
+      if (F.isDeclaration() || AMDGPU::isEntryFunctionCC(F.getCallingConv()) ||
+          !IsCalled(F) || !Attributor::isInternalizable(F))
+        continue;
+      InternalizeFns.insert(&F);
+    }
+
+    Changed |=
+        Attributor::internalizeFunctions(InternalizeFns, InternalizedMap);
+  }
+
   SetVector<Function *> Functions;
   for (Function &F : M) {
-    if (!F.isIntrinsic())
+    if (!F.isIntrinsic() && !InternalizedMap.lookup(&F))
       Functions.insert(&F);
   }
 
@@ -1094,8 +1122,8 @@ static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM,
     }
   }
 
-  ChangeStatus Change = A.run();
-  return Change == ChangeStatus::CHANGED;
+  Changed |= (A.run() == ChangeStatus::CHANGED);
+  return Changed;
 }
 
 class AMDGPUAttributorLegacy : public ModulePass {
