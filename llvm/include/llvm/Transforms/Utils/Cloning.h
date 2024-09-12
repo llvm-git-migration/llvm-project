@@ -205,6 +205,11 @@ void CloneAndPruneFunctionInto(Function *NewFunc, const Function *OldFunc,
                                const char *NameSuffix = "",
                                ClonedCodeInfo *CodeInfo = nullptr);
 
+/// Process debug information from function's subprogram attachment.
+DISubprogram *ProcessSubprogramAttachment(const Function &F,
+                                          CloneFunctionChangeType Changes,
+                                          DebugInfoFinder &DIFinder);
+
 /// This class captures the data input to the InlineFunction call, and records
 /// the auxiliary results produced by it.
 class InlineFunctionInfo {
