@@ -7420,7 +7420,7 @@ LegalizerHelper::lowerFPTOINT_SAT(MachineInstr &MI) {
   // is already zero.
   if (!IsSigned) {
     MIRBuilder.buildSelect(Dst, OGT, MIRBuilder.buildConstant(DstTy, MaxInt),
-                           Max, MachineInstr::FmNoNans);
+                           Max);
     MI.eraseFromParent();
     return Legalized;
   }
