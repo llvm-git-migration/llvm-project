@@ -1295,6 +1295,8 @@ clang-format
 - Adds ``WrapNamespaceBodyWithEmptyLines`` option.
 - Adds the ``IndentExportBlock`` option.
 - Adds ``PenaltyBreakBeforeMemberAccess`` option.
+- Adds ``AlignAfterOpenBracketBreak`` sub-options for better control of
+  ``AlignAfterOpenBracket`` with ``AlwaysBreak`` or ``BlockIndent`` modes.
 
 libclang
 --------
