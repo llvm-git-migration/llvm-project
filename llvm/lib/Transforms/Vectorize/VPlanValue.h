@@ -351,6 +351,7 @@ public:
     VPWidenCallSC,
     VPWidenCanonicalIVSC,
     VPWidenCastSC,
+    VPWidenCastEVLSC,
     VPWidenGEPSC,
     VPWidenLoadEVLSC,
     VPWidenLoadSC,
