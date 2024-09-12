@@ -126,4 +126,18 @@ def TosaValidation : Pass<"tosa-validate", "mlir::ModuleOp"> {
    ];
 }
 
+def TosaRemoveRedundantTransposes : Pass<"tosa-remove-redundant-transposes", "func::FuncOp"> {
+  let summary = "Remove redundant transposes";
+  let description = [{
+    Pass that identifies and removes redundant tosa.TRANSPOSE operations.
+    It does so by traversing dependencies of tosa.TRANSPOSE operations until they terminate in either
+    tosa.RESHAPE, a nullifying tosa.TRANSPOSE, or a tosa.CONST. It then propagates the downstream
+    transform upward through the intervening operators if it is able and replaces the downstream tosa.TRANSPOSE.
+    Results generally better when run after canonicalization and resolution of dynamic shapes.
+    This pass has an important use-case in cleaning up the results of frameworks that introduce a lot
+    of data-layout transformations when legalizing to TOSA, a common one being transformations between NHWC and NCHW
+    layouts.
+  }];
+}
+
 #endif // MLIR_DIALECT_TOSA_TRANSFORMS_PASSES
