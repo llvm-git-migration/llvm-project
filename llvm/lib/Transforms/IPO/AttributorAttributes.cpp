@@ -12571,8 +12571,19 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
   void initialize(Attributor &A) override {
     assert(getAssociatedType()->isPtrOrPtrVectorTy() &&
            "Associated value is not a pointer");
-    if (getAssociatedType()->getPointerAddressSpace())
+
+    unsigned FlatAS = A.getInfoCache().getDL().getFlatAddressSpace();
+    if (FlatAS == DataLayout::AS_INVALID) {
+      indicatePessimisticFixpoint();
+      return;
+    }
+
+    unsigned AS = getAssociatedType()->getPointerAddressSpace();
+    if (AS != FlatAS) {
+      [[maybe_unused]] bool R = takeAddressSpace(AS);
+      assert(R && "The take should happen");
       indicateOptimisticFixpoint();
+    }
   }
 
   ChangeStatus updateImpl(Attributor &A) override {
@@ -12594,11 +12605,12 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
 
   /// See AbstractAttribute::manifest(...).
   ChangeStatus manifest(Attributor &A) override {
-    Value *AssociatedValue = &getAssociatedValue();
-    Value *OriginalValue = peelAddrspacecast(AssociatedValue);
-    if (getAddressSpace() == NoAddressSpace ||
+    if (getAddressSpace() == DataLayout::AS_INVALID ||
         getAddressSpace() == getAssociatedType()->getPointerAddressSpace())
       return ChangeStatus::UNCHANGED;
+
+    Value *AssociatedValue = &getAssociatedValue();
+    Value *OriginalValue = peelAddrspacecast(AssociatedValue);
 
     PointerType *NewPtrTy =
         PointerType::get(getAssociatedType()->getContext(), getAddressSpace());
@@ -12646,17 +12658,17 @@ struct AAAddressSpaceImpl : public AAAddressSpace {
     if (!isValidState())
       return "addrspace(<invalid>)";
     return "addrspace(" +
-           (AssumedAddressSpace == NoAddressSpace
+           (AssumedAddressSpace == DataLayout::AS_INVALID
                 ? "none"
                 : std::to_string(AssumedAddressSpace)) +
            ")";
   }
 
 private:
-  uint32_t AssumedAddressSpace = NoAddressSpace;
+  uint32_t AssumedAddressSpace = DataLayout::AS_INVALID;
 
   bool takeAddressSpace(uint32_t AS) {
-    if (AssumedAddressSpace == NoAddressSpace) {
+    if (AssumedAddressSpace == DataLayout::AS_INVALID) {
       AssumedAddressSpace = AS;
       return true;
     }
