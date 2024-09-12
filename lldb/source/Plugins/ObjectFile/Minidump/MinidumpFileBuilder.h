@@ -174,7 +174,9 @@ private:
       m_tid_to_reg_ctx;
   std::unordered_set<lldb::addr_t> m_saved_stack_ranges;
   lldb::FileUP m_core_file;
-  lldb_private::SaveCoreOptions m_save_core_options;
+  lldb_private::SaveCoreOptions m_save_core_options; 
+  const std::unordered_set<lldb::StopReason> m_thread_stop_reasons = {lldb::StopReason::eStopReasonException, lldb::StopReason::eStopReasonSignal,
+  lldb::StopReason::eStopReasonBreakpoint };
 };
 
 #endif // LLDB_SOURCE_PLUGINS_OBJECTFILE_MINIDUMP_MINIDUMPFILEBUILDER_H
