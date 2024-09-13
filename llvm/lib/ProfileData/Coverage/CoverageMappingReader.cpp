@@ -1065,6 +1065,9 @@ lookupSections(ObjectFile &OF, InstrProfSectKind IPSK) {
       // start/end of the section. If its size is 2 bytes, it's empty.
       if (IsCOFF && IPSK == IPSK_name && Section.getSize() == 2)
         continue;
+      // Skip empty profile name section.
+      if (IPSK == IPSK_name && Section.getSize() == 0)
+        continue;
       Sections.push_back(Section);
     }
   }
