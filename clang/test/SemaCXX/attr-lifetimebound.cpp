@@ -20,6 +20,7 @@ namespace usage_ok {
   struct IntRef { int *target; };
 
   const int &crefparam(const int &param); // Omitted in first decl
+  const int &crefparam(const int &param); // Omitted in second decl
   const int &crefparam(const int &param [[clang::lifetimebound]]); // Add LB
   const int &crefparam(const int &param) { return param; } // Omit in impl
   int &refparam(int &param [[clang::lifetimebound]]);
