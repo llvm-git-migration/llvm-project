@@ -84,4 +84,23 @@ Task<int> nonelidable() {
   co_return 1;
 }
 
+// CHECK-LABEL: define{{.*}} @_Z8addTasks4TaskIiES0_{{.*}} {
+Task<int> addTasks([[clang::coro_must_await]] Task<int> t1, Task<int> t2) {
+  int i1 = co_await t1;
+  int i2 = co_await t2;
+  co_return i1 + i2;
+}
+
+// CHECK-LABEL: define{{.*}} @_Z10returnSamei{{.*}} {
+Task<int> returnSame(int i) {
+  co_return i;
+}
+
+// CHECK-LABEL: define{{.*}} @_Z21elidableWithMustAwaitv{{.*}} {
+Task<int> elidableWithMustAwait() {
+  // CHECK: call void @_Z10returnSamei(ptr {{.*}}, i32 noundef 2) #[[ELIDE_SAFE]]
+  // CHECK-NOT: call void @_Z10returnSamei(ptr {{.*}}, i32 noundef 3) #[[ELIDE_SAFE]]
+  co_return co_await addTasks(returnSame(2), returnSame(3));
+}
+
 // CHECK: attributes #[[ELIDE_SAFE]] = { coro_elide_safe }

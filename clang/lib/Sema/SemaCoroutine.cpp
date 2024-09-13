@@ -849,12 +849,40 @@ static bool isAttributedCoroAwaitElidable(const QualType &QT) {
   return Record && Record->hasAttr<CoroAwaitElidableAttr>();
 }
 
-static bool isCoroAwaitElidableCall(Expr *Operand) {
+static void applyAwaitElidableContext(Expr *Operand) {
   if (!Operand->isPRValue()) {
-    return false;
+    return;
   }
 
-  return isAttributedCoroAwaitElidable(Operand->getType());
+  auto *Call = dyn_cast<CallExpr>(Operand->IgnoreImplicit());
+  if (!Call)
+    return;
+
+  if (!isAttributedCoroAwaitElidable(Call->getType()))
+    return;
+
+  Call->setCoroElideSafe();
+
+  // Check parameter
+  auto *Fn = llvm::dyn_cast_if_present<FunctionDecl>(Call->getCalleeDecl());
+  if (!Fn)
+    return;
+
+  size_t ParmIdx = 0;
+  for (ParmVarDecl *PD : Fn->parameters()) {
+    if (PD->hasAttr<CoroMustAwaitAttr>()) {
+      if (PD->isParameterPack()) {
+        size_t NumArgs = Call->getNumArgs();
+        for (size_t ArgIdx = ParmIdx; ArgIdx < NumArgs; ArgIdx++) {
+          applyAwaitElidableContext(Call->getArg(ArgIdx));
+        }
+        break;
+      } else {
+        applyAwaitElidableContext(Call->getArg(ParmIdx));
+      }
+    }
+    ParmIdx++;
+  }
 }
 
 // Attempts to resolve and build a CoawaitExpr from "raw" inputs, bailing out to
@@ -880,14 +908,12 @@ ExprResult Sema::BuildUnresolvedCoawaitExpr(SourceLocation Loc, Expr *Operand,
   }
 
   auto *RD = Promise->getType()->getAsCXXRecordDecl();
-  bool AwaitElidable =
-      isCoroAwaitElidableCall(Operand) &&
-      isAttributedCoroAwaitElidable(
-          getCurFunctionDecl(/*AllowLambda=*/true)->getReturnType());
 
-  if (AwaitElidable)
-    if (auto *Call = dyn_cast<CallExpr>(Operand->IgnoreImplicit()))
-      Call->setCoroElideSafe();
+  bool CurFnAwaitElidable = isAttributedCoroAwaitElidable(
+      getCurFunctionDecl(/*AllowLambda=*/true)->getReturnType());
+
+  if (CurFnAwaitElidable)
+    applyAwaitElidableContext(Operand);
 
   Expr *Transformed = Operand;
   if (lookupMember(*this, "await_transform", RD, Loc)) {

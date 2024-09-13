@@ -8301,6 +8301,18 @@ callee coroutine.
 }];
 }
 
+def CoroMustAwaitDoc : Documentation {
+  let Category = DocCatDecl;
+  let Content = [{
+A direct call expression which returned a prvalue of a type attributed 
+[[clang::coro_await_elidable]] is said to be under a SafeElide context
+if one of the following is true: 
+- it is the right-hand side operand to an co_await expression. 
+- it is an argument to a [[clang::coro_must_await]] parameter or 
+parameter pack of another direct call expression under a SafeElide context.
+}];
+}
+
 def CountedByDocs : Documentation {
   let Category = DocCatField;
   let Content = [{
