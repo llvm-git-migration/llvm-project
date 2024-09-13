@@ -972,14 +972,14 @@ void VPlan::prepareToExecute(Value *TripCountV, Value *VectorTripCountV,
 /// predecessor, which is rewired to the new VPIRBasicBlock. All successors of
 /// VPBB, if any, are rewired to the new VPIRBasicBlock.
 static void replaceVPBBWithIRVPBB(VPBasicBlock *VPBB, BasicBlock *IRBB) {
-  VPIRBasicBlock *IRMiddleVPBB = new VPIRBasicBlock(IRBB);
+  VPIRBasicBlock *IRVPBB = new VPIRBasicBlock(IRBB);
   for (auto &R : make_early_inc_range(*VPBB))
-    R.moveBefore(*IRMiddleVPBB, IRMiddleVPBB->end());
+    R.moveBefore(*IRVPBB, IRVPBB->end());
   VPBlockBase *PredVPBB = VPBB->getSinglePredecessor();
   VPBlockUtils::disconnectBlocks(PredVPBB, VPBB);
-  VPBlockUtils::connectBlocks(PredVPBB, IRMiddleVPBB);
+  VPBlockUtils::connectBlocks(PredVPBB, IRVPBB);
   for (auto *Succ : to_vector(VPBB->getSuccessors())) {
-    VPBlockUtils::connectBlocks(IRMiddleVPBB, Succ);
+    VPBlockUtils::connectBlocks(IRVPBB, Succ);
     VPBlockUtils::disconnectBlocks(VPBB, Succ);
   }
   delete VPBB;
