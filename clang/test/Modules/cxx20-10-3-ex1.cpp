@@ -37,6 +37,7 @@ module M:PartImpl;
 export module M;
                      // error: exported partition :Part is an implementation unit
 export import :PartImpl; // expected-error {{module partition implementations cannot be exported}}
+                         // expected-warning@-1 {{it is not suggested to import implementation partition unit in interface unit}}
 
 //--- std10-3-ex1-tu3.cpp
 export module M:Part;
