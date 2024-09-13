@@ -6078,6 +6078,10 @@ bool MemorySanitizer::sanitizeFunction(Function &F, TargetLibraryInfo &TLI) {
   if (!CompileKernel && F.getName() == kMsanModuleCtorName)
     return false;
 
+  // Do not apply any instrumentation for naked functions.
+  if (F.hasFnAttribute(Attribute::Naked))
+    return false;
+
   if (F.hasFnAttribute(Attribute::DisableSanitizerInstrumentation))
     return false;
 
