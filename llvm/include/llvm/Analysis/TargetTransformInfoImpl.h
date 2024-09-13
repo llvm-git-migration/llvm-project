@@ -115,7 +115,7 @@ public:
     return true;
   }
 
-  unsigned getFlatAddressSpace() const { return -1; }
+  std::optional<unsigned> getFlatAddressSpace() const { return std::nullopt; }
 
   bool collectFlatAddressOperands(SmallVectorImpl<int> &OpIndexes,
                                   Intrinsic::ID IID) const {

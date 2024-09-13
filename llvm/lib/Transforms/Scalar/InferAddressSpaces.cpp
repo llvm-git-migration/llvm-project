@@ -854,9 +854,9 @@ bool InferAddressSpacesImpl::run(Function &CurFn) {
     FlatAddrSpace = 0;
 
   if (FlatAddrSpace == UninitializedAddressSpace) {
-    FlatAddrSpace = TTI->getFlatAddressSpace();
-    if (FlatAddrSpace == UninitializedAddressSpace)
+    if (!TTI->getFlatAddressSpace().has_value())
       return false;
+    FlatAddrSpace = TTI->getFlatAddressSpace().value();
   }
 
   // Collects all flat address expressions in postorder.

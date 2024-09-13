@@ -305,7 +305,7 @@ bool llvm::TargetTransformInfo::addrspacesMayAlias(unsigned FromAS,
   return TTIImpl->addrspacesMayAlias(FromAS, ToAS);
 }
 
-unsigned TargetTransformInfo::getFlatAddressSpace() const {
+std::optional<unsigned> TargetTransformInfo::getFlatAddressSpace() const {
   return TTIImpl->getFlatAddressSpace();
 }
 
