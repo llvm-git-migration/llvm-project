@@ -247,7 +247,10 @@ Attribute Changes in Clang
   (#GH106864)
 
 - Introduced a new attribute ``[[clang::coro_await_elidable]]`` on coroutine return types
-  to express elideability at call sites where the coroutine is co_awaited as a prvalue.
+  to express elideability at call sites where the coroutine is invoked under a safe elide context.
+
+- Introduced a new attribute ``[[clang::coro_must_await]]`` on function parameters to
+  propagate safe elide context if such function is also under a safe elide context.
 
 Improvements to Clang's diagnostics
 -----------------------------------
