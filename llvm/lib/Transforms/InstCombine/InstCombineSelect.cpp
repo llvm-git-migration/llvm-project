@@ -1406,6 +1406,46 @@ Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
   return nullptr;
 }
 
+/// Fold the following code sequence:
+/// \code
+///   %XEq = icmp eq i64 %X, %Z
+///   %YEq = icmp eq i64 %Y, %Z
+///   %either = select i1 %XEq, i1 true, i1 %YEq
+///   %both = select i1 %XEq, i1 %YEq, i1 false
+///   %cmp = icmp eq i64 %X, %Y
+///   %equal = select i1 %either, i1 %both, i1 %cmp
+/// \code
+///
+/// into:
+///   %equal = icmp eq i64 %X, %Y
+///
+/// Equivalently:
+///   (X==Z || Y==Z) ? (X==Z && Y==Z) : X==Y --> X==Y
+Instruction *InstCombinerImpl::foldSelectEqualityTest(SelectInst &Sel) {
+  Value *X, *Y, *Z, *XEq, *YEq;
+  Value *Either = Sel.getCondition(), *Both = Sel.getTrueValue(),
+        *Cmp = Sel.getFalseValue();
+
+  if (!match(Either, m_Select(m_Value(XEq), m_One(), m_Value(YEq))))
+    return nullptr;
+
+  if (!match(XEq,
+             m_c_SpecificICmp(ICmpInst::ICMP_EQ, m_Value(X), m_Value(Z))) ||
+      !match(YEq,
+             m_c_SpecificICmp(ICmpInst::ICMP_EQ, m_Value(Y), m_Specific(Z))))
+    return nullptr;
+
+  if (!match(Both, m_Select(m_Specific(XEq), m_Specific(YEq), m_Zero())) &&
+      !match(Both, m_Select(m_Specific(YEq), m_Specific(XEq), m_Zero())))
+    return nullptr;
+
+  if (!match(Cmp,
+             m_c_SpecificICmp(ICmpInst::ICMP_EQ, m_Specific(X), m_Specific(Y))))
+    return nullptr;
+
+  return replaceInstUsesWith(Sel, Cmp);
+}
+
 // See if this is a pattern like:
 //   %old_cmp1 = icmp slt i32 %x, C2
 //   %old_replacement = select i1 %old_cmp1, i32 %target_low, i32 %target_high
@@ -4066,6 +4106,11 @@ Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
   }
 
   if (Instruction *I = foldSelectOfSymmetricSelect(SI, Builder))
+    return I;
+
+  // This needs to happen before foldNestedSelects, as that could break the
+  // patterns that we test for.
+  if (Instruction *I = foldSelectEqualityTest(SI))
     return I;
 
   if (Instruction *I = foldNestedSelects(SI, Builder))
