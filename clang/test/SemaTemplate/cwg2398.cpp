@@ -379,3 +379,17 @@ namespace regression1 {
     bar(input);
   }
 } // namespace regression1
+
+namespace regression2 {
+  template <class> struct D;
+  // old-note@-1 {{template is declared here}}
+
+  template <class ET, template <class> class VT>
+  struct D<VT<ET>> {
+    template <class C> using E = VT<C>;
+  };
+
+  template <typename, int> class Matrix;
+  using X = D<Matrix<double, 3>>::E<int>;
+  // old-error@-1 {{implicit instantiation of undefined template}}
+} // namespace regression2

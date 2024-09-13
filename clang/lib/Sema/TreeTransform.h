@@ -4540,6 +4540,63 @@ NestedNameSpecifierLoc TreeTransform<Derived>::TransformNestedNameSpecifierLoc(
   return SS.getWithLocInContext(SemaRef.Context);
 }
 
+/// Iterator adaptor that invents template argument location information
+/// for each of the template arguments in its underlying iterator.
+template <typename Derived, typename InputIterator>
+class TemplateArgumentLocInventIterator {
+  TreeTransform<Derived> &Self;
+  InputIterator Iter;
+
+public:
+  typedef TemplateArgumentLoc value_type;
+  typedef TemplateArgumentLoc reference;
+  typedef typename std::iterator_traits<InputIterator>::difference_type
+      difference_type;
+  typedef std::input_iterator_tag iterator_category;
+
+  class pointer {
+    TemplateArgumentLoc Arg;
+
+  public:
+    explicit pointer(TemplateArgumentLoc Arg) : Arg(Arg) {}
+
+    const TemplateArgumentLoc *operator->() const { return &Arg; }
+  };
+
+  explicit TemplateArgumentLocInventIterator(TreeTransform<Derived> &Self,
+                                             InputIterator Iter)
+      : Self(Self), Iter(Iter) {}
+
+  TemplateArgumentLocInventIterator &operator++() {
+    ++Iter;
+    return *this;
+  }
+
+  TemplateArgumentLocInventIterator operator++(int) {
+    TemplateArgumentLocInventIterator Old(*this);
+    ++(*this);
+    return Old;
+  }
+
+  reference operator*() const {
+    TemplateArgumentLoc Result;
+    Self.InventTemplateArgumentLoc(*Iter, Result);
+    return Result;
+  }
+
+  pointer operator->() const { return pointer(**this); }
+
+  friend bool operator==(const TemplateArgumentLocInventIterator &X,
+                         const TemplateArgumentLocInventIterator &Y) {
+    return X.Iter == Y.Iter;
+  }
+
+  friend bool operator!=(const TemplateArgumentLocInventIterator &X,
+                         const TemplateArgumentLocInventIterator &Y) {
+    return X.Iter != Y.Iter;
+  }
+};
+
 template<typename Derived>
 DeclarationNameInfo
 TreeTransform<Derived>
@@ -4660,6 +4717,42 @@ TreeTransform<Derived>::TransformTemplateName(CXXScopeSpec &SS,
                                             DTN->getOperator(), NameLoc,
                                             ObjectType, AllowInjectedClassName);
   }
+
+  if (DeducedTemplateStorage *DTN = Name.getAsDeducedTemplateName()) {
+    TemplateName Underlying = DTN->getUnderlying();
+    TemplateName TransUnderlying = getDerived().TransformTemplateName(
+        SS, Underlying, NameLoc, ObjectType, FirstQualifierInScope,
+        AllowInjectedClassName);
+    if (TransUnderlying.isNull())
+      return TemplateName();
+
+    DefaultArguments DefArgs = DTN->getDefaultArguments();
+
+    TemplateArgumentListInfo TransArgsInfo;
+    using Iterator =
+        TemplateArgumentLocInventIterator<Derived, TemplateArgument *>;
+    if (getDerived().TransformTemplateArguments(
+            Iterator(*this,
+                     const_cast<TemplateArgument *>(DefArgs.Args.begin())),
+            Iterator(*this, const_cast<TemplateArgument *>(DefArgs.Args.end())),
+            TransArgsInfo))
+      return TemplateName();
+
+    SmallVector<TemplateArgument, 4> TransArgs(
+        TransArgsInfo.arguments().size());
+    for (unsigned I = 0; I < TransArgs.size(); ++I)
+      TransArgs[I] = TransArgsInfo.arguments()[I].getArgument();
+
+    return getSema().Context.getDeducedTemplateName(
+        TransUnderlying, DefaultArguments{DefArgs.StartPos, TransArgs});
+  }
+
+  // FIXME: Preserve SubstTemplateTemplateParm.
+  if (SubstTemplateTemplateParmStorage *STN =
+          Name.getAsSubstTemplateTemplateParm())
+    return getDerived().TransformTemplateName(
+        SS, STN->getReplacement(), NameLoc, ObjectType, FirstQualifierInScope,
+        AllowInjectedClassName);
 
   // FIXME: Try to preserve more of the TemplateName.
   if (TemplateDecl *Template = Name.getAsTemplateDecl()) {
@@ -4806,63 +4899,6 @@ bool TreeTransform<Derived>::TransformTemplateArgument(
   // Work around bogus GCC warning
   return true;
 }
-
-/// Iterator adaptor that invents template argument location information
-/// for each of the template arguments in its underlying iterator.
-template<typename Derived, typename InputIterator>
-class TemplateArgumentLocInventIterator {
-  TreeTransform<Derived> &Self;
-  InputIterator Iter;
-
-public:
-  typedef TemplateArgumentLoc value_type;
-  typedef TemplateArgumentLoc reference;
-  typedef typename std::iterator_traits<InputIterator>::difference_type
-    difference_type;
-  typedef std::input_iterator_tag iterator_category;
-
-  class pointer {
-    TemplateArgumentLoc Arg;
-
-  public:
-    explicit pointer(TemplateArgumentLoc Arg) : Arg(Arg) { }
-
-    const TemplateArgumentLoc *operator->() const { return &Arg; }
-  };
-
-  explicit TemplateArgumentLocInventIterator(TreeTransform<Derived> &Self,
-                                             InputIterator Iter)
-    : Self(Self), Iter(Iter) { }
-
-  TemplateArgumentLocInventIterator &operator++() {
-    ++Iter;
-    return *this;
-  }
-
-  TemplateArgumentLocInventIterator operator++(int) {
-    TemplateArgumentLocInventIterator Old(*this);
-    ++(*this);
-    return Old;
-  }
-
-  reference operator*() const {
-    TemplateArgumentLoc Result;
-    Self.InventTemplateArgumentLoc(*Iter, Result);
-    return Result;
-  }
-
-  pointer operator->() const { return pointer(**this); }
-
-  friend bool operator==(const TemplateArgumentLocInventIterator &X,
-                         const TemplateArgumentLocInventIterator &Y) {
-    return X.Iter == Y.Iter;
-  }
-
-  friend bool operator!=(const TemplateArgumentLocInventIterator &X,
-                         const TemplateArgumentLocInventIterator &Y) {
-    return X.Iter != Y.Iter;
-  }
-};
 
 template<typename Derived>
 template<typename InputIterator>

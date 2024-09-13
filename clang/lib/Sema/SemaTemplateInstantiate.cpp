@@ -1973,9 +1973,11 @@ TemplateName TemplateInstantiator::TransformTemplateName(
     CXXScopeSpec &SS, TemplateName Name, SourceLocation NameLoc,
     QualType ObjectType, NamedDecl *FirstQualifierInScope,
     bool AllowInjectedClassName) {
-  if (TemplateTemplateParmDecl *TTP
-       = dyn_cast_or_null<TemplateTemplateParmDecl>(Name.getAsTemplateDecl())) {
-    if (TTP->getDepth() < TemplateArgs.getNumLevels()) {
+  // FIXME: Don't lose sugar here.
+  if (auto [TD, DefArgs] = Name.getTemplateDeclAndDefaultArgs();
+      TD && DefArgs.Args.empty()) {
+    if (auto *TTP = dyn_cast<TemplateTemplateParmDecl>(TD);
+        TTP && TTP->getDepth() < TemplateArgs.getNumLevels()) {
       // If the corresponding template argument is NULL or non-existent, it's
       // because we are performing instantiation from explicitly-specified
       // template arguments in a function template, but there were some
