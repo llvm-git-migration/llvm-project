@@ -355,7 +355,7 @@ public:
 
     if (AccumEVT.isScalableVector() && !ST->isSVEorStreamingSVEAvailable())
       return Invalid;
-    if (!AccumEVT.isScalableVector() && !ST->isNeonAvailable() &&
+    if (AccumEVT.isFixedLengthVector() && !ST->isNeonAvailable() &&
         !ST->hasDotProd())
       return Invalid;
 
