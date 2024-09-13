@@ -887,7 +887,6 @@ define void @bitcast_undef_to_vector() {
 ; CHECK:       unreachable:
 ; CHECK-NEXT:    br label [[END]]
 ; CHECK:       end:
-; CHECK-NEXT:    store i16 0, ptr addrspace(1) null, align 2
 ; CHECK-NEXT:    ret void
 ;
 entry:
