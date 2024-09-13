@@ -4460,6 +4460,11 @@ ExprResult Sema::BuildTemplateIdExpr(const CXXScopeSpec &SS,
                                   R.getAsSingle<ConceptDecl>(), TemplateArgs);
   }
 
+  if (TemplateArgs && R.getAsSingle<FunctionDecl>() &&
+      R.getAsSingle<FunctionDecl>()->getTemplateSpecializationKind() ==
+          TemplateSpecializationKind::TSK_Undeclared)
+    return ExprError();
+
   // We don't want lookup warnings at this point.
   R.suppressDiagnostics();
 
