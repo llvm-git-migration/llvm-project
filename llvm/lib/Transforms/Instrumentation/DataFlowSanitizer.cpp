@@ -1545,8 +1545,9 @@ bool DataFlowSanitizer::runImpl(
   SmallPtrSet<Function *, 2> FnsWithForceZeroLabel;
   SmallPtrSet<Constant *, 1> PersonalityFns;
   for (Function &F : M)
+    // Do not apply any instrumentation for naked functions or if disabled.
     if (!F.isIntrinsic() && !DFSanRuntimeFunctions.contains(&F) &&
-        !LibAtomicFunction(F) &&
+        !LibAtomicFunction(F) && !F.hasFnAttribute(Attribute::Naked) &&
         !F.hasFnAttribute(Attribute::DisableSanitizerInstrumentation)) {
       FnsToInstrument.push_back(&F);
       if (F.hasPersonalityFn())
