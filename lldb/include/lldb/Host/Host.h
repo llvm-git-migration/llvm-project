@@ -31,6 +31,22 @@ class ProcessInstanceInfo;
 class ProcessInstanceInfoMatch;
 typedef std::vector<ProcessInstanceInfo> ProcessInstanceInfoList;
 
+// Always on system log category and channel.
+enum class SystemLog : Log::MaskType {
+  System = Log::ChannelFlag<0>,
+  LLVM_MARK_AS_BITMASK_ENUM(System)
+};
+
+LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
+
+class LogChannelSystem {
+public:
+  static void Initialize();
+  static void Terminate();
+};
+
+template <> Log::Channel &LogChannelFor<SystemLog>();
+
 // Exit Type for inferior processes
 struct WaitStatus {
   enum Type : uint8_t {

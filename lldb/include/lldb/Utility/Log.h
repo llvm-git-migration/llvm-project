@@ -165,13 +165,14 @@ public:
     friend class Log;
 
   public:
+    const bool internal = false;
     const llvm::ArrayRef<Category> categories;
     const MaskType default_flags;
 
     template <typename Cat>
     constexpr Channel(llvm::ArrayRef<Log::Category> categories,
-                      Cat default_flags)
-        : log_ptr(nullptr), categories(categories),
+                      Cat default_flags, bool internal = false)
+        : log_ptr(nullptr), internal(internal), categories(categories),
           default_flags(MaskType(default_flags)) {
       static_assert(
           std::is_same<Log::MaskType, std::underlying_type_t<Cat>>::value);

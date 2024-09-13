@@ -245,6 +245,11 @@ bool Log::DisableLogChannel(llvm::StringRef channel,
     error_stream << llvm::formatv("Invalid log channel '{0}'.\n", channel);
     return false;
   }
+  if (iter->second.m_channel.internal) {
+    error_stream << llvm::formatv(
+        "Cannot disable internal log channel '{0}'.\n", channel);
+    return false;
+  }
   MaskType flags = categories.empty()
                        ? std::numeric_limits<MaskType>::max()
                        : GetFlags(error_stream, *iter, categories);
@@ -296,8 +301,10 @@ void Log::ForEachChannelCategory(
 
 std::vector<llvm::StringRef> Log::ListChannels() {
   std::vector<llvm::StringRef> result;
-  for (const auto &channel : *g_channel_map)
-    result.push_back(channel.first());
+  for (const auto &entry : *g_channel_map) {
+    if (!entry.second.m_channel.internal)
+      result.push_back(entry.first());
+  }
   return result;
 }
 
@@ -307,8 +314,10 @@ void Log::ListAllLogChannels(llvm::raw_ostream &stream) {
     return;
   }
 
-  for (const auto &channel : *g_channel_map)
-    ListCategories(stream, channel);
+  for (const auto &entry : *g_channel_map) {
+    if (!entry.second.m_channel.internal)
+      ListCategories(stream, entry);
+  }
 }
 
 bool Log::GetVerbose() const {
