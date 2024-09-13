@@ -4,13 +4,8 @@
 define i1 @icmp_equality_test(i64 %X, i64 %Y, i64 %Z) {
 ; CHECK-LABEL: @icmp_equality_test(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i64 [[X:%.*]], [[Z:%.*]]
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i64 [[Y:%.*]], [[Z]]
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X]], [[Y]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor i1 [[YEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_YEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[XEQ]], i1 [[YEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i64 %X, %Z
@@ -25,13 +20,8 @@ entry:
 define i1 @icmp_equality_test_constant(i42 %X, i42 %Y) {
 ; CHECK-LABEL: @icmp_equality_test_constant(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i42 [[X:%.*]], -42
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i42 [[Y:%.*]], -42
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i42 [[X]], [[Y]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor i1 [[YEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_YEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[XEQ]], i1 [[YEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i42 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i42 %X, -42
@@ -46,13 +36,8 @@ entry:
 define <2 x i1> @icmp_equality_test_vector(<2 x i64> %X, <2 x i64> %Y) {
 ; CHECK-LABEL: @icmp_equality_test_vector(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq <2 x i64> [[X:%.*]], <i64 123, i64 456>
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq <2 x i64> [[Y:%.*]], <i64 123, i64 456>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i64> [[X]], [[Y]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor <2 x i1> [[YEQ]], <i1 true, i1 true>
-; CHECK-NEXT:    [[BOTH:%.*]] = select <2 x i1> [[NOT_YEQ]], <2 x i1> [[CMP]], <2 x i1> zeroinitializer
-; CHECK-NEXT:    [[EQUAL:%.*]] = select <2 x i1> [[XEQ]], <2 x i1> [[YEQ]], <2 x i1> [[BOTH]]
-; CHECK-NEXT:    ret <2 x i1> [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i64> [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
 entry:
   %XEq = icmp eq <2 x i64> %X, <i64 123, i64 456>
@@ -67,13 +52,8 @@ entry:
 define i1 @icmp_equality_test_commute_icmp1(i64 %X, i64 %Y, i64 %Z) {
 ; CHECK-LABEL: @icmp_equality_test_commute_icmp1(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i64 [[Z:%.*]], [[X:%.*]]
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i64 [[Z]], [[Y:%.*]]
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[Y]], [[X]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor i1 [[YEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_YEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[XEQ]], i1 [[YEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[Y:%.*]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i64 %Z, %X
@@ -88,13 +68,8 @@ entry:
 define i1 @icmp_equality_test_commute_icmp2(i64 %X, i64 %Y, i64 %Z) {
 ; CHECK-LABEL: @icmp_equality_test_commute_icmp2(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i64 [[Z:%.*]], [[X:%.*]]
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i64 [[Y:%.*]], [[Z]]
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[Y]], [[X]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor i1 [[YEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_YEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[XEQ]], i1 [[YEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[Y:%.*]], [[X:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i64 %Z, %X
@@ -109,13 +84,8 @@ entry:
 define i1 @icmp_equality_test_commute_select1(i64 %X, i64 %Y) {
 ; CHECK-LABEL: @icmp_equality_test_commute_select1(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i64 [[X:%.*]], 0
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i64 [[Y:%.*]], 0
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X]], [[Y]]
-; CHECK-NEXT:    [[NOT_YEQ:%.*]] = xor i1 [[YEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_YEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[XEQ]], i1 [[YEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i64 %X, 0
@@ -130,13 +100,8 @@ entry:
 define i1 @icmp_equality_test_commute_select2(i64 %X, i64 %Y) {
 ; CHECK-LABEL: @icmp_equality_test_commute_select2(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[XEQ:%.*]] = icmp eq i64 [[X:%.*]], 0
-; CHECK-NEXT:    [[YEQ:%.*]] = icmp eq i64 [[Y:%.*]], 0
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X]], [[Y]]
-; CHECK-NEXT:    [[NOT_XEQ:%.*]] = xor i1 [[XEQ]], true
-; CHECK-NEXT:    [[BOTH:%.*]] = select i1 [[NOT_XEQ]], i1 [[CMP]], i1 false
-; CHECK-NEXT:    [[EQUAL:%.*]] = select i1 [[YEQ]], i1 [[XEQ]], i1 [[BOTH]]
-; CHECK-NEXT:    ret i1 [[EQUAL]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq i64 [[X:%.*]], [[Y:%.*]]
+; CHECK-NEXT:    ret i1 [[CMP]]
 ;
 entry:
   %XEq = icmp eq i64 %X, 0
