@@ -12319,7 +12319,7 @@ static SDValue lowerShuffleAsElementInsertion(
     }
     V2 = DAG.getNode(ISD::SCALAR_TO_VECTOR, DL, ExtVT, V2S);
   } else if (Mask[V2Index] != (int)Mask.size() || EltVT == MVT::i8 ||
-             EltVT == MVT::i16) {
+             (EltVT == MVT::i16 && !Subtarget.hasAVX10_2())) {
     // Either not inserting from the low element of the input or the input
     // element size is too small to use VZEXT_MOVL to clear the high bits.
     return SDValue();
@@ -38197,7 +38197,8 @@ static bool matchUnaryShuffle(MVT MaskVT, ArrayRef<int> Mask,
 
   // Match against a VZEXT_MOVL instruction, SSE1 only supports 32-bits (MOVSS).
   if (((MaskEltSize == 32) || (MaskEltSize == 64 && Subtarget.hasSSE2()) ||
-       (MaskEltSize == 16 && Subtarget.hasFP16())) &&
+       (MaskEltSize == 16 &&
+        (Subtarget.hasFP16() || Subtarget.hasAVX10_2()))) &&
       isUndefOrEqual(Mask[0], 0) &&
       isUndefOrZeroInRange(Mask, 1, NumMaskElts - 1)) {
     Shuffle = X86ISD::VZEXT_MOVL;
