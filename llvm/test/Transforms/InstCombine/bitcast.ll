@@ -879,3 +879,28 @@ define half @copysign_idiom_constant_wrong_type2(bfloat %x, i16 %mag) {
   %y = bitcast i16 %res to half
   ret half %y
 }
+
+define void @bitcast_undef_to_vector() {
+; CHECK-LABEL: @bitcast_undef_to_vector(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[END:%.*]]
+; CHECK:       unreachable:
+; CHECK-NEXT:    br label [[END]]
+; CHECK:       end:
+; CHECK-NEXT:    store i16 0, ptr addrspace(1) null, align 2
+; CHECK-NEXT:    ret void
+;
+entry:
+  br label %end
+
+unreachable:                                 ; No predecessors!
+  %0 = extractvalue { i32, i32 } zeroinitializer, 1
+  br label %end
+
+end:                                        ; preds = %unreachable, %entry
+  %1 = phi i32 [ %0, %unreachable ], [ undef, %entry ]
+  %2 = bitcast i32 %1 to <2 x i16>
+  %3 = extractelement <2 x i16> %2, i64 0
+  store i16 %3, ptr addrspace(1) null, align 2
+  ret void
+}
