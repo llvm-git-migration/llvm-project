@@ -62,6 +62,7 @@
 // CHECK-NEXT: CoroAwaitElidable (SubjectMatchRule_record)
 // CHECK-NEXT: CoroDisableLifetimeBound (SubjectMatchRule_function)
 // CHECK-NEXT: CoroLifetimeBound (SubjectMatchRule_record)
+// CHECK-NEXT: CoroMustAwait (SubjectMatchRule_variable_is_parameter)
 // CHECK-NEXT: CoroOnlyDestroyWhenComplete (SubjectMatchRule_record)
 // CHECK-NEXT: CoroReturnType (SubjectMatchRule_record)
 // CHECK-NEXT: CoroWrapper (SubjectMatchRule_function)
