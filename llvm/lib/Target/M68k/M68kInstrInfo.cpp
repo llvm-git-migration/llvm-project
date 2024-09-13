@@ -23,7 +23,9 @@
 #include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGenTypes/MachineValueType.h"
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
@@ -571,6 +573,12 @@ bool M68kInstrInfo::ExpandPUSH_POP(MachineInstrBuilder &MIB,
 }
 
 bool M68kInstrInfo::ExpandCCR(MachineInstrBuilder &MIB, bool IsToCCR) const {
+  if (MIB->getOpcode() == M68k::MOV8cd) {
+    // Promote used register to the next class
+    MachineOperand &Opd = MIB->getOperand(1);
+    Opd.setReg(getRegisterInfo().getMatchingSuperReg(
+        Opd.getReg(), M68k::MxSubRegIndex8Lo, &M68k::DR16RegClass));
+  }
 
   // Replace the pseudo instruction with the real one
   if (IsToCCR)
@@ -578,11 +586,6 @@ bool M68kInstrInfo::ExpandCCR(MachineInstrBuilder &MIB, bool IsToCCR) const {
   else
     // FIXME M68010 or later is required
     MIB->setDesc(get(M68k::MOV16dc));
-
-  // Promote used register to the next class
-  auto &Opd = MIB->getOperand(1);
-  Opd.setReg(getRegisterInfo().getMatchingSuperReg(
-      Opd.getReg(), M68k::MxSubRegIndex8Lo, &M68k::DR16RegClass));
 
   return true;
 }
@@ -729,8 +732,8 @@ void M68kInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     return;
   }
 
-  // Now deal with asymmetrically sized copies. The cases that follow are upcast
-  // moves.
+  // Now deal with asymmetrically sized copies. The cases that follow are
+  // upcast moves.
   //
   // NOTE
   // These moves are not aware of type nature of these values and thus
@@ -757,24 +760,24 @@ void M68kInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   bool ToSR = DstReg == M68k::SR;
 
   if (FromCCR) {
-    if (M68k::DR8RegClass.contains(DstReg))
+    if (M68k::DR8RegClass.contains(DstReg)) {
       Opc = M68k::MOV8dc;
-    else if (M68k::DR16RegClass.contains(DstReg))
+    } else if (M68k::DR16RegClass.contains(DstReg)) {
       Opc = M68k::MOV16dc;
-    else if (M68k::DR32RegClass.contains(DstReg))
+    } else if (M68k::DR32RegClass.contains(DstReg)) {
       Opc = M68k::MOV16dc;
-    else {
+    } else {
       LLVM_DEBUG(dbgs() << "Cannot copy CCR to " << RI.getName(DstReg) << '\n');
       llvm_unreachable("Invalid register for MOVE from CCR");
     }
   } else if (ToCCR) {
-    if (M68k::DR8RegClass.contains(SrcReg))
+    if (M68k::DR8RegClass.contains(SrcReg)) {
       Opc = M68k::MOV8cd;
-    else if (M68k::DR16RegClass.contains(SrcReg))
+    } else if (M68k::DR16RegClass.contains(SrcReg)) {
       Opc = M68k::MOV16cd;
-    else if (M68k::DR32RegClass.contains(SrcReg))
+    } else if (M68k::DR32RegClass.contains(SrcReg)) {
       Opc = M68k::MOV16cd;
-    else {
+    } else {
       LLVM_DEBUG(dbgs() << "Cannot copy " << RI.getName(SrcReg) << " to CCR\n");
       llvm_unreachable("Invalid register for MOVE to CCR");
     }
@@ -886,10 +889,10 @@ unsigned M68kInstrInfo::getGlobalBaseReg(MachineFunction *MF) const {
   //
   // NOTE
   // Normally M68k uses A5 register as global base pointer but this will
-  // create unnecessary spill if we use less then 4 registers in code; since A5
-  // is callee-save anyway we could try to allocate caller-save first and if
-  // lucky get one, otherwise it does not really matter which callee-save to
-  // use.
+  // create unnecessary spill if we use less then 4 registers in code; since
+  // A5 is callee-save anyway we could try to allocate caller-save first and
+  // if lucky get one, otherwise it does not really matter which callee-save
+  // to use.
   MachineRegisterInfo &RegInfo = MF->getRegInfo();
   GlobalBaseReg = RegInfo.createVirtualRegister(&M68k::AR32_NOSPRegClass);
   MxFI->setGlobalBaseReg(GlobalBaseReg);
