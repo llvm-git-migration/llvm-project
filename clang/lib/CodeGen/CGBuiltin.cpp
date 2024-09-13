@@ -18709,6 +18709,25 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
         CGM.getHLSLRuntime().getNormalizeIntrinsic(), ArrayRef<Value *>{X},
         nullptr, "hlsl.normalize");
   }
+  case Builtin::BI__builtin_hlsl_elementwise_fmod: {
+    Value *Op0 = EmitScalarExpr(E->getArg(0));
+    Value *Op1 = EmitScalarExpr(E->getArg(1));
+    if (!E->getArg(0)->getType()->hasFloatingRepresentation() ||
+        (E->getArg(0)->getType() != E->getArg(1)->getType()))
+      llvm_unreachable("fmod operands must have the same float representation");
+
+    llvm::Triple::ArchType Arch = CGM.getTarget().getTriple().getArch();
+    assert(((Arch == llvm::Triple::dxil) || (Arch == llvm::Triple::spirv)) &&
+           "Unknown target architecture");
+
+    if (CGM.getTarget().getTriple().getArch() == llvm::Triple::dxil)
+      return Builder.CreateIntrinsic(
+          /*ReturnType=*/Op0->getType(), Intrinsic::dx_fmod,
+          ArrayRef<Value *>{Op0, Op1}, nullptr, "dx.fmod");
+
+    // HLSL's Fmod builtin is equivalent to SPIRV's OpFRem instruction
+    return Builder.CreateFRem(Op0, Op1, "fmod");
+  }
   case Builtin::BI__builtin_hlsl_elementwise_frac: {
     Value *Op0 = EmitScalarExpr(E->getArg(0));
     if (!E->getArg(0)->getType()->hasFloatingRepresentation())
