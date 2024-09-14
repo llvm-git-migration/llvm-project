@@ -431,7 +431,8 @@ public:
 PassBuilder::PassBuilder(TargetMachine *TM, PipelineTuningOptions PTO,
                          std::optional<PGOOptions> PGOOpt,
                          PassInstrumentationCallbacks *PIC)
-    : TM(TM), PTO(PTO), PGOOpt(PGOOpt), PIC(PIC) {
+    : TM(TM), PTO(PTO), PGOOpt(PGOOpt), CGPBO(getCGPassBuilderOption()),
+      PIC(PIC) {
   if (TM)
     TM->registerPassBuilderCallbacks(*this);
   if (PIC) {
