@@ -11,8 +11,9 @@
 #define _LIBCPP___MEMORY_TEMPORARY_BUFFER_H
 
 #include <__config>
+#include <__cstddef/ptrdiff_t.h>
+#include <__cstddef/size_t.h>
 #include <__utility/pair.h>
-#include <cstddef>
 #include <new>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

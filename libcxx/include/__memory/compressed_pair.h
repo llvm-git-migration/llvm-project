@@ -11,6 +11,7 @@
 #define _LIBCPP___MEMORY_COMPRESSED_PAIR_H
 
 #include <__config>
+#include <__cstddef/size_t.h>
 #include <__fwd/tuple.h>
 #include <__tuple/tuple_indices.h>
 #include <__type_traits/decay.h>
@@ -24,7 +25,6 @@
 #include <__utility/forward.h>
 #include <__utility/move.h>
 #include <__utility/piecewise_construct.h>
-#include <cstddef>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header

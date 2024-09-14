@@ -11,6 +11,7 @@
 #define _LIBCPP___MEMORY_ALLOCATOR_TRAITS_H
 
 #include <__config>
+#include <__cstddef/size_t.h>
 #include <__memory/construct_at.h>
 #include <__memory/pointer_traits.h>
 #include <__type_traits/enable_if.h>
@@ -22,7 +23,6 @@
 #include <__type_traits/void_t.h>
 #include <__utility/declval.h>
 #include <__utility/forward.h>
-#include <cstddef>
 #include <limits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
