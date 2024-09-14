@@ -25,7 +25,7 @@ bool bad_typeid_test () {
     class A { virtual void f() {}};
     class B { virtual void g() {}};
 
-    B *bp = NULL;
+    B *bp = nullptr;
     try {bool b = typeid(*bp) == typeid (A); ((void)b); }
     catch ( const std::bad_typeid &) { return true; }
     return false;
