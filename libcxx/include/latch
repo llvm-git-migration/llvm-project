@@ -48,7 +48,7 @@ namespace std
 #  include <__atomic/atomic_base.h>
 #  include <__atomic/atomic_sync.h>
 #  include <__atomic/memory_order.h>
-#  include <cstddef>
+#  include <__cstddef/ptrdiff_t.h>
 #  include <limits>
 #  include <version>
 

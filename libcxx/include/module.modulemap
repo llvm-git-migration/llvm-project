@@ -441,7 +441,10 @@ module std_cstdbool [system] {
 module std_cstddef [system] {
   header "cstddef"
   module byte         { header "__cstddef/byte.h" }
-  module max_align_t  { header "__cstddef/max_align_t.h" }
+  module max_align_t  {
+    header "__cstddef/max_align_t.h"
+    export *
+  }
   module nullptr_t    { header "__cstddef/nullptr_t.h" }
   module ptrdiff_t    { header "__cstddef/ptrdiff_t.h" }
   module size_t       { header "__cstddef/size_t.h" }
@@ -1531,6 +1534,7 @@ module std_private_memory_temp_value                      [system] { header "__m
 module std_private_memory_temporary_buffer                [system] {
   header "__memory/temporary_buffer.h"
   export std_private_utility_pair
+  export std_cstddef.ptrdiff_t
 }
 module std_private_memory_uninitialized_algorithms        [system] {
   header "__memory/uninitialized_algorithms.h"

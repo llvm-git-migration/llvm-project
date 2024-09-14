@@ -14,6 +14,8 @@
 #include <__compare/compare_three_way_result.h>
 #include <__compare/three_way_comparable.h>
 #include <__config>
+#include <__cstddef/nullptr_t.h>
+#include <__cstddef/size_t.h>
 #include <__functional/hash.h>
 #include <__functional/operations.h>
 #include <__memory/allocator_traits.h> // __pointer
@@ -41,7 +43,6 @@
 #include <__utility/declval.h>
 #include <__utility/forward.h>
 #include <__utility/move.h>
-#include <cstddef>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header

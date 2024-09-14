@@ -57,11 +57,11 @@ public:
 */
 
 #include <__config>
+#include <__cstddef/size_t.h>
 #include <__exception/exception.h>
 #include <__type_traits/integral_constant.h>
 #include <__type_traits/is_constant_evaluated.h>
 #include <__verbose_abort>
-#include <cstddef>
 #include <cstdint>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
