@@ -3109,6 +3109,50 @@ Value *LibCallSimplifier::optimizeRemquo(CallInst *CI, IRBuilderBase &B) {
   return ConstantFP::get(CI->getType(), Rem);
 }
 
+/// Constant folds fdim
+Value *LibCallSimplifier::optimizeFdim(CallInst *CI, IRBuilderBase &B) {
+  // Cannot perform the fold unless the call has attribute memory(none)
+  if (!CI->doesNotAccessMemory())
+    return nullptr;
+
+  // TODO : Handle undef values
+  // propagate poison if any
+  if (isa<PoisonValue>(CI->getArgOperand(0)))
+    return CI->getArgOperand(0);
+  if (isa<PoisonValue>(CI->getArgOperand(1)))
+    return CI->getArgOperand(1);
+
+  const APFloat *X, *Y;
+  // Check if both values are constants
+  if (!match(CI->getArgOperand(0), m_APFloat(X)) ||
+      !match(CI->getArgOperand(1), m_APFloat(Y)))
+    return nullptr;
+
+  // If either argument is NaN, NaN is returned
+  if (X->isNaN())
+    return ConstantFP::get(CI->getType(), X->makeQuiet());
+  if (Y->isNaN())
+    return ConstantFP::get(CI->getType(), Y->makeQuiet());
+
+  // if X - Y overflows, it will set the errno, so we avoid the fold
+  APFloat Difference = *X;
+  APFloat::opStatus Status =
+      Difference.subtract(*Y, RoundingMode::NearestTiesToEven);
+  switch (Status) {
+  case APFloat::opStatus::opOK:
+  case APFloat::opStatus::opInexact:
+  case APFloat::opStatus::opUnderflow:
+    break;
+  case APFloat::opStatus::opOverflow:
+  case APFloat::opStatus::opInvalidOp:
+  case APFloat::opStatus::opDivByZero:
+    return nullptr;
+  }
+  APFloat MaxVal =
+      maximum(Difference, APFloat::getZero(CI->getType()->getFltSemantics()));
+  return ConstantFP::get(CI->getType(), MaxVal);
+}
+
 //===----------------------------------------------------------------------===//
 // Integer Library Call Optimizations
 //===----------------------------------------------------------------------===//
@@ -4042,6 +4086,10 @@ Value *LibCallSimplifier::optimizeFloatingPointLibCall(CallInst *CI,
     if (hasFloatVersion(M, CI->getCalledFunction()->getName()))
       return optimizeBinaryDoubleFP(CI, Builder, TLI);
     return nullptr;
+  case LibFunc_fdim:
+  case LibFunc_fdimf:
+  case LibFunc_fdiml:
+    return optimizeFdim(CI, Builder);
   case LibFunc_fminf:
   case LibFunc_fmin:
   case LibFunc_fminl:
