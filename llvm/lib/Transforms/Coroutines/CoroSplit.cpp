@@ -31,6 +31,7 @@
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/ConstantFolding.h"
+#include "llvm/Analysis/DebugInfoCache.h"
 #include "llvm/Analysis/LazyCallGraph.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -82,15 +83,39 @@ using namespace llvm;
 
 namespace {
 
+const DebugInfoFinder *cachedDIFinder(Function &F,
+                                      const DebugInfoCache *DICache) {
+  if (!DICache)
+    return nullptr;
+
+  auto *SP = F.getSubprogram();
+  auto *CU = SP ? SP->getUnit() : nullptr;
+  if (!CU)
+    return nullptr;
+
+  auto Found = DICache->Result.find(CU);
+  if (Found == DICache->Result.end())
+    return nullptr;
+
+  return &Found->getSecond();
+}
+
 /// Collect (a known) subset of global debug info metadata potentially used by
 /// the function \p F.
 ///
 /// This metadata set can be used to avoid cloning debug info not owned by \p F
 /// and is shared among all potential clones \p F.
-void collectGlobalDebugInfo(Function &F, MetadataSetTy &GlobalDebugInfo) {
+void collectGlobalDebugInfo(Function &F, MetadataSetTy &GlobalDebugInfo,
+                            const DebugInfoCache *DICache) {
   TimeTraceScope FunctionScope("CollectGlobalDebugInfo");
 
   DebugInfoFinder DIFinder;
+
+  // Copy DIFinder from cache which is primed on F's compile unit when available
+  auto *PrimedDIFinder = cachedDIFinder(F, DICache);
+  if (PrimedDIFinder)
+    DIFinder = *PrimedDIFinder;
+
   DISubprogram *SPClonedWithinModule = ProcessSubprogramAttachment(
       F, CloneFunctionChangeType::LocalChangesOnly, DIFinder);
 
@@ -1514,11 +1539,11 @@ namespace {
 struct SwitchCoroutineSplitter {
   static void split(Function &F, coro::Shape &Shape,
                     SmallVectorImpl<Function *> &Clones,
-                    TargetTransformInfo &TTI) {
+                    TargetTransformInfo &TTI, const DebugInfoCache *DICache) {
     assert(Shape.ABI == coro::ABI::Switch);
 
     MetadataSetTy GlobalDebugInfo;
-    collectGlobalDebugInfo(F, GlobalDebugInfo);
+    collectGlobalDebugInfo(F, GlobalDebugInfo, DICache);
 
     // Create a resume clone by cloning the body of the original function,
     // setting new entry block and replacing coro.suspend an appropriate value
@@ -1832,7 +1857,8 @@ CallInst *coro::createMustTailCall(DebugLoc Loc, Function *MustTailCallFn,
 
 static void splitAsyncCoroutine(Function &F, coro::Shape &Shape,
                                 SmallVectorImpl<Function *> &Clones,
-                                TargetTransformInfo &TTI) {
+                                TargetTransformInfo &TTI,
+                                const DebugInfoCache *DICache) {
   assert(Shape.ABI == coro::ABI::Async);
   assert(Clones.empty());
   // Reset various things that the optimizer might have decided it
@@ -1919,7 +1945,7 @@ static void splitAsyncCoroutine(Function &F, coro::Shape &Shape,
   assert(Clones.size() == Shape.CoroSuspends.size());
 
   MetadataSetTy GlobalDebugInfo;
-  collectGlobalDebugInfo(F, GlobalDebugInfo);
+  collectGlobalDebugInfo(F, GlobalDebugInfo, DICache);
 
   for (size_t Idx = 0, End = Shape.CoroSuspends.size(); Idx != End; ++Idx) {
     auto *Suspend = Shape.CoroSuspends[Idx];
@@ -1932,7 +1958,8 @@ static void splitAsyncCoroutine(Function &F, coro::Shape &Shape,
 
 static void splitRetconCoroutine(Function &F, coro::Shape &Shape,
                                  SmallVectorImpl<Function *> &Clones,
-                                 TargetTransformInfo &TTI) {
+                                 TargetTransformInfo &TTI,
+                                 const DebugInfoCache *DICache) {
   assert(Shape.ABI == coro::ABI::Retcon || Shape.ABI == coro::ABI::RetconOnce);
   assert(Clones.empty());
 
@@ -2053,7 +2080,7 @@ static void splitRetconCoroutine(Function &F, coro::Shape &Shape,
   assert(Clones.size() == Shape.CoroSuspends.size());
 
   MetadataSetTy GlobalDebugInfo;
-  collectGlobalDebugInfo(F, GlobalDebugInfo);
+  collectGlobalDebugInfo(F, GlobalDebugInfo, DICache);
 
   for (size_t i = 0, e = Shape.CoroSuspends.size(); i != e; ++i) {
     auto Suspend = Shape.CoroSuspends[i];
@@ -2108,7 +2135,8 @@ static bool hasSafeElideCaller(Function &F) {
 static coro::Shape
 splitCoroutine(Function &F, SmallVectorImpl<Function *> &Clones,
                TargetTransformInfo &TTI, bool OptimizeFrame,
-               std::function<bool(Instruction &)> MaterializableCallback) {
+               std::function<bool(Instruction &)> MaterializableCallback,
+               const DebugInfoCache *DICache) {
   PrettyStackTraceFunction prettyStackTrace(F);
 
   // The suspend-crossing algorithm in buildCoroutineFrame get tripped
@@ -2138,14 +2166,14 @@ splitCoroutine(Function &F, SmallVectorImpl<Function *> &Clones,
   } else {
     switch (Shape.ABI) {
     case coro::ABI::Switch:
-      SwitchCoroutineSplitter::split(F, Shape, Clones, TTI);
+      SwitchCoroutineSplitter::split(F, Shape, Clones, TTI, DICache);
       break;
     case coro::ABI::Async:
-      splitAsyncCoroutine(F, Shape, Clones, TTI);
+      splitAsyncCoroutine(F, Shape, Clones, TTI, DICache);
       break;
     case coro::ABI::Retcon:
     case coro::ABI::RetconOnce:
-      splitRetconCoroutine(F, Shape, Clones, TTI);
+      splitRetconCoroutine(F, Shape, Clones, TTI, DICache);
       break;
     }
   }
@@ -2282,6 +2310,9 @@ PreservedAnalyses CoroSplitPass::run(LazyCallGraph::SCC &C,
   auto &FAM =
       AM.getResult<FunctionAnalysisManagerCGSCCProxy>(C, CG).getManager();
 
+  const auto &MAMProxy = AM.getResult<ModuleAnalysisManagerCGSCCProxy>(C, CG);
+  const auto *DICache = MAMProxy.getCachedResult<DebugInfoCacheAnalysis>(M);
+
   // Check for uses of llvm.coro.prepare.retcon/async.
   SmallVector<Function *, 2> PrepareFns;
   addPrepareFunction(M, PrepareFns, "llvm.coro.prepare.retcon");
@@ -2307,7 +2338,7 @@ PreservedAnalyses CoroSplitPass::run(LazyCallGraph::SCC &C,
     SmallVector<Function *, 4> Clones;
     coro::Shape Shape =
         splitCoroutine(F, Clones, FAM.getResult<TargetIRAnalysis>(F),
-                       OptimizeFrame, MaterializableCallback);
+                       OptimizeFrame, MaterializableCallback, DICache);
     CurrentSCC = &updateCallGraphAfterCoroutineSplit(
         *N, Shape, Clones, *CurrentSCC, CG, AM, UR, FAM);
 
