@@ -22,6 +22,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "llvm/ADT/StringSet.h"
+#include "Move.h"
 
 using namespace clang;
 using namespace ento;
