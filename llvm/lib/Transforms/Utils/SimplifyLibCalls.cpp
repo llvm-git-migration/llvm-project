@@ -3109,6 +3109,33 @@ Value *LibCallSimplifier::optimizeRemquo(CallInst *CI, IRBuilderBase &B) {
   return ConstantFP::get(CI->getType(), Rem);
 }
 
+/// Constant folds fdim
+Value *LibCallSimplifier::optimizeFdim(CallInst *CI, IRBuilderBase &B) {
+  const APFloat *X, *Y;
+  // Check if both values are constants
+  if (!match(CI->getArgOperand(0), m_APFloat(X)) ||
+      !match(CI->getArgOperand(1), m_APFloat(Y)))
+    return nullptr;
+  // If either argument is NaN, NaN is returned
+  if (X->isNaN() || Y->isNaN())
+    return ConstantFP::getQNaN(CI->getType());
+
+  IRBuilderBase::FastMathFlagGuard Guard(B);
+  FastMathFlags FMF = CI->getFastMathFlags();
+  // set no-NaN fast-math-flag as we already checked for NaN for both operands
+  FMF.setNoNaNs();
+  // set no-signed-zeroes as fdim will never return -0.0
+  FMF.setNoSignedZeros();
+  B.setFastMathFlags(FMF);
+  // fdim is equivalent to fmax(x - y, 0), except for the NaN handling
+  // requirements.
+  Intrinsic::ID IID = Intrinsic::maxnum;
+  return copyFlags(
+      *CI, B.CreateBinaryIntrinsic(
+               IID, B.CreateFSub(CI->getArgOperand(0), CI->getArgOperand(1)),
+               ConstantFP::get(CI->getType(), 0)));
+}
+
 //===----------------------------------------------------------------------===//
 // Integer Library Call Optimizations
 //===----------------------------------------------------------------------===//
@@ -4042,6 +4069,10 @@ Value *LibCallSimplifier::optimizeFloatingPointLibCall(CallInst *CI,
     if (hasFloatVersion(M, CI->getCalledFunction()->getName()))
       return optimizeBinaryDoubleFP(CI, Builder, TLI);
     return nullptr;
+  case LibFunc_fdim:
+  case LibFunc_fdimf:
+  case LibFunc_fdiml:
+    return optimizeFdim(CI, Builder);
   case LibFunc_fminf:
   case LibFunc_fmin:
   case LibFunc_fminl:
