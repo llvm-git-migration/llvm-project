@@ -3080,6 +3080,41 @@ Value *LibCallSimplifier::optimizeRemquo(CallInst *CI, IRBuilderBase &B) {
   return ConstantFP::get(CI->getType(), Rem);
 }
 
+/// Constant folds fdim
+Value *LibCallSimplifier::optimizeFdim(CallInst *CI, IRBuilderBase &B) {
+  const APFloat *X, *Y;
+  // Check if both values are constants
+  if (!match(CI->getArgOperand(0), m_APFloat(X)) ||
+      !match(CI->getArgOperand(1), m_APFloat(Y)))
+    return nullptr;
+  // If either argument is NaN, NaN is returned
+  if (X->isNaN() || Y->isNaN())
+    return ConstantFP::getQNaN(CI->getType());
+
+  // If the difference if negative, return +0.0
+  if (*X <= *Y)
+    return ConstantFP::get(CI->getType(), 0.0);
+
+  APFloat ReturnVal = *X;
+  APFloat::opStatus Status =
+      ReturnVal.subtract(*Y, RoundingMode::NearestTiesToEven);
+  switch (Status) {
+  case APFloat::opStatus::opOK:
+    break;
+  case APFloat::opStatus::opOverflow:
+    return ConstantFP::get(
+        CI->getType(),
+        APFloat::getLargest(X->getSemantics(), /*Negative=*/false));
+  case APFloat::opStatus::opUnderflow:
+    return ConstantFP::get(
+        CI->getType(),
+        APFloat::getLargest(X->getSemantics(), /*Negative=*/true));
+  default:
+    return nullptr;
+  }
+  return ConstantFP::get(CI->getType(), ReturnVal);
+}
+
 //===----------------------------------------------------------------------===//
 // Integer Library Call Optimizations
 //===----------------------------------------------------------------------===//
@@ -4009,6 +4044,10 @@ Value *LibCallSimplifier::optimizeFloatingPointLibCall(CallInst *CI,
     if (hasFloatVersion(M, CI->getCalledFunction()->getName()))
       return optimizeBinaryDoubleFP(CI, Builder, TLI);
     return nullptr;
+  case LibFunc_fdim:
+  case LibFunc_fdimf:
+  case LibFunc_fdiml:
+    return optimizeFdim(CI, Builder);
   case LibFunc_fminf:
   case LibFunc_fmin:
   case LibFunc_fminl:
