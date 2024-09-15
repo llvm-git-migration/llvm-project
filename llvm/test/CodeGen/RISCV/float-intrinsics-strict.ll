@@ -279,10 +279,10 @@ define float @sincos_f32(float %a) nounwind strictfp {
 ; RV32IZFINX-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32IZFINX-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32IZFINX-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32IZFINX-NEXT:    fmv.s s0, a0
+; RV32IZFINX-NEXT:    mv s0, a0
 ; RV32IZFINX-NEXT:    call sinf
-; RV32IZFINX-NEXT:    fmv.s s1, a0
-; RV32IZFINX-NEXT:    fmv.s a0, s0
+; RV32IZFINX-NEXT:    mv s1, a0
+; RV32IZFINX-NEXT:    mv a0, s0
 ; RV32IZFINX-NEXT:    call cosf
 ; RV32IZFINX-NEXT:    fadd.s a0, s1, a0
 ; RV32IZFINX-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
@@ -297,10 +297,10 @@ define float @sincos_f32(float %a) nounwind strictfp {
 ; RV64IZFINX-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64IZFINX-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64IZFINX-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64IZFINX-NEXT:    fmv.s s0, a0
+; RV64IZFINX-NEXT:    mv s0, a0
 ; RV64IZFINX-NEXT:    call sinf
-; RV64IZFINX-NEXT:    fmv.s s1, a0
-; RV64IZFINX-NEXT:    fmv.s a0, s0
+; RV64IZFINX-NEXT:    mv s1, a0
+; RV64IZFINX-NEXT:    mv a0, s0
 ; RV64IZFINX-NEXT:    call cosf
 ; RV64IZFINX-NEXT:    fadd.s a0, s1, a0
 ; RV64IZFINX-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload

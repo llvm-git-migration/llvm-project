@@ -663,6 +663,9 @@ def GPRF32 : RISCVRegisterClass<[f32], 32, (add (sequence "X%u_W", 10, 17),
                                                 (sequence "X%u_W", 8, 9),
                                                 (sequence "X%u_W", 18, 27),
                                                 (sequence "X%u_W", 0, 4))>;
+def GPRF32C : RISCVRegisterClass<[f32], 32, (add (sequence "X%u_W", 10, 15),
+                                                 (sequence "X%u_W", 8, 9))>;
+def GPRF32NoX0 : RISCVRegisterClass<[f32], 32, (sub GPRF32, X0_W)>;
 
 // Dummy zero register for use in the register pair containing X0 (as X1 is
 // not read to or written when the X0 register pair is used).

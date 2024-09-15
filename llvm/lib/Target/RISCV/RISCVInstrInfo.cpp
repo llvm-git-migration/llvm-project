@@ -110,6 +110,7 @@ Register RISCVInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
     MemBytes = 2;
     break;
   case RISCV::LW:
+  case RISCV::LW_INX:
   case RISCV::FLW:
   case RISCV::LWU:
     MemBytes = 4;
@@ -150,6 +151,7 @@ Register RISCVInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
     MemBytes = 2;
     break;
   case RISCV::SW:
+  case RISCV::SW_INX:
   case RISCV::FSW:
     MemBytes = 4;
     break;
@@ -472,10 +474,9 @@ void RISCVInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   }
 
   if (RISCV::GPRF32RegClass.contains(DstReg, SrcReg)) {
-    assert(STI.hasStdExtZfinx());
-    BuildMI(MBB, MBBI, DL, get(RISCV::FSGNJ_S_INX), DstReg)
-        .addReg(SrcReg, getKillRegState(KillSrc))
-        .addReg(SrcReg, getKillRegState(KillSrc));
+    BuildMI(MBB, MBBI, DL, get(RISCV::PseudoMV_FPR32INX), DstReg)
+        .addReg(SrcReg,
+                getKillRegState(KillSrc) | getRenamableRegState(RenamableSrc));
     return;
   }
 
@@ -1535,6 +1536,7 @@ unsigned RISCVInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
 
   switch (Opcode) {
   case RISCV::PseudoMV_FPR16INX:
+  case RISCV::PseudoMV_FPR32INX:
     // MV is always compressible.
     return STI.hasStdExtCOrZca() ? 2 : 4;
   case TargetOpcode::STACKMAP:
@@ -2595,6 +2597,7 @@ bool RISCVInstrInfo::canFoldIntoAddrMode(const MachineInstr &MemI, Register Reg,
   case RISCV::LH_INX:
   case RISCV::LHU:
   case RISCV::LW:
+  case RISCV::LW_INX:
   case RISCV::LWU:
   case RISCV::LD:
   case RISCV::FLH:
@@ -2604,6 +2607,7 @@ bool RISCVInstrInfo::canFoldIntoAddrMode(const MachineInstr &MemI, Register Reg,
   case RISCV::SH:
   case RISCV::SH_INX:
   case RISCV::SW:
+  case RISCV::SW_INX:
   case RISCV::SD:
   case RISCV::FSH:
   case RISCV::FSW:
@@ -2673,9 +2677,11 @@ bool RISCVInstrInfo::getMemOperandsWithOffsetWidth(
   case RISCV::SH_INX:
   case RISCV::FSH:
   case RISCV::LW:
+  case RISCV::LW_INX:
   case RISCV::LWU:
   case RISCV::FLW:
   case RISCV::SW:
+  case RISCV::SW_INX:
   case RISCV::FSW:
   case RISCV::LD:
   case RISCV::FLD:

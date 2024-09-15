@@ -170,7 +170,7 @@ define i64 @test_floor_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -311,7 +311,7 @@ define i64 @test_floor_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -568,7 +568,7 @@ define i64 @test_floor_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -683,7 +683,7 @@ define i64 @test_floor_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168
@@ -878,7 +878,7 @@ define i64 @test_ceil_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -1019,7 +1019,7 @@ define i64 @test_ceil_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -1276,7 +1276,7 @@ define i64 @test_ceil_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -1391,7 +1391,7 @@ define i64 @test_ceil_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168
@@ -1586,7 +1586,7 @@ define i64 @test_trunc_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -1727,7 +1727,7 @@ define i64 @test_trunc_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -1984,7 +1984,7 @@ define i64 @test_trunc_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -2099,7 +2099,7 @@ define i64 @test_trunc_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168
@@ -2294,7 +2294,7 @@ define i64 @test_round_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -2435,7 +2435,7 @@ define i64 @test_round_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -2692,7 +2692,7 @@ define i64 @test_round_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -2807,7 +2807,7 @@ define i64 @test_round_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168
@@ -3002,7 +3002,7 @@ define i64 @test_roundeven_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -3143,7 +3143,7 @@ define i64 @test_roundeven_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -3400,7 +3400,7 @@ define i64 @test_roundeven_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -3515,7 +3515,7 @@ define i64 @test_roundeven_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168
@@ -3710,7 +3710,7 @@ define i64 @test_rint_si64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    lui a0, 913408
 ; RV32IZHINX-NEXT:    fle.s s1, a0, s0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixsfdi
 ; RV32IZHINX-NEXT:    lui a4, 524288
 ; RV32IZHINX-NEXT:    lui a2, 524288
@@ -3851,7 +3851,7 @@ define i64 @test_rint_si64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    lui a0, 913408
 ; RV32IZHINXMIN-NEXT:    fle.s s1, a0, s0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixsfdi
 ; RV32IZHINXMIN-NEXT:    lui a4, 524288
 ; RV32IZHINXMIN-NEXT:    lui a2, 524288
@@ -4108,7 +4108,7 @@ define i64 @test_rint_ui64(half %x) nounwind {
 ; RV32IZHINX-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINX-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINX-NEXT:    neg s1, a0
-; RV32IZHINX-NEXT:    fmv.s a0, s0
+; RV32IZHINX-NEXT:    mv a0, s0
 ; RV32IZHINX-NEXT:    call __fixunssfdi
 ; RV32IZHINX-NEXT:    and a0, s1, a0
 ; RV32IZHINX-NEXT:    lui a2, 391168
@@ -4223,7 +4223,7 @@ define i64 @test_rint_ui64(half %x) nounwind {
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h s0, a0
 ; RV32IZHINXMIN-NEXT:    fle.s a0, zero, s0
 ; RV32IZHINXMIN-NEXT:    neg s1, a0
-; RV32IZHINXMIN-NEXT:    fmv.s a0, s0
+; RV32IZHINXMIN-NEXT:    mv a0, s0
 ; RV32IZHINXMIN-NEXT:    call __fixunssfdi
 ; RV32IZHINXMIN-NEXT:    and a0, s1, a0
 ; RV32IZHINXMIN-NEXT:    lui a2, 391168

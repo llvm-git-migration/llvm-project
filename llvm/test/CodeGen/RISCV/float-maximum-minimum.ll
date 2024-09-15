@@ -43,7 +43,7 @@ define float @fminimum_f32(float %a, float %b) nounwind {
 ; RV32IZFINX-LABEL: fminimum_f32:
 ; RV32IZFINX:       # %bb.0:
 ; RV32IZFINX-NEXT:    feq.s a3, a0, a0
-; RV32IZFINX-NEXT:    fmv.s a2, a1
+; RV32IZFINX-NEXT:    mv a2, a1
 ; RV32IZFINX-NEXT:    beqz a3, .LBB0_3
 ; RV32IZFINX-NEXT:  # %bb.1:
 ; RV32IZFINX-NEXT:    feq.s a3, a1, a1
@@ -52,7 +52,7 @@ define float @fminimum_f32(float %a, float %b) nounwind {
 ; RV32IZFINX-NEXT:    fmin.s a0, a0, a2
 ; RV32IZFINX-NEXT:    ret
 ; RV32IZFINX-NEXT:  .LBB0_3:
-; RV32IZFINX-NEXT:    fmv.s a2, a0
+; RV32IZFINX-NEXT:    mv a2, a0
 ; RV32IZFINX-NEXT:    feq.s a3, a1, a1
 ; RV32IZFINX-NEXT:    bnez a3, .LBB0_2
 ; RV32IZFINX-NEXT:  .LBB0_4:
@@ -81,7 +81,7 @@ define float @fminimum_f32(float %a, float %b) nounwind {
 ; RV64IZFINX-LABEL: fminimum_f32:
 ; RV64IZFINX:       # %bb.0:
 ; RV64IZFINX-NEXT:    feq.s a3, a0, a0
-; RV64IZFINX-NEXT:    fmv.s a2, a1
+; RV64IZFINX-NEXT:    mv a2, a1
 ; RV64IZFINX-NEXT:    beqz a3, .LBB0_3
 ; RV64IZFINX-NEXT:  # %bb.1:
 ; RV64IZFINX-NEXT:    feq.s a3, a1, a1
@@ -90,7 +90,7 @@ define float @fminimum_f32(float %a, float %b) nounwind {
 ; RV64IZFINX-NEXT:    fmin.s a0, a0, a2
 ; RV64IZFINX-NEXT:    ret
 ; RV64IZFINX-NEXT:  .LBB0_3:
-; RV64IZFINX-NEXT:    fmv.s a2, a0
+; RV64IZFINX-NEXT:    mv a2, a0
 ; RV64IZFINX-NEXT:    feq.s a3, a1, a1
 ; RV64IZFINX-NEXT:    bnez a3, .LBB0_2
 ; RV64IZFINX-NEXT:  .LBB0_4:
@@ -125,7 +125,7 @@ define float @fmaximum_f32(float %a, float %b) nounwind {
 ; RV32IZFINX-LABEL: fmaximum_f32:
 ; RV32IZFINX:       # %bb.0:
 ; RV32IZFINX-NEXT:    feq.s a3, a0, a0
-; RV32IZFINX-NEXT:    fmv.s a2, a1
+; RV32IZFINX-NEXT:    mv a2, a1
 ; RV32IZFINX-NEXT:    beqz a3, .LBB1_3
 ; RV32IZFINX-NEXT:  # %bb.1:
 ; RV32IZFINX-NEXT:    feq.s a3, a1, a1
@@ -134,7 +134,7 @@ define float @fmaximum_f32(float %a, float %b) nounwind {
 ; RV32IZFINX-NEXT:    fmax.s a0, a0, a2
 ; RV32IZFINX-NEXT:    ret
 ; RV32IZFINX-NEXT:  .LBB1_3:
-; RV32IZFINX-NEXT:    fmv.s a2, a0
+; RV32IZFINX-NEXT:    mv a2, a0
 ; RV32IZFINX-NEXT:    feq.s a3, a1, a1
 ; RV32IZFINX-NEXT:    bnez a3, .LBB1_2
 ; RV32IZFINX-NEXT:  .LBB1_4:
@@ -163,7 +163,7 @@ define float @fmaximum_f32(float %a, float %b) nounwind {
 ; RV64IZFINX-LABEL: fmaximum_f32:
 ; RV64IZFINX:       # %bb.0:
 ; RV64IZFINX-NEXT:    feq.s a3, a0, a0
-; RV64IZFINX-NEXT:    fmv.s a2, a1
+; RV64IZFINX-NEXT:    mv a2, a1
 ; RV64IZFINX-NEXT:    beqz a3, .LBB1_3
 ; RV64IZFINX-NEXT:  # %bb.1:
 ; RV64IZFINX-NEXT:    feq.s a3, a1, a1
@@ -172,7 +172,7 @@ define float @fmaximum_f32(float %a, float %b) nounwind {
 ; RV64IZFINX-NEXT:    fmax.s a0, a0, a2
 ; RV64IZFINX-NEXT:    ret
 ; RV64IZFINX-NEXT:  .LBB1_3:
-; RV64IZFINX-NEXT:    fmv.s a2, a0
+; RV64IZFINX-NEXT:    mv a2, a0
 ; RV64IZFINX-NEXT:    feq.s a3, a1, a1
 ; RV64IZFINX-NEXT:    bnez a3, .LBB1_2
 ; RV64IZFINX-NEXT:  .LBB1_4:

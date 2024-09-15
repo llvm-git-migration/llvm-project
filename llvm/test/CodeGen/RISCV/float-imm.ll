@@ -57,7 +57,7 @@ define float @float_positive_zero(ptr %pf) nounwind {
 ;
 ; CHECKZFINX-LABEL: float_positive_zero:
 ; CHECKZFINX:       # %bb.0:
-; CHECKZFINX-NEXT:    fmv.s a0, zero
+; CHECKZFINX-NEXT:    li a0, 0
 ; CHECKZFINX-NEXT:    ret
   ret float 0.0
 }
