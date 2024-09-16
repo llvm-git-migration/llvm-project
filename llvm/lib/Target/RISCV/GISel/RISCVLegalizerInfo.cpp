@@ -581,6 +581,12 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
 
   SplatActions.clampScalar(1, sXLen, sXLen);
 
+  getActionDefinitionsBuilder(G_INSERT_SUBVECTOR)
+      .customIf(all(typeIsLegalBoolVec(0, BoolVecTys, ST),
+                    typeIsLegalBoolVec(1, BoolVecTys, ST)))
+      .customIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
+                    typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)));
+
   getLegacyLegalizerInfo().computeTables();
 }
 
@@ -915,6 +921,154 @@ bool RISCVLegalizerInfo::legalizeSplatVector(MachineInstr &MI,
   return true;
 }
 
+static LLT getLMUL1Ty(LLT VecTy) {
+  assert(VecTy.getElementType().getSizeInBits() <= 64 &&
+         "Unexpected vector LLT");
+  return LLT::scalable_vector(RISCV::RVVBitsPerBlock /
+                                  VecTy.getElementType().getSizeInBits(),
+                              VecTy.getElementType());
+}
+
+bool RISCVLegalizerInfo::legalizeInsertSubvector(MachineInstr &MI,
+                                                 MachineIRBuilder &MIB) const {
+  assert(MI.getOpcode() == TargetOpcode::G_INSERT_SUBVECTOR);
+
+  MachineRegisterInfo &MRI = *MIB.getMRI();
+
+  Register Dst = MI.getOperand(0).getReg();
+  Register Src1 = MI.getOperand(1).getReg();
+  Register Src2 = MI.getOperand(2).getReg();
+  uint64_t Idx = MI.getOperand(3).getImm();
+
+  LLT BigTy = MRI.getType(Src1);
+  LLT LitTy = MRI.getType(Src2);
+  Register BigVec = Src1;
+  Register LitVec = Src2;
+
+  // We don't have the ability to slide mask vectors up indexed by their i1
+  // elements; the smallest we can do is i8. Often we are able to bitcast to
+  // equivalent i8 vectors. Otherwise, we can must zeroextend to equivalent i8
+  // vectors and truncate down after the insert.
+  if (LitTy.getElementType() == LLT::scalar(1) &&
+      (Idx != 0 ||
+       MRI.getVRegDef(BigVec)->getOpcode() != TargetOpcode::G_IMPLICIT_DEF)) {
+    auto BigTyMinElts = BigTy.getElementCount().getKnownMinValue();
+    auto LitTyMinElts = LitTy.getElementCount().getKnownMinValue();
+    if (BigTyMinElts >= 8 && LitTyMinElts >= 8) {
+      assert(Idx % 8 == 0 && "Invalid index");
+      assert(BigTyMinElts % 8 == 0 && LitTyMinElts % 8 == 0 &&
+             "Unexpected mask vector lowering");
+      Idx /= 8;
+      BigTy = LLT::vector(BigTy.getElementCount().divideCoefficientBy(8), 8);
+      LitTy = LLT::vector(LitTy.getElementCount().divideCoefficientBy(8), 8);
+      BigVec = MIB.buildBitcast(BigTy, BigVec).getReg(0);
+      LitVec = MIB.buildBitcast(LitTy, LitVec).getReg(0);
+    } else {
+      // We can't slide this mask vector up indexed by its i1 elements.
+      // This poses a problem when we wish to insert a scalable vector which
+      // can't be re-expressed as a larger type. Just choose the slow path and
+      // extend to a larger type, then truncate back down.
+      LLT ExtBigTy = BigTy.changeElementType(LLT::scalar(8));
+      LLT ExtLitTy = LitTy.changeElementType(LLT::scalar(8));
+      auto BigZExt = MIB.buildZExt(ExtBigTy, BigVec);
+      auto LitZExt = MIB.buildZExt(ExtLitTy, LitVec);
+      auto Insert = MIB.buildInsertSubvector(ExtBigTy, BigZExt, LitZExt, Idx);
+      auto SplatZero = MIB.buildSplatVector(
+          ExtBigTy, MIB.buildConstant(ExtBigTy.getElementType(), 0));
+      MIB.buildICmp(CmpInst::Predicate::ICMP_NE, Dst, Insert, SplatZero);
+      MI.eraseFromParent();
+      return true;
+    }
+  }
+
+  const RISCVRegisterInfo *TRI = STI.getRegisterInfo();
+  MVT LitTyMVT = getMVTForLLT(LitTy);
+  unsigned SubRegIdx, RemIdx;
+  std::tie(SubRegIdx, RemIdx) =
+      RISCVTargetLowering::decomposeSubvectorInsertExtractToSubRegs(
+          getMVTForLLT(BigTy), LitTyMVT, Idx, TRI);
+
+  RISCVII::VLMUL SubVecLMUL = RISCVTargetLowering::getLMUL(getMVTForLLT(LitTy));
+  bool IsSubVecPartReg = SubVecLMUL == RISCVII::VLMUL::LMUL_F2 ||
+                         SubVecLMUL == RISCVII::VLMUL::LMUL_F4 ||
+                         SubVecLMUL == RISCVII::VLMUL::LMUL_F8;
+
+  // If the Idx has been completely eliminated and this subvector's size is a
+  // vector register or a multiple thereof, or the surrounding elements are
+  // undef, then this is a subvector insert which naturally aligns to a vector
+  // register. These can easily be handled using subregister manipulation.
+  if (RemIdx == 0 && (!IsSubVecPartReg || MRI.getVRegDef(Src1)->getOpcode() ==
+                                              TargetOpcode::G_IMPLICIT_DEF))
+    return true;
+
+  // If the subvector is smaller than a vector register, then the insertion
+  // must preserve the undisturbed elements of the register. We do this by
+  // lowering to an EXTRACT_SUBVECTOR grabbing the nearest LMUL=1 vector type
+  // (which resolves to a subregister copy), performing a VSLIDEUP to place the
+  // subvector within the vector register, and an INSERT_SUBVECTOR of that
+  // LMUL=1 type back into the larger vector (resolving to another subregister
+  // operation). See below for how our VSLIDEUP works. We go via a LMUL=1 type
+  // to avoid allocating a large register group to hold our subvector.
+
+  // VSLIDEUP works by leaving elements 0<i<OFFSET undisturbed, elements
+  // OFFSET<=i<VL set to the "subvector" and vl<=i<VLMAX set to the tail policy
+  // (in our case undisturbed). This means we can set up a subvector insertion
+  // where OFFSET is the insertion offset, and the VL is the OFFSET plus the
+  // size of the subvector.
+  const LLT XLenTy(STI.getXLenVT());
+  LLT InterLitTy = BigTy;
+  Register AlignedExtract = Src1;
+  unsigned AlignedIdx = Idx - RemIdx;
+  if (TypeSize::isKnownGT(BigTy.getSizeInBits(),
+                          getLMUL1Ty(BigTy).getSizeInBits())) {
+    InterLitTy = getLMUL1Ty(BigTy);
+    // Extract a subvector equal to the nearest full vector register type. This
+    // should resolve to a G_EXTRACT on a subreg.
+    AlignedExtract =
+        MIB.buildExtractSubvector(InterLitTy, BigVec, AlignedIdx).getReg(0);
+  }
+
+  auto Insert = MIB.buildInsertSubvector(InterLitTy, MIB.buildUndef(InterLitTy),
+                                         LitVec, 0);
+
+  auto [Mask, _] = buildDefaultVLOps(BigTy, MIB, MRI);
+  auto VL = MIB.buildVScale(XLenTy, LitTy.getElementCount().getKnownMinValue());
+
+  // Use tail agnostic policy if we're inserting over InterLitTy's tail.
+  ElementCount EndIndex =
+      ElementCount::getScalable(RemIdx) + LitTy.getElementCount();
+  uint64_t Policy = RISCVII::TAIL_UNDISTURBED_MASK_UNDISTURBED;
+  if (EndIndex == InterLitTy.getElementCount())
+    Policy = RISCVII::TAIL_AGNOSTIC;
+
+  // If we're inserting into the lowest elements, use a tail undisturbed
+  // vmv.v.v.
+  MachineInstrBuilder Inserted;
+  if (RemIdx == 0) {
+    Inserted = MIB.buildInstr(RISCV::G_VMV_V_V_VL, {InterLitTy},
+                              {AlignedExtract, Insert, VL});
+  } else {
+    auto SlideupAmt = MIB.buildVScale(XLenTy, RemIdx);
+    // Construct the vector length corresponding to RemIdx + length(LitTy).
+    VL = MIB.buildAdd(XLenTy, SlideupAmt, VL);
+    Inserted =
+        MIB.buildInstr(RISCV::G_VSLIDEUP_VL, {InterLitTy},
+                       {AlignedExtract, LitVec, SlideupAmt, Mask, VL, Policy});
+  }
+
+  // If required, insert this subvector back into the correct vector register.
+  // This should resolve to an INSERT_SUBREG instruction.
+  if (TypeSize::isKnownGT(BigTy.getSizeInBits(), InterLitTy.getSizeInBits()))
+    Inserted = MIB.buildInsert(BigTy, BigVec, LitVec, AlignedIdx);
+
+  // We might have bitcast from a mask type: cast back to the original type if
+  // required.
+  MIB.buildBitcast(Dst, Inserted);
+
+  MI.eraseFromParent();
+  return true;
+}
+
 bool RISCVLegalizerInfo::legalizeCustom(
     LegalizerHelper &Helper, MachineInstr &MI,
     LostDebugLocObserver &LocObserver) const {
@@ -985,6 +1139,8 @@ bool RISCVLegalizerInfo::legalizeCustom(
     return legalizeExt(MI, MIRBuilder);
   case TargetOpcode::G_SPLAT_VECTOR:
     return legalizeSplatVector(MI, MIRBuilder);
+  case TargetOpcode::G_INSERT_SUBVECTOR:
+    return legalizeInsertSubvector(MI, MIRBuilder);
   case TargetOpcode::G_LOAD:
   case TargetOpcode::G_STORE:
     return legalizeLoadStore(MI, Helper, MIRBuilder);
