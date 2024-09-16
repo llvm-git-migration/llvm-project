@@ -13,6 +13,7 @@
 #include "mlir/Dialect/Arith/Transforms/Passes.h"
 
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Location.h"
@@ -155,7 +156,8 @@ void EmulateUnsupportedFloatsPass::runOnOperation() {
   SmallVector<Type> sourceTypes;
   Type targetType;
 
-  std::optional<FloatType> maybeTargetType = parseFloatType(ctx, targetTypeStr);
+  std::optional<FloatType> maybeTargetType =
+      arith::parseFloatType(ctx, targetTypeStr);
   if (!maybeTargetType) {
     emitError(UnknownLoc::get(ctx), "could not map target type '" +
                                         targetTypeStr +
@@ -165,7 +167,7 @@ void EmulateUnsupportedFloatsPass::runOnOperation() {
   targetType = *maybeTargetType;
   for (StringRef sourceTypeStr : sourceTypeStrs) {
     std::optional<FloatType> maybeSourceType =
-        parseFloatType(ctx, sourceTypeStr);
+        arith::parseFloatType(ctx, sourceTypeStr);
     if (!maybeSourceType) {
       emitError(UnknownLoc::get(ctx), "could not map source type '" +
                                           sourceTypeStr +
