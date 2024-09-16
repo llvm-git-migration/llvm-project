@@ -259,6 +259,7 @@ public:
   DerivedTypeSpec(DerivedTypeSpec &&);
 
   const SourceName &name() const { return name_; }
+  const Symbol &originalTypeSymbol() const { return originalTypeSymbol_; }
   const Symbol &typeSymbol() const { return typeSymbol_; }
   const Scope *scope() const { return scope_; }
   // Return scope_ if it is set, or the typeSymbol_ scope otherwise.
@@ -319,7 +320,8 @@ public:
 
 private:
   SourceName name_;
-  const Symbol &typeSymbol_;
+  const Symbol &originalTypeSymbol_;
+  const Symbol &typeSymbol_; // == originalTypeSymbol_.GetUltimate()
   const Scope *scope_{nullptr}; // same as typeSymbol_.scope() unless PDT
   bool cooked_{false};
   bool evaluated_{false};

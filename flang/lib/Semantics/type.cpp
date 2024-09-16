@@ -22,8 +22,9 @@
 namespace Fortran::semantics {
 
 DerivedTypeSpec::DerivedTypeSpec(SourceName name, const Symbol &typeSymbol)
-    : name_{name}, typeSymbol_{typeSymbol} {
-  CHECK(typeSymbol.has<DerivedTypeDetails>());
+    : name_{name}, originalTypeSymbol_{typeSymbol},
+      typeSymbol_{typeSymbol.GetUltimate()} {
+  CHECK(typeSymbol_.has<DerivedTypeDetails>());
 }
 DerivedTypeSpec::DerivedTypeSpec(const DerivedTypeSpec &that) = default;
 DerivedTypeSpec::DerivedTypeSpec(DerivedTypeSpec &&that) = default;
@@ -664,7 +665,7 @@ std::string DerivedTypeSpec::VectorTypeAsFortran() const {
 std::string DerivedTypeSpec::AsFortran() const {
   std::string buf;
   llvm::raw_string_ostream ss{buf};
-  ss << name_;
+  ss << originalTypeSymbol_.name();
   if (!rawParameters_.empty()) {
     CHECK(parameters_.empty());
     ss << '(';
