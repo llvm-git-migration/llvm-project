@@ -699,9 +699,10 @@ bool ScalarizerVisitor::splitBinary(Instruction &I, const Splitter &Split) {
 }
 
 bool ScalarizerVisitor::isTriviallyScalarizable(Intrinsic::ID ID) {
-
-  return TTI->isTargetIntrinsicTriviallyScalarizable(ID) ||
-         isTriviallyVectorizable(ID);
+  if (isTriviallyVectorizable(ID))
+    return true;
+  return Function::isTargetIntrinsic(ID) &&
+         TTI->isTargetIntrinsicTriviallyScalarizable(ID);
 }
 
 /// If a call to a vector typed intrinsic function, split into a scalar call per
