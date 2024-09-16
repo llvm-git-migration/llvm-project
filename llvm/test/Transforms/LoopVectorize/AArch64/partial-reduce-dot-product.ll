@@ -320,4 +320,197 @@ for.body:                                         ; preds = %for.body, %entry
   %exitcond.not = icmp eq i64 %iv.next, 0
   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
 }
+
+define void @dotp_unrolled(i32 %num_out, i32 %num_in, ptr %w, ptr %scales, ptr %u, ptr %v) #0 {
+entry:
+  %cmp154 = icmp sgt i32 %num_out, 3
+  br i1 %cmp154, label %for.body.lr.ph, label %for.end98
+
+for.body.lr.ph:                                   ; preds = %entry
+  %div = sdiv i32 %num_out, 4
+  %mul = shl nsw i32 %div, 2
+  %cmp11145 = icmp sgt i32 %num_in, 0
+  %idxprom44 = sext i32 %num_in to i64
+  %0 = zext nneg i32 %mul to i64
+  br i1 %cmp11145, label %for.body.us.preheader, label %for.body.preheader
+
+for.body.preheader:                               ; preds = %for.body.lr.ph
+  br label %for.end98
+
+for.body.us.preheader:                            ; preds = %for.body.lr.ph
+  %wide.trip.count = zext nneg i32 %num_in to i64
+  br label %for.body.us
+
+for.body.us:                                      ; preds = %for.body.us.preheader, %for.cond10.for.cond.cleanup_crit_edge.us
+  %indvars.iv164 = phi i64 [ 0, %for.body.us.preheader ], [ %indvars.iv.next165, %for.cond10.for.cond.cleanup_crit_edge.us ]
+  %arrayidx.us = getelementptr inbounds ptr, ptr %w, i64 %indvars.iv164
+  %1 = load ptr, ptr %arrayidx.us, align 8
+  %2 = or disjoint i64 %indvars.iv164, 1
+  %arrayidx3.us = getelementptr inbounds ptr, ptr %w, i64 %2
+  %3 = load ptr, ptr %arrayidx3.us, align 8
+  %4 = or disjoint i64 %indvars.iv164, 2
+  %arrayidx6.us = getelementptr inbounds ptr, ptr %w, i64 %4
+  %5 = load ptr, ptr %arrayidx6.us, align 8
+  %6 = or disjoint i64 %indvars.iv164, 3
+  %arrayidx9.us = getelementptr inbounds ptr, ptr %w, i64 %6
+  %7 = load ptr, ptr %arrayidx9.us, align 8
+  %8 = call i64 @llvm.vscale.i64()
+  %9 = mul i64 %8, 16
+  %min.iters.check = icmp ult i64 %wide.trip.count, %9
+  br i1 %min.iters.check, label %scalar.ph, label %vector.ph
+
+vector.ph:                                        ; preds = %for.body.us
+  %10 = call i64 @llvm.vscale.i64()
+  %11 = mul i64 %10, 16
+  %n.mod.vf = urem i64 %wide.trip.count, %11
+  %n.vec = sub i64 %wide.trip.count, %n.mod.vf
+  %12 = call i64 @llvm.vscale.i64()
+  %13 = mul i64 %12, 16
+  br label %vector.body
+
+vector.body:                                      ; preds = %vector.body, %vector.ph
+  %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
+  %vec.phi = phi <vscale x 4 x i32> [ zeroinitializer, %vector.ph ], [ %partial.reduce181, %vector.body ]
+  %vec.phi172 = phi <vscale x 4 x i32> [ zeroinitializer, %vector.ph ], [ %partial.reduce179, %vector.body ]
+  %vec.phi173 = phi <vscale x 4 x i32> [ zeroinitializer, %vector.ph ], [ %partial.reduce177, %vector.body ]
+  %vec.phi174 = phi <vscale x 4 x i32> [ zeroinitializer, %vector.ph ], [ %partial.reduce, %vector.body ]
+  %14 = add i64 %index, 0
+  %15 = getelementptr inbounds i8, ptr %1, i64 %14
+  %16 = getelementptr inbounds i8, ptr %15, i32 0
+  %wide.load = load <vscale x 16 x i8>, ptr %16, align 1
+  %17 = sext <vscale x 16 x i8> %wide.load to <vscale x 16 x i32>
+  %18 = getelementptr inbounds i8, ptr %u, i64 %14
+  %19 = getelementptr inbounds i8, ptr %18, i32 0
+  %wide.load175 = load <vscale x 16 x i8>, ptr %19, align 1
+  %20 = sext <vscale x 16 x i8> %wide.load175 to <vscale x 16 x i32>
+  %21 = mul nsw <vscale x 16 x i32> %20, %17
+  %partial.reduce = call <vscale x 4 x i32> @llvm.experimental.vector.partial.reduce.add.nxv4i32.nxv16i32(<vscale x 4 x i32> %vec.phi174, <vscale x 16 x i32> %21)
+  %22 = getelementptr inbounds i8, ptr %3, i64 %14
+  %23 = getelementptr inbounds i8, ptr %22, i32 0
+  %wide.load176 = load <vscale x 16 x i8>, ptr %23, align 1
+  %24 = sext <vscale x 16 x i8> %wide.load176 to <vscale x 16 x i32>
+  %25 = mul nsw <vscale x 16 x i32> %24, %20
+  %partial.reduce177 = call <vscale x 4 x i32> @llvm.experimental.vector.partial.reduce.add.nxv4i32.nxv16i32(<vscale x 4 x i32> %vec.phi173, <vscale x 16 x i32> %25)
+  %26 = getelementptr inbounds i8, ptr %5, i64 %14
+  %27 = getelementptr inbounds i8, ptr %26, i32 0
+  %wide.load178 = load <vscale x 16 x i8>, ptr %27, align 1
+  %28 = sext <vscale x 16 x i8> %wide.load178 to <vscale x 16 x i32>
+  %29 = mul nsw <vscale x 16 x i32> %28, %20
+  %partial.reduce179 = call <vscale x 4 x i32> @llvm.experimental.vector.partial.reduce.add.nxv4i32.nxv16i32(<vscale x 4 x i32> %vec.phi172, <vscale x 16 x i32> %29)
+  %30 = getelementptr inbounds i8, ptr %7, i64 %14
+  %31 = getelementptr inbounds i8, ptr %30, i32 0
+  %wide.load180 = load <vscale x 16 x i8>, ptr %31, align 1
+  %32 = sext <vscale x 16 x i8> %wide.load180 to <vscale x 16 x i32>
+  %33 = mul nsw <vscale x 16 x i32> %32, %20
+  %partial.reduce181 = call <vscale x 4 x i32> @llvm.experimental.vector.partial.reduce.add.nxv4i32.nxv16i32(<vscale x 4 x i32> %vec.phi, <vscale x 16 x i32> %33)
+  %index.next = add nuw i64 %index, %13
+  %34 = icmp eq i64 %index.next, %n.vec
+  br i1 %34, label %middle.block, label %vector.body
+
+middle.block:                                     ; preds = %vector.body
+  %35 = call i32 @llvm.vector.reduce.add.nxv4i32(<vscale x 4 x i32> %partial.reduce181)
+  %36 = call i32 @llvm.vector.reduce.add.nxv4i32(<vscale x 4 x i32> %partial.reduce179)
+  %37 = call i32 @llvm.vector.reduce.add.nxv4i32(<vscale x 4 x i32> %partial.reduce177)
+  %38 = call i32 @llvm.vector.reduce.add.nxv4i32(<vscale x 4 x i32> %partial.reduce)
+  %cmp.n = icmp eq i64 %wide.trip.count, %n.vec
+  br i1 %cmp.n, label %for.cond10.for.cond.cleanup_crit_edge.us, label %scalar.ph
+
+scalar.ph:                                        ; preds = %middle.block, %for.body.us
+  %bc.resume.val = phi i64 [ %n.vec, %middle.block ], [ 0, %for.body.us ]
+  %bc.merge.rdx = phi i32 [ %35, %middle.block ], [ 0, %for.body.us ]
+  %bc.merge.rdx182 = phi i32 [ %36, %middle.block ], [ 0, %for.body.us ]
+  %bc.merge.rdx183 = phi i32 [ %37, %middle.block ], [ 0, %for.body.us ]
+  %bc.merge.rdx184 = phi i32 [ %38, %middle.block ], [ 0, %for.body.us ]
+  br label %for.body12.us
+
+for.body12.us:                                    ; preds = %scalar.ph, %for.body12.us
+  %indvars.iv161 = phi i64 [ %bc.resume.val, %scalar.ph ], [ %indvars.iv.next162, %for.body12.us ]
+  %total3.0149.us = phi i32 [ %bc.merge.rdx, %scalar.ph ], [ %add43.us, %for.body12.us ]
+  %total2.0148.us = phi i32 [ %bc.merge.rdx182, %scalar.ph ], [ %add35.us, %for.body12.us ]
+  %total1.0147.us = phi i32 [ %bc.merge.rdx183, %scalar.ph ], [ %add27.us, %for.body12.us ]
+  %total0.0146.us = phi i32 [ %bc.merge.rdx184, %scalar.ph ], [ %add19.us, %for.body12.us ]
+  %arrayidx14.us = getelementptr inbounds i8, ptr %1, i64 %indvars.iv161
+  %39 = load i8, ptr %arrayidx14.us, align 1
+  %conv.us = sext i8 %39 to i32
+  %arrayidx16.us = getelementptr inbounds i8, ptr %u, i64 %indvars.iv161
+  %40 = load i8, ptr %arrayidx16.us, align 1
+  %conv17.us = sext i8 %40 to i32
+  %mul18.us = mul nsw i32 %conv17.us, %conv.us
+  %add19.us = add nsw i32 %mul18.us, %total0.0146.us
+  %arrayidx21.us = getelementptr inbounds i8, ptr %3, i64 %indvars.iv161
+  %41 = load i8, ptr %arrayidx21.us, align 1
+  %conv22.us = sext i8 %41 to i32
+  %mul26.us = mul nsw i32 %conv22.us, %conv17.us
+  %add27.us = add nsw i32 %mul26.us, %total1.0147.us
+  %arrayidx29.us = getelementptr inbounds i8, ptr %5, i64 %indvars.iv161
+  %42 = load i8, ptr %arrayidx29.us, align 1
+  %conv30.us = sext i8 %42 to i32
+  %mul34.us = mul nsw i32 %conv30.us, %conv17.us
+  %add35.us = add nsw i32 %mul34.us, %total2.0148.us
+  %arrayidx37.us = getelementptr inbounds i8, ptr %7, i64 %indvars.iv161
+  %43 = load i8, ptr %arrayidx37.us, align 1
+  %conv38.us = sext i8 %43 to i32
+  %mul42.us = mul nsw i32 %conv38.us, %conv17.us
+  %add43.us = add nsw i32 %mul42.us, %total3.0149.us
+  %indvars.iv.next162 = add nuw nsw i64 %indvars.iv161, 1
+  %exitcond.not = icmp eq i64 %indvars.iv.next162, %wide.trip.count
+  br i1 %exitcond.not, label %for.cond10.for.cond.cleanup_crit_edge.us, label %for.body12.us
+
+for.cond10.for.cond.cleanup_crit_edge.us:         ; preds = %middle.block, %for.body12.us
+  %add19.us.lcssa = phi i32 [ %add19.us, %for.body12.us ], [ %38, %middle.block ]
+  %add27.us.lcssa = phi i32 [ %add27.us, %for.body12.us ], [ %37, %middle.block ]
+  %add35.us.lcssa = phi i32 [ %add35.us, %for.body12.us ], [ %36, %middle.block ]
+  %add43.us.lcssa = phi i32 [ %add43.us, %for.body12.us ], [ %35, %middle.block ]
+  %arrayidx45.us = getelementptr inbounds i8, ptr %1, i64 %idxprom44
+  %44 = load i8, ptr %arrayidx45.us, align 1
+  %conv46.us = sext i8 %44 to i32
+  %mul47.us = mul nsw i32 %conv46.us, 127
+  %add48.us = add nsw i32 %mul47.us, %add19.us.lcssa
+  %conv49.us = sitofp i32 %add48.us to float
+  %arrayidx52.us = getelementptr inbounds float, ptr %scales, i64 %indvars.iv164
+  %45 = load float, ptr %arrayidx52.us, align 4
+  %mul53.us = fmul float %45, %conv49.us
+  %arrayidx56.us = getelementptr inbounds float, ptr %v, i64 %indvars.iv164
+  store float %mul53.us, ptr %arrayidx56.us, align 4
+  %arrayidx58.us = getelementptr inbounds i8, ptr %3, i64 %idxprom44
+  %46 = load i8, ptr %arrayidx58.us, align 1
+  %conv59.us = sext i8 %46 to i32
+  %mul60.us = mul nsw i32 %conv59.us, 127
+  %add61.us = add nsw i32 %mul60.us, %add27.us.lcssa
+  %conv62.us = sitofp i32 %add61.us to float
+  %arrayidx65.us = getelementptr inbounds float, ptr %scales, i64 %2
+  %47 = load float, ptr %arrayidx65.us, align 4
+  %mul66.us = fmul float %47, %conv62.us
+  %arrayidx69.us = getelementptr inbounds float, ptr %v, i64 %2
+  store float %mul66.us, ptr %arrayidx69.us, align 4
+  %arrayidx71.us = getelementptr inbounds i8, ptr %5, i64 %idxprom44
+  %48 = load i8, ptr %arrayidx71.us, align 1
+  %conv72.us = sext i8 %48 to i32
+  %mul73.us = mul nsw i32 %conv72.us, 127
+  %add74.us = add nsw i32 %mul73.us, %add35.us.lcssa
+  %conv75.us = sitofp i32 %add74.us to float
+  %arrayidx78.us = getelementptr inbounds float, ptr %scales, i64 %4
+  %49 = load float, ptr %arrayidx78.us, align 4
+  %mul79.us = fmul float %49, %conv75.us
+  %arrayidx82.us = getelementptr inbounds float, ptr %v, i64 %4
+  store float %mul79.us, ptr %arrayidx82.us, align 4
+  %arrayidx84.us = getelementptr inbounds i8, ptr %7, i64 %idxprom44
+  %50 = load i8, ptr %arrayidx84.us, align 1
+  %conv85.us = sext i8 %50 to i32
+  %mul86.us = mul nsw i32 %conv85.us, 127
+  %add87.us = add nsw i32 %mul86.us, %add43.us.lcssa
+  %conv88.us = sitofp i32 %add87.us to float
+  %arrayidx91.us = getelementptr inbounds float, ptr %scales, i64 %6
+  %51 = load float, ptr %arrayidx91.us, align 4
+  %mul92.us = fmul float %51, %conv88.us
+  %arrayidx95.us = getelementptr inbounds float, ptr %v, i64 %6
+  store float %mul92.us, ptr %arrayidx95.us, align 4
+  %indvars.iv.next165 = add nuw nsw i64 %indvars.iv164, 4
+  %cmp.us = icmp ult i64 %indvars.iv.next165, %0
+  br i1 %cmp.us, label %for.body.us, label %for.end98
+
+for.end98:                                        ; preds = %for.end98.loopexit171, %for.end98.loopexit, %entry
+  ret void
+}
+
 attributes #0 = { nofree norecurse nosync nounwind memory(argmem: readwrite) uwtable vscale_range(1,16) "target-features"="+sve" }
