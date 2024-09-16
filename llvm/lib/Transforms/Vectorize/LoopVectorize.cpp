@@ -8675,6 +8675,18 @@ VPReplicateRecipe *VPRecipeBuilder::handleReplication(Instruction *I,
   return Recipe;
 }
 
+unsigned getScaleFactorForReductionPhi(PHINode *Phi,
+                                       LoopVectorizationCostModel &CM) {
+  for (auto *User : Phi->users()) {
+    if (auto *I = dyn_cast<Instruction>(User)) {
+      if (auto Chain = CM.getInstructionsPartialReduction(I)) {
+        return Chain->ScaleFactor;
+      }
+    }
+  }
+  return 1;
+}
+
 VPRecipeBase *
 VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
                                         ArrayRef<VPValue *> Operands,
@@ -8701,15 +8713,7 @@ VPRecipeBuilder::tryToCreateWidenRecipe(Instruction *Instr,
              Phi->getIncomingValueForBlock(OrigLoop->getLoopPreheader()));
 
       // If the PHI is used by a partial reduction, set the scale factor
-      unsigned ScaleFactor = 1;
-      for (auto *User : Phi->users()) {
-        if (auto *I = dyn_cast<Instruction>(User)) {
-          if (auto Chain = CM.getInstructionsPartialReduction(I)) {
-            ScaleFactor = Chain->ScaleFactor;
-            break;
-          }
-        }
-      }
+      unsigned ScaleFactor = getScaleFactorForReductionPhi(Phi, CM);
       PhiRecipe = new VPReductionPHIRecipe(
           Phi, RdxDesc, *StartV, CM.isInLoopReduction(Phi),
           CM.useOrderedReductions(RdxDesc), ScaleFactor);
