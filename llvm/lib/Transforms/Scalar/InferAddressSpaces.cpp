@@ -854,7 +854,7 @@ bool InferAddressSpacesImpl::run(Function &CurFn) {
     FlatAddrSpace = 0;
 
   if (FlatAddrSpace == UninitializedAddressSpace) {
-    FlatAddrSpace = TTI->getFlatAddressSpace();
+    FlatAddrSpace = DL->getFlatAddressSpace();
     if (FlatAddrSpace == UninitializedAddressSpace)
       return false;
   }
