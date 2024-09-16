@@ -1642,14 +1642,13 @@ public:
     }
 
     Instruction *BinOp = cast<Instruction>(Instr->getOperand(BinOpIdx));
-    Value *InputA = Ext0->getOperand(0);
     TTI::PartialReductionExtendKind OpAExtend =
         TargetTransformInfo::getPartialReductionExtendKind(Ext0);
     TTI::PartialReductionExtendKind OpBExtend =
         TargetTransformInfo::getPartialReductionExtendKind(Ext1);
     InstructionCost Cost = TTI.getPartialReductionCost(
-        Instr->getOpcode(), InputA->getType(), ExpectedPhi->getType(), VF,
-        OpAExtend, OpBExtend,
+        Instr->getOpcode(), A->getType(), ExpectedPhi->getType(), VF, OpAExtend,
+        OpBExtend,
         BinOp ? std::make_optional(BinOp->getOpcode()) : std::nullopt);
     if (Cost == InstructionCost::getInvalid())
       return;
@@ -1661,7 +1660,7 @@ public:
     Chain.ExtendB = Ext1;
     Chain.Accumulator = ExpectedPhi;
 
-    unsigned InputSizeBits = InputA->getType()->getScalarSizeInBits();
+    unsigned InputSizeBits = A->getType()->getScalarSizeInBits();
     unsigned ResultSizeBits = Chain.Reduction->getType()->getScalarSizeInBits();
     Chain.ScaleFactor = ResultSizeBits / InputSizeBits;
 
