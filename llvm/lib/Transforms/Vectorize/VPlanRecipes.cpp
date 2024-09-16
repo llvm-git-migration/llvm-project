@@ -324,30 +324,21 @@ void VPPartialReductionRecipe::execute(VPTransformState &State) {
 
   assert(Opcode == Instruction::Add && "Unhandled partial reduction opcode");
 
+  SmallVector<VPValue *, 2> Operands;
+  for (auto *Op : operands())
+    Operands.push_back(Op);
+
   unsigned UF = getParent()->getPlan()->getUF();
   for (unsigned Part = 0; Part < UF; ++Part) {
-    Value *Mul = nullptr;
-    Value *Phi = nullptr;
-    SmallVector<Value *, 2> Ops;
-    for (VPValue *VPOp : operands()) {
-      auto *Op = State.get(VPOp, Part);
-      Ops.push_back(Op);
-      if (isa<PHINode>(Op))
-        Phi = Op;
-      else
-        Mul = Op;
-    }
+    Value *BinOpVal = State.get(Operands[0], Part);
+    Value *PhiVal = State.get(Operands[1], Part);
+    assert(PhiVal && BinOpVal && "Phi and Mul must be set");
 
-    assert(Phi && Mul && "Phi and Mul must be set");
-
-    VectorType *FullTy = cast<VectorType>(Ops[0]->getType());
-    ElementCount EC = FullTy->getElementCount();
-    Type *RetTy =
-        VectorType::get(FullTy->getScalarType(), EC.divideCoefficientBy(Scale));
+    Type *RetTy = PhiVal->getType();
 
     CallInst *V = Builder.CreateIntrinsic(
-        RetTy, Intrinsic::experimental_vector_partial_reduce_add, {Phi, Mul},
-        nullptr, Twine("partial.reduce"));
+        RetTy, Intrinsic::experimental_vector_partial_reduce_add,
+        {PhiVal, BinOpVal}, nullptr, Twine("partial.reduce"));
 
     // Use this vector value for all users of the original instruction.
     State.set(this, V, Part);

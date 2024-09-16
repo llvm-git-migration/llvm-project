@@ -8737,8 +8737,18 @@ VPRecipeBase *
 VPRecipeBuilder::tryToCreatePartialReduction(Instruction *Reduction,
                                              unsigned ScaleFactor,
                                              ArrayRef<VPValue *> Operands) {
+  assert(Operands.size() == 2 &&
+         "Unexpected number of operands for partial reduction");
+
+  VPValue *BinOp = Operands[0];
+  VPValue *Phi = Operands[1];
+  VPRecipeBase *BinOpRecipe = BinOp->getDefiningRecipe();
+  if (isa<VPReductionPHIRecipe>(BinOpRecipe))
+    std::swap(BinOp, Phi);
+
+  SmallVector<VPValue *, 2> OrderedOperands = {BinOp, Phi};
   return new VPPartialReductionRecipe(
-      *Reduction, make_range(Operands.begin(), Operands.end()), ScaleFactor);
+      *Reduction, make_range(OrderedOperands.begin(), OrderedOperands.end()));
 }
 
 void LoopVectorizationPlanner::buildVPlansWithVPRecipes(ElementCount MinVF,
