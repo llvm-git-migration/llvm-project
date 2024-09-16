@@ -35,6 +35,7 @@
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/CodeGen/SlotIndexes.h"
 #include "llvm/CodeGen/StackMaps.h"
+#include "llvm/IR/Module.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/TargetRegistry.h"
@@ -3107,6 +3108,11 @@ bool PPCInstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
     return true;
   }
   case TargetOpcode::LOAD_STACK_GUARD: {
+    const Module *M = MI.getParent()->getBasicBlock()->getModule();
+    if (M->getStackProtectorGuard() == "tls") {
+      MI.setDesc(get(PPC::UNENCODED_NOP));
+      return true;
+    }
     assert(Subtarget.isTargetLinux() &&
            "Only Linux target is expected to contain LOAD_STACK_GUARD");
     const int64_t Offset = Subtarget.isPPC64() ? -0x7010 : -0x7008;
