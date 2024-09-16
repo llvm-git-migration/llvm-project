@@ -433,6 +433,11 @@ bool RISCVMakeCompressibleOpt::runOnMachineFunction(MachineFunction &Fn) {
         BuildMI(MBB, MI, MI.getDebugLoc(), TII.get(RISCV::PseudoMV_FPR16INX),
                 NewReg)
             .addReg(RegImm.Reg);
+      } else if (RISCV::GPRF32RegClass.contains(RegImm.Reg)) {
+        assert(RegImm.Imm == 0);
+        BuildMI(MBB, MI, MI.getDebugLoc(), TII.get(RISCV::PseudoMV_FPR32INX),
+                NewReg)
+            .addReg(RegImm.Reg);
       } else {
         // If we are looking at replacing an FPR register we don't expect to
         // have any offset. The only compressible FP instructions with an offset
