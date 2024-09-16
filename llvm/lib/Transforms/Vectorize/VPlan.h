@@ -2163,10 +2163,9 @@ class VPPartialReductionRecipe : public VPRecipeWithIRFlags {
 
 public:
   template <typename IterT>
-  VPPartialReductionRecipe(Instruction &I, iterator_range<IterT> Operands,
-                           unsigned Scale)
+  VPPartialReductionRecipe(Instruction &I, iterator_range<IterT> Operands)
       : VPRecipeWithIRFlags(VPDef::VPPartialReductionSC, Operands, I),
-        Opcode(I.getOpcode()), Scale(Scale) {}
+        Opcode(I.getOpcode()) {}
   ~VPPartialReductionRecipe() override = default;
   VPPartialReductionRecipe *clone() override {
     llvm_unreachable(
