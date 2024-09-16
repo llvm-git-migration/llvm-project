@@ -1648,8 +1648,7 @@ public:
         TargetTransformInfo::getPartialReductionExtendKind(Ext1);
     InstructionCost Cost = TTI.getPartialReductionCost(
         Instr->getOpcode(), A->getType(), ExpectedPhi->getType(), VF, OpAExtend,
-        OpBExtend,
-        BinOp ? std::make_optional(BinOp->getOpcode()) : std::nullopt);
+        OpBExtend, std::make_optional(BinOp->getOpcode()));
     if (Cost == InstructionCost::getInvalid())
       return;
 
