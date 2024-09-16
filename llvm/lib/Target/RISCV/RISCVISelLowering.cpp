@@ -21228,6 +21228,14 @@ Value *RISCVTargetLowering::getIRStackGuard(IRBuilderBase &IRB) const {
   if (Subtarget.isTargetAndroid())
     return useTpOffset(IRB, -0x18);
 
+  Module *M = IRB.GetInsertBlock()->getParent()->getParent();
+
+  if (M->getStackProtectorGuard() == "tls") {
+    // Specially, some users may customize the base reg and offset.
+    int Offset = M->getStackProtectorGuardOffset();
+    return useTpOffset(IRB, Offset);
+  }
+
   return TargetLowering::getIRStackGuard(IRB);
 }
 
