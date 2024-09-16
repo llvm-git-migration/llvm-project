@@ -283,7 +283,7 @@ class SimplifyCFGOpt {
   bool tryToSimplifyUncondBranchWithICmpInIt(ICmpInst *ICI,
                                              IRBuilder<> &Builder);
 
-  bool hoistCommonCodeFromSuccessors(BasicBlock *BB, bool EqTermsOnly);
+  bool hoistCommonCodeFromSuccessors(Instruction *TI, bool EqTermsOnly);
   bool hoistSuccIdenticalTerminatorToSwitchOrIf(
       Instruction *TI, Instruction *I1,
       SmallVectorImpl<Instruction *> &OtherSuccTIs);
@@ -1615,12 +1615,31 @@ static bool areIdenticalUpToCommutativity(const Instruction *I1,
   return false;
 }
 
+static bool isSafeCheapLoadStore(const Instruction *I,
+                                 const TargetTransformInfo &TTI) {
+  // Not handle volatile or atomic.
+  if (auto *L = dyn_cast<LoadInst>(I)) {
+    if (!L->isSimple())
+      return false;
+  } else if (auto *S = dyn_cast<StoreInst>(I)) {
+    if (!S->isSimple())
+      return false;
+  } else
+    return false;
+
+  // llvm.masked.load/store use i32 for alignment while load/store use i64.
+  // That's why we have the alignment limitation.
+  // FIXME: Update the prototype of the intrinsics?
+  return TTI.hasConditionalLoadStoreForType(getLoadStoreType(I)) &&
+         getLoadStoreAlignment(I) < Value::MaximumAlignment;
+}
+
 /// Hoist any common code in the successor blocks up into the block. This
 /// function guarantees that BB dominates all successors. If EqTermsOnly is
 /// given, only perform hoisting in case both blocks only contain a terminator.
 /// In that case, only the original BI will be replaced and selects for PHIs are
 /// added.
-bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
+bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(Instruction *TI,
                                                    bool EqTermsOnly) {
   // This does very trivial matching, with limited scanning, to find identical
   // instructions in the two blocks. In particular, we don't want to get into
@@ -1628,6 +1647,7 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
   // such, we currently just scan for obviously identical instructions in an
   // identical order, possibly separated by the same number of non-identical
   // instructions.
+  BasicBlock *BB = TI->getParent();
   unsigned int SuccSize = succ_size(BB);
   if (SuccSize < 2)
     return false;
@@ -1639,7 +1659,63 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
     if (Succ->hasAddressTaken() || !Succ->getSinglePredecessor())
       return false;
 
-  auto *TI = BB->getTerminator();
+  auto *BI = dyn_cast<BranchInst>(TI);
+  if (BI && HoistLoadsStoresWithCondFaulting &&
+      Options.HoistLoadsStoresWithCondFaulting) {
+    SmallVector<Instruction *, 2> SpeculatedConditionalLoadsStores;
+    for (auto *Succ : successors(BB)) {
+      for (Instruction &I : drop_end(*Succ)) {
+        if (!isSafeCheapLoadStore(&I, TTI) ||
+            SpeculatedConditionalLoadsStores.size() ==
+                HoistLoadsStoresWithCondFaultingThreshold)
+          return false;
+        SpeculatedConditionalLoadsStores.push_back(&I);
+      }
+    }
+
+    // TODO: Move below code to a function to share with #96878.
+    if (SpeculatedConditionalLoadsStores.empty())
+      return false;
+
+    auto &Context = BI->getParent()->getContext();
+    auto *VCondTy = FixedVectorType::get(Type::getInt1Ty(Context), 1);
+    auto *Cond = BI->getOperand(0);
+    IRBuilder<> Builder(BI);
+    Value *Mask1 = Builder.CreateBitCast(Cond, VCondTy);
+    Value *Mask0 = Builder.CreateBitCast(
+        Builder.CreateXor(Cond, ConstantInt::getTrue(Context)), VCondTy);
+    for (auto *I : SpeculatedConditionalLoadsStores) {
+      Value *Mask = I->getParent() == BI->getSuccessor(0) ? Mask1 : Mask0;
+      assert(!getLoadStoreType(I)->isVectorTy() && "not implemented");
+      auto *Op0 = I->getOperand(0);
+      Instruction *MaskedLoadStore = nullptr;
+      if (auto *LI = dyn_cast<LoadInst>(I)) {
+        // Handle Load.
+        auto *Ty = I->getType();
+        MaskedLoadStore = Builder.CreateMaskedLoad(FixedVectorType::get(Ty, 1),
+                                                   Op0, LI->getAlign(), Mask);
+        I->replaceAllUsesWith(Builder.CreateBitCast(MaskedLoadStore, Ty));
+      } else {
+        // Handle Store.
+        auto *StoredVal =
+            Builder.CreateBitCast(Op0, FixedVectorType::get(Op0->getType(), 1));
+        MaskedLoadStore = Builder.CreateMaskedStore(
+            StoredVal, I->getOperand(1), cast<StoreInst>(I)->getAlign(), Mask);
+      }
+      I->dropUBImplyingAttrsAndUnknownMetadata(
+          {LLVMContext::MD_range, LLVMContext::MD_annotation});
+      // FIXME: DIAssignID is not supported for masked store yet.
+      // (Verifier::visitDIAssignIDMetadata)
+      at::deleteAssignmentMarkers(I);
+      I->eraseMetadataIf([](unsigned MDKind, MDNode *Node) {
+        return Node->getMetadataID() == Metadata::DIAssignIDKind;
+      });
+      MaskedLoadStore->copyMetadata(*I);
+      I->eraseFromParent();
+    }
+
+    return true;
+  }
 
   // The second of pair is a SkipFlags bitmask.
   using SuccIterPair = std::pair<BasicBlock::iterator, unsigned>;
@@ -2996,25 +3072,6 @@ static bool isProfitableToSpeculate(const BranchInst *BI, bool Invert,
       BranchProbability::getBranchProbability(EndWeight, TWeight + FWeight);
   BranchProbability Likely = TTI.getPredictableBranchThreshold();
   return BIEndProb < Likely;
-}
-
-static bool isSafeCheapLoadStore(const Instruction *I,
-                                 const TargetTransformInfo &TTI) {
-  // Not handle volatile or atomic.
-  if (auto *L = dyn_cast<LoadInst>(I)) {
-    if (!L->isSimple())
-      return false;
-  } else if (auto *S = dyn_cast<StoreInst>(I)) {
-    if (!S->isSimple())
-      return false;
-  } else
-    return false;
-
-  // llvm.masked.load/store use i32 for alignment while load/store use i64.
-  // That's why we have the alignment limitation.
-  // FIXME: Update the prototype of the intrinsics?
-  return TTI.hasConditionalLoadStoreForType(getLoadStoreType(I)) &&
-         getLoadStoreAlignment(I) < Value::MaximumAlignment;
 }
 
 /// Speculate a conditional basic block flattening the CFG.
@@ -7436,7 +7493,7 @@ bool SimplifyCFGOpt::simplifySwitch(SwitchInst *SI, IRBuilder<> &Builder) {
     return requestResimplify();
 
   if (HoistCommon &&
-      hoistCommonCodeFromSuccessors(SI->getParent(), !Options.HoistCommonInsts))
+      hoistCommonCodeFromSuccessors(SI, !Options.HoistCommonInsts))
     return requestResimplify();
 
   return false;
@@ -7794,8 +7851,8 @@ bool SimplifyCFGOpt::simplifyCondBranch(BranchInst *BI, IRBuilder<> &Builder) {
   // can hoist it up to the branching block.
   if (BI->getSuccessor(0)->getSinglePredecessor()) {
     if (BI->getSuccessor(1)->getSinglePredecessor()) {
-      if (HoistCommon && hoistCommonCodeFromSuccessors(
-                             BI->getParent(), !Options.HoistCommonInsts))
+      if (HoistCommon &&
+          hoistCommonCodeFromSuccessors(BI, !Options.HoistCommonInsts))
         return requestResimplify();
     } else {
       // If Successor #1 has multiple preds, we may be able to conditionally
