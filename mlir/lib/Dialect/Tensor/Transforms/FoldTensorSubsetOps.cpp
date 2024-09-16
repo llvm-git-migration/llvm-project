@@ -21,6 +21,7 @@
 #include "mlir/Dialect/Vector/Utils/VectorUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include <type_traits>
@@ -67,6 +68,9 @@ public:
 
   LogicalResult matchAndRewrite(tensor::InsertSliceOp insertSliceOp,
                                 PatternRewriter &rewriter) const override;
+
+  static bool
+  doesTransferWriteCoverInsertSlice(vector::TransferWriteOp writeOp);
 };
 } // namespace
 
@@ -84,6 +88,15 @@ static LogicalResult preconditionsFoldExtractOrInsertWithTransferOp(
                 "strides, this may result in needing to insert "
                 "vector.insert_strided_slice/extract_strided_slice ops");
   }
+  if constexpr (std::is_same_v<XferOp, vector::TransferWriteOp>) {
+    if constexpr (std::is_same_v<ExtractOrInsertOp, tensor::InsertSliceOp>) {
+      if (!InsertSliceOfTransferWriteOpFolder::
+              doesTransferWriteCoverInsertSlice(xferOp))
+        return rewriter.notifyMatchFailure(
+            xferOp, "transfer_write does not cover insert_slice");
+    }
+  }
+
   return success();
 }
 
@@ -152,6 +165,17 @@ LogicalResult InsertSliceOfTransferWriteOpFolder::matchAndRewrite(
       writeOp.getInBoundsAttr());
 
   return success();
+}
+
+bool InsertSliceOfTransferWriteOpFolder::doesTransferWriteCoverInsertSlice(
+    vector::TransferWriteOp writeOp) {
+  if (writeOp.getShapedType().hasStaticShape())
+    return llvm::equal(writeOp.getVectorType().getShape(),
+                       writeOp.getShapedType().getShape());
+
+  // TODO: ValueBoundsConstraintSet for dynamic shapes.
+
+  return false;
 }
 
 template <typename OpTy>
