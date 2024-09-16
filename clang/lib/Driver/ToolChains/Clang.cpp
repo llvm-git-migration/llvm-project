@@ -3605,7 +3605,8 @@ static void RenderSSPOptions(const Driver &D, const ToolChain &TC,
     StringRef Value = A->getValue();
     if (!EffectiveTriple.isX86() && !EffectiveTriple.isAArch64() &&
         !EffectiveTriple.isARM() && !EffectiveTriple.isThumb() &&
-        !EffectiveTriple.isRISCV())
+        !EffectiveTriple.isRISCV() && !EffectiveTriple.isPPC64() &&
+        !EffectiveTriple.isPPC32())
       D.Diag(diag::err_drv_unsupported_opt_for_target)
           << A->getAsString(Args) << TripleStr;
     if ((EffectiveTriple.isX86() || EffectiveTriple.isARM() ||
@@ -3645,7 +3646,8 @@ static void RenderSSPOptions(const Driver &D, const ToolChain &TC,
           << A->getOption().getName() << Value << "sysreg global";
       return;
     }
-    if (EffectiveTriple.isRISCV()) {
+    if (EffectiveTriple.isRISCV() || EffectiveTriple.isPPC64() ||
+        EffectiveTriple.isPPC32()) {
       if (Value != "tls" && Value != "global") {
         D.Diag(diag::err_drv_invalid_value_with_suggestion)
             << A->getOption().getName() << Value << "tls global";
@@ -3666,7 +3668,8 @@ static void RenderSSPOptions(const Driver &D, const ToolChain &TC,
     StringRef Value = A->getValue();
     if (!EffectiveTriple.isX86() && !EffectiveTriple.isAArch64() &&
         !EffectiveTriple.isARM() && !EffectiveTriple.isThumb() &&
-        !EffectiveTriple.isRISCV())
+        !EffectiveTriple.isRISCV() && !EffectiveTriple.isPPC64() &&
+        !EffectiveTriple.isPPC32())
       D.Diag(diag::err_drv_unsupported_opt_for_target)
           << A->getAsString(Args) << TripleStr;
     int Offset;
@@ -3686,7 +3689,8 @@ static void RenderSSPOptions(const Driver &D, const ToolChain &TC,
   if (Arg *A = Args.getLastArg(options::OPT_mstack_protector_guard_reg_EQ)) {
     StringRef Value = A->getValue();
     if (!EffectiveTriple.isX86() && !EffectiveTriple.isAArch64() &&
-        !EffectiveTriple.isRISCV())
+        !EffectiveTriple.isRISCV() && !EffectiveTriple.isPPC64() &&
+        !EffectiveTriple.isPPC32())
       D.Diag(diag::err_drv_unsupported_opt_for_target)
           << A->getAsString(Args) << TripleStr;
     if (EffectiveTriple.isX86() && (Value != "fs" && Value != "gs")) {
@@ -3701,6 +3705,16 @@ static void RenderSSPOptions(const Driver &D, const ToolChain &TC,
     if (EffectiveTriple.isRISCV() && Value != "tp") {
       D.Diag(diag::err_drv_invalid_value_with_suggestion)
           << A->getOption().getName() << Value << "tp";
+      return;
+    }
+    if (EffectiveTriple.isPPC64() && Value != "r13") {
+      D.Diag(diag::err_drv_invalid_value_with_suggestion)
+          << A->getOption().getName() << Value << "r13";
+      return;
+    }
+    if (EffectiveTriple.isPPC32() && Value != "r2") {
+      D.Diag(diag::err_drv_invalid_value_with_suggestion)
+          << A->getOption().getName() << Value << "r2";
       return;
     }
     A->render(Args, CmdArgs);
