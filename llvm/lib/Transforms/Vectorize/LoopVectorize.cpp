@@ -1587,11 +1587,21 @@ public:
 
     using namespace llvm::PatternMatch;
 
-    if (!match(Instr,
-               m_BinOp(m_OneUse(m_BinOp(
-                           m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
-                           m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
-                       m_Value(ExpectedPhi))))
+    unsigned BinOpIdx = 0;
+
+    // The binary operator can be commutative
+    if (match(Instr, m_BinOp(m_OneUse(m_BinOp(
+                                 m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
+                                 m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
+                             m_Value(ExpectedPhi))))
+      BinOpIdx = 0;
+    else if (match(Instr,
+                   m_BinOp(m_Value(ExpectedPhi),
+                           m_OneUse(m_BinOp(
+                               m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
+                               m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))))))
+      BinOpIdx = 1;
+    else
       return;
 
     // Check that the extends extend from the same type
@@ -1631,7 +1641,7 @@ public:
       return;
     }
 
-    Instruction *BinOp = cast<Instruction>(Instr->getOperand(0));
+    Instruction *BinOp = cast<Instruction>(Instr->getOperand(BinOpIdx));
     Value *InputA = Ext0->getOperand(0);
     TTI::PartialReductionExtendKind OpAExtend =
         TargetTransformInfo::getPartialReductionExtendKind(Ext0);
