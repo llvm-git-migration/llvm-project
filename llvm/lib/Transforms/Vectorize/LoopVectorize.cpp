@@ -9125,8 +9125,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
       if (auto Chain = CM.getInstructionsPartialReduction(Instr))
         Recipe = RecipeBuilder.tryToCreatePartialReduction(
             Chain->Reduction, Chain->ScaleFactor, Operands);
-
-      if (!Recipe)
+      else if (!Recipe)
         Recipe =
             RecipeBuilder.tryToCreateWidenRecipe(Instr, Operands, Range, VPBB);
       if (!Recipe)
