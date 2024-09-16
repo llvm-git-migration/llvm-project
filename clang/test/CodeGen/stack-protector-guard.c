@@ -12,6 +12,9 @@
 // RUN: %clang_cc1 -mstack-protector-guard=tls -triple riscv64-unknown-elf \
 // RUN:   -mstack-protector-guard-offset=44 -mstack-protector-guard-reg=tp \
 // RUN:   -emit-llvm %s -o - | FileCheck %s --check-prefix=RISCV
+// RUN: %clang_cc1 -mstack-protector-guard=tls -triple powerpc64-unknown-elf \
+// RUN:   -mstack-protector-guard-offset=52 -mstack-protector-guard-reg=r13 \
+// RUN:   -emit-llvm %s -o - | FileCheck %s --check-prefix=POWERPC64
 void foo(int*);
 void bar(int x) {
   int baz[x];
@@ -31,3 +34,8 @@ void bar(int x) {
 // RISCV: [[ATTR1]] = !{i32 1, !"stack-protector-guard", !"tls"}
 // RISCV: [[ATTR2]] = !{i32 1, !"stack-protector-guard-reg", !"tp"}
 // RISCV: [[ATTR3]] = !{i32 1, !"stack-protector-guard-offset", i32 44}
+
+// POWERPC64: !llvm.module.flags = !{{{.*}}[[ATTR1:![0-9]+]], [[ATTR2:![0-9]+]], [[ATTR3:![0-9]+]], [[ATTR4:![0-9]+]]}
+// POWERPC64: [[ATTR1]] = !{i32 1, !"stack-protector-guard", !"tls"}
+// POWERPC64: [[ATTR2]] = !{i32 1, !"stack-protector-guard-reg", !"r13"}
+// POWERPC64: [[ATTR3]] = !{i32 1, !"stack-protector-guard-offset", i32 52}
