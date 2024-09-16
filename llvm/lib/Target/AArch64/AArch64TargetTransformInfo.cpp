@@ -4147,6 +4147,22 @@ AArch64TTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *ValTy,
   switch (ISD) {
   default:
     break;
+  case ISD::FADD: {
+    if (MTy.isVector()) {
+      // FIXME: Consider cases where the number of vector elements is not power
+      // of 2.
+      const unsigned NElts = MTy.getVectorNumElements();
+      if (ValTy->getElementCount().getFixedValue() >= 2 && NElts >= 2 &&
+          isPowerOf2_32(NElts)) {
+        // Reduction corresponding to series of fadd instructions is lowered to
+        // series of faddp instructions. faddp has latency/throughput that
+        // matches fadd instruction and hence, every faddp instruction can be
+        // considered to have a relative cost=1 with
+        // CostKind=TCK_RecipThroughput.
+        return (LT.first - 1) + /*No of faddp instructions*/ Log2_32(NElts);
+      }
+    }
+  } break;
   case ISD::ADD:
     if (const auto *Entry = CostTableLookup(CostTblNoPairwise, ISD, MTy))
       return (LT.first - 1) + Entry->Cost;
