@@ -23,6 +23,8 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/TypeSwitch.h"
+#include <cstddef>
+#include <sys/_types/_int64_t.h>
 #include <type_traits>
 
 namespace mlir {
@@ -67,6 +69,12 @@ public:
 
   LogicalResult matchAndRewrite(tensor::InsertSliceOp insertSliceOp,
                                 PatternRewriter &rewriter) const override;
+
+private:
+  static bool
+  doesTransferWriteCoverInsertSlice(vector::TransferWriteOp writeOp,
+                                    tensor::InsertSliceOp insertSliceOp,
+                                    MLIRContext *context);
 };
 } // namespace
 
@@ -136,6 +144,11 @@ LogicalResult InsertSliceOfTransferWriteOpFolder::matchAndRewrite(
   if (failed(preconditionResult))
     return preconditionResult;
 
+  if (!doesTransferWriteCoverInsertSlice(writeOp, insertSliceOp,
+                                         rewriter.getContext()))
+    return rewriter.notifyMatchFailure(
+        insertSliceOp, "transfer_write does not cover insert_slice");
+
   SmallVector<Value> indices(writeOp.getIndices().begin(),
                              writeOp.getIndices().end());
   SmallVector<Value> sourceIndices;
@@ -152,6 +165,13 @@ LogicalResult InsertSliceOfTransferWriteOpFolder::matchAndRewrite(
       writeOp.getInBoundsAttr());
 
   return success();
+}
+
+bool InsertSliceOfTransferWriteOpFolder::doesTransferWriteCoverInsertSlice(
+    vector::TransferWriteOp writeOp, tensor::InsertSliceOp insertSliceOp,
+    MLIRContext *context) {
+  // Todo
+  return true;
 }
 
 template <typename OpTy>
