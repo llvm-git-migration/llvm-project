@@ -931,14 +931,14 @@ static LLT getLMUL1Ty(LLT VecTy) {
 
 bool RISCVLegalizerInfo::legalizeInsertSubvector(MachineInstr &MI,
                                                  MachineIRBuilder &MIB) const {
-  assert(MI.getOpcode() == TargetOpcode::G_INSERT_SUBVECTOR);
+  GInsertSubvector &IS = cast<GInsertSubvector>(MI);
 
   MachineRegisterInfo &MRI = *MIB.getMRI();
 
-  Register Dst = MI.getOperand(0).getReg();
-  Register Src1 = MI.getOperand(1).getReg();
-  Register Src2 = MI.getOperand(2).getReg();
-  uint64_t Idx = MI.getOperand(3).getImm();
+  Register Dst = IS.getOperand(0).getReg();
+  Register Src1 = IS.getBigVec();
+  Register Src2 = IS.getSubVec();
+  uint64_t Idx = IS.getIndexImm();
 
   LLT BigTy = MRI.getType(Src1);
   LLT LitTy = MRI.getType(Src2);
@@ -989,9 +989,7 @@ bool RISCVLegalizerInfo::legalizeInsertSubvector(MachineInstr &MI,
           getMVTForLLT(BigTy), LitTyMVT, Idx, TRI);
 
   RISCVII::VLMUL SubVecLMUL = RISCVTargetLowering::getLMUL(getMVTForLLT(LitTy));
-  bool IsSubVecPartReg = SubVecLMUL == RISCVII::VLMUL::LMUL_F2 ||
-                         SubVecLMUL == RISCVII::VLMUL::LMUL_F4 ||
-                         SubVecLMUL == RISCVII::VLMUL::LMUL_F8;
+  bool IsSubVecPartReg = !RISCVVType::decodeVLMUL(SubVecLMUL).second;
 
   // If the Idx has been completely eliminated and this subvector's size is a
   // vector register or a multiple thereof, or the surrounding elements are
@@ -1059,7 +1057,7 @@ bool RISCVLegalizerInfo::legalizeInsertSubvector(MachineInstr &MI,
   // If required, insert this subvector back into the correct vector register.
   // This should resolve to an INSERT_SUBREG instruction.
   if (TypeSize::isKnownGT(BigTy.getSizeInBits(), InterLitTy.getSizeInBits()))
-    Inserted = MIB.buildInsert(BigTy, BigVec, LitVec, AlignedIdx);
+    Inserted = MIB.buildInsertSubvector(BigTy, BigVec, LitVec, AlignedIdx);
 
   // We might have bitcast from a mask type: cast back to the original type if
   // required.
