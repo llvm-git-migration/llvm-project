@@ -17913,6 +17913,26 @@ Value *PPCTargetLowering::getSDagStackGuard(const Module &M) const {
   return TargetLowering::getSDagStackGuard(M);
 }
 
+static Value *useTpOffset(IRBuilderBase &IRB, unsigned Offset) {
+  Module *M = IRB.GetInsertBlock()->getModule();
+  Function *ThreadPointerFunc =
+      Intrinsic::getDeclaration(M, Intrinsic::thread_pointer);
+  return IRB.CreateConstGEP1_32(IRB.getInt8Ty(),
+                                IRB.CreateCall(ThreadPointerFunc), Offset);
+}
+
+Value *PPCTargetLowering::getIRStackGuard(IRBuilderBase &IRB) const {
+  Module *M = IRB.GetInsertBlock()->getModule();
+
+  if (M->getStackProtectorGuard() == "tls") {
+    // Specially, some users may customize the base reg and offset.
+    int Offset = M->getStackProtectorGuardOffset();
+    return useTpOffset(IRB, Offset);
+  }
+
+  return TargetLowering::getIRStackGuard(IRB);
+}
+
 bool PPCTargetLowering::isFPImmLegal(const APFloat &Imm, EVT VT,
                                      bool ForCodeSize) const {
   if (!VT.isSimple() || !Subtarget.hasVSX())

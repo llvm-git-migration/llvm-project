@@ -1140,6 +1140,7 @@ namespace llvm {
     bool useLoadStackGuardNode() const override;
     void insertSSPDeclarations(Module &M) const override;
     Value *getSDagStackGuard(const Module &M) const override;
+    Value *getIRStackGuard(IRBuilderBase &IRB) const override;
 
     bool isFPImmLegal(const APFloat &Imm, EVT VT,
                       bool ForCodeSize) const override;
