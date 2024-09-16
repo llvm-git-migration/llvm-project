@@ -4,8 +4,8 @@
 target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-none-unknown-elf"
 
-define void @dotp(ptr %a, ptr %b) #0 {
-; CHECK-LABEL: define void @dotp(
+define i32 @dotp(ptr %a, ptr %b) #0 {
+; CHECK-LABEL: define i32 @dotp(
 ; CHECK-SAME: ptr [[A:%.*]], ptr [[B:%.*]]) #[[ATTR0:[0-9]+]] {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP0:%.*]] = call i64 @llvm.vscale.i64()
@@ -46,22 +46,22 @@ entry:
   br label %for.body
 
 for.cond.cleanup.loopexit:                        ; preds = %for.body
-  %0 = lshr i32 %add, 0
-  ret void
+  %result = lshr i32 %add, 0
+  ret i32 %result
 
 for.body:                                         ; preds = %for.body, %entry
-  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.body ]
-  %acc.010 = phi i32 [ 0, %entry ], [ %add, %for.body ]
-  %arrayidx = getelementptr i8, ptr %a, i64 %indvars.iv
-  %1 = load i8, ptr %arrayidx, align 1
-  %conv = zext i8 %1 to i32
-  %arrayidx2 = getelementptr i8, ptr %b, i64 %indvars.iv
-  %2 = load i8, ptr %arrayidx2, align 1
-  %conv3 = zext i8 %2 to i32
-  %mul = mul i32 %conv3, %conv
-  %add = add i32 %mul, %acc.010
-  %indvars.iv.next = add i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, 0
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %accum = phi i32 [ 0, %entry ], [ %add, %for.body ]
+  %gep.a = getelementptr i8, ptr %a, i64 %iv
+  %load.a = load i8, ptr %gep.a, align 1
+  %ext.a = zext i8 %load.a to i32
+  %gep.b = getelementptr i8, ptr %b, i64 %iv
+  %load.b = load i8, ptr %gep.b, align 1
+  %ext.b = zext i8 %load.b to i32
+  %mul = mul i32 %ext.b, %ext.a
+  %add = add i32 %mul, %accum
+  %iv.next = add i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, 0
   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
 }
 
@@ -161,18 +161,18 @@ for.cond.cleanup.loopexit:                        ; preds = %for.body
   ret void
 
 for.body:                                         ; preds = %for.body, %entry
-  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.body ]
-  %acc.010 = phi i32 [ 0, %entry ], [ %add, %for.body ]
-  %arrayidx = getelementptr i8, ptr %a, i64 %indvars.iv
-  %1 = load i8, ptr %arrayidx, align 1
-  %conv = zext i8 %1 to i32
-  %arrayidx2 = getelementptr i8, ptr %b, i64 %indvars.iv
-  %2 = load i16, ptr %arrayidx2, align 2
-  %conv3 = zext i16 %2 to i32
-  %mul = mul i32 %conv3, %conv
-  %add = add i32 %mul, %acc.010
-  %indvars.iv.next = add i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, 0
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %accum = phi i32 [ 0, %entry ], [ %add, %for.body ]
+  %gep.a = getelementptr i8, ptr %a, i64 %iv
+  %load.a = load i8, ptr %gep.a, align 1
+  %ext.a = zext i8 %load.a to i32
+  %gep.b = getelementptr i8, ptr %b, i64 %iv
+  %load.b = load i16, ptr %gep.b, align 2
+  %ext.b = zext i16 %load.b to i32
+  %mul = mul i32 %ext.b, %ext.a
+  %add = add i32 %mul, %accum
+  %iv.next = add i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, 0
   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
 }
 
@@ -214,18 +214,18 @@ for.cond.cleanup.loopexit:                        ; preds = %for.body
   ret void
 
 for.body:                                         ; preds = %for.body, %entry
-  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.body ]
-  %acc.010 = phi i32 [ 0, %entry ], [ %mul, %for.body ]
-  %arrayidx = getelementptr i8, ptr %a, i64 %indvars.iv
-  %1 = load i8, ptr %arrayidx, align 1
-  %conv = zext i8 %1 to i32
-  %arrayidx2 = getelementptr i8, ptr %b, i64 %indvars.iv
-  %2 = load i8, ptr %arrayidx2, align 1
-  %conv3 = zext i8 %2 to i32
-  %mul = mul i32 %conv3, %conv
-  %add = add i32 %mul, %acc.010
-  %indvars.iv.next = add i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, 0
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %accum = phi i32 [ 0, %entry ], [ %mul, %for.body ]
+  %gep.a = getelementptr i8, ptr %a, i64 %iv
+  %load.a = load i8, ptr %gep.a, align 1
+  %ext.a = zext i8 %load.a to i32
+  %gep.b = getelementptr i8, ptr %b, i64 %iv
+  %load.b = load i8, ptr %gep.b, align 1
+  %ext.b = zext i8 %load.b to i32
+  %mul = mul i32 %ext.b, %ext.a
+  %add = add i32 %mul, %accum
+  %iv.next = add i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, 0
   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
 }
 
@@ -266,18 +266,18 @@ for.cond.cleanup.loopexit:                        ; preds = %for.body
   ret void
 
 for.body:                                         ; preds = %for.body, %entry
-  %indvars.iv = phi i64 [ 0, %entry ], [ %indvars.iv.next, %for.body ]
-  %acc.010 = phi i32 [ 0, %entry ], [ %add, %for.body ]
-  %arrayidx = getelementptr i8, ptr %a, i64 %indvars.iv
-  %1 = load i8, ptr %arrayidx, align 1
-  %conv = zext i8 %1 to i32
-  %arrayidx2 = getelementptr i8, ptr %b, i64 %indvars.iv
-  %2 = load i8, ptr %arrayidx2, align 1
-  %conv3 = zext i8 %2 to i32
-  %mul = mul i32 %conv3, %conv
-  %add = add i32 %mul, %conv3
-  %indvars.iv.next = add i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, 0
+  %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
+  %accum = phi i32 [ 0, %entry ], [ %add, %for.body ]
+  %gep.a = getelementptr i8, ptr %a, i64 %iv
+  %load.a = load i8, ptr %gep.a, align 1
+  %ext.a = zext i8 %load.a to i32
+  %gep.b = getelementptr i8, ptr %b, i64 %iv
+  %load.b = load i8, ptr %gep.b, align 1
+  %ext.b = zext i8 %load.b to i32
+  %mul = mul i32 %ext.b, %ext.a
+  %add = add i32 %mul, %ext.b
+  %iv.next = add i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, 0
   br i1 %exitcond.not, label %for.cond.cleanup.loopexit, label %for.body
 }
 attributes #0 = { nofree norecurse nosync nounwind memory(argmem: readwrite) uwtable vscale_range(1,16) "target-features"="+sve" }
