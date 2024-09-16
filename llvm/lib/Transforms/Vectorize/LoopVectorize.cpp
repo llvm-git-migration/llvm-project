@@ -1623,7 +1623,8 @@ public:
     }
 
     // Check that the second phi value is the instruction we're looking at
-    Instruction *MaybeAdd = dyn_cast<Instruction>(PhiNode->getIncomingValue(1));
+    Instruction *MaybeAdd = dyn_cast<Instruction>(
+        PhiNode->getIncomingValueForBlock(Instr->getParent()));
     if (!MaybeAdd || MaybeAdd != Instr) {
       LLVM_DEBUG(dbgs() << "Second PHI value is not the root binop, cannot "
                            "create a partial reduction.\n");
