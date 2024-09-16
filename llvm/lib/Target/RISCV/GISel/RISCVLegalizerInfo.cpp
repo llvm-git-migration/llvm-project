@@ -935,7 +935,7 @@ bool RISCVLegalizerInfo::legalizeInsertSubvector(MachineInstr &MI,
 
   MachineRegisterInfo &MRI = *MIB.getMRI();
 
-  Register Dst = IS.getOperand(0).getReg();
+  Register Dst = IS.getReg(0);
   Register Src1 = IS.getBigVec();
   Register Src2 = IS.getSubVec();
   uint64_t Idx = IS.getIndexImm();
