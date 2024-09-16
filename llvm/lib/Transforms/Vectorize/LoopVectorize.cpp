@@ -1586,14 +1586,12 @@ public:
     Value *A, *B;
 
     using namespace llvm::PatternMatch;
-    auto Pattern =
-        m_BinOp(m_OneUse(m_BinOp(m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
-                                 m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
-                m_Value(ExpectedPhi));
 
-    bool Matches = match(Instr, Pattern);
-
-    if (!Matches)
+    if (!match(Instr,
+               m_BinOp(m_OneUse(m_BinOp(
+                           m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
+                           m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
+                       m_Value(ExpectedPhi))))
       return;
 
     // Check that the extends extend from the same type
