@@ -1591,15 +1591,15 @@ public:
 
     // The binary operator can be commutative
     if (match(Instr, m_BinOp(m_OneUse(m_BinOp(
-                                 m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
-                                 m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))),
+                                 m_ZExtOrSExt(m_Value(A)),
+                                 m_ZExtOrSExt(m_Value(B)))),
                              m_Value(ExpectedPhi))))
       BinOpIdx = 0;
     else if (match(Instr,
                    m_BinOp(m_Value(ExpectedPhi),
                            m_OneUse(m_BinOp(
-                               m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(A)))),
-                               m_OneUse(m_ZExtOrSExt(m_OneUse(m_Value(B)))))))))
+                               m_ZExtOrSExt(m_Value(A)),
+                               m_ZExtOrSExt(m_Value(B)))))))
       BinOpIdx = 1;
     else
       return;
@@ -7152,6 +7152,37 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC) {
     auto *ReductionExitInstr = ReductionVar.second.getLoopExitInstr();
     CM.addPartialReductionIfSupported(ReductionExitInstr, UserVF);
   }
+
+  // Wider-than-legal vector types (coming from extends in partial reductions) should only be used by partial reductions so that they are lowered properly
+
+  // Build up a set of partial reduction bin ops for efficient use checking
+  SmallSet<Instruction *, 4> PartialReductionBinOps;
+  for (auto It : CM.getPartialReductionChains()) {
+    if (It.second.BinOp) PartialReductionBinOps.insert(It.second.BinOp);
+  }
+
+  auto ExtendIsOnlyUsedByPartialReductions = [PartialReductionBinOps](Instruction *Extend) {
+    for (auto *Use : Extend->users()) {
+      Instruction *UseInstr = dyn_cast<Instruction>(Use);
+      if (!PartialReductionBinOps.contains(UseInstr))
+        return false;
+    }
+    return true;
+  };
+
+  // Check if each use of a chain's two extends is a partial reduction
+  SmallVector<Instruction *, 2> ChainsToRemove;
+  for (auto It : CM.getPartialReductionChains()) {
+      LoopVectorizationCostModel::PartialReductionChain Chain = It.second;
+    if (!ExtendIsOnlyUsedByPartialReductions(Chain.ExtendA))
+      ChainsToRemove.push_back(Chain.Reduction);
+    else if (!ExtendIsOnlyUsedByPartialReductions(Chain.ExtendB))
+      ChainsToRemove.push_back(Chain.Reduction);
+  }
+
+  // Remove those that have non-partial reduction users
+  for (auto *It : ChainsToRemove)
+    CM.getPartialReductionChains().erase(It);
 
   CM.collectValuesToIgnore();
   CM.collectElementTypesForWidening();
