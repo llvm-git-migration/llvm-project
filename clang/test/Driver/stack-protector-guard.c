@@ -85,3 +85,10 @@
 // CHECK-AARCH64: "-cc1" {{.*}}"-mstack-protector-guard=sysreg" "-mstack-protector-guard-offset=0" "-mstack-protector-guard-reg=sp_el0"
 // INVALID-VALUE-AARCH64: error: invalid value 'tls' in 'mstack-protector-guard=', expected one of: sysreg global
 // INVALID-REG-AARCH64: error: invalid value 'foo' in 'mstack-protector-guard-reg='
+
+// RUN: not %clang -target riscv64-unknown-elf -mstack-protector-guard=tls %s 2>&1 | \
+// RUN:   FileCheck -check-prefix=MISSING-OFFSET %s
+
+// RUN: not %clang -target riscv64-unknown-elf -mstack-protector-guard=sysreg %s 2>&1 | \
+// RUN:   FileCheck -check-prefix=INVALID-VALUE2 %s
+
