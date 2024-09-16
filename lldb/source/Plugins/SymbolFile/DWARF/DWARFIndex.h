@@ -64,6 +64,23 @@ public:
   virtual void
   GetNamespaces(ConstString name,
                 llvm::function_ref<bool(DWARFDIE die)> callback) = 0;
+
+  /// Get type DIEs whose base name match \param name with \param parent_names
+  /// in its decl parent chain as subset.  A base implementation is provided,
+  /// Specializations should override this if they are able to provide a faster
+  /// implementation.
+  virtual void
+  GetTypesWithParents(ConstString name,
+                      llvm::ArrayRef<llvm::StringRef> parent_names,
+                      llvm::function_ref<bool(DWARFDIE die)> callback);
+  /// Get namespace DIEs whose base name match \param name with \param
+  /// parent_names in its decl parent chain as subset.  A base implementation is
+  /// provided. Specializations should override this if they are able to provide
+  /// a faster implementation.
+  virtual void
+  GetNamespacesWithParents(ConstString name,
+                           llvm::ArrayRef<llvm::StringRef> parent_names,
+                           llvm::function_ref<bool(DWARFDIE die)> callback);
   virtual void
   GetFunctions(const Module::LookupInfo &lookup_info, SymbolFileDWARF &dwarf,
                const CompilerDeclContext &parent_decl_ctx,
@@ -115,6 +132,11 @@ protected:
   bool
   GetFullyQualifiedTypeImpl(const DWARFDeclContext &context, DWARFDIE die,
                             llvm::function_ref<bool(DWARFDIE die)> callback);
+
+  /// Check if the \a die has \a parent_names in its decl parent chain.
+  bool ProcessDieMatchParentNames(
+      ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+      DWARFDIE die, llvm::function_ref<bool(DWARFDIE die)> callback);
 };
 } // namespace dwarf
 } // namespace lldb_private::plugin

@@ -126,3 +126,62 @@ bool DWARFIndex::GetFullyQualifiedTypeImpl(
     return callback(die);
   return true;
 }
+
+void DWARFIndex::GetNamespacesWithParents(
+    ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+    llvm::function_ref<bool(DWARFDIE die)> callback) {
+  GetNamespaces(name, [&](DWARFDIE die) {
+    return ProcessDieMatchParentNames(name, parent_names, die, callback);
+  });
+}
+
+void DWARFIndex::GetTypesWithParents(
+    ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+    llvm::function_ref<bool(DWARFDIE die)> callback) {
+  GetTypes(name, [&](DWARFDIE die) {
+    return ProcessDieMatchParentNames(name, parent_names, die, callback);
+  });
+}
+
+bool DWARFIndex::ProcessDieMatchParentNames(
+    ConstString name, llvm::ArrayRef<llvm::StringRef> query_parent_names,
+    DWARFDIE die, llvm::function_ref<bool(DWARFDIE die)> callback) {
+  std::vector<lldb_private::CompilerContext> type_context =
+      die.GetTypeLookupContext();
+  if (type_context.empty()) {
+    // If both type_context and query_parent_names and empty we have a match.
+    // Otherwise, this one does not match and we keep on searching. 
+    if (query_parent_names.empty())
+      return callback(die);
+    return true;
+  }
+
+  // Type lookup context includes the current DIE as the last element.
+  // so revert it for easy matching.
+  std::reverse(type_context.begin(), type_context.end());
+
+  // type_context includes the name of the current DIE while query_parent_names
+  // doesn't. So start check from index 1 for dwarf_decl_ctx.
+  uint32_t i = 1, j = 0;
+  while (i < type_context.size() && j < query_parent_names.size()) {
+    // If type_context[i] has no name, skip it.
+    // e.g. this can happen for anonymous namespaces.
+    if (type_context[i].name.IsNull() || type_context[i].name.IsEmpty()) {
+      ++i;
+      continue;
+    }
+    // If the name doesn't match, skip it.
+    // e.g. this can happen for inline namespaces.
+    if (query_parent_names[j] != type_context[i].name) {
+      ++i;
+      continue;
+    }
+    ++i;
+    ++j;
+  }
+  // If not all query_parent_names were found in type_context.
+  // This die does not meet the criteria, try next one.
+  if (j != query_parent_names.size())
+    return true;
+  return callback(die);
+}

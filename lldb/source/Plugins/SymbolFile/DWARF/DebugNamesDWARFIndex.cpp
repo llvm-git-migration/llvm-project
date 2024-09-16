@@ -16,6 +16,8 @@
 #include "lldb/Utility/Stream.h"
 #include "llvm/ADT/Sequence.h"
 #include <optional>
+#include "lldb/Core/Progress.h"
+#include "lldb/Utility/LLDBLog.h"
 
 using namespace lldb_private;
 using namespace lldb;
@@ -301,7 +303,8 @@ using Entry = llvm::DWARFDebugNames::Entry;
 /// If any parent does not have an `IDX_parent`, or the Entry data is corrupted,
 /// nullopt is returned.
 std::optional<llvm::SmallVector<Entry, 4>>
-getParentChain(Entry entry, uint32_t max_parents) {
+getParentChain(Entry entry,
+               uint32_t max_parents = std::numeric_limits<uint32_t>::max()) {
   llvm::SmallVector<Entry, 4> parent_entries;
 
   do {
@@ -374,24 +377,39 @@ void DebugNamesDWARFIndex::GetFullyQualifiedType(
   m_fallback.GetFullyQualifiedType(context, callback);
 }
 
+bool DebugNamesDWARFIndex::SameAsEntryATName(
+    llvm::StringRef query_name, const DebugNames::Entry &entry) const {
+  auto maybe_dieoffset = entry.getDIEUnitOffset();
+  if (!maybe_dieoffset)
+    return false;
+
+  // [Optimization] instead of parsing the entry from dwo file, we simply
+  // check if the query_name can point to an entry of the same DIE offset.
+  // This greatly reduced number of dwo file parsed and thus improved the
+  // performance.
+  for (const DebugNames::Entry &query_entry :
+       entry.getNameIndex()->equal_range(query_name)) {
+    auto query_dieoffset = query_entry.getDIEUnitOffset();
+    if (!query_dieoffset)
+      continue;
+
+    if (*query_dieoffset == *maybe_dieoffset) {
+      return true;
+    } else if (*query_dieoffset > *maybe_dieoffset) {
+      // The pool entries of the same name are sequentially cluttered together
+      // so if the query name from `query_name` is after the target entry, this
+      // is definitely not the correct one, we can stop searching.
+      return false;
+    }
+  }
+  return false;
+}
+
 bool DebugNamesDWARFIndex::SameParentChain(
     llvm::ArrayRef<llvm::StringRef> parent_names,
     llvm::ArrayRef<DebugNames::Entry> parent_entries) const {
-
   if (parent_entries.size() != parent_names.size())
     return false;
-
-  auto SameAsEntryATName = [this](llvm::StringRef name,
-                                  const DebugNames::Entry &entry) {
-    // Peek at the AT_name of `entry` and test equality to `name`.
-    auto maybe_dieoffset = entry.getDIEUnitOffset();
-    if (!maybe_dieoffset)
-      return false;
-    DWARFUnit *unit = GetNonSkeletonUnit(entry);
-    if (!unit)
-      return false;
-    return name == unit->PeekDIEName(unit->GetOffset() + *maybe_dieoffset);
-  };
 
   // If the AT_name of any parent fails to match the expected name, we don't
   // have a match.
@@ -400,6 +418,36 @@ bool DebugNamesDWARFIndex::SameParentChain(
     if (!SameAsEntryATName(parent_name, parent_entry))
       return false;
   return true;
+}
+
+bool DebugNamesDWARFIndex::WithinParentChain(
+    llvm::ArrayRef<llvm::StringRef> query_parent_names,
+    llvm::ArrayRef<DebugNames::Entry> parent_chain) const {
+  if (parent_chain.size() < query_parent_names.size())
+    return false;
+
+  size_t query_idx = 0, chain_idx = 0;
+  while (query_idx < query_parent_names.size() &&
+         chain_idx < parent_chain.size()) {
+    if (SameAsEntryATName(query_parent_names[query_idx],
+                          parent_chain[chain_idx])) {
+      ++query_idx;
+      ++chain_idx;
+    } else {
+      // Name does not match, try next parent_chain entry if the current entry
+      // is namespace because the current one can be an inline namespace.
+      if (parent_chain[chain_idx].tag() != DW_TAG_namespace)
+        return false;
+
+      ++chain_idx;
+      if (query_parent_names.size() - query_idx >
+          parent_chain.size() - chain_idx) {
+        // Parent chain has not enough entries, we can't possibly have a match.
+        return false;
+      }
+    }
+  }
+  return query_idx == query_parent_names.size();
 }
 
 void DebugNamesDWARFIndex::GetTypes(
@@ -442,6 +490,98 @@ void DebugNamesDWARFIndex::GetNamespaces(
   }
 
   m_fallback.GetNamespaces(name, callback);
+}
+
+void DebugNamesDWARFIndex::GetNamespacesWithParents(
+    ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+    llvm::function_ref<bool(DWARFDIE die)> callback) {
+  Progress progress("Get namespace from index for %s", name.GetCString());
+  for (const DebugNames::Entry &entry :
+       m_debug_names_up->equal_range(name.GetStringRef())) {
+    lldb_private::dwarf::Tag entry_tag = entry.tag();
+    if (entry_tag == DW_TAG_namespace ||
+        entry_tag == DW_TAG_imported_declaration) {
+      std::optional<llvm::SmallVector<Entry, 4>> parent_chain =
+          getParentChain(entry);
+      if (!parent_chain) {
+        // Fallback: use the base class implementation.
+        if (!ProcessEntry(entry, [&](DWARFDIE die) {
+              return ProcessDieMatchParentNames(name, parent_names, die, callback);
+            }))
+          return;
+        continue;
+      }
+
+      if (parent_chain->size() < parent_names.size())
+        continue;
+      else if (parent_chain->size() == parent_names.size()) {
+        if (SameParentChain(parent_names, *parent_chain) &&
+            !ProcessEntry(entry, callback))
+          return;
+      } else {
+        // parent_chain->size() > parent_names.size()
+        if (WithinParentChain(parent_names, *parent_chain) &&
+            !ProcessEntry(entry, callback))
+          return;
+      }
+    }
+  }
+
+  m_fallback.GetNamespaces(name, callback);
+}
+
+void DebugNamesDWARFIndex::GetTypesWithParents(
+    ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+    llvm::function_ref<bool(DWARFDIE die)> callback) {
+  if (parent_names.empty())
+    return GetTypes(name, callback);
+    
+  Log *log = GetLog(LLDBLog::Temporary);
+  int count = 0;
+  Progress progress("GetTypesWithParents from index for %s", name.GetCString());
+  // For each entry, grab its parent chain and check if we have a match.
+  for (const DebugNames::Entry &entry : m_debug_names_up->equal_range(name)) {
+    if (!isType(entry.tag()))
+      continue;
+
+    // If we get a NULL foreign_tu back, the entry doesn't match the type unit
+    // in the .dwp file, or we were not able to load the .dwo file or the DWO ID
+    // didn't match.
+    std::optional<DWARFTypeUnit *> foreign_tu = GetForeignTypeUnit(entry);
+    if (foreign_tu && foreign_tu.value() == nullptr)
+      continue;
+
+    // Grab at most one extra parent, subsequent parents are not necessary to
+    // test equality.
+    std::optional<llvm::SmallVector<Entry, 4>> parent_chain =
+        getParentChain(entry);
+    ++count;
+    if (!parent_chain) {
+      // Fallback: use the base class implementation.
+      if (!ProcessEntry(entry, [&](DWARFDIE die) {
+            return ProcessDieMatchParentNames(name, parent_names, die, callback);
+          }))
+        return;
+      continue;
+    }
+
+    if (parent_chain->size() < parent_names.size())
+      continue;
+    else if (parent_chain->size() == parent_names.size()) {
+      if (SameParentChain(parent_names, *parent_chain) &&
+          !ProcessEntry(entry, callback))
+        return;
+    } else {
+      // parent_chain->size() > parent_names.size()
+      if (WithinParentChain(parent_names, *parent_chain) &&
+          !ProcessEntry(entry, callback))
+        return;
+    }
+  }
+  LLDB_LOG(log,
+           "GetTypesWithParents searched {0} entries for {1} but found none",
+           count, name.GetCString());
+  m_fallback.GetTypesWithParents(name, parent_names, callback);
 }
 
 void DebugNamesDWARFIndex::GetFunctions(

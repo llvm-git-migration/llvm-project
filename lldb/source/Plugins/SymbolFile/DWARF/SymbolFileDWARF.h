@@ -506,6 +506,8 @@ protected:
   void
   GetCompileOptions(std::unordered_map<lldb::CompUnitSP, Args> &args) override;
 
+  llvm::SmallVector<llvm::StringRef> GetTypeQueryParentNames(TypeQuery query);
+
   lldb::ModuleWP m_debug_map_module_wp;
   SymbolFileDWARFDebugMap *m_debug_map_symfile;
 

@@ -2731,6 +2731,22 @@ uint64_t SymbolFileDWARF::GetDebugInfoSize(bool load_all_debug_info) {
   return debug_info_size;
 }
 
+llvm::SmallVector<llvm::StringRef>
+SymbolFileDWARF::GetTypeQueryParentNames(TypeQuery query) {
+  std::vector<lldb_private::CompilerContext> &query_decl_context =
+      query.GetContextRef();
+  llvm::SmallVector<llvm::StringRef> parent_names;
+  if (!query_decl_context.empty()) {
+    auto rbegin = query_decl_context.rbegin(), rend = query_decl_context.rend();
+    for (auto rit = rbegin + 1; rit != rend; ++rit)
+      if ((rit->kind & CompilerContextKind::AnyType) !=
+              CompilerContextKind::Invalid &&
+          !rit->name.IsEmpty())
+        parent_names.push_back(rit->name.GetStringRef());
+  }
+  return parent_names;
+}
+
 void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
 
   // Make sure we haven't already searched this SymbolFile before.
@@ -2748,45 +2764,50 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
 
   std::lock_guard<std::recursive_mutex> guard(GetModuleMutex());
 
+  TypeQuery query_full(query);
+  llvm::SmallVector<llvm::StringRef> parent_names =
+      GetTypeQueryParentNames(query_full);
   bool have_index_match = false;
-  m_index->GetTypes(type_basename, [&](DWARFDIE die) {
-    // Check the language, but only if we have a language filter.
-    if (query.HasLanguage()) {
-      if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
-        return true; // Keep iterating over index types, language mismatch.
-    }
+  m_index->GetTypesWithParents(
+      query.GetTypeBasename(), parent_names, [&](DWARFDIE die) {
+        // Check the language, but only if we have a language filter.
+        if (query.HasLanguage()) {
+          if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
+            return true; // Keep iterating over index types, language mismatch.
+        }
 
-    // Check the context matches
-    std::vector<lldb_private::CompilerContext> die_context;
-    if (query.GetModuleSearch())
-      die_context = die.GetDeclContext();
-    else
-      die_context = die.GetTypeLookupContext();
-    assert(!die_context.empty());
-    if (!query.ContextMatches(die_context))
-      return true; // Keep iterating over index types, context mismatch.
+        // Check the context matches
+        std::vector<lldb_private::CompilerContext> die_context;
+        if (query.GetModuleSearch())
+          die_context = die.GetDeclContext();
+        else
+          die_context = die.GetTypeLookupContext();
+        assert(!die_context.empty());
+        if (!query.ContextMatches(die_context))
+          return true; // Keep iterating over index types, context mismatch.
 
-    // Try to resolve the type.
-    if (Type *matching_type = ResolveType(die, true, true)) {
-      if (matching_type->IsTemplateType()) {
-        // We have to watch out for case where we lookup a type by basename and
-        // it matches a template with simple template names. Like looking up
-        // "Foo" and if we have simple template names then we will match
-        // "Foo<int>" and "Foo<double>" because all the DWARF has is "Foo" in
-        // the accelerator tables. The main case we see this in is when the
-        // expression parser is trying to parse "Foo<int>" and it will first do
-        // a lookup on just "Foo". We verify the type basename matches before
-        // inserting the type in the results.
-        auto CompilerTypeBasename =
-            matching_type->GetForwardCompilerType().GetTypeName(true);
-        if (CompilerTypeBasename != query.GetTypeBasename())
-          return true; // Keep iterating over index types, basename mismatch.
-      }
-      have_index_match = true;
-      results.InsertUnique(matching_type->shared_from_this());
-    }
-    return !results.Done(query); // Keep iterating if we aren't done.
-  });
+        // Try to resolve the type.
+        if (Type *matching_type = ResolveType(die, true, true)) {
+          if (matching_type->IsTemplateType()) {
+            // We have to watch out for case where we lookup a type by basename
+            // and it matches a template with simple template names. Like
+            // looking up "Foo" and if we have simple template names then we
+            // will match "Foo<int>" and "Foo<double>" because all the DWARF has
+            // is "Foo" in the accelerator tables. The main case we see this in
+            // is when the expression parser is trying to parse "Foo<int>" and
+            // it will first do a lookup on just "Foo". We verify the type
+            // basename matches before inserting the type in the results.
+            auto CompilerTypeBasename =
+                matching_type->GetForwardCompilerType().GetTypeName(true);
+            if (CompilerTypeBasename != query.GetTypeBasename())
+              return true; // Keep iterating over index types, basename
+                           // mismatch.
+          }
+          have_index_match = true;
+          results.InsertUnique(matching_type->shared_from_this());
+        }
+        return !results.Done(query); // Keep iterating if we aren't done.
+      });
 
   if (results.Done(query)) {
     if (log) {
@@ -2811,44 +2832,50 @@ void SymbolFileDWARF::FindTypes(const TypeQuery &query, TypeResults &results) {
     TypeQuery query_simple(query);
     if (UpdateCompilerContextForSimpleTemplateNames(query_simple)) {
       auto type_basename_simple = query_simple.GetTypeBasename();
+      llvm::SmallVector<llvm::StringRef> parent_names =
+          GetTypeQueryParentNames(query_simple);
       // Copy our match's context and update the basename we are looking for
       // so we can use this only to compare the context correctly.
-      m_index->GetTypes(type_basename_simple, [&](DWARFDIE die) {
-        // Check the language, but only if we have a language filter.
-        if (query.HasLanguage()) {
-          if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
-            return true; // Keep iterating over index types, language mismatch.
-        }
+      m_index->GetTypesWithParents(
+          query_simple.GetTypeBasename(), parent_names, [&](DWARFDIE die) {
+            // Check the language, but only if we have a language filter.
+            if (query.HasLanguage()) {
+              if (!query.LanguageMatches(GetLanguageFamily(*die.GetCU())))
+                return true; // Keep iterating over index types, language
+                             // mismatch.
+            }
 
-        // Check the context matches
-        std::vector<lldb_private::CompilerContext> die_context;
-        if (query.GetModuleSearch())
-          die_context = die.GetDeclContext();
-        else
-          die_context = die.GetTypeLookupContext();
-        assert(!die_context.empty());
-        if (!query_simple.ContextMatches(die_context))
-          return true; // Keep iterating over index types, context mismatch.
+            // Check the context matches
+            std::vector<lldb_private::CompilerContext> die_context;
+            if (query.GetModuleSearch())
+              die_context = die.GetDeclContext();
+            else
+              die_context = die.GetTypeLookupContext();
+            assert(!die_context.empty());
+            if (!query_simple.ContextMatches(die_context))
+              return true; // Keep iterating over index types, context mismatch.
 
-        // Try to resolve the type.
-        if (Type *matching_type = ResolveType(die, true, true)) {
-          ConstString name = matching_type->GetQualifiedName();
-          // We have found a type that still might not match due to template
-          // parameters. If we create a new TypeQuery that uses the new type's
-          // fully qualified name, we can find out if this type matches at all
-          // context levels. We can't use just the "match_simple" context
-          // because all template parameters were stripped off. The fully
-          // qualified name of the type will have the template parameters and
-          // will allow us to make sure it matches correctly.
-          TypeQuery die_query(name.GetStringRef(),
-                              TypeQueryOptions::e_exact_match);
-          if (!query.ContextMatches(die_query.GetContextRef()))
-            return true; // Keep iterating over index types, context mismatch.
+            // Try to resolve the type.
+            if (Type *matching_type = ResolveType(die, true, true)) {
+              ConstString name = matching_type->GetQualifiedName();
+              // We have found a type that still might not match due to template
+              // parameters. If we create a new TypeQuery that uses the new
+              // type's fully qualified name, we can find out if this type
+              // matches at all context levels. We can't use just the
+              // "match_simple" context because all template parameters were
+              // stripped off. The fully qualified name of the type will have
+              // the template parameters and will allow us to make sure it
+              // matches correctly.
+              TypeQuery die_query(name.GetStringRef(),
+                                  TypeQueryOptions::e_exact_match);
+              if (!query.ContextMatches(die_query.GetContextRef()))
+                return true; // Keep iterating over index types, context
+                             // mismatch.
 
-          results.InsertUnique(matching_type->shared_from_this());
-        }
-        return !results.Done(query); // Keep iterating if we aren't done.
-      });
+              results.InsertUnique(matching_type->shared_from_this());
+            }
+            return !results.Done(query); // Keep iterating if we aren't done.
+          });
       if (results.Done(query)) {
         if (log) {
           GetObjectFile()->GetModule()->LogMessage(
@@ -2898,7 +2925,24 @@ SymbolFileDWARF::FindNamespace(ConstString name,
   if (!DeclContextMatchesThisSymbolFile(parent_decl_ctx))
     return namespace_decl_ctx;
 
-  m_index->GetNamespaces(name, [&](DWARFDIE die) {
+  llvm::SmallVector<llvm::StringRef> parent_names;
+  auto parent_ctx = parent_decl_ctx.GetCompilerContext();
+  auto rbegin = parent_ctx.rbegin(), rend = parent_ctx.rend();
+  for (auto rit = rbegin;rit != rend; ++rit) {
+    if (!rit->name.IsEmpty())
+      parent_names.push_back(rit->name);
+  }
+
+  std::string parent_name_strings;
+  for (auto &parent_name : parent_names) {
+    parent_name_strings += "::";
+    parent_name_strings += parent_name;
+  }
+  Log *log1 = GetLog(LLDBLog::Temporary);
+  LLDB_LOGF(log1, "GetNamespacesWithParents() for %s with parent_names %s -- start",
+        name.GetCString(), parent_name_strings.c_str());
+
+  m_index->GetNamespacesWithParents(name, parent_names, [&](DWARFDIE die) {
     if (!DIEInDeclContext(parent_decl_ctx, die, only_root_namespaces))
       return true; // The containing decl contexts don't match
 
@@ -2909,6 +2953,8 @@ SymbolFileDWARF::FindNamespace(ConstString name,
     namespace_decl_ctx = dwarf_ast->GetDeclContextForUIDFromDWARF(die);
     return !namespace_decl_ctx.IsValid();
   });
+  LLDB_LOGF(log1, "GetNamespacesWithParents() for %s with parent_names %s -- end",
+        name.GetCString(), parent_name_strings.c_str());
 
   if (log && namespace_decl_ctx) {
     GetObjectFile()->GetModule()->LogMessage(

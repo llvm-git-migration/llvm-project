@@ -52,6 +52,14 @@ public:
                 llvm::function_ref<bool(DWARFDIE die)> callback) override;
   void GetNamespaces(ConstString name,
                      llvm::function_ref<bool(DWARFDIE die)> callback) override;
+  void
+  GetTypesWithParents(ConstString name,
+                      llvm::ArrayRef<llvm::StringRef> parent_names,
+                      llvm::function_ref<bool(DWARFDIE die)> callback) override;
+  void GetNamespacesWithParents(
+      ConstString name, llvm::ArrayRef<llvm::StringRef> parent_names,
+      llvm::function_ref<bool(DWARFDIE die)> callback) override;
+
   void GetFunctions(const Module::LookupInfo &lookup_info,
                     SymbolFileDWARF &dwarf,
                     const CompilerDeclContext &parent_decl_ctx,
@@ -117,6 +125,27 @@ private:
   /// Returns true if `parent_entries` have identical names to `parent_names`.
   bool SameParentChain(llvm::ArrayRef<llvm::StringRef> parent_names,
                        llvm::ArrayRef<DebugNames::Entry> parent_entries) const;
+
+  /// Returns true if \a parent_names entries are within \a parent_chain.
+  /// This is diffferent from SameParentChain() which checks for exact match.
+  /// This function is required because \a parent_chain can contain inline
+  /// namespace entries which may not be specified in parent_names by client.
+  ///
+  /// \param[in] parent_names
+  ///   The list of parent names to check for.
+  ///
+  /// \param[in] parent_chain
+  ///   The fully qualified parent chain entries from .debug_names index table
+  ///   to check against.
+  ///
+  /// \returns
+  ///   True if all \a parent_names entries are can be sequentially found inside
+  ///   \a parent_chain, otherwise False.
+  bool WithinParentChain(llvm::ArrayRef<llvm::StringRef> parent_names,
+                         llvm::ArrayRef<DebugNames::Entry> parent_chain) const;
+
+  /// Returns true if .debug_names pool entry \p entry has name \p query_name.
+  bool SameAsEntryATName(llvm::StringRef query_name, const DebugNames::Entry &entry) const;
 
   static void MaybeLogLookupError(llvm::Error error,
                                   const DebugNames::NameIndex &ni,
