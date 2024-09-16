@@ -21,6 +21,7 @@
 #include "mlir/Dialect/Vector/Utils/VectorUtils.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include <type_traits>
@@ -67,6 +68,12 @@ public:
 
   LogicalResult matchAndRewrite(tensor::InsertSliceOp insertSliceOp,
                                 PatternRewriter &rewriter) const override;
+
+private:
+  static bool
+  doesTransferWriteCoverInsertSlice(vector::TransferWriteOp writeOp,
+                                    tensor::InsertSliceOp insertSliceOp,
+                                    MLIRContext *context);
 };
 } // namespace
 
@@ -136,6 +143,11 @@ LogicalResult InsertSliceOfTransferWriteOpFolder::matchAndRewrite(
   if (failed(preconditionResult))
     return preconditionResult;
 
+  if (!doesTransferWriteCoverInsertSlice(writeOp, insertSliceOp,
+                                         rewriter.getContext()))
+    return rewriter.notifyMatchFailure(
+        insertSliceOp, "transfer_write does not cover insert_slice");
+
   SmallVector<Value> indices(writeOp.getIndices().begin(),
                              writeOp.getIndices().end());
   SmallVector<Value> sourceIndices;
@@ -152,6 +164,25 @@ LogicalResult InsertSliceOfTransferWriteOpFolder::matchAndRewrite(
       writeOp.getInBoundsAttr());
 
   return success();
+}
+
+bool InsertSliceOfTransferWriteOpFolder::doesTransferWriteCoverInsertSlice(
+    vector::TransferWriteOp writeOp, tensor::InsertSliceOp insertSliceOp,
+    MLIRContext *context) {
+  auto destType = cast<ShapedType>(writeOp.getOperand(0).getType());
+  auto insertSliceType = insertSliceOp.getSourceType();
+
+  if (destType.hasStaticShape() && insertSliceType.hasStaticShape()) {
+    for (int64_t d = 0, e = insertSliceType.getRank(); d < e; ++d) {
+      if (destType.getDimSize(d) != insertSliceType.getDimSize(d))
+        return false;
+    }
+    return true;
+  }
+
+  // Todo: ValueBoundsConstraintSet for dynamic shapes.
+
+  return false;
 }
 
 template <typename OpTy>
