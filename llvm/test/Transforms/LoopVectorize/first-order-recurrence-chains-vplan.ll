@@ -154,8 +154,53 @@ exit:
 ; FOR (for.y) should be moved which is not currently supported.
 define i32 @test_chained_first_order_recurrences_4(ptr %base) {
 ; CHECK-LABEL: 'test_chained_first_order_recurrences_4'
-; CHECK: No VPlans built.
-
+; CHECK:      VPlan 'Initial VPlan for VF={4},UF>=1' {
+; CHECK-NEXT: Live-in vp<[[VFxUF:%.+]]> = VF * UF
+; CHECK-NEXT: Live-in vp<[[VTC:%.+]]> = vector-trip-count
+; CHECK-NEXT: Live-in ir<4098> = original trip-count
+; CHECK-EMPTY:
+; CHECK-NEXT: vector.ph:
+; CHECK-NEXT: Successor(s): vector loop
+; CHECK-EMPTY:
+; CHECK-NEXT: <x1> vector loop: {
+; CHECK-NEXT:   vector.body:
+; CHECK-NEXT:     EMIT vp<[[CAN_IV:%.+]]> = CANONICAL-INDUCTION ir<0>, vp<[[CAN_IV_NEXT:%.+]]>
+; CHECK-NEXT:     FIRST-ORDER-RECURRENCE-PHI ir<%for.x> = phi ir<0>, ir<%for.x.next>
+; CHECK-NEXT:     FIRST-ORDER-RECURRENCE-PHI ir<%for.y> = phi ir<0>, ir<%for.x.prev>
+; CHECK-NEXT:     vp<[[SCALAR_STEPS:%.+]]> = SCALAR-STEPS vp<[[CAN_IV]]>, ir<1>
+; CHECK-NEXT:     WIDEN ir<%for.x.next> = mul ir<0>, ir<0>
+; CHECK-NEXT:     EMIT vp<[[SPLICE_X:%.]]> = first-order splice ir<%for.x>, ir<%for.x.next>
+; CHECK-NEXT:     WIDEN-CAST ir<%for.x.prev> = trunc  vp<[[SPLICE_X]]> to i32
+; CHECK-NEXT:     EMIT vp<[[SPLICE_Y:%.+]]> = first-order splice ir<%for.y>, ir<%for.x.prev>
+; CHECK-NEXT:     CLONE ir<%gep> = getelementptr ir<%base>, vp<[[SCALAR_STEPS]]>
+; CHECK-NEXT:     WIDEN-CAST ir<%for.y.i64> = sext  vp<[[SPLICE_Y]]> to i64
+; CHECK-NEXT:     vp<[[VEC_PTR:%.+]]> = vector-pointer ir<%gep>
+; CHECK-NEXT:     WIDEN store vp<[[VEC_PTR]]>, ir<%for.y.i64>
+; CHECK-NEXT:     EMIT vp<[[CAN_IV_NEXT]]> = add nuw vp<[[CAN_IV]]>, vp<[[VFxUF]]>
+; CHECK-NEXT:     EMIT branch-on-count vp<[[CAN_IV_NEXT]]>, vp<[[VTC]]>
+; CHECK-NEXT:   No successors
+; CHECK-NEXT: }
+; CHECK-NEXT: Successor(s): middle.block
+; CHECK-EMPTY:
+; CHECK-NEXT: middle.block:
+; CHECK-NEXT:   EMIT vp<[[EXT_X:%.+]]> = extract-from-end ir<%for.x.next>, ir<1>
+; CHECK-NEXT:   EMIT vp<[[EXT_Y:%.+]]> = extract-from-end ir<%for.x.prev>, ir<1>
+; CHECK-NEXT:   EMIT vp<[[MIDDLE_C:%.+]]> = icmp eq ir<4098>, vp<[[VTC]]>
+; CHECK-NEXT:   EMIT branch-on-cond vp<[[MIDDLE_C]]>
+; CHECK-NEXT: Successor(s): ir-bb<ret>, scalar.ph
+; CHECK-EMPTY:
+; CHECK-NEXT: ir-bb<ret>:
+; CHECK-NEXT: No successors
+; CHECK-EMPTY:
+; CHECK-NEXT: scalar.ph:
+; CHECK-NEXT:   EMIT vp<[[RESUME_X:%.+]]> = resume-phi vp<[[EXT_X]]>, ir<0>
+; CHECK-NEXT:   EMIT vp<[[RESUME_Y:%.+]]> = resume-phi vp<[[EXT_Y]]>, ir<0>
+; CHECK-NEXT: No successors
+; CHECK-EMPTY:
+; CHECK-NEXT: Live-out i64 %for.x = vp<[[RESUME_X]]>
+; CHECK-NEXT: Live-out i32 %for.y = vp<[[RESUME_Y]]>
+; CHECK-NEXT: }
+;
 entry:
   br label %loop
 
