@@ -583,9 +583,9 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
 
   getActionDefinitionsBuilder(G_INSERT_SUBVECTOR)
       .legalIf(all(typeIsLegalBoolVec(0, BoolVecTys, ST),
-                    typeIsLegalBoolVec(1, BoolVecTys, ST)))
+                   typeIsLegalBoolVec(1, BoolVecTys, ST)))
       .legalIf(all(typeIsLegalIntOrFPVec(0, IntOrFPVecTys, ST),
-                    typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)));
+                   typeIsLegalIntOrFPVec(1, IntOrFPVecTys, ST)));
 
   getLegacyLegalizerInfo().computeTables();
 }
