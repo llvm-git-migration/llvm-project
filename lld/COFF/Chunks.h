@@ -624,7 +624,8 @@ public:
   MachineTypes getMachine() const override { return ARM64EC; }
   void writeTo(uint8_t *buf) const override;
 
-  Defined *exitThunk;
+  Defined *exitThunk = nullptr;
+  Defined *sym = nullptr;
 
 private:
   ImportFile *file;
