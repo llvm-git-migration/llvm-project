@@ -91,10 +91,19 @@ public:
                       "-v128:64-a:8:16-n32:64");
     }
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 128;
+
+    HasLegalHalfType = false;    // Default=false
+    HalfArgsAndReturns = false;  // Default=false
+    HasFloat16 = true;           // Default=false
+
     HasStrictFP = true;
   }
 
   unsigned getMinGlobalAlign(uint64_t Size, bool HasNonWeakDef) const override;
+
+  bool useFP16ConversionIntrinsics() const override {
+    return false;
+  }
 
   void getTargetDefines(const LangOptions &Opts,
                         MacroBuilder &Builder) const override;
