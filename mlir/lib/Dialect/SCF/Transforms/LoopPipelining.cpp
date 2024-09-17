@@ -674,9 +674,9 @@ LoopPipelinerInternal::emitEpilogue(RewriterBase &rewriter,
     setValueMapping(forOp.getInductionVar(), newlastIter, maxStage - i);
 
     if (dynamicLoop) {
-      // pred = iterI < 0
+      // pred = iterI >= 0
       predicates[i + 1] = rewriter.create<arith::CmpIOp>(
-          loc, arith::CmpIPredicate::slt, iterI, zero);
+          loc, arith::CmpIPredicate::sge, iterI, zero);
     }
   }
 
