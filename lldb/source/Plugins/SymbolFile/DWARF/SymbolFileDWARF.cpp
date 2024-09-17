@@ -2928,20 +2928,10 @@ SymbolFileDWARF::FindNamespace(ConstString name,
   llvm::SmallVector<llvm::StringRef> parent_names;
   auto parent_ctx = parent_decl_ctx.GetCompilerContext();
   auto rbegin = parent_ctx.rbegin(), rend = parent_ctx.rend();
-  for (auto rit = rbegin;rit != rend; ++rit) {
+  for (auto rit = rbegin; rit != rend; ++rit) {
     if (!rit->name.IsEmpty())
       parent_names.push_back(rit->name);
   }
-
-  std::string parent_name_strings;
-  for (auto &parent_name : parent_names) {
-    parent_name_strings += "::";
-    parent_name_strings += parent_name;
-  }
-  Log *log1 = GetLog(LLDBLog::Temporary);
-  LLDB_LOGF(log1, "GetNamespacesWithParents() for %s with parent_names %s -- start",
-        name.GetCString(), parent_name_strings.c_str());
-
   m_index->GetNamespacesWithParents(name, parent_names, [&](DWARFDIE die) {
     if (!DIEInDeclContext(parent_decl_ctx, die, only_root_namespaces))
       return true; // The containing decl contexts don't match
@@ -2953,8 +2943,6 @@ SymbolFileDWARF::FindNamespace(ConstString name,
     namespace_decl_ctx = dwarf_ast->GetDeclContextForUIDFromDWARF(die);
     return !namespace_decl_ctx.IsValid();
   });
-  LLDB_LOGF(log1, "GetNamespacesWithParents() for %s with parent_names %s -- end",
-        name.GetCString(), parent_name_strings.c_str());
 
   if (log && namespace_decl_ctx) {
     GetObjectFile()->GetModule()->LogMessage(
