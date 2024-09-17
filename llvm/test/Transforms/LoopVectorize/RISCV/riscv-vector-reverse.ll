@@ -45,7 +45,6 @@ define void @vector_reverse_i64(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  LV: Found an estimated cost of 1 for VF vscale x 4 For instruction: %indvars.iv.next = add nsw i64 %indvars.iv, -1
 ; CHECK-NEXT:  LV: Found an estimated cost of 0 for VF vscale x 4 For instruction: br i1 %cmp, label %for.body, label %for.cond.cleanup.loopexit, !llvm.loop !0
 ; CHECK-NEXT:  LV: Using user VF vscale x 4.
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Scalarizing: %i.0 = add nsw i32 %i.0.in8, -1
 ; CHECK-NEXT:  LV: Scalarizing: %idxprom = zext i32 %i.0 to i64
 ; CHECK-NEXT:  LV: Scalarizing: %arrayidx = getelementptr inbounds i32, ptr %B, i64 %idxprom
@@ -126,7 +125,6 @@ define void @vector_reverse_i64(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  LV(REG): RegisterClass: RISCV::GPRRC, 1 registers
 ; CHECK-NEXT:  LV: The target has 31 registers of RISCV::GPRRC register class
 ; CHECK-NEXT:  LV: The target has 32 registers of RISCV::VRRC register class
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Loop cost is 32
 ; CHECK-NEXT:  LV: IC is 1
 ; CHECK-NEXT:  LV: VF is vscale x 4
@@ -178,10 +176,7 @@ define void @vector_reverse_i64(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  scalar.ph:
 ; CHECK-NEXT:  No successors
 ; CHECK-NEXT:  }
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Interleaving disabled by the pass manager
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Vectorizing: innermost loop.
 ; CHECK-EMPTY:
 ;
@@ -247,7 +242,6 @@ define void @vector_reverse_f32(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  LV: Found an estimated cost of 1 for VF vscale x 4 For instruction: %indvars.iv.next = add nsw i64 %indvars.iv, -1
 ; CHECK-NEXT:  LV: Found an estimated cost of 0 for VF vscale x 4 For instruction: br i1 %cmp, label %for.body, label %for.cond.cleanup.loopexit, !llvm.loop !0
 ; CHECK-NEXT:  LV: Using user VF vscale x 4.
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Scalarizing: %i.0 = add nsw i32 %i.0.in8, -1
 ; CHECK-NEXT:  LV: Scalarizing: %idxprom = zext i32 %i.0 to i64
 ; CHECK-NEXT:  LV: Scalarizing: %arrayidx = getelementptr inbounds float, ptr %B, i64 %idxprom
@@ -328,7 +322,6 @@ define void @vector_reverse_f32(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  LV(REG): RegisterClass: RISCV::GPRRC, 1 registers
 ; CHECK-NEXT:  LV: The target has 31 registers of RISCV::GPRRC register class
 ; CHECK-NEXT:  LV: The target has 32 registers of RISCV::VRRC register class
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Loop cost is 34
 ; CHECK-NEXT:  LV: IC is 1
 ; CHECK-NEXT:  LV: VF is vscale x 4
@@ -380,10 +373,7 @@ define void @vector_reverse_f32(ptr nocapture noundef writeonly %A, ptr nocaptur
 ; CHECK-NEXT:  scalar.ph:
 ; CHECK-NEXT:  No successors
 ; CHECK-NEXT:  }
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Interleaving disabled by the pass manager
-; CHECK-NEXT:  LV: Loop does not require scalar epilogue
 ; CHECK-NEXT:  LV: Vectorizing: innermost loop.
 ;
 entry:

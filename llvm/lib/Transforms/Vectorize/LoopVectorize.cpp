@@ -1388,32 +1388,42 @@ public:
 
   /// Returns true if we're required to use a scalar epilogue for at least
   /// the final iteration of the original loop.
-  bool requiresScalarEpilogue(bool IsVectorizing) const {
-    if (!isScalarEpilogueAllowed()) {
+  bool requiresScalarEpilogue(bool IsVectorizing) {
+    std::optional<bool> &CachedResult = RequiresScalarEpilogue[IsVectorizing];
+    if (CachedResult)
+      return *CachedResult;
+
+    auto NeedsScalarEpilogue = [&](bool IsVectorizing) -> bool {
+      if (!isScalarEpilogueAllowed()) {
+        LLVM_DEBUG(dbgs() << "LV: Loop does not require scalar epilogue\n");
+        return false;
+      }
+      // If we might exit from anywhere but the latch, must run the exiting
+      // iteration in scalar form.
+      if (TheLoop->getExitingBlock() != TheLoop->getLoopLatch()) {
+        LLVM_DEBUG(
+            dbgs() << "LV: Loop requires scalar epilogue: multiple exits\n");
+        return true;
+      }
+      if (IsVectorizing && InterleaveInfo.requiresScalarEpilogue()) {
+        LLVM_DEBUG(dbgs() << "LV: Loop requires scalar epilogue: "
+                             "interleaved group requires scalar epilogue\n");
+        return true;
+      }
       LLVM_DEBUG(dbgs() << "LV: Loop does not require scalar epilogue\n");
       return false;
-    }
-    // If we might exit from anywhere but the latch, must run the exiting
-    // iteration in scalar form.
-    if (TheLoop->getExitingBlock() != TheLoop->getLoopLatch()) {
-      LLVM_DEBUG(
-          dbgs() << "LV: Loop requires scalar epilogue: multiple exits\n");
-      return true;
-    }
-    if (IsVectorizing && InterleaveInfo.requiresScalarEpilogue()) {
-      LLVM_DEBUG(dbgs() << "LV: Loop requires scalar epilogue: "
-                           "interleaved group requires scalar epilogue\n");
-      return true;
-    }
-    LLVM_DEBUG(dbgs() << "LV: Loop does not require scalar epilogue\n");
-    return false;
+    };
+
+    bool Res = NeedsScalarEpilogue(IsVectorizing);
+    CachedResult = Res;
+    return Res;
   }
 
   /// Returns true if we're required to use a scalar epilogue for at least
   /// the final iteration of the original loop for all VFs in \p Range.
   /// A scalar epilogue must either be required for all VFs in \p Range or for
   /// none.
-  bool requiresScalarEpilogue(VFRange Range) const {
+  bool requiresScalarEpilogue(VFRange Range) {
     auto RequiresScalarEpilogue = [this](ElementCount VF) {
       return requiresScalarEpilogue(VF.isVector());
     };
@@ -1782,6 +1792,9 @@ public:
 
   /// All element types found in the loop.
   SmallPtrSet<Type *, 16> ElementTypesInLoop;
+
+  /// Keeps track of whether we require a scalar epilogue.
+  std::optional<bool> RequiresScalarEpilogue[2];
 };
 } // end namespace llvm
 
