@@ -33,11 +33,14 @@ test(
 #ifndef _LIBCPP_VERSIONH
 #define _LIBCPP_VERSIONH
 
-#include <__config>
+#if __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
+#  include <__cxx03/version>
+#else
+#  include <__config>
 
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#  pragma GCC system_header
-#endif
+#  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#    pragma GCC system_header
+#  endif
 
 #if _LIBCPP_STD_VER >= 17
 #  define __cpp_lib_any 201606L
@@ -68,6 +71,7 @@ test(
 // define __cpp_lib_variant 202306L
 // define __cpp_lib_missing_FTM_in_older_standard 2026L
 #endif // _LIBCPP_STD_VER >= 26
+#endif // __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
 
 #endif // _LIBCPP_VERSIONH
 """,
