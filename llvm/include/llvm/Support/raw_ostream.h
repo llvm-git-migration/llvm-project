@@ -769,6 +769,24 @@ public:
   ~buffer_unique_ostream() override { *OS << str(); }
 };
 
+// Helper struct to add indentation to raw_ostream. Instead of
+// OS.indent(6) << "more stuff";
+// you can use
+// OS << indent(6) << "more stuff";
+// which has better ergonomics.
+struct indent {
+  explicit indent(unsigned NumSpaces) : NumSpaces(NumSpaces) {}
+  unsigned NumSpaces;
+  void operator+=(unsigned N) { NumSpaces += N; }
+  void operator-=(unsigned N) { NumSpaces -= N; }
+  indent operator+(unsigned N) { return indent(NumSpaces + N); }
+  indent operator-(unsigned N) { return indent(NumSpaces - N); }
+};
+
+inline raw_ostream &operator<<(raw_ostream &OS, const indent &Indent) {
+  return OS.indent(Indent.NumSpaces);
+}
+
 class Error;
 
 /// This helper creates an output stream and then passes it to \p Write.
