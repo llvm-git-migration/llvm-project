@@ -704,6 +704,13 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::BITCAST, MVT::f32, Custom);
   }
 
+  // Expand FP16 <=> FP32 conversions to libcalls and handle FP16 loads and
+  // stores in GPRs.
+  setOperationAction(ISD::FP16_TO_FP, MVT::f32, Expand);
+  setOperationAction(ISD::FP_TO_FP16, MVT::f32, Expand);
+  setLoadExtAction(ISD::EXTLOAD, MVT::f32, MVT::f16, Expand);
+  setTruncStoreAction(MVT::f32, MVT::f16, Expand);
+
   // VASTART and VACOPY need to deal with the SystemZ-specific varargs
   // structure, but VAEND is a no-op.
   setOperationAction(ISD::VASTART, MVT::Other, Custom);
