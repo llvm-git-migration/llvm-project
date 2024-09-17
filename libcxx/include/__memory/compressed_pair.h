@@ -56,7 +56,7 @@ template <class _ToPad>
 class __compressed_pair_padding {
   char __padding_[((is_empty<_ToPad>::value && !__libcpp_is_final<_ToPad>::value) || is_reference<_ToPad>::value)
                       ? 0
-                      : sizeof(_ToPad) - __datasizeof_v<_ToPad>];
+                      : sizeof(_ToPad) - __datasizeof_v<_ToPad>] = {};
 };
 
 #  define _LIBCPP_COMPRESSED_PAIR(T1, Initializer1, T2, Initializer2)                                                  \
