@@ -81,6 +81,236 @@ exit:
   ret i64 %res
 }
 
+define i64 @test_udiv(i1 %c) {
+; CHECK-LABEL: @test_udiv(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ 9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = udiv i64 [[IV]], 3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [9, %entry], [%iv.next, %loop]
+  %iv.next = udiv i64 %iv, 3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 16
+  ret i64 %res
+}
+
+define i64 @test_sdiv(i1 %c) {
+; CHECK-LABEL: @test_sdiv(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ -9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = sdiv i64 [[IV]], -3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [-9, %entry], [%iv.next, %loop]
+  %iv.next = sdiv i64 %iv, -3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 16
+  ret i64 %res
+}
+
+define i64 @test_sdiv2(i1 %c) {
+; CHECK-LABEL: @test_sdiv2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ -9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = sdiv i64 [[IV]], 3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [-9, %entry], [%iv.next, %loop]
+  %iv.next = sdiv i64 %iv, 3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 16
+  ret i64 %res
+}
+
+define i64 @test_sdiv3(i1 %c) {
+; CHECK-LABEL: @test_sdiv3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ 9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = sdiv i64 [[IV]], -3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], -16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [9, %entry], [%iv.next, %loop]
+  %iv.next = sdiv i64 %iv, -3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, -16
+  ret i64 %res
+}
+
+define i64 @test_urem(i1 %c) {
+; CHECK-LABEL: @test_urem(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ 3, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = urem i64 9, [[IV]]
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 4
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [3, %entry], [%iv.next, %loop]
+  %iv.next = urem i64 9, %iv
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 4
+  ret i64 %res
+}
+
+define i64 @test_srem(i1 %c) {
+; CHECK-LABEL: @test_srem(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ -9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = srem i64 [[IV]], 3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [-9, %entry], [%iv.next, %loop]
+  %iv.next = srem i64 %iv, -3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 16
+  ret i64 %res
+}
+
+define i64 @test_srem2(i1 %c) {
+; CHECK-LABEL: @test_srem2(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ -9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = srem i64 [[IV]], 3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [-9, %entry], [%iv.next, %loop]
+  %iv.next = srem i64 %iv, 3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 16
+  ret i64 %res
+}
+
+define i64 @test_srem2_flipped(i1 %c) {
+; CHECK-LABEL: @test_srem2_flipped(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ 3, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = srem i64 -9, [[IV]]
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], 4
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [3, %entry], [%iv.next, %loop]
+  %iv.next = srem i64 -9, %iv
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, 4
+  ret i64 %res
+}
+
+define i64 @test_srem3(i1 %c) {
+; CHECK-LABEL: @test_srem3(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ 9, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = srem i64 [[IV]], 3
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], -16
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [9, %entry], [%iv.next, %loop]
+  %iv.next = srem i64 %iv, -3
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, -16
+  ret i64 %res
+}
+
+define i64 @test_srem3_flipped(i1 %c) {
+; CHECK-LABEL: @test_srem3_flipped(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LOOP:%.*]]
+; CHECK:       loop:
+; CHECK-NEXT:    [[IV:%.*]] = phi i64 [ -3, [[ENTRY:%.*]] ], [ [[IV_NEXT:%.*]], [[LOOP]] ]
+; CHECK-NEXT:    [[IV_NEXT]] = srem i64 9, [[IV]]
+; CHECK-NEXT:    br i1 [[C:%.*]], label [[EXIT:%.*]], label [[LOOP]]
+; CHECK:       exit:
+; CHECK-NEXT:    [[RES:%.*]] = and i64 [[IV]], -4
+; CHECK-NEXT:    ret i64 [[RES]]
+;
+entry:
+  br label %loop
+loop:
+  %iv = phi i64 [-3, %entry], [%iv.next, %loop]
+  %iv.next = srem i64 9, %iv
+  br i1 %c, label %exit, label %loop
+exit:
+  %res = and i64 %iv, -4
+  ret i64 %res
+}
+
 define i64 @test_and(i1 %c) {
 ; CHECK-LABEL: @test_and(
 ; CHECK-NEXT:  entry:
