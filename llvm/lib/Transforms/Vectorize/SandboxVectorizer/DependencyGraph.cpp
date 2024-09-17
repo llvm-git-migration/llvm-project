@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Vectorize/SandboxVectorizer/DependencyGraph.h"
+#include "llvm/ADT/ArrayRef.h"
 
 using namespace llvm::sandboxir;
 
@@ -30,16 +31,21 @@ void DGNode::dump() const {
 }
 #endif // NDEBUG
 
-void DependencyGraph::extend(BasicBlock *BB) {
-  if (BB->empty())
-    return;
+InstrInterval DependencyGraph::extend(ArrayRef<Instruction *> Instrs) {
+  if (Instrs.empty())
+    return {};
   // TODO: For now create a chain of dependencies.
-  DGNode *LastN = getOrCreateNode(&*BB->begin());
-  for (auto &I : drop_begin(*BB)) {
-    auto *N = getOrCreateNode(&I);
+  InstrInterval Interval(Instrs);
+  auto *TopI = Interval.top();
+  auto *BotI = Interval.bottom();
+  DGNode *LastN = getOrCreateNode(BotI);
+  for (Instruction *I = BotI->getPrevNode(), *E = TopI->getPrevNode(); I != E;
+       I = I->getPrevNode()) {
+    auto *N = getOrCreateNode(I);
     N->addMemPred(LastN);
     LastN = N;
   }
+  return Interval;
 }
 
 #ifndef NDEBUG
