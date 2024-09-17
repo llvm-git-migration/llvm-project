@@ -3306,6 +3306,8 @@ bool CommandInterpreter::SaveTranscript(
   result.SetStatus(eReturnStatusSuccessFinishNoResult);
   result.AppendMessageWithFormat("Session's transcripts saved to %s\n",
                                  output_file->c_str());
+  if (!GetSaveTranscript())
+    result.AppendError("Note: the setting interpreter.save-transcript is set to false, so the transcript might not have been recorded.");
 
   if (GetOpenTranscriptInEditor() && Host::IsInteractiveGraphicSession()) {
     const FileSpec file_spec;
