@@ -2444,6 +2444,7 @@ def : AMDGPUPat <
                $src1), sub1)
 >;
 
+let OtherPredicates = [NotHasTrue16BitInsts] in {
 def : ROTRPattern <V_ALIGNBIT_B32_e64>;
 
 def : GCNPat<(i32 (trunc (srl i64:$src0, (and i32:$src1, (i32 31))))),
@@ -2453,6 +2454,30 @@ def : GCNPat<(i32 (trunc (srl i64:$src0, (and i32:$src1, (i32 31))))),
 def : GCNPat<(i32 (trunc (srl i64:$src0, (i32 ShiftAmt32Imm:$src1)))),
           (V_ALIGNBIT_B32_e64 (i32 (EXTRACT_SUBREG (i64 $src0), sub1)),
                           (i32 (EXTRACT_SUBREG (i64 $src0), sub0)), $src1)>;
+} // end OtherPredicates = [NotHasTrue16BitInsts]
+
+let True16Predicate = UseFakeTrue16Insts in {
+def ROTRPattern_fake16 : GCNPat <
+  (rotr i32:$src0, i32:$src1),
+  (V_ALIGNBIT_B32_fake16_e64 /* src0_modifiers */ 0, $src0,
+                          /* src1_modifiers */ 0, $src0,
+                          /* src2_modifiers */ 0,
+                          $src1, /* clamp */ 0, /* op_sel */ 0)
+>;
+def : GCNPat<(i32 (trunc (srl i64:$src0, (i32 ShiftAmt32Imm:$src1)))),
+          (V_ALIGNBIT_B32_fake16_e64 0, /* src0_modifiers */
+                          (i32 (EXTRACT_SUBREG (i64 $src0), sub1)),
+                          0, /* src1_modifiers */
+                          (i32 (EXTRACT_SUBREG (i64 $src0), sub0)),
+                          0, /* src2_modifiers */
+                          $src1, /* clamp */ 0, /* op_sel */ 0)>;
+
+def : GCNPat<(fshr i32:$src0, i32:$src1, i32:$src2),
+          (V_ALIGNBIT_B32_fake16_e64 /* src0_modifiers */ 0, $src0,
+                          /* src1_modifiers */ 0, $src1,
+                          /* src2_modifiers */ 0,
+                          $src2, /* clamp */ 0, /* op_sel */ 0)>;
+} // end OtherPredicates = [UseFakeTrue16Insts]
 
 /********** ====================== **********/
 /**********   Indirect addressing  **********/
@@ -3688,6 +3713,12 @@ def : FPMinCanonMaxPat<V_MINIMUMMAXIMUM_F32_e64, f32, DivergentBinFrag<fmaximum>
 def : FPMinCanonMaxPat<V_MAXIMUMMINIMUM_F32_e64, f32, DivergentBinFrag<fminimum>, fmaximum_oneuse>;
 def : FPMinCanonMaxPat<V_MINIMUMMAXIMUM_F16_e64, f16, DivergentBinFrag<fmaximum>, fminimum_oneuse>;
 def : FPMinCanonMaxPat<V_MAXIMUMMINIMUM_F16_e64, f16, DivergentBinFrag<fminimum>, fmaximum_oneuse>;
+}
+let True16Predicate = UseFakeTrue16Insts, OtherPredicates = [isGFX12Plus] in {
+def : FPMinMaxPat<V_MINIMUMMAXIMUM_F16_fake16_e64, f16, DivergentBinFrag<fmaximum>, fminimum_oneuse>;
+def : FPMinMaxPat<V_MAXIMUMMINIMUM_F16_fake16_e64, f16, DivergentBinFrag<fminimum>, fmaximum_oneuse>;
+def : FPMinCanonMaxPat<V_MINIMUMMAXIMUM_F16_fake16_e64, f16, DivergentBinFrag<fmaximum>, fminimum_oneuse>;
+def : FPMinCanonMaxPat<V_MAXIMUMMINIMUM_F16_fake16_e64, f16, DivergentBinFrag<fminimum>, fmaximum_oneuse>;
 }
 
 // Convert a floating-point power of 2 to the integer exponent.
