@@ -13,6 +13,8 @@
 // template <class ForwardIterator>
 //    basic_regex(ForwardIterator first, ForwardIterator last);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 

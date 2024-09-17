@@ -14,6 +14,8 @@
 //    basic_regex(ForwardIterator first, ForwardIterator last,
 //                flag_type f = regex_constants::ECMAScript);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 

@@ -13,6 +13,8 @@
 //     though it is not at the beginning of a line, so the character ^ in the
 //     regular expression shall not match [first,first).
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

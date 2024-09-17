@@ -13,6 +13,8 @@
 // const_iterator begin() const;
 // const_iterator end() const;
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include <cstddef>

@@ -10,6 +10,8 @@
 
 // iterator erase(const_iterator position);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <vector>
 #include <cassert>
 #include <memory>

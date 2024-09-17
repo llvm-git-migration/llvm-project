@@ -15,7 +15,7 @@
 
 #include <__cxx03/__locale_dir/locale_base_api/locale_guard.h>
 #include <__cxx03/cstdio>
-#include <__cxx03/stdarg.h>
+#include <stdarg.h>
 #include <__cxx03/stdlib.h>
 
 #ifndef _LIBCPP_HAS_NO_WIDE_CHARACTERS

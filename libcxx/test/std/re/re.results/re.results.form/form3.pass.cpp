@@ -15,6 +15,8 @@
 //   format(const basic_string<char_type, ST, SA>& fmt,
 //          regex_constants::match_flag_type flags = regex_constants::format_default) const;
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 

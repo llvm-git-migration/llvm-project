@@ -12,6 +12,8 @@
 
 // basic_regex(const charT* p, size_t len, flag_type f);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

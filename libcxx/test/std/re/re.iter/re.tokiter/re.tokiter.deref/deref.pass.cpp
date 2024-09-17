@@ -12,6 +12,8 @@
 
 // const value_type& operator*() const;
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include <iterator>

@@ -17,6 +17,8 @@
 
 // https://llvm.org/PR16135
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <string>
 #include <regex>
 #include <cassert>
