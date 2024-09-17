@@ -12,6 +12,17 @@ define i8 @urem_low_bits_know(i8 %xx, i8 %yy) {
   ret i8 %r
 }
 
+define i8 @urem_high_bits_know(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @urem_high_bits_know(
+; CHECK-NEXT:    ret i8 0
+;
+  %x = and i8 %xx, 2
+  %y = and i8 %yy, -4
+  %rem = urem i8 %x, %y
+  %r = and i8 %rem, 8
+  ret i8 %r
+}
+
 define i8 @urem_low_bits_know2(i8 %xx, i8 %yy) {
 ; CHECK-LABEL: @urem_low_bits_know2(
 ; CHECK-NEXT:    ret i8 2
@@ -77,6 +88,21 @@ define i8 @srem_low_bits_know(i8 %xx, i8 %yy) {
   %y = and i8 %yy, -4
   %rem = srem i8 %x, %y
   %r = and i8 %rem, 2
+  ret i8 %r
+}
+
+define i8 @srem_high_bits_know(i8 %xx, i8 %yy) {
+; CHECK-LABEL: @srem_high_bits_know(
+; CHECK-NEXT:    [[X:%.*]] = or i8 [[XX:%.*]], -2
+; CHECK-NEXT:    [[Y:%.*]] = and i8 [[YY:%.*]], -4
+; CHECK-NEXT:    [[REM:%.*]] = srem i8 [[X]], [[Y]]
+; CHECK-NEXT:    [[R:%.*]] = and i8 [[REM]], 8
+; CHECK-NEXT:    ret i8 [[R]]
+;
+  %x = or i8 %xx, -2
+  %y = and i8 %yy, -4
+  %rem = srem i8 %x, %y
+  %r = and i8 %rem, 8
   ret i8 %r
 }
 
