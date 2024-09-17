@@ -14,6 +14,8 @@
 //   basic_regex& assign(const basic_string<charT, string_traits, A>& s,
 //                       flag_type f = regex_constants::ECMAScript);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <cassert>
 #include <regex>
 #include <string>

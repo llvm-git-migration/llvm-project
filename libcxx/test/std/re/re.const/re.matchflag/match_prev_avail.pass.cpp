@@ -13,6 +13,8 @@
 //     match_not_bol and match_not_bow shall be ignored by the regular
 //     expression algorithms (30.11) and iterators (30.12)
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 
 #include <cassert>

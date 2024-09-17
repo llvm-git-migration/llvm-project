@@ -318,6 +318,7 @@ set(files
   __configuration/abi.h
   __configuration/availability.h
   __configuration/compiler.h
+  __configuration/config_site_shim.h
   __configuration/language.h
   __configuration/platform.h
   __coroutine/coroutine_handle.h
@@ -1018,14 +1019,10 @@ set(files
   wctype.h
   )
 
-configure_file("__config_site.in" "${LIBCXX_GENERATED_INCLUDE_TARGET_DIR}/__config_site" @ONLY)
-configure_file("${LIBCXX_ASSERTION_HANDLER_FILE}" "${LIBCXX_GENERATED_INCLUDE_DIR}/__assertion_handler" COPYONLY)
-
-set(_all_includes "${LIBCXX_GENERATED_INCLUDE_TARGET_DIR}/__config_site"
-                  "${LIBCXX_GENERATED_INCLUDE_DIR}/__assertion_handler")
+set(_all_includes "")
 foreach(f ${files})
   set(src "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
-  set(dst "${LIBCXX_GENERATED_INCLUDE_DIR}/${f}")
+  set(dst "${LIBCXX_GENERATED_INCLUDE_DIR}/__cxx03/${f}")
   add_custom_command(OUTPUT ${dst}
     DEPENDS ${src}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${dst}
@@ -1033,60 +1030,23 @@ foreach(f ${files})
   list(APPEND _all_includes "${dst}")
 endforeach()
 
-# Generate the IWYU mapping. This depends on all header files but it's also considered as an
-# "include" for dependency tracking.
-add_custom_command(OUTPUT "${LIBCXX_GENERATED_INCLUDE_DIR}/libcxx.imp"
-  COMMAND "${Python3_EXECUTABLE}" "${LIBCXX_SOURCE_DIR}/utils/generate_iwyu_mapping.py" "-o" "${LIBCXX_GENERATED_INCLUDE_DIR}/libcxx.imp"
-  DEPENDS "${LIBCXX_SOURCE_DIR}/utils/libcxx/header_information.py"
-  COMMENT "Generate the mapping file for include-what-you-use"
-)
-list(APPEND _all_includes "${LIBCXX_GENERATED_INCLUDE_DIR}/libcxx.imp")
-
-add_custom_target(generate-cxx-headers ALL DEPENDS ${_all_includes})
-
-add_library(cxx-headers INTERFACE)
-target_link_libraries(cxx-headers INTERFACE libcxx-libc-headers libcxx-abi-headers)
-add_dependencies(cxx-headers generate-cxx-headers)
-# It's important that the arch directory be included first so that its header files
-# which interpose on the default include dir be included instead of the default ones.
-target_include_directories(cxx-headers INTERFACE ${LIBCXX_GENERATED_INCLUDE_TARGET_DIR}
-                                                 ${LIBCXX_GENERATED_INCLUDE_DIR})
+add_custom_target(generate-frozen-cxx03-headers ALL DEPENDS ${_all_includes})
 
 if (LIBCXX_INSTALL_HEADERS)
   foreach(file ${files})
     get_filename_component(dir ${file} DIRECTORY)
-    install(FILES ${file}
-      DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}/${dir}"
+    install(FILES "${file}"
+      DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}/__cxx03/${dir}"
       COMPONENT cxx-headers
       PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     )
   endforeach()
 
-  # Install the generated __config_site file to the per-target include dir.
-  install(FILES "${LIBCXX_GENERATED_INCLUDE_TARGET_DIR}/__config_site"
-    DESTINATION "${LIBCXX_INSTALL_INCLUDE_TARGET_DIR}"
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    COMPONENT cxx-headers)
-
-  # Install the generated __assertion_handler file to the generic include dir.
-  install(FILES "${LIBCXX_GENERATED_INCLUDE_DIR}/__assertion_handler"
-    DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}"
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    COMPONENT cxx-headers)
-
-  # Install the generated IWYU file to the generic include dir.
-  install(FILES "${LIBCXX_GENERATED_INCLUDE_DIR}/libcxx.imp"
-    DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}"
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    COMPONENT cxx-headers)
-
   if (NOT CMAKE_CONFIGURATION_TYPES)
-    add_custom_target(install-cxx-headers
+    add_custom_target(install-frozen-cxx03-headers
                       DEPENDS cxx-headers
                       COMMAND "${CMAKE_COMMAND}"
                               -DCMAKE_INSTALL_COMPONENT=cxx-headers
                               -P "${CMAKE_BINARY_DIR}/cmake_install.cmake")
-    # Stripping is a no-op for headers
-    add_custom_target(install-cxx-headers-stripped DEPENDS install-cxx-headers)
   endif()
 endif()

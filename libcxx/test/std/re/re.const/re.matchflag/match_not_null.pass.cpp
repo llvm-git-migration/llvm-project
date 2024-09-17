@@ -11,6 +11,8 @@
 // match_not_null:
 //     The regular expression shall not match an empty sequence.
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include "test_macros.h"
 #include <cassert>
 #include <regex>

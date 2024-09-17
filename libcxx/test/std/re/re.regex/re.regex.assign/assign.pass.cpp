@@ -12,6 +12,8 @@
 
 // basic_regex& assign(const basic_regex& that);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

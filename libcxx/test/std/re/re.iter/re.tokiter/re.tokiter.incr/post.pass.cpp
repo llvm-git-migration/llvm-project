@@ -12,6 +12,8 @@
 
 // regex_token_iterator& operator++(int);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include <iterator>

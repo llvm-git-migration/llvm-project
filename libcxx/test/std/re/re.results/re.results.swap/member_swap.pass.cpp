@@ -12,6 +12,8 @@
 
 // void swap(match_results& that);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

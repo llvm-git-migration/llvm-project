@@ -14,6 +14,8 @@
 //    void swap(match_results<BidirectionalIterator, Allocator>& m1,
 //              match_results<BidirectionalIterator, Allocator>& m2);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

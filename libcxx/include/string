@@ -586,8 +586,9 @@ basic_string<char32_t> operator""s( const char32_t *str, size_t len );          
 
 // clang-format on
 
-#if 0
-#else // 0
+#if __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
+#  include <__cxx03/string>
+#else
 #  include <__algorithm/max.h>
 #  include <__algorithm/min.h>
 #  include <__algorithm/remove.h>
@@ -4371,6 +4372,6 @@ _LIBCPP_POP_MACROS
 #    include <typeinfo>
 #    include <utility>
 #  endif
-#endif // 0
+#endif // __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
 
 #endif // _LIBCPP_STRING

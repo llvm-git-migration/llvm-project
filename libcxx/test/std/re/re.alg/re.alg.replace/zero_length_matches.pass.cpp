@@ -10,6 +10,8 @@
 
 // Test that replacing zero-length matches works correctly.
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <cassert>
 #include <regex>
 #include <string>

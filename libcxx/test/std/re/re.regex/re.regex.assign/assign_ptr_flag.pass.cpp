@@ -12,6 +12,8 @@
 
 // basic_regex& assign(const charT* ptr, flag_type f = regex_constants::ECMAScript);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"

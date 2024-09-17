@@ -15,6 +15,8 @@
 //                   regex_constants::match_flag_type flags =
 //                                              regex_constants::match_default);
 
+// XFAIL: FROZEN-CXX03-HEADERS-FIXME
+
 #include <regex>
 #include <cassert>
 #include "test_macros.h"
