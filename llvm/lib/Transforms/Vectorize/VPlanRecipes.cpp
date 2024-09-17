@@ -2366,15 +2366,17 @@ InstructionCost VPCSADataUpdateRecipe::computeCost(ElementCount VF,
 
   // FIXME: These costs should be moved into VPInstruction::computeCost. We put
   // them here for now since they are related to updating the data and there is
-  // no VPInstruction::computeCost support at the moment. CSAInitMask AnyActive
-  C += TTI.getArithmeticInstrCost(Instruction::Select, VTy, CostKind);
-  // vp.reduce.or
+  // no VPInstruction::computeCost support at the moment.
+
+  // CSAAnyActive
   C += TTI.getArithmeticReductionCost(Instruction::Or, VTy, std::nullopt,
                                       CostKind);
   // VPVLSel
-  C += TTI.getArithmeticInstrCost(Instruction::Select, VTy, CostKind);
+  C += TTI.getCmpSelInstrCost(Instruction::Select, VTy, MaskTy,
+                              CmpInst::BAD_ICMP_PREDICATE, CostKind);
   // MaskUpdate
-  C += TTI.getArithmeticInstrCost(Instruction::Select, MaskTy, CostKind);
+  C += TTI.getCmpSelInstrCost(Instruction::Select, MaskTy, MaskTy,
+                              CmpInst::BAD_ICMP_PREDICATE, CostKind);
   return C;
 }
 
@@ -2464,31 +2466,31 @@ VPCSAExtractScalarRecipe::computeCost(ElementCount VF,
                                     CostKind);
   } else {
     // ActiveLaneIdxs
-    C += TTI.getArithmeticInstrCost(Instruction::Select,
-                                    MaskTy->getScalarType(), CostKind);
+    C += TTI.getCmpSelInstrCost(Instruction::Select, MaskTy, MaskTy,
+                                CmpInst::BAD_ICMP_PREDICATE, CostKind);
     // MaybeLastIdx
     C += TTI.getMinMaxReductionCost(Intrinsic::smax, Int32VTy, FastMathFlags(),
                                     CostKind);
     // IsLaneZeroActive
-    C += TTI.getArithmeticInstrCost(Instruction::ExtractElement, MaskTy,
-                                    CostKind);
+    C += TTI.getVectorInstrCost(Instruction::ExtractElement, MaskTy, CostKind);
     // MaybeLastIdxEQZero
-    C += TTI.getArithmeticInstrCost(Instruction::ICmp, MaskTy->getScalarType(),
-                                    CostKind);
+    C += TTI.getCmpSelInstrCost(Instruction::ICmp, Int32VTy, MaskTy,
+                                CmpInst::ICMP_EQ, CostKind);
     // And
     C += TTI.getArithmeticInstrCost(Instruction::And, MaskTy->getScalarType(),
                                     CostKind);
     // LastIdx
-    C += TTI.getArithmeticInstrCost(Instruction::Select, VTy->getScalarType(),
-                                    CostKind);
+    C += TTI.getCmpSelInstrCost(Instruction::Select, VTy, MaskTy,
+                                CmpInst::BAD_ICMP_PREDICATE, CostKind);
   }
   // ExtractFromVec
   C += TTI.getArithmeticInstrCost(Instruction::ExtractElement, VTy, CostKind);
-  // LastIdxGeZero
-  C += TTI.getArithmeticInstrCost(Instruction::ICmp, Int32VTy, CostKind);
+  // LastIdxGEZero
+  C += TTI.getCmpSelInstrCost(Instruction::ICmp, Int32VTy, MaskTy,
+                              CmpInst::ICMP_SGE, CostKind);
   // ChooseFromVecOrInit
-  C += TTI.getArithmeticInstrCost(Instruction::Select, VTy->getScalarType(),
-                                  CostKind);
+  C += TTI.getCmpSelInstrCost(Instruction::Select, VTy, MaskTy,
+                              CmpInst::BAD_ICMP_PREDICATE, CostKind);
   return C;
 }
 
