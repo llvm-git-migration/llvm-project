@@ -164,15 +164,15 @@ public:
 
   // Emit the decoder state machine table.
   void emitTable(formatted_raw_ostream &o, DecoderTable &Table,
-                 unsigned Indentation, unsigned BitWidth, StringRef Namespace,
+                 indent Indentation, unsigned BitWidth, StringRef Namespace,
                  const EncodingIDsVec &EncodingIDs) const;
   void emitInstrLenTable(formatted_raw_ostream &OS,
                          std::vector<unsigned> &InstrLen) const;
   void emitPredicateFunction(formatted_raw_ostream &OS,
                              PredicateSet &Predicates,
-                             unsigned Indentation) const;
+                             indent Indentation) const;
   void emitDecoderFunction(formatted_raw_ostream &OS, DecoderSet &Decoders,
-                           unsigned Indentation) const;
+                           indent Indentation) const;
 
   // run - Output the code emitter
   void run(raw_ostream &o);
@@ -524,8 +524,7 @@ protected:
 
   // Emits code to check the Predicates member of an instruction are true.
   // Returns true if predicate matches were emitted, false otherwise.
-  bool emitPredicateMatch(raw_ostream &o, unsigned &Indentation,
-                          unsigned Opc) const;
+  bool emitPredicateMatch(raw_ostream &OS, unsigned Opc) const;
   bool emitPredicateMatchAux(const Init &Val, bool ParenIfBinOp,
                              raw_ostream &OS) const;
 
@@ -543,11 +542,11 @@ protected:
   void emitSingletonTableEntry(DecoderTableInfo &TableInfo,
                                const Filter &Best) const;
 
-  void emitBinaryParser(raw_ostream &o, unsigned &Indentation,
+  void emitBinaryParser(raw_ostream &OS, indent Indentation,
                         const OperandInfo &OpInfo,
                         bool &OpHasCompleteDecoder) const;
 
-  void emitDecoder(raw_ostream &OS, unsigned Indentation, unsigned Opc,
+  void emitDecoder(raw_ostream &OS, indent Indentation, unsigned Opc,
                    bool &HasCompleteDecoder) const;
   unsigned getDecoderIndex(DecoderSet &Decoders, unsigned Opc,
                            bool &HasCompleteDecoder) const;
@@ -793,7 +792,7 @@ unsigned Filter::usefulness() const {
 
 // Emit the decoder state machine table.
 void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
-                               unsigned Indentation, unsigned BitWidth,
+                               indent Indentation, unsigned BitWidth,
                                StringRef Namespace,
                                const EncodingIDsVec &EncodingIDs) const {
   // We'll need to be able to map from a decoded opcode into the corresponding
@@ -804,8 +803,8 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
   for (const auto &EI : EncodingIDs)
     OpcodeToEncodingID[EI.Opcode] = EI.EncodingID;
 
-  OS.indent(Indentation) << "static const uint8_t DecoderTable" << Namespace
-                         << BitWidth << "[] = {\n";
+  OS << Indentation << "static const uint8_t DecoderTable" << Namespace
+     << BitWidth << "[] = {\n";
 
   Indentation += 2;
 
@@ -852,7 +851,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
       PrintFatalError("invalid decode table opcode");
     case MCD::OPC_ExtractField: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_ExtractField, ";
+      OS << Indentation << "MCD::OPC_ExtractField, ";
 
       // ULEB128 encoded start value.
       const char *ErrMsg = nullptr;
@@ -870,7 +869,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
     }
     case MCD::OPC_FilterValue: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_FilterValue, ";
+      OS << Indentation << "MCD::OPC_FilterValue, ";
       // The filter value is ULEB128 encoded.
       I += emitULEB128(I, OS);
 
@@ -882,7 +881,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
     }
     case MCD::OPC_CheckField: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_CheckField, ";
+      OS << Indentation << "MCD::OPC_CheckField, ";
       // ULEB128 encoded start value.
       I += emitULEB128(I, OS);
       // 8-bit length.
@@ -899,7 +898,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
     }
     case MCD::OPC_CheckPredicate: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_CheckPredicate, ";
+      OS << Indentation << "MCD::OPC_CheckPredicate, ";
       I += emitULEB128(I, OS);
 
       // 24-bit numtoskip value.
@@ -918,8 +917,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
                                    Table.data() + Table.size(), &ErrMsg);
       assert(ErrMsg == nullptr && "ULEB128 value too large!");
 
-      OS.indent(Indentation)
-          << "MCD::OPC_" << (IsTry ? "Try" : "") << "Decode, ";
+      OS << Indentation << "MCD::OPC_" << (IsTry ? "Try" : "") << "Decode, ";
       I += emitULEB128(I, OS);
 
       // Decoder index.
@@ -946,7 +944,7 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
     }
     case MCD::OPC_SoftFail: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_SoftFail";
+      OS << Indentation << "MCD::OPC_SoftFail";
       // Positive mask
       uint64_t Value = 0;
       unsigned Shift = 0;
@@ -978,16 +976,16 @@ void DecoderEmitter::emitTable(formatted_raw_ostream &OS, DecoderTable &Table,
     }
     case MCD::OPC_Fail: {
       ++I;
-      OS.indent(Indentation) << "MCD::OPC_Fail,\n";
+      OS << Indentation << "MCD::OPC_Fail,\n";
       break;
     }
     }
   }
-  OS.indent(Indentation) << "0\n";
+  OS << Indentation << "0\n";
 
   Indentation -= 2;
 
-  OS.indent(Indentation) << "};\n\n";
+  OS << Indentation << "};\n\n";
 }
 
 void DecoderEmitter::emitInstrLenTable(formatted_raw_ostream &OS,
@@ -1001,61 +999,60 @@ void DecoderEmitter::emitInstrLenTable(formatted_raw_ostream &OS,
 
 void DecoderEmitter::emitPredicateFunction(formatted_raw_ostream &OS,
                                            PredicateSet &Predicates,
-                                           unsigned Indentation) const {
+                                           indent Indentation) const {
   // The predicate function is just a big switch statement based on the
   // input predicate index.
-  OS.indent(Indentation) << "static bool checkDecoderPredicate(unsigned Idx, "
-                         << "const FeatureBitset &Bits) {\n";
+  OS << Indentation << "static bool checkDecoderPredicate(unsigned Idx, "
+     << "const FeatureBitset &Bits) {\n";
   Indentation += 2;
   if (!Predicates.empty()) {
-    OS.indent(Indentation) << "switch (Idx) {\n";
-    OS.indent(Indentation)
-        << "default: llvm_unreachable(\"Invalid index!\");\n";
+    OS << Indentation << "switch (Idx) {\n";
+    OS << Indentation << "default: llvm_unreachable(\"Invalid index!\");\n";
     unsigned Index = 0;
     for (const auto &Predicate : Predicates) {
-      OS.indent(Indentation) << "case " << Index++ << ":\n";
-      OS.indent(Indentation + 2) << "return (" << Predicate << ");\n";
+      OS << Indentation << "case " << Index++ << ":\n";
+      OS << Indentation + 2 << "return (" << Predicate << ");\n";
     }
-    OS.indent(Indentation) << "}\n";
+    OS << Indentation << "}\n";
   } else {
     // No case statement to emit
-    OS.indent(Indentation) << "llvm_unreachable(\"Invalid index!\");\n";
+    OS << Indentation << "llvm_unreachable(\"Invalid index!\");\n";
   }
   Indentation -= 2;
-  OS.indent(Indentation) << "}\n\n";
+  OS << Indentation << "}\n\n";
 }
 
 void DecoderEmitter::emitDecoderFunction(formatted_raw_ostream &OS,
                                          DecoderSet &Decoders,
-                                         unsigned Indentation) const {
+                                         indent Indentation) const {
   // The decoder function is just a big switch statement based on the
   // input decoder index.
-  OS.indent(Indentation) << "template <typename InsnType>\n";
-  OS.indent(Indentation) << "static DecodeStatus decodeToMCInst(DecodeStatus S,"
-                         << " unsigned Idx, InsnType insn, MCInst &MI,\n";
-  OS.indent(Indentation)
-      << "                                   uint64_t "
-      << "Address, const MCDisassembler *Decoder, bool &DecodeComplete) {\n";
+  OS << Indentation << "template <typename InsnType>\n";
+  OS << Indentation << "static DecodeStatus decodeToMCInst(DecodeStatus S,"
+     << " unsigned Idx, InsnType insn, MCInst &MI,\n";
+  OS << Indentation << "                                   uint64_t "
+     << "Address, const MCDisassembler *Decoder, bool &DecodeComplete) {\n";
   Indentation += 2;
-  OS.indent(Indentation) << "DecodeComplete = true;\n";
+  OS << Indentation << "DecodeComplete = true;\n";
   // TODO: When InsnType is large, using uint64_t limits all fields to 64 bits
   // It would be better for emitBinaryParser to use a 64-bit tmp whenever
   // possible but fall back to an InsnType-sized tmp for truly large fields.
-  OS.indent(Indentation) << "using TmpType = "
-                            "std::conditional_t<std::is_integral<InsnType>::"
-                            "value, InsnType, uint64_t>;\n";
-  OS.indent(Indentation) << "TmpType tmp;\n";
-  OS.indent(Indentation) << "switch (Idx) {\n";
-  OS.indent(Indentation) << "default: llvm_unreachable(\"Invalid index!\");\n";
+  OS << Indentation
+     << "using TmpType = "
+        "std::conditional_t<std::is_integral<InsnType>::"
+        "value, InsnType, uint64_t>;\n";
+  OS << Indentation << "TmpType tmp;\n";
+  OS << Indentation << "switch (Idx) {\n";
+  OS << Indentation << "default: llvm_unreachable(\"Invalid index!\");\n";
   unsigned Index = 0;
   for (const auto &Decoder : Decoders) {
-    OS.indent(Indentation) << "case " << Index++ << ":\n";
+    OS << Indentation << "case " << Index++ << ":\n";
     OS << Decoder;
-    OS.indent(Indentation + 2) << "return S;\n";
+    OS << Indentation + 2 << "return S;\n";
   }
-  OS.indent(Indentation) << "}\n";
+  OS << Indentation << "}\n";
   Indentation -= 2;
-  OS.indent(Indentation) << "}\n";
+  OS << Indentation << "}\n";
 }
 
 // Populates the field of the insn given the start position and the number of
@@ -1176,7 +1173,7 @@ unsigned FilterChooser::getIslands(std::vector<unsigned> &StartBits,
   return Num;
 }
 
-void FilterChooser::emitBinaryParser(raw_ostream &o, unsigned &Indentation,
+void FilterChooser::emitBinaryParser(raw_ostream &OS, indent Indentation,
                                      const OperandInfo &OpInfo,
                                      bool &OpHasCompleteDecoder) const {
   const std::string &Decoder = OpInfo.Decoder;
@@ -1184,39 +1181,38 @@ void FilterChooser::emitBinaryParser(raw_ostream &o, unsigned &Indentation,
   bool UseInsertBits = OpInfo.numFields() != 1 || OpInfo.InitValue != 0;
 
   if (UseInsertBits) {
-    o.indent(Indentation) << "tmp = 0x";
-    o.write_hex(OpInfo.InitValue);
-    o << ";\n";
+    OS << Indentation << "tmp = 0x";
+    OS.write_hex(OpInfo.InitValue);
+    OS << ";\n";
   }
 
   for (const EncodingField &EF : OpInfo) {
-    o.indent(Indentation);
+    OS << Indentation;
     if (UseInsertBits)
-      o << "insertBits(tmp, ";
+      OS << "insertBits(tmp, ";
     else
-      o << "tmp = ";
-    o << "fieldFromInstruction(insn, " << EF.Base << ", " << EF.Width << ')';
+      OS << "tmp = ";
+    OS << "fieldFromInstruction(insn, " << EF.Base << ", " << EF.Width << ')';
     if (UseInsertBits)
-      o << ", " << EF.Offset << ", " << EF.Width << ')';
+      OS << ", " << EF.Offset << ", " << EF.Width << ')';
     else if (EF.Offset != 0)
-      o << " << " << EF.Offset;
-    o << ";\n";
+      OS << " << " << EF.Offset;
+    OS << ";\n";
   }
 
   if (Decoder != "") {
     OpHasCompleteDecoder = OpInfo.HasCompleteDecoder;
-    o.indent(Indentation) << "if (!Check(S, " << Decoder
-                          << "(MI, tmp, Address, Decoder))) { "
-                          << (OpHasCompleteDecoder ? ""
-                                                   : "DecodeComplete = false; ")
-                          << "return MCDisassembler::Fail; }\n";
+    OS << Indentation << "if (!Check(S, " << Decoder
+       << "(MI, tmp, Address, Decoder))) { "
+       << (OpHasCompleteDecoder ? "" : "DecodeComplete = false; ")
+       << "return MCDisassembler::Fail; }\n";
   } else {
     OpHasCompleteDecoder = true;
-    o.indent(Indentation) << "MI.addOperand(MCOperand::createImm(tmp));\n";
+    OS << Indentation << "MI.addOperand(MCOperand::createImm(tmp));\n";
   }
 }
 
-void FilterChooser::emitDecoder(raw_ostream &OS, unsigned Indentation,
+void FilterChooser::emitDecoder(raw_ostream &OS, indent Indentation,
                                 unsigned Opc, bool &HasCompleteDecoder) const {
   HasCompleteDecoder = true;
 
@@ -1224,11 +1220,10 @@ void FilterChooser::emitDecoder(raw_ostream &OS, unsigned Indentation,
     // If a custom instruction decoder was specified, use that.
     if (Op.numFields() == 0 && !Op.Decoder.empty()) {
       HasCompleteDecoder = Op.HasCompleteDecoder;
-      OS.indent(Indentation)
-          << "if (!Check(S, " << Op.Decoder
-          << "(MI, insn, Address, Decoder))) { "
-          << (HasCompleteDecoder ? "" : "DecodeComplete = false; ")
-          << "return MCDisassembler::Fail; }\n";
+      OS << Indentation << "if (!Check(S, " << Op.Decoder
+         << "(MI, insn, Address, Decoder))) { "
+         << (HasCompleteDecoder ? "" : "DecodeComplete = false; ")
+         << "return MCDisassembler::Fail; }\n";
       break;
     }
 
@@ -1246,8 +1241,7 @@ unsigned FilterChooser::getDecoderIndex(DecoderSet &Decoders, unsigned Opc,
   // FIXME: emitDecoder() function can take a buffer directly rather than
   // a stream.
   raw_svector_ostream S(Decoder);
-  unsigned I = 4;
-  emitDecoder(S, I, Opc, HasCompleteDecoder);
+  emitDecoder(S, indent(4), Opc, HasCompleteDecoder);
 
   // Using the full decoder string as the key value here is a bit
   // heavyweight, but is effective. If the string comparisons become a
@@ -1296,8 +1290,7 @@ bool FilterChooser::emitPredicateMatchAux(const Init &Val, bool ParenIfBinOp,
   return true;
 }
 
-bool FilterChooser::emitPredicateMatch(raw_ostream &o, unsigned &Indentation,
-                                       unsigned Opc) const {
+bool FilterChooser::emitPredicateMatch(raw_ostream &OS, unsigned Opc) const {
   ListInit *Predicates =
       AllInstructions[Opc].EncodingDef->getValueAsListInit("Predicates");
   bool IsFirstEmission = true;
@@ -1310,9 +1303,9 @@ bool FilterChooser::emitPredicateMatch(raw_ostream &o, unsigned &Indentation,
       continue;
 
     if (!IsFirstEmission)
-      o << " && ";
+      OS << " && ";
     if (emitPredicateMatchAux(*Pred->getValueAsDag("AssemblerCondDag"),
-                              Predicates->size() > 1, o))
+                              Predicates->size() > 1, OS))
       PrintFatalError(Pred->getLoc(), "Invalid AssemblerCondDag!");
     IsFirstEmission = false;
   }
@@ -1358,8 +1351,7 @@ void FilterChooser::emitPredicateTableEntry(DecoderTableInfo &TableInfo,
   // FIXME: emitPredicateMatch() functions can take a buffer directly rather
   // than a stream.
   raw_svector_ostream PS(Predicate);
-  unsigned I = 0;
-  emitPredicateMatch(PS, I, Opc);
+  emitPredicateMatch(PS, Opc);
 
   // Figure out the index into the predicate table for the predicate just
   // computed.
@@ -2630,7 +2622,7 @@ namespace llvm {
     TableInfo.Table.push_back(MCD::OPC_Fail);
 
     // Print the table to the output stream.
-    emitTable(OS, TableInfo.Table, 0, FC.getBitWidth(), Opc.first.first,
+    emitTable(OS, TableInfo.Table, indent(0), FC.getBitWidth(), Opc.first.first,
               Opc.second);
   }
 
@@ -2640,10 +2632,10 @@ namespace llvm {
   if (IsVarLenInst)
     emitInstrLenTable(OS, InstrLen);
   // Emit the predicate function.
-  emitPredicateFunction(OS, TableInfo.Predicates, 0);
+  emitPredicateFunction(OS, TableInfo.Predicates, indent(0));
 
   // Emit the decoder function.
-  emitDecoderFunction(OS, TableInfo.Decoders, 0);
+  emitDecoderFunction(OS, TableInfo.Decoders, indent(0));
 
   // Emit the main entry point for the decoder, decodeInstruction().
   emitDecodeInstruction(OS, IsVarLenInst);
