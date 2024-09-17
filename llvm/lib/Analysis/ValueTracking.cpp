@@ -1451,34 +1451,39 @@ static void computeKnownBitsFromOperator(const Operator *I,
         };
       }
 
+      // Change the context instruction to the "edge" that flows into the
+      // phi. This is important because that is where the value is actually
+      // "evaluated" even though it is used later somewhere else. (see also
+      // D69571).
+      SimplifyQuery RecQ = Q.getWithoutCondContext();
+
+      unsigned OpNum = P->getOperand(0) == R ? 0 : 1;
+      Instruction *RInst = P->getIncomingBlock(OpNum)->getTerminator();
+      Instruction *LInst = P->getIncomingBlock(1 - OpNum)->getTerminator();
+
+      // Ok, we have a PHI of the form L op= R.
+      RecQ.CxtI = RInst;
+      computeKnownBits(R, DemandedElts, Known2, Depth + 1, RecQ);
+
+      KnownBits Known3(BitWidth);
+      RecQ.CxtI = LInst;
+      computeKnownBits(L, DemandedElts, Known3, Depth + 1, RecQ);
+
+      // We want to make sure BO's LHS has KnownBits Known2, and RHS has
+      // KnownBits Known3.
+      if (BO->getOperand(0) == L)
+        std::swap(Known2, Known3);
+
+      switch (Opcode) {
       // Check for operations that have the property that if
       // both their operands have low zero bits, the result
       // will have low zero bits.
-      if (Opcode == Instruction::Add ||
-          Opcode == Instruction::Sub ||
-          Opcode == Instruction::And ||
-          Opcode == Instruction::Or ||
-          Opcode == Instruction::Mul) {
-        // Change the context instruction to the "edge" that flows into the
-        // phi. This is important because that is where the value is actually
-        // "evaluated" even though it is used later somewhere else. (see also
-        // D69571).
-        SimplifyQuery RecQ = Q.getWithoutCondContext();
-
-        unsigned OpNum = P->getOperand(0) == R ? 0 : 1;
-        Instruction *RInst = P->getIncomingBlock(OpNum)->getTerminator();
-        Instruction *LInst = P->getIncomingBlock(1 - OpNum)->getTerminator();
-
-        // Ok, we have a PHI of the form L op= R. Check for low
-        // zero bits.
-        RecQ.CxtI = RInst;
-        computeKnownBits(R, DemandedElts, Known2, Depth + 1, RecQ);
-
+      case Instruction::Add:
+      case Instruction::Sub:
+      case Instruction::And:
+      case Instruction::Or:
+      case Instruction::Mul: {
         // We need to take the minimum number of known bits
-        KnownBits Known3(BitWidth);
-        RecQ.CxtI = LInst;
-        computeKnownBits(L, DemandedElts, Known3, Depth + 1, RecQ);
-
         Known.Zero.setLowBits(std::min(Known2.countMinTrailingZeros(),
                                        Known3.countMinTrailingZeros()));
 
@@ -1514,9 +1519,34 @@ static void computeKnownBitsFromOperator(const Operator *I,
                    Known3.isNonNegative())
             Known.makeNonNegative();
         }
-
         break;
       }
+      // For UDiv and SDiv, result cannot be larger than numerator. For UDiv and
+      // SDiv, result cannot be larger than Denominator. Further, for signed
+      // versions, only if one of the two operands is signed, is the result is
+      // signed.
+      case Instruction::UDiv:
+        Known.Zero.setHighBits(Known2.countMinLeadingZeros());
+        break;
+      case Instruction::SDiv:
+        Known.Zero.setHighBits(Known2.abs().countMinLeadingZeros());
+        if ((Known2.isNegative() && Known3.isNonNegative()) ||
+            (Known2.isNonNegative() && Known3.isNegative()))
+          Known.makeNegative();
+        break;
+      case Instruction::URem:
+        Known.Zero.setHighBits(Known3.countMinLeadingZeros());
+        break;
+      case Instruction::SRem:
+        Known.Zero.setHighBits(Known3.abs().countMinLeadingZeros());
+        if ((Known2.isNegative() && Known3.isNonNegative()) ||
+            (Known2.isNonNegative() && Known3.isNegative()))
+          Known.makeNegative();
+        break;
+      default:
+        break;
+      }
+      break;
     }
 
     // Unreachable blocks may have zero-operand PHI nodes.
@@ -8968,7 +8998,6 @@ bool llvm::matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
     switch (Opcode) {
     default:
       continue;
-    // TODO: Expand list -- xor, div, gep, uaddo, etc..
     case Instruction::LShr:
     case Instruction::AShr:
     case Instruction::Shl:
@@ -8977,7 +9006,10 @@ bool llvm::matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
     case Instruction::And:
     case Instruction::Or:
     case Instruction::Mul:
-    case Instruction::FMul: {
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::URem:
+    case Instruction::SRem: {
       Value *LL = LU->getOperand(0);
       Value *LR = LU->getOperand(1);
       // Find a recurrence.
