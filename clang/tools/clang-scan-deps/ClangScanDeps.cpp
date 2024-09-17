@@ -839,9 +839,11 @@ int clang_scan_deps_main(int argc, char **argv, const llvm::ToolContext &) {
           auto R = std::make_reverse_iterator(FlagsEnd);
           for (auto I = R, E = Args.rend(); I != E; ++I) {
             StringRef Arg = *I;
+            if ((I + 1) == E) // Don't inspect Args[0] as an option.
+              break;
             if (ClangCLMode) {
               // Ignore arguments that are preceded by "-Xclang".
-              if ((I + 1) != E && I[1] == "-Xclang")
+              if (I[1] == "-Xclang")
                 continue;
               if (LastO.empty()) {
                 // With clang-cl, the output obj file can be specified with
