@@ -1,3 +1,5 @@
+add_subdirectory(__cxx03)
+
 set(files
   __algorithm/adjacent_find.h
   __algorithm/all_of.h
@@ -1052,7 +1054,8 @@ configure_file("${LIBCXX_ASSERTION_HANDLER_FILE}" "${LIBCXX_GENERATED_INCLUDE_DI
 
 set(_all_includes "${LIBCXX_GENERATED_INCLUDE_TARGET_DIR}/__config_site"
                   "${LIBCXX_GENERATED_INCLUDE_DIR}/__assertion_handler")
-foreach(f ${files})
+message(STATUS "C++03 headers: ${LIBCXX_FROZEN_CXX03_HEADERS}")
+foreach(f ${files} ${LIBCXX_FROZEN_CXX03_HEADERS})
   set(src "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
   set(dst "${LIBCXX_GENERATED_INCLUDE_DIR}/${f}")
   add_custom_command(OUTPUT ${dst}
@@ -1082,7 +1085,7 @@ target_include_directories(cxx-headers INTERFACE ${LIBCXX_GENERATED_INCLUDE_TARG
                                                  ${LIBCXX_GENERATED_INCLUDE_DIR})
 
 if (LIBCXX_INSTALL_HEADERS)
-  foreach(file ${files})
+  foreach(file ${files} ${LIBCXX_FROZEN_CXX03_HEADERS})
     get_filename_component(dir ${file} DIRECTORY)
     install(FILES ${file}
       DESTINATION "${LIBCXX_INSTALL_INCLUDE_DIR}/${dir}"

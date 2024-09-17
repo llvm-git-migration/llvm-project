@@ -2233,13 +2233,17 @@ class FeatureTestMacros:
 #ifndef _LIBCPP_VERSION
 #define _LIBCPP_VERSION
 
-#include <__config>
+#if __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
+#  include <__cxx03/version>
+#else
+#  include <__config>
 
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#  pragma GCC system_header
-#endif
+#  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#    pragma GCC system_header
+#  endif
 
 {feature_test_macros}
+#endif // __cplusplus < 201103L && defined(_LIBCPP_USE_FROZEN_CXX03_HEADERS)
 
 #endif // _LIBCPP_VERSION
 """
