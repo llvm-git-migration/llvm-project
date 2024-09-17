@@ -1451,34 +1451,34 @@ static void computeKnownBitsFromOperator(const Operator *I,
         };
       }
 
-      // Check for operations that have the property that if
-      // both their operands have low zero bits, the result
-      // will have low zero bits.
-      if (Opcode == Instruction::Add ||
-          Opcode == Instruction::Sub ||
-          Opcode == Instruction::And ||
-          Opcode == Instruction::Or ||
-          Opcode == Instruction::Mul) {
-        // Change the context instruction to the "edge" that flows into the
-        // phi. This is important because that is where the value is actually
-        // "evaluated" even though it is used later somewhere else. (see also
-        // D69571).
-        SimplifyQuery RecQ = Q.getWithoutCondContext();
+      // Change the context instruction to the "edge" that flows into the
+      // phi. This is important because that is where the value is actually
+      // "evaluated" even though it is used later somewhere else. (see also
+      // D69571).
+      SimplifyQuery RecQ = Q.getWithoutCondContext();
 
-        unsigned OpNum = P->getOperand(0) == R ? 0 : 1;
-        Instruction *RInst = P->getIncomingBlock(OpNum)->getTerminator();
-        Instruction *LInst = P->getIncomingBlock(1 - OpNum)->getTerminator();
+      unsigned OpNum = P->getOperand(0) == R ? 0 : 1;
+      Instruction *RInst = P->getIncomingBlock(OpNum)->getTerminator();
+      Instruction *LInst = P->getIncomingBlock(1 - OpNum)->getTerminator();
 
-        // Ok, we have a PHI of the form L op= R. Check for low
-        // zero bits.
-        RecQ.CxtI = RInst;
-        computeKnownBits(R, DemandedElts, Known2, Depth + 1, RecQ);
+      // Ok, we have a PHI of the form L op= R. R and Known2 correspond to the
+      // start value.
+      RecQ.CxtI = RInst;
+      computeKnownBits(R, DemandedElts, Known2, Depth + 1, RecQ);
 
+      KnownBits Known3(BitWidth);
+      RecQ.CxtI = LInst;
+      computeKnownBits(L, DemandedElts, Known3, Depth + 1, RecQ);
+
+      switch (Opcode) {
+      // Check for operations that have the property that if both their operands
+      // have low zero bits, the result will have low zero bits.
+      case Instruction::Add:
+      case Instruction::Sub:
+      case Instruction::And:
+      case Instruction::Or:
+      case Instruction::Mul: {
         // We need to take the minimum number of known bits
-        KnownBits Known3(BitWidth);
-        RecQ.CxtI = LInst;
-        computeKnownBits(L, DemandedElts, Known3, Depth + 1, RecQ);
-
         Known.Zero.setLowBits(std::min(Known2.countMinTrailingZeros(),
                                        Known3.countMinTrailingZeros()));
 
@@ -1514,9 +1514,26 @@ static void computeKnownBitsFromOperator(const Operator *I,
                    Known3.isNonNegative())
             Known.makeNonNegative();
         }
-
         break;
       }
+      case Instruction::UDiv:
+      case Instruction::URem:
+        // Result cannot be larger than start value.
+        Known.Zero.setHighBits(Known2.countMinLeadingZeros());
+        break;
+      case Instruction::SDiv:
+      case Instruction::SRem: {
+        // Magnitude of result cannot be larger than that of start value.
+        if (Known2.isNonNegative())
+          Known.Zero.setHighBits(Known2.countMinLeadingZeros());
+        else if (Known2.isNegative())
+          Known.One.setHighBits(Known2.countMinLeadingOnes());
+        break;
+      }
+      default:
+        break;
+      }
+      break;
     }
 
     // Unreachable blocks may have zero-operand PHI nodes.
@@ -8968,7 +8985,6 @@ bool llvm::matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
     switch (Opcode) {
     default:
       continue;
-    // TODO: Expand list -- xor, div, gep, uaddo, etc..
     case Instruction::LShr:
     case Instruction::AShr:
     case Instruction::Shl:
@@ -8977,7 +8993,11 @@ bool llvm::matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
     case Instruction::And:
     case Instruction::Or:
     case Instruction::Mul:
-    case Instruction::FMul: {
+    case Instruction::FMul:
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::URem:
+    case Instruction::SRem: {
       Value *LL = LU->getOperand(0);
       Value *LR = LU->getOperand(1);
       // Find a recurrence.
