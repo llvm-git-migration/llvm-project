@@ -506,12 +506,14 @@ void DebugNamesDWARFIndex::GetNamespacesWithParents(
       if (!parent_chain) {
         // Fallback: use the base class implementation.
         if (!ProcessEntry(entry, [&](DWARFDIE die) {
-              return ProcessDieMatchParentNames(name, parent_names, die, callback);
+              return ProcessDieMatchParentNames(name, parent_names, die,
+                                                callback);
             }))
           return;
         continue;
       }
 
+      // If parent_chain is shorter than parent_names, we can't possibly match.
       if (parent_chain->size() < parent_names.size())
         continue;
       else if (parent_chain->size() == parent_names.size()) {
@@ -519,7 +521,8 @@ void DebugNamesDWARFIndex::GetNamespacesWithParents(
             !ProcessEntry(entry, callback))
           return;
       } else {
-        // parent_chain->size() > parent_names.size()
+        // When parent_chain has more entries than parent_names we still
+        // possibly match if parent_chain contains inline namespaces.
         if (WithinParentChain(parent_names, *parent_chain) &&
             !ProcessEntry(entry, callback))
           return;
@@ -535,10 +538,7 @@ void DebugNamesDWARFIndex::GetTypesWithParents(
     llvm::function_ref<bool(DWARFDIE die)> callback) {
   if (parent_names.empty())
     return GetTypes(name, callback);
-    
-  Log *log = GetLog(LLDBLog::Temporary);
-  int count = 0;
-  Progress progress("GetTypesWithParents from index for %s", name.GetCString());
+
   // For each entry, grab its parent chain and check if we have a match.
   for (const DebugNames::Entry &entry : m_debug_names_up->equal_range(name)) {
     if (!isType(entry.tag()))
@@ -551,20 +551,19 @@ void DebugNamesDWARFIndex::GetTypesWithParents(
     if (foreign_tu && foreign_tu.value() == nullptr)
       continue;
 
-    // Grab at most one extra parent, subsequent parents are not necessary to
-    // test equality.
     std::optional<llvm::SmallVector<Entry, 4>> parent_chain =
         getParentChain(entry);
-    ++count;
     if (!parent_chain) {
       // Fallback: use the base class implementation.
       if (!ProcessEntry(entry, [&](DWARFDIE die) {
-            return ProcessDieMatchParentNames(name, parent_names, die, callback);
+            return ProcessDieMatchParentNames(name, parent_names, die,
+                                              callback);
           }))
         return;
       continue;
     }
 
+    // If parent_chain is shorter than parent_names, we can't possibly match.
     if (parent_chain->size() < parent_names.size())
       continue;
     else if (parent_chain->size() == parent_names.size()) {
@@ -572,15 +571,13 @@ void DebugNamesDWARFIndex::GetTypesWithParents(
           !ProcessEntry(entry, callback))
         return;
     } else {
-      // parent_chain->size() > parent_names.size()
+      // When parent_chain has more entries than parent_names we still possibly
+      // match if parent_chain contains inline namespaces.
       if (WithinParentChain(parent_names, *parent_chain) &&
           !ProcessEntry(entry, callback))
         return;
     }
   }
-  LLDB_LOG(log,
-           "GetTypesWithParents searched {0} entries for {1} but found none",
-           count, name.GetCString());
   m_fallback.GetTypesWithParents(name, parent_names, callback);
 }
 
