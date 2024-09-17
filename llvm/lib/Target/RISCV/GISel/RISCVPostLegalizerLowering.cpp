@@ -70,9 +70,8 @@ static MachineInstrBuilder buildAllOnesMask(LLT VecTy, const SrcOp &VL,
 /// Gets the two common "VL" operands: an all-ones mask and the vector length.
 /// VecTy is a scalable vector type.
 static std::pair<MachineInstrBuilder, Register>
-buildDefaultVLOps(const DstOp &Dst, MachineIRBuilder &MIB,
+buildDefaultVLOps(LLT VecTy, MachineIRBuilder &MIB,
                   MachineRegisterInfo &MRI) {
-  LLT VecTy = Dst.getLLTTy(MRI);
   assert(VecTy.isScalableVector() && "Expecting scalable container type");
   Register VL(RISCV::X0);
   MachineInstrBuilder Mask = buildAllOnesMask(VecTy, VL, MIB, MRI);
@@ -213,7 +212,11 @@ void lowerInsertSubvector(MachineInstr &MI, const RISCVSubtarget &STI) {
 
   // We might have bitcast from a mask type: cast back to the original type if
   // required.
-  MIB.buildBitcast(Dst, Inserted);
+  if (TypeSize::isKnownLT(InterLitTy.getSizeInBits(),
+                          MRI.getType(Dst).getSizeInBits()))
+    MIB.buildBitcast(Dst, Inserted);
+  else
+    Inserted->getOperand(0).setReg(Dst);
 
   MI.eraseFromParent();
   return;
