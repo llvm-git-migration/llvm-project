@@ -837,8 +837,12 @@ public:
   matchAndRewrite(spirv::FunctionCallOp callOp, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     if (callOp.getNumResults() == 0) {
-      rewriter.replaceOpWithNewOp<LLVM::CallOp>(
+      auto newOp = rewriter.replaceOpWithNewOp<LLVM::CallOp>(
           callOp, std::nullopt, adaptor.getOperands(), callOp->getAttrs());
+      newOp->setAttr(
+          newOp.getOperandSegmentSizesAttrName(),
+          rewriter.getDenseI32ArrayAttr(
+              {static_cast<int32_t>(adaptor.getOperands().size()), 0}));
       return success();
     }
 
@@ -846,8 +850,12 @@ public:
     auto dstType = typeConverter.convertType(callOp.getType(0));
     if (!dstType)
       return rewriter.notifyMatchFailure(callOp, "type conversion failed");
-    rewriter.replaceOpWithNewOp<LLVM::CallOp>(
+    auto newOp = rewriter.replaceOpWithNewOp<LLVM::CallOp>(
         callOp, dstType, adaptor.getOperands(), callOp->getAttrs());
+    newOp->setAttr(
+        newOp.getOperandSegmentSizesAttrName(),
+        rewriter.getDenseI32ArrayAttr(
+            {static_cast<int32_t>(adaptor.getOperands().size()), 0}));
     return success();
   }
 };

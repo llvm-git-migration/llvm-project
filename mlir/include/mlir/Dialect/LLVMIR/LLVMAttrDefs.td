@@ -1210,4 +1210,33 @@ def WorkgroupAttributionAttr
   let assemblyFormat = "`<` $num_elements `,` $element_type `>`";
 }
 
+//===----------------------------------------------------------------------===//
+// OperandBundleAttr
+//===----------------------------------------------------------------------===//
+
+def LLVM_OperandBundleAttr : LLVM_Attr<"OperandBundle", "opbundle"> {
+  let summary = "Operand bundle information";
+  let description = [{
+    Provide information about a single operand bundle. Each operand bundle has a
+    string tag together with various number of SSA value uses. The SSA values
+    are specified through indices into the operation's operand bundle operands.
+  }];
+
+  let parameters = (ins "StringAttr":$tag,
+                        OptionalArrayRefParameter<"uint32_t">:$argIndices);
+  let assemblyFormat = [{
+    `<` $tag (`,` $argIndices^)? `>`
+  }];
+}
+
+def LLVM_OperandBundlesAttr : LLVM_Attr<"OperandBundles", "opbundles"> {
+  let summary = "A list of operand bundle attributes";
+  let description = "A list of operand bundle attributes";
+
+  let parameters = (ins ArrayRefParameter<"OperandBundleAttr">:$bundles);
+  let assemblyFormat = [{
+    `<` $bundles `>`
+  }];
+}
+
 #endif // LLVMIR_ATTRDEFS

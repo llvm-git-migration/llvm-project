@@ -225,7 +225,7 @@ func.func @invalid_call() {
 // -----
 
 func.func @call_missing_ptr_type(%callee : !llvm.func<i8 (i8)>, %arg : i8) {
-  // expected-error@+1 {{expected indirect call to have 2 trailing types}}
+  // expected-error@+1 {{expected indirect call without operand bundles to have 2 trailing types}}
   llvm.call %callee(%arg) : (i8) -> (i8)
   llvm.return
 }
@@ -235,7 +235,7 @@ func.func @call_missing_ptr_type(%callee : !llvm.func<i8 (i8)>, %arg : i8) {
 func.func private @standard_func_callee()
 
 func.func @call_missing_ptr_type(%arg : i8) {
-  // expected-error@+1 {{expected direct call to have 1 trailing type}}
+  // expected-error@+1 {{expected direct call without operand bundles to have 1 trailing type}}
   llvm.call @standard_func_callee(%arg) : !llvm.ptr, (i8) -> (i8)
   llvm.return
 }
@@ -286,7 +286,7 @@ func.func @call_non_llvm() {
 
 func.func @call_non_llvm_arg(%arg0 : tensor<*xi32>) {
   // expected-error@+1 {{'llvm.call' op operand #0 must be variadic of LLVM dialect-compatible type}}
-  "llvm.call"(%arg0) : (tensor<*xi32>) -> ()
+  "llvm.call"(%arg0) {operandSegmentSizes = array<i32: 1, 0>} : (tensor<*xi32>) -> ()
   llvm.return
 }
 
@@ -1588,7 +1588,7 @@ llvm.func @variadic(...)
 
 llvm.func @invalid_variadic_call(%arg: i32)  {
   // expected-error@+1 {{missing var_callee_type attribute for vararg call}}
-  "llvm.call"(%arg) <{callee = @variadic}> : (i32) -> ()
+  "llvm.call"(%arg) <{callee = @variadic}> {operandSegmentSizes = array<i32: 1, 0>} : (i32) -> ()
   llvm.return
 }
 
@@ -1598,7 +1598,7 @@ llvm.func @variadic(...)
 
 llvm.func @invalid_variadic_call(%arg: i32)  {
   // expected-error@+1 {{missing var_callee_type attribute for vararg call}}
-  "llvm.call"(%arg) <{callee = @variadic}> : (i32) -> ()
+  "llvm.call"(%arg) <{callee = @variadic}> {operandSegmentSizes = array<i32: 1, 0>} : (i32) -> ()
   llvm.return
 }
 
@@ -1654,4 +1654,46 @@ llvm.func @alwaysinline_noinline() attributes { always_inline, no_inline } {
 // expected-error @below {{'llvm.func' op with optimize_none must also be no_inline}}
 llvm.func @optnone_requires_noinline() attributes { optimize_none } {
   llvm.return
+}
+
+// -----
+llvm.func @foo()
+llvm.func @opbundle_no_types() {
+  %0 = llvm.mlir.constant(0 : i32) : i32
+  // expected-error@+1 {{expected direct call with operand bundles to have 2 trailing types}}
+  llvm.call @foo() bundlearg(%0) {op_bundles = #llvm.opbundles<#llvm.opbundle<"tag", 0>>} : () -> ()
+}
+
+// -----
+llvm.func @foo()
+llvm.func @opbundle_no_attr() {
+  %0 = llvm.mlir.constant(0 : i32) : i32
+  // expected-error@+1 {{expected operand bundles attribute}}
+  llvm.call @foo() bundlearg(%0) : () -> (), tuple<i32>
+}
+
+// -----
+llvm.func @foo()
+llvm.func @opbundle_types_mismatch() {
+  %0 = llvm.mlir.constant(0 : i32) : i32
+  %1 = llvm.mlir.constant(1 : i32) : i32
+  // expected-error@+1 {{2 operands present, but expected 1}}
+  llvm.call @foo() bundlearg(%0, %1) : () -> (), tuple<i32>
+}
+
+// -----
+llvm.func @foo()
+llvm.func @opbundle_arg_idx_out_of_range() {
+  %0 = llvm.mlir.constant(0 : i32) : i32
+  // expected-error@+1 {{operand bundle argument index 1 is out of range}}
+  llvm.call @foo() bundlearg(%0) {op_bundles = #llvm.opbundles<#llvm.opbundle<"tag", 1>>} : () -> (), tuple<i32>
+}
+
+// -----
+llvm.func @foo()
+llvm.func @opbundle_arg_not_used() {
+  %0 = llvm.mlir.constant(0 : i32) : i32
+  %1 = llvm.mlir.constant(1 : i32) : i32
+  // expected-error@+1 {{operand bundle argument at index 0 is not included in any operand bundles}}
+  llvm.call @foo() bundlearg(%0, %1) {op_bundles = #llvm.opbundles<#llvm.opbundle<"tag", 1>>} : () -> (), tuple<i32, i32>
 }
