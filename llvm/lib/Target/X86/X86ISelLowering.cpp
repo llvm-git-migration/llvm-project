@@ -29899,7 +29899,8 @@ static SDValue LowerShift(SDValue Op, const X86Subtarget &Subtarget,
       // Create our new vector of shift amounts.
       SDValue Amt16 = getConstVector(AmtBits16, UndefElts16, VT16, DAG, dl);
       // Perform the actual shift.
-      unsigned LogicalOpc = Opc == ISD::SRA ? ISD::SRL : Opc;
+      unsigned LogicalOpc =
+          Opc == ISD::SRA ? static_cast<unsigned>(ISD::SRL) : Opc;
       SDValue ShiftedR = DAG.getNode(LogicalOpc, dl, VT16, R16, Amt16);
       // Now we need to construct a mask which will "drop" bits that get
       // shifted past the LSB/MSB. For a logical shift left, it will look
