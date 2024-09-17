@@ -102,7 +102,7 @@ private:
     // may be wrapped type, such that `operator<=` has side effects.
     pointer __begin_ptr   = std::__to_address(__begin);
     pointer __current_ptr = std::__to_address(__current);
-    pointer __end_ptr = std::__to_address(__end);
+    pointer __end_ptr     = std::__to_address(__end);
     _LIBCPP_ASSUME(__begin_ptr <= __current_ptr);
     _LIBCPP_ASSUME(__current_ptr <= __end_ptr);
   }
