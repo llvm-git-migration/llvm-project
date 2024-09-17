@@ -254,6 +254,18 @@ define void @foo(ptr %ptr, i8 %v0, i8 %v1) {
   EXPECT_EQ(N0->getNumUnscheduledSuccs(), 1u); // N1
   EXPECT_EQ(N1->getNumUnscheduledSuccs(), 0u);
   EXPECT_EQ(N2->getNumUnscheduledSuccs(), 0u);
+
+  // Check decrUnscheduledSuccs.
+  N0->decrUnscheduledSuccs();
+  EXPECT_EQ(N0->getNumUnscheduledSuccs(), 0u);
+#ifndef NDEBUG
+  EXPECT_DEATH(N0->decrUnscheduledSuccs(), ".*Counting.*");
+#endif // NDEBUG
+
+  // Check scheduled(), setScheduled().
+  EXPECT_FALSE(N0->scheduled());
+  N0->setScheduled(true);
+  EXPECT_TRUE(N0->scheduled());
 }
 
 TEST_F(DependencyGraphTest, Preds) {

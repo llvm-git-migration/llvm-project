@@ -286,7 +286,9 @@ void DependencyGraph::createNewNodes(const Interval<Instruction> &NewInterval) {
         MemDGNodeIntervalBuilder::getBotMemDGNode(TopInterval, *this);
     MemDGNode *LinkBotN =
         MemDGNodeIntervalBuilder::getTopMemDGNode(BotInterval, *this);
-    assert(LinkTopN->comesBefore(LinkBotN) && "Wrong order!");
+    assert((LinkTopN == nullptr || LinkBotN == nullptr ||
+            LinkTopN->comesBefore(LinkBotN)) &&
+           "Wrong order!");
     if (LinkTopN != nullptr && LinkBotN != nullptr) {
       LinkTopN->setNextNode(LinkBotN);
       LinkBotN->setPrevNode(LinkTopN);
