@@ -2237,8 +2237,9 @@ class getAsmVOP3Base <int NumSrcArgs, bit HasDst, bit HasClamp,
   string clamp = !if(HasClamp, "$clamp", "");
   string omod = !if(HasOMod, "$omod", "");
 
-  string ret = dst#!if(!gt(NumSrcArgs,0),", "#src0#src1#src2#opsel#bytesel#3PMods#clamp#omod, "");
-
+  string ret = dst#!if(!eq(NumSrcArgs,0),
+                       "",
+                       !if(HasDst,", ", "")#src0#src1#src2#opsel#bytesel#3PMods#clamp#omod);
 }
 
 class getAsmVOP3DPP<string base> {
@@ -2576,12 +2577,7 @@ class VOPProfile <list<ValueType> _ArgVT, bit _EnableClamp = 0> {
    HasModifiers, DstVT, IsFP8ByteSel>.ret;
   field string Asm64 = AsmVOP3Base;
   field string AsmVOP3P = getAsmVOP3P<NumSrcArgs, HasModifiers, HasClamp, HasOpSel>.ret;
-  field string AsmVOP3OpSel = getAsmVOP3OpSel<NumSrcArgs,
-                                              HasClamp,
-                                              HasOMod,
-                                              HasSrc0FloatMods,
-                                              HasSrc1FloatMods,
-                                              HasSrc2FloatMods>.ret;
+  field string AsmVOP3OpSel = AsmVOP3Base;
   field string AsmVOP3DPP = getAsmVOP3DPP<AsmVOP3Base>.ret;
   field string AsmVOP3DPP16 = getAsmVOP3DPP16<AsmVOP3Base>.ret;
   field string AsmVOP3DPP8 = getAsmVOP3DPP8<AsmVOP3Base>.ret;
@@ -2733,6 +2729,7 @@ def VOP_F32_F32_F16_F16 : VOPProfile <[f32, f32, f16, f16]>;
 def VOP_F32_F32_F32_F32 : VOPProfile <[f32, f32, f32, f32]>;
 def VOP_F64_F64_F64_F64 : VOPProfile <[f64, f64, f64, f64]>;
 def VOP_I32_I32_I32_I32 : VOPProfile <[i32, i32, i32, i32]>;
+def VOP_I32_I32_I32_I16 : VOPProfile <[i32, i32, i32, i16]>;
 def VOP_I64_I32_I32_I64 : VOPProfile <[i64, i32, i32, i64]>;
 def VOP_I32_F32_I32_I32 : VOPProfile <[i32, f32, i32, i32]>;
 def VOP_I64_I64_I32_I64 : VOPProfile <[i64, i64, i32, i64]>;
