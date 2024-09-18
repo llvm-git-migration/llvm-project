@@ -183,6 +183,10 @@ Changes in existing checks
   <clang-tidy/checks/readability/redundant-smartptr-get>` check to
   remove `->`, when redundant `get()` is removed.
 
+- Improved :doc:`modernize-use-nullptr
+  <clang-tidy/checks/modernize/use-nullptr>` check to also recognize
+  `NULL`/`__null` (but not `0`) when used with a templated type.
+
 Removed checks
 ^^^^^^^^^^^^^^
 
