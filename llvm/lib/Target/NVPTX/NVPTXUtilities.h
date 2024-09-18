@@ -59,7 +59,11 @@ std::optional<unsigned> getReqNTIDy(const Function &);
 std::optional<unsigned> getReqNTIDz(const Function &);
 std::optional<unsigned> getReqNTID(const Function &);
 
-bool getMaxClusterRank(const Function &, unsigned &);
+std::optional<unsigned> getClusterDimx(const Function &F);
+std::optional<unsigned> getClusterDimy(const Function &F);
+std::optional<unsigned> getClusterDimz(const Function &F);
+
+std::optional<unsigned> getMaxClusterRank(const Function &);
 bool getMinCTASm(const Function &, unsigned &);
 bool getMaxNReg(const Function &, unsigned &);
 bool isKernelFunction(const Function &);
