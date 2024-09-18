@@ -88,12 +88,16 @@ public:
     /// The function pointer alignment is a multiple of the function alignment.
     MultipleOfFunctionAlign,
   };
+
+  enum { AS_INVALID = ~0U };
+
 private:
   bool BigEndian = false;
 
   unsigned AllocaAddrSpace = 0;
   unsigned ProgramAddrSpace = 0;
   unsigned DefaultGlobalsAddrSpace = 0;
+  unsigned FlatAddressSpace = AS_INVALID;
 
   MaybeAlign StackNaturalAlign;
   MaybeAlign FunctionPtrAlign;
@@ -245,6 +249,7 @@ public:
   unsigned getDefaultGlobalsAddressSpace() const {
     return DefaultGlobalsAddrSpace;
   }
+  unsigned getFlatAddressSpace() const { return FlatAddressSpace; }
 
   bool hasMicrosoftFastStdCallMangling() const {
     return ManglingMode == MM_WinCOFFX86;
