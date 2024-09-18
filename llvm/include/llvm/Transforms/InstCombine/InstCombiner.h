@@ -526,6 +526,7 @@ public:
                              bool AllowMultipleUsers = false) = 0;
 
   bool isValidAddrSpaceCast(unsigned FromAS, unsigned ToAS) const;
+  bool hasAndNot(Type *DT) const;
 };
 
 } // namespace llvm

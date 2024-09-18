@@ -823,6 +823,8 @@ public:
   /// would typically be allowed using throughput or size cost models.
   bool hasDivRemOp(Type *DataType, bool IsSigned) const;
 
+  bool hasAndNot(Type *DataType) const;
+
   /// Return true if the given instruction (assumed to be a memory access
   /// instruction) has a volatile variant. If that's the case then we can avoid
   /// addrspacecast to generic AS for volatile loads/stores. Default
@@ -1912,6 +1914,7 @@ public:
                                const SmallBitVector &OpcodeMask) const = 0;
   virtual bool enableOrderedReductions() = 0;
   virtual bool hasDivRemOp(Type *DataType, bool IsSigned) = 0;
+  virtual bool hasAndNot(Type *DataType) = 0;
   virtual bool hasVolatileVariant(Instruction *I, unsigned AddrSpace) = 0;
   virtual bool prefersVectorizedAddressing() = 0;
   virtual InstructionCost getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
@@ -2430,6 +2433,9 @@ public:
   bool hasDivRemOp(Type *DataType, bool IsSigned) override {
     return Impl.hasDivRemOp(DataType, IsSigned);
   }
+
+  bool hasAndNot(Type *DataType) override { return Impl.hasAndNot(DataType); }
+
   bool hasVolatileVariant(Instruction *I, unsigned AddrSpace) override {
     return Impl.hasVolatileVariant(I, AddrSpace);
   }

@@ -189,6 +189,8 @@ bool InstCombiner::isValidAddrSpaceCast(unsigned FromAS, unsigned ToAS) const {
   return TTI.isValidAddrSpaceCast(FromAS, ToAS);
 }
 
+bool InstCombiner::hasAndNot(Type *DT) const { return TTI.hasAndNot(DT); }
+
 Value *InstCombinerImpl::EmitGEPOffset(GEPOperator *GEP, bool RewriteGEP) {
   if (!RewriteGEP)
     return llvm::emitGEPOffset(&Builder, DL, GEP);

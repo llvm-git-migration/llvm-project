@@ -2630,8 +2630,9 @@ Instruction *InstCombinerImpl::visitAnd(BinaryOperator &I) {
   if (Instruction *FoldedLogic = foldBinOpIntoSelectOrPhi(I))
     return FoldedLogic;
 
-  if (Instruction *DeMorgan = matchDeMorgansLaws(I, *this))
-    return DeMorgan;
+  if (!hasAndNot(I.getType()))
+    if (Instruction *DeMorgan = matchDeMorgansLaws(I, *this))
+      return DeMorgan;
 
   {
     Value *A, *B, *C;
@@ -4486,11 +4487,13 @@ Instruction *InstCombinerImpl::foldNot(BinaryOperator &I) {
   //       those are handled via SimplifySelectsFeedingBinaryOp().
   Type *Ty = I.getType();
   Value *X, *Y;
-  if (match(NotOp, m_OneUse(m_c_And(m_Not(m_Value(X)), m_Value(Y))))) {
+  if (match(NotOp, m_OneUse(m_c_And(m_Not(m_Value(X)), m_Value(Y)))) &&
+      !hasAndNot(Ty)) {
     Value *NotY = Builder.CreateNot(Y, Y->getName() + ".not");
     return BinaryOperator::CreateOr(X, NotY);
   }
-  if (match(NotOp, m_OneUse(m_LogicalAnd(m_Not(m_Value(X)), m_Value(Y))))) {
+  if (match(NotOp, m_OneUse(m_LogicalAnd(m_Not(m_Value(X)), m_Value(Y)))) &&
+      !hasAndNot(Ty)) {
     Value *NotY = Builder.CreateNot(Y, Y->getName() + ".not");
     return SelectInst::Create(X, ConstantInt::getTrue(Ty), NotY);
   }

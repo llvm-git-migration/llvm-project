@@ -530,6 +530,10 @@ bool TargetTransformInfo::hasDivRemOp(Type *DataType, bool IsSigned) const {
   return TTIImpl->hasDivRemOp(DataType, IsSigned);
 }
 
+bool TargetTransformInfo::hasAndNot(Type *DataType) const {
+  return TTIImpl->hasAndNot(DataType);
+}
+
 bool TargetTransformInfo::hasVolatileVariant(Instruction *I,
                                              unsigned AddrSpace) const {
   return TTIImpl->hasVolatileVariant(I, AddrSpace);

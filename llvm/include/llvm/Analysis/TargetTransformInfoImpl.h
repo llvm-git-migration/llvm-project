@@ -335,6 +335,8 @@ public:
 
   bool hasDivRemOp(Type *DataType, bool IsSigned) const { return false; }
 
+  bool hasAndNot(Type *DataType) const { return false; }
+
   bool hasVolatileVariant(Instruction *I, unsigned AddrSpace) const {
     return false;
   }

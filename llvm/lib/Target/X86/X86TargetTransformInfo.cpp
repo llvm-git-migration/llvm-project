@@ -6250,6 +6250,28 @@ bool X86TTIImpl::hasDivRemOp(Type *DataType, bool IsSigned) {
   return TLI->isOperationLegal(IsSigned ? ISD::SDIVREM : ISD::UDIVREM, VT);
 }
 
+bool X86TTIImpl::hasAndNot(Type *DataType) {
+  EVT VT = TLI->getValueType(DL, DataType);
+
+  if (VT.isVector()) {
+    if (!ST->hasSSE1() || VT.getSizeInBits() < 128)
+      return false;
+
+    if (VT == MVT::v4i32)
+      return false;
+
+    return ST->hasSSE2();
+  }
+
+  if (!ST->hasBMI())
+    return false;
+
+  if (VT != MVT::i32 && VT != MVT::i64)
+    return false;
+
+  return true;
+}
+
 bool X86TTIImpl::isExpensiveToSpeculativelyExecute(const Instruction* I) {
   // FDIV is always expensive, even if it has a very low uop count.
   // TODO: Still necessary for recent CPUs with low latency/throughput fdiv?
