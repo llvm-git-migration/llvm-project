@@ -655,7 +655,7 @@ INTERCEPTOR_STRTO_BASE(long long, strtoll)
 INTERCEPTOR(long, strtol, const char *nptr, char **endptr, int base) {
   // REAL(strol) may be ntdll!strol, which doesn't set errno. Instead,
   // re-use the strtoll interceptor and do the range check ourselves.
-  COMPILER_CHECK(sizeof(long) == sizeof(i32));
+  COMPILER_CHECK(sizeof(long) == sizeof(u32));
   long long result = strtoll(nptr, endptr, base);
   if (result > INT32_MAX) {
     errno = errno_ERANGE;
