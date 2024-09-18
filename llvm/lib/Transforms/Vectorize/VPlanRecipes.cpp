@@ -2482,7 +2482,7 @@ VPCSAExtractScalarRecipe::computeCost(ElementCount VF,
                                 CmpInst::BAD_ICMP_PREDICATE, CostKind);
   }
   // ExtractFromVec
-  C += TTI.getArithmeticInstrCost(Instruction::ExtractElement, VTy, CostKind);
+  C += TTI.getVectorInstrCost(Instruction::ExtractElement, VTy, CostKind);
   // LastIdxGEZero
   C += TTI.getCmpSelInstrCost(Instruction::ICmp, Int32VTy, MaskTy,
                               CmpInst::ICMP_SGE, CostKind);
