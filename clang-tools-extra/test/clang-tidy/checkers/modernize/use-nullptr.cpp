@@ -84,6 +84,14 @@ void test_macro_expansion4() {
 #undef MY_NULL
 }
 
+template <typename T> struct pear {
+  T x;
+};
+void test_templated() {
+  pear<int*> p = { NULL };
+  dummy(p.x);
+}
+
 #define IS_EQ(x, y) if (x != y) return;
 void test_macro_args() {
   int i = 0;
