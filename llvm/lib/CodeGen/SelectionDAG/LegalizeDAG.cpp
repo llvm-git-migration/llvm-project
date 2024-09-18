@@ -2205,7 +2205,24 @@ void SelectionDAGLegalize::ExpandFPLibCall(SDNode* Node,
     Results.push_back(Tmp.first);
     Results.push_back(Tmp.second);
   } else {
-    SDValue Tmp = ExpandLibCall(LC, Node, false).first;
+    bool IsSignedArgument = false;
+    switch (LC) {
+    case RTLIB::LDEXP_F32:
+    case RTLIB::LDEXP_F64:
+    case RTLIB::LDEXP_F80:
+    case RTLIB::LDEXP_F128:
+    case RTLIB::LDEXP_PPCF128:
+      IsSignedArgument = true;
+      break;
+    case RTLIB::FREXP_F32:
+    case RTLIB::FREXP_F64:
+    case RTLIB::FREXP_F80:
+    case RTLIB::FREXP_F128:
+    case RTLIB::FREXP_PPCF128:
+      IsSignedArgument = true;
+      break;
+    }
+    SDValue Tmp = ExpandLibCall(LC, Node, IsSignedArgument).first;
     Results.push_back(Tmp);
   }
 }
