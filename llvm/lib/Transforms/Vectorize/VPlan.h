@@ -236,7 +236,7 @@ public:
 struct VPTransformState {
   VPTransformState(ElementCount VF, unsigned UF, LoopInfo *LI,
                    DominatorTree *DT, IRBuilderBase &Builder,
-                   InnerLoopVectorizer *ILV, VPlan *Plan);
+                   InnerLoopVectorizer *ILV, VPlan *Plan, Loop *OrigLoop);
 
   /// The chosen Vectorization Factor of the loop being vectorized.
   ElementCount VF;
@@ -1235,6 +1235,7 @@ public:
     CanonicalIVIncrementForPart,
     BranchOnCount,
     BranchOnCond,
+    BranchMultipleConds,
     ComputeReductionResult,
     // Takes the VPValue to extract from as first operand and the lane or part
     // to extract as second operand, counting from the end starting with 1 for
@@ -1245,6 +1246,7 @@ public:
     // operand). Only generates scalar values (either for the first lane only or
     // for all lanes, depending on its uses).
     PtrAdd,
+    AnyOf,
   };
 
 private:
@@ -1360,6 +1362,7 @@ public:
     case Instruction::AtomicRMW:
     case VPInstruction::BranchOnCond:
     case VPInstruction::BranchOnCount:
+    case VPInstruction::BranchMultipleConds:
       return false;
     default:
       return true;
