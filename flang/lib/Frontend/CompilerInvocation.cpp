@@ -1100,6 +1100,24 @@ static bool parseOpenMPArgs(CompilerInvocation &res, llvm::opt::ArgList &args,
   return diags.getNumErrors() == numErrorsBefore;
 }
 
+/// Parses signed integer overflow options and populates the
+/// CompilerInvocation accordingly.
+/// Returns false if new errors are generated.
+///
+/// \param [out] invoc Stores the processed arguments
+/// \param [in] args The compiler invocation arguments to parse
+/// \param [out] diags DiagnosticsEngine to report erros with
+static bool parseIntegerOverflowArgs(CompilerInvocation &invoc,
+                                     llvm::opt::ArgList &args,
+                                     clang::DiagnosticsEngine &diags) {
+  LangOptions &opts = invoc.getLangOpts();
+
+  if (args.getLastArg(clang::driver::options::OPT_fwrapv))
+    opts.setSignedOverflowBehavior(LangOptions::SOB_Defined);
+
+  return true;
+}
+
 /// Parses all floating point related arguments and populates the
 /// CompilerInvocation accordingly.
 /// Returns false if new errors are generated.
@@ -1240,6 +1258,18 @@ static bool parseLinkerOptionsArgs(CompilerInvocation &invoc,
   return true;
 }
 
+static bool parseLangOptionsArgs(CompilerInvocation &invoc,
+                                 llvm::opt::ArgList &args,
+                                 clang::DiagnosticsEngine &diags) {
+  bool success = true;
+
+  success &= parseIntegerOverflowArgs(invoc, args, diags);
+  success &= parseFloatingPointArgs(invoc, args, diags);
+  success &= parseVScaleArgs(invoc, args, diags);
+
+  return success;
+}
+
 bool CompilerInvocation::createFromArgs(
     CompilerInvocation &invoc, llvm::ArrayRef<const char *> commandLineArgs,
     clang::DiagnosticsEngine &diags, const char *argv0) {
@@ -1348,9 +1378,7 @@ bool CompilerInvocation::createFromArgs(
   invoc.frontendOpts.mlirArgs =
       args.getAllArgValues(clang::driver::options::OPT_mmlir);
 
-  success &= parseFloatingPointArgs(invoc, args, diags);
-
-  success &= parseVScaleArgs(invoc, args, diags);
+  success &= parseLangOptionsArgs(invoc, args, diags);
 
   success &= parseLinkerOptionsArgs(invoc, args, diags);
 
@@ -1557,6 +1585,8 @@ void CompilerInvocation::setLoweringOptions() {
   loweringOpts.setUnderscoring(codegenOpts.Underscoring);
 
   const LangOptions &langOptions = getLangOpts();
+  loweringOpts.setIntegerWrapAround(langOptions.getSignedOverflowBehavior() ==
+                                    LangOptions::SOB_Defined);
   Fortran::common::MathOptionsBase &mathOpts = loweringOpts.getMathOptions();
   // TODO: when LangOptions are finalized, we can represent
   //       the math related options using Fortran::commmon::MathOptionsBase,
