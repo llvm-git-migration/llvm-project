@@ -254,7 +254,7 @@ struct AssumeBuilderState {
                              ->getDataLayout()
                              .getTypeStoreSize(AccType)
                              .getKnownMinValue();
-    if (DerefSize != 0) {
+    if (EnableKnowledgeRetention && DerefSize != 0) {
       addKnowledge({Attribute::Dereferenceable, DerefSize, Pointer});
       if (!NullPointerIsDefined(MemInst->getFunction(),
                                 Pointer->getType()->getPointerAddressSpace()))
@@ -265,6 +265,15 @@ struct AssumeBuilderState {
   }
 
   void addInstruction(Instruction *I) {
+    if (auto *L = dyn_cast<LoadInst>(I))
+      if (auto *Align = L->getMetadata(LLVMContext::MD_align)) {
+        addKnowledge({Attribute::Alignment,
+                      mdconst::extract<ConstantInt>(Align->getOperand(0))
+                          ->getZExtValue(),
+                      I});
+      }
+    if (!EnableKnowledgeRetention)
+      return;
     if (auto *Call = dyn_cast<CallBase>(I))
       return addCall(Call);
     if (auto *Load = dyn_cast<LoadInst>(I))
@@ -291,7 +300,7 @@ AssumeInst *llvm::buildAssumeFromInst(Instruction *I) {
 
 bool llvm::salvageKnowledge(Instruction *I, AssumptionCache *AC,
                             DominatorTree *DT) {
-  if (!EnableKnowledgeRetention || I->isTerminator())
+  if (I->isTerminator())
     return false;
   bool Changed = false;
   AssumeBuilderState Builder(I->getModule(), I, AC, DT);

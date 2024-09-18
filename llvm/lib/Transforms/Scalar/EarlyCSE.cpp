@@ -1588,9 +1588,9 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
         if (InVal.IsLoad)
           if (auto *I = dyn_cast<Instruction>(Op))
             combineMetadataForCSE(I, &Inst, false);
+        salvageKnowledge(&Inst, &AC);
         if (!Inst.use_empty())
           Inst.replaceAllUsesWith(Op);
-        salvageKnowledge(&Inst, &AC);
         removeMSSA(Inst);
         Inst.eraseFromParent();
         Changed = true;
