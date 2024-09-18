@@ -1387,9 +1387,11 @@ public:
     // If we might exit from anywhere but the latch, must run the exiting
     // iteration in scalar form.
     if (TheLoop->getExitingBlock() != TheLoop->getLoopLatch()) {
-      LLVM_DEBUG(
-          dbgs() << "LV: Loop requires scalar epilogue: multiple exits\n");
-      return true;
+      if (!Legal->canVectorizeMultiCond()) {
+        LLVM_DEBUG(
+            dbgs() << "LV: Loop requires scalar epilogue: multiple exits\n");
+        return true;
+      }
     }
     if (IsVectorizing && InterleaveInfo.requiresScalarEpilogue()) {
       LLVM_DEBUG(dbgs() << "LV: Loop requires scalar epilogue: "
@@ -2571,8 +2573,17 @@ void InnerLoopVectorizer::createVectorLoopSkeleton(StringRef Prefix) {
   LoopVectorPreHeader = OrigLoop->getLoopPreheader();
   assert(LoopVectorPreHeader && "Invalid loop structure");
   LoopExitBlock = OrigLoop->getUniqueExitBlock(); // may be nullptr
-  assert((LoopExitBlock || Cost->requiresScalarEpilogue(VF.isVector())) &&
-         "multiple exit loop without required epilogue?");
+  if (Legal->canVectorizeMultiCond()) {
+    BasicBlock *Latch = OrigLoop->getLoopLatch();
+    BasicBlock *TrueSucc =
+        cast<BranchInst>(Latch->getTerminator())->getSuccessor(0);
+    BasicBlock *FalseSucc =
+        cast<BranchInst>(Latch->getTerminator())->getSuccessor(1);
+    LoopExitBlock = OrigLoop->contains(TrueSucc) ? FalseSucc : TrueSucc;
+  } else {
+    assert((LoopExitBlock || Cost->requiresScalarEpilogue(VF.isVector())) &&
+           "multiple exit loop without required epilogue?");
+  }
 
   LoopMiddleBlock =
       SplitBlock(LoopVectorPreHeader, LoopVectorPreHeader->getTerminator(), DT,
@@ -2943,24 +2954,26 @@ void InnerLoopVectorizer::fixVectorizedLoop(VPTransformState &State,
   VPRegionBlock *VectorRegion = State.Plan->getVectorLoopRegion();
   VPBasicBlock *LatchVPBB = VectorRegion->getExitingBasicBlock();
   Loop *VectorLoop = LI->getLoopFor(State.CFG.VPBB2IRBB[LatchVPBB]);
-  if (Cost->requiresScalarEpilogue(VF.isVector())) {
-    // No edge from the middle block to the unique exit block has been inserted
-    // and there is nothing to fix from vector loop; phis should have incoming
-    // from scalar loop only.
-  } else {
-    // TODO: Check VPLiveOuts to see if IV users need fixing instead of checking
-    // the cost model.
+  if (OrigLoop->getUniqueExitBlock()) {
+    if (Cost->requiresScalarEpilogue(VF.isVector())) {
+      // No edge from the middle block to the unique exit block has been
+      // inserted and there is nothing to fix from vector loop; phis should have
+      // incoming from scalar loop only.
+    } else {
+      // TODO: Check VPLiveOuts to see if IV users need fixing instead of
+      // checking the cost model.
 
-    // If we inserted an edge from the middle block to the unique exit block,
-    // update uses outside the loop (phis) to account for the newly inserted
-    // edge.
+      // If we inserted an edge from the middle block to the unique exit block,
+      // update uses outside the loop (phis) to account for the newly inserted
+      // edge.
 
-    // Fix-up external users of the induction variables.
-    for (const auto &Entry : Legal->getInductionVars())
-      fixupIVUsers(Entry.first, Entry.second,
-                   getOrCreateVectorTripCount(VectorLoop->getLoopPreheader()),
-                   IVEndValues[Entry.first], LoopMiddleBlock,
-                   VectorLoop->getHeader(), Plan, State);
+      // Fix-up external users of the induction variables.
+      for (const auto &Entry : Legal->getInductionVars())
+        fixupIVUsers(Entry.first, Entry.second,
+                     getOrCreateVectorTripCount(VectorLoop->getLoopPreheader()),
+                     IVEndValues[Entry.first], LoopMiddleBlock,
+                     VectorLoop->getHeader(), Plan, State);
+    }
   }
 
   // Fix live-out phis not already fixed earlier.
@@ -3584,7 +3597,8 @@ void LoopVectorizationCostModel::collectLoopUniforms(ElementCount VF) {
   TheLoop->getExitingBlocks(Exiting);
   for (BasicBlock *E : Exiting) {
     auto *Cmp = dyn_cast<Instruction>(E->getTerminator()->getOperand(0));
-    if (Cmp && TheLoop->contains(Cmp) && Cmp->hasOneUse())
+    if (Cmp && TheLoop->contains(Cmp) && Cmp->hasOneUse() &&
+        (TheLoop->getLoopLatch() == E || !Legal->canVectorizeMultiCond()))
       AddToWorklistIfAllowed(Cmp);
   }
 
@@ -7515,7 +7529,8 @@ LoopVectorizationPlanner::executePlan(
   LLVM_DEBUG(BestVPlan.dump());
 
   // Perform the actual loop transformation.
-  VPTransformState State(BestVF, BestUF, LI, DT, ILV.Builder, &ILV, &BestVPlan);
+  VPTransformState State(BestVF, BestUF, LI, DT, ILV.Builder, &ILV, &BestVPlan,
+                         OrigLoop);
 
   // 0. Generate SCEV-dependent code into the preheader, including TripCount,
   // before making any changes to the CFG.
@@ -7577,12 +7592,15 @@ LoopVectorizationPlanner::executePlan(
 
   // 2.5 Collect reduction resume values.
   DenseMap<const RecurrenceDescriptor *, Value *> ReductionResumeValues;
-  auto *ExitVPBB =
-      cast<VPBasicBlock>(BestVPlan.getVectorLoopRegion()->getSingleSuccessor());
-  for (VPRecipeBase &R : *ExitVPBB) {
-    createAndCollectMergePhiForReduction(
-        dyn_cast<VPInstruction>(&R), ReductionResumeValues, State, OrigLoop,
-        State.CFG.VPBB2IRBB[ExitVPBB], ExpandedSCEVs);
+  VPBasicBlock *ExitVPBB = nullptr;
+  if (BestVPlan.getVectorLoopRegion()->getSingleSuccessor()) {
+    ExitVPBB = cast<VPBasicBlock>(
+        BestVPlan.getVectorLoopRegion()->getSingleSuccessor());
+    for (VPRecipeBase &R : *ExitVPBB) {
+      createAndCollectMergePhiForReduction(
+          dyn_cast<VPInstruction>(&R), ReductionResumeValues, State, OrigLoop,
+          State.CFG.VPBB2IRBB[ExitVPBB], ExpandedSCEVs);
+    }
   }
 
   // 2.6. Maintain Loop Hints
@@ -7608,6 +7626,7 @@ LoopVectorizationPlanner::executePlan(
     LoopVectorizeHints Hints(L, true, *ORE);
     Hints.setAlreadyVectorized();
   }
+
   TargetTransformInfo::UnrollingPreferences UP;
   TTI.getUnrollingPreferences(L, *PSE.getSE(), UP, ORE);
   if (!UP.UnrollVectorizedLoop || CanonicalIVStartValue)
@@ -7620,15 +7639,17 @@ LoopVectorizationPlanner::executePlan(
   ILV.printDebugTracesAtEnd();
 
   // 4. Adjust branch weight of the branch in the middle block.
-  auto *MiddleTerm =
-      cast<BranchInst>(State.CFG.VPBB2IRBB[ExitVPBB]->getTerminator());
-  if (MiddleTerm->isConditional() &&
-      hasBranchWeightMD(*OrigLoop->getLoopLatch()->getTerminator())) {
-    // Assume that `Count % VectorTripCount` is equally distributed.
-    unsigned TripCount = State.UF * State.VF.getKnownMinValue();
-    assert(TripCount > 0 && "trip count should not be zero");
-    const uint32_t Weights[] = {1, TripCount - 1};
-    setBranchWeights(*MiddleTerm, Weights, /*IsExpected=*/false);
+  if (ExitVPBB) {
+    auto *MiddleTerm =
+        cast<BranchInst>(State.CFG.VPBB2IRBB[ExitVPBB]->getTerminator());
+    if (MiddleTerm->isConditional() &&
+        hasBranchWeightMD(*OrigLoop->getLoopLatch()->getTerminator())) {
+      // Assume that `Count % VectorTripCount` is equally distributed.
+      unsigned TripCount = State.UF * State.VF.getKnownMinValue();
+      assert(TripCount > 0 && "trip count should not be zero");
+      const uint32_t Weights[] = {1, TripCount - 1};
+      setBranchWeights(*MiddleTerm, Weights, /*IsExpected=*/false);
+    }
   }
 
   return {State.ExpandedSCEVs, ReductionResumeValues};
@@ -8013,7 +8034,7 @@ VPValue *VPRecipeBuilder::createEdgeMask(BasicBlock *Src, BasicBlock *Dst) {
   // If source is an exiting block, we know the exit edge is dynamically dead
   // in the vector loop, and thus we don't need to restrict the mask.  Avoid
   // adding uses of an otherwise potentially dead instruction.
-  if (OrigLoop->isLoopExiting(Src))
+  if (!Legal->canVectorizeMultiCond() && OrigLoop->isLoopExiting(Src))
     return EdgeMaskCache[Edge] = SrcMask;
 
   VPValue *EdgeMask = getVPValueOrAddLiveIn(BI->getCondition());
@@ -8630,6 +8651,8 @@ static void addCanonicalIVRecipes(VPlan &Plan, Type *IdxTy, bool HasNUW,
 static SetVector<VPIRInstruction *> collectUsersInExitBlock(
     Loop *OrigLoop, VPRecipeBuilder &Builder, VPlan &Plan,
     const MapVector<PHINode *, InductionDescriptor> &Inductions) {
+  if (!Plan.getVectorLoopRegion()->getSingleSuccessor())
+    return {};
   auto *MiddleVPBB =
       cast<VPBasicBlock>(Plan.getVectorLoopRegion()->getSingleSuccessor());
   // No edge from the middle block to the unique exit block has been inserted
@@ -8717,6 +8740,8 @@ static void addLiveOutsForFirstOrderRecurrences(
   // TODO: Should be replaced by
   // Plan->getScalarLoopRegion()->getSinglePredecessor() in the future once the
   // scalar region is modeled as well.
+  if (!VectorRegion->getSingleSuccessor())
+    return;
   auto *MiddleVPBB = cast<VPBasicBlock>(VectorRegion->getSingleSuccessor());
   VPBasicBlock *ScalarPHVPBB = nullptr;
   if (MiddleVPBB->getNumSuccessors() == 2) {
@@ -8991,6 +9016,67 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
          "VPBasicBlock");
   RecipeBuilder.fixHeaderPhis();
 
+  SmallVector<BasicBlock *> Exiting;
+  OrigLoop->getExitingBlocks(Exiting);
+
+  if (Legal->canVectorizeMultiCond()) {
+    auto *LatchVPBB =
+        cast<VPBasicBlock>(Plan->getVectorLoopRegion()->getExiting());
+    VPBuilder::InsertPointGuard Guard(Builder);
+    Builder.setInsertPoint(LatchVPBB->getTerminator());
+    auto *MiddleVPBB =
+        cast<VPBasicBlock>(Plan->getVectorLoopRegion()->getSingleSuccessor());
+
+    VPValue *EarlyExitTaken = nullptr;
+    SmallVector<VPValue *> ExitTaken;
+    SmallVector<PHINode *> ExitPhis;
+    SmallVector<Value *> ExitValues;
+    BasicBlock *ExitBlock;
+    for (BasicBlock *E : Exiting) {
+      if (E == OrigLoop->getLoopLatch()) {
+        BasicBlock *TrueSucc =
+            cast<BranchInst>(E->getTerminator())->getSuccessor(0);
+        BasicBlock *FalseSucc =
+            cast<BranchInst>(E->getTerminator())->getSuccessor(1);
+        auto EB = !OrigLoop->contains(TrueSucc) ? TrueSucc : FalseSucc;
+
+        auto *VPExitBlock = new VPIRBasicBlock(EB);
+        VPBasicBlock *ScalarPH = new VPBasicBlock("scalar.ph");
+        VPBlockUtils::connectBlocks(MiddleVPBB, VPExitBlock);
+        VPBlockUtils::connectBlocks(MiddleVPBB, ScalarPH);
+        continue;
+      }
+      BasicBlock *TrueSucc =
+          cast<BranchInst>(E->getTerminator())->getSuccessor(0);
+      BasicBlock *FalseSucc =
+          cast<BranchInst>(E->getTerminator())->getSuccessor(1);
+      VPValue *M = RecipeBuilder.getBlockInMask(
+          OrigLoop->contains(TrueSucc) ? TrueSucc : FalseSucc);
+
+      auto *N = Builder.createNot(M);
+      auto *EC = Builder.createNaryOp(VPInstruction::AnyOf, {N});
+      ExitTaken.push_back(EC);
+      if (EarlyExitTaken)
+        EarlyExitTaken = Builder.createOr(EarlyExitTaken, EC);
+      else
+        EarlyExitTaken = EC;
+      ExitBlock = !OrigLoop->contains(TrueSucc) ? TrueSucc : FalseSucc;
+    }
+
+    auto *Term = dyn_cast<VPInstruction>(LatchVPBB->getTerminator());
+    auto *IsLatchExiting = Builder.createICmp(
+        CmpInst::ICMP_EQ, Term->getOperand(0), Term->getOperand(1));
+    Builder.createNaryOp(VPInstruction::BranchMultipleConds,
+                         {EarlyExitTaken, IsLatchExiting});
+    Term->eraseFromParent();
+
+    auto *EA = new VPIRBasicBlock(ExitBlock);
+    VPRegionBlock *LoopRegion = Plan->getVectorLoopRegion();
+    VPBlockUtils::disconnectBlocks(LoopRegion, MiddleVPBB);
+    VPBlockUtils::connectBlocks(LoopRegion, EA);
+    VPBlockUtils::connectBlocks(LoopRegion, MiddleVPBB);
+  }
+
   SetVector<VPIRInstruction *> ExitUsersToFix = collectUsersInExitBlock(
       OrigLoop, RecipeBuilder, *Plan, Legal->getInductionVars());
   addLiveOutsForFirstOrderRecurrences(*Plan, ExitUsersToFix);
@@ -9062,6 +9148,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
     VPlanTransforms::addActiveLaneMask(*Plan, ForControlFlow,
                                        WithoutRuntimeCheck);
   }
+
   return Plan;
 }
 
@@ -9286,6 +9373,8 @@ void LoopVectorizationPlanner::adjustRecipesForReductions(
   }
   VPBasicBlock *LatchVPBB = VectorLoopRegion->getExitingBasicBlock();
   Builder.setInsertPoint(&*LatchVPBB->begin());
+  if (!VectorLoopRegion->getSingleSuccessor())
+    return;
   VPBasicBlock *MiddleVPBB =
       cast<VPBasicBlock>(VectorLoopRegion->getSingleSuccessor());
   VPBasicBlock::iterator IP = MiddleVPBB->getFirstNonPhi();
