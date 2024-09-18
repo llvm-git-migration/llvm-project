@@ -5265,10 +5265,62 @@ OpenMPIRBuilder::getOpenMPDefaultSimdAlign(const Triple &TargetTriple,
   return 0;
 }
 
+static void appendNontemporalVars(BasicBlock *Block,
+                                  SmallVector<Value *> &NontemporalVars) {
+  for (Instruction &I : *Block) {
+    if (const CallInst *CI = dyn_cast<CallInst>(&I)) {
+      if (CI->getIntrinsicID() == Intrinsic::memcpy) {
+        llvm::Value *DestPtr = CI->getArgOperand(0);
+        llvm::Value *SrcPtr = CI->getArgOperand(1);
+        for (const llvm::Value *Var : NontemporalVars) {
+          if (Var == SrcPtr) {
+            NontemporalVars.push_back(DestPtr);
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+/// Attach nontemporal metadata to the load/store instructions of nontemporal
+/// variables of \p Block
+static void addNonTemporalMetadata(BasicBlock *Block, MDNode *Nontemporal,
+                                   SmallVector<Value *> &NontemporalVars) {
+  appendNontemporalVars(Block, NontemporalVars);
+  for (Instruction &I : *Block) {
+    llvm::Value *mem_ptr = nullptr;
+    bool MetadataFlag = true;
+    if (llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(&I)) {
+      if (!(li->getType()->isPointerTy()))
+        mem_ptr = li->getPointerOperand();
+    } else if (llvm::StoreInst *si = dyn_cast<llvm::StoreInst>(&I))
+      mem_ptr = si->getPointerOperand();
+    if (mem_ptr) {
+      while (mem_ptr && !(isa<llvm::AllocaInst>(mem_ptr))) {
+        if (llvm::GetElementPtrInst *gep =
+                dyn_cast<llvm::GetElementPtrInst>(mem_ptr)) {
+          llvm::Type *sourceType = gep->getSourceElementType();
+          if (sourceType->isStructTy() && gep->getNumIndices() >= 2 &&
+              !(gep->hasAllZeroIndices())) {
+            MetadataFlag = false;
+            break;
+          }
+          mem_ptr = gep->getPointerOperand();
+        } else if (llvm::LoadInst *li = dyn_cast<llvm::LoadInst>(mem_ptr))
+          mem_ptr = li->getPointerOperand();
+      }
+      if (MetadataFlag && is_contained(NontemporalVars, mem_ptr))
+        I.setMetadata(LLVMContext::MD_nontemporal, Nontemporal);
+    }
+  }
+}
+
 void OpenMPIRBuilder::applySimd(CanonicalLoopInfo *CanonicalLoop,
                                 MapVector<Value *, Value *> AlignedVars,
                                 Value *IfCond, OrderKind Order,
-                                ConstantInt *Simdlen, ConstantInt *Safelen) {
+                                ConstantInt *Simdlen, ConstantInt *Safelen,
+                                SmallVector<Value *> NontemporalVars) {
   LLVMContext &Ctx = Builder.getContext();
 
   Function *F = CanonicalLoop->getFunction();
@@ -5365,6 +5417,12 @@ void OpenMPIRBuilder::applySimd(CanonicalLoopInfo *CanonicalLoop,
   }
 
   addLoopMetadata(CanonicalLoop, LoopMDList);
+  // Set nontemporal metadata to load and stores of nontemporal values
+  if (NontemporalVars.size()) {
+    MDNode *NontemporalNode = MDNode::getDistinct(Ctx, {});
+    for (BasicBlock *BB : Reachable)
+      addNonTemporalMetadata(BB, NontemporalNode, NontemporalVars);
+  }
 }
 
 /// Create the TargetMachine object to query the backend for optimization
