@@ -109,6 +109,35 @@ public:
     return VXRMInfo::getUnknown();
   }
 
+  // Calculate the VXRMInfo visible to a block assuming this and Other
+  // are both predecessors. To allow speculatively running WriteVXRM
+  // we will ignore Unknowns if one of this and Other have valid
+  // WriteVXRM. Rationale: WriteVXRM causes a pipeline flush in some
+  // uarchs and moving it outside loops is very important for some
+  // workloads.
+  VXRMInfo intersectAnticipated(const VXRMInfo &Other) const {
+    // If the new value isn't valid, ignore it.
+    if (!Other.isValid())
+      return *this;
+
+    // If this value isn't valid, this must be the first predecessor, use it.
+    if (!isValid())
+      return Other;
+
+    // If either is unknown, the result is the other one.
+    if (isUnknown())
+      return Other;
+    else if (Other.isUnknown())
+      return *this;
+
+    // If we have an exact match, return this.
+    if (*this == Other)
+      return *this;
+
+    // Otherwise the result is unknown.
+    return VXRMInfo::getUnknown();
+  }
+
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Support for debugging, callable in GDB: V->dump()
   LLVM_DUMP_METHOD void dump() const {
@@ -290,7 +319,7 @@ void RISCVInsertWriteVXRM::computeAnticipated(const MachineBasicBlock &MBB) {
   } else {
     for (const MachineBasicBlock *S : MBB.successors())
       Anticipated =
-          Anticipated.intersect(BlockInfo[S->getNumber()].AnticipatedIn);
+          Anticipated.intersectAnticipated(BlockInfo[S->getNumber()].AnticipatedIn);
   }
 
   // If we don't have any valid anticipated info, wait until we do.

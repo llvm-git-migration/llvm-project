@@ -388,10 +388,9 @@ mergeblock:
 define void @test10(ptr nocapture %ptr_dest, ptr nocapture readonly %ptr_op1, ptr nocapture readonly %ptr_op2, iXLen %n) {
 ; CHECK-LABEL: test10:
 ; CHECK:       # %bb.0: # %entry
-; CHECK-NEXT:    beqz a3, .LBB9_3
-; CHECK-NEXT:  # %bb.1: # %for.body.preheader
 ; CHECK-NEXT:    csrwi vxrm, 2
-; CHECK-NEXT:  .LBB9_2: # %for.body
+; CHECK-NEXT:    beqz a3, .LBB9_2
+; CHECK-NEXT:  .LBB9_1: # %for.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vsetvli a4, a3, e8, mf8, ta, ma
 ; CHECK-NEXT:    vle8.v v8, (a1)
@@ -399,8 +398,8 @@ define void @test10(ptr nocapture %ptr_dest, ptr nocapture readonly %ptr_op1, pt
 ; CHECK-NEXT:    vaadd.vv v8, v8, v9
 ; CHECK-NEXT:    sub a3, a3, a4
 ; CHECK-NEXT:    vse8.v v8, (a0)
-; CHECK-NEXT:    bnez a3, .LBB9_2
-; CHECK-NEXT:  .LBB9_3: # %for.end
+; CHECK-NEXT:    bnez a3, .LBB9_1
+; CHECK-NEXT:  .LBB9_2: # %for.end
 ; CHECK-NEXT:    ret
 entry:
   %tobool.not9 = icmp eq iXLen %n, 0
