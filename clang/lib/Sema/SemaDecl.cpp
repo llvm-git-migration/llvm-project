@@ -18931,7 +18931,11 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
       FD->setInvalidDecl();
       EnclosingDecl->setInvalidDecl();
       continue;
-    } else if (FDTy->isIncompleteArrayType() &&
+    } else if (Decl::isFlexibleArrayMemberLike(
+                   Context, FD, FD->getType(),
+                   LangOptions::StrictFlexArraysLevelKind::ZeroOrIncomplete
+                   /*getLangOpts().getStrictFlexArraysLevel()*/,
+                   true) &&
                (Record || isa<ObjCContainerDecl>(EnclosingDecl))) {
       if (Record) {
         // Flexible array member.
