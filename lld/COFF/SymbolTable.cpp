@@ -479,10 +479,11 @@ void SymbolTable::reportUnresolvable() {
                        /* localImports */ nullptr, true);
 }
 
-void SymbolTable::resolveRemainingUndefines() {
+bool SymbolTable::resolveRemainingUndefines() {
   llvm::TimeTraceScope timeScope("Resolve remaining undefined symbols");
   SmallPtrSet<Symbol *, 8> undefs;
   DenseMap<Symbol *, Symbol *> localImports;
+  bool foundLazy = false;
 
   for (auto &i : symMap) {
     Symbol *sym = i.second;
@@ -502,6 +503,11 @@ void SymbolTable::resolveRemainingUndefines() {
     // This odd rule is for compatibility with MSVC linker.
     if (name.starts_with("__imp_")) {
       Symbol *imp = find(name.substr(strlen("__imp_")));
+      if (imp && imp->isLazy()) {
+        forceLazy(imp);
+        foundLazy = true;
+        continue;
+      }
       if (imp && isa<Defined>(imp)) {
         auto *d = cast<Defined>(imp);
         replaceSymbol<DefinedLocalImport>(sym, ctx, name, d);
@@ -529,6 +535,7 @@ void SymbolTable::resolveRemainingUndefines() {
   reportProblemSymbols(
       ctx, undefs,
       ctx.config.warnLocallyDefinedImported ? &localImports : nullptr, false);
+  return foundLazy;
 }
 
 std::pair<Symbol *, bool> SymbolTable::insert(StringRef name) {
