@@ -16,6 +16,10 @@ COMPILER_RT_ABI NOINLINE float __extendhfsf2(src_t a) {
   return __extendXfYf2__(a);
 }
 
+COMPILER_RT_ABI NOINLINE long double __extendhfxf2(src_t a) {
+  return (long double)__extendXfYf2__(a);
+}
+
 COMPILER_RT_ABI float __gnu_h2f_ieee(src_t a) { return __extendhfsf2(a); }
 
 #if defined(__ARM_EABI__)
