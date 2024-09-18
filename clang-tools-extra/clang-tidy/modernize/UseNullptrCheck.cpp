@@ -38,7 +38,9 @@ AST_MATCHER(Type, sugaredNullptrType) {
 StatementMatcher makeCastSequenceMatcher(llvm::ArrayRef<StringRef> NameList) {
   auto ImplicitCastToNull = implicitCastExpr(
       anyOf(hasCastKind(CK_NullToPointer), hasCastKind(CK_NullToMemberPointer)),
-      unless(hasImplicitDestinationType(qualType(substTemplateTypeParmType()))),
+      anyOf(hasSourceExpression(gnuNullExpr()),
+            unless(hasImplicitDestinationType(
+                qualType(substTemplateTypeParmType())))),
       unless(hasSourceExpression(hasType(sugaredNullptrType()))),
       unless(hasImplicitDestinationType(
           qualType(matchers::matchesAnyListedTypeName(NameList)))));
