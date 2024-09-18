@@ -656,7 +656,12 @@ INTERCEPTOR(long, strtol, const char *nptr, char **endptr, int base) {
   // REAL(strol) may be ntdll!strol, which doesn't set errno. Instead,
   // re-use the strtoll interceptor and do the range check ourselves.
   COMPILER_CHECK(sizeof(long) == sizeof(u32));
-  long long result = strtoll(nptr, endptr, base);
+
+  void *ctx;
+  ASAN_INTERCEPTOR_ENTER(ctx, strtol);
+  AsanInitFromRtl();
+  long long result = StrtolImpl(ctx, REAL(strtoll), nptr, endptr, base);
+
   if (result > INT32_MAX) {
     errno = errno_ERANGE;
     return INT32_MAX;
