@@ -84,6 +84,17 @@ void test_macro_expansion4() {
 #undef MY_NULL
 }
 
+template <typename T> struct pear {
+  pear() { x = __null; }
+  // CHECK-MESSAGES: :[[@LINE-1]]:16: warning: use nullptr [modernize-use-nullptr]
+  // CHECK-FIXES: x = nullptr;
+  T x;
+};
+void test_templated() {
+  pear<int*> p;
+  dummy(p.x);
+}
+
 #define IS_EQ(x, y) if (x != y) return;
 void test_macro_args() {
   int i = 0;
