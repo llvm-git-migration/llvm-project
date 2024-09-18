@@ -810,6 +810,9 @@ static Value calculateGatherOffset(RewriterBase &rewriter,
 
 enum VectorMemoryAccessKind { ScalarBroadcast, Contiguous, Gather };
 
+/// Find the non constant dim in a linalgOp. This is used for finding contiguous
+/// loads and it is expected that only one dim will be non constant, if thats
+/// not the case this function will assert.
 static uint64_t getNonUnitLoopDim(LinalgOp linalgOp) {
   uint64_t nonUnitDim = 0;
   uint64_t countNonUnitDim = 0;
