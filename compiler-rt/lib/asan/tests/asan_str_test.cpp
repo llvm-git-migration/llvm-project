@@ -641,6 +641,8 @@ TEST(AddressSanitizer, StrtolOOBTest) {
 
 #if defined(_WIN32)
 TEST(AddressSanitizer, StrtolOverflow) {
+  EXPECT_EQ(&errno, nullptr); // XXX: what is our errno?
+
   long res;
   errno = 0;
   res = Ident(strtol("2147483647", NULL, 0));

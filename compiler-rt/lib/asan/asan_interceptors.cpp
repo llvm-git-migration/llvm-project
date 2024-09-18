@@ -663,7 +663,11 @@ INTERCEPTOR(long, strtol, const char *nptr, char **endptr, int base) {
   long long result = StrtolImpl(ctx, REAL(strtoll), nptr, endptr, base);
 
   if (result > INT32_MAX) {
-    errno = errno_ERANGE;
+    // XXX Use strtoll to set errno.
+    (void)REAL(strtoll)("9999999999999999999999999", nullptr, 0);
+    //errno = errno_ERANGE;
+    Report("errno: %d %p\n", errno, &errno); // XXX hack hack
+    CHECK(errno == 34);
     return INT32_MAX;
   }
   if (result < INT32_MIN) {
