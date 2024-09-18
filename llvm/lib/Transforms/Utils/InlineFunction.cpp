@@ -2211,7 +2211,15 @@ remapIndices(Function &Caller, BasicBlock *StartBB,
     }
     for (auto &I : llvm::make_early_inc_range(*BB)) {
       if (auto *Inc = dyn_cast<InstrProfIncrementInst>(&I)) {
-        if (Inc != BBID) {
+        if (isa<InstrProfIncrementInstStep>(Inc)) {
+          if (isa<Constant>(Inc->getStep())) {
+            assert(!Inc->getNextNode() || !isa<SelectInst>(Inc->getNextNode()));
+            Inc->eraseFromParent();
+          } else {
+            assert(isa_and_nonnull<SelectInst>(Inc->getNextNode()));
+            RewriteInstrIfNeeded(*Inc);
+          }
+        } else if (Inc != BBID) {
           // If we're here it means that the BB had more than 1 IDs, presumably
           // some coming from the callee. We "made up our mind" to keep the
           // first one (which may or may not have been originally the caller's).
