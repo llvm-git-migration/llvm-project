@@ -2156,6 +2156,16 @@ void OmpStructureChecker::Leave(const parser::OmpClauseList &) {
         }
       }
     }
+
+    // 2.11.5 Simd construct restriction (OpenMP 5.1)
+    if ( auto *clause{FindClause(llvm::omp::Clause::OMPC_safelen)} ) {
+      if ( FindClause(llvm::omp::Clause::OMPC_order) ) {
+        context_.Say(clause->source,
+          "The `SAFELEN` clause cannot appear in the `SIMD` directive "
+          "with `ORDER(CONCURRENT)` clause"_err_en_US);
+      }
+    }
+
     // Sema checks related to presence of multiple list items within the same
     // clause
     CheckMultListItems();
