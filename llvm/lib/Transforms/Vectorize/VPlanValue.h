@@ -359,6 +359,7 @@ public:
     VPWidenSC,
     VPWidenEVLSC,
     VPWidenSelectSC,
+    VPWidenSelectEVLSC,
     VPBlendSC,
     // START: Phi-like recipes. Need to be kept together.
     VPWidenPHISC,
