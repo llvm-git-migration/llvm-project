@@ -1582,28 +1582,45 @@ public:
   }
 
   void addPartialReductionIfSupported(Instruction *Instr, ElementCount VF) {
-    Value *ExpectedPhi;
-    Value *A, *B;
-
     using namespace llvm::PatternMatch;
 
-    unsigned BinOpIdx = 0;
+    // Try to commutatively match:
+    // bin_op (one_use bin_op (z_or_sext, z_or_sext), phi)
 
-    // The binary operator can be commutative
-    if (match(Instr, m_BinOp(m_OneUse(m_BinOp(
-                                 m_ZExtOrSExt(m_Value(A)),
-                                 m_ZExtOrSExt(m_Value(B)))),
-                             m_Value(ExpectedPhi))))
-      BinOpIdx = 0;
-    else if (match(Instr,
-                   m_BinOp(m_Value(ExpectedPhi),
-                           m_OneUse(m_BinOp(
-                               m_ZExtOrSExt(m_Value(A)),
-                               m_ZExtOrSExt(m_Value(B)))))))
-      BinOpIdx = 1;
-    else
+    auto *Root = dyn_cast<BinaryOperator>(Instr);
+    if (!Root) return;
+
+    auto *BinOp = dyn_cast<BinaryOperator>(Root->getOperand(0));
+    auto *Phi = dyn_cast<PHINode>(Root->getOperand(1));
+    if (!BinOp) {
+        BinOp = dyn_cast<BinaryOperator>(Root->getOperand(1));
+        Phi = dyn_cast<PHINode>(Root->getOperand(0));
+    }
+    if (!BinOp || !BinOp->hasOneUse()) {
+      LLVM_DEBUG(dbgs() << "Root was not a one-use binary operator, cannot create a "
+                           "partial reduction.\n");
       return;
+    }
+    if (!Phi) {
+      LLVM_DEBUG(dbgs() << "Expected Phi node was not a phi, cannot create a "
+                           "partial reduction.\n");
+      return;
+    }
 
+    auto IsSextOrZext = [](Instruction *I) {
+        return I && (I->getOpcode() == Instruction::ZExt || I->getOpcode() == Instruction::SExt);
+    };
+
+    auto *ExtA = dyn_cast<Instruction>(BinOp->getOperand(0));
+    auto *ExtB = dyn_cast<Instruction>(BinOp->getOperand(1));
+    if (!IsSextOrZext(ExtA) || !IsSextOrZext(ExtB)) {
+      LLVM_DEBUG(dbgs() << "Expected extends were not extends, cannot create a "
+                           "partial reduction.\n");
+        return;
+    }
+
+    Value *A = ExtA->getOperand(0);
+    Value *B = ExtB->getOperand(0);
     // Check that the extends extend from the same type
     if (A->getType() != B->getType()) {
       LLVM_DEBUG(dbgs() << "Extends don't extend from the same type, cannot "
@@ -1611,43 +1628,29 @@ public:
       return;
     }
 
-    // A and B are one-use, so the first user of each should be the respective
-    // extend
-    Instruction *Ext0 = cast<CastInst>(*A->user_begin());
-    Instruction *Ext1 = cast<CastInst>(*B->user_begin());
-
     // Check that the extends extend to the same type
-    if (Ext0->getType() != Ext1->getType()) {
+    if (ExtA->getType() != ExtB->getType()) {
       LLVM_DEBUG(
           dbgs() << "Extends don't extend to the same type, cannot create "
                     "a partial reduction.\n");
       return;
     }
 
-    // Check that the add feeds into ExpectedPhi
-    PHINode *PhiNode = dyn_cast<PHINode>(ExpectedPhi);
-    if (!PhiNode) {
-      LLVM_DEBUG(dbgs() << "Expected Phi node was not a phi, cannot create a "
-                           "partial reduction.\n");
-      return;
-    }
-
     // Check that the second phi value is the instruction we're looking at
     Instruction *MaybeAdd = dyn_cast<Instruction>(
-        PhiNode->getIncomingValueForBlock(Instr->getParent()));
+        Phi->getIncomingValueForBlock(Instr->getParent()));
     if (!MaybeAdd || MaybeAdd != Instr) {
       LLVM_DEBUG(dbgs() << "Second PHI value is not the root binop, cannot "
                            "create a partial reduction.\n");
       return;
     }
 
-    Instruction *BinOp = cast<Instruction>(Instr->getOperand(BinOpIdx));
     TTI::PartialReductionExtendKind OpAExtend =
-        TargetTransformInfo::getPartialReductionExtendKind(Ext0);
+        TargetTransformInfo::getPartialReductionExtendKind(ExtA);
     TTI::PartialReductionExtendKind OpBExtend =
-        TargetTransformInfo::getPartialReductionExtendKind(Ext1);
+        TargetTransformInfo::getPartialReductionExtendKind(ExtB);
     InstructionCost Cost = TTI.getPartialReductionCost(
-        Instr->getOpcode(), A->getType(), ExpectedPhi->getType(), VF, OpAExtend,
+        Instr->getOpcode(), A->getType(), Phi->getType(), VF, OpAExtend,
         OpBExtend, std::make_optional(BinOp->getOpcode()));
     if (Cost == InstructionCost::getInvalid())
       return;
@@ -1655,9 +1658,9 @@ public:
     PartialReductionChain Chain;
     Chain.Reduction = Instr;
     Chain.BinOp = BinOp;
-    Chain.ExtendA = Ext0;
-    Chain.ExtendB = Ext1;
-    Chain.Accumulator = ExpectedPhi;
+    Chain.ExtendA = ExtA;
+    Chain.ExtendB = ExtB;
+    Chain.Accumulator = Phi;
 
     unsigned InputSizeBits = A->getType()->getScalarSizeInBits();
     unsigned ResultSizeBits = Chain.Reduction->getType()->getScalarSizeInBits();
