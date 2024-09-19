@@ -4900,16 +4900,35 @@ bool AMDGPULegalizerInfo::legalizeFDIV16(MachineInstr &MI,
   LLT S16 = LLT::scalar(16);
   LLT S32 = LLT::scalar(32);
 
+  // a32.u = opx(V_CVT_F32_F16, a.u);
+  // b32.u = opx(V_CVT_F32_F16, b.u);
+  // r32.u = opx(V_RCP_F32, b32.u);
+  // q32.u = opx(V_MUL_F32, a32.u, r32.u);
+  // e32.u = opx(V_MAD_F32, (b32.u^_neg32), q32.u, a32.u);
+  // q32.u = opx(V_MAD_F32, e32.u, r32.u, q32.u);
+  // e32.u = opx(V_MAD_F32, (b32.u^_neg32), q32.u, a32.u);
+  // tmp.u = opx(V_MUL_F32, e32.u, r32.u);
+  // tmp.u = opx(V_FREXP_MANT_F32, tmp.u);
+  // q32.u = opx(V_ADD_F32, tmp.u, q32.u);
+  // q16.u = opx(V_CVT_F16_F32, q32.u);
+  // q16.u = opx(V_DIV_FIXUP_F16, q16.u, b.u, a.u);
+
   auto LHSExt = B.buildFPExt(S32, LHS, Flags);
   auto RHSExt = B.buildFPExt(S32, RHS, Flags);
-
-  auto RCP = B.buildIntrinsic(Intrinsic::amdgcn_rcp, {S32})
+  auto NegRHSExt = B.buildFNeg(S32, RHSExt);
+  auto Rcp = B.buildIntrinsic(Intrinsic::amdgcn_rcp, {S32})
                  .addUse(RHSExt.getReg(0))
                  .setMIFlags(Flags);
-
-  auto QUOT = B.buildFMul(S32, LHSExt, RCP, Flags);
-  auto RDst = B.buildFPTrunc(S16, QUOT, Flags);
-
+  auto Quot = B.buildFMul(S32, LHSExt, Rcp);
+  auto Err = B.buildFMA(S32, NegRHSExt, Quot, LHSExt);
+  Quot = B.buildFMA(S32, Err, Rcp, Quot);
+  Err = B.buildFMA(S32, NegRHSExt, Quot, LHSExt);
+  auto Tmp = B.buildFMul(S32, Err, Rcp);
+  Tmp = B.buildIntrinsic(Intrinsic::amdgcn_frexp_mant, {S32})
+            .addUse(Tmp.getReg(0))
+            .setMIFlags(Flags);
+  Quot = B.buildFAdd(S32, Tmp, Quot);
+  auto RDst = B.buildFPTrunc(S16, Quot, Flags);
   B.buildIntrinsic(Intrinsic::amdgcn_div_fixup, Res)
       .addUse(RDst.getReg(0))
       .addUse(RHS)
