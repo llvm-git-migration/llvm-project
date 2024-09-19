@@ -639,7 +639,7 @@ TEST(AddressSanitizer, StrtolOOBTest) {
 }
 #endif
 
-#if defined(_WIN32)
+// Check that errno gets set correctly on overflow.
 TEST(AddressSanitizer, StrtolOverflow) {
   long res;
   errno = 0;
@@ -660,4 +660,3 @@ TEST(AddressSanitizer, StrtolOverflow) {
   EXPECT_EQ(errno, ERANGE);
   EXPECT_EQ(res, -2147483648);
 }
-#endif
