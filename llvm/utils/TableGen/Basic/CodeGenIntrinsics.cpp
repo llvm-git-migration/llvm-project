@@ -49,11 +49,14 @@ CodeGenIntrinsicTable::CodeGenIntrinsicTable(const RecordKeeper &RC) {
   for (const Record *Def : Defs)
     Intrinsics.push_back(CodeGenIntrinsic(Def, Ctx));
 
-  llvm::sort(Intrinsics,
-             [](const CodeGenIntrinsic &LHS, const CodeGenIntrinsic &RHS) {
-               return std::tie(LHS.TargetPrefix, LHS.Name) <
-                      std::tie(RHS.TargetPrefix, RHS.Name);
-             });
+  llvm::sort(Intrinsics, [](const CodeGenIntrinsic &LHS,
+                            const CodeGenIntrinsic &RHS) {
+    // Order target independent intrinsics before target dependent ones.
+    bool LHSHasTarget = !LHS.TargetPrefix.empty();
+    bool RHSHasTarget = !RHS.TargetPrefix.empty();
+    return std::tie(LHSHasTarget, LHS.Name) < std::tie(RHSHasTarget, RHS.Name);
+  });
+
   Targets.push_back({"", 0, 0});
   for (size_t I = 0, E = Intrinsics.size(); I < E; ++I)
     if (Intrinsics[I].TargetPrefix != Targets.back().Name) {
