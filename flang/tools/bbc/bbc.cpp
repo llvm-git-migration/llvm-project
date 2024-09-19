@@ -227,10 +227,10 @@ static llvm::cl::opt<std::string>
                          llvm::cl::desc("Override host target triple"),
                          llvm::cl::init(""));
 
-static llvm::cl::opt<bool>
-    setNSW("integer-overflow",
-           llvm::cl::desc("add nsw flag to internal operations"),
-           llvm::cl::init(false));
+static llvm::cl::opt<bool> integerWrapAround(
+    "fwrapv",
+    llvm::cl::desc("Treat signed integer overflow as two's complement"),
+    llvm::cl::init(false));
 
 #define FLANG_EXCLUDE_CODEGEN
 #include "flang/Tools/CLOptions.inc"
@@ -371,7 +371,7 @@ static llvm::LogicalResult convertFortranSourceToMLIR(
   Fortran::lower::LoweringOptions loweringOptions{};
   loweringOptions.setNoPPCNativeVecElemOrder(enableNoPPCNativeVecElemOrder);
   loweringOptions.setLowerToHighLevelFIR(useHLFIR || emitHLFIR);
-  loweringOptions.setNSWOnLoopVarInc(setNSW);
+  loweringOptions.setIntegerWrapAround(integerWrapAround);
   std::vector<Fortran::lower::EnvironmentDefault> envDefaults = {};
   constexpr const char *tuneCPU = "";
   auto burnside = Fortran::lower::LoweringBridge::create(
@@ -456,7 +456,7 @@ static llvm::LogicalResult convertFortranSourceToMLIR(
 
     // Add O2 optimizer pass pipeline.
     MLIRToLLVMPassPipelineConfig config(llvm::OptimizationLevel::O2);
-    config.NSWOnLoopVarInc = setNSW;
+    config.NSWOnLoopVarInc = !integerWrapAround;
     fir::registerDefaultInlinerPass(config);
     fir::createDefaultFIROptimizerPassPipeline(pm, config);
   }

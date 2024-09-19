@@ -162,10 +162,10 @@ inline void addCfgConversionPass(
     mlir::PassManager &pm, const MLIRToLLVMPassPipelineConfig &config) {
   if (config.NSWOnLoopVarInc)
     addNestedPassToAllTopLevelOperationsConditionally(
-        pm, disableCfgConversion, fir::createCFGConversionPassWithNSW);
+        pm, disableCfgConversion, fir::createCFGConversion);
   else
     addNestedPassToAllTopLevelOperationsConditionally(
-        pm, disableCfgConversion, fir::createCFGConversion);
+        pm, disableCfgConversion, fir::createCFGConversionPassWithoutNSW);
 }
 
 inline void addAVC(
