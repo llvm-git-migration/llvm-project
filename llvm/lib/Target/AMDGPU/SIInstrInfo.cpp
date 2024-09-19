@@ -3401,13 +3401,19 @@ bool SIInstrInfo::foldImmediate(MachineInstr &UseMI, MachineInstr &DefMI,
     case AMDGPU::sub1:
       return Hi_32(Imm);
     case AMDGPU::lo16:
-      return APInt(16, Imm).getSExtValue();
+      return APInt(16, Imm, /*isSigned=*/true, /*implicitTrunc=*/true)
+          .getSExtValue();
     case AMDGPU::hi16:
-      return APInt(32, Imm).ashr(16).getSExtValue();
+      return APInt(32, Imm, /*isSigned=*/true, /*implicitTrunc=*/true)
+          .ashr(16)
+          .getSExtValue();
     case AMDGPU::sub1_lo16:
-      return APInt(16, Hi_32(Imm)).getSExtValue();
+      return APInt(16, Hi_32(Imm), /*isSigned=*/true, /*implicitTrunc=*/true)
+          .getSExtValue();
     case AMDGPU::sub1_hi16:
-      return APInt(32, Hi_32(Imm)).ashr(16).getSExtValue();
+      return APInt(32, Hi_32(Imm), /*isSigned=*/true, /*implicitTrunc=*/true)
+          .ashr(16)
+          .getSExtValue();
     }
   };
 
@@ -3426,7 +3432,8 @@ bool SIInstrInfo::foldImmediate(MachineInstr &UseMI, MachineInstr &DefMI,
                                            : AMDGPU::V_MOV_B32_e32
                                  : Is64Bit ? AMDGPU::S_MOV_B64_IMM_PSEUDO
                                            : AMDGPU::S_MOV_B32;
-    APInt Imm(Is64Bit ? 64 : 32, getImmFor(UseMI.getOperand(1)));
+    APInt Imm(Is64Bit ? 64 : 32, getImmFor(UseMI.getOperand(1)),
+              /*isSigned=*/true, /*implicitTrunc=*/true);
 
     if (RI.isAGPR(*MRI, DstReg)) {
       if (Is64Bit || !isInlineConstant(Imm))
