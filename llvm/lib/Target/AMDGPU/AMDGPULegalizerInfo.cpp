@@ -4902,14 +4902,18 @@ bool AMDGPULegalizerInfo::legalizeFDIV16(MachineInstr &MI,
 
   auto LHSExt = B.buildFPExt(S32, LHS, Flags);
   auto RHSExt = B.buildFPExt(S32, RHS, Flags);
-
-  auto RCP = B.buildIntrinsic(Intrinsic::amdgcn_rcp, {S32})
+  auto NegRHSExt = B.buildFNeg(S32, RHSExt);
+  auto Rcp = B.buildIntrinsic(Intrinsic::amdgcn_rcp, {S32})
                  .addUse(RHSExt.getReg(0))
                  .setMIFlags(Flags);
-
-  auto QUOT = B.buildFMul(S32, LHSExt, RCP, Flags);
-  auto RDst = B.buildFPTrunc(S16, QUOT, Flags);
-
+  auto Quot = B.buildFMul(S32, LHSExt, Rcp);
+  auto Err = B.buildFMA(S32, NegRHSExt, Quot, LHSExt);
+  Quot = B.buildFMA(S32, Err, Rcp, Quot);
+  Err = B.buildFMA(S32, NegRHSExt, Quot, LHSExt);
+  auto Tmp = B.buildFMul(S32, Err, Rcp);
+  Tmp = B.buildAnd(S32, Tmp, B.buildConstant(S32, 0xff800000));
+  Quot = B.buildFAdd(S32, Tmp, Quot);
+  auto RDst = B.buildFPTrunc(S16, Quot, Flags);
   B.buildIntrinsic(Intrinsic::amdgcn_div_fixup, Res)
       .addUse(RDst.getReg(0))
       .addUse(RHS)
