@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "ABIInfo.h"
+#include "Address.h"
 #include "CGCUDARuntime.h"
 #include "CGCXXABI.h"
 #include "CGHLSLRuntime.h"
@@ -18823,6 +18824,34 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     return Builder.CreateIntrinsic(
         retType, CGM.getHLSLRuntime().getSignIntrinsic(),
         ArrayRef<Value *>{Op0}, nullptr, "hlsl.sign");
+  }
+  // This should only be called when targeting DXIL
+  case Builtin::BI__builtin_hlsl_asuint_splitdouble: {
+
+    assert((E->getArg(0)->getType()->isDoubleType() &&
+            E->getArg(1)->getType()->isUnsignedIntegerType() &&
+            E->getArg(2)->getType()->isUnsignedIntegerType()) &&
+           "asuint operands types mismatch");
+
+    Value *Op0 = EmitScalarExpr(E->getArg(0));
+    Address Op1ptr = EmitPointerWithAlignment(E->getArg(1));
+
+    llvm::Type *retType = llvm::StructType::get(Int32Ty, Int32Ty);
+    if (Op0->getType()->isVectorTy()) {
+      auto *XVecTy = E->getArg(0)->getType()->getAs<VectorType>();
+
+      llvm::VectorType *i32VecTy = llvm::VectorType::get(
+          Int32Ty, ElementCount::getFixed(XVecTy->getNumElements()));
+
+      retType = llvm::StructType::get(i32VecTy, i32VecTy);
+    }
+
+    CallInst *CI =
+        Builder.CreateIntrinsic(retType, llvm::Intrinsic::dx_asuint_splitdouble,
+                                {Op0}, nullptr, "hlsl.asuint");
+
+    Value *arg1 = Builder.CreateExtractValue(CI, 1);
+    return Builder.CreateStore(arg1, Op1ptr);
   }
   }
   return nullptr;

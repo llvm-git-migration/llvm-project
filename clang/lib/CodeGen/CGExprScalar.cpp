@@ -43,6 +43,7 @@
 #include "llvm/IR/IntrinsicsPowerPC.h"
 #include "llvm/IR/MatrixBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TypeSize.h"
 #include <cstdarg>
 #include <optional>
