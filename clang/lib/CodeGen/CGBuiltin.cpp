@@ -18824,6 +18824,40 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
         retType, CGM.getHLSLRuntime().getSignIntrinsic(),
         ArrayRef<Value *>{Op0}, nullptr, "hlsl.sign");
   }
+  // This should only be called when targeting DXIL
+  case Builtin::BI__builtin_hlsl_asuint_splitdouble: {
+
+    assert((E->getArg(0)->getType()->isDoubleType() ||
+            E->getArg(1)->getType()->isUnsignedIntegerType() ||
+            E->getArg(2)->getType()->isUnsignedIntegerType()) &&
+           "asuint operands types mismatch");
+
+    Value *Op0 = EmitScalarExpr(E->getArg(0));
+
+    llvm::Type *retType = llvm::StructType::get(Int32Ty, Int32Ty);
+    if (Op0->getType()->isVectorTy()) {
+      auto *XVecTy = E->getArg(0)->getType()->getAs<VectorType>();
+
+      llvm::VectorType *i32VecTy = llvm::VectorType::get(
+          Int32Ty, ElementCount::getFixed(XVecTy->getNumElements()));
+
+      retType = llvm::StructType::get(i32VecTy, i32VecTy);
+    }
+
+    auto ptr = CreateMemTemp(E->getArg(1)->getType());
+    EmitAnyExprToMem(E->getArg(1), ptr, Qualifiers(), /*init*/ true);
+    Address x = EmitPointerWithAlignment(E->getArg(1));
+
+    CallInst *CI =
+        Builder.CreateIntrinsic(retType, llvm::Intrinsic::dx_asuint_splitdouble,
+                                {Op0}, nullptr, "hlsl.asuint");
+
+    // Value* arg1 = Builder.CreateExtractValue(CI, 1);
+
+    // Address y = EmitPointerWithAlignment(E->getArg(2));
+    // Builder.CreateLoad(ptr);
+    // return Builder.CreateStore(arg1, ptr);
+  }
   }
   return nullptr;
 }
