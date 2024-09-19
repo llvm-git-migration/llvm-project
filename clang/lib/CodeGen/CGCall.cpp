@@ -4681,6 +4681,11 @@ void CallArg::copyInto(CodeGenFunction &CGF, Address Addr) const {
   IsUsed = true;
 }
 
+void CodeGenFunction::EmitWritebacks(CodeGenFunction &CGF,
+                                     const CallArgList &args) {
+  emitWritebacks(CGF, args);
+}
+
 void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
                                   QualType type) {
   DisableDebugLocationUpdates Dis(*this, E);
@@ -4696,6 +4701,7 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
   // Add writeback for HLSLOutParamExpr.
   if (const HLSLOutArgExpr *OE = dyn_cast<HLSLOutArgExpr>(E)) {
     EmitHLSLOutArgExpr(OE, args, type);
+    emitWritebacks(*this, args);
     return;
   }
 
