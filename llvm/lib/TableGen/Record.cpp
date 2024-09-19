@@ -987,6 +987,29 @@ Init *UnOpInit::Fold(Record *CurRec, bool IsFinal) const {
       }
     }
     break;
+
+  case LISTFLATTEN:
+    if (ListInit *LHSList = dyn_cast<ListInit>(LHS)) {
+      ListRecTy *InnerListTy = dyn_cast<ListRecTy>(LHSList->getElementType());
+      // list of non-lists, !listflatten() is a NOP.
+      if (!InnerListTy)
+        return LHS;
+      std::vector<Init *> Flattened;
+      auto CanFlatten = [LHSList, &Flattened]() {
+        // Concatenate elements of all the inner lists.
+        for (Init *InnerInit : LHSList->getValues()) {
+          ListInit *InnerList = dyn_cast<ListInit>(InnerInit);
+          if (!InnerList)
+            return false;
+          for (Init *InnerElem : InnerList->getValues())
+            Flattened.push_back(InnerElem);
+        };
+        return true;
+      }();
+      if (CanFlatten)
+        return ListInit::get(Flattened, InnerListTy->getElementType());
+    }
+    break;
   }
   return const_cast<UnOpInit *>(this);
 }
@@ -1011,6 +1034,9 @@ std::string UnOpInit::getAsString() const {
   case EMPTY: Result = "!empty"; break;
   case GETDAGOP: Result = "!getdagop"; break;
   case LOG2 : Result = "!logtwo"; break;
+  case LISTFLATTEN:
+    Result = "!listflatten";
+    break;
   case REPR:
     Result = "!repr";
     break;
