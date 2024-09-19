@@ -88,6 +88,7 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
   int64_t DwarfVersion = 0;
   int64_t DebugInfoVersion = 0;
   SmallPtrSet<DIBasicType *, 12> BasicTypes;
+  SmallPtrSet<DIDerivedType *, 12> PointerDerivedTypes;
   // Searching through the Module metadata to find nescessary
   // information like DwarfVersion or SourceLanguage
   {
@@ -129,8 +130,22 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
           for (DbgVariableRecord &DVR : filterDbgVars(I.getDbgRecordRange())) {
             DILocalVariable *LocalVariable = DVR.getVariable();
             if (auto *BasicType =
-                    dyn_cast<DIBasicType>(LocalVariable->getType()))
+                    dyn_cast<DIBasicType>(LocalVariable->getType())) {
               BasicTypes.insert(BasicType);
+            } else if (auto *DerivedType =
+                           dyn_cast<DIDerivedType>(LocalVariable->getType())) {
+              if (DerivedType->getTag() == dwarf::DW_TAG_pointer_type) {
+                PointerDerivedTypes.insert(DerivedType);
+                // DIBasicType can be unreachable from DbgRecord and only
+                // pointed on from other DI types
+                // DerivedType->getBaseType is null when pointer
+                // is representing a void type
+                if (DerivedType->getBaseType()) {
+                  BasicTypes.insert(
+                      cast<DIBasicType>(DerivedType->getBaseType()));
+                }
+              }
+            }
           }
         }
       }
@@ -160,7 +175,6 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
       return StrReg;
     };
 
-    // Emit OpString with FilePath which is required by DebugSource
     const Register FilePathStrReg = EmitOpString(FilePath);
 
     const SPIRVType *VoidTy =
@@ -187,15 +201,12 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
           return InstReg;
         };
 
-    // Emit DebugSource which is required by DebugCompilationUnit
     const Register DebugSourceResIdReg = EmitDIInstruction(
         SPIRV::NonSemanticExtInst::DebugSource, {FilePathStrReg});
 
     const SPIRVType *I32Ty =
         GR->getOrCreateSPIRVType(Type::getInt32Ty(*Context), MIRBuilder);
 
-    // Convert DwarfVersion, DebugInfo and SourceLanguage integers to OpConstant
-    // instructions required by DebugCompilationUnit
     const Register DwarfVersionReg =
         GR->buildConstantInt(DwarfVersion, MIRBuilder, I32Ty, false);
     const Register DebugInfoVersionReg =
@@ -214,6 +225,11 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
     const Register I32ZeroReg =
         GR->buildConstantInt(0, MIRBuilder, I32Ty, false);
 
+    // We need to store pairs because further instructions reference
+    // the DIBasicTypes and size will be always small so there isn't
+    // need for any kind of map
+    SmallVector<std::pair<const DIBasicType *const, const Register>, 12>
+        BasicTypeRegPairs;
     for (auto *BasicType : BasicTypes) {
       const Register BasicTypeStrReg = EmitOpString(BasicType->getName());
 
@@ -247,11 +263,31 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
       const Register AttributeEncodingReg =
           GR->buildConstantInt(AttributeEncoding, MIRBuilder, I32Ty, false);
 
-      [[maybe_unused]]
       const Register BasicTypeReg =
           EmitDIInstruction(SPIRV::NonSemanticExtInst::DebugTypeBasic,
                             {BasicTypeStrReg, ConstIntBitwidthReg,
                              AttributeEncodingReg, I32ZeroReg});
+      BasicTypeRegPairs.emplace_back(BasicType, BasicTypeReg);
+    }
+
+    if (PointerDerivedTypes.size()) {
+      const Register GenericStorageClass =
+          GR->buildConstantInt(8, MIRBuilder, I32Ty, false);
+      for (const auto *PointerDerivedType : PointerDerivedTypes) {
+        // If the Pointer is representing a void type it's getBaseType
+        // is a nullptr
+        const auto *MaybeBT =
+            cast_or_null<DIBasicType>(PointerDerivedType->getBaseType());
+        for (const auto &BasicTypeRegPair : BasicTypeRegPairs) {
+          const auto &[SBT, Reg] = BasicTypeRegPair;
+          if (SBT == MaybeBT) {
+            [[maybe_unused]]
+            const Register DebugPointerTypeReg =
+                EmitDIInstruction(SPIRV::NonSemanticExtInst::DebugTypePointer,
+                                  {Reg, GenericStorageClass, I32ZeroReg});
+          }
+        }
+      }
     }
   }
   return true;
