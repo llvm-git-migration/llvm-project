@@ -651,23 +651,21 @@ static ALWAYS_INLINE auto StrtolImpl(void *ctx, Fn real, const char *nptr,
     }
 
 INTERCEPTOR_STRTO_BASE(long long, strtoll)
+
 #if SANITIZER_WINDOWS
 INTERCEPTOR(long, strtol, const char *nptr, char **endptr, int base) {
   // REAL(strol) may be ntdll!strol, which doesn't set errno. Instead,
-  // re-use the strtoll interceptor and do the range check ourselves.
+  // call REAL(strtoll) and do the range check ourselves.
   COMPILER_CHECK(sizeof(long) == sizeof(u32));
 
   void *ctx;
   ASAN_INTERCEPTOR_ENTER(ctx, strtol);
   AsanInitFromRtl();
+
   long long result = StrtolImpl(ctx, REAL(strtoll), nptr, endptr, base);
 
   if (result > INT32_MAX) {
-    // XXX Use strtoll to set errno.
-    (void)REAL(strtoll)("9999999999999999999999999", nullptr, 0);
-    //errno = errno_ERANGE;
-    Report("errno: %d %p\n", errno, &errno); // XXX hack hack
-    CHECK(errno == 34);
+    errno = errno_ERANGE;
     return INT32_MAX;
   }
   if (result < INT32_MIN) {
