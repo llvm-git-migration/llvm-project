@@ -148,6 +148,9 @@ bool VPlanVerifier::verifyEVLRecipe(const VPInstruction &EVL) const {
                return VerifyEVLUse(
                    *W, Instruction::isUnaryOp(W->getOpcode()) ? 1 : 2);
              })
+             .Case<VPWidenCallEVLRecipe>([&](const VPWidenCallEVLRecipe *R) {
+               return VerifyEVLUse(*R, U->getNumOperands() - 1);
+             })
              .Case<VPReductionEVLRecipe>([&](const VPReductionEVLRecipe *R) {
                return VerifyEVLUse(*R, 2);
              })

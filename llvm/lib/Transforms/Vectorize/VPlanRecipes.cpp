@@ -76,6 +76,7 @@ bool VPRecipeBase::mayWriteToMemory() const {
     return cast<Instruction>(getVPSingleValue()->getUnderlyingValue())
         ->mayWriteToMemory();
   case VPWidenCallSC:
+    // case VPWidenCallEVLSC:
     return !cast<VPWidenCallRecipe>(this)
                 ->getCalledScalarFunction()
                 ->onlyReadsMemory();
@@ -117,6 +118,7 @@ bool VPRecipeBase::mayReadFromMemory() const {
     return cast<Instruction>(getVPSingleValue()->getUnderlyingValue())
         ->mayReadFromMemory();
   case VPWidenCallSC:
+    // case VPWidenCallEVLSC:
     return !cast<VPWidenCallRecipe>(this)
                 ->getCalledScalarFunction()
                 ->onlyWritesMemory();
@@ -158,6 +160,7 @@ bool VPRecipeBase::mayHaveSideEffects() const {
   case VPInstructionSC:
     return mayWriteToMemory();
   case VPWidenCallSC: {
+    // case VPWidenCallEVLSC: {
     Function *Fn = cast<VPWidenCallRecipe>(this)->getCalledScalarFunction();
     return mayWriteToMemory() || !Fn->doesNotThrow() || !Fn->willReturn();
   }
@@ -951,6 +954,52 @@ void VPWidenCallRecipe::execute(VPTransformState &State) {
   State.addMetadata(V, CI);
 }
 
+void VPWidenCallEVLRecipe::execute(VPTransformState &State) {
+  Function *CalledScalarFn = getCalledScalarFunction();
+  assert(!isDbgInfoIntrinsic(CalledScalarFn->getIntrinsicID()) &&
+         "DbgInfoIntrinsic should have been dropped during VPlan construction");
+  State.setDebugLocFrom(getDebugLoc());
+
+  bool UseIntrinsic = VectorIntrinsicID != Intrinsic::not_intrinsic;
+
+  // TODO: more intrinsics to support , Now only support the
+  // llvm.smax/llvm.smin/llvm.umax/llvm.umin
+  auto *TysForDecl = VectorType::get(
+      CalledScalarFn->getReturnType()->getScalarType(), State.VF);
+
+  SmallVector<Value *, 4> Args;
+  for (const auto &I : enumerate(arg_operands())) {
+    Value *Arg;
+    if (UseIntrinsic && isVectorIntrinsicWithScalarOpAtArg(
+                            CalledScalarFn->getIntrinsicID(), I.index()))
+      Arg = State.get(I.value(), VPLane(0));
+    else
+      Arg = State.get(I.value());
+    Args.push_back(Arg);
+  }
+
+  IRBuilderBase &BuilderIR = State.Builder;
+  VectorBuilder VBuilder(BuilderIR);
+  Value *Mask = BuilderIR.CreateVectorSplat(State.VF, BuilderIR.getTrue());
+  VBuilder.setMask(Mask).setEVL(State.get(getEVL(), /*NeedsScalar=*/true));
+
+  auto VPInst = VBuilder.createSimpleIntrinsic(VectorIntrinsicID, TysForDecl,
+                                               Args, "vp.call");
+  // FIXME: IR/Recipe/EVLRecipe has same the flags. Can copy from IR?
+  if (VPInst) {
+    if (auto *VecOp = dyn_cast<CallInst>(VPInst))
+      VecOp->copyIRFlags(getUnderlyingInstr());
+  }
+
+  auto *CI = cast_or_null<CallInst>(getUnderlyingInstr());
+  SmallVector<OperandBundleDef, 1> OpBundles;
+  if (CI)
+    CI->getOperandBundlesAsDefs(OpBundles);
+
+  State.set(this, VPInst);
+  State.addMetadata(VPInst, CI);
+}
+
 InstructionCost VPWidenCallRecipe::computeCost(ElementCount VF,
                                                VPCostContext &Ctx) const {
   TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
@@ -996,6 +1045,12 @@ InstructionCost VPWidenCallRecipe::computeCost(ElementCount VF,
       VectorIntrinsicID, RetTy, Arguments, ParamTys, FMF,
       dyn_cast_or_null<IntrinsicInst>(getUnderlyingValue()));
   return Ctx.TTI.getIntrinsicInstrCost(CostAttrs, CostKind);
+}
+
+// TODO: Reimplement of the computeCost
+InstructionCost VPWidenCallEVLRecipe::computeCost(ElementCount VF,
+                                                  VPCostContext &Ctx) const {
+  return VPRecipeBase::computeCost(VF, Ctx);
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -1112,6 +1167,32 @@ void VPHistogramRecipe::print(raw_ostream &O, const Twine &Indent,
   if (VPValue *Mask = getMask()) {
     O << ", mask: ";
     Mask->printAsOperand(O, SlotTracker);
+  }
+}
+
+void VPWidenCallEVLRecipe::print(raw_ostream &O, const Twine &Indent,
+                                 VPSlotTracker &SlotTracker) const {
+  O << Indent << "WIDEN-CALL ";
+
+  Function *CalledFn = getCalledScalarFunction();
+  if (CalledFn->getReturnType()->isVoidTy())
+    O << "void ";
+  else {
+    printAsOperand(O, SlotTracker);
+    O << " = ";
+  }
+
+  O << "vp.call @" << CalledFn->getName() << "(";
+  interleaveComma(arg_operands(), O, [&O, &SlotTracker](VPValue *Op) {
+    Op->printAsOperand(O, SlotTracker);
+  });
+  O << ")";
+
+  if (VectorIntrinsicID)
+    O << " (using vector intrinsic)";
+  else {
+    O << " (using library function";
+    O << ")";
   }
 }
 

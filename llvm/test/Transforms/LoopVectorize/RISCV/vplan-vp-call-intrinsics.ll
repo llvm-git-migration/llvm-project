@@ -27,7 +27,7 @@ define void @vp_smax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-CALL ir<[[SMAX:%.+]]> = call @llvm.smax.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
+; IF-EVL-NEXT:     WIDEN-CALL ir<[[SMAX:%.+]]> = vp.call @llvm.smax.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[SMAX]]>, vp<[[EVL]]>
@@ -80,7 +80,7 @@ define void @vp_smin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-CALL ir<[[SMIN:%.+]]> = call @llvm.smin.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
+; IF-EVL-NEXT:     WIDEN-CALL ir<[[SMIN:%.+]]> = vp.call @llvm.smin.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[SMIN]]>, vp<[[EVL]]>
@@ -133,7 +133,7 @@ define void @vp_umax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-CALL ir<[[UMAX:%.+]]> = call @llvm.umax.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
+; IF-EVL-NEXT:     WIDEN-CALL ir<[[UMAX:%.+]]> = vp.call @llvm.umax.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[UMAX]]>, vp<[[EVL]]>
@@ -186,7 +186,7 @@ define void @vp_umin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-CALL ir<[[UMIN:%.+]]> = call @llvm.umin.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
+; IF-EVL-NEXT:     WIDEN-CALL ir<[[UMIN:%.+]]> = vp.call @llvm.umin.i32(ir<[[LD1]]>, ir<[[LD2]]>) (using vector intrinsic)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[UMIN]]>, vp<[[EVL]]>
