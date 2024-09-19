@@ -954,6 +954,7 @@ void CallOp::build(OpBuilder &builder, OperationState &state, TypeRange results,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr,
         /*memory_effects=*/nullptr,
         /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
+        /*op_bundle_operands=*/{}, /*op_bundle_tags=*/std::nullopt,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -980,6 +981,7 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
         /*TailCallKind=*/nullptr, /*memory_effects=*/nullptr,
         /*convergent=*/nullptr,
         /*no_unwind=*/nullptr, /*will_return=*/nullptr,
+        /*op_bundle_operands=*/{}, /*op_bundle_tags=*/std::nullopt,
         /*access_groups=*/nullptr,
         /*alias_scopes=*/nullptr, /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -992,6 +994,7 @@ void CallOp::build(OpBuilder &builder, OperationState &state,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr, /*memory_effects=*/nullptr,
         /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
+        /*op_bundle_operands=*/{}, /*op_bundle_tags=*/std::nullopt,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -1004,6 +1007,7 @@ void CallOp::build(OpBuilder &builder, OperationState &state, LLVMFuncOp func,
         /*fastmathFlags=*/nullptr, /*branch_weights=*/nullptr,
         /*CConv=*/nullptr, /*TailCallKind=*/nullptr, /*memory_effects=*/nullptr,
         /*convergent=*/nullptr, /*no_unwind=*/nullptr, /*will_return=*/nullptr,
+        /*op_bundle_operands=*/{}, /*op_bundle_tags=*/std::nullopt,
         /*access_groups=*/nullptr, /*alias_scopes=*/nullptr,
         /*noalias_scopes=*/nullptr, /*tbaa=*/nullptr);
 }
@@ -1027,7 +1031,7 @@ void CallOp::setCalleeFromCallable(CallInterfaceCallable callee) {
 }
 
 Operation::operand_range CallOp::getArgOperands() {
-  return getOperands().drop_front(getCallee().has_value() ? 0 : 1);
+  return getCalleeOperands().drop_front(getCallee().has_value() ? 0 : 1);
 }
 
 MutableOperandRange CallOp::getArgOperandsMutable() {
@@ -1100,6 +1104,27 @@ LogicalResult verifyCallOpVarCalleeType(OpTy callOp) {
   return success();
 }
 
+template <typename OpType>
+static LogicalResult verifyOperandBundles(OpType &op) {
+  OperandRangeRange opBundleOperands = op.getOpBundleOperands();
+  std::optional<ArrayRef<std::string>> opBundleTags = op.getOpBundleTags();
+
+  if (!opBundleTags.has_value()) {
+    if (!opBundleOperands.empty())
+      return op.emitError("expected operand bundle tags");
+    return success();
+  }
+
+  if (opBundleTags->size() != opBundleOperands.size())
+    return op.emitError("expected ")
+           << opBundleOperands.size()
+           << " operand bundle tags, but actually got " << opBundleTags->size();
+
+  return success();
+}
+
+LogicalResult CallOp::verify() { return verifyOperandBundles(*this); }
+
 LogicalResult CallOp::verifySymbolUses(SymbolTableCollection &symbolTable) {
   if (failed(verifyCallOpVarCalleeType(*this)))
     return failure();
@@ -1150,15 +1175,15 @@ LogicalResult CallOp::verifySymbolUses(SymbolTableCollection &symbolTable) {
   // Verify that the operand and result types match the callee.
 
   if (!funcType.isVarArg() &&
-      funcType.getNumParams() != (getNumOperands() - isIndirect))
+      funcType.getNumParams() != (getCalleeOperands().size() - isIndirect))
     return emitOpError() << "incorrect number of operands ("
-                         << (getNumOperands() - isIndirect)
+                         << (getCalleeOperands().size() - isIndirect)
                          << ") for callee (expecting: "
                          << funcType.getNumParams() << ")";
 
-  if (funcType.getNumParams() > (getNumOperands() - isIndirect))
+  if (funcType.getNumParams() > (getCalleeOperands().size() - isIndirect))
     return emitOpError() << "incorrect number of operands ("
-                         << (getNumOperands() - isIndirect)
+                         << (getCalleeOperands().size() - isIndirect)
                          << ") for varargs callee (expecting at least: "
                          << funcType.getNumParams() << ")";
 
@@ -1188,6 +1213,33 @@ LogicalResult CallOp::verifySymbolUses(SymbolTableCollection &symbolTable) {
   return success();
 }
 
+template <typename OpType>
+static void printOpBundleArgsAndTags(OpType &op, OpAsmPrinter &p) {
+  if (!op.getOpBundleOperands().empty())
+    return;
+
+  p << "bundlearg(";
+  llvm::interleaveComma(op.getOpBundleOperands(), p, [&](ValueRange operands) {
+    p << "(" << operands << ")";
+  });
+
+  p << ") bundletag([";
+  llvm::interleaveComma(*op.getOpBundleTags(), p,
+                        [&](const std::string &tag) { p.printString(tag); });
+  p << "])";
+}
+
+template <typename OpType>
+static void printOpBundleTypes(OpType &op, OpAsmPrinter &p) {
+  if (op.getOpBundleOperands().empty())
+    return;
+
+  p << "bundletype(";
+  llvm::interleaveComma(op.getOpBundleOperands().getTypes(), p,
+                        [&](TypeRange types) { p << "(" << types << ")"; });
+  p << ")";
+}
+
 void CallOp::print(OpAsmPrinter &p) {
   auto callee = getCallee();
   bool isDirect = callee.has_value();
@@ -1208,16 +1260,23 @@ void CallOp::print(OpAsmPrinter &p) {
   else
     p << getOperand(0);
 
-  auto args = getOperands().drop_front(isDirect ? 0 : 1);
+  auto args = getCalleeOperands().drop_front(isDirect ? 0 : 1);
   p << '(' << args << ')';
 
   // Print the variadic callee type if the call is variadic.
   if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
     p << " vararg(" << *varCalleeType << ")";
 
+  if (!getOpBundleOperands().empty()) {
+    p << " ";
+    printOpBundleArgsAndTags(*this, p);
+  }
+
   p.printOptionalAttrDict(processFMFAttr((*this)->getAttrs()),
                           {getCalleeAttrName(), getTailCallKindAttrName(),
-                           getVarCalleeTypeAttrName(), getCConvAttrName()});
+                           getVarCalleeTypeAttrName(), getCConvAttrName(),
+                           getOperandSegmentSizesAttrName(),
+                           getOpBundleSizesAttrName()});
 
   p << " : ";
   if (!isDirect)
@@ -1225,6 +1284,11 @@ void CallOp::print(OpAsmPrinter &p) {
 
   // Reconstruct the function MLIR function type from operand and result types.
   p.printFunctionalType(args.getTypes(), getResultTypes());
+
+  if (!getOpBundleOperands().empty()) {
+    p << ", ";
+    printOpBundleTypes(*this, p);
+  }
 }
 
 /// Parses the type of a call operation and resolves the operands if the parsing
@@ -1285,14 +1349,102 @@ static ParseResult parseOptionalCallFuncPtr(
   return success();
 }
 
+static ParseResult parseOpBundleArgsAndTags(
+    OpAsmParser &parser,
+    SmallVector<OpAsmParser::UnresolvedOperand> &opBundleOperands,
+    SmallVector<int32_t> &opBundleSizes,
+    SmallVector<std::string> &opBundleTags) {
+  if (succeeded(parser.parseOptionalKeyword("bundlearg"))) {
+    if (parser.parseLParen())
+      return failure();
+
+    int32_t curSize = 0;
+    do {
+      if (parser.parseOptionalLParen())
+        break;
+      if (parser.parseOperandList(opBundleOperands) || parser.parseRParen())
+        return failure();
+      opBundleSizes.push_back(opBundleOperands.size() - curSize);
+      curSize = opBundleOperands.size();
+    } while (succeeded(parser.parseOptionalComma()));
+
+    if (parser.parseRParen())
+      return failure();
+  }
+
+  if (succeeded(parser.parseOptionalKeyword("bundletag"))) {
+    if (parser.parseLParen())
+      return failure();
+    if (parser.parseLSquare())
+      return failure();
+
+    do {
+      std::string tag;
+      if (parser.parseString(&tag))
+        break;
+      opBundleTags.push_back(std::move(tag));
+    } while (succeeded(parser.parseOptionalComma()));
+
+    if (parser.parseRSquare())
+      return failure();
+    if (parser.parseRParen())
+      return failure();
+  }
+
+  return success();
+}
+
+static ParseResult parseOpBundleTypeAndResolveOperands(
+    OpAsmParser &parser, OperationState &state,
+    ArrayRef<OpAsmParser::UnresolvedOperand> opBundleOperands) {
+  SmallVector<Type> opBundleTypes;
+
+  auto currentLoc = parser.getCurrentLocation();
+  if (succeeded(parser.parseOptionalKeyword("bundletype"))) {
+    if (parser.parseLParen())
+      return failure();
+
+    do {
+      if (parser.parseOptionalLParen())
+        break;
+      if (parser.parseOptionalRParen() &&
+          (parser.parseTypeList(opBundleTypes) || parser.parseRParen()))
+        return failure();
+    } while (succeeded(parser.parseOptionalComma()));
+
+    if (parser.parseRParen())
+      return failure();
+  }
+
+  if (opBundleTypes.size() != opBundleOperands.size())
+    return parser.emitError(currentLoc, "expected ")
+           << opBundleOperands.size()
+           << " types for operand bundle operands, but actually got "
+           << opBundleTypes.size();
+
+  if (!opBundleOperands.empty()) {
+    if (parser.resolveOperands(opBundleOperands, opBundleTypes, currentLoc,
+                               state.operands))
+      return failure();
+  }
+
+  return success();
+}
+
 // <operation> ::= `llvm.call` (cconv)? (tailcallkind)? (function-id | ssa-use)
 //                             `(` ssa-use-list `)`
 //                             ( `vararg(` var-callee-type `)` )?
+//                             ( `bundlearg(` ssa-use-list-list `)` )?
+//                             ( `bundletags(` str-elements-attr `) )
 //                             attribute-dict? `:` (type `,`)? function-type
+//                             (`,` `bundletype(` type-list-list `)`)?
 ParseResult CallOp::parse(OpAsmParser &parser, OperationState &result) {
   SymbolRefAttr funcAttr;
   TypeAttr varCalleeType;
   SmallVector<OpAsmParser::UnresolvedOperand> operands;
+  SmallVector<OpAsmParser::UnresolvedOperand> opBundleOperands;
+  SmallVector<int32_t> opBundleSizes;
+  SmallVector<std::string> opBundleTags;
 
   // Default to C Calling Convention if no keyword is provided.
   result.addAttribute(
@@ -1333,11 +1485,30 @@ ParseResult CallOp::parse(OpAsmParser &parser, OperationState &result) {
       return failure();
   }
 
+  if (parseOpBundleArgsAndTags(parser, opBundleOperands, opBundleSizes,
+                               opBundleTags))
+    return failure();
+  result.addAttribute(
+      getOpBundleSizesAttrName(result.name),
+      DenseI32ArrayAttr::get(parser.getContext(), opBundleSizes));
+  if (!opBundleTags.empty())
+    result.getOrAddProperties<CallOp::Properties>().op_bundle_tags.emplace(
+        std::move(opBundleTags));
+
   if (parser.parseOptionalAttrDict(result.attributes))
     return failure();
 
   // Parse the trailing type list and resolve the operands.
-  return parseCallTypeAndResolveOperands(parser, result, isDirect, operands);
+  if (parseCallTypeAndResolveOperands(parser, result, isDirect, operands))
+    return failure();
+  if (parseOpBundleTypeAndResolveOperands(parser, result, opBundleOperands))
+    return failure();
+
+  result.addAttribute(CallOp::getOperandSegmentSizeAttr(),
+                      parser.getBuilder().getDenseI32ArrayAttr(
+                          {static_cast<int32_t>(operands.size()),
+                           static_cast<int32_t>(opBundleOperands.size())}));
+  return success();
 }
 
 LLVMFunctionType CallOp::getCalleeFunctionType() {
@@ -1356,7 +1527,8 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state, LLVMFuncOp func,
   auto calleeType = func.getFunctionType();
   build(builder, state, getCallOpResultTypes(calleeType),
         getCallOpVarCalleeType(calleeType), SymbolRefAttr::get(func), ops,
-        normalOps, unwindOps, nullptr, nullptr, normal, unwind);
+        normalOps, unwindOps, nullptr, nullptr, {}, std::nullopt, normal,
+        unwind);
 }
 
 void InvokeOp::build(OpBuilder &builder, OperationState &state, TypeRange tys,
@@ -1365,7 +1537,7 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state, TypeRange tys,
                      ValueRange unwindOps) {
   build(builder, state, tys,
         /*var_callee_type=*/nullptr, callee, ops, normalOps, unwindOps, nullptr,
-        nullptr, normal, unwind);
+        nullptr, {}, std::nullopt, normal, unwind);
 }
 
 void InvokeOp::build(OpBuilder &builder, OperationState &state,
@@ -1374,7 +1546,7 @@ void InvokeOp::build(OpBuilder &builder, OperationState &state,
                      Block *unwind, ValueRange unwindOps) {
   build(builder, state, getCallOpResultTypes(calleeType),
         getCallOpVarCalleeType(calleeType), callee, ops, normalOps, unwindOps,
-        nullptr, nullptr, normal, unwind);
+        nullptr, nullptr, {}, std::nullopt, normal, unwind);
 }
 
 SuccessorOperands InvokeOp::getSuccessorOperands(unsigned index) {
@@ -1402,7 +1574,7 @@ void InvokeOp::setCalleeFromCallable(CallInterfaceCallable callee) {
 }
 
 Operation::operand_range InvokeOp::getArgOperands() {
-  return getOperands().drop_front(getCallee().has_value() ? 0 : 1);
+  return getCalleeOperands().drop_front(getCallee().has_value() ? 0 : 1);
 }
 
 MutableOperandRange InvokeOp::getArgOperandsMutable() {
@@ -1422,6 +1594,9 @@ LogicalResult InvokeOp::verify() {
   if (!isa<LandingpadOp>(unwindDest->front()))
     return emitError("first operation in unwind destination should be a "
                      "llvm.landingpad operation");
+
+  if (failed(verifyOperandBundles(*this)))
+    return failure();
 
   return success();
 }
@@ -1452,15 +1627,26 @@ void InvokeOp::print(OpAsmPrinter &p) {
   if (std::optional<LLVMFunctionType> varCalleeType = getVarCalleeType())
     p << " vararg(" << *varCalleeType << ")";
 
+  if (!getOpBundleOperands().empty()) {
+    p << " ";
+    printOpBundleArgsAndTags(*this, p);
+  }
+
   p.printOptionalAttrDict((*this)->getAttrs(),
                           {getCalleeAttrName(), getOperandSegmentSizeAttr(),
-                           getCConvAttrName(), getVarCalleeTypeAttrName()});
+                           getCConvAttrName(), getVarCalleeTypeAttrName(),
+                           getOpBundleSizesAttrName()});
 
   p << " : ";
   if (!isDirect)
     p << getOperand(0).getType() << ", ";
   p.printFunctionalType(llvm::drop_begin(getOperandTypes(), isDirect ? 0 : 1),
                         getResultTypes());
+
+  if (!getOpBundleOperands().empty()) {
+    p << ", ";
+    printOpBundleTypes(*this, p);
+  }
 }
 
 // <operation> ::= `llvm.invoke` (cconv)? (function-id | ssa-use)
@@ -1468,11 +1654,17 @@ void InvokeOp::print(OpAsmPrinter &p) {
 //                  `to` bb-id (`[` ssa-use-and-type-list `]`)?
 //                  `unwind` bb-id (`[` ssa-use-and-type-list `]`)?
 //                  ( `vararg(` var-callee-type `)` )?
+//                  ( `bundlearg(` ssa-use-list-list `)` )?
+//                  ( `bundletags(` str-elements-attr `) )
 //                  attribute-dict? `:` (type `,`)? function-type
+//                  (`,` `bundletype(` type-list-list `)`)?
 ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
   SmallVector<OpAsmParser::UnresolvedOperand, 8> operands;
   SymbolRefAttr funcAttr;
   TypeAttr varCalleeType;
+  SmallVector<OpAsmParser::UnresolvedOperand> opBundleOperands;
+  SmallVector<int32_t> opBundleSizes;
+  SmallVector<std::string> opBundleTags;
   Block *normalDest, *unwindDest;
   SmallVector<Value, 4> normalOperands, unwindOperands;
   Builder &builder = parser.getBuilder();
@@ -1513,11 +1705,23 @@ ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
       return failure();
   }
 
+  if (parseOpBundleArgsAndTags(parser, opBundleOperands, opBundleSizes,
+                               opBundleTags))
+    return failure();
+  result.addAttribute(
+      getOpBundleSizesAttrName(result.name),
+      DenseI32ArrayAttr::get(parser.getContext(), opBundleSizes));
+  if (!opBundleTags.empty())
+    result.getOrAddProperties<InvokeOp::Properties>().op_bundle_tags.emplace(
+        std::move(opBundleTags));
+
   if (parser.parseOptionalAttrDict(result.attributes))
     return failure();
 
   // Parse the trailing type list and resolve the function operands.
   if (parseCallTypeAndResolveOperands(parser, result, isDirect, operands))
+    return failure();
+  if (parseOpBundleTypeAndResolveOperands(parser, result, opBundleOperands))
     return failure();
 
   result.addSuccessors({normalDest, unwindDest});
@@ -1528,7 +1732,8 @@ ParseResult InvokeOp::parse(OpAsmParser &parser, OperationState &result) {
                       builder.getDenseI32ArrayAttr(
                           {static_cast<int32_t>(operands.size()),
                            static_cast<int32_t>(normalOperands.size()),
-                           static_cast<int32_t>(unwindOperands.size())}));
+                           static_cast<int32_t>(unwindOperands.size()),
+                           static_cast<int32_t>(opBundleOperands.size())}));
   return success();
 }
 
@@ -3108,6 +3313,8 @@ OpFoldResult LLVM::OrOp::fold(FoldAdaptor adaptor) {
 LogicalResult CallIntrinsicOp::verify() {
   if (!getIntrin().starts_with("llvm."))
     return emitOpError() << "intrinsic name must start with 'llvm.'";
+  if (failed(verifyOperandBundles(*this)))
+    return failure();
   return success();
 }
 

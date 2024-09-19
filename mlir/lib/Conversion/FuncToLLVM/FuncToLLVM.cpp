@@ -544,6 +544,12 @@ struct CallOpInterfaceLowering : public ConvertOpToLLVMPattern<CallOpType> {
         callOp.getLoc(), packedResult ? TypeRange(packedResult) : TypeRange(),
         promoted, callOp->getAttrs());
 
+    newOp->setAttr(newOp.getOperandSegmentSizesAttrName(),
+                   rewriter.getDenseI32ArrayAttr(
+                       {static_cast<int32_t>(promoted.size()), 0}));
+    newOp->setAttr(newOp.getOpBundleSizesAttrName(),
+                   rewriter.getDenseI32ArrayAttr({}));
+
     SmallVector<Value, 4> results;
     if (numResults < 2) {
       // If < 2 results, packing did not do anything and we can just return.
