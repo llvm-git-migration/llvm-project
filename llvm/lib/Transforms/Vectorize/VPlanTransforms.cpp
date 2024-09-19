@@ -1350,7 +1350,8 @@ void VPlanTransforms::addActiveLaneMask(
 }
 
 /// Replace recipes with their EVL variants.
-static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
+static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL,
+                                         const TargetLibraryInfo &TLI) {
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
     for (VPUser *U : collectUsersRecursively(HeaderMask)) {
@@ -1378,6 +1379,12 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
                     !Instruction::isUnaryOp(Opcode))
                   return nullptr;
                 return new VPWidenEVLRecipe(*W, EVL);
+              })
+              .Case<VPWidenCallRecipe>([&](VPWidenCallRecipe *W) {
+                auto *CI = cast<CallInst>(W->getUnderlyingInstr());
+                Intrinsic::ID VPID = getVPIntrinsicIDForCall(CI, &TLI);
+                return new VPWidenCallEVLRecipe(*W, VPID, CI->getDebugLoc(),
+                                                EVL);
               })
               .Case<VPReductionRecipe>([&](VPReductionRecipe *Red) {
                 VPValue *NewMask = GetNewMask(Red->getCondOp());
@@ -1429,7 +1436,8 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
 /// %NextEVLIV = add IVSize (cast i32 %VPEVVL to IVSize), %EVLPhi
 /// ...
 ///
-bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
+bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan,
+                                                 const TargetLibraryInfo &TLI) {
   VPBasicBlock *Header = Plan.getVectorLoopRegion()->getEntryBasicBlock();
   // The transform updates all users of inductions to work based on EVL, instead
   // of the VF directly. At the moment, widened inductions cannot be updated, so
@@ -1481,7 +1489,7 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
   NextEVLIV->insertBefore(CanonicalIVIncrement);
   EVLPhi->addOperand(NextEVLIV);
 
-  transformRecipestoEVLRecipes(Plan, *VPEVL);
+  transformRecipestoEVLRecipes(Plan, *VPEVL, TLI);
 
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.

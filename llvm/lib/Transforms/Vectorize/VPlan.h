@@ -883,6 +883,7 @@ public:
     case VPRecipeBase::VPScalarIVStepsSC:
     case VPRecipeBase::VPVectorPointerSC:
     case VPRecipeBase::VPWidenCallSC:
+    case VPRecipeBase::VPWidenCallEVLSC:
     case VPRecipeBase::VPWidenCanonicalIVSC:
     case VPRecipeBase::VPWidenCastSC:
     case VPRecipeBase::VPWidenGEPSC:
@@ -1610,6 +1611,7 @@ public:
 
 /// A recipe for widening Call instructions.
 class VPWidenCallRecipe : public VPSingleDefRecipe {
+public:
   /// ID of the vector intrinsic to call when widening the call. If set the
   /// Intrinsic::not_intrinsic, a library call will be used instead.
   Intrinsic::ID VectorIntrinsicID;
@@ -1619,17 +1621,32 @@ class VPWidenCallRecipe : public VPSingleDefRecipe {
   /// VF with a valid variant.
   Function *Variant;
 
-public:
+protected:
   template <typename IterT>
-  VPWidenCallRecipe(Value *UV, iterator_range<IterT> CallArguments,
+  VPWidenCallRecipe(unsigned VPDefOpcode, Value *UV,
+                    iterator_range<IterT> CallArguments,
                     Intrinsic::ID VectorIntrinsicID, DebugLoc DL = {},
                     Function *Variant = nullptr)
-      : VPSingleDefRecipe(VPDef::VPWidenCallSC, CallArguments, UV, DL),
+      : VPSingleDefRecipe(VPDefOpcode, CallArguments, UV, DL),
         VectorIntrinsicID(VectorIntrinsicID), Variant(Variant) {
     assert(
         isa<Function>(getOperand(getNumOperands() - 1)->getLiveInIRValue()) &&
         "last operand must be the called function");
   }
+
+public:
+  template <typename IterT>
+  VPWidenCallRecipe(Value *UV, iterator_range<IterT> CallArguments,
+                    Intrinsic::ID VectorIntrinsicID, DebugLoc DL)
+      : VPWidenCallRecipe(VPDef::VPWidenCallSC, UV, CallArguments,
+                          VectorIntrinsicID, DL) {}
+
+  template <typename IterT>
+  VPWidenCallRecipe(Value *UV, iterator_range<IterT> CallArguments,
+                    Intrinsic::ID VectorIntrinsicID, DebugLoc DL,
+                    Function *Variant)
+      : VPWidenCallRecipe(VPDef::VPWidenCallSC, UV, CallArguments,
+                          VectorIntrinsicID, DL, Variant) {}
 
   ~VPWidenCallRecipe() override = default;
 
@@ -1637,8 +1654,15 @@ public:
     return new VPWidenCallRecipe(getUnderlyingValue(), operands(),
                                  VectorIntrinsicID, getDebugLoc(), Variant);
   }
+  static inline bool classof(const VPRecipeBase *R) {
+    return R->getVPDefID() == VPRecipeBase::VPWidenCallSC ||
+           R->getVPDefID() == VPRecipeBase::VPWidenCallEVLSC;
+  }
 
-  VP_CLASSOF_IMPL(VPDef::VPWidenCallSC)
+  static inline bool classof(const VPUser *U) {
+    auto *R = dyn_cast<VPRecipeBase>(U);
+    return R && classof(R);
+  }
 
   /// Produce a widened version of the call instruction.
   void execute(VPTransformState &State) override;
@@ -1662,6 +1686,74 @@ public:
   /// Print the recipe.
   void print(raw_ostream &O, const Twine &Indent,
              VPSlotTracker &SlotTracker) const override;
+#endif
+};
+
+/// A recipe for widening Call instructions  with vector-predication intrinsics
+/// with explicit vector length (EVL).
+class VPWidenCallEVLRecipe : public VPWidenCallRecipe {
+  // using VPRecipeWithIRFlags::transferFlags;
+  // Intrinsic::ID VectorIntrinsicID;
+
+public:
+  template <typename IterT>
+  VPWidenCallEVLRecipe(Value *UV, iterator_range<IterT> CallArguments,
+                       Intrinsic::ID VectorIntrinsicID, DebugLoc DL,
+                       VPValue &EVL)
+      : VPWidenCallRecipe(VPDef::VPWidenCallEVLSC, UV, CallArguments,
+                          VectorIntrinsicID, DL) {
+    addOperand(&EVL);
+  }
+
+  VPWidenCallEVLRecipe(VPWidenCallRecipe &W, Intrinsic::ID VectorIntrinsicID,
+                       DebugLoc DL, VPValue &EVL)
+      : VPWidenCallEVLRecipe(W.getUnderlyingValue(), W.operands(),
+                             VectorIntrinsicID, DL, EVL) {}
+
+  ~VPWidenCallEVLRecipe() override = default;
+
+  VPWidenCallEVLRecipe *clone() override {
+    llvm_unreachable("VPWidenCallEVLRecipe cannot be cloned");
+    return nullptr;
+  }
+
+  VPValue *getEVL() { return getOperand(getNumOperands() - 1); }
+  const VPValue *getEVL() const { return getOperand(getNumOperands() - 1); }
+
+  // Intrinsic::ID getVectorIntrinsicID() {
+  //   return VectorIntrinsicID;
+  // }
+
+  VP_CLASSOF_IMPL(VPDef::VPWidenCallEVLSC)
+
+  InstructionCost computeCost(ElementCount VF, VPCostContext &Ctx) const final;
+
+  Function *getCalledScalarFunction() const {
+    return cast<Function>(getOperand(getNumOperands() - 2)->getLiveInIRValue());
+  }
+
+  operand_range arg_operands() {
+    return make_range(op_begin(), op_begin() + getNumOperands() - 2);
+  }
+  const_operand_range arg_operands() const {
+    return make_range(op_begin(), op_begin() + getNumOperands() - 2);
+  }
+  /// Produce a widened version of the call instruction.
+  void execute(VPTransformState &State) final;
+
+  /// Returns true if the recipe only uses the first lane of operand \p Op.
+  bool onlyFirstLaneUsed(const VPValue *Op) const override {
+    assert(is_contained(operands(), Op) &&
+           "Op must be an operand of the recipe");
+    // EVL in that recipe is always the last operand, thus any use before means
+    // the VPValue should be vectorized.
+    return getEVL() == Op;
+  }
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Print the recipe.
+  void print(raw_ostream &O, const Twine &Indent,
+             VPSlotTracker &SlotTracker) const final;
 #endif
 };
 

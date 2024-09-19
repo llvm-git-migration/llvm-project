@@ -8635,7 +8635,7 @@ void LoopVectorizationPlanner::buildVPlansWithVPRecipes(ElementCount MinVF,
       // TODO: try to put it close to addActiveLaneMask().
       // Discard the plan if it is not EVL-compatible
       if (CM.foldTailWithEVL() &&
-          !VPlanTransforms::tryAddExplicitVectorLength(*Plan))
+          !VPlanTransforms::tryAddExplicitVectorLength(*Plan, *TLI))
         break;
       assert(verifyVPlanIsValid(*Plan) && "VPlan is invalid");
       VPlans.push_back(std::move(Plan));
