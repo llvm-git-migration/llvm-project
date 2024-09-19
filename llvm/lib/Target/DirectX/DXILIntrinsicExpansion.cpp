@@ -12,6 +12,7 @@
 
 #include "DXILIntrinsicExpansion.h"
 #include "DirectX.h"
+#include "llvm-c/Core.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/DXILResource.h"
@@ -405,6 +406,15 @@ static Value *expandStepIntrinsic(CallInst *Orig) {
   return Builder.CreateSelect(Cond, Zero, One);
 }
 
+// static Value *expandSplitdoubleIntrinsic(CallInst *Orig) {
+//   Value *X = Orig->getOperand(0);
+//   Type *Ty = X->getType();
+//   IRBuilder<> Builder(Orig);
+
+//   Builder.CreateIntrinsic()
+
+// }
+
 static Intrinsic::ID getMaxForClamp(Type *ElemTy,
                                     Intrinsic::ID ClampIntrinsic) {
   if (ClampIntrinsic == Intrinsic::dx_uclamp)
@@ -521,6 +531,9 @@ static bool expandIntrinsic(Function &F, CallInst *Orig) {
     break;
   case Intrinsic::dx_step:
     Result = expandStepIntrinsic(Orig);
+    break;
+    // case Intrinsic::dx_asuint_splitdouble:
+    //   Result = expandSplitdoubleIntrinsic(Orig);
   }
   if (Result) {
     Orig->replaceAllUsesWith(Result);
