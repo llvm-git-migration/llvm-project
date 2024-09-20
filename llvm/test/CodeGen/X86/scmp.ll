@@ -2435,7 +2435,7 @@ define <7 x i117> @scmp_uncommon_vectors(<7 x i7> %x, <7 x i7> %y) nounwind {
 ; X86-NEXT:    movl %edi, 28(%ebx)
 ; X86-NEXT:    movl %edx, %eax
 ; X86-NEXT:    shrl $18, %eax
-; X86-NEXT:    andl $7, %eax
+; X86-NEXT:    andb $7, %al
 ; X86-NEXT:    movb %al, 102(%ebx)
 ; X86-NEXT:    movl %ebx, %eax
 ; X86-NEXT:    addl $52, %esp
