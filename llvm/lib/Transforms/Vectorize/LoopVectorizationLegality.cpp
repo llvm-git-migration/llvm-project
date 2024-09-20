@@ -79,6 +79,12 @@ static cl::opt<LoopVectorizeHints::ScalableForceKind>
                 "Scalable vectorization is available and favored when the "
                 "cost is inconclusive.")));
 
+static cl::opt<bool> AssumeNoMemFault(
+    "vectorizer-no-mem-fault", cl::init(false), cl::Hidden,
+    cl::desc("Assume vectorized loops will not have memory faults, which is "
+             "potentially unsafe but can be useful for testing vectorization "
+             "of early exit loops."));
+
 /// Maximum vectorization interleave count.
 static const unsigned MaxInterleaveFactor = 16;
 
@@ -1579,11 +1585,15 @@ bool LoopVectorizationLegality::isVectorizableEarlyExitLoop() {
   Predicates.clear();
   if (!isDereferenceableReadOnlyLoop(TheLoop, PSE.getSE(), DT, AC,
                                      &Predicates)) {
-    reportVectorizationFailure(
-        "Loop may fault",
-        "Cannot vectorize potentially faulting early exit loop",
-        "PotentiallyFaultingEarlyExitLoop", ORE, TheLoop);
-    return false;
+    if (!AssumeNoMemFault) {
+      reportVectorizationFailure(
+          "Loop may fault",
+          "Cannot vectorize potentially faulting early exit loop",
+          "PotentiallyFaultingEarlyExitLoop", ORE, TheLoop);
+      return false;
+    } else
+      LLVM_DEBUG(dbgs() << "LV: Assuming early exit vector loop will not "
+                        << "fault\n");
   }
 
   [[maybe_unused]] const SCEV *SymbolicMaxBTC =
