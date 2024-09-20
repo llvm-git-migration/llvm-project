@@ -954,11 +954,10 @@ bool LoopVectorizationLegality::canVectorizeInstrs() {
       if (CI && !VFDatabase::getMappings(*CI).empty())
         VecCallVariantsFound = true;
 
-      auto CanWidenInstruction = [this](Instruction const &Inst) {
+      auto CanWidenInstruction = [](Instruction const &Inst) {
         Type *InstTy = Inst.getType();
         if (isa<CallInst>(Inst) && isa<StructType>(InstTy) &&
             canWidenCallReturnType(InstTy)) {
-          StructVecCallFound = true;
           // For now, we can only widen struct values returned from calls where
           // all users are extractvalue instructions.
           return llvm::all_of(Inst.users(), IsaPred<ExtractValueInst>);

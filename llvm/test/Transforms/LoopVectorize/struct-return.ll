@@ -1,15 +1,20 @@
 ; RUN: opt < %s -passes=loop-vectorize,dce,instcombine -force-vector-width=2 -force-vector-interleave=1 -S | FileCheck %s
-; RUN: opt < %s -passes=loop-vectorize,dce,instcombine -force-vector-width=2 -force-vector-interleave=1 -pass-remarks-analysis=loop-vectorize  -disable-output -S 2>&1 | FileCheck %s --check-prefix=CHECK-REMARKS
+; RUN: opt < %s -passes=loop-vectorize,dce,instcombine -force-vector-width=2 -force-vector-interleave=1 -pass-remarks=loop-vectorize -pass-remarks-analysis=loop-vectorize  -disable-output -S 2>&1 | FileCheck %s --check-prefix=CHECK-REMARKS
 
 target datalayout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64"
 
 ; Tests basic vectorization of homogeneous struct literal returns.
 
-; TODO: Support vectorization in this case.
-; CHECK-REMARKS: remark: {{.*}} loop not vectorized: Auto-vectorization of calls that return struct types is not yet supported
+; CHECK-REMARKS: remark: {{.*}} vectorized loop
 define void @struct_return_f32_widen(ptr noalias %in, ptr noalias writeonly %out_a, ptr noalias writeonly %out_b) {
 ; CHECK-LABEL: define void @struct_return_f32_widen
-; CHECK-NOT:   vector.body:
+; CHECK-SAME:  (ptr noalias [[IN:%.*]], ptr noalias writeonly [[OUT_A:%.*]], ptr noalias writeonly [[OUT_B:%.*]])
+; CHECK:       vector.body:
+; CHECK:         [[WIDE_CALL:%.*]] = call { <2 x float>, <2 x float> } @fixed_vec_foo(<2 x float> [[WIDE_LOAD:%.*]])
+; CHECK:         [[WIDE_A:%.*]] = extractvalue { <2 x float>, <2 x float> } [[WIDE_CALL]], 0
+; CHECK:         [[WIDE_B:%.*]] = extractvalue { <2 x float>, <2 x float> } [[WIDE_CALL]], 1
+; CHECK:         store <2 x float> [[WIDE_A]], ptr {{%.*}}, align 4
+; CHECK:         store <2 x float> [[WIDE_B]], ptr {{%.*}}, align 4
 entry:
   br label %for.body
 
@@ -32,11 +37,16 @@ exit:
   ret void
 }
 
-; TODO: Support vectorization in this case.
-; CHECK-REMARKS: remark: {{.*}} loop not vectorized: Auto-vectorization of calls that return struct types is not yet supported
+; CHECK-REMARKS: remark: {{.*}} vectorized loop
 define void @struct_return_f64_widen(ptr noalias %in, ptr noalias writeonly %out_a, ptr noalias writeonly %out_b) {
 ; CHECK-LABEL: define void @struct_return_f64_widen
-; CHECK-NOT:   vector.body:
+; CHECK-SAME:  (ptr noalias [[IN:%.*]], ptr noalias writeonly [[OUT_A:%.*]], ptr noalias writeonly [[OUT_B:%.*]])
+; CHECK:        vector.body:
+; CHECK:          [[WIDE_CALL:%.*]] = call { <2 x double>, <2 x double> } @fixed_vec_bar(<2 x double> [[WIDE_LOAD:%.*]])
+; CHECK:          [[WIDE_A:%.*]] = extractvalue { <2 x double>, <2 x double> } [[WIDE_CALL]], 0
+; CHECK:          [[WIDE_B:%.*]] = extractvalue { <2 x double>, <2 x double> } [[WIDE_CALL]], 1
+; CHECK:          store <2 x double> [[WIDE_A]], ptr {{%.*}}, align 8
+; CHECK:          store <2 x double> [[WIDE_B]], ptr {{%.*}}, align 8
 entry:
   br label %for.body
 
@@ -59,11 +69,23 @@ exit:
   ret void
 }
 
-; TODO: Support vectorization in this case.
-; CHECK-REMARKS: remark: {{.*}} loop not vectorized: Auto-vectorization of calls that return struct types is not yet supported
+; CHECK-REMARKS: remark: {{.*}} vectorized loop
 define void @struct_return_f32_replicate(ptr noalias %in, ptr noalias writeonly %out_a, ptr noalias writeonly %out_b) {
 ; CHECK-LABEL: define void @struct_return_f32_replicate
-; CHECK-NOT:   vector.body:
+; CHECK-SAME:  (ptr noalias [[IN:%.*]], ptr noalias writeonly [[OUT_A:%.*]], ptr noalias writeonly [[OUT_B:%.*]])
+; CHECK:       vector.body:
+; CHECK:         [[CALL_LANE_0:%.*]] = tail call { float, float } @foo(float {{%.*}})
+; CHECK:         [[CALL_LANE_1:%.*]] = tail call { float, float } @foo(float {{%.*}})
+; CHECK:         [[LANE_0_A:%.*]] = extractvalue { float, float } [[CALL_LANE_0]], 0
+; CHECK:         [[TMP_A:%.*]] = insertelement <2 x float> poison, float [[LANE_0_A]], i64 0
+; CHECK:         [[LANE_0_B:%.*]] = extractvalue { float, float } [[CALL_LANE_0]], 1
+; CHECK:         [[TMP_B:%.*]] = insertelement <2 x float> poison, float [[LANE_0_B]], i64 0
+; CHECK:         [[LANE_1_A:%.*]] = extractvalue { float, float } [[CALL_LANE_1]], 0
+; CHECK:         [[WIDE_A:%.*]] = insertelement <2 x float> [[TMP_A]], float [[LANE_1_A]], i64 1
+; CHECK:         [[LANE_1_B:%.*]] = extractvalue { float, float } [[CALL_LANE_1]], 1
+; CHECK:         [[WIDE_B:%.*]] = insertelement <2 x float> [[TMP_B]], float [[LANE_1_B]], i64 1
+; CHECK:         store <2 x float> [[WIDE_A]], ptr {{%.*}}, align 4
+; CHECK:         store <2 x float> [[WIDE_B]], ptr {{%.*}}, align 4
 entry:
   br label %for.body
 
@@ -87,11 +109,17 @@ exit:
   ret void
 }
 
-; TODO: Support vectorization in this case.
-; CHECK-REMARKS: remark: {{.*}} loop not vectorized: Auto-vectorization of calls that return struct types is not yet supported
+; CHECK-REMARKS: remark: {{.*}} vectorized loop
 define void @struct_return_f32_widen_rt_checks(ptr %in, ptr writeonly %out_a, ptr writeonly %out_b) {
 ; CHECK-LABEL: define void @struct_return_f32_widen_rt_checks
-; CHECK-NOT:   vector.body:
+; CHECK-SAME:  (ptr [[IN:%.*]], ptr writeonly [[OUT_A:%.*]], ptr writeonly [[OUT_B:%.*]])
+; CHECK:       entry:
+; CHECK:         br i1 false, label %scalar.ph, label %vector.memcheck
+; CHECK:       vector.memcheck:
+; CHECK:       vector.body:
+; CHECK:         call { <2 x float>, <2 x float> } @fixed_vec_foo(<2 x float> [[WIDE_LOAD:%.*]])
+; CHECK:       for.body:
+; CHECK          call { float, float } @foo(float [[LOAD:%.*]])
 entry:
   br label %for.body
 
@@ -143,11 +171,11 @@ exit:
   ret void
 }
 
-; TODO: Support vectorization in this case.
-; CHECK-REMARKS: remark: {{.*}} loop not vectorized: Auto-vectorization of calls that return struct types is not yet supported
+; CHECK-REMARKS: remark: {{.*}} vectorized loop
 define void @struct_return_i32_three_results_widen(ptr noalias %in, ptr noalias writeonly %out_a) {
 ; CHECK-LABEL: define void @struct_return_i32_three_results_widen
-; CHECK-NOT:   vector.body:
+; CHECK:   vector.body:
+; CHECK:     call { <2 x i32>, <2 x i32>, <2 x i32> } @fixed_vec_qux(<2 x i32> [[WIDE_LOAD:%.*]])
 entry:
   br label %for.body
 
