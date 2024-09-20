@@ -1573,8 +1573,8 @@ public:
     return PartialReductionChains;
   }
 
-  std::optional<PartialReductionChain> getInstructionsPartialReduction(Instruction *I
- ) const {
+  std::optional<PartialReductionChain>
+  getInstructionsPartialReduction(Instruction *I) const {
     auto PairIt = PartialReductionChains.find(I);
     if (PairIt == PartialReductionChains.end())
       return std::nullopt;
@@ -1588,17 +1588,19 @@ public:
     // bin_op (one_use bin_op (z_or_sext, z_or_sext), phi)
 
     auto *Root = dyn_cast<BinaryOperator>(Instr);
-    if (!Root) return;
+    if (!Root)
+      return;
 
     auto *BinOp = dyn_cast<BinaryOperator>(Root->getOperand(0));
     auto *Phi = dyn_cast<PHINode>(Root->getOperand(1));
     if (!BinOp) {
-        BinOp = dyn_cast<BinaryOperator>(Root->getOperand(1));
-        Phi = dyn_cast<PHINode>(Root->getOperand(0));
+      BinOp = dyn_cast<BinaryOperator>(Root->getOperand(1));
+      Phi = dyn_cast<PHINode>(Root->getOperand(0));
     }
     if (!BinOp || !BinOp->hasOneUse()) {
-      LLVM_DEBUG(dbgs() << "Root was not a one-use binary operator, cannot create a "
-                           "partial reduction.\n");
+      LLVM_DEBUG(
+          dbgs() << "Root was not a one-use binary operator, cannot create a "
+                    "partial reduction.\n");
       return;
     }
     if (!Phi) {
@@ -1608,7 +1610,8 @@ public:
     }
 
     auto IsSextOrZext = [](Instruction *I) {
-        return I && (I->getOpcode() == Instruction::ZExt || I->getOpcode() == Instruction::SExt);
+      return I && (I->getOpcode() == Instruction::ZExt ||
+                   I->getOpcode() == Instruction::SExt);
     };
 
     auto *ExtA = dyn_cast<Instruction>(BinOp->getOperand(0));
@@ -1616,7 +1619,7 @@ public:
     if (!IsSextOrZext(ExtA) || !IsSextOrZext(ExtB)) {
       LLVM_DEBUG(dbgs() << "Expected extends were not extends, cannot create a "
                            "partial reduction.\n");
-        return;
+      return;
     }
 
     Value *A = ExtA->getOperand(0);
@@ -7156,27 +7159,30 @@ void LoopVectorizationPlanner::plan(ElementCount UserVF, unsigned UserIC) {
     CM.addPartialReductionIfSupported(ReductionExitInstr, UserVF);
   }
 
-  // Wider-than-legal vector types (coming from extends in partial reductions) should only be used by partial reductions so that they are lowered properly
+  // Wider-than-legal vector types (coming from extends in partial reductions)
+  // should only be used by partial reductions so that they are lowered properly
 
   // Build up a set of partial reduction bin ops for efficient use checking
   SmallSet<Instruction *, 4> PartialReductionBinOps;
   for (auto It : CM.getPartialReductionChains()) {
-    if (It.second.BinOp) PartialReductionBinOps.insert(It.second.BinOp);
+    if (It.second.BinOp)
+      PartialReductionBinOps.insert(It.second.BinOp);
   }
 
-  auto ExtendIsOnlyUsedByPartialReductions = [PartialReductionBinOps](Instruction *Extend) {
-    for (auto *Use : Extend->users()) {
-      Instruction *UseInstr = dyn_cast<Instruction>(Use);
-      if (!PartialReductionBinOps.contains(UseInstr))
-        return false;
-    }
-    return true;
-  };
+  auto ExtendIsOnlyUsedByPartialReductions =
+      [PartialReductionBinOps](Instruction *Extend) {
+        for (auto *Use : Extend->users()) {
+          Instruction *UseInstr = dyn_cast<Instruction>(Use);
+          if (!PartialReductionBinOps.contains(UseInstr))
+            return false;
+        }
+        return true;
+      };
 
   // Check if each use of a chain's two extends is a partial reduction
   SmallVector<Instruction *, 2> ChainsToRemove;
   for (auto It : CM.getPartialReductionChains()) {
-      LoopVectorizationCostModel::PartialReductionChain Chain = It.second;
+    LoopVectorizationCostModel::PartialReductionChain Chain = It.second;
     if (!ExtendIsOnlyUsedByPartialReductions(Chain.ExtendA))
       ChainsToRemove.push_back(Chain.Reduction);
     else if (!ExtendIsOnlyUsedByPartialReductions(Chain.ExtendB))

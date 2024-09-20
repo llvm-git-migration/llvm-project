@@ -340,11 +340,12 @@ public:
     return BaseT::isLegalNTLoad(DataType, Alignment);
   }
 
-  InstructionCost getPartialReductionCost(unsigned Opcode, Type *InputType,
-                                          Type *AccumType, ElementCount VF,
-                                          TTI::PartialReductionExtendKind OpAExtend,
-                                          TTI::PartialReductionExtendKind OpBExtend,
-                                          std::optional<unsigned> BinOp) const {
+  InstructionCost
+  getPartialReductionCost(unsigned Opcode, Type *InputType, Type *AccumType,
+                          ElementCount VF,
+                          TTI::PartialReductionExtendKind OpAExtend,
+                          TTI::PartialReductionExtendKind OpBExtend,
+                          std::optional<unsigned> BinOp) const {
     InstructionCost Invalid = InstructionCost::getInvalid();
 
     if (Opcode != Instruction::Add)
