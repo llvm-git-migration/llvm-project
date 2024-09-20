@@ -114,20 +114,18 @@ define amdgpu_kernel void @sgpr_if_else_valu_br(ptr addrspace(1) %out, float %a,
 ; SI-NEXT:    v_cmp_lg_f32_e32 vcc, 0, v0
 ; SI-NEXT:    s_and_saveexec_b64 s[0:1], vcc
 ; SI-NEXT:    s_xor_b64 s[0:1], exec, s[0:1]
-; SI-NEXT:    s_cbranch_execz .LBB2_2
 ; SI-NEXT:  ; %bb.1: ; %else
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    s_add_i32 s8, s6, s7
-; SI-NEXT:  .LBB2_2: ; %Flow
+; SI-NEXT:  ; %bb.2: ; %Flow
 ; SI-NEXT:    s_or_saveexec_b64 s[0:1], s[0:1]
 ; SI-NEXT:    v_mov_b32_e32 v0, s8
 ; SI-NEXT:    s_xor_b64 exec, exec, s[0:1]
-; SI-NEXT:    s_cbranch_execz .LBB2_4
 ; SI-NEXT:  ; %bb.3: ; %if
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    s_add_i32 s4, s4, s5
 ; SI-NEXT:    v_mov_b32_e32 v0, s4
-; SI-NEXT:  .LBB2_4: ; %endif
+; SI-NEXT:  ; %bb.4: ; %endif
 ; SI-NEXT:    s_or_b64 exec, exec, s[0:1]
 ; SI-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x9
 ; SI-NEXT:    s_mov_b32 s3, 0xf000

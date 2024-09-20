@@ -5812,11 +5812,10 @@ define amdgpu_kernel void @insert_vgpr_offset_multiple_in_block(ptr addrspace(1)
 ; GENERIC-NEXT:    s_waitcnt vmcnt(0)
 ; GENERIC-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GENERIC-NEXT:    s_and_saveexec_b64 s[0:1], vcc
-; GENERIC-NEXT:    s_cbranch_execz .LBB17_2
 ; GENERIC-NEXT:  ; %bb.1: ; %bb1
 ; GENERIC-NEXT:    buffer_store_dword v1, off, s[20:23], 0
 ; GENERIC-NEXT:    s_waitcnt vmcnt(0)
-; GENERIC-NEXT:  .LBB17_2: ; %bb2
+; GENERIC-NEXT:  ; %bb.2: ; %bb2
 ; GENERIC-NEXT:    s_endpgm
 ;
 ; NOOPT-LABEL: insert_vgpr_offset_multiple_in_block:

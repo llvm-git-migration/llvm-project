@@ -6,9 +6,7 @@ name: skip_waitcnt_vscnt
 body: |
   ; CHECK-LABEL: name: skip_waitcnt_vscnt
   ; CHECK: bb.0:
-  ; CHECK-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
-  ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; CHECK-NEXT:   successors: %bb.1(0x40000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
   ; CHECK-NEXT:   successors: %bb.2(0x80000000)
@@ -36,9 +34,7 @@ name: skip_waitcnt_expcnt
 body: |
   ; CHECK-LABEL: name: skip_waitcnt_expcnt
   ; CHECK: bb.0:
-  ; CHECK-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
-  ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; CHECK-NEXT:   successors: %bb.1(0x40000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
   ; CHECK-NEXT:   successors: %bb.2(0x80000000)
@@ -66,9 +62,7 @@ name: skip_waitcnt_vmcnt
 body: |
   ; CHECK-LABEL: name: skip_waitcnt_vmcnt
   ; CHECK: bb.0:
-  ; CHECK-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
-  ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; CHECK-NEXT:   successors: %bb.1(0x40000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
   ; CHECK-NEXT:   successors: %bb.2(0x80000000)
@@ -96,9 +90,7 @@ name: skip_waitcnt_lgkmcnt
 body: |
   ; CHECK-LABEL: name: skip_waitcnt_lgkmcnt
   ; CHECK: bb.0:
-  ; CHECK-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
-  ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; CHECK-NEXT:   successors: %bb.1(0x40000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
   ; CHECK-NEXT:   successors: %bb.2(0x80000000)
@@ -126,9 +118,7 @@ name: skip_wait_idle
 body: |
   ; CHECK-LABEL: name: skip_wait_idle
   ; CHECK: bb.0:
-  ; CHECK-NEXT:   successors: %bb.1(0x40000000), %bb.2(0x40000000)
-  ; CHECK-NEXT: {{  $}}
-  ; CHECK-NEXT:   S_CBRANCH_EXECZ %bb.2, implicit $exec
+  ; CHECK-NEXT:   successors: %bb.1(0x40000000)
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
   ; CHECK-NEXT:   successors: %bb.2(0x80000000)

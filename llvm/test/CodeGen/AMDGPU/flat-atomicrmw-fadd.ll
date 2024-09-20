@@ -108,13 +108,12 @@ define float @flat_agent_atomic_fadd_ret_f32__amdgpu_no_fine_grained_memory__amd
 ; GFX90A-NEXT:    ; implicit-def: $vgpr2
 ; GFX90A-NEXT:  .LBB0_6: ; %Flow2
 ; GFX90A-NEXT:    s_andn2_saveexec_b64 s[4:5], s[4:5]
-; GFX90A-NEXT:    s_cbranch_execz .LBB0_8
 ; GFX90A-NEXT:  ; %bb.7: ; %atomicrmw.shared
 ; GFX90A-NEXT:    v_cmp_ne_u64_e32 vcc, 0, v[0:1]
 ; GFX90A-NEXT:    v_cndmask_b32_e32 v0, -1, v0, vcc
 ; GFX90A-NEXT:    ds_add_rtn_f32 v3, v0, v2
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB0_8: ; %atomicrmw.phi
+; GFX90A-NEXT:  ; %bb.8: ; %atomicrmw.phi
 ; GFX90A-NEXT:    s_or_b64 exec, exec, s[4:5]
 ; GFX90A-NEXT:    v_mov_b32_e32 v0, v3
 ; GFX90A-NEXT:    s_waitcnt vmcnt(0)
@@ -2428,13 +2427,12 @@ define float @flat_agent_atomic_fadd_ret_f32__ftz__amdgpu_no_fine_grained_memory
 ; GFX90A-NEXT:    ; implicit-def: $vgpr2
 ; GFX90A-NEXT:  .LBB12_6: ; %Flow2
 ; GFX90A-NEXT:    s_andn2_saveexec_b64 s[4:5], s[4:5]
-; GFX90A-NEXT:    s_cbranch_execz .LBB12_8
 ; GFX90A-NEXT:  ; %bb.7: ; %atomicrmw.shared
 ; GFX90A-NEXT:    v_cmp_ne_u64_e32 vcc, 0, v[0:1]
 ; GFX90A-NEXT:    v_cndmask_b32_e32 v0, -1, v0, vcc
 ; GFX90A-NEXT:    ds_add_rtn_f32 v3, v0, v2
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB12_8: ; %atomicrmw.phi
+; GFX90A-NEXT:  ; %bb.8: ; %atomicrmw.phi
 ; GFX90A-NEXT:    s_or_b64 exec, exec, s[4:5]
 ; GFX90A-NEXT:    v_mov_b32_e32 v0, v3
 ; GFX90A-NEXT:    s_waitcnt vmcnt(0)
@@ -5099,13 +5097,12 @@ define float @flat_agent_atomic_fadd_ret_f32__amdgpu_no_fine_grained_memory_amdg
 ; GFX90A-NEXT:    ; implicit-def: $vgpr2
 ; GFX90A-NEXT:  .LBB26_6: ; %Flow2
 ; GFX90A-NEXT:    s_andn2_saveexec_b64 s[4:5], s[4:5]
-; GFX90A-NEXT:    s_cbranch_execz .LBB26_8
 ; GFX90A-NEXT:  ; %bb.7: ; %atomicrmw.shared
 ; GFX90A-NEXT:    v_cmp_ne_u64_e32 vcc, 0, v[0:1]
 ; GFX90A-NEXT:    v_cndmask_b32_e32 v0, -1, v0, vcc
 ; GFX90A-NEXT:    ds_add_rtn_f32 v3, v0, v2
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB26_8: ; %atomicrmw.phi
+; GFX90A-NEXT:  ; %bb.8: ; %atomicrmw.phi
 ; GFX90A-NEXT:    s_or_b64 exec, exec, s[4:5]
 ; GFX90A-NEXT:    v_mov_b32_e32 v0, v3
 ; GFX90A-NEXT:    s_waitcnt vmcnt(0)
