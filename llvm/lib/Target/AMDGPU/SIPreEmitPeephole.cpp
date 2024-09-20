@@ -15,6 +15,10 @@
 #include "GCNSubtarget.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/TargetSchedule.h"
+#include "llvm/Support/BranchProbability.h"
+
+#include <limits>
 
 using namespace llvm;
 
@@ -41,7 +45,8 @@ private:
                             MachineBasicBlock *&TrueMBB,
                             MachineBasicBlock *&FalseMBB,
                             SmallVectorImpl<MachineOperand> &Cond);
-  bool mustRetainExeczBranch(const MachineBasicBlock &From,
+  bool mustRetainExeczBranch(const MachineBasicBlock &Head,
+                             const MachineBasicBlock &From,
                              const MachineBasicBlock &To) const;
   bool removeExeczBranch(MachineInstr &MI, MachineBasicBlock &SrcMBB);
 
@@ -305,10 +310,53 @@ bool SIPreEmitPeephole::getBlockDestinations(
 }
 
 bool SIPreEmitPeephole::mustRetainExeczBranch(
-    const MachineBasicBlock &From, const MachineBasicBlock &To) const {
-  unsigned NumInstr = 0;
-  const MachineFunction *MF = From.getParent();
+    const MachineBasicBlock &Head, const MachineBasicBlock &From,
+    const MachineBasicBlock &To) const {
 
+  auto FromIt = find(Head.successors(), &From);
+  assert(FromIt != Head.succ_end());
+  BranchProbability ExecNZProb = Head.getSuccProbability(FromIt);
+
+  unsigned NumInstr = 0;
+
+  unsigned long ExecNZBranchCost = 0;
+  unsigned long UnconditionalBranchCost = 0;
+  unsigned long N = 0;
+  unsigned long D = 0;
+  unsigned long ThenCyclesCost = 0;
+
+  std::function<bool(const MachineInstr &)> IsProfitable =
+      [&](const MachineInstr &MI) {
+        ++NumInstr;
+        if (NumInstr >= SkipThreshold)
+          return false;
+        // These instructions are potentially expensive even if EXEC = 0.
+        if (TII->isSMRD(MI) || TII->isVMEM(MI) || TII->isFLAT(MI) ||
+            TII->isDS(MI) || TII->isWaitcnt(MI.getOpcode()))
+          return false;
+        return true;
+      };
+
+  auto &SchedModel = TII->getSchedModel();
+  if (SchedModel.hasInstrSchedModel() && !ExecNZProb.isUnknown()) {
+    ExecNZBranchCost = SchedModel.computeInstrLatency(AMDGPU::S_CBRANCH_EXECZ);
+    UnconditionalBranchCost = SchedModel.computeInstrLatency(AMDGPU::S_BRANCH);
+    N = ExecNZProb.getNumerator();
+    D = ExecNZProb.getDenominator();
+
+    IsProfitable = [&](const MachineInstr &MI) {
+      ThenCyclesCost += SchedModel.computeInstrLatency(&MI, false);
+
+      // Consider `P = N/D` to be the probability of execnz being true
+      // The transformation is profitable if always executing the 'then' block
+      // is cheaper than executing sometimes 'then', s_branch and always
+      // executing s_cbranch_execnz
+      return (D - N) * ThenCyclesCost <=
+             D * ExecNZBranchCost + (D - N) * UnconditionalBranchCost;
+    };
+  }
+
+  const MachineFunction *MF = From.getParent();
   for (MachineFunction::const_iterator MBBI(&From), ToI(&To), End = MF->end();
        MBBI != End && MBBI != ToI; ++MBBI) {
     const MachineBasicBlock &MBB = *MBBI;
@@ -326,13 +374,7 @@ bool SIPreEmitPeephole::mustRetainExeczBranch(
       if (TII->hasUnwantedEffectsWhenEXECEmpty(MI))
         return true;
 
-      // These instructions are potentially expensive even if EXEC = 0.
-      if (TII->isSMRD(MI) || TII->isVMEM(MI) || TII->isFLAT(MI) ||
-          TII->isDS(MI) || TII->isWaitcnt(MI.getOpcode()))
-        return true;
-
-      ++NumInstr;
-      if (NumInstr >= SkipThreshold)
+      if (!IsProfitable(MI))
         return true;
     }
   }
@@ -351,8 +393,11 @@ bool SIPreEmitPeephole::removeExeczBranch(MachineInstr &MI,
     return false;
 
   // Consider only the forward branches.
-  if ((SrcMBB.getNumber() >= TrueMBB->getNumber()) ||
-      mustRetainExeczBranch(*FalseMBB, *TrueMBB))
+  if (SrcMBB.getNumber() >= TrueMBB->getNumber())
+    return false;
+
+  // Consider only when it is legal and profitable
+  if (mustRetainExeczBranch(SrcMBB, *FalseMBB, *TrueMBB))
     return false;
 
   LLVM_DEBUG(dbgs() << "Removing the execz branch: " << MI);
@@ -366,6 +411,7 @@ bool SIPreEmitPeephole::runOnMachineFunction(MachineFunction &MF) {
   const GCNSubtarget &ST = MF.getSubtarget<GCNSubtarget>();
   TII = ST.getInstrInfo();
   TRI = &TII->getRegisterInfo();
+
   bool Changed = false;
 
   MF.RenumberBlocks();
