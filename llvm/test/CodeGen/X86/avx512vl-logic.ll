@@ -980,7 +980,7 @@ define <4 x i32> @ternlog_or_andn(<4 x i32> %x, <4 x i32> %y, <4 x i32> %z) {
 define <4 x i32> @ternlog_and_orn(<4 x i32> %x, <4 x i32> %y, <4 x i32> %z) {
 ; CHECK-LABEL: ternlog_and_orn:
 ; CHECK:       ## %bb.0:
-; CHECK-NEXT:    vpternlogd $176, %xmm1, %xmm2, %xmm0
+; CHECK-NEXT:    vpternlogd $208, %xmm2, %xmm1, %xmm0
 ; CHECK-NEXT:    retq
   %a = xor <4 x i32> %z, <i32 -1, i32 -1, i32 -1, i32 -1>
   %b = or <4 x i32> %a, %y
