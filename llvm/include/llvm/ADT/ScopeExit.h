@@ -31,13 +31,14 @@ public:
   template <typename Fp>
   explicit scope_exit(Fp &&F) : ExitFunction(std::forward<Fp>(F)) {}
 
-  scope_exit(scope_exit &&Rhs)
-      : ExitFunction(std::move(Rhs.ExitFunction)), Engaged(Rhs.Engaged) {
-    Rhs.release();
-  }
+  scope_exit(scope_exit &&Rhs) { *this = std::move(Rhs); }
   scope_exit(const scope_exit &) = delete;
-  scope_exit &operator=(scope_exit &&) = delete;
   scope_exit &operator=(const scope_exit &) = delete;
+  scope_exit &operator=(scope_exit &&Rhs) {
+    Engaged = std::exchange(Rhs.Engaged, false);
+    ExitFunction = std::move(Rhs.ExitFunction);
+    return *this;
+  }
 
   void release() { Engaged = false; }
 
