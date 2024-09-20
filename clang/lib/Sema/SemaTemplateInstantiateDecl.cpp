@@ -9,6 +9,7 @@
 //
 //===----------------------------------------------------------------------===/
 
+#include "AttrTemplateInstantiate.h"
 #include "TreeTransform.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
@@ -87,9 +88,6 @@ bool TemplateDeclInstantiator::SubstQualifier(const TagDecl *OldDecl,
                                               TagDecl *NewDecl) {
   return ::SubstQualifier(SemaRef, OldDecl, NewDecl, TemplateArgs);
 }
-
-// Include attribute instantiation code.
-#include "clang/Sema/AttrTemplateInstantiate.inc"
 
 static void instantiateDependentAlignedAttr(
     Sema &S, const MultiLevelTemplateArgumentList &TemplateArgs,
