@@ -70,7 +70,7 @@ protected:
     Loop *L = LI->getLoopFor(LoopHeader);
     PredicatedScalarEvolution PSE(*SE, *L);
     auto Plan = VPlan::createInitialVPlan(IntegerType::get(*Ctx, 64), PSE, true,
-                                          false, L);
+                                          false, L, nullptr, nullptr);
     VPlanHCFGBuilder HCFGBuilder(L, LI.get(), *Plan);
     HCFGBuilder.buildHierarchicalCFG();
     return Plan;
@@ -85,7 +85,7 @@ protected:
     Loop *L = LI->getLoopFor(LoopHeader);
     PredicatedScalarEvolution PSE(*SE, *L);
     auto Plan = VPlan::createInitialVPlan(IntegerType::get(*Ctx, 64), PSE, true,
-                                          false, L);
+                                          false, L, nullptr, nullptr);
     VPlanHCFGBuilder HCFGBuilder(L, LI.get(), *Plan);
     HCFGBuilder.buildPlainCFG();
     return Plan;
