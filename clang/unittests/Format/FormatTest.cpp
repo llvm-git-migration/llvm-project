@@ -25137,7 +25137,7 @@ TEST_F(FormatTest, SkipMacroDefinitionBody) {
                  "a",
                  Style);
 
-  // Adjust indendations but don't change the definition.
+  // Adjust indentations but don't change the definition.
   Style.IndentPPDirectives = FormatStyle::PPDIS_None;
   verifyNoChange("#if A\n"
                  "#define A  a\n"
