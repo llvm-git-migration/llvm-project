@@ -18,6 +18,7 @@
 #include "AMDGPU.h"
 #include "AMDGPUAliasAnalysis.h"
 #include "AMDGPUCtorDtorLowering.h"
+#include "AMDGPUDemoteSCCBranchToExecz.h"
 #include "AMDGPUExportClustering.h"
 #include "AMDGPUIGroupLP.h"
 #include "AMDGPUISelDAGToDAG.h"

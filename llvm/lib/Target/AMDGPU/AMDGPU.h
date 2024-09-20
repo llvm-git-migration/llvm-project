@@ -376,14 +376,6 @@ extern char &AMDGPURemoveIncompatibleFunctionsID;
 void initializeAMDGPUDemoteSCCBranchToExeczLegacyPass(PassRegistry &);
 extern char &AMDGPUDemoteSCCBranchToExeczLegacyID;
 
-class AMDGPUDemoteSCCBranchToExeczPass
-    : public PassInfoMixin<AMDGPUDemoteSCCBranchToExeczPass> {
-public:
-  AMDGPUDemoteSCCBranchToExeczPass() = default;
-  PreservedAnalyses run(MachineFunction &MF,
-                        MachineFunctionAnalysisManager &MFAM);
-};
-
 void initializeAMDGPULateCodeGenPrepareLegacyPass(PassRegistry &);
 extern char &AMDGPULateCodeGenPrepareLegacyID;
 
