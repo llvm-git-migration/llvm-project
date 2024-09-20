@@ -2762,7 +2762,8 @@ static void emitAttributes(const RecordKeeper &Records, raw_ostream &OS,
     }
 
     if (Header)
-      OS << "class CLANG_ABI " << R.getName() << "Attr : public " << SuperName << " {\n";
+      OS << "class CLANG_ABI " << R.getName() << "Attr : public " << SuperName
+         << " {\n";
     else
       OS << "\n// " << R.getName() << "Attr implementation\n\n";
 
