@@ -1225,17 +1225,13 @@ parsePrivateList(OpAsmParser &parser,
 }
 
 static void printPrivateList(OpAsmPrinter &p, Operation *op,
-                             ValueRange privateVars, TypeRange privateTypes,
-                             ArrayAttr privateSyms) {
-  // TODO: Remove target-specific logic from this function.
-  auto targetOp = mlir::dyn_cast<mlir::omp::TargetOp>(op);
-  assert(targetOp);
-
+                             Operation::operand_range privateVars,
+                             TypeRange privateTypes, ArrayAttr privateSyms) {
   auto &region = op->getRegion(0);
   auto *argsBegin = region.front().getArguments().begin();
-  MutableArrayRef argsSubrange(argsBegin + targetOp.getMapVars().size(),
-                               argsBegin + targetOp.getMapVars().size() +
-                                   privateTypes.size());
+  MutableArrayRef argsSubrange(argsBegin + privateVars.getBeginOperandIndex(),
+                               argsBegin + privateVars.getBeginOperandIndex() +
+                                   privateVars.size());
   mlir::SmallVector<bool> isByRefVec;
   isByRefVec.resize(privateTypes.size(), false);
   DenseBoolArrayAttr isByRef =

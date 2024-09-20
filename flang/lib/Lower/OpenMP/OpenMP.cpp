@@ -485,6 +485,33 @@ mergePrivateVarsInfo(OMPOp op, llvm::ArrayRef<InfoTy> currentList,
                   infoAccessor);
 }
 
+static void
+bindSymbolsToRegionArgs(lower::AbstractConverter &converter, mlir::Location loc,
+                        llvm::ArrayRef<const semantics::Symbol *> symbols,
+                        mlir::Region &region, unsigned regionBeginArgIdx) {
+  assert(regionBeginArgIdx + symbols.size() <= region.getNumArguments());
+  for (const semantics::Symbol *arg : symbols) {
+    auto bind = [&](const semantics::Symbol *sym) {
+      mlir::BlockArgument blockArg = region.getArgument(regionBeginArgIdx);
+      ++regionBeginArgIdx;
+      converter.bindSymbol(
+          *sym,
+          hlfir::translateToExtendedValue(
+              loc, converter.getFirOpBuilder(), hlfir::Entity{blockArg},
+              /*contiguousHint=*/
+              evaluate::IsSimplyContiguous(*sym, converter.getFoldingContext()))
+              .first);
+    };
+
+    if (const auto *commonDet =
+            arg->detailsIf<semantics::CommonBlockDetails>()) {
+      for (const auto &mem : commonDet->objects())
+        bind(&*mem);
+    } else
+      bind(arg);
+  }
+}
+
 //===----------------------------------------------------------------------===//
 // Op body generation helper structures and functions
 //===----------------------------------------------------------------------===//
@@ -1493,28 +1520,7 @@ genParallelOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
     llvm::SmallVector<const semantics::Symbol *> allSymbols(reductionSyms);
     allSymbols.append(dsp->getDelayedPrivSymbols().begin(),
                       dsp->getDelayedPrivSymbols().end());
-
-    unsigned argIdx = 0;
-    for (const semantics::Symbol *arg : allSymbols) {
-      auto bind = [&](const semantics::Symbol *sym) {
-        mlir::BlockArgument blockArg = region.getArgument(argIdx);
-        ++argIdx;
-        converter.bindSymbol(*sym,
-                             hlfir::translateToExtendedValue(
-                                 loc, firOpBuilder, hlfir::Entity{blockArg},
-                                 /*contiguousHint=*/
-                                 evaluate::IsSimplyContiguous(
-                                     *sym, converter.getFoldingContext()))
-                                 .first);
-      };
-
-      if (const auto *commonDet =
-              arg->detailsIf<semantics::CommonBlockDetails>()) {
-        for (const auto &mem : commonDet->objects())
-          bind(&*mem);
-      } else
-        bind(arg);
-    }
+    bindSymbolsToRegionArgs(converter, loc, allSymbols, region, 0);
 
     return allSymbols;
   };
@@ -1681,7 +1687,6 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
                    mapTypes, deviceAddrSyms, deviceAddrLocs, deviceAddrTypes,
                    devicePtrSyms, devicePtrLocs, devicePtrTypes);
 
-  llvm::SmallVector<const semantics::Symbol *> privateSyms;
   DataSharingProcessor dsp(converter, semaCtx, item->clauses, eval,
                            /*shouldCollectPreDeterminedSymbols=*/
                            lower::omp::isLastItemInQueue(item, queue),
@@ -1932,22 +1937,49 @@ static void genStandaloneDistribute(lower::AbstractConverter &converter,
                                     ConstructQueue::const_iterator item) {
   lower::StatementContext stmtCtx;
 
+  auto teamsOp = mlir::cast<mlir::omp::TeamsOp>(
+      converter.getFirOpBuilder().getInsertionBlock()->getParentOp());
   mlir::omp::DistributeOperands distributeClauseOps;
   genDistributeClauses(converter, semaCtx, stmtCtx, item->clauses, loc,
                        distributeClauseOps);
 
-  // TODO: Support delayed privatization.
+  // Privatization for a `distribute` directive is done in the `teams` region to
+  // which the directive binds. Therefore, all privatization logic (delayed as
+  // well as early) happens **before** the `distribute` op is generated (i.e.
+  // inside the parent `teams` op).
   DataSharingProcessor dsp(converter, semaCtx, item->clauses, eval,
                            /*shouldCollectPreDeterminedSymbols=*/true,
-                           /*useDelayedPrivatization=*/false, &symTable);
-  dsp.processStep1();
+                           enableDelayedPrivatizationStaging, &symTable);
+  mlir::omp::PrivateClauseOps privateClauseOps;
+  dsp.processStep1(&privateClauseOps);
+
+  if (enableDelayedPrivatizationStaging) {
+    mlir::Region &teamsRegion = teamsOp.getRegion();
+    unsigned privateVarsArgIdx = teamsRegion.getNumArguments();
+    llvm::SmallVector<mlir::Type> privateVarTypes;
+    llvm::SmallVector<mlir::Location> privateVarLocs;
+
+    for (mlir::Value privateVar : privateClauseOps.privateVars) {
+      privateVarTypes.push_back(privateVar.getType());
+      privateVarLocs.push_back(privateVar.getLoc());
+      teamsOp.getPrivateVarsMutable().append(privateVar);
+    }
+
+    teamsOp.setPrivateSymsAttr(
+        converter.getFirOpBuilder().getArrayAttr(privateClauseOps.privateSyms));
+    teamsRegion.addArguments(privateVarTypes, privateVarLocs);
+
+    llvm::ArrayRef<const semantics::Symbol *> delayedPrivSyms =
+        dsp.getDelayedPrivSymbols();
+    bindSymbolsToRegionArgs(converter, loc, delayedPrivSyms, teamsRegion,
+                            privateVarsArgIdx);
+  }
 
   mlir::omp::LoopNestOperands loopNestClauseOps;
   llvm::SmallVector<const semantics::Symbol *> iv;
   genLoopNestClauses(converter, semaCtx, eval, item->clauses, loc,
                      loopNestClauseOps, iv);
 
-  // TODO: Populate entry block arguments with private variables.
   auto distributeOp = genWrapperOp<mlir::omp::DistributeOp>(
       converter, loc, distributeClauseOps, /*blockArgTypes=*/{});
 
