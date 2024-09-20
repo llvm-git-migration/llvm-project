@@ -698,7 +698,6 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX9-NEXT:    v_mbcnt_hi_u32_b32 v0, s1, v0
 ; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX9-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX9-NEXT:    s_cbranch_execz .LBB5_2
 ; GFX9-NEXT:  ; %bb.1:
 ; GFX9-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
@@ -708,7 +707,7 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX9-NEXT:    v_mov_b32_e32 v0, s2
 ; GFX9-NEXT:    ds_add_u32 v0, v1
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:  .LBB5_2:
+; GFX9-NEXT:  ; %bb.2:
 ; GFX9-NEXT:    s_endpgm
 ;
 ; GFX90A-LABEL: atomic_add_local:
@@ -718,7 +717,6 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX90A-NEXT:    v_mbcnt_hi_u32_b32 v0, s1, v0
 ; GFX90A-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX90A-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX90A-NEXT:    s_cbranch_execz .LBB5_2
 ; GFX90A-NEXT:  ; %bb.1:
 ; GFX90A-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
@@ -728,7 +726,7 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX90A-NEXT:    v_mov_b32_e32 v0, s2
 ; GFX90A-NEXT:    ds_add_u32 v0, v1
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB5_2:
+; GFX90A-NEXT:  ; %bb.2:
 ; GFX90A-NEXT:    s_endpgm
 ;
 ; GFX10-LABEL: atomic_add_local:
@@ -758,7 +756,6 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX9-FLATSCR-NEXT:    v_mbcnt_hi_u32_b32 v0, s1, v0
 ; GFX9-FLATSCR-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX9-FLATSCR-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX9-FLATSCR-NEXT:    s_cbranch_execz .LBB5_2
 ; GFX9-FLATSCR-NEXT:  ; %bb.1:
 ; GFX9-FLATSCR-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX9-FLATSCR-NEXT:    s_waitcnt lgkmcnt(0)
@@ -768,7 +765,7 @@ define amdgpu_kernel void @atomic_add_local(ptr addrspace(3) %local) {
 ; GFX9-FLATSCR-NEXT:    v_mov_b32_e32 v0, s2
 ; GFX9-FLATSCR-NEXT:    ds_add_u32 v0, v1
 ; GFX9-FLATSCR-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-FLATSCR-NEXT:  .LBB5_2:
+; GFX9-FLATSCR-NEXT:  ; %bb.2:
 ; GFX9-FLATSCR-NEXT:    s_endpgm
 ;
 ; GFX11-LABEL: atomic_add_local:
@@ -900,7 +897,6 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX9-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX9-NEXT:    ; implicit-def: $vgpr1
 ; GFX9-NEXT:    s_and_saveexec_b64 s[0:1], vcc
-; GFX9-NEXT:    s_cbranch_execz .LBB7_2
 ; GFX9-NEXT:  ; %bb.1:
 ; GFX9-NEXT:    s_load_dword s6, s[2:3], 0x2c
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
@@ -910,7 +906,7 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX9-NEXT:    v_mov_b32_e32 v1, s6
 ; GFX9-NEXT:    ds_add_rtn_u32 v1, v1, v2
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-NEXT:  .LBB7_2:
+; GFX9-NEXT:  ; %bb.2:
 ; GFX9-NEXT:    s_or_b64 exec, exec, s[0:1]
 ; GFX9-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x24
 ; GFX9-NEXT:    s_waitcnt lgkmcnt(0)
@@ -929,7 +925,6 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX90A-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX90A-NEXT:    ; implicit-def: $vgpr1
 ; GFX90A-NEXT:    s_and_saveexec_b64 s[0:1], vcc
-; GFX90A-NEXT:    s_cbranch_execz .LBB7_2
 ; GFX90A-NEXT:  ; %bb.1:
 ; GFX90A-NEXT:    s_load_dword s6, s[2:3], 0x2c
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
@@ -939,7 +934,7 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX90A-NEXT:    v_mov_b32_e32 v1, s6
 ; GFX90A-NEXT:    ds_add_rtn_u32 v1, v1, v2
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB7_2:
+; GFX90A-NEXT:  ; %bb.2:
 ; GFX90A-NEXT:    s_or_b64 exec, exec, s[0:1]
 ; GFX90A-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x24
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
@@ -988,7 +983,6 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX9-FLATSCR-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX9-FLATSCR-NEXT:    ; implicit-def: $vgpr1
 ; GFX9-FLATSCR-NEXT:    s_and_saveexec_b64 s[0:1], vcc
-; GFX9-FLATSCR-NEXT:    s_cbranch_execz .LBB7_2
 ; GFX9-FLATSCR-NEXT:  ; %bb.1:
 ; GFX9-FLATSCR-NEXT:    s_load_dword s6, s[2:3], 0x2c
 ; GFX9-FLATSCR-NEXT:    s_waitcnt lgkmcnt(0)
@@ -998,7 +992,7 @@ define amdgpu_kernel void @atomic_add_ret_local(ptr addrspace(1) %out, ptr addrs
 ; GFX9-FLATSCR-NEXT:    v_mov_b32_e32 v1, s6
 ; GFX9-FLATSCR-NEXT:    ds_add_rtn_u32 v1, v1, v2
 ; GFX9-FLATSCR-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX9-FLATSCR-NEXT:  .LBB7_2:
+; GFX9-FLATSCR-NEXT:  ; %bb.2:
 ; GFX9-FLATSCR-NEXT:    s_or_b64 exec, exec, s[0:1]
 ; GFX9-FLATSCR-NEXT:    s_load_dwordx2 s[0:1], s[2:3], 0x24
 ; GFX9-FLATSCR-NEXT:    s_waitcnt lgkmcnt(0)

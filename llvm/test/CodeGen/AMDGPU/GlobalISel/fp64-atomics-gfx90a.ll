@@ -1726,7 +1726,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat(ptr addrspace(3) %ptr
 ; GFX90A-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX90A-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX90A-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX90A-NEXT:    s_cbranch_execz .LBB59_2
 ; GFX90A-NEXT:  ; %bb.1:
 ; GFX90A-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX90A-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1736,7 +1735,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat(ptr addrspace(3) %ptr
 ; GFX90A-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX90A-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB59_2:
+; GFX90A-NEXT:  ; %bb.2:
 ; GFX90A-NEXT:    s_endpgm
 ;
 ; GFX940-LABEL: local_atomic_fadd_f64_noret_pat:
@@ -1747,7 +1746,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat(ptr addrspace(3) %ptr
 ; GFX940-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX940-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX940-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX940-NEXT:    s_cbranch_execz .LBB59_2
 ; GFX940-NEXT:  ; %bb.1:
 ; GFX940-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX940-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1757,7 +1755,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat(ptr addrspace(3) %ptr
 ; GFX940-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX940-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX940-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NEXT:  .LBB59_2:
+; GFX940-NEXT:  ; %bb.2:
 ; GFX940-NEXT:    s_endpgm
 main_body:
   %ret = atomicrmw fadd ptr addrspace(3) %ptr, double 4.0 seq_cst, !amdgpu.no.fine.grained.memory !0
@@ -1773,7 +1771,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush(ptr addrspace(3
 ; GFX90A-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX90A-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX90A-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX90A-NEXT:    s_cbranch_execz .LBB60_2
 ; GFX90A-NEXT:  ; %bb.1:
 ; GFX90A-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX90A-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1783,7 +1780,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush(ptr addrspace(3
 ; GFX90A-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX90A-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB60_2:
+; GFX90A-NEXT:  ; %bb.2:
 ; GFX90A-NEXT:    s_endpgm
 ;
 ; GFX940-LABEL: local_atomic_fadd_f64_noret_pat_flush:
@@ -1794,7 +1791,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush(ptr addrspace(3
 ; GFX940-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX940-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX940-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX940-NEXT:    s_cbranch_execz .LBB60_2
 ; GFX940-NEXT:  ; %bb.1:
 ; GFX940-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX940-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1804,7 +1800,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush(ptr addrspace(3
 ; GFX940-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX940-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX940-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NEXT:  .LBB60_2:
+; GFX940-NEXT:  ; %bb.2:
 ; GFX940-NEXT:    s_endpgm
 main_body:
   %ret = atomicrmw fadd ptr addrspace(3) %ptr, double 4.0 seq_cst, !amdgpu.no.fine.grained.memory !0
@@ -1820,7 +1816,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush_safe(ptr addrsp
 ; GFX90A-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX90A-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX90A-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX90A-NEXT:    s_cbranch_execz .LBB61_2
 ; GFX90A-NEXT:  ; %bb.1:
 ; GFX90A-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX90A-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1830,7 +1825,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush_safe(ptr addrsp
 ; GFX90A-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX90A-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX90A-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX90A-NEXT:  .LBB61_2:
+; GFX90A-NEXT:  ; %bb.2:
 ; GFX90A-NEXT:    s_endpgm
 ;
 ; GFX940-LABEL: local_atomic_fadd_f64_noret_pat_flush_safe:
@@ -1841,7 +1836,6 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush_safe(ptr addrsp
 ; GFX940-NEXT:    v_mbcnt_hi_u32_b32 v0, s4, v0
 ; GFX940-NEXT:    v_cmp_eq_u32_e32 vcc, 0, v0
 ; GFX940-NEXT:    s_and_saveexec_b64 s[4:5], vcc
-; GFX940-NEXT:    s_cbranch_execz .LBB61_2
 ; GFX940-NEXT:  ; %bb.1:
 ; GFX940-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; GFX940-NEXT:    s_bcnt1_i32_b64 s0, s[0:1]
@@ -1851,7 +1845,7 @@ define amdgpu_kernel void @local_atomic_fadd_f64_noret_pat_flush_safe(ptr addrsp
 ; GFX940-NEXT:    v_mov_b32_e32 v2, s2
 ; GFX940-NEXT:    ds_add_f64 v2, v[0:1]
 ; GFX940-NEXT:    s_waitcnt lgkmcnt(0)
-; GFX940-NEXT:  .LBB61_2:
+; GFX940-NEXT:  ; %bb.2:
 ; GFX940-NEXT:    s_endpgm
 main_body:
   %ret = atomicrmw fadd ptr addrspace(3) %ptr, double 4.0 seq_cst, !amdgpu.no.fine.grained.memory !0

@@ -74,14 +74,13 @@ define amdgpu_kernel void @phi_cond_outside_loop(i32 %b) {
 ; SI-NEXT:    s_mov_b64 s[0:1], 0
 ; SI-NEXT:    s_mov_b64 s[4:5], 0
 ; SI-NEXT:    s_and_saveexec_b64 s[6:7], vcc
-; SI-NEXT:    s_cbranch_execz .LBB1_2
 ; SI-NEXT:  ; %bb.1: ; %else
 ; SI-NEXT:    s_load_dword s2, s[2:3], 0x9
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    s_cmp_eq_u32 s2, 0
 ; SI-NEXT:    s_cselect_b64 s[2:3], -1, 0
 ; SI-NEXT:    s_and_b64 s[4:5], s[2:3], exec
-; SI-NEXT:  .LBB1_2: ; %endif
+; SI-NEXT:  ; %bb.2: ; %endif
 ; SI-NEXT:    s_or_b64 exec, exec, s[6:7]
 ; SI-NEXT:  .LBB1_3: ; %loop
 ; SI-NEXT:    ; =>This Inner Loop Header: Depth=1
@@ -99,14 +98,13 @@ define amdgpu_kernel void @phi_cond_outside_loop(i32 %b) {
 ; FLAT-NEXT:    s_mov_b64 s[0:1], 0
 ; FLAT-NEXT:    s_mov_b64 s[4:5], 0
 ; FLAT-NEXT:    s_and_saveexec_b64 s[6:7], vcc
-; FLAT-NEXT:    s_cbranch_execz .LBB1_2
 ; FLAT-NEXT:  ; %bb.1: ; %else
 ; FLAT-NEXT:    s_load_dword s2, s[2:3], 0x24
 ; FLAT-NEXT:    s_waitcnt lgkmcnt(0)
 ; FLAT-NEXT:    s_cmp_eq_u32 s2, 0
 ; FLAT-NEXT:    s_cselect_b64 s[2:3], -1, 0
 ; FLAT-NEXT:    s_and_b64 s[4:5], s[2:3], exec
-; FLAT-NEXT:  .LBB1_2: ; %endif
+; FLAT-NEXT:  ; %bb.2: ; %endif
 ; FLAT-NEXT:    s_or_b64 exec, exec, s[6:7]
 ; FLAT-NEXT:  .LBB1_3: ; %loop
 ; FLAT-NEXT:    ; =>This Inner Loop Header: Depth=1
