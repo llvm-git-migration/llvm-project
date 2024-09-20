@@ -444,6 +444,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeAMDGPUTarget() {
   initializeAMDGPURewriteUndefForPHILegacyPass(*PR);
   initializeAMDGPUUnifyMetadataPass(*PR);
   initializeSIAnnotateControlFlowLegacyPass(*PR);
+  initializeAMDGPUDemoteSCCBranchToExeczLegacyPass(*PR);
   initializeAMDGPUInsertDelayAluPass(*PR);
   initializeSIInsertHardClausesPass(*PR);
   initializeSIInsertWaitcntsPass(*PR);
@@ -1283,7 +1284,7 @@ void GCNPassConfig::addMachineSSAOptimization() {
 bool GCNPassConfig::addILPOpts() {
   if (EnableEarlyIfConversion)
     addPass(&EarlyIfConverterID);
-
+  addPass(&AMDGPUDemoteSCCBranchToExeczLegacyID);
   TargetPassConfig::addILPOpts();
   return false;
 }
