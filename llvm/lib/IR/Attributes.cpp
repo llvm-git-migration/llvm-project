@@ -362,8 +362,7 @@ bool Attribute::isConstantRangeListAttribute() const {
 
 Attribute::AttrKind Attribute::getKindAsEnum() const {
   if (!pImpl) return None;
-  assert((isEnumAttribute() || isIntAttribute() || isTypeAttribute() ||
-          isConstantRangeAttribute() || isConstantRangeListAttribute()) &&
+  assert(hasKindAsEnum() &&
          "Invalid attribute type to get the kind as an enum!");
   return pImpl->getKindAsEnum();
 }

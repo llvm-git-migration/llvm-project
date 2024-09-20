@@ -9,15 +9,11 @@ declare void @side.effect()
 define ptr @test_hoist_int_attrs(i1 %c, ptr %p, i64 %x) {
 ; CHECK-LABEL: define {{[^@]+}}@test_hoist_int_attrs
 ; CHECK-SAME: (i1 [[C:%.*]], ptr [[P:%.*]], i64 [[X:%.*]]) {
-; CHECK-NEXT:    br i1 [[C]], label [[IF:%.*]], label [[ELSE:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call ptr @foo(ptr align 32 dereferenceable(50) dereferenceable_or_null(100) [[P]], i64 range(i64 10, 100000) [[X]]) #[[ATTR0:[0-9]+]]
+; CHECK-NEXT:    br i1 [[C]], label [[COMMON_RET:%.*]], label [[ELSE:%.*]]
 ; CHECK:       common.ret:
-; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
-; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
-; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call ptr @foo(ptr align 64 dereferenceable(50) dereferenceable_or_null(100) [[P]], i64 range(i64 10, 1000) [[X]]) #[[ATTR0:[0-9]+]]
-; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK-NEXT:    ret ptr [[R]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call ptr @foo(ptr align 32 dereferenceable(100) dereferenceable_or_null(200) [[P]], i64 range(i64 10000, 100000) [[X]]) #[[ATTR1:[0-9]+]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -35,15 +31,11 @@ else:
 define ptr @test_hoist_int_attrs2(i1 %c, ptr %p, i64 %x) {
 ; CHECK-LABEL: define {{[^@]+}}@test_hoist_int_attrs2
 ; CHECK-SAME: (i1 [[C:%.*]], ptr [[P:%.*]], i64 [[X:%.*]]) {
-; CHECK-NEXT:    br i1 [[C]], label [[IF:%.*]], label [[ELSE:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call ptr @foo(ptr dereferenceable(50) [[P]], i64 range(i64 10, 1000) [[X]]) #[[ATTR1:[0-9]+]]
+; CHECK-NEXT:    br i1 [[C]], label [[COMMON_RET:%.*]], label [[ELSE:%.*]]
 ; CHECK:       common.ret:
-; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
-; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
-; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call ptr @foo(ptr dereferenceable(50) [[P]], i64 range(i64 10, 1000) [[X]]) #[[ATTR0]]
-; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK-NEXT:    ret ptr [[R]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call ptr @foo(ptr align 32 dereferenceable(100) dereferenceable_or_null(200) [[P]], i64 range(i64 11, 100) [[X]]) #[[ATTR2:[0-9]+]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -61,15 +53,11 @@ else:
 define ptr @test_hoist_bool_attrs2(i1 %c, ptr %p, i64 %x) {
 ; CHECK-LABEL: define {{[^@]+}}@test_hoist_bool_attrs2
 ; CHECK-SAME: (i1 [[C:%.*]], ptr [[P:%.*]], i64 [[X:%.*]]) {
-; CHECK-NEXT:    br i1 [[C]], label [[IF:%.*]], label [[ELSE:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call noundef ptr @foo(ptr nonnull [[P]], i64 noundef [[X]]) #[[ATTR2:[0-9]+]]
+; CHECK-NEXT:    br i1 [[C]], label [[COMMON_RET:%.*]], label [[ELSE:%.*]]
 ; CHECK:       common.ret:
-; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
-; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
-; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call noundef ptr @foo(ptr noundef nonnull readnone [[P]], i64 noundef [[X]]) #[[ATTR3:[0-9]+]]
-; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK-NEXT:    ret ptr [[R]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull readonly [[P]], i64 noundef [[X]]) #[[ATTR4:[0-9]+]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -87,15 +75,11 @@ else:
 define ptr @test_hoist_bool_attrs3(i1 %c, ptr %p, i64 %x) {
 ; CHECK-LABEL: define {{[^@]+}}@test_hoist_bool_attrs3
 ; CHECK-SAME: (i1 [[C:%.*]], ptr [[P:%.*]], i64 [[X:%.*]]) {
-; CHECK-NEXT:    br i1 [[C]], label [[IF:%.*]], label [[ELSE:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call nonnull ptr @foo(ptr [[P]], i64 noundef [[X]]) #[[ATTR3:[0-9]+]]
+; CHECK-NEXT:    br i1 [[C]], label [[COMMON_RET:%.*]], label [[ELSE:%.*]]
 ; CHECK:       common.ret:
-; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
-; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
-; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly [[P]], i64 noundef [[X]]) #[[ATTR5:[0-9]+]]
-; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK-NEXT:    ret ptr [[R]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly [[P]], i64 noundef [[X]]) #[[ATTR6:[0-9]+]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -118,10 +102,10 @@ define ptr @test_hoist_bool_attrs_fail_non_droppable(i1 %c, ptr %p, i64 %x) {
 ; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
 ; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly [[P]], i64 noundef [[X]]) #[[ATTR5]]
+; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly [[P]], i64 noundef [[X]]) #[[ATTR4:[0-9]+]]
 ; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly [[P]], i64 noundef [[X]]) #[[ATTR7:[0-9]+]]
+; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly [[P]], i64 noundef [[X]]) #[[ATTR5:[0-9]+]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -144,10 +128,10 @@ define ptr @test_hoist_bool_attrs_fail_non_droppable2(i1 %c, ptr %p, i64 %x) {
 ; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
 ; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly [[P]], i64 noundef [[X]]) #[[ATTR8:[0-9]+]]
+; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly [[P]], i64 noundef [[X]]) #[[ATTR6:[0-9]+]]
 ; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR7]]
+; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR5]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -170,10 +154,10 @@ define ptr @test_hoist_bool_attrs_fail_non_droppable3(i1 %c, ptr %p, i64 %x) {
 ; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
 ; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly byval(i32) [[P]], i64 noundef [[X]]) #[[ATTR8]]
+; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly byval(i32) [[P]], i64 noundef [[X]]) #[[ATTR6]]
 ; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR7]]
+; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR5]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;
@@ -191,15 +175,11 @@ else:
 define ptr @test_hoist_bool_attrs4(i1 %c, ptr %p, i64 %x) {
 ; CHECK-LABEL: define {{[^@]+}}@test_hoist_bool_attrs4
 ; CHECK-SAME: (i1 [[C:%.*]], ptr [[P:%.*]], i64 [[X:%.*]]) {
-; CHECK-NEXT:    br i1 [[C]], label [[IF:%.*]], label [[ELSE:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = call nonnull ptr @foo(ptr byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR5]]
+; CHECK-NEXT:    br i1 [[C]], label [[COMMON_RET:%.*]], label [[ELSE:%.*]]
 ; CHECK:       common.ret:
-; CHECK-NEXT:    [[COMMON_RET_OP:%.*]] = phi ptr [ [[R:%.*]], [[IF]] ], [ [[R2:%.*]], [[ELSE]] ]
-; CHECK-NEXT:    ret ptr [[COMMON_RET_OP]]
-; CHECK:       if:
-; CHECK-NEXT:    [[R]] = call nonnull ptr @foo(ptr noundef readonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR8]]
-; CHECK-NEXT:    br label [[COMMON_RET:%.*]]
+; CHECK-NEXT:    ret ptr [[R]]
 ; CHECK:       else:
-; CHECK-NEXT:    [[R2]] = call noundef nonnull ptr @foo(ptr nonnull writeonly byval(i64) [[P]], i64 noundef [[X]]) #[[ATTR7]]
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[COMMON_RET]]
 ;

@@ -1591,10 +1591,149 @@ static void hoistLockstepIdenticalDbgVariableRecords(
   }
 }
 
+// See if we can intersect the attributes for two callbases (used for sinking).
+static std::optional<AttributeList> tryIntersectAttrs(const CallBase *CB0,
+                                                      const CallBase *CB1) {
+  assert(CB0->getCalledFunction() == CB1->getCalledFunction() &&
+         "Merging attrs for different functions!");
+
+  AttributeList AL0 = CB0->getAttributes();
+  AttributeList AL1 = CB1->getAttributes();
+
+  // Trivial case if attributes match
+  if (AL0 == AL1)
+    return AL0;
+
+  // Otherwise go through all attributes present and make sure they either match
+  // or that dropping them is okay.
+  // Note: At the moment the logic is only concerned with correctness (i.e we
+  // can't sink a callbase with a `ByVal` attr on a param with one that doesn't
+  // have the attr). But there may be some attributes that are not preferable to
+  // drop i.e a certain Range attr might trivialize inlining so intersecting it
+  // with a callbase without the attr might not be profitable.
+  LLVMContext &Ctx = CB0->getContext();
+  auto IntersectAttrs = [&Ctx](AttributeSet AS0,
+                               AttributeSet AS1) -> std::optional<AttrBuilder> {
+    AttrBuilder Intersected(Ctx);
+
+    AttributeSet AllAttrs = AS0.addAttributes(Ctx, AS1);
+    for (Attribute Attr : AllAttrs) {
+      if (!Attr.isValid())
+        return std::nullopt;
+
+	  // Only supporting enum attrs for now.
+      if (!Attr.hasKindAsEnum())
+        return std::nullopt;
+
+      Attribute::AttrKind Kind = Attr.getKindAsEnum();
+      bool BothContain = AS0.hasAttribute(Kind) && AS1.hasAttribute(Kind);
+      switch (Kind) {
+      default:
+        // Except for the below attrs we know we can intersect safely, fail if
+        // the attributes don't match.
+        if (!BothContain)
+          return std::nullopt;
+        if (AS0.getAttribute(Kind) != AS1.getAttribute(Kind))
+          return std::nullopt;
+        Intersected.addAttribute(Attr);
+        break;
+        // Attributes that can safely be intersected and can safely be thrown
+        // away.
+      case Attribute::Cold:
+      case Attribute::Hot:
+      case Attribute::MustProgress:
+      case Attribute::NoAlias:
+      case Attribute::NoCallback:
+      case Attribute::NoCapture:
+      case Attribute::NoFree:
+      case Attribute::NoRecurse:
+      case Attribute::NoReturn:
+      case Attribute::NoSync:
+      case Attribute::NoUndef:
+      case Attribute::NoUnwind:
+      case Attribute::NonNull:
+      case Attribute::OptimizeForSize:
+        // TODO: We could merge ReadNone + Readonly -> ReadOnly
+      case Attribute::ReadNone:
+      case Attribute::ReadOnly:
+      case Attribute::Returned:
+      case Attribute::Speculatable:
+      case Attribute::WillReturn:
+      case Attribute::Writable:
+      case Attribute::WriteOnly:
+        if (BothContain)
+          Intersected.addAttribute(Attr);
+        break;
+        // Alignment/Dereferenceable/DereferenceableOrNull/Memory/Range we can
+        // safely throw out, but intersection requires us to compare the values
+        // at hand.
+      case Attribute::Alignment:
+        if (BothContain)
+          Intersected.addAlignmentAttr(
+              std::min(AS0.getAlignment().valueOrOne(),
+                       AS1.getAlignment().valueOrOne()));
+        break;
+      case Attribute::Dereferenceable:
+        if (BothContain)
+          Intersected.addDereferenceableAttr(std::min(
+              AS0.getDereferenceableBytes(), AS1.getDereferenceableBytes()));
+        break;
+      case Attribute::DereferenceableOrNull:
+        if (BothContain)
+          Intersected.addDereferenceableOrNullAttr(
+              std::min(AS0.getDereferenceableOrNullBytes(),
+                       AS1.getDereferenceableOrNullBytes()));
+        break;
+      case Attribute::Memory:
+        if (BothContain)
+          Intersected.addMemoryAttr(AS0.getMemoryEffects() |
+                                    AS1.getMemoryEffects());
+        break;
+      case Attribute::Range:
+        if (BothContain) {
+          ConstantRange Range0 = AS0.getAttribute(Attribute::Range).getRange();
+          ConstantRange Range1 = AS1.getAttribute(Attribute::Range).getRange();
+          ConstantRange NewRange = Range0.unionWith(Range1);
+          if (!NewRange.isFullSet())
+            Intersected.addRangeAttr(NewRange);
+        }
+      }
+    }
+	return Intersected;
+  };
+
+  // Intersect all attribute types (ret/fn/param).
+  AttributeList IntersectedAttrs{};
+  auto IntersectedRetAttrs =
+      IntersectAttrs(AL0.getRetAttrs(), AL1.getRetAttrs());
+  if (!IntersectedRetAttrs)
+    return std::nullopt;
+  IntersectedAttrs =
+      IntersectedAttrs.addRetAttributes(Ctx, *IntersectedRetAttrs);
+
+  auto IntersectedFnAttrs = IntersectAttrs(AL0.getFnAttrs(), AL1.getFnAttrs());
+  if (!IntersectedFnAttrs)
+    return std::nullopt;
+  IntersectedAttrs = IntersectedAttrs.addFnAttributes(Ctx, *IntersectedFnAttrs);
+
+  for (unsigned ParamIdx = 0; ParamIdx < CB0->arg_size(); ++ParamIdx) {
+    auto IntersectedParamAttrs = IntersectAttrs(AL0.getParamAttrs(ParamIdx),
+                                                AL1.getParamAttrs(ParamIdx));
+    if (!IntersectedParamAttrs)
+      return std::nullopt;
+    IntersectedAttrs = IntersectedAttrs.addParamAttributes(
+        Ctx, ParamIdx, *IntersectedParamAttrs);
+  }
+  return IntersectedAttrs;
+}
+
 static bool areIdenticalUpToCommutativity(const Instruction *I1,
                                           const Instruction *I2) {
-  if (I1->isIdenticalToWhenDefined(I2))
+  if (I1->isIdenticalToWhenDefined(I2, /*IgnoreAttrs=*/true)) {
+    if (auto *CB1 = dyn_cast<CallBase>(I1))
+      return tryIntersectAttrs(CB1, cast<CallBase>(I2)).has_value();
     return true;
+  }
 
   if (auto *Cmp1 = dyn_cast<CmpInst>(I1))
     if (auto *Cmp2 = dyn_cast<CmpInst>(I2))
@@ -1775,6 +1914,14 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(BasicBlock *BB,
           if (!I2->use_empty())
             I2->replaceAllUsesWith(I1);
           I1->andIRFlags(I2);
+          if (auto *CB = dyn_cast<CallBase>(I1)) {
+            auto IntersectedAttrs = tryIntersectAttrs(CB, cast<CallBase>(I2));
+            assert(IntersectedAttrs &&
+                   "We should not be trying to hoist callbases "
+                   "with non-intersectable attributes");
+            CB->setAttributes(*IntersectedAttrs);
+          }
+
           combineMetadataForCSE(I1, I2, true);
           // I1 and I2 are being combined into a single instruction.  Its debug
           // location is the merged locations of the original instructions.
@@ -1995,7 +2142,7 @@ static bool canSinkInstructions(
   const Instruction *I0 = Insts.front();
   const auto I0MMRA = MMRAMetadata(*I0);
   for (auto *I : Insts) {
-    if (!I->isSameOperationAs(I0))
+    if (!I->isSameOperationAs(I0, Instruction::CompareIgnoringAttrs))
       return false;
 
     // swifterror pointers can only be used by a load or store; sinking a load
@@ -2029,7 +2176,7 @@ static bool canSinkInstructions(
   // I.e. if we have two direct calls to different callees, we don't want to
   // turn that into an indirect call. Likewise, if we have an indirect call,
   // and a direct call, we don't actually want to have a single indirect call.
-  if (isa<CallBase>(I0)) {
+  if (auto *CB = dyn_cast<CallBase>(I0)) {
     auto IsIndirectCall = [](const Instruction *I) {
       return cast<CallBase>(I)->isIndirectCall();
     };
@@ -2048,6 +2195,11 @@ static bool canSinkInstructions(
         else if (Callee != CurrCallee)
           return false;
       }
+    }
+	// Check that we can intersect the attributes if we sink.
+    for (const Instruction *I : Insts) {
+      if (I != I0 && !tryIntersectAttrs(CB, cast<CallBase>(I)))
+        return false;
     }
   }
 
@@ -2152,6 +2304,12 @@ static void sinkLastInstruction(ArrayRef<BasicBlock*> Blocks) {
       I0->applyMergedLocation(I0->getDebugLoc(), I->getDebugLoc());
       combineMetadataForCSE(I0, I, true);
       I0->andIRFlags(I);
+      if (auto *CB = dyn_cast<CallBase>(I0)) {
+        auto IntersectedAttrs = tryIntersectAttrs(CB, cast<CallBase>(I));
+        assert(IntersectedAttrs && "We should not be trying to sink callbases "
+                                   "with non-intersectable attributes");
+        CB->setAttributes(*IntersectedAttrs);
+      }
     }
 
   for (User *U : make_early_inc_range(I0->users())) {

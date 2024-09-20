@@ -208,8 +208,15 @@ public:
   /// Return true if the target-dependent attribute is present.
   bool hasAttribute(StringRef Val) const;
 
+  /// Returns true if the attribute's kind can be represented as an enum (Enum,
+  /// Integer, Type, ConstantRange, or ConstantRangeList attribute).
+  bool hasKindAsEnum() const {
+    return isEnumAttribute() || isIntAttribute() || isTypeAttribute() ||
+           isConstantRangeAttribute() || isConstantRangeListAttribute();
+  }
+
   /// Return the attribute's kind as an enum (Attribute::AttrKind). This
-  /// requires the attribute to be an enum, integer, or type attribute.
+  /// requires the attribute be representable as an enum (see: `hasKindAsEnum`).
   Attribute::AttrKind getKindAsEnum() const;
 
   /// Return the attribute's value as an integer. This requires that the
