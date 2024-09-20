@@ -113,3 +113,105 @@ define void @foo(ptr %ptr, i8 %v0, i8 %v1) {
   EXPECT_THAT(N1->memPreds(), testing::ElementsAre(N0));
   EXPECT_THAT(N2->memPreds(), testing::ElementsAre(N1));
 }
+
+TEST_F(DependencyGraphTest, DGNode_getPrev_getNext_getPrevMem_getNextMem) {
+  parseIR(C, R"IR(
+define void @foo(ptr %ptr, i8 %v0, i8 %v1) {
+  store i8 %v0, ptr %ptr
+  add i8 %v0, %v0
+  store i8 %v1, ptr %ptr
+  ret void
+}
+)IR");
+  llvm::Function *LLVMF = &*M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+  auto *F = Ctx.createFunction(LLVMF);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto *S0 = cast<sandboxir::StoreInst>(&*It++);
+  auto *Add = cast<sandboxir::BinaryOperator>(&*It++);
+  auto *S1 = cast<sandboxir::StoreInst>(&*It++);
+  auto *Ret = cast<sandboxir::ReturnInst>(&*It++);
+
+  sandboxir::DependencyGraph DAG;
+  DAG.extend({&*BB->begin(), BB->getTerminator()});
+
+  sandboxir::DGNode *S0N = DAG.getNode(S0);
+  sandboxir::DGNode *AddN = DAG.getNode(Add);
+  sandboxir::DGNode *S1N = DAG.getNode(S1);
+  sandboxir::DGNode *RetN = DAG.getNode(Ret);
+
+  EXPECT_EQ(S0N->getPrev(DAG), nullptr);
+  EXPECT_EQ(S0N->getNext(DAG), AddN);
+  EXPECT_EQ(S0N->getPrevMem(DAG), nullptr);
+  EXPECT_EQ(S0N->getNextMem(DAG), S1N);
+
+  EXPECT_EQ(AddN->getPrev(DAG), S0N);
+  EXPECT_EQ(AddN->getNext(DAG), S1N);
+  EXPECT_EQ(AddN->getPrevMem(DAG), S0N);
+  EXPECT_EQ(AddN->getNextMem(DAG), S1N);
+
+  EXPECT_EQ(S1N->getPrev(DAG), AddN);
+  EXPECT_EQ(S1N->getNext(DAG), RetN);
+  EXPECT_EQ(S1N->getPrevMem(DAG), S0N);
+  EXPECT_EQ(S1N->getNextMem(DAG), nullptr);
+
+  EXPECT_EQ(RetN->getPrev(DAG), S1N);
+  EXPECT_EQ(RetN->getNext(DAG), nullptr);
+  EXPECT_EQ(RetN->getPrevMem(DAG), S1N);
+  EXPECT_EQ(RetN->getNextMem(DAG), nullptr);
+}
+
+TEST_F(DependencyGraphTest, DGNodeRange) {
+  parseIR(C, R"IR(
+define void @foo(ptr %ptr, i8 %v0, i8 %v1) {
+  add i8 %v0, %v0
+  store i8 %v0, ptr %ptr
+  add i8 %v0, %v0
+  store i8 %v1, ptr %ptr
+  ret void
+}
+)IR");
+  llvm::Function *LLVMF = &*M->getFunction("foo");
+  sandboxir::Context Ctx(C);
+  auto *F = Ctx.createFunction(LLVMF);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto *Add0 = cast<sandboxir::BinaryOperator>(&*It++);
+  auto *S0 = cast<sandboxir::StoreInst>(&*It++);
+  auto *Add1 = cast<sandboxir::BinaryOperator>(&*It++);
+  auto *S1 = cast<sandboxir::StoreInst>(&*It++);
+  auto *Ret = cast<sandboxir::ReturnInst>(&*It++);
+
+  sandboxir::DependencyGraph DAG;
+  DAG.extend({&*BB->begin(), BB->getTerminator()});
+
+  sandboxir::DGNode *Add0N = DAG.getNode(Add0);
+  sandboxir::DGNode *S0N = DAG.getNode(S0);
+  sandboxir::DGNode *Add1N = DAG.getNode(Add1);
+  sandboxir::DGNode *S1N = DAG.getNode(S1);
+  sandboxir::DGNode *RetN = DAG.getNode(Ret);
+
+  // Check empty range.
+  EXPECT_THAT(sandboxir::DGNodeRange::makeEmptyMemRange(),
+              testing::ElementsAre());
+
+  // Both TopN and BotN are memory.
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(S0N, S1N, DAG),
+              testing::ElementsAre(S0N, S1N));
+  // Only TopN is memory.
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(S0N, RetN, DAG),
+              testing::ElementsAre(S0N, S1N));
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(S0N, Add1N, DAG),
+              testing::ElementsAre(S0N));
+  // Only BotN is memory.
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(Add0N, S1N, DAG),
+              testing::ElementsAre(S0N, S1N));
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(Add0N, S0N, DAG),
+              testing::ElementsAre(S0N));
+  // Neither TopN or BotN is memory.
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(Add0N, RetN, DAG),
+              testing::ElementsAre(S0N, S1N));
+  EXPECT_THAT(sandboxir::DGNodeRange::makeMemRange(Add0N, Add0N, DAG),
+              testing::ElementsAre());
+}

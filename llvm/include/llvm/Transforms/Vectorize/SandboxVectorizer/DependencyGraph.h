@@ -29,6 +29,8 @@
 
 namespace llvm::sandboxir {
 
+class DependencyGraph;
+
 /// A DependencyGraph Node that points to an Instruction and contains memory
 /// dependency edges.
 class DGNode {
@@ -45,6 +47,7 @@ public:
             (isa<AllocaInst>(I) && cast<AllocaInst>(I)->isUsedWithInAlloca()) ||
             I->isStackSaveOrRestoreIntrinsic();
   }
+  DGNode(const DGNode &Other) = delete;
   Instruction *getInstruction() const { return I; }
   void addMemPred(DGNode *PredN) { MemPreds.insert(PredN); }
   /// \Returns all memory dependency predecessors.
@@ -56,6 +59,19 @@ public:
   /// \Returns true if this may read/write memory, or if it has some ordering
   /// constraings, like with stacksave/stackrestore and alloca/inalloca.
   bool isMem() const { return IsMem; }
+  /// \Returns the previous DGNode in program order.
+  DGNode *getPrev(DependencyGraph &DAG) const;
+  /// \Returns the next DGNode in program order.
+  DGNode *getNext(DependencyGraph &DAG) const;
+  /// Walks up the instruction chain looking for the next memory dependency
+  /// candidate instruction.
+  /// \Returns the corresponding DAG Node, or null if no instruction found.
+  DGNode *getPrevMem(DependencyGraph &DAG) const;
+  /// Walks down the instr chain looking for the next memory dependency
+  /// candidate instruction.
+  /// \Returns the corresponding DAG Node, or null if no instruction found.
+  DGNode *getNextMem(DependencyGraph &DAG) const;
+
 #ifndef NDEBUG
   void print(raw_ostream &OS, bool PrintDeps = true) const;
   friend raw_ostream &operator<<(DGNode &N, raw_ostream &OS) {
@@ -66,9 +82,73 @@ public:
 #endif // NDEBUG
 };
 
+/// Walks in the order of the instruction chain but skips non-mem Nodes.
+/// This is used for building/updating the DAG.
+class MemDGNodeIterator {
+  DGNode *N;
+  DependencyGraph *DAG;
+
+public:
+  using difference_type = std::ptrdiff_t;
+  using value_type = DGNode;
+  using pointer = value_type *;
+  using reference = value_type &;
+  using iterator_category = std::bidirectional_iterator_tag;
+  MemDGNodeIterator(DGNode *N, DependencyGraph *DAG) : N(N), DAG(DAG) {
+    assert((N == nullptr || N->isMem()) && "Expects mem node!");
+  }
+  MemDGNodeIterator &operator++() {
+    assert(N != nullptr && "Already at end!");
+    N = N->getNextMem(*DAG);
+    return *this;
+  }
+  MemDGNodeIterator operator++(int) {
+    auto ItCopy = *this;
+    ++*this;
+    return ItCopy;
+  }
+  MemDGNodeIterator &operator--() {
+    N = N->getPrevMem(*DAG);
+    return *this;
+  }
+  MemDGNodeIterator operator--(int) {
+    auto ItCopy = *this;
+    --*this;
+    return ItCopy;
+  }
+  pointer operator*() { return N; }
+  const DGNode *operator*() const { return N; }
+  bool operator==(const MemDGNodeIterator &Other) const { return N == Other.N; }
+  bool operator!=(const MemDGNodeIterator &Other) const {
+    return !(*this == Other);
+  }
+};
+
+/// A MemDGNodeIterator with convenience builders and dump().
+class DGNodeRange : public iterator_range<MemDGNodeIterator> {
+public:
+  DGNodeRange(MemDGNodeIterator Begin, MemDGNodeIterator End)
+      : iterator_range(Begin, End) {}
+  /// An empty range.
+  DGNodeRange()
+      : iterator_range(MemDGNodeIterator(nullptr, nullptr),
+                       MemDGNodeIterator(nullptr, nullptr)) {}
+  /// Given \p TopN and \p BotN it finds their closest mem nodes in the range
+  /// TopN to BotN and returns the corresponding mem range.
+  /// Note: BotN (or its neighboring mem node) is included in the range.
+  static DGNodeRange makeMemRange(DGNode *TopN, DGNode *BotN,
+                                  DependencyGraph &DAG);
+  static DGNodeRange makeEmptyMemRange() { return DGNodeRange(); }
+#ifndef NDEBUG
+  LLVM_DUMP_METHOD void dump() const;
+#endif
+};
+
 class DependencyGraph {
 private:
   DenseMap<Instruction *, std::unique_ptr<DGNode>> InstrToNodeMap;
+  /// The DAG spans across all instructions in this interval.
+  InstrInterval DAGInterval;
 
 public:
   DependencyGraph() {}
@@ -76,6 +156,12 @@ public:
   DGNode *getNode(Instruction *I) const {
     auto It = InstrToNodeMap.find(I);
     return It != InstrToNodeMap.end() ? It->second.get() : nullptr;
+  }
+  /// Like getNode() but returns nullptr if \p I is nullptr.
+  DGNode *getNodeOrNull(Instruction *I) const {
+    if (I == nullptr)
+      return nullptr;
+    return getNode(I);
   }
   DGNode *getOrCreateNode(Instruction *I) {
     auto [It, NotInMap] = InstrToNodeMap.try_emplace(I);

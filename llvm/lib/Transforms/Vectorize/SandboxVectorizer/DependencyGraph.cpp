@@ -11,6 +11,39 @@
 
 using namespace llvm::sandboxir;
 
+// TODO: Move this to Utils once it lands.
+/// \Returns the previous memory-dependency-candidate instruction before \p I in
+/// the instruction stream.
+static llvm::sandboxir::Instruction *
+getPrevMemDepInst(llvm::sandboxir::Instruction *I) {
+  for (I = I->getPrevNode(); I != nullptr; I = I->getPrevNode())
+    if (I->isMemDepCandidate() || I->isStackSaveOrRestoreIntrinsic())
+      return I;
+  return nullptr;
+}
+/// \Returns the next memory-dependency-candidate instruction after \p I in the
+/// instruction stream.
+static llvm::sandboxir::Instruction *
+getNextMemDepInst(llvm::sandboxir::Instruction *I) {
+  for (I = I->getNextNode(); I != nullptr; I = I->getNextNode())
+    if (I->isMemDepCandidate() || I->isStackSaveOrRestoreIntrinsic())
+      return I;
+  return nullptr;
+}
+
+DGNode *DGNode::getPrev(DependencyGraph &DAG) const {
+  return DAG.getNodeOrNull(I->getPrevNode());
+}
+DGNode *DGNode::getNext(DependencyGraph &DAG) const {
+  return DAG.getNodeOrNull(I->getNextNode());
+}
+DGNode *DGNode::getPrevMem(DependencyGraph &DAG) const {
+  return DAG.getNodeOrNull(getPrevMemDepInst(I));
+}
+DGNode *DGNode::getNextMem(DependencyGraph &DAG) const {
+  return DAG.getNodeOrNull(getNextMemDepInst(I));
+}
+
 #ifndef NDEBUG
 void DGNode::print(raw_ostream &OS, bool PrintDeps) const {
   I->dumpOS(OS);
@@ -28,6 +61,34 @@ void DGNode::print(raw_ostream &OS, bool PrintDeps) const {
 void DGNode::dump() const {
   print(dbgs());
   dbgs() << "\n";
+}
+#endif // NDEBUG
+
+DGNodeRange DGNodeRange::makeMemRange(DGNode *TopN, DGNode *BotN,
+                                      DependencyGraph &DAG) {
+  assert((TopN == BotN ||
+          TopN->getInstruction()->comesBefore(BotN->getInstruction())) &&
+         "Expected TopN before BotN!");
+  // If TopN/BotN are not mem-dep candidate nodes we need to walk down/up the
+  // chain and find the mem-dep ones.
+  DGNode *MemTopN = TopN;
+  DGNode *MemBotN = BotN;
+  while (!MemTopN->isMem() && MemTopN != MemBotN)
+    MemTopN = MemTopN->getNext(DAG);
+  while (!MemBotN->isMem() && MemBotN != MemTopN)
+    MemBotN = MemBotN->getPrev(DAG);
+  // If we couldn't find a mem node in range TopN - BotN then it's empty.
+  if (!MemTopN->isMem())
+    return {};
+  // Now that we have the mem-dep nodes, create and return the range.
+  return DGNodeRange(MemDGNodeIterator(MemTopN, &DAG),
+                     MemDGNodeIterator(MemBotN->getNextMem(DAG), &DAG));
+}
+
+#ifndef NDEBUG
+void DGNodeRange::dump() const {
+  for (const DGNode *N : *this)
+    N->dump();
 }
 #endif // NDEBUG
 
