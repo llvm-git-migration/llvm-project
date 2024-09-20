@@ -753,13 +753,7 @@ CodeGenTypes::arrangeCall(const CGFunctionInfo &signature,
                                  signature.getRequiredArgs());
 }
 
-namespace clang {
-namespace CodeGen {
-void computeSPIRKernelABIInfo(CodeGenModule &CGM, CGFunctionInfo &FI);
-}
-}
-
-/// Arrange the argument and result information for an abstract value
+/// Arrange the argument and result instatic formation for an abstract value
 /// of a given function type.  This is the method which all of the
 /// above functions ultimately defer to.
 const CGFunctionInfo &CodeGenTypes::arrangeLLVMFunctionInfo(

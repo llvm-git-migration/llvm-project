@@ -21,6 +21,7 @@
 #include "clang/AST/CanonicalType.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Type.h"
+#include "clang/CodeGen/CGFunctionInfo.h"
 #include "llvm/ADT/STLForwardCompat.h"
 #include "llvm/IR/Value.h"
 
@@ -432,6 +433,8 @@ void mergeDefaultFunctionDefinitionAttributes(llvm::Function &F,
                                               const LangOptions &LangOpts,
                                               const TargetOptions &TargetOpts,
                                               bool WillInternalize);
+
+void computeSPIRKernelABIInfo(CodeGenModule &CGM, CGFunctionInfo &FI);
 
 enum class FnInfoOpts {
   None = 0,

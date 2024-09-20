@@ -22,6 +22,9 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
 
+namespace llvm {
+extern cl::opt<bool> EnableSingleByteCoverage;
+} // namespace llvm
 namespace llvm::coverage {
 extern cl::opt<bool> SystemHeadersCoverage;
 }
