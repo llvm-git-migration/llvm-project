@@ -9451,7 +9451,7 @@ static llvm::Value *emitDeviceID(
 }
 
 static llvm::Value *emitDynCGGroupMem(const OMPExecutableDirective &D,
-                               CodeGenFunction &CGF) {
+                                      CodeGenFunction &CGF) {
   llvm::Value *DynCGroupMem = CGF.Builder.getInt32(0);
 
   if (auto *DynMemClause = D.getSingleClause<OMPXDynCGroupMemClause>()) {

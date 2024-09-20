@@ -2734,8 +2734,8 @@ GetAlignedMapping(const OMPLoopDirective &S, CodeGenFunction &CGF) {
 
 // Pass OMPLoopDirective (instead of OMPSimdDirective) to make this function
 // available for "loop bind(thread)", which maps to "simd".
-static void emitOMPSimdDirective(const OMPLoopDirective &S, CodeGenFunction &CGF,
-                          CodeGenModule &CGM) {
+static void emitOMPSimdDirective(const OMPLoopDirective &S,
+                                 CodeGenFunction &CGF, CodeGenModule &CGM) {
   bool UseOMPIRBuilder =
       CGM.getLangOpts().OpenMPIRBuilder && isSimdSupportedByOpenMPIRBuilder(S);
   if (UseOMPIRBuilder) {
@@ -3988,7 +3988,7 @@ convertClauseKindToSchedKind(OpenMPScheduleClauseKind ScheduleClauseKind) {
 // Pass OMPLoopDirective (instead of OMPForDirective) to make this function
 // available for "loop bind(parallel)", which maps to "for".
 static void emitOMPForDirective(const OMPLoopDirective &S, CodeGenFunction &CGF,
-                         CodeGenModule &CGM, bool HasCancel) {
+                                CodeGenModule &CGM, bool HasCancel) {
   bool HasLastprivates = false;
   bool UseOMPIRBuilder = CGM.getLangOpts().OpenMPIRBuilder &&
                          isForSupportedByOpenMPIRBuilder(S, HasCancel);
@@ -5968,8 +5968,9 @@ void CodeGenFunction::EmitOMPDistributeLoop(const OMPLoopDirective &S,
 
 // Pass OMPLoopDirective (instead of OMPDistributeDirective) to make this
 // function available for "loop bind(teams)", which maps to "distribute".
-static void emitOMPDistributeDirective(const OMPLoopDirective &S, CodeGenFunction &CGF,
-                                CodeGenModule &CGM) {
+static void emitOMPDistributeDirective(const OMPLoopDirective &S,
+                                       CodeGenFunction &CGF,
+                                       CodeGenModule &CGM) {
   auto &&CodeGen = [&S](CodeGenFunction &CGF, PrePostActionTy &) {
     CGF.EmitOMPDistributeLoop(S, emitOMPLoopBodyWithStopPoint, S.getInc());
   };
