@@ -409,12 +409,18 @@ public:
     default: break;
       // clang-format off
     case LibFunc_acos:         case LibFunc_acosf:      case LibFunc_acosl:
+    case LibFunc_acosh:        case LibFunc_acoshf:     case LibFunc_acoshl:
     case LibFunc_asin:         case LibFunc_asinf:      case LibFunc_asinl:
+    case LibFunc_asinh:        case LibFunc_asinhf:     case LibFunc_asinhl:
+    case LibFunc_atan2:        case LibFunc_atan2f:     case LibFunc_atan2l:
     case LibFunc_atan:         case LibFunc_atanf:      case LibFunc_atanl:
+    case LibFunc_atanh:        case LibFunc_atanhf:     case LibFunc_atanhl:
+    case LibFunc_cbrt:         case LibFunc_cbrtf:      case LibFunc_cbrtl:
     case LibFunc_ceil:         case LibFunc_ceilf:      case LibFunc_ceill:
     case LibFunc_copysign:     case LibFunc_copysignf:  case LibFunc_copysignl:
     case LibFunc_cos:          case LibFunc_cosf:       case LibFunc_cosl:
     case LibFunc_cosh:         case LibFunc_coshf:      case LibFunc_coshl:
+    case LibFunc_erf:          case LibFunc_erff:       case LibFunc_erfl:
     case LibFunc_exp2:         case LibFunc_exp2f:      case LibFunc_exp2l:
     case LibFunc_fabs:         case LibFunc_fabsf:      case LibFunc_fabsl:
     case LibFunc_floor:        case LibFunc_floorf:     case LibFunc_floorl:
@@ -425,6 +431,7 @@ public:
     case LibFunc_memcmp:       case LibFunc_bcmp:       case LibFunc_strcmp:
     case LibFunc_memcpy:       case LibFunc_memset:     case LibFunc_memmove:
     case LibFunc_nearbyint:    case LibFunc_nearbyintf: case LibFunc_nearbyintl:
+    case LibFunc_pow:          case LibFunc_powf:       case LibFunc_powl:
     case LibFunc_rint:         case LibFunc_rintf:      case LibFunc_rintl:
     case LibFunc_round:        case LibFunc_roundf:     case LibFunc_roundl:
     case LibFunc_sin:          case LibFunc_sinf:       case LibFunc_sinl:
