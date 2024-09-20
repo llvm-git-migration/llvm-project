@@ -1681,7 +1681,6 @@ genTargetOp(lower::AbstractConverter &converter, lower::SymMap &symTable,
                    mapTypes, deviceAddrSyms, deviceAddrLocs, deviceAddrTypes,
                    devicePtrSyms, devicePtrLocs, devicePtrTypes);
 
-  llvm::SmallVector<const semantics::Symbol *> privateSyms;
   DataSharingProcessor dsp(converter, semaCtx, item->clauses, eval,
                            /*shouldCollectPreDeterminedSymbols=*/
                            lower::omp::isLastItemInQueue(item, queue),
@@ -1936,24 +1935,35 @@ static void genStandaloneDistribute(lower::AbstractConverter &converter,
   genDistributeClauses(converter, semaCtx, stmtCtx, item->clauses, loc,
                        distributeClauseOps);
 
-  // TODO: Support delayed privatization.
   DataSharingProcessor dsp(converter, semaCtx, item->clauses, eval,
                            /*shouldCollectPreDeterminedSymbols=*/true,
-                           /*useDelayedPrivatization=*/false, &symTable);
-  dsp.processStep1();
+                           enableDelayedPrivatizationStaging, &symTable);
+  mlir::omp::PrivateClauseOps privateClauseOps;
+  dsp.processStep1(&privateClauseOps);
+  llvm::SmallVector<mlir::Type> privateVarTypes{};
+
+  for (mlir::Value privateVar : privateClauseOps.privateVars)
+    privateVarTypes.push_back(privateVar.getType());
 
   mlir::omp::LoopNestOperands loopNestClauseOps;
   llvm::SmallVector<const semantics::Symbol *> iv;
   genLoopNestClauses(converter, semaCtx, eval, item->clauses, loc,
                      loopNestClauseOps, iv);
 
-  // TODO: Populate entry block arguments with private variables.
   auto distributeOp = genWrapperOp<mlir::omp::DistributeOp>(
-      converter, loc, distributeClauseOps, /*blockArgTypes=*/{});
+      converter, loc, distributeClauseOps, privateVarTypes);
+  distributeOp.setPrivateSymsAttr(
+      privateClauseOps.privateSyms.empty()
+          ? nullptr
+          : converter.getFirOpBuilder().getArrayAttr(
+                privateClauseOps.privateSyms));
+
+  for (mlir::Value privateVar : privateClauseOps.privateVars)
+    distributeOp.getPrivateVarsMutable().append(privateVar);
 
   genLoopNestOp(converter, symTable, semaCtx, eval, loc, queue, item,
-                loopNestClauseOps, iv,
-                /*wrapperSyms=*/{}, distributeOp.getRegion().getArguments(),
+                loopNestClauseOps, iv, dsp.getDelayedPrivSymbols(),
+                distributeOp.getRegion().getArguments(),
                 llvm::omp::Directive::OMPD_distribute, dsp);
 }
 
