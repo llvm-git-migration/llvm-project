@@ -45,12 +45,12 @@ define void @print_partial_reduction(ptr %a, ptr %b) {
 ; CHECK-NEXT: Successor(s): ir-bb<for.cond.cleanup.loopexit>, scalar.ph
 ; CHECK-EMPTY:
 ; CHECK-NEXT: ir-bb<for.cond.cleanup.loopexit>:
+; CHECK-NEXT:   IR   %add.lcssa = phi i32 [ %add, %for.body ] (extra operand: vp<%9>)
+; CHECK-NEXT:   IR   %0 = lshr i32 %add.lcssa, 0
 ; CHECK-NEXT: No successors
 ; CHECK-EMPTY:
 ; CHECK-NEXT: scalar.ph:
 ; CHECK-NEXT: No successors
-; CHECK-EMPTY:
-; CHECK-NEXT: Live-out i32 %add.lcssa = vp<%9>
 ; CHECK-NEXT: }
 ;
 entry:
