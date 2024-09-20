@@ -29,22 +29,42 @@
 
 namespace llvm::sandboxir {
 
+class DependencyGraph;
+class MemDGNode;
+
+/// SubclassIDs for isa/dyn_cast etc.
+enum class DGNodeID {
+  DGNode,
+  MemDGNode,
+};
+
 /// A DependencyGraph Node that points to an Instruction and contains memory
 /// dependency edges.
 class DGNode {
+protected:
   Instruction *I;
+  // TODO: Use a PointerIntPair for SubclassID and I.
+  /// For isa/dyn_cast etc.
+  DGNodeID SubclassID;
   /// Memory predecessors.
   DenseSet<DGNode *> MemPreds;
-  /// This is true if this may read/write memory, or if it has some ordering
-  /// constraints, like with stacksave/stackrestore and alloca/inalloca.
-  bool IsMem;
+
+  DGNode(Instruction *I, DGNodeID ID) : I(I), SubclassID(ID) {}
+  friend class MemDGNode; // For constructor.
 
 public:
-  DGNode(Instruction *I) : I(I) {
-    IsMem = I->isMemDepCandidate() ||
-            (isa<AllocaInst>(I) && cast<AllocaInst>(I)->isUsedWithInAlloca()) ||
-            I->isStackSaveOrRestoreIntrinsic();
+  DGNode(Instruction *I) : I(I), SubclassID(DGNodeID::DGNode) {
+    assert(!isMemDepCandidate(I) && "Expected Non-Mem instruction, ");
   }
+  DGNode(const DGNode &Other) = delete;
+  virtual ~DGNode() = default;
+  /// \Returns true if \p I is a memory dependency candidate instruction.
+  static bool isMemDepCandidate(Instruction *I) {
+    return I->isMemDepCandidate() ||
+           (isa<AllocaInst>(I) && cast<AllocaInst>(I)->isUsedWithInAlloca()) ||
+           I->isStackSaveOrRestoreIntrinsic();
+  }
+
   Instruction *getInstruction() const { return I; }
   void addMemPred(DGNode *PredN) { MemPreds.insert(PredN); }
   /// \Returns all memory dependency predecessors.
@@ -53,11 +73,9 @@ public:
   }
   /// \Returns true if there is a memory dependency N->this.
   bool hasMemPred(DGNode *N) const { return MemPreds.count(N); }
-  /// \Returns true if this may read/write memory, or if it has some ordering
-  /// constraints, like with stacksave/stackrestore and alloca/inalloca.
-  bool isMem() const { return IsMem; }
+
 #ifndef NDEBUG
-  void print(raw_ostream &OS, bool PrintDeps = true) const;
+  virtual void print(raw_ostream &OS, bool PrintDeps = true) const;
   friend raw_ostream &operator<<(DGNode &N, raw_ostream &OS) {
     N.print(OS);
     return OS;
@@ -66,9 +84,94 @@ public:
 #endif // NDEBUG
 };
 
+/// A DependencyGraph Node for instructiosn that may read/write memory, or have
+/// some ordering constraints, like with stacksave/stackrestore and
+/// alloca/inalloca.
+class MemDGNode final : public DGNode {
+  MemDGNode *PrevMemN = nullptr;
+  MemDGNode *NextMemN = nullptr;
+
+  void setNextNode(MemDGNode *N) { NextMemN = N; }
+  void setPrevNode(MemDGNode *N) { PrevMemN = N; }
+  friend class DependencyGraph; // For setNextNode(), setPrevNode().
+
+public:
+  MemDGNode(Instruction *I) : DGNode(I, DGNodeID::MemDGNode) {
+    assert(isMemDepCandidate(I) && "Expected Mem instruction!");
+  }
+  static bool classof(const DGNode *Other) {
+    return Other->SubclassID == DGNodeID::MemDGNode;
+  }
+  /// \Returns the previous Mem DGNode in instruction order.
+  MemDGNode *getPrevNode() const { return PrevMemN; }
+  /// \Returns the next Mem DGNode in instruction order.
+  MemDGNode *getNextNode() const { return NextMemN; }
+};
+
+/// Walks in the order of the instruction chain but skips non-mem Nodes.
+/// This is used for building/updating the DAG.
+class MemDGNodeIterator {
+  MemDGNode *N;
+
+public:
+  using difference_type = std::ptrdiff_t;
+  using value_type = DGNode;
+  using pointer = value_type *;
+  using reference = value_type &;
+  using iterator_category = std::bidirectional_iterator_tag;
+  MemDGNodeIterator(MemDGNode *N) : N(N) {}
+  MemDGNodeIterator &operator++() {
+    assert(N != nullptr && "Already at end!");
+    N = N->getNextNode();
+    return *this;
+  }
+  MemDGNodeIterator operator++(int) {
+    auto ItCopy = *this;
+    ++*this;
+    return ItCopy;
+  }
+  MemDGNodeIterator &operator--() {
+    N = N->getPrevNode();
+    return *this;
+  }
+  MemDGNodeIterator operator--(int) {
+    auto ItCopy = *this;
+    --*this;
+    return ItCopy;
+  }
+  pointer operator*() { return N; }
+  const DGNode *operator*() const { return N; }
+  bool operator==(const MemDGNodeIterator &Other) const { return N == Other.N; }
+  bool operator!=(const MemDGNodeIterator &Other) const {
+    return !(*this == Other);
+  }
+};
+
+/// A MemDGNodeIterator with convenience builders and dump().
+class DGNodeRange : public iterator_range<MemDGNodeIterator> {
+public:
+  DGNodeRange(MemDGNodeIterator Begin, MemDGNodeIterator End)
+      : iterator_range(Begin, End) {}
+  /// An empty range.
+  DGNodeRange()
+      : iterator_range(MemDGNodeIterator(nullptr), MemDGNodeIterator(nullptr)) {
+  }
+  /// Given \p Instrs it finds their closest mem nodes in the interval and
+  /// returns the corresponding mem range. Note: BotN (or its neighboring mem
+  /// node) is included in the range.
+  static DGNodeRange makeMemRange(const Interval<Instruction> &Instrs,
+                                  DependencyGraph &DAG);
+  static DGNodeRange makeEmptyMemRange() { return DGNodeRange(); }
+#ifndef NDEBUG
+  LLVM_DUMP_METHOD void dump() const;
+#endif
+};
+
 class DependencyGraph {
 private:
   DenseMap<Instruction *, std::unique_ptr<DGNode>> InstrToNodeMap;
+  /// The DAG spans across all instructions in this interval.
+  Interval<Instruction> DAGInterval;
 
 public:
   DependencyGraph() {}
@@ -77,10 +180,20 @@ public:
     auto It = InstrToNodeMap.find(I);
     return It != InstrToNodeMap.end() ? It->second.get() : nullptr;
   }
+  /// Like getNode() but returns nullptr if \p I is nullptr.
+  DGNode *getNodeOrNull(Instruction *I) const {
+    if (I == nullptr)
+      return nullptr;
+    return getNode(I);
+  }
   DGNode *getOrCreateNode(Instruction *I) {
     auto [It, NotInMap] = InstrToNodeMap.try_emplace(I);
-    if (NotInMap)
-      It->second = std::make_unique<DGNode>(I);
+    if (NotInMap) {
+      if (I->isMemDepCandidate() || I->isStackSaveOrRestoreIntrinsic())
+        It->second = std::make_unique<MemDGNode>(I);
+      else
+        It->second = std::make_unique<DGNode>(I);
+    }
     return It->second.get();
   }
   /// Build/extend the dependency graph such that it includes \p Instrs. Returns
