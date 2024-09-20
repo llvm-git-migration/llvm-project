@@ -118,7 +118,6 @@ void DynamicLoaderPOSIXDYLD::DidAttach() {
       addr_t load_addr = addr.GetLoadAddress(&target);
       if (load_addr != LLDB_INVALID_ADDRESS) {
         rebase_exec = false;
-        m_loaded_modules[executable_sp] = load_addr;
       } 
     }
   } else {
@@ -127,7 +126,7 @@ void DynamicLoaderPOSIXDYLD::DidAttach() {
   }
 
   // if the target executable should be re-based
-  if (rebase_exec) {
+  if (rebase_exec || IsCoreFile()) {
     ModuleList module_list;
 
     module_list.Append(executable_sp);
