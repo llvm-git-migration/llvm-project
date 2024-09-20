@@ -1592,26 +1592,6 @@ static void hoistLockstepIdenticalDbgVariableRecords(
   }
 }
 
-static bool areIdenticalUpToCommutativity(const Instruction *I1,
-                                          const Instruction *I2) {
-  if (I1->isIdenticalToWhenDefined(I2))
-    return true;
-
-  if (auto *Cmp1 = dyn_cast<CmpInst>(I1))
-    if (auto *Cmp2 = dyn_cast<CmpInst>(I2))
-      return Cmp1->getPredicate() == Cmp2->getSwappedPredicate() &&
-             Cmp1->getOperand(0) == Cmp2->getOperand(1) &&
-             Cmp1->getOperand(1) == Cmp2->getOperand(0);
-
-  if (I1->isCommutative() && I1->isSameOperationAs(I2)) {
-    return I1->getOperand(0) == I2->getOperand(1) &&
-           I1->getOperand(1) == I2->getOperand(0) &&
-           equal(drop_begin(I1->operands(), 2), drop_begin(I2->operands(), 2));
-  }
-
-  return false;
-}
-
 /// If the target supports conditional faulting,
 /// we look for the following pattern:
 /// \code
@@ -1745,6 +1725,36 @@ static bool isSafeCheapLoadStore(const Instruction *I,
   // FIXME: Update the prototype of the intrinsics?
   return TTI.hasConditionalLoadStoreForType(getLoadStoreType(I)) &&
          getLoadStoreAlignment(I) < Value::MaximumAlignment;
+}
+
+static std::optional<AttributeList> tryIntersectCBAttrs(const CallBase *CB0,
+                                                        const CallBase *CB1) {
+  AttributeList AL0 = CB0->getAttributes();
+  if (CB0 == CB1)
+    return AL0;
+
+  return AL0.intersectWith(CB0->getContext(), CB1->getAttributes());
+}
+
+static bool areIdenticalUpToCommutativity(const Instruction *I1,
+                                          const Instruction *I2) {
+  if (I1->isIdenticalToWhenDefined(I2, /*IgnoreAttrs=*/true)) {
+    if (auto *CB1 = dyn_cast<CallBase>(I1))
+      return tryIntersectCBAttrs(CB1, cast<CallBase>(I2)).has_value();
+    return true;
+  }
+
+  if (auto *Cmp1 = dyn_cast<CmpInst>(I1))
+    if (auto *Cmp2 = dyn_cast<CmpInst>(I2))
+      return Cmp1->getPredicate() == Cmp2->getSwappedPredicate() &&
+             Cmp1->getOperand(0) == Cmp2->getOperand(1) &&
+             Cmp1->getOperand(1) == Cmp2->getOperand(0);
+  if (I1->isCommutative() && I1->isSameOperationAs(I2)) {
+    return I1->getOperand(0) == I2->getOperand(1) &&
+           I1->getOperand(1) == I2->getOperand(0) &&
+           equal(drop_begin(I1->operands(), 2), drop_begin(I2->operands(), 2));
+  }
+  return false;
 }
 
 /// Hoist any common code in the successor blocks up into the block. This
@@ -1910,6 +1920,14 @@ bool SimplifyCFGOpt::hoistCommonCodeFromSuccessors(Instruction *TI,
           if (!I2->use_empty())
             I2->replaceAllUsesWith(I1);
           I1->andIRFlags(I2);
+          if (auto *CB = dyn_cast<CallBase>(I1)) {
+            auto IntersectedAttrs = tryIntersectCBAttrs(CB, cast<CallBase>(I2));
+            assert(IntersectedAttrs &&
+                   "We should not be trying to hoist callbases "
+                   "with non-intersectable attributes");
+            CB->setAttributes(*IntersectedAttrs);
+          }
+
           combineMetadataForCSE(I1, I2, true);
           // I1 and I2 are being combined into a single instruction.  Its debug
           // location is the merged locations of the original instructions.
@@ -2130,7 +2148,7 @@ static bool canSinkInstructions(
   const Instruction *I0 = Insts.front();
   const auto I0MMRA = MMRAMetadata(*I0);
   for (auto *I : Insts) {
-    if (!I->isSameOperationAs(I0))
+    if (!I->isSameOperationAs(I0, Instruction::CompareIgnoringAttrs))
       return false;
 
     // swifterror pointers can only be used by a load or store; sinking a load
@@ -2164,7 +2182,7 @@ static bool canSinkInstructions(
   // I.e. if we have two direct calls to different callees, we don't want to
   // turn that into an indirect call. Likewise, if we have an indirect call,
   // and a direct call, we don't actually want to have a single indirect call.
-  if (isa<CallBase>(I0)) {
+  if (auto *CB = dyn_cast<CallBase>(I0)) {
     auto IsIndirectCall = [](const Instruction *I) {
       return cast<CallBase>(I)->isIndirectCall();
     };
@@ -2183,6 +2201,11 @@ static bool canSinkInstructions(
         else if (Callee != CurrCallee)
           return false;
       }
+    }
+    // Check that we can intersect the attributes if we sink.
+    for (const Instruction *I : Insts) {
+      if (I != I0 && !tryIntersectCBAttrs(CB, cast<CallBase>(I)))
+        return false;
     }
   }
 
@@ -2287,6 +2310,12 @@ static void sinkLastInstruction(ArrayRef<BasicBlock*> Blocks) {
       I0->applyMergedLocation(I0->getDebugLoc(), I->getDebugLoc());
       combineMetadataForCSE(I0, I, true);
       I0->andIRFlags(I);
+      if (auto *CB = dyn_cast<CallBase>(I0)) {
+        auto IntersectedAttrs = tryIntersectCBAttrs(CB, cast<CallBase>(I));
+        assert(IntersectedAttrs && "We should not be trying to sink callbases "
+                                   "with non-intersectable attributes");
+        CB->setAttributes(*IntersectedAttrs);
+      }
     }
 
   for (User *U : make_early_inc_range(I0->users())) {

@@ -785,7 +785,8 @@ const char *Instruction::getOpcodeName(unsigned OpCode) {
 /// This must be kept in sync with FunctionComparator::cmpOperations in
 /// lib/Transforms/IPO/MergeFunctions.cpp.
 bool Instruction::hasSameSpecialState(const Instruction *I2,
-                                      bool IgnoreAlignment) const {
+                                      bool IgnoreAlignment,
+                                      bool IgnoreAttrs) const {
   auto I1 = this;
   assert(I1->getOpcode() == I2->getOpcode() &&
          "Can not compare special state of different instructions");
@@ -811,15 +812,18 @@ bool Instruction::hasSameSpecialState(const Instruction *I2,
   if (const CallInst *CI = dyn_cast<CallInst>(I1))
     return CI->isTailCall() == cast<CallInst>(I2)->isTailCall() &&
            CI->getCallingConv() == cast<CallInst>(I2)->getCallingConv() &&
-           CI->getAttributes() == cast<CallInst>(I2)->getAttributes() &&
+           (IgnoreAttrs ||
+            CI->getAttributes() == cast<CallInst>(I2)->getAttributes()) &&
            CI->hasIdenticalOperandBundleSchema(*cast<CallInst>(I2));
   if (const InvokeInst *CI = dyn_cast<InvokeInst>(I1))
     return CI->getCallingConv() == cast<InvokeInst>(I2)->getCallingConv() &&
-           CI->getAttributes() == cast<InvokeInst>(I2)->getAttributes() &&
+           (IgnoreAttrs ||
+            CI->getAttributes() == cast<InvokeInst>(I2)->getAttributes()) &&
            CI->hasIdenticalOperandBundleSchema(*cast<InvokeInst>(I2));
   if (const CallBrInst *CI = dyn_cast<CallBrInst>(I1))
     return CI->getCallingConv() == cast<CallBrInst>(I2)->getCallingConv() &&
-           CI->getAttributes() == cast<CallBrInst>(I2)->getAttributes() &&
+           (IgnoreAttrs ||
+            CI->getAttributes() == cast<CallBrInst>(I2)->getAttributes()) &&
            CI->hasIdenticalOperandBundleSchema(*cast<CallBrInst>(I2));
   if (const InsertValueInst *IVI = dyn_cast<InsertValueInst>(I1))
     return IVI->getIndices() == cast<InsertValueInst>(I2)->getIndices();
@@ -857,10 +861,10 @@ bool Instruction::isIdenticalTo(const Instruction *I) const {
          SubclassOptionalData == I->SubclassOptionalData;
 }
 
-bool Instruction::isIdenticalToWhenDefined(const Instruction *I) const {
+bool Instruction::isIdenticalToWhenDefined(const Instruction *I,
+                                           bool IgnoreAttrs) const {
   if (getOpcode() != I->getOpcode() ||
-      getNumOperands() != I->getNumOperands() ||
-      getType() != I->getType())
+      getNumOperands() != I->getNumOperands() || getType() != I->getType())
     return false;
 
   // If both instructions have no operands, they are identical.
@@ -879,7 +883,7 @@ bool Instruction::isIdenticalToWhenDefined(const Instruction *I) const {
                       otherPHI->block_begin());
   }
 
-  return this->hasSameSpecialState(I);
+  return this->hasSameSpecialState(I, /*IgnoreAlignment=*/false, IgnoreAttrs);
 }
 
 // Keep this in sync with FunctionComparator::cmpOperations in
@@ -887,7 +891,8 @@ bool Instruction::isIdenticalToWhenDefined(const Instruction *I) const {
 bool Instruction::isSameOperationAs(const Instruction *I,
                                     unsigned flags) const {
   bool IgnoreAlignment = flags & CompareIgnoringAlignment;
-  bool UseScalarTypes  = flags & CompareUsingScalarTypes;
+  bool UseScalarTypes = flags & CompareUsingScalarTypes;
+  bool IgnoreAttrs = flags & CompareIgnoringAttrs;
 
   if (getOpcode() != I->getOpcode() ||
       getNumOperands() != I->getNumOperands() ||
@@ -905,7 +910,7 @@ bool Instruction::isSameOperationAs(const Instruction *I,
         getOperand(i)->getType() != I->getOperand(i)->getType())
       return false;
 
-  return this->hasSameSpecialState(I, IgnoreAlignment);
+  return this->hasSameSpecialState(I, IgnoreAlignment, IgnoreAttrs);
 }
 
 bool Instruction::isUsedOutsideOfBlock(const BasicBlock *BB) const {
