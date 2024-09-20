@@ -145,6 +145,7 @@ bool VPRecipeBase::mayHaveSideEffects() const {
     case VPInstruction::CalculateTripCountMinusVF:
     case VPInstruction::CanonicalIVIncrementForPart:
     case VPInstruction::ExtractFromEnd:
+    case VPInstruction::ExtractHighestActive:
     case VPInstruction::FirstOrderRecurrenceSplice:
     case VPInstruction::LogicalAnd:
     case VPInstruction::PtrAdd:
@@ -199,21 +200,34 @@ bool VPRecipeBase::mayHaveSideEffects() const {
 
 void VPLiveOut::fixPhi(VPlan &Plan, VPTransformState &State) {
   VPValue *ExitValue = getOperand(0);
-  VPBasicBlock *MiddleVPBB =
-      cast<VPBasicBlock>(Plan.getVectorLoopRegion()->getSingleSuccessor());
-  VPRecipeBase *ExitingRecipe = ExitValue->getDefiningRecipe();
-  auto *ExitingVPBB = ExitingRecipe ? ExitingRecipe->getParent() : nullptr;
-  // Values leaving the vector loop reach live out phi's in the exiting block
-  // via middle block.
-  auto *PredVPBB = !ExitingVPBB || ExitingVPBB->getEnclosingLoopRegion()
-                       ? MiddleVPBB
-                       : ExitingVPBB;
+  VPBasicBlock *PredVPBB = nullptr;
+  VPRecipeBase *ExitRecipe = ExitValue->getDefiningRecipe();
+  // If the exit recipe is a ExtractHighestActive VPInstruction then this has
+  // come from an early exiting block.
+  if (ExitRecipe && isa<VPInstruction>(ExitRecipe) &&
+      cast<VPInstruction>(ExitRecipe)->getOpcode() ==
+          VPInstruction::ExtractHighestActive)
+    PredVPBB = ExitRecipe->getParent();
+  else {
+    auto *ExitVPBB = ExitRecipe ? ExitRecipe->getParent() : nullptr;
+    VPBasicBlock *MiddleVPBB =
+        cast<VPBasicBlock>(Plan.getVectorLoopRegion()->getSuccessors()[0]);
+    // Values leaving the vector loop reach live out phi's in the exiting block
+    // via middle block.
+    PredVPBB =
+        !ExitVPBB || ExitVPBB->getEnclosingLoopRegion() ? MiddleVPBB : ExitVPBB;
+  }
+
   BasicBlock *PredBB = State.CFG.VPBB2IRBB[PredVPBB];
-  Value *V = State.get(ExitValue, VPIteration(0, 0));
+  // Set insertion point in PredBB in case an extract needs to be generated.
+  // TODO: Model extracts explicitly.
+  State.Builder.SetInsertPoint(PredBB, PredBB->getFirstNonPHIIt());
+
+  Value *NewIncoming = State.get(ExitValue, VPIteration(0, 0));
   if (Phi->getBasicBlockIndex(PredBB) != -1)
-    Phi->setIncomingValueForBlock(PredBB, V);
+    Phi->setIncomingValueForBlock(PredBB, NewIncoming);
   else
-    Phi->addIncoming(V, PredBB);
+    Phi->addIncoming(NewIncoming, PredBB);
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -370,6 +384,8 @@ bool VPInstruction::doesGeneratePerAllLanes() const {
   return Opcode == VPInstruction::PtrAdd && !vputils::onlyFirstLaneUsed(this);
 }
 
+// TODO: Can this function be made static given it's only ever called from one
+// place in this file?
 bool VPInstruction::canGenerateScalarForFirstLane() const {
   if (Instruction::isBinaryOp(getOpcode()))
     return true;
@@ -381,6 +397,7 @@ bool VPInstruction::canGenerateScalarForFirstLane() const {
   case VPInstruction::BranchOnCount:
   case VPInstruction::CalculateTripCountMinusVF:
   case VPInstruction::CanonicalIVIncrementForPart:
+  case VPInstruction::OrReduction:
   case VPInstruction::PtrAdd:
   case VPInstruction::ExplicitVectorLength:
     return true;
@@ -524,6 +541,9 @@ Value *VPInstruction::generate(VPTransformState &State) {
       return CondBr;
 
     VPRegionBlock *ParentRegion = getParent()->getParent();
+    if (ParentRegion->getEarlyExiting() == getParent())
+      return CondBr;
+
     VPBasicBlock *Header = ParentRegion->getEntryBasicBlock();
     CondBr->setSuccessor(1, State.CFG.VPBB2IRBB[Header]);
     return CondBr;
@@ -624,6 +644,13 @@ Value *VPInstruction::generate(VPTransformState &State) {
 
     return ReducedPartRdx;
   }
+  case VPInstruction::ExtractHighestActive: {
+    Value *Vec = State.get(getOperand(0));
+    Value *Mask = State.get(getOperand(1));
+    Value *Ctz =
+        Builder.CreateCountTrailingZeroElems(Builder.getInt64Ty(), Mask);
+    return Builder.CreateExtractElement(Vec, Ctz);
+  }
   case VPInstruction::ExtractFromEnd: {
     auto *CI = cast<ConstantInt>(getOperand(1)->getLiveInIRValue());
     unsigned Offset = CI->getZExtValue();
@@ -673,7 +700,10 @@ Value *VPInstruction::generate(VPTransformState &State) {
     }
     return NewPhi;
   }
-
+  case VPInstruction::OrReduction: {
+    Value *Val = State.get(getOperand(0));
+    return Builder.CreateOrReduce(Val);
+  }
   default:
     llvm_unreachable("Unsupported opcode for instruction");
   }
@@ -681,7 +711,9 @@ Value *VPInstruction::generate(VPTransformState &State) {
 
 bool VPInstruction::isVectorToScalar() const {
   return getOpcode() == VPInstruction::ExtractFromEnd ||
-         getOpcode() == VPInstruction::ComputeReductionResult;
+         getOpcode() == VPInstruction::ExtractHighestActive ||
+         getOpcode() == VPInstruction::ComputeReductionResult ||
+         getOpcode() == VPInstruction::OrReduction;
 }
 
 bool VPInstruction::isSingleScalar() const {
@@ -829,6 +861,9 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
   case VPInstruction::ExtractFromEnd:
     O << "extract-from-end";
     break;
+  case VPInstruction::ExtractHighestActive:
+    O << "extract-highest-active";
+    break;
   case VPInstruction::ComputeReductionResult:
     O << "compute-reduction-result";
     break;
@@ -837,6 +872,9 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
     break;
   case VPInstruction::PtrAdd:
     O << "ptradd";
+    break;
+  case VPInstruction::OrReduction:
+    O << "or reduction";
     break;
   default:
     O << Instruction::getOpcodeName(getOpcode());

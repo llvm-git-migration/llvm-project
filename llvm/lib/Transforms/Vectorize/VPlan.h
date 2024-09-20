@@ -641,6 +641,17 @@ public:
     return true;
   }
 
+  void moveSuccessorToFront(VPBlockBase *Succ) {
+    if (Successors[0] == Succ)
+      return;
+
+    removeSuccessor(Succ);
+
+    VPBlockBase *Old = Successors[0];
+    Successors[0] = Succ;
+    appendSuccessor(Old);
+  }
+
   /// Replace all operands of VPUsers in the block with \p NewValue and also
   /// replaces all uses of VPValues defined in the block with NewValue.
   virtual void dropAllReferences(VPValue *NewValue) = 0;
@@ -1270,6 +1281,8 @@ public:
     // operand). Only generates scalar values (either for the first lane only or
     // for all lanes, depending on its uses).
     PtrAdd,
+    ExtractHighestActive,
+    OrReduction,
   };
 
 private:
@@ -3305,7 +3318,12 @@ public:
 };
 
 /// VPRegionBlock represents a collection of VPBasicBlocks and VPRegionBlocks
-/// which form a Single-Entry-Single-Exiting subgraph of the output IR CFG.
+/// which form a Single-Entry-Single-Exiting or Single-Entry-Multiple-Exiting
+/// subgraph of the output IR CFG. For the multiple-exiting case only a total
+/// of two exits are currently supported and the early exit is tracked
+/// separately. The first successor should always correspond to the normal
+/// exiting block, i.e. vector latch -> middle.block. An optional second
+/// successor corresponds to the early exit.
 /// A VPRegionBlock may indicate that its contents are to be replicated several
 /// times. This is designed to support predicated scalarization, in which a
 /// scalar if-then code structure needs to be generated VF * UF times. Having
@@ -3313,12 +3331,29 @@ public:
 /// candidate VF's. The actual replication takes place only once the desired VF
 /// and UF have been determined.
 class VPRegionBlock : public VPBlockBase {
-  /// Hold the Single Entry of the SESE region modelled by the VPRegionBlock.
+  /// Hold the Single Entry of the SESE/SEME region modelled by the
+  /// VPRegionBlock.
   VPBlockBase *Entry;
 
-  /// Hold the Single Exiting block of the SESE region modelled by the
+  /// Hold the normal Exiting block of the SESE/SEME region modelled by the
   /// VPRegionBlock.
   VPBlockBase *Exiting;
+
+  /// Hold the Early Exiting block of the SEME region. If this is a SESE region
+  /// this value should be nullptr.
+  VPBlockBase *EarlyExiting;
+
+  /// Hold the Early Exit block of the SEME region, if one exists.
+  VPBasicBlock *EarlyExit;
+
+  /// We need to keep track of the early exit block from the original scalar
+  /// loop in order to update the dominator tree correctly, since the vector
+  /// early exit will also jump to the original.
+  BasicBlock *OrigEarlyExit;
+
+  /// If one exists, this keeps track of the vector early mask that triggered
+  /// the early exit.
+  VPValue *VectorEarlyExitCond;
 
   /// An indicator whether this region is to generate multiple replicated
   /// instances of output IR corresponding to its VPBlockBases.
@@ -3328,7 +3363,8 @@ public:
   VPRegionBlock(VPBlockBase *Entry, VPBlockBase *Exiting,
                 const std::string &Name = "", bool IsReplicator = false)
       : VPBlockBase(VPRegionBlockSC, Name), Entry(Entry), Exiting(Exiting),
-        IsReplicator(IsReplicator) {
+        EarlyExiting(nullptr), EarlyExit(nullptr), OrigEarlyExit(nullptr),
+        VectorEarlyExitCond(nullptr), IsReplicator(IsReplicator) {
     assert(Entry->getPredecessors().empty() && "Entry block has predecessors.");
     assert(Exiting->getSuccessors().empty() && "Exit block has successors.");
     Entry->setParent(this);
@@ -3336,7 +3372,8 @@ public:
   }
   VPRegionBlock(const std::string &Name = "", bool IsReplicator = false)
       : VPBlockBase(VPRegionBlockSC, Name), Entry(nullptr), Exiting(nullptr),
-        IsReplicator(IsReplicator) {}
+        EarlyExiting(nullptr), EarlyExit(nullptr), OrigEarlyExit(nullptr),
+        VectorEarlyExitCond(nullptr), IsReplicator(IsReplicator) {}
 
   ~VPRegionBlock() override {
     if (Entry) {
@@ -3354,6 +3391,12 @@ public:
   const VPBlockBase *getEntry() const { return Entry; }
   VPBlockBase *getEntry() { return Entry; }
 
+  /// Sets the early exit vector mask.
+  void setVectorEarlyExitCond(VPValue *V) { VectorEarlyExitCond = V; }
+
+  /// Gets the early exit vector mask
+  VPValue *getVectorEarlyExitCond() const { return VectorEarlyExitCond; }
+
   /// Set \p EntryBlock as the entry VPBlockBase of this VPRegionBlock. \p
   /// EntryBlock must have no predecessors.
   void setEntry(VPBlockBase *EntryBlock) {
@@ -3366,14 +3409,43 @@ public:
   const VPBlockBase *getExiting() const { return Exiting; }
   VPBlockBase *getExiting() { return Exiting; }
 
-  /// Set \p ExitingBlock as the exiting VPBlockBase of this VPRegionBlock. \p
-  /// ExitingBlock must have no successors.
+  /// Set \p ExitingBlock as the normal exiting VPBlockBase of this
+  /// VPRegionBlock. \p ExitingBlock must have no successors.
   void setExiting(VPBlockBase *ExitingBlock) {
     assert(ExitingBlock->getSuccessors().empty() &&
            "Exit block cannot have successors.");
     Exiting = ExitingBlock;
     ExitingBlock->setParent(this);
   }
+
+  /// Set \p EarlyExitingBlock as the early exiting VPBlockBase of this
+  /// VPRegionBlock. \p EarlyExitingBlock must have a successor, since
+  /// it cannot be the latch.
+  void setEarlyExiting(VPBlockBase *EarlyExitingBlock) {
+    assert(EarlyExitingBlock->getNumSuccessors() == 1 &&
+           "Early exit block must have a successor.");
+    assert(EarlyExitingBlock->getParent() == this &&
+           "Early exit block should already be in loop region");
+    EarlyExiting = EarlyExitingBlock;
+  }
+
+  void setEarlyExit(VPBasicBlock *ExitBlock) { EarlyExit = ExitBlock; }
+
+  const VPBlockBase *getEarlyExiting() const { return EarlyExiting; }
+  VPBlockBase *getEarlyExiting() { return EarlyExiting; }
+
+  const VPBasicBlock *getEarlyExit() const { return EarlyExit; }
+  VPBasicBlock *getEarlyExit() { return EarlyExit; }
+
+  /// Return the number of exiting blocks from this region. It should match
+  /// the number of successors.
+  unsigned getNumExitingBlocks() const { return EarlyExiting ? 2 : 1; }
+
+  void setOrigEarlyExit(BasicBlock *EarlyExitBlock) {
+    OrigEarlyExit = EarlyExitBlock;
+  }
+
+  BasicBlock *getOrigEarlyExit() { return OrigEarlyExit; }
 
   /// Returns the pre-header VPBasicBlock of the loop region.
   VPBasicBlock *getPreheaderVPBB() {
@@ -3467,7 +3539,7 @@ class VPlan {
   /// Values used outside the plan. It contains live-outs that need fixing. Any
   /// live-out that is fixed outside VPlan needs to be removed. The remaining
   /// live-outs are fixed via VPLiveOut::fixPhi.
-  MapVector<PHINode *, VPLiveOut *> LiveOuts;
+  MapVector<std::pair<PHINode *, VPBasicBlock *>, VPLiveOut *> LiveOuts;
 
   /// Mapping from SCEVs to the VPValues representing their expansions.
   /// NOTE: This mapping is temporary and will be removed once all users have
@@ -3511,7 +3583,9 @@ public:
   static VPlanPtr createInitialVPlan(Type *InductionTy,
                                      PredicatedScalarEvolution &PSE,
                                      bool RequiresScalarEpilogueCheck,
-                                     bool TailFolded, Loop *TheLoop);
+                                     bool TailFolded, Loop *TheLoop,
+                                     BasicBlock *EarlyExitingBB,
+                                     BasicBlock *EarlyExitBB);
 
   /// Prepare the plan for execution, setting up the required live-in values.
   void prepareToExecute(Value *TripCount, Value *VectorTripCount,
@@ -3648,10 +3722,18 @@ public:
     return cast<VPCanonicalIVPHIRecipe>(&*EntryVPBB->begin());
   }
 
-  void addLiveOut(PHINode *PN, VPValue *V);
+  void addLiveOut(PHINode *PN, VPValue *V,
+                  VPBasicBlock *IncomingBlock = nullptr);
 
-  const MapVector<PHINode *, VPLiveOut *> &getLiveOuts() const {
+  const MapVector<std::pair<PHINode *, VPBasicBlock *>, VPLiveOut *> &
+  getLiveOuts() const {
     return LiveOuts;
+  }
+
+  void removeLiveOut(PHINode *PN, VPBasicBlock *IncomingBlock = nullptr) {
+    auto Key = std::pair<PHINode *, VPBasicBlock *>(PN, IncomingBlock);
+    delete LiveOuts[Key];
+    LiveOuts.erase(Key);
   }
 
   VPValue *getSCEVExpansion(const SCEV *S) const {
