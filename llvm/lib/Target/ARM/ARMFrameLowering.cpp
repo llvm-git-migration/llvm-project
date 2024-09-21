@@ -2271,6 +2271,7 @@ void ARMFrameLowering::determineCalleeSaves(MachineFunction &MF,
   // is spilled in the order specified by getCalleeSavedRegs() to make it easier
   // to combine multiple loads / stores.
   bool CanEliminateFrame = !(requiresAAPCSFrameRecord(MF) && hasFP(MF));
+  bool CanEliminateLeafFrame = !MF.getTarget().Options.EnableLeafFramePointerElim(MF);
   bool CS1Spilled = false;
   bool LRSpilled = false;
   unsigned NumGPRSpills = 0;
@@ -2513,7 +2514,7 @@ void ARMFrameLowering::determineCalleeSaves(MachineFunction &MF,
                     << "; EstimatedFPStack: " << MaxFixedOffset - MaxFPOffset
                     << "; BigFrameOffsets: " << BigFrameOffsets << "\n");
   if (BigFrameOffsets ||
-      !CanEliminateFrame || RegInfo->cannotEliminateFrame(MF)) {
+      !CanEliminateFrame || RegInfo->cannotEliminateFrame(MF) || !CanEliminateLeafFrame) {
     AFI->setHasStackFrame(true);
 
     if (HasFP) {

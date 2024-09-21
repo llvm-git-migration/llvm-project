@@ -40,6 +40,19 @@ bool TargetOptions::DisableFramePointerElim(const MachineFunction &MF) const {
   llvm_unreachable("unknown frame pointer flag");
 }
 
+/// EnableLeafFramePointerElim - This returns true if leaf frame pointer elimination
+/// optimization should be disabled for the given machine function.
+bool TargetOptions::EnableLeafFramePointerElim(const MachineFunction &MF) const {
+  const Function &F = MF.getFunction();
+
+  if (!F.hasFnAttribute("frame-pointer"))
+    return false;
+  StringRef FP = F.getFnAttribute("frame-pointer").getValueAsString();
+  if (FP == "all")
+    return true;
+  return false;
+}
+
 bool TargetOptions::FramePointerIsReserved(const MachineFunction &MF) const {
   // Check to see if the target want to forcibly keep frame pointer.
   if (MF.getSubtarget().getFrameLowering()->keepFramePointer(MF))
