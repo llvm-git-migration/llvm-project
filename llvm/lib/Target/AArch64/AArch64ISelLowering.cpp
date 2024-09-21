@@ -1353,8 +1353,8 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
     // And the same for FMAXNUM_IEEE and FMINNUM_IEEE.
     for (auto Op :
          {ISD::FFLOOR, ISD::FNEARBYINT, ISD::FCEIL, ISD::FRINT, ISD::FTRUNC,
-          ISD::FROUND, ISD::FROUNDEVEN, ISD::STRICT_FFLOOR, ISD::FMAXNUM_IEEE,
-          ISD::FMINNUM_IEEE, ISD::STRICT_FNEARBYINT, ISD::STRICT_FCEIL,
+          ISD::FROUND, ISD::FROUNDEVEN, ISD::FMAXNUM_IEEE, ISD::FMINNUM_IEEE,
+          ISD::STRICT_FFLOOR, ISD::STRICT_FNEARBYINT, ISD::STRICT_FCEIL,
           ISD::STRICT_FRINT, ISD::STRICT_FTRUNC, ISD::STRICT_FROUND,
           ISD::STRICT_FROUNDEVEN}) {
       for (MVT Ty : {MVT::v2f32, MVT::v4f32, MVT::v2f64})
@@ -1362,6 +1362,16 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
       if (Subtarget->hasFullFP16())
         for (MVT Ty : {MVT::v4f16, MVT::v8f16})
           setOperationAction(Op, Ty, Legal);
+    }
+
+    // In fact TargetLowering::expandFMINIMUMNUM_FMAXIMUMNUM works well with
+    // them. While in narrowInsertExtractVectorBinOp, they are expected to be
+    // LegalOrCustom.
+    for (auto Op : {ISD::FMAXIMUMNUM, ISD::FMINIMUMNUM}) {
+      for (MVT Ty : {MVT::v4f32, MVT::v2f64})
+        setOperationAction(Op, Ty, Custom);
+      if (Subtarget->hasFullFP16())
+        setOperationAction(Op, MVT::v8f16, Custom);
     }
 
     // LRINT and LLRINT.
@@ -7208,6 +7218,9 @@ SDValue AArch64TargetLowering::LowerOperation(SDValue Op,
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMAX_PRED);
   case ISD::FMAXNUM:
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMAXNM_PRED);
+  case ISD::FMAXIMUMNUM:
+  case ISD::FMINIMUMNUM:
+    return LowerFMINIMUMNUM_FMAXIMUMNUM(Op, DAG);
   case ISD::FMINIMUM:
     return LowerToPredicatedOp(Op, DAG, AArch64ISD::FMIN_PRED);
   case ISD::FMINNUM:
@@ -10236,6 +10249,28 @@ SDValue AArch64TargetLowering::LowerFCOPYSIGN(SDValue Op,
   return BitCast(VT, BSP, DAG);
 }
 
+SDValue
+AArch64TargetLowering::LowerFMINIMUMNUM_FMAXIMUMNUM(SDValue Op,
+                                                    SelectionDAG &DAG) const {
+  SDValue LHS = Op.getOperand(0);
+  SDValue RHS = Op.getOperand(1);
+  unsigned Opc = Op.getOpcode();
+  SDLoc DL(Op);
+  EVT VT = Op->getValueType(0);
+  unsigned NewOp =
+      Opc == ISD::FMINIMUMNUM ? ISD::FMINNUM_IEEE : ISD::FMAXNUM_IEEE;
+  SDNodeFlags Flags = Op->getFlags();
+
+  if (!Flags.hasNoNaNs()) {
+    if (!DAG.isKnownNeverSNaN(LHS)) {
+      LHS = DAG.getNode(ISD::FCANONICALIZE, DL, VT, LHS, Flags);
+    }
+    if (!DAG.isKnownNeverSNaN(RHS)) {
+      RHS = DAG.getNode(ISD::FCANONICALIZE, DL, VT, RHS, Flags);
+    }
+  }
+  return DAG.getNode(NewOp, DL, VT, LHS, RHS, Flags);
+}
 SDValue AArch64TargetLowering::LowerCTPOP_PARITY(SDValue Op,
                                                  SelectionDAG &DAG) const {
   if (DAG.getMachineFunction().getFunction().hasFnAttribute(
