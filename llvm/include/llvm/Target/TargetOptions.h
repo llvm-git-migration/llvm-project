@@ -161,6 +161,10 @@ namespace llvm {
     /// DisableFramePointerElim - This returns true if frame pointer elimination
     /// optimization should be disabled for the given machine function.
     bool DisableFramePointerElim(const MachineFunction &MF) const;
+    
+    /// DisableLeafFramePointerElim - This returns true if leaf frame pointer elimination
+    /// optimization should be disabled for the given machine function.
+    bool DisableLeafFramePointerElim(const MachineFunction &MF) const;
 
     /// FramePointerIsReserved - This returns true if the frame pointer must
     /// always either point to a new frame record or be un-modified in the given
