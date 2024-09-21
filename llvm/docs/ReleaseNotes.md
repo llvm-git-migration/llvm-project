@@ -125,6 +125,11 @@ Changes to the ARM Backend
   the required alignment space with a sequence of `0x0` bytes (the requested
   fill value) rather than NOPs.
 
+* The default behavior for frame pointers in leaf functions has been updated. When
+  `-fno-omit-frame-pointer` is specified, the frame pointer (FP) will now be retained
+  in leaf functions by default. To eliminate the frame pointer in leaf functions, the
+  `-momit-leaf-frame-pointer` option must be explicitly provided.
+
 Changes to the AVR Backend
 --------------------------
 

@@ -548,6 +548,11 @@ Miscellaneous Clang Crashes Fixed
 - Fixed internal assertion firing when a declaration in the implicit global
   module is found through ADL. (GH#109879)
 
+Leaf Functions Do Not Retain FP Bug Fixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fixed ``-fno-omit-frame-pointer`` leaf functions do not retain fp.(#GH108019)
+
 OpenACC Specific Changes
 ------------------------
 
