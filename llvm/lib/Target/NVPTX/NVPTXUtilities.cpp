@@ -130,8 +130,8 @@ static void cacheAnnotationFromMD(const Module *m, const GlobalValue *gv) {
   }
 }
 
-bool findOneNVVMAnnotation(const GlobalValue *gv, const std::string &prop,
-                           unsigned &retval) {
+std::optional<unsigned> findOneNVVMAnnotation(const GlobalValue *gv,
+                                              const std::string &prop) {
   auto &AC = getAnnotationCache();
   std::lock_guard<sys::Mutex> Guard(AC.Lock);
   const Module *m = gv->getParent();
@@ -140,17 +140,8 @@ bool findOneNVVMAnnotation(const GlobalValue *gv, const std::string &prop,
   else if (AC.Cache[m].find(gv) == AC.Cache[m].end())
     cacheAnnotationFromMD(m, gv);
   if (AC.Cache[m][gv].find(prop) == AC.Cache[m][gv].end())
-    return false;
-  retval = AC.Cache[m][gv][prop][0];
-  return true;
-}
-
-static std::optional<unsigned>
-findOneNVVMAnnotation(const GlobalValue &GV, const std::string &PropName) {
-  unsigned RetVal;
-  if (findOneNVVMAnnotation(&GV, PropName, RetVal))
-    return RetVal;
-  return std::nullopt;
+    return std::nullopt;
+  return AC.Cache[m][gv][prop][0];
 }
 
 bool findAllNVVMAnnotation(const GlobalValue *gv, const std::string &prop,
@@ -170,9 +161,8 @@ bool findAllNVVMAnnotation(const GlobalValue *gv, const std::string &prop,
 
 bool isTexture(const Value &val) {
   if (const GlobalValue *gv = dyn_cast<GlobalValue>(&val)) {
-    unsigned Annot;
-    if (findOneNVVMAnnotation(gv, "texture", Annot)) {
-      assert((Annot == 1) && "Unexpected annotation on a texture symbol");
+    if (const auto Annot = findOneNVVMAnnotation(gv, "texture")) {
+      assert((*Annot == 1) && "Unexpected annotation on a texture symbol");
       return true;
     }
   }
@@ -181,9 +171,8 @@ bool isTexture(const Value &val) {
 
 bool isSurface(const Value &val) {
   if (const GlobalValue *gv = dyn_cast<GlobalValue>(&val)) {
-    unsigned Annot;
-    if (findOneNVVMAnnotation(gv, "surface", Annot)) {
-      assert((Annot == 1) && "Unexpected annotation on a surface symbol");
+    if (const auto Annot = findOneNVVMAnnotation(gv, "surface")) {
+      assert((*Annot == 1) && "Unexpected annotation on a surface symbol");
       return true;
     }
   }
@@ -224,9 +213,8 @@ bool isSampler(const Value &val) {
   const char *AnnotationName = "sampler";
 
   if (const GlobalValue *gv = dyn_cast<GlobalValue>(&val)) {
-    unsigned Annot;
-    if (findOneNVVMAnnotation(gv, AnnotationName, Annot)) {
-      assert((Annot == 1) && "Unexpected annotation on a sampler symbol");
+    if (const auto Annot = findOneNVVMAnnotation(gv, AnnotationName)) {
+      assert((*Annot == 1) && "Unexpected annotation on a sampler symbol");
       return true;
     }
   }
@@ -251,9 +239,8 @@ bool isImage(const Value &val) {
 
 bool isManaged(const Value &val) {
   if(const GlobalValue *gv = dyn_cast<GlobalValue>(&val)) {
-    unsigned Annot;
-    if (findOneNVVMAnnotation(gv, "managed", Annot)) {
-      assert((Annot == 1) && "Unexpected annotation on a managed symbol");
+    if (const auto Annot = findOneNVVMAnnotation(gv, "managed")) {
+      assert((*Annot == 1) && "Unexpected annotation on a managed symbol");
       return true;
     }
   }
@@ -276,15 +263,15 @@ std::string getSamplerName(const Value &val) {
 }
 
 std::optional<unsigned> getMaxNTIDx(const Function &F) {
-  return findOneNVVMAnnotation(F, "maxntidx");
+  return findOneNVVMAnnotation(&F, "maxntidx");
 }
 
 std::optional<unsigned> getMaxNTIDy(const Function &F) {
-  return findOneNVVMAnnotation(F, "maxntidy");
+  return findOneNVVMAnnotation(&F, "maxntidy");
 }
 
 std::optional<unsigned> getMaxNTIDz(const Function &F) {
-  return findOneNVVMAnnotation(F, "maxntidz");
+  return findOneNVVMAnnotation(&F, "maxntidz");
 }
 
 std::optional<unsigned> getMaxNTID(const Function &F) {
@@ -303,31 +290,31 @@ std::optional<unsigned> getMaxNTID(const Function &F) {
 }
 
 std::optional<unsigned> getClusterDimx(const Function &F) {
-  return findOneNVVMAnnotation(F, "cluster_dim_x");
+  return findOneNVVMAnnotation(&F, "cluster_dim_x");
 }
 
 std::optional<unsigned> getClusterDimy(const Function &F) {
-  return findOneNVVMAnnotation(F, "cluster_dim_y");
+  return findOneNVVMAnnotation(&F, "cluster_dim_y");
 }
 
 std::optional<unsigned> getClusterDimz(const Function &F) {
-  return findOneNVVMAnnotation(F, "cluster_dim_z");
+  return findOneNVVMAnnotation(&F, "cluster_dim_z");
 }
 
 std::optional<unsigned> getMaxClusterRank(const Function &F) {
-  return findOneNVVMAnnotation(F, "maxclusterrank");
+  return findOneNVVMAnnotation(&F, "maxclusterrank");
 }
 
 std::optional<unsigned> getReqNTIDx(const Function &F) {
-  return findOneNVVMAnnotation(F, "reqntidx");
+  return findOneNVVMAnnotation(&F, "reqntidx");
 }
 
 std::optional<unsigned> getReqNTIDy(const Function &F) {
-  return findOneNVVMAnnotation(F, "reqntidy");
+  return findOneNVVMAnnotation(&F, "reqntidy");
 }
 
 std::optional<unsigned> getReqNTIDz(const Function &F) {
-  return findOneNVVMAnnotation(F, "reqntidz");
+  return findOneNVVMAnnotation(&F, "reqntidz");
 }
 
 std::optional<unsigned> getReqNTID(const Function &F) {
@@ -340,21 +327,20 @@ std::optional<unsigned> getReqNTID(const Function &F) {
   return std::nullopt;
 }
 
-bool getMinCTASm(const Function &F, unsigned &x) {
-  return findOneNVVMAnnotation(&F, "minctasm", x);
+std::optional<unsigned> getMinCTASm(const Function &F) {
+  return findOneNVVMAnnotation(&F, "minctasm");
 }
 
-bool getMaxNReg(const Function &F, unsigned &x) {
-  return findOneNVVMAnnotation(&F, "maxnreg", x);
+std::optional<unsigned> getMaxNReg(const Function &F) {
+  return findOneNVVMAnnotation(&F, "maxnreg");
 }
 
 bool isKernelFunction(const Function &F) {
-  unsigned x = 0;
-  if (!findOneNVVMAnnotation(&F, "kernel", x)) {
-    // There is no NVVM metadata, check the calling convention
-    return F.getCallingConv() == CallingConv::PTX_Kernel;
-  }
-  return (x == 1);
+  if (const auto x = findOneNVVMAnnotation(&F, "kernel"))
+    return (*x == 1);
+
+  // There is no NVVM metadata, check the calling convention
+  return F.getCallingConv() == CallingConv::PTX_Kernel;
 }
 
 MaybeAlign getAlign(const Function &F, unsigned Index) {

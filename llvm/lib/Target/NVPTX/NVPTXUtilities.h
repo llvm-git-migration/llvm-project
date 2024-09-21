@@ -31,8 +31,8 @@ class TargetMachine;
 
 void clearAnnotationCache(const Module *);
 
-bool findOneNVVMAnnotation(const GlobalValue *, const std::string &,
-                           unsigned &);
+std::optional<unsigned> findOneNVVMAnnotation(const GlobalValue *,
+                                              const std::string &);
 bool findAllNVVMAnnotation(const GlobalValue *, const std::string &,
                            std::vector<unsigned> &);
 
@@ -64,8 +64,8 @@ std::optional<unsigned> getClusterDimy(const Function &F);
 std::optional<unsigned> getClusterDimz(const Function &F);
 
 std::optional<unsigned> getMaxClusterRank(const Function &);
-bool getMinCTASm(const Function &, unsigned &);
-bool getMaxNReg(const Function &, unsigned &);
+std::optional<unsigned> getMinCTASm(const Function &);
+std::optional<unsigned> getMaxNReg(const Function &);
 bool isKernelFunction(const Function &);
 bool isParamGridConstant(const Value &);
 
