@@ -549,8 +549,8 @@ protected:
       : RewritePattern(std::forward<Args>(args)...),
         typeConverter(&typeConverter) {}
 
-  static SmallVector<Value>
-  getOneToOneAdaptorOperands(ArrayRef<ArrayRef<Value>> operands);
+  SmallVector<Value>
+  getOneToOneAdaptorOperands(ArrayRef<ArrayRef<Value>> operands) const;
 
 protected:
   /// An optional type converter for use by this pattern.
@@ -823,6 +823,9 @@ public:
 
   /// PatternRewriter hook for replacing an operation.
   void replaceOp(Operation *op, Operation *newOp) override;
+
+  /// PatternRewriter hook for replacing an operation.
+  void replaceOpWithMultiple(Operation *op, ArrayRef<ValueRange> newValues);
 
   /// PatternRewriter hook for erasing a dead operation. The uses of this
   /// operation *must* be made dead by the end of the conversion process,
