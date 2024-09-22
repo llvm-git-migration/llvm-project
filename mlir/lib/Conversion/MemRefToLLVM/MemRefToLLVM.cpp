@@ -1664,6 +1664,80 @@ public:
   }
 };
 
+struct UnrealizedConversionCastOpLowering
+    : public ConvertOpToLLVMPattern<UnrealizedConversionCastOp> {
+public:
+  using ConvertOpToLLVMPattern<
+      UnrealizedConversionCastOp>::ConvertOpToLLVMPattern;
+
+  static bool canLower(const LLVMTypeConverter &converter, BaseMemRefType type, ValueRange inputs) {
+    if (inputs.size() == 1 && isa<LLVM::LLVMPointerType>(inputs.front().getType())) {
+      // Bare pointer.
+      return true;
+    }
+
+    Type converted = converter.convertType(type);
+    if (!converted) return false;
+
+    auto llvmTy = cast<LLVM::LLVMStructType>(converted);
+    SmallVector<Type> flattened;
+    std::function<void(Type)> flattenType = [&](Type t) {
+      if (auto structTy = dyn_cast<LLVM::LLVMStructType>(t)) {
+        for (Type t : structTy.getBody())
+          flattenType(t);
+      } else if (auto arrayTy = dyn_cast<LLVM::LLVMArrayType>(t)) {
+        for (uint64_t i =0, e=arrayTy.getNumElements(); i < e; ++i) {
+          flattenType(arrayTy.getElementType());
+        }
+      } else {
+        flattened.push_back(t);
+      }
+    };
+
+    flattenType(converted);
+    return TypeRange(flattened) == TypeRange(inputs);
+  }
+
+  LogicalResult
+  matchAndRewrite(UnrealizedConversionCastOp op,
+                  OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    if (op->getNumResults() != 1)
+      return failure();
+
+    op.dump();
+    Location loc = op.getLoc();
+    Value result = op->getResult(0);
+    
+    if (auto rankedMemrefType = dyn_cast<MemRefType>(result.getType())){
+      if (op.getInputs().size() == 1 && isa<LLVM::LLVMPointerType>(op.getInputs().front().getType())) {
+        // Converting a bare pointer.
+        Value repl = MemRefDescriptor::fromStaticShape(rewriter, loc, *getTypeConverter(), rankedMemrefType,
+                                                 op.getInputs().front());
+        rewriter.replaceOp(op, repl);
+        return success();
+      }
+
+      // Converting memref descriptor elements.
+      // TODO: Check types.
+      Value repl = MemRefDescriptor::pack(rewriter, loc, *getTypeConverter(), rankedMemrefType, op.getInputs());
+        rewriter.replaceOp(op, repl);
+        return success();
+    } else if(auto unrankedMemrefType = dyn_cast<UnrankedMemRefType>(result.getType())) {
+      if (op.getInputs().size() == 1 && isa<LLVM::LLVMPointerType>(op.getInputs().front().getType())) {
+        return failure();
+      }
+
+      // TODO: Check types.
+      Value repl = UnrankedMemRefDescriptor::pack(rewriter, loc, *getTypeConverter(),
+                                                    unrankedMemrefType, op.getInputs());
+        rewriter.replaceOp(op, repl);
+        return success();
+    }
+
+    return failure();
+  }
+};
 } // namespace
 
 void mlir::populateFinalizeMemRefToLLVMConversionPatterns(
@@ -1693,6 +1767,7 @@ void mlir::populateFinalizeMemRefToLLVMConversionPatterns(
       StoreOpLowering,
       SubViewOpLowering,
       TransposeOpLowering,
+      UnrealizedConversionCastOpLowering,
       ViewOpLowering>(converter);
   // clang-format on
   auto allocLowering = converter.getOptions().allocLowering;
@@ -1728,6 +1803,12 @@ struct FinalizeMemRefToLLVMConversionPass
     RewritePatternSet patterns(&getContext());
     populateFinalizeMemRefToLLVMConversionPatterns(typeConverter, patterns);
     LLVMConversionTarget target(getContext());
+  target.addDynamicallyLegalOp<UnrealizedConversionCastOp>([&](UnrealizedConversionCastOp op) {
+    // TODO: Better checking
+    auto memrefType =dyn_cast<BaseMemRefType>(op->getResult(0).getType());
+    bool canConvert = op->getNumResults() == 1 && memrefType && UnrealizedConversionCastOpLowering::canLower(typeConverter, memrefType, op.getInputs());
+    return !canConvert;
+  });
     target.addLegalOp<func::FuncOp>();
     if (failed(applyPartialConversion(op, target, std::move(patterns))))
       signalPassFailure();
