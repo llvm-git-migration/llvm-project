@@ -1864,6 +1864,7 @@ module std_private_type_traits_common_type                               [system
 }
 module std_private_type_traits_conditional                               [system] { header "__type_traits/conditional.h" }
 module std_private_type_traits_conjunction                               [system] { header "__type_traits/conjunction.h" }
+module std_private_type_traits_container_traits                          [system] { header "__type_traits/container_traits.h" }
 module std_private_type_traits_copy_cv                                   [system] { header "__type_traits/copy_cv.h" }
 module std_private_type_traits_copy_cvref                                [system] { header "__type_traits/copy_cvref.h" }
 module std_private_type_traits_datasizeof                                [system] { header "__type_traits/datasizeof.h" }
