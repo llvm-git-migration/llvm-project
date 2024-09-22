@@ -8485,6 +8485,11 @@ SDValue TargetLowering::expandFMINNUM_FMAXNUM(SDNode *Node,
                          Node->getOperand(1), Node->getFlags());
   }
 
+  // If we have INSN fitting this operation strictly for the elements of the
+  // vector, normally, splitting it is better than compare+select.
+  if (VT.isVector() && isOperationLegal(Node->getOpcode(), VT.getScalarType()))
+    return SDValue();
+
   if (SDValue SelCC = createSelectForFMINNUM_FMAXNUM(Node, DAG))
     return SelCC;
 
