@@ -1,3 +1,4 @@
+
 //===-- RISCVMCTargetDesc.cpp - RISC-V Target Descriptions ----------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -122,8 +123,26 @@ static MCTargetStreamer *createRISCVNullTargetStreamer(MCStreamer &S) {
 
 namespace {
 
+// one way to implement this change is to keep the branching and
+// instruction analysis separate. in this approach, simply keeping track of
+// auipc and lui separately would be enough
+
+// in the other approach, we can merge the two by editing the RISCVMCInstrAnalysis class
+// this can be done by keeping reack of the general purpose registers
+// with respect to the last instruction that operated on them. this is basically
+// what evaluate branch is doing (looking for auipc (and only auipc because the state is only
+// updated when auipc is seen) and thena  subsequent jalr)
+
 class RISCVMCInstrAnalysis : public MCInstrAnalysis {
-  int64_t GPRState[31] = {};
+
+  struct RegisterState {
+    int64_t Value;
+    // keep track of the last opcode that influenced
+    // the current value of the register
+    unsigned InlfuOpcode;
+  };
+
+  RegisterState GPRState[31] = {};
   std::bitset<31> GPRValidMask;
 
   static bool isGPR(MCRegister Reg) {
@@ -135,21 +154,22 @@ class RISCVMCInstrAnalysis : public MCInstrAnalysis {
     return Reg - RISCV::X1;
   }
 
-  void setGPRState(MCRegister Reg, std::optional<int64_t> Value) {
+  void setRegisterState(MCRegister Reg, std::optional<int64_t> Value, std::optional<unsigned> Opcode) {
     if (Reg == RISCV::X0)
       return;
 
     auto Index = getRegIndex(Reg);
 
-    if (Value) {
-      GPRState[Index] = *Value;
+    if (Value && Opcode) {
+      GPRState[Index].Value = *Value;
+      GPRState[Index].InfluOpcode = Opcode;
       GPRValidMask.set(Index);
     } else {
       GPRValidMask.reset(Index);
     }
   }
 
-  std::optional<int64_t> getGPRState(MCRegister Reg) const {
+  std::optional<RegisterState> getRegisterState(McRegister Reg) const {
     if (Reg == RISCV::X0)
       return 0;
 
@@ -185,13 +205,13 @@ public:
       for (unsigned I = 0; I < NumDefs; ++I) {
         auto DefReg = Inst.getOperand(I).getReg();
         if (isGPR(DefReg))
-          setGPRState(DefReg, std::nullopt);
+          setRegisterState(DefReg, std::nullopt, std::nullopt);
       }
       break;
     }
     case RISCV::AUIPC:
-      setGPRState(Inst.getOperand(0).getReg(),
-                  Addr + (Inst.getOperand(1).getImm() << 12));
+      setRegisterState(Inst.getOperand(0).getReg(),
+                  Addr + (Inst.getOperand(1).getImm() << 12), RISCV::AUIPC);
       break;
     }
   }
@@ -219,8 +239,8 @@ public:
     }
 
     if (Inst.getOpcode() == RISCV::JALR) {
-      if (auto TargetRegState = getGPRState(Inst.getOperand(1).getReg())) {
-        Target = *TargetRegState + Inst.getOperand(2).getImm();
+      if (auto TargetRegState = getRegisterState(Inst.getOperand(1).getReg())) {
+        Target = TargetRegState->Value + Inst.getOperand(2).getImm();
         return true;
       }
 
@@ -228,6 +248,26 @@ public:
     }
 
     return false;
+  }
+
+  // keep track of what kind of instruction was used previously
+  // once we are concretely able to keep track of what kind of instruction was used previously,
+  // we just have to look at the corresponding 
+  // how to output the analysis of the instructions?
+
+  // listen for instruction that gets the upper immediate. cache the value of the upper immediate
+  // now go until the next instruction that shows up with the lower bits and writes to the same register
+  // keep track of all the changes to that register in between
+
+
+  // bool evaluateInst(const MCInst &Inst, uint64_t Addr, uint64_t Size,
+                      // uint64_t &Target) const override {
+    // if we see a function call a branch or a jump, then we cannot guarantee the
+    // location of the program counter since it can be edited after the jump, so
+    // we should discard the cache
+
+    // if the first check passes, then we should wait and look for all the instructions
+    // that will provide the lower 12 bits
   }
 
   bool isTerminator(const MCInst &Inst) const override {
@@ -359,3 +399,5 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRISCVTargetMC() {
                                                createRISCVNullTargetStreamer);
   }
 }
+
+
