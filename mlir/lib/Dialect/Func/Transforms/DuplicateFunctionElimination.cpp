@@ -54,6 +54,10 @@ struct DuplicateFuncOpEquivalenceInfo
     if (lhs == getTombstoneKey() || lhs == getEmptyKey() ||
         rhs == getTombstoneKey() || rhs == getEmptyKey())
       return false;
+
+    if (lhs.isDeclaration() || rhs.isDeclaration())
+      return false;
+
     // Check discardable attributes equivalence
     if (lhs->getDiscardableAttrDictionary() !=
         rhs->getDiscardableAttrDictionary())
@@ -87,11 +91,11 @@ struct DuplicateFunctionEliminationPass
 
     // Find unique representant per equivalent func ops.
     DenseSet<func::FuncOp, DuplicateFuncOpEquivalenceInfo> uniqueFuncOps;
-    DenseMap<StringAttr, func::FuncOp> getRepresentant;
+    DenseMap<StringRef, func::FuncOp> getRepresentant;
     DenseSet<func::FuncOp> toBeErased;
     module.walk([&](func::FuncOp f) {
       auto [repr, inserted] = uniqueFuncOps.insert(f);
-      getRepresentant[f.getSymNameAttr()] = *repr;
+      getRepresentant[f.getSymName()] = *repr;
       if (!inserted) {
         toBeErased.insert(f);
       }
@@ -99,8 +103,13 @@ struct DuplicateFunctionEliminationPass
 
     // Update call ops to call unique func op representants.
     module.walk([&](func::CallOp callOp) {
-      func::FuncOp callee = getRepresentant[callOp.getCalleeAttr().getAttr()];
+      func::FuncOp callee = getRepresentant[callOp.getCallee()];
       callOp.setCallee(callee.getSymName());
+    });
+    // Update constant ops to reference unique func op representants.
+    module.walk([&](func::ConstantOp constantOp) {
+      func::FuncOp value = getRepresentant[constantOp.getValue()];
+      constantOp.setValue(value.getSymName());
     });
 
     // Erase redundant func ops.
