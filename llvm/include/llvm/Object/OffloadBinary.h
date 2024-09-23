@@ -266,7 +266,7 @@ public:
     }
   }
 
-  OffloadBundleFatBin(MemoryBufferRef Source, StringRef file) 
+  OffloadBundleFatBin(MemoryBufferRef Source, StringRef file)
       : FileName(file), NumberOfEntries(0),
         Entries(SmallVector<OffloadBundleEntry>()) {}
 
