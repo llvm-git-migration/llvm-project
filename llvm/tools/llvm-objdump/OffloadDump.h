@@ -15,8 +15,12 @@
 namespace llvm {
 
 void dumpOffloadSections(const object::OffloadBinary &OB);
-void dumpOffloadBinary(const object::ObjectFile &O);
+// SALINAS void dumpOffloadBinary(const object::ObjectFile &O);
+void dumpOffloadBinary(const object::ObjectFile &O, std::string ArchName);
 
+/// Dump fat binary in binary clang-offload-bundler format
+void dumpOffloadBundleFatBinary(const object::ObjectFile &O,
+                                std::string ArchName/* SALINAS, bool Disassemble*/);
 } // namespace llvm
 
 #endif
