@@ -268,6 +268,9 @@ Attribute Changes in Clang
 - Introduced a new attribute ``[[clang::coro_await_elidable_argument]]`` on function parameters
   to propagate safe elide context to arguments if such function is also under a safe elide context.
 
+- Fix a bug where clang doesn't automatically apply the ``[[gsl::Owner]]`` or
+  ``[[gsl::Pointer]]`` to STL explicit template specialization decls. (#GH109442)
+
 Improvements to Clang's diagnostics
 -----------------------------------
 
