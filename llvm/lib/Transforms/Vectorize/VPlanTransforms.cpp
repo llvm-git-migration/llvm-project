@@ -1381,10 +1381,8 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
               })
               .Case<VPWidenCastRecipe>(
                   [&](VPWidenCastRecipe *W) -> VPRecipeBase * {
-                    unsigned Opcode = W->getOpcode();
-                    if (Opcode != Instruction::SExt &&
-                        Opcode != Instruction::ZExt &&
-                        Opcode != Instruction::Trunc)
+                    auto Inst = cast<CastInst>(W->getUnderlyingInstr());
+                    if (!Inst->isCast())
                       return nullptr;
                     return new VPWidenCastEVLRecipe(*W, EVL);
                   })

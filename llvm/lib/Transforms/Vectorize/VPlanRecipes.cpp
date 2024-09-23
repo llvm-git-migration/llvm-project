@@ -1424,13 +1424,12 @@ void VPWidenCastRecipe::execute(VPTransformState &State) {
 
 void VPWidenCastEVLRecipe::execute(VPTransformState &State) {
   unsigned Opcode = getOpcode();
+  auto Inst = cast<CastInst>(getUnderlyingInstr());
   State.setDebugLocFrom(getDebugLoc());
   assert(State.UF == 1 && "Expected only UF == 1 when vectorizing with "
                           "explicit vector length.");
 
-  // TODO: add more cast instruction, eg: fptoint/inttofp/inttoptr/fptofp
-  if (Opcode == Instruction::SExt || Opcode == Instruction::ZExt ||
-      Opcode == Instruction::Trunc) {
+  if (Inst->isCast()) {
     Value *SrcVal = State.get(getOperand(0), 0);
     VectorType *DsType = VectorType::get(getResultType(), State.VF);
 
