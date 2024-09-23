@@ -333,7 +333,7 @@ void GCNSchedStrategy::pickNodeFromQueue(SchedBoundary &Zone,
       SGPRPressure = Pressure[AMDGPU::RegisterPressureSets::SReg_32];
       VGPRPressure = Pressure[AMDGPU::RegisterPressureSets::VGPR_32];
     } else {
-      GCNRPTracker *T = Zone.isTop()
+      GCNRPTracker *T = IsBottomUp
                             ? static_cast<GCNRPTracker *>(&UpwardTracker)
                             : static_cast<GCNRPTracker *>(&DownwardTracker);
       SGPRPressure = T->getPressure().getSGPRNum();
