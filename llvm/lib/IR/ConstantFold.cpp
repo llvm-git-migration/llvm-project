@@ -729,13 +729,16 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
   // Neither constant should be UndefValue, unless these are vector constants.
   assert((!HasScalarUndefOrScalableVectorUndef) && "Unexpected UndefValue");
 
+  Constant *Absorber = ConstantExpr::getBinOpAbsorber(
+      Opcode, C1->getType(), /*AllowLHSConstant*/ true);
+
+  // Handle absorbing element when the Opcode is a commutative opcode
+  if ((C1 == Absorber || C2 == Absorber) && Instruction::isCommutative(Opcode))
+    return Absorber;
+
   // Handle simplifications when the RHS is a constant int.
   if (ConstantInt *CI2 = dyn_cast<ConstantInt>(C2)) {
     switch (Opcode) {
-    case Instruction::Mul:
-      if (CI2->isZero())
-        return C2; // X * 0 == 0
-      break;
     case Instruction::UDiv:
     case Instruction::SDiv:
       if (CI2->isZero())
@@ -749,9 +752,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
         return PoisonValue::get(CI2->getType());              // X % 0 == poison
       break;
     case Instruction::And:
-      if (CI2->isZero())
-        return C2; // X & 0 == 0
-
+      assert(!CI2->isZero() && "And zero handled above");
       if (ConstantExpr *CE1 = dyn_cast<ConstantExpr>(C1)) {
         // If and'ing the address of a global with a constant, fold it.
         if (CE1->getOpcode() == Instruction::PtrToInt &&
@@ -790,10 +791,6 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
           }
         }
       }
-      break;
-    case Instruction::Or:
-      if (CI2->isMinusOne())
-        return C2; // X | -1 == -1
       break;
     }
   } else if (isa<ConstantInt>(C1)) {
@@ -854,19 +851,8 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
       }
     }
 
-    switch (Opcode) {
-    case Instruction::SDiv:
-    case Instruction::UDiv:
-    case Instruction::URem:
-    case Instruction::SRem:
-    case Instruction::LShr:
-    case Instruction::AShr:
-    case Instruction::Shl:
-      if (CI1->isZero()) return C1;
-      break;
-    default:
-      break;
-    }
+    if (C1 == Absorber)
+      return C1;
   } else if (ConstantFP *CFP1 = dyn_cast<ConstantFP>(C1)) {
     if (ConstantFP *CFP2 = dyn_cast<ConstantFP>(C2)) {
       const APFloat &C1V = CFP1->getValueAPF();
