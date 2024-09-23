@@ -2903,23 +2903,46 @@ TreePatternNodePtr TreePattern::ParseTreePattern(Init *TheInit,
   }
   Record *Operator = OpDef->getDef();
 
-  if (Operator->isSubClassOf("ValueType")) {
-    // If the operator is a ValueType, then this must be "type cast" of a leaf
-    // node.
+  auto ParseCastOperand = [this](DagInit *Dag, StringRef OpName) {
     if (Dag->getNumArgs() != 1)
       error("Type cast only takes one operand!");
 
-    TreePatternNodePtr New =
-        ParseTreePattern(Dag->getArg(0), Dag->getArgNameStr(0));
+    if (!OpName.empty())
+      error("Type cast should not have a name!");
+
+    return ParseTreePattern(Dag->getArg(0), Dag->getArgNameStr(0));
+  };
+
+  if (Operator->isSubClassOf("ValueType")) {
+    // If the operator is a ValueType, then this must be "type cast" of a leaf
+    // node.
+    TreePatternNodePtr New = ParseCastOperand(Dag, OpName);
+
+    if (New->getNumTypes() != 1)
+      error("ValueType cast can only have one type!");
 
     // Apply the type cast.
-    if (New->getNumTypes() != 1)
-      error("Type cast can only have one type!");
     const CodeGenHwModes &CGH = getDAGPatterns().getTargetInfo().getHwModes();
     New->UpdateNodeType(0, getValueTypeByHwMode(Operator, CGH), *this);
 
-    if (!OpName.empty())
-      error("ValueType cast should not have a name!");
+    return New;
+  }
+
+  if (Operator->isSubClassOf("ValueTypeList")) {
+    // If the operator is a ValueTypeList, then this must be "type cast" of a
+    // leaf node with multiple results.
+    TreePatternNodePtr New = ParseCastOperand(Dag, OpName);
+
+    ListInit *LI = Operator->getValueAsListInit("VTs");
+    if (New->getNumTypes() != LI->size())
+      error("Invalid number of type casts!");
+
+    // Apply the type casts.
+    const CodeGenHwModes &CGH = getDAGPatterns().getTargetInfo().getHwModes();
+    for (unsigned i = 0, e = New->getNumTypes(); i != e; ++i)
+      New->UpdateNodeType(
+          i, getValueTypeByHwMode(LI->getElementAsRecord(i), CGH), *this);
+
     return New;
   }
 
