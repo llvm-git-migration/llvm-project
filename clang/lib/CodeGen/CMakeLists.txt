@@ -1,3 +1,7 @@
+if(EXISTS ${LLVM_MAIN_SRC_DIR}/include/llvm/CodeGen AND CLANG_BUILT_STANDALONE)
+  add_subdirectory(${LLVM_MAIN_SRC_DIR}/include/llvm/CodeGen llvm/lib/CodeGen)
+endif()
+
 set(LLVM_LINK_COMPONENTS
   AggressiveInstCombine
   Analysis
