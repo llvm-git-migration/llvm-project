@@ -21,6 +21,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/Ownership.h"
 #include "clang/Sema/SemaBase.h"
+#include "clang/Support/Compiler.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <optional>
@@ -31,7 +32,7 @@ namespace clang {
 class IdentifierInfo;
 class OpenACCClause;
 
-class SemaOpenACC : public SemaBase {
+class CLANG_ABI SemaOpenACC : public SemaBase {
 private:
   /// A collection of loop constructs in the compute construct scope that
   /// haven't had their 'parent' compute construct set yet. Entires will only be
@@ -452,7 +453,7 @@ public:
   /// Helper type for the registration/assignment of constructs that need to
   /// 'know' about their parent constructs and hold a reference to them, such as
   /// Loop needing its parent construct.
-  class AssociatedStmtRAII {
+  class CLANG_ABI AssociatedStmtRAII {
     SemaOpenACC &SemaRef;
     bool WasInsideComputeConstruct;
     OpenACCDirectiveKind DirKind;
