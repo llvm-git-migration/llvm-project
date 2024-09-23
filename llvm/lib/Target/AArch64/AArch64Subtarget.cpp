@@ -367,8 +367,6 @@ AArch64Subtarget::AArch64Subtarget(const Triple &TT, StringRef CPU,
   // X29 is named FP, so we can't use TRI->getName to check X29.
   if (ReservedRegNames.count("X29") || ReservedRegNames.count("FP"))
     ReserveXRegisterForRA.set(29);
-
-  AddressCheckPSV.reset(new AddressCheckPseudoSourceValue(TM));
 }
 
 const CallLowering *AArch64Subtarget::getCallLowering() const {
