@@ -649,6 +649,20 @@ static void addPGOAndCoverageFlags(const ToolChain &TC, Compilation &C,
     }
   }
 
+  if (auto *SampleColdArg =
+          Args.getLastArg(options::OPT_fprofile_sample_cold_function,
+                          options::OPT_fprofile_sample_cold_function_EQ)) {
+    SmallString<128> Path;
+    if (SampleColdArg->getOption().matches(options::OPT_fprofile_sample_cold_function_EQ))
+      Path.append(SampleColdArg->getValue());
+    else 
+      Path.append("default_%m.profraw");
+
+    CmdArgs.push_back("-mllvm");
+    CmdArgs.push_back(Args.MakeArgString(
+        Twine("--instrument-sample-cold-function-path=") + Path));    
+  }
+
   Arg *PGOGenArg = nullptr;
   if (PGOGenerateArg) {
     assert(!CSPGOGenerateArg);
