@@ -691,8 +691,8 @@ define <4 x i16> @widening_shuffle_shl_constant_op1_non0(<2 x i16> %v) {
 
 define <4 x i16> @widening_shuffle_or(<2 x i16> %v) {
 ; CHECK-LABEL: @widening_shuffle_or(
-; CHECK-NEXT:    [[TMP1:%.*]] = or <2 x i16> [[V:%.*]], <i16 42, i16 -42>
-; CHECK-NEXT:    [[BO:%.*]] = shufflevector <2 x i16> [[TMP1]], <2 x i16> poison, <4 x i32> <i32 0, i32 1, i32 poison, i32 poison>
+; CHECK-NEXT:    [[SHUF:%.*]] = shufflevector <2 x i16> [[V:%.*]], <2 x i16> poison, <4 x i32> <i32 0, i32 1, i32 poison, i32 poison>
+; CHECK-NEXT:    [[BO:%.*]] = or <4 x i16> [[SHUF]], <i16 42, i16 -42, i16 -1, i16 -1>
 ; CHECK-NEXT:    ret <4 x i16> [[BO]]
 ;
   %shuf = shufflevector <2 x i16> %v, <2 x i16> poison, <4 x i32> <i32 0, i32 1, i32 undef, i32 undef>
@@ -1035,7 +1035,8 @@ define <2 x i32> @and_splat_constant(<2 x i32> %x) {
 define <4 x i16> @and_constant_mask_poison(<4 x i16> %add) {
 ; CHECK-LABEL: @and_constant_mask_poison(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND:%.*]] = shufflevector <4 x i16> [[ADD:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 poison, i32 1, i32 1>
+; CHECK-NEXT:    [[SHUFFLE:%.*]] = shufflevector <4 x i16> [[ADD:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 poison, i32 1, i32 1>
+; CHECK-NEXT:    [[AND:%.*]] = and <4 x i16> [[SHUFFLE]], <i16 0, i16 0, i16 -1, i16 -1>
 ; CHECK-NEXT:    ret <4 x i16> [[AND]]
 ;
 entry:
@@ -1047,7 +1048,8 @@ entry:
 define <4 x i16> @and_constant_mask_poison_2(<4 x i16> %add) {
 ; CHECK-LABEL: @and_constant_mask_poison_2(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[AND:%.*]] = shufflevector <4 x i16> [[ADD:%.*]], <4 x i16> poison, <4 x i32> <i32 1, i32 1, i32 1, i32 poison>
+; CHECK-NEXT:    [[SHUFFLE:%.*]] = shufflevector <4 x i16> [[ADD:%.*]], <4 x i16> poison, <4 x i32> <i32 1, i32 1, i32 1, i32 poison>
+; CHECK-NEXT:    [[AND:%.*]] = and <4 x i16> [[SHUFFLE]], <i16 -1, i16 -1, i16 -1, i16 0>
 ; CHECK-NEXT:    ret <4 x i16> [[AND]]
 ;
 entry:
@@ -1098,7 +1100,8 @@ entry:
 define <4 x i16> @or_constant_mask_poison(<4 x i16> %in) {
 ; CHECK-LABEL: @or_constant_mask_poison(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR:%.*]] = shufflevector <4 x i16> [[IN:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 poison, i32 1, i32 1>
+; CHECK-NEXT:    [[SHUFFLE:%.*]] = shufflevector <4 x i16> [[IN:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 poison, i32 1, i32 1>
+; CHECK-NEXT:    [[OR:%.*]] = or <4 x i16> [[SHUFFLE]], <i16 -1, i16 -1, i16 0, i16 0>
 ; CHECK-NEXT:    ret <4 x i16> [[OR]]
 ;
 entry:
@@ -1110,7 +1113,8 @@ entry:
 define <4 x i16> @or_constant_mask_poison_2(<4 x i16> %in) {
 ; CHECK-LABEL: @or_constant_mask_poison_2(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[OR:%.*]] = shufflevector <4 x i16> [[IN:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 1, i32 1, i32 poison>
+; CHECK-NEXT:    [[SHUFFLE:%.*]] = shufflevector <4 x i16> [[IN:%.*]], <4 x i16> poison, <4 x i32> <i32 poison, i32 1, i32 1, i32 poison>
+; CHECK-NEXT:    [[OR:%.*]] = or <4 x i16> [[SHUFFLE]], <i16 -1, i16 0, i16 0, i16 -1>
 ; CHECK-NEXT:    ret <4 x i16> [[OR]]
 ;
 entry:

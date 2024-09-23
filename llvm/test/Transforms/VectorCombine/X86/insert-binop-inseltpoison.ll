@@ -100,7 +100,7 @@ define <16 x i8> @ins1_ins0_add(i8 %x, i8 %y) {
 define <4 x i32> @ins0_ins0_mul(i32 %x, i32 %y) {
 ; CHECK-LABEL: @ins0_ins0_mul(
 ; CHECK-NEXT:    [[R_SCALAR:%.*]] = mul i32 [[X:%.*]], [[Y:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = insertelement <4 x i32> poison, i32 [[R_SCALAR]], i64 0
+; CHECK-NEXT:    [[R:%.*]] = insertelement <4 x i32> zeroinitializer, i32 [[R_SCALAR]], i64 0
 ; CHECK-NEXT:    ret <4 x i32> [[R]]
 ;
   %i0 = insertelement <4 x i32> zeroinitializer, i32 %x, i32 0

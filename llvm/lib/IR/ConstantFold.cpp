@@ -624,6 +624,14 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
       return C1;
   }
 
+  if (Constant *Absorber = ConstantExpr::getBinOpAbsorber(
+          Opcode, C1->getType(), /*AllowLHSAbsorber*/ true)) {
+    if (C1 == Absorber)
+      return C1;
+    if (C2 == Absorber)
+      return C2;
+  }
+
   // Binary operations propagate poison.
   if (isa<PoisonValue>(C1) || isa<PoisonValue>(C2))
     return PoisonValue::get(C1->getType());
@@ -733,8 +741,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
   if (ConstantInt *CI2 = dyn_cast<ConstantInt>(C2)) {
     switch (Opcode) {
     case Instruction::Mul:
-      if (CI2->isZero())
-        return C2; // X * 0 == 0
+      assert(!CI2->isZero() && "Mul zero handled above");
       break;
     case Instruction::UDiv:
     case Instruction::SDiv:
@@ -749,9 +756,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
         return PoisonValue::get(CI2->getType());              // X % 0 == poison
       break;
     case Instruction::And:
-      if (CI2->isZero())
-        return C2; // X & 0 == 0
-
+      assert(!CI2->isZero() && "And zero handled above");
       if (ConstantExpr *CE1 = dyn_cast<ConstantExpr>(C1)) {
         // If and'ing the address of a global with a constant, fold it.
         if (CE1->getOpcode() == Instruction::PtrToInt &&
@@ -792,8 +797,7 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
       }
       break;
     case Instruction::Or:
-      if (CI2->isMinusOne())
-        return C2; // X | -1 == -1
+      assert(!CI2->isMinusOne() && "Or MinusOne handled above");
       break;
     }
   } else if (isa<ConstantInt>(C1)) {
@@ -840,32 +844,21 @@ Constant *llvm::ConstantFoldBinaryInstruction(unsigned Opcode, Constant *C1,
       case Instruction::Xor:
         return ConstantInt::get(CI1->getContext(), C1V ^ C2V);
       case Instruction::Shl:
+        assert(!CI1->isZero() && "Zero Shl handled above");
         if (C2V.ult(C1V.getBitWidth()))
           return ConstantInt::get(CI1->getContext(), C1V.shl(C2V));
         return PoisonValue::get(C1->getType()); // too big shift is poison
       case Instruction::LShr:
+        assert(!CI1->isZero() && "Zero LShr handled above");
         if (C2V.ult(C1V.getBitWidth()))
           return ConstantInt::get(CI1->getContext(), C1V.lshr(C2V));
         return PoisonValue::get(C1->getType()); // too big shift is poison
       case Instruction::AShr:
+        assert(!CI1->isZero() && "Zero AShr handled above");
         if (C2V.ult(C1V.getBitWidth()))
           return ConstantInt::get(CI1->getContext(), C1V.ashr(C2V));
         return PoisonValue::get(C1->getType()); // too big shift is poison
       }
-    }
-
-    switch (Opcode) {
-    case Instruction::SDiv:
-    case Instruction::UDiv:
-    case Instruction::URem:
-    case Instruction::SRem:
-    case Instruction::LShr:
-    case Instruction::AShr:
-    case Instruction::Shl:
-      if (CI1->isZero()) return C1;
-      break;
-    default:
-      break;
     }
   } else if (ConstantFP *CFP1 = dyn_cast<ConstantFP>(C1)) {
     if (ConstantFP *CFP2 = dyn_cast<ConstantFP>(C2)) {

@@ -244,7 +244,7 @@ define i32 @test24() {
 
 define i32 @test25() {
 ; CHECK-LABEL: @test25(
-; CHECK-NEXT:    ret i32 poison
+; CHECK-NEXT:    ret i32 0
 ;
   %b = lshr i32 0, undef
   ret i32 %b
@@ -252,7 +252,7 @@ define i32 @test25() {
 
 define i32 @test26() {
 ; CHECK-LABEL: @test26(
-; CHECK-NEXT:    ret i32 poison
+; CHECK-NEXT:    ret i32 0
 ;
   %b = ashr i32 0, undef
   ret i32 %b
@@ -260,7 +260,7 @@ define i32 @test26() {
 
 define i32 @test27() {
 ; CHECK-LABEL: @test27(
-; CHECK-NEXT:    ret i32 poison
+; CHECK-NEXT:    ret i32 0
 ;
   %b = shl i32 0, undef
   ret i32 %b
