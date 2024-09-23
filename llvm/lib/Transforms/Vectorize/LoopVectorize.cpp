@@ -9285,7 +9285,6 @@ void LoopVectorizationPlanner::adjustRecipesForReductions(
       continue;
 
     const RecurrenceDescriptor &RdxDesc = PhiR->getRecurrenceDescriptor();
-    StoreInst *IntermediateStore = RdxDesc.IntermediateStore;
     // Adjust AnyOf reductions; replace the reduction phi for the selected value
     // with a boolean reduction phi node to check if the condition is true in
     // any iteration. The final value is selected by the final
@@ -9387,13 +9386,10 @@ void LoopVectorizationPlanner::adjustRecipesForReductions(
     // also modeled in VPlan.
     auto *FinalReductionResult = new VPInstruction(
         VPInstruction::ComputeReductionResult, {PhiR, NewExitingVPV}, ExitDL);
-    FinalReductionResult->insertBefore(*MiddleVPBB, IP);
-     auto *FinalReductionResult = new VPInstruction( 
-        VPInstruction::ComputeReductionResult, {PhiR, NewExitingVPV}, ExitDL);
     // Update all users outside the vector region.
     OrigExitingVPV->replaceUsesWithIf(
         FinalReductionResult, [](VPUser &User, unsigned) {
-        auto *Parent = cast<VPRecipeBase>(&User)->getParent();
+          auto *Parent = cast<VPRecipeBase>(&User)->getParent();
           return Parent && !Parent->getParent();
         });
     FinalReductionResult->insertBefore(*MiddleVPBB, IP);
