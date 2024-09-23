@@ -3116,8 +3116,7 @@ bool Compiler<Emitter>::VisitCXXNewExpr(const CXXNewExpr *E) {
         if (!this->discard(Arg1))
           return false;
         IsNoThrow = true;
-      } else if (Ctx.getLangOpts().CPlusPlus26 &&
-                 OperatorNew->isReservedGlobalPlacementOperator()) {
+      } else if (OperatorNew->isReservedGlobalPlacementOperator()) {
         // If we have a placement-new destination, we'll later use that instead
         // of allocating.
         PlacementDest = Arg1;
