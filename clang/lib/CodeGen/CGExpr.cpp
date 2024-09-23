@@ -54,6 +54,7 @@
 
 #include <optional>
 #include <string>
+#include <utility>
 
 using namespace clang;
 using namespace CodeGen;
@@ -5477,8 +5478,9 @@ CodeGenFunction::EmitHLSLOutArgLValues(const HLSLOutArgExpr *E, QualType Ty) {
   return std::make_pair(BaseLV, TempLV);
 }
 
-LValue CodeGenFunction::EmitHLSLOutArgExpr(const HLSLOutArgExpr *E,
-                                           CallArgList &Args, QualType Ty) {
+std::pair<LValue, LValue>
+CodeGenFunction::EmitHLSLOutArgExpr(const HLSLOutArgExpr *E, CallArgList &Args,
+                                    QualType Ty) {
 
   auto [BaseLV, TempLV] = EmitHLSLOutArgLValues(E, Ty);
 
@@ -5493,7 +5495,7 @@ LValue CodeGenFunction::EmitHLSLOutArgExpr(const HLSLOutArgExpr *E,
   Args.addWriteback(BaseLV, TmpAddr, nullptr, E->getWritebackCast(),
                     LifetimeSize);
   Args.add(RValue::get(TmpAddr, *this), Ty);
-  return TempLV;
+  return std::make_pair(BaseLV, TempLV);
 }
 
 LValue
