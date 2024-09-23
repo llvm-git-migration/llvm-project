@@ -31,6 +31,7 @@ set(LLVM_LINK_COMPONENTS
   Target
   TargetParser
   TransformUtils
+  LLVMCodeGenTypes
   )
 
 # Workaround for MSVC ARM64 performance regression:
@@ -144,7 +145,6 @@ add_clang_library(clangCodeGen
   VarBypassDetector.cpp
 
   DEPENDS
-  vt_gen
   intrinsics_gen
   ClangDriverOptions
   # These generated headers are included transitively.
