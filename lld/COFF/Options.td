@@ -132,6 +132,8 @@ def manifestinput : P<
 // a reserved keyword in tablegen.
 def incl : Joined<["/", "-", "/?", "-?"], "include:">,
     HelpText<"Force symbol to be added to symbol table as undefined one">;
+def incl_glob : Joined<["/", "-", "/?", "-?"], "includeglob:">,
+    HelpText<"Force symbol to be added to symbol table as undefined one using a glob pattern">;
 
 // "def" is also a keyword.
 def deffile : Joined<["/", "-", "/?", "-?"], "def:">,
