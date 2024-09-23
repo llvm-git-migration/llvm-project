@@ -219,6 +219,11 @@ OPTIONS
 
   Display the content of the LLVM offloading section.
 
+.. option:: --offload-fatbin
+
+  Extract all clang-offload-bundler fat binaries.  Can be specified with :option:'--arch' to
+  dump fat binaries for specific archs only.
+
 .. option:: --prefix=<prefix>
 
   When disassembling with the :option:`--source` option, prepend ``prefix`` to
