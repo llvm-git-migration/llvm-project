@@ -145,8 +145,7 @@ struct PassModel : PassConcept<IRUnitT, AnalysisManagerT, ExtraArgTs...> {
   bool isEmpty() const override {
     if constexpr (is_detected<has_is_empty_t, PassT>::value)
       return Pass.isEmpty();
-    else
-      return false;
+    return false;
   }
 
   PassT Pass;
