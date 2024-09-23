@@ -30,6 +30,7 @@
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
+#include "llvm/IR/ProfDataUtils.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Use.h"
 #include "llvm/IR/Value.h"
@@ -47,6 +48,7 @@
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 #include <algorithm>
 #include <cassert>
+#include <optional>
 #include <utility>
 
 using namespace llvm;
@@ -85,7 +87,46 @@ using PhiMap = MapVector<PHINode *, BBValueVector>;
 using BB2BBVecMap = MapVector<BasicBlock *, BBVector>;
 
 using BBPhiMap = DenseMap<BasicBlock *, PhiMap>;
-using BBPredicates = DenseMap<BasicBlock *, Value *>;
+
+using MaybeCondBranchWeights = std::optional<class CondBranchWeights>;
+
+class CondBranchWeights {
+  uint32_t TrueWeight;
+  uint32_t FalseWeight;
+
+public:
+  CondBranchWeights(unsigned T, unsigned F) : TrueWeight(T), FalseWeight(F) {}
+
+  static MaybeCondBranchWeights tryParse(const BranchInst &Br) {
+    assert(Br.isConditional());
+
+    SmallVector<uint32_t, 2> Weights;
+    if (!extractBranchWeights(Br, Weights))
+      return std::nullopt;
+
+    if (Weights.size() != 2)
+      return std::nullopt;
+
+    return CondBranchWeights{Weights[0], Weights[1]};
+  }
+
+  static void setMetadata(BranchInst &Br,
+                          MaybeCondBranchWeights const &Weights) {
+    assert(Br.isConditional());
+    if (!Weights)
+      return;
+    uint32_t Arr[] = {Weights->TrueWeight, Weights->FalseWeight};
+    setBranchWeights(Br, Arr, false);
+  }
+
+  CondBranchWeights invert() const {
+    return CondBranchWeights{FalseWeight, TrueWeight};
+  }
+};
+
+using ValueWeightPair = std::pair<Value *, MaybeCondBranchWeights>;
+
+using BBPredicates = DenseMap<BasicBlock *, ValueWeightPair>;
 using PredMap = DenseMap<BasicBlock *, BBPredicates>;
 using BB2BBMap = DenseMap<BasicBlock *, BasicBlock *>;
 
@@ -271,7 +312,7 @@ class StructurizeCFG {
 
   void analyzeLoops(RegionNode *N);
 
-  Value *buildCondition(BranchInst *Term, unsigned Idx, bool Invert);
+  ValueWeightPair buildCondition(BranchInst *Term, unsigned Idx, bool Invert);
 
   void gatherPredicates(RegionNode *N);
 
@@ -449,16 +490,22 @@ void StructurizeCFG::analyzeLoops(RegionNode *N) {
 }
 
 /// Build the condition for one edge
-Value *StructurizeCFG::buildCondition(BranchInst *Term, unsigned Idx,
-                                      bool Invert) {
+ValueWeightPair StructurizeCFG::buildCondition(BranchInst *Term, unsigned Idx,
+                                               bool Invert) {
   Value *Cond = Invert ? BoolFalse : BoolTrue;
+  MaybeCondBranchWeights Weights = std::nullopt;
+
   if (Term->isConditional()) {
     Cond = Term->getCondition();
+    Weights = CondBranchWeights::tryParse(*Term);
 
-    if (Idx != (unsigned)Invert)
+    if (Idx != (unsigned)Invert) {
       Cond = invertCondition(Cond);
+      if (Weights)
+        Weights = Weights->invert();
+    }
   }
-  return Cond;
+  return {Cond, Weights};
 }
 
 /// Analyze the predecessors of each block and build up predicates
@@ -490,8 +537,8 @@ void StructurizeCFG::gatherPredicates(RegionNode *N) {
             if (Visited.count(Other) && !Loops.count(Other) &&
                 !Pred.count(Other) && !Pred.count(P)) {
 
-              Pred[Other] = BoolFalse;
-              Pred[P] = BoolTrue;
+              Pred[Other] = {BoolFalse, std::nullopt};
+              Pred[P] = {BoolTrue, std::nullopt};
               continue;
             }
           }
@@ -512,9 +559,9 @@ void StructurizeCFG::gatherPredicates(RegionNode *N) {
 
       BasicBlock *Entry = R->getEntry();
       if (Visited.count(Entry))
-        Pred[Entry] = BoolTrue;
+        Pred[Entry] = {BoolTrue, std::nullopt};
       else
-        LPred[Entry] = BoolFalse;
+        LPred[Entry] = {BoolFalse, std::nullopt};
     }
   }
 }
@@ -578,12 +625,14 @@ void StructurizeCFG::insertConditions(bool Loops) {
     Dominator.addBlock(Parent);
 
     Value *ParentValue = nullptr;
-    for (std::pair<BasicBlock *, Value *> BBAndPred : Preds) {
+    MaybeCondBranchWeights ParentWeights = std::nullopt;
+    for (std::pair<BasicBlock *, ValueWeightPair> BBAndPred : Preds) {
       BasicBlock *BB = BBAndPred.first;
-      Value *Pred = BBAndPred.second;
+      Value *Pred = BBAndPred.second.first;
 
       if (BB == Parent) {
         ParentValue = Pred;
+        ParentWeights = BBAndPred.second.second;
         break;
       }
       PhiInserter.AddAvailableValue(BB, Pred);
@@ -592,6 +641,7 @@ void StructurizeCFG::insertConditions(bool Loops) {
 
     if (ParentValue) {
       Term->setCondition(ParentValue);
+      CondBranchWeights::setMetadata(*Term, ParentWeights);
     } else {
       if (!Dominator.resultIsRememberedBlock())
         PhiInserter.AddAvailableValue(Dominator.result(), Default);
@@ -607,7 +657,7 @@ void StructurizeCFG::simplifyConditions() {
   for (auto &I : concat<PredMap::value_type>(Predicates, LoopPreds)) {
     auto &Preds = I.second;
     for (auto &J : Preds) {
-      auto &Cond = J.second;
+      auto &Cond = J.second.first;
       Instruction *Inverted;
       if (match(Cond, m_Not(m_OneUse(m_Instruction(Inverted)))) &&
           !Cond->use_empty()) {
@@ -904,9 +954,10 @@ void StructurizeCFG::setPrevNode(BasicBlock *BB) {
 /// Does BB dominate all the predicates of Node?
 bool StructurizeCFG::dominatesPredicates(BasicBlock *BB, RegionNode *Node) {
   BBPredicates &Preds = Predicates[Node->getEntry()];
-  return llvm::all_of(Preds, [&](std::pair<BasicBlock *, Value *> Pred) {
-    return DT->dominates(BB, Pred.first);
-  });
+  return llvm::all_of(Preds,
+                      [&](std::pair<BasicBlock *, ValueWeightPair> Pred) {
+                        return DT->dominates(BB, Pred.first);
+                      });
 }
 
 /// Can we predict that this node will always be called?
@@ -918,9 +969,9 @@ bool StructurizeCFG::isPredictableTrue(RegionNode *Node) {
   if (!PrevNode)
     return true;
 
-  for (std::pair<BasicBlock*, Value*> Pred : Preds) {
+  for (std::pair<BasicBlock *, ValueWeightPair> Pred : Preds) {
     BasicBlock *BB = Pred.first;
-    Value *V = Pred.second;
+    Value *V = Pred.second.first;
 
     if (V != BoolTrue)
       return false;
