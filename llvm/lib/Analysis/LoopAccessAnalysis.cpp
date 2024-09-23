@@ -1970,7 +1970,7 @@ MemoryDepChecker::getDependenceDistanceStrideAndSize(
   LLVM_DEBUG(dbgs() << "LAA:  Src induction step: " << *StrideAPtr
                     << " Sink induction step: " << *StrideBPtr << "\n");
 
-  // Note that store size is different from alloc size, which is depedent on
+  // Note that store size is different from alloc size, which is dependent on
   // store size. We use the former for checking illegal cases, and the latter
   // for scaling strides.
   TypeSize AStoreSz = DL.getTypeStoreSizeInBits(ATy),
