@@ -1973,8 +1973,8 @@ MemoryDepChecker::getDependenceDistanceStrideAndSize(
   // Note that store size is different from alloc size, which is dependent on
   // store size. We use the former for checking illegal cases, and the latter
   // for scaling strides.
-  TypeSize AStoreSz = DL.getTypeStoreSizeInBits(ATy),
-           BStoreSz = DL.getTypeStoreSizeInBits(BTy);
+  TypeSize AStoreSz = DL.getTypeStoreSize(ATy),
+           BStoreSz = DL.getTypeStoreSize(BTy);
 
   // When the distance is zero, we're reading/writing the same memory location:
   // check that the store sizes are equal. Otherwise, fail with an unknown
@@ -1989,8 +1989,8 @@ MemoryDepChecker::getDependenceDistanceStrideAndSize(
 
   // The TypeByteSize is used to scale Distance and VF. In these contexts, the
   // only size that matters is the size of the Sink.
-  uint64_t ASz = DL.getTypeAllocSize(ATy),
-           TypeByteSize = DL.getTypeAllocSize(BTy);
+  uint64_t ASz = alignTo(AStoreSz, DL.getABITypeAlign(ATy).value()),
+           TypeByteSize = alignTo(BStoreSz, DL.getABITypeAlign(BTy).value());
 
   // We scale the strides by the alloc-type-sizes, so we can check that the
   // common distance is equal when ASz != BSz.
