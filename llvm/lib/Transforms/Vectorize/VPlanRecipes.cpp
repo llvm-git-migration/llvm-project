@@ -1384,15 +1384,32 @@ void VPWidenCastRecipe::execute(VPTransformState &State) {
   }
 }
 
+static bool isCastInstruction(unsigned Opcode) {
+  switch (Opcode) {
+  case Instruction::SExt:
+  case Instruction::ZExt:
+  case Instruction::Trunc:
+  case Instruction::FPExt:
+  case Instruction::FPTrunc:
+  case Instruction::FPToSI:
+  case Instruction::FPToUI:
+  case Instruction::SIToFP:
+  case Instruction::UIToFP:
+  case Instruction::PtrToInt:
+  case Instruction::IntToPtr:
+    return true;
+  default:
+    return false;
+  }
+}
+
 void VPWidenCastEVLRecipe::execute(VPTransformState &State) {
   unsigned Opcode = getOpcode();
   State.setDebugLocFrom(getDebugLoc());
   assert(State.UF == 1 && "Expected only UF == 1 when vectorizing with "
                           "explicit vector length.");
 
-  // TODO: add more cast instruction, eg: fptoint/inttofp/inttoptr/fptofp
-  if (Opcode == Instruction::SExt || Opcode == Instruction::ZExt ||
-      Opcode == Instruction::Trunc) {
+  if (isCastInstruction(Opcode)) {
     Value *SrcVal = State.get(getOperand(0), 0);
     VectorType *DsType = VectorType::get(getResultType(), State.VF);
 

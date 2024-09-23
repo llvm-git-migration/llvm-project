@@ -1314,6 +1314,25 @@ void VPlanTransforms::addActiveLaneMask(
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
 
+static bool isCastInstruction(unsigned Opcode) {
+  switch (Opcode) {
+  case Instruction::SExt:
+  case Instruction::ZExt:
+  case Instruction::Trunc:
+  case Instruction::FPExt:
+  case Instruction::FPTrunc:
+  case Instruction::FPToSI:
+  case Instruction::FPToUI:
+  case Instruction::SIToFP:
+  case Instruction::UIToFP:
+  case Instruction::PtrToInt:
+  case Instruction::IntToPtr:
+    return true;
+  default:
+    return false;
+  }
+}
+
 /// Replace recipes with their EVL variants.
 static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
@@ -1347,9 +1366,7 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
               .Case<VPWidenCastRecipe>(
                   [&](VPWidenCastRecipe *W) -> VPRecipeBase * {
                     unsigned Opcode = W->getOpcode();
-                    if (Opcode != Instruction::SExt &&
-                        Opcode != Instruction::ZExt &&
-                        Opcode != Instruction::Trunc)
+                    if (!isCastInstruction(Opcode))
                       return nullptr;
                     return new VPWidenCastEVLRecipe(*W, EVL);
                   })
