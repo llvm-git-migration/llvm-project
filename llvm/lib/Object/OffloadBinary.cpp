@@ -259,9 +259,9 @@ Error OffloadFatBinBundle::ReadEntries(StringRef Buffer, uint64_t SectionOffset)
       }
 
       // create a Bundle Entry object:
-      auto entry = new OffloadFatBinBundle::BundleEntry(EntryOffset+SectionOffset, EntrySize, EntryIDSize, EntryID);
+      auto entry = new BundleEntry(EntryOffset+SectionOffset, EntrySize, EntryIDSize, EntryID);
 
-      Entries->push_back(*entry);
+      Entries.push_back(*entry);
     } // end of for loop
 
     return Error::success();
@@ -287,7 +287,7 @@ Expected<std::unique_ptr<OffloadFatBinBundle>> OffloadFatBinBundle::create(Memor
 
 Error OffloadFatBinBundle::extractBundle(const ObjectFile &Source) {
   // This will extract all entries in the Bundle
-  SmallVectorImpl<OffloadFatBinBundle::BundleEntry>::iterator it = Entries->begin();
+  SmallVectorImpl<BundleEntry>::iterator it = Entries.begin();
   for (int64_t I = 0; I < getNumEntries(); I++) {
 
     if (it->Size >0) {
@@ -450,7 +450,6 @@ Error object::extractFatBinaryFromObject(const ObjectFile &Obj, SmallVectorImpl<
       } else if (Obj.isCOFF()) {
     	  if (const COFFObjectFile *COFFObj = dyn_cast<COFFObjectFile>(&Obj)) {
     	    const coff_section *CoffSection = COFFObj->getCOFFSection(Sec);
-    	    fprintf(stderr,"DAVE: COFF viritual address =0x%llX\n", CoffSection->VirtualAddress);// COFFObj->getCOFFSection(Sec)->VirtualAddress);
     	  }
       }
 
