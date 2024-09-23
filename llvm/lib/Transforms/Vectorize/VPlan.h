@@ -1594,14 +1594,14 @@ class VPWidenCastEVLRecipe : public VPWidenCastRecipe {
 
 public:
   VPWidenCastEVLRecipe(Instruction::CastOps Opcode, VPValue *Op, Type *ResultTy,
-                       VPValue &EVL)
-      : VPWidenCastRecipe(VPDef::VPWidenCastEVLSC, Opcode, Op, ResultTy) {
+                       CastInst &UI, VPValue &EVL)
+      : VPWidenCastRecipe(VPDef::VPWidenCastEVLSC, Opcode, Op, ResultTy, UI) {
     addOperand(&EVL);
   }
 
   VPWidenCastEVLRecipe(VPWidenCastRecipe &W, VPValue &EVL)
       : VPWidenCastEVLRecipe(W.getOpcode(), W.getOperand(0), W.getResultType(),
-                             EVL) {
+                             *cast<CastInst>(W.getUnderlyingInstr()), EVL) {
     transferFlags(W);
   }
 
