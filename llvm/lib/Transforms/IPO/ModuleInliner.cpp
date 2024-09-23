@@ -49,6 +49,13 @@ using namespace llvm;
 STATISTIC(NumInlined, "Number of functions inlined");
 STATISTIC(NumDeleted, "Number of functions deleted because all callers found");
 
+cl::opt<bool> CtxProfPromoteAlwaysInline(
+    "ctx-prof-promote-alwaysinline", cl::init(false), cl::Hidden,
+    cl::desc("If using a contextual profile in this module, and an indirect "
+             "call target is marked as alwaysinline, perform indirect call "
+             "promotion for that target. If multiple targets for an indirect "
+             "call site fit this description, they are all promoted."));
+
 /// Return true if the specified inline history ID
 /// indicates an inline history that includes the specified function.
 static bool inlineHistoryIncludes(
@@ -145,10 +152,11 @@ PreservedAnalyses ModuleInlinerPass::run(Module &M,
   assert(Calls != nullptr && "Expected an initialized InlineOrder");
 
   // Populate the initial list of calls in this module.
+  SetVector<std::pair<CallBase *, Function *>> ICPCandidates;
   for (Function &F : M) {
     auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
-    for (Instruction &I : instructions(F))
-      if (auto *CB = dyn_cast<CallBase>(&I))
+    for (Instruction &I : instructions(F)) {
+      if (auto *CB = dyn_cast<CallBase>(&I)) {
         if (Function *Callee = CB->getCalledFunction()) {
           if (!Callee->isDeclaration())
             Calls->push({CB, -1});
@@ -163,7 +171,17 @@ PreservedAnalyses ModuleInlinerPass::run(Module &M,
                      << setIsVerbose();
             });
           }
+        } else if (CtxProfPromoteAlwaysInline && CtxProf &&
+                   CB->isIndirectCall()) {
+          CtxProfAnalysis::collectIndirectCallPromotionList(*CB, CtxProf,
+                                                            ICPCandidates);
         }
+      }
+    }
+  }
+  for (auto &[CB, Target] : ICPCandidates) {
+    if (auto *DirectCB = promoteCallWithIfThenElse(*CB, *Target, CtxProf))
+      Calls->push({DirectCB, -1});
   }
   if (Calls->empty())
     return PreservedAnalyses::all();
@@ -236,19 +254,30 @@ PreservedAnalyses ModuleInlinerPass::run(Module &M,
 
       for (CallBase *ICB : reverse(IFI.InlinedCallSites)) {
         Function *NewCallee = ICB->getCalledFunction();
-        if (!NewCallee) {
+        if (NewCallee) {
+          if (!NewCallee->isDeclaration())
+            Calls->push({ICB, NewHistoryID});
+        } else {
           // Try to promote an indirect (virtual) call without waiting for
           // the post-inline cleanup and the next DevirtSCCRepeatedPass
           // iteration because the next iteration may not happen and we may
           // miss inlining it.
-          // FIXME: enable for ctxprof.
-          if (!CtxProf)
-            if (tryPromoteCall(*ICB))
-              NewCallee = ICB->getCalledFunction();
+          if (CtxProfPromoteAlwaysInline && CtxProf) {
+            SetVector<std::pair<CallBase *, Function *>> Candidates;
+            CtxProfAnalysis::collectIndirectCallPromotionList(*ICB, CtxProf,
+                                                              Candidates);
+            for (auto &[DC, _] : Candidates) {
+              assert(!DC->isIndirectCall());
+              assert(!DC->getCalledFunction()->isDeclaration() &&
+                     "CtxProf promotes calls to defined targets only");
+              Calls->push({DC, NewHistoryID});
+            }
+          } else if (tryPromoteCall(*ICB)) {
+            NewCallee = ICB->getCalledFunction();
+            if (NewCallee && !NewCallee->isDeclaration())
+              Calls->push({ICB, NewHistoryID});
+          }
         }
-        if (NewCallee)
-          if (!NewCallee->isDeclaration())
-            Calls->push({ICB, NewHistoryID});
       }
     }
 
