@@ -49,13 +49,14 @@ env:
 jobs:
   stage1:
     if: github.repository_owner == 'llvm'
-    runs: &docker-image
-      using: 'docker'
-      image: 'libcxx/utils/ci/Dockerfile'
-      args:
-        - BASE_IMAGE: ghcr.io/actions/actions-runner:2.317.0
-        - GCC_LATEST_VERSION: 14
-        - LLVM_HEAD_VERSION: 20
+    runs-on: ubuntu-latest
+    # runs: &docker-image
+    #   using: 'docker'
+    #   image: 'libcxx/utils/ci/Dockerfile'
+    #   args:
+    #     - BASE_IMAGE: ghcr.io/actions/actions-runner:2.317.0
+    #     - GCC_LATEST_VERSION: 14
+    #     - LLVM_HEAD_VERSION: 20
     continue-on-error: false
     strategy:
       fail-fast: false
@@ -90,8 +91,7 @@ jobs:
             **/crash_diagnostics/*
   stage2:
     if: github.repository_owner == 'llvm'
-    runs:
-      <<: *docker-image
+    runs-on: ubuntu-latest
     needs: [ stage1 ]
     continue-on-error: false
     strategy:
@@ -172,8 +172,7 @@ jobs:
           'benchmarks',
           'bootstrapping-build'
         ]
-    runs:
-      <<: *docker-image
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: ${{ matrix.config }}
