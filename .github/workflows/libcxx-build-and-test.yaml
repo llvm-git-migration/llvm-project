@@ -50,6 +50,8 @@ jobs:
   stage1:
     if: github.repository_owner == 'llvm'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/libcxx/actions-builder:fozzie-live
     # runs: &docker-image
     #   using: 'docker'
     #   image: 'libcxx/utils/ci/Dockerfile'
