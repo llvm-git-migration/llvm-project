@@ -2070,3 +2070,18 @@ class ComplexPattern<ValueType ty, int numops, string fn,
   list<SDNodeProperty> Properties = props;
   int Complexity = complexity;
 }
+
+//===----------------------------------------------------------------------===//
+// Value type list.
+//
+// This can be used to pattern match for intrinsics with multiple overloaded
+// return values. For example:
+//
+// def int_foo : Intrinsic<[llvm_anyint_ty, llvm_anyint_ty], []>;
+// def i32_i32 : ValueTypeList<[i32, i32]>;
+// def : Pat<(i32_i32 (int_foo)), ...>;
+//
+
+class ValueTypeList<list<ValueType> vts> {
+  list<ValueType> VTs = vts;
+}
