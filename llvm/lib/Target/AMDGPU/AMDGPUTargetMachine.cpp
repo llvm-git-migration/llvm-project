@@ -461,7 +461,7 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeAMDGPUTarget() {
   initializeSILateBranchLoweringPass(*PR);
   initializeSIMemoryLegalizerPass(*PR);
   initializeSIOptimizeExecMaskingPass(*PR);
-  initializeSIPreAllocateWWMRegsPass(*PR);
+  initializeSIPreAllocateWWMRegsLegacyPass(*PR);
   initializeSIFormMemoryClausesPass(*PR);
   initializeSIPostRABundlerPass(*PR);
   initializeGCNCreateVOPDPass(*PR);
@@ -1443,7 +1443,7 @@ bool GCNPassConfig::addRegAssignAndRewriteFast() {
 
   // Equivalent of PEI for SGPRs.
   addPass(&SILowerSGPRSpillsLegacyID);
-  addPass(&SIPreAllocateWWMRegsID);
+  addPass(&SIPreAllocateWWMRegsLegacyID);
 
   addPass(createVGPRAllocPass(false));
 
@@ -1467,7 +1467,7 @@ bool GCNPassConfig::addRegAssignAndRewriteOptimized() {
 
   // Equivalent of PEI for SGPRs.
   addPass(&SILowerSGPRSpillsLegacyID);
-  addPass(&SIPreAllocateWWMRegsID);
+  addPass(&SIPreAllocateWWMRegsLegacyID);
 
   addPass(createVGPRAllocPass(true));
 
