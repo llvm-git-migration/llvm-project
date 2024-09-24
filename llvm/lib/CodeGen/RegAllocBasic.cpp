@@ -139,7 +139,7 @@ INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(MachineDominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(MachineLoopInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(VirtRegMapWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(LiveRegMatrix)
+INITIALIZE_PASS_DEPENDENCY(LiveRegMatrixWrapperPass)
 INITIALIZE_PASS_END(RABasic, "regallocbasic", "Basic Register Allocator", false,
                     false)
 
@@ -190,8 +190,8 @@ void RABasic::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addPreserved<MachineLoopInfoWrapperPass>();
   AU.addRequired<VirtRegMapWrapperPass>();
   AU.addPreserved<VirtRegMapWrapperPass>();
-  AU.addRequired<LiveRegMatrix>();
-  AU.addPreserved<LiveRegMatrix>();
+  AU.addRequired<LiveRegMatrixWrapperPass>();
+  AU.addPreserved<LiveRegMatrixWrapperPass>();
   MachineFunctionPass::getAnalysisUsage(AU);
 }
 
@@ -309,7 +309,7 @@ bool RABasic::runOnMachineFunction(MachineFunction &mf) {
   MF = &mf;
   RegAllocBase::init(getAnalysis<VirtRegMapWrapperPass>().getVRM(),
                      getAnalysis<LiveIntervalsWrapperPass>().getLIS(),
-                     getAnalysis<LiveRegMatrix>());
+                     getAnalysis<LiveRegMatrixWrapperPass>().getLRM());
   VirtRegAuxInfo VRAI(
       *MF, *LIS, *VRM, getAnalysis<MachineLoopInfoWrapperPass>().getLI(),
       getAnalysis<MachineBlockFrequencyInfoWrapperPass>().getMBFI());
