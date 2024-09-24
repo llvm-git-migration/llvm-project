@@ -21,7 +21,9 @@ weak_func:                              # @weak_func
 .Ltmp3:
         .seh_endprologue
         xorl    %eax, %eax
+        .seh_beginepilogue
         popq    %rbp
+        .seh_endepilogue
         retq
 .Leh_func_end0:
 .Ltmp4:

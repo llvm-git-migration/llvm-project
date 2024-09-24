@@ -33,10 +33,12 @@ f:                                      # @f
 	.seh_stackalloc 32
 	.seh_endprologue
 	nop
+	.seh_beginepilogue
 	addq	$32, %rsp
 	popq	%rbx
 	popq	%rdi
 	popq	%rsi
+	.seh_endepilogue
 	retq
 	.seh_handlerdata
 	.text
@@ -63,8 +65,10 @@ g:
 	.seh_setframe 3, 128
 	# CHECK: :[[@LINE-1]]:{{[0-9]+}}: error: frame register and offset can be set at most once
 	nop
+	.seh_beginepilogue
 	popq %rsi
 	popq %rbp
+	.seh_endepilogue
 	retq
 	.seh_endproc
 
@@ -90,9 +94,11 @@ h:                                      # @h
         addsd   %xmm6, %xmm7
         callq   getdbl
         addsd   %xmm7, %xmm0
+		.seh_beginepilogue
         movaps  32(%rsp), %xmm6         # 16-byte Reload
         movaps  48(%rsp), %xmm7         # 16-byte Reload
         addq    $72, %rsp
+		.seh_endepilogue
         retq
         .seh_handlerdata
         .text
