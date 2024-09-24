@@ -3,7 +3,9 @@
 ; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs \
 ; RUN:     | FileCheck %s  --check-prefixes=CHECK,CHECK-NOTRAP
 ; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs -mattr=+ptx75 \
-; RUN:     | FileCheck %s  --check-prefixes=CHECK-PTX75
+; RUN:     | FileCheck %s  --check-prefixes=CHECK-BUG-FIXED
+; RUN: llc < %s -march=nvptx64 -mcpu=sm_70 -verify-machineinstrs \
+; RUN:     | FileCheck %s  --check-prefixes=CHECK-BUG-FIXED
 ; RUN: llc < %s -march=nvptx -mcpu=sm_20 -verify-machineinstrs -trap-unreachable \
 ; RUN:     | FileCheck %s --check-prefixes=CHECK,CHECK-TRAP
 ; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs -trap-unreachable \
@@ -23,7 +25,7 @@ define void @kernel_func() {
 ; CHECK-TRAP: trap;
 ; CHECK-NOTRAP-NOT: trap;
 ; CHECK: exit;
-; CHECK-PTX75-NOT: exit;
+; CHECK-BUG-FIXED-NOT: exit;
   unreachable
 }
 
