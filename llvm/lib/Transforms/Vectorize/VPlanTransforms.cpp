@@ -1381,9 +1381,6 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
               })
               .Case<VPWidenCastRecipe>(
                   [&](VPWidenCastRecipe *W) -> VPRecipeBase * {
-                    auto Inst = cast<CastInst>(W->getUnderlyingInstr());
-                    if (!Inst->isCast())
-                      return nullptr;
                     return new VPWidenCastEVLRecipe(*W, EVL);
                   })
               .Case<VPReductionRecipe>([&](VPReductionRecipe *Red) {
