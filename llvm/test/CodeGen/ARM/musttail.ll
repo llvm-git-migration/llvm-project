@@ -117,3 +117,205 @@ entry:
   musttail call void @sret_callee(ptr sret({ double, double }) align 8 %result)
   ret void
 }
+
+%large_struct = type { [20 x i32] }
+declare void @large_callee(%large_struct* byval(%large_struct) align 4)
+
+; Functions with sret parameters can be tail-called, because the value is
+; actually passed in registers and the stack in the same way for the caller and
+; callee. Within @large_caller the first 16 bytes of the argument are spilled
+; to the local stack frame, but for the tail-call they are passed in r0-r3, so
+; it's safe to de-allocate that memory before the call. Most of the code
+; generated for this isn't needed, but that's a missed optimisation, not a
+; correctness issue.
+define void @large_caller(%large_struct* byval(%large_struct) align 4 %a) {
+; CHECK-LABEL: large_caller:
+; CHECK:       @ %bb.0: @ %entry
+; CHECK-NEXT:    .pad #16
+; CHECK-NEXT:    sub sp, sp, #16
+; CHECK-NEXT:    .save {r4, lr}
+; CHECK-NEXT:    push {r4, lr}
+; CHECK-NEXT:    add r12, sp, #8
+; CHECK-NEXT:    stm r12, {r0, r1, r2, r3}
+; CHECK-NEXT:    add r12, sp, #8
+; CHECK-NEXT:    add lr, r12, #16
+; CHECK-NEXT:    add r12, sp, #24
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    pop {r4, lr}
+; CHECK-NEXT:    add sp, sp, #16
+; CHECK-NEXT:    b large_callee
+entry:
+  musttail call void @large_callee(%large_struct* byval(%large_struct) align 4 %a)
+  ret void
+}
+
+; As above, but with some inline asm to test that the arguments in r0-r3 are
+; re-loaded before the call.
+define void @large_caller_check_regs(%large_struct* byval(%large_struct) align 4 %a) {
+; CHECK-LABEL: large_caller_check_regs:
+; CHECK:       @ %bb.0: @ %entry
+; CHECK-NEXT:    .pad #16
+; CHECK-NEXT:    sub sp, sp, #16
+; CHECK-NEXT:    .save {r4, lr}
+; CHECK-NEXT:    push {r4, lr}
+; CHECK-NEXT:    add r12, sp, #8
+; CHECK-NEXT:    stm r12, {r0, r1, r2, r3}
+; CHECK-NEXT:    @APP
+; CHECK-NEXT:    @NO_APP
+; CHECK-NEXT:    add r12, sp, #24
+; CHECK-NEXT:    add r0, sp, #8
+; CHECK-NEXT:    add lr, r0, #16
+; CHECK-NEXT:    add r3, sp, #8
+; CHECK-NEXT:    ldm r3, {r0, r1, r2, r3}
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    ldr r4, [lr], #4
+; CHECK-NEXT:    str r4, [r12], #4
+; CHECK-NEXT:    pop {r4, lr}
+; CHECK-NEXT:    add sp, sp, #16
+; CHECK-NEXT:    b large_callee
+entry:
+  tail call void asm sideeffect "", "~{r0},~{r1},~{r2},~{r3}"()
+  musttail call void @large_callee(%large_struct* byval(%large_struct) align 4 %a)
+  ret void
+}
+
+; The IR for this one looks dodgy, because it has an alloca passed to a
+; musttail function, but it is passed as a byval argument, so will be copied
+; into the stack space allocated by @large_caller_new_value's caller, so is
+; valid.
+define void @large_caller_new_value(%large_struct* byval(%large_struct) align 4 %a) {
+; CHECK-LABEL: large_caller_new_value:
+; CHECK:       @ %bb.0: @ %entry
+; CHECK-NEXT:    .pad #96
+; CHECK-NEXT:    sub sp, sp, #96
+; CHECK-NEXT:    add r12, sp, #80
+; CHECK-NEXT:    stm r12, {r0, r1, r2, r3}
+; CHECK-NEXT:    mov r0, #5
+; CHECK-NEXT:    mov r3, #3
+; CHECK-NEXT:    str r0, [sp, #20]
+; CHECK-NEXT:    mov r0, #4
+; CHECK-NEXT:    str r0, [sp, #16]
+; CHECK-NEXT:    mov r0, #3
+; CHECK-NEXT:    str r0, [sp, #12]
+; CHECK-NEXT:    mov r0, #2
+; CHECK-NEXT:    str r0, [sp, #8]
+; CHECK-NEXT:    mov r0, #1
+; CHECK-NEXT:    str r0, [sp, #4]
+; CHECK-NEXT:    mov r0, #0
+; CHECK-NEXT:    str r0, [sp]
+; CHECK-NEXT:    mov r0, sp
+; CHECK-NEXT:    add r1, r0, #16
+; CHECK-NEXT:    add r0, sp, #96
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    ldr r2, [r1], #4
+; CHECK-NEXT:    str r2, [r0], #4
+; CHECK-NEXT:    mov r1, #1
+; CHECK-NEXT:    mov r0, #0
+; CHECK-NEXT:    mov r2, #2
+; CHECK-NEXT:    add sp, sp, #96
+; CHECK-NEXT:    b large_callee
+entry:
+  %y = alloca %large_struct, align 4
+  store i32 0, ptr %y, align 4
+  %0 = getelementptr inbounds i8, ptr %y, i32 4
+  store i32 1, ptr %0, align 4
+  %1 = getelementptr inbounds i8, ptr %y, i32 8
+  store i32 2, ptr %1, align 4
+  %2 = getelementptr inbounds i8, ptr %y, i32 12
+  store i32 3, ptr %2, align 4
+  %3 = getelementptr inbounds i8, ptr %y, i32 16
+  store i32 4, ptr %3, align 4
+  %4 = getelementptr inbounds i8, ptr %y, i32 20
+  store i32 5, ptr %4, align 4
+  musttail call void @large_callee(%large_struct* byval(%large_struct) align 4 %y)
+  ret void
+}
