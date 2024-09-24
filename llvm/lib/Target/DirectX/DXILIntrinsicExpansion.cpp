@@ -17,6 +17,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/DXILResource.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
@@ -396,15 +397,6 @@ static Value *expandStepIntrinsic(CallInst *Orig) {
   return Builder.CreateSelect(Cond, Zero, One);
 }
 
-// static Value *expandSplitdoubleIntrinsic(CallInst *Orig) {
-//   Value *X = Orig->getOperand(0);
-//   Type *Ty = X->getType();
-//   IRBuilder<> Builder(Orig);
-
-//   Builder.CreateIntrinsic()
-
-// }
-
 static Intrinsic::ID getMaxForClamp(Type *ElemTy,
                                     Intrinsic::ID ClampIntrinsic) {
   if (ClampIntrinsic == Intrinsic::dx_uclamp)
@@ -522,8 +514,6 @@ static bool expandIntrinsic(Function &F, CallInst *Orig) {
   case Intrinsic::dx_step:
     Result = expandStepIntrinsic(Orig);
     break;
-    // case Intrinsic::dx_asuint_splitdouble:
-    //   Result = expandSplitdoubleIntrinsic(Orig);
   }
   if (Result) {
     Orig->replaceAllUsesWith(Result);

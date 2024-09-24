@@ -18847,7 +18847,7 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
         ArrayRef<Value *>{Op0}, nullptr, "hlsl.sign");
   }
   // This should only be called when targeting DXIL
-  case Builtin::BI__builtin_hlsl_asuint_splitdouble: {
+  case Builtin::BI__builtin_hlsl_splitdouble: {
 
     assert((E->getArg(0)->getType()->hasFloatingRepresentation() &&
             E->getArg(1)->getType()->hasUnsignedIntegerRepresentation() &&
@@ -18861,9 +18861,9 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     auto emitSplitDouble =
         [](CGBuilderTy *Builder, llvm::Value *arg,
            llvm::Type *retType) -> std::pair<Value *, Value *> {
-      CallInst *CI = Builder->CreateIntrinsic(
-          retType, llvm::Intrinsic::dx_asuint_splitdouble, {arg}, nullptr,
-          "hlsl.asuint");
+      CallInst *CI =
+          Builder->CreateIntrinsic(retType, llvm::Intrinsic::dx_splitdouble,
+                                   {arg}, nullptr, "hlsl.asuint");
 
       Value *arg0 = Builder->CreateExtractValue(CI, 0);
       Value *arg1 = Builder->CreateExtractValue(CI, 1);
@@ -18877,7 +18877,7 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     auto [Op2BaseLValue, Op2TmpLValue] =
         EmitHLSLOutArgExpr(OutArg2, Args, OutArg2->getType());
 
-    llvm::Type *retType = llvm::StructType::get(Int32Ty, Int32Ty);
+    llvm::StructType *retType = llvm::StructType::get(Int32Ty, Int32Ty);
 
     if (!Op0->getType()->isVectorTy()) {
       auto [arg0, arg1] = emitSplitDouble(&Builder, Op0, retType);
@@ -18906,7 +18906,7 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
         inserts.second = Builder.CreateInsertElement(i32VecTy, arg1, idx);
       } else {
         inserts.first = Builder.CreateInsertElement(inserts.first, arg0, idx);
-        inserts.second = Builder.CreateInsertElement(inserts.second, arg0, idx);
+        inserts.second = Builder.CreateInsertElement(inserts.second, arg1, idx);
       }
     }
 
