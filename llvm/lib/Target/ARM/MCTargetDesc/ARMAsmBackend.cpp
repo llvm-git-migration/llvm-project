@@ -579,6 +579,19 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   case ARM::fixup_arm_uncondbl:
   case ARM::fixup_arm_condbl:
   case ARM::fixup_arm_blx:
+    // Check that the relocation value is legal.
+    if (!isInt<26>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
+      return 0;
+    }
+    // Alignment differs for blx. Because we are switching to thumb ISA, we use
+    // 16-bit alignment. Otherwise, use 32-bit.
+    if ((Kind == ARM::fixup_arm_blx && Value % 2 != 0) ||
+        (Kind != ARM::fixup_arm_blx && Value % 4 != 0)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation not aligned");
+      return 0;
+    }
+
     // These values don't encode the low two bits since they're always zero.
     // Offset by 8 just as above.
     if (const MCSymbolRefExpr *SRE =
