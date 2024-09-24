@@ -1121,12 +1121,12 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
   assert(Offset + NumBytes <= Data.size() && "Invalid fixup offset!");
 
   // Used to point to big endian bytes.
-  unsigned FullSizeBytes;
+  unsigned FullSizeBytes = 0;
   if (Endian == llvm::endianness::big) {
     FullSizeBytes = getFixupKindContainerSizeBytes(Kind);
     assert((Offset + FullSizeBytes) <= Data.size() && "Invalid fixup size!");
     assert(NumBytes <= FullSizeBytes && "Invalid fixup size!");
-  }
+  } 
 
   // For each byte of the fragment that the fixup touches, mask in the bits from
   // the fixup value. The Value has been "split up" into the appropriate
@@ -1135,6 +1135,7 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
     unsigned Idx =
         Endian == llvm::endianness::little ? i : (FullSizeBytes - 1 - i);
     Data[Offset + Idx] |= uint8_t((Value >> (i * 8)) & 0xff);
+
   }
 }
 
