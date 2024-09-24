@@ -1395,11 +1395,12 @@ public:
       MapVector<StringRef, BitcodeModule> &ModuleMap) = 0;
   virtual Error wait() = 0;
   virtual unsigned getThreadCount() = 0;
+  virtual bool isSensitiveToInputOrder() { return false; }
 
   // Write sharded indices and (optionally) imports to disk
   Error emitFiles(const FunctionImporter::ImportMapTy &ImportList,
                   llvm::StringRef ModulePath,
-                  const std::string &NewModulePath) {
+                  const std::string &NewModulePath) const {
     ModuleToSummariesForIndexTy ModuleToSummariesForIndex;
     GVSummaryPtrSet DeclarationSummaries;
 
@@ -1613,6 +1614,10 @@ namespace {
 class WriteIndexesThinBackend : public ThinBackendProc {
   std::string OldPrefix, NewPrefix, NativeObjectPrefix;
   raw_fd_ostream *LinkedObjectsFile;
+  DefaultThreadPool BackendThreadPool;
+  std::optional<Error> Err;
+  std::mutex ErrMu;
+  std::mutex OnWriteMu;
 
 public:
   WriteIndexesThinBackend(
@@ -1634,8 +1639,6 @@ public:
       const std::map<GlobalValue::GUID, GlobalValue::LinkageTypes> &ResolvedODR,
       MapVector<StringRef, BitcodeModule> &ModuleMap) override {
     StringRef ModulePath = BM.getModuleIdentifier();
-    std::string NewModulePath =
-        getThinLTOOutputFile(ModulePath, OldPrefix, NewPrefix);
 
     if (LinkedObjectsFile) {
       std::string ObjectPrefix =
@@ -1645,19 +1648,48 @@ public:
       *LinkedObjectsFile << LinkedObjectsFilePath << '\n';
     }
 
-    if (auto E = emitFiles(ImportList, ModulePath, NewModulePath))
-      return E;
-
-    if (OnWrite)
-      OnWrite(std::string(ModulePath));
+    BackendThreadPool.async(
+        [this](const StringRef ModulePath,
+               const FunctionImporter::ImportMapTy &ImportList,
+               const std::string &OldPrefix, const std::string &NewPrefix) {
+          std::string NewModulePath =
+              getThinLTOOutputFile(ModulePath, OldPrefix, NewPrefix);
+          auto E = emitFiles(ImportList, ModulePath, NewModulePath);
+          if (E) {
+            std::unique_lock<std::mutex> L(ErrMu);
+            if (Err)
+              Err = joinErrors(std::move(*Err), std::move(E));
+            else
+              Err = std::move(E);
+            return;
+          }
+          if (OnWrite) {
+            // Serialize calls to the on write callback in case it is not thread
+            // safe
+            std::unique_lock<std::mutex> L(OnWriteMu);
+            OnWrite(std::string(ModulePath));
+          }
+        },
+        ModulePath, ImportList, OldPrefix, NewPrefix);
     return Error::success();
   }
 
-  Error wait() override { return Error::success(); }
+  Error wait() override {
+    BackendThreadPool.wait();
+    if (Err)
+      return std::move(*Err);
+    return Error::success();
+  }
 
-  // WriteIndexesThinBackend should always return 1 to prevent module
-  // re-ordering and avoid non-determinism in the final link.
-  unsigned getThreadCount() override { return 1; }
+  unsigned getThreadCount() override {
+    return BackendThreadPool.getMaxConcurrency();
+  }
+
+  bool isSensitiveToInputOrder() override {
+    // The order which modules are written to LinkedObjectsFile should be
+    // deterministic and match the order they are passed on the command line.
+    return true;
+  }
 };
 } // end anonymous namespace
 
@@ -1856,7 +1888,8 @@ Error LTO::runThinLTO(AddStreamFn AddStream, FileCache Cache,
                               ThinLTO.ModuleMap);
   };
 
-  if (BackendProc->getThreadCount() == 1) {
+  if (BackendProc->getThreadCount() == 1 ||
+      BackendProc->isSensitiveToInputOrder()) {
     // Process the modules in the order they were provided on the command-line.
     // It is important for this codepath to be used for WriteIndexesThinBackend,
     // to ensure the emitted LinkedObjectsFile lists ThinLTO objects in the same
