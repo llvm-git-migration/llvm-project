@@ -1,11 +1,13 @@
 ; RUN: llc < %s -march=nvptx -mcpu=sm_20 -verify-machineinstrs \
-; RUN:     | FileCheck %s  --check-prefix=CHECK --check-prefix=CHECK-NOTRAP
+; RUN:     | FileCheck %s  --check-prefixes=CHECK,CHECK-NOTRAP
 ; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs \
-; RUN:     | FileCheck %s  --check-prefix=CHECK --check-prefix=CHECK-NOTRAP
+; RUN:     | FileCheck %s  --check-prefixes=CHECK,CHECK-NOTRAP
+; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs -mattr=+ptx75 \
+; RUN:     | FileCheck %s  --check-prefixes=CHECK-PTX75
 ; RUN: llc < %s -march=nvptx -mcpu=sm_20 -verify-machineinstrs -trap-unreachable \
-; RUN:     | FileCheck %s --check-prefix=CHECK --check-prefix=CHECK-TRAP
+; RUN:     | FileCheck %s --check-prefixes=CHECK,CHECK-TRAP
 ; RUN: llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs -trap-unreachable \
-; RUN:     | FileCheck %s --check-prefix=CHECK --check-prefix=CHECK-TRAP
+; RUN:     | FileCheck %s --check-prefixes=CHECK,CHECK-TRAP
 ; RUN: %if ptxas && !ptxas-12.0 %{ llc < %s -march=nvptx -mcpu=sm_20 -verify-machineinstrs | %ptxas-verify %}
 ; RUN: %if ptxas %{ llc < %s -march=nvptx64 -mcpu=sm_20 -verify-machineinstrs | %ptxas-verify %}
 
@@ -21,12 +23,11 @@ define void @kernel_func() {
 ; CHECK-TRAP: trap;
 ; CHECK-NOTRAP-NOT: trap;
 ; CHECK: exit;
+; CHECK-PTX75-NOT: exit;
   unreachable
 }
 
 attributes #0 = { noreturn }
 
-
 !nvvm.annotations = !{!1}
-
 !1 = !{ptr @kernel_func, !"kernel", i32 1}
