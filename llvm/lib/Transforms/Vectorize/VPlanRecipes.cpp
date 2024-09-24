@@ -2362,7 +2362,8 @@ InstructionCost VPCSADataUpdateRecipe::computeCost(ElementCount VF,
   const TargetTransformInfo &TTI = Ctx.TTI;
 
   // Data Update
-  C += TTI.getArithmeticInstrCost(Instruction::Select, VTy, CostKind);
+  C += TTI.getCmpSelInstrCost(Instruction::Select, VTy, MaskTy,
+                              CmpInst::BAD_ICMP_PREDICATE, CostKind);
 
   // FIXME: These costs should be moved into VPInstruction::computeCost. We put
   // them here for now since they are related to updating the data and there is
