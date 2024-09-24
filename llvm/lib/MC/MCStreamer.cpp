@@ -979,6 +979,35 @@ void MCStreamer::emitWinCFIEndProlog(SMLoc Loc) {
   CurFrame->PrologEnd = Label;
 }
 
+void MCStreamer::emitWinCFIBeginEpilogue(SMLoc Loc) {
+  WinEH::FrameInfo *CurFrame = EnsureValidWinFrameInfo(Loc);
+  if (!CurFrame)
+    return;
+
+  if (!CurFrame->PrologEnd)
+    return getContext().reportError(
+        Loc, "starting epilogue (.seh_startepilogue) before prologue has ended "
+             "(.seh_endprologue)");
+
+  InEpilogCFI = true;
+  CurrentEpilog = emitCFILabel();
+}
+
+void MCStreamer::emitWinCFIEndEpilogue(SMLoc Loc) {
+  WinEH::FrameInfo *CurFrame = EnsureValidWinFrameInfo(Loc);
+  if (!CurFrame)
+    return;
+
+  if (!InEpilogCFI)
+    return getContext().reportError(
+        Loc, ".seh_endepilogue without a corresponding .seh_startepilogue");
+
+  InEpilogCFI = false;
+  MCSymbol *Label = emitCFILabel();
+  CurFrame->EpilogMap[CurrentEpilog].End = Label;
+  CurrentEpilog = nullptr;
+}
+
 void MCStreamer::emitCOFFSafeSEH(MCSymbol const *Symbol) {}
 
 void MCStreamer::emitCOFFSymbolIndex(MCSymbol const *Symbol) {}
