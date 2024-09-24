@@ -1771,34 +1771,34 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
     break;
   }
-  case Builtin::BI__builtin_hlsl_asuint_splitdouble: {
+  case Builtin::BI__builtin_hlsl_splitdouble: {
     if (SemaRef.checkArgCount(TheCall, 3))
       return true;
 
-    // Expr *Op0 = TheCall->getArg(0);
+    Expr *Op0 = TheCall->getArg(0);
 
-    // auto CheckIsNotDouble = [](clang::QualType PassedType) -> bool {
-    //   return !PassedType->isDoubleType();
-    // };
+    auto CheckIsNotDouble = [](clang::QualType PassedType) -> bool {
+      return !PassedType->hasFloatingRepresentation();
+    };
 
-    // if (CheckArgTypeIsCorrect(&SemaRef, Op0, SemaRef.Context.DoubleTy,
-    //                           CheckIsNotDouble)) {
-    //   return true;
-    // }
+    if (CheckArgTypeIsCorrect(&SemaRef, Op0, SemaRef.Context.DoubleTy,
+                              CheckIsNotDouble)) {
+      return true;
+    }
 
-    // Expr *Op1 = TheCall->getArg(1);
-    // Expr *Op2 = TheCall->getArg(2);
+    Expr *Op1 = TheCall->getArg(1);
+    Expr *Op2 = TheCall->getArg(2);
 
-    // auto CheckIsNotUint = [](clang::QualType PassedType) -> bool {
-    //   return !PassedType->isUnsignedIntegerType();
-    // };
+    auto CheckIsNotUint = [](clang::QualType PassedType) -> bool {
+      return !PassedType->hasUnsignedIntegerRepresentation();
+    };
 
-    // if (CheckArgTypeIsCorrect(&SemaRef, Op1, SemaRef.Context.UnsignedIntTy,
-    //                           CheckIsNotUint) ||
-    //     CheckArgTypeIsCorrect(&SemaRef, Op2, SemaRef.Context.UnsignedIntTy,
-    //                           CheckIsNotUint)) {
-    //   return true;
-    // }
+    if (CheckArgTypeIsCorrect(&SemaRef, Op1, SemaRef.Context.UnsignedIntTy,
+                              CheckIsNotUint) ||
+        CheckArgTypeIsCorrect(&SemaRef, Op2, SemaRef.Context.UnsignedIntTy,
+                              CheckIsNotUint)) {
+      return true;
+    }
 
     break;
   }
