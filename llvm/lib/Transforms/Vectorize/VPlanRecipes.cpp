@@ -1345,32 +1345,21 @@ void VPWidenCastRecipe::execute(VPTransformState &State) {
 
 void VPWidenCastEVLRecipe::execute(VPTransformState &State) {
   unsigned Opcode = getOpcode();
-  auto Inst = cast<CastInst>(getUnderlyingInstr());
   State.setDebugLocFrom(getDebugLoc());
-  assert(State.UF == 1 && "Expected only UF == 1 when vectorizing with "
-                          "explicit vector length.");
+  Value *SrcVal = State.get(getOperand(0));
+  VectorType *DsType = VectorType::get(getResultType(), State.VF);
 
-  if (Inst->isCast()) {
-    Value *SrcVal = State.get(getOperand(0), 0);
-    VectorType *DsType = VectorType::get(getResultType(), State.VF);
+  IRBuilderBase &BuilderIR = State.Builder;
+  VectorBuilder Builder(BuilderIR);
+  Value *Mask = BuilderIR.CreateVectorSplat(State.VF, BuilderIR.getTrue());
+  Builder.setMask(Mask).setEVL(State.get(getEVL(), /*NeedsScalar=*/true));
 
-    IRBuilderBase &BuilderIR = State.Builder;
-    VectorBuilder Builder(BuilderIR);
-    Value *Mask = BuilderIR.CreateVectorSplat(State.VF, BuilderIR.getTrue());
-    Builder.setMask(Mask).setEVL(State.get(getEVL(), 0, /*NeedsScalar=*/true));
+  Value *VPInst =
+      Builder.createVectorInstruction(Opcode, DsType, {SrcVal}, "vp.cast");
 
-    Value *VPInst =
-        Builder.createVectorInstruction(Opcode, DsType, {SrcVal}, "vp.cast");
-
-    if (VPInst) {
-      if (auto *VecOp = dyn_cast<CastInst>(VPInst))
-        VecOp->copyIRFlags(getUnderlyingInstr());
-    }
-
-    State.set(this, VPInst, 0);
-    State.addMetadata(VPInst,
-                      dyn_cast_or_null<Instruction>(getUnderlyingValue()));
-  }
+  State.set(this, VPInst, 0);
+  State.addMetadata(VPInst,
+                    dyn_cast_or_null<Instruction>(getUnderlyingValue()));
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -1378,7 +1367,7 @@ void VPWidenCastRecipe::print(raw_ostream &O, const Twine &Indent,
                               VPSlotTracker &SlotTracker) const {
   O << Indent << "WIDEN-CAST ";
   printAsOperand(O, SlotTracker);
-  O << " = " << Instruction::getOpcodeName(Opcode);
+  O << " = " << Instruction::getOpcodeName(Opcode) << " ";
   printFlags(O);
   printOperands(O, SlotTracker);
   O << " to " << *getResultType();

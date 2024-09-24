@@ -1587,7 +1587,7 @@ public:
   Type *getResultType() const { return ResultTy; }
 };
 
-// A recipe for widening cast operation with vector-predication intrinsics with
+/// A recipe for widening cast operation with vector-predication intrinsics with
 /// explicit vector length (EVL).
 class VPWidenCastEVLRecipe : public VPWidenCastRecipe {
   using VPRecipeWithIRFlags::transferFlags;
