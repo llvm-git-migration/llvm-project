@@ -725,8 +725,6 @@ bool Compiler<Emitter>::VisitParenExpr(const ParenExpr *E) {
 template <class Emitter>
 bool Compiler<Emitter>::VisitBinaryOperator(const BinaryOperator *BO) {
   // Need short-circuiting for these.
-  if (BO->getType()->isVectorType())
-    return this->VisitVectorBinOp(BO);
   if (BO->isLogicalOp())
     return this->VisitLogicalBinOp(BO);
 
@@ -746,6 +744,8 @@ bool Compiler<Emitter>::VisitBinaryOperator(const BinaryOperator *BO) {
 
   if (BO->getType()->isAnyComplexType())
     return this->VisitComplexBinOp(BO);
+  if (BO->getType()->isVectorType())
+    return this->VisitVectorBinOp(BO);
   if ((LHS->getType()->isAnyComplexType() ||
        RHS->getType()->isAnyComplexType()) &&
       BO->isComparisonOp())
@@ -1264,6 +1264,8 @@ bool Compiler<Emitter>::VisitComplexBinOp(const BinaryOperator *E) {
 
 template <class Emitter>
 bool Compiler<Emitter>::VisitVectorBinOp(const BinaryOperator *E) {
+  assert(!E->isCommaOp() &&
+         "Comma op should be handled in VisitBinaryOperator");
   assert(E->getType()->isVectorType());
   assert(E->getLHS()->getType()->isVectorType());
   assert(E->getRHS()->getType()->isVectorType());
