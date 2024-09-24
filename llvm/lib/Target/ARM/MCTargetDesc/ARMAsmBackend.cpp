@@ -579,13 +579,24 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   case ARM::fixup_arm_uncondbl:
   case ARM::fixup_arm_condbl:
   case ARM::fixup_arm_blx:
+    // Check that the fixup value is legal.
+    Value = Value - 8;
+    if (!isInt<25>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
+      return 0;
+    }
+    if (Value % 4 != 0) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation not aligned");
+      return 0;
+    }
+
     // These values don't encode the low two bits since they're always zero.
     // Offset by 8 just as above.
     if (const MCSymbolRefExpr *SRE =
             dyn_cast<MCSymbolRefExpr>(Fixup.getValue()))
       if (SRE->getKind() == MCSymbolRefExpr::VK_TLSCALL)
         return 0;
-    return 0xffffff & ((Value - 8) >> 2);
+    return 0xffffff & (Value >> 2);
   case ARM::fixup_t2_uncondbranch: {
     if (STI->getTargetTriple().isOSBinFormatCOFF() && !IsResolved &&
         Value != 4) {
@@ -1121,7 +1132,7 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
   assert(Offset + NumBytes <= Data.size() && "Invalid fixup offset!");
 
   // Used to point to big endian bytes.
-  unsigned FullSizeBytes;
+  unsigned FullSizeBytes = 0;
   if (Endian == llvm::endianness::big) {
     FullSizeBytes = getFixupKindContainerSizeBytes(Kind);
     assert((Offset + FullSizeBytes) <= Data.size() && "Invalid fixup size!");
