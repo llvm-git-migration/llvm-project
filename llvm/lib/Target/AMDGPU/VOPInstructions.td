@@ -1375,7 +1375,7 @@ class VOP3_Profile_Base<VOPProfile P, VOP3Features Features = VOP3_REGULAR> : VO
 
   let HasModifiers =
       !if (Features.IsMAI, 0,
-           !or(Features.IsPacked, Features.HasOpSel, P.HasModifiers));
+           !or(Features.IsPacked, P.HasModifiers));
 }
 
 class VOP3_Profile<VOPProfile P, VOP3Features Features = VOP3_REGULAR> : VOP3_Profile_Base<P, Features> {

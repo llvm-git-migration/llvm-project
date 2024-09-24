@@ -630,8 +630,8 @@ let SubtargetPredicate = isGFX12Plus, ReadsModeReg = 0 in {
   defm V_MAXIMUM3_F16 : VOP3Inst_t16 <"v_maximum3_f16", VOP_F16_F16_F16_F16, AMDGPUfmaximum3>;
 } // End SubtargetPredicate = isGFX12Plus, ReadsModeReg = 0
 
-defm V_ADD_I16 : VOP3Inst <"v_add_i16", VOP3_Profile<VOP_I16_I16_I16, VOP3_OPSEL>>;
-defm V_SUB_I16 : VOP3Inst <"v_sub_i16", VOP3_Profile<VOP_I16_I16_I16, VOP3_OPSEL>>;
+defm V_ADD_I16 : VOP3Inst_t16 <"v_add_i16", VOP_I16_I16_I16>;
+defm V_SUB_I16 : VOP3Inst_t16 <"v_sub_i16", VOP_I16_I16_I16>;
 
 defm V_MAD_U32_U16 : VOP3Inst <"v_mad_u32_u16", VOP3_Profile<VOP_I32_I16_I16_I32, VOP3_OPSEL>>;
 defm V_MAD_I32_I16 : VOP3Inst <"v_mad_i32_i16", VOP3_Profile<VOP_I32_I16_I16_I32, VOP3_OPSEL>>;
@@ -746,6 +746,8 @@ def : GCNPat<(DivergentBinFrag<or> (or_oneuse i64:$src0, i64:$src1), i64:$src2),
                               (i32 (EXTRACT_SUBREG $src1, sub1)),
                               (i32 (EXTRACT_SUBREG $src2, sub1))), sub1)>;
 
+} // End SubtargetPredicate = isGFX9Plus
+
 // FIXME: Probably should hardcode clamp bit in pseudo and avoid this.
 class OpSelBinOpClampPat<SDPatternOperator node,
                          Instruction inst> : GCNPat<
@@ -754,9 +756,14 @@ class OpSelBinOpClampPat<SDPatternOperator node,
   (inst $src0_modifiers, $src0, $src1_modifiers, $src1, DSTCLAMP.ENABLE, 0)
 >;
 
-def : OpSelBinOpClampPat<saddsat, V_ADD_I16_e64>;
-def : OpSelBinOpClampPat<ssubsat, V_SUB_I16_e64>;
-} // End SubtargetPredicate = isGFX9Plus
+let OtherPredicates = [isGFX9Plus], True16Predicate = NotHasTrue16BitInsts in {
+  def : OpSelBinOpClampPat<saddsat, V_ADD_I16_e64>;
+  def : OpSelBinOpClampPat<ssubsat, V_SUB_I16_e64>;
+} // End OtherPredicates = [isGFX9Plus], True16Predicate = NotHasTrue16BitInsts
+let True16Predicate = UseFakeTrue16Insts in {
+  def : OpSelBinOpClampPat<saddsat, V_ADD_I16_fake16_e64>;
+  def : OpSelBinOpClampPat<ssubsat, V_SUB_I16_fake16_e64>;
+} // End True16Predicate = UseFakeTrue16Insts
 
 multiclass IMAD32_Pats <VOP3_Pseudo inst> {
   def : GCNPat <
@@ -865,20 +872,30 @@ let SubtargetPredicate = isGFX10Plus in {
     def : PermlanePat<int_amdgcn_permlanex16, V_PERMLANEX16_B32_e64, vt>;
   }
 
-  defm V_ADD_NC_U16 : VOP3Inst <"v_add_nc_u16", VOP3_Profile<VOP_I16_I16_I16, VOP3_OPSEL>, add>;
-  defm V_SUB_NC_U16 : VOP3Inst <"v_sub_nc_u16", VOP3_Profile<VOP_I16_I16_I16, VOP3_OPSEL>, sub>;
-
-  def : OpSelBinOpClampPat<uaddsat, V_ADD_NC_U16_e64>;
-  def : OpSelBinOpClampPat<usubsat, V_SUB_NC_U16_e64>;
-
-  // Undo sub x, c -> add x, -c canonicalization since c is more likely
-  // an inline immediate than -c.
-  def : GCNPat<
-    (add i16:$src0, (i16 NegSubInlineIntConst16:$src1)),
-    (V_SUB_NC_U16_e64 0, VSrc_b16:$src0, 0, NegSubInlineIntConst16:$src1, 0, 0)
-  >;
+  defm V_ADD_NC_U16 : VOP3Inst_t16 <"v_add_nc_u16", VOP_I16_I16_I16, add>;
+  defm V_SUB_NC_U16 : VOP3Inst_t16 <"v_sub_nc_u16", VOP_I16_I16_I16, sub>;
 
 } // End SubtargetPredicate = isGFX10Plus
+
+let True16Predicate = NotHasTrue16BitInsts, OtherPredicates = [isGFX10Plus] in {
+   def : OpSelBinOpClampPat<uaddsat, V_ADD_NC_U16_e64>;
+   def : OpSelBinOpClampPat<usubsat, V_SUB_NC_U16_e64>;
+   // Undo sub x, c -> add x, -c canonicalization since c is more likely
+   // an inline immediate than -c.
+   def : GCNPat<
+     (add i16:$src0, (i16 NegSubInlineIntConst16:$src1)),
+     (V_SUB_NC_U16_e64 0, VSrc_b16:$src0, 0, NegSubInlineIntConst16:$src1, 0, 0)
+   >;
+} // End True16Predicate = NotHasTrue16BitInsts, OtherPredicates = [isGFX10Plus]
+
+let True16Predicate = UseFakeTrue16Insts in {
+   def : OpSelBinOpClampPat<uaddsat, V_ADD_NC_U16_fake16_e64>;
+   def : OpSelBinOpClampPat<usubsat, V_SUB_NC_U16_fake16_e64>;
+   def : GCNPat<
+     (add i16:$src0, (i16 NegSubInlineIntConst16:$src1)),
+     (V_SUB_NC_U16_fake16_e64 0, VSrc_b16:$src0, 0, NegSubInlineIntConst16:$src1, 0, 0)
+   >;
+} // End True16Predicate = UseFakeTrue16Insts
 
 let SubtargetPredicate = isGFX12Plus in {
   let Constraints = "$vdst = $vdst_in", DisableEncoding="$vdst_in" in {
