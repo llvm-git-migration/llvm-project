@@ -554,6 +554,7 @@ define void @fabs_v8f16(ptr %x) {
 ; ZVFHMIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-RV64-LABEL: fabs_v8f16:
@@ -602,6 +603,7 @@ define void @fabs_v8f16(ptr %x) {
 ; ZVFHMIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-RV64-NEXT:    ret
   %a = load <8 x half>, ptr %x
   %b = call <8 x half> @llvm.fabs.v8f16(<8 x half> %a)
@@ -667,6 +669,7 @@ define void @fabs_v6f16(ptr %x) {
 ; ZVFHMIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-RV64-LABEL: fabs_v6f16:
@@ -717,6 +720,7 @@ define void @fabs_v6f16(ptr %x) {
 ; ZVFHMIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-RV64-NEXT:    ret
   %a = load <6 x half>, ptr %x
   %b = call <6 x half> @llvm.fabs.v6f16(<6 x half> %a)
@@ -828,6 +832,7 @@ define void @copysign_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_v8f16:
@@ -885,6 +890,7 @@ define void @copysign_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_v8f16:
@@ -969,6 +975,7 @@ define void @copysign_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_v8f16:
@@ -1053,6 +1060,7 @@ define void @copysign_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <8 x half>, ptr %x
   %b = load <8 x half>, ptr %y
@@ -1129,6 +1137,7 @@ define void @copysign_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_v6f16:
@@ -1188,6 +1197,7 @@ define void @copysign_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_v6f16:
@@ -1274,6 +1284,7 @@ define void @copysign_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_v6f16:
@@ -1360,6 +1371,7 @@ define void @copysign_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <6 x half>, ptr %x
   %b = load <6 x half>, ptr %y
@@ -1465,6 +1477,7 @@ define void @copysign_vf_v8f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_vf_v8f16:
@@ -1511,6 +1524,7 @@ define void @copysign_vf_v8f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_vf_v8f16:
@@ -1570,6 +1584,7 @@ define void @copysign_vf_v8f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_vf_v8f16:
@@ -1629,6 +1644,7 @@ define void @copysign_vf_v8f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <8 x half>, ptr %x
   %b = insertelement <8 x half> poison, half %y, i32 0
@@ -1693,6 +1709,7 @@ define void @copysign_vf_v6f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_vf_v6f16:
@@ -1741,6 +1758,7 @@ define void @copysign_vf_v6f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_vf_v6f16:
@@ -1804,6 +1822,7 @@ define void @copysign_vf_v6f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_vf_v6f16:
@@ -1867,6 +1886,7 @@ define void @copysign_vf_v6f16(ptr %x, half %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <6 x half>, ptr %x
   %b = insertelement <6 x half> poison, half %y, i32 0
@@ -1983,6 +2003,7 @@ define void @copysign_neg_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_neg_v8f16:
@@ -2042,6 +2063,7 @@ define void @copysign_neg_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_neg_v8f16:
@@ -2127,6 +2149,7 @@ define void @copysign_neg_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_neg_v8f16:
@@ -2212,6 +2235,7 @@ define void @copysign_neg_v8f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <8 x half>, ptr %x
   %b = load <8 x half>, ptr %y
@@ -2290,6 +2314,7 @@ define void @copysign_neg_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_neg_v6f16:
@@ -2351,6 +2376,7 @@ define void @copysign_neg_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_neg_v6f16:
@@ -2438,6 +2464,7 @@ define void @copysign_neg_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_neg_v6f16:
@@ -2525,6 +2552,7 @@ define void @copysign_neg_v6f16(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslidedown.vi v9, v8, 4, v0.t
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v9, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 32
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <6 x half>, ptr %x
   %b = load <6 x half>, ptr %y
@@ -2624,6 +2652,7 @@ define void @copysign_neg_trunc_v4f16_v4f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vslide1down.vx v8, v8, a1
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_neg_trunc_v4f16_v4f32:
@@ -2662,6 +2691,7 @@ define void @copysign_neg_trunc_v4f16_v4f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vslide1down.vx v8, v8, a1
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_neg_trunc_v4f16_v4f32:
@@ -2714,6 +2744,7 @@ define void @copysign_neg_trunc_v4f16_v4f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vslide1down.vx v8, v8, a1
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_neg_trunc_v4f16_v4f32:
@@ -2766,6 +2797,7 @@ define void @copysign_neg_trunc_v4f16_v4f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vslide1down.vx v8, v8, a1
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <4 x half>, ptr %x
   %b = load <4 x float>, ptr %y
@@ -2828,6 +2860,7 @@ define void @copysign_neg_trunc_v3f16_v3f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV32-NEXT:    vsetivli zero, 3, e16, mf4, ta, ma
 ; ZVFHMIN-ZFH-RV32-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFH-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFH-RV64-LABEL: copysign_neg_trunc_v3f16_v3f32:
@@ -2868,6 +2901,7 @@ define void @copysign_neg_trunc_v3f16_v3f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFH-RV64-NEXT:    vsetivli zero, 3, e16, mf4, ta, ma
 ; ZVFHMIN-ZFH-RV64-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFH-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFH-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFH-RV64-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV32-LABEL: copysign_neg_trunc_v3f16_v3f32:
@@ -2922,6 +2956,7 @@ define void @copysign_neg_trunc_v3f16_v3f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vsetivli zero, 3, e16, mf4, ta, ma
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV32-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV32-NEXT:    ret
 ;
 ; ZVFHMIN-ZFHIN-RV64-LABEL: copysign_neg_trunc_v3f16_v3f32:
@@ -2976,6 +3011,7 @@ define void @copysign_neg_trunc_v3f16_v3f32(ptr %x, ptr %y) {
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vsetivli zero, 3, e16, mf4, ta, ma
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    vse16.v v8, (a0)
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    addi sp, sp, 16
+; ZVFHMIN-ZFHIN-RV64-NEXT:    .cfi_def_cfa_offset 0
 ; ZVFHMIN-ZFHIN-RV64-NEXT:    ret
   %a = load <3 x half>, ptr %x
   %b = load <3 x float>, ptr %y
