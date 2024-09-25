@@ -3015,11 +3015,12 @@ bool ARMTargetLowering::IsEligibleForTailCallOptimization(
   // a return to the hardware. Tail-calling another function would probably
   // break this.
   if (CallerF.hasFnAttribute("interrupt")) {
-      LLVM_DEBUG(dbgs() << "false (interrupt attribute)\n");
+    LLVM_DEBUG(dbgs() << "false (interrupt attribute)\n");
     return false;
   }
 
-  if (canGuaranteeTCO(CalleeCC, getTargetMachine().Options.GuaranteedTailCallOpt)) {
+  if (canGuaranteeTCO(CalleeCC,
+                      getTargetMachine().Options.GuaranteedTailCallOpt)) {
     LLVM_DEBUG(dbgs() << (CalleeCC == CallerCC ? "true" : "false")
                       << " (guaranteed tail-call CC)\n");
     return CalleeCC == CallerCC;
@@ -3030,7 +3031,7 @@ bool ARMTargetLowering::IsEligibleForTailCallOptimization(
   bool isCalleeStructRet = Outs.empty() ? false : Outs[0].Flags.isSRet();
   bool isCallerStructRet = MF.getFunction().hasStructRetAttr();
   if (isCalleeStructRet != isCallerStructRet) {
-      LLVM_DEBUG(dbgs() << "false (struct-ret)\n");
+    LLVM_DEBUG(dbgs() << "false (struct-ret)\n");
     return false;
   }
 
@@ -3045,7 +3046,8 @@ bool ARMTargetLowering::IsEligibleForTailCallOptimization(
     const GlobalValue *GV = G->getGlobal();
     const Triple &TT = getTargetMachine().getTargetTriple();
     if (GV->hasExternalWeakLinkage() &&
-        (!TT.isOSWindows() || TT.isOSBinFormatELF() || TT.isOSBinFormatMachO())) {
+        (!TT.isOSWindows() || TT.isOSBinFormatELF() ||
+         TT.isOSBinFormatMachO())) {
       LLVM_DEBUG(dbgs() << "false (external weak linkage)\n");
       return false;
     }
