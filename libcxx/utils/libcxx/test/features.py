@@ -747,11 +747,19 @@ DEFAULT_FEATURES += [
             cfg.available_features,
         ),
     ),
+    # Tests that require std::to_chars(floating-point) in the built library
+    Feature(
+        name="availability-fp_to_chars-missing",
+        when=lambda cfg: BooleanExpression.evaluate(
+            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-14)",
+            cfg.available_features,
+        ),
+    ),
     # Tests that require __libcpp_verbose_abort support in the built library
     Feature(
         name="availability-verbose_abort-missing",
         when=lambda cfg: BooleanExpression.evaluate(
-            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-13)",
+            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-15)",
             cfg.available_features,
         ),
     ),
@@ -759,15 +767,7 @@ DEFAULT_FEATURES += [
     Feature(
         name="availability-pmr-missing",
         when=lambda cfg: BooleanExpression.evaluate(
-            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-13)",
-            cfg.available_features,
-        ),
-    ),
-    # Tests that require std::to_chars(floating-point) in the built library
-    Feature(
-        name="availability-fp_to_chars-missing",
-        when=lambda cfg: BooleanExpression.evaluate(
-            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-14)",
+            "!libcpp-has-no-availability-markup && (stdlib=apple-libc++ && !_target-has-llvm-16)",
             cfg.available_features,
         ),
     ),
