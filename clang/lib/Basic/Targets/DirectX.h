@@ -65,8 +65,8 @@ public:
     TheCXXABI.set(TargetCXXABI::Microsoft);
   }
   bool useFP16ConversionIntrinsics() const override { return false; }
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasFeature(StringRef Feature) const override {
     return Feature == "directx";

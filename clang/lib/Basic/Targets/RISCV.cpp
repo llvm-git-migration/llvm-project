@@ -130,7 +130,8 @@ static unsigned getVersionValue(unsigned MajorVersion, unsigned MinorVersion) {
 }
 
 void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__riscv");
   bool Is64Bit = getTriple().isRISCV64();
   Builder.defineMacro("__riscv_xlen", Is64Bit ? "64" : "32");

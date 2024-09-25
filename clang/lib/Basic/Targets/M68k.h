@@ -42,8 +42,8 @@ class LLVM_LIBRARY_VISIBILITY M68kTargetInfo : public TargetInfo {
 public:
   M68kTargetInfo(const llvm::Triple &Triple, const TargetOptions &);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
   bool hasFeature(StringRef Feature) const override;
   ArrayRef<const char *> getGCCRegNames() const override;

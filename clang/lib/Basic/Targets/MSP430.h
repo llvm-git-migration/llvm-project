@@ -47,8 +47,8 @@ public:
     SigAtomicType = SignedLong;
     resetDataLayout("e-m:e-p:16:16-i32:16-i64:16-f32:16-f64:16-a:8-n8:16-S16");
   }
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override {
     // FIXME: Implement.

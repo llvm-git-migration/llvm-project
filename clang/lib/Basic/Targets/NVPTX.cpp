@@ -170,7 +170,8 @@ bool NVPTXTargetInfo::hasFeature(StringRef Feature) const {
 }
 
 void NVPTXTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__PTX__");
   Builder.defineMacro("__NVPTX__");
 

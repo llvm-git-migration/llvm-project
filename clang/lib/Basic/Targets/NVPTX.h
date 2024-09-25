@@ -70,8 +70,8 @@ public:
   NVPTXTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts,
                   unsigned TargetPointerWidth);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 

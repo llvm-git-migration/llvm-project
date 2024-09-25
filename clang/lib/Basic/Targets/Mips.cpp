@@ -69,7 +69,8 @@ unsigned MipsTargetInfo::getISARev() const {
 }
 
 void MipsTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                      MacroBuilder &Builder) const {
+                                      MacroBuilder &Builder,
+                                      DiagnosticsEngine &Diags) const {
   if (BigEndian) {
     DefineStd(Builder, "MIPSEB", Opts);
     Builder.defineMacro("_MIPSEB");

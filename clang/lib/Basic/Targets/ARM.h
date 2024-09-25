@@ -193,8 +193,8 @@ public:
                                MacroBuilder &Builder) const;
   void getTargetDefinesARMV83A(const LangOptions &Opts,
                                  MacroBuilder &Builder) const;
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 
@@ -234,15 +234,15 @@ public:
 class LLVM_LIBRARY_VISIBILITY ARMleTargetInfo : public ARMTargetInfo {
 public:
   ARMleTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY ARMbeTargetInfo : public ARMTargetInfo {
 public:
   ARMbeTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY WindowsARMTargetInfo
@@ -267,8 +267,8 @@ public:
   ItaniumWindowsARMleTargetInfo(const llvm::Triple &Triple,
                                 const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 // Windows ARM, MS (C++) ABI
@@ -278,8 +278,8 @@ public:
   MicrosoftARMleTargetInfo(const llvm::Triple &Triple,
                            const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 // ARM MinGW target
@@ -287,8 +287,8 @@ class LLVM_LIBRARY_VISIBILITY MinGWARMTargetInfo : public WindowsARMTargetInfo {
 public:
   MinGWARMTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 // ARM Cygwin target
@@ -296,8 +296,8 @@ class LLVM_LIBRARY_VISIBILITY CygwinARMTargetInfo : public ARMleTargetInfo {
 public:
   CygwinARMTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY DarwinARMTargetInfo
@@ -317,8 +317,8 @@ public:
   RenderScript32TargetInfo(const llvm::Triple &Triple,
                            const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 } // namespace targets

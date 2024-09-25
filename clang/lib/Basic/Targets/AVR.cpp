@@ -446,7 +446,8 @@ AVRTargetInfo::handleAsmEscapedChar(char EscChar) const {
 }
 
 void AVRTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
   Builder.defineMacro("AVR");
   Builder.defineMacro("__AVR");
   Builder.defineMacro("__AVR__");

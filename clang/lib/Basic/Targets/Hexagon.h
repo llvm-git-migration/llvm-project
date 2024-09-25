@@ -88,8 +88,8 @@ public:
     return false;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool isCLZForZeroUndef() const override { return false; }
 

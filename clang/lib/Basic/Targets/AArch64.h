@@ -148,8 +148,8 @@ public:
                                MacroBuilder &Builder) const;
   void getTargetDefinesARMV95A(const LangOptions &Opts,
                                MacroBuilder &Builder) const;
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 
@@ -211,8 +211,9 @@ class LLVM_LIBRARY_VISIBILITY AArch64leTargetInfo : public AArch64TargetInfo {
 public:
   AArch64leTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                            MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
+
 private:
   void setDataLayout() override;
 };
@@ -239,8 +240,8 @@ public:
   MicrosoftARM64TargetInfo(const llvm::Triple &Triple,
                            const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
   TargetInfo::CallingConvKind
   getCallingConvKind(bool ClangABICompat4) const override;
 
@@ -258,8 +259,8 @@ public:
 class LLVM_LIBRARY_VISIBILITY AArch64beTargetInfo : public AArch64TargetInfo {
 public:
   AArch64beTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts);
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
 private:
   void setDataLayout() override;
@@ -284,8 +285,8 @@ public:
   RenderScript64TargetInfo(const llvm::Triple &Triple,
                            const TargetOptions &Opts);
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 } // namespace targets

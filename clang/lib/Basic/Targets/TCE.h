@@ -90,8 +90,8 @@ public:
     UseAddrSpaceMapMangling = true;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasFeature(StringRef Feature) const override { return Feature == "tce"; }
 
@@ -132,8 +132,8 @@ public:
                     "v1024:32:32-a0:0:32-n32");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 } // namespace targets
 } // namespace clang

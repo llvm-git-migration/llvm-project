@@ -1004,9 +1004,8 @@ public:
 
   /// Appends the target-specific \#define values for this
   /// target set to the specified buffer.
-  virtual void getTargetDefines(const LangOptions &Opts,
-                                MacroBuilder &Builder) const = 0;
-
+  virtual void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                                DiagnosticsEngine &Diags) const = 0;
 
   /// Return information about target-specific builtins for
   /// the current primary target, and info about which builtins are non-portable

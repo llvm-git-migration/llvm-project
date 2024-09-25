@@ -130,7 +130,8 @@ void SparcTargetInfo::fillValidCPUList(
 }
 
 void SparcTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "sparc", Opts);
   Builder.defineMacro("__REGISTER_PREFIX__", "");
 
@@ -139,8 +140,9 @@ void SparcTargetInfo::getTargetDefines(const LangOptions &Opts,
 }
 
 void SparcV8TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
-  SparcTargetInfo::getTargetDefines(Opts, Builder);
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
+  SparcTargetInfo::getTargetDefines(Opts, Builder, Diags);
   if (getTriple().isOSSolaris())
     Builder.defineMacro("__sparcv8");
   else {
@@ -163,8 +165,9 @@ void SparcV8TargetInfo::getTargetDefines(const LangOptions &Opts,
 }
 
 void SparcV9TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
-  SparcTargetInfo::getTargetDefines(Opts, Builder);
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
+  SparcTargetInfo::getTargetDefines(Opts, Builder, Diags);
   Builder.defineMacro("__sparcv9");
   Builder.defineMacro("__arch64__");
   // Solaris doesn't need these variants, but the BSDs do.

@@ -19,41 +19,48 @@ using namespace clang;
 using namespace clang::targets;
 
 void SPIRTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                      MacroBuilder &Builder) const {
+                                      MacroBuilder &Builder,
+                                      DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "SPIR", Opts);
 }
 
 void SPIR32TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                        MacroBuilder &Builder) const {
-  SPIRTargetInfo::getTargetDefines(Opts, Builder);
+                                        MacroBuilder &Builder,
+                                        DiagnosticsEngine &Diags) const {
+  SPIRTargetInfo::getTargetDefines(Opts, Builder, Diags);
   DefineStd(Builder, "SPIR32", Opts);
 }
 
 void SPIR64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                        MacroBuilder &Builder) const {
-  SPIRTargetInfo::getTargetDefines(Opts, Builder);
+                                        MacroBuilder &Builder,
+                                        DiagnosticsEngine &Diags) const {
+  SPIRTargetInfo::getTargetDefines(Opts, Builder, Diags);
   DefineStd(Builder, "SPIR64", Opts);
 }
 
 void BaseSPIRVTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                           MacroBuilder &Builder) const {
+                                           MacroBuilder &Builder,
+                                           DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "SPIRV", Opts);
 }
 
 void SPIRVTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
-  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder);
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
+  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
 
 void SPIRV32TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
-  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder);
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
+  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder, Diags);
   DefineStd(Builder, "SPIRV32", Opts);
 }
 
 void SPIRV64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
-  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder);
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
+  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder, Diags);
   DefineStd(Builder, "SPIRV64", Opts);
 }
 
@@ -86,8 +93,9 @@ ArrayRef<Builtin::Info> SPIRV64AMDGCNTargetInfo::getTargetBuiltins() const {
 }
 
 void SPIRV64AMDGCNTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                               MacroBuilder &Builder) const {
-  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder);
+                                               MacroBuilder &Builder,
+                                               DiagnosticsEngine &Diags) const {
+  BaseSPIRVTargetInfo::getTargetDefines(Opts, Builder, Diags);
   DefineStd(Builder, "SPIRV64", Opts);
 
   Builder.defineMacro("__AMD__");

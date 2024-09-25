@@ -43,8 +43,8 @@ public:
       SoftFloat = true;
     return true;
   }
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasFeature(StringRef Feature) const override;
 
@@ -177,8 +177,8 @@ public:
       MaxAtomicInlineWidth = 32;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasBitIntType() const override { return true; }
 };
@@ -218,8 +218,8 @@ public:
     MaxAtomicPromoteWidth = MaxAtomicInlineWidth = 64;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool isValidCPUName(StringRef Name) const override {
     return getCPUGeneration(SparcTargetInfo::getCPUKind(Name)) == CG_V9;

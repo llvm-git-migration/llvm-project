@@ -26,7 +26,8 @@ static constexpr Builtin::Info BuiltinInfo[] = {
 };
 
 void BPFTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__bpf__");
   Builder.defineMacro("__BPF__");
 

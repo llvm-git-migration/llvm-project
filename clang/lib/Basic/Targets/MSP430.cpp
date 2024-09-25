@@ -26,7 +26,8 @@ ArrayRef<const char *> MSP430TargetInfo::getGCCRegNames() const {
 }
 
 void MSP430TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                        MacroBuilder &Builder) const {
+                                        MacroBuilder &Builder,
+                                        DiagnosticsEngine &Diags) const {
   Builder.defineMacro("MSP430");
   Builder.defineMacro("__MSP430__");
   // FIXME: defines for different 'flavours' of MCU

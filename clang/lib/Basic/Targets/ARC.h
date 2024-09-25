@@ -37,8 +37,8 @@ public:
                     "i32:32:32-f32:32:32-i64:32-f64:32-a:0:32-n32");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override {
     return std::nullopt;

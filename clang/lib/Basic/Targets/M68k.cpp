@@ -75,7 +75,8 @@ bool M68kTargetInfo::setCPU(const std::string &Name) {
 }
 
 void M68kTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                      MacroBuilder &Builder) const {
+                                      MacroBuilder &Builder,
+                                      DiagnosticsEngine &Diags) const {
   using llvm::Twine;
 
   Builder.defineMacro("__m68k__");

@@ -522,7 +522,8 @@ bool X86TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
 /// X86TargetInfo::getTargetDefines - Return the set of the X86-specific macro
 /// definitions for this particular subtarget.
 void X86TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
   // Inline assembly supports X86 flag outputs.
   Builder.defineMacro("__GCC_ASM_FLAG_OUTPUTS__");
 

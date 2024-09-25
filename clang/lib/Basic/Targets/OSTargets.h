@@ -27,9 +27,9 @@ public:
   OSTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : TgtInfo(Triple, Opts) {}
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    TgtInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    TgtInfo::getTargetDefines(Opts, Builder, Diags);
     getOSDefines(Opts, TgtInfo::getTriple(), Builder);
   }
 };

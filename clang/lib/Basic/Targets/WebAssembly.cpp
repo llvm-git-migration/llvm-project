@@ -72,7 +72,8 @@ void WebAssemblyTargetInfo::fillValidCPUList(
 }
 
 void WebAssemblyTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                             MacroBuilder &Builder) const {
+                                             MacroBuilder &Builder,
+                                             DiagnosticsEngine &Diags) const {
   defineCPUMacros(Builder, "wasm", /*Tuning=*/false);
   if (HasAtomics)
     Builder.defineMacro("__wasm_atomics__");
@@ -320,13 +321,15 @@ void WebAssemblyTargetInfo::adjust(DiagnosticsEngine &Diags,
 }
 
 void WebAssembly32TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                               MacroBuilder &Builder) const {
-  WebAssemblyTargetInfo::getTargetDefines(Opts, Builder);
+                                               MacroBuilder &Builder,
+                                               DiagnosticsEngine &Diags) const {
+  WebAssemblyTargetInfo::getTargetDefines(Opts, Builder, Diags);
   defineCPUMacros(Builder, "wasm32", /*Tuning=*/false);
 }
 
 void WebAssembly64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                               MacroBuilder &Builder) const {
-  WebAssemblyTargetInfo::getTargetDefines(Opts, Builder);
+                                               MacroBuilder &Builder,
+                                               DiagnosticsEngine &Diags) const {
+  WebAssemblyTargetInfo::getTargetDefines(Opts, Builder, Diags);
   defineCPUMacros(Builder, "wasm64", /*Tuning=*/false);
 }

@@ -25,7 +25,8 @@ static constexpr Builtin::Info BuiltinInfo[] = {
 };
 
 void VETargetInfo::getTargetDefines(const LangOptions &Opts,
-                                    MacroBuilder &Builder) const {
+                                    MacroBuilder &Builder,
+                                    DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__ve", "1");
   Builder.defineMacro("__ve__", "1");
   Builder.defineMacro("__NEC__", "1");

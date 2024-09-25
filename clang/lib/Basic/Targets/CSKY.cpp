@@ -32,7 +32,8 @@ bool CSKYTargetInfo::setCPU(const std::string &Name) {
 }
 
 void CSKYTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                      MacroBuilder &Builder) const {
+                                      MacroBuilder &Builder,
+                                      DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__csky__", "2");
   Builder.defineMacro("__CSKY__", "2");
   Builder.defineMacro("__ckcore__", "2");

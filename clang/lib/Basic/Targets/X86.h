@@ -319,8 +319,8 @@ public:
     return false;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   void setFeatureEnabled(llvm::StringMap<bool> &Features, StringRef Name,
                          bool Enabled) const final;
@@ -587,9 +587,9 @@ public:
     LongDoubleFormat = &llvm::APFloat::IEEEdouble();
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    WindowsX86_32TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    WindowsX86_32TargetInfo::getTargetDefines(Opts, Builder, Diags);
     // The value of the following reflects processor type.
     // 300=386, 400=486, 500=Pentium, 600=Blend (default)
     // We lost the original triple, so we use the default.
@@ -606,9 +606,9 @@ public:
     HasFloat128 = true;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    WindowsX86_32TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    WindowsX86_32TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("_X86_");
   }
 };
@@ -625,9 +625,9 @@ public:
                     "_");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    X86_32TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    X86_32TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("_X86_");
     Builder.defineMacro("__CYGWIN__");
     Builder.defineMacro("__CYGWIN32__");
@@ -645,9 +645,9 @@ public:
   HaikuX86_32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : HaikuTargetInfo<X86_32TargetInfo>(Triple, Opts) {}
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    HaikuTargetInfo<X86_32TargetInfo>::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    HaikuTargetInfo<X86_32TargetInfo>::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("__INTEL__");
   }
 };
@@ -670,9 +670,9 @@ public:
     return CC == CC_C ? CCCR_OK : CCCR_Warning;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    X86_32TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    X86_32TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("__iamcu");
     Builder.defineMacro("__iamcu__");
   }
@@ -690,9 +690,9 @@ public:
     PtrDiffType = SignedLong;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    X86_32TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    X86_32TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("__INTEL__");
     Builder.defineMacro("__rtems__");
   }
@@ -823,8 +823,8 @@ public:
                           "i64:64-i128:128-f80:128-n8:16:32:64-S128");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
     getOSDefines(Opts, X86TargetInfo::getTriple(), Builder);
   }
 
@@ -902,9 +902,9 @@ public:
     LongDoubleFormat = &llvm::APFloat::IEEEdouble();
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    WindowsX86_64TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    WindowsX86_64TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("_M_X64", "100");
     Builder.defineMacro("_M_AMD64", "100");
   }
@@ -938,9 +938,9 @@ public:
     TLSSupported = false;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
-    X86_64TargetInfo::getTargetDefines(Opts, Builder);
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
+    X86_64TargetInfo::getTargetDefines(Opts, Builder, Diags);
     Builder.defineMacro("__x86_64__");
     Builder.defineMacro("__CYGWIN__");
     Builder.defineMacro("__CYGWIN64__");

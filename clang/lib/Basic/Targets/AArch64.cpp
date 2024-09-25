@@ -374,7 +374,8 @@ void AArch64TargetInfo::getTargetDefinesARMV95A(const LangOptions &Opts,
 }
 
 void AArch64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
   // Target identification.
   if (getTriple().isWindowsArm64EC()) {
     // Define the same set of macros as would be defined on x86_64 to ensure that
@@ -1530,9 +1531,10 @@ void AArch64leTargetInfo::setDataLayout() {
 }
 
 void AArch64leTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                           MacroBuilder &Builder) const {
+                                           MacroBuilder &Builder,
+                                           DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__AARCH64EL__");
-  AArch64TargetInfo::getTargetDefines(Opts, Builder);
+  AArch64TargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
 
 AArch64beTargetInfo::AArch64beTargetInfo(const llvm::Triple &Triple,
@@ -1540,11 +1542,12 @@ AArch64beTargetInfo::AArch64beTargetInfo(const llvm::Triple &Triple,
     : AArch64TargetInfo(Triple, Opts) {}
 
 void AArch64beTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                           MacroBuilder &Builder) const {
+                                           MacroBuilder &Builder,
+                                           DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__AARCH64EB__");
   Builder.defineMacro("__AARCH_BIG_ENDIAN");
   Builder.defineMacro("__ARM_BIG_ENDIAN");
-  AArch64TargetInfo::getTargetDefines(Opts, Builder);
+  AArch64TargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
 
 void AArch64beTargetInfo::setDataLayout() {
@@ -1613,9 +1616,10 @@ MicrosoftARM64TargetInfo::MicrosoftARM64TargetInfo(const llvm::Triple &Triple,
   TheCXXABI.set(TargetCXXABI::Microsoft);
 }
 
-void MicrosoftARM64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                                MacroBuilder &Builder) const {
-  WindowsARM64TargetInfo::getTargetDefines(Opts, Builder);
+void MicrosoftARM64TargetInfo::getTargetDefines(
+    const LangOptions &Opts, MacroBuilder &Builder,
+    DiagnosticsEngine &Diags) const {
+  WindowsARM64TargetInfo::getTargetDefines(Opts, Builder, Diags);
   if (getTriple().isWindowsArm64EC()) {
     Builder.defineMacro("_M_X64", "100");
     Builder.defineMacro("_M_AMD64", "100");
@@ -1713,8 +1717,9 @@ RenderScript64TargetInfo::RenderScript64TargetInfo(const llvm::Triple &Triple,
   IsRenderScriptTarget = true;
 }
 
-void RenderScript64TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                                MacroBuilder &Builder) const {
+void RenderScript64TargetInfo::getTargetDefines(
+    const LangOptions &Opts, MacroBuilder &Builder,
+    DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__RENDERSCRIPT__");
-  AArch64leTargetInfo::getTargetDefines(Opts, Builder);
+  AArch64leTargetInfo::getTargetDefines(Opts, Builder, Diags);
 }

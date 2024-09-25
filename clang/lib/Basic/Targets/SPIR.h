@@ -239,8 +239,8 @@ public:
            "SPIR target must use unknown environment type");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasFeature(StringRef Feature) const override {
     return Feature == "spir";
@@ -262,8 +262,8 @@ public:
                     "v96:128-v192:256-v256:256-v512:512-v1024:1024-G1");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY SPIR64TargetInfo : public SPIRTargetInfo {
@@ -279,8 +279,8 @@ public:
                     "v96:128-v192:256-v256:256-v512:512-v1024:1024-G1");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY BaseSPIRVTargetInfo : public BaseSPIRTargetInfo {
@@ -294,8 +294,8 @@ public:
     return Feature == "spirv";
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY SPIRVTargetInfo : public BaseSPIRVTargetInfo {
@@ -318,8 +318,8 @@ public:
                     "v96:128-v192:256-v256:256-v512:512-v1024:1024-G1");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY SPIRV32TargetInfo : public BaseSPIRVTargetInfo {
@@ -339,8 +339,8 @@ public:
                     "v96:128-v192:256-v256:256-v512:512-v1024:1024-G1");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY SPIRV64TargetInfo : public BaseSPIRVTargetInfo {
@@ -360,8 +360,8 @@ public:
                     "v96:128-v192:256-v256:256-v512:512-v1024:1024-G1");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY SPIRV64AMDGCNTargetInfo final
@@ -407,8 +407,8 @@ public:
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   void setAuxTarget(const TargetInfo *Aux) override;
 

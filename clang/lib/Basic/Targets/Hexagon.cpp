@@ -20,7 +20,8 @@ using namespace clang;
 using namespace clang::targets;
 
 void HexagonTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__qdsp6__", "1");
   Builder.defineMacro("__hexagon__", "1");
 

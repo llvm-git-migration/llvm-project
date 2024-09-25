@@ -27,7 +27,8 @@ static constexpr Builtin::Info BuiltinInfo[] = {
 };
 
 void XCoreTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__xcore__");
   Builder.defineMacro("__XS1B__");
 }

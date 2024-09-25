@@ -50,8 +50,8 @@ public:
         "v1024:64:64-v2048:64:64-v4096:64:64-v8192:64:64-v16384:64:64");
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasSjLjLowering() const override { return true; }
 

@@ -43,8 +43,8 @@ public:
 
   void getArchDefines(const LangOptions &Opts, MacroBuilder &Builder) const;
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override {
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override {
     getArchDefines(Opts, Builder);
   }
 

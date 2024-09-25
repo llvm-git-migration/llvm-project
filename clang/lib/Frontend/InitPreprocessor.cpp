@@ -852,7 +852,8 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
                                        const LangOptions &LangOpts,
                                        const FrontendOptions &FEOpts,
                                        const PreprocessorOptions &PPOpts,
-                                       MacroBuilder &Builder) {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) {
   // Compiler version introspection macros.
   Builder.defineMacro("__llvm__");  // LLVM Backend
   Builder.defineMacro("__clang__"); // Clang Frontend
@@ -1509,7 +1510,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   }
 
   // Get other target #defines.
-  TI.getTargetDefines(LangOpts, Builder);
+  TI.getTargetDefines(LangOpts, Builder, Diags);
 }
 
 static void InitializePGOProfileMacros(const CodeGenOptions &CodeGenOpts,
@@ -1547,10 +1548,12 @@ void clang::InitializePreprocessor(Preprocessor &PP,
          LangOpts.SYCLIsDevice) &&
         PP.getAuxTargetInfo())
       InitializePredefinedMacros(*PP.getAuxTargetInfo(), LangOpts, FEOpts,
-                                 PP.getPreprocessorOpts(), Builder);
+                                 PP.getPreprocessorOpts(), Builder,
+                                 PP.getDiagnostics());
 
     InitializePredefinedMacros(PP.getTargetInfo(), LangOpts, FEOpts,
-                               PP.getPreprocessorOpts(), Builder);
+                               PP.getPreprocessorOpts(), Builder,
+                               PP.getDiagnostics());
 
     // Install definitions to make Objective-C++ ARC work well with various
     // C++ Standard Library implementations.

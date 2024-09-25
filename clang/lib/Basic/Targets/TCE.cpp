@@ -18,14 +18,16 @@ using namespace clang;
 using namespace clang::targets;
 
 void TCETargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "tce", Opts);
   Builder.defineMacro("__TCE__");
   Builder.defineMacro("__TCE_V1__");
 }
 
 void TCELETargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "tcele", Opts);
   Builder.defineMacro("__TCE__");
   Builder.defineMacro("__TCE_V1__");

@@ -55,7 +55,8 @@ bool LanaiTargetInfo::hasFeature(StringRef Feature) const {
 }
 
 void LanaiTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   // Define __lanai__ when building for target lanai.
   Builder.defineMacro("__lanai__");
 

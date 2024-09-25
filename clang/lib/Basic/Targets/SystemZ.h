@@ -96,8 +96,8 @@ public:
 
   unsigned getMinGlobalAlign(uint64_t Size, bool HasNonWeakDef) const override;
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
 

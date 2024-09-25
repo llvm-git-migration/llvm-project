@@ -184,7 +184,8 @@ LoongArchTargetInfo::convertConstraint(const char *&Constraint) const {
 }
 
 void LoongArchTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                           MacroBuilder &Builder) const {
+                                           MacroBuilder &Builder,
+                                           DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__loongarch__");
   unsigned GRLen = getRegisterWidth();
   Builder.defineMacro("__loongarch_grlen", Twine(GRLen));

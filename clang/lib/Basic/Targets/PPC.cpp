@@ -288,7 +288,8 @@ static void defineXLCompatMacros(MacroBuilder &Builder) {
 /// PPCTargetInfo::getTargetDefines - Return a set of the PowerPC-specific
 /// #defines that are not tied to a specific subtarget.
 void PPCTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
 
   // We define the XLC compatibility macros only on AIX and Linux since XLC
   // was never available on any other platforms.

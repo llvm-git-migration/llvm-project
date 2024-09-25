@@ -44,8 +44,8 @@ public:
     TLSSupported = false;
   }
 
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
   bool hasFeature(StringRef Feature) const override {
     return Feature == "bpf" || Feature == "alu32" || Feature == "dwarfris";

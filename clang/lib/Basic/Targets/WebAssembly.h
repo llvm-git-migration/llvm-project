@@ -93,8 +93,8 @@ public:
   bool useFP16ConversionIntrinsics() const override { return !HasFP16; }
 
 protected:
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 
 private:
   static void setSIMDLevel(llvm::StringMap<bool> &Features, SIMDEnum Level,
@@ -187,8 +187,8 @@ public:
   }
 
 protected:
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 
 class LLVM_LIBRARY_VISIBILITY WebAssembly64TargetInfo
@@ -211,8 +211,8 @@ public:
   }
 
 protected:
-  void getTargetDefines(const LangOptions &Opts,
-                        MacroBuilder &Builder) const override;
+  void getTargetDefines(const LangOptions &Opts, MacroBuilder &Builder,
+                        DiagnosticsEngine &Diags) const override;
 };
 } // namespace targets
 } // namespace clang

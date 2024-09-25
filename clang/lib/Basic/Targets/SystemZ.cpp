@@ -149,7 +149,8 @@ unsigned SystemZTargetInfo::getMinGlobalAlign(uint64_t Size,
 }
 
 void SystemZTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__s390__");
   Builder.defineMacro("__s390x__");
   Builder.defineMacro("__zarch__");

@@ -17,6 +17,7 @@ using namespace clang;
 using namespace clang::targets;
 
 void DirectXTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                         MacroBuilder &Builder) const {
+                                         MacroBuilder &Builder,
+                                         DiagnosticsEngine &Diags) const {
   DefineStd(Builder, "DIRECTX", Opts);
 }

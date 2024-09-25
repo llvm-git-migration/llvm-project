@@ -712,7 +712,8 @@ void ARMTargetInfo::getTargetDefinesARMV83A(const LangOptions &Opts,
 }
 
 void ARMTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                     MacroBuilder &Builder) const {
+                                     MacroBuilder &Builder,
+                                     DiagnosticsEngine &Diags) const {
   // Target identification.
   Builder.defineMacro("__arm");
   Builder.defineMacro("__arm__");
@@ -1349,9 +1350,10 @@ ARMleTargetInfo::ARMleTargetInfo(const llvm::Triple &Triple,
     : ARMTargetInfo(Triple, Opts) {}
 
 void ARMleTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__ARMEL__");
-  ARMTargetInfo::getTargetDefines(Opts, Builder);
+  ARMTargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
 
 ARMbeTargetInfo::ARMbeTargetInfo(const llvm::Triple &Triple,
@@ -1359,10 +1361,11 @@ ARMbeTargetInfo::ARMbeTargetInfo(const llvm::Triple &Triple,
     : ARMTargetInfo(Triple, Opts) {}
 
 void ARMbeTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                       MacroBuilder &Builder) const {
+                                       MacroBuilder &Builder,
+                                       DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__ARMEB__");
   Builder.defineMacro("__ARM_BIG_ENDIAN");
-  ARMTargetInfo::getTargetDefines(Opts, Builder);
+  ARMTargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
 
 WindowsARMTargetInfo::WindowsARMTargetInfo(const llvm::Triple &Triple,
@@ -1421,8 +1424,9 @@ ItaniumWindowsARMleTargetInfo::ItaniumWindowsARMleTargetInfo(
 }
 
 void ItaniumWindowsARMleTargetInfo::getTargetDefines(
-    const LangOptions &Opts, MacroBuilder &Builder) const {
-  WindowsARMTargetInfo::getTargetDefines(Opts, Builder);
+    const LangOptions &Opts, MacroBuilder &Builder,
+    DiagnosticsEngine &Diags) const {
+  WindowsARMTargetInfo::getTargetDefines(Opts, Builder, Diags);
 
   if (Opts.MSVCCompat)
     WindowsARMTargetInfo::getVisualStudioDefines(Opts, Builder);
@@ -1435,9 +1439,10 @@ MicrosoftARMleTargetInfo::MicrosoftARMleTargetInfo(const llvm::Triple &Triple,
   TheCXXABI.set(TargetCXXABI::Microsoft);
 }
 
-void MicrosoftARMleTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                                MacroBuilder &Builder) const {
-  WindowsARMTargetInfo::getTargetDefines(Opts, Builder);
+void MicrosoftARMleTargetInfo::getTargetDefines(
+    const LangOptions &Opts, MacroBuilder &Builder,
+    DiagnosticsEngine &Diags) const {
+  WindowsARMTargetInfo::getTargetDefines(Opts, Builder, Diags);
   WindowsARMTargetInfo::getVisualStudioDefines(Opts, Builder);
 }
 
@@ -1448,8 +1453,9 @@ MinGWARMTargetInfo::MinGWARMTargetInfo(const llvm::Triple &Triple,
 }
 
 void MinGWARMTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                          MacroBuilder &Builder) const {
-  WindowsARMTargetInfo::getTargetDefines(Opts, Builder);
+                                          MacroBuilder &Builder,
+                                          DiagnosticsEngine &Diags) const {
+  WindowsARMTargetInfo::getTargetDefines(Opts, Builder, Diags);
   Builder.defineMacro("_ARM_");
 }
 
@@ -1463,8 +1469,9 @@ CygwinARMTargetInfo::CygwinARMTargetInfo(const llvm::Triple &Triple,
 }
 
 void CygwinARMTargetInfo::getTargetDefines(const LangOptions &Opts,
-                                           MacroBuilder &Builder) const {
-  ARMleTargetInfo::getTargetDefines(Opts, Builder);
+                                           MacroBuilder &Builder,
+                                           DiagnosticsEngine &Diags) const {
+  ARMleTargetInfo::getTargetDefines(Opts, Builder, Diags);
   Builder.defineMacro("_ARM_");
   Builder.defineMacro("__CYGWIN__");
   Builder.defineMacro("__CYGWIN32__");
@@ -1503,8 +1510,9 @@ RenderScript32TargetInfo::RenderScript32TargetInfo(const llvm::Triple &Triple,
   LongWidth = LongAlign = 64;
 }
 
-void RenderScript32TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                                MacroBuilder &Builder) const {
+void RenderScript32TargetInfo::getTargetDefines(
+    const LangOptions &Opts, MacroBuilder &Builder,
+    DiagnosticsEngine &Diags) const {
   Builder.defineMacro("__RENDERSCRIPT__");
-  ARMleTargetInfo::getTargetDefines(Opts, Builder);
+  ARMleTargetInfo::getTargetDefines(Opts, Builder, Diags);
 }
