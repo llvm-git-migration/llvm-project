@@ -20,6 +20,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/TargetSelect.h"
 
+#include "lldb/Version/Version.h"
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 #include "llvm/ExecutionEngine/MCJIT.h"
@@ -82,6 +84,9 @@ llvm::Error SystemInitializerFull::Initialize() {
 
   // Use the Debugger's LLDBAssert callback.
   SetLLDBAssertCallback(Debugger::AssertCallback);
+
+  // Log the LLDB version to the system log.
+  LLDB_LOG(GetLog(SystemLog::System), "{0}", GetVersion());
 
   return llvm::Error::success();
 }
