@@ -422,7 +422,8 @@ static std::optional<unsigned> getSmallBestKnownTC(ScalarEvolution &SE,
       return *EstimatedTC;
 
   // Check if upper bound estimate is known.
-  if (unsigned ExpectedTC = SE.getSmallConstantMaxTripCount(L))
+  SmallVector<const SCEVPredicate *, 2> Predicates;
+  if (unsigned ExpectedTC = SE.getSmallConstantMaxTripCount(L, &Predicates))
     return ExpectedTC;
 
   return std::nullopt;
@@ -2291,8 +2292,9 @@ static bool isIndvarOverflowCheckKnownFalse(
   // We know the runtime overflow check is known false iff the (max) trip-count
   // is known and (max) trip-count + (VF * UF) does not overflow in the type of
   // the vector loop induction variable.
-  if (unsigned TC =
-          Cost->PSE.getSE()->getSmallConstantMaxTripCount(Cost->TheLoop)) {
+  SmallVector<const SCEVPredicate *, 2> Predicates;
+  if (unsigned TC = Cost->PSE.getSE()->getSmallConstantMaxTripCount(
+          Cost->TheLoop, &Predicates)) {
     uint64_t MaxVF = VF.getKnownMinValue();
     if (VF.isScalable()) {
       std::optional<unsigned> MaxVScale =
@@ -3987,7 +3989,10 @@ LoopVectorizationCostModel::computeMaxVF(ElementCount UserVF, unsigned UserIC) {
   }
 
   unsigned TC = PSE.getSE()->getSmallConstantTripCount(TheLoop);
-  unsigned MaxTC = PSE.getSE()->getSmallConstantMaxTripCount(TheLoop);
+
+  SmallVector<const SCEVPredicate *, 2> Predicates;
+  unsigned MaxTC =
+      PSE.getSE()->getSmallConstantMaxTripCount(TheLoop, &Predicates);
   LLVM_DEBUG(dbgs() << "LV: Found trip count: " << TC << '\n');
   if (TC != MaxTC)
     LLVM_DEBUG(dbgs() << "LV: Found maximum trip count: " << MaxTC << '\n');
@@ -4278,7 +4283,9 @@ bool LoopVectorizationPlanner::isMoreProfitable(
   InstructionCost CostA = A.Cost;
   InstructionCost CostB = B.Cost;
 
-  unsigned MaxTripCount = PSE.getSE()->getSmallConstantMaxTripCount(OrigLoop);
+  SmallVector<const SCEVPredicate *, 2> Predicates;
+  unsigned MaxTripCount =
+      PSE.getSE()->getSmallConstantMaxTripCount(OrigLoop, &Predicates);
 
   // Improve estimate for the vector width if it is scalable.
   unsigned EstimatedWidthA = A.Width.getKnownMinValue();
