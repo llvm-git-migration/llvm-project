@@ -193,6 +193,7 @@ define <vscale x 1 x i64> @vp_splat_nxv1i64(i64 %val, <vscale x 1 x i1> %m, i32 
 ; RV32-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; RV32-NEXT:    vlse64.v v8, (a0), zero
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: vp_splat_nxv1i64:
@@ -215,6 +216,7 @@ define <vscale x 2 x i64> @vp_splat_nxv2i64(i64 %val, <vscale x 2 x i1> %m, i32 
 ; RV32-NEXT:    vsetvli a1, zero, e64, m2, ta, ma
 ; RV32-NEXT:    vlse64.v v8, (a0), zero
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: vp_splat_nxv2i64:
@@ -237,6 +239,7 @@ define <vscale x 4 x i64> @vp_splat_nxv4i64(i64 %val, <vscale x 4 x i1> %m, i32 
 ; RV32-NEXT:    vsetvli a1, zero, e64, m4, ta, ma
 ; RV32-NEXT:    vlse64.v v8, (a0), zero
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: vp_splat_nxv4i64:
@@ -259,6 +262,7 @@ define <vscale x 8 x i64> @vp_splat_nxv8i64(i64 %val, <vscale x 8 x i1> %m, i32 
 ; RV32-NEXT:    vsetvli a1, zero, e64, m8, ta, ma
 ; RV32-NEXT:    vlse64.v v8, (a0), zero
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: vp_splat_nxv8i64:
