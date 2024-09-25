@@ -579,13 +579,24 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   case ARM::fixup_arm_uncondbl:
   case ARM::fixup_arm_condbl:
   case ARM::fixup_arm_blx:
+    // Check that the fixup value is legal.
+    Value = Value - 8;
+    if (!isInt<25>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
+      return 0;
+    }
+    if (Value % 4 != 0) {
+      Ctx.reportError(Fixup.getLoc(), "Relocation not aligned");
+      return 0;
+    }
+
     // These values don't encode the low two bits since they're always zero.
     // Offset by 8 just as above.
     if (const MCSymbolRefExpr *SRE =
             dyn_cast<MCSymbolRefExpr>(Fixup.getValue()))
       if (SRE->getKind() == MCSymbolRefExpr::VK_TLSCALL)
         return 0;
-    return 0xffffff & ((Value - 8) >> 2);
+    return 0xffffff & (Value >> 2);
   case ARM::fixup_t2_uncondbranch: {
     if (STI->getTargetTriple().isOSBinFormatCOFF() && !IsResolved &&
         Value != 4) {
@@ -1126,7 +1137,7 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
     FullSizeBytes = getFixupKindContainerSizeBytes(Kind);
     assert((Offset + FullSizeBytes) <= Data.size() && "Invalid fixup size!");
     assert(NumBytes <= FullSizeBytes && "Invalid fixup size!");
-  } 
+  }
 
   // For each byte of the fragment that the fixup touches, mask in the bits from
   // the fixup value. The Value has been "split up" into the appropriate
@@ -1135,7 +1146,6 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
     unsigned Idx =
         Endian == llvm::endianness::little ? i : (FullSizeBytes - 1 - i);
     Data[Offset + Idx] |= uint8_t((Value >> (i * 8)) & 0xff);
-
   }
 }
 
