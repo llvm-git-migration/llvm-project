@@ -31,7 +31,9 @@ define i64 @i64(<vscale x 1 x i64> %v, i1 %c) {
 ; RV32-NEXT:    csrr a2, vlenb
 ; RV32-NEXT:    slli a2, a2, 1
 ; RV32-NEXT:    add sp, sp, a2
+; RV32-NEXT:    .cfi_def_cfa sp, 16
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: i64:
@@ -49,12 +51,17 @@ define i64 @i64(<vscale x 1 x i64> %v, i1 %c) {
 ; RV64-NEXT:    #NO_APP
 ; RV64-NEXT:    beqz a0, .LBB0_2
 ; RV64-NEXT:  # %bb.1: # %truebb
-; RV64-NEXT:    ld a0, 16(sp) # 8-byte Folded Reload
+; RV64-NEXT:    addi a0, sp, 16
+; RV64-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
+; RV64-NEXT:    vmv.x.s a0, v8
 ; RV64-NEXT:  .LBB0_2: # %falsebb
 ; RV64-NEXT:    csrr a1, vlenb
 ; RV64-NEXT:    slli a1, a1, 1
 ; RV64-NEXT:    add sp, sp, a1
+; RV64-NEXT:    .cfi_def_cfa sp, 16
 ; RV64-NEXT:    addi sp, sp, 16
+; RV64-NEXT:    .cfi_def_cfa_offset 0
 ; RV64-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
@@ -81,12 +88,17 @@ define i32 @i32(<vscale x 2 x i32> %v, i1 %c) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    beqz a0, .LBB1_2
 ; CHECK-NEXT:  # %bb.1: # %truebb
-; CHECK-NEXT:    lw a0, 16(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; CHECK-NEXT:    vsetivli zero, 1, e32, m1, ta, ma
+; CHECK-NEXT:    vmv.x.s a0, v8
 ; CHECK-NEXT:  .LBB1_2: # %falsebb
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    slli a1, a1, 1
 ; CHECK-NEXT:    add sp, sp, a1
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
 ; CHECK-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
@@ -113,12 +125,17 @@ define i16 @i16(<vscale x 4 x i16> %v, i1 %c) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    beqz a0, .LBB2_2
 ; CHECK-NEXT:  # %bb.1: # %truebb
-; CHECK-NEXT:    lh a0, 16(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; CHECK-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
+; CHECK-NEXT:    vmv.x.s a0, v8
 ; CHECK-NEXT:  .LBB2_2: # %falsebb
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    slli a1, a1, 1
 ; CHECK-NEXT:    add sp, sp, a1
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
 ; CHECK-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
@@ -145,12 +162,17 @@ define i8 @i8(<vscale x 8 x i8> %v, i1 %c) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    beqz a0, .LBB3_2
 ; CHECK-NEXT:  # %bb.1: # %truebb
-; CHECK-NEXT:    lb a0, 16(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; CHECK-NEXT:    vsetivli zero, 1, e8, m1, ta, ma
+; CHECK-NEXT:    vmv.x.s a0, v8
 ; CHECK-NEXT:  .LBB3_2: # %falsebb
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    slli a1, a1, 1
 ; CHECK-NEXT:    add sp, sp, a1
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
 ; CHECK-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
@@ -177,7 +199,10 @@ define double @f64(<vscale x 1 x double> %v, i1 %c) {
 ; RV32-NEXT:    #NO_APP
 ; RV32-NEXT:    beqz a0, .LBB4_2
 ; RV32-NEXT:  # %bb.1: # %truebb
-; RV32-NEXT:    fld fa0, 16(sp) # 8-byte Folded Reload
+; RV32-NEXT:    addi a0, sp, 16
+; RV32-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
+; RV32-NEXT:    vfmv.f.s fa0, v8
 ; RV32-NEXT:    j .LBB4_3
 ; RV32-NEXT:  .LBB4_2: # %falsebb
 ; RV32-NEXT:    fcvt.d.w fa0, zero
@@ -185,7 +210,9 @@ define double @f64(<vscale x 1 x double> %v, i1 %c) {
 ; RV32-NEXT:    csrr a0, vlenb
 ; RV32-NEXT:    slli a0, a0, 1
 ; RV32-NEXT:    add sp, sp, a0
+; RV32-NEXT:    .cfi_def_cfa sp, 16
 ; RV32-NEXT:    addi sp, sp, 16
+; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    ret
 ;
 ; RV64-LABEL: f64:
@@ -203,7 +230,10 @@ define double @f64(<vscale x 1 x double> %v, i1 %c) {
 ; RV64-NEXT:    #NO_APP
 ; RV64-NEXT:    beqz a0, .LBB4_2
 ; RV64-NEXT:  # %bb.1: # %truebb
-; RV64-NEXT:    fld fa0, 16(sp) # 8-byte Folded Reload
+; RV64-NEXT:    addi a0, sp, 16
+; RV64-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
+; RV64-NEXT:    vfmv.f.s fa0, v8
 ; RV64-NEXT:    j .LBB4_3
 ; RV64-NEXT:  .LBB4_2: # %falsebb
 ; RV64-NEXT:    fmv.d.x fa0, zero
@@ -211,7 +241,9 @@ define double @f64(<vscale x 1 x double> %v, i1 %c) {
 ; RV64-NEXT:    csrr a0, vlenb
 ; RV64-NEXT:    slli a0, a0, 1
 ; RV64-NEXT:    add sp, sp, a0
+; RV64-NEXT:    .cfi_def_cfa sp, 16
 ; RV64-NEXT:    addi sp, sp, 16
+; RV64-NEXT:    .cfi_def_cfa_offset 0
 ; RV64-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
@@ -238,7 +270,10 @@ define float @f32(<vscale x 2 x float> %v, i1 %c) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:    beqz a0, .LBB5_2
 ; CHECK-NEXT:  # %bb.1: # %truebb
-; CHECK-NEXT:    flw fa0, 16(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    vl1r.v v8, (a0) # Unknown-size Folded Reload
+; CHECK-NEXT:    vsetivli zero, 1, e32, m1, ta, ma
+; CHECK-NEXT:    vfmv.f.s fa0, v8
 ; CHECK-NEXT:    j .LBB5_3
 ; CHECK-NEXT:  .LBB5_2: # %falsebb
 ; CHECK-NEXT:    fmv.w.x fa0, zero
@@ -246,7 +281,9 @@ define float @f32(<vscale x 2 x float> %v, i1 %c) {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 1
 ; CHECK-NEXT:    add sp, sp, a0
+; CHECK-NEXT:    .cfi_def_cfa sp, 16
 ; CHECK-NEXT:    addi sp, sp, 16
+; CHECK-NEXT:    .cfi_def_cfa_offset 0
 ; CHECK-NEXT:    ret
   tail call void asm sideeffect "", "~{v0},~{v1},~{v2},~{v3},~{v4},~{v5},~{v6},~{v7},~{v8},~{v9},~{v10},~{v11},~{v12},~{v13},~{v14},~{v15},~{v16},~{v17},~{v18},~{v19},~{v20},~{v21},~{v22},~{v23},~{v24},~{v25},~{v26},~{v27},~{v28},~{v29},~{v30},~{v31}"()
   br i1 %c, label %truebb, label %falsebb
