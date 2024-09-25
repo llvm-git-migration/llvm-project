@@ -180,6 +180,9 @@ public:
   virtual bool
   evaluateBranch(const MCInst &Inst, uint64_t Addr, uint64_t Size,
                  uint64_t &Target) const;
+  virtual bool
+  evaluateInstruction(const MCInst &Inst, uint64_t Addr, uint64_t Size,
+                 uint64_t &Target) const;
 
   virtual bool
   evaluateInstruction(const MCInst &Inst, uint64_t Addr, uint64_t Size,

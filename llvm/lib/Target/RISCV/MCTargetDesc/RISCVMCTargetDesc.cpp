@@ -1,3 +1,4 @@
+
 //===-- RISCVMCTargetDesc.cpp - RISC-V Target Descriptions ----------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -122,8 +123,26 @@ static MCTargetStreamer *createRISCVNullTargetStreamer(MCStreamer &S) {
 
 namespace {
 
+// one way to implement this change is to keep the branching and
+// instruction analysis separate. in this approach, simply keeping track of
+// auipc and lui separately would be enough
+
+// in the other approach, we can merge the two by editing the RISCVMCInstrAnalysis class
+// this can be done by keeping reack of the general purpose registers
+// with respect to the last instruction that operated on them. this is basically
+// what evaluate branch is doing (looking for auipc (and only auipc because the state is only
+// updated when auipc is seen) and thena  subsequent jalr)
+
 class RISCVMCInstrAnalysis : public MCInstrAnalysis {
-  int64_t GPRState[31] = {};
+
+  struct RegisterState {
+    int64_t Value;
+    // keep track of the last opcode that influenced
+    // the current value of the register
+    unsigned InlfuOpcode;
+  };
+
+  RegisterState GPRState[31] = {};
   std::bitset<31> GPRValidMask;
 
   static bool isGPR(MCRegister Reg) {
@@ -135,21 +154,22 @@ class RISCVMCInstrAnalysis : public MCInstrAnalysis {
     return Reg - RISCV::X1;
   }
 
-  void setGPRState(MCRegister Reg, std::optional<int64_t> Value) {
+  void setRegisterState(MCRegister Reg, std::optional<int64_t> Value, std::optional<unsigned> Opcode) {
     if (Reg == RISCV::X0)
       return;
 
     auto Index = getRegIndex(Reg);
 
-    if (Value) {
-      GPRState[Index] = *Value;
+    if (Value && Opcode) {
+      GPRState[Index].Value = *Value;
+      GPRState[Index].InfluOpcode = Opcode;
       GPRValidMask.set(Index);
     } else {
       GPRValidMask.reset(Index);
     }
   }
 
-  std::optional<int64_t> getGPRState(MCRegister Reg) const {
+  std::optional<RegisterState> getRegisterState(McRegister Reg) const {
     if (Reg == RISCV::X0)
       return 0;
 
@@ -222,8 +242,8 @@ public:
     }
 
     if (Inst.getOpcode() == RISCV::JALR) {
-      if (auto TargetRegState = getGPRState(Inst.getOperand(1).getReg())) {
-        Target = *TargetRegState + Inst.getOperand(2).getImm();
+      if (auto TargetRegState = getRegisterState(Inst.getOperand(1).getReg())) {
+        Target = TargetRegState->Value + Inst.getOperand(2).getImm();
         return true;
       }
 
@@ -400,3 +420,5 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRISCVTargetMC() {
                                                createRISCVNullTargetStreamer);
   }
 }
+
+
