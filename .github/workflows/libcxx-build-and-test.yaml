@@ -193,7 +193,7 @@ jobs:
             **/crash_diagnostics/*
 
   macos:
-    needs: [ stage1 ]
+    # needs: [ stage1 ]
     strategy:
       fail-fast: true
       matrix:
