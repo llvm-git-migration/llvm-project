@@ -266,11 +266,8 @@ public:
     return TargetInfo::checkCFProtectionReturnSupported(Diags);
   };
 
-  bool
-  checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const override {
-    if (CPU == llvm::X86::CK_None || CPU >= llvm::X86::CK_PentiumPro)
-      return true;
-    return TargetInfo::checkCFProtectionBranchSupported(Diags);
+  bool checkCFProtectionBranchSupported() const override {
+    return CPU == llvm::X86::CK_None || CPU >= llvm::X86::CK_PentiumPro;
   };
 
   virtual bool validateOperandSize(const llvm::StringMap<bool> &FeatureMap,

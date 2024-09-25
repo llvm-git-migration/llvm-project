@@ -135,11 +135,8 @@ public:
   bool validateGlobalRegisterVariable(StringRef RegName, unsigned RegSize,
                                       bool &HasSizeMismatch) const override;
 
-  bool
-  checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const override {
-    if (ISAInfo->hasExtension("zicfilp"))
-      return true;
-    return TargetInfo::checkCFProtectionBranchSupported(Diags);
+  bool checkCFProtectionBranchSupported() const override {
+    return ISAInfo->hasExtension("zicfilp");
   }
 
   CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const override {

@@ -1725,8 +1725,7 @@ public:
   }
 
   /// Check if the target supports CFProtection branch.
-  virtual bool
-  checkCFProtectionBranchSupported(DiagnosticsEngine &Diags) const;
+  virtual bool checkCFProtectionBranchSupported() const;
 
   /// Get the target default CFBranchLabelScheme scheme
   virtual CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const;

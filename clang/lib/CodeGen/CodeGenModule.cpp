@@ -1159,11 +1159,13 @@ void CodeGenModule::Release() {
                               1);
   }
 
-  if (CodeGenOpts.CFProtectionBranch &&
-      Target.checkCFProtectionBranchSupported(getDiags())) {
-    // Indicate that we want to instrument branch control flow protection.
-    getModule().addModuleFlag(llvm::Module::Min, "cf-protection-branch",
-                              1);
+  if (CodeGenOpts.CFProtectionBranch) {
+    if (Target.checkCFProtectionBranchSupported())
+      // Indicate that we want to instrument branch control flow protection.
+      getModule().addModuleFlag(llvm::Module::Min, "cf-protection-branch", 1);
+    else
+      getDiags().Report(diag::err_opt_not_valid_on_target)
+          << "cf-protection=branch";
   }
 
   if (CodeGenOpts.FunctionReturnThunks)
