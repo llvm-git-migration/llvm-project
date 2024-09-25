@@ -4,6 +4,7 @@
 #include "SPIRVGlobalRegistry.h"
 #include "SPIRVRegisterInfo.h"
 #include "SPIRVTargetMachine.h"
+#include "SPIRVUtils.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/BinaryFormat/Dwarf.h"
@@ -140,10 +141,9 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
                 // pointed on from other DI types
                 // DerivedType->getBaseType is null when pointer
                 // is representing a void type
-                if (DerivedType->getBaseType()) {
+                if (DerivedType->getBaseType())
                   BasicTypes.insert(
                       cast<DIBasicType>(DerivedType->getBaseType()));
-                }
               }
             }
           }
@@ -271,21 +271,36 @@ bool SPIRVEmitNonSemanticDI::emitGlobalDI(MachineFunction &MF) {
     }
 
     if (PointerDerivedTypes.size()) {
-      const Register GenericStorageClass =
-          GR->buildConstantInt(8, MIRBuilder, I32Ty, false);
       for (const auto *PointerDerivedType : PointerDerivedTypes) {
+
+        assert(PointerDerivedType->getDWARFAddressSpace().has_value());
+        const Register StorageClassReg = GR->buildConstantInt(
+            addressSpaceToStorageClass(
+                PointerDerivedType->getDWARFAddressSpace().value(),
+                *TM->getSubtargetImpl()),
+            MIRBuilder, I32Ty, false);
+
         // If the Pointer is representing a void type it's getBaseType
         // is a nullptr
-        const auto *MaybeBT =
+        const auto *MaybeNestedBasicType =
             cast_or_null<DIBasicType>(PointerDerivedType->getBaseType());
-        for (const auto &BasicTypeRegPair : BasicTypeRegPairs) {
-          const auto &[SBT, Reg] = BasicTypeRegPair;
-          if (SBT == MaybeBT) {
-            [[maybe_unused]]
-            const Register DebugPointerTypeReg =
-                EmitDIInstruction(SPIRV::NonSemanticExtInst::DebugTypePointer,
-                                  {Reg, GenericStorageClass, I32ZeroReg});
+        if (MaybeNestedBasicType) {
+          for (const auto &BasicTypeRegPair : BasicTypeRegPairs) {
+            const auto &[DefinedBasicType, BasicTypeReg] = BasicTypeRegPair;
+            if (DefinedBasicType == MaybeNestedBasicType) {
+              [[maybe_unused]]
+              const Register DebugPointerTypeReg = EmitDIInstruction(
+                  SPIRV::NonSemanticExtInst::DebugTypePointer,
+                  {BasicTypeReg, StorageClassReg, I32ZeroReg});
+            }
           }
+        } else {
+          const Register DebugInfoNoneReg =
+              EmitDIInstruction(SPIRV::NonSemanticExtInst::DebugInfoNone, {});
+          [[maybe_unused]]
+          const Register DebugPointerTypeReg = EmitDIInstruction(
+              SPIRV::NonSemanticExtInst::DebugTypePointer,
+              {DebugInfoNoneReg, StorageClassReg, I32ZeroReg});
         }
       }
     }
