@@ -139,6 +139,16 @@ class LLVM_VectorOf<Type element> : Type<
 class LLVM_ScalarOrVectorOf<Type element> :
     AnyTypeOf<[element, LLVM_VectorOf<element>]>;
 
+// Type constraint accepting an LLVM fixed vector type with an additional constraint
+// on the vector element type.
+class LLVM_FixedVectorOf<Type element> : Type<
+  And<[LLVM_AnyFixedVector.predicate,
+       SubstLeaves<
+         "$_self",
+         "::mlir::LLVM::getVectorElementType($_self)",
+         element.predicate>]>,
+  "LLVM dialect-compatible fixed vector of " # element.summary>;
+
 // Base class for LLVM operations. Defines the interface to the llvm::IRBuilder
 // used to translate to proper LLVM IR and the interface to the mlir::OpBuilder
 // used to import from LLVM IR.
