@@ -2822,11 +2822,17 @@ Instruction *InstCombinerImpl::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   //    This has better support in BasicAA.
   //  - gep i32 p, mul(O, C) -> gep i8, p, mul(O, C*4) to fold the two
   //    multiplies together.
-  if (GEPEltType->isScalableTy() ||
-      (!GEPEltType->isIntegerTy(8) && GEP.getNumIndices() == 1 &&
-       match(GEP.getOperand(1),
-             m_OneUse(m_CombineOr(m_Mul(m_Value(), m_ConstantInt()),
-                                  m_Shl(m_Value(), m_ConstantInt())))))) {
+  //  - gep (gep @global, C1), %x, C2 is expanded so the two constants can
+  //    possibly be merged together.
+  if (!GEPEltType->isIntegerTy(8) &&
+      (GEPEltType->isScalableTy() ||
+       (GEP.getNumIndices() == 1 &&
+        match(GEP.getOperand(1),
+              m_OneUse(m_CombineOr(m_Mul(m_Value(), m_ConstantInt()),
+                                   m_Shl(m_Value(), m_ConstantInt()))))) ||
+       (isa<GEPOperator>(PtrOp) && isa<ConstantExpr>(PtrOp) &&
+        any_of(drop_begin(GEP.indices()),
+               [](Value *V) { return isa<Constant>(V); })))) {
     Value *Offset = EmitGEPOffset(cast<GEPOperator>(&GEP));
     return replaceInstUsesWith(
         GEP, Builder.CreatePtrAdd(PtrOp, Offset, "", GEP.getNoWrapFlags()));
