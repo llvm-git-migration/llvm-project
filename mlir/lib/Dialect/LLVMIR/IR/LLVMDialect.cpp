@@ -3008,9 +3008,19 @@ void AtomicRMWOp::build(OpBuilder &builder, OperationState &state,
 
 LogicalResult AtomicRMWOp::verify() {
   auto valType = getVal().getType();
-  if (getBinOp() == AtomicBinOp::fadd || getBinOp() == AtomicBinOp::fsub ||
-      getBinOp() == AtomicBinOp::fmin || getBinOp() == AtomicBinOp::fmax) {
-    if (!mlir::LLVM::isCompatibleFloatingPointType(valType))
+  if (getBinOp() == AtomicBinOp::fadd && isCompatibleVectorType(valType)) {
+    // Currently, only fadd operation supports fixed vector operands.
+    if (isScalableVectorType(valType))
+      return emitOpError("expected LLVM IR fixed vector type");
+    Type elemType = getVectorElementType(valType);
+    if (!(isCompatibleFloatingPointType(elemType) &&
+          elemType.getIntOrFloatBitWidth() == 16))
+      return emitOpError("unexpected LLVM IR type for vector element");
+  } else if (getBinOp() == AtomicBinOp::fadd ||
+             getBinOp() == AtomicBinOp::fsub ||
+             getBinOp() == AtomicBinOp::fmin ||
+             getBinOp() == AtomicBinOp::fmax) {
+    if (!isCompatibleFloatingPointType(valType))
       return emitOpError("expected LLVM IR floating point type");
   } else if (getBinOp() == AtomicBinOp::xchg) {
     DataLayout dataLayout = DataLayout::closest(*this);
