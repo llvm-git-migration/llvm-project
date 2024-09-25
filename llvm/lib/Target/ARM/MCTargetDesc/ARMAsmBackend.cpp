@@ -579,13 +579,15 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCAssembler &Asm,
   case ARM::fixup_arm_uncondbl:
   case ARM::fixup_arm_condbl:
   case ARM::fixup_arm_blx:
-    // Check that the fixup value is legal.
-    Value = Value - 8;
-    if (!isInt<25>(Value)) {
+    // Check that the relocation value is legal.
+    if (!isInt<26>(Value)) {
       Ctx.reportError(Fixup.getLoc(), "Relocation out of range");
       return 0;
     }
-    if (Value % 4 != 0) {
+    // Alignment differs for blx. Because we are switching to thumb ISA, we use
+    // 16-bit alignment. Otherwise, use 32-bit.
+    if ((Kind == ARM::fixup_arm_blx && Value % 2 != 0) ||
+        (Kind != ARM::fixup_arm_blx && Value % 4 != 0)) {
       Ctx.reportError(Fixup.getLoc(), "Relocation not aligned");
       return 0;
     }
@@ -1132,7 +1134,7 @@ void ARMAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
   assert(Offset + NumBytes <= Data.size() && "Invalid fixup offset!");
 
   // Used to point to big endian bytes.
-  unsigned FullSizeBytes = 0;
+  unsigned FullSizeBytes;
   if (Endian == llvm::endianness::big) {
     FullSizeBytes = getFixupKindContainerSizeBytes(Kind);
     assert((Offset + FullSizeBytes) <= Data.size() && "Invalid fixup size!");
