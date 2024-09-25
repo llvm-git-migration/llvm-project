@@ -193,17 +193,26 @@ jobs:
             **/crash_diagnostics/*
 
   macos:
-    runs-on: macos-14
     needs: [ stage1 ]
     strategy:
       fail-fast: true
       matrix:
-        config: [
-          generic-cxx03,
-          generic-cxx23,
-          generic-modules,
-          apple-configuration
-        ]
+        include:
+        - config: generic-cxx03
+          os: macos-latest
+        - config: generic-cxx23
+          os: macos-latest
+        - config: generic-modules
+          os: macos-latest
+        - config: apple-configuration
+          os: macos-latest
+        - config: apple-system-12.0
+          os: macos-12
+        - config: apple-system-13.0
+          os: macos-13
+        - config: apple-system-hardened-13.0
+          os: macos-13
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: maxim-lobanov/setup-xcode@v1
