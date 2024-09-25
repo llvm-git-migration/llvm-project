@@ -643,6 +643,14 @@ func.func @atomicrmw_expected_float(%i32_ptr : !llvm.ptr, %i32 : i32) {
 
 // -----
 
+func.func @atomicrmw_unexpected_vector_element(%ptr : !llvm.ptr, %i32_vec : vector<3xi32>) {
+  // expected-error@+1 {{expected LLVM IR floating point type for vector element}}
+  %0 = llvm.atomicrmw fadd %ptr, %i32_vec unordered : !llvm.ptr, vector<3xi32>
+  llvm.return
+}
+
+// -----
+
 func.func @atomicrmw_unexpected_xchg_type(%i1_ptr : !llvm.ptr, %i1 : i1) {
   // expected-error@+1 {{unexpected LLVM IR type for 'xchg' bin_op}}
   %0 = llvm.atomicrmw xchg %i1_ptr, %i1 unordered : !llvm.ptr, i1

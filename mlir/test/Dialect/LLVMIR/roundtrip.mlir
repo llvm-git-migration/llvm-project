@@ -420,11 +420,13 @@ func.func @atomic_store(%val : f32, %large_val : i256, %ptr : !llvm.ptr) {
 }
 
 // CHECK-LABEL: @atomicrmw
-func.func @atomicrmw(%ptr : !llvm.ptr, %val : f32) {
+func.func @atomicrmw(%f32_ptr : !llvm.ptr, %f32 : f32, %f32_vec_ptr : !llvm.ptr, %f16_vec : vector<2xf16>) {
   // CHECK: llvm.atomicrmw fadd %{{.*}}, %{{.*}} monotonic : !llvm.ptr, f32
-  %0 = llvm.atomicrmw fadd %ptr, %val monotonic : !llvm.ptr, f32
+  %0 = llvm.atomicrmw fadd %f32_ptr, %f32 monotonic : !llvm.ptr, f32
   // CHECK: llvm.atomicrmw volatile fsub %{{.*}}, %{{.*}} syncscope("singlethread") monotonic {alignment = 16 : i64} : !llvm.ptr, f32
-  %1 = llvm.atomicrmw volatile fsub %ptr, %val syncscope("singlethread") monotonic {alignment = 16 : i64} : !llvm.ptr, f32
+  %1 = llvm.atomicrmw volatile fsub %f32_ptr, %f32 syncscope("singlethread") monotonic {alignment = 16 : i64} : !llvm.ptr, f32
+  // CHECK: llvm.atomicrmw fmin %{{.*}}, %{{.*}} monotonic : !llvm.ptr, vector<2xf16>
+  %2 = llvm.atomicrmw fmin %f32_vec_ptr, %f16_vec monotonic : !llvm.ptr, vector<2xf16>
   llvm.return
 }
 
