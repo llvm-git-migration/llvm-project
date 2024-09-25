@@ -1429,34 +1429,59 @@ bool AMDGPUInstructionSelector::selectBallot(MachineInstr &I) const {
   std::optional<ValueAndVReg> Arg =
       getIConstantVRegValWithLookThrough(I.getOperand(2).getReg(), *MRI);
 
-  const auto BuildCopy = [&](Register SrcReg) {
-    if (Size == STI.getWavefrontSize()) {
-      BuildMI(*BB, &I, DL, TII.get(AMDGPU::COPY), DstReg)
-          .addReg(SrcReg);
-      return;
-    }
+  const auto BuildAnd = [&](unsigned Opcode, Register Dst, Register Src,
+                            Register Exec) -> bool {
+    auto And = BuildMI(*BB, &I, DL, TII.get(Opcode), Dst)
+                   .addReg(Src)
+                   .addReg(Exec)
+                   .setOperandDead(3); // Dead scc
+    return constrainSelectedInstRegOperands(*And, TII, TRI, RBI);
+  };
 
-    // If emitting a i64 ballot in wave32, fill the upper bits with zeroes.
-    Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
-    BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
-    BuildMI(*BB, &I, DL, TII.get(AMDGPU::REG_SEQUENCE), DstReg)
-        .addReg(SrcReg)
+  const auto BuildREG_SEQUENCE = [&](Register Dst, Register Lo, Register Hi) {
+    BuildMI(*BB, &I, DL, TII.get(AMDGPU::REG_SEQUENCE), Dst)
+        .addReg(Lo)
         .addImm(AMDGPU::sub0)
-        .addReg(HiReg)
+        .addReg(Hi)
         .addImm(AMDGPU::sub1);
   };
 
   if (Arg) {
-    const int64_t Value = Arg->Value.getSExtValue();
+    const int64_t Value = Arg->Value.getZExtValue();
     if (Value == 0) {
+      // DstReg(32or64) = S_MOV 0
       unsigned Opcode = Is64 ? AMDGPU::S_MOV_B64 : AMDGPU::S_MOV_B32;
       BuildMI(*BB, &I, DL, TII.get(Opcode), DstReg).addImm(0);
-    } else if (Value == -1) // all ones
-      BuildCopy(IsWave32 ? AMDGPU::EXEC_LO : AMDGPU::EXEC);
-    else
+    } else if (Value == 1) {
+      if (Size == STI.getWavefrontSize()) {
+        // DstReg(32or64) = COPY EXEC
+        BuildMI(*BB, &I, DL, TII.get(AMDGPU::COPY), DstReg)
+            .addReg(TRI.getExec());
+      } else {
+        // DstReg(64) = REG_SEQUENCE EXEC_LO, 0
+        Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+        BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
+        BuildREG_SEQUENCE(DstReg, TRI.getExec(), HiReg);
+      }
+    } else
       return false;
-  } else
-    BuildCopy(I.getOperand(2).getReg());
+  } else {
+    Register SrcReg = I.getOperand(2).getReg();
+    if (Size == STI.getWavefrontSize()) {
+      // DstReg(32or64) = AND SrcReg, EXEC
+      unsigned AndOpc = IsWave32 ? AMDGPU::S_AND_B32 : AMDGPU::S_AND_B64;
+      if (!BuildAnd(AndOpc, DstReg, SrcReg, TRI.getExec()))
+        return false;
+    } else {
+      // DstReg(64) = REG_SEQUENCE (AND SrcReg(32), EXEC_LO), 0
+      Register LoReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+      if (!BuildAnd(AMDGPU::S_AND_B32, LoReg, SrcReg, AMDGPU::EXEC_LO))
+        return false;
+      Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+      BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
+      BuildREG_SEQUENCE(DstReg, LoReg, HiReg);
+    }
+  }
 
   I.eraseFromParent();
   return true;
