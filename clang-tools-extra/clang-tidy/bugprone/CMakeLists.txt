@@ -45,6 +45,7 @@ add_clang_library(clangTidyBugproneModule
   MultipleNewInOneExpressionCheck.cpp
   MultipleStatementMacroCheck.cpp
   NoEscapeCheck.cpp
+  NondeterministicPointerUsageCheck.cpp
   NonZeroEnumToBoolConversionCheck.cpp
   NotNullTerminatedResultCheck.cpp
   OptionalValueConversionCheck.cpp

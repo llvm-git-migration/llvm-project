@@ -121,6 +121,12 @@ New checks
   Gives warnings for tagged unions, where the number of tags is
   different from the number of data members inside the union.
 
+- New :doc:`bugprone-nondeterministic-pointer-iteration-order
+  <clang-tidy/checks/bugprone/nondeterministic-pointer-iteration-order>`
+  check.
+
+  Finds nondeterministic usages of pointers in unordered containers.
+
 New check aliases
 ^^^^^^^^^^^^^^^^^
 

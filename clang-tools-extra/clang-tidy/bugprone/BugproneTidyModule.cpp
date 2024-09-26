@@ -49,6 +49,7 @@
 #include "MultipleStatementMacroCheck.h"
 #include "NoEscapeCheck.h"
 #include "NonZeroEnumToBoolConversionCheck.h"
+#include "NondeterministicPointerUsageCheck.h"
 #include "NotNullTerminatedResultCheck.h"
 #include "OptionalValueConversionCheck.h"
 #include "ParentVirtualCallCheck.h"
@@ -174,6 +175,8 @@ public:
         "bugprone-multiple-new-in-one-expression");
     CheckFactories.registerCheck<MultipleStatementMacroCheck>(
         "bugprone-multiple-statement-macro");
+    CheckFactories.registerCheck<NondeterministicPointerUsageCheck>(
+        "bugprone-nondeterministic-pointer-iteration-order");
     CheckFactories.registerCheck<OptionalValueConversionCheck>(
         "bugprone-optional-value-conversion");
     CheckFactories.registerCheck<PointerArithmeticOnPolymorphicObjectCheck>(
