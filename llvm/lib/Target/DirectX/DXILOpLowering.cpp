@@ -268,7 +268,7 @@ public:
   Error replaceSplitDoubleCallUsages(CallInst *Intrin, CallInst *Op) {
     IRBuilder<> &IRB = OpBuilder.getIRB();
 
-    for (Use &U : Intrin->uses()) {
+    for (Use &U : make_early_inc_range(Intrin->uses())) {
       if (auto *EVI = dyn_cast<ExtractValueInst>(U.getUser())) {
 
         assert(EVI->getNumIndices() == 1 &&
