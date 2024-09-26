@@ -116,7 +116,8 @@ define void @issue92561(ptr addrspace(1) %arg) {
 ; GISEL-NEXT:    s_and_b32 s0, s0, s1
 ; GISEL-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instid1(SALU_CYCLE_1)
 ; GISEL-NEXT:    s_and_b32 s0, s0, s2
-; GISEL-NEXT:    s_delay_alu instid0(SALU_CYCLE_1)
+; GISEL-NEXT:    s_delay_alu instid0(SALU_CYCLE_1) | instskip(NEXT) | instid1(SALU_CYCLE_1)
+; GISEL-NEXT:    s_and_b32 s0, s0, exec_lo
 ; GISEL-NEXT:    s_and_saveexec_b32 s0, s0
 ; GISEL-NEXT:    image_sample_c_lz v1, [v0, v0, v0, v0], s[12:19], s[20:23] dmask:0x1 dim:SQ_RSRC_IMG_2D_ARRAY
 ; GISEL-NEXT:    ; implicit-def: $vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8_vgpr9
