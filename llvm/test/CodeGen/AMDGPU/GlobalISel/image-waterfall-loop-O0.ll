@@ -138,6 +138,7 @@ define <4 x float> @waterfall_loop(<8 x i32> %vgpr_srd) {
 ; CHECK-NEXT:    s_and_b32 s4, s4, s5
 ; CHECK-NEXT:    v_cmp_eq_u64_e64 s5, s[6:7], v[1:2]
 ; CHECK-NEXT:    s_and_b32 s4, s4, s5
+; CHECK-NEXT:    s_and_b32 s4, s4, exec_lo
 ; CHECK-NEXT:    s_and_saveexec_b32 s4, s4
 ; CHECK-NEXT:    v_writelane_b32 v0, s4, 13
 ; CHECK-NEXT:    s_or_saveexec_b32 s21, -1
