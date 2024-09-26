@@ -1429,34 +1429,129 @@ bool AMDGPUInstructionSelector::selectBallot(MachineInstr &I) const {
   std::optional<ValueAndVReg> Arg =
       getIConstantVRegValWithLookThrough(I.getOperand(2).getReg(), *MRI);
 
-  const auto BuildCopy = [&](Register SrcReg) {
-    if (Size == STI.getWavefrontSize()) {
-      BuildMI(*BB, &I, DL, TII.get(AMDGPU::COPY), DstReg)
-          .addReg(SrcReg);
-      return;
+  const auto getCmpInput = [&]() -> MachineInstr * {
+    MachineInstr *SrcMI = getDefIgnoringCopies(I.getOperand(2).getReg(), *MRI);
+    // Try to fold sgpr compare.
+    if (SrcMI->getOpcode() == AMDGPU::G_TRUNC)
+      SrcMI = MRI->getVRegDef(SrcMI->getOperand(1).getReg());
+
+    if (SrcMI->getOpcode() == AMDGPU::G_ICMP ||
+        SrcMI->getOpcode() == AMDGPU::G_FCMP)
+      return SrcMI;
+    return nullptr;
+  };
+
+  const auto FoldCmp = [&](Register Dst, MachineInstr *CmpMI) -> bool {
+    // Fold ballot of a compare. Active lanes when the ballot is executed need
+    // to also be active when the compare is executed for this fold to be
+    // correct. If an inactive lane on compare becomes active for the ballot,
+    // divergent control flow is involved. The compare was in a divergent branch
+    // and needs to go through phi before being used by the ballot. The ballot
+    // is in a block that merged control flow. Using the compare directly in the
+    // ballot implies that active lanes for the ballot are a subset of active
+    // lanes for the compare.
+    auto Pred = (CmpInst::Predicate)CmpMI->getOperand(1).getPredicate();
+    Register Op0 = CmpMI->getOperand(2).getReg();
+    Register Op1 = CmpMI->getOperand(3).getReg();
+    unsigned OpSize = MRI->getType(Op0).getSizeInBits();
+    const TargetRegisterClass *VgprRC = TRI.getVGPRClassForBitWidth(OpSize);
+
+    int CmpOpcode = getV_CMPOpcode(Pred, OpSize, *Subtarget);
+    if (CmpOpcode == -1)
+      return false;
+
+    MachineInstr *Cmp;
+    unsigned Op0Idx, Op1Idx;
+    if (CmpMI->getOpcode() == AMDGPU::G_ICMP) {
+      Cmp =
+          BuildMI(*BB, &I, DL, TII.get(CmpOpcode), Dst).addReg(Op0).addReg(Op1);
+      Op0Idx = 1;
+      Op1Idx = 2;
+    } else {
+      // fcmp compares have modifiers
+      Cmp = BuildMI(*BB, &I, DL, TII.get(CmpOpcode), Dst)
+                .addImm(0)
+                .addReg(Op0)
+                .addImm(0)
+                .addReg(Op1)
+                .addImm(0);
+      Op0Idx = 2;
+      Op1Idx = 4;
     }
 
-    // If emitting a i64 ballot in wave32, fill the upper bits with zeroes.
-    Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
-    BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
-    BuildMI(*BB, &I, DL, TII.get(AMDGPU::REG_SEQUENCE), DstReg)
-        .addReg(SrcReg)
+    return constrainOperandRegClass(*MF, TRI, *MRI, TII, RBI, *Cmp, *VgprRC,
+                                    Cmp->getOperand(Op0Idx)) &&
+           constrainOperandRegClass(*MF, TRI, *MRI, TII, RBI, *Cmp, *VgprRC,
+                                    Cmp->getOperand(Op1Idx)) &&
+           constrainSelectedInstRegOperands(*Cmp, TII, TRI, RBI);
+  };
+
+  const auto BuildAnd = [&](unsigned Opcode, Register Dst, Register Src,
+                            Register Exec) -> bool {
+    auto And = BuildMI(*BB, &I, DL, TII.get(Opcode), Dst)
+                   .addReg(Src)
+                   .addReg(Exec)
+                   .setOperandDead(3); // Dead scc
+    return constrainSelectedInstRegOperands(*And, TII, TRI, RBI);
+  };
+
+  const auto BuildREG_SEQUENCE = [&](Register Dst, Register Lo, Register Hi) {
+    BuildMI(*BB, &I, DL, TII.get(AMDGPU::REG_SEQUENCE), Dst)
+        .addReg(Lo)
         .addImm(AMDGPU::sub0)
-        .addReg(HiReg)
+        .addReg(Hi)
         .addImm(AMDGPU::sub1);
   };
 
   if (Arg) {
-    const int64_t Value = Arg->Value.getSExtValue();
+    const int64_t Value = Arg->Value.getZExtValue();
     if (Value == 0) {
+      // DstReg(32or64) = S_MOV 0
       unsigned Opcode = Is64 ? AMDGPU::S_MOV_B64 : AMDGPU::S_MOV_B32;
       BuildMI(*BB, &I, DL, TII.get(Opcode), DstReg).addImm(0);
-    } else if (Value == -1) // all ones
-      BuildCopy(IsWave32 ? AMDGPU::EXEC_LO : AMDGPU::EXEC);
-    else
+    } else if (Value == 1) {
+      if (Size == STI.getWavefrontSize()) {
+        // DstReg(32or64) = COPY EXEC
+        BuildMI(*BB, &I, DL, TII.get(AMDGPU::COPY), DstReg)
+            .addReg(TRI.getExec());
+      } else {
+        // DstReg(64) = REG_SEQUENCE EXEC_LO, 0
+        Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+        BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
+        BuildREG_SEQUENCE(DstReg, TRI.getExec(), HiReg);
+      }
+    } else
       return false;
-  } else
-    BuildCopy(I.getOperand(2).getReg());
+  } else {
+    Register SrcReg = I.getOperand(2).getReg();
+    if (Size == STI.getWavefrontSize()) {
+      if (MachineInstr *Cmp = getCmpInput()) {
+        // DstReg(32or64) = V_CMP...
+        if (!FoldCmp(DstReg, Cmp))
+          return false;
+      } else {
+        // DstReg(32or64) = AND SrcReg, EXEC
+        unsigned AndOpc = IsWave32 ? AMDGPU::S_AND_B32 : AMDGPU::S_AND_B64;
+        if (!BuildAnd(AndOpc, DstReg, SrcReg, TRI.getExec()))
+          return false;
+      }
+    } else {
+      Register LoReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+      if (MachineInstr *Cmp = getCmpInput()) {
+        // LoReg(32) = V_CMP...
+        if (!FoldCmp(LoReg, Cmp))
+          return false;
+      } else {
+        // LoReg(32) = AND SrcReg, EXEC
+        if (!BuildAnd(AMDGPU::S_AND_B32, LoReg, SrcReg, AMDGPU::EXEC_LO))
+          return false;
+      }
+      // DstReg(64) = REG_SEQUENCE (LoReg(32), EXEC_LO), 0
+      Register HiReg = MRI->createVirtualRegister(&AMDGPU::SReg_32RegClass);
+      BuildMI(*BB, &I, DL, TII.get(AMDGPU::S_MOV_B32), HiReg).addImm(0);
+      BuildREG_SEQUENCE(DstReg, LoReg, HiReg);
+    }
+  }
 
   I.eraseFromParent();
   return true;
