@@ -252,6 +252,22 @@ public:
                              {Cond, MaskPhi, AnyActive}, DL, Name);
   }
 
+  VPInstruction *createCSAAnyActiveEVL(VPValue *Cond, VPValue *EVL, DebugLoc DL,
+                                       const Twine &Name) {
+    return createInstruction(VPInstruction::CSAAnyActiveEVL, {Cond, EVL}, DL,
+                             Name);
+  }
+
+  VPInstruction *createCSAVLPhi(DebugLoc DL, const Twine &Name) {
+    return createInstruction(VPInstruction::CSAVLPhi, {}, DL, Name);
+  }
+
+  VPInstruction *createCSAVLSel(VPValue *AnyActiveEVL, VPValue *VLPhi,
+                                VPValue *EVL, DebugLoc DL, const Twine &Name) {
+    return createInstruction(VPInstruction::CSAVLSel,
+                             {AnyActiveEVL, VLPhi, EVL}, DL, Name);
+  }
+
   VPDerivedIVRecipe *createDerivedIV(InductionDescriptor::InductionKind Kind,
                                      FPMathOperator *FPBinOp, VPValue *Start,
                                      VPCanonicalIVPHIRecipe *CanonicalIV,

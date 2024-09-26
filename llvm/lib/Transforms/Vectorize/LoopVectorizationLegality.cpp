@@ -1878,7 +1878,7 @@ bool LoopVectorizationLegality::canFoldTailByMasking() const {
   // TODO: handle non-reduction outside users when tail is folded by masking.
   for (auto *AE : AllowedExit) {
     // Check that all users of allowed exit values are inside the loop or
-    // are the live-out of a reduction or a CSA
+    // are the live-out of a reduction or a CSA.
     if (ReductionLiveOuts.count(AE) || CSALiveOuts.count(AE))
       continue;
     for (User *U : AE->users()) {

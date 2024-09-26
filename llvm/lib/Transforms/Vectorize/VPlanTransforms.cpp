@@ -1361,9 +1361,10 @@ static void addExplicitVectorLengthForCSA(
     // EVL number of elements in the mask. Replace CSAAnyActive with the EVL
     // specific CSAAnyActiveEVL instruction.
     auto *VPAnyActive = CSAState->getVPAnyActive();
-    auto *VPAnyActiveEVL = new VPInstruction(
-        VPInstruction::CSAAnyActiveEVL, {VPAnyActive->getOperand(0), &EVL},
-        VPAnyActive->getDebugLoc(), "csa.cond.anyactive");
+    VPBuilder B;
+    auto *VPAnyActiveEVL = B.createCSAAnyActiveEVL(
+        VPAnyActive->getOperand(0), &EVL, VPAnyActive->getDebugLoc(),
+        "csa.cond.anyactive");
     VPAnyActiveEVL->insertBefore(VPAnyActive);
     VPAnyActive->replaceAllUsesWith(VPAnyActiveEVL->getVPSingleValue());
     VPAnyActive->eraseFromParent();
@@ -1376,11 +1377,10 @@ static void addExplicitVectorLengthForCSA(
     // extract the scalar from the data vector, we must use the EVL that
     // corresponds to the EVL that was used when the mask vector was last
     // updated. To do this, we introduce CSAVLPhi and CSAVLSel instructions
-    auto *VPVLPhi =
-        new VPInstruction(VPInstruction::CSAVLPhi, {}, {}, "csa.vl.phi");
+
+    auto *VPVLPhi = B.createCSAVLPhi({}, "csa.vl.phi");
     auto *VPVLSel =
-        new VPInstruction(VPInstruction::CSAVLSel,
-                          {VPAnyActiveEVL, VPVLPhi, &EVL}, {}, "csa.vl.sel");
+        B.createCSAVLSel(VPAnyActiveEVL, VPVLPhi, &EVL, {}, "csa.vl.sel");
     VPVLPhi->insertAfter(CSAState->getPhiRecipe());
     VPVLSel->insertAfter(VPAnyActiveEVL);
 
