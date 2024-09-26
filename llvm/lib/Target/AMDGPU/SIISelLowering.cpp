@@ -8209,6 +8209,10 @@ SDValue SITargetLowering::lowerImage(SDValue Op,
     append_range(Ops, VAddrs);
   else
     Ops.push_back(VAddr);
+  SDValue Rsrc = Op.getOperand(ArgOffset + Intr->RsrcIndex);
+  EVT VT = Rsrc.getValueType();
+  if (VT != MVT::v4i32 && VT != MVT::v8i32)
+    return Op;
   Ops.push_back(Op.getOperand(ArgOffset + Intr->RsrcIndex));
   if (BaseOpcode->Sampler)
     Ops.push_back(Op.getOperand(ArgOffset + Intr->SampIndex));
