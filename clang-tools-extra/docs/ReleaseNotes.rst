@@ -103,6 +103,10 @@ Improvements to clang-tidy
 New checks
 ^^^^^^^^^^
 
+- New check :doc:`bugprone-nondeterministic-pointer-usage
+  <clang-tidy/checks/bugprone/nondeterministic-pointer-usage>` check to
+  detect certain nondeterministic pointer seen with unordered containers.
+
 New check aliases
 ^^^^^^^^^^^^^^^^^
 

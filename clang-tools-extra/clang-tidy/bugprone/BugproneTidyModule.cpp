@@ -48,6 +48,7 @@
 #include "MultipleStatementMacroCheck.h"
 #include "NoEscapeCheck.h"
 #include "NonZeroEnumToBoolConversionCheck.h"
+#include "NondeterministicPointerUsageCheck.h"
 #include "NotNullTerminatedResultCheck.h"
 #include "OptionalValueConversionCheck.h"
 #include "ParentVirtualCallCheck.h"
@@ -179,6 +180,8 @@ public:
     CheckFactories.registerCheck<cppcoreguidelines::NarrowingConversionsCheck>(
         "bugprone-narrowing-conversions");
     CheckFactories.registerCheck<NoEscapeCheck>("bugprone-no-escape");
+    CheckFactories.registerCheck<NondeterministicPointerUsageCheck>(
+        "bugprone-nondeterministic-pointer-usage");
     CheckFactories.registerCheck<NonZeroEnumToBoolConversionCheck>(
         "bugprone-non-zero-enum-to-bool-conversion");
     CheckFactories.registerCheck<NotNullTerminatedResultCheck>(
