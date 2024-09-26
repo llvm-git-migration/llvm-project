@@ -103,11 +103,115 @@ ConstantFPRange ConstantFPRange::getNaNOnly(const fltSemantics &Sem,
                          MayBeSNaN);
 }
 
+ConstantFPRange ConstantFPRange::getNonNaN(const fltSemantics &Sem) {
+  return ConstantFPRange(APFloat::getInf(Sem, /*Negative=*/true),
+                         APFloat::getInf(Sem, /*Negative=*/false),
+                         /*MayBeQNaN=*/false, /*MayBeSNaN=*/false);
+}
+
+/// Return [-inf, V) or [-inf, V]
+static ConstantFPRange makeLessThan(APFloat V, FCmpInst::Predicate Pred) {
+  const fltSemantics &Sem = V.getSemantics();
+  if (!(Pred & FCmpInst::FCMP_OEQ)) {
+    if (V.isNegInfinity())
+      return ConstantFPRange::getEmpty(Sem);
+    V.next(/*nextDown=*/true);
+  }
+  return ConstantFPRange::getNonNaN(APFloat::getInf(Sem, /*Negative=*/true),
+                                    std::move(V));
+}
+
+/// Return (V, +inf] or [V, +inf]
+static ConstantFPRange makeGreaterThan(APFloat V, FCmpInst::Predicate Pred) {
+  const fltSemantics &Sem = V.getSemantics();
+  if (!(Pred & FCmpInst::FCMP_OEQ)) {
+    if (V.isPosInfinity())
+      return ConstantFPRange::getEmpty(Sem);
+    V.next(/*nextDown=*/false);
+  }
+  return ConstantFPRange::getNonNaN(std::move(V),
+                                    APFloat::getInf(Sem, /*Negative=*/false));
+}
+
+/// Make sure that +0/-0 are both included in the range.
+static ConstantFPRange extendZeroIfEqual(const ConstantFPRange &CR,
+                                         FCmpInst::Predicate Pred) {
+  if (!(Pred & FCmpInst::FCMP_OEQ))
+    return CR;
+
+  APFloat Lower = CR.getLower();
+  APFloat Upper = CR.getUpper();
+  if (Lower.isPosZero())
+    Lower = APFloat::getZero(Lower.getSemantics(), /*Negative=*/true);
+  if (Upper.isNegZero())
+    Upper = APFloat::getZero(Upper.getSemantics(), /*Negative=*/false);
+  return ConstantFPRange(std::move(Lower), std::move(Upper), CR.containsQNaN(),
+                         CR.containsSNaN());
+}
+
+static ConstantFPRange setNaNField(const ConstantFPRange &CR,
+                                   FCmpInst::Predicate Pred) {
+  bool ContainsNaN = FCmpInst::isUnordered(Pred);
+  return ConstantFPRange(CR.getLower(), CR.getUpper(),
+                         /*MayBeQNaN=*/ContainsNaN, /*MayBeSNaN=*/ContainsNaN);
+}
+
 ConstantFPRange
 ConstantFPRange::makeAllowedFCmpRegion(FCmpInst::Predicate Pred,
                                        const ConstantFPRange &Other) {
-  // TODO
-  return getFull(Other.getSemantics());
+  if (Other.isEmptySet())
+    return Other;
+  if (Other.containsNaN() && FCmpInst::isUnordered(Pred))
+    return getFull(Other.getSemantics());
+  if (Other.isNaNOnly() && FCmpInst::isOrdered(Pred))
+    return getEmpty(Other.getSemantics());
+
+  switch (Pred) {
+  case FCmpInst::FCMP_TRUE:
+    return getFull(Other.getSemantics());
+  case FCmpInst::FCMP_FALSE:
+    return getEmpty(Other.getSemantics());
+  case FCmpInst::FCMP_ORD:
+    return getNonNaN(Other.getSemantics());
+  case FCmpInst::FCMP_UNO:
+    return getNaNOnly(Other.getSemantics(), /*MayBeQNaN=*/true,
+                      /*MayBeSNaN=*/true);
+  case FCmpInst::FCMP_OEQ:
+  case FCmpInst::FCMP_UEQ:
+    return setNaNField(extendZeroIfEqual(Other, Pred), Pred);
+  case FCmpInst::FCMP_ONE:
+  case FCmpInst::FCMP_UNE:
+    if (const APFloat *SingleElement =
+            Other.getSingleElement(/*ExcludesNaN=*/true)) {
+      const fltSemantics &Sem = SingleElement->getSemantics();
+      if (SingleElement->isPosInfinity())
+        return setNaNField(
+            getNonNaN(APFloat::getInf(Sem, /*Negative=*/true),
+                      APFloat::getLargest(Sem, /*Negative=*/false)),
+            Pred);
+      if (SingleElement->isNegInfinity())
+        return setNaNField(
+            getNonNaN(APFloat::getLargest(Sem, /*Negative=*/true),
+                      APFloat::getInf(Sem, /*Negative=*/false)),
+            Pred);
+    }
+    return Pred == FCmpInst::FCMP_ONE ? getNonNaN(Other.getSemantics())
+                                      : getFull(Other.getSemantics());
+  case FCmpInst::FCMP_OLT:
+  case FCmpInst::FCMP_OLE:
+  case FCmpInst::FCMP_ULT:
+  case FCmpInst::FCMP_ULE:
+    return setNaNField(
+        extendZeroIfEqual(makeLessThan(Other.getUpper(), Pred), Pred), Pred);
+  case FCmpInst::FCMP_OGT:
+  case FCmpInst::FCMP_OGE:
+  case FCmpInst::FCMP_UGT:
+  case FCmpInst::FCMP_UGE:
+    return setNaNField(
+        extendZeroIfEqual(makeGreaterThan(Other.getLower(), Pred), Pred), Pred);
+  default:
+    llvm_unreachable("Unexpected predicate");
+  }
 }
 
 ConstantFPRange
@@ -117,9 +221,10 @@ ConstantFPRange::makeSatisfyingFCmpRegion(FCmpInst::Predicate Pred,
   return getEmpty(Other.getSemantics());
 }
 
-ConstantFPRange ConstantFPRange::makeExactFCmpRegion(FCmpInst::Predicate Pred,
-                                                     const APFloat &Other) {
-  return makeAllowedFCmpRegion(Pred, ConstantFPRange(Other));
+std::optional<ConstantFPRange>
+ConstantFPRange::makeExactFCmpRegion(FCmpInst::Predicate Pred,
+                                     const APFloat &Other) {
+  return std::nullopt;
 }
 
 bool ConstantFPRange::fcmp(FCmpInst::Predicate Pred,
@@ -161,8 +266,8 @@ bool ConstantFPRange::contains(const ConstantFPRange &CR) const {
          strictCompare(CR.Upper, Upper) != APFloat::cmpGreaterThan;
 }
 
-const APFloat *ConstantFPRange::getSingleElement() const {
-  if (MayBeSNaN || MayBeQNaN)
+const APFloat *ConstantFPRange::getSingleElement(bool ExcludesNaN) const {
+  if (!ExcludesNaN && (MayBeSNaN || MayBeQNaN))
     return nullptr;
   return Lower.bitwiseIsEqual(Upper) ? &Lower : nullptr;
 }
