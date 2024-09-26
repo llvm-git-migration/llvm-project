@@ -11,6 +11,7 @@
 #include "clang/Basic/Version.h"
 #include "clang/Driver/Driver.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Compiler.h"
@@ -96,9 +97,83 @@ MultilibSet &MultilibSet::FilterOut(FilterCallback F) {
 
 void MultilibSet::push_back(const Multilib &M) { Multilibs.push_back(M); }
 
+static void WarnUnclaimedMultilibCustomFlags(
+    const Driver &D, const SmallVector<StringRef> &UnclaimedCustomFlagValues,
+    const SmallVector<MultilibSet::CustomFlagDeclaration> &CustomFlagDecls,
+    const StringRef MultilibFlagOptionStr) {
+  struct EditDistanceInfo {
+    StringRef FlagValue;
+    unsigned EditDistance;
+  };
+
+  for (StringRef Unclaimed : UnclaimedCustomFlagValues) {
+    std::optional<EditDistanceInfo> BestCandidate;
+    for (const auto &Decl : CustomFlagDecls) {
+      for (StringRef FlagValue : Decl.Values) {
+        unsigned EditDistance =
+            Unclaimed.edit_distance(FlagValue, /*AllowReplacements=*/false);
+        if (!BestCandidate || EditDistance < BestCandidate->EditDistance) {
+          BestCandidate = {std::move(FlagValue), EditDistance};
+        }
+      }
+    }
+    if (!BestCandidate)
+      continue;
+    D.Diag(clang::diag::warn_drv_unsupported_opt_with_suggestion)
+        << (MultilibFlagOptionStr + Unclaimed).str()
+        << (MultilibFlagOptionStr + BestCandidate->FlagValue).str();
+  }
+}
+
+Multilib::flags_list
+MultilibSet::processCustomFlags(const Driver &D,
+                                const Multilib::flags_list &Flags) const {
+  Multilib::flags_list Result;
+  constexpr StringRef MultilibFlagOptionStr = "-fmultilib-flag=";
+  SmallVector<StringRef> CustomFlags;
+
+  for (StringRef Flag : Flags) {
+    if (Flag.starts_with(MultilibFlagOptionStr))
+      CustomFlags.push_back(std::move(Flag));
+    else
+      Result.push_back(Flag.str());
+  }
+
+  SmallVector<StringRef> UnclaimedCustomFlagValues;
+  llvm::SmallSet<StringRef, 8> TriggeredCustomFlagDecls;
+
+  for (StringRef Flag : llvm::reverse(CustomFlags)) {
+    StringRef CustomFlagValue = Flag.drop_front(MultilibFlagOptionStr.size());
+    bool Claimed = false;
+    for (const CustomFlagDeclaration &Decl : CustomFlagDecls) {
+      if (llvm::is_contained(Decl.Values, CustomFlagValue)) {
+        Result.push_back(Flag.str());
+        TriggeredCustomFlagDecls.insert(Decl.Name);
+        Claimed = true;
+        break;
+      }
+    }
+    if (!Claimed) {
+      UnclaimedCustomFlagValues.push_back(std::move(CustomFlagValue));
+    }
+  }
+
+  for (const CustomFlagDeclaration &Decl : CustomFlagDecls) {
+    if (TriggeredCustomFlagDecls.contains(Decl.Name))
+      continue;
+    Result.push_back(MultilibFlagOptionStr.str() + Decl.DefaultValue);
+  }
+
+  WarnUnclaimedMultilibCustomFlags(D, UnclaimedCustomFlagValues,
+                                   CustomFlagDecls, MultilibFlagOptionStr);
+
+  return Result;
+}
+
 bool MultilibSet::select(const Driver &D, const Multilib::flags_list &Flags,
                          llvm::SmallVectorImpl<Multilib> &Selected) const {
-  llvm::StringSet<> FlagSet(expandFlags(Flags));
+  Multilib::flags_list FlagsWithCustom = processCustomFlags(D, Flags);
+  llvm::StringSet<> FlagSet(expandFlags(FlagsWithCustom));
   Selected.clear();
 
   // Decide which multilibs we're going to select at all.

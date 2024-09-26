@@ -1,0 +1,57 @@
+# REQUIRES: shell
+# UNSUPPORTED: system-windows
+
+# RUN: rm -rf %T/baremetal_multilib
+# RUN: mkdir -p %T/baremetal_multilib/bin
+# RUN: mkdir -p %T/baremetal_multilib/lib/clang-runtimes
+# RUN: ln -s %clang %T/baremetal_multilib/bin/clang
+# RUN: ln -s %s %T/baremetal_multilib/lib/clang-runtimes/multilib.yaml
+
+# RUN: %T/baremetal_multilib/bin/clang -no-canonical-prefixes -x c %s -### -o %t.out 2>&1 \
+# RUN:     --target=thumbv8m.main-none-eabi -mfpu=none --sysroot= \
+# RUN:   | FileCheck -DSYSROOT=%T/baremetal_multilib --check-prefix=CHECK-DEFAULT %s
+
+# CHECK-DEFAULT:      "-cc1" "-triple" "thumbv8m.main-unknown-none-eabi"
+# CHECK-DEFAULT-SAME: "-internal-isystem" "[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/thumb/v8-m.main/nofp/include"
+# CHECK-DEFAULT-NEXT: "-L[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/thumb/v8-m.main/nofp/lib"
+
+# RUN: %T/baremetal_multilib/bin/clang -no-canonical-prefixes -x c %s -### -o %t.out 2>&1 \
+# RUN:     --target=thumbv8m.main-none-eabi -mfpu=none -fmultilib-flag=no-multithreaded --sysroot= \
+# RUN:   | FileCheck -DSYSROOT=%T/baremetal_multilib --check-prefix=CHECK-NOMULTI %s
+
+# CHECK-NOMULTI:      "-cc1" "-triple" "thumbv8m.main-unknown-none-eabi"
+# CHECK-NOMULTI-SAME: "-internal-isystem" "[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/thumb/v8-m.main/nofp/include"
+# CHECK-NOMULTI-NEXT: "-L[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/thumb/v8-m.main/nofp/lib"
+
+# RUN: %T/baremetal_multilib/bin/clang -no-canonical-prefixes -x c %s -### -o %t.out 2>&1 \
+# RUN:     --target=thumbv8m.main-none-eabi -mfpu=none -fmultilib-flag=multithreaded --sysroot= \
+# RUN:   | FileCheck -DSYSROOT=%T/baremetal_multilib --check-prefix=CHECK-MULTI %s
+
+# CHECK-MULTI:      "-cc1" "-triple" "thumbv8m.main-unknown-none-eabi"
+# CHECK-MULTI-SAME: "-internal-isystem" "[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/multithreaded/thumb/v8-m.main/nofp/include"
+# CHECK-MULTI-NEXT: "-L[[SYSROOT]]/bin/../lib/clang-runtimes/arm-none-eabi/multithreaded/thumb/v8-m.main/nofp/lib"
+
+# RUN: %T/baremetal_multilib/bin/clang -no-canonical-prefixes -x c %s -### -o %t.out 2>&1 \
+# RUN:     --target=thumbv8m.main-none-eabi -mfpu=none -fmultilib-flag=multi-threaded --sysroot= \
+# RUN:   | FileCheck -DSYSROOT=%T/baremetal_multilib --check-prefix=CHECK-WARNING %s
+# CHECK-WARNING: warning: unsupported option '-fmultilib-flag=multi-threaded'; did you mean '-fmultilib-flag=multithreaded'?
+
+---
+MultilibVersion: 1.0
+
+Groups:
+- Name: stdlib
+  Type: Exclusive
+
+Variants:
+- Dir: arm-none-eabi/thumb/v8-m.main/nofp
+  Flags: [--target=thumbv8m.main-unknown-none-eabi, -mfpu=none, -fmultilib-flag=no-multithreaded]
+  Group: stdlib
+- Dir: arm-none-eabi/multithreaded/thumb/v8-m.main/nofp
+  Flags: [--target=thumbv8m.main-unknown-none-eabi, -mfpu=none, -fmultilib-flag=multithreaded]
+  Group: stdlib
+
+Flags:
+ - Name: multithreading
+   Values: [no-multithreaded, multithreaded]
+   Default: no-multithreaded
