@@ -655,21 +655,16 @@ Expected<SmallVector<StringRef>> getInput(const ArgList &Args) {
     }
   }
 
-  // Copy all of the input files to a new file ending in `.cubin`. The 'nvlink'
+  // Create a link for each file to a new file ending in `.cubin`. The 'nvlink'
   // linker requires all NVPTX inputs to have this extension for some reason.
   for (auto &Input : LinkerInput) {
     auto TempFileOrErr = createTempFile(
         Args, sys::path::stem(Input->getBufferIdentifier()), "cubin");
     if (!TempFileOrErr)
       return TempFileOrErr.takeError();
-    Expected<std::unique_ptr<FileOutputBuffer>> OutputOrErr =
-        FileOutputBuffer::create(*TempFileOrErr, Input->getBuffer().size());
-    if (!OutputOrErr)
-      return OutputOrErr.takeError();
-    std::unique_ptr<FileOutputBuffer> Output = std::move(*OutputOrErr);
-    llvm::copy(Input->getBuffer(), Output->getBufferStart());
-    if (Error E = Output->commit())
-      return E;
+    if (std::error_code EC =
+            sys::fs::create_link(Input->getBufferIdentifier(), *TempFileOrErr))
+      reportError(createFileError(*TempFileOrErr, EC));
     Files.emplace_back(Args.MakeArgString(*TempFileOrErr));
   }
 
