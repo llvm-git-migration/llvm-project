@@ -13,6 +13,7 @@
 
 #include "mlir/TableGen/GenInfo.h"
 
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
@@ -25,6 +26,7 @@ using llvm::ClauseVal;
 using llvm::raw_ostream;
 using llvm::Record;
 using llvm::RecordKeeper;
+using llvm::Twine;
 
 // LLVM has multiple places (Clang, Flang, MLIR) where information about
 // the directives (OpenMP/OpenACC), and clauses are needed. It is good software
@@ -54,8 +56,7 @@ static bool emitDecls(const RecordKeeper &recordKeeper, llvm::StringRef dialect,
       recordKeeper.getAllDerivedDefinitions("DirectiveLanguage");
   assert(!directiveLanguages.empty() && "DirectiveLanguage missing.");
 
-  for (const Record *r : recordKeeper.getAllDerivedDefinitions("Clause")) {
-    Clause c{r};
+  for (const Clause c : recordKeeper.getAllDerivedDefinitions("Clause")) {
     const auto &clauseVals = c.getClauseVals();
     if (clauseVals.empty())
       continue;
@@ -65,14 +66,13 @@ static bool emitDecls(const RecordKeeper &recordKeeper, llvm::StringRef dialect,
 
     std::vector<std::string> cvDefs;
     for (const auto &it : llvm::enumerate(clauseVals)) {
-      ClauseVal cval{it.value()};
+      const ClauseVal cval{it.value()};
       if (!cval.isUserVisible())
         continue;
 
       std::string name = cval.getFormattedName();
       std::string enumValName(name.length(), ' ');
-      std::transform(name.begin(), name.end(), enumValName.begin(),
-                     llvm::toLower);
+      llvm::transform(name, enumValName.begin(), llvm::toLower);
       enumValName[0] = llvm::toUpper(enumValName[0]);
       std::string cvDef{(enumName + llvm::Twine(name)).str()};
       os << "def " << cvDef << " : I32EnumAttrCase<\"" << enumValName << "\", "
@@ -84,11 +84,9 @@ static bool emitDecls(const RecordKeeper &recordKeeper, llvm::StringRef dialect,
     os << "  \"Clause" << enumName << "\",\n";
     os << "  \"" << enumName << " Clause\",\n";
     os << "  [";
-    for (unsigned int i = 0; i < cvDefs.size(); i++) {
-      os << cvDefs[i];
-      if (i != cvDefs.size() - 1)
-        os << ",";
-    }
+    llvm::ListSeparator LS;
+    for (const auto &cvDef : cvDefs)
+      os << LS << cvDef;
     os << "]> {\n";
     os << "    let cppNamespace = \"::mlir::"
        << directiveLanguages[0]->getValueAsString("cppNamespace") << "\";\n";
