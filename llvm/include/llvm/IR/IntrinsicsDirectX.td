@@ -87,7 +87,7 @@ def int_dx_sign : DefaultAttrsIntrinsic<[LLVMScalarOrSameVectorWidth<0, llvm_i32
 def int_dx_step : DefaultAttrsIntrinsic<[LLVMMatchType<0>], [llvm_anyfloat_ty, LLVMMatchType<0>], [IntrNoMem]>;
 
 def int_dx_splitdouble : DefaultAttrsIntrinsic<
-    [llvm_anyint_ty, LLVMMatchType<0>], 
-    [LLVMScalarOrSameVectorWidth<0, llvm_double_ty>], 
+    [llvm_anyvector_ty], 
+    [llvm_double_ty], 
     [IntrNoMem, IntrWillReturn]>;
 }
