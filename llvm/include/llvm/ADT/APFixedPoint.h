@@ -114,6 +114,9 @@ public:
   }
   bool operator!=(FixedPointSemantics Other) const { return !(*this == Other); }
 
+  uint32_t toOpaqueInt() const;
+  static FixedPointSemantics getFromOpaqueInt(uint32_t);
+
 private:
   unsigned Width          : WidthBitWidth;
   signed int LsbWeight    : LsbWeightBitWidth;
