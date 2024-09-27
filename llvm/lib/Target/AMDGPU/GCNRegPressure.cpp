@@ -605,26 +605,22 @@ bool GCNDownwardRPTracker::reset(const MachineInstr &MI,
 }
 
 bool GCNDownwardRPTracker::advanceBeforeNext(MachineInstr *MI,
-                                             bool UseInternalIterator,
-                                             LiveIntervals *TheLIS) {
+                                             bool UseInternalIterator) {
   assert(MRI && "call reset first");
   SlotIndex SI;
-  const LiveIntervals *CurrLIS;
   const MachineInstr *CurrMI;
   if (UseInternalIterator) {
     if (!LastTrackedMI)
       return NextMI == MBBEnd;
 
     assert(NextMI == MBBEnd || !NextMI->isDebugInstr());
-    CurrLIS = &LIS;
     CurrMI = LastTrackedMI;
 
     SI = NextMI == MBBEnd
-             ? CurrLIS->getInstructionIndex(*LastTrackedMI).getDeadSlot()
-             : CurrLIS->getInstructionIndex(*NextMI).getBaseIndex();
+             ? LIS.getInstructionIndex(*LastTrackedMI).getDeadSlot()
+             : LIS.getInstructionIndex(*NextMI).getBaseIndex();
   } else { //! UseInternalIterator
-    CurrLIS = TheLIS;
-    SI = CurrLIS->getInstructionIndex(*MI).getBaseIndex();
+    SI = LIS.getInstructionIndex(*MI).getBaseIndex();
     CurrMI = MI;
   }
 
@@ -641,7 +637,7 @@ bool GCNDownwardRPTracker::advanceBeforeNext(MachineInstr *MI,
       continue;
     if (!SeenRegs.insert(MO.getReg()).second)
       continue;
-    const LiveInterval &LI = CurrLIS->getInterval(MO.getReg());
+    const LiveInterval &LI = LIS.getInterval(MO.getReg());
     if (LI.hasSubRanges()) {
       auto It = LiveRegs.end();
       for (const auto &S : LI.subranges()) {
@@ -699,16 +695,15 @@ void GCNDownwardRPTracker::advanceToNext(MachineInstr *MI,
   MaxPressure = max(MaxPressure, CurPressure);
 }
 
-bool GCNDownwardRPTracker::advance(MachineInstr *MI, bool UseInternalIterator,
-                                   LiveIntervals *TheLIS) {
+bool GCNDownwardRPTracker::advance(MachineInstr *MI, bool UseInternalIterator) {
   if (UseInternalIterator && NextMI == MBBEnd)
     return false;
 
-  advanceBeforeNext(MI, UseInternalIterator, TheLIS);
+  advanceBeforeNext(MI, UseInternalIterator);
   advanceToNext(MI, UseInternalIterator);
   if (!UseInternalIterator) {
     // We must remove any dead def lanes from the current RP
-    advanceBeforeNext(MI, true, TheLIS);
+    advanceBeforeNext(MI, true);
   }
   return true;
 }

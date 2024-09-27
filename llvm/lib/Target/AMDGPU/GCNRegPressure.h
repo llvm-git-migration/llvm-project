@@ -280,10 +280,9 @@ public:
   /// it is assumed that the tracker is using an externally managed iterator,
   /// and advance* calls will not update the state of the iterator. In such
   /// cases, the tracker will move to the state right before the provided \p MI
-  /// and use the provided \p TheLIS for RP calculations.
+  /// and use LIS for RP calculations.
   bool advanceBeforeNext(MachineInstr *MI = nullptr,
-                         bool UseInternalIterator = true,
-                         LiveIntervals *TheLIS = nullptr);
+                         bool UseInternalIterator = true);
 
   /// Move to the state at the MI, advanceBeforeNext has to be called first.
   /// If \p UseInternalIterator is true, then internal iterators are used and
@@ -300,9 +299,8 @@ public:
   /// then it is assumed that the tracker is using an externally managed
   /// iterator, and advance* calls will not update the state of the iterator. In
   /// such cases, the tracker will move to the state right before the provided
-  /// \p MI and use the provided \p TheLIS for RP calculations.
-  bool advance(MachineInstr *MI = nullptr, bool UseInternalIterator = true,
-               LiveIntervals *TheLIS = nullptr);
+  /// \p MI and use LIS for RP calculations.
+  bool advance(MachineInstr *MI = nullptr, bool UseInternalIterator = true);
 
   /// Advance instructions until before \p End.
   bool advance(MachineBasicBlock::const_iterator End);
