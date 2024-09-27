@@ -2755,6 +2755,8 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
 
   // These builtins restrict the element type to floating point
   // types only, and take in two arguments.
+  case Builtin::BI__builtin_elementwise_minimum:
+  case Builtin::BI__builtin_elementwise_maximum:
   case Builtin::BI__builtin_elementwise_pow: {
     if (BuiltinElementwiseMath(TheCall))
       return ExprError();
@@ -2861,6 +2863,29 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     if (ElTy.isNull()) {
       Diag(Arg->getBeginLoc(), diag::err_builtin_invalid_arg_type)
           << 1 << /* vector ty*/ 4 << Arg->getType();
+      return ExprError();
+    }
+
+    TheCall->setType(ElTy);
+    break;
+  }
+  case Builtin::BI__builtin_reduce_maximum:
+  case Builtin::BI__builtin_reduce_minimum: {
+    if (PrepareBuiltinReduceMathOneArgCall(TheCall))
+      return ExprError();
+
+    const Expr *Arg = TheCall->getArg(0);
+    const auto *TyA = Arg->getType()->getAs<VectorType>();
+
+    QualType ElTy;
+    if (TyA)
+      ElTy = TyA->getElementType();
+    else if (Arg->getType()->isSizelessVectorType())
+      ElTy = Arg->getType()->getSizelessVectorEltType(Context);
+
+    if (ElTy.isNull() || !ElTy->isFloatingType()) {
+      Diag(Arg->getBeginLoc(), diag::err_builtin_invalid_arg_type)
+          << 1 << /* vector of floating points */ 9 << Arg->getType();
       return ExprError();
     }
 

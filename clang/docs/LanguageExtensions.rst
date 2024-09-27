@@ -706,6 +706,12 @@ Unless specified otherwise operation(±0) = ±0 and operation(±infinity) = ±in
                                              representable values for the signed/unsigned integer type.
  T __builtin_elementwise_sub_sat(T x, T y)   return the difference of x and y, clamped to the range of        integer types
                                              representable values for the signed/unsigned integer type.
+ T __builtin_elementwise_maximum(T x, T y)   return x or y, whichever is larger. Follows IEEE 754-2019        floating point types
+                                             semantics, see `LangRef <http://llvm.org/docs/LangRef.html#llvm-min-intrinsics-comparation>`_
+                                             for the comparison.
+ T __builtin_elementwise_minimum(T x, T y)   return x or y, whichever is smaller. Follows IEEE 754-2019       floating point types
+                                             semantics, see `LangRef <http://llvm.org/docs/LangRef.html#llvm-min-intrinsics-comparation>`_
+                                             for the comparison.
 =========================================== ================================================================ =========================================
 
 
@@ -745,6 +751,12 @@ Let ``VT`` be a vector type and ``ET`` the element type of ``VT``.
  ET __builtin_reduce_and(VT a)           &                                                                integer types
  ET __builtin_reduce_or(VT a)            \|                                                               integer types
  ET __builtin_reduce_xor(VT a)           ^                                                                integer types
+ ET __builtin_reduce_maximum(VT a)       return the largest element of the vector. Follows IEEE 754-2019  floating point types
+                                         semantics, see `LangRef <http://llvm.org/docs/LangRef.html#llvm-min-intrinsics-comparation>`_
+                                         for the comparison.
+ ET __builtin_reduce_minimum(VT a)       return the smallest element of the vector. Follows IEEE 754-2019 floating point types
+                                         semantics, see `LangRef <http://llvm.org/docs/LangRef.html#llvm-min-intrinsics-comparation>`_
+                                         for the comparison.
 ======================================= ================================================================ ==================================
 
 Matrix Types
