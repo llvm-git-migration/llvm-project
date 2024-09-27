@@ -6750,7 +6750,8 @@ AST_POLYMORPHIC_MATCHER(isTemplateInstantiation,
 ///   matches 'A(int) {...};' and 'A(unsigned) {...}'.
 AST_MATCHER_FUNCTION(internal::Matcher<Decl>, isInstantiated) {
   auto IsInstantiation = decl(anyOf(cxxRecordDecl(isTemplateInstantiation()),
-                                    functionDecl(isTemplateInstantiation())));
+                                    functionDecl(isTemplateInstantiation()),
+                                    varDecl(isTemplateInstantiation())));
   return decl(anyOf(IsInstantiation, hasAncestor(IsInstantiation)));
 }
 
@@ -6771,7 +6772,8 @@ AST_MATCHER_FUNCTION(internal::Matcher<Decl>, isInstantiated) {
 AST_MATCHER_FUNCTION(internal::Matcher<Stmt>, isInTemplateInstantiation) {
   return stmt(
       hasAncestor(decl(anyOf(cxxRecordDecl(isTemplateInstantiation()),
-                             functionDecl(isTemplateInstantiation())))));
+                             functionDecl(isTemplateInstantiation()),
+                             varDecl(isTemplateInstantiation())))));
 }
 
 /// Matches explicit template specializations of function, class, or
