@@ -4926,7 +4926,7 @@ define amdgpu_gs void @sgpr_base_large_offset(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GFX12-LABEL: sgpr_base_large_offset:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-NEXT:    scratch_load_b32 v2, off, s0 offset:65512
 ; GFX12-NEXT:    s_wait_loadcnt 0x0
 ; GFX12-NEXT:    global_store_b32 v[0:1], v2, off
 ; GFX12-NEXT:    s_nop 0
@@ -4985,7 +4985,7 @@ define amdgpu_gs void @sgpr_base_large_offset(ptr addrspace(1) %out, ptr addrspa
 ;
 ; GFX12-PAL-LABEL: sgpr_base_large_offset:
 ; GFX12-PAL:       ; %bb.0: ; %entry
-; GFX12-PAL-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-PAL-NEXT:    scratch_load_b32 v2, off, s0 offset:65512
 ; GFX12-PAL-NEXT:    s_wait_loadcnt 0x0
 ; GFX12-PAL-NEXT:    global_store_b32 v[0:1], v2, off
 ; GFX12-PAL-NEXT:    s_nop 0

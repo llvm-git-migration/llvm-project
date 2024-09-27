@@ -1911,7 +1911,7 @@ bool AMDGPUDAGToDAGISel::SelectScratchSAddr(SDNode *Parent, SDValue Addr,
                     0);
   }
 
-  Offset = CurDAG->getTargetConstant(COffsetVal, DL, MVT::i16);
+  Offset = CurDAG->getTargetConstant(COffsetVal, DL, MVT::i32);
 
   return true;
 }
