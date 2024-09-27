@@ -115,4 +115,3 @@ bool vputils::isUniformAcrossVFsAndUFs(VPValue *V) {
         return false;
       });
 }
-
