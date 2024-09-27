@@ -3,7 +3,7 @@
 
 float builtin_bool_to_float_type_promotion(bool p1, bool p2) {
   return __builtin_elementwise_fmod(p1, p2);
-  // expected-error@-1 {{1st argument must be a vector, integer or floating point type (was 'bool')}}
+  // expected-error@-1 {{1st argument must be a floating point type (was 'bool')}}
 }
 
 float2 builtin_fmod_int2_to_float2_promotion(int2 p1, int2 p2) {
