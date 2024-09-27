@@ -155,9 +155,14 @@ bool VPlanVerifier::verifyEVLRecipe(const VPInstruction &EVL) const {
              .Case<VPScalarCastRecipe>(
                  [&](const VPScalarCastRecipe *S) { return true; })
              .Case<VPInstruction>([&](const VPInstruction *I) {
-               if (I->getOpcode() != Instruction::Add) {
-                 errs()
-                     << "EVL is used as an operand in non-VPInstruction::Add\n";
+               unsigned Opc = I->getOpcode();
+               if (Opc == VPInstruction::CSAAnyActiveEVL ||
+                   Opc == VPInstruction::CSAVLSel)
+                 return true;
+
+               if (Opc != Instruction::Add) {
+                 errs() << "EVL is used as an operand that does not expect EVL "
+                           "operand\n";
                  return false;
                }
                if (I->getNumUsers() != 1) {

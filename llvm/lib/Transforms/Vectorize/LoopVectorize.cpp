@@ -2926,8 +2926,8 @@ void InnerLoopVectorizer::fixCSALiveOuts(VPTransformState &State, VPlan &Plan) {
     assert(VPDataUpdate &&
            "VPDataUpdate must have been introduced prior to fixing live outs");
     Value *V = VPDataUpdate->getUnderlyingValue();
-    Value *ExtractedScalar = State.get(CSA.second->getExtractScalarRecipe(), 0,
-                                       /*NeedsScalar=*/true);
+    Value *ExtractedScalar =
+        State.get(CSA.second->getExtractScalarRecipe(), /*NeedsScalar=*/true);
     // Fix LCSSAPhis
     llvm::SmallPtrSet<PHINode *, 2> ToFix;
     for (User *U : V->users())
