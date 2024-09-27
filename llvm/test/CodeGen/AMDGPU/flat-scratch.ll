@@ -4891,5 +4891,215 @@ bb:
   ret void
 }
 
+define amdgpu_gs void @sgpr_base_large_offset(ptr addrspace(1) %out, ptr addrspace(5) inreg %scevgep) {
+; GFX9-LABEL: sgpr_base_large_offset:
+; GFX9:       ; %bb.0: ; %entry
+; GFX9-NEXT:    s_add_u32 flat_scratch_lo, s0, s5
+; GFX9-NEXT:    s_addc_u32 flat_scratch_hi, s1, 0
+; GFX9-NEXT:    s_add_i32 s2, s2, 0xffe8
+; GFX9-NEXT:    scratch_load_dword v2, off, s2
+; GFX9-NEXT:    s_waitcnt vmcnt(0)
+; GFX9-NEXT:    global_store_dword v[0:1], v2, off
+; GFX9-NEXT:    s_endpgm
+;
+; GFX10-LABEL: sgpr_base_large_offset:
+; GFX10:       ; %bb.0: ; %entry
+; GFX10-NEXT:    s_add_u32 s0, s0, s5
+; GFX10-NEXT:    s_addc_u32 s1, s1, 0
+; GFX10-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_LO), s0
+; GFX10-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_HI), s1
+; GFX10-NEXT:    s_add_i32 s2, s2, 0xffe8
+; GFX10-NEXT:    scratch_load_dword v2, off, s2
+; GFX10-NEXT:    s_waitcnt vmcnt(0)
+; GFX10-NEXT:    global_store_dword v[0:1], v2, off
+; GFX10-NEXT:    s_endpgm
+;
+; GFX11-LABEL: sgpr_base_large_offset:
+; GFX11:       ; %bb.0: ; %entry
+; GFX11-NEXT:    s_add_i32 s0, s0, 0xffe8
+; GFX11-NEXT:    scratch_load_b32 v2, off, s0
+; GFX11-NEXT:    s_waitcnt vmcnt(0)
+; GFX11-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX11-NEXT:    s_nop 0
+; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX11-NEXT:    s_endpgm
+;
+; GFX12-LABEL: sgpr_base_large_offset:
+; GFX12:       ; %bb.0: ; %entry
+; GFX12-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-NEXT:    s_wait_loadcnt 0x0
+; GFX12-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX12-NEXT:    s_nop 0
+; GFX12-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX12-NEXT:    s_endpgm
+;
+; GFX9-PAL-LABEL: sgpr_base_large_offset:
+; GFX9-PAL:       ; %bb.0: ; %entry
+; GFX9-PAL-NEXT:    s_getpc_b64 s[2:3]
+; GFX9-PAL-NEXT:    s_mov_b32 s2, s8
+; GFX9-PAL-NEXT:    s_load_dwordx2 s[2:3], s[2:3], 0x0
+; GFX9-PAL-NEXT:    s_waitcnt lgkmcnt(0)
+; GFX9-PAL-NEXT:    s_and_b32 s3, s3, 0xffff
+; GFX9-PAL-NEXT:    s_add_u32 flat_scratch_lo, s2, s5
+; GFX9-PAL-NEXT:    s_addc_u32 flat_scratch_hi, s3, 0
+; GFX9-PAL-NEXT:    s_add_i32 s0, s0, 0xffe8
+; GFX9-PAL-NEXT:    scratch_load_dword v2, off, s0
+; GFX9-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX9-PAL-NEXT:    global_store_dword v[0:1], v2, off
+; GFX9-PAL-NEXT:    s_endpgm
+;
+; GFX940-LABEL: sgpr_base_large_offset:
+; GFX940:       ; %bb.0: ; %entry
+; GFX940-NEXT:    s_add_i32 s0, s0, 0xffe8
+; GFX940-NEXT:    scratch_load_dword v2, off, s0
+; GFX940-NEXT:    s_waitcnt vmcnt(0)
+; GFX940-NEXT:    global_store_dword v[0:1], v2, off sc0 sc1
+; GFX940-NEXT:    s_endpgm
+;
+; GFX10-PAL-LABEL: sgpr_base_large_offset:
+; GFX10-PAL:       ; %bb.0: ; %entry
+; GFX10-PAL-NEXT:    s_getpc_b64 s[2:3]
+; GFX10-PAL-NEXT:    s_mov_b32 s2, s8
+; GFX10-PAL-NEXT:    s_load_dwordx2 s[2:3], s[2:3], 0x0
+; GFX10-PAL-NEXT:    s_waitcnt lgkmcnt(0)
+; GFX10-PAL-NEXT:    s_and_b32 s3, s3, 0xffff
+; GFX10-PAL-NEXT:    s_add_u32 s2, s2, s5
+; GFX10-PAL-NEXT:    s_addc_u32 s3, s3, 0
+; GFX10-PAL-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_LO), s2
+; GFX10-PAL-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_HI), s3
+; GFX10-PAL-NEXT:    s_add_i32 s0, s0, 0xffe8
+; GFX10-PAL-NEXT:    scratch_load_dword v2, off, s0
+; GFX10-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX10-PAL-NEXT:    global_store_dword v[0:1], v2, off
+; GFX10-PAL-NEXT:    s_endpgm
+;
+; GFX11-PAL-LABEL: sgpr_base_large_offset:
+; GFX11-PAL:       ; %bb.0: ; %entry
+; GFX11-PAL-NEXT:    s_add_i32 s0, s0, 0xffe8
+; GFX11-PAL-NEXT:    scratch_load_b32 v2, off, s0
+; GFX11-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX11-PAL-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX11-PAL-NEXT:    s_nop 0
+; GFX11-PAL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX11-PAL-NEXT:    s_endpgm
+;
+; GFX12-PAL-LABEL: sgpr_base_large_offset:
+; GFX12-PAL:       ; %bb.0: ; %entry
+; GFX12-PAL-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-PAL-NEXT:    s_wait_loadcnt 0x0
+; GFX12-PAL-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX12-PAL-NEXT:    s_nop 0
+; GFX12-PAL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX12-PAL-NEXT:    s_endpgm
+entry:
+  %scevgep28 = getelementptr i8, ptr addrspace(5) %scevgep, i32 65512
+  %0 = load i32, ptr addrspace(5) %scevgep28, align 4
+  store i32 %0, ptr addrspace(1) %out
+  ret void
+}
+
+define amdgpu_gs void @sgpr_base_negative_offset(ptr addrspace(1) %out, ptr addrspace(5) inreg %scevgep) {
+; GFX9-LABEL: sgpr_base_negative_offset:
+; GFX9:       ; %bb.0: ; %entry
+; GFX9-NEXT:    s_add_u32 flat_scratch_lo, s0, s5
+; GFX9-NEXT:    s_addc_u32 flat_scratch_hi, s1, 0
+; GFX9-NEXT:    s_addk_i32 s2, 0xffe8
+; GFX9-NEXT:    scratch_load_dword v2, off, s2
+; GFX9-NEXT:    s_waitcnt vmcnt(0)
+; GFX9-NEXT:    global_store_dword v[0:1], v2, off
+; GFX9-NEXT:    s_endpgm
+;
+; GFX10-LABEL: sgpr_base_negative_offset:
+; GFX10:       ; %bb.0: ; %entry
+; GFX10-NEXT:    s_add_u32 s0, s0, s5
+; GFX10-NEXT:    s_addc_u32 s1, s1, 0
+; GFX10-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_LO), s0
+; GFX10-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_HI), s1
+; GFX10-NEXT:    scratch_load_dword v2, off, s2 offset:-24
+; GFX10-NEXT:    s_waitcnt vmcnt(0)
+; GFX10-NEXT:    global_store_dword v[0:1], v2, off
+; GFX10-NEXT:    s_endpgm
+;
+; GFX11-LABEL: sgpr_base_negative_offset:
+; GFX11:       ; %bb.0: ; %entry
+; GFX11-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX11-NEXT:    s_waitcnt vmcnt(0)
+; GFX11-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX11-NEXT:    s_nop 0
+; GFX11-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX11-NEXT:    s_endpgm
+;
+; GFX12-LABEL: sgpr_base_negative_offset:
+; GFX12:       ; %bb.0: ; %entry
+; GFX12-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-NEXT:    s_wait_loadcnt 0x0
+; GFX12-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX12-NEXT:    s_nop 0
+; GFX12-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX12-NEXT:    s_endpgm
+;
+; GFX9-PAL-LABEL: sgpr_base_negative_offset:
+; GFX9-PAL:       ; %bb.0: ; %entry
+; GFX9-PAL-NEXT:    s_getpc_b64 s[2:3]
+; GFX9-PAL-NEXT:    s_mov_b32 s2, s8
+; GFX9-PAL-NEXT:    s_load_dwordx2 s[2:3], s[2:3], 0x0
+; GFX9-PAL-NEXT:    s_waitcnt lgkmcnt(0)
+; GFX9-PAL-NEXT:    s_and_b32 s3, s3, 0xffff
+; GFX9-PAL-NEXT:    s_add_u32 flat_scratch_lo, s2, s5
+; GFX9-PAL-NEXT:    s_addc_u32 flat_scratch_hi, s3, 0
+; GFX9-PAL-NEXT:    s_addk_i32 s0, 0xffe8
+; GFX9-PAL-NEXT:    scratch_load_dword v2, off, s0
+; GFX9-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX9-PAL-NEXT:    global_store_dword v[0:1], v2, off
+; GFX9-PAL-NEXT:    s_endpgm
+;
+; GFX940-LABEL: sgpr_base_negative_offset:
+; GFX940:       ; %bb.0: ; %entry
+; GFX940-NEXT:    s_addk_i32 s0, 0xffe8
+; GFX940-NEXT:    scratch_load_dword v2, off, s0
+; GFX940-NEXT:    s_waitcnt vmcnt(0)
+; GFX940-NEXT:    global_store_dword v[0:1], v2, off sc0 sc1
+; GFX940-NEXT:    s_endpgm
+;
+; GFX10-PAL-LABEL: sgpr_base_negative_offset:
+; GFX10-PAL:       ; %bb.0: ; %entry
+; GFX10-PAL-NEXT:    s_getpc_b64 s[2:3]
+; GFX10-PAL-NEXT:    s_mov_b32 s2, s8
+; GFX10-PAL-NEXT:    s_load_dwordx2 s[2:3], s[2:3], 0x0
+; GFX10-PAL-NEXT:    s_waitcnt lgkmcnt(0)
+; GFX10-PAL-NEXT:    s_and_b32 s3, s3, 0xffff
+; GFX10-PAL-NEXT:    s_add_u32 s2, s2, s5
+; GFX10-PAL-NEXT:    s_addc_u32 s3, s3, 0
+; GFX10-PAL-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_LO), s2
+; GFX10-PAL-NEXT:    s_setreg_b32 hwreg(HW_REG_FLAT_SCR_HI), s3
+; GFX10-PAL-NEXT:    scratch_load_dword v2, off, s0 offset:-24
+; GFX10-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX10-PAL-NEXT:    global_store_dword v[0:1], v2, off
+; GFX10-PAL-NEXT:    s_endpgm
+;
+; GFX11-PAL-LABEL: sgpr_base_negative_offset:
+; GFX11-PAL:       ; %bb.0: ; %entry
+; GFX11-PAL-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX11-PAL-NEXT:    s_waitcnt vmcnt(0)
+; GFX11-PAL-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX11-PAL-NEXT:    s_nop 0
+; GFX11-PAL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX11-PAL-NEXT:    s_endpgm
+;
+; GFX12-PAL-LABEL: sgpr_base_negative_offset:
+; GFX12-PAL:       ; %bb.0: ; %entry
+; GFX12-PAL-NEXT:    scratch_load_b32 v2, off, s0 offset:-24
+; GFX12-PAL-NEXT:    s_wait_loadcnt 0x0
+; GFX12-PAL-NEXT:    global_store_b32 v[0:1], v2, off
+; GFX12-PAL-NEXT:    s_nop 0
+; GFX12-PAL-NEXT:    s_sendmsg sendmsg(MSG_DEALLOC_VGPRS)
+; GFX12-PAL-NEXT:    s_endpgm
+entry:
+  %scevgep28 = getelementptr i8, ptr addrspace(5) %scevgep, i32 -24
+  %0 = load i32, ptr addrspace(5) %scevgep28, align 4
+  store i32 %0, ptr addrspace(1) %out
+  ret void
+}
+
 declare void @llvm.memset.p5.i64(ptr addrspace(5) nocapture writeonly, i8, i64, i1 immarg)
 declare i32 @llvm.amdgcn.workitem.id.x()
