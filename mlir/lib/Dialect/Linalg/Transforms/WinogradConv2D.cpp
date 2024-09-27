@@ -837,9 +837,25 @@ Value outputTransform(RewriterBase &rewriter, Location loc, Value value,
     Value widthOffset =
         builder.create<affine::AffineApplyOp>(loc, affineMap, tileWIter);
 
+    // Handling bias.
+    Value prevVal =
+        extract2DDataFrom4D(builder, loc, args[0], NIter, FIter, heightOffset,
+                            widthOffset, retRows, retCols,
+                            /*loopNorFIdx=*/0,
+                            /*loopCorFIdx=*/3, /*heightIdx=*/1,
+                            /*widthIdx=*/2);
+    Value biasedVal =
+        builder
+            .create<linalg::AddOp>(
+                loc, prevVal.getType(), ValueRange{matmulRetValue, prevVal},
+                ValueRange{builder.create<tensor::EmptyOp>(
+                    loc, llvm::cast<ShapedType>(prevVal.getType()).getShape(),
+                    elementType)})
+            .getResult(0);
+
     // Insert (H, W) to (N, H, W, F).
     Value combinedVal =
-        insert2DDataTo4D(builder, loc, matmulRetValue, args[0], NIter, FIter,
+        insert2DDataTo4D(builder, loc, biasedVal, args[0], NIter, FIter,
                          heightOffset, widthOffset, retRows, retCols,
                          /*loopNorFIdx=*/0,
                          /*loopCorFIdx=*/3, /*heightIdx=*/1,
