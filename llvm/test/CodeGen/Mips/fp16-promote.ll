@@ -62,8 +62,8 @@ define <4 x float> @test_vec_fpext_float(ptr %p) #0 {
 ; CHECK-LIBCALL-LABEL: test_vec_fpext_double:
 ; CHECK-LIBCALL: %call16(__gnu_h2f_ieee)
 ; CHECK-LIBCALL: %call16(__gnu_h2f_ieee)
-; CHECK-LIBCALL: %call16(__gnu_h2f_ieee)
 ; CHECK-LIBCALL: cvt.d.s
+; CHECK-LIBCALL: %call16(__gnu_h2f_ieee)
 ; CHECK-LIBCALL: cvt.d.s
 ; CHECK-LIBCALL: cvt.d.s
 ; CHECK-LIBCALL: %call16(__gnu_h2f_ieee)

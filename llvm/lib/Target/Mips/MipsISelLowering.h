@@ -369,9 +369,11 @@ class TargetRegisterClass;
       return getTargetMachine().isPositionIndependent();
     }
 
-   CCAssignFn *CCAssignFnForCall() const;
+    CCAssignFn *CCAssignFnForCall() const;
 
-   CCAssignFn *CCAssignFnForReturn() const;
+    CCAssignFn *CCAssignFnForReturn() const;
+
+    bool softPromoteHalfType() const override { return true; }
 
   protected:
     SDValue getGlobalReg(SelectionDAG &DAG, EVT Ty) const;
@@ -390,8 +392,8 @@ class TargetRegisterClass;
           DAG.getLoad(Ty, DL, DAG.getEntryNode(), GOT,
                       MachinePointerInfo::getGOT(DAG.getMachineFunction()));
       unsigned LoFlag = IsN32OrN64 ? MipsII::MO_GOT_OFST : MipsII::MO_ABS_LO;
-      SDValue Lo = DAG.getNode(MipsISD::Lo, DL, Ty,
-                               getTargetNode(N, Ty, DAG, LoFlag));
+      SDValue Lo =
+          DAG.getNode(MipsISD::Lo, DL, Ty, getTargetNode(N, Ty, DAG, LoFlag));
       return DAG.getNode(ISD::ADD, DL, Ty, Load, Lo);
     }
 
