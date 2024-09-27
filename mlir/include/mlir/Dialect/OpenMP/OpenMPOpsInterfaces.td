@@ -47,38 +47,66 @@ def BlockArgOpenMPOpInterface : OpInterface<"BlockArgOpenMPOpInterface"> {
     }]>,
 
     // Unified access methods for clause-associated entry block arguments.
+    InterfaceMethod<"Get start index of block arguments defined by `in_reduction`.",
+                    "unsigned", "getInReductionBlockArgsStart", (ins), [{
+      return 0;
+    }]>,
+    InterfaceMethod<"Get start index of block arguments defined by `map`.",
+                    "unsigned", "getMapBlockArgsStart", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
+      return iface.getInReductionBlockArgsStart() +
+             $_op.numInReductionBlockArgs();
+    }]>,
+    InterfaceMethod<"Get start index of block arguments defined by `private`.",
+                    "unsigned", "getPrivateBlockArgsStart", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
+      return iface.getMapBlockArgsStart() + $_op.numMapBlockArgs();
+    }]>,
+    InterfaceMethod<"Get start index of block arguments defined by `reduction`.",
+                    "unsigned", "getReductionBlockArgsStart", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
+      return iface.getPrivateBlockArgsStart() + $_op.numPrivateBlockArgs();
+    }]>,
+    InterfaceMethod<"Get start index of block arguments defined by `task_reduction`.",
+                    "unsigned", "getTaskReductionBlockArgsStart", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
+      return iface.getReductionBlockArgsStart() + $_op.numReductionBlockArgs();
+    }]>,
+
     InterfaceMethod<"Get block arguments defined by `in_reduction`.",
                     "::llvm::MutableArrayRef<::mlir::BlockArgument>",
                     "getInReductionBlockArgs", (ins), [{
-      return $_op->getRegion(0).getArguments().take_front(
-          $_op.numInReductionBlockArgs());
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
+      return $_op->getRegion(0).getArguments().slice(
+          iface.getInReductionBlockArgsStart(), $_op.numInReductionBlockArgs());
     }]>,
     InterfaceMethod<"Get block arguments defined by `map`.",
                     "::llvm::MutableArrayRef<::mlir::BlockArgument>",
                     "getMapBlockArgs", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
       return $_op->getRegion(0).getArguments().slice(
-          $_op.numInReductionBlockArgs(), $_op.numMapBlockArgs());
+          iface.getMapBlockArgsStart(), $_op.numMapBlockArgs());
     }]>,
     InterfaceMethod<"Get block arguments defined by `private`.",
                     "::llvm::MutableArrayRef<::mlir::BlockArgument>",
                     "getPrivateBlockArgs", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
       return $_op->getRegion(0).getArguments().slice(
-          $_op.numInReductionBlockArgs() + $_op.numMapBlockArgs(),
-          $_op.numPrivateBlockArgs());
+          iface.getPrivateBlockArgsStart(), $_op.numPrivateBlockArgs());
     }]>,
     InterfaceMethod<"Get block arguments defined by `reduction`.",
                     "::llvm::MutableArrayRef<::mlir::BlockArgument>",
                     "getReductionBlockArgs", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
       return $_op->getRegion(0).getArguments().slice(
-          $_op.numInReductionBlockArgs() + $_op.numMapBlockArgs() +
-          $_op.numPrivateBlockArgs(), $_op.numReductionBlockArgs());
+          iface.getReductionBlockArgsStart(), $_op.numReductionBlockArgs());
     }]>,
     InterfaceMethod<"Get block arguments defined by `task_reduction`.",
                     "::llvm::MutableArrayRef<::mlir::BlockArgument>",
                     "getTaskReductionBlockArgs", (ins), [{
+      auto iface = ::llvm::cast<BlockArgOpenMPOpInterface>(*$_op);
       return $_op->getRegion(0).getArguments().slice(
-          $_op.numInReductionBlockArgs() + $_op.numMapBlockArgs() +
-          $_op.numPrivateBlockArgs() + $_op.numReductionBlockArgs(),
+          iface.getTaskReductionBlockArgsStart(),
           $_op.numTaskReductionBlockArgs());
     }]>,
   ];
