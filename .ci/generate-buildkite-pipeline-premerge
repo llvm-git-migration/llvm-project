@@ -192,13 +192,22 @@ function keep-modified-projects() {
 
 function check-targets() {
   projects=${@}
+
+  # If any one of the projects must be checked with check-all, return only
+  # check-all as it will enable testing for all projects.
+  for project in ${projects}; do
+    case ${project} in
+    compiler-rt|pstl|libclc)
+      echo "check-all"
+      return
+    ;;
+    esac
+  done
+
   for project in ${projects}; do
     case ${project} in
     clang-tools-extra)
       echo "check-clang-tools"
-    ;;
-    compiler-rt)
-      echo "check-all"
     ;;
     cross-project-tests)
       echo "check-cross-project"
@@ -214,12 +223,6 @@ function check-targets() {
     ;;
     lldb)
       echo "check-lldb"
-    ;;
-    pstl)
-      echo "check-all"
-    ;;
-    libclc)
-      echo "check-all"
     ;;
     *)
       echo "check-${project}"
@@ -255,6 +258,10 @@ linux_check_targets=$(check-targets ${linux_projects_to_test} | sort | uniq)
 linux_projects=$(add-dependencies ${linux_projects_to_test} | sort | uniq)
 
 linux_runtimes_to_test=$(compute-runtimes-to-test ${linux_projects_to_test})
+# linux_check_targets may be "check-all" at this point, however
+# monolithic-linux.sh uses this for the first build which includes projects
+# only. The second build is runtimes only and it will use the "check-" targets
+# we generate here.
 linux_runtime_check_targets=$(check-targets ${linux_runtimes_to_test} | sort | uniq)
 linux_runtimes=$(echo ${linux_runtimes_to_test} | sort | uniq)
 
