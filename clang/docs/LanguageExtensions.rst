@@ -706,6 +706,12 @@ Unless specified otherwise operation(±0) = ±0 and operation(±infinity) = ±in
                                              representable values for the signed/unsigned integer type.
  T __builtin_elementwise_sub_sat(T x, T y)   return the difference of x and y, clamped to the range of        integer types
                                              representable values for the signed/unsigned integer type.
+ T __builtin_elementwise_maximum(T x, T y)   return x or y, whichever is larger. If exactly one argument is   integer and floating point types
+                                             a NaN, return the other argument. If both arguments are NaNs,
+                                             return a NaN.
+ T __builtin_elementwise_minimum(T x, T y)   return x or y, whichever is smaller. If exactly one argument is   integer and floating point types
+                                             a NaN, return the other argument. If both arguments are NaNs,
+                                             return a NaN.
 =========================================== ================================================================ =========================================
 
 
@@ -745,6 +751,10 @@ Let ``VT`` be a vector type and ``ET`` the element type of ``VT``.
  ET __builtin_reduce_and(VT a)           &                                                                integer types
  ET __builtin_reduce_or(VT a)            \|                                                               integer types
  ET __builtin_reduce_xor(VT a)           ^                                                                integer types
+ ET __builtin_reduce_maximum(VT a)       return the largest element of the vector. If the vector          floating point types
+                                         contains a NaN, return NaN.
+ ET __builtin_reduce_minimum(VT a)       return the smallest element of the vector. If the vector         floating point types
+                                         contains a NaN, return NaN.
 ======================================= ================================================================ ==================================
 
 Matrix Types
