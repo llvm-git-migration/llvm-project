@@ -238,6 +238,8 @@ public:
   std::optional<std::pair<Intrinsic::ID, SmallVector<Value *, 3>>>
   convertOrOfShiftsToFunnelShift(Instruction &Or);
 
+  Value *EmitGEPOffset(GEPOperator *GEP, bool RewriteGEP = false);
+
 private:
   bool annotateAnyAllocSite(CallBase &Call, const TargetLibraryInfo *TLI);
   bool isDesirableIntType(unsigned BitWidth) const;
@@ -374,7 +376,6 @@ private:
     }
   }
 
-  Value *EmitGEPOffset(GEPOperator *GEP, bool RewriteGEP = false);
   Instruction *scalarizePHI(ExtractElementInst &EI, PHINode *PN);
   Instruction *foldBitcastExtElt(ExtractElementInst &ExtElt);
   Instruction *foldCastedBitwiseLogic(BinaryOperator &I);
