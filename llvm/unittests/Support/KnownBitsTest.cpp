@@ -526,11 +526,10 @@ TEST(KnownBitsTest, BinaryExhaustive) {
   testBinaryOpExhaustive("avgFloorS", KnownBits::avgFloorS, APIntOps::avgFloorS,
                          false);
 
-  testBinaryOpExhaustive("avgFloorU", KnownBits::avgFloorU, APIntOps::avgFloorU,
-                         false);
+  testBinaryOpExhaustive("avgFloorU", KnownBits::avgFloorU,
+                         APIntOps::avgFloorU);
 
-  testBinaryOpExhaustive("avgCeilU", KnownBits::avgCeilU, APIntOps::avgCeilU,
-                         false);
+  testBinaryOpExhaustive("avgCeilU", KnownBits::avgCeilU, APIntOps::avgCeilU);
 
   testBinaryOpExhaustive("avgCeilS", KnownBits::avgCeilS, APIntOps::avgCeilS,
                          false);
