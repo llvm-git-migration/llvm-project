@@ -12,6 +12,7 @@
 #include "TreeTransform.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTLambda.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclVisitor.h"
@@ -1994,8 +1995,10 @@ TemplateDeclInstantiator::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
   // Link the instantiation back to the pattern *unless* this is a
   // non-definition friend declaration.
   if (!InstTemplate->getInstantiatedFromMemberTemplate() &&
-      !(isFriend && !D->getTemplatedDecl()->isThisDeclarationADefinition()))
+      !(isFriend && !D->getTemplatedDecl()->isThisDeclarationADefinition())) {
+    InstTemplate->setInstantiatedFromDefinition();
     InstTemplate->setInstantiatedFromMemberTemplate(D);
+  }
 
   // Make declarations visible in the appropriate context.
   if (!isFriend) {
@@ -2299,6 +2302,7 @@ Decl *TemplateDeclInstantiator::VisitFunctionDecl(
     FunctionTemplate->setLexicalDeclContext(LexicalDC);
 
     if (isFriend && D->isThisDeclarationADefinition()) {
+      FunctionTemplate->setInstantiatedFromDefinition();
       FunctionTemplate->setInstantiatedFromMemberTemplate(
                                            D->getDescribedFunctionTemplate());
     }
@@ -5185,9 +5189,24 @@ void Sema::InstantiateFunctionDefinition(SourceLocation PointOfInstantiation,
     RebuildTypeSourceInfoForDefaultSpecialMembers();
     SetDeclDefaulted(Function, PatternDecl->getLocation());
   } else {
+    NamedDecl *ND = Function;
+    std::optional<ArrayRef<TemplateArgument>> Innermost;
+    if (auto *Primary = Function->getPrimaryTemplate();
+        Primary &&
+        !isGenericLambdaCallOperatorOrStaticInvokerSpecialization(Function)) {
+      ND = *llvm::find_if(Primary->redecls(),
+                          [](const RedeclarableTemplateDecl *RTD) {
+                            auto *FTD = cast<FunctionTemplateDecl>(RTD);
+                            return FTD->isInstantiatedFromDefinition() ||
+                                   FTD->isThisDeclarationADefinition();
+                          });
+      if (Function->getTemplateSpecializationKind() !=
+          TSK_ExplicitSpecialization)
+        Innermost.emplace(Function->getTemplateSpecializationArgs()->asArray());
+    }
     MultiLevelTemplateArgumentList TemplateArgs = getTemplateInstantiationArgs(
-        Function, Function->getLexicalDeclContext(), /*Final=*/false,
-        /*Innermost=*/std::nullopt, false, PatternDecl);
+        Function, ND->getLexicalDeclContext(), /*Final=*/false, Innermost,
+        false, PatternDecl);
 
     // Substitute into the qualifier; we can get a substitution failure here
     // through evil use of alias templates.

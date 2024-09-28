@@ -1010,6 +1010,13 @@ public:
     return getTemplatedDecl()->isThisDeclarationADefinition();
   }
 
+  bool isInstantiatedFromDefinition() const {
+    return getTemplatedDecl()->isInstantiatedFromDefinition();
+  }
+  void setInstantiatedFromDefinition() {
+    getTemplatedDecl()->setInstantiatedFromDefinition();
+  }
+
   /// Return the specialization with the provided arguments if it exists,
   /// otherwise return the insertion point.
   FunctionDecl *findSpecialization(ArrayRef<TemplateArgument> Args,
