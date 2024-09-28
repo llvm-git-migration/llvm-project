@@ -11,11 +11,11 @@
 
 #include <stddef.h> // For size_t.
 
+#include "src/__support/CPP/limits.h"
 #include "src/__support/common.h"
 #include "src/__support/macros/config.h"
 #include "src/errno/libc_errno.h"
 #include "src/time/mktime.h"
-#include "src/__support/CPP/limits.h"
 
 #include <stdint.h>
 
@@ -175,8 +175,9 @@ LIBC_INLINE struct tm *localtime(const time_t *t_ptr) {
   return &result;
 }
 
-LIBC_INLINE struct tm *localtime_internal(const time_t *t_ptr, struct tm *result) {
-  //time_t time = *t;
+LIBC_INLINE struct tm *localtime_internal(const time_t *t_ptr,
+                                          struct tm *result) {
+  // time_t time = *t;
   int64_t t = *t_ptr;
 
   // Update the tm structure's year, month, day, etc. from seconds.
