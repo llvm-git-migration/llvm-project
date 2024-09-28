@@ -166,9 +166,9 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
       static_cast<int>(remainingSeconds % TimeConstants::SECONDS_PER_MIN);
 
   if (offset == 0) {
-    tm->tm_isdst = 1;
-  } else {
     tm->tm_isdst = 0;
+  } else {
+    tm->tm_isdst = 1;
     tm->tm_hour += offset;
   }
 
