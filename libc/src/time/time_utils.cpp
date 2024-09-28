@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <stdio.h>
 #include "src/time/time_utils.h"
 #include "src/__support/CPP/limits.h" // INT_MIN, INT_MAX
 #include "src/__support/common.h"
@@ -129,6 +130,25 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   if (years > INT_MAX || years < INT_MIN)
     return time_utils::out_of_range();
 
+  FILE *fp;
+  fp = fopen("/etc/timezone", "rb");
+  if (fp == NULL) {
+    return time_utils::out_of_range();
+  }
+
+  char timezone[128];
+  if (fgets(timezone, sizeof(timezone), fp) == NULL) {
+    return time_utils::out_of_range();
+  }
+
+  int offset;
+  if (internal::same_string(timezone, "UTC") == 0) {
+      offset = 0;
+  }
+  if (internal::same_string(timezone, "Europe/Berlin") == 0) {
+      offset = 2;
+  }
+
   // All the data (years, month and remaining days) was calculated from
   // March, 2000. Thus adjust the data to be from January, 1900.
   tm->tm_year = static_cast<int>(years + 2000 - TimeConstants::TIME_YEAR_BASE);
@@ -144,10 +164,31 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
                        TimeConstants::SECONDS_PER_MIN);
   tm->tm_sec =
       static_cast<int>(remainingSeconds % TimeConstants::SECONDS_PER_MIN);
-  // TODO(rtenneti): Need to handle timezone and update of tm_isdst.
-  tm->tm_isdst = 0;
+
+  if (offset == 0) {
+    tm->tm_isdst = 1;
+  } else {
+    tm->tm_isdst = 0;
+    tm->tm_hour += offset;
+  }
+
+  fclose(fp);
 
   return 0;
+}
+
+int calculate_dst(struct tm *tm) {
+  int sunday = tm->tm_mday - tm->tm_wday;
+
+  if (tm->tm_mon < 3 || tm->tm_mon > 11) {
+    return 0;
+  } else if (tm->tm_mon > 3 && tm->tm_mon < 11) {
+    return 1;
+  } else if (tm->tm_mon == 3) {
+      return sunday >= 8;
+  }
+
+  return sunday <= 0;
 }
 
 } // namespace time_utils
