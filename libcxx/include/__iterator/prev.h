@@ -25,7 +25,7 @@
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _InputIter, __enable_if_t<__has_input_iterator_category<_InputIter>::value, int> = 0>
-[[__nodiscard__]] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 _InputIter
+inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 _InputIter
 prev(_InputIter __x, typename iterator_traits<_InputIter>::difference_type __n = 1) {
   // Calling `advance` with a negative value on a non-bidirectional iterator is a no-op in the current implementation.
   // Note that this check duplicates the similar check in `std::advance`.
@@ -42,20 +42,19 @@ prev(_InputIter __x, typename iterator_traits<_InputIter>::difference_type __n =
 namespace ranges {
 struct __prev {
   template <bidirectional_iterator _Ip>
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr _Ip operator()(_Ip __x) const {
+  _LIBCPP_HIDE_FROM_ABI constexpr _Ip operator()(_Ip __x) const {
     --__x;
     return __x;
   }
 
   template <bidirectional_iterator _Ip>
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr _Ip operator()(_Ip __x, iter_difference_t<_Ip> __n) const {
+  _LIBCPP_HIDE_FROM_ABI constexpr _Ip operator()(_Ip __x, iter_difference_t<_Ip> __n) const {
     ranges::advance(__x, -__n);
     return __x;
   }
 
   template <bidirectional_iterator _Ip>
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr _Ip
-  operator()(_Ip __x, iter_difference_t<_Ip> __n, _Ip __bound_iter) const {
+  _LIBCPP_HIDE_FROM_ABI constexpr _Ip operator()(_Ip __x, iter_difference_t<_Ip> __n, _Ip __bound_iter) const {
     ranges::advance(__x, -__n, __bound_iter);
     return __x;
   }
