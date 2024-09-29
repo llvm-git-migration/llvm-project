@@ -20,6 +20,7 @@
 #include "llvm/CGData/OutlinedHashTreeRecord.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Object/ObjectFile.h"
+#include "llvm/Support/Caching.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/TargetParser/Triple.h"
 #include <mutex>
@@ -164,22 +165,36 @@ publishOutlinedHashTree(std::unique_ptr<OutlinedHashTree> HashTree) {
   CodeGenData::getInstance().publishOutlinedHashTree(std::move(HashTree));
 }
 
-void initializeTwoCodegenRounds();
+struct StreamCacheData {
+  /// Backing buffer for serialized data streams.
+  SmallVector<SmallString<0>> &Outputs;
+  /// Callback function to add serialized data to the stream.
+  AddStreamFn &AddStream;
+  /// Backing buffer for cached data.
+  SmallVector<std::unique_ptr<MemoryBuffer>> &Files;
+  /// Cache mechanism for storing and retrieving data.
+  FileCache &Cache;
+};
+
+void initializeTwoCodegenRounds(StreamCacheData &CG, StreamCacheData &IR);
 
 /// Save \p TheModule before the first codegen round.
 /// \p Task represents the partition number in the parallel code generation
 /// process.
-void saveModuleForTwoRounds(const Module &TheModule, unsigned Task);
+/// \p AddStream is the callback used to add the serialized module to the
+/// stream.
+void saveModuleForTwoRounds(const Module &TheModule, unsigned Task,
+                            AddStreamFn AddStream);
 
 /// Load the optimized module before the second codegen round.
 std::unique_ptr<Module> loadModuleForTwoRounds(BitcodeModule &OrigModule,
                                                unsigned Task,
-                                               LLVMContext &Context);
+                                               LLVMContext &Context,
+                                               ArrayRef<StringRef> IRBuffer);
 
 /// Merge the codegen data from the input files in scratch vector in ThinLTO
 /// two-codegen rounds.
-Error mergeCodeGenData(
-    const std::unique_ptr<std::vector<llvm::SmallString<0>>> InputFiles);
+Error mergeCodeGenData(ArrayRef<StringRef> InputFiles);
 
 void warn(Error E, StringRef Whence = "");
 void warn(Twine Message, std::string Whence = "", std::string Hint = "");
