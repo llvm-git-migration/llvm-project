@@ -886,6 +886,7 @@ public:
     case VPRecipeBase::VPWidenCanonicalIVSC:
     case VPRecipeBase::VPWidenCastSC:
     case VPRecipeBase::VPWidenGEPSC:
+    case VPRecipeBase::VPWidenIntrinsicSC:
     case VPRecipeBase::VPWidenSC:
     case VPRecipeBase::VPWidenEVLSC:
     case VPRecipeBase::VPWidenSelectSC:
@@ -1608,24 +1609,63 @@ public:
   }
 };
 
-/// A recipe for widening Call instructions.
-class VPWidenCallRecipe : public VPSingleDefRecipe {
-  /// ID of the vector intrinsic to call when widening the call. If set the
-  /// Intrinsic::not_intrinsic, a library call will be used instead.
+/// A recipe for widening vector intrinsics.
+class VPWidenIntrinsicRecipe : public VPSingleDefRecipe {
+  /// ID of the vector intrinsic to widen.
   Intrinsic::ID VectorIntrinsicID;
-  /// If this recipe represents a library call, Variant stores a pointer to
-  /// the chosen function. There is a 1:1 mapping between a given VF and the
-  /// chosen vectorized variant, so there will be a different vplan for each
-  /// VF with a valid variant.
+
+  /// Scalar type of the result produced by the intrinsic.
+  Type *ResultTy;
+
+public:
+  template <typename IterT>
+  VPWidenIntrinsicRecipe(Value *UV, Intrinsic::ID VectorIntrinsicID,
+                         iterator_range<IterT> CallArguments, Type *Ty,
+                         DebugLoc DL = {})
+      : VPSingleDefRecipe(VPDef::VPWidenIntrinsicSC, CallArguments, UV, DL),
+        VectorIntrinsicID(VectorIntrinsicID), ResultTy(Ty) {}
+
+  ~VPWidenIntrinsicRecipe() override = default;
+
+  VPWidenIntrinsicRecipe *clone() override {
+    return new VPWidenIntrinsicRecipe(getUnderlyingValue(), VectorIntrinsicID,
+                                      operands(), ResultTy, getDebugLoc());
+  }
+
+  VP_CLASSOF_IMPL(VPDef::VPWidenIntrinsicSC)
+
+  /// Produce a widened version of the vector intrinsic.
+  void execute(VPTransformState &State) override;
+
+  /// Return the cost of this vector intrinsic.
+  InstructionCost computeCost(ElementCount VF,
+                              VPCostContext &Ctx) const override;
+
+  Type *getResultTy() const { return ResultTy; }
+
+  /// Return to name of the intrinsic as string.
+  StringRef getIntrinsicName() const;
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Print the recipe.
+  void print(raw_ostream &O, const Twine &Indent,
+             VPSlotTracker &SlotTracker) const override;
+#endif
+};
+
+/// A recipe for widening Call instructions using library calls.
+class VPWidenCallRecipe : public VPSingleDefRecipe {
+  /// Variant stores a pointer to the chosen function. There is a 1:1 mapping
+  /// between a given VF and the chosen vectorized variant, so there will be a
+  /// different VPlan for each VF with a valid variant.
   Function *Variant;
 
 public:
   template <typename IterT>
-  VPWidenCallRecipe(Value *UV, iterator_range<IterT> CallArguments,
-                    Intrinsic::ID VectorIntrinsicID, DebugLoc DL = {},
-                    Function *Variant = nullptr)
+  VPWidenCallRecipe(Value *UV, Function *Variant,
+                    iterator_range<IterT> CallArguments, DebugLoc DL = {})
       : VPSingleDefRecipe(VPDef::VPWidenCallSC, CallArguments, UV, DL),
-        VectorIntrinsicID(VectorIntrinsicID), Variant(Variant) {
+        Variant(Variant) {
     assert(
         isa<Function>(getOperand(getNumOperands() - 1)->getLiveInIRValue()) &&
         "last operand must be the called function");
@@ -1634,8 +1674,8 @@ public:
   ~VPWidenCallRecipe() override = default;
 
   VPWidenCallRecipe *clone() override {
-    return new VPWidenCallRecipe(getUnderlyingValue(), operands(),
-                                 VectorIntrinsicID, getDebugLoc(), Variant);
+    return new VPWidenCallRecipe(getUnderlyingValue(), Variant, operands(),
+                                 getDebugLoc());
   }
 
   VP_CLASSOF_IMPL(VPDef::VPWidenCallSC)
