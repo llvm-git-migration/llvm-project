@@ -1651,6 +1651,8 @@ public:
   void print(raw_ostream &O, const Twine &Indent,
              VPSlotTracker &SlotTracker) const override;
 #endif
+
+  bool onlyFirstLaneUsed(const VPValue *Op) const override;
 };
 
 /// A recipe for widening Call instructions using library calls.
