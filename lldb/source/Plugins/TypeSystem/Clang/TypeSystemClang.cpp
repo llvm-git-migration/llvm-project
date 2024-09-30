@@ -709,7 +709,8 @@ void TypeSystemClang::CreateASTContext() {
     LLDB_LOG(GetLog(LLDBLog::Expressions), err.c_str());
 
     static std::once_flag s_uninitialized_target_warning;
-    Debugger::ReportWarning(std::move(err), /*debugger_id=*/std::nullopt, &s_uninitialized_target_warning);
+    Debugger::ReportWarning(std::move(err), /*debugger_id=*/std::nullopt,
+                            &s_uninitialized_target_warning);
   }
 
   GetASTMap().Insert(m_ast_up.get(), this);
@@ -761,7 +762,10 @@ TypeSystemClang::GetBuiltinTypeForEncodingAndBitSize(Encoding encoding,
   ASTContext &ast = getASTContext();
 
   if (!ast.VoidPtrTy) {
-    LLDB_LOG(GetLog(LLDBLog::Expressions), "{0} failed: builtin types on ASTContext were not initialized properly.", __func__);
+    LLDB_LOG(GetLog(LLDBLog::Expressions),
+             "{0} failed: builtin types on ASTContext were not initialized "
+             "properly.",
+             __func__);
     return {};
   }
 
@@ -908,7 +912,10 @@ CompilerType TypeSystemClang::GetBuiltinTypeForDWARFEncodingAndBitSize(
   ASTContext &ast = getASTContext();
 
   if (!ast.VoidPtrTy) {
-    LLDB_LOG(GetLog(LLDBLog::Expressions), "{0} failed: builtin types on ASTContext were not initialized properly.", __func__);
+    LLDB_LOG(GetLog(LLDBLog::Expressions),
+             "{0} failed: builtin types on ASTContext were not initialized "
+             "properly.",
+             __func__);
     return {};
   }
 
