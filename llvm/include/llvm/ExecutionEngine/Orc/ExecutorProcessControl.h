@@ -303,8 +303,8 @@ public:
   using SymbolLookupCompleteFn =
       unique_function<void(Expected<std::vector<tpctypes::LookupResult>>)>;
 
-  using ResolveSymbolsCompleteFn = unique_function<void(
-      Expected<std::vector<ResolveResult>>)>;
+  using ResolveSymbolsCompleteFn =
+      unique_function<void(Expected<std::vector<ResolveResult>>)>;
 
   /// Search for symbols in the target process.
   ///
