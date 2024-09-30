@@ -406,7 +406,8 @@ void VPTransformState::packScalarIntoWideValue(VPValue *Def,
     for (unsigned I = 0, E = StructTy->getNumElements(); I != E; I++) {
       Value *ScalarValue = Builder.CreateExtractValue(ScalarInst, I);
       Value *VectorValue = Builder.CreateExtractValue(WideValue, I);
-      VectorValue = Builder.CreateInsertElement(VectorValue, ScalarValue, LaneExpr);
+      VectorValue =
+          Builder.CreateInsertElement(VectorValue, ScalarValue, LaneExpr);
       WideValue = Builder.CreateInsertValue(WideValue, VectorValue, I);
     }
   } else {
