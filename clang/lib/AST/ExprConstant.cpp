@@ -13486,6 +13486,20 @@ bool IntExprEvaluator::VisitBuiltinCallExpr(const CallExpr *E,
     Result &= llvm::maskTrailingOnes<uint64_t>(Length);
     return Success(Result, E);
   }
+
+  case clang::X86::BI__builtin_ia32_bzhi_si:
+  case clang::X86::BI__builtin_ia32_bzhi_di: {
+    APSInt Val, Idx;
+    if (!EvaluateInteger(E->getArg(0), Val, Info) ||
+        !EvaluateInteger(E->getArg(1), Idx, Info))
+      return false;
+
+    unsigned BitWidth = Val.getBitWidth();
+    unsigned Index = Idx.extractBitsAsZExtValue(8, 0);
+    if (Index < BitWidth)
+      Val.clearHighBits(BitWidth - Index);
+    return Success(Val, E);
+  }
   }
 }
 
