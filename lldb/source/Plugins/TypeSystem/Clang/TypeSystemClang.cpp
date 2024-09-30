@@ -759,6 +759,7 @@ CompilerType
 TypeSystemClang::GetBuiltinTypeForEncodingAndBitSize(Encoding encoding,
                                                      size_t bit_size) {
   ASTContext &ast = getASTContext();
+
   if (!ast.VoidPtrTy) {
     LLDB_LOG(GetLog(LLDBLog::Expressions), "{0} failed: builtin types on ASTContext were not initialized properly.", __func__);
     return {};
