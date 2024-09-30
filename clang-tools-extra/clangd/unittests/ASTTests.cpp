@@ -658,6 +658,26 @@ TEST(ClangdAST, PreferredIncludeDirective) {
             Symbol::IncludeDirective::Import);
 }
 
+TEST(ClangdAST, HandleUninitializedTypeConstraints) {
+  auto TU = TestTU::withHeaderCode(R"cpp(
+    template<typename T>
+    concept C; // error-ok
+    template<C U>
+    void f();
+    )cpp");
+  TU.ExtraArgs.push_back("-std=c++20");
+
+  auto AST = TU.build();
+
+  const auto &F = llvm::cast<FunctionTemplateDecl>(findDecl(AST, "f"));
+  const auto *Params = F.getTemplateParameters();
+  const auto *U = llvm::cast<TemplateTypeParmDecl>(Params->getParam(0));
+  const auto *TC = U->getTypeConstraint();
+
+  EXPECT_TRUE(U->hasTypeConstraint());
+  EXPECT_FALSE(/*TypeConstraintInitialized=*/TC != nullptr);
+}
+
 } // namespace
 } // namespace clangd
 } // namespace clang
