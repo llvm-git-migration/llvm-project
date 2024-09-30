@@ -1,0 +1,30 @@
+# RUN: rm -rf %t
+# RUN: mkdir -p %t
+# RUN: split-file %s %t
+# RUN: sed -i 's|CWD|%/t|' %t/compile_commands.json
+#
+# RUN: not clangd --check=%t/main.cpp 2>&1 | FileCheck -strict-whitespace %s
+#
+# CHECK:      Loaded compilation database
+# CHECK-NEXT: Compile command from CDB is:
+# CHECK:      Indexing headers...
+# CHECK-NEXT: [expected] Line 1: in included file: expected '='
+# CHECK:      All checks completed, 1 errors
+
+#--- header.h
+template<typename T>
+concept C;
+template<C U>
+void f();
+
+#--- main.cpp
+#include "header.h"
+
+#--- compile_commands.json
+[
+  {
+    "directory": "CWD",
+    "command": "c++ -std=c++20",
+    "file": "main.cpp"
+  }
+]
