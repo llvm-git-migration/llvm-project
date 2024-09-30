@@ -38,6 +38,12 @@ namespace linalg {
 // General utilities
 //===----------------------------------------------------------------------===//
 
+// Returns true if `val` represents a zero-filled tensor, per its defining op.
+bool isZeroTensor(Value val);
+
+// Returns true if the operation defines a zero-filled tensor.
+bool isZeroOp(Operation *);
+
 /// Check if all indexing maps are projected permutations.
 bool allIndexingsAreProjectedPermutation(LinalgOp op);
 
