@@ -26,7 +26,6 @@ namespace clang {
 class AnalysisDeclContext;
 class FunctionDecl;
 class NamedDecl;
-class Attr;
 
 namespace threadSafety {
 
@@ -230,9 +229,6 @@ public:
 
   /// Warn that there is a cycle in acquired_before/after dependencies.
   virtual void handleBeforeAfterCycle(Name L1Name, SourceLocation Loc) {}
-
-  virtual void handleAttributeMismatch(const FunctionDecl *FD1,
-                                       const FunctionDecl *FD2) {}
 
   /// Called by the analysis when starting analysis of a function.
   /// Used to issue suggestions for changes to annotations.
