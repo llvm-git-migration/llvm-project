@@ -17,6 +17,7 @@
 #include <__type_traits/type_identity.h>
 #include <__type_traits/void_t.h>
 #include <__utility/declval.h>
+#include <__utility/empty.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -32,24 +33,8 @@ struct common_type;
 template <class... _Args>
 using __common_type_t = typename common_type<_Args...>::type;
 
-struct __no_common_type {
-  using type = __no_common_type;
-};
-
-template <class _Common>
-struct __common_type_impl {
-  using type = _Common;
-};
-
-template <>
-struct __common_type_impl<__no_common_type> {};
-
-// We can't just inherit from __builtin_common_type, because that would require exporting __builtin_common_type
-// from this module and there's no way to do that.
 template <class... _Args>
-struct common_type
-    : __common_type_impl<
-          typename __builtin_common_type<__common_type_t, __type_identity, __no_common_type, _Args...>::type> {};
+struct common_type : __builtin_common_type<__common_type_t, __type_identity, __empty, _Args...> {};
 
 #else
 #  if _LIBCPP_STD_VER >= 20
