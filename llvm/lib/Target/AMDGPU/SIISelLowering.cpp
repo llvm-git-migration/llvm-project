@@ -16904,8 +16904,8 @@ void SITargetLowering::emitExpandAtomicAddrSpacePredicate(
     Builder.CreateAlignedStore(NewVal, CastToPrivate, RMW->getAlign());
   } else {
     auto [ResultLoad, Equal] =
-        buildAtomicCmpXchgValue(Builder, CastToPrivate, CX->getCompareOperand(),
-                                CX->getNewValOperand(), CX->getAlign());
+        buildCmpXchgValue(Builder, CastToPrivate, CX->getCompareOperand(),
+                          CX->getNewValOperand(), CX->getAlign());
 
     Value *Insert = Builder.CreateInsertValue(PoisonValue::get(CX->getType()),
                                               ResultLoad, 0);
