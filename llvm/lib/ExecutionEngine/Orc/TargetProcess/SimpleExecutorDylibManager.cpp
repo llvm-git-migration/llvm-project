@@ -12,8 +12,6 @@
 #include "llvm/Support/FormatVariadic.h"
 
 #include <dlfcn.h>
-#include <string>
-#include <unordered_map>
 
 #define DEBUG_TYPE "orc"
 
