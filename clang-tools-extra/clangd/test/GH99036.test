@@ -1,0 +1,29 @@
+# RUN: rm -rf %t
+# RUN: mkdir -p %t
+# RUN: split-file %s %t
+#
+# RUN: not clangd --check=%t/main.cpp 2>&1 | FileCheck -strict-whitespace %s
+#
+# CHECK:      Loaded compilation database
+# CHECK-NEXT: Compile command inferred from main.cpp is:
+# CHECK:      Indexing headers...
+# CHECK-NEXT: [unknown_typename] Line 1: in included file: unknown type name '_Up'
+# CHECK:      All checks completed, 1 errors
+
+#--- header.h
+template<_Up>
+concept __decayed_same_as;
+template<__decayed_same_as>
+partial_ordering operator0
+
+#--- main.cpp
+#include "header.h"
+
+#--- compile_commands.json
+[
+  {
+    "directory": "/",
+    "command": "c++ -std=c++20",
+    "file": "main.cpp"
+  }
+]
