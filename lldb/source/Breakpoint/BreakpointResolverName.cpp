@@ -24,10 +24,10 @@
 using namespace lldb;
 using namespace lldb_private;
 
-BreakpointResolverName::BreakpointResolverName(const BreakpointSP &bkpt,
-    const char *name_cstr, FunctionNameType name_type_mask,
-    LanguageType language, Breakpoint::MatchType type, lldb::addr_t offset,
-    bool skip_prologue)
+BreakpointResolverName::BreakpointResolverName(
+    const BreakpointSP &bkpt, const char *name_cstr,
+    FunctionNameType name_type_mask, LanguageType language,
+    Breakpoint::MatchType type, lldb::addr_t offset, bool skip_prologue)
     : BreakpointResolver(bkpt, BreakpointResolver::NameResolver, offset),
       m_match_type(type), m_language(language), m_skip_prologue(skip_prologue) {
   if (m_match_type == Breakpoint::Regexp) {
@@ -237,9 +237,9 @@ void BreakpointResolverName::AddNameLookup(ConstString name,
   if (Language *lang = Language::FindPlugin(m_language)) {
     add_variant_funcs(lang);
   } else {
-    // Most likely m_language is eLanguageTypeUnknown. We check each language for
-    // possible variants or more qualified names and create lookups for those as
-    // well.
+    // Most likely m_language is eLanguageTypeUnknown. We check each language
+    // for possible variants or more qualified names and create lookups for
+    // those as well.
     Language::ForEach(add_variant_funcs);
   }
 }

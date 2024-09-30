@@ -797,6 +797,10 @@ void Module::LookupInfo::Prune(SymbolContextList &sc_list,
     while (i < sc_list.GetSize()) {
       if (!sc_list.GetContextAtIndex(i, sc))
         break;
+      if (!lldb_private::Language::LanguageIsCFamily(sc.GetLanguage())) {
+        ++i;
+        continue;
+      }
       // Make sure the mangled and demangled names don't match before we try to
       // pull anything out
       ConstString mangled_name(sc.GetFunctionName(Mangled::ePreferMangled));
