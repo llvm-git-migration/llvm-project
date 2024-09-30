@@ -122,6 +122,11 @@ static cl::opt<unsigned> MaxPhiEntriesIncreaseAfterRemovingEmptyBlock(
 // bitreverse idioms.
 static const unsigned BitPartRecursionMaxDepth = 48;
 
+static cl::opt<unsigned> MaxNumPredsThreshold(
+    "simplifycfg-uncondbr-max-num-preds-threshold", cl::init(128), cl::Hidden,
+    cl::desc("The maximum number of predecessors a block can have to simplify "
+             "uncond-brs from empty blocks."));
+
 //===----------------------------------------------------------------------===//
 //  Local constant propagation.
 //
@@ -1163,6 +1168,11 @@ bool llvm::TryToSimplifyUncondBranchFromEmptyBlock(BasicBlock *BB,
   // We can't simplify infinite loops.
   BasicBlock *Succ = cast<BranchInst>(BB->getTerminator())->getSuccessor(0);
   if (BB == Succ)
+    return false;
+
+  // Some pathological IR can have extremely high numbers of predecessor blocks.
+  // Bail out early if so.
+  if (Succ->hasNPredecessorsOrMore(MaxNumPredsThreshold))
     return false;
 
   SmallPtrSet<BasicBlock *, 16> BBPreds(pred_begin(BB), pred_end(BB));
