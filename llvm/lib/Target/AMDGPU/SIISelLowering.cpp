@@ -1841,8 +1841,7 @@ bool SITargetLowering::allowsMisalignedMemoryAccessesImpl(
     if (IsFast)
       *IsFast = AlignedBy4;
 
-    return AlignedBy4 || Subtarget->enableFlatScratch() ||
-           Subtarget->hasUnalignedScratchAccessEnabled();
+    return AlignedBy4 || Subtarget->hasUnalignedScratchAccessEnabled();
   }
 
   // So long as they are correct, wide global memory operations perform better
