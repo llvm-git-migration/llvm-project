@@ -5119,37 +5119,37 @@ MachineBasicBlock *SITargetLowering::EmitInstrWithCustomInserter(
   case AMDGPU::WAVE_REDUCE_UMIN_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MIN_I32);
   case AMDGPU::WAVE_REDUCE_UMIN_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MIN_F32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MIN_F32); // TODO - add support for floats
   case AMDGPU::WAVE_REDUCE_UMAX_PSEUDO_U32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MAX_U32);
   case AMDGPU::WAVE_REDUCE_UMAX_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MAX_I32);
   case AMDGPU::WAVE_REDUCE_UMAX_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MAX_F32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_MAX_F32); // TODO - add support for floats
   case AMDGPU::WAVE_REDUCE_ADD_PSEUDO_U32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_ADD_U32);
   case AMDGPU::WAVE_REDUCE_ADD_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_ADD_I32);
   case AMDGPU::WAVE_REDUCE_ADD_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_ADD_F32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_ADD_F32); // TODO - add support for floats
   case AMDGPU::WAVE_REDUCE_SUB_PSEUDO_U32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_SUB_U32);
   case AMDGPU::WAVE_REDUCE_SUB_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_SUB_I32);
   case AMDGPU::WAVE_REDUCE_SUB_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_SUB_F32);
-  case AMDGPU::WAVE_REDUCE_AND_PSEUDO_U32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_AND_B32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_SUB_F32); // TODO - add support for floats
+  // case AMDGPU::WAVE_REDUCE_AND_PSEUDO_U32:
+  //   return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_AND_B32);
   case AMDGPU::WAVE_REDUCE_AND_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_AND_B32);
   case AMDGPU::WAVE_REDUCE_AND_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_AND_B32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_AND_B32); // TODO - add support for floats
   case AMDGPU::WAVE_REDUCE_OR_PSEUDO_U32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_OR_B32);
   case AMDGPU::WAVE_REDUCE_OR_PSEUDO_I32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_OR_B32);
   case AMDGPU::WAVE_REDUCE_OR_PSEUDO_F32:
-    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_OR_B32);
+    return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_OR_B32); // TODO - add support for floats
   case AMDGPU::WAVE_REDUCE_XOR_PSEUDO_U32:
     return lowerWaveReduce(MI, *BB, *getSubtarget(), AMDGPU::S_XOR_B32);
   case AMDGPU::S_UADDO_PSEUDO:
