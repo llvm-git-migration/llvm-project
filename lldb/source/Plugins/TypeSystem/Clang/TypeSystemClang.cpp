@@ -54,6 +54,7 @@
 #include "Plugins/ExpressionParser/Clang/ClangUserExpression.h"
 #include "Plugins/ExpressionParser/Clang/ClangUtil.h"
 #include "Plugins/ExpressionParser/Clang/ClangUtilityFunction.h"
+#include "lldb/Core/Debugger.h"
 #include "lldb/Core/DumpDataExtractor.h"
 #include "lldb/Core/Module.h"
 #include "lldb/Core/PluginManager.h"
@@ -697,10 +698,19 @@ void TypeSystemClang::CreateASTContext() {
   TargetInfo *target_info = getTargetInfo();
   if (target_info)
     m_ast_up->InitBuiltinTypes(*target_info);
-  else if (auto *log = GetLog(LLDBLog::Expressions))
-    LLDB_LOG(log,
-             "Failed to initialize builtin ASTContext types for target '{0}'",
-             m_target_triple);
+  else {
+    std::string err =
+        llvm::formatv(
+            "Failed to initialize builtin ASTContext types for target '{0}'. "
+            "Printing variables may behave unexpectedly.",
+            m_target_triple)
+            .str();
+
+    LLDB_LOG(GetLog(LLDBLog::Expressions), err.c_str());
+
+    static std::once_flag s_uninitialized_target_warning;
+    Debugger::ReportWarning(std::move(err), /*debugger_id=*/std::nullopt, &s_uninitialized_target_warning);
+  }
 
   GetASTMap().Insert(m_ast_up.get(), this);
 
@@ -749,6 +759,11 @@ CompilerType
 TypeSystemClang::GetBuiltinTypeForEncodingAndBitSize(Encoding encoding,
                                                      size_t bit_size) {
   ASTContext &ast = getASTContext();
+  if (!ast.VoidPtrTy) {
+    LLDB_LOG(GetLog(LLDBLog::Expressions), "{0} failed: builtin types on ASTContext were not initialized properly.", __func__);
+    return {};
+  }
+
   switch (encoding) {
   case eEncodingInvalid:
     if (QualTypeMatchesBitSize(bit_size, ast, ast.VoidPtrTy))
@@ -890,6 +905,11 @@ CompilerType TypeSystemClang::GetBasicType(lldb::BasicType basic_type) {
 CompilerType TypeSystemClang::GetBuiltinTypeForDWARFEncodingAndBitSize(
     llvm::StringRef type_name, uint32_t dw_ate, uint32_t bit_size) {
   ASTContext &ast = getASTContext();
+
+  if (!ast.VoidPtrTy) {
+    LLDB_LOG(GetLog(LLDBLog::Expressions), "{0} failed: builtin types on ASTContext were not initialized properly.", __func__);
+    return {};
+  }
 
   switch (dw_ate) {
   default:
