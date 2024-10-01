@@ -316,7 +316,6 @@ void llvm::CloneFunctionInto(Function *NewFunc, const Function *OldFunc,
     if (Changes == CloneFunctionChangeType::DifferentModule) {
       assert(NewFunc->getParent() &&
              "Need parent of new function to maintain debug info invariants");
-
     }
   }
 

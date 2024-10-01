@@ -1,4 +1,4 @@
-//===- llvm/Analysis/DebugInfoCache.cpp - debug info cache ---*- C++ -*-===//
+//===- llvm/Analysis/DebugInfoCache.cpp - debug info cache ----------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.

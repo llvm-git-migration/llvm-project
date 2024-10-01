@@ -1,4 +1,4 @@
-//===- llvm/Analysis/DebugInfoCache.h - debug info cache ---*- C++ -*-===//
+//===- llvm/Analysis/DebugInfoCache.h - debug info cache --------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -18,6 +18,13 @@
 #include "llvm/IR/PassManager.h"
 
 namespace llvm {
+
+/// Processes and caches debug info for each DICompileUnit in a module.
+///
+/// The result of the analysis is a set of DebugInfoFinders primed on their
+/// respective DICompileUnit. Such DebugInfoFinders can be used to speed up
+/// function cloning which otherwise requires an expensive traversal of
+/// DICompileUnit-level debug info. See an example usage in CoroSplit.
 class DebugInfoCache {
 public:
   using DIFinderCache = SmallDenseMap<const DICompileUnit *, DebugInfoFinder>;
