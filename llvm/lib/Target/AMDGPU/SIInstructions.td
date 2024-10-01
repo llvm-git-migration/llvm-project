@@ -301,20 +301,10 @@ let usesCustomInserter = 1, hasSideEffects = 0, mayLoad = 0, mayStore = 0, Uses 
     [(set f32:$sdst, (int_amdgcn_wave_reduce_add f32:$src, i32:$strategy))]> {
   }
   
-  //def WAVE_REDUCE_ADD_PSEUDO_U32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  //  [(set i32:$sdst, (int_amdgcn_wave_reduce_uadd i32:$src, i32:$strategy))]> {
-  //}
-  
   def WAVE_REDUCE_SUB_PSEUDO_I32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
     [(set i32:$sdst, (int_amdgcn_wave_reduce_sub i32:$src, i32:$strategy))]> {
   }
-  
-  //def WAVE_REDUCE_SUB_PSEUDO_U32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  // [(set i32:$sdst, (int_amdgcn_wave_reduce_usub i32:$src, i32:$strategy))]> {
-  //}
 
   def WAVE_REDUCE_SUB_PSEUDO_F32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
@@ -325,31 +315,11 @@ let usesCustomInserter = 1, hasSideEffects = 0, mayLoad = 0, mayStore = 0, Uses 
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
     [(set i32:$sdst, (int_amdgcn_wave_reduce_and i32:$src, i32:$strategy))]> {
   }
-
-  //def WAVE_REDUCE_AND_PSEUDO_I32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  //  [(set i32:$sdst, (int_amdgcn_wave_reduce_and i32:$src, i32:$strategy))]> {
-  //}
-
-  //def WAVE_REDUCE_AND_PSEUDO_F32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  //  [(set f32:$sdst, (int_amdgcn_wave_reduce_fand f32:$src, i32:$strategy))]> {
-  //}
   
   def WAVE_REDUCE_OR_PSEUDO_B32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
     [(set i32:$sdst, (int_amdgcn_wave_reduce_or i32:$src, i32:$strategy))]> {
   }
-
-  //def WAVE_REDUCE_OR_PSEUDO_I32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  //  [(set i32:$sdst, (int_amdgcn_wave_reduce_or i32:$src, i32:$strategy))]> {
-  //}
-
-  //def WAVE_REDUCE_OR_PSEUDO_F32 : VPseudoInstSI <(outs SGPR_32:$sdst),
-  //  (ins VSrc_b32: $src, VSrc_b32:$strategy),
-  //  [(set f32:$sdst, (int_amdgcn_wave_reduce_for f32:$src, i32:$strategy))]> {
-  //}
   
   def WAVE_REDUCE_XOR_PSEUDO_B32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
