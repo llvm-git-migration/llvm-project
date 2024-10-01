@@ -1582,12 +1582,12 @@ define void @scalar_mov_materializes_frame_index_no_live_scc_no_live_sgprs_gep_i
 ; GFX7-NEXT:    buffer_store_dword v15, v16, s[0:3], s32 offen offset:60 ; 4-byte Folded Spill
 ; GFX7-NEXT:    buffer_load_dword v16, off, s[0:3], s32
 ; GFX7-NEXT:    ; implicit-def: $vgpr22 : SGPR spill to VGPR lane
-; GFX7-NEXT:    v_lshr_b32_e64 v0, s32, 6
+; GFX7-NEXT:    v_lshr_b32_e64 v1, s32, 6
 ; GFX7-NEXT:    v_writelane_b32 v22, vcc_lo, 0
 ; GFX7-NEXT:    v_writelane_b32 v22, vcc_hi, 1
 ; GFX7-NEXT:    s_movk_i32 vcc_lo, 0x4040
-; GFX7-NEXT:    v_add_i32_e32 v0, vcc, vcc_lo, v0
-; GFX7-NEXT:    v_add_i32_e32 v0, vcc, 0x200, v0
+; GFX7-NEXT:    v_add_i32_e32 v1, vcc, vcc_lo, v1
+; GFX7-NEXT:    v_add_i32_e32 v0, vcc, 0x200, v1
 ; GFX7-NEXT:    v_writelane_b32 v23, s59, 27
 ; GFX7-NEXT:    v_readfirstlane_b32 s59, v0
 ; GFX7-NEXT:    s_and_b64 vcc, 0, exec
@@ -1723,12 +1723,12 @@ define void @scalar_mov_materializes_frame_index_no_live_scc_no_live_sgprs_gep_i
 ; GFX8-NEXT:    buffer_store_dword v15, v16, s[0:3], s32 offen offset:60 ; 4-byte Folded Spill
 ; GFX8-NEXT:    buffer_load_dword v16, off, s[0:3], s32
 ; GFX8-NEXT:    ; implicit-def: $vgpr22 : SGPR spill to VGPR lane
-; GFX8-NEXT:    v_lshrrev_b32_e64 v0, 6, s32
+; GFX8-NEXT:    v_lshrrev_b32_e64 v1, 6, s32
 ; GFX8-NEXT:    v_writelane_b32 v22, vcc_lo, 0
 ; GFX8-NEXT:    v_writelane_b32 v22, vcc_hi, 1
 ; GFX8-NEXT:    s_movk_i32 vcc_lo, 0x4040
-; GFX8-NEXT:    v_add_u32_e32 v0, vcc, vcc_lo, v0
-; GFX8-NEXT:    v_add_u32_e32 v0, vcc, 0x200, v0
+; GFX8-NEXT:    v_add_u32_e32 v1, vcc, vcc_lo, v1
+; GFX8-NEXT:    v_add_u32_e32 v0, vcc, 0x200, v1
 ; GFX8-NEXT:    v_writelane_b32 v23, s59, 27
 ; GFX8-NEXT:    v_readfirstlane_b32 s59, v0
 ; GFX8-NEXT:    s_and_b64 vcc, 0, exec
