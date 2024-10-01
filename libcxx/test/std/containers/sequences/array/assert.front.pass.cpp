@@ -11,7 +11,7 @@
 // UNSUPPORTED: libcpp-hardening-mode=none
 // XFAIL: libcpp-hardening-mode=debug && availability-verbose_abort-missing
 
-// test that array<T, 0>::back() triggers an assertion
+// test that array<T, 0>::front() triggers an assertion
 
 #include <array>
 
