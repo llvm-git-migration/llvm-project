@@ -9746,6 +9746,10 @@ static bool isStdBuiltin(ASTContext &Ctx, FunctionDecl *FD,
     return FPT->getNumParams() == 1 && !FPT->isVariadic();
   }
 
+  case Builtin::BIinvoke:
+  case Builtin::BI__invoke:
+    return true;
+
   default:
     return false;
   }

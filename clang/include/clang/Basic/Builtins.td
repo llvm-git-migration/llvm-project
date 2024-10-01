@@ -4209,6 +4209,15 @@ def MoveIfNsoexcept : CxxLibBuiltin<"utility"> {
   let Namespace = "std";
 }
 
+def Invoke : CxxLibBuiltin<"functional"> {
+  // __invoke is used internally by libc++ and libstdc++
+  let Spellings = ["invoke", "__invoke"];
+  let Attributes = [CustomTypeChecking, Constexpr];
+  let Prototype = "void(...)";
+  let Namespace = "std";
+  let AddBuiltinPrefixedAlias = 1;
+}
+
 def Annotation : Builtin {
   let Spellings = ["__builtin_annotation"];
   let Attributes = [NoThrow, CustomTypeChecking];
