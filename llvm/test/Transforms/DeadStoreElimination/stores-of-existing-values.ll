@@ -655,3 +655,55 @@ exit:
   call void @use(ptr %p) argmemonly
   ret void
 }
+
+define void @scalable_scalable_redundant_store(ptr %ptr) {
+; CHECK-LABEL: @scalable_scalable_redundant_store(
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i64, ptr [[PTR:%.*]], i64 2
+; CHECK-NEXT:    store <vscale x 2 x i64> zeroinitializer, ptr [[GEP]], align 16
+; CHECK-NEXT:    store <vscale x 4 x i64> zeroinitializer, ptr [[PTR]], align 32
+; CHECK-NEXT:    ret void
+;
+  %gep = getelementptr i64, ptr %ptr, i64 2
+  store <vscale x 2 x i64> zeroinitializer, ptr %gep
+  store <vscale x 4 x i64> zeroinitializer, ptr %ptr
+  ret void
+}
+
+define void @scalable_fixed_redundant_store(ptr %ptr) {
+; CHECK-LABEL: @scalable_fixed_redundant_store(
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i64, ptr [[PTR:%.*]], i64 2
+; CHECK-NEXT:    store <2 x i64> zeroinitializer, ptr [[GEP]], align 16
+; CHECK-NEXT:    store <vscale x 4 x i64> zeroinitializer, ptr [[PTR]], align 32
+; CHECK-NEXT:    ret void
+;
+  %gep = getelementptr i64, ptr %ptr, i64 2
+  store <2 x i64> zeroinitializer, ptr %gep
+  store <vscale x 4 x i64> zeroinitializer, ptr %ptr
+  ret void
+}
+
+define void @fixed_scalable_redundant_store(ptr %ptr) {
+; CHECK-LABEL: @fixed_scalable_redundant_store(
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i64, ptr [[PTR:%.*]], i64 2
+; CHECK-NEXT:    store <vscale x 2 x i64> zeroinitializer, ptr [[GEP]], align 16
+; CHECK-NEXT:    store <128 x i64> zeroinitializer, ptr [[PTR]], align 1024
+; CHECK-NEXT:    ret void
+;
+  %gep = getelementptr i64, ptr %ptr, i64 2
+  store <vscale x 2 x i64> zeroinitializer, ptr %gep
+  store <128 x i64> zeroinitializer, ptr %ptr
+  ret void
+}
+
+define void @scalable_scalable_neg(ptr %ptr) {
+; CHECK-LABEL: @scalable_scalable_neg(
+; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i64, ptr [[PTR:%.*]], i64 8
+; CHECK-NEXT:    store <vscale x 4 x i64> zeroinitializer, ptr [[GEP]], align 32
+; CHECK-NEXT:    store <vscale x 2 x i64> zeroinitializer, ptr [[PTR]], align 16
+; CHECK-NEXT:    ret void
+;
+  %gep = getelementptr i64, ptr %ptr, i64 8
+  store <vscale x 4 x i64> zeroinitializer, ptr %gep
+  store <vscale x 2 x i64> zeroinitializer, ptr %ptr
+  ret void
+}
