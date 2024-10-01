@@ -224,6 +224,8 @@ bool RISCVABIInfo::detectFPCCEligibleStructHelper(QualType Ty, CharUnits CurOff,
     if (isEmptyRecord(getContext(), Ty, true, true))
       return true;
     const RecordDecl *RD = RTy->getDecl();
+    const Type *RT = RD->getTypeForDecl();
+    unsigned Alignment = getContext().getTypeAlign(RT);
     // Unions aren't eligible unless they're empty (which is caught above).
     if (RD->isUnion())
       return false;
@@ -251,6 +253,15 @@ bool RISCVABIInfo::detectFPCCEligibleStructHelper(QualType Ty, CharUnits CurOff,
         // bitwidth is XLen or less.
         if (getContext().getTypeSize(QTy) > XLen && BitWidth <= XLen)
           QTy = getContext().getIntTypeForBitwidth(XLen, false);
+        // Trim type to alignment/bitwidth if that is possible
+        else if (getContext().getTypeSize(QTy) > Alignment &&
+                 getContext().getTypeSize(QTy) > BitWidth) {
+          bool isSigned =
+              FD->getType().getTypePtr()->hasSignedIntegerRepresentation();
+          unsigned bits =
+              std::max(Alignment, (unsigned)llvm::PowerOf2Ceil(BitWidth));
+          QTy = getContext().getIntTypeForBitwidth(bits, isSigned);
+        }
         if (BitWidth == 0) {
           ZeroWidthBitFieldCount++;
           continue;
