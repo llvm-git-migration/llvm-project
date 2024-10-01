@@ -1016,15 +1016,25 @@ struct DSEState {
       return isMaskedStoreOverwrite(KillingI, DeadI, BatchAA);
     }
 
-    const TypeSize KillingSize = KillingLocSize.getValue();
-    const TypeSize DeadSize = DeadLoc.Size.getValue();
-    // Bail on doing Size comparison which depends on AA for now
-    // TODO: Remove AnyScalable once Alias Analysis deal with scalable vectors
-    const bool AnyScalable =
-        DeadSize.isScalable() || KillingLocSize.isScalable();
+    APInt KillingSize = APInt(64, KillingLocSize.getValue().getKnownMinValue());
+    APInt DeadSize = APInt(64, DeadLoc.Size.getValue().getKnownMinValue());
 
-    if (AnyScalable)
-      return OW_Unknown;
+    // We can compare lower-range(KillingSize) with upper-range(DeadSize), using
+    // VScale.
+    ConstantRange CR = getVScaleRange(&F, 64);
+    if (KillingLocSize.isScalable()) {
+      bool Overflow;
+      APInt LowerRange = CR.getUnsignedMin().umul_ov(KillingSize, Overflow);
+      if (!Overflow)
+        KillingSize = LowerRange;
+    }
+    if (DeadLoc.Size.isScalable()) {
+      bool Overflow;
+      APInt UpperRange = CR.getUnsignedMax().umul_ov(DeadSize, Overflow);
+      if (!Overflow)
+        DeadSize = UpperRange;
+    }
+
     // Query the alias information
     AliasResult AAR = BatchAA.alias(KillingLoc, DeadLoc);
 
@@ -1032,14 +1042,14 @@ struct DSEState {
     // the killing store was larger than the dead store.
     if (AAR == AliasResult::MustAlias) {
       // Make sure that the KillingSize size is >= the DeadSize size.
-      if (KillingSize >= DeadSize)
+      if (KillingSize.uge(DeadSize))
         return OW_Complete;
     }
 
     // If we hit a partial alias we may have a full overwrite
     if (AAR == AliasResult::PartialAlias && AAR.hasOffset()) {
       int32_t Off = AAR.getOffset();
-      if (Off >= 0 && (uint64_t)Off + DeadSize <= KillingSize)
+      if (Off >= 0 && KillingSize.uge(uint64_t(Off) + DeadSize))
         return OW_Complete;
     }
 
@@ -1089,16 +1099,16 @@ struct DSEState {
     if (DeadOff >= KillingOff) {
       // If the dead access ends "not after" the killing access then the
       // dead one is completely overwritten by the killing one.
-      if (uint64_t(DeadOff - KillingOff) + DeadSize <= KillingSize)
+      if (KillingSize.uge(uint64_t(DeadOff - KillingOff) + DeadSize))
         return OW_Complete;
       // If start of the dead access is "before" end of the killing access
       // then accesses overlap.
-      else if ((uint64_t)(DeadOff - KillingOff) < KillingSize)
+      if (KillingSize.ugt(uint64_t(DeadOff - KillingOff)))
         return OW_MaybePartial;
     }
     // If start of the killing access is "before" end of the dead access then
     // accesses overlap.
-    else if ((uint64_t)(KillingOff - DeadOff) < DeadSize) {
+    else if (DeadSize.ugt(uint64_t(KillingOff - DeadOff))) {
       return OW_MaybePartial;
     }
 
