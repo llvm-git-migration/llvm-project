@@ -153,7 +153,9 @@ class Builder:
         cc_dir = cc_path.parent
 
         def getToolchainUtil(util_name):
-            return os.path.join(configuration.llvm_tools_dir, util_name + exe_ext)
+            return os.path.join(
+                configuration.llvm_tools_dir, "llvm-" + util_name + exe_ext
+            )
 
         cxx = cc_dir / (cc_prefix + cxx_type + cc_ext)
 
