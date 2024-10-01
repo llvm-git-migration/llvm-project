@@ -222,11 +222,12 @@ public:
   /// For internal use only!
   void eraseIf(function_ref<bool(StringRef)> Pred) {
     for (auto I = Passes.begin(); I != Passes.end();) {
-      (*I)->eraseIf(Pred);
-      bool IsSpecial = (*I)->name().ends_with("PassAdaptor") ||
-                       (*I)->name().contains("PassManager");
-      bool PredResult = Pred((*I)->name());
-      if ((!IsSpecial && PredResult) || (IsSpecial && (*I)->isEmpty()))
+      auto &P = *I;
+      P->eraseIf(Pred);
+      bool IsSpecial = P->name().ends_with("PassAdaptor") ||
+                       P->name().contains("PassManager");
+      bool PredResult = Pred(P->name());
+      if ((!IsSpecial && PredResult) || (IsSpecial && P->isEmpty()))
         I = Passes.erase(I);
       else
         ++I;
