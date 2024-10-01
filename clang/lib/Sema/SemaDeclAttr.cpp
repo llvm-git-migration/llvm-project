@@ -5794,30 +5794,6 @@ static void handleRequiresCapabilityAttr(Sema &S, Decl *D,
       RequiresCapabilityAttr(S.Context, AL, Args.data(), Args.size());
 
   D->addAttr(RCA);
-
-  if (const auto *FD = dyn_cast<FunctionDecl>(D)) {
-
-    auto collectExprs = [](const FunctionDecl *FuncDecl) {
-      std::set<const ValueDecl*> Args;
-      for (const auto *A : FuncDecl->specific_attrs<RequiresCapabilityAttr>()) {
-        for (const Expr *E : A->args()) {
-          if (const auto *DRE = dyn_cast<DeclRefExpr>(E))
-            Args.insert(DRE->getDecl());
-        }
-      }
-      return Args;
-    };
-    auto ThisDecl = collectExprs(FD);
-    for (const FunctionDecl *P = FD->getPreviousDecl(); P;
-         P = P->getPreviousDecl()) {
-      auto PrevDecl = collectExprs(P);
-      // FIXME: It would be nice to mention _what_ attribute isn't matched and maybe
-      // even where the previous declaration was?
-      if (ThisDecl.size() != PrevDecl.size())
-        S.Diag(D->getLocation(), diag::warn_attribute_mismatch) << FD;
-    }
-
-  }
 }
 
 static void handleDeprecatedAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
