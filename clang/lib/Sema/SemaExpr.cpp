@@ -16193,7 +16193,8 @@ void Sema::ActOnBlockError(SourceLocation CaretLoc, Scope *CurScope) {
   // that we are about to discard along with the rest of the block.
   if (!getCurBlock()->EnclosingLambdaContainsUnexpandedParameterPack) {
     LambdaScopeInfo *L = getEnclosingLambda();
-    if (L) L->ContainsUnexpandedParameterPack = false;
+    if (L)
+      L->ContainsUnexpandedParameterPack = false;
   }
 
   // Leave the expression-evaluation context.
