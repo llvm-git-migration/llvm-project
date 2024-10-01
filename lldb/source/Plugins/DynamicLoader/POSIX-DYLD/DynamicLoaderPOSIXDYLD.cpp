@@ -108,6 +108,7 @@ void DynamicLoaderPOSIXDYLD::DidAttach() {
   // if we dont have a load address we cant re-base
   bool rebase_exec = load_offset != LLDB_INVALID_ADDRESS;
 
+  // if the target executable should be re-based
   if (rebase_exec) {
     ModuleList module_list;
 
