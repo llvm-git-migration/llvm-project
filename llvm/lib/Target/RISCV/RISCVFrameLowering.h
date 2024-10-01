@@ -92,6 +92,8 @@ private:
   void emitCalleeSavedRVVPrologCFI(MachineBasicBlock &MBB,
                                    MachineBasicBlock::iterator MI,
                                    bool HasFP) const;
+  void emitCalleeSavedRVVEpilogCFI(MachineBasicBlock &MBB,
+                                   MachineBasicBlock::iterator MI) const;
 
   void deallocateStack(MachineFunction &MF, MachineBasicBlock &MBB,
                        MachineBasicBlock::iterator MBBI, const DebugLoc &DL,
