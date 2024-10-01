@@ -1073,6 +1073,8 @@ public:
                    ProtectedOperationKind POK);
   void checkPtAccess(const FactSet &FSet, const Expr *Exp, AccessKind AK,
                      ProtectedOperationKind POK);
+
+  void checkMismatchedFunctionAttrs(const FunctionDecl *FD);
 };
 
 } // namespace
@@ -2263,34 +2265,25 @@ static bool neverReturns(const CFGBlock *B) {
   return false;
 }
 
-template <typename AttrT>
-static SmallVector<const Expr *> collectAttrArgs(const FunctionDecl *FD) {
-  SmallVector<const Expr *> Args;
-  for (const AttrT *A : FD->specific_attrs<AttrT>()) {
-    for (const Expr *E : A->args())
-      Args.push_back(E);
-  }
+void ThreadSafetyAnalyzer::checkMismatchedFunctionAttrs(
+    const FunctionDecl *FD) {
+  FD = FD->getMostRecentDecl();
 
-  return Args;
-}
+  auto collectCapabilities = [&](const FunctionDecl *FD) {
+    SmallVector<CapabilityExpr> Args;
+    for (const auto *A : FD->specific_attrs<RequiresCapabilityAttr>()) {
+      for (const Expr *E : A->args())
+        Args.push_back(SxBuilder.translateAttrExpr(E, nullptr));
+    }
+    return Args;
+  };
 
-static void diagnoseMismatchedFunctionAttrs(const FunctionDecl *FD,
-                                            ThreadSafetyHandler &Handler) {
-  assert(FD);
-  FD = FD->getDefinition();
-  assert(FD);
-  auto FDArgs = collectAttrArgs<RequiresCapabilityAttr>(FD);
-
+  auto FDArgs = collectCapabilities(FD);
   for (const FunctionDecl *D = FD->getPreviousDecl(); D;
        D = D->getPreviousDecl()) {
-    auto DArgs = collectAttrArgs<RequiresCapabilityAttr>(D);
-
-    for (const Expr *E : FDArgs) {
-      if (!llvm::is_contained(DArgs, E)) {
-        // FD requires E, but D doesn't.
-        Handler.handleAttributeMismatch(FD, D);
-      }
-    }
+    auto DArgs = collectCapabilities(D);
+    if (DArgs.size() != FDArgs.size())
+      Handler.handleAttributeMismatch(FD, D);
   }
 }
 
@@ -2314,7 +2307,7 @@ void ThreadSafetyAnalyzer::runAnalysis(AnalysisDeclContext &AC) {
   CurrentFunction = dyn_cast<FunctionDecl>(D);
 
   if (CurrentFunction)
-    diagnoseMismatchedFunctionAttrs(CurrentFunction, Handler);
+    checkMismatchedFunctionAttrs(CurrentFunction);
 
   if (D->hasAttr<NoThreadSafetyAnalysisAttr>())
     return;
