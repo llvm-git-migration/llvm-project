@@ -1,7 +1,7 @@
 # RUN: %PYTHON %s | FileCheck %s
 
 from mlir.ir import *
-from mlir.dialects import sparse_tensor as st
+from mlir.dialects import sparse_tensor as st, tensor
 import textwrap
 
 
@@ -219,9 +219,12 @@ def testEncodingAttrOnTensorType():
                 )
             )
         )
-        tt = RankedTensorType.get((1024,), F32Type.get(), encoding=encoding)
-        # CHECK: tensor<1024xf32, #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed), posWidth = 64, crdWidth = 32 }>>
-        print(tt)
-        # CHECK: #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed), posWidth = 64, crdWidth = 32 }>
-        print(tt.encoding)
-        assert tt.encoding == encoding
+        for tt in (
+            RankedTensorType.get((1024,), F32Type.get(), encoding=encoding),
+            tensor.empty((1024,), F32Type.get(), encoding=encoding),
+        ):
+            # CHECK: tensor<1024xf32, #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed), posWidth = 64, crdWidth = 32 }>>
+            print(tt)
+            # CHECK: #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed), posWidth = 64, crdWidth = 32 }>
+            print(tt.encoding)
+            assert tt.encoding == encoding
