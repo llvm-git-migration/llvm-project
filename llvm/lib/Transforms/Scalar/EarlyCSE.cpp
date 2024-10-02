@@ -362,7 +362,7 @@ static bool isEqualImpl(SimpleValue LHS, SimpleValue RHS) {
 
   if (LHSI->getOpcode() != RHSI->getOpcode())
     return false;
-  if (LHSI->isIdenticalToWhenDefined(RHSI)) {
+  if (LHSI->isIdenticalToWhenDefined(RHSI, /*IntersectAttrs=*/true)) {
     // Convergent calls implicitly depend on the set of threads that is
     // currently executing, so conservatively return false if they are in
     // different basic blocks.
@@ -551,7 +551,7 @@ bool DenseMapInfo<CallValue>::isEqual(CallValue LHS, CallValue RHS) {
   if (LHSI->isConvergent() && LHSI->getParent() != RHSI->getParent())
     return false;
 
-  return LHSI->isIdenticalTo(RHSI);
+  return LHSI->isIdenticalTo(RHSI, /*IntersectAttrs=*/true);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1534,6 +1534,13 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
+        if (auto *CB = dyn_cast<CallBase>(V)) {
+          bool Success = CB->tryIntersectAttributes(cast<CallBase>(&Inst));
+          assert(Success && "Failed to intersect attributes in callsites that "
+                            "passed identical check");
+          // For NDEBUG Compile.
+          (void)Success;
+        }
         combineIRFlags(Inst, V);
         Inst.replaceAllUsesWith(V);
         salvageKnowledge(&Inst, &AC);
@@ -1632,6 +1639,18 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
+        // We probably don't need a complete itersection of attrs between
+        // InVal.first and Inst.
+        // We only CSE readonly functions that have the same memory state and
+        // its not clear that any non-return *callsite* attribute can create
+        // side-effects. Likewise this implies when checking equality of
+        // callsite for CSEing, we can probably ignore all non-return attrs.
+        bool Success = cast<CallBase>(InVal.first)
+                           ->tryIntersectAttributes(cast<CallBase>(&Inst));
+        assert(Success && "Failed to intersect attributes in callsites that "
+                          "passed identical check");
+        // For NDEBUG Compile.
+        (void)Success;
         if (!Inst.use_empty())
           Inst.replaceAllUsesWith(InVal.first);
         salvageKnowledge(&Inst, &AC);

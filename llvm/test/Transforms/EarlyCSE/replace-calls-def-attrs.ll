@@ -10,9 +10,8 @@ declare i8 @buz.ptr(ptr, ptr)
 define i8 @same_parent_combine_diff_attrs(i8 %x, i8 %y) {
 ; CHECK-LABEL: define i8 @same_parent_combine_diff_attrs(
 ; CHECK-SAME: i8 [[X:%.*]], i8 [[Y:%.*]]) {
-; CHECK-NEXT:    [[C2:%.*]] = call i8 @baz(i8 noundef [[X]], i8 noundef [[Y]]) #[[ATTR0:[0-9]+]]
-; CHECK-NEXT:    [[C1:%.*]] = call i8 @baz(i8 [[X]], i8 noundef [[Y]]) #[[ATTR0]]
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C1]], i8 [[C2]])
+; CHECK-NEXT:    [[C1:%.*]] = call i8 @baz(i8 [[X]], i8 noundef [[Y]]) #[[ATTR0:[0-9]+]]
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C1]], i8 [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ;
   %c1 = call i8 @baz(i8 noundef %x, i8 noundef %y) readnone
@@ -25,9 +24,8 @@ define i8 @same_parent_combine_diff_attrs(i8 %x, i8 %y) {
 define i8 @same_parent_combine_diff_attrs_needs_intersect(i8 %x, i8 %y) {
 ; CHECK-LABEL: define i8 @same_parent_combine_diff_attrs_needs_intersect(
 ; CHECK-SAME: i8 [[X:%.*]], i8 [[Y:%.*]]) {
-; CHECK-NEXT:    [[C1:%.*]] = call nonnull ptr @baz.ptr(i8 noundef [[X]], i8 noundef [[Y]]) #[[ATTR0]]
-; CHECK-NEXT:    [[C0:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR0]]
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C0]], ptr [[C1]])
+; CHECK-NEXT:    [[C1:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR0]]
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C1]], ptr [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ;
   %c1 = call nonnull ptr @baz.ptr(i8 noundef %x, i8 noundef %y) readnone
@@ -40,9 +38,8 @@ define i8 @same_parent_combine_diff_attrs_needs_intersect(i8 %x, i8 %y) {
 define i8 @same_parent_combine_diff_attrs_needs_intersect2(i8 %x, i8 %y) {
 ; CHECK-LABEL: define i8 @same_parent_combine_diff_attrs_needs_intersect2(
 ; CHECK-SAME: i8 [[X:%.*]], i8 [[Y:%.*]]) {
-; CHECK-NEXT:    [[C1:%.*]] = call nonnull ptr @baz.ptr(i8 noundef [[X]], i8 noundef [[Y]]) #[[ATTR1:[0-9]+]]
-; CHECK-NEXT:    [[C0:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR1]]
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C0]], ptr [[C1]])
+; CHECK-NEXT:    [[C1:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR1:[0-9]+]]
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C1]], ptr [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ;
   %c1 = call nonnull ptr @baz.ptr(i8 noundef %x, i8 noundef %y) readonly
@@ -55,9 +52,8 @@ define i8 @same_parent_combine_diff_attrs_needs_intersect2(i8 %x, i8 %y) {
 define i8 @same_parent_combine_diff_attrs_really_needs_intersect(i8 %x, i8 %y) {
 ; CHECK-LABEL: define i8 @same_parent_combine_diff_attrs_really_needs_intersect(
 ; CHECK-SAME: i8 [[X:%.*]], i8 [[Y:%.*]]) {
-; CHECK-NEXT:    [[C1:%.*]] = call nonnull ptr @baz.ptr(i8 noundef [[X]], i8 noundef [[Y]]) #[[ATTR1]]
-; CHECK-NEXT:    [[C0:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR1]]
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C0]], ptr noundef [[C1]])
+; CHECK-NEXT:    [[C1:%.*]] = call ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR1]]
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C1]], ptr noundef [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ;
   %c1 = call nonnull ptr @baz.ptr(i8 noundef %x, i8 noundef %y) readonly
@@ -128,8 +124,7 @@ define i8 @diff_parent_combine_diff_attrs_preserves_return_attrs(i1 %c, i8 %x, i
 ; CHECK-NEXT:    [[C1:%.*]] = call nonnull ptr @baz.ptr(i8 [[X]], i8 noundef [[Y]]) #[[ATTR1]]
 ; CHECK-NEXT:    br i1 [[C]], label %[[T:.*]], label %[[F:.*]]
 ; CHECK:       [[T]]:
-; CHECK-NEXT:    [[C0:%.*]] = call nonnull ptr @baz.ptr(i8 noundef [[X]], i8 noundef [[Y]]) #[[ATTR1]]
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C0]], ptr noundef [[C1]])
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz.ptr(ptr [[C1]], ptr noundef [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ; CHECK:       [[F]]:
 ; CHECK-NEXT:    ret i8 9
