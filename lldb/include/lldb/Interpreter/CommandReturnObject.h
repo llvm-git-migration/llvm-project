@@ -10,6 +10,7 @@
 #define LLDB_INTERPRETER_COMMANDRETURNOBJECT_H
 
 #include "lldb/Host/StreamFile.h"
+#include "lldb/Utility/DiagnosticsRendering.h"
 #include "lldb/Utility/StreamString.h"
 #include "lldb/Utility/StreamTee.h"
 #include "lldb/lldb-private.h"
@@ -29,6 +30,8 @@ public:
 
   ~CommandReturnObject() = default;
 
+  llvm::StringRef GetInlineDiagnosticsData(unsigned indent);
+
   llvm::StringRef GetOutputData() {
     lldb::StreamSP stream_sp(m_out_stream.GetStreamAtIndex(eStreamStringIndex));
     if (stream_sp)
@@ -36,12 +39,7 @@ public:
     return llvm::StringRef();
   }
 
-  llvm::StringRef GetErrorData() {
-    lldb::StreamSP stream_sp(m_err_stream.GetStreamAtIndex(eStreamStringIndex));
-    if (stream_sp)
-      return std::static_pointer_cast<StreamString>(stream_sp)->GetString();
-    return llvm::StringRef();
-  }
+  llvm::StringRef GetErrorData();
 
   Stream &GetOutputStream() {
     // Make sure we at least have our normal string stream output stream
@@ -135,6 +133,12 @@ public:
 
   void SetError(llvm::Error error);
 
+  /// The user input is often the last part of the command, for
+  /// example for "expression -- foo" it would be "foo".
+  /// This is used to make sure inline diagnostics are indented correctly.
+  void SetUserInput(llvm::StringRef user_input) { m_user_input = user_input; }
+  llvm::StringRef GetUserInput() const { return m_user_input; }
+
   lldb::ReturnStatus GetStatus() const;
 
   void SetStatus(lldb::ReturnStatus status);
@@ -160,6 +164,9 @@ private:
 
   StreamTee m_out_stream;
   StreamTee m_err_stream;
+  std::vector<DiagnosticDetail> m_diagnostics;
+  StreamString m_diag_stream;
+  std::string m_user_input;
 
   lldb::ReturnStatus m_status = lldb::eReturnStatusStarted;
 
