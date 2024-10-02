@@ -7,8 +7,7 @@ define i8 @same_parent_combine_diff_attrs(i8 %x, i8 %y) {
 ; CHECK-LABEL: define i8 @same_parent_combine_diff_attrs(
 ; CHECK-SAME: i8 [[X:%.*]], i8 [[Y:%.*]]) {
 ; CHECK-NEXT:    [[C1:%.*]] = call i8 @baz(i8 [[X]], i8 noundef [[Y]])
-; CHECK-NEXT:    [[C0:%.*]] = call i8 @baz(i8 noundef [[X]], i8 noundef [[Y]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C0]], i8 [[C1]])
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C1]], i8 [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ;
   %c1 = call i8 @baz(i8 %x, i8 noundef %y)
@@ -24,8 +23,7 @@ define i8 @diff_parent_combine_diff_attrs(i1 %c, i8 %x, i8 %y) {
 ; CHECK-NEXT:    [[C1:%.*]] = call i8 @baz(i8 [[X]], i8 noundef [[Y]])
 ; CHECK-NEXT:    br i1 [[C]], label %[[T:.*]], label %[[F:.*]]
 ; CHECK:       [[T]]:
-; CHECK-NEXT:    [[C0:%.*]] = call i8 @baz(i8 noundef [[X]], i8 noundef [[Y]])
-; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C0]], i8 [[C1]])
+; CHECK-NEXT:    [[R:%.*]] = call i8 @buz(i8 [[C1]], i8 [[C1]])
 ; CHECK-NEXT:    ret i8 [[R]]
 ; CHECK:       [[F]]:
 ; CHECK-NEXT:    [[R2:%.*]] = add i8 [[C1]], 4

@@ -362,7 +362,7 @@ static bool isEqualImpl(SimpleValue LHS, SimpleValue RHS) {
 
   if (LHSI->getOpcode() != RHSI->getOpcode())
     return false;
-  if (LHSI->isIdenticalToWhenDefined(RHSI)) {
+  if (LHSI->isIdenticalToWhenDefined(RHSI, /*IntersectAttrs=*/true)) {
     // Convergent calls implicitly depend on the set of threads that is
     // currently executing, so conservatively return false if they are in
     // different basic blocks.
@@ -551,7 +551,7 @@ bool DenseMapInfo<CallValue>::isEqual(CallValue LHS, CallValue RHS) {
   if (LHSI->isConvergent() && LHSI->getParent() != RHSI->getParent())
     return false;
 
-  return LHSI->isIdenticalTo(RHSI);
+  return LHSI->isIdenticalTo(RHSI, /*IntersectAttrs=*/true);
 }
 
 //===----------------------------------------------------------------------===//
@@ -621,7 +621,7 @@ bool DenseMapInfo<GEPValue>::isEqual(const GEPValue &LHS, const GEPValue &RHS) {
     return false;
   if (LHS.ConstantOffset.has_value() && RHS.ConstantOffset.has_value())
     return LHS.ConstantOffset.value() == RHS.ConstantOffset.value();
-  return LGEP->isIdenticalToWhenDefined(RGEP);
+  return LGEP->isIdenticalToWhenDefined(RGEP, /*IntersectAttrs=*/true);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1632,6 +1632,9 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           LLVM_DEBUG(dbgs() << "Skipping due to debug counter\n");
           continue;
         }
+
+        // Potential TODO: We may be throwing away attribute information when
+        // we delete Inst that we could propagate too InVal.first.
         if (!Inst.use_empty())
           Inst.replaceAllUsesWith(InVal.first);
         salvageKnowledge(&Inst, &AC);

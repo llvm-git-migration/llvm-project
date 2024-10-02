@@ -876,7 +876,8 @@ public:
   /// Return true if the specified instruction is exactly identical to the
   /// current one. This means that all operands match and any extra information
   /// (e.g. load is volatile) agree.
-  bool isIdenticalTo(const Instruction *I) const LLVM_READONLY;
+  bool isIdenticalTo(const Instruction *I,
+                     bool IntersectAttrs = false) const LLVM_READONLY;
 
   /// This is like isIdenticalTo, except that it ignores the
   /// SubclassOptionalData flags, which may specify conditions under which the

@@ -862,8 +862,9 @@ bool Instruction::hasSameSpecialState(const Instruction *I2,
   return true;
 }
 
-bool Instruction::isIdenticalTo(const Instruction *I) const {
-  return isIdenticalToWhenDefined(I) &&
+bool Instruction::isIdenticalTo(const Instruction *I,
+                                bool IntersectAttrs) const {
+  return isIdenticalToWhenDefined(I, IntersectAttrs) &&
          SubclassOptionalData == I->SubclassOptionalData;
 }
 
