@@ -4690,7 +4690,8 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
     return emitWritebackArg(*this, args, CRE);
   }
 
-  assert(type->isReferenceType() == E->isGLValue() &&
+  assert(type->isArrayParameterType() ||
+	 (type->isReferenceType() == E->isGLValue()) &&
          "reference binding to unmaterialized r-value!");
 
   // Add writeback for HLSLOutParamExpr.
