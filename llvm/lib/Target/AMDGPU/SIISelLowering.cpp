@@ -899,6 +899,7 @@ SITargetLowering::SITargetLowering(const TargetMachine &TM,
                        ISD::FADD,
                        ISD::FSUB,
                        ISD::FDIV,
+                       ISD::FMUL,
                        ISD::FMINNUM,
                        ISD::FMAXNUM,
                        ISD::FMINNUM_IEEE,
@@ -14476,6 +14477,57 @@ SDValue SITargetLowering::performFDivCombine(SDNode *N,
   return SDValue();
 }
 
+SDValue SITargetLowering::performFMulCombine(SDNode *N,
+                                             DAGCombinerInfo &DCI) const {
+  SelectionDAG &DAG = DCI.DAG;
+  EVT VT = N->getValueType(0);
+
+  SDLoc SL(N);
+  SDValue LHS = N->getOperand(0);
+  SDValue RHS = N->getOperand(1);
+
+  // ldexp(x, zext(i1 y)) -> fmul x, (select y, 2.0, 1.0)
+  // ldexp(x, sext(i1 y)) -> fmul x, (select y, 0.5, 1.0)
+  //
+  // The above mentioned ldexp folding works fine for
+  // f16/f32, but as for f64 it creates f64 select which
+  // is costly to materealize as compared to f64 ldexp
+  // so here we undo the transform for f64 as follows :
+  //
+  // fmul x, (select y, 2.0, 1.0) -> ldexp(x, zext(i1 y))
+  // fmul x, (select y, 0.5, 1.0) -> ldexp(x, sext(i1 y))
+  // TODO : Need to handle vector of f64 type.
+  if (VT == MVT::f64) {
+    if (RHS.hasOneUse() && RHS.getOpcode() == ISD::SELECT) {
+      const ConstantFPSDNode *TrueNode =
+          dyn_cast<ConstantFPSDNode>(RHS.getOperand(1));
+      const ConstantFPSDNode *FalseNode =
+          dyn_cast<ConstantFPSDNode>(RHS.getOperand(2));
+
+      if (!TrueNode || !FalseNode)
+        return SDValue();
+
+      const double TrueVal = TrueNode->getValueAPF().convertToDouble();
+      const double FalseVal = FalseNode->getValueAPF().convertToDouble();
+      unsigned ExtOp;
+
+      if (FalseVal == 1.0) {
+        if (TrueVal == 2.0)
+          ExtOp = ISD::ZERO_EXTEND;
+        else if (TrueVal == 0.5)
+          ExtOp = ISD::SIGN_EXTEND;
+        else
+          return SDValue();
+
+        SDValue ExtNode = DAG.getNode(ExtOp, SL, MVT::i32, RHS.getOperand(0));
+        return DAG.getNode(ISD::FLDEXP, SL, MVT::f64, LHS, ExtNode);
+      }
+    }
+  }
+
+  return SDValue();
+}
+
 SDValue SITargetLowering::performFMACombine(SDNode *N,
                                             DAGCombinerInfo &DCI) const {
   SelectionDAG &DAG = DCI.DAG;
@@ -14765,6 +14817,8 @@ SDValue SITargetLowering::PerformDAGCombine(SDNode *N,
     return performFSubCombine(N, DCI);
   case ISD::FDIV:
     return performFDivCombine(N, DCI);
+  case ISD::FMUL:
+    return performFMulCombine(N, DCI);
   case ISD::SETCC:
     return performSetCCCombine(N, DCI);
   case ISD::FMAXNUM:
