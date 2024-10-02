@@ -1422,13 +1422,13 @@ public:
   bool isInlineAsm() const { return cast<llvm::CallBase>(Val)->isInlineAsm(); }
 };
 
-class CallInst final : public CallBase {
+class CallInst : public CallBase {
   /// Use Context::createCallInst(). Don't call the
   /// constructor directly.
   CallInst(llvm::Instruction *I, Context &Ctx)
       : CallBase(ClassID::Call, Opcode::Call, I, Ctx) {}
-  friend class Context; // For accessing the constructor in
-                        // create*()
+  friend class Context;       // For accessing the constructor in create*()
+  friend class IntrinsicInst; // For constructor
 
 public:
   static CallInst *create(FunctionType *FTy, Value *Func,
