@@ -1430,12 +1430,11 @@ define void @scalar_mov_materializes_frame_index_unavailable_scc__gep_immoffset(
 ; GFX10_1-NEXT:    v_writelane_b32 v2, s59, 0
 ; GFX10_1-NEXT:    v_lshrrev_b32_e64 v0, 5, s32
 ; GFX10_1-NEXT:    s_and_b32 s4, 0, exec_lo
-; GFX10_1-NEXT:    v_add_nc_u32_e32 v3, 0x4040, v3
+; GFX10_1-NEXT:    v_add_nc_u32_e32 v1, 0x442c, v3
 ; GFX10_1-NEXT:    v_add_nc_u32_e32 v0, 64, v0
 ; GFX10_1-NEXT:    ;;#ASMSTART
 ; GFX10_1-NEXT:    ; use alloca0 v0
 ; GFX10_1-NEXT:    ;;#ASMEND
-; GFX10_1-NEXT:    v_add_nc_u32_e32 v1, 0x3ec, v3
 ; GFX10_1-NEXT:    v_readfirstlane_b32 s59, v1
 ; GFX10_1-NEXT:    ;;#ASMSTART
 ; GFX10_1-NEXT:    ; use s59, scc
@@ -1460,12 +1459,11 @@ define void @scalar_mov_materializes_frame_index_unavailable_scc__gep_immoffset(
 ; GFX10_3-NEXT:    v_writelane_b32 v2, s59, 0
 ; GFX10_3-NEXT:    v_lshrrev_b32_e64 v0, 5, s32
 ; GFX10_3-NEXT:    s_and_b32 s4, 0, exec_lo
-; GFX10_3-NEXT:    v_add_nc_u32_e32 v3, 0x4040, v3
+; GFX10_3-NEXT:    v_add_nc_u32_e32 v1, 0x442c, v3
 ; GFX10_3-NEXT:    v_add_nc_u32_e32 v0, 64, v0
 ; GFX10_3-NEXT:    ;;#ASMSTART
 ; GFX10_3-NEXT:    ; use alloca0 v0
 ; GFX10_3-NEXT:    ;;#ASMEND
-; GFX10_3-NEXT:    v_add_nc_u32_e32 v1, 0x3ec, v3
 ; GFX10_3-NEXT:    v_readfirstlane_b32 s59, v1
 ; GFX10_3-NEXT:    ;;#ASMSTART
 ; GFX10_3-NEXT:    ; use s59, scc
@@ -1487,14 +1485,13 @@ define void @scalar_mov_materializes_frame_index_unavailable_scc__gep_immoffset(
 ; GFX11-NEXT:    s_mov_b32 exec_lo, s0
 ; GFX11-NEXT:    s_add_i32 s0, s32, 64
 ; GFX11-NEXT:    v_writelane_b32 v2, s59, 0
-; GFX11-NEXT:    v_mov_b32_e32 v0, s0
-; GFX11-NEXT:    s_add_i32 s0, s32, 0x4040
+; GFX11-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v3, s32
+; GFX11-NEXT:    s_and_b32 s0, 0, exec_lo
 ; GFX11-NEXT:    ;;#ASMSTART
 ; GFX11-NEXT:    ; use alloca0 v0
 ; GFX11-NEXT:    ;;#ASMEND
-; GFX11-NEXT:    v_add_nc_u32_e64 v1, 0x3ec, s0
-; GFX11-NEXT:    s_and_b32 s0, 0, exec_lo
-; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(VALU_DEP_1)
+; GFX11-NEXT:    v_add_nc_u32_e32 v1, 0x442c, v3
 ; GFX11-NEXT:    v_readfirstlane_b32 s59, v1
 ; GFX11-NEXT:    ;;#ASMSTART
 ; GFX11-NEXT:    ; use s59, scc
@@ -1518,16 +1515,14 @@ define void @scalar_mov_materializes_frame_index_unavailable_scc__gep_immoffset(
 ; GFX12-NEXT:    scratch_store_b32 off, v2, s32 offset:32768 ; 4-byte Folded Spill
 ; GFX12-NEXT:    s_wait_alu 0xfffe
 ; GFX12-NEXT:    s_mov_b32 exec_lo, s0
-; GFX12-NEXT:    s_add_co_i32 s0, s32, 0x4000
+; GFX12-NEXT:    v_dual_mov_b32 v0, s32 :: v_dual_mov_b32 v3, s32
 ; GFX12-NEXT:    v_writelane_b32 v2, s59, 0
-; GFX12-NEXT:    s_wait_alu 0xfffe
-; GFX12-NEXT:    v_add_nc_u32_e64 v1, 0x3ec, s0
-; GFX12-NEXT:    v_mov_b32_e32 v0, s32
 ; GFX12-NEXT:    s_and_b32 s0, 0, exec_lo
 ; GFX12-NEXT:    ;;#ASMSTART
 ; GFX12-NEXT:    ; use alloca0 v0
 ; GFX12-NEXT:    ;;#ASMEND
-; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_2)
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_2) | instskip(NEXT) | instid1(VALU_DEP_1)
+; GFX12-NEXT:    v_add_nc_u32_e32 v1, 0x43ec, v3
 ; GFX12-NEXT:    v_readfirstlane_b32 s59, v1
 ; GFX12-NEXT:    ;;#ASMSTART
 ; GFX12-NEXT:    ; use s59, scc
@@ -1549,9 +1544,7 @@ define void @scalar_mov_materializes_frame_index_unavailable_scc__gep_immoffset(
 ; GFX8-NEXT:    buffer_store_dword v2, off, s[0:3], s6 ; 4-byte Folded Spill
 ; GFX8-NEXT:    s_mov_b64 exec, s[4:5]
 ; GFX8-NEXT:    v_lshrrev_b32_e64 v1, 6, s32
-; GFX8-NEXT:    s_movk_i32 vcc_lo, 0x4040
-; GFX8-NEXT:    v_add_u32_e32 v1, vcc, vcc_lo, v1
-; GFX8-NEXT:    v_add_u32_e32 v0, vcc, 0x3ec, v1
+; GFX8-NEXT:    v_add_u32_e32 v0, vcc, 0x442c, v1
 ; GFX8-NEXT:    v_writelane_b32 v2, s59, 0
 ; GFX8-NEXT:    v_lshrrev_b32_e64 v1, 6, s32
 ; GFX8-NEXT:    v_readfirstlane_b32 s59, v0
