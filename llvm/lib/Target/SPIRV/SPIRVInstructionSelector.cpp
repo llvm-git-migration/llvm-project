@@ -247,6 +247,9 @@ private:
   bool selectStep(Register ResVReg, const SPIRVType *ResType,
                   MachineInstr &I) const;
 
+  bool selectRadians(Register ResVReg, const SPIRVType *ResType,
+                     MachineInstr &I) const;
+
   bool selectUnmergeValues(MachineInstr &I) const;
 
   Register buildI32Constant(uint32_t Val, MachineInstr &I,
@@ -1783,6 +1786,23 @@ bool SPIRVInstructionSelector::selectStep(Register ResVReg,
       .constrainAllUses(TII, TRI, RBI);
 }
 
+bool SPIRVInstructionSelector::selectRadians(Register ResVReg,
+                                          const SPIRVType *ResType,
+                                          MachineInstr &I) const {
+
+  assert(I.getNumOperands() == 3);
+  assert(I.getOperand(2).isReg());
+  MachineBasicBlock &BB = *I.getParent();
+
+  return BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpExtInst))
+      .addDef(ResVReg)
+      .addUse(GR.getSPIRVTypeID(ResType))
+      .addImm(static_cast<uint32_t>(SPIRV::InstructionSet::GLSL_std_450))
+      .addImm(GL::Radians)
+      .addUse(I.getOperand(2).getReg())
+      .constrainAllUses(TII, TRI, RBI);
+}
+
 bool SPIRVInstructionSelector::selectBitreverse(Register ResVReg,
                                                 const SPIRVType *ResType,
                                                 MachineInstr &I) const {
@@ -2556,6 +2576,8 @@ bool SPIRVInstructionSelector::selectIntrinsic(Register ResVReg,
   }
   case Intrinsic::spv_step:
     return selectStep(ResVReg, ResType, I);
+  case Intrinsic::spv_radians:
+    return selectRadians(ResVReg, ResType, I);
   case Intrinsic::spv_value_md:
     // ignore the intrinsic
     break;
