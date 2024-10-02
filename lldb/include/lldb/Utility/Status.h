@@ -9,6 +9,7 @@
 #ifndef LLDB_UTILITY_STATUS_H
 #define LLDB_UTILITY_STATUS_H
 
+#include "lldb/Utility/FileSpec.h"
 #include "lldb/lldb-defines.h"
 #include "lldb/lldb-enumerations.h"
 #include "llvm/ADT/StringRef.h"
@@ -25,6 +26,48 @@ class raw_ostream;
 }
 
 namespace lldb_private {
+
+/// A compiler-independent representation of an \c
+/// lldb_private::Diagnostic. Expression evaluation failures often
+/// have more than one diagnostic that a UI layer might want to render
+/// differently, for example to colorize it.
+///
+/// Running example:
+///   (lldb) expr 1 + foo
+///   error: <user expression 0>:1:3: use of undeclared identifier 'foo'
+///   1 + foo
+///       ^~~
+struct DiagnosticDetail {
+  /// A source location consisting of a file name and position.
+  struct SourceLocation {
+    /// \c "<user expression 0>" in the example above.
+    FileSpec file;
+    /// \c 1 in the example above.
+    unsigned line = 0;
+    /// \c 5 in the example above.
+    uint16_t column = 0;
+    /// \c 3 in the example above.
+    uint16_t length = 0;
+    /// Whether this source location should be surfaced to the
+    /// user. For example, syntax errors diagnosed in LLDB's
+    /// expression wrapper code have this set to true.
+    bool hidden = false;
+    /// Whether this source location refers to something the user
+    /// typed as part of the command, i.e., if this qualifies for
+    /// inline display, or if the source line would need to be echoed
+    /// again for the message to make sense.
+    bool in_user_input = false;
+  };
+  /// Contains this diagnostic's source location, if applicable.
+  std::optional<SourceLocation> source_location;
+  /// Contains \c eSeverityError in the example above.
+  lldb::Severity severity = lldb::eSeverityInfo;
+  /// Contains "use of undeclared identifier 'foo'" in the example above.
+  std::string message;
+  /// Contains the fully rendered error message, without "error: ",
+  /// but including the source context.
+  std::string rendered;
+};
 
 const char *ExpressionResultAsCString(lldb::ExpressionResults result);
 
@@ -86,6 +129,7 @@ public:
   ExpressionErrorBase(std::error_code ec, std::string msg = {})
       : ErrorInfo(ec) {}
   lldb::ErrorType GetErrorType() const override;
+  virtual llvm::ArrayRef<DiagnosticDetail> GetDetails() const;
   static char ID;
 };
 
