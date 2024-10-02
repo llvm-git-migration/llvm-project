@@ -29,6 +29,9 @@ public:
 
   ~CommandReturnObject() = default;
 
+  llvm::StringRef GetInlineDiagnosticsData(unsigned indent,
+                                           llvm::StringRef command);
+
   llvm::StringRef GetOutputData() {
     lldb::StreamSP stream_sp(m_out_stream.GetStreamAtIndex(eStreamStringIndex));
     if (stream_sp)
@@ -36,12 +39,7 @@ public:
     return llvm::StringRef();
   }
 
-  llvm::StringRef GetErrorData() {
-    lldb::StreamSP stream_sp(m_err_stream.GetStreamAtIndex(eStreamStringIndex));
-    if (stream_sp)
-      return std::static_pointer_cast<StreamString>(stream_sp)->GetString();
-    return llvm::StringRef();
-  }
+  llvm::StringRef GetErrorData();
 
   Stream &GetOutputStream() {
     // Make sure we at least have our normal string stream output stream
@@ -135,6 +133,8 @@ public:
 
   void SetError(llvm::Error error);
 
+  void SetUserInput(llvm::StringRef user_input) { m_user_input = user_input; }
+
   lldb::ReturnStatus GetStatus() const;
 
   void SetStatus(lldb::ReturnStatus status);
@@ -160,6 +160,9 @@ private:
 
   StreamTee m_out_stream;
   StreamTee m_err_stream;
+  std::vector<DiagnosticDetail> m_diagnostics;
+  StreamString m_diag_stream;
+  std::string m_user_input;
 
   lldb::ReturnStatus m_status = lldb::eReturnStatusStarted;
 
