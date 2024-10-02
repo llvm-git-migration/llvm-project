@@ -25,6 +25,7 @@ using llvm::ClauseVal;
 using llvm::raw_ostream;
 using llvm::Record;
 using llvm::RecordKeeper;
+namespace cl = llvm::cl;
 
 // LLVM has multiple places (Clang, Flang, MLIR) where information about
 // the directives (OpenMP/OpenACC), and clauses are needed. It is good software
@@ -96,12 +97,11 @@ static bool emitDecls(const RecordKeeper &recordKeeper, llvm::StringRef dialect,
   return false;
 }
 
-static llvm::cl::OptionCategory
-    directiveGenCat("Options for gen-directive-decl");
-static llvm::cl::opt<std::string>
+static cl::OptionCategory directiveGenCat("Options for gen-directive-decl");
+static cl::opt<std::string>
     dialect("directives-dialect",
-            llvm::cl::desc("Generate directives for this dialect"),
-            llvm::cl::cat(directiveGenCat), llvm::cl::CommaSeparated);
+            cl::desc("Generate directives for this dialect"),
+            cl::cat(directiveGenCat), cl::CommaSeparated);
 
 // Registers the generator to mlir-tblgen.
 static mlir::GenRegistration genDirectiveDecls(

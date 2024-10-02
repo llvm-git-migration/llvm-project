@@ -13,6 +13,8 @@
 
 using namespace mlir;
 using namespace mlir::tblgen;
+using llvm::SourceMgr;
+namespace cl = llvm::cl;
 
 //===----------------------------------------------------------------------===//
 // FormatToken
@@ -26,14 +28,14 @@ SMLoc FormatToken::getLoc() const {
 // FormatLexer
 //===----------------------------------------------------------------------===//
 
-FormatLexer::FormatLexer(llvm::SourceMgr &mgr, SMLoc loc)
+FormatLexer::FormatLexer(SourceMgr &mgr, SMLoc loc)
     : mgr(mgr), loc(loc),
       curBuffer(mgr.getMemoryBuffer(mgr.getMainFileID())->getBuffer()),
       curPtr(curBuffer.begin()) {}
 
 FormatToken FormatLexer::emitError(SMLoc loc, const Twine &msg) {
-  mgr.PrintMessage(loc, llvm::SourceMgr::DK_Error, msg);
-  llvm::SrcMgr.PrintMessage(this->loc, llvm::SourceMgr::DK_Note,
+  mgr.PrintMessage(loc, SourceMgr::DK_Error, msg);
+  llvm::SrcMgr.PrintMessage(this->loc, SourceMgr::DK_Note,
                             "in custom assembly format for this operation");
   return formToken(FormatToken::error, loc.getPointer());
 }
@@ -44,10 +46,10 @@ FormatToken FormatLexer::emitError(const char *loc, const Twine &msg) {
 
 FormatToken FormatLexer::emitErrorAndNote(SMLoc loc, const Twine &msg,
                                           const Twine &note) {
-  mgr.PrintMessage(loc, llvm::SourceMgr::DK_Error, msg);
-  llvm::SrcMgr.PrintMessage(this->loc, llvm::SourceMgr::DK_Note,
+  mgr.PrintMessage(loc, SourceMgr::DK_Error, msg);
+  llvm::SrcMgr.PrintMessage(this->loc, SourceMgr::DK_Note,
                             "in custom assembly format for this operation");
-  mgr.PrintMessage(loc, llvm::SourceMgr::DK_Note, note);
+  mgr.PrintMessage(loc, SourceMgr::DK_Note, note);
   return formToken(FormatToken::error, loc.getPointer());
 }
 
@@ -536,7 +538,6 @@ bool mlir::tblgen::isValidLiteral(StringRef value,
 // Commandline Options
 //===----------------------------------------------------------------------===//
 
-llvm::cl::opt<bool> mlir::tblgen::formatErrorIsFatal(
+cl::opt<bool> mlir::tblgen::formatErrorIsFatal(
     "asmformat-error-is-fatal",
-    llvm::cl::desc("Emit a fatal error if format parsing fails"),
-    llvm::cl::init(true));
+    cl::desc("Emit a fatal error if format parsing fails"), cl::init(true));
