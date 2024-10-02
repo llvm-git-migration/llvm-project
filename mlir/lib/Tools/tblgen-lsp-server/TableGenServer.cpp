@@ -109,7 +109,7 @@ getBaseValue(const llvm::Record *record, const llvm::RecordVal *value) {
   // On success, `record` is updated to the new parent record.
   StringRef valueName = value->getName();
   auto findValueInSupers =
-      [&](const llvm::Record *&record) -> llvm::RecordVal * {
+      [&](const llvm::Record *&record) -> const llvm::RecordVal * {
     for (auto [parentRecord, loc] : record->getSuperClasses()) {
       if (auto *newBase = parentRecord->getValue(valueName)) {
         record = parentRecord;
