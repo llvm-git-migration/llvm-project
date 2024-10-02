@@ -198,11 +198,14 @@ bool SIFoldOperandsImpl::frameIndexMayFold(
   case AMDGPU::S_ADD_I32:
   case AMDGPU::V_ADD_U32_e32:
   case AMDGPU::V_ADD_CO_U32_e32:
-    // TODO: Handle e64 variants
     // TODO: Possibly relax hasOneUse. It matters more for mubuf, since we have
     // to insert the wave size shift at every point we use the index.
     // TODO: Fix depending on visit order to fold immediates into the operand
     return UseMI.getOperand(OpNo == 1 ? 2 : 1).isImm() &&
+           MRI->hasOneNonDBGUse(UseMI.getOperand(OpNo).getReg());
+  case AMDGPU::V_ADD_U32_e64:
+  case AMDGPU::V_ADD_CO_U32_e64:
+    return UseMI.getOperand(OpNo == 2 ? 3 : 2).isImm() &&
            MRI->hasOneNonDBGUse(UseMI.getOperand(OpNo).getReg());
   default:
     break;
