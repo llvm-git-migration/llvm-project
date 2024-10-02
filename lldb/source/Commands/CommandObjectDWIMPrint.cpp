@@ -188,12 +188,14 @@ void CommandObjectDWIMPrint::DoExecute(StringRef command,
     ValueObjectSP valobj_sp;
     std::string fixed_expression;
 
+    result.SetUserInput(expr);
     ExpressionResults expr_result = target.EvaluateExpression(
         expr, exe_scope, valobj_sp, eval_options, &fixed_expression);
 
     // Only mention Fix-Its if the expression evaluator applied them.
     // Compiler errors refer to the final expression after applying Fix-It(s).
     if (!fixed_expression.empty() && target.GetEnableNotifyAboutFixIts()) {
+      result.SetUserInput(fixed_expression);
       Stream &error_stream = result.GetErrorStream();
       error_stream << "  Evaluated this expression after applying Fix-It(s):\n";
       error_stream << "    " << fixed_expression << "\n";

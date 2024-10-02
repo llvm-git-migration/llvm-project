@@ -1,4 +1,4 @@
-//===-- DiagnosticRendering.h -----------------------------------*- C++ -*-===//
+//===-- DiagnosticsRendering.cpp ------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,17 +6,46 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLDB_SOURCE_COMMANDS_DIAGNOSTICRENDERING_H
-#define LLDB_SOURCE_COMMANDS_DIAGNOSTICRENDERING_H
+#include "lldb/Utility/DiagnosticsRendering.h"
 
-#include "lldb/Expression/DiagnosticManager.h"
-#include "lldb/Utility/Stream.h"
-#include "llvm/Support/WithColor.h"
+using namespace lldb_private;
+using namespace lldb;
 
 namespace lldb_private {
 
-static llvm::raw_ostream &PrintSeverity(Stream &stream,
-                                        lldb::Severity severity) {
+char DiagnosticError::ID;
+
+lldb::ErrorType DiagnosticError::GetErrorType() const {
+  return lldb::eErrorTypeExpression;
+}
+
+const char *ExpressionResultAsCString(ExpressionResults result) {
+  switch (result) {
+  case eExpressionCompleted:
+    return "eExpressionCompleted";
+  case eExpressionDiscarded:
+    return "eExpressionDiscarded";
+  case eExpressionInterrupted:
+    return "eExpressionInterrupted";
+  case eExpressionHitBreakpoint:
+    return "eExpressionHitBreakpoint";
+  case eExpressionSetupError:
+    return "eExpressionSetupError";
+  case eExpressionParseError:
+    return "eExpressionParseError";
+  case eExpressionResultUnavailable:
+    return "eExpressionResultUnavailable";
+  case eExpressionTimedOut:
+    return "eExpressionTimedOut";
+  case eExpressionStoppedForDebug:
+    return "eExpressionStoppedForDebug";
+  case eExpressionThreadVanished:
+    return "eExpressionThreadVanished";
+  }
+  return "<unknown>";
+}
+  
+llvm::raw_ostream &PrintSeverity(Stream &stream, lldb::Severity severity) {
   llvm::HighlightColor color;
   llvm::StringRef text;
   switch (severity) {
@@ -36,12 +65,11 @@ static llvm::raw_ostream &PrintSeverity(Stream &stream,
   return llvm::WithColor(stream.AsRawOstream(), color, llvm::ColorMode::Enable)
          << text;
 }
-  
-// Public for unittesting.
-static void RenderDiagnosticDetails(Stream &stream,
-                                    std::optional<uint16_t> offset_in_command,
-                                    bool show_inline,
-                                    llvm::ArrayRef<DiagnosticDetail> details) {
+
+void RenderDiagnosticDetails(Stream &stream,
+                             std::optional<uint16_t> offset_in_command,
+                             bool show_inline,
+                             llvm::ArrayRef<DiagnosticDetail> details) {
   if (details.empty())
     return;
 
@@ -130,4 +158,3 @@ static void RenderDiagnosticDetails(Stream &stream,
 }
 
 } // namespace lldb_private
-#endif
