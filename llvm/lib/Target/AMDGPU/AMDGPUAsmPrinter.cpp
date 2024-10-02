@@ -358,6 +358,9 @@ bool AMDGPUAsmPrinter::doInitialization(Module &M) {
       report_fatal_error("Unexpected code object version");
     }
   }
+
+  RI.reset();
+  
   return AsmPrinter::doInitialization(M);
 }
 
