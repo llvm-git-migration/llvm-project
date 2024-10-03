@@ -18835,6 +18835,29 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     Intrinsic::ID ID = CGM.getHLSLRuntime().getWaveIsFirstLaneIntrinsic();
     return EmitRuntimeCall(Intrinsic::getDeclaration(&CGM.getModule(), ID));
   }
+  case Builtin::BI__builtin_hlsl_wave_read_lane_at: {
+    // Due to the use of variadic arguments we must explicitly retreive them and
+    // create our function type.
+    Value *OpExpr = EmitScalarExpr(E->getArg(0));
+    Value *OpIndex = EmitScalarExpr(E->getArg(1));
+    llvm::FunctionType *FT = llvm::FunctionType::get(
+        OpExpr->getType(), ArrayRef{OpExpr->getType(), OpIndex->getType()},
+        false);
+
+    if (CGM.getTarget().getTriple().getArch() == llvm::Triple::spirv) {
+      // Get overloaded name
+      std::string name =
+          Intrinsic::getName(Intrinsic::spv_wave_read_lane_at,
+                             ArrayRef{OpExpr->getType()}, &CGM.getModule());
+
+      return EmitRuntimeCall(
+          CGM.CreateRuntimeFunction(FT, name, {}, false, true),
+          ArrayRef{OpExpr, OpIndex}, "hlsl.wave.read.lane.at");
+    }
+
+    llvm_unreachable(
+        "Intrinsic wave_read_lane_at not supported by target architecture");
+  }
   case Builtin::BI__builtin_hlsl_elementwise_sign: {
     Value *Op0 = EmitScalarExpr(E->getArg(0));
     llvm::Type *Xty = Op0->getType();
