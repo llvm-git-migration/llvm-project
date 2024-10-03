@@ -61,7 +61,7 @@ struct specificval_ty {
 
   specificval_ty(const VPValue *V) : Val(V) {}
 
-  bool match(VPValue *VPV) { return VPV == Val; }
+  bool match(VPValue *VPV) const { return VPV == Val; }
 };
 
 inline specificval_ty m_Specific(const VPValue *VPV) { return VPV; }
@@ -227,16 +227,16 @@ struct TernaryRecipe_match {
   TernaryRecipe_match(Op0_t Op0, Op1_t Op1, Op2_t Op2)
       : Op0(Op0), Op1(Op1), Op2(Op2) {}
 
-  bool match(const VPValue *V) {
+  bool match(const VPValue *V) const {
     auto *DefR = V->getDefiningRecipe();
     return DefR && match(DefR);
   }
 
-  bool match(const VPSingleDefRecipe *R) {
+  bool match(const VPSingleDefRecipe *R) const {
     return match(static_cast<const VPRecipeBase *>(R));
   }
 
-  bool match(const VPRecipeBase *R) {
+  bool match(const VPRecipeBase *R) const {
     if (!detail::MatchRecipeAndOpcode<Opcode, RecipeTys...>::match(R))
       return false;
     assert(R->getNumOperands() == 3 &&
