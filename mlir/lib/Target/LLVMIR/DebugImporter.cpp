@@ -245,12 +245,16 @@ DISubprogramAttr DebugImporter::translateImpl(llvm::DISubprogram *node) {
   if (llvm::is_contained(retainedNodes, nullptr))
     retainedNodes.clear();
 
+  SmallVector<DINodeAttr> annotations;
+  for (llvm::DINode *annotation : node->getAnnotations())
+    retainedNodes.push_back(translate(annotation));
+
   return DISubprogramAttr::get(context, id, translate(node->getUnit()), scope,
                                getStringAttrOrNull(node->getRawName()),
                                getStringAttrOrNull(node->getRawLinkageName()),
                                translate(node->getFile()), node->getLine(),
                                node->getScopeLine(), *subprogramFlags, type,
-                               retainedNodes);
+                               retainedNodes, annotations);
 }
 
 DISubrangeAttr DebugImporter::translateImpl(llvm::DISubrange *node) {
