@@ -458,19 +458,6 @@ void GCNRPTracker::reset(const MachineRegisterInfo &MRI_,
   MaxPressure = CurPressure = getRegPressure(MRI_, LiveRegs_);
 }
 
-void GCNRPTracker::bumpDeadDefs(ArrayRef<RegisterMaskPair> DeadDefs) {
-  GCNRegPressure TempPressure = CurPressure;
-  for (const RegisterMaskPair &P : DeadDefs) {
-    Register Reg = P.RegUnit;
-    if (!Reg.isVirtual())
-      continue;
-    LaneBitmask LiveMask = LiveRegs[Reg];
-    LaneBitmask BumpedMask = LiveMask | P.LaneMask;
-    CurPressure.inc(Reg, LiveMask, BumpedMask, *MRI);
-  }
-  MaxPressure = max(MaxPressure, CurPressure);
-  CurPressure = TempPressure;
-}
 /// Mostly copy/paste from CodeGen/RegisterPressure.cpp
 LaneBitmask GCNRPTracker::getLastUsedLanes(Register RegUnit,
                                            SlotIndex Pos) const {
@@ -545,8 +532,9 @@ void GCNUpwardRPTracker::recede(const MachineInstr &MI) {
   assert(CurPressure == getRegPressure(*MRI, LiveRegs));
 }
 
-void GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
-                                            const SIRegisterInfo *TRI) {
+GCNRegPressure
+GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
+                                       const SIRegisterInfo *TRI) const {
   assert(!MI->isDebugOrPseudoInstr() && "Expect a nondebug instruction.");
 
   SlotIndex SlotIdx = LIS.getInstructionIndex(*MI).getRegSlot();
@@ -559,33 +547,32 @@ void GCNUpwardRPTracker::bumpUpwardPressure(const MachineInstr *MI,
   adjustDefLaneLiveness(RegOpers.Defs, SlotIdx, LIS, *MRI);
   RegOpers.detectDeadDefs(*MI, LIS);
 
-  // Boost max pressure for all dead defs together.
-  // Since CurrSetPressure and MaxSetPressure
-  bumpDeadDefs(RegOpers.DeadDefs);
+  GCNRegPressure TempPressure = CurPressure;
 
   // Kill liveness at live defs.
   for (const RegisterMaskPair &P : RegOpers.Defs) {
     Register Reg = P.RegUnit;
     if (!Reg.isVirtual())
       continue;
-    LaneBitmask LiveAfter = LiveRegs[Reg];
+    LaneBitmask LiveAfter =
+        LiveRegs.contains(Reg) ? LiveRegs.at(Reg) : LaneBitmask(0);
     LaneBitmask UseLanes = getRegLanes(RegOpers.Uses, Reg);
     LaneBitmask DefLanes = P.LaneMask;
     LaneBitmask LiveBefore = (LiveAfter & ~DefLanes) | UseLanes;
 
-    CurPressure.inc(Reg, LiveAfter, LiveAfter & LiveBefore, *MRI);
-    MaxPressure = max(MaxPressure, CurPressure);
+    TempPressure.inc(Reg, LiveAfter, LiveAfter & LiveBefore, *MRI);
   }
   // Generate liveness for uses.
   for (const RegisterMaskPair &P : RegOpers.Uses) {
     Register Reg = P.RegUnit;
     if (!Reg.isVirtual())
       continue;
-    LaneBitmask LiveAfter = LiveRegs[Reg];
+    LaneBitmask LiveAfter =
+        LiveRegs.contains(Reg) ? LiveRegs.at(Reg) : LaneBitmask(0);
     LaneBitmask LiveBefore = LiveAfter | P.LaneMask;
-    CurPressure.inc(Reg, LiveAfter, LiveBefore, *MRI);
+    TempPressure.inc(Reg, LiveAfter, LiveBefore, *MRI);
   }
-  MaxPressure = max(MaxPressure, CurPressure);
+  return TempPressure;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -746,8 +733,9 @@ Printable llvm::reportMismatch(const GCNRPTracker::LiveRegSet &LISLR,
   });
 }
 
-void GCNDownwardRPTracker::bumpDownwardPressure(const MachineInstr *MI,
-                                                const SIRegisterInfo *TRI) {
+GCNRegPressure
+GCNDownwardRPTracker::bumpDownwardPressure(const MachineInstr *MI,
+                                           const SIRegisterInfo *TRI) const {
   assert(!MI->isDebugOrPseudoInstr() && "Expect a nondebug instruction.");
 
   SlotIndex SlotIdx;
@@ -757,6 +745,7 @@ void GCNDownwardRPTracker::bumpDownwardPressure(const MachineInstr *MI,
   RegisterOperands RegOpers;
   RegOpers.collect(*MI, *TRI, *MRI, true, /*IgnoreDead=*/false);
   RegOpers.adjustLaneLiveness(LIS, *MRI, SlotIdx);
+  GCNRegPressure TempPressure = CurPressure;
 
   for (const RegisterMaskPair &Use : RegOpers.Uses) {
     Register Reg = Use.RegUnit;
@@ -785,9 +774,10 @@ void GCNDownwardRPTracker::bumpDownwardPressure(const MachineInstr *MI,
     if (LastUseMask.none())
       continue;
 
-    LaneBitmask LiveMask = LiveRegs[Reg];
+    LaneBitmask LiveMask =
+        LiveRegs.contains(Reg) ? LiveRegs.at(Reg) : LaneBitmask(0);
     LaneBitmask NewMask = LiveMask & ~LastUseMask;
-    CurPressure.inc(Reg, LiveMask, NewMask, *MRI);
+    TempPressure.inc(Reg, LiveMask, NewMask, *MRI);
   }
 
   // Generate liveness for defs.
@@ -795,14 +785,13 @@ void GCNDownwardRPTracker::bumpDownwardPressure(const MachineInstr *MI,
     Register Reg = Def.RegUnit;
     if (!Reg.isVirtual())
       continue;
-    LaneBitmask LiveMask = LiveRegs[Reg];
+    LaneBitmask LiveMask =
+        LiveRegs.contains(Reg) ? LiveRegs.at(Reg) : LaneBitmask(0);
     LaneBitmask NewMask = LiveMask | Def.LaneMask;
-    CurPressure.inc(Reg, LiveMask, NewMask, *MRI);
+    TempPressure.inc(Reg, LiveMask, NewMask, *MRI);
   }
-  MaxPressure = max(MaxPressure, CurPressure);
 
-  // Boost pressure for all dead defs together.
-  bumpDeadDefs(RegOpers.DeadDefs);
+  return TempPressure;
 }
 
 bool GCNUpwardRPTracker::isValid() const {

@@ -228,7 +228,8 @@ public:
   /// does not rely on the implicit program ordering in the LiveIntervals to
   /// support RP Speculation. It leaves the state of pressure inconsistent with
   /// the current position
-  void bumpUpwardPressure(const MachineInstr *MI, const SIRegisterInfo *TRI);
+  GCNRegPressure bumpUpwardPressure(const MachineInstr *MI,
+                                    const SIRegisterInfo *TRI) const;
 
   /// \p returns whether the tracker's state after receding MI corresponds
   /// to reported by LIS.
@@ -315,7 +316,8 @@ public:
   /// does not rely on the implicit program ordering in the LiveIntervals to
   /// support RP Speculation. It leaves the state of pressure inconsistent with
   /// the current position
-  void bumpDownwardPressure(const MachineInstr *MI, const SIRegisterInfo *TRI);
+  GCNRegPressure bumpDownwardPressure(const MachineInstr *MI,
+                                      const SIRegisterInfo *TRI) const;
 };
 
 /// \returns the LaneMask of live lanes of \p Reg at position \p SI. Only the
