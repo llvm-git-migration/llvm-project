@@ -186,6 +186,7 @@ private:
     int64_t Addend = 0;
 
     switch (*Kind) {
+    case i386::EdgeKind_i386::Pointer32:
     case i386::EdgeKind_i386::Delta32: {
       const char *FixupContent = BlockToFix.getContent().data() +
                                  (FixupAddress - BlockToFix.getAddress());
