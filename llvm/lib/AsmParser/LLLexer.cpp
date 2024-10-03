@@ -175,17 +175,25 @@ LLLexer::LLLexer(StringRef StartBuf, SourceMgr &SM, SMDiagnostic &Err,
 }
 
 int LLLexer::getNextChar() {
-  char CurChar = *CurPtr++;
+  int NextChar = peekNextChar();
+  // Keeping CurPtr unchanged at EOF, so that another call to `getNextChar`
+  // returns EOF again.
+  if (NextChar != EOF)
+    ++CurPtr;
+  return NextChar;
+}
+
+int LLLexer::peekNextChar() const {
+  char CurChar = *CurPtr;
   switch (CurChar) {
   default: return (unsigned char)CurChar;
   case 0:
     // A nul character in the stream is either the end of the current buffer or
     // a random nul in the file.  Disambiguate that here.
-    if (CurPtr-1 != CurBuf.end())
+    if (CurPtr != CurBuf.end())
       return 0;  // Just whitespace.
 
     // Otherwise, return end of file.
-    --CurPtr;  // Another call to lex will return EOF again.
     return EOF;
   }
 }
@@ -200,7 +208,6 @@ lltok::Kind LLLexer::LexToken() {
       // Handle letters: [a-zA-Z_]
       if (isalpha(static_cast<unsigned char>(CurChar)) || CurChar == '_')
         return LexIdentifier();
-
       return lltok::Error;
     case EOF: return lltok::Eof;
     case 0:
@@ -251,6 +258,12 @@ lltok::Kind LLLexer::LexToken() {
     case ',': return lltok::comma;
     case '*': return lltok::star;
     case '|': return lltok::bar;
+    case '/':
+      if (peekNextChar() != '*')
+        return lltok::Error;
+      if (SkipCComment())
+        return lltok::Error;
+      continue;
     }
   }
 }
@@ -259,6 +272,27 @@ void LLLexer::SkipLineComment() {
   while (true) {
     if (CurPtr[0] == '\n' || CurPtr[0] == '\r' || getNextChar() == EOF)
       return;
+  }
+}
+
+/// SkipCComment - This skips C-style /**/ comments. Returns true if there
+/// was an error.
+bool LLLexer::SkipCComment() {
+  getNextChar(); // skip the star.
+
+  while (true) {
+    int CurChar = getNextChar();
+    switch (CurChar) {
+    case EOF:
+      LexError("unterminated comment");
+      return true;
+    case '*':
+      // End of the comment?
+      if (peekNextChar() == '/') {
+        getNextChar(); // Eat the '/'.
+        return false;
+      }
+    }
   }
 }
 
