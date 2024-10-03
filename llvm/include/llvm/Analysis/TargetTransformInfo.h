@@ -1744,9 +1744,10 @@ public:
   bool hasActiveVectorLength(unsigned Opcode, Type *DataType,
                              Align Alignment) const;
 
-  /// \returns Returns true if the target supports vector match operations for
-  /// the vector type `VT` using a segment size of `SegSize`.
-  bool hasVectorMatch(VectorType *VT, unsigned SegSize) const;
+  /// \returns True if the target has hardware support for vector match
+  /// operations between vectors of type `VT` and search vectors of `SearchSize`
+  /// elements, and false otherwise.
+  bool hasVectorMatch(VectorType *VT, unsigned SearchSize) const;
 
   struct VPLegalization {
     enum VPTransform {
@@ -2186,7 +2187,7 @@ public:
   virtual bool supportsScalableVectors() const = 0;
   virtual bool hasActiveVectorLength(unsigned Opcode, Type *DataType,
                                      Align Alignment) const = 0;
-  virtual bool hasVectorMatch(VectorType *VT, unsigned SegSize) const = 0;
+  virtual bool hasVectorMatch(VectorType *VT, unsigned SearchSize) const = 0;
   virtual VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const = 0;
   virtual bool hasArmWideBranch(bool Thumb) const = 0;
@@ -2957,8 +2958,8 @@ public:
     return Impl.hasActiveVectorLength(Opcode, DataType, Alignment);
   }
 
-  bool hasVectorMatch(VectorType *VT, unsigned SegSize) const override {
-    return Impl.hasVectorMatch(VT, SegSize);
+  bool hasVectorMatch(VectorType *VT, unsigned SearchSize) const override {
+    return Impl.hasVectorMatch(VT, SearchSize);
   }
 
   VPLegalization

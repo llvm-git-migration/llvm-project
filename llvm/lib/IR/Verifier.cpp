@@ -6112,28 +6112,21 @@ void Verifier::visitIntrinsicCall(Intrinsic::ID ID, CallBase &Call) {
     Value *Op1 = Call.getArgOperand(0);
     Value *Op2 = Call.getArgOperand(1);
     Value *Mask = Call.getArgOperand(2);
-    Value *SegSize = Call.getArgOperand(3);
 
-    VectorType *OpTy = dyn_cast<VectorType>(Op1->getType());
+    VectorType *Op1Ty = dyn_cast<VectorType>(Op1->getType());
+    VectorType *Op2Ty = dyn_cast<VectorType>(Op2->getType());
     VectorType *MaskTy = dyn_cast<VectorType>(Mask->getType());
-    Check(OpTy && MaskTy, "experimental.vector.match operands are not vectors.",
-          &Call);
-    Check(Op2->getType() == OpTy,
-          "experimental.vector.match first two operands must have matching "
-          "types.",
-          &Call);
-    Check(isa<ConstantInt>(SegSize),
-          "experimental.vector.match segment size needs to be an immediate "
-          "integer.",
-          &Call);
 
-    ElementCount EC = OpTy->getElementCount();
-    Check(MaskTy->getElementCount() == EC,
-          "experimental.vector.match mask must have the same number of "
-          "elements as the remaining vector operands.",
+    Check(Op1Ty && Op2Ty && MaskTy, "Operands must be vectors.", &Call);
+    Check(!isa<ScalableVectorType>(Op2Ty), "Second operand cannot be scalable.",
+          &Call);
+    Check(Op1Ty->getElementType() == Op2Ty->getElementType(),
+          "First two operands must have the same element type.", &Call);
+    Check(Op1Ty->getElementCount() == MaskTy->getElementCount(),
+          "First operand and mask must have the same number of elements.",
           &Call);
     Check(MaskTy->getElementType()->isIntegerTy(1),
-          "experimental.vector.match mask element type is not i1.", &Call);
+          "Mask must be a vector of i1's.", &Call);
     break;
   }
   case Intrinsic::vector_insert: {

@@ -1916,11 +1916,9 @@ def int_experimental_vector_histogram_add : DefaultAttrsIntrinsic<[],
 def int_experimental_vector_match : DefaultAttrsIntrinsic<
                              [ LLVMScalarOrSameVectorWidth<0, llvm_i1_ty> ],
                              [ llvm_anyvector_ty,
-                               LLVMMatchType<0>,
-                               LLVMScalarOrSameVectorWidth<0, llvm_i1_ty>,  // Mask
-                               llvm_i32_ty ],  // Segment size
-                             [ IntrNoMem, IntrNoSync, IntrWillReturn,
-                               ImmArg<ArgIndex<3>> ]>;
+                               llvm_anyvector_ty,
+                               LLVMScalarOrSameVectorWidth<0, llvm_i1_ty> ],  // Mask
+                             [ IntrNoMem, IntrNoSync, IntrWillReturn ]>;
 
 // Operators
 let IntrProperties = [IntrNoMem, IntrNoSync, IntrWillReturn] in {

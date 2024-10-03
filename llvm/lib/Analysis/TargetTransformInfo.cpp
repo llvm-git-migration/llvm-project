@@ -1355,8 +1355,8 @@ bool TargetTransformInfo::hasActiveVectorLength(unsigned Opcode, Type *DataType,
 }
 
 bool TargetTransformInfo::hasVectorMatch(VectorType *VT,
-                                         unsigned SegSize) const {
-  return TTIImpl->hasVectorMatch(VT, SegSize);
+                                         unsigned SearchSize) const {
+  return TTIImpl->hasVectorMatch(VT, SearchSize);
 }
 
 TargetTransformInfo::Concept::~Concept() = default;
