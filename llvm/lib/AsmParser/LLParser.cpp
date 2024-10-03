@@ -2631,7 +2631,9 @@ unsigned LLParser::parseNoFPClassAttr() {
 
       return Value;
     } else {
-      error(Lex.getLoc(), "expected nofpclass test mask");
+      // We enter here is parseUInt64() fails and log a generic error message.
+      // Overwrite it with a more precise error message.
+      error(Lex.getLoc(), "expected nofpclass test mask", /*Overwrite=*/true);
       return 0;
     }
 
@@ -3220,7 +3222,7 @@ bool LLParser::parseOptionalOperandBundles(
 }
 
 bool LLParser::checkValueID(LocTy Loc, StringRef Kind, StringRef Prefix,
-                            unsigned NextID, unsigned ID) const {
+                            unsigned NextID, unsigned ID) {
   if (ID < NextID)
     return error(Loc, Kind + " expected to be numbered '" + Prefix +
                           Twine(NextID) + "' or greater");

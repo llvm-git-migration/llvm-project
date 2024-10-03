@@ -25,8 +25,10 @@
 
 using namespace llvm;
 
-bool LLLexer::Error(LocTy ErrorLoc, const Twine &Msg) const {
-  ErrorInfo = SM.GetMessage(ErrorLoc, SourceMgr::DK_Error, Msg);
+bool LLLexer::Error(LocTy ErrorLoc, const Twine &Msg, bool Overwrite) {
+  if (!HasErrorInfo || Overwrite)
+    ErrorInfo = SM.GetMessage(ErrorLoc, SourceMgr::DK_Error, Msg);
+  HasErrorInfo = true;
   return true;
 }
 

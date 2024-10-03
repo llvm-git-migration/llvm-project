@@ -28,7 +28,12 @@ namespace llvm {
   class LLLexer {
     const char *CurPtr;
     StringRef CurBuf;
+
+    // Used to make sure an earlier error is not overwritten by a later one
+    // (e.g., a lexer error overwritten by a later parser one).
+    bool HasErrorInfo = false;
     SMDiagnostic &ErrorInfo;
+
     SourceMgr &SM;
     LLVMContext &Context;
 
@@ -66,8 +71,10 @@ namespace llvm {
       IgnoreColonInIdentifiers = val;
     }
 
-    bool Error(LocTy ErrorLoc, const Twine &Msg) const;
-    bool Error(const Twine &Msg) const { return Error(getLoc(), Msg); }
+    bool Error(LocTy ErrorLoc, const Twine &Msg, bool Overwrite = false);
+    bool Error(const Twine &Msg, bool Overwrite = false) {
+      return Error(getLoc(), Msg);
+    }
 
     void Warning(LocTy WarningLoc, const Twine &Msg) const;
     void Warning(const Twine &Msg) const { return Warning(getLoc(), Msg); }

@@ -207,11 +207,15 @@ namespace llvm {
     LLVMContext &getContext() { return Context; }
 
   private:
-    bool error(LocTy L, const Twine &Msg) const { return Lex.Error(L, Msg); }
-    bool tokError(const Twine &Msg) const { return error(Lex.getLoc(), Msg); }
+    bool error(LocTy L, const Twine &Msg, bool Overwrite = false) {
+      return Lex.Error(L, Msg, Overwrite);
+    }
+    bool tokError(const Twine &Msg, bool Overwrite = false) {
+      return error(Lex.getLoc(), Msg, Overwrite);
+    }
 
     bool checkValueID(LocTy L, StringRef Kind, StringRef Prefix,
-                      unsigned NextID, unsigned ID) const;
+                      unsigned NextID, unsigned ID);
 
     /// Restore the internal name and slot mappings using the mappings that
     /// were created at an earlier parsing stage.
