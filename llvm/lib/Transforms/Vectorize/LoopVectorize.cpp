@@ -1787,12 +1787,15 @@ class GeneratedRTChecks {
 
   Loop *OuterLoop = nullptr;
 
+  PredicatedScalarEvolution &PSE;
+
 public:
-  GeneratedRTChecks(ScalarEvolution &SE, DominatorTree *DT, LoopInfo *LI,
-                    TargetTransformInfo *TTI, const DataLayout &DL,
-                    bool AddBranchWeights)
-      : DT(DT), LI(LI), TTI(TTI), SCEVExp(SE, DL, "scev.check"),
-        MemCheckExp(SE, DL, "scev.check"), AddBranchWeights(AddBranchWeights) {}
+  GeneratedRTChecks(PredicatedScalarEvolution &PSE, DominatorTree *DT,
+                    LoopInfo *LI, TargetTransformInfo *TTI,
+                    const DataLayout &DL, bool AddBranchWeights)
+      : DT(DT), LI(LI), TTI(TTI), SCEVExp(*PSE.getSE(), DL, "scev.check"),
+        MemCheckExp(*PSE.getSE(), DL, "scev.check"),
+        AddBranchWeights(AddBranchWeights), PSE(PSE) {}
 
   /// Generate runtime checks in SCEVCheckBlock and MemCheckBlock, so we can
   /// accurately estimate the cost of the runtime checks. The blocks are
@@ -1939,7 +1942,7 @@ public:
 
           // Get the best known TC estimate.
           if (auto EstimatedTC = getSmallBestKnownTC(
-                  *SE, OuterLoop, /* CanUseConstantMax = */ false))
+                  PSE, OuterLoop, /* CanUseConstantMax = */ false))
             BestTripCount = *EstimatedTC;
 
           BestTripCount = std::max(BestTripCount, 1U);
@@ -9590,8 +9593,8 @@ static bool processLoopInVPlanNativePath(
   {
     bool AddBranchWeights =
         hasBranchWeightMD(*L->getLoopLatch()->getTerminator());
-    GeneratedRTChecks Checks(*PSE.getSE(), DT, LI, TTI,
-                             F->getDataLayout(), AddBranchWeights);
+    GeneratedRTChecks Checks(PSE, DT, LI, TTI, F->getDataLayout(),
+                             AddBranchWeights);
     InnerLoopVectorizer LB(L, PSE, LI, DT, TLI, TTI, AC, ORE, VF.Width,
                            VF.Width, 1, LVL, &CM, BFI, PSI, Checks);
     LLVM_DEBUG(dbgs() << "Vectorizing outer loop in \""
@@ -9945,8 +9948,8 @@ bool LoopVectorizePass::processLoop(Loop *L) {
 
   bool AddBranchWeights =
       hasBranchWeightMD(*L->getLoopLatch()->getTerminator());
-  GeneratedRTChecks Checks(*PSE.getSE(), DT, LI, TTI,
-                           F->getDataLayout(), AddBranchWeights);
+  GeneratedRTChecks Checks(PSE, DT, LI, TTI, F->getDataLayout(),
+                           AddBranchWeights);
   if (LVP.hasPlanWithVF(VF.Width)) {
     // Select the interleave count.
     IC = CM.selectInterleaveCount(VF.Width, VF.Cost);
