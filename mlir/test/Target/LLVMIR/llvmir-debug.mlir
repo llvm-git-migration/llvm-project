@@ -89,7 +89,8 @@ llvm.func @func_no_debug() {
 #spType1 = #llvm.di_subroutine_type<callingConvention = DW_CC_normal>
 #sp1 = #llvm.di_subprogram<
   compileUnit = #cu, scope = #module, name = "empty_types",
-  file = #file, subprogramFlags = "Definition", type = #spType1
+  file = #file, subprogramFlags = "Definition", type = #spType1,
+  annotations = #llvm.di_annotation<name = "foo", value = "bar">
 >
 
 // CHECK-LABEL: define void @func_with_debug(
