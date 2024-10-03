@@ -5579,9 +5579,6 @@ bool Sema::CheckTemplateArgumentList(
         return true;
       }
 
-      // We're now done with this argument.
-      ++ArgIdx;
-
       if ((*Param)->isTemplateParameterPack()) {
         // The template parameter was a template parameter pack, so take the
         // deduced argument and place it on the argument pack. Note that we
@@ -5592,7 +5589,15 @@ bool Sema::CheckTemplateArgumentList(
       } else {
         // Move to the next template parameter.
         ++Param;
+        if (PartialOrderingTTP && PackExpansionIntoNonPack) {
+          SugaredConverted.pop_back();
+          CanonicalConverted.pop_back();
+          continue;
+        }
       }
+
+      // We're now done with this argument.
+      ++ArgIdx;
 
       // If we just saw a pack expansion into a non-pack, then directly convert
       // the remaining arguments, because we don't know what parameters they'll
@@ -5727,15 +5732,10 @@ bool Sema::CheckTemplateArgumentList(
   // pack expansions; they might be empty. This can happen even if
   // PartialTemplateArgs is false (the list of arguments is complete but
   // still dependent).
-  if (PartialOrderingTTP ||
-      (CurrentInstantiationScope &&
-       CurrentInstantiationScope->getPartiallySubstitutedPack())) {
-    while (ArgIdx < NumArgs &&
-           NewArgs[ArgIdx].getArgument().isPackExpansion()) {
-      const TemplateArgument &Arg = NewArgs[ArgIdx++].getArgument();
-      SugaredConverted.push_back(Arg);
-      CanonicalConverted.push_back(Context.getCanonicalTemplateArgument(Arg));
-    }
+  while (ArgIdx < NumArgs && NewArgs[ArgIdx].getArgument().isPackExpansion()) {
+    const TemplateArgument &Arg = NewArgs[ArgIdx++].getArgument();
+    SugaredConverted.push_back(Arg);
+    CanonicalConverted.push_back(Context.getCanonicalTemplateArgument(Arg));
   }
 
   // If we have any leftover arguments, then there were too many arguments.
