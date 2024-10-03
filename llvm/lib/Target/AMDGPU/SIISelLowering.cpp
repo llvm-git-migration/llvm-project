@@ -3565,6 +3565,7 @@ bool SITargetLowering::isEligibleForTailCallOptimization(
   if (IsVarArg)
     return false;
 
+  // FIXME: We need to know all arguments passed in SGPR are uniform.
   for (const Argument &Arg : CallerF.args()) {
     if (Arg.hasByValAttr())
       return false;
@@ -3877,6 +3878,25 @@ SDValue SITargetLowering::LowerCall(CallLoweringInfo &CLI,
 
   std::vector<SDValue> Ops;
   Ops.push_back(Chain);
+
+  if (IsTailCall) {
+    // isEligibleForTailCallOptimization considered whether the call target is
+    // divergent, but we may still end up with a uniform value in a VGPR. Insert
+    // a readfirstlane just in case.
+    SDValue ReadFirstLaneID =
+        DAG.getTargetConstant(Intrinsic::amdgcn_readfirstlane, DL, MVT::i32);
+
+    SmallVector<SDValue, 3> ReadfirstlaneArgs({ReadFirstLaneID, Callee});
+    if (CLI.ConvergenceControlToken) {
+      SDValue TokenGlue = DAG.getNode(ISD::CONVERGENCECTRL_GLUE, {}, MVT::Glue,
+                                      CLI.ConvergenceControlToken);
+      ReadfirstlaneArgs.push_back(TokenGlue); // Wire up convergence token.
+    }
+
+    Callee = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, Callee.getValueType(),
+                         ReadfirstlaneArgs);
+  }
+
   Ops.push_back(Callee);
   // Add a redundant copy of the callee global which will not be legalized, as
   // we need direct access to the callee later.
