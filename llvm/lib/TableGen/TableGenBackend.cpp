@@ -25,23 +25,6 @@ using namespace TableGen::Emitter;
 
 const size_t MAX_LINE_LEN = 80U;
 
-// CommandLine options of class type are not directly supported with some
-// specific exceptions like std::string which are safe to copy. In our case,
-// the `FnT` function_ref object is also safe to copy. So provide a
-// specialization of `OptionValue` for `FnT` type that stores it as a copy.
-// This is essentially similar to OptionValue<std::string> specialization for
-// strings.
-template <> struct cl::OptionValue<FnT> final : cl::OptionValueCopy<FnT> {
-  OptionValue() = default;
-
-  OptionValue(const FnT &V) { this->setValue(V); }
-
-  OptionValue<FnT> &operator=(const FnT &V) {
-    setValue(V);
-    return *this;
-  }
-};
-
 namespace {
 struct OptCreatorT {
   static void *call() {
@@ -60,7 +43,7 @@ Opt::Opt(StringRef Name, FnT CB, StringRef Desc, bool ByDefault) {
 
 /// Apply callback specified on the command line. Returns true if no callback
 /// was applied.
-bool llvm::TableGen::Emitter::ApplyCallback(RecordKeeper &Records,
+bool llvm::TableGen::Emitter::ApplyCallback(const RecordKeeper &Records,
                                             raw_ostream &OS) {
   FnT Fn = CallbackFunction->getValue();
   if (!Fn)
