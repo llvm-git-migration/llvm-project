@@ -173,25 +173,18 @@ static void getRegisterPressures(
   // GCNTrackers
   Pressure.resize(4, 0);
   MachineInstr *MI = SU->getInstr();
+  GCNRegPressure NewPressure;
   if (AtTop) {
     GCNDownwardRPTracker TempDownwardTracker(DownwardTracker);
-    TempDownwardTracker.bumpDownwardPressure(MI, SRI);
-    Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
-        TempDownwardTracker.getPressure().getSGPRNum();
-    Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-        TempDownwardTracker.getPressure().getArchVGPRNum();
-    Pressure[AMDGPU::RegisterPressureSets::AGPR_32] =
-        TempDownwardTracker.getPressure().getAGPRNum();
+    NewPressure = TempDownwardTracker.bumpDownwardPressure(MI, SRI);
   } else {
     GCNUpwardRPTracker TempUpwardTracker(UpwardTracker);
-    TempUpwardTracker.bumpUpwardPressure(MI, SRI);
-    Pressure[AMDGPU::RegisterPressureSets::SReg_32] =
-        TempUpwardTracker.getPressure().getSGPRNum();
-    Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
-        TempUpwardTracker.getPressure().getArchVGPRNum();
-    Pressure[AMDGPU::RegisterPressureSets::AGPR_32] =
-        TempUpwardTracker.getPressure().getAGPRNum();
+    NewPressure = TempUpwardTracker.bumpUpwardPressure(MI, SRI);
   }
+  Pressure[AMDGPU::RegisterPressureSets::SReg_32] = NewPressure.getSGPRNum();
+  Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
+      NewPressure.getArchVGPRNum();
+  Pressure[AMDGPU::RegisterPressureSets::AGPR_32] = NewPressure.getAGPRNum();
 }
 
 void GCNSchedStrategy::initCandidate(SchedCandidate &Cand, SUnit *SU,
