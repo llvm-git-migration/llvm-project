@@ -2022,6 +2022,11 @@ void VPReductionEVLRecipe::execute(VPTransformState &State) {
   State.set(this, NewRed, /*IsScalar*/ true);
 }
 
+static bool isZExtOrSExt(Instruction::CastOps CastOpcode) {
+  return CastOpcode == Instruction::CastOps::ZExt ||
+         CastOpcode == Instruction::CastOps::SExt;
+}
+
 InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
                                                VPCostContext &Ctx) const {
   RecurKind RdxKind = RdxDesc.getRecurrenceKind();
@@ -2030,17 +2035,149 @@ InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
   TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
   unsigned Opcode = RdxDesc.getOpcode();
 
-  // Cost = Reduction cost + BinOp cost
-  InstructionCost Cost =
-      Ctx.TTI.getArithmeticInstrCost(Opcode, ElementTy, CostKind);
+  InstructionCost BaseCost;
   if (RecurrenceDescriptor::isMinMaxRecurrenceKind(RdxKind)) {
     Intrinsic::ID Id = getMinMaxReductionIntrinsicOp(RdxKind);
-    return Cost + Ctx.TTI.getMinMaxReductionCost(
-                      Id, VectorTy, RdxDesc.getFastMathFlags(), CostKind);
+    BaseCost = Ctx.TTI.getMinMaxReductionCost(
+        Id, VectorTy, RdxDesc.getFastMathFlags(), CostKind);
+  } else {
+    BaseCost = Ctx.TTI.getArithmeticReductionCost(
+        Opcode, VectorTy, RdxDesc.getFastMathFlags(), CostKind);
   }
 
-  return Cost + Ctx.TTI.getArithmeticReductionCost(
-                    Opcode, VectorTy, RdxDesc.getFastMathFlags(), CostKind);
+  // For a call to the llvm.fmuladd intrinsic we need to add the cost of a
+  // normal fmul instruction to the cost of the fadd reduction.
+  if (RdxKind == RecurKind::FMulAdd)
+    BaseCost +=
+        Ctx.TTI.getArithmeticInstrCost(Instruction::FMul, VectorTy, CostKind);
+
+  // If we're using ordered reductions then we can just return the base cost
+  // here, since getArithmeticReductionCost calculates the full ordered
+  // reduction cost when FP reassociation is not allowed.
+  if (IsOrdered && Opcode == Instruction::FAdd)
+    return BaseCost;
+
+  // Special case for arm from D93476
+  // The reduction instruction can be substituted in following condition.
+  //
+  //       %sa = sext <16 x i8> A to <16 x i32>
+  //       %sb = sext <16 x i8> B to <16 x i32>
+  //       %m = mul <16 x i32> %sa, %sb
+  //       %r = vecreduce.add(%m)
+  //       ->
+  //       R = VMLADAV A, B
+  //
+  // There are other instructions for performing add reductions of
+  // v4i32/v8i16/v16i8 into i32 (VADDV), for doing the same with v4i32->i64
+  // (VADDLV) and for performing a v4i32/v8i16 MLA into an i64 (VMLALDAV).
+  //
+  // We are looking for a pattern of, and finding the minimal acceptable cost:
+  //       reduce.add(ext(mul(ext(A), ext(B)))) or
+  //       reduce(ext(A)) or
+  //       reduce.add(mul(ext(A), ext(B))) or
+  //       reduce.add(mul(A, B)) or
+  //       reduce(A).
+
+  // Try to match reduce(ext(...))
+  auto *Ext = dyn_cast<VPWidenCastRecipe>(getVecOp());
+  if (Ext && isZExtOrSExt(Ext->getOpcode())) {
+    bool isUnsigned = Ext->getOpcode() == Instruction::CastOps::ZExt;
+
+    // Try to match reduce.add(ext(mul(...)))
+    auto *ExtTy = cast<VectorType>(
+        ToVectorTy(Ext->getOperand(0)->getUnderlyingValue()->getType(), VF));
+    auto *Mul = dyn_cast_if_present<VPWidenRecipe>(
+        Ext->getOperand(0)->getDefiningRecipe());
+    if (Mul && Mul->getOpcode() == Instruction::Mul &&
+        Opcode == Instruction::Add) {
+      auto *MulTy = cast<VectorType>(
+          ToVectorTy(Mul->getUnderlyingValue()->getType(), VF));
+      auto *InnerExt0 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(0));
+      auto *InnerExt1 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(1));
+
+      // Match reduce.add(ext(mul(ext(A), ext(B))))
+      if (InnerExt0 && isZExtOrSExt(InnerExt0->getOpcode()) && InnerExt1 &&
+          isZExtOrSExt(InnerExt1->getOpcode()) &&
+          InnerExt0->getOpcode() == InnerExt1->getOpcode()) {
+        Type *InnerExt0Ty =
+            InnerExt0->getOperand(0)->getUnderlyingValue()->getType();
+        Type *InnerExt1Ty =
+            InnerExt1->getOperand(0)->getUnderlyingValue()->getType();
+        // Get the largest type.
+        auto *MaxExtVecTy = cast<VectorType>(
+            ToVectorTy(InnerExt0Ty->getIntegerBitWidth() >
+                               InnerExt1Ty->getIntegerBitWidth()
+                           ? InnerExt0Ty
+                           : InnerExt1Ty,
+                       VF));
+        InstructionCost RedCost = Ctx.TTI.getMulAccReductionCost(
+            isUnsigned, ElementTy, MaxExtVecTy, CostKind);
+        InstructionCost InnerExtCost =
+            Ctx.TTI.getCastInstrCost(InnerExt0->getOpcode(), MulTy, MaxExtVecTy,
+                                     TTI::CastContextHint::None, CostKind);
+        InstructionCost MulCost =
+            Ctx.TTI.getArithmeticInstrCost(Instruction::Mul, MulTy, CostKind);
+        InstructionCost ExtCost =
+            Ctx.TTI.getCastInstrCost(Ext->getOpcode(), VectorTy, ExtTy,
+                                     TTI::CastContextHint::None, CostKind);
+        if (RedCost.isValid() &&
+            RedCost < InnerExtCost * 2 + MulCost + ExtCost + BaseCost)
+          return RedCost;
+      }
+    }
+
+    // Match reduce(ext(A))
+    InstructionCost RedCost =
+        Ctx.TTI.getExtendedReductionCost(Opcode, isUnsigned, ElementTy, ExtTy,
+                                         RdxDesc.getFastMathFlags(), CostKind);
+    InstructionCost ExtCost =
+        Ctx.TTI.getCastInstrCost(Ext->getOpcode(), VectorTy, ExtTy,
+                                 TTI::CastContextHint::None, CostKind);
+    if (RedCost.isValid() && RedCost < RedCost + ExtCost)
+      return RedCost;
+  }
+
+  // Try to match reduce.add(mul(...))
+  auto *Mul =
+      dyn_cast_if_present<VPWidenRecipe>(getVecOp()->getDefiningRecipe());
+  if (Mul && Mul->getOpcode() == Instruction::Mul &&
+      Opcode == Instruction::Add) {
+    // Match reduce.add(mul(ext(A), ext(B)))
+    auto *InnerExt0 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(0));
+    auto *InnerExt1 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(1));
+    auto *MulTy =
+        cast<VectorType>(ToVectorTy(Mul->getUnderlyingValue()->getType(), VF));
+    InstructionCost MulCost =
+        Ctx.TTI.getArithmeticInstrCost(Instruction::Mul, MulTy, CostKind);
+    if (InnerExt0 && isZExtOrSExt(InnerExt0->getOpcode()) && InnerExt1 &&
+        InnerExt0->getOpcode() == InnerExt1->getOpcode()) {
+      Type *InnerExt0Ty =
+          InnerExt0->getOperand(0)->getUnderlyingValue()->getType();
+      Type *InnerExt1Ty =
+          InnerExt1->getOperand(0)->getUnderlyingValue()->getType();
+      auto *MaxInnerExtVecTy = cast<VectorType>(ToVectorTy(
+          InnerExt0Ty->getIntegerBitWidth() > InnerExt1Ty->getIntegerBitWidth()
+              ? InnerExt0Ty
+              : InnerExt1Ty,
+          VF));
+      bool isUnsigned = InnerExt0->getOpcode() == Instruction::CastOps::ZExt;
+      InstructionCost RedCost = Ctx.TTI.getMulAccReductionCost(
+          isUnsigned, ElementTy, MaxInnerExtVecTy, CostKind);
+      InstructionCost InnerExtCost = Ctx.TTI.getCastInstrCost(
+          InnerExt0->getOpcode(), MulTy, MaxInnerExtVecTy,
+          TTI::CastContextHint::None, CostKind);
+      if (RedCost.isValid() && RedCost < BaseCost + MulCost + 2 * InnerExtCost)
+        return RedCost;
+    }
+    // Match reduce.add(mul)
+    InstructionCost RedCost =
+        Ctx.TTI.getMulAccReductionCost(true, ElementTy, VectorTy, CostKind);
+    if (RedCost.isValid() && RedCost < BaseCost + MulCost)
+      return RedCost;
+  }
+
+  // Normal cost = Reduction cost + BinOp cost
+  return BaseCost + Ctx.TTI.getArithmeticInstrCost(Opcode, ElementTy, CostKind);
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)

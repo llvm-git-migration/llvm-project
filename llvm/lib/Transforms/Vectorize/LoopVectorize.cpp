@@ -7220,10 +7220,25 @@ LoopVectorizationPlanner::precomputeCosts(VPlan &Plan, ElementCount VF,
                                                  ChainOps.end());
     // Also include the operands of instructions in the chain, as the cost-model
     // may mark extends as free.
+    // We only handle the reduction cost in the VPlan-based cost model
+    // currently.
+    // TODO: Handle this calculation in VPWidenRecipe and VPWidenCastRecipe.
     for (auto *ChainOp : ChainOps) {
       for (Value *Op : ChainOp->operands()) {
         if (auto *I = dyn_cast<Instruction>(Op))
           ChainOpsAndOperands.insert(I);
+      }
+    }
+
+    // Since we implemented the reduction cost for the VPReductionRecipe,
+    // removing the instruction here to prevent VPReductionRecipe::computeCost
+    // be skiped.
+    // TODO: Remove following checks when we can fully support reduction pattern
+    // cost in the VPlan-based cost model.
+    for (auto *I : ChainOpsAndOperands) {
+      if (I->getOpcode() == RdxDesc.getOpcode()) {
+        ChainOpsAndOperands.remove(I);
+        break;
       }
     }
 
