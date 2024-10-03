@@ -2033,8 +2033,10 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   std::optional<uint64_t> CommonStride =
       StrideA == StrideB ? std::make_optional(StrideA) : std::nullopt;
   if (isa<SCEVCouldNotCompute>(Dist)) {
+    // TODO: Relax requirement that there is a common stride to retry with
+    // non-constant distance dependencies.
+    FoundNonConstantDistanceDependence |= CommonStride.has_value();
     LLVM_DEBUG(dbgs() << "LAA: Dependence because of uncomputable distance.\n");
-    FoundNonConstantDistanceDependence = true;
     return Dependence::Unknown;
   }
 
@@ -2088,7 +2090,11 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
 
     if (IsTrueDataDependence && EnableForwardingConflictDetection) {
       if (!ConstDist) {
-        FoundNonConstantDistanceDependence = true;
+        // TODO: FoundNonConstantDistanceDependence is used as a necessary
+        // condition to consider retrying with runtime checks. Historically, we
+        // did not set it when strides were different but there is no inherent
+        // reason to.
+        FoundNonConstantDistanceDependence |= CommonStride.has_value();
         return Dependence::Unknown;
       }
       if (couldPreventStoreLoadForward(
@@ -2106,12 +2112,20 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   int64_t MinDistance = SE.getSignedRangeMin(Dist).getSExtValue();
   // Below we only handle strictly positive distances.
   if (MinDistance <= 0) {
-    FoundNonConstantDistanceDependence = true;
+    FoundNonConstantDistanceDependence |= CommonStride.has_value();
     return Dependence::Unknown;
   }
 
   if (!ConstDist)
-    FoundNonConstantDistanceDependence = true;
+    // Previously this case would be treated as Unknown, possibly setting
+    // FoundNonConstantDistanceDependence to force re-trying with runtime
+    // checks. Until the TODO below is addressed, set it here to preserve
+    // original behavior w.r.t. re-trying with runtime checks.
+    // TODO: FoundNonConstantDistanceDependence is used as a necessary
+    // condition to consider retrying with runtime checks. Historically, we
+    // did not set it when strides were different but there is no inherent
+    // reason to.
+    FoundNonConstantDistanceDependence |= CommonStride.has_value();
 
   if (!CommonStride)
     return Dependence::Unknown;

@@ -109,21 +109,15 @@ exit:
 define void @unknown_dep_safe_with_rtchecks(ptr %A) {
 ; CHECK-LABEL: 'unknown_dep_safe_with_rtchecks'
 ; CHECK-NEXT:    loop:
-; CHECK-NEXT:      Memory dependences are safe with run-time checks
+; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
+; CHECK-NEXT:  Unknown data dependence.
 ; CHECK-NEXT:      Dependences:
+; CHECK-NEXT:        Unknown:
+; CHECK-NEXT:            %l = load i32, ptr %gep, align 4 ->
+; CHECK-NEXT:            store i32 %add, ptr %gep.mul.2, align 4
+; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
-; CHECK-NEXT:      Check 0:
-; CHECK-NEXT:        Comparing group ([[GRP1:0x[0-9a-f]+]]):
-; CHECK-NEXT:          %gep.mul.2 = getelementptr inbounds i32, ptr %A.510, i64 %iv.mul.2
-; CHECK-NEXT:        Against group ([[GRP2:0x[0-9a-f]+]]):
-; CHECK-NEXT:          %gep = getelementptr inbounds i32, ptr %A, i64 %iv
 ; CHECK-NEXT:      Grouped accesses:
-; CHECK-NEXT:        Group [[GRP1]]:
-; CHECK-NEXT:          (Low: (2040 + %A)<nuw> High: (4084 + %A))
-; CHECK-NEXT:            Member: {(2040 + %A)<nuw>,+,8}<nuw><%loop>
-; CHECK-NEXT:        Group [[GRP2]]:
-; CHECK-NEXT:          (Low: %A High: (1024 + %A))
-; CHECK-NEXT:            Member: {%A,+,4}<nuw><%loop>
 ; CHECK-EMPTY:
 ; CHECK-NEXT:      Non vectorizable stores to invariant address were not found in loop.
 ; CHECK-NEXT:      SCEV assumptions:
