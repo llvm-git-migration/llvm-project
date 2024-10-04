@@ -107,6 +107,7 @@ public:
       llvm::SmallVectorImpl<mlir::Type> &isDeviceTypes,
       llvm::SmallVectorImpl<mlir::Location> &isDeviceLocs,
       llvm::SmallVectorImpl<const semantics::Symbol *> &isDeviceSymbols) const;
+  bool processLinear(mlir::omp::LinearClauseOps &result) const;
   bool
   processLink(llvm::SmallVectorImpl<DeclareTargetCapturePair> &result) const;
 
