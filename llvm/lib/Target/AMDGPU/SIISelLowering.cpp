@@ -4992,7 +4992,6 @@ static MachineBasicBlock *lowerWaveReduce(MachineInstr &MI,
                 .addReg(NewAccumulator->getOperand(0).getReg());
             break;
           }
-          // Doubt --> is SSA form still have to be followed for MIR?
           case AMDGPU::S_ADD_U32:
           case AMDGPU::S_ADD_I32:
           case AMDGPU::S_ADD_F32:{
