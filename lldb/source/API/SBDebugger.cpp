@@ -1704,6 +1704,26 @@ void SBDebugger::SetDestroyCallback(
 }
 
 lldb::callback_token_t
+SBDebugger::AddCreateCallback(lldb::SBDebuggerCreateCallback create_callback,
+                              void *baton) {
+  LLDB_INSTRUMENT_VA(create_callback, baton);
+
+  DebuggerCreateCallback callback = [](lldb::DebuggerSP debugger, void *baton,
+                                       void *original_callback) {
+    SBDebugger sb_debugger(debugger);
+    lldb::SBDebuggerCreateCallback original_callback_func =
+        (lldb::SBDebuggerCreateCallback)original_callback;
+    original_callback_func(sb_debugger, baton);
+  };
+  return Debugger::AddCreateCallback(callback, baton, (void *)create_callback);
+}
+
+bool SBDebugger::RemoveCreateCallback(lldb::callback_token_t token) {
+  LLDB_INSTRUMENT_VA(token);
+  return Debugger::RemoveCreateCallback(token);
+}
+
+lldb::callback_token_t
 SBDebugger::AddDestroyCallback(lldb::SBDebuggerDestroyCallback destroy_callback,
                                void *baton) {
   LLDB_INSTRUMENT_VA(this, destroy_callback, baton);

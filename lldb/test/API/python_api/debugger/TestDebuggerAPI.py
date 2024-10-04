@@ -286,3 +286,25 @@ class DebuggerAPITestCase(TestBase):
             ('remove bar ret', False), # remove_bar should fail, because it's already invoked and removed
             ('foo called', original_dbg_id), # foo should be called
         ])
+
+    def test_AddRemoveDebuggerCreateCallback(self):
+        """
+        Test SBDebugger::AddCreateCallback and SBDebugger::RemoveCreateCallback
+        """
+        created_debuggers = []
+        def debugger_create_callback(debugger):
+            created_debuggers.append(debugger)
+        
+        create_callback_token = lldb.SBDebugger.AddCreateCallback(debugger_create_callback)
+        debugger1 = lldb.SBDebugger.Create()
+        debugger2 = lldb.SBDebugger.Create()     
+        
+        lldb.SBDebugger.RemoveCreateCallback(create_callback_token)
+        debugger3 = lldb.SBDebugger.Create()
+        
+        self.assertNotEqual(debugger1.GetID(), debugger2.GetID())
+        self.assertNotEqual(debugger1.GetID(), debugger3.GetID())
+        
+        self.assertEqual(len(created_debuggers), 2)
+        self.assertEqual(debugger1.GetID(), created_debuggers[0].GetID())
+        self.assertEqual(debugger2.GetID(), created_debuggers[1].GetID())

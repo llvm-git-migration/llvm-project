@@ -336,6 +336,16 @@ public:
   void SetDestroyCallback(lldb::SBDebuggerDestroyCallback destroy_callback,
                           void *baton);
 
+  /// Add a callback for when the debugger is created. Return a token, which
+  /// can be used to remove said callback. Multiple callbacks can be added by
+  /// calling this function multiple times, and will be invoked in FIFO order.
+  static lldb::callback_token_t
+  AddCreateCallback(lldb::SBDebuggerCreateCallback create_callback,
+                    void *baton);
+
+  /// Remove the specified callback. Return true if successful.
+  static bool RemoveCreateCallback(lldb::callback_token_t token);
+
   /// Add a callback for when the debugger is destroyed. Return a token, which
   /// can be used to remove said callback. Multiple callbacks can be added by
   /// calling this function multiple times, and will be invoked in FIFO order.

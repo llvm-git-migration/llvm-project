@@ -1024,6 +1024,26 @@ static void LLDBSwigPythonCallPythonLogOutputCallback(const char *str,
   }
 }
 
+// For DebuggerCreateCallback functions
+static void LLDBSwigPythonCallPythonSBDebuggerCreateCallback(lldb::SBDebugger &debugger,
+                                                      void *baton) {
+  if (baton != Py_None) {
+    SWIG_PYTHON_THREAD_BEGIN_BLOCK;
+    PythonObject debugger_arg = SWIGBridge::ToSWIGWrapper(
+      std::make_unique<SBDebugger>(debugger));
+
+    // Create a tuple of arguments
+    PyObject *args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, debugger_arg.get());
+
+    // Call the Python function
+    PyObject *result = PyObject_CallFunction(
+            reinterpret_cast<PyObject *>(baton), const_cast<char *>("O"), args);
+    Py_XDECREF(result);
+    SWIG_PYTHON_THREAD_END_BLOCK;
+  }
+}
+
 // For DebuggerTerminateCallback functions
 static void LLDBSwigPythonCallPythonSBDebuggerTerminateCallback(lldb::user_id_t debugger_id,
                                                       void *baton) {

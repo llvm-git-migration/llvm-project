@@ -569,6 +569,16 @@ public:
   SetDestroyCallback(lldb_private::DebuggerDestroyCallback destroy_callback,
                      void *baton);
 
+  /// Add a callback for when the debugger is created. Return a token, which
+  /// can be used to remove said callback. Multiple callbacks can be added by
+  /// calling this function multiple times, and will be invoked in FIFO order.
+  static lldb::callback_token_t
+  AddCreateCallback(lldb_private::DebuggerCreateCallback create_callback,
+                    void *baton, void *original_callback);
+
+  /// Remove the specified callback. Return true if successful.
+  static bool RemoveCreateCallback(lldb::callback_token_t token);
+
   /// Add a callback for when the debugger is destroyed. Return a token, which
   /// can be used to remove said callback. Multiple callbacks can be added by
   /// calling this function multiple times, and will be invoked in FIFO order.
@@ -737,19 +747,32 @@ protected:
   lldb::TargetSP m_dummy_target_sp;
   Diagnostics::CallbackID m_diagnostics_callback_id;
 
-  std::mutex m_destroy_callback_mutex;
-  lldb::callback_token_t m_destroy_callback_next_token = 0;
-  struct DestroyCallbackInfo {
-    DestroyCallbackInfo() {}
-    DestroyCallbackInfo(lldb::callback_token_t token,
-                        lldb_private::DebuggerDestroyCallback callback,
-                        void *baton)
+  template <typename T> struct CallbackInfo {
+    CallbackInfo() {}
+    CallbackInfo(lldb::callback_token_t token, T callback, void *baton)
         : token(token), callback(callback), baton(baton) {}
     lldb::callback_token_t token;
-    lldb_private::DebuggerDestroyCallback callback;
+    T callback;
     void *baton;
   };
-  llvm::SmallVector<DestroyCallbackInfo, 2> m_destroy_callbacks;
+  template <typename T, typename ExtraT>
+  struct CallbackInfoExtraData : public CallbackInfo<T> {
+    CallbackInfoExtraData() {}
+    CallbackInfoExtraData(lldb::callback_token_t token, T callback, void *baton,
+                          ExtraT extra_data)
+        : CallbackInfo<T>(token, callback, baton), extra_data(extra_data) {}
+    ExtraT extra_data;
+  };
+  static std::mutex s_create_callback_mutex;
+  static lldb::callback_token_t s_create_callback_next_token;
+  static llvm::SmallVector<
+      CallbackInfoExtraData<lldb_private::DebuggerCreateCallback, void *>, 2>
+      s_create_callbacks;
+
+  std::mutex m_destroy_callback_mutex;
+  lldb::callback_token_t m_destroy_callback_next_token = 0;
+  llvm::SmallVector<CallbackInfo<lldb_private::DebuggerDestroyCallback>, 2>
+      m_destroy_callbacks;
 
   uint32_t m_interrupt_requested = 0; ///< Tracks interrupt requests
   std::mutex m_interrupt_mutex;

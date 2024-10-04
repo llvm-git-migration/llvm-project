@@ -106,6 +106,13 @@ static Debugger::DebuggerList *g_debugger_list_ptr =
     nullptr; // NOTE: intentional leak to avoid issues with C++ destructor chain
 static llvm::DefaultThreadPool *g_thread_pool = nullptr;
 
+std::mutex Debugger::s_create_callback_mutex;
+lldb::callback_token_t Debugger::s_create_callback_next_token = 0;
+llvm::SmallVector<Debugger::CallbackInfoExtraData<
+                      lldb_private::DebuggerCreateCallback, void *>,
+                  2>
+    Debugger::s_create_callbacks;
+
 static constexpr OptionEnumValueElement g_show_disassembly_enum_values[] = {
     {
         Debugger::eStopDisassemblyTypeNever,
@@ -739,6 +746,15 @@ DebuggerSP Debugger::CreateInstance(lldb::LogOutputCallback log_callback,
     g_debugger_list_ptr->push_back(debugger_sp);
   }
   debugger_sp->InstanceInitialize();
+
+  // Invoke all debugger create callbacks.
+  {
+    std::lock_guard<std::mutex> guard(s_create_callback_mutex);
+    for (const auto &callback_info : s_create_callbacks) {
+      callback_info.callback(debugger_sp, callback_info.baton,
+                             callback_info.extra_data);
+    }
+  }
   return debugger_sp;
 }
 
@@ -748,7 +764,7 @@ void Debugger::HandleDestroyCallback() {
   // added during this loop will be appended, invoked and then removed last.
   // Callbacks which are removed during this loop will not be invoked.
   while (true) {
-    DestroyCallbackInfo callback_info;
+    CallbackInfo<DebuggerDestroyCallback> callback_info;
     {
       std::lock_guard<std::mutex> guard(m_destroy_callback_mutex);
       if (m_destroy_callbacks.empty())
@@ -1445,6 +1461,28 @@ void Debugger::SetDestroyCallback(
   m_destroy_callbacks.clear();
   const lldb::callback_token_t token = m_destroy_callback_next_token++;
   m_destroy_callbacks.emplace_back(token, destroy_callback, baton);
+}
+
+lldb::callback_token_t Debugger::AddCreateCallback(
+    lldb_private::DebuggerCreateCallback create_callback, void *baton,
+    void *original_callback) {
+  std::lock_guard<std::mutex> guard(s_create_callback_mutex);
+  const lldb::callback_token_t token = s_create_callback_next_token++;
+  s_create_callbacks.emplace_back(token, create_callback, baton,
+                                  original_callback);
+  return token;
+}
+
+bool Debugger::RemoveCreateCallback(lldb::callback_token_t token) {
+  std::lock_guard<std::mutex> guard(s_create_callback_mutex);
+  for (auto it = s_create_callbacks.begin(); it != s_create_callbacks.end();
+       ++it) {
+    if (it->token == token) {
+      s_create_callbacks.erase(it);
+      return true;
+    }
+  }
+  return false;
 }
 
 lldb::callback_token_t Debugger::AddDestroyCallback(

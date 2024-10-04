@@ -139,6 +139,8 @@ typedef bool (*SBBreakpointHitCallback)(void *baton, lldb::SBProcess &process,
                                         lldb::SBThread &thread,
                                         lldb::SBBreakpointLocation &location);
 
+typedef void (*SBDebuggerCreateCallback)(lldb::SBDebugger &debugger,
+                                         void *baton);
 typedef void (*SBDebuggerDestroyCallback)(lldb::user_id_t debugger_id,
                                           void *baton);
 

@@ -143,6 +143,8 @@ typedef struct type256 { uint64_t x[4]; } type256;
 using ValueObjectProviderTy =
     std::function<lldb::ValueObjectSP(ConstString, StackFrame *)>;
 
+typedef void (*DebuggerCreateCallback)(lldb::DebuggerSP debugger, void *baton,
+                                       void *original_callback);
 typedef void (*DebuggerDestroyCallback)(lldb::user_id_t debugger_id,
                                         void *baton);
 typedef bool (*CommandOverrideCallbackWithResult)(
