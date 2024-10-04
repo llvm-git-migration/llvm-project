@@ -123,8 +123,7 @@ public:
   template <class T>
   static void addDeclareReduction(
       mlir::Location currentLocation, lower::AbstractConverter &converter,
-      const T &reduction,
-      llvm::SmallVectorImpl<mlir::Value> &reductionVars,
+      const T &reduction, llvm::SmallVectorImpl<mlir::Value> &reductionVars,
       llvm::SmallVectorImpl<bool> &reduceVarByRef,
       llvm::SmallVectorImpl<mlir::Attribute> &reductionDeclSymbols,
       llvm::SmallVectorImpl<const semantics::Symbol *> *reductionSymbols =
