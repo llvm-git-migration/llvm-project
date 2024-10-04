@@ -1,78 +1,64 @@
 // RUN: %clang_builtins %s %librt -o %t && %run %t
 // REQUIRES: librt_has_extendhfxf2
 
-#include "int_lib.h"
+#include <limits.h>
+#include <math.h> // for isnan, isinf
 #include <stdio.h>
 
-#if __LDBL_MANT_DIG__ == 113 && defined(COMPILER_RT_HAS_FLOAT16)
+#if __LDBL_MANT_DIG__ >= 64 && defined(COMPILER_RT_HAS_FLOAT16)
+long double __extendhfxf2(_Float16 f);
 
-#  include "fp_test.h"
-
-COMPILER_RT_ABI long double __extendhfxf2(TYPE_FP16 a);
-
-int test__extendhfxf2(TYPE_FP16 a, uint64_t expectedHi, uint64_t expectedLo) {
+int test_extendhfxf2(_Float16 a, long double expected) {
   long double x = __extendhfxf2(a);
-  int ret = compareResultF128(x, expectedHi, expectedLo);
-
+  __uint16_t *b = (void *)&a;
+  int ret = !(x == expected || (isnan(x) && isnan(expected)) ||
+              (isinf(x) && isinf(expected) && x == expected));
   if (ret) {
-    printf("error in test__extendhfxf2(%#.4x) = %.20Lf, "
+    printf("error in test__extendhfsf2(%#.4x) = %.20Lf, "
            "expected %.20Lf\n",
-           toRep16(a), x, fromRep128(expectedHi, expectedLo));
+           *b, x, expected);
   }
   return ret;
 }
 
-char assumption_1[sizeof(TYPE_FP16) * CHAR_BIT == 16] = {0};
+char assumption_1[sizeof(_Float16) * CHAR_BIT == 16] = {0};
 
 #endif
 
 int main() {
-#if __LDBL_MANT_DIG__ == 113 && defined(COMPILER_RT_HAS_FLOAT16)
-  // qNaN
-  if (test__extendhfxf2(makeQNaN16(), UINT64_C(0x7fff800000000000),
-                        UINT64_C(0x0)))
+#if __LDBL_MANT_DIG__ >= 64 && defined(COMPILER_RT_HAS_FLOAT16)
+  // Small positive value
+  if (test_extendhfxf2(0.09997558593750000000f, 0.09997558593750000000L))
     return 1;
+
+  // Small negative value
+  if (test_extendhfxf2(-0.09997558593750000000f, -0.09997558593750000000L))
+    return 1;
+
+  // Zero
+  if (test_extendhfxf2(0.0f, 0.0L))
+    return 1;
+
+  // Smallest positive non-zero value
+  if (test_extendhfxf2(0x1p-16f, 0x1p-16L))
+    return 1;
+
+  // Smallest negative non-zero value
+  if (test_extendhfxf2(-0x1p-16f, -0x1p-16L))
+    return 1;
+
+  // Positive infinity
+  if (test_extendhfxf2(__builtin_huge_valf16(), __builtin_huge_valf64x()))
+    return 1;
+
+  // Negative infinity
+  if (test_extendhfxf2(-__builtin_huge_valf16(),
+                       (long double)-__builtin_huge_valf64x()))
+    return 1;
+
   // NaN
-  if (test__extendhfxf2(makeNaN16(UINT16_C(0x0100)),
-                        UINT64_C(0x7fff400000000000), UINT64_C(0x0)))
-    return 1;
-  // inf
-  if (test__extendhfxf2(makeInf16(), UINT64_C(0x7fff000000000000),
-                        UINT64_C(0x0)))
-    return 1;
-  if (test__extendhfxf2(-makeInf16(), UINT64_C(0xffff000000000000),
-                        UINT64_C(0x0)))
-    return 1;
-  // zero
-  if (test__extendhfxf2(fromRep16(0x0U), UINT64_C(0x0), UINT64_C(0x0)))
-    return 1;
-  if (test__extendhfxf2(fromRep16(0x8000U), UINT64_C(0x8000000000000000),
-                        UINT64_C(0x0)))
-    return 1;
-  // denormal
-  if (test__extendhfxf2(fromRep16(0x0010U), UINT64_C(0x3feb000000000000),
-                        UINT64_C(0x0000000000000000)))
-    return 1;
-  if (test__extendhfxf2(fromRep16(0x0001U), UINT64_C(0x3fe7000000000000),
-                        UINT64_C(0x0000000000000000)))
-    return 1;
-  if (test__extendhfxf2(fromRep16(0x8001U), UINT64_C(0xbfe7000000000000),
-                        UINT64_C(0x0000000000000000)))
-    return 1;
-
-  // pi
-  if (test__extendhfxf2(fromRep16(0x4248U), UINT64_C(0x4000920000000000),
-                        UINT64_C(0x0000000000000000)))
-    return 1;
-  if (test__extendhfxf2(fromRep16(0xc248U), UINT64_C(0xc000920000000000),
-                        UINT64_C(0x0000000000000000)))
-    return 1;
-
-  if (test__extendhfxf2(fromRep16(0x508cU), UINT64_C(0x4004230000000000),
-                        UINT64_C(0x0)))
-    return 1;
-  if (test__extendhfxf2(fromRep16(0x1bb7U), UINT64_C(0x3ff6edc000000000),
-                        UINT64_C(0x0)))
+  if (test_extendhfxf2(__builtin_nanf16(""),
+                       (long double)__builtin_nanf64x("")))
     return 1;
 #else
   printf("skipped\n");
