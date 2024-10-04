@@ -4872,9 +4872,7 @@ static MachineBasicBlock *lowerWaveReduce(MachineInstr &MI,
       case AMDGPU::S_OR_B32:{
         // These operations with a uniform value i.e. SGPR are idempotent.
         // Reduced value will be same as given sgpr.
-        // bool IsWave32 = ST.isWave32();
-        unsigned MovOpc = ST.isWave32() ? AMDGPU::S_MOV_B32 : AMDGPU::S_MOV_B64;
-        BuildMI(BB, MI, DL, TII->get(MovOpc), DstReg).addReg(SrcReg);
+        BuildMI(BB, MI, DL, TII->get(AMDGPU::S_MOV_B32), DstReg).addReg(SrcReg);
         RetBB = &BB;
         break;
       }
