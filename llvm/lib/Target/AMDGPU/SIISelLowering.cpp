@@ -4976,9 +4976,6 @@ static MachineBasicBlock *lowerWaveReduce(MachineInstr &MI,
             auto ParityReg = BuildMI(*ComputeEnd, I, DL, TII->get(AMDGPU::S_AND_B32), ParityRegister)
                 .addReg(NewAccumulator->getOperand(0).getReg())
                 .addImm(1);
-// S_MUL_I32
-            // auto MulOp = 
-            // Can you have one float and one int op? I dont think you can, need to handle the float case seperately.  
             BuildMI(*ComputeEnd, I, DL, TII->get(AMDGPU::S_MUL_I32), DstReg)  
                 .addReg(SrcReg)
                 .addReg(ParityReg->getOperand(0).getReg())  ;

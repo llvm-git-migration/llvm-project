@@ -254,12 +254,6 @@ def : GCNPat <(vt (int_amdgcn_set_inactive vt:$src, vt:$inactive)),
 def : GCNPat<(i32 (int_amdgcn_set_inactive_chain_arg i32:$src, i32:$inactive)),
     (V_SET_INACTIVE_B32 0, VGPR_32:$src, 0, VGPR_32:$inactive, (IMPLICIT_DEF))>;
 
-multiclass WaveReduceAndPseudo<type SrcType, string IntrinsicName>{
-  defm WAVE_REDUCE_AND_PSEUDO : VPseudoInstSI <(outs SGPR_32:$sdst),
-    (ins VSrc_b32: $src, VSrc_b32:$stratergy),
-    [(set SrcType:$sdst, (IntrinsicName SrcType:$src, i32:$strategy))]>
-}
-
 let usesCustomInserter = 1, hasSideEffects = 0, mayLoad = 0, mayStore = 0, Uses = [EXEC] in {
   def WAVE_REDUCE_MIN_PSEUDO_U32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
@@ -298,7 +292,7 @@ let usesCustomInserter = 1, hasSideEffects = 0, mayLoad = 0, mayStore = 0, Uses 
 
   def WAVE_REDUCE_ADD_PSEUDO_F32 : VPseudoInstSI <(outs SGPR_32:$sdst),
     (ins VSrc_b32: $src, VSrc_b32:$strategy),
-    [(set f32:$sdst, (int_amdgcn_wave_reduce_add f32:$src, i32:$strategy))]> {
+    [(set f32:$sdst, (int_amdgcn_wave_reduce_fadd f32:$src, i32:$strategy))]> {
   }
   
   def WAVE_REDUCE_SUB_PSEUDO_I32 : VPseudoInstSI <(outs SGPR_32:$sdst),

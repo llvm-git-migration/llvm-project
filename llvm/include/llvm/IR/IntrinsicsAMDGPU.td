@@ -2119,19 +2119,14 @@ class AMDGPUWaveReduce<LLVMType data_ty = llvm_any_ty> : Intrinsic<
     ],
     [IntrNoMem, IntrConvergent, IntrWillReturn, IntrNoCallback, IntrNoFree, ImmArg<ArgIndex<1>>]>;
 
-def int_amdgcn_wave_reduce_umin : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_min : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_fmin : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_umax : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_max : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_fmax : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_add : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_fadd : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_sub : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_fsub : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_and : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_or : AMDGPUWaveReduce;
-def int_amdgcn_wave_reduce_xor : AMDGPUWaveReduce;
+multiclass AMDGPUWaveReduceGeneratorClass<list<string> Operations> {
+  foreach Op = Operations in {
+    def Op : AMDGPUWaveReduce;
+  }
+}
+
+defvar Operations = ["umin", "min", "fmin", "umax", "max", "fmax", "add", "fadd", "sub", "fsub", "and", "or", "xor"];
+defm int_amdgcn_wave_reduce_ :  AMDGPUWaveReduceGeneratorClass<Operations>;
 
 def int_amdgcn_readfirstlane :
   Intrinsic<[llvm_any_ty], [LLVMMatchType<0>],
