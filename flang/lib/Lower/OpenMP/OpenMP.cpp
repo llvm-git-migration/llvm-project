@@ -1241,6 +1241,7 @@ static void genTargetClauses(
     cp.processNowait(clauseOps);
 
   cp.processThreadLimit(stmtCtx, clauseOps);
+  cp.processBare(clauseOps);
 
   cp.processTODO<clause::Allocate, clause::Defaultmap, clause::Firstprivate,
                  clause::InReduction, clause::UsesAllocators>(
@@ -2780,6 +2781,7 @@ static void genOMP(lower::AbstractConverter &converter, lower::SymMap &symTable,
         !std::holds_alternative<clause::ThreadLimit>(clause.u) &&
         !std::holds_alternative<clause::Threads>(clause.u) &&
         !std::holds_alternative<clause::UseDeviceAddr>(clause.u) &&
+        !std::holds_alternative<clause::OmpxBare>(clause.u) &&
         !std::holds_alternative<clause::UseDevicePtr>(clause.u)) {
       TODO(clauseLocation, "OpenMP Block construct clause");
     }
