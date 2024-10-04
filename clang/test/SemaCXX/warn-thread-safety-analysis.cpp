@@ -2198,8 +2198,8 @@ namespace FunctionDefinitionTest {
 class Foo {
 public:
   void foo1();
-  void foo2();
-  void foo3(Foo *other);
+  void foo2() EXCLUSIVE_LOCKS_REQUIRED(mu_);
+  void foo3(Foo *other) EXCLUSIVE_LOCKS_REQUIRED(other->mu_);
 
   template<class T>
   void fooT1(const T& dummy1);
@@ -2249,7 +2249,7 @@ void fooF1(Foo *f) EXCLUSIVE_LOCKS_REQUIRED(f->mu_) {
   f->a = 1;
 }
 
-void fooF2(Foo *f);
+void fooF2(Foo *f); // expected-warning {{attribute mismatch between function declarations of 'fooF2'}}
 void fooF2(Foo *f) EXCLUSIVE_LOCKS_REQUIRED(f->mu_) {
   f->a = 2;
 }

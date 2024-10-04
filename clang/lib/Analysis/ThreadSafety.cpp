@@ -1074,7 +1074,7 @@ public:
   void checkPtAccess(const FactSet &FSet, const Expr *Exp, AccessKind AK,
                      ProtectedOperationKind POK);
 
-  void checkMismatchedFunctionAttrs(const FunctionDecl *FD);
+  void checkMismatchedFunctionAttrs(const NamedDecl *ND);
 };
 
 } // namespace
@@ -2265,25 +2265,27 @@ static bool neverReturns(const CFGBlock *B) {
   return false;
 }
 
-void ThreadSafetyAnalyzer::checkMismatchedFunctionAttrs(
-    const FunctionDecl *FD) {
-  FD = FD->getMostRecentDecl();
+void ThreadSafetyAnalyzer::checkMismatchedFunctionAttrs( const NamedDecl *ND) {
 
-  auto collectCapabilities = [&](const FunctionDecl *FD) {
-    SmallVector<CapabilityExpr> Args;
-    for (const auto *A : FD->specific_attrs<RequiresCapabilityAttr>()) {
+  auto collectCapabilities = [&](const Decl *D) {
+    llvm::SmallVector<CapabilityExpr> Args;
+    for (const auto *A : D->specific_attrs<RequiresCapabilityAttr>()) {
       for (const Expr *E : A->args())
         Args.push_back(SxBuilder.translateAttrExpr(E, nullptr));
     }
     return Args;
   };
 
-  auto FDArgs = collectCapabilities(FD);
-  for (const FunctionDecl *D = FD->getPreviousDecl(); D;
+  auto NDArgs = collectCapabilities(ND);
+  for (const Decl *D = ND->getPreviousDecl(); D;
        D = D->getPreviousDecl()) {
     auto DArgs = collectCapabilities(D);
-    if (DArgs.size() != FDArgs.size())
-      Handler.handleAttributeMismatch(FD, D);
+
+    for (const auto &[A, B] : zip_longest(NDArgs, DArgs)) {
+      if (!A || !B || !(*A).equals(*B)) {
+        Handler.handleAttributeMismatch(cast<NamedDecl>(ND), cast<NamedDecl>(D));
+      }
+    }
   }
 }
 
@@ -2306,8 +2308,8 @@ void ThreadSafetyAnalyzer::runAnalysis(AnalysisDeclContext &AC) {
   const NamedDecl *D = walker.getDecl();
   CurrentFunction = dyn_cast<FunctionDecl>(D);
 
-  if (CurrentFunction)
-    checkMismatchedFunctionAttrs(CurrentFunction);
+  if (isa<FunctionDecl, ObjCMethodDecl>(D))
+    checkMismatchedFunctionAttrs(D);
 
   if (D->hasAttr<NoThreadSafetyAnalysisAttr>())
     return;
