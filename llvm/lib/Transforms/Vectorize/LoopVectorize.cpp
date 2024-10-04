@@ -7519,7 +7519,7 @@ DenseMap<const SCEV *, Value *> LoopVectorizationPlanner::executePlan(
   // TODO: Move to VPlan transform stage once the transition to the VPlan-based
   // cost model is complete for better cost estimates.
   VPlanTransforms::unrollByUF(BestVPlan, BestUF,
-                              OrigLoop->getHeader()->getModule()->getContext());
+                              OrigLoop->getHeader()->getContext());
   VPlanTransforms::optimizeForVFAndUF(BestVPlan, BestVF, BestUF, PSE);
 
   LLVM_DEBUG(dbgs() << "Executing best plan with VF=" << BestVF
@@ -8350,8 +8350,8 @@ VPWidenCallRecipe *VPRecipeBuilder::tryToWidenCall(CallInst *CI,
       if (Legal->isMaskRequired(CI))
         Mask = getBlockInMask(CI->getParent());
       else
-        Mask = Plan.getOrAddLiveIn(ConstantInt::getTrue(
-            IntegerType::getInt1Ty(Variant->getFunctionType()->getContext())));
+        Mask = Plan.getOrAddLiveIn(
+            ConstantInt::getTrue(IntegerType::getInt1Ty(CI->getContext())));
 
       Ops.insert(Ops.begin() + *MaskPos, Mask);
     }
@@ -8719,15 +8719,13 @@ static SetVector<VPIRInstruction *> collectUsersInExitBlock(
 // Add exit values to \p Plan. Extracts are added for each entry in \p
 // ExitUsersToFix if needed and their operands are updated.
 static void
-addUsersInExitBlock(VPlan &Plan,
+addUsersInExitBlock(VPlan &Plan, LLVMContext &Ctx,
                     const SetVector<VPIRInstruction *> &ExitUsersToFix) {
   if (ExitUsersToFix.empty())
     return;
 
   auto *MiddleVPBB =
       cast<VPBasicBlock>(Plan.getVectorLoopRegion()->getSingleSuccessor());
-  BasicBlock *ExitBB =
-      cast<VPIRBasicBlock>(MiddleVPBB->getSuccessors()[0])->getIRBasicBlock();
   VPBuilder B(MiddleVPBB, MiddleVPBB->getFirstNonPhi());
 
   // Introduce extract for exiting values and update the VPIRInstructions
@@ -8738,10 +8736,9 @@ addUsersInExitBlock(VPlan &Plan,
     if (V->isLiveIn())
       continue;
 
-    VPValue *Ext = B.createNaryOp(
-        VPInstruction::ExtractFromEnd,
-        {V, Plan.getOrAddLiveIn(ConstantInt::get(
-                IntegerType::get(ExitBB->getContext(), 32), 1))});
+    VPValue *Ext = B.createNaryOp(VPInstruction::ExtractFromEnd,
+                                  {V, Plan.getOrAddLiveIn(ConstantInt::get(
+                                          IntegerType::get(Ctx, 32), 1))});
     ExitIRI->setOperand(0, Ext);
   }
 }
@@ -8904,9 +8901,10 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
             return !CM.requiresScalarEpilogue(VF.isVector());
           },
           Range);
-  VPlanPtr Plan = VPlan::createInitialVPlan(Legal->getWidestInductionType(),
-                                            PSE, RequiresScalarEpilogueCheck,
-                                            CM.foldTailByMasking(), OrigLoop);
+  Type *WidestIndTy = Legal->getWidestInductionType();
+  VPlanPtr Plan =
+      VPlan::createInitialVPlan(WidestIndTy, PSE, RequiresScalarEpilogueCheck,
+                                CM.foldTailByMasking(), OrigLoop);
 
   // Don't use getDecisionAndClampRange here, because we don't know the UF
   // so this function is better to be conservative, rather than to split
@@ -8921,7 +8919,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
   // When not folding the tail, we know that the induction increment will not
   // overflow.
   bool HasNUW = Style == TailFoldingStyle::None;
-  addCanonicalIVRecipes(*Plan, Legal->getWidestInductionType(), HasNUW, DL);
+  addCanonicalIVRecipes(*Plan, WidestIndTy, HasNUW, DL);
 
   VPRecipeBuilder RecipeBuilder(*Plan, OrigLoop, TLI, Legal, CM, PSE, Builder);
 
@@ -9053,7 +9051,7 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
   SetVector<VPIRInstruction *> ExitUsersToFix = collectUsersInExitBlock(
       OrigLoop, RecipeBuilder, *Plan, Legal->getInductionVars());
   addLiveOutsForFirstOrderRecurrences(*Plan, ExitUsersToFix);
-  addUsersInExitBlock(*Plan, ExitUsersToFix);
+  addUsersInExitBlock(*Plan, WidestIndTy->getContext(), ExitUsersToFix);
 
   // ---------------------------------------------------------------------------
   // Transform initial VPlan: Apply previously taken decisions, in order, to
