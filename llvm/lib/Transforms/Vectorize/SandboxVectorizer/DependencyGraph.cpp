@@ -8,9 +8,44 @@
 
 #include "llvm/Transforms/Vectorize/SandboxVectorizer/DependencyGraph.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/SandboxIR/Instruction.h"
 #include "llvm/SandboxIR/Utils.h"
 
 namespace llvm::sandboxir {
+
+PredIterator::value_type PredIterator::operator*() {
+  // If it's a DGNode, or a MemDGNode with an OpIt != end.
+  if (!isa<MemDGNode>(N) || OpIt != OpItE) {
+    assert(OpIt != OpItE && "Can't dereference end iterator!");
+    Value *OpV = *OpIt;
+    return DAG->getNode(cast<Instruction>(OpV));
+  }
+  // It's a MemDGNode with OpIt == end, so we need to use MemIt.
+  assert(MemIt != cast<MemDGNode>(N)->memPreds().end() &&
+         "Cant' dereference end iterator!");
+  return *MemIt;
+}
+
+PredIterator &PredIterator::operator++() {
+  // If it's a DGNode, or a MemDGNode with an OpIt != end.
+  if (!isa<MemDGNode>(N) || OpIt != OpItE) {
+    assert(OpIt != OpItE && "Already at end!");
+    ++OpIt;
+    // Skip operands that are not instructions.
+    OpIt = skipNonInstr(OpIt, OpItE);
+    return *this;
+  }
+  // It's a MemDGNode with OpIt == end, so we need to increment MemIt.
+  assert(MemIt != cast<MemDGNode>(N)->memPreds().end() && "Already at end!");
+  ++MemIt;
+  return *this;
+}
+
+bool PredIterator::operator==(const PredIterator &Other) const {
+  assert(DAG == Other.DAG && "Iterators of different DAGs!");
+  assert(N == Other.N && "Iterators of different nodes!");
+  return OpIt == Other.OpIt && MemIt == Other.MemIt;
+}
 
 #ifndef NDEBUG
 void DGNode::print(raw_ostream &OS, bool PrintDeps) const {
