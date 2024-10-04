@@ -5457,8 +5457,8 @@ InstructionCost LoopVectorizationCostModel::computePredInstDiscount(
       for (Type *VectorTy : getContainedTypes(WideTy)) {
         ScalarCost += TTI.getScalarizationOverhead(
             cast<VectorType>(VectorTy), APInt::getAllOnes(VF.getFixedValue()),
-            /*Insert*/ true,
-            /*Extract*/ false, CostKind);
+            /*Insert=*/true,
+            /*Extract=*/false, CostKind);
       }
       ScalarCost +=
           VF.getFixedValue() * TTI.getCFInstrCost(Instruction::PHI, CostKind);
@@ -5955,8 +5955,8 @@ InstructionCost LoopVectorizationCostModel::getScalarizationOverhead(
     for (Type *VectorTy : getContainedTypes(RetTy)) {
       Cost += TTI.getScalarizationOverhead(
           cast<VectorType>(VectorTy), APInt::getAllOnes(VF.getKnownMinValue()),
-          /*Insert*/ true,
-          /*Extract*/ false, CostKind);
+          /*Insert=*/true,
+          /*Extract=*/false, CostKind);
     }
   }
 
