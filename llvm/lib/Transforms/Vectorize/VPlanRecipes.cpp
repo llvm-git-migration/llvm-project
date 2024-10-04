@@ -2030,10 +2030,18 @@ static bool isZExtOrSExt(Instruction::CastOps CastOpcode) {
 InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
                                                VPCostContext &Ctx) const {
   RecurKind RdxKind = RdxDesc.getRecurrenceKind();
-  Type *ElementTy = RdxDesc.getRecurrenceType();
+  Type *ElementTy = Ctx.Types.inferScalarType(this->getVPSingleValue());
+  assert(ElementTy->getTypeID() == RdxDesc.getRecurrenceType()->getTypeID());
+
   auto *VectorTy = cast<VectorType>(ToVectorTy(ElementTy, VF));
   TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
   unsigned Opcode = RdxDesc.getOpcode();
+
+  // TODO: Remove the assertion when we support any-of reduction in VPlan-base
+  // cost model.
+  assert(!RecurrenceDescriptor::isAnyOfRecurrenceKind(
+             RdxDesc.getRecurrenceKind()) &&
+         "VPlan-base cost model not support any-of reduction.");
 
   InstructionCost BaseCost;
   if (RecurrenceDescriptor::isMinMaxRecurrenceKind(RdxKind)) {
@@ -2085,13 +2093,13 @@ InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
 
     // Try to match reduce.add(ext(mul(...)))
     auto *ExtTy = cast<VectorType>(
-        ToVectorTy(Ext->getOperand(0)->getUnderlyingValue()->getType(), VF));
+        ToVectorTy(Ctx.Types.inferScalarType(Ext->getOperand(0)), VF));
     auto *Mul = dyn_cast_if_present<VPWidenRecipe>(
         Ext->getOperand(0)->getDefiningRecipe());
     if (Mul && Mul->getOpcode() == Instruction::Mul &&
         Opcode == Instruction::Add) {
       auto *MulTy = cast<VectorType>(
-          ToVectorTy(Mul->getUnderlyingValue()->getType(), VF));
+          ToVectorTy(Ctx.Types.inferScalarType(Mul->getVPSingleValue()), VF));
       auto *InnerExt0 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(0));
       auto *InnerExt1 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(1));
 
@@ -2099,10 +2107,8 @@ InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
       if (InnerExt0 && isZExtOrSExt(InnerExt0->getOpcode()) && InnerExt1 &&
           isZExtOrSExt(InnerExt1->getOpcode()) &&
           InnerExt0->getOpcode() == InnerExt1->getOpcode()) {
-        Type *InnerExt0Ty =
-            InnerExt0->getOperand(0)->getUnderlyingValue()->getType();
-        Type *InnerExt1Ty =
-            InnerExt1->getOperand(0)->getUnderlyingValue()->getType();
+        Type *InnerExt0Ty = Ctx.Types.inferScalarType(InnerExt0->getOperand(0));
+        Type *InnerExt1Ty = Ctx.Types.inferScalarType(InnerExt1->getOperand(0));
         // Get the largest type.
         auto *MaxExtVecTy = cast<VectorType>(
             ToVectorTy(InnerExt0Ty->getIntegerBitWidth() >
@@ -2145,16 +2151,14 @@ InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
     // Match reduce.add(mul(ext(A), ext(B)))
     auto *InnerExt0 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(0));
     auto *InnerExt1 = dyn_cast<VPWidenCastRecipe>(Mul->getOperand(1));
-    auto *MulTy =
-        cast<VectorType>(ToVectorTy(Mul->getUnderlyingValue()->getType(), VF));
+    auto *MulTy = cast<VectorType>(
+        ToVectorTy(Ctx.Types.inferScalarType(Mul->getVPSingleValue()), VF));
     InstructionCost MulCost =
         Ctx.TTI.getArithmeticInstrCost(Instruction::Mul, MulTy, CostKind);
     if (InnerExt0 && isZExtOrSExt(InnerExt0->getOpcode()) && InnerExt1 &&
         InnerExt0->getOpcode() == InnerExt1->getOpcode()) {
-      Type *InnerExt0Ty =
-          InnerExt0->getOperand(0)->getUnderlyingValue()->getType();
-      Type *InnerExt1Ty =
-          InnerExt1->getOperand(0)->getUnderlyingValue()->getType();
+      Type *InnerExt0Ty = Ctx.Types.inferScalarType(InnerExt0->getOperand(0));
+      Type *InnerExt1Ty = Ctx.Types.inferScalarType(InnerExt1->getOperand(0));
       auto *MaxInnerExtVecTy = cast<VectorType>(ToVectorTy(
           InnerExt0Ty->getIntegerBitWidth() > InnerExt1Ty->getIntegerBitWidth()
               ? InnerExt0Ty
