@@ -71,7 +71,6 @@
 #include "lldb/Utility/Flags.h"
 #include "lldb/Utility/LLDBAssert.h"
 #include "lldb/Utility/LLDBLog.h"
-#include "lldb/Utility/RegularExpression.h"
 #include "lldb/Utility/Scalar.h"
 #include "lldb/Utility/ThreadSafeDenseMap.h"
 
