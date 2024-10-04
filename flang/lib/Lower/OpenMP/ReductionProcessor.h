@@ -120,9 +120,10 @@ public:
 
   /// Creates a reduction declaration and associates it with an OpenMP block
   /// directive.
+  template <class T>
   static void addDeclareReduction(
       mlir::Location currentLocation, lower::AbstractConverter &converter,
-      const omp::clause::Reduction &reduction,
+      const T &reduction,
       llvm::SmallVectorImpl<mlir::Value> &reductionVars,
       llvm::SmallVectorImpl<bool> &reduceVarByRef,
       llvm::SmallVectorImpl<mlir::Attribute> &reductionDeclSymbols,
