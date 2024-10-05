@@ -442,7 +442,15 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;
   }
   case Intrinsic::copysign: {
-    ReplaceFPIntrinsicWithCall(CI, "copysignf", "copysign", "copysignl");
+    switch (CI->getArgOperand(0)->getType()->getTypeID()) {
+    default:
+      assert(false && "only need a copysign libcall for arch-specific floats");
+      break;
+    case Type::X86_FP80TyID:
+    case Type::PPC_FP128TyID:
+      ReplaceCallWith("copysignl", CI, CI->arg_begin(), CI->arg_end(),
+                      Type::getFloatTy(CI->getContext()));
+    }
     break;
   }
   case Intrinsic::get_rounding:
