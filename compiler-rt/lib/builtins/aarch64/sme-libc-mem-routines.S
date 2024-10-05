@@ -6,7 +6,7 @@
 
 #include "../assembly.h"
 
-#ifdef __aarch64__
+#if defined(__aarch64__) && __ARM_FP != 0
 
 #define L(l) .L ## l
 
