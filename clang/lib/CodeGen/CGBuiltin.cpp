@@ -18646,6 +18646,7 @@ Intrinsic::ID getFirstBitHighIntrinsic(CGHLSLRuntime &RT, QualType QT) {
     return RT.getFirstBitSHighIntrinsic();
   }
 
+  assert(QT->hasUnsignedIntegerRepresentation());
   return RT.getFirstBitUHighIntrinsic();
 }
 
