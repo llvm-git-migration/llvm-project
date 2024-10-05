@@ -633,6 +633,12 @@ Lnovec:
 .arch_extension gcs
 #endif
 
+#if defined(__ARM_FP) && __ARM_FP != 0
+#define LDP(a,b,r,o,p) stp a, b, [r, o]
+#else
+#define LDP(a,b,r,o,p) ldr a, [r, o] ; ldr b, [r, p]
+#endif
+
 //
 // extern "C" void __libunwind_Registers_arm64_jumpto(Registers_arm64 *);
 //
@@ -642,23 +648,24 @@ Lnovec:
   .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(__libunwind_Registers_arm64_jumpto)
   // skip restore of x0,x1 for now
-  ldp    x2, x3,  [x0, #0x010]
-  ldp    x4, x5,  [x0, #0x020]
-  ldp    x6, x7,  [x0, #0x030]
-  ldp    x8, x9,  [x0, #0x040]
-  ldp    x10,x11, [x0, #0x050]
-  ldp    x12,x13, [x0, #0x060]
-  ldp    x14,x15, [x0, #0x070]
+  LDP(x2, x3, x0, #0x010, #0x018)
+  LDP(x4, x5, x0, #0x020, #0x028)
+  LDP(x6, x7, x0, #0x030, #0x038)
+  LDP(x8, x9, x0, #0x040, #0x048)
+  LDP(x10, x11, x0, #0x050, #0x058)
+  LDP(x12, x13, x0, #0x060, #0x068)
+  LDP(x14, x15, x0, #0x070, #0x078)
   // x16 and x17 were clobbered by the call into the unwinder, so no point in
   // restoring them.
-  ldp    x18,x19, [x0, #0x090]
-  ldp    x20,x21, [x0, #0x0A0]
-  ldp    x22,x23, [x0, #0x0B0]
-  ldp    x24,x25, [x0, #0x0C0]
-  ldp    x26,x27, [x0, #0x0D0]
-  ldp    x28,x29, [x0, #0x0E0]
+  LDP(x18, x19, x0, #0x090, #0x098)
+  LDP(x20, x21, x0, #0x0A0, #0x0A8)
+  LDP(x22, x23, x0, #0x0B0, #0x0B8)
+  LDP(x24, x25, x0, #0x0C0, #0x0C8)
+  LDP(x26, x27, x0, #0x0D0, #0x0D8)
+  LDP(x28, x29, x0, #0x0E0, #0x0E8)
   ldr    x30,     [x0, #0x100]  // restore pc into lr
 
+#if defined(__ARM_FP) && __ARM_FP != 0
   ldp    d0, d1,  [x0, #0x110]
   ldp    d2, d3,  [x0, #0x120]
   ldp    d4, d5,  [x0, #0x130]
@@ -676,13 +683,14 @@ DEFINE_LIBUNWIND_FUNCTION(__libunwind_Registers_arm64_jumpto)
   ldp    d28,d29, [x0, #0x1F0]
   ldr    d30,     [x0, #0x200]
   ldr    d31,     [x0, #0x208]
+#endif
 
   // Finally, restore sp. This must be done after the last read from the
   // context struct, because it is allocated on the stack, and an exception
   // could clobber the de-allocated portion of the stack after sp has been
   // restored.
   ldr    x16,     [x0, #0x0F8]
-  ldp    x0, x1,  [x0, #0x000]  // restore x0,x1
+  LDP(x0, x1, x0, #0x000, #0x008)  // restore x0,x1
   mov    sp,x16                 // restore sp
 #if defined(__ARM_FEATURE_GCS_DEFAULT)
   // If GCS is enabled we need to push the address we're returning to onto the
