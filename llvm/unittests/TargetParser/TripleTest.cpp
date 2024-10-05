@@ -1283,6 +1283,28 @@ TEST(TripleTest, ParsedIDs) {
   EXPECT_EQ(Triple::Linux, T.getOS());
   EXPECT_EQ(Triple::PAuthTest, T.getEnvironment());
 
+  // Gentoo time64 triples
+  T = Triple("i686-pc-linux-gnut64");
+  EXPECT_EQ(Triple::x86, T.getArch());
+  EXPECT_EQ(Triple::PC, T.getVendor());
+  EXPECT_EQ(Triple::Linux, T.getOS());
+  EXPECT_EQ(Triple::GNUT64, T.getEnvironment());
+  EXPECT_TRUE(T.isTime64ABI());
+
+  T = Triple("armv5tel-softfloat-linux-gnueabit64");
+  EXPECT_EQ(Triple::arm, T.getArch());
+  EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
+  EXPECT_EQ(Triple::Linux, T.getOS());
+  EXPECT_EQ(Triple::GNUEABIT64, T.getEnvironment());
+  EXPECT_TRUE(T.isTime64ABI());
+
+  T = Triple("armv7a-unknown-linux-gnueabihft64");
+  EXPECT_EQ(Triple::arm, T.getArch());
+  EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
+  EXPECT_EQ(Triple::Linux, T.getOS());
+  EXPECT_EQ(Triple::GNUEABIHFT64, T.getEnvironment());
+  EXPECT_TRUE(T.isTime64ABI());
+
   T = Triple("huh");
   EXPECT_EQ(Triple::UnknownArch, T.getArch());
 }
