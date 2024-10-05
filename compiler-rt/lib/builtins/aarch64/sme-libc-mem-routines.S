@@ -6,8 +6,6 @@
 
 #include "../assembly.h"
 
-#ifdef __aarch64__
-
 #define L(l) .L ## l
 
 //
@@ -238,6 +236,7 @@ END_COMPILERRT_OUTLINE_FUNCTION(__arm_sc_memcpy)
 
 DEFINE_COMPILERRT_FUNCTION_ALIAS(__arm_sc_memmove, __arm_sc_memcpy)
 
+#if defined(__aarch64__) && __ARM_FP != 0
 
 //
 //  __arm_sc_memset
