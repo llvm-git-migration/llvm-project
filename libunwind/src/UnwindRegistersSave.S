@@ -718,6 +718,12 @@ LnoR2Fix:
 
 #elif defined(__aarch64__)
 
+#if defined(__ARM_FP) && __ARM_FP != 0
+#define STP(a,b,r,o,p) stp a, b, [r, o]
+#else
+#define STP(a,b,r,o,p) str a, [r, o] ; str b, [r, p]
+#endif
+
 //
 // extern int __unw_getcontext(unw_context_t* thread_state)
 //
@@ -726,26 +732,27 @@ LnoR2Fix:
 //
   .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(__unw_getcontext)
-  stp    x0, x1,  [x0, #0x000]
-  stp    x2, x3,  [x0, #0x010]
-  stp    x4, x5,  [x0, #0x020]
-  stp    x6, x7,  [x0, #0x030]
-  stp    x8, x9,  [x0, #0x040]
-  stp    x10,x11, [x0, #0x050]
-  stp    x12,x13, [x0, #0x060]
-  stp    x14,x15, [x0, #0x070]
-  stp    x16,x17, [x0, #0x080]
-  stp    x18,x19, [x0, #0x090]
-  stp    x20,x21, [x0, #0x0A0]
-  stp    x22,x23, [x0, #0x0B0]
-  stp    x24,x25, [x0, #0x0C0]
-  stp    x26,x27, [x0, #0x0D0]
-  stp    x28,x29, [x0, #0x0E0]
+  STP(x0, x1, x0, #0x000, #0x008)
+  STP(x2, x3, x0, #0x010, #0x018)
+  STP(x4, x5, x0, #0x020, #0x028)
+  STP(x6, x7, x0, #0x030, #0x038)
+  STP(x8, x9, x0, #0x040, #0x048)
+  STP(x10, x11, x0, #0x050, #0x058)
+  STP(x12, x13, x0, #0x060, #0x068)
+  STP(x14, x15, x0, #0x070, #0x078)
+  STP(x16, x17, x0, #0x080, #0x088)
+  STP(x18, x19, x0, #0x090, #0x098)
+  STP(x20, x21, x0, #0x0A0, #0x0A8)
+  STP(x22, x23, x0, #0x0B0, #0x0B8)
+  STP(x24, x25, x0, #0x0C0, #0x0C8)
+  STP(x26, x27, x0, #0x0D0, #0x0D8)
+  STP(x28, x29, x0, #0x0E0, #0x0E8)
   str    x30,     [x0, #0x0F0]
   mov    x1,sp
   str    x1,      [x0, #0x0F8]
   str    x30,     [x0, #0x100]    // store return address as pc
   // skip cpsr
+#if defined(__ARM_FP) && __ARM_FP != 0
   stp    d0, d1,  [x0, #0x110]
   stp    d2, d3,  [x0, #0x120]
   stp    d4, d5,  [x0, #0x130]
@@ -763,6 +770,7 @@ DEFINE_LIBUNWIND_FUNCTION(__unw_getcontext)
   stp    d28,d29, [x0, #0x1F0]
   str    d30,     [x0, #0x200]
   str    d31,     [x0, #0x208]
+#endif
   mov    x0, #0                   // return UNW_ESUCCESS
   ret
 
