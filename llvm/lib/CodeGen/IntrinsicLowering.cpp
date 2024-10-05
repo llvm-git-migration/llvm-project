@@ -58,7 +58,9 @@ static Value *LowerBSWAP(LLVMContext &Context, Value *V, Instruction *IP) {
   IRBuilder<> Builder(IP);
 
   switch(BitSize) {
-  default: llvm_unreachable("Unhandled type size of value to byteswap!");
+  default:
+    assert(false && "Unhandled type size of value to byteswap!");
+    break;
   case 16: {
     Value *Tmp1 = Builder.CreateShl(V, ConstantInt::get(V->getType(), 8),
                                     "bswap.2");
@@ -203,7 +205,9 @@ static void ReplaceFPIntrinsicWithCall(CallInst *CI, const char *Fname,
                                        const char *Dname,
                                        const char *LDname) {
   switch (CI->getArgOperand(0)->getType()->getTypeID()) {
-  default: llvm_unreachable("Invalid type in intrinsic");
+  default:
+    assert(false && "Invalid type in intrinsic");
+    break;
   case Type::FloatTyID:
     ReplaceCallWith(Fname, CI, CI->arg_begin(), CI->arg_end(),
                     Type::getFloatTy(CI->getContext()));
