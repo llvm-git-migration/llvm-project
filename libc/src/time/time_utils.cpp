@@ -130,24 +130,22 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   if (years > INT_MAX || years < INT_MIN)
     return time_utils::out_of_range();
 
+  char timezone[128];
+
   FILE *fp;
   fp = fopen("/etc/timezone", "rb");
   if (fp == NULL) {
+    // TODO: implement getting timezone from `TZ` environment variable and
+    // storing the value in `timezone`
+  } else if (fgets(timezone, sizeof(timezone), fp) == NULL)
     return time_utils::out_of_range();
-  }
-
-  char timezone[128];
-  if (fgets(timezone, sizeof(timezone), fp) == NULL) {
-    return time_utils::out_of_range();
-  }
 
   int offset;
-  if (internal::same_string(timezone, "UTC") == 0) {
+  // TODO: Add more timezones
+  if (internal::same_string(timezone, "UTC") == 0)
     offset = 0;
-  }
-  if (internal::same_string(timezone, "Europe/Berlin") == 0) {
+  if (internal::same_string(timezone, "Europe/Berlin") == 0)
     offset = 2;
-  }
 
   // All the data (years, month and remaining days) was calculated from
   // March, 2000. Thus adjust the data to be from January, 1900.
@@ -167,9 +165,11 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
 
   if (offset == 0) {
     tm->tm_isdst = 0;
-  } else {
+  } else if (offset > 0) {
     tm->tm_isdst = 1;
     tm->tm_hour += offset;
+  } else {
+    tm->tm_isdst = -1;
   }
 
   fclose(fp);
