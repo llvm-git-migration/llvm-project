@@ -81,6 +81,8 @@ struct TimeConstants {
   static constexpr int END_OF32_BIT_EPOCH_YEAR = 2038;
 
   static constexpr time_t OUT_OF_RANGE_RETURN_VALUE = -1;
+
+  static constexpr size_t TIMEZONE_SIZE = 128;
 };
 
 // Update the "tm" structure's year, month, etc. members from seconds.
