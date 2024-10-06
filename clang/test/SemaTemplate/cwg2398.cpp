@@ -405,6 +405,40 @@ namespace packs {
   } // namespace t4
 } // namespace packs
 
+namespace fun_tmpl_call {
+  namespace t1 {
+    template <template <class> class TT> void f(TT<int>) {};
+    // old-note@-1 {{has different template parameters}}
+    template <class...> struct A {};
+    void test() { f(A<int>()); }
+    // old-error@-1 {{no matching function for call to 'f'}}
+  } // namespace t1
+  namespace t2 {
+    template <template <class> class TT> void f(TT<int>) = delete;
+    // new-note@-1 {{candidate function}}
+    template <template <class...> class TT> void f(TT<int>) {}
+    // new-note@-1 {{candidate function}}
+
+    template <class...> struct A {};
+    void test() { f(A<int>()); }
+    // new-error@-1 {{call to deleted function 'f'}}
+  } // namespace t2
+  namespace t3 {
+    template <template <class> class TT> void f(TT<int>) {}
+    template <template <class...> class TT> void f(TT<int>) = delete;
+
+    template <class> struct A {};
+    void test() { f(A<int>()); }
+  } // namespace t3
+  namespace t4 {
+    template <template <class, class...> class TT, class T1, class... T2s>
+    void f(TT<T1, T2s...>) {}
+
+    template <class> struct A {};
+    void test() { f(A<int>()); }
+  } // namespace t4
+} // namespace fun_tmpl_packs
+
 namespace partial {
   namespace t1 {
     template<template<class... T1s> class TT1> struct A {};
