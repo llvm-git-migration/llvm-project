@@ -140,12 +140,11 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   } else if (fgets(timezone, sizeof(timezone), fp) == NULL)
     return time_utils::out_of_range();
 
-  int offset;
+  // UTC = 0
+  int offset = 0;
   // TODO: Add more timezones
-  if (internal::same_string(timezone, "UTC") == 0)
-    offset = 0;
   if (internal::same_string(timezone, "Europe/Berlin") == 0)
-    offset = 2;
+    offset = 1;
 
   // All the data (years, month and remaining days) was calculated from
   // March, 2000. Thus adjust the data to be from January, 1900.
@@ -163,14 +162,11 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   tm->tm_sec =
       static_cast<int>(remainingSeconds % TimeConstants::SECONDS_PER_MIN);
 
-  if (offset == 0) {
-    tm->tm_isdst = 0;
-  } else if (offset > 0) {
-    tm->tm_isdst = 1;
-    tm->tm_hour += offset;
-  } else {
-    tm->tm_isdst = -1;
+  set_dst(tm);
+  if (tm->tm_isdst > 0) {
+    tm->tm_hour += 1;
   }
+  tm->tm_hour += offset;
 
   fclose(fp);
 
