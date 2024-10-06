@@ -151,6 +151,10 @@ C++ Language Changes
 - The builtin type alias ``__builtin_common_type`` has been added to improve the
   performance of ``std::common_type``.
 
+- When matching a template to a template template parameter in the context of a deduced
+  function template call, clang now implements P0522 pack rules,
+  allowing a non-pack parameter to match a pack argument.
+
 C++2c Feature Support
 ^^^^^^^^^^^^^^^^^^^^^
 

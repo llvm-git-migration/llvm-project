@@ -925,6 +925,8 @@ class Sema;
 
     bool TookAddressOfOverload : 1;
 
+    bool HasMatchedPackOnParmToNonPackOnArg : 1;
+
     /// True if the candidate was found using ADL.
     CallExpr::ADLCallKind IsADLCandidate : 1;
 
@@ -999,8 +1001,9 @@ class Sema;
     friend class OverloadCandidateSet;
     OverloadCandidate()
         : IsSurrogate(false), IgnoreObjectArgument(false),
-          TookAddressOfOverload(false), IsADLCandidate(CallExpr::NotADL),
-          RewriteKind(CRK_None) {}
+          TookAddressOfOverload(false),
+          HasMatchedPackOnParmToNonPackOnArg(false),
+          IsADLCandidate(CallExpr::NotADL), RewriteKind(CRK_None) {}
   };
 
   /// OverloadCandidateSet - A set of overload candidates, used in C++
