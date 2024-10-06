@@ -894,6 +894,10 @@ ARMTargetLowering::ARMTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::FNEARBYINT, MVT::v2f64, Expand);
     setOperationAction(ISD::FFLOOR, MVT::v2f64, Expand);
     setOperationAction(ISD::FMA, MVT::v2f64, Expand);
+
+    for (auto CC : {ISD::SETOGT, ISD::SETOGE, ISD::SETOLT, ISD::SETOLE,
+                    ISD::SETGT, ISD::SETGE, ISD::SETLT, ISD::SETLE})
+      setCondCodeAction(CC, MVT::v2f64, Expand);
   }
 
   if (Subtarget->hasNEON()) {
@@ -915,6 +919,9 @@ ARMTargetLowering::ARMTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::FRINT, MVT::v4f32, Expand);
     setOperationAction(ISD::FNEARBYINT, MVT::v4f32, Expand);
     setOperationAction(ISD::FFLOOR, MVT::v4f32, Expand);
+    for (auto CC : {ISD::SETOGT, ISD::SETOGE, ISD::SETOLT, ISD::SETOLE,
+                    ISD::SETGT, ISD::SETGE, ISD::SETLT, ISD::SETLE})
+      setCondCodeAction(CC, MVT::v4f32, Expand);
 
     // Mark v2f32 intrinsics.
     setOperationAction(ISD::FSQRT, MVT::v2f32, Expand);
@@ -933,6 +940,9 @@ ARMTargetLowering::ARMTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::FRINT, MVT::v2f32, Expand);
     setOperationAction(ISD::FNEARBYINT, MVT::v2f32, Expand);
     setOperationAction(ISD::FFLOOR, MVT::v2f32, Expand);
+    for (auto CC : {ISD::SETOGT, ISD::SETOGE, ISD::SETOLT, ISD::SETOLE,
+                    ISD::SETGT, ISD::SETGE, ISD::SETLT, ISD::SETLE})
+      setCondCodeAction(CC, MVT::v2f32, Expand);
 
     // Neon does not support some operations on v1i64 and v2i64 types.
     setOperationAction(ISD::MUL, MVT::v1i64, Expand);
