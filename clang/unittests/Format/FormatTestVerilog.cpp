@@ -56,6 +56,7 @@ TEST_F(FormatTestVerilog, Align) {
                "sfdbddfbdfbb <= x;",
                Style);
   Style.AlignConsecutiveAssignments.AlignCompound = true;
+  Style.AlignConsecutiveAssignments.PadOperators = true;
   verifyFormat("x            <= x;\n"
                "sfdbddfbdfbb <= x;",
                Style);

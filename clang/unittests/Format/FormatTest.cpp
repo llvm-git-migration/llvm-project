@@ -20261,10 +20261,7 @@ TEST_F(FormatTest, AlignWithLineBreaks) {
   auto Style = getLLVMStyleWithColumns(120);
 
   EXPECT_EQ(Style.AlignConsecutiveAssignments,
-            FormatStyle::AlignConsecutiveStyle(
-                {/*Enabled=*/false, /*AcrossEmptyLines=*/false,
-                 /*AcrossComments=*/false, /*AlignCompound=*/false,
-                 /*AlignFunctionPointers=*/false, /*PadOperators=*/true}));
+            FormatStyle::AlignConsecutiveStyle({}));
   EXPECT_EQ(Style.AlignConsecutiveDeclarations,
             FormatStyle::AlignConsecutiveStyle({}));
   verifyFormat("void foo() {\n"
