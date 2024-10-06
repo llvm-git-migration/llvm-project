@@ -75,6 +75,10 @@ static cl::opt<size_t> InlineMaxBB(
     cl::desc("Maximum number of BBs allowed in a function after inlining"
              " (compile time constraint)"));
 
+static cl::opt<unsigned> InlineLastCallToStaticBonus(
+    "amdgpu-inline-last-call-to-static-bonus", cl::Hidden, cl::init(165000),
+    cl::desc("Threshold added when the callee only has one live use"));
+
 static bool dependsOnLocalPhi(const Loop *L, const Value *Cond,
                               unsigned Depth = 0) {
   const Instruction *I = dyn_cast<Instruction>(Cond);
@@ -1297,6 +1301,10 @@ static unsigned getCallArgsTotalAllocaSize(const CallBase *CB,
     AllocaSize += DL.getTypeAllocSize(AI->getAllocatedType());
   }
   return AllocaSize;
+}
+
+int GCNTTIImpl::getInliningLastCallToStaticBonus() const {
+  return InlineLastCallToStaticBonus;
 }
 
 unsigned GCNTTIImpl::adjustInliningThreshold(const CallBase *CB) const {
