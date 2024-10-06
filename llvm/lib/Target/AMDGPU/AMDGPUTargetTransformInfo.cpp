@@ -75,6 +75,10 @@ static cl::opt<size_t> InlineMaxBB(
     cl::desc("Maximum number of BBs allowed in a function after inlining"
              " (compile time constraint)"));
 
+static cl::opt<unsigned> InlineThresholdOneLiveUse(
+    "amdgpu-inline-threshold-one-live-use", cl::Hidden, cl::init(15000),
+    cl::desc("Threshold added when the callee only has one live use"));
+
 static bool dependsOnLocalPhi(const Loop *L, const Value *Cond,
                               unsigned Depth = 0) {
   const Instruction *I = dyn_cast<Instruction>(Cond);
@@ -1307,6 +1311,12 @@ unsigned GCNTTIImpl::adjustInliningThreshold(const CallBase *CB) const {
   unsigned AllocaSize = getCallArgsTotalAllocaSize(CB, DL);
   if (AllocaSize > 0)
     Threshold += ArgAllocaCost;
+
+  // Increase the threshold if it is the only call to a local function.
+  Function *Callee = CB->getCalledFunction();
+  if (Callee && Callee->hasLocalLinkage() && Callee->hasOneLiveUse())
+    Threshold += InlineThresholdOneLiveUse;
+
   return Threshold;
 }
 
