@@ -5482,6 +5482,8 @@ Error BitcodeReader::parseFunctionBody(Function *F) {
         if (!CmpInst::isIntPredicate(PredVal))
           return error("Invalid icmp predicate");
         I = new ICmpInst(PredVal, LHS, RHS);
+        if (Record[OpNum] & (1 << bitc::PSSI_SAME_SIGN))
+          cast<ICmpInst>(I)->setSameSign(true);
       }
 
       ResTypeID = getVirtualTypeID(I->getType()->getScalarType());

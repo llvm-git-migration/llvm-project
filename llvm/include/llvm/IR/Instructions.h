@@ -1224,6 +1224,17 @@ public:
   /// Return the unsigned version of the predicate.
   static Predicate getUnsignedPredicate(Predicate pred);
 
+  /// An icmp instruction, which can be marked as "samesign", indicating that
+  /// the two operands have the same sign. This means that we can convert
+  /// "slt/ult" to "ult", which enables more optimizations.
+  enum { SameSign = (1 << 0) };
+
+  void setSameSign(bool B) {
+    SubclassOptionalData = (SubclassOptionalData & ~SameSign) | (B * SameSign);
+  }
+
+  bool hasSameSign() const { return SubclassOptionalData & SameSign; }
+
   /// Return true if this predicate is either EQ or NE.  This also
   /// tests for commutativity.
   static bool isEquality(Predicate P) {
