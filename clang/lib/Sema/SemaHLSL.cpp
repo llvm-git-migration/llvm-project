@@ -2012,9 +2012,8 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     };
 
     if (CheckArgTypeIsIncorrect(&SemaRef, Op0, SemaRef.Context.DoubleTy,
-                                CheckIsNotDouble)) {
+                                CheckIsNotDouble))
       return true;
-    }
 
     Expr *Op1 = TheCall->getArg(1);
     Expr *Op2 = TheCall->getArg(2);
@@ -2026,9 +2025,8 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     if (CheckArgTypeIsIncorrect(&SemaRef, Op1, SemaRef.Context.UnsignedIntTy,
                                 CheckIsNotUint) ||
         CheckArgTypeIsIncorrect(&SemaRef, Op2, SemaRef.Context.UnsignedIntTy,
-                                CheckIsNotUint)) {
+                                CheckIsNotUint))
       return true;
-    }
 
     break;
   }

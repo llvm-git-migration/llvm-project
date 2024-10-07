@@ -40,6 +40,7 @@
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Type.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <optional>
 using namespace clang;
@@ -4682,8 +4683,11 @@ void CallArg::copyInto(CodeGenFunction &CGF, Address Addr) const {
 }
 
 void CodeGenFunction::EmitWritebacks(CodeGenFunction &CGF,
-                                     const CallArgList &args) {
-  emitWritebacks(CGF, args);
+                                     const CallArgList &Args) {
+  if (getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee())
+    std::reverse_iterator(Args.writebacks().begin());
+
+  emitWritebacks(CGF, Args);
 }
 
 void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
