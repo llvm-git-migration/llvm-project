@@ -40,6 +40,7 @@
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Type.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <optional>
 using namespace clang;
@@ -4197,7 +4198,7 @@ static void emitWriteback(CodeGenFunction &CGF,
     // Release the old value.
     CGF.EmitARCRelease(oldValue, srcLV.isARCPreciseLifetime());
 
-  // Otherwise, we can just do a normal lvalue store.
+    // Otherwise, we can just do a normal lvalue store.
   } else {
     CGF.EmitStoreThroughLValue(RValue::get(value), srcLV);
   }
@@ -4205,12 +4206,6 @@ static void emitWriteback(CodeGenFunction &CGF,
   // Jump to the continuation block.
   if (!provablyNonNull)
     CGF.EmitBlock(contBB);
-}
-
-static void emitWritebacks(CodeGenFunction &CGF,
-                           const CallArgList &args) {
-  for (const auto &I : args.writebacks())
-    emitWriteback(CGF, I);
 }
 
 static void deactivateArgCleanupsBeforeCall(CodeGenFunction &CGF,
@@ -4681,9 +4676,9 @@ void CallArg::copyInto(CodeGenFunction &CGF, Address Addr) const {
   IsUsed = true;
 }
 
-void CodeGenFunction::EmitWritebacks(CodeGenFunction &CGF,
-                                     const CallArgList &args) {
-  emitWritebacks(CGF, args);
+void CodeGenFunction::EmitWritebacks(const CallArgList &args) {
+  for (const auto &I : args.writebacks())
+    emitWriteback(*this, I);
 }
 
 void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
@@ -5898,7 +5893,7 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
   // Emit any call-associated writebacks immediately.  Arguably this
   // should happen after any return-value munging.
   if (CallArgs.hasWritebacks())
-    emitWritebacks(*this, CallArgs);
+    CodeGenFunction::EmitWritebacks(CallArgs);
 
   // The stack cleanup for inalloca arguments has to run out of the normal
   // lexical order, so deactivate it and run it manually here.
