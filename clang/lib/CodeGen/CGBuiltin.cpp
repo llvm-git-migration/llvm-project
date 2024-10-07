@@ -34,14 +34,11 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/FloatingPointMode.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/DataLayout.h"
-#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsAArch64.h"
@@ -18912,8 +18909,8 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
             E->getArg(2)->getType()->hasUnsignedIntegerRepresentation()) &&
            "asuint operands types mismatch");
     Value *Op0 = EmitScalarExpr(E->getArg(0));
-    const HLSLOutArgExpr *OutArg1 = dyn_cast<HLSLOutArgExpr>(E->getArg(1));
-    const HLSLOutArgExpr *OutArg2 = dyn_cast<HLSLOutArgExpr>(E->getArg(2));
+    const auto *OutArg1 = dyn_cast<HLSLOutArgExpr>(E->getArg(1));
+    const auto *OutArg2 = dyn_cast<HLSLOutArgExpr>(E->getArg(2));
 
     CallArgList Args;
     auto [Op1BaseLValue, Op1TmpLValue] =
@@ -18921,75 +18918,142 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     auto [Op2BaseLValue, Op2TmpLValue] =
         EmitHLSLOutArgExpr(OutArg2, Args, OutArg2->getType());
 
-    if (CGM.getTarget().getTriple().getArch() == llvm::Triple::dxil) {
+    if (CGM.getTarget().getTriple().isDXIL()) {
 
-      llvm::StructType *retType = llvm::StructType::get(Int32Ty, Int32Ty);
+      llvm::StructType *RetType = nullptr;
 
       if (Op0->getType()->isVectorTy()) {
         auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>();
 
         llvm::VectorType *i32VecTy = llvm::VectorType::get(
             Int32Ty, ElementCount::getFixed(Op0VecTy->getNumElements()));
-        retType = llvm::StructType::get(i32VecTy, i32VecTy);
+        RetType = llvm::StructType::get(i32VecTy, i32VecTy);
+      } else {
+        RetType = llvm::StructType::get(Int32Ty, Int32Ty);
       }
 
       CallInst *CI =
-          Builder.CreateIntrinsic(retType, Intrinsic::dx_splitdouble, {Op0},
+          Builder.CreateIntrinsic(RetType, Intrinsic::dx_splitdouble, {Op0},
                                   nullptr, "hlsl.splitdouble");
 
-      Value *arg0 = Builder.CreateExtractValue(CI, 0);
-      Value *arg1 = Builder.CreateExtractValue(CI, 1);
+      Value *Arg0 = Builder.CreateExtractValue(CI, 0);
+      Value *Arg1 = Builder.CreateExtractValue(CI, 1);
+
+      Builder.CreateStore(Arg0, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(Arg1, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
+    }
+
+    assert(!CGM.getTarget().getTriple().isDXIL() &&
+           "For non-DXIL targets we generate the instructions");
+
+    if (!Op0->getType()->isVectorTy()) {
+      FixedVectorType *DestTy = FixedVectorType::get(Int32Ty, 2);
+      Value *Bitcast = Builder.CreateBitCast(Op0, DestTy);
+
+      Value *Arg0 = Builder.CreateExtractElement(Bitcast, 0.0);
+      Value *Arg1 = Builder.CreateExtractElement(Bitcast, 1.0);
+
+      Builder.CreateStore(Arg0, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(Arg1, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
+    }
+
+    auto emitVectorCode =
+        [](Value *Op, CGBuilderTy *Builder,
+           FixedVectorType *DestTy) -> std::pair<Value *, Value *> {
+      Value *bitcast = Builder->CreateBitCast(Op, DestTy);
+
+      SmallVector<int> LowbitsIndex;
+      SmallVector<int> HighbitsIndex;
+
+      for (unsigned int idx = 0; idx < DestTy->getNumElements(); idx += 2) {
+        LowbitsIndex.push_back(idx);
+        HighbitsIndex.push_back(idx + 1);
+      }
+
+      Value *Arg0 = Builder->CreateShuffleVector(bitcast, LowbitsIndex);
+      Value *Arg1 = Builder->CreateShuffleVector(bitcast, HighbitsIndex);
+
+      return std::make_pair(Arg0, Arg1);
+    };
+
+    const auto *TargTy = E->getArg(0)->getType()->getAs<VectorType>();
+
+    int numElements = TargTy->getNumElements();
+
+    switch (numElements) {
+    case 2: {
+
+      FixedVectorType *DestTy = FixedVectorType::get(Int32Ty, 4);
+
+      std::pair<Value *, Value *> Vec2res =
+          emitVectorCode(Op0, &Builder, DestTy);
+
+      Builder.CreateStore(Vec2res.first, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(Vec2res.second, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
+    }
+    case 3: {
+      FixedVectorType *DestTy = FixedVectorType::get(Int32Ty, 4);
+
+      auto Low = Builder.CreateShuffleVector(Op0, {0, 1});
+      // Second element in the index mask is useless.
+      // It is here just to make vectors with same size,
+      // which is a requirement for shuffle vector.
+      auto High = Builder.CreateShuffleVector(Op0, {2, 0});
+
+      std::pair<Value *, Value *> LowRes =
+          emitVectorCode(Low, &Builder, DestTy);
+      std::pair<Value *, Value *> HighRes =
+          emitVectorCode(High, &Builder, DestTy);
+
+      auto arg0 =
+          Builder.CreateShuffleVector(LowRes.first, HighRes.first, {0, 1, 2});
+      auto arg1 =
+          Builder.CreateShuffleVector(LowRes.second, HighRes.second, {0, 1, 2});
 
       Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
       auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
 
       EmitWritebacks(*this, Args);
       return s;
-    } 
-
-
-    if(!Op0->getType()->isVectorTy()){
-        FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 2);
-        Value *bitcast = Builder.CreateBitCast(Op0, destTy);
-
-        Value *arg0 = Builder.CreateExtractElement(bitcast, 0.0);
-        Value *arg1 = Builder.CreateExtractElement(bitcast, 1.0);
-
-        Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-        auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
-
-        EmitWritebacks(*this, Args);
-        return s;
     }
-    
-    auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>();
+    case 4: {
 
-    int numElements = Op0VecTy -> getNumElements() * 2;
+      FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 4);
 
-    FixedVectorType *destTy = FixedVectorType::get(Int32Ty, numElements);
-      
-    Value *bitcast = Builder.CreateBitCast(Op0, destTy);
+      auto Low = Builder.CreateShuffleVector(Op0, {0, 1});
+      auto High = Builder.CreateShuffleVector(Op0, {2, 3});
 
-    SmallVector<int> lowbitsIndex;
-    SmallVector<int> highbitsIndex;
+      std::pair<Value *, Value *> LowRes =
+          emitVectorCode(Low, &Builder, destTy);
+      std::pair<Value *, Value *> HighRes =
+          emitVectorCode(High, &Builder, destTy);
 
-    for(int idx = 0; idx < numElements; idx += 2){
-      lowbitsIndex.push_back(idx);
+      auto Arg0 = Builder.CreateShuffleVector(LowRes.first, HighRes.first,
+                                              {0, 1, 2, 3});
+      auto Arg1 = Builder.CreateShuffleVector(LowRes.second, HighRes.second,
+                                              {0, 1, 2, 3});
+
+      Builder.CreateStore(Arg0, Op1TmpLValue.getAddress());
+      Value *s = Builder.CreateStore(Arg1, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
     }
-
-    for(int idx = 1; idx < numElements; idx += 2){
-      highbitsIndex.push_back(idx);
+    default: {
+      CGM.Error(
+          E->getExprLoc(),
+          "Splitdouble has no support for vectors bigger than 4 elements.");
     }
-
-    Value *arg0 = Builder.CreateShuffleVector(bitcast, lowbitsIndex);
-    Value *arg1 = Builder.CreateShuffleVector(bitcast, highbitsIndex);
-
-    Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-    auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
-
-    EmitWritebacks(*this, Args);
-    return s;
-
+    }
   }
   }
   return nullptr;

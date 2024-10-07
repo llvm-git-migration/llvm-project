@@ -17,15 +17,12 @@
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instruction.h"
-#include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsDirectX.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/InitializePasses.h"
-#include "llvm/Object/Error.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 
 #define DEBUG_TYPE "dxil-op-lower"
@@ -493,12 +490,6 @@ public:
       IRB.SetInsertPoint(CI);
 
       Value *Arg0 = CI->getArgOperand(0);
-
-      if (Arg0->getType()->isVectorTy()) {
-        return make_error<StringError>(
-            "splitdouble doesn't support lowering vector types.",
-            inconvertibleErrorCode());
-      }
 
       Type *NewRetTy = OpBuilder.getResSplitDoubleType(M.getContext());
 
