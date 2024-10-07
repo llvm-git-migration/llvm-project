@@ -1998,19 +1998,17 @@ static bool impliesEquivalanceIfTrue(CmpInst* Cmp) {
   // +0.0 vs 0.0 for all operators
   if (Cmp->getPredicate() == CmpInst::Predicate::FCMP_OEQ ||
       (Cmp->getPredicate() == CmpInst::Predicate::FCMP_UEQ &&
-       Cmp->getFastMathFlags().noNaNs())) {
-      Value *LHS = Cmp->getOperand(0);
-      Value *RHS = Cmp->getOperand(1);
-      // If we can prove either side non-zero, then equality must imply
-      // equivalence.
-      // FIXME: We should do this optimization if 'no signed zeros' is
-      // applicable via an instruction-level fast-math-flag or some other
-      // indicator that relaxed FP semantics are being used.
-      if (isa<ConstantFP>(LHS) && !cast<ConstantFP>(LHS)->isZero())
+       Cmp->hasNoNaNs())) {
+    Value *LHS = Cmp->getOperand(0);
+    Value *RHS = Cmp->getOperand(1);
+    // If we can prove either side non-zero, then equality must imply
+    // equivalence.
+    auto *ConstLHS = dyn_cast<Constant>(LHS),
+         *ConstRHS = dyn_cast<Constant>(RHS);
+    if (auto *Const = ConstLHS ? ConstLHS : ConstRHS) {
+      if (!Const->isZeroValue())
         return true;
-      if (isa<ConstantFP>(RHS) && !cast<ConstantFP>(RHS)->isZero())
-        return true;
-      // TODO: Handle vector floating point constants
+    }
   }
   return false;
 }
@@ -2023,20 +2021,18 @@ static bool impliesEquivalanceIfFalse(CmpInst* Cmp) {
   // NaNs for unordered operators
   // +0.0 vs 0.0 for all operators
   if ((Cmp->getPredicate() == CmpInst::Predicate::FCMP_ONE &&
-       Cmp->getFastMathFlags().noNaNs()) ||
+       Cmp->hasNoNaNs()) ||
       Cmp->getPredicate() == CmpInst::Predicate::FCMP_UNE) {
-      Value *LHS = Cmp->getOperand(0);
-      Value *RHS = Cmp->getOperand(1);
-      // If we can prove either side non-zero, then equality must imply
-      // equivalence.
-      // FIXME: We should do this optimization if 'no signed zeros' is
-      // applicable via an instruction-level fast-math-flag or some other
-      // indicator that relaxed FP semantics are being used.
-      if (isa<ConstantFP>(LHS) && !cast<ConstantFP>(LHS)->isZero())
+    Value *LHS = Cmp->getOperand(0);
+    Value *RHS = Cmp->getOperand(1);
+    // If we can prove either side non-zero, then equality must imply
+    // equivalence.
+    auto *ConstLHS = dyn_cast<Constant>(LHS),
+         *ConstRHS = dyn_cast<Constant>(RHS);
+    if (auto *Const = ConstLHS ? ConstLHS : ConstRHS) {
+      if (!Const->isZeroValue())
         return true;
-      if (isa<ConstantFP>(RHS) && !cast<ConstantFP>(RHS)->isZero())
-        return true;
-      // TODO: Handle vector floating point constants
+    }
   }
   return false;
 }

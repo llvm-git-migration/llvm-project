@@ -115,7 +115,20 @@ if:
 return:
   %retval = phi double [ %div, %if ], [ %x, %entry ]
   ret double %retval
+}
 
+define <2 x double> @fcmp_oeq_not_zero_vec(<2 x double> %x, <2 x double> %y) {
+; CHECK-LABEL: define <2 x double> @fcmp_oeq_not_zero_vec(
+; CHECK-SAME: <2 x double> [[X:%.*]], <2 x double> [[Y:%.*]]) {
+; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq <2 x double> [[Y]], <double 2.000000e+00, double 2.000000e+00>
+; CHECK-NEXT:    [[DIV:%.*]] = fdiv <2 x double> [[X]], [[Y]]
+; CHECK-NEXT:    [[RETVAL:%.*]] = select <2 x i1> [[FCMP]], <2 x double> [[DIV]], <2 x double> [[X]]
+; CHECK-NEXT:    ret <2 x double> [[RETVAL]]
+;
+  %fcmp = fcmp oeq <2 x double> %y, <double 2.0, double 2.0>
+  %div = fdiv <2 x double> %x, %y
+  %retval = select <2 x i1> %fcmp, <2 x double> %div, <2 x double> %x
+  ret <2 x double> %retval
 }
 
 define double @fcmp_une_not_zero(double %x, double %y) {
@@ -142,7 +155,20 @@ else:
 return:
   %retval = phi double [ %div, %else ], [ %x, %entry ]
   ret double %retval
+}
 
+define <2 x double> @fcmp_une_not_zero_vec(<2 x double> %x, <2 x double> %y) {
+; CHECK-LABEL: define <2 x double> @fcmp_une_not_zero_vec(
+; CHECK-SAME: <2 x double> [[X:%.*]], <2 x double> [[Y:%.*]]) {
+; CHECK-NEXT:    [[FCMP:%.*]] = fcmp une <2 x double> [[Y]], <double 2.000000e+00, double 2.000000e+00>
+; CHECK-NEXT:    [[DIV:%.*]] = fdiv <2 x double> [[X]], [[Y]]
+; CHECK-NEXT:    [[RETVAL:%.*]] = select <2 x i1> [[FCMP]], <2 x double> [[X]], <2 x double> [[DIV]]
+; CHECK-NEXT:    ret <2 x double> [[RETVAL]]
+;
+  %fcmp = fcmp une <2 x double> %y, <double 2.0, double 2.0>
+  %div = fdiv <2 x double> %x, %y
+  %retval = select <2 x i1> %fcmp, <2 x double> %x, <2 x double> %div
+  ret <2 x double> %retval
 }
 
 define double @fcmp_one_possibly_nan(double %x, double %y) {
