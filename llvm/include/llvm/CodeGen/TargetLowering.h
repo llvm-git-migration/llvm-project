@@ -5586,8 +5586,8 @@ public:
 
   /// If this function returns true, SelectionDAGBuilder emits a
   /// LOAD_STACK_GUARD node when it is lowering Intrinsic::stackprotector.
-  virtual bool useLoadStackGuardNode() const {
-    return false;
+  virtual bool useLoadStackGuardNode(const Module &M) const {
+    return useLoadStackGuardNode();
   }
 
   virtual SDValue emitStackGuardXorFP(SelectionDAG &DAG, SDValue Val,
@@ -5615,6 +5615,10 @@ public:
   virtual bool isXAndYEqZeroPreferableToXAndYEqY(ISD::CondCode, EVT) const {
     return true;
   }
+
+protected:
+  // Simple interface for targets without a Module dependency
+  virtual bool useLoadStackGuardNode() const { return false; }
 
 private:
   SDValue foldSetCCWithAnd(EVT VT, SDValue N0, SDValue N1, ISD::CondCode Cond,
