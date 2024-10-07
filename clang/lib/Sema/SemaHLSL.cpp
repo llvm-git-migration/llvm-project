@@ -1698,7 +1698,7 @@ static bool CheckVectorElementCallArgs(Sema *S, CallExpr *TheCall) {
   return true;
 }
 
-bool CheckArgTypeIsIncorrect(
+bool CheckArgTypeIsCorrect(
     Sema *S, Expr *Arg, QualType ExpectedType,
     llvm::function_ref<bool(clang::QualType PassedType)> Check) {
   QualType PassedType = Arg->getType();
@@ -1718,7 +1718,7 @@ bool CheckArgsTypesAreCorrect(
     llvm::function_ref<bool(clang::QualType PassedType)> Check) {
   for (unsigned i = 0; i < TheCall->getNumArgs(); ++i) {
     Expr *Arg = TheCall->getArg(i);
-    if (CheckArgTypeIsIncorrect(S, Arg, ExpectedType, Check)) {
+    if (CheckArgTypeIsCorrect(S, Arg, ExpectedType, Check)) {
       return true;
     }
   }
@@ -2083,34 +2083,32 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
     break;
   }
-  case Builtin::BI__builtin_hlsl_splitdouble: {
+  case Builtin::BI__builtin_hlsl_elementwise_splitdouble: {
     if (SemaRef.checkArgCount(TheCall, 3))
       return true;
 
     Expr *Op0 = TheCall->getArg(0);
 
-    auto CheckIsNotDouble = [](clang::QualType PassedType) -> bool {
+    auto CheckIsDouble = [](clang::QualType PassedType) -> bool {
       return !PassedType->hasFloatingRepresentation();
     };
 
-    if (CheckArgTypeIsIncorrect(&SemaRef, Op0, SemaRef.Context.DoubleTy,
-                                CheckIsNotDouble)) {
+    if (CheckArgTypeIsCorrect(&SemaRef, Op0, SemaRef.Context.DoubleTy,
+                              CheckIsDouble))
       return true;
-    }
 
     Expr *Op1 = TheCall->getArg(1);
     Expr *Op2 = TheCall->getArg(2);
 
-    auto CheckIsNotUint = [](clang::QualType PassedType) -> bool {
+    auto CheckIsUint = [](clang::QualType PassedType) -> bool {
       return !PassedType->hasUnsignedIntegerRepresentation();
     };
 
-    if (CheckArgTypeIsIncorrect(&SemaRef, Op1, SemaRef.Context.UnsignedIntTy,
-                                CheckIsNotUint) ||
-        CheckArgTypeIsIncorrect(&SemaRef, Op2, SemaRef.Context.UnsignedIntTy,
-                                CheckIsNotUint)) {
+    if (CheckArgTypeIsCorrect(&SemaRef, Op1, SemaRef.Context.UnsignedIntTy,
+                              CheckIsUint) ||
+        CheckArgTypeIsCorrect(&SemaRef, Op2, SemaRef.Context.UnsignedIntTy,
+                              CheckIsUint))
       return true;
-    }
 
     break;
   }
