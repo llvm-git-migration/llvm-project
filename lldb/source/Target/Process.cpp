@@ -6566,7 +6566,8 @@ static void AddSegmentRegisterSections(Process &process, ThreadSP &thread_sp,
   AddRegion(thread_local_region, true, ranges);
 }
 
-static void AddLinkMapSections(Process &process, CoreFileMemoryRanges &ranges) {
+static void AddLinkMapSections(Process &process, CoreFileMemoryRanges &ranges,
+                               std::set<addr_t> &stack_ends) {
   ModuleList &module_list = process.GetTarget().GetImages();
   Target *target = &process.GetTarget();
   for (size_t idx = 0; idx < module_list.GetSize(); idx++) {
@@ -6585,6 +6586,11 @@ static void AddLinkMapSections(Process &process, CoreFileMemoryRanges &ranges) {
     MemoryRegionInfo link_map_section;
     Status err = process.GetMemoryRegionInfo(load_addr, link_map_section);
     if (err.Fail())
+      continue;
+
+    // Sometimes, the link map section is included in one of the stack memory
+    // ranges. In that case, we already saved a truncated version of that range
+    if (stack_ends.count(link_map_section.GetRange().GetRangeEnd()) == 0)
       continue;
 
     AddRegion(link_map_section, true, ranges);
@@ -6743,7 +6749,7 @@ Status Process::CalculateCoreFileSaveRanges(const SaveCoreOptions &options,
     SaveOffRegionsWithStackPointers(*this, options, regions, ranges,
                                     stack_ends);
     // We need the link map for TLS data.
-    AddLinkMapSections(*this, ranges);
+    AddLinkMapSections(*this, ranges, stack_ends);
   }
 
   switch (core_style) {
