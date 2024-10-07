@@ -1351,9 +1351,9 @@ void VPlanTransforms::addActiveLaneMask(
 }
 
 /// Replace recipes with their EVL variants.
-static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL,
-                                         LLVMContext &Ctx) {
+static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   using namespace llvm::VPlanPatternMatch;
+  LLVMContext &Ctx = Plan.getCanonicalIV()->getScalarType()->getContext();
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
     for (VPUser *U : collectUsersRecursively(HeaderMask)) {
@@ -1487,8 +1487,7 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
   NextEVLIV->insertBefore(CanonicalIVIncrement);
   EVLPhi->addOperand(NextEVLIV);
 
-  LLVMContext &Ctx = CanonicalIVPHI->getScalarType()->getContext();
-  transformRecipestoEVLRecipes(Plan, *VPEVL, Ctx);
+  transformRecipestoEVLRecipes(Plan, *VPEVL);
 
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.
