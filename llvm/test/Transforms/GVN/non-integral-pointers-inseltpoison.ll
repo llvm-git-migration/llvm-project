@@ -369,7 +369,7 @@ entry:
 
 declare void @use.v2(<2 x ptr addrspace(4)>)
 declare void @use.v4(<4 x ptr addrspace(4)>)
- define ptr addrspace(5) @multini(i1 %alwaysFalse, ptr addrspace(4) %val, ptr %loc) {
+  define ptr addrspace(5) @multini(i1 %alwaysFalse, ptr addrspace(4) %val, ptr %loc) {
 ; CHECK-LABEL: @multini(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    store ptr addrspace(4) [[VAL:%.*]], ptr [[LOC:%.*]], align 8

@@ -10,7 +10,7 @@ define void @widget(ptr %tmp1) {
 ; CHECK-LABEL: @widget(
 ; CHECK-NEXT:  bb:
 ; CHECK-NEXT:    callbr void asm sideeffect "", "!i,!i"()
-; CHECK-NEXT:    to label [[BB4:%.*]] [label [[BB5:%.*]], label %bb.bb8_crit_edge]
+; CHECK-NEXT:            to label [[BB4:%.*]] [label [[BB5:%.*]], label %bb.bb8_crit_edge]
 ; CHECK:       bb.bb8_crit_edge:
 ; CHECK-NEXT:    [[TMP10_PRE:%.*]] = load ptr, ptr [[TMP1:%.*]], align 8
 ; CHECK-NEXT:    br label [[BB8:%.*]]

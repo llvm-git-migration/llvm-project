@@ -9,7 +9,7 @@ define void @wombat(i64 %arg, ptr %arg1, i64 %arg2, ptr %arg3) {
 ; CHECK-NEXT:  bb:
 ; CHECK-NEXT:    [[TMP5:%.*]] = or i64 [[ARG2:%.*]], [[ARG:%.*]]
 ; CHECK-NEXT:    callbr void asm sideeffect "", "!i,!i"()
-; CHECK-NEXT:    to label [[BB6:%.*]] [label [[BB7:%.*]], label %bb.bb9_crit_edge]
+; CHECK-NEXT:            to label [[BB6:%.*]] [label [[BB7:%.*]], label %bb.bb9_crit_edge]
 ; CHECK:       bb.bb9_crit_edge:
 ; CHECK-NEXT:    [[DOTPRE:%.*]] = trunc i64 [[TMP5]] to i32
 ; CHECK-NEXT:    br label [[BB9:%.*]]
