@@ -192,6 +192,8 @@ public:
     return false;
   }
 
+  unsigned getEpilogueVectorizationMinVF() const { return 16; }
+
   bool preferPredicateOverEpilogue(TailFoldingInfo *TFI) const { return false; }
 
   TailFoldingStyle

@@ -4581,6 +4581,10 @@ static bool containsDecreasingPointers(Loop *TheLoop,
   return false;
 }
 
+unsigned AArch64TTIImpl::getEpilogueVectorizationMinVF() const {
+  return ST->getEpilogueVectorizationMinVF();
+}
+
 bool AArch64TTIImpl::preferPredicateOverEpilogue(TailFoldingInfo *TFI) {
   if (!ST->hasSVE())
     return false;
