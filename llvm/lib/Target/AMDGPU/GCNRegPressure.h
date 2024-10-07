@@ -223,14 +223,6 @@ public:
   /// to false allows for an externally managed iterator / program order.
   void recede(const MachineInstr &MI);
 
-  /// Mostly copy/paste from CodeGen/RegisterPressure.cpp
-  /// Calculate the impact \p MI will have on CurPressure and MaxPressure. This
-  /// does not rely on the implicit program ordering in the LiveIntervals to
-  /// support RP Speculation. It leaves the state of pressure inconsistent with
-  /// the current position
-  GCNRegPressure bumpUpwardPressure(const MachineInstr *MI,
-                                    const SIRegisterInfo *TRI) const;
-
   /// \p returns whether the tracker's state after receding MI corresponds
   /// to reported by LIS.
   bool isValid() const;
