@@ -456,7 +456,6 @@ void asuint(double3, out uint3, out uint3);
 _HLSL_BUILTIN_ALIAS(__builtin_hlsl_splitdouble)
 void asuint(double4, out uint4, out uint4);
 
-
 //===----------------------------------------------------------------------===//
 // atan builtins
 //===----------------------------------------------------------------------===//

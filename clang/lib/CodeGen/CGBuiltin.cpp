@@ -34,14 +34,11 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/FloatingPointMode.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/DataLayout.h"
-#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsAArch64.h"
@@ -18904,7 +18901,6 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
         CGM.getHLSLRuntime().getRadiansIntrinsic(), ArrayRef<Value *>{Op0},
         nullptr, "hlsl.radians");
   }
-  // This should only be called when targeting DXIL
   case Builtin::BI__builtin_hlsl_splitdouble: {
 
     assert((E->getArg(0)->getType()->hasFloatingRepresentation() &&
@@ -18912,8 +18908,8 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
             E->getArg(2)->getType()->hasUnsignedIntegerRepresentation()) &&
            "asuint operands types mismatch");
     Value *Op0 = EmitScalarExpr(E->getArg(0));
-    const HLSLOutArgExpr *OutArg1 = dyn_cast<HLSLOutArgExpr>(E->getArg(1));
-    const HLSLOutArgExpr *OutArg2 = dyn_cast<HLSLOutArgExpr>(E->getArg(2));
+    const auto *OutArg1 = dyn_cast<HLSLOutArgExpr>(E->getArg(1));
+    const auto *OutArg2 = dyn_cast<HLSLOutArgExpr>(E->getArg(2));
 
     CallArgList Args;
     auto [Op1BaseLValue, Op1TmpLValue] =
@@ -18921,75 +18917,117 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
     auto [Op2BaseLValue, Op2TmpLValue] =
         EmitHLSLOutArgExpr(OutArg2, Args, OutArg2->getType());
 
-    if (CGM.getTarget().getTriple().getArch() == llvm::Triple::dxil) {
+    if (getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee())
+      Args.reverseWritebacks();
 
-      llvm::StructType *retType = llvm::StructType::get(Int32Ty, Int32Ty);
+    auto EmitVectorCode =
+        [](Value *Op, CGBuilderTy *Builder,
+           FixedVectorType *DestTy) -> std::pair<Value *, Value *> {
+      Value *bitcast = Builder->CreateBitCast(Op, DestTy);
 
-      if (Op0->getType()->isVectorTy()) {
-        auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>();
+      SmallVector<int> LowbitsIndex;
+      SmallVector<int> HighbitsIndex;
 
-        llvm::VectorType *i32VecTy = llvm::VectorType::get(
-            Int32Ty, ElementCount::getFixed(Op0VecTy->getNumElements()));
-        retType = llvm::StructType::get(i32VecTy, i32VecTy);
+      for (unsigned int Idx = 0; Idx < DestTy->getNumElements(); Idx += 2) {
+        LowbitsIndex.push_back(Idx);
+        HighbitsIndex.push_back(Idx + 1);
       }
 
-      CallInst *CI =
-          Builder.CreateIntrinsic(retType, Intrinsic::dx_splitdouble, {Op0},
-                                  nullptr, "hlsl.splitdouble");
+      Value *Arg0 = Builder->CreateShuffleVector(bitcast, LowbitsIndex);
+      Value *Arg1 = Builder->CreateShuffleVector(bitcast, HighbitsIndex);
 
-      Value *arg0 = Builder.CreateExtractValue(CI, 0);
-      Value *arg1 = Builder.CreateExtractValue(CI, 1);
+      return std::make_pair(Arg0, Arg1);
+    };
 
-      Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-      auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+    Value *LastInst = nullptr;
 
-      EmitWritebacks(*this, Args);
-      return s;
-    } 
+    if (CGM.getTarget().getTriple().isDXIL()) {
 
+      llvm::Type *RetElementTy = Int32Ty;
+      if (auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>())
+        RetElementTy = llvm::VectorType::get(
+            Int32Ty, ElementCount::getFixed(Op0VecTy->getNumElements()));
+      auto *RetTy = llvm::StructType::get(RetElementTy, RetElementTy);
 
-    if(!Op0->getType()->isVectorTy()){
-        FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 2);
-        Value *bitcast = Builder.CreateBitCast(Op0, destTy);
+      CallInst *CI = Builder.CreateIntrinsic(
+          RetTy, Intrinsic::dx_splitdouble, {Op0}, nullptr, "hlsl.splitdouble");
 
-        Value *arg0 = Builder.CreateExtractElement(bitcast, 0.0);
-        Value *arg1 = Builder.CreateExtractElement(bitcast, 1.0);
+      Value *Arg0 = Builder.CreateExtractValue(CI, 0);
+      Value *Arg1 = Builder.CreateExtractValue(CI, 1);
 
-        Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-        auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+      Builder.CreateStore(Arg0, Op1TmpLValue.getAddress());
+      LastInst = Builder.CreateStore(Arg1, Op2TmpLValue.getAddress());
 
-        EmitWritebacks(*this, Args);
-        return s;
+    } else {
+
+      assert(!CGM.getTarget().getTriple().isDXIL() &&
+             "For non-DXIL targets we generate the instructions");
+
+      if (!Op0->getType()->isVectorTy()) {
+        FixedVectorType *DestTy = FixedVectorType::get(Int32Ty, 2);
+        Value *Bitcast = Builder.CreateBitCast(Op0, DestTy);
+
+        Value *Arg0 = Builder.CreateExtractElement(Bitcast, 0.0);
+        Value *Arg1 = Builder.CreateExtractElement(Bitcast, 1.0);
+
+        Builder.CreateStore(Arg0, Op1TmpLValue.getAddress());
+        LastInst = Builder.CreateStore(Arg1, Op2TmpLValue.getAddress());
+      } else {
+
+        const auto *TargTy = E->getArg(0)->getType()->getAs<VectorType>();
+
+        int NumElements = TargTy->getNumElements();
+
+        FixedVectorType *DestTy = FixedVectorType::get(Int32Ty, 4);
+        if (NumElements == 2) {
+          std::pair<Value *, Value *> Vec2res =
+              EmitVectorCode(Op0, &Builder, DestTy);
+
+          Builder.CreateStore(Vec2res.first, Op1TmpLValue.getAddress());
+          LastInst =
+              Builder.CreateStore(Vec2res.second, Op2TmpLValue.getAddress());
+        } else {
+
+          SmallVector<std::pair<Value *, Value *>> EmitedValuePairs;
+
+          for (int It = 0; It < NumElements; It += 2) {
+            // Second element in the index mask might be useless if NumElements
+            // is odd. It is here just to make vectors with same size, which is
+            // a requirement for shuffle vector.
+            auto Shuff = Builder.CreateShuffleVector(
+                Op0, {It, ((It + 1) % NumElements)});
+            std::pair<Value *, Value *> ValuePair =
+                EmitVectorCode(Shuff, &Builder, DestTy);
+            EmitedValuePairs.push_back(ValuePair);
+          }
+
+          SmallVector<int> Index;
+          auto InitSize = NumElements > 4 ? 4 : NumElements;
+          for (int It = 0; It < InitSize; It++)
+            Index.push_back(It);
+
+          auto arg0 = Builder.CreateShuffleVector(
+              EmitedValuePairs[0].first, EmitedValuePairs[1].first, Index);
+          auto arg1 = Builder.CreateShuffleVector(
+              EmitedValuePairs[0].second, EmitedValuePairs[1].second, Index);
+
+          for (size_t It = 2; It < EmitedValuePairs.size(); It++) {
+            int CurIndexSize = Index.size();
+            Index.insert(Index.end(), {CurIndexSize + 1,
+                                       ((CurIndexSize + 2) % NumElements)});
+            arg0 = Builder.CreateShuffleVector(arg0, EmitedValuePairs[It].first,
+                                               Index);
+            arg1 = Builder.CreateShuffleVector(
+                arg1, EmitedValuePairs[It].second, Index);
+          }
+
+          Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
+          LastInst = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+        }
+      }
     }
-    
-    auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>();
-
-    int numElements = Op0VecTy -> getNumElements() * 2;
-
-    FixedVectorType *destTy = FixedVectorType::get(Int32Ty, numElements);
-      
-    Value *bitcast = Builder.CreateBitCast(Op0, destTy);
-
-    SmallVector<int> lowbitsIndex;
-    SmallVector<int> highbitsIndex;
-
-    for(int idx = 0; idx < numElements; idx += 2){
-      lowbitsIndex.push_back(idx);
-    }
-
-    for(int idx = 1; idx < numElements; idx += 2){
-      highbitsIndex.push_back(idx);
-    }
-
-    Value *arg0 = Builder.CreateShuffleVector(bitcast, lowbitsIndex);
-    Value *arg1 = Builder.CreateShuffleVector(bitcast, highbitsIndex);
-
-    Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-    auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
-
     EmitWritebacks(*this, Args);
-    return s;
-
+    return LastInst;
   }
   }
   return nullptr;

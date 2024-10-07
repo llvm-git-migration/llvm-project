@@ -5152,7 +5152,10 @@ public:
                            unsigned ParmNum);
 
   /// EmitWriteback - Emit callbacks for function.
-  void EmitWritebacks(CodeGenFunction &CGF, const CallArgList &args);
+  void EmitWritebacks(CodeGenFunction &CGF, const CallArgList &Args);
+
+  void EmitWriteback(CodeGenFunction &CGF,
+                     const CallArgList::Writeback &writeback);
 
   /// EmitCallArg - Emit a single call argument.
   void EmitCallArg(CallArgList &args, const Expr *E, QualType ArgType);
