@@ -176,6 +176,26 @@ public:
       Result.emplace_back(Intersection.To->getNextNode(), To);
     return Result;
   }
+  /// A difference that asserts that the result is a single interval.
+  Interval getSingleDiff(const Interval &Other) {
+    auto Diff = *this - Other;
+    assert(Diff.size() == 1 && "Expected a single interval!");
+    return Diff[0];
+  }
+  /// \Returns a single interval that spans across both this and \p Other.
+  // For example:
+  // |---|        this
+  //        |---| Other
+  // |----------| this->getUnionInterval(Other)
+  Interval getUnionInterval(const Interval &Other) {
+    if (empty())
+      return Other;
+    if (Other.empty())
+      return *this;
+    auto *NewFrom = From->comesBefore(Other.From) ? From : Other.From;
+    auto *NewTo = To->comesBefore(Other.To) ? Other.To : To;
+    return {NewFrom, NewTo};
+  }
 };
 
 } // namespace llvm::sandboxir
