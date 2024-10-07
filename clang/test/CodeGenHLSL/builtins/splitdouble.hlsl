@@ -25,9 +25,12 @@ uint test_scalar(double D) {
 // CHECK-NEXT: extractvalue { <3 x i32>, <3 x i32> } [[VALRET]], 1
 // SPIRV: define spir_func {{.*}} <3 x i32> {{.*}}test_vector{{.*}}(<3 x double> {{.*}} [[VALD:%.*]])
 // SPIRV-NOT: @llvm.dx.splitdouble.i32
-// SPIRV: [[CAST:%.*]] = bitcast <3 x double> [[VALD]] to <6 x i32>
-// SPIRV-NEXT: shufflevector <6 x i32> [[CAST]], <6 x i32> poison, <3 x i32> <i32 0, i32 2, i32 4>
-// SPIRV-NEXT: shufflevector <6 x i32> [[CAST]], <6 x i32> poison, <3 x i32> <i32 1, i32 3, i32 5>
+// SPIRV: [[VALRET1:%.*]] = shufflevector <3 x double> [[VALD]], <3 x double> poison, <2 x i32> <i32 0, i32 1>
+// SPIRV: [[VALRET2:%.*]] = shufflevector <3 x double> [[VALD]], <3 x double> poison, <2 x i32> <i32 2, i32 0>
+// SPIRV: [[CAST1:%.*]] = bitcast <2 x double> [[VALRET1]] to <4 x i32>
+// SPIRV: [[CAST2:%.*]] = bitcast <2 x double> [[VALRET2]] to <4 x i32>
+// SPIRV: shufflevector <4 x i32> [[CAST1]], <4 x i32> [[CAST2]], <3 x i32> <i32 0, i32 2, i32 4>
+// SPIRV: shufflevector <4 x i32> [[CAST1]], <4 x i32> [[CAST2]], <3 x i32> <i32 1, i32 3, i32 5>
 uint3 test_vector(double3 D) {
   uint3 A, B;
   asuint(D, A, B);

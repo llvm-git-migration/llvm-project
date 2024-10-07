@@ -34,14 +34,11 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/FloatingPointMode.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/DataLayout.h"
-#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsAArch64.h"
@@ -18961,35 +18958,93 @@ case Builtin::BI__builtin_hlsl_elementwise_isinf: {
         EmitWritebacks(*this, Args);
         return s;
     }
-    
-    auto *Op0VecTy = E->getArg(0)->getType()->getAs<VectorType>();
 
-    int numElements = Op0VecTy -> getNumElements() * 2;
+    auto emitVectorCode =
+        [](Value *Op, CGBuilderTy *Builder,
+           FixedVectorType *DestTy) -> std::pair<Value *, Value *> {
+      Value *bitcast = Builder->CreateBitCast(Op, DestTy);
 
-    FixedVectorType *destTy = FixedVectorType::get(Int32Ty, numElements);
-      
-    Value *bitcast = Builder.CreateBitCast(Op0, destTy);
+      SmallVector<int> lowbitsIndex;
+      SmallVector<int> highbitsIndex;
 
-    SmallVector<int> lowbitsIndex;
-    SmallVector<int> highbitsIndex;
+      for (unsigned int idx = 0; idx < DestTy->getNumElements(); idx += 2) {
+        lowbitsIndex.push_back(idx);
+        highbitsIndex.push_back(idx + 1);
+      }
 
-    for(int idx = 0; idx < numElements; idx += 2){
-      lowbitsIndex.push_back(idx);
+      Value *arg0 = Builder->CreateShuffleVector(bitcast, lowbitsIndex);
+      Value *arg1 = Builder->CreateShuffleVector(bitcast, highbitsIndex);
+
+      return std::make_pair(arg0, arg1);
+    };
+
+    const VectorType *targTy = E->getArg(0)->getType()->getAs<VectorType>();
+
+    int numElements = targTy->getNumElements();
+
+    switch (numElements) {
+    case 2: {
+
+      FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 4);
+
+      auto vec2res = emitVectorCode(Op0, &Builder, destTy);
+
+      Builder.CreateStore(vec2res.first, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(vec2res.second, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
     }
+    case 3: {
+      FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 4);
 
-    for(int idx = 1; idx < numElements; idx += 2){
-      highbitsIndex.push_back(idx);
+      auto low = Builder.CreateShuffleVector(Op0, {0, 1});
+      // Second element in the index mask is useless.
+      // It is here just to make vectors with same size,
+      // which is a requirement for shuffle vector.
+      auto high = Builder.CreateShuffleVector(Op0, {2, 0});
+
+      auto lowRes = emitVectorCode(low, &Builder, destTy);
+      auto highRes = emitVectorCode(high, &Builder, destTy);
+
+      auto arg0 =
+          Builder.CreateShuffleVector(lowRes.first, highRes.first, {0, 1, 2});
+      auto arg1 =
+          Builder.CreateShuffleVector(lowRes.second, highRes.second, {0, 1, 2});
+
+      Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
     }
+    case 4: {
 
-    Value *arg0 = Builder.CreateShuffleVector(bitcast, lowbitsIndex);
-    Value *arg1 = Builder.CreateShuffleVector(bitcast, highbitsIndex);
+      FixedVectorType *destTy = FixedVectorType::get(Int32Ty, 4);
 
-    Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
-    auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+      auto low = Builder.CreateShuffleVector(Op0, {0, 1});
+      auto high = Builder.CreateShuffleVector(Op0, {2, 3});
 
-    EmitWritebacks(*this, Args);
-    return s;
+      auto lowRes = emitVectorCode(low, &Builder, destTy);
+      auto highRes = emitVectorCode(high, &Builder, destTy);
 
+      auto arg0 = Builder.CreateShuffleVector(lowRes.first, highRes.first,
+                                              {0, 1, 2, 3});
+      auto arg1 = Builder.CreateShuffleVector(lowRes.second, highRes.second,
+                                              {0, 1, 2, 3});
+
+      Builder.CreateStore(arg0, Op1TmpLValue.getAddress());
+      auto *s = Builder.CreateStore(arg1, Op2TmpLValue.getAddress());
+
+      EmitWritebacks(*this, Args);
+      return s;
+    }
+    default: {
+      CGM.Error(
+          E->getExprLoc(),
+          "Splitdouble has no support for vectors bigger than 4 elements.");
+    }
+    }
   }
   }
   return nullptr;
