@@ -1277,10 +1277,19 @@ public:
     return 1;
   }
 
-  InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
-                                     TTI::TargetCostKind CostKind,
-                                     unsigned Index, Value *Op0, Value *Op1) {
+  virtual InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
+                                             TTI::TargetCostKind CostKind,
+                                             unsigned Index, Value *Op0,
+                                             Value *Op1) {
     return getRegUsageForType(Val->getScalarType());
+  }
+
+  InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Scalar,
+      const ArrayRef<std::tuple<Value *, User *, int>> ScalarUserAndIdx
+      ) {
+    return getVectorInstrCost(Opcode, Val, CostKind, Index, nullptr, nullptr);
   }
 
   InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
