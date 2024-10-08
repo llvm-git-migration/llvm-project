@@ -352,16 +352,6 @@ static LaneBitmask findUseBetween(unsigned Reg, LaneBitmask LastUseMask,
   return LastUseMask;
 }
 
-/// Mostly copy/paste from CodeGen/RegisterPressure.cpp
-static LaneBitmask getLiveLanesAt(const LiveIntervals &LIS,
-                                  const MachineRegisterInfo &MRI,
-                                  bool TrackLaneMasks, Register RegUnit,
-                                  SlotIndex Pos) {
-  return getLanesWithProperty(
-      LIS, MRI, TrackLaneMasks, RegUnit, Pos, LaneBitmask::getAll(),
-      [](const LiveRange &LR, SlotIndex Pos) { return LR.liveAt(Pos); });
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // GCNRPTracker
 

@@ -179,7 +179,8 @@ static void getRegisterPressures(
     NewPressure = TempDownwardTracker.bumpDownwardPressure(MI, SRI);
   } else {
     GCNUpwardRPTracker TempUpwardTracker(UpwardTracker);
-    NewPressure = TempUpwardTracker.bumpUpwardPressure(MI, SRI);
+    TempUpwardTracker.recede(*MI);
+    NewPressure = TempUpwardTracker.getPressure();
   }
   Pressure[AMDGPU::RegisterPressureSets::SReg_32] = NewPressure.getSGPRNum();
   Pressure[AMDGPU::RegisterPressureSets::VGPR_32] =
