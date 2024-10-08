@@ -2268,12 +2268,12 @@ static bool neverReturns(const CFGBlock *B) {
 void ThreadSafetyAnalyzer::checkMismatchedFunctionAttrs( const NamedDecl *ND) {
 
   auto collectCapabilities = [&](const Decl *D) {
-    llvm::SmallVector<CapabilityExpr> Args;
+    CapExprSet Caps;
     for (const auto *A : D->specific_attrs<RequiresCapabilityAttr>()) {
       for (const Expr *E : A->args())
-        Args.push_back(SxBuilder.translateAttrExpr(E, nullptr));
+        Caps.push_back_nodup(SxBuilder.translateAttrExpr(E, nullptr));
     }
-    return Args;
+    return Caps;
   };
 
   auto NDArgs = collectCapabilities(ND);
@@ -2282,9 +2282,8 @@ void ThreadSafetyAnalyzer::checkMismatchedFunctionAttrs( const NamedDecl *ND) {
     auto DArgs = collectCapabilities(D);
 
     for (const auto &[A, B] : zip_longest(NDArgs, DArgs)) {
-      if (!A || !B || !(*A).equals(*B)) {
+      if (!A || !B || !(*A).equals(*B))
         Handler.handleAttributeMismatch(cast<NamedDecl>(ND), cast<NamedDecl>(D));
-      }
     }
   }
 }
