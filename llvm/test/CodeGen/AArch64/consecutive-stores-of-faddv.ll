@@ -6,6 +6,7 @@
 ; be matched by DAGCombiner::mergeConsecutiveStores(), which we want to avoid in
 ; some cases as it can lead to worse codegen.
 
+; TODO: A single `stp s0, s1, [x0]` may be preferred here.
 define void @consecutive_stores_pair(ptr noalias %dest0, ptr noalias %src0) {
 ; CHECK-LABEL: consecutive_stores_pair:
 ; CHECK:       // %bb.0:
@@ -74,17 +75,12 @@ define void @consecutive_stores_quadruple(ptr noalias %dest0, ptr noalias %src0)
 define void @consecutive_stores_pair_streaming_function(ptr noalias %dest0, ptr noalias %src0) #0 "aarch64_pstate_sm_enabled"  {
 ; CHECK-LABEL: consecutive_stores_pair_streaming_function:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    sub sp, sp, #16
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    ptrue p0.s
-; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x1, #1, mul vl]
-; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x1]
+; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x1]
+; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x1, #1, mul vl]
 ; CHECK-NEXT:    faddv s0, p0, z0.s
 ; CHECK-NEXT:    faddv s1, p0, z1.s
-; CHECK-NEXT:    stp s1, s0, [sp, #8]
-; CHECK-NEXT:    ldr d0, [sp, #8]
-; CHECK-NEXT:    str d0, [x0]
-; CHECK-NEXT:    add sp, sp, #16
+; CHECK-NEXT:    stp s0, s1, [x0]
 ; CHECK-NEXT:    ret
   %ptrue = call <vscale x 4 x i1> @llvm.aarch64.sve.ptrue.nxv4i1(i32 31)
   %vscale = call i64 @llvm.vscale.i64()
@@ -106,20 +102,14 @@ define void @consecutive_stores_quadruple_streaming_function(ptr noalias %dest0,
 ; CHECK-NEXT:    ptrue p0.s
 ; CHECK-NEXT:    ld1w { z0.s }, p0/z, [x1]
 ; CHECK-NEXT:    ld1w { z1.s }, p0/z, [x1, #1, mul vl]
-; CHECK-NEXT:    ld1w { z2.s }, p0/z, [x1, #3, mul vl]
-; CHECK-NEXT:    ld1w { z3.s }, p0/z, [x1, #2, mul vl]
+; CHECK-NEXT:    ld1w { z2.s }, p0/z, [x1, #2, mul vl]
+; CHECK-NEXT:    ld1w { z3.s }, p0/z, [x1, #3, mul vl]
 ; CHECK-NEXT:    faddv s0, p0, z0.s
 ; CHECK-NEXT:    faddv s1, p0, z1.s
 ; CHECK-NEXT:    faddv s2, p0, z2.s
+; CHECK-NEXT:    stp s0, s1, [x0]
 ; CHECK-NEXT:    faddv s3, p0, z3.s
-; CHECK-NEXT:    stp s0, s1, [sp, #-16]!
-; CHECK-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-NEXT:    ldr d0, [sp]
-; CHECK-NEXT:    str d0, [x0]
-; CHECK-NEXT:    stp s3, s2, [sp, #8]
-; CHECK-NEXT:    ldr d0, [sp, #8]
-; CHECK-NEXT:    str d0, [x0, #8]
-; CHECK-NEXT:    add sp, sp, #16
+; CHECK-NEXT:    stp s2, s3, [x0, #8]
 ; CHECK-NEXT:    ret
   %ptrue = call <vscale x 4 x i1> @llvm.aarch64.sve.ptrue.nxv4i1(i32 31)
   %vscale = call i64 @llvm.vscale.i64()
