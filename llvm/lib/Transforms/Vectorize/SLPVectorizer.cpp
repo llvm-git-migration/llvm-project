@@ -11633,6 +11633,17 @@ InstructionCost BoUpSLP::getTreeCost(ArrayRef<Value *> VectorizedVals) {
   std::optional<DenseMap<Value *, unsigned>> ValueToExtUses;
   DenseMap<const TreeEntry *, DenseSet<Value *>> ExtractsCount;
   SmallPtrSet<Value *, 4> ScalarOpsFromCasts;
+  // Keep track of {Scalar, Index} -> User and User -> {Scalar, Index}.
+  // On AArch64, this helps in fusing a mov instruction, associated with
+  // extractelement, with fmul in the backend so that extractelement is free.
+  DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+      ScalarAndIdxToUser;
+  DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+      UserToScalarAndIdx;
+  for (ExternalUser &EU : ExternalUses) {
+    UserToScalarAndIdx[EU.User].push_back({EU.Scalar, EU.Lane});
+    ScalarAndIdxToUser[{EU.Scalar, EU.Lane}].push_back(EU.User);
+  }
   for (ExternalUser &EU : ExternalUses) {
     // Uses by ephemeral values are free (because the ephemeral value will be
     // removed prior to code generation, and so the extraction will be
@@ -11739,8 +11750,9 @@ InstructionCost BoUpSLP::getTreeCost(ArrayRef<Value *> VectorizedVals) {
       ExtraCost = TTI->getExtractWithExtendCost(Extend, EU.Scalar->getType(),
                                                 VecTy, EU.Lane);
     } else {
-      ExtraCost = TTI->getVectorInstrCost(Instruction::ExtractElement, VecTy,
-                                          CostKind, EU.Lane);
+      ExtraCost = TTI->getVectorInstrCost(
+          Instruction::ExtractElement, VecTy, CostKind, EU.Lane, nullptr,
+          nullptr, EU.Scalar, ScalarAndIdxToUser, UserToScalarAndIdx);
     }
     // Leave the scalar instructions as is if they are cheaper than extracts.
     if (Entry->Idx != 0 || Entry->getOpcode() == Instruction::GetElementPtr ||

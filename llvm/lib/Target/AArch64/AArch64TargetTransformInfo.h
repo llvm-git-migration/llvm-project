@@ -24,6 +24,7 @@
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Intrinsics.h"
+#include <climits>
 #include <cstdint>
 #include <optional>
 
@@ -66,8 +67,15 @@ class AArch64TTIImpl : public BasicTTIImplBase<AArch64TTIImpl> {
   // 'Val' and 'Index' are forwarded from 'getVectorInstrCost'; 'HasRealUse'
   // indicates whether the vector instruction is available in the input IR or
   // just imaginary in vectorizer passes.
-  InstructionCost getVectorInstrCostHelper(const Instruction *I, Type *Val,
-                                           unsigned Index, bool HasRealUse);
+  InstructionCost getVectorInstrCostHelper(
+      std::variant<const Instruction *, const unsigned> InstOrOpcode, Type *Val,
+      unsigned Index, bool HasRealUse, Value *Scalar = nullptr,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser =
+              DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>(),
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx = DenseMap<
+              Value *, SmallVector<std::pair<Value *, unsigned>, 4>>());
 
 public:
   explicit AArch64TTIImpl(const AArch64TargetMachine *TM, const Function &F)
@@ -185,6 +193,15 @@ public:
   InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
                                      TTI::TargetCostKind CostKind,
                                      unsigned Index, Value *Op0, Value *Op1);
+
+  InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Op0, Value *Op1, Value *Scalar,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser,
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx);
+
   InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
                                      TTI::TargetCostKind CostKind,
                                      unsigned Index);

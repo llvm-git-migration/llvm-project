@@ -16,14 +16,20 @@
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/CodeGen/CostTable.h"
 #include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsAArch64.h"
 #include "llvm/IR/PatternMatch.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/InstCombine/InstCombiner.h"
 #include "llvm/Transforms/Vectorize/LoopVectorizationLegality.h"
 #include <algorithm>
+#include <cassert>
 #include <optional>
 using namespace llvm;
 using namespace llvm::PatternMatch;
@@ -3145,11 +3151,19 @@ InstructionCost AArch64TTIImpl::getCFInstrCost(unsigned Opcode,
   return 0;
 }
 
-InstructionCost AArch64TTIImpl::getVectorInstrCostHelper(const Instruction *I,
-                                                         Type *Val,
-                                                         unsigned Index,
-                                                         bool HasRealUse) {
+InstructionCost AArch64TTIImpl::getVectorInstrCostHelper(
+    std::variant<const Instruction *, const unsigned> InstOrOpcode, Type *Val,
+    unsigned Index, bool HasRealUse, Value *Scalar,
+    const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+        &ScalarAndIdxToUser,
+    const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+        &UserToScalarAndIdx) {
   assert(Val->isVectorTy() && "This must be a vector type");
+
+  const Instruction *I =
+      (std::holds_alternative<const Instruction *>(InstOrOpcode)
+           ? get<const Instruction *>(InstOrOpcode)
+           : nullptr);
 
   if (Index != -1U) {
     // Legalize the type.
@@ -3194,6 +3208,134 @@ InstructionCost AArch64TTIImpl::getVectorInstrCostHelper(const Instruction *I,
     // compile-time considerations.
   }
 
+  // In case of Neon, if there exists extractelement from lane != 0 such that
+  // 1. extractelement does not necessitate a move from vector_reg -> GPR.
+  // 2. extractelement result feeds into fmul.
+  // 3. Other operand of fmul is a scalar or extractelement from lane 0 or lane
+  // equivalent to 0.
+  // then the extractelement can be merged with fmul in the backend and it
+  // incurs no cost.
+  // e.g.
+  // define double @foo(<2 x double> %a) {
+  //   %1 = extractelement <2 x double> %a, i32 0
+  //   %2 = extractelement <2 x double> %a, i32 1
+  //   %res = fmul double %1, %2
+  //   ret double %res
+  // }
+  // %2 and %res can be merged in the backend to generate fmul v0, v0, v1.d[1]
+  auto ExtractCanFuseWithFmul = [&]() {
+    // We bail out if the extract is from lane 0.
+    if (Index == 0)
+      return false;
+
+    // Check if the scalar element type of the vector operand of ExtractElement
+    // instruction is one of the allowed types.
+    auto IsAllowedScalarTy = [&](const Type *T) {
+      return T->isFloatTy() || T->isDoubleTy() ||
+             (T->isHalfTy() && ST->hasFullFP16());
+    };
+
+    // Check if the extractelement user is scalar fmul.
+    auto IsUserFMulScalarTy = [](const Value *EEUser) {
+      // Check if the user is scalar fmul.
+      const BinaryOperator *BO = dyn_cast_if_present<BinaryOperator>(EEUser);
+      return BO && BO->getOpcode() == BinaryOperator::FMul &&
+             !BO->getType()->isVectorTy();
+    };
+
+    // InstCombine combines fmul with fadd/fsub. Hence, extractelement fusion
+    // with fmul does not happen.
+    auto IsFMulUserFAddFSub = [](const Value *FMul) {
+      return any_of(FMul->users(), [](const User *U) {
+        const BinaryOperator *BO = dyn_cast_if_present<BinaryOperator>(U);
+        return (BO && (BO->getOpcode() == BinaryOperator::FAdd ||
+                       BO->getOpcode() == BinaryOperator::FSub));
+      });
+    };
+
+    // Check if the type constraints on input vector type and result scalar type
+    // of extractelement instruction are satisfied.
+    auto TypeConstraintsOnEESatisfied =
+        [&IsAllowedScalarTy](const Type *VectorTy, const Type *ScalarTy) {
+          return isa<FixedVectorType>(VectorTy) && IsAllowedScalarTy(ScalarTy);
+        };
+
+    // Check if the extract index is from lane 0 or lane equivalent to 0 for a
+    // certain scalar type and a certain vector register width.
+    auto IsExtractLaneEquivalentToZero = [&](const unsigned &Idx,
+                                             const unsigned &EltSz) {
+      auto RegWidth =
+          getRegisterBitWidth(TargetTransformInfo::RGK_FixedWidthVector)
+              .getFixedValue();
+      return (Idx == 0 || (Idx * EltSz) % RegWidth == 0);
+    };
+
+    if (std::holds_alternative<const unsigned>(InstOrOpcode)) {
+      if (!TypeConstraintsOnEESatisfied(Val, Val->getScalarType()))
+        return false;
+      const auto &ScalarIdxPair = std::make_pair(Scalar, Index);
+      return ScalarAndIdxToUser.find(ScalarIdxPair) !=
+                 ScalarAndIdxToUser.end() &&
+             all_of(ScalarAndIdxToUser.at(ScalarIdxPair), [&](Value *U) {
+               if (!IsUserFMulScalarTy(U) || IsFMulUserFAddFSub(U))
+                 return false;
+               // 1. Check if the other operand is extract from lane 0 or lane
+               // equivalent to 0.
+               // 2. In case of SLP, if the other operand is not extract from
+               // same tree, we bail out since we can not analyze that extract.
+               return UserToScalarAndIdx.at(U).size() == 2 &&
+                      all_of(UserToScalarAndIdx.at(U), [&](auto &P) {
+                        if (ScalarIdxPair == P)
+                          return true; // Skip.
+                        return IsExtractLaneEquivalentToZero(
+                            P.second, Val->getScalarSizeInBits());
+                      });
+             });
+    } else {
+      const ExtractElementInst *EE = cast<ExtractElementInst>(I);
+
+      const ConstantInt *IdxOp = dyn_cast<ConstantInt>(EE->getIndexOperand());
+      if (!IdxOp)
+        return false;
+
+      if (!TypeConstraintsOnEESatisfied(EE->getVectorOperand()->getType(),
+                                        EE->getType()))
+        return false;
+
+      return !EE->users().empty() && all_of(EE->users(), [&](const User *U) {
+        if (!IsUserFMulScalarTy(U) || IsFMulUserFAddFSub(U))
+          return false;
+
+        // Check if the other operand of extractelement is also extractelement
+        // from lane equivalent to 0.
+        const BinaryOperator *BO = cast<BinaryOperator>(U);
+        const ExtractElementInst *OtherEE = dyn_cast<ExtractElementInst>(
+            BO->getOperand(0) == EE ? BO->getOperand(1) : BO->getOperand(0));
+        if (OtherEE) {
+          const ConstantInt *IdxOp =
+              dyn_cast<ConstantInt>(OtherEE->getIndexOperand());
+          if (!IdxOp)
+            return false;
+          return IsExtractLaneEquivalentToZero(
+              cast<ConstantInt>(OtherEE->getIndexOperand())
+                  ->getValue()
+                  .getZExtValue(),
+              OtherEE->getType()->getScalarSizeInBits());
+        }
+        return true;
+      });
+    }
+    return false;
+  };
+
+  if (std::holds_alternative<const unsigned>(InstOrOpcode)) {
+    const unsigned &Opcode = get<const unsigned>(InstOrOpcode);
+    if (Opcode == Instruction::ExtractElement && ExtractCanFuseWithFmul())
+      return 0;
+  } else if (I && I->getOpcode() == Instruction::ExtractElement &&
+             ExtractCanFuseWithFmul())
+    return 0;
+
   // All other insert/extracts cost this much.
   return ST->getVectorInsertExtractBaseCost();
 }
@@ -3205,6 +3347,19 @@ InstructionCost AArch64TTIImpl::getVectorInstrCost(unsigned Opcode, Type *Val,
   bool HasRealUse =
       Opcode == Instruction::InsertElement && Op0 && !isa<UndefValue>(Op0);
   return getVectorInstrCostHelper(nullptr, Val, Index, HasRealUse);
+}
+
+InstructionCost AArch64TTIImpl::getVectorInstrCost(
+    unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+    Value *Op0, Value *Op1, Value *Scalar,
+    const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+        &ScalarAndIdxToUser,
+    const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+        &UserToScalarAndIdx) {
+  bool HasRealUse =
+      Opcode == Instruction::InsertElement && Op0 && !isa<UndefValue>(Op0);
+  return getVectorInstrCostHelper(Opcode, Val, Index, HasRealUse, Scalar,
+                                  ScalarAndIdxToUser, UserToScalarAndIdx);
 }
 
 InstructionCost AArch64TTIImpl::getVectorInstrCost(const Instruction &I,

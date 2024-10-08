@@ -1393,6 +1393,19 @@ public:
                                      Value *Op1 = nullptr) const;
 
   /// \return The expected cost of vector Insert and Extract.
+  /// Use -1 to indicate that there is no information on the index value.
+  /// This is used when the instruction is not available; a typical use
+  /// case is to provision the cost of vectorization/scalarization in
+  /// vectorizer passes.
+  InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Op0, Value *Op1, Value *Scalar,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser,
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx) const;
+
+  /// \return The expected cost of vector Insert and Extract.
   /// This is used when instruction is available, and implementation
   /// asserts 'I' is not nullptr.
   ///
@@ -2062,6 +2075,14 @@ public:
                                              TTI::TargetCostKind CostKind,
                                              unsigned Index, Value *Op0,
                                              Value *Op1) = 0;
+
+  virtual InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Op0, Value *Op1, Value *Scalar,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser,
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx) = 0;
   virtual InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
                                              TTI::TargetCostKind CostKind,
                                              unsigned Index) = 0;
@@ -2725,6 +2746,17 @@ public:
                                      unsigned Index, Value *Op0,
                                      Value *Op1) override {
     return Impl.getVectorInstrCost(Opcode, Val, CostKind, Index, Op0, Op1);
+  }
+  InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Op0, Value *Op1, Value *Scalar,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser,
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx) override {
+    return Impl.getVectorInstrCost(Opcode, Val, CostKind, Index, Op0, Op1,
+                                   Scalar, ScalarAndIdxToUser,
+                                   UserToScalarAndIdx);
   }
   InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
                                      TTI::TargetCostKind CostKind,

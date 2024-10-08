@@ -683,6 +683,16 @@ public:
     return 1;
   }
 
+  InstructionCost getVectorInstrCost(
+      unsigned Opcode, Type *Val, TTI::TargetCostKind CostKind, unsigned Index,
+      Value *Op0, Value *Op1, Value *Scalar,
+      const DenseMap<std::pair<Value *, unsigned>, SmallVector<Value *, 4>>
+          &ScalarAndIdxToUser,
+      const DenseMap<Value *, SmallVector<std::pair<Value *, unsigned>, 4>>
+          &UserToScalarAndIdx) const {
+    return 1;
+  }
+
   InstructionCost getVectorInstrCost(const Instruction &I, Type *Val,
                                      TTI::TargetCostKind CostKind,
                                      unsigned Index) const {
