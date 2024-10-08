@@ -17,7 +17,7 @@ void noescapeFunc4(__attribute__((noescape)) int &);
 void noescapeFunc2(int *); // expected-error {{conflicting types for 'noescapeFunc2'}}
 
 template <class T>
-void noescapeFunc5(__attribute__((noescape)) T); // expected-warning {{'noescape' attribute only applies to pointer arguments}}
+void noescapeFunc5(__attribute__((noescape)) T);
 template <class T>
 void noescapeFunc6(__attribute__((noescape)) const T &);
 template <class T>
