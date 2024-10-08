@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/time/time_utils.h"
-#include "src/time/timezone.h"
 #include "src/__support/CPP/limits.h" // INT_MIN, INT_MAX
+#include "src/__support/CPP/string_view.h"
 #include "src/__support/common.h"
 #include "src/__support/macros/config.h"
-#include "src/__support/CPP/string_view.h"
+#include "src/time/timezone.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -158,7 +158,8 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   timezone = getenv("TZ");
   FILE *fp = NULL;
   if (timezone == NULL) {
-    timezone = (char *)realloc(timezone, sizeof(char) * TimeConstants::TIMEZONE_SIZE);
+    timezone =
+        (char *)realloc(timezone, sizeof(char) * TimeConstants::TIMEZONE_SIZE);
     fp = fopen("/etc/timezone", "rb");
     if (fp == NULL) {
       return time_utils::out_of_range();
