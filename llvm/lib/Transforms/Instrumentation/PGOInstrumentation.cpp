@@ -1970,11 +1970,9 @@ static void fixFuncEntryCount(PGOUseFunc &Func, LoopInfo &LI,
                               BranchProbabilityInfo &NBPI) {
   Function &F = Func.getFunc();
   BlockFrequencyInfo NBFI(F, NBPI, LI);
-#ifndef NDEBUG
   auto BFIEntryCount = F.getEntryCount();
-  assert(BFIEntryCount && (BFIEntryCount->getCount() > 0) &&
-         "Invalid BFI Entrycount");
-#endif
+  if (!BFIEntryCount || BFIEntryCount->getCount() == 0)
+    return;
   auto SumCount = APFloat::getZero(APFloat::IEEEdouble());
   auto SumBFICount = APFloat::getZero(APFloat::IEEEdouble());
   for (auto &BBI : F) {
