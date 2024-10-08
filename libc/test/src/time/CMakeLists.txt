@@ -46,6 +46,7 @@ add_libc_unittest(
     libc.hdr.types.time_t
     libc.src.time.ctime
     libc.src.time.time_utils
+    libc.src.time.timezone
 )
 
 add_libc_unittest(
@@ -64,6 +65,7 @@ add_libc_unittest(
     libc.hdr.types.time_t
     libc.src.time.ctime_r
     libc.src.time.time_utils
+    libc.src.time.timezone
 )
 
 add_libc_unittest(
@@ -82,6 +84,7 @@ add_libc_unittest(
     libc.hdr.types.time_t
     libc.src.time.localtime
     libc.src.time.time_utils
+    libc.src.time.timezone
 )
 
 add_libc_unittest(
@@ -100,6 +103,7 @@ add_libc_unittest(
     libc.hdr.types.time_t
     libc.src.time.localtime_r
     libc.src.time.time_utils
+    libc.src.time.timezone
 )
 
 add_libc_unittest(
@@ -118,6 +122,7 @@ add_libc_unittest(
     libc.hdr.types.time_t
     libc.src.time.localtime_s
     libc.src.time.time_utils
+    libc.src.time.timezone
 )
 
 add_libc_test(
