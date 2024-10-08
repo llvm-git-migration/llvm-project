@@ -35,6 +35,14 @@ UEFI::UEFI(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
 
 Tool *UEFI::buildLinker() const { return new tools::uefi::Linker(*this); }
 
+void UEFI::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
+                                           ArgStringList &CC1Args) const {
+  if (DriverArgs.hasArg(options::OPT_nostdinc, options::OPT_nostdlibinc,
+                        options::OPT_nostdincxx))
+    return;
+}
+
+
 void tools::uefi::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                        const InputInfo &Output,
                                        const InputInfoList &Inputs,
