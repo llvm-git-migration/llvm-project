@@ -52,6 +52,9 @@ T *atest3() __attribute__((assume_aligned(31, o))); // expected-error {{requeste
 template <typename T, int o>
 T *atest4() __attribute__((assume_aligned(32, o)));
 
+template<typename T>
+T atest5(int) __attribute__((assume_aligned(2)));
+
 void test22() {
   atest3<int, 5>();
   atest4<int, 5>();

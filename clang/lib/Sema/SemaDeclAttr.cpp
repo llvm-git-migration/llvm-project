@@ -1217,6 +1217,8 @@ static void handlePreferredName(Sema &S, Decl *D, const ParsedAttr &AL) {
 
 bool Sema::isValidPointerAttrType(QualType T, bool RefOkay) {
   if (RefOkay) {
+    if (T->isDependentType())
+      return true;
     if (T->isReferenceType())
       return true;
   } else {
