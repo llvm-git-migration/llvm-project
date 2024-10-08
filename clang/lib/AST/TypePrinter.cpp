@@ -12,6 +12,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -25,6 +26,7 @@
 #include "clang/AST/TextNodeDumper.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AddressSpaces.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/ExceptionSpecificationType.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
@@ -1907,6 +1909,24 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     OS << " [[clang::lifetimebound]]";
     return;
   }
+  if (T->getAttrKind() == attr::LifetimeCaptureBy) {
+    OS << " [[clang::lifetime_capture_by(...)";
+    // const LifetimeCaptureByAttr* A= T->getAs<LifetimeCaptureByAttr>();
+    // bool valid = true;
+    // for (int I : A->params())
+    //   valid &= I != -2;
+    // if (valid) {
+    //   OS << "invalid)";
+    //   return;
+    // }
+    // for (size_t I = 0; I < A->params_size(); ++I) {
+    //   OS << A->getArgIdents()[I]->getName()
+    //      << "(idx: " << *(A->params_begin() + I) << ")";
+    //   if (I != A->params_size() - 1)
+    //     OS << ", ";
+    // }
+    return;
+  }
 
   // The printing of the address_space attribute is handled by the qualifier
   // since it is still stored in the qualifier. Return early to prevent printing
@@ -1966,6 +1986,7 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
   case attr::SizedBy:
   case attr::SizedByOrNull:
   case attr::LifetimeBound:
+  case attr::LifetimeCaptureBy:
   case attr::TypeNonNull:
   case attr::TypeNullable:
   case attr::TypeNullableResult:

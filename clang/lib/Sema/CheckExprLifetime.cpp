@@ -41,10 +41,14 @@ enum LifetimeKind {
   /// a default member initializer), the program is ill-formed.
   LK_MemInitializer,
 
-  /// The lifetime of a temporary bound to this entity probably ends too soon,
+  /// The lifetime of a temporary bound to this entity may end too soon,
   /// because the entity is a pointer and we assign the address of a temporary
   /// object to it.
   LK_Assignment,
+
+  /// The lifetime of a temporary bound to this entity probably ends too soon,
+  /// because the entity may capture the reference to a temporary object.
+  LK_LifetimeCapture,
 };
 using LifetimeResult =
     llvm::PointerIntPair<const InitializedEntity *, 3, LifetimeKind>;
@@ -189,6 +193,7 @@ struct IndirectLocalPathEntry {
     VarInit,
     LValToRVal,
     LifetimeBoundCall,
+    LifetimeCapture,
     TemporaryCopy,
     LambdaCaptureInit,
     GslReferenceInit,
@@ -898,6 +903,7 @@ static SourceRange nextPathEntryRange(const IndirectLocalPath &Path, unsigned I,
     case IndirectLocalPathEntry::AddressOf:
     case IndirectLocalPathEntry::LValToRVal:
     case IndirectLocalPathEntry::LifetimeBoundCall:
+    case IndirectLocalPathEntry::LifetimeCapture:
     case IndirectLocalPathEntry::TemporaryCopy:
     case IndirectLocalPathEntry::GslReferenceInit:
     case IndirectLocalPathEntry::GslPointerInit:
@@ -928,6 +934,7 @@ static bool pathOnlyHandlesGslPointer(IndirectLocalPath &Path) {
     case IndirectLocalPathEntry::VarInit:
     case IndirectLocalPathEntry::AddressOf:
     case IndirectLocalPathEntry::LifetimeBoundCall:
+    case IndirectLocalPathEntry::LifetimeCapture:
       continue;
     case IndirectLocalPathEntry::GslPointerInit:
     case IndirectLocalPathEntry::GslReferenceInit:
@@ -948,11 +955,11 @@ static bool isAssignmentOperatorLifetimeBound(CXXMethodDecl *CMD) {
 }
 
 static bool shouldRunGSLAssignmentAnalysis(const Sema &SemaRef,
-                                           const AssignedEntity &Entity) {
+                                           const CapturingEntity &Entity) {
   bool EnableGSLAssignmentWarnings = !SemaRef.getDiagnostics().isIgnored(
       diag::warn_dangling_lifetime_pointer_assignment, SourceLocation());
   return (EnableGSLAssignmentWarnings &&
-          (isRecordWithAttr<PointerAttr>(Entity.LHS->getType()) ||
+          (isRecordWithAttr<PointerAttr>(Entity.Expression->getType()) ||
            isAssignmentOperatorLifetimeBound(Entity.AssignmentOperator)));
 }
 
@@ -960,9 +967,10 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
                                   const InitializedEntity *InitEntity,
                                   const InitializedEntity *ExtendingEntity,
                                   LifetimeKind LK,
-                                  const AssignedEntity *AEntity, Expr *Init) {
-  assert((AEntity && LK == LK_Assignment) ||
-         (InitEntity && LK != LK_Assignment));
+                                  const CapturingEntity *CEntity, Expr *Init) {
+  assert(InitEntity || CEntity);
+  assert(!CEntity || LK == LK_Assignment || LK == LK_LifetimeCapture);
+  assert(!InitEntity || LK != LK_Assignment);
   // If this entity doesn't have an interesting lifetime, don't bother looking
   // for temporaries within its initializer.
   if (LK == LK_FullExpression)
@@ -1046,6 +1054,17 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
       break;
     }
 
+    case LK_LifetimeCapture: {
+      if (!MTE)
+        return false;
+      assert(shouldLifetimeExtendThroughPath(Path) ==
+                 PathLifetimeKind::NoExtend &&
+             "No lifetime extension for in function calls");
+      SemaRef.Diag(DiagLoc, diag::warn_dangling_reference_captured)
+          << CEntity->Expression << DiagRange;
+      return false;
+    }
+
     case LK_Assignment: {
       if (!MTE || pathContainsInit(Path))
         return false;
@@ -1056,7 +1075,7 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
                    IsGslPtrValueFromGslTempOwner
                        ? diag::warn_dangling_lifetime_pointer_assignment
                        : diag::warn_dangling_pointer_assignment)
-          << AEntity->LHS << DiagRange;
+          << CEntity->Expression << DiagRange;
       return false;
     }
     case LK_MemInitializer: {
@@ -1199,6 +1218,7 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         break;
 
       case IndirectLocalPathEntry::LifetimeBoundCall:
+      case IndirectLocalPathEntry::LifetimeCapture:
       case IndirectLocalPathEntry::TemporaryCopy:
       case IndirectLocalPathEntry::GslPointerInit:
       case IndirectLocalPathEntry::GslReferenceInit:
@@ -1243,8 +1263,10 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
   };
 
   llvm::SmallVector<IndirectLocalPathEntry, 8> Path;
-  if (LK == LK_Assignment && shouldRunGSLAssignmentAnalysis(SemaRef, *AEntity))
+  if (LK == LK_Assignment && shouldRunGSLAssignmentAnalysis(SemaRef, *CEntity))
     Path.push_back({IndirectLocalPathEntry::GslPointerAssignment, Init});
+  else if (LK == LK_LifetimeCapture)
+    Path.push_back({IndirectLocalPathEntry::LifetimeCapture, Init});
 
   if (Init->isGLValue())
     visitLocalsRetainedByReferenceBinding(Path, Init, RK_ReferenceBinding,
@@ -1256,7 +1278,7 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         /*RevisitSubinits=*/!InitEntity);
 }
 
-void checkExprLifetime(Sema &SemaRef, const InitializedEntity &Entity,
+void checkInitLifetime(Sema &SemaRef, const InitializedEntity &Entity,
                        Expr *Init) {
   auto LTResult = getEntityLifetime(&Entity);
   LifetimeKind LK = LTResult.getInt();
@@ -1265,12 +1287,12 @@ void checkExprLifetime(Sema &SemaRef, const InitializedEntity &Entity,
                         /*AEntity*/ nullptr, Init);
 }
 
-void checkExprLifetime(Sema &SemaRef, const AssignedEntity &Entity,
-                       Expr *Init) {
+void checkAssignmentLifetime(Sema &SemaRef, const CapturingEntity &Entity,
+                             Expr *RHS) {
   bool EnableDanglingPointerAssignment = !SemaRef.getDiagnostics().isIgnored(
       diag::warn_dangling_pointer_assignment, SourceLocation());
   bool RunAnalysis = (EnableDanglingPointerAssignment &&
-                      Entity.LHS->getType()->isPointerType()) ||
+                      Entity.Expression->getType()->isPointerType()) ||
                      shouldRunGSLAssignmentAnalysis(SemaRef, Entity);
 
   if (!RunAnalysis)
@@ -1278,7 +1300,13 @@ void checkExprLifetime(Sema &SemaRef, const AssignedEntity &Entity,
 
   checkExprLifetimeImpl(SemaRef, /*InitEntity=*/nullptr,
                         /*ExtendingEntity=*/nullptr, LK_Assignment, &Entity,
-                        Init);
+                        RHS);
 }
 
+void checkCaptureLifetime(Sema &SemaRef, const CapturingEntity &Entity,
+                          Expr *Captured) {
+  checkExprLifetimeImpl(SemaRef, /*InitEntity=*/nullptr,
+                        /*ExtendingEntity=*/nullptr, LK_LifetimeCapture,
+                        &Entity, Captured);
+}
 } // namespace clang::sema
