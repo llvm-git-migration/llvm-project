@@ -243,3 +243,88 @@ define void @foo(ptr addrspace(3) %val) {
   ret void
 }
 
+define void @kernel_argument_promotion_pattern_intra_procedure(ptr %p, i32 %val) {
+; CHECK-LABEL: define void @kernel_argument_promotion_pattern_intra_procedure(
+; CHECK-SAME: ptr [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[P_CAST_0:%.*]] = addrspacecast ptr [[P]] to ptr addrspace(1)
+; CHECK-NEXT:    store i32 [[VAL]], ptr addrspace(1) [[P_CAST_0]], align 4
+; CHECK-NEXT:    ret void
+;
+  %p.cast.0 = addrspacecast ptr %p to ptr addrspace(1)
+  %p.cast.1 = addrspacecast ptr addrspace(1) %p.cast.0 to ptr
+  store i32 %val, ptr %p.cast.1
+  ret void
+}
+
+define internal void @use_argument_after_promotion(ptr %p, i32 %val) {
+; CHECK-LABEL: define internal void @use_argument_after_promotion(
+; CHECK-SAME: ptr [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[TMP1:%.*]] = addrspacecast ptr [[P]] to ptr addrspace(1)
+; CHECK-NEXT:    store i32 [[VAL]], ptr addrspace(1) [[TMP1]], align 4
+; CHECK-NEXT:    ret void
+;
+  store i32 %val, ptr %p
+  ret void
+}
+
+define void @kernel_argument_promotion_pattern_inter_procedure(ptr %p, i32 %val) {
+; CHECK-LABEL: define void @kernel_argument_promotion_pattern_inter_procedure(
+; CHECK-SAME: ptr [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    call void @use_argument_after_promotion(ptr [[P]], i32 [[VAL]])
+; CHECK-NEXT:    ret void
+;
+  %p.cast.0 = addrspacecast ptr %p to ptr addrspace(1)
+  %p.cast.1 = addrspacecast ptr addrspace(1) %p.cast.0 to ptr
+  call void @use_argument_after_promotion(ptr %p.cast.1, i32 %val)
+  ret void
+}
+
+define void @vec_kernel_argument_promotion_pattern_intra_procedure(<2 x ptr> %p, i32 %val) {
+; CHECK-LABEL: define void @vec_kernel_argument_promotion_pattern_intra_procedure(
+; CHECK-SAME: <2 x ptr> [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[P_CAST_0:%.*]] = addrspacecast <2 x ptr> [[P]] to <2 x ptr addrspace(1)>
+; CHECK-NEXT:    [[P_CAST_1:%.*]] = addrspacecast <2 x ptr addrspace(1)> [[P_CAST_0]] to <2 x ptr>
+; CHECK-NEXT:    [[P1:%.*]] = extractelement <2 x ptr> [[P_CAST_1]], i32 0
+; CHECK-NEXT:    [[P2:%.*]] = extractelement <2 x ptr> [[P_CAST_1]], i32 1
+; CHECK-NEXT:    store i32 [[VAL]], ptr [[P1]], align 4
+; CHECK-NEXT:    store i32 [[VAL]], ptr [[P2]], align 4
+; CHECK-NEXT:    ret void
+;
+  %p.cast.0 = addrspacecast <2 x ptr> %p to <2 x ptr addrspace(1)>
+  %p.cast.1 = addrspacecast <2 x ptr addrspace(1)> %p.cast.0 to <2 x ptr>
+  %p1 = extractelement <2 x ptr> %p.cast.1, i32 0
+  %p2 = extractelement <2 x ptr> %p.cast.1, i32 1
+  store i32 %val, ptr %p1
+  store i32 %val, ptr %p2
+  ret void
+}
+
+define internal void @use_vec_argument_after_promotion(<2 x ptr> %p, i32 %val) {
+; CHECK-LABEL: define internal void @use_vec_argument_after_promotion(
+; CHECK-SAME: <2 x ptr> [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[P1:%.*]] = extractelement <2 x ptr> [[P]], i32 0
+; CHECK-NEXT:    [[P2:%.*]] = extractelement <2 x ptr> [[P]], i32 1
+; CHECK-NEXT:    store i32 [[VAL]], ptr [[P1]], align 4
+; CHECK-NEXT:    store i32 [[VAL]], ptr [[P2]], align 4
+; CHECK-NEXT:    ret void
+;
+  %p1 = extractelement <2 x ptr> %p, i32 0
+  %p2 = extractelement <2 x ptr> %p, i32 1
+  store i32 %val, ptr %p1
+  store i32 %val, ptr %p2
+  ret void
+}
+
+define void @vec_kernel_argument_promotion_pattern_inter_procedure(<2 x ptr> %p, i32 %val) {
+; CHECK-LABEL: define void @vec_kernel_argument_promotion_pattern_inter_procedure(
+; CHECK-SAME: <2 x ptr> [[P:%.*]], i32 [[VAL:%.*]]) #[[ATTR0]] {
+; CHECK-NEXT:    [[P_CAST_0:%.*]] = addrspacecast <2 x ptr> [[P]] to <2 x ptr addrspace(1)>
+; CHECK-NEXT:    [[P_CAST_1:%.*]] = addrspacecast <2 x ptr addrspace(1)> [[P_CAST_0]] to <2 x ptr>
+; CHECK-NEXT:    call void @use_vec_argument_after_promotion(<2 x ptr> [[P_CAST_1]], i32 [[VAL]])
+; CHECK-NEXT:    ret void
+;
+  %p.cast.0 = addrspacecast <2 x ptr> %p to <2 x ptr addrspace(1)>
+  %p.cast.1 = addrspacecast <2 x ptr addrspace(1)> %p.cast.0 to <2 x ptr>
+  call void @use_vec_argument_after_promotion(<2 x ptr> %p.cast.1, i32 %val)
+  ret void
+}
