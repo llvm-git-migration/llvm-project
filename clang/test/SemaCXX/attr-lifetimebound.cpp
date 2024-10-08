@@ -307,3 +307,83 @@ void test(StatusOr<FooView> foo1, StatusOr<NonAnnotatedFooView> foo2) {
   foo2 = NonAnnotatedFoo();
 }
 } // namespace GH106372
+
+namespace lifetime_capture_by {
+
+struct S {
+  const int *x;
+  void setX(const int *x) { this->x = x; }
+};
+
+///////////////////////////
+// Test for valid usages.
+///////////////////////////
+[[clang::lifetime_capture_by(unknown)]] // expected-error {{'lifetime_capture_by' attribute only applies to parameters and implicit object parameters}}
+void nonMember(
+    const int &x1 [[clang::lifetime_capture_by(s, t)]],
+    S &s,
+    S &t,
+    const int &x2 [[clang::lifetime_capture_by(12345 + 12)]], // expected-error {{'lifetime_capture_by' attribute argument 12345 + 12 is not a known function parameter. Must be a function parameter of one of 'this', 'global' or 'unknown'}}
+    const int &x3 [[clang::lifetime_capture_by(abcdefgh)]],   // expected-error {{'lifetime_capture_by' attribute argument 'abcdefgh' is not a known function parameter. Must be a function parameter of one of 'this', 'global' or 'unknown'}}
+    const int &x4 [[clang::lifetime_capture_by("abcdefgh")]], // expected-error {{'lifetime_capture_by' attribute argument "abcdefgh" is not a known function parameter. Must be a function parameter of one of 'this', 'global' or 'unknown'}}
+    const int &x5 [[clang::lifetime_capture_by(this)]], // expected-error {{'lifetime_capture_by' argument references unavailable implicit 'this'}}
+    const int &x6 [[clang::lifetime_capture_by()]], // expected-error {{'lifetime_capture_by' attribute specifies no capturing entity}}
+
+    const int& x7 [[clang::lifetime_capture_by(u)]],
+    const S& u
+  )
+{
+  s.setX(&x1);
+}
+
+struct T {
+  void member(
+    const int &x [[clang::lifetime_capture_by(s)]], 
+    S &s,
+    S &t,            
+    const int &y [[clang::lifetime_capture_by(s)]],
+    const int &z [[clang::lifetime_capture_by(this, x, y)]],
+    const int &u [[clang::lifetime_capture_by(global, x, s)]])
+  {
+    s.setX(&x);
+  }
+};
+
+///////////////////////////
+// Detect dangling warning.
+///////////////////////////
+void captureInt(const int&x [[clang::lifetime_capture_by(s)]], S&s);
+void noCaptureInt(int x [[clang::lifetime_capture_by(s)]], S&s);
+
+std::string_view substr(const std::string& s [[clang::lifetimebound]]);
+std::string_view strcopy(const std::string& s);
+
+void captureSV(std::string_view x [[clang::lifetime_capture_by(s)]], S&s);
+void noCaptureSV(std::string_view x, S&s);
+
+void use() {
+  S s;
+  int local;
+  captureInt(1, // expected-warning {{object captured by the 's' will be destroyed at the end of the full-expression}}
+            s);
+  captureInt(local, s);
+  
+  noCaptureInt(1, s);
+  noCaptureInt(local, s);
+
+  std::string_view local_sv;
+  captureSV(local_sv, s);
+  captureSV(std::string(), // expected-warning {{object captured by the 's'}}
+            s);
+  captureSV(substr(
+      std::string() // expected-warning {{object captured by the 's'}}
+      ), s);
+  captureSV(strcopy(std::string()), s);
+  
+  noCaptureSV(local_sv, s);
+  noCaptureSV(std::string(), s);
+  noCaptureSV(substr(std::string()), s);
+}
+} // namespace lifetime_capture_by_usage
+
+// Test for templated code.

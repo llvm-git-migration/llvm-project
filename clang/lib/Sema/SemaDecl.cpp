@@ -16615,6 +16615,7 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
   }
 
   inferLifetimeBoundAttribute(FD);
+  lazyProcessLifetimeCaptureByParams(FD);
   AddKnownFunctionAttributesForReplaceableGlobalAllocationFunction(FD);
 
   // If C++ exceptions are enabled but we are told extern "C" functions cannot

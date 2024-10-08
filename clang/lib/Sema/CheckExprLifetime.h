@@ -35,6 +35,9 @@ void checkExprLifetime(Sema &SemaRef, const InitializedEntity &Entity,
 /// sufficient for assigning to the entity.
 void checkExprLifetime(Sema &SemaRef, const AssignedEntity &Entity, Expr *Init);
 
+void checkCaptureLifetime(Sema &SemaRef, const AssignedEntity &Entity,
+                          Expr *Init);
+
 } // namespace clang::sema
 
 #endif // LLVM_CLANG_SEMA_CHECK_EXPR_LIFETIME_H

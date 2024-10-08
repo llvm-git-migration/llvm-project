@@ -14,6 +14,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
@@ -3834,6 +3835,81 @@ static void handleCallbackAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
       S.Context, AL, EncodingIndices.data(), EncodingIndices.size()));
 }
 
+static void HandleLifetimeCaptureByAttr(Sema &S, Decl *D,
+                                        const ParsedAttr &AL) {
+  // Atleast one capture by is required. TODO()
+  if (AL.getNumArgs() == 0) {
+    S.Diag(AL.getLoc(), diag::err_capture_by_attribute_no_entity)
+        << AL.getRange();
+    return;
+  }
+
+  ParmVarDecl *PVD = dyn_cast<ParmVarDecl>(D);
+  if (!PVD) {
+    llvm::errs() << "Should be attached only to a function parameter;\n";
+    return;
+  }
+  SmallVector<IdentifierInfo *, 1> ParamIdents;
+  SmallVector<SourceLocation, 1> ParamLocs;
+  for (unsigned I = 0; I < AL.getNumArgs(); ++I) {
+    if (AL.isArgIdent(I)) {
+      IdentifierLoc *IdLoc = AL.getArgAsIdent(I);
+      ParamIdents.push_back(IdLoc->Ident);
+      ParamLocs.push_back(IdLoc->Loc);
+    } else if (AL.isArgExpr(I)) {
+      Expr *E = AL.getArgAsExpr(I);
+      S.Diag(E->getExprLoc(), diag::err_capture_by_attribute_argument_unknown)
+          << E << E->getExprLoc();
+    }
+  }
+  // Do not allow multiple attributes.
+  if (D->hasAttr<LifetimeCaptureByAttr>()) {
+    S.Diag(AL.getLoc(), diag::err_capture_by_attribute_multiple)
+        << AL.getRange();
+    return;
+  }
+  SmallVector<int, 1> FakeParamIndices(ParamIdents.size(), -1);
+  LifetimeCaptureByAttr *CapturedBy = ::new (S.Context) LifetimeCaptureByAttr(
+      S.Context, AL, FakeParamIndices.data(), FakeParamIndices.size());
+  CapturedBy->setArgs(std::move(ParamIdents), std::move(ParamLocs));
+  D->addAttr(CapturedBy);
+}
+
+void Sema::lazyProcessLifetimeCaptureByParams(FunctionDecl *FD) {
+  bool HasImplicitThisParam = isInstanceMethod(FD);
+
+  llvm::StringMap<std::pair<int, QualType>> NameIdxMapping;
+  NameIdxMapping["global"] = {-1, {}};
+  NameIdxMapping["unknown"] = {-1, {}};
+  int Idx = 0;
+  if (HasImplicitThisParam) {
+    NameIdxMapping["this"] = {0, dyn_cast<CXXMethodDecl>(FD)->getThisType()};
+    Idx++;
+  }
+  for (const ParmVarDecl *PVD : FD->parameters())
+    NameIdxMapping[PVD->getName()] = {Idx++, PVD->getType()};
+  for (ParmVarDecl *PVD : FD->parameters()) {
+    auto *CapturedBy = PVD->getAttr<LifetimeCaptureByAttr>();
+    if (!CapturedBy)
+      continue;
+    const auto &Entities = CapturedBy->getArgIdents();
+    for (size_t I = 0; I < Entities.size(); ++I) {
+      StringRef Name = Entities[I]->getName();
+      auto It = NameIdxMapping.find(Name);
+      if (It == NameIdxMapping.end()) {
+        auto Loc = CapturedBy->getArgLocs()[I];
+        if (!HasImplicitThisParam && Name == "this")
+          Diag(Loc, diag::err_capture_by_implicit_this_not_available) << Loc;
+        else
+          Diag(Loc, diag::err_capture_by_attribute_argument_unknown)
+              << Entities[I] << Loc;
+        continue;
+      }
+      CapturedBy->setParamIdx(I, It->second.first);
+    }
+  }
+}
+
 static bool isFunctionLike(const Type &T) {
   // Check for explicit function types.
   // 'called_once' is only supported in Objective-C and it has
@@ -6617,6 +6693,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     break;
   case ParsedAttr::AT_Callback:
     handleCallbackAttr(S, D, AL);
+    break;
+  case ParsedAttr::AT_LifetimeCaptureBy:
+    HandleLifetimeCaptureByAttr(S, D, AL);
     break;
   case ParsedAttr::AT_CalledOnce:
     handleCalledOnceAttr(S, D, AL);
