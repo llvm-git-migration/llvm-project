@@ -175,7 +175,7 @@ private:
     WAW,   ///> Write After Write
     RAR,   ///> Read After Read
     WAR,   ///> Write After Read
-    CTRL,  ///> Dependencies related to PHIs or Terminators
+    CTRL,  ///> Control-related dependencies, like with PHIs/Terminators
     OTHER, ///> Currently used for stack related instrs
     NONE,  ///> No memory/other dependency
   };
