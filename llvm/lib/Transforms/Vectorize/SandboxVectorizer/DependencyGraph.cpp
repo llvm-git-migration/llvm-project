@@ -53,13 +53,13 @@ MemDGNodeIntervalBuilder::make(const Interval<Instruction> &Instrs,
 
 DependencyGraph::DependencyType
 DependencyGraph::getRoughDepType(Instruction *FromI, Instruction *ToI) {
+  // TODO: Perhaps compile-time improvement by skipping if neither is mem?
   if (FromI->mayWriteToMemory()) {
     if (ToI->mayReadFromMemory())
       return DependencyType::RAW;
     if (ToI->mayWriteToMemory())
       return DependencyType::WAW;
-  }
-  if (FromI->mayReadFromMemory()) {
+  } else if (FromI->mayReadFromMemory()) {
     if (ToI->mayWriteToMemory())
       return DependencyType::WAR;
     if (ToI->mayReadFromMemory())
