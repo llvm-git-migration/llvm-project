@@ -1544,7 +1544,7 @@ static void computeKnownBitsFromOperator(const Operator *I,
         break;
       }
 
-      // Check for operations with the propperty that the magnitude of the
+      // Check for operations with the property that the magnitude of the
       // result will never exceed that of the start value.
       case Instruction::UDiv:
       case Instruction::URem: {
@@ -9012,7 +9012,7 @@ bool llvm::matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
     switch (Opcode) {
     default:
       continue;
-    // TODO: Expand list -- sdiv, srem, fadd etc.
+    // TODO: Expand list -- xor, gep, uadd.sat etc.
     case Instruction::LShr:
     case Instruction::AShr:
     case Instruction::Shl:
