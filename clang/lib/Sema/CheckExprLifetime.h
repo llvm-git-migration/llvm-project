@@ -49,6 +49,12 @@ void checkAssignmentLifetime(Sema &SemaRef, const CapturingEntity &Entity,
 void checkCaptureLifetime(Sema &SemaRef, const CapturingEntity &Entity,
                           Expr *Captured);
 
+/// Check that the lifetime of the given expr (and its subobjects) is
+/// sufficient, assuming that it is passed as an argument to a musttail
+/// function.
+void checkExprLifetimeMustTailArg(Sema &SemaRef,
+                                  const InitializedEntity &Entity, Expr *Init);
+
 } // namespace clang::sema
 
 #endif // LLVM_CLANG_SEMA_CHECK_EXPR_LIFETIME_H
