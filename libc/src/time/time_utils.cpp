@@ -14,6 +14,7 @@
 #include "src/time/timezone.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 namespace LIBC_NAMESPACE_DECL {
 namespace time_utils {
@@ -154,12 +155,13 @@ int64_t update_from_seconds(int64_t total_seconds, struct tm *tm) {
   if (years > INT_MAX || years < INT_MIN)
     return time_utils::out_of_range();
 
-  char *timezone = (char *)malloc(sizeof(char) * TimeConstants::TIMEZONE_SIZE);
-  timezone = getenv("TZ");
+  char timezone[TimeConstants::TIMEZONE_SIZE];
+  char *env_tz = getenv("TZ");
   FILE *fp = NULL;
-  if (timezone == NULL) {
-    timezone =
-        (char *)realloc(timezone, sizeof(char) * TimeConstants::TIMEZONE_SIZE);
+  if (env_tz) {
+    strncpy(timezone, env_tz, sizeof(timezone));
+    timezone[sizeof(timezone) - 1] = '\0';
+  } else {
     fp = fopen("/etc/timezone", "rb");
     if (fp == NULL) {
       return time_utils::out_of_range();
