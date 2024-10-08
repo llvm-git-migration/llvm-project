@@ -60,6 +60,14 @@ CodeGen::arrangeCXXMethodType(CodeGenModule &CGM,
 }
 
 const CGFunctionInfo &
+CodeGen::arrangeCXXMethodCall(CodeGenModule &CGM, CanQualType returnType,
+                              ArrayRef<CanQualType> argTypes,
+                              FunctionType::ExtInfo info, RequiredArgs args) {
+  return CGM.getTypes().arrangeLLVMFunctionInfo(
+      returnType, FnInfoOpts::IsInstanceMethod, argTypes, info, {}, args);
+}
+
+const CGFunctionInfo &
 CodeGen::arrangeFreeFunctionCall(CodeGenModule &CGM,
                                  CanQualType returnType,
                                  ArrayRef<CanQualType> argTypes,

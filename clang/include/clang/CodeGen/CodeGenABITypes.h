@@ -75,6 +75,12 @@ const CGFunctionInfo &arrangeCXXMethodType(CodeGenModule &CGM,
                                            const FunctionProtoType *FTP,
                                            const CXXMethodDecl *MD);
 
+const CGFunctionInfo &arrangeCXXMethodCall(CodeGenModule &CGM,
+                                           CanQualType returnType,
+                                           ArrayRef<CanQualType> argTypes,
+                                           FunctionType::ExtInfo info,
+                                           RequiredArgs args);
+
 const CGFunctionInfo &arrangeFreeFunctionCall(CodeGenModule &CGM,
                                               CanQualType returnType,
                                               ArrayRef<CanQualType> argTypes,
