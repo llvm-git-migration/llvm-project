@@ -1709,13 +1709,14 @@ void TargetOp::build(OpBuilder &builder, OperationState &state,
   // TODO Store clauses in op: allocateVars, allocatorVars, inReductionVars,
   // inReductionByref, inReductionSyms.
   TargetOp::build(builder, state, /*allocate_vars=*/{}, /*allocator_vars=*/{},
-                  makeArrayAttr(ctx, clauses.dependKinds), clauses.dependVars,
-                  clauses.device, clauses.hasDeviceAddrVars, clauses.ifExpr,
+                  clauses.bare, makeArrayAttr(ctx, clauses.dependKinds),
+                  clauses.dependVars, clauses.device, clauses.hasDeviceAddrVars,
+                  clauses.ifExpr,
                   /*in_reduction_vars=*/{}, /*in_reduction_byref=*/nullptr,
                   /*in_reduction_syms=*/nullptr, clauses.isDevicePtrVars,
                   clauses.mapVars, clauses.nowait, clauses.privateVars,
                   makeArrayAttr(ctx, clauses.privateSyms), clauses.threadLimit,
-                  clauses.bare, /*private_maps=*/nullptr);
+                  /*private_maps=*/nullptr);
 }
 
 LogicalResult TargetOp::verify() {
