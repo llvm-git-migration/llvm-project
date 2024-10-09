@@ -2069,7 +2069,7 @@ bool CommandInterpreter::HandleCommand(const char *command_line,
         remainder.c_str());
 
     // To test whether or not transcript should be saved, `transcript_item` is
-    // used instead of `GetSaveTrasncript()`. This is because the latter will
+    // used instead of `GetSaveTranscript()`. This is because the latter will
     // fail when the command is "settings set interpreter.save-transcript true".
     if (transcript_item) {
       transcript_item->AddStringItem("commandName", cmd_obj->GetCommandName());
@@ -3180,15 +3180,26 @@ void CommandInterpreter::IOHandlerInputComplete(IOHandler &io_handler,
   if ((result.Succeeded() &&
        io_handler.GetFlags().Test(eHandleCommandFlagPrintResult)) ||
       io_handler.GetFlags().Test(eHandleCommandFlagPrintErrors)) {
-    // Display any STDOUT/STDERR _prior_ to emitting the command result text
     GetProcessOutput();
 
+    // Display any inline diagnostics first.
+    if (!result.GetImmediateErrorStream() &&
+        GetDebugger().GetShowInlineDiagnostics()) {
+      unsigned prompt_len = GetDebugger().GetPrompt().size();
+      if (auto indent = result.GetDiagnosticIndent()) {
+        llvm::StringRef diags =
+            result.GetInlineDiagnosticsData(prompt_len + *indent);
+        PrintCommandOutput(io_handler, diags, true);
+      }
+    }
+
+    // Display any STDOUT/STDERR _prior_ to emitting the command result text.
     if (!result.GetImmediateOutputStream()) {
       llvm::StringRef output = result.GetOutputData();
       PrintCommandOutput(io_handler, output, true);
     }
 
-    // Now emit the command error text from the command we just executed
+    // Now emit the command error text from the command we just executed.
     if (!result.GetImmediateErrorStream()) {
       llvm::StringRef error = result.GetErrorData();
       PrintCommandOutput(io_handler, error, false);
