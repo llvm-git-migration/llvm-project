@@ -61,6 +61,8 @@ Changes to the LLVM IR
 Changes to LLVM infrastructure
 ------------------------------
 
+* The `TargetIntrinsicInfo` support has been removed.
+
 Changes to building LLVM
 ------------------------
 
