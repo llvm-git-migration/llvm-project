@@ -23,12 +23,14 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/MemoryLocation.h"
 #include "llvm/Analysis/VectorUtils.h"
+#include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAGAddressAnalysis.h"
+#include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -13572,9 +13574,71 @@ static SDValue combineSubOfBoolean(SDNode *N, SelectionDAG &DAG) {
   return DAG.getNode(ISD::ADD, DL, VT, NewLHS, NewRHS);
 }
 
+// Looks for (sub (shl X, 8-N), (shr X, N)) where the N-th bit in each byte is potentially set. Replace with orc.b. 
+static SDValue combineSubShiftToOrcBGeneralized(SDNode *N, SelectionDAG &DAG,
+                                     const RISCVSubtarget &Subtarget) {
+  if (!Subtarget.hasStdExtZbb())
+    return SDValue();
+
+  EVT VT = N->getValueType(0);
+
+  if (VT != Subtarget.getXLenVT() && VT != MVT::i32 && VT != MVT::i16)
+    return SDValue(); 
+
+  SDValue N0 = N->getOperand(0);
+  SDValue N1 = N->getOperand(1);
+  
+  if (N0->getOpcode() != ISD::SHL){
+    return SDValue();
+  }  
+  
+  auto *ShAmtCLeft = dyn_cast<ConstantSDNode>(N0.getOperand(1));
+  if (!ShAmtCLeft)
+    return SDValue();
+  unsigned ShiftedAmount = 8 - ShAmtCLeft->getZExtValue();
+  SDValue LeftShiftOperand = N0->getOperand(0);
+  SDValue RightShiftOperand;
+
+  if (N1->getOpcode() == ISD::SRL){ // (sub (shl X, 8 - N), (srl X, N)) case
+    auto *ShAmtCRight = dyn_cast<ConstantSDNode>(N1.getOperand(1));
+    // Note that the (sub (X, (shr X, 8))) is a degenerate case that should not get optimized,
+    // as we would be replacing a subtraction with an orc.b
+    // (!N0.hasOneUse() && !N1.hasOneUse())
+    if (!ShAmtCRight || ShAmtCRight->getZExtValue() == 8 || ShAmtCRight->getZExtValue() != ShiftedAmount )
+    {
+        return SDValue();
+    }
+    if (!N0.hasOneUse() && !N1.hasOneUse()){
+      dbgs() << "Both operands both have > 1 use\n";
+      return SDValue();
+    }
+    RightShiftOperand = N1.getOperand(0);
+  }
+  else{ // (sub (shl X, 8), X) case
+    if (!N0.hasOneUse()){
+      dbgs() << "N0 has > 1 uses\n";
+      return SDValue();
+    }
+    // llvm::errs() << "N0 has " << N0->get;
+    RightShiftOperand = N1;
+  }
+
+  APInt Mask = APInt::getSplat(VT.getSizeInBits(), APInt(8, 0x1));
+  Mask <<= ShiftedAmount;
+  // Check that X has indeed the right shape (only the N-th bit can be set in every byte)
+  if(!DAG.MaskedValueIsZero(LeftShiftOperand, ~Mask))
+    return SDValue();
+
+  if (LeftShiftOperand != RightShiftOperand)
+    return SDValue();
+  dbgs() << "Optimized for node - " << N->getDebugLoc() << "\n";
+  return DAG.getNode(RISCVISD::ORC_B, SDLoc(N), VT, LeftShiftOperand);
+}
+
+
 // Looks for (sub (shl X, 8), X) where only bits 8, 16, 24, 32, etc. of X are
 // non-zero. Replace with orc.b.
-static SDValue combineSubShiftToOrcB(SDNode *N, SelectionDAG &DAG,
+__attribute__((unused)) static SDValue combineSubShiftToOrcB(SDNode *N, SelectionDAG &DAG,
                                      const RISCVSubtarget &Subtarget) {
   if (!Subtarget.hasStdExtZbb())
     return SDValue();
@@ -13596,7 +13660,7 @@ static SDValue combineSubShiftToOrcB(SDNode *N, SelectionDAG &DAG,
 
   APInt Mask = APInt::getSplat(VT.getSizeInBits(), APInt(8, 0xfe));
   if (!DAG.MaskedValueIsZero(N1, Mask))
-    return SDValue();
+    return SDValue(); 
 
   return DAG.getNode(RISCVISD::ORC_B, SDLoc(N), VT, N1);
 }
@@ -13623,7 +13687,9 @@ static SDValue performSUBCombine(SDNode *N, SelectionDAG &DAG,
 
   if (SDValue V = combineBinOpOfZExt(N, DAG))
     return V;
-  if (SDValue V = combineSubShiftToOrcB(N, DAG, Subtarget))
+  // if (SDValue V = combineSubShiftToOrcB(N, DAG, Subtarget))
+  //   return V;
+  if (SDValue V  = combineSubShiftToOrcBGeneralized(N, DAG, Subtarget))
     return V;
 
   // fold (sub x, (select lhs, rhs, cc, 0, y)) ->
