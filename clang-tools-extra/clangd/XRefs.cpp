@@ -63,6 +63,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include <optional>
@@ -2272,18 +2273,14 @@ incomingCalls(const CallHierarchyItem &Item, const SymbolIndex *Index) {
   // Initially store the ranges in a map keyed by SymbolID of the caller.
   // This allows us to group different calls with the same caller
   // into the same CallHierarchyIncomingCall.
-  llvm::DenseMap<SymbolID, std::vector<Range>> CallsIn;
+  llvm::DenseMap<SymbolID, std::vector<SymbolLocation>> CallsIn;
   // We can populate the ranges based on a refs request only. As we do so, we
   // also accumulate the container IDs into a lookup request.
   LookupRequest ContainerLookup;
   Index->refs(Request, [&](const Ref &R) {
-    auto Loc = indexToLSPLocation(R.Location, Item.uri.file());
-    if (!Loc) {
-      elog("incomingCalls failed to convert location: {0}", Loc.takeError());
-      return;
-    }
-    auto It = CallsIn.try_emplace(R.Container, std::vector<Range>{}).first;
-    It->second.push_back(Loc->range);
+    auto It =
+        CallsIn.try_emplace(R.Container, std::vector<SymbolLocation>{}).first;
+    It->second.push_back(R.Location);
 
     ContainerLookup.IDs.insert(R.Container);
   });
@@ -2292,9 +2289,26 @@ incomingCalls(const CallHierarchyItem &Item, const SymbolIndex *Index) {
   Index->lookup(ContainerLookup, [&](const Symbol &Caller) {
     auto It = CallsIn.find(Caller.ID);
     assert(It != CallsIn.end());
-    if (auto CHI = symbolToCallHierarchyItem(Caller, Item.uri.file()))
+    if (auto CHI = symbolToCallHierarchyItem(Caller, Item.uri.file())) {
+      SymbolLocation CallerLoc =
+          Caller.Definition ? Caller.Definition : Caller.CanonicalDeclaration;
+      std::vector<Range> FromRanges;
+      for (const SymbolLocation &L : It->second) {
+        if (StringRef{L.FileURI} != StringRef{CallerLoc.FileURI}) {
+          elog("incomingCalls: call location not in same file as caller, this "
+               "is unexpected");
+          continue;
+        }
+        Range R;
+        R.start.line = L.Start.line();
+        R.start.character = L.Start.column();
+        R.end.line = L.End.line();
+        R.end.character = L.End.column();
+        FromRanges.push_back(R);
+      }
       Results.push_back(
-          CallHierarchyIncomingCall{std::move(*CHI), std::move(It->second)});
+          CallHierarchyIncomingCall{std::move(*CHI), std::move(FromRanges)});
+    }
   });
   // Sort results by name of container.
   llvm::sort(Results, [](const CallHierarchyIncomingCall &A,
