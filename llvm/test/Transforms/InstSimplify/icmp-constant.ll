@@ -1215,7 +1215,7 @@ define <2 x i1> @icmp_eq_constant_range_attr_vec(<2 x i8> range(i8 0, 10) %i) {
 
 define <2 x i1> @neg_icmp_eq_constant_range_attr_vec(<2 x i8> range(i8 0, 11) %i) {
 ; CHECK-LABEL: @neg_icmp_eq_constant_range_attr_vec(
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I:%.*]], <i8 10, i8 10>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I:%.*]], splat (i8 10)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
   %cmp = icmp eq <2 x i8> %i, <i8 10, i8 10>
@@ -1238,7 +1238,7 @@ define <2 x i1> @icmp_eq_constant_range_return_vec() {
 define <2 x i1> @neg_icmp_eq_constant_range_return_vec() {
 ; CHECK-LABEL: @neg_icmp_eq_constant_range_return_vec(
 ; CHECK-NEXT:    [[I:%.*]] = call <2 x i8> @returns_contain_ten_range_helper_vec()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], <i8 10, i8 10>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], splat (i8 10)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
   %i = call <2 x i8> @returns_contain_ten_range_helper_vec()
@@ -1261,7 +1261,7 @@ define <2 x i1> @icmp_eq_constant_range_call_vec() {
 define <2 x i1> @neg_icmp_eq_constant_range_call_vec() {
 ; CHECK-LABEL: @neg_icmp_eq_constant_range_call_vec(
 ; CHECK-NEXT:    [[I:%.*]] = call range(i8 0, 11) <2 x i8> @returns_i8_helper_vec()
-; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], <i8 10, i8 10>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp eq <2 x i8> [[I]], splat (i8 10)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
   %i = call range(i8 0, 11) <2 x i8> @returns_i8_helper_vec()

@@ -1965,7 +1965,7 @@ define i1 @shl_pow2_cmp_ne_zero(i32 %x) {
 
 define <2 x i1> @shl_pow2_cmp_ne_zero_splat(<2 x i32> %x) {
 ; CHECK-LABEL: @shl_pow2_cmp_ne_zero_splat(
-; CHECK-NEXT:    [[S:%.*]] = shl <2 x i32> <i32 16, i32 16>, [[X:%.*]]
+; CHECK-NEXT:    [[S:%.*]] = shl <2 x i32> splat (i32 16), [[X:%.*]]
 ; CHECK-NEXT:    [[C:%.*]] = icmp ne <2 x i32> [[S]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;

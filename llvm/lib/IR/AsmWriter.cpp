@@ -89,6 +89,11 @@
 
 using namespace llvm;
 
+namespace llvm {
+extern cl::opt<bool> UseConstantIntForFixedLengthSplat;
+extern cl::opt<bool> UseConstantFPForFixedLengthSplat;
+} // namespace llvm
+
 // Make virtual table appear in this compilation unit.
 AssemblyAnnotationWriter::~AssemblyAnnotationWriter() = default;
 
@@ -1685,6 +1690,46 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
     if (CS->getType()->isPacked())
       Out << '>';
     return;
+  }
+
+  // When in the mode where Constant{Int,FP} do not support vector types the
+  // "splat(Ty val)" syntax is interpreted as a ConstantDataVector. Maintaining
+  // this association when outputiing the IR will significantly reduce the
+  // output changes when in the mode where Constant{Int,FP} do support vector
+  // types. In turn this should make it easier to spot difference in output
+  // when switching between the modes. Once the transition is complete this
+  // code will be removed.
+  if (const ConstantDataVector *CDV = dyn_cast<ConstantDataVector>(CV)) {
+    if (auto *SplatVal = CDV->getSplatValue()) {
+      Type* EltTy = SplatVal->getType();
+
+      if (EltTy->isIntegerTy() && !UseConstantIntForFixedLengthSplat) {
+        if (const ConstantInt *CI = dyn_cast<ConstantInt>(SplatVal)) {
+          Out << "splat (";
+          WriterCtx.TypePrinter->print(EltTy, Out);
+          Out << " ";
+
+          if (EltTy->isIntegerTy(1))
+            Out << (CI->getZExtValue() ? "true" : "false");
+          else
+            Out << CI->getValue();
+
+          Out << ")";
+          return;
+        }
+      }
+
+      if (EltTy->isFloatingPointTy() && !UseConstantFPForFixedLengthSplat) {
+        if (const ConstantFP *CFP = dyn_cast<ConstantFP>(SplatVal)) {
+          Out << "splat (";
+          WriterCtx.TypePrinter->print(EltTy, Out);
+          Out << " ";
+          WriteAPFloatInternal(Out, CFP->getValueAPF());
+          Out << ")";
+          return;
+        }
+      }
+    }
   }
 
   if (isa<ConstantVector>(CV) || isa<ConstantDataVector>(CV)) {

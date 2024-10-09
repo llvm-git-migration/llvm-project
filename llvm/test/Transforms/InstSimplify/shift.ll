@@ -115,7 +115,7 @@ define i32 @ashr_all_ones(i32 %A) {
 
 define <3 x i8> @ashr_all_ones_vec_with_poison_elts(<3 x i8> %x, <3 x i8> %y) {
 ; CHECK-LABEL: @ashr_all_ones_vec_with_poison_elts(
-; CHECK-NEXT:    ret <3 x i8> <i8 -1, i8 -1, i8 -1>
+; CHECK-NEXT:    ret <3 x i8> splat (i8 -1)
 ;
   %sh = ashr <3 x i8> <i8 poison, i8 -1, i8 poison>, %y
   ret <3 x i8> %sh
@@ -225,9 +225,9 @@ define <2 x i64> @shl_or_shr2v(<2 x i32> %a, <2 x i32> %b) {
 ; CHECK-LABEL: @shl_or_shr2v(
 ; CHECK-NEXT:    [[T1:%.*]] = zext <2 x i32> [[A:%.*]] to <2 x i64>
 ; CHECK-NEXT:    [[T2:%.*]] = zext <2 x i32> [[B:%.*]] to <2 x i64>
-; CHECK-NEXT:    [[T3:%.*]] = shl nuw <2 x i64> [[T1]], <i64 31, i64 31>
+; CHECK-NEXT:    [[T3:%.*]] = shl nuw <2 x i64> [[T1]], splat (i64 31)
 ; CHECK-NEXT:    [[T4:%.*]] = or <2 x i64> [[T2]], [[T3]]
-; CHECK-NEXT:    [[T5:%.*]] = lshr <2 x i64> [[T4]], <i64 31, i64 31>
+; CHECK-NEXT:    [[T5:%.*]] = lshr <2 x i64> [[T4]], splat (i64 31)
 ; CHECK-NEXT:    ret <2 x i64> [[T5]]
 ;
   %t1 = zext <2 x i32> %a to <2 x i64>

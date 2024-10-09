@@ -111,7 +111,7 @@ define i1 @test6(i32 %d) {
 
 define <2 x i1> @test6vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test6vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], <i32 6, i32 6>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], splat (i32 6)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 5, i32 5>, %d
@@ -150,7 +150,7 @@ define i1 @test8(i32 %d) {
 
 define <2 x i1> @test8vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test8vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], <i32 2, i32 2>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], splat (i32 2)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -170,7 +170,7 @@ define i1 @test9(i32 %d) {
 
 define <2 x i1> @test9vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test9vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], <i32 2, i32 2>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], splat (i32 2)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -190,7 +190,7 @@ define i1 @test10(i32 %d) {
 
 define <2 x i1> @test10vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test10vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], <i32 3, i32 3>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ult <2 x i32> [[D:%.*]], splat (i32 3)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -210,7 +210,7 @@ define i1 @test11(i32 %d) {
 
 define <2 x i1> @test11vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test11vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], <i32 4, i32 4>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], splat (i32 4)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -230,7 +230,7 @@ define i1 @test12(i32 %d) {
 
 define <2 x i1> @test12vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test12vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], <i32 2, i32 2>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], splat (i32 2)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -250,7 +250,7 @@ define i1 @test13(i32 %d) {
 
 define <2 x i1> @test13vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test13vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], <i32 1, i32 1>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], splat (i32 1)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d
@@ -270,7 +270,7 @@ define i1 @test14(i32 %d) {
 
 define <2 x i1> @test14vec(<2 x i32> %d) {
 ; CHECK-LABEL: @test14vec(
-; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], <i32 1, i32 1>
+; CHECK-NEXT:    [[CMP1:%.*]] = icmp ugt <2 x i32> [[D:%.*]], splat (i32 1)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP1]]
 ;
   %div = udiv <2 x i32> <i32 4, i32 4>, %d

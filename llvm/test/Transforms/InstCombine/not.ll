@@ -73,7 +73,7 @@ define i1 @not_cmp_constant(i32 %a) {
 
 define <2 x i1> @not_cmp_constant_vector(<2 x i32> %a) {
 ; CHECK-LABEL: @not_cmp_constant_vector(
-; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i32> [[A:%.*]], <i32 -43, i32 -43>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i32> [[A:%.*]], splat (i32 -43)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
   %nota = xor <2 x i32> %a, <i32 -1, i32 -1>
@@ -114,7 +114,7 @@ define i8 @not_ashr_const(i8 %x) {
 
 define <2 x i8> @not_ashr_const_splat(<2 x i8> %x) {
 ; CHECK-LABEL: @not_ashr_const_splat(
-; CHECK-NEXT:    [[NOT:%.*]] = lshr <2 x i8> <i8 41, i8 41>, [[X:%.*]]
+; CHECK-NEXT:    [[NOT:%.*]] = lshr <2 x i8> splat (i8 41), [[X:%.*]]
 ; CHECK-NEXT:    ret <2 x i8> [[NOT]]
 ;
   %shr = ashr <2 x i8> <i8 -42, i8 -42>, %x
@@ -147,7 +147,7 @@ define i8 @not_lshr_const(i8 %x) {
 
 define <2 x i8> @not_lshr_const_splat(<2 x i8> %x) {
 ; CHECK-LABEL: @not_lshr_const_splat(
-; CHECK-NEXT:    [[NOT:%.*]] = ashr <2 x i8> <i8 -43, i8 -43>, [[X:%.*]]
+; CHECK-NEXT:    [[NOT:%.*]] = ashr <2 x i8> splat (i8 -43), [[X:%.*]]
 ; CHECK-NEXT:    ret <2 x i8> [[NOT]]
 ;
   %shr = lshr <2 x i8> <i8 42, i8 42>, %x
@@ -180,7 +180,7 @@ define i32 @not_sub_extra_use(i32 %y, ptr %p) {
 
 define <2 x i32> @not_sub_splat(<2 x i32> %y) {
 ; CHECK-LABEL: @not_sub_splat(
-; CHECK-NEXT:    [[R:%.*]] = add <2 x i32> [[Y:%.*]], <i32 -124, i32 -124>
+; CHECK-NEXT:    [[R:%.*]] = add <2 x i32> [[Y:%.*]], splat (i32 -124)
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %s = sub <2 x i32> <i32 123, i32 123>, %y
@@ -190,9 +190,9 @@ define <2 x i32> @not_sub_splat(<2 x i32> %y) {
 
 define <2 x i32> @not_sub_extra_use_splat(<2 x i32> %y, ptr %p) {
 ; CHECK-LABEL: @not_sub_extra_use_splat(
-; CHECK-NEXT:    [[S:%.*]] = sub <2 x i32> <i32 123, i32 123>, [[Y:%.*]]
+; CHECK-NEXT:    [[S:%.*]] = sub <2 x i32> splat (i32 123), [[Y:%.*]]
 ; CHECK-NEXT:    store <2 x i32> [[S]], ptr [[P:%.*]], align 8
-; CHECK-NEXT:    [[R:%.*]] = add <2 x i32> [[Y]], <i32 -124, i32 -124>
+; CHECK-NEXT:    [[R:%.*]] = add <2 x i32> [[Y]], splat (i32 -124)
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %s = sub <2 x i32> <i32 123, i32 123>, %y
@@ -238,7 +238,7 @@ define i32 @not_add(i32 %x) {
 
 define <2 x i32> @not_add_splat(<2 x i32> %x) {
 ; CHECK-LABEL: @not_add_splat(
-; CHECK-NEXT:    [[R:%.*]] = sub <2 x i32> <i32 -124, i32 -124>, [[X:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = sub <2 x i32> splat (i32 -124), [[X:%.*]]
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %a = add <2 x i32> %x, <i32 123, i32 123>

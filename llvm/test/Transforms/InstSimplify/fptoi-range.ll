@@ -157,7 +157,7 @@ define i1 @f16_ui_min2(half %f) {
 define <2 x i1> @v2f16_si_max(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_si_max(
 ; CHECK-NEXT:    [[I:%.*]] = fptosi <2 x half> [[F:%.*]] to <2 x i32>
-; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i32> [[I]], <i32 65504, i32 65504>
+; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i32> [[I]], splat (i32 65504)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptosi <2 x half> %f to <2 x i32>
@@ -177,7 +177,7 @@ define <2 x i1> @v2f16_si_max2(<2 x half> %f) {
 define <2 x i1> @v2f16_si16_max2(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_si16_max2(
 ; CHECK-NEXT:    [[I:%.*]] = fptosi <2 x half> [[F:%.*]] to <2 x i16>
-; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i16> [[I]], <i16 -32, i16 -32>
+; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i16> [[I]], splat (i16 -32)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptosi <2 x half> %f to <2 x i16>
@@ -197,7 +197,7 @@ define <2 x i1> @v2f16_si_min1(<2 x half> %f) {
 define <2 x i1> @v2f16_si16_min1(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_si16_min1(
 ; CHECK-NEXT:    [[I:%.*]] = fptosi <2 x half> [[F:%.*]] to <2 x i16>
-; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i16> [[I]], <i16 32, i16 32>
+; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i16> [[I]], splat (i16 32)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptosi <2 x half> %f to <2 x i16>
@@ -208,7 +208,7 @@ define <2 x i1> @v2f16_si16_min1(<2 x half> %f) {
 define <2 x i1> @v2f16_si_min2(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_si_min2(
 ; CHECK-NEXT:    [[I:%.*]] = fptosi <2 x half> [[F:%.*]] to <2 x i32>
-; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i32> [[I]], <i32 -65504, i32 -65504>
+; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i32> [[I]], splat (i32 -65504)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptosi <2 x half> %f to <2 x i32>
@@ -219,7 +219,7 @@ define <2 x i1> @v2f16_si_min2(<2 x half> %f) {
 define <2 x i1> @v2f16_ui_max1(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_ui_max1(
 ; CHECK-NEXT:    [[I:%.*]] = fptoui <2 x half> [[F:%.*]] to <2 x i32>
-; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i32> [[I]], <i32 65504, i32 65504>
+; CHECK-NEXT:    [[C:%.*]] = icmp sge <2 x i32> [[I]], splat (i32 65504)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptoui <2 x half> %f to <2 x i32>
@@ -239,7 +239,7 @@ define <2 x i1> @v2f16_ui_max2(<2 x half> %f) {
 define <2 x i1> @v2f16_ui16_max2(<2 x half> %f) {
 ; CHECK-LABEL: @v2f16_ui16_max2(
 ; CHECK-NEXT:    [[I:%.*]] = fptoui <2 x half> [[F:%.*]] to <2 x i16>
-; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i16> [[I]], <i16 -32, i16 -32>
+; CHECK-NEXT:    [[C:%.*]] = icmp sgt <2 x i16> [[I]], splat (i16 -32)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %i = fptoui <2 x half> %f to <2 x i16>

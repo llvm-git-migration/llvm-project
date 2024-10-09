@@ -67,8 +67,8 @@ define i232 @lshr_lshr(i232 %A) {
 
 define <2 x i32> @lshr_lshr_splat_vec(<2 x i32> %A) {
 ; CHECK-LABEL: @lshr_lshr_splat_vec(
-; CHECK-NEXT:    [[B:%.*]] = lshr <2 x i32> [[A:%.*]], <i32 28, i32 28>
-; CHECK-NEXT:    [[C:%.*]] = lshr <2 x i32> [[B]], <i32 4, i32 4>
+; CHECK-NEXT:    [[B:%.*]] = lshr <2 x i32> [[A:%.*]], splat (i32 28)
+; CHECK-NEXT:    [[C:%.*]] = lshr <2 x i32> [[B]], splat (i32 4)
 ; CHECK-NEXT:    ret <2 x i32> [[C]]
 ;
   %B = lshr <2 x i32> %A, <i32 28, i32 28>

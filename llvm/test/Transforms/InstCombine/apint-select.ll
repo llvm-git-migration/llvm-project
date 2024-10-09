@@ -85,7 +85,7 @@ define <2 x i64> @not_sext_vec(<2 x i1> %C) {
 
 define <2 x i32> @scalar_select_of_vectors(i1 %c) {
 ; CHECK-LABEL: @scalar_select_of_vectors(
-; CHECK-NEXT:    [[V:%.*]] = select i1 [[C:%.*]], <2 x i32> <i32 1, i32 1>, <2 x i32> zeroinitializer
+; CHECK-NEXT:    [[V:%.*]] = select i1 [[C:%.*]], <2 x i32> splat (i32 1), <2 x i32> zeroinitializer
 ; CHECK-NEXT:    ret <2 x i32> [[V]]
 ;
   %V = select i1 %c, <2 x i32> <i32 1, i32 1>, <2 x i32> zeroinitializer

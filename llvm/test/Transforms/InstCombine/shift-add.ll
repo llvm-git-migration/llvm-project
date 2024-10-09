@@ -410,9 +410,9 @@ define i32 @shl_nsw_add_negative(i32 %x) {
 
 define <2 x i8> @shl_nuw_add_negative_splat_uses(<2 x i8> %x, ptr %p) {
 ; CHECK-LABEL: @shl_nuw_add_negative_splat_uses(
-; CHECK-NEXT:    [[A:%.*]] = add <2 x i8> [[X:%.*]], <i8 -2, i8 -2>
+; CHECK-NEXT:    [[A:%.*]] = add <2 x i8> [[X:%.*]], splat (i8 -2)
 ; CHECK-NEXT:    store <2 x i8> [[A]], ptr [[P:%.*]], align 2
-; CHECK-NEXT:    [[R:%.*]] = shl nuw <2 x i8> <i8 3, i8 3>, [[X]]
+; CHECK-NEXT:    [[R:%.*]] = shl nuw <2 x i8> splat (i8 3), [[X]]
 ; CHECK-NEXT:    ret <2 x i8> [[R]]
 ;
   %a = add <2 x i8> %x, <i8 -2, i8 -2>

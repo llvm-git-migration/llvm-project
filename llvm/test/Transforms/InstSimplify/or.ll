@@ -19,7 +19,7 @@ define i32 @all_ones(i32 %A) {
 
 define <3 x i8> @all_ones_vec_with_poison_elt(<3 x i8> %A) {
 ; CHECK-LABEL: @all_ones_vec_with_poison_elt(
-; CHECK-NEXT:    ret <3 x i8> <i8 -1, i8 -1, i8 -1>
+; CHECK-NEXT:    ret <3 x i8> splat (i8 -1)
 ;
   %B = or <3 x i8> %A, <i8 -1, i8 poison, i8 -1>
   ret <3 x i8> %B
@@ -130,7 +130,7 @@ define i8 @test11(i8 %A) {
 define i8 @test11v(<2 x i8> %A) {
 ; CHECK-LABEL: @test11v(
 ; CHECK-NEXT:    [[B:%.*]] = or <2 x i8> [[A:%.*]], <i8 -2, i8 0>
-; CHECK-NEXT:    [[CV:%.*]] = xor <2 x i8> [[B]], <i8 13, i8 13>
+; CHECK-NEXT:    [[CV:%.*]] = xor <2 x i8> [[B]], splat (i8 13)
 ; CHECK-NEXT:    [[C:%.*]] = extractelement <2 x i8> [[CV]], i32 0
 ; CHECK-NEXT:    [[D:%.*]] = or i8 [[C]], 1
 ; CHECK-NEXT:    [[E:%.*]] = xor i8 [[D]], 12

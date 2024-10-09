@@ -75,10 +75,8 @@ attributes #0 = { mustprogress noreturn nounwind sanitize_memory "no-trapping-ma
 !4 = !{!"Simple C++ TBAA"}
 !5 = distinct !{!5, !6}
 !6 = !{!"llvm.loop.mustprogress"}
-;.
 ; CHECK: [[TBAA0]] = !{[[META1:![0-9]+]], [[META1]], i64 0}
 ; CHECK: [[META1]] = !{!"omnipotent char", [[META2:![0-9]+]], i64 0}
 ; CHECK: [[META2]] = !{!"Simple C++ TBAA"}
 ; CHECK: [[LOOP3]] = distinct !{[[LOOP3]], [[META4:![0-9]+]]}
 ; CHECK: [[META4]] = !{!"llvm.loop.mustprogress"}
-;.

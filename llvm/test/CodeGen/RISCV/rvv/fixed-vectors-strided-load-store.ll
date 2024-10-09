@@ -382,7 +382,7 @@ define void @negative_shl_non_commute(ptr noalias nocapture %A, ptr noalias noca
 ; CHECK-NEXT:    [[I4:%.*]] = add <8 x i32> [[WIDE_LOAD]], [[WIDE_MASKED_GATHER]]
 ; CHECK-NEXT:    store <8 x i32> [[I4]], ptr [[I2]], align 1
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 8
-; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <8 x i64> [[VEC_IND]], <i64 8, i64 8, i64 8, i64 8, i64 8, i64 8, i64 8, i64 8>
+; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <8 x i64> [[VEC_IND]], splat (i64 8)
 ; CHECK-NEXT:    [[I6:%.*]] = icmp eq i64 [[INDEX_NEXT]], 1024
 ; CHECK-NEXT:    br i1 [[I6]], label [[FOR_COND_CLEANUP:%.*]], label [[VECTOR_BODY]]
 ; CHECK:       for.cond.cleanup:
@@ -677,9 +677,9 @@ define void @gather_of_pointers(ptr noalias nocapture %arg, ptr noalias nocaptur
 ; ZVE32F:       bb2:
 ; ZVE32F-NEXT:    [[I:%.*]] = phi i64 [ 0, [[BB:%.*]] ], [ [[I15:%.*]], [[BB2]] ]
 ; ZVE32F-NEXT:    [[I3:%.*]] = phi <2 x i64> [ <i64 0, i64 1>, [[BB]] ], [ [[I16:%.*]], [[BB2]] ]
-; ZVE32F-NEXT:    [[I4:%.*]] = mul nuw nsw <2 x i64> [[I3]], <i64 5, i64 5>
-; ZVE32F-NEXT:    [[I5:%.*]] = mul <2 x i64> [[I3]], <i64 5, i64 5>
-; ZVE32F-NEXT:    [[I6:%.*]] = add <2 x i64> [[I5]], <i64 10, i64 10>
+; ZVE32F-NEXT:    [[I4:%.*]] = mul nuw nsw <2 x i64> [[I3]], splat (i64 5)
+; ZVE32F-NEXT:    [[I5:%.*]] = mul <2 x i64> [[I3]], splat (i64 5)
+; ZVE32F-NEXT:    [[I6:%.*]] = add <2 x i64> [[I5]], splat (i64 10)
 ; ZVE32F-NEXT:    [[I7:%.*]] = getelementptr inbounds ptr, ptr [[ARG1:%.*]], <2 x i64> [[I4]]
 ; ZVE32F-NEXT:    [[I8:%.*]] = getelementptr inbounds ptr, ptr [[ARG1]], <2 x i64> [[I6]]
 ; ZVE32F-NEXT:    [[I9:%.*]] = call <2 x ptr> @llvm.masked.gather.v2p0.v2p0(<2 x ptr> [[I7]], i32 8, <2 x i1> <i1 true, i1 true>, <2 x ptr> undef)
@@ -689,7 +689,7 @@ define void @gather_of_pointers(ptr noalias nocapture %arg, ptr noalias nocaptur
 ; ZVE32F-NEXT:    [[I13:%.*]] = getelementptr inbounds ptr, ptr [[I11]], i64 2
 ; ZVE32F-NEXT:    store <2 x ptr> [[I10]], ptr [[I13]], align 8
 ; ZVE32F-NEXT:    [[I15]] = add nuw i64 [[I]], 4
-; ZVE32F-NEXT:    [[I16]] = add <2 x i64> [[I3]], <i64 4, i64 4>
+; ZVE32F-NEXT:    [[I16]] = add <2 x i64> [[I3]], splat (i64 4)
 ; ZVE32F-NEXT:    [[I17:%.*]] = icmp eq i64 [[I15]], 1024
 ; ZVE32F-NEXT:    br i1 [[I17]], label [[BB18:%.*]], label [[BB2]]
 ; ZVE32F:       bb18:
@@ -758,15 +758,15 @@ define void @scatter_of_pointers(ptr noalias nocapture %arg, ptr noalias nocaptu
 ; ZVE32F-NEXT:    [[I6:%.*]] = load <2 x ptr>, ptr [[I4]], align 8
 ; ZVE32F-NEXT:    [[I7:%.*]] = getelementptr inbounds ptr, ptr [[I4]], i64 2
 ; ZVE32F-NEXT:    [[I9:%.*]] = load <2 x ptr>, ptr [[I7]], align 8
-; ZVE32F-NEXT:    [[I10:%.*]] = mul nuw nsw <2 x i64> [[I3]], <i64 5, i64 5>
-; ZVE32F-NEXT:    [[I11:%.*]] = mul <2 x i64> [[I3]], <i64 5, i64 5>
-; ZVE32F-NEXT:    [[I12:%.*]] = add <2 x i64> [[I11]], <i64 10, i64 10>
+; ZVE32F-NEXT:    [[I10:%.*]] = mul nuw nsw <2 x i64> [[I3]], splat (i64 5)
+; ZVE32F-NEXT:    [[I11:%.*]] = mul <2 x i64> [[I3]], splat (i64 5)
+; ZVE32F-NEXT:    [[I12:%.*]] = add <2 x i64> [[I11]], splat (i64 10)
 ; ZVE32F-NEXT:    [[I13:%.*]] = getelementptr inbounds ptr, ptr [[ARG:%.*]], <2 x i64> [[I10]]
 ; ZVE32F-NEXT:    [[I14:%.*]] = getelementptr inbounds ptr, ptr [[ARG]], <2 x i64> [[I12]]
 ; ZVE32F-NEXT:    call void @llvm.masked.scatter.v2p0.v2p0(<2 x ptr> [[I6]], <2 x ptr> [[I13]], i32 8, <2 x i1> <i1 true, i1 true>)
 ; ZVE32F-NEXT:    call void @llvm.masked.scatter.v2p0.v2p0(<2 x ptr> [[I9]], <2 x ptr> [[I14]], i32 8, <2 x i1> <i1 true, i1 true>)
 ; ZVE32F-NEXT:    [[I15]] = add nuw i64 [[I]], 4
-; ZVE32F-NEXT:    [[I16]] = add <2 x i64> [[I3]], <i64 4, i64 4>
+; ZVE32F-NEXT:    [[I16]] = add <2 x i64> [[I3]], splat (i64 4)
 ; ZVE32F-NEXT:    [[I17:%.*]] = icmp eq i64 [[I15]], 1024
 ; ZVE32F-NEXT:    br i1 [[I17]], label [[BB18:%.*]], label [[BB2]]
 ; ZVE32F:       bb18:
@@ -995,7 +995,7 @@ define void @gather_narrow_idx(ptr noalias nocapture %A, ptr noalias nocapture r
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <32 x i16> [ <i16 0, i16 1, i16 2, i16 3, i16 4, i16 5, i16 6, i16 7, i16 8, i16 9, i16 10, i16 11, i16 12, i16 13, i16 14, i16 15, i16 16, i16 17, i16 18, i16 19, i16 20, i16 21, i16 22, i16 23, i16 24, i16 25, i16 26, i16 27, i16 28, i16 29, i16 30, i16 31>, [[ENTRY]] ], [ [[VEC_IND_NEXT:%.*]], [[VECTOR_BODY]] ]
-; CHECK-NEXT:    [[I:%.*]] = mul nuw nsw <32 x i16> [[VEC_IND]], <i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5, i16 5>
+; CHECK-NEXT:    [[I:%.*]] = mul nuw nsw <32 x i16> [[VEC_IND]], splat (i16 5)
 ; CHECK-NEXT:    [[I1:%.*]] = getelementptr inbounds i8, ptr [[B:%.*]], <32 x i16> [[I]]
 ; CHECK-NEXT:    [[WIDE_MASKED_GATHER:%.*]] = call <32 x i8> @llvm.masked.gather.v32i8.v32p0(<32 x ptr> [[I1]], i32 1, <32 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, <32 x i8> undef)
 ; CHECK-NEXT:    [[I2:%.*]] = getelementptr inbounds i8, ptr [[A:%.*]], i64 [[INDEX]]
@@ -1003,7 +1003,7 @@ define void @gather_narrow_idx(ptr noalias nocapture %A, ptr noalias nocapture r
 ; CHECK-NEXT:    [[I4:%.*]] = add <32 x i8> [[WIDE_LOAD]], [[WIDE_MASKED_GATHER]]
 ; CHECK-NEXT:    store <32 x i8> [[I4]], ptr [[I2]], align 1
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 32
-; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <32 x i16> [[VEC_IND]], <i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32, i16 32>
+; CHECK-NEXT:    [[VEC_IND_NEXT]] = add <32 x i16> [[VEC_IND]], splat (i16 32)
 ; CHECK-NEXT:    [[I6:%.*]] = icmp eq i64 [[INDEX_NEXT]], 1024
 ; CHECK-NEXT:    br i1 [[I6]], label [[FOR_COND_CLEANUP:%.*]], label [[VECTOR_BODY]]
 ; CHECK:       for.cond.cleanup:

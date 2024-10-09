@@ -210,7 +210,7 @@ define i1 @shl_nz_bounded_cnt(i32 %cnt, i32 %y) {
 define <2 x i1> @shl_nz_bounded_cnt_vec_todo_no_common_bit(<2 x i32> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @shl_nz_bounded_cnt_vec_todo_no_common_bit(
 ; CHECK-NEXT:    [[CNT:%.*]] = and <2 x i32> [[X:%.*]], <i32 16, i32 32>
-; CHECK-NEXT:    [[VAL:%.*]] = or <2 x i32> [[Y:%.*]], <i32 16, i32 16>
+; CHECK-NEXT:    [[VAL:%.*]] = or <2 x i32> [[Y:%.*]], splat (i32 16)
 ; CHECK-NEXT:    [[SHL:%.*]] = shl <2 x i32> [[VAL]], [[CNT]]
 ; CHECK-NEXT:    [[R:%.*]] = icmp eq <2 x i32> [[SHL]], zeroinitializer
 ; CHECK-NEXT:    ret <2 x i1> [[R]]
@@ -315,7 +315,7 @@ define i1 @lshr_nz_bounded_cnt_fail(i32 %cnt, i32 %y) {
 
 define <2 x i1> @ashr_nz_bounded_cnt_vec_fail(<2 x i32> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @ashr_nz_bounded_cnt_vec_fail(
-; CHECK-NEXT:    [[CNT:%.*]] = and <2 x i32> [[X:%.*]], <i32 24, i32 24>
+; CHECK-NEXT:    [[CNT:%.*]] = and <2 x i32> [[X:%.*]], splat (i32 24)
 ; CHECK-NEXT:    [[VAL:%.*]] = or <2 x i32> [[Y:%.*]], <i32 131088, i32 268697601>
 ; CHECK-NEXT:    [[SHL:%.*]] = ashr <2 x i32> [[VAL]], [[CNT]]
 ; CHECK-NEXT:    [[R:%.*]] = icmp eq <2 x i32> [[SHL]], zeroinitializer
@@ -663,7 +663,7 @@ define <3 x i1> @bitcast_veci3_to_veci4_fail_not_multiple(<4 x i3> %xx, <3 x i4>
 
 define <4 x i1> @bitcast_fail_veci16_to_veci8(<2 x i16> %xx, <4 x i8> %ind) {
 ; CHECK-LABEL: @bitcast_fail_veci16_to_veci8(
-; CHECK-NEXT:    [[XA:%.*]] = add nuw nsw <2 x i16> [[XX:%.*]], <i16 1, i16 1>
+; CHECK-NEXT:    [[XA:%.*]] = add nuw nsw <2 x i16> [[XX:%.*]], splat (i16 1)
 ; CHECK-NEXT:    [[X:%.*]] = bitcast <2 x i16> [[XA]] to <4 x i8>
 ; CHECK-NEXT:    [[Z:%.*]] = or <4 x i8> [[X]], [[IND:%.*]]
 ; CHECK-NEXT:    [[R:%.*]] = icmp eq <4 x i8> [[Z]], zeroinitializer

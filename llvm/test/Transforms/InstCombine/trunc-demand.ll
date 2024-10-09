@@ -113,7 +113,7 @@ define <2 x i7> @trunc_lshr_vec_splat_exact_mask(<2 x i16> %x) {
 
 define <2 x i7> @trunc_lshr_big_shift(<2 x i16> %x) {
 ; CHECK-LABEL: @trunc_lshr_big_shift(
-; CHECK-NEXT:    [[S:%.*]] = lshr <2 x i16> [[X:%.*]], <i16 7, i16 7>
+; CHECK-NEXT:    [[S:%.*]] = lshr <2 x i16> [[X:%.*]], splat (i16 7)
 ; CHECK-NEXT:    [[T:%.*]] = trunc <2 x i16> [[S]] to <2 x i7>
 ; CHECK-NEXT:    [[R:%.*]] = and <2 x i7> [[T]], <i7 1, i7 1>
 ; CHECK-NEXT:    ret <2 x i7> [[R]]

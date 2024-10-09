@@ -350,7 +350,7 @@ define <2 x i64> @bitcast_select_multi_uses(<4 x i1> %cmp, <2 x i64> %a, <2 x i6
 ; CHECK-NEXT:    [[BC1:%.*]] = bitcast <4 x i32> [[SEXT]] to <2 x i64>
 ; CHECK-NEXT:    [[AND1:%.*]] = and <2 x i64> [[A:%.*]], [[BC1]]
 ; CHECK-NEXT:    [[TMP1:%.*]] = bitcast <4 x i32> [[SEXT]] to <2 x i64>
-; CHECK-NEXT:    [[BC2:%.*]] = xor <2 x i64> [[TMP1]], <i64 -1, i64 -1>
+; CHECK-NEXT:    [[BC2:%.*]] = xor <2 x i64> [[TMP1]], splat (i64 -1)
 ; CHECK-NEXT:    [[AND2:%.*]] = and <2 x i64> [[B:%.*]], [[BC2]]
 ; CHECK-NEXT:    [[OR:%.*]] = or <2 x i64> [[AND2]], [[AND1]]
 ; CHECK-NEXT:    [[ADD:%.*]] = add <2 x i64> [[AND2]], [[BC2]]
@@ -830,7 +830,7 @@ define <2 x i16> @bitcast_vec_cond_commute3(<4 x i8> %cond, <2 x i16> %pc, <2 x 
 define <2 x i64> @bitcast_fp_vec_cond(<2 x double> noundef %s, <2 x i64> %c, <2 x i64> %d) {
 ; CHECK-LABEL: @bitcast_fp_vec_cond(
 ; CHECK-NEXT:    [[T9:%.*]] = bitcast <2 x double> [[S:%.*]] to <2 x i64>
-; CHECK-NEXT:    [[NOTT9:%.*]] = xor <2 x i64> [[T9]], <i64 -1, i64 -1>
+; CHECK-NEXT:    [[NOTT9:%.*]] = xor <2 x i64> [[T9]], splat (i64 -1)
 ; CHECK-NEXT:    [[T11:%.*]] = and <2 x i64> [[C:%.*]], [[NOTT9]]
 ; CHECK-NEXT:    [[T12:%.*]] = and <2 x i64> [[D:%.*]], [[T9]]
 ; CHECK-NEXT:    [[R:%.*]] = or disjoint <2 x i64> [[T11]], [[T12]]
@@ -850,7 +850,7 @@ define <2 x i64> @bitcast_int_vec_cond(i1 noundef %b, <2 x i64> %c, <2 x i64> %d
 ; CHECK-LABEL: @bitcast_int_vec_cond(
 ; CHECK-NEXT:    [[S:%.*]] = sext i1 [[B:%.*]] to i128
 ; CHECK-NEXT:    [[T9:%.*]] = bitcast i128 [[S]] to <2 x i64>
-; CHECK-NEXT:    [[NOTT9:%.*]] = xor <2 x i64> [[T9]], <i64 -1, i64 -1>
+; CHECK-NEXT:    [[NOTT9:%.*]] = xor <2 x i64> [[T9]], splat (i64 -1)
 ; CHECK-NEXT:    [[T11:%.*]] = and <2 x i64> [[C:%.*]], [[NOTT9]]
 ; CHECK-NEXT:    [[T12:%.*]] = and <2 x i64> [[D:%.*]], [[T9]]
 ; CHECK-NEXT:    [[R:%.*]] = or disjoint <2 x i64> [[T11]], [[T12]]

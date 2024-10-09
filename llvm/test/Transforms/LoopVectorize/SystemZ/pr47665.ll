@@ -23,7 +23,7 @@ define void @test(ptr %p, i40 %a) {
 ; CHECK-NEXT:    [[BROADCAST_SPLATINSERT2:%.*]] = insertelement <16 x i32> poison, i32 [[INDEX]], i64 0
 ; CHECK-NEXT:    [[BROADCAST_SPLAT3:%.*]] = shufflevector <16 x i32> [[BROADCAST_SPLATINSERT2]], <16 x i32> poison, <16 x i32> zeroinitializer
 ; CHECK-NEXT:    [[VEC_IV:%.*]] = add <16 x i32> [[BROADCAST_SPLAT3]], <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-; CHECK-NEXT:    [[TMP0:%.*]] = icmp ule <16 x i32> [[VEC_IV]], <i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9, i32 9>
+; CHECK-NEXT:    [[TMP0:%.*]] = icmp ule <16 x i32> [[VEC_IV]], splat (i32 9)
 ; CHECK-NEXT:    [[TMP9:%.*]] = extractelement <16 x i1> [[TMP0]], i32 0
 ; CHECK-NEXT:    br i1 [[TMP9]], label [[PRED_STORE_IF:%.*]], label [[PRED_STORE_CONTINUE:%.*]]
 ; CHECK:       pred.store.if:

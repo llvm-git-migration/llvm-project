@@ -408,7 +408,7 @@ define <2 x i1> @i8_vec_sitofp_test3(<2 x i8> %A) {
 
 define <2 x i1> @i8_vec_sitofp_test4(<2 x i8> %A) {
 ; CHECK-LABEL: @i8_vec_sitofp_test4(
-; CHECK-NEXT:    [[C:%.*]] = icmp ne <2 x i8> [[A:%.*]], <i8 127, i8 127>
+; CHECK-NEXT:    [[C:%.*]] = icmp ne <2 x i8> [[A:%.*]], splat (i8 127)
 ; CHECK-NEXT:    ret <2 x i1> [[C]]
 ;
   %B = sitofp <2 x i8> %A to <2 x double>

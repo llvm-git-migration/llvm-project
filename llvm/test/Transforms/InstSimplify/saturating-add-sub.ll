@@ -74,7 +74,7 @@ define i3 @uadd_scalar_maxval_commute(i3 %a) {
 
 define <2 x i8> @uadd_vector_maxval_commute(<2 x i8> %a) {
 ; CHECK-LABEL: @uadd_vector_maxval_commute(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %x4v = call <2 x i8> @llvm.uadd.sat.v2i8(<2 x i8> <i8 255, i8 255>, <2 x i8> %a)
   ret <2 x i8> %x4v
@@ -98,7 +98,7 @@ define i8 @uadd_scalar_poison(i8 %a) {
 
 define <2 x i8> @uadd_vector_undef(<2 x i8> %a) {
 ; CHECK-LABEL: @uadd_vector_undef(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %x5v = call <2 x i8> @llvm.uadd.sat.v2i8(<2 x i8> %a, <2 x i8> <i8 undef, i8 undef>)
   ret <2 x i8> %x5v
@@ -106,7 +106,7 @@ define <2 x i8> @uadd_vector_undef(<2 x i8> %a) {
 
 define <2 x i8> @uadd_vector_poison(<2 x i8> %a) {
 ; CHECK-LABEL: @uadd_vector_poison(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %x5v = call <2 x i8> @llvm.uadd.sat.v2i8(<2 x i8> %a, <2 x i8> <i8 poison, i8 poison>)
   ret <2 x i8> %x5v
@@ -130,7 +130,7 @@ define i8 @uadd_scalar_poison_commute(i8 %a) {
 
 define <2 x i8> @uadd_vector_undef_commute(<2 x i8> %a) {
 ; CHECK-LABEL: @uadd_vector_undef_commute(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %x5v = call <2 x i8> @llvm.uadd.sat.v2i8(<2 x i8> undef, <2 x i8> %a)
   ret <2 x i8> %x5v
@@ -138,7 +138,7 @@ define <2 x i8> @uadd_vector_undef_commute(<2 x i8> %a) {
 
 define <2 x i8> @uadd_vector_poison_commute(<2 x i8> %a) {
 ; CHECK-LABEL: @uadd_vector_poison_commute(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %x5v = call <2 x i8> @llvm.uadd.sat.v2i8(<2 x i8> poison, <2 x i8> %a)
   ret <2 x i8> %x5v
@@ -187,7 +187,7 @@ define i8 @sadd_scalar_maxval(i8 %a) {
 
 define <2 x i8> @sadd_vector_maxval(<2 x i8> %a) {
 ; CHECK-LABEL: @sadd_vector_maxval(
-; CHECK-NEXT:    [[Y3V:%.*]] = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> [[A:%.*]], <2 x i8> <i8 127, i8 127>)
+; CHECK-NEXT:    [[Y3V:%.*]] = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> [[A:%.*]], <2 x i8> splat (i8 127))
 ; CHECK-NEXT:    ret <2 x i8> [[Y3V]]
 ;
   %y3v = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> %a, <2 x i8> <i8 127, i8 127>)
@@ -230,7 +230,7 @@ define i8 @sadd_scalar_poison(i8 %a) {
 
 define <2 x i8> @sadd_vector_undef(<2 x i8> %a) {
 ; CHECK-LABEL: @sadd_vector_undef(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %y5v = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> %a, <2 x i8> undef)
   ret <2 x i8> %y5v
@@ -238,7 +238,7 @@ define <2 x i8> @sadd_vector_undef(<2 x i8> %a) {
 
 define <2 x i8> @sadd_vector_poison(<2 x i8> %a) {
 ; CHECK-LABEL: @sadd_vector_poison(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %y5v = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> %a, <2 x i8> poison)
   ret <2 x i8> %y5v
@@ -262,7 +262,7 @@ define i8 @sadd_scalar_poison_commute(i8 %a) {
 
 define <2 x i8> @sadd_vector_undef_commute(<2 x i8> %a) {
 ; CHECK-LABEL: @sadd_vector_undef_commute(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %y6v = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> undef, <2 x i8> %a)
   ret <2 x i8> %y6v
@@ -270,7 +270,7 @@ define <2 x i8> @sadd_vector_undef_commute(<2 x i8> %a) {
 
 define <2 x i8> @sadd_vector_poison_commute(<2 x i8> %a) {
 ; CHECK-LABEL: @sadd_vector_poison_commute(
-; CHECK-NEXT:    ret <2 x i8> <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i8> splat (i8 -1)
 ;
   %y6v = call <2 x i8> @llvm.sadd.sat.v2i8(<2 x i8> poison, <2 x i8> %a)
   ret <2 x i8> %y6v
@@ -449,7 +449,7 @@ define i8 @ssub_scalar_maxval(i8 %a) {
 
 define <2 x i8> @ssub_vector_maxval(<2 x i8> %a) {
 ; CHECK-LABEL: @ssub_vector_maxval(
-; CHECK-NEXT:    [[Y3V:%.*]] = call <2 x i8> @llvm.ssub.sat.v2i8(<2 x i8> [[A:%.*]], <2 x i8> <i8 127, i8 127>)
+; CHECK-NEXT:    [[Y3V:%.*]] = call <2 x i8> @llvm.ssub.sat.v2i8(<2 x i8> [[A:%.*]], <2 x i8> splat (i8 127))
 ; CHECK-NEXT:    ret <2 x i8> [[Y3V]]
 ;
   %y3v = call <2 x i8> @llvm.ssub.sat.v2i8(<2 x i8> %a, <2 x i8> <i8 127, i8 127>)

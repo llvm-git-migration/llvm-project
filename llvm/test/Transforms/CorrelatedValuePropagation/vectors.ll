@@ -4,7 +4,7 @@
 define <2 x i1> @cmp1(<2 x i8> %a) {
 ; CHECK-LABEL: define <2 x i1> @cmp1(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
-; CHECK-NEXT:    [[ADD:%.*]] = add nuw <2 x i8> [[A]], <i8 1, i8 1>
+; CHECK-NEXT:    [[ADD:%.*]] = add nuw <2 x i8> [[A]], splat (i8 1)
 ; CHECK-NEXT:    ret <2 x i1> <i1 true, i1 true>
 ;
   %add = add nuw <2 x i8> %a, splat (i8 1)
@@ -15,7 +15,7 @@ define <2 x i1> @cmp1(<2 x i8> %a) {
 define <2 x i1> @cmp2(<2 x i8> %a) {
 ; CHECK-LABEL: define <2 x i1> @cmp2(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
-; CHECK-NEXT:    [[ADD:%.*]] = add nuw <2 x i8> [[A]], <i8 5, i8 5>
+; CHECK-NEXT:    [[ADD:%.*]] = add nuw <2 x i8> [[A]], splat (i8 5)
 ; CHECK-NEXT:    ret <2 x i1> <i1 true, i1 true>
 ;
   %add = add nuw <2 x i8> %a, splat (i8 5)
@@ -51,7 +51,7 @@ define <2 x i1> @cmp_signedness(<2 x i8> %a) {
 ; CHECK-LABEL: define <2 x i1> @cmp_signedness(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
-; CHECK-NEXT:    [[CMP:%.*]] = icmp ult <2 x i16> [[ZEXT]], <i16 5, i16 5>
+; CHECK-NEXT:    [[CMP:%.*]] = icmp ult <2 x i16> [[ZEXT]], splat (i16 5)
 ; CHECK-NEXT:    ret <2 x i1> [[CMP]]
 ;
   %zext = zext <2 x i8> %a to <2 x i16>
@@ -63,7 +63,7 @@ define <2 x i16> @infer_nowrap(<2 x i8> %a) {
 ; CHECK-LABEL: define range(i16 1, 257) <2 x i16> @infer_nowrap(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
-; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], <i16 1, i16 1>
+; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], splat (i16 1)
 ; CHECK-NEXT:    ret <2 x i16> [[RES]]
 ;
   %zext = zext <2 x i8> %a to <2 x i16>
@@ -134,7 +134,7 @@ define <2 x i16> @saturating(<2 x i8> %a) {
 ; CHECK-LABEL: define range(i16 1, 257) <2 x i16> @saturating(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
-; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], <i16 1, i16 1>
+; CHECK-NEXT:    [[RES:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], splat (i16 1)
 ; CHECK-NEXT:    ret <2 x i16> [[RES]]
 ;
   %zext = zext <2 x i8> %a to <2 x i16>
@@ -146,7 +146,7 @@ define {<2 x i16>, <2 x i1>} @with_overflow(<2 x i8> %a) {
 ; CHECK-LABEL: define { <2 x i16>, <2 x i1> } @with_overflow(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
-; CHECK-NEXT:    [[RES1:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], <i16 1, i16 1>
+; CHECK-NEXT:    [[RES1:%.*]] = add nuw nsw <2 x i16> [[ZEXT]], splat (i16 1)
 ; CHECK-NEXT:    [[RES:%.*]] = insertvalue { <2 x i16>, <2 x i1> } { <2 x i16> poison, <2 x i1> zeroinitializer }, <2 x i16> [[RES1]], 0
 ; CHECK-NEXT:    ret { <2 x i16>, <2 x i1> } [[RES]]
 ;
@@ -160,7 +160,7 @@ define <2 x i16> @srem1(<2 x i8> %a) {
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
 ; CHECK-NEXT:    [[RES1_LHS_TRUNC:%.*]] = trunc <2 x i16> [[ZEXT]] to <2 x i8>
-; CHECK-NEXT:    [[RES12:%.*]] = urem <2 x i8> [[RES1_LHS_TRUNC]], <i8 42, i8 42>
+; CHECK-NEXT:    [[RES12:%.*]] = urem <2 x i8> [[RES1_LHS_TRUNC]], splat (i8 42)
 ; CHECK-NEXT:    [[RES:%.*]] = zext <2 x i8> [[RES12]] to <2 x i16>
 ; CHECK-NEXT:    ret <2 x i16> [[RES]]
 ;
@@ -174,7 +174,7 @@ define <2 x i16> @srem2(<2 x i8> %a) {
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = sext <2 x i8> [[A]] to <2 x i16>
 ; CHECK-NEXT:    [[RES_LHS_TRUNC:%.*]] = trunc <2 x i16> [[ZEXT]] to <2 x i8>
-; CHECK-NEXT:    [[RES1:%.*]] = srem <2 x i8> [[RES_LHS_TRUNC]], <i8 42, i8 42>
+; CHECK-NEXT:    [[RES1:%.*]] = srem <2 x i8> [[RES_LHS_TRUNC]], splat (i8 42)
 ; CHECK-NEXT:    [[RES:%.*]] = sext <2 x i8> [[RES1]] to <2 x i16>
 ; CHECK-NEXT:    ret <2 x i16> [[RES]]
 ;
@@ -187,7 +187,7 @@ define <2 x i16> @ashr(<2 x i8> %a) {
 ; CHECK-LABEL: define range(i16 0, 128) <2 x i16> @ashr(
 ; CHECK-SAME: <2 x i8> [[A:%.*]]) {
 ; CHECK-NEXT:    [[ZEXT:%.*]] = zext <2 x i8> [[A]] to <2 x i16>
-; CHECK-NEXT:    [[RES:%.*]] = lshr <2 x i16> [[ZEXT]], <i16 1, i16 1>
+; CHECK-NEXT:    [[RES:%.*]] = lshr <2 x i16> [[ZEXT]], splat (i16 1)
 ; CHECK-NEXT:    ret <2 x i16> [[RES]]
 ;
   %zext = zext <2 x i8> %a to <2 x i16>
@@ -247,10 +247,10 @@ define <4 x i64> @issue_97674_getConstantOnEdge(i1 %cond) {
 ; CHECK-NEXT:  [[ENTRY:.*]]:
 ; CHECK-NEXT:    br i1 [[COND]], label %[[IF_THEN:.*]], label %[[IF_END:.*]]
 ; CHECK:       [[IF_THEN]]:
-; CHECK-NEXT:    [[FOLDS:%.*]] = add nuw nsw <4 x i64> zeroinitializer, <i64 1, i64 1, i64 1, i64 1>
+; CHECK-NEXT:    [[FOLDS:%.*]] = add nuw nsw <4 x i64> zeroinitializer, splat (i64 1)
 ; CHECK-NEXT:    br label %[[IF_END]]
 ; CHECK:       [[IF_END]]:
-; CHECK-NEXT:    [[R:%.*]] = phi <4 x i64> [ <i64 1, i64 1, i64 1, i64 1>, %[[IF_THEN]] ], [ zeroinitializer, %[[ENTRY]] ]
+; CHECK-NEXT:    [[R:%.*]] = phi <4 x i64> [ splat (i64 1), %[[IF_THEN]] ], [ zeroinitializer, %[[ENTRY]] ]
 ; CHECK-NEXT:    ret <4 x i64> [[R]]
 ;
 entry:

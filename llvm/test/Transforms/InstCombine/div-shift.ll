@@ -25,7 +25,7 @@ define i32 @t1(i16 zeroext %x, i32 %y) {
 define <2 x i32> @t1vec(<2 x i16> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @t1vec(
 ; CHECK-NEXT:    [[CONV:%.*]] = zext <2 x i16> [[X:%.*]] to <2 x i32>
-; CHECK-NEXT:    [[TMP1:%.*]] = add <2 x i32> [[Y:%.*]], <i32 1, i32 1>
+; CHECK-NEXT:    [[TMP1:%.*]] = add <2 x i32> [[Y:%.*]], splat (i32 1)
 ; CHECK-NEXT:    [[D1:%.*]] = lshr <2 x i32> [[CONV]], [[TMP1]]
 ; CHECK-NEXT:    ret <2 x i32> [[D1]]
 ;
@@ -236,7 +236,7 @@ define i32 @t10(i32 %x, i32 %y) {
 
 define <2 x i32> @t11(<2 x i32> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @t11(
-; CHECK-NEXT:    [[R:%.*]] = shl nuw nsw <2 x i32> <i32 1, i32 1>, [[Y:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = shl nuw nsw <2 x i32> splat (i32 1), [[Y:%.*]]
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %shl = shl nsw <2 x i32> %x, %y
@@ -287,7 +287,7 @@ define i32 @t15(i32 %x, i32 %y) {
 
 define <2 x i32> @t16(<2 x i32> %x, <2 x i32> %y) {
 ; CHECK-LABEL: @t16(
-; CHECK-NEXT:    [[R:%.*]] = shl nuw <2 x i32> <i32 1, i32 1>, [[Y:%.*]]
+; CHECK-NEXT:    [[R:%.*]] = shl nuw <2 x i32> splat (i32 1), [[Y:%.*]]
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %shl = shl nuw <2 x i32> %x, %y

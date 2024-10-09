@@ -69,13 +69,13 @@ define <2 x i8> @mul_v1i16(<1 x i16> %arg) {
 ;
 ; VI-LABEL: @mul_v1i16(
 ; VI-NEXT:  BB:
-; VI-NEXT:    [[MUL:%.*]] = mul <1 x i16> [[ARG:%.*]], <i16 42>
+; VI-NEXT:    [[MUL:%.*]] = mul <1 x i16> [[ARG:%.*]], splat (i16 42)
 ; VI-NEXT:    [[CAST:%.*]] = bitcast <1 x i16> [[MUL]] to <2 x i8>
 ; VI-NEXT:    ret <2 x i8> [[CAST]]
 ;
 ; DISABLED-LABEL: @mul_v1i16(
 ; DISABLED-NEXT:  BB:
-; DISABLED-NEXT:    [[MUL:%.*]] = mul <1 x i16> [[ARG:%.*]], <i16 42>
+; DISABLED-NEXT:    [[MUL:%.*]] = mul <1 x i16> [[ARG:%.*]], splat (i16 42)
 ; DISABLED-NEXT:    [[CAST:%.*]] = bitcast <1 x i16> [[MUL]] to <2 x i8>
 ; DISABLED-NEXT:    ret <2 x i8> [[CAST]]
 ;
@@ -97,12 +97,12 @@ define <1 x i8> @mul_v1i8(<1 x i8> %arg) {
 ;
 ; VI-LABEL: @mul_v1i8(
 ; VI-NEXT:  BB:
-; VI-NEXT:    [[MUL:%.*]] = mul <1 x i8> [[ARG:%.*]], <i8 42>
+; VI-NEXT:    [[MUL:%.*]] = mul <1 x i8> [[ARG:%.*]], splat (i8 42)
 ; VI-NEXT:    ret <1 x i8> [[MUL]]
 ;
 ; DISABLED-LABEL: @mul_v1i8(
 ; DISABLED-NEXT:  BB:
-; DISABLED-NEXT:    [[MUL:%.*]] = mul <1 x i8> [[ARG:%.*]], <i8 42>
+; DISABLED-NEXT:    [[MUL:%.*]] = mul <1 x i8> [[ARG:%.*]], splat (i8 42)
 ; DISABLED-NEXT:    ret <1 x i8> [[MUL]]
 ;
 BB:
@@ -112,10 +112,10 @@ BB:
 
 define <2 x i32> @smul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; SI-LABEL: @smul24_v2i32(
-; SI-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], <i32 8, i32 8>
-; SI-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], <i32 8, i32 8>
-; SI-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], <i32 8, i32 8>
-; SI-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], <i32 8, i32 8>
+; SI-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], splat (i32 8)
+; SI-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], splat (i32 8)
+; SI-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], splat (i32 8)
+; SI-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], splat (i32 8)
 ; SI-NEXT:    [[TMP1:%.*]] = extractelement <2 x i32> [[LHS24]], i64 0
 ; SI-NEXT:    [[TMP2:%.*]] = extractelement <2 x i32> [[LHS24]], i64 1
 ; SI-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[RHS24]], i64 0
@@ -127,10 +127,10 @@ define <2 x i32> @smul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; SI-NEXT:    ret <2 x i32> [[MUL]]
 ;
 ; VI-LABEL: @smul24_v2i32(
-; VI-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], <i32 8, i32 8>
-; VI-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], <i32 8, i32 8>
-; VI-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], <i32 8, i32 8>
-; VI-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], <i32 8, i32 8>
+; VI-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], splat (i32 8)
+; VI-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], splat (i32 8)
+; VI-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], splat (i32 8)
+; VI-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], splat (i32 8)
 ; VI-NEXT:    [[TMP1:%.*]] = extractelement <2 x i32> [[LHS24]], i64 0
 ; VI-NEXT:    [[TMP2:%.*]] = extractelement <2 x i32> [[LHS24]], i64 1
 ; VI-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[RHS24]], i64 0
@@ -142,10 +142,10 @@ define <2 x i32> @smul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; VI-NEXT:    ret <2 x i32> [[MUL]]
 ;
 ; DISABLED-LABEL: @smul24_v2i32(
-; DISABLED-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], <i32 8, i32 8>
-; DISABLED-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], <i32 8, i32 8>
-; DISABLED-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], <i32 8, i32 8>
-; DISABLED-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], <i32 8, i32 8>
+; DISABLED-NEXT:    [[SHL_LHS:%.*]] = shl <2 x i32> [[LHS:%.*]], splat (i32 8)
+; DISABLED-NEXT:    [[LHS24:%.*]] = ashr <2 x i32> [[SHL_LHS]], splat (i32 8)
+; DISABLED-NEXT:    [[SHL_RHS:%.*]] = shl <2 x i32> [[RHS:%.*]], splat (i32 8)
+; DISABLED-NEXT:    [[RHS24:%.*]] = ashr <2 x i32> [[SHL_RHS]], splat (i32 8)
 ; DISABLED-NEXT:    [[MUL:%.*]] = mul <2 x i32> [[LHS24]], [[RHS24]]
 ; DISABLED-NEXT:    ret <2 x i32> [[MUL]]
 ;
@@ -184,8 +184,8 @@ define i32 @umul24_i32(i32 %lhs, i32 %rhs) {
 
 define <2 x i32> @umul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; SI-LABEL: @umul24_v2i32(
-; SI-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], <i32 16777215, i32 16777215>
-; SI-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], <i32 16777215, i32 16777215>
+; SI-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], splat (i32 16777215)
+; SI-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], splat (i32 16777215)
 ; SI-NEXT:    [[TMP1:%.*]] = extractelement <2 x i32> [[LHS24]], i64 0
 ; SI-NEXT:    [[TMP2:%.*]] = extractelement <2 x i32> [[LHS24]], i64 1
 ; SI-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[RHS24]], i64 0
@@ -197,8 +197,8 @@ define <2 x i32> @umul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; SI-NEXT:    ret <2 x i32> [[MUL]]
 ;
 ; VI-LABEL: @umul24_v2i32(
-; VI-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], <i32 16777215, i32 16777215>
-; VI-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], <i32 16777215, i32 16777215>
+; VI-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], splat (i32 16777215)
+; VI-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], splat (i32 16777215)
 ; VI-NEXT:    [[TMP1:%.*]] = extractelement <2 x i32> [[LHS24]], i64 0
 ; VI-NEXT:    [[TMP2:%.*]] = extractelement <2 x i32> [[LHS24]], i64 1
 ; VI-NEXT:    [[TMP3:%.*]] = extractelement <2 x i32> [[RHS24]], i64 0
@@ -210,8 +210,8 @@ define <2 x i32> @umul24_v2i32(<2 x i32> %lhs, <2 x i32> %rhs) {
 ; VI-NEXT:    ret <2 x i32> [[MUL]]
 ;
 ; DISABLED-LABEL: @umul24_v2i32(
-; DISABLED-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], <i32 16777215, i32 16777215>
-; DISABLED-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], <i32 16777215, i32 16777215>
+; DISABLED-NEXT:    [[LHS24:%.*]] = and <2 x i32> [[LHS:%.*]], splat (i32 16777215)
+; DISABLED-NEXT:    [[RHS24:%.*]] = and <2 x i32> [[RHS:%.*]], splat (i32 16777215)
 ; DISABLED-NEXT:    [[MUL:%.*]] = mul <2 x i32> [[LHS24]], [[RHS24]]
 ; DISABLED-NEXT:    ret <2 x i32> [[MUL]]
 ;

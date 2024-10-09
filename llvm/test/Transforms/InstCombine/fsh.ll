@@ -241,7 +241,7 @@ define <2 x i31> @fshl_op1_undef_splat_vec(<2 x i31> %x) {
 
 define <2 x i32> @fshr_op0_undef_splat_vec(<2 x i32> %x) {
 ; CHECK-LABEL: @fshr_op0_undef_splat_vec(
-; CHECK-NEXT:    [[R:%.*]] = lshr <2 x i32> [[X:%.*]], <i32 7, i32 7>
+; CHECK-NEXT:    [[R:%.*]] = lshr <2 x i32> [[X:%.*]], splat (i32 7)
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %r = call <2 x i32> @llvm.fshr.v2i32(<2 x i32> undef, <2 x i32> %x, <2 x i32> <i32 7, i32 7>)
@@ -250,7 +250,7 @@ define <2 x i32> @fshr_op0_undef_splat_vec(<2 x i32> %x) {
 
 define <2 x i32> @fshr_op1_zero_splat_vec(<2 x i32> %x) {
 ; CHECK-LABEL: @fshr_op1_zero_splat_vec(
-; CHECK-NEXT:    [[R:%.*]] = shl <2 x i32> [[X:%.*]], <i32 25, i32 25>
+; CHECK-NEXT:    [[R:%.*]] = shl <2 x i32> [[X:%.*]], splat (i32 25)
 ; CHECK-NEXT:    ret <2 x i32> [[R]]
 ;
   %r = call <2 x i32> @llvm.fshr.v2i32(<2 x i32> %x, <2 x i32> zeroinitializer, <2 x i32> <i32 7, i32 7>)
@@ -864,7 +864,7 @@ define <2 x i31> @fshr_mask_args_same_vector(<2 x i31> %a) {
 define <2 x i32> @fshr_mask_args_same_vector2(<2 x i32> %a, <2 x i32> %b) {
 ; CHECK-LABEL: @fshr_mask_args_same_vector2(
 ; CHECK-NEXT:    [[T1:%.*]] = and <2 x i32> [[A:%.*]], <i32 1000000, i32 100000>
-; CHECK-NEXT:    [[T3:%.*]] = lshr exact <2 x i32> [[T1]], <i32 3, i32 3>
+; CHECK-NEXT:    [[T3:%.*]] = lshr exact <2 x i32> [[T1]], splat (i32 3)
 ; CHECK-NEXT:    ret <2 x i32> [[T3]]
 ;
   %t1 = and <2 x i32> %a, <i32 1000000, i32 100000>

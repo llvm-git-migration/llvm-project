@@ -1458,8 +1458,8 @@ if.end:
 
 define <1 x i64> @PR56601(<1 x i64> %x, <1 x i64> %y) {
 ; CHECK-LABEL: @PR56601(
-; CHECK-NEXT:    [[M1:%.*]] = mul nsw <1 x i64> [[X:%.*]], <i64 42>
-; CHECK-NEXT:    [[M2:%.*]] = mul nsw <1 x i64> [[Y:%.*]], <i64 12>
+; CHECK-NEXT:    [[M1:%.*]] = mul nsw <1 x i64> [[X:%.*]], splat (i64 42)
+; CHECK-NEXT:    [[M2:%.*]] = mul nsw <1 x i64> [[Y:%.*]], splat (i64 12)
 ; CHECK-NEXT:    [[A1:%.*]] = add <1 x i64> [[M1]], <i64 add (i64 ptrtoint (ptr @g to i64), i64 -4)>
 ; CHECK-NEXT:    [[A2:%.*]] = add <1 x i64> [[M2]], <i64 add (i64 ptrtoint (ptr @g to i64), i64 -3)>
 ; CHECK-NEXT:    [[R:%.*]] = sub <1 x i64> [[A1]], [[A2]]

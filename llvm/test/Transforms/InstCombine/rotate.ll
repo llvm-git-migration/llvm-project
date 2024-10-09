@@ -56,7 +56,7 @@ define i88 @rotl_i88_constant_commute(i88 %x) {
 
 define <2 x i16> @rotl_v2i16_constant_splat(<2 x i16> %x) {
 ; CHECK-LABEL: @rotl_v2i16_constant_splat(
-; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> <i16 1, i16 1>)
+; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> splat (i16 1))
 ; CHECK-NEXT:    ret <2 x i16> [[R]]
 ;
   %shl = shl <2 x i16> %x, <i16 1, i16 1>
@@ -67,7 +67,7 @@ define <2 x i16> @rotl_v2i16_constant_splat(<2 x i16> %x) {
 
 define <2 x i16> @rotl_v2i16_constant_splat_poison0(<2 x i16> %x) {
 ; CHECK-LABEL: @rotl_v2i16_constant_splat_poison0(
-; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> <i16 1, i16 1>)
+; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> splat (i16 1))
 ; CHECK-NEXT:    ret <2 x i16> [[R]]
 ;
   %shl = shl <2 x i16> %x, <i16 poison, i16 1>
@@ -78,7 +78,7 @@ define <2 x i16> @rotl_v2i16_constant_splat_poison0(<2 x i16> %x) {
 
 define <2 x i16> @rotl_v2i16_constant_splat_poison1(<2 x i16> %x) {
 ; CHECK-LABEL: @rotl_v2i16_constant_splat_poison1(
-; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> <i16 1, i16 1>)
+; CHECK-NEXT:    [[R:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> [[X]], <2 x i16> splat (i16 1))
 ; CHECK-NEXT:    ret <2 x i16> [[R]]
 ;
   %shl = shl <2 x i16> %x, <i16 1, i16 1>
@@ -238,7 +238,7 @@ define i8 @rotr_i8_commute(i8 %x, i8 %y) {
 
 define <4 x i32> @rotl_v4i32(<4 x i32> %x, <4 x i32> %y) {
 ; CHECK-LABEL: @rotl_v4i32(
-; CHECK-NEXT:    [[SUB:%.*]] = sub <4 x i32> <i32 32, i32 32, i32 32, i32 32>, [[Y:%.*]]
+; CHECK-NEXT:    [[SUB:%.*]] = sub <4 x i32> splat (i32 32), [[Y:%.*]]
 ; CHECK-NEXT:    [[SHL:%.*]] = shl <4 x i32> [[X:%.*]], [[Y]]
 ; CHECK-NEXT:    [[SHR:%.*]] = lshr <4 x i32> [[X]], [[SUB]]
 ; CHECK-NEXT:    [[R:%.*]] = or <4 x i32> [[SHL]], [[SHR]]

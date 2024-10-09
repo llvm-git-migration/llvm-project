@@ -178,9 +178,9 @@ define i32 @abs_trailing_zeros_negative(i32 %x) {
 
 define <4 x i32> @abs_trailing_zeros_negative_vec(<4 x i32> %x) {
 ; CHECK-LABEL: @abs_trailing_zeros_negative_vec(
-; CHECK-NEXT:    [[AND:%.*]] = and <4 x i32> [[X:%.*]], <i32 -2, i32 -2, i32 -2, i32 -2>
+; CHECK-NEXT:    [[AND:%.*]] = and <4 x i32> [[X:%.*]], splat (i32 -2)
 ; CHECK-NEXT:    [[ABS:%.*]] = call <4 x i32> @llvm.abs.v4i32(<4 x i32> [[AND]], i1 false)
-; CHECK-NEXT:    [[AND2:%.*]] = and <4 x i32> [[ABS]], <i32 -4, i32 -4, i32 -4, i32 -4>
+; CHECK-NEXT:    [[AND2:%.*]] = and <4 x i32> [[ABS]], splat (i32 -4)
 ; CHECK-NEXT:    ret <4 x i32> [[AND2]]
 ;
   %and = and <4 x i32> %x, <i32 -2, i32 -2, i32 -2, i32 -2>
