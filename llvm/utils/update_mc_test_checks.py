@@ -118,6 +118,12 @@ def main():
         default=None,
         help="Set a default -march for when neither triple nor arch are found in a RUN line",
     )
+
+    parser.add_argument(
+        "--remove-duplicate",
+        action=argparse.BooleanOptionalAction,
+        help="remove duplicated test line if found",
+    )
     parser.add_argument("tests", nargs="+")
     initial_args = common.parse_commandline_args(parser)
 
@@ -196,6 +202,10 @@ def main():
 
         # find all test line from input
         testlines = [l for l in ti.input_lines if isTestLine(l, mc_mode)]
+        # remove duplicated lines to save running time
+        testlines = list(dict.fromkeys(testlines))
+        common.debug("Valid test line found: ", len(testlines))
+
         run_list_size = len(run_list)
         testnum = len(testlines)
 
@@ -233,7 +243,7 @@ def main():
             raw_prefixes.append(prefixes)
 
         output_lines = []
-        generated_prefixes = []
+        generated_prefixes = {}
         used_prefixes = set()
         prefix_set = set([prefix for p in run_list for prefix in p[0]])
         common.debug("Rewriting FileCheck prefixes:", str(prefix_set))
@@ -298,16 +308,21 @@ def main():
                     else:
                         gen_prefix += getStdCheckLine(prefix, o, mc_mode)
 
-            generated_prefixes.append(gen_prefix.rstrip("\n"))
+            generated_prefixes[input_line] = gen_prefix.rstrip("\n")
 
         # write output
-        prefix_id = 0
+        written_lines = set()
         for input_info in ti.iterlines(output_lines):
             input_line = input_info.line
-            if isTestLine(input_line, mc_mode):
+            if input_line in testlines:
+                if ti.args.remove_duplicate:
+                    if input_line in written_lines:
+                        common.debug("Duplicated line skipped: ", input_line)
+                        continue
+                    else:
+                        written_lines.add(input_line)
                 output_lines.append(input_line)
-                output_lines.append(generated_prefixes[prefix_id])
-                prefix_id += 1
+                output_lines.append(generated_prefixes[input_line])
 
             elif should_add_line_to_output(input_line, prefix_set, mc_mode):
                 output_lines.append(input_line)
