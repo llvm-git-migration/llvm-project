@@ -305,6 +305,25 @@ define void @foo(ptr %ptr, i8 %v0, i8 %v1) {
   auto *S0N = cast<sandboxir::MemDGNode>(DAG.getNode(S0));
   auto *S1N = cast<sandboxir::MemDGNode>(DAG.getNode(S1));
 
+  // Check getMemDGNodeAfter().
+  using B = sandboxir::MemDGNodeIntervalBuilder;
+  EXPECT_EQ(B::getMemDGNodeAfter(S0, S0, DAG), S0N);
+  EXPECT_EQ(B::getMemDGNodeAfter(S0, Ret, DAG), S0N);
+#ifndef NDEBUG
+  EXPECT_DEATH(B::getMemDGNodeAfter(S0, Add0, DAG), ".*before.*");
+#endif
+  EXPECT_EQ(B::getMemDGNodeAfter(Add0, Add1, DAG), S0N);
+  EXPECT_EQ(B::getMemDGNodeAfter(Add0, Add0, DAG), nullptr);
+
+  // Check getMemDGNodeBefore().
+  EXPECT_EQ(B::getMemDGNodeBefore(S1, S1, DAG), S1N);
+  EXPECT_EQ(B::getMemDGNodeBefore(S1, Add0, DAG), S1N);
+#ifndef NDEBUG
+  EXPECT_DEATH(B::getMemDGNodeBefore(S1, Ret, DAG), ".*before.*");
+#endif
+  EXPECT_EQ(B::getMemDGNodeBefore(Ret, Add0, DAG), S1N);
+  EXPECT_EQ(B::getMemDGNodeBefore(Ret, Ret, DAG), nullptr);
+
   // Check empty range.
   EXPECT_THAT(sandboxir::MemDGNodeIntervalBuilder::makeEmpty(),
               testing::ElementsAre());
