@@ -1066,4 +1066,18 @@ entry:
   ret <2 x float> %4
 }
 
+define <16 x i64> @operandbundles(<4 x i64> %a, <4 x i64> %b, <4 x i64> %c) {
+; CHECK-LABEL: @operandbundles(
+; CHECK-NEXT:    [[CALL:%.*]] = call <4 x i64> @llvm.fshl.v4i64(<4 x i64> [[A:%.*]], <4 x i64> [[B:%.*]], <4 x i64> [[C:%.*]]) [ "jl_roots"(ptr addrspace(10) null, ptr addrspace(10) null) ]
+; CHECK-NEXT:    [[SHUFFLEVECTOR:%.*]] = shufflevector <4 x i64> [[CALL]], <4 x i64> poison, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison>
+; CHECK-NEXT:    [[SHUFFLEVECTOR1:%.*]] = shufflevector <16 x i64> [[SHUFFLEVECTOR]], <16 x i64> undef, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>
+; CHECK-NEXT:    ret <16 x i64> [[SHUFFLEVECTOR1]]
+;
+  %call = call <4 x i64> @llvm.fshl.v4i64(<4 x i64> %a, <4 x i64> %b, <4 x i64> %c) [ "jl_roots"(ptr addrspace(10) null, ptr addrspace(10) null) ]
+  %shufflevector = shufflevector <4 x i64> %call, <4 x i64> poison, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison, i32 poison>
+  %shufflevector1 = shufflevector <16 x i64> %shufflevector, <16 x i64> undef, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>
+  ret <16 x i64> %shufflevector1
+}
+
+declare <4 x i64> @llvm.fshl.v4i64(<4 x i64>, <4 x i64>, <4 x i64>)
 declare void @use(<4 x i8>)

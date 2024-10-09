@@ -2039,6 +2039,8 @@ bool VectorCombine::foldShuffleToIdentity(Instruction &I) {
         continue;
       } else if (auto *II = dyn_cast<IntrinsicInst>(FrontU);
                  II && isTriviallyVectorizable(II->getIntrinsicID())) {
+        if (II->hasOperandBundles())
+          return false;
         for (unsigned Op = 0, E = II->getNumOperands() - 1; Op < E; Op++) {
           if (isVectorIntrinsicWithScalarOpAtArg(II->getIntrinsicID(), Op)) {
             if (!all_of(drop_begin(Item), [Item, Op](InstLane &IL) {
