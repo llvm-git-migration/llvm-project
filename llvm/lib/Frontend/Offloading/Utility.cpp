@@ -54,6 +54,8 @@ offloading::getOffloadingEntryInitializer(Module &M, Constant *Addr,
       new GlobalVariable(M, AddrName->getType(), /*isConstant=*/true,
                          GlobalValue::InternalLinkage, AddrName, Prefix);
   Str->setUnnamedAddr(GlobalValue::UnnamedAddr::Global);
+  Str->setSection(".llvm.rodata.offloading");
+  Str->setAlignment(Align(1));
 
   // Construct the offloading entry.
   Constant *EntryData[] = {
