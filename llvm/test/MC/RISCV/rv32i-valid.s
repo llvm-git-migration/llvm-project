@@ -373,3 +373,6 @@ csrrsi t2, 0xfff, 31
 # CHECK-ASM-AND-OBJ: csrrci t1, sscratch, 5
 # CHECK-ASM: encoding: [0x73,0xf3,0x02,0x14]
 csrrci t1, 0x140, 5
+# CHECK-ASM-AND-OBJ: csrrw t0, 16, t1
+# CHECK-ASM: encoding: [0xf3,0x12,0x03,0x01]
+csrrw t0, CONST, t1

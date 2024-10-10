@@ -21,13 +21,13 @@ ori a0, a1, -2049 # CHECK: :[[@LINE]]:13: error: operand must be a symbol with %
 andi ra, sp, 2048 # CHECK: :[[@LINE]]:14: error: operand must be a symbol with %lo/%pcrel_lo/%tprel_lo modifier or an integer in the range [-2048, 2047]
 
 ## uimm12
-csrrw a0, -1, a0 # CHECK: :[[@LINE]]:11: error: immediate must be an integer in the range [0, 4095]
-csrrs a0, 4096, a0 # CHECK: :[[@LINE]]:11: error: immediate must be an integer in the range [0, 4095]
-csrrs a0, -0xf, a0 # CHECK: :[[@LINE]]:11: error: immediate must be an integer in the range [0, 4095]
-csrrc a0, 0x1000, a0 # CHECK: :[[@LINE]]:11: error: immediate must be an integer in the range [0, 4095]
-csrrwi a0, -50, 0 # CHECK: :[[@LINE]]:12: error: immediate must be an integer in the range [0, 4095]
-csrrsi a0, 4097, a0 # CHECK: :[[@LINE]]:12: error: immediate must be an integer in the range [0, 4095]
-csrrci a0, 0xffff, a0 # CHECK: :[[@LINE]]:12: error: immediate must be an integer in the range [0, 4095]
+csrrw a0, -1, a0 # CHECK: :[[@LINE]]:11: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrs a0, 4096, a0 # CHECK: :[[@LINE]]:11: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrs a0, -0xf, a0 # CHECK: :[[@LINE]]:11: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrc a0, 0x1000, a0 # CHECK: :[[@LINE]]:11: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrwi a0, -50, 0 # CHECK: :[[@LINE]]:12: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrsi a0, 4097, a0 # CHECK: :[[@LINE]]:12: error: operand must be a valid system register name or an integer in the range [0, 4095]
+csrrci a0, 0xffff, a0 # CHECK: :[[@LINE]]:12: error: operand must be a valid system register name or an integer in the range [0, 4095]
 
 ## simm13_lsb0
 beq t0, t1, -4098 # CHECK: :[[@LINE]]:13: error: immediate must be a multiple of 2 bytes in the range [-4096, 4094]
