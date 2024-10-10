@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <lldb/API/SBLanguages.h>
 
 #ifndef SWIG
 // Macro to enable bitmask operations on an enum.  Without this, Enum | Enum
