@@ -409,14 +409,15 @@ define i8 @f15(i1 %i) {
 ; CHECK-NEXT:    [[G2:%.*]] = getelementptr i8, ptr [[A2]], i32 16
 ; CHECK-NEXT:    br label [[BB2]]
 ; CHECK:       bb2:
-; CHECK-NEXT:    [[TMP0:%.*]] = phi i64 [ 100, [[ENTRY:%.*]] ], [ 16, [[BB1]] ]
+; CHECK-NEXT:    [[TMP0:%.*]] = phi i64 [ 0, [[ENTRY:%.*]] ], [ 32, [[BB1]] ]
+; CHECK-NEXT:    [[TMP6:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ 16, [[BB1]] ]
 ; CHECK-NEXT:    [[ALLOC:%.*]] = phi ptr [ [[G1]], [[ENTRY]] ], [ [[G2]], [[BB1]] ]
-; CHECK-NEXT:    [[TMP1:%.*]] = sub i64 32, [[TMP0]]
-; CHECK-NEXT:    [[TMP2:%.*]] = icmp ult i64 32, [[TMP0]]
+; CHECK-NEXT:    [[TMP1:%.*]] = sub i64 [[TMP0]], [[TMP6]]
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp ult i64 [[TMP0]], [[TMP6]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = icmp ult i64 [[TMP1]], 1
 ; CHECK-NEXT:    [[TMP4:%.*]] = or i1 [[TMP2]], [[TMP3]]
 ; CHECK-NEXT:    br i1 [[TMP4]], label [[TRAP:%.*]], label [[TMP5:%.*]]
-; CHECK:       5:
+; CHECK:       6:
 ; CHECK-NEXT:    [[RET:%.*]] = load i8, ptr [[ALLOC]], align 1
 ; CHECK-NEXT:    ret i8 [[RET]]
 ; CHECK:       trap:
