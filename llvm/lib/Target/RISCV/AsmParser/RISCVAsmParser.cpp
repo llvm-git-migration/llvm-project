@@ -1877,10 +1877,13 @@ ParseStatus RISCVAsmParser::parseInsnCDirectiveOpcode(OperandVector &Operands) {
 ParseStatus RISCVAsmParser::parseCSRSystemRegister(OperandVector &Operands) {
   SMLoc S = getLoc();
   const MCExpr *Res;
+  auto Kind = getLexer().getKind();
 
-  switch (getLexer().getKind()) {
+  switch (Kind) {
   default:
     return ParseStatus::NoMatch;
+
+  case AsmToken::Identifier:
   case AsmToken::LParen:
   case AsmToken::Minus:
   case AsmToken::Plus:
@@ -1890,6 +1893,47 @@ ParseStatus RISCVAsmParser::parseCSRSystemRegister(OperandVector &Operands) {
   case AsmToken::String: {
     if (getParser().parseExpression(Res))
       return ParseStatus::Failure;
+
+    if (Kind == AsmToken::Identifier) {
+      auto *SRE = dyn_cast<MCSymbolRefExpr>(Res);
+      if (SRE) {
+        auto Identifier = SRE->getSymbol().getName();
+        const auto *SysReg = RISCVSysReg::lookupSysRegByName(Identifier);
+        if (!SysReg)
+          SysReg = RISCVSysReg::lookupSysRegByAltName(Identifier);
+        if (!SysReg)
+          if ((SysReg = RISCVSysReg::lookupSysRegByDeprecatedName(Identifier)))
+            Warning(S, "'" + Identifier + "' is a deprecated alias for '" +
+                           SysReg->Name + "'");
+
+        // Accept a named Sys Reg if the required features are present.
+        if (SysReg) {
+          const auto &FeatureBits = getSTI().getFeatureBits();
+          if (!SysReg->haveRequiredFeatures(FeatureBits)) {
+            const auto *Feature =
+                llvm::find_if(RISCVFeatureKV, [&](auto Feature) {
+                  return SysReg->FeaturesRequired[Feature.Value];
+                });
+            auto ErrorMsg =
+                std::string("system register '") + SysReg->Name + "' ";
+            if (SysReg->isRV32Only && FeatureBits[RISCV::Feature64Bit]) {
+              ErrorMsg += "is RV32 only";
+              if (Feature != std::end(RISCVFeatureKV))
+                ErrorMsg += " and ";
+            }
+            if (Feature != std::end(RISCVFeatureKV)) {
+              ErrorMsg +=
+                  "requires '" + std::string(Feature->Key) + "' to be enabled";
+            }
+
+            return Error(S, ErrorMsg);
+          }
+          Operands.push_back(
+              RISCVOperand::createSysReg(Identifier, S, SysReg->Encoding));
+          return ParseStatus::Success;
+        }
+      }
+    }
 
     auto *CE = dyn_cast<MCConstantExpr>(Res);
     if (CE) {
@@ -1909,46 +1953,6 @@ ParseStatus RISCVAsmParser::parseCSRSystemRegister(OperandVector &Operands) {
         Operands.push_back(RISCVOperand::createSysReg("", S, Imm));
         return ParseStatus::Success;
       }
-    }
-
-    return generateImmOutOfRangeError(S, 0, (1 << 12) - 1);
-  }
-  case AsmToken::Identifier: {
-    StringRef Identifier;
-    if (getParser().parseIdentifier(Identifier))
-      return ParseStatus::Failure;
-
-    const auto *SysReg = RISCVSysReg::lookupSysRegByName(Identifier);
-    if (!SysReg)
-      SysReg = RISCVSysReg::lookupSysRegByAltName(Identifier);
-    if (!SysReg)
-      if ((SysReg = RISCVSysReg::lookupSysRegByDeprecatedName(Identifier)))
-        Warning(S, "'" + Identifier + "' is a deprecated alias for '" +
-                       SysReg->Name + "'");
-
-    // Accept a named Sys Reg if the required features are present.
-    if (SysReg) {
-      const auto &FeatureBits = getSTI().getFeatureBits();
-      if (!SysReg->haveRequiredFeatures(FeatureBits)) {
-        const auto *Feature = llvm::find_if(RISCVFeatureKV, [&](auto Feature) {
-          return SysReg->FeaturesRequired[Feature.Value];
-        });
-        auto ErrorMsg = std::string("system register '") + SysReg->Name + "' ";
-        if (SysReg->isRV32Only && FeatureBits[RISCV::Feature64Bit]) {
-          ErrorMsg += "is RV32 only";
-          if (Feature != std::end(RISCVFeatureKV))
-            ErrorMsg += " and ";
-        }
-        if (Feature != std::end(RISCVFeatureKV)) {
-          ErrorMsg +=
-              "requires '" + std::string(Feature->Key) + "' to be enabled";
-        }
-
-        return Error(S, ErrorMsg);
-      }
-      Operands.push_back(
-          RISCVOperand::createSysReg(Identifier, S, SysReg->Encoding));
-      return ParseStatus::Success;
     }
 
     return generateImmOutOfRangeError(S, 0, (1 << 12) - 1,
