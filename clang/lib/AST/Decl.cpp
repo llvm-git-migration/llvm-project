@@ -2696,10 +2696,7 @@ VarDecl *VarDecl::getTemplateInstantiationPattern() const {
     if (isTemplateInstantiation(VDTemplSpec->getTemplateSpecializationKind())) {
       auto From = VDTemplSpec->getInstantiatedFrom();
       if (auto *VTD = From.dyn_cast<VarTemplateDecl *>()) {
-        while (true) {
-          VTD = VTD->getMostRecentDecl();
-          if (VTD->isMemberSpecialization())
-            break;
+        while (!VTD->hasMemberSpecialization()) {
           if (auto *NewVTD = VTD->getInstantiatedFromMemberTemplate())
             VTD = NewVTD;
           else
@@ -2709,10 +2706,7 @@ VarDecl *VarDecl::getTemplateInstantiationPattern() const {
       }
       if (auto *VTPSD =
               From.dyn_cast<VarTemplatePartialSpecializationDecl *>()) {
-        while (true) {
-          VTPSD = VTPSD->getMostRecentDecl();
-          if (VTPSD->isMemberSpecialization())
-            break;
+        while (!VTPSD->hasMemberSpecialization()) {
           if (auto *NewVTPSD = VTPSD->getInstantiatedFromMember())
             VTPSD = NewVTPSD;
           else
@@ -2726,10 +2720,7 @@ VarDecl *VarDecl::getTemplateInstantiationPattern() const {
   // If this is the pattern of a variable template, find where it was
   // instantiated from. FIXME: Is this necessary?
   if (VarTemplateDecl *VTD = VD->getDescribedVarTemplate()) {
-    while (true) {
-      VTD = VTD->getMostRecentDecl();
-      if (VTD->isMemberSpecialization())
-        break;
+    while (!VTD->hasMemberSpecialization()) {
       if (auto *NewVTD = VTD->getInstantiatedFromMemberTemplate())
         VTD = NewVTD;
       else
@@ -4150,10 +4141,7 @@ FunctionDecl::getTemplateInstantiationPattern(bool ForDefinition) const {
   if (FunctionTemplateDecl *Primary = getPrimaryTemplate()) {
     // If we hit a point where the user provided a specialization of this
     // template, we're done looking.
-    while (true) {
-      Primary = Primary->getMostRecentDecl();
-      if (ForDefinition && Primary->isMemberSpecialization())
-        break;
+    while (!ForDefinition || !Primary->hasMemberSpecialization()) {
       if (auto *NewPrimary = Primary->getInstantiatedFromMemberTemplate())
         Primary = NewPrimary;
       else
