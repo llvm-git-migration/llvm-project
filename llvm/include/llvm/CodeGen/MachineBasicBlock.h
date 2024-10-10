@@ -224,6 +224,10 @@ private:
   // Indicate that this basic block ends a section.
   bool IsEndSection = false;
 
+  // Indicate that this basic block contains the first instruction in the
+  // section.
+  bool IsFirstNonEmptyBBInSection = false;
+
   /// Indicate that this basic block is the indirect dest of an INLINEASM_BR.
   bool IsInlineAsmBrIndirectTarget = false;
 
@@ -673,9 +677,16 @@ public:
   /// Returns true if this block ends any section.
   bool isEndSection() const { return IsEndSection; }
 
+  /// Returns true if this block contains the first instruction of its section.
+  bool isFirstNonEmptyBBInSection() const { return IsFirstNonEmptyBBInSection; }
+
   void setIsBeginSection(bool V = true) { IsBeginSection = V; }
 
   void setIsEndSection(bool V = true) { IsEndSection = V; }
+
+  void setIsFirstNonEmptyBBInSection(bool V = true) {
+    IsFirstNonEmptyBBInSection = V;
+  }
 
   std::optional<UniqueBBID> getBBID() const { return BBID; }
 

@@ -383,13 +383,28 @@ void MachineFunction::RenumberBlocks(MachineBasicBlock *MBB) {
 /// and the SectionID's are assigned to MBBs.
 void MachineFunction::assignBeginEndSections() {
   front().setIsBeginSection();
+  front().setIsFirstNonEmptyBBInSection();
   auto CurrentSectionID = front().getSectionID();
+  bool FirstSectionFirstInstructionEmitted = true;
   for (auto MBBI = std::next(begin()), E = end(); MBBI != E; ++MBBI) {
-    if (MBBI->getSectionID() == CurrentSectionID)
+    if (MBBI->getSectionID() == CurrentSectionID) {
+      if (!FirstSectionFirstInstructionEmitted && !MBBI->empty()) {
+        MBBI->setIsFirstNonEmptyBBInSection();
+        FirstSectionFirstInstructionEmitted = true;
+      }
       continue;
+    }
+
     MBBI->setIsBeginSection();
     std::prev(MBBI)->setIsEndSection();
     CurrentSectionID = MBBI->getSectionID();
+
+    if (MBBI->empty()) {
+      FirstSectionFirstInstructionEmitted = false;
+    } else {
+      MBBI->setIsFirstNonEmptyBBInSection();
+      FirstSectionFirstInstructionEmitted = true;
+    }
   }
   back().setIsEndSection();
 }
