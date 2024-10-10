@@ -13574,8 +13574,11 @@ static SDValue combineSubOfBoolean(SDNode *N, SelectionDAG &DAG) {
   return DAG.getNode(ISD::ADD, DL, VT, NewLHS, NewRHS);
 }
 
-// Looks for (sub (shl X, 8-N), (shr X, N)) where the N-th bit in each byte is potentially set. Replace with orc.b. 
-static SDValue combineSubShiftToOrcBGeneralized(SDNode *N, SelectionDAG &DAG,
+// Looks for (sub (shl X, 8-Y), (shr X, Y)) where the Y-th bit in each byte is
+// potentially set. It is fine for Y to be 0, meaning that (sub (shl X, 8), X)
+// is also valid. Replace with (orc.b X). For example, 0b0000_1000_0000_1000 is
+// valid with Y=3, while 0b0000_1000_0000_0100 is not.
+static SDValue combineSubShiftToOrcB(SDNode *N, SelectionDAG &DAG,
                                      const RISCVSubtarget &Subtarget) {
   if (!Subtarget.hasStdExtZbb())
     return SDValue();
@@ -13583,86 +13586,46 @@ static SDValue combineSubShiftToOrcBGeneralized(SDNode *N, SelectionDAG &DAG,
   EVT VT = N->getValueType(0);
 
   if (VT != Subtarget.getXLenVT() && VT != MVT::i32 && VT != MVT::i16)
-    return SDValue(); 
+    return SDValue();
 
   SDValue N0 = N->getOperand(0);
   SDValue N1 = N->getOperand(1);
-  
-  if (N0->getOpcode() != ISD::SHL){
+
+  if (N0->getOpcode() != ISD::SHL)
     return SDValue();
-  }  
   
   auto *ShAmtCLeft = dyn_cast<ConstantSDNode>(N0.getOperand(1));
   if (!ShAmtCLeft)
     return SDValue();
   unsigned ShiftedAmount = 8 - ShAmtCLeft->getZExtValue();
   SDValue LeftShiftOperand = N0->getOperand(0);
-  SDValue RightShiftOperand;
+  SDValue RightShiftOperand = N1;
 
-  if (N1->getOpcode() == ISD::SRL){ // (sub (shl X, 8 - N), (srl X, N)) case
+  if (ShiftedAmount != 0 && N1->getOpcode() != ISD::SRL)
+    return SDValue();
+
+  if (ShiftedAmount != 0) { // Right operand must be a right shift.
     auto *ShAmtCRight = dyn_cast<ConstantSDNode>(N1.getOperand(1));
-    // Note that the (sub (X, (shr X, 8))) is a degenerate case that should not get optimized,
-    // as we would be replacing a subtraction with an orc.b
-    // (!N0.hasOneUse() && !N1.hasOneUse())
-    if (!ShAmtCRight || ShAmtCRight->getZExtValue() == 8 || ShAmtCRight->getZExtValue() != ShiftedAmount )
-    {
-        return SDValue();
-    }
-    if (!N0.hasOneUse() && !N1.hasOneUse()){
-      dbgs() << "Both operands both have > 1 use\n";
+    if (!ShAmtCRight || ShAmtCRight->getZExtValue() != ShiftedAmount)
       return SDValue();
-    }
     RightShiftOperand = N1.getOperand(0);
   }
-  else{ // (sub (shl X, 8), X) case
-    if (!N0.hasOneUse()){
-      dbgs() << "N0 has > 1 uses\n";
-      return SDValue();
-    }
-    // llvm::errs() << "N0 has " << N0->get;
-    RightShiftOperand = N1;
-  }
 
-  APInt Mask = APInt::getSplat(VT.getSizeInBits(), APInt(8, 0x1));
-  Mask <<= ShiftedAmount;
-  // Check that X has indeed the right shape (only the N-th bit can be set in every byte)
-  if(!DAG.MaskedValueIsZero(LeftShiftOperand, ~Mask))
+  // At least one shift should have a single use.
+  if (!N0.hasOneUse() && (ShiftedAmount == 0 || !N1.hasOneUse()))
     return SDValue();
 
   if (LeftShiftOperand != RightShiftOperand)
     return SDValue();
-  dbgs() << "Optimized for node - " << N->getDebugLoc() << "\n";
+
+  APInt Mask = APInt::getSplat(VT.getSizeInBits(), APInt(8, 0x1));
+  Mask <<= ShiftedAmount;
+  // Check that X has indeed the right shape (only the Y-th bit can be set in
+  // every byte).
+  if (!DAG.MaskedValueIsZero(LeftShiftOperand, ~Mask))
+    return SDValue();
+
   return DAG.getNode(RISCVISD::ORC_B, SDLoc(N), VT, LeftShiftOperand);
-}
-
-
-// Looks for (sub (shl X, 8), X) where only bits 8, 16, 24, 32, etc. of X are
-// non-zero. Replace with orc.b.
-__attribute__((unused)) static SDValue combineSubShiftToOrcB(SDNode *N, SelectionDAG &DAG,
-                                     const RISCVSubtarget &Subtarget) {
-  if (!Subtarget.hasStdExtZbb())
-    return SDValue();
-
-  EVT VT = N->getValueType(0);
-
-  if (VT != Subtarget.getXLenVT() && VT != MVT::i32 && VT != MVT::i16)
-    return SDValue();
-
-  SDValue N0 = N->getOperand(0);
-  SDValue N1 = N->getOperand(1);
-
-  if (N0.getOpcode() != ISD::SHL || N0.getOperand(0) != N1 || !N0.hasOneUse())
-    return SDValue();
-
-  auto *ShAmtC = dyn_cast<ConstantSDNode>(N0.getOperand(1));
-  if (!ShAmtC || ShAmtC->getZExtValue() != 8)
-    return SDValue();
-
-  APInt Mask = APInt::getSplat(VT.getSizeInBits(), APInt(8, 0xfe));
-  if (!DAG.MaskedValueIsZero(N1, Mask))
-    return SDValue(); 
-
-  return DAG.getNode(RISCVISD::ORC_B, SDLoc(N), VT, N1);
 }
 
 static SDValue performSUBCombine(SDNode *N, SelectionDAG &DAG,
@@ -13687,9 +13650,7 @@ static SDValue performSUBCombine(SDNode *N, SelectionDAG &DAG,
 
   if (SDValue V = combineBinOpOfZExt(N, DAG))
     return V;
-  // if (SDValue V = combineSubShiftToOrcB(N, DAG, Subtarget))
-  //   return V;
-  if (SDValue V  = combineSubShiftToOrcBGeneralized(N, DAG, Subtarget))
+  if (SDValue V = combineSubShiftToOrcB(N, DAG, Subtarget))
     return V;
 
   // fold (sub x, (select lhs, rhs, cc, 0, y)) ->

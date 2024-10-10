@@ -51,6 +51,33 @@ entry:
   ret i32 %sub
 }
 
+define i32 @orc_b_i32_sub_shl8x_x_lsb_preshifted(i32 %x){
+; RV32I-LABEL: orc_b_i32_sub_shl8x_x_lsb_preshifted:
+; RV32I:       # %bb.0: # %entry
+; RV32I-NEXT:    srli a0, a0, 11
+; RV32I-NEXT:    lui a1, 16
+; RV32I-NEXT:    addi a1, a1, 257
+; RV32I-NEXT:    and a0, a0, a1
+; RV32I-NEXT:    slli a1, a0, 8
+; RV32I-NEXT:    sub a0, a1, a0
+; RV32I-NEXT:    ret
+;
+; RV32ZBB-LABEL: orc_b_i32_sub_shl8x_x_lsb_preshifted:
+; RV32ZBB:       # %bb.0: # %entry
+; RV32ZBB-NEXT:    srli a0, a0, 11
+; RV32ZBB-NEXT:    lui a1, 16
+; RV32ZBB-NEXT:    addi a1, a1, 257
+; RV32ZBB-NEXT:    and a0, a0, a1
+; RV32ZBB-NEXT:    orc.b a0, a0
+; RV32ZBB-NEXT:    ret
+entry:
+  %shr = lshr i32 %x, 11
+  %and = and i32 %shr, 16843009
+  %sub = mul nuw i32 %and, 255
+  ret i32 %sub
+}
+
+
 define  i32 @orc_b_i32_sub_shl8x_x_b1(i32  %x)  {
 ; RV32I-LABEL: orc_b_i32_sub_shl8x_x_b1:
 ; RV32I:       # %bb.0: # %entry
