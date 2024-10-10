@@ -23,6 +23,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 
 #define DEBUG_TYPE "dxil-flatten-arrays"
@@ -39,11 +40,11 @@ public:
   static char ID; // Pass identification.
 };
 
-struct GEPChainInfo {
-  DenseMap<GetElementPtrInst *, SmallVector<ConstantInt *>> GEPToIndicesMap;
-  DenseMap<GetElementPtrInst *, SmallVector<uint64_t>> GEPToDimmsMap;
-  DenseMap<GetElementPtrInst *, GetElementPtrInst *> GEPChildToNewParentMap;
-  DenseMap<Value *, GetElementPtrInst *> OperandToBaseGEPMap;
+struct GEPData {
+  ArrayType* ParentArrayType;
+  Value *ParendOperand;
+  SmallVector<ConstantInt *> Indices;
+  SmallVector<uint64_t> Dims;
 };
 
 class DXILFlattenArraysVisitor
@@ -74,7 +75,7 @@ public:
 
 private:
   SmallVector<WeakTrackingVH, 32> PotentiallyDeadInstrs;
-  GEPChainInfo GEPChain;
+  DenseMap<GetElementPtrInst *, GEPData> GEPChainMap;
   bool finish();
   bool isMultiDimensionalArray(Type *T);
   ConstantInt *flattenIndices(ArrayRef<ConstantInt *> Indices,
@@ -82,11 +83,11 @@ private:
   unsigned getTotalElements(Type *ArrayTy);
   Type *getBaseElementType(Type *ArrayTy);
   void recursivelyCollectGEPs(
-      GetElementPtrInst &CurrGEP, GetElementPtrInst &NewGEP,
-      GEPChainInfo &GEPChain,
+      GetElementPtrInst &CurrGEP, ArrayType *FattenedArrayType, Value *PtrOperand,
       SmallVector<ConstantInt *> Indices = SmallVector<ConstantInt *>(),
       SmallVector<uint64_t> Dims = SmallVector<uint64_t>());
   bool visitGetElementPtrInstInGEPChain(GetElementPtrInst &GEP);
+  void recursivelyDeleteGEPs(GetElementPtrInst *CurrGEP = nullptr);
 };
 
 bool DXILFlattenArraysVisitor::finish() {
@@ -154,9 +155,8 @@ bool DXILFlattenArraysVisitor::visitAllocaInst(AllocaInst &AI) {
 }
 
 void DXILFlattenArraysVisitor::recursivelyCollectGEPs(
-    GetElementPtrInst &CurrGEP, GetElementPtrInst &NewGEP,
-    GEPChainInfo &GEPChain, SmallVector<ConstantInt *> Indices,
-    SmallVector<uint64_t> Dims) {
+    GetElementPtrInst &CurrGEP, ArrayType *FattenedArrayType, Value *PtrOperand,
+    SmallVector<ConstantInt *> Indices, SmallVector<uint64_t> Dims) {
   ConstantInt *LastIndex =
       cast<ConstantInt>(CurrGEP.getOperand(CurrGEP.getNumOperands() - 1));
 
@@ -165,41 +165,36 @@ void DXILFlattenArraysVisitor::recursivelyCollectGEPs(
   Dims.push_back(
       cast<ArrayType>(CurrGEP.getSourceElementType())->getNumElements());
   if (!isMultiDimensionalArray(CurrGEP.getSourceElementType())) {
-    GEPChain.GEPToIndicesMap.insert({&CurrGEP, Indices});
-    GEPChain.GEPChildToNewParentMap.insert({&CurrGEP, &NewGEP});
-    GEPChain.GEPToDimmsMap.insert({&CurrGEP, Dims});
+    GEPChainMap.insert(
+        {&CurrGEP, {std::move(FattenedArrayType), PtrOperand, std::move(Indices), std::move(Dims)}});
   }
   for (auto *User : CurrGEP.users()) {
     if (GetElementPtrInst *NestedGEP = dyn_cast<GetElementPtrInst>(User)) {
-      recursivelyCollectGEPs(*NestedGEP, NewGEP, GEPChain, Indices, Dims);
+      recursivelyCollectGEPs(*NestedGEP, FattenedArrayType, PtrOperand, Indices, Dims);
     }
   }
-  PotentiallyDeadInstrs.emplace_back(&CurrGEP);
 }
 
 bool DXILFlattenArraysVisitor::visitGetElementPtrInstInGEPChain(
     GetElementPtrInst &GEP) {
   IRBuilder<> Builder(&GEP);
-  SmallVector<ConstantInt *> Indices = GEPChain.GEPToIndicesMap.at(&GEP);
-  GetElementPtrInst *Parent = GEPChain.GEPChildToNewParentMap.at(&GEP);
-  SmallVector<uint64_t> Dims = GEPChain.GEPToDimmsMap.at(&GEP);
-  ConstantInt *FlatIndex = flattenIndices(Indices, Dims, Builder);
-  if (!FlatIndex->isZero()) {
-    ArrayType *FlattenedArrayType =
-        cast<ArrayType>(Parent->getSourceElementType());
-    Value *FlatGEP =
-        Builder.CreateGEP(FlattenedArrayType, Parent->getPointerOperand(),
-                          FlatIndex, GEP.getName() + ".flat", GEP.isInBounds());
+  GEPData GEPInfo = GEPChainMap.at(&GEP);
+  ConstantInt *FlatIndex =
+      flattenIndices(GEPInfo.Indices, GEPInfo.Dims, Builder);
+  
+  ArrayType *FlattenedArrayType = GEPInfo.ParentArrayType;
+  Value *FlatGEP = Builder.CreateGEP(
+        FlattenedArrayType, GEPInfo.ParendOperand, FlatIndex,
+        GEP.getName() + ".flat", GEP.isInBounds());
 
-    GEP.replaceAllUsesWith(FlatGEP);
-  }
+  GEP.replaceAllUsesWith(FlatGEP);
   GEP.eraseFromParent();
   return true;
 }
 
 bool DXILFlattenArraysVisitor::visitGetElementPtrInst(GetElementPtrInst &GEP) {
-  auto It = GEPChain.GEPToIndicesMap.find(&GEP);
-  if (It != GEPChain.GEPToIndicesMap.end())
+  auto It = GEPChainMap.find(&GEP);
+  if (It != GEPChainMap.end())
     return visitGetElementPtrInstInGEPChain(GEP);
   if (!isMultiDimensionalArray(GEP.getSourceElementType()))
     return false;
@@ -210,21 +205,10 @@ bool DXILFlattenArraysVisitor::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   ArrayType *FattenedArrayType =
       ArrayType::get(getBaseElementType(ArrType), TotalElements);
 
-  ConstantInt *FlatIndex = Builder.getInt32(0);
   Value *PtrOperand = GEP.getPointerOperand();
-  auto OpExists = GEPChain.OperandToBaseGEPMap.find(PtrOperand);
 
-  GetElementPtrInst *FlatGEP = nullptr;
-  if (OpExists == GEPChain.OperandToBaseGEPMap.end()) {
-    FlatGEP = cast<GetElementPtrInst>(
-        Builder.CreateGEP(FattenedArrayType, PtrOperand, FlatIndex,
-                          GEP.getName() + ".flat", GEP.isInBounds()));
-    GEPChain.OperandToBaseGEPMap.insert({PtrOperand, FlatGEP});
-  } else
-    FlatGEP = OpExists->getSecond();
-  recursivelyCollectGEPs(GEP, *FlatGEP, GEPChain);
-  GEP.replaceAllUsesWith(FlatGEP);
-  GEP.eraseFromParent();
+  recursivelyCollectGEPs(GEP, FattenedArrayType, PtrOperand);
+  PotentiallyDeadInstrs.emplace_back(&GEP);
   return true;
 }
 
@@ -240,11 +224,11 @@ bool DXILFlattenArraysVisitor::visit(Function &F) {
       }
     }
   }
+  finish();
   return MadeChange;
 }
 
 static bool flattenArrays(Module &M) {
-  // TODO
   bool MadeChange = false;
   DXILFlattenArraysVisitor Impl;
   for (auto &F : make_early_inc_range(M.functions())) {
