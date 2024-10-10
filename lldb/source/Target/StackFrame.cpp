@@ -1084,7 +1084,9 @@ bool StackFrame::GetFrameBaseValue(Scalar &frame_base, Status *error_ptr) {
   if (!m_cfa_is_valid) {
     m_frame_base_error = Status::FromErrorString(
         "No frame base available for this historical stack frame.");
-    return false;
+    if (error_ptr)
+      *error_ptr = m_frame_base_error.Clone();
+    return m_frame_base_error.Success();
   }
 
   if (m_flags.IsClear(GOT_FRAME_BASE)) {
