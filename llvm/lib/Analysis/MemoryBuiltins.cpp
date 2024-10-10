@@ -570,6 +570,14 @@ static APInt getSizeWithOverflow(const SizeOffsetAPInt &Data) {
   return Size - Offset;
 }
 
+static APInt getOffsetWithOverflow(const SizeOffsetAPInt &Data) {
+  APInt Size = Data.Size;
+  APInt Offset = Data.Offset;
+  if (Offset.isNegative())
+    return APInt(Size.getBitWidth(), 0);
+  return Offset;
+}
+
 /// Compute the size of the object pointed by Ptr. Returns true and the
 /// object size in Size if successful, and false otherwise.
 /// If RoundToAlign is true, then Size is rounded up to the alignment of
@@ -697,7 +705,8 @@ SizeOffsetAPInt ObjectSizeOffsetVisitor::computeImpl(Value *V) {
   // the index type size and if we stripped address space casts we have to
   // readjust the APInt as we pass it upwards in order for the APInt to match
   // the type the caller passed in.
-  APInt Offset(InitialIntTyBits, 0);
+
+  APInt Offset = APInt{InitialIntTyBits, 0};
   V = V->stripAndAccumulateConstantOffsets(
       DL, Offset, /* AllowNonInbounds */ true, /* AllowInvariantGroup */ true);
 
@@ -706,7 +715,9 @@ SizeOffsetAPInt ObjectSizeOffsetVisitor::computeImpl(Value *V) {
   IntTyBits = DL.getIndexTypeSizeInBits(V->getType());
   Zero = APInt::getZero(IntTyBits);
 
+  std::swap(Offset, ConstantOffset);
   SizeOffsetAPInt SOT = computeValue(V);
+  std::swap(Offset, ConstantOffset);
 
   bool IndexTypeSizeChanged = InitialIntTyBits != IntTyBits;
   if (!IndexTypeSizeChanged && Offset.isZero())
@@ -981,18 +992,39 @@ ObjectSizeOffsetVisitor::combineSizeOffset(SizeOffsetAPInt LHS,
                                            SizeOffsetAPInt RHS) {
   if (!LHS.bothKnown() || !RHS.bothKnown())
     return ObjectSizeOffsetVisitor::unknown();
-
-  switch (Options.EvalMode) {
-  case ObjectSizeOpts::Mode::Min:
-    return (getSizeWithOverflow(LHS).slt(getSizeWithOverflow(RHS))) ? LHS : RHS;
-  case ObjectSizeOpts::Mode::Max:
-    return (getSizeWithOverflow(LHS).sgt(getSizeWithOverflow(RHS))) ? LHS : RHS;
-  case ObjectSizeOpts::Mode::ExactSizeFromOffset:
-    return (getSizeWithOverflow(LHS).eq(getSizeWithOverflow(RHS)))
-               ? LHS
-               : ObjectSizeOffsetVisitor::unknown();
-  case ObjectSizeOpts::Mode::ExactUnderlyingSizeAndOffset:
-    return LHS == RHS ? LHS : ObjectSizeOffsetVisitor::unknown();
+  // If the ConstantOffset we add in the end is negative, then we're actually
+  // interested in selecting the nodes based on their offset rather than their
+  // size.
+  if (ConstantOffset.isNegative()) {
+    switch (Options.EvalMode) {
+    case ObjectSizeOpts::Mode::Min:
+      return (getOffsetWithOverflow(LHS).slt(getOffsetWithOverflow(RHS))) ? LHS
+                                                                          : RHS;
+    case ObjectSizeOpts::Mode::Max:
+      return (getOffsetWithOverflow(LHS).sgt(getOffsetWithOverflow(RHS))) ? LHS
+                                                                          : RHS;
+    case ObjectSizeOpts::Mode::ExactSizeFromOffset:
+      return (getOffsetWithOverflow(LHS).eq(getOffsetWithOverflow(RHS)))
+                 ? LHS
+                 : ObjectSizeOffsetVisitor::unknown();
+    case ObjectSizeOpts::Mode::ExactUnderlyingSizeAndOffset:
+      return LHS == RHS ? LHS : ObjectSizeOffsetVisitor::unknown();
+    }
+  } else {
+    switch (Options.EvalMode) {
+    case ObjectSizeOpts::Mode::Min:
+      return (getSizeWithOverflow(LHS).slt(getSizeWithOverflow(RHS))) ? LHS
+                                                                      : RHS;
+    case ObjectSizeOpts::Mode::Max:
+      return (getSizeWithOverflow(LHS).sgt(getSizeWithOverflow(RHS))) ? LHS
+                                                                      : RHS;
+    case ObjectSizeOpts::Mode::ExactSizeFromOffset:
+      return (getSizeWithOverflow(LHS).eq(getSizeWithOverflow(RHS)))
+                 ? LHS
+                 : ObjectSizeOffsetVisitor::unknown();
+    case ObjectSizeOpts::Mode::ExactUnderlyingSizeAndOffset:
+      return LHS == RHS ? LHS : ObjectSizeOffsetVisitor::unknown();
+    }
   }
   llvm_unreachable("missing an eval mode");
 }
