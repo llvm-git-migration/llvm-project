@@ -6950,7 +6950,8 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
     SmallVector<EVT, 2> ValueVTs;
     ComputeValueVTs(TLI, DAG.getDataLayout(), I.getType(), ValueVTs);
     SDVTList VTs = DAG.getVTList(ValueVTs);
-    setValue(&I, DAG.getNode(Opcode, sdl, VTs, getValue(I.getArgOperand(0))));
+    setValue(
+        &I, DAG.getNode(Opcode, sdl, VTs, getValue(I.getArgOperand(0)), Flags));
     return;
   }
   case Intrinsic::arithmetic_fence: {
