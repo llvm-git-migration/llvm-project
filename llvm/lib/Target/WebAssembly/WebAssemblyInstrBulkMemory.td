@@ -16,8 +16,7 @@ multiclass BULK_I<dag oops_r, dag iops_r, dag oops_s, dag iops_s,
                   list<dag> pattern_r, string asmstr_r = "",
                   string asmstr_s = "", bits<32> simdop = -1> {
   defm "" : I<oops_r, iops_r, oops_s, iops_s, pattern_r, asmstr_r, asmstr_s,
-              !or(0xfc00, !and(0xff, simdop))>,
-            Requires<[HasBulkMemory]>;
+              !or(0xfc00, !and(0xff, simdop))>;
 }
 
 // Bespoke types and nodes for bulk memory ops
@@ -52,7 +51,8 @@ defm INIT_A#B :
          (outs), (ins i32imm_op:$seg, i32imm_op:$idx),
          [],
          "memory.init\t$seg, $idx, $dest, $offset, $size",
-         "memory.init\t$seg, $idx", 0x08>;
+         "memory.init\t$seg, $idx", 0x08>,
+  Requires<[HasBulkMemory]>;
 
 let mayLoad = 1, mayStore = 1 in
 defm COPY_A#B :
