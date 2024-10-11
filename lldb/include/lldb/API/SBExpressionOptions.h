@@ -10,7 +10,6 @@
 #define LLDB_API_SBEXPRESSIONOPTIONS_H
 
 #include "lldb/API/SBDefines.h"
-#include "lldb/API/SBLanguages.h"
 
 #include <vector>
 
@@ -71,7 +70,7 @@ public:
   /// Set the language using a pair of language code and version as
   /// defined by the DWARF 6 specification.
   /// WARNING: These codes may change until DWARF 6 is finalized.
-  void SetLanguage(lldb::SBSourceLanguageName name, uint32_t version);
+  void SetLanguage(lldb::SourceLanguageName name, uint32_t version);
 
 #ifndef SWIG
   void SetCancelCallback(lldb::ExpressionCancelCallback callback, void *baton);

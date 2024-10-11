@@ -5,7 +5,7 @@ import re
 import os
 
 HEADER = """\
-//===-- SBLanguages.h -----------------------------------------*- C++ -*-===//
+//===-- SourceLanguageNames.h -----------------------------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -13,14 +13,13 @@ HEADER = """\
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLDB_API_SBLANGUAGE_H
-#define LLDB_API_SBLANGUAGE_H
+#ifndef LLDB_SOURCELANGUAGENAMES_H
+#define LLDB_SOURCELANGUAGENAMES_H
 
 namespace lldb {
-/// Used by \\ref SBExpressionOptions.
 /// These enumerations use the same language enumerations as the DWARF
 /// specification for ease of use and consistency.
-enum SBSourceLanguageName : uint16_t {
+enum SourceLanguageName {
 """
 
 FOOTER = """\
