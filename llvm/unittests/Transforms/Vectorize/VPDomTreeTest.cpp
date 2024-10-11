@@ -41,7 +41,8 @@ TEST(VPDominatorTreeTest, DominanceNoRegionsTest) {
   VPBlockUtils::connectBlocks(VPBB3, VPBB4);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB0);
+  VPBlockUtils::connectBlocks(VPPH, VPBB0);
+  VPlan Plan(VPPH, &*TC);
   VPDominatorTree VPDT;
   VPDT.recalculate(Plan);
 
@@ -115,7 +116,8 @@ TEST(VPDominatorTreeTest, DominanceRegionsTest) {
     VPBlockUtils::connectBlocks(R1, R2);
 
     auto TC = std::make_unique<VPValue>();
-    VPlan Plan(VPPH, &*TC, VPBB0);
+    VPBlockUtils::connectBlocks(VPPH, VPBB0);
+    VPlan Plan(VPPH, &*TC);
     VPDominatorTree VPDT;
     VPDT.recalculate(Plan);
 
@@ -195,7 +197,8 @@ TEST(VPDominatorTreeTest, DominanceRegionsTest) {
     VPBlockUtils::connectBlocks(R1, VPBB2);
 
     auto TC = std::make_unique<VPValue>();
-    VPlan Plan(VPPH, &*TC, VPBB1);
+    VPBlockUtils::connectBlocks(VPPH, VPBB1);
+    VPlan Plan(VPPH, &*TC);
     VPDominatorTree VPDT;
     VPDT.recalculate(Plan);
 

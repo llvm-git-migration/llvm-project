@@ -3671,11 +3671,6 @@ class VPlan {
   /// preheader of the vector loop.
   VPBasicBlock *Entry;
 
-  /// VPBasicBlock corresponding to the original preheader. Used to place
-  /// VPExpandSCEV recipes for expressions used during skeleton creation and the
-  /// rest of VPlan execution.
-  VPBasicBlock *Preheader;
-
   /// Holds the VFs applicable to this VPlan.
   SmallSetVector<ElementCount, 2> VFs;
 
@@ -3722,29 +3717,18 @@ class VPlan {
   DenseMap<const SCEV *, VPValue *> SCEVToExpansion;
 
 public:
-  /// Construct a VPlan with original preheader \p Preheader, trip count \p TC
-  /// and \p Entry to the plan. At the moment, \p Preheader and \p Entry need to
-  /// be disconnected, as the bypass blocks between them are not yet modeled in
-  /// VPlan.
-  VPlan(VPBasicBlock *Preheader, VPValue *TC, VPBasicBlock *Entry)
-      : VPlan(Preheader, Entry) {
-    TripCount = TC;
-  }
+  /// Construct a VPlan with \p Entry entering the plan and trip count \p TC.
+  VPlan(VPBasicBlock *Entry, VPValue *TC) : VPlan(Entry) { TripCount = TC; }
 
-  /// Construct a VPlan with original preheader \p Preheader and \p Entry to
-  /// the plan. At the moment, \p Preheader and \p Entry need to be
-  /// disconnected, as the bypass blocks between them are not yet modeled in
-  /// VPlan.
-  VPlan(VPBasicBlock *Preheader, VPBasicBlock *Entry)
-      : Entry(Entry), Preheader(Preheader) {
-    Entry->setPlan(this);
-    Preheader->setPlan(this);
-    assert(Preheader->getNumSuccessors() == 0 &&
-           Preheader->getNumPredecessors() == 0 &&
-           "preheader must be disconnected");
-  }
+  /// Construct a VPlan with \p Entry to the plan.
+  VPlan(VPBasicBlock *Entry) : Entry(Entry) { Entry->setPlan(this); }
 
   ~VPlan();
+
+  void setEntry(VPBasicBlock *VPBB) {
+    Entry = VPBB;
+    VPBB->setPlan(this);
+  }
 
   /// Create initial VPlan, having an "entry" VPBasicBlock (wrapping
   /// original scalar pre-header ) which contains SCEV expansions that need
@@ -3878,12 +3862,9 @@ public:
 #endif
 
   /// Returns the VPRegionBlock of the vector loop.
-  VPRegionBlock *getVectorLoopRegion() {
-    return cast<VPRegionBlock>(getEntry()->getSingleSuccessor());
-  }
-  const VPRegionBlock *getVectorLoopRegion() const {
-    return cast<VPRegionBlock>(getEntry()->getSingleSuccessor());
-  }
+  VPRegionBlock *getVectorLoopRegion();
+
+  const VPRegionBlock *getVectorLoopRegion() const;
 
   /// Returns the preheader of the vector loop region.
   VPBasicBlock *getVectorPreheader() {
@@ -3915,13 +3896,11 @@ public:
     SCEVToExpansion[S] = V;
   }
 
-  /// \return The block corresponding to the original preheader.
-  VPBasicBlock *getPreheader() { return Preheader; }
-  const VPBasicBlock *getPreheader() const { return Preheader; }
-
   /// Clone the current VPlan, update all VPValues of the new VPlan and cloned
   /// recipes to refer to the clones, and return it.
   VPlan *duplicate();
+
+  VPBasicBlock *getScalarPreheader();
 };
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)

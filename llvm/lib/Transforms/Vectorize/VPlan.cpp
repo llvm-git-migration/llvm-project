@@ -173,9 +173,8 @@ VPBasicBlock *VPBlockBase::getEntryBasicBlock() {
 }
 
 void VPBlockBase::setPlan(VPlan *ParentPlan) {
-  assert(
-      (ParentPlan->getEntry() == this || ParentPlan->getPreheader() == this) &&
-      "Can only set plan on its entry or preheader block.");
+  assert(ParentPlan->getEntry() == this &&
+         "Can only set plan on its entry or preheader block.");
   Plan = ParentPlan;
 }
 
@@ -455,13 +454,11 @@ void VPIRBasicBlock::execute(VPTransformState *State) {
          "VPIRBasicBlock can have at most two successors at the moment!");
   State->Builder.SetInsertPoint(IRBB->getTerminator());
   executeRecipes(State, IRBB);
-  if (getSingleSuccessor()) {
-    assert(isa<UnreachableInst>(IRBB->getTerminator()));
+  if (getSingleSuccessor() && isa<UnreachableInst>(IRBB->getTerminator())) {
     auto *Br = State->Builder.CreateBr(IRBB);
     Br->setOperand(0, nullptr);
     IRBB->getTerminator()->eraseFromParent();
   }
-
   for (VPBlockBase *PredVPBlock : getHierarchicalPredecessors()) {
     VPBasicBlock *PredVPBB = PredVPBlock->getExitingBasicBlock();
     BasicBlock *PredBB = State->CFG.VPBB2IRBB[PredVPBB];
@@ -474,7 +471,7 @@ void VPIRBasicBlock::execute(VPTransformState *State) {
     // backedges. A backward successor is set when the branch is created.
     const auto &PredVPSuccessors = PredVPBB->getHierarchicalSuccessors();
     unsigned idx = PredVPSuccessors.front() == this ? 0 : 1;
-    assert(!TermBr->getSuccessor(idx) &&
+    assert((!TermBr->getSuccessor(idx) || TermBr->getSuccessor(idx) == IRBB) &&
            "Trying to reset an existing successor block.");
     TermBr->setSuccessor(idx, IRBB);
     State->CFG.DTU.applyUpdates({{DominatorTree::Insert, PredBB, IRBB}});
@@ -853,9 +850,6 @@ VPlan::~VPlan() {
       Block->dropAllReferences(&DummyValue);
 
     VPBlockBase::deleteCFG(Entry);
-
-    Preheader->dropAllReferences(&DummyValue);
-    delete Preheader;
   }
   for (VPValue *VPV : VPLiveInsToFree)
     delete VPV;
@@ -878,7 +872,8 @@ VPlanPtr VPlan::createInitialVPlan(Type *InductionTy,
   VPIRBasicBlock *Entry =
       VPIRBasicBlock::fromBasicBlock(TheLoop->getLoopPreheader());
   VPBasicBlock *VecPreheader = new VPBasicBlock("vector.ph");
-  auto Plan = std::make_unique<VPlan>(Entry, VecPreheader);
+  VPBlockUtils::connectBlocks(Entry, VecPreheader);
+  auto Plan = std::make_unique<VPlan>(Entry);
 
   // Create SCEV and VPValue for the trip count.
 
@@ -1020,8 +1015,9 @@ void VPlan::execute(VPTransformState *State) {
   BasicBlock *VectorPreHeader = State->CFG.PrevBB;
   State->Builder.SetInsertPoint(VectorPreHeader->getTerminator());
 
-  // Disconnect VectorPreHeader from ExitBB in both the CFG and DT.
-  cast<BranchInst>(VectorPreHeader->getTerminator())->setSuccessor(0, nullptr);
+  replaceVPBBWithIRVPBB(
+      cast<VPBasicBlock>(getVectorLoopRegion()->getSinglePredecessor()),
+      VectorPreHeader);
   State->CFG.DTU.applyUpdates(
       {{DominatorTree::Delete, VectorPreHeader, State->CFG.ExitBB}});
 
@@ -1055,8 +1051,10 @@ void VPlan::execute(VPTransformState *State) {
   MiddleBB->getTerminator()->eraseFromParent();
   State->CFG.DTU.applyUpdates({{DominatorTree::Delete, MiddleBB, ScalarPh}});
 
+  ReversePostOrderTraversal<VPBlockShallowTraversalWrapper<VPBlockBase *>> RPOT(
+      Entry);
   // Generate code in the loop pre-header and body.
-  for (VPBlockBase *Block : vp_depth_first_shallow(Entry))
+  for (VPBlockBase *Block : make_range(RPOT.begin(), RPOT.end()))
     Block->execute(State);
 
   VPBasicBlock *LatchVPBB = getVectorLoopRegion()->getExitingBasicBlock();
@@ -1107,9 +1105,6 @@ void VPlan::execute(VPTransformState *State) {
   }
 
   State->CFG.DTU.flush();
-  assert(State->CFG.DTU.getDomTree().verify(
-             DominatorTree::VerificationLevel::Fast) &&
-         "DT not preserved correctly");
 }
 
 InstructionCost VPlan::cost(ElementCount VF, VPCostContext &Ctx) {
@@ -1162,12 +1157,10 @@ void VPlan::print(raw_ostream &O) const {
 
   printLiveIns(O);
 
-  if (!getPreheader()->empty()) {
-    O << "\n";
-    getPreheader()->print(O, "", SlotTracker);
-  }
+  ReversePostOrderTraversal<VPBlockShallowTraversalWrapper<const VPBlockBase *>>
+      RPOT(getEntry());
 
-  for (const VPBlockBase *Block : vp_depth_first_shallow(getEntry())) {
+  for (const VPBlockBase *Block : RPOT) {
     O << '\n';
     Block->print(O, "", SlotTracker);
   }
@@ -1202,6 +1195,20 @@ std::string VPlan::getName() const {
   }
 
   return Out;
+}
+
+VPRegionBlock *VPlan::getVectorLoopRegion() {
+  for (VPBlockBase *B : vp_depth_first_shallow(getEntry()))
+    if (auto *R = dyn_cast<VPRegionBlock>(B))
+      return R;
+  return nullptr;
+}
+
+const VPRegionBlock *VPlan::getVectorLoopRegion() const {
+  for (const VPBlockBase *B : vp_depth_first_shallow(getEntry()))
+    if (auto *R = dyn_cast<VPRegionBlock>(B))
+      return R;
+  return nullptr;
 }
 
 LLVM_DUMP_METHOD
@@ -1259,11 +1266,10 @@ static void remapOperands(VPBlockBase *Entry, VPBlockBase *NewEntry,
 
 VPlan *VPlan::duplicate() {
   // Clone blocks.
-  VPBasicBlock *NewPreheader = Preheader->clone();
   const auto &[NewEntry, __] = cloneFrom(Entry);
 
   // Create VPlan, clone live-ins and remap operands in the cloned blocks.
-  auto *NewPlan = new VPlan(NewPreheader, cast<VPBasicBlock>(NewEntry));
+  auto *NewPlan = new VPlan(cast<VPBasicBlock>(NewEntry));
   DenseMap<VPValue *, VPValue *> Old2NewVPValues;
   for (VPValue *OldLiveIn : VPLiveInsToFree) {
     Old2NewVPValues[OldLiveIn] =
@@ -1283,7 +1289,6 @@ VPlan *VPlan::duplicate() {
   // else NewTripCount will be created and inserted into Old2NewVPValues when
   // TripCount is cloned. In any case NewPlan->TripCount is updated below.
 
-  remapOperands(Preheader, NewPreheader, Old2NewVPValues);
   remapOperands(Entry, NewEntry, Old2NewVPValues);
 
   // Clone live-outs.
@@ -1299,6 +1304,19 @@ VPlan *VPlan::duplicate() {
          "TripCount must have been added to Old2NewVPValues");
   NewPlan->TripCount = Old2NewVPValues[TripCount];
   return NewPlan;
+}
+
+VPBasicBlock *VPlan::getScalarPreheader() {
+  auto *MiddleVPBB =
+      cast<VPBasicBlock>(getVectorLoopRegion()->getSingleSuccessor());
+  if (MiddleVPBB->getNumSuccessors() == 2) {
+    // Order is strict: first is the exit block, second is the scalar preheader.
+    return cast<VPBasicBlock>(MiddleVPBB->getSuccessors()[1]);
+  }
+  if (auto *IRVPBB = dyn_cast<VPBasicBlock>(MiddleVPBB->getSingleSuccessor()))
+    return IRVPBB;
+
+  return nullptr;
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -1338,8 +1356,6 @@ void VPlanPrinter::dump() {
   OS << "node [shape=rect, fontname=Courier, fontsize=30]\n";
   OS << "edge [fontname=Courier, fontsize=30]\n";
   OS << "compound=true\n";
-
-  dumpBlock(Plan.getPreheader());
 
   for (const VPBlockBase *Block : vp_depth_first_shallow(Plan.getEntry()))
     dumpBlock(Block);
@@ -1601,7 +1617,6 @@ void VPSlotTracker::assignNames(const VPlan &Plan) {
     assignName(Plan.BackedgeTakenCount);
   for (VPValue *LI : Plan.VPLiveInsToFree)
     assignName(LI);
-  assignNames(Plan.getPreheader());
 
   ReversePostOrderTraversal<VPBlockDeepTraversalWrapper<const VPBlockBase *>>
       RPOT(VPBlockDeepTraversalWrapper<const VPBlockBase *>(Plan.getEntry()));

@@ -28,7 +28,8 @@ TEST(VPVerifierTest, VPInstructionUseBeforeDefSameBB) {
   VPBasicBlock *VPBB2 = new VPBasicBlock();
   VPRegionBlock *R1 = new VPRegionBlock(VPBB2, VPBB2, "R1");
   VPBlockUtils::connectBlocks(VPBB1, R1);
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, VPBB1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();
@@ -60,7 +61,8 @@ TEST(VPVerifierTest, VPInstructionUseBeforeDefDifferentBB) {
   VPBlockUtils::connectBlocks(VPBB1, R1);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, VPBB1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();
@@ -103,7 +105,8 @@ TEST(VPVerifierTest, VPBlendUseBeforeDefDifferentBB) {
   VPBB3->setParent(R1);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, VPBB1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();
@@ -139,7 +142,8 @@ TEST(VPVerifierTest, DuplicateSuccessorsOutsideRegion) {
   VPBlockUtils::connectBlocks(VPBB1, R1);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, VPBB1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();
@@ -176,7 +180,8 @@ TEST(VPVerifierTest, DuplicateSuccessorsInsideRegion) {
   VPBB3->setParent(R1);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, VPBB1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();
@@ -205,7 +210,8 @@ TEST(VPVerifierTest, BlockOutsideRegionWithParent) {
   VPBB1->setParent(R1);
 
   auto TC = std::make_unique<VPValue>();
-  VPlan Plan(VPPH, &*TC, VPBB1);
+  VPBlockUtils::connectBlocks(VPPH, R1);
+  VPlan Plan(VPPH, &*TC);
 
 #if GTEST_HAS_STREAM_REDIRECTION
   ::testing::internal::CaptureStderr();

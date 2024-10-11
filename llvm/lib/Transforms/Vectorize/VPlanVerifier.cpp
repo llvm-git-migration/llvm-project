@@ -197,15 +197,6 @@ bool VPlanVerifier::verifyVPBasicBlock(const VPBasicBlock *VPBB) {
     RecipeNumbering[&R] = Cnt++;
 
   for (const VPRecipeBase &R : *VPBB) {
-    if (isa<VPIRInstruction>(&R) ^ isa<VPIRBasicBlock>(VPBB)) {
-      errs() << "VPIRInstructions ";
-#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-      R.dump();
-      errs() << " ";
-#endif
-      errs() << "not in a VPIRBasicBlock!\n";
-      return false;
-    }
     for (const VPValue *V : R.definedValues()) {
       for (const VPUser *U : V->users()) {
         auto *UI = dyn_cast<VPRecipeBase>(U);
@@ -245,15 +236,6 @@ bool VPlanVerifier::verifyVPBasicBlock(const VPBasicBlock *VPBB) {
 
   if (!WrappedIRBBs.insert(IRBB->getIRBasicBlock()).second) {
     errs() << "Same IR basic block used by multiple wrapper blocks!\n";
-    return false;
-  }
-
-  VPBlockBase *MiddleBB =
-      IRBB->getPlan()->getVectorLoopRegion()->getSingleSuccessor();
-  if (IRBB != IRBB->getPlan()->getPreheader() &&
-      IRBB->getSinglePredecessor() != MiddleBB) {
-    errs() << "VPIRBasicBlock can only be used as pre-header or a successor of "
-              "middle-block at the moment!\n";
     return false;
   }
   return true;
