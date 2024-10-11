@@ -10,7 +10,7 @@ define <2 x i1> @test_vec_undef_poison(i1 %c) {
 ; CHECK:       [[F]]:
 ; CHECK-NEXT:    br label %[[M]]
 ; CHECK:       [[M]]:
-; CHECK-NEXT:    ret <2 x i1> <i1 poison, i1 false>
+; CHECK-NEXT:    ret <2 x i1> <i1 undef, i1 false>
 ;
   br i1 %c, label %t, label %f
 t:
@@ -31,7 +31,7 @@ define <2 x i1> @test_vec_poison_undef(i1 %c) {
 ; CHECK:       [[F]]:
 ; CHECK-NEXT:    br label %[[M]]
 ; CHECK:       [[M]]:
-; CHECK-NEXT:    ret <2 x i1> <i1 false, i1 poison>
+; CHECK-NEXT:    ret <2 x i1> <i1 false, i1 undef>
 ;
   br i1 %c, label %t, label %f
 t:
@@ -56,8 +56,7 @@ define <2 x i1> @test_vec_poison_undef_defined(i1 %c1, i1 %c2) {
 ; CHECK:       [[F]]:
 ; CHECK-NEXT:    br label %[[M]]
 ; CHECK:       [[M]]:
-; CHECK-NEXT:    [[RES:%.*]] = phi <2 x i1> [ <i1 false, i1 poison>, %[[TT]] ], [ undef, %[[TF]] ], [ <i1 poison, i1 true>, %[[F]] ]
-; CHECK-NEXT:    ret <2 x i1> [[RES]]
+; CHECK-NEXT:    ret <2 x i1> <i1 false, i1 true>
 ;
   br i1 %c1, label %t, label %f
 t:
