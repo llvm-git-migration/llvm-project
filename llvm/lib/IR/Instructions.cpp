@@ -3471,6 +3471,63 @@ bool CmpInst::isEquality(Predicate P) {
   llvm_unreachable("Unsupported predicate kind");
 }
 
+// Returns true if either operand of CmpInst is a provably non-zero
+// floating-point constant. If both operands are constants, simply return the
+// equality of the constants.
+static bool hasNonZeroFPOperands(const CmpInst *Cmp) {
+  auto *LHS = dyn_cast<Constant>(Cmp->getOperand(0));
+  auto *RHS = dyn_cast<Constant>(Cmp->getOperand(1));
+  if (LHS && RHS)
+    return LHS == RHS;
+  if (auto *Const = LHS ? LHS : RHS) {
+    if (auto *ConstFP = dyn_cast<ConstantFP>(Const)) {
+      if (!ConstFP->isZero())
+        return true;
+    } else if (auto *ConstVec = dyn_cast<ConstantVector>(Const)) {
+      if (auto *SplatCFP =
+              dyn_cast_or_null<ConstantFP>(ConstVec->getSplatValue())) {
+        if (!SplatCFP->isZero())
+          return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Floating-point equality is not an equivalence when comparing +0.0 with
+// -0.0 or when comparing NaN with another value.
+bool CmpInst::isEqEquivalence() const {
+  switch (getPredicate()) {
+  case CmpInst::Predicate::ICMP_EQ:
+    return true;
+  case CmpInst::Predicate::FCMP_UEQ:
+    if (!hasNoNaNs())
+      return false;
+    [[fallthrough]];
+  case CmpInst::Predicate::FCMP_OEQ:
+    return hasNonZeroFPOperands(this);
+  default:
+    return false;
+  }
+}
+
+// Floating-point equality is not an equivalence when comparing +0.0 with
+// -0.0 or when comparing NaN with another value.
+bool CmpInst::isNeEquivalence() const {
+  switch (getPredicate()) {
+  case CmpInst::Predicate::ICMP_NE:
+    return true;
+  case CmpInst::Predicate::FCMP_ONE:
+    if (!hasNoNaNs())
+      return false;
+    [[fallthrough]];
+  case CmpInst::Predicate::FCMP_UNE:
+    return hasNonZeroFPOperands(this);
+  default:
+    return false;
+  }
+}
+
 CmpInst::Predicate CmpInst::getInversePredicate(Predicate pred) {
   switch (pred) {
     default: llvm_unreachable("Unknown cmp predicate!");
