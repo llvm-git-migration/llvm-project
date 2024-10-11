@@ -2882,8 +2882,6 @@ CHECK_SIMPLE_CLAUSE(Align, OMPC_align)
 CHECK_SIMPLE_CLAUSE(Compare, OMPC_compare)
 CHECK_SIMPLE_CLAUSE(CancellationConstructType, OMPC_cancellation_construct_type)
 CHECK_SIMPLE_CLAUSE(OmpxAttribute, OMPC_ompx_attribute)
-CHECK_SIMPLE_CLAUSE(OmpxBare, OMPC_ompx_bare)
-CHECK_SIMPLE_CLAUSE(Enter, OMPC_enter)
 CHECK_SIMPLE_CLAUSE(Fail, OMPC_fail)
 CHECK_SIMPLE_CLAUSE(Weak, OMPC_weak)
 
