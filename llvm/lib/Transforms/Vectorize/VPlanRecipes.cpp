@@ -65,6 +65,7 @@ bool VPRecipeBase::mayWriteToMemory() const {
     case VPInstruction::FirstOrderRecurrenceSplice:
     case VPInstruction::LogicalAnd:
     case VPInstruction::PtrAdd:
+    case VPInstruction::ResumePhi:
       return false;
     default:
       return true;
