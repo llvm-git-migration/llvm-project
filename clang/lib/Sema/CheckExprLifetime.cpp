@@ -194,6 +194,7 @@ struct IndirectLocalPathEntry {
     GslReferenceInit,
     GslPointerInit,
     GslPointerAssignment,
+    DefaultArg,
   } Kind;
   Expr *E;
   union {
@@ -531,6 +532,11 @@ static void visitLocalsRetainedByReferenceBinding(IndirectLocalPath &Path,
       Init = DIE->getExpr();
     }
   } while (Init != Old);
+
+  if (auto *DAE = dyn_cast<CXXDefaultArgExpr>(Init)) {
+    Path.push_back({IndirectLocalPathEntry::DefaultArg, DAE, DAE->getParam()});
+    Init = DAE->getExpr();
+  }
 
   if (auto *MTE = dyn_cast<MaterializeTemporaryExpr>(Init)) {
     if (Visit(Path, Local(MTE), RK))
@@ -917,6 +923,9 @@ static SourceRange nextPathEntryRange(const IndirectLocalPath &Path, unsigned I,
         continue;
       return Path[I].E->getSourceRange();
     }
+
+    case IndirectLocalPathEntry::DefaultArg:
+      return cast<CXXDefaultArgExpr>(Path[I].E)->getUsedLocation();
   }
   return E->getSourceRange();
 }
@@ -1221,7 +1230,7 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         break;
       }
 
-      case IndirectLocalPathEntry::LambdaCaptureInit:
+      case IndirectLocalPathEntry::LambdaCaptureInit: {
         if (!Elem.Capture->capturesVariable())
           break;
         // FIXME: We can't easily tell apart an init-capture from a nested
@@ -1233,6 +1242,16 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
             << (Elem.Capture->getCaptureKind() == LCK_ByRef) << VD
             << nextPathEntryRange(Path, I + 1, L);
         break;
+      }
+
+      case IndirectLocalPathEntry::DefaultArg: {
+        const auto *DAE = cast<CXXDefaultArgExpr>(Elem.E);
+        SemaRef.Diag(DAE->getParam()->getDefaultArgRange().getBegin(),
+                     diag::note_default_argument_declared_here)
+            << DAE->getParam() << nextPathEntryRange(Path, I + 1, L);
+        break;
+      }
+      }
       }
     }
 

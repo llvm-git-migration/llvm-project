@@ -19,8 +19,10 @@ namespace usage_invalid {
 namespace usage_ok {
   struct IntRef { int *target; };
 
+  const int *defaultparam(const int &def1 [[clang::lifetimebound]] = 0); // #def1
   int &refparam(int &param [[clang::lifetimebound]]);
   int &classparam(IntRef param [[clang::lifetimebound]]);
+  const int *c = defaultparam(); // expected-warning {{temporary whose address is used as value of local variable 'c' will be destroyed at the end of the full-expression}} expected-note@#def1 {{default argument declared here}}
 
   // Do not diagnose non-void return types; they can still be lifetime-bound.
   long long ptrintcast(int &param [[clang::lifetimebound]]) {
@@ -34,13 +36,17 @@ namespace usage_ok {
   struct A {
     A();
     A(int);
+    A(const char*, const int& def2 [[clang::lifetimebound]] = 0); // #def2
     int *class_member() [[clang::lifetimebound]];
     operator int*() [[clang::lifetimebound]];
+    const int *defaulted_param(const int &def3 [[clang::lifetimebound]] = 0); // #def3
   };
 
   int *p = A().class_member(); // expected-warning {{temporary whose address is used as value of local variable 'p' will be destroyed at the end of the full-expression}}
   int *q = A(); // expected-warning {{temporary whose address is used as value of local variable 'q' will be destroyed at the end of the full-expression}}
   int *r = A(1); // expected-warning {{temporary whose address is used as value of local variable 'r' will be destroyed at the end of the full-expression}}
+  A a = A(""); // expected-warning {{temporary whose address is used as value of local variable 'a' will be destroyed at the end of the full-expression}} expected-note@#def2 {{default argument declared here}}
+  const int *s = A().defaulted_param(); // expected-warning {{temporary whose address is used as value of local variable 's' will be destroyed at the end of the full-expression}} expected-note@#def3 {{default argument declared here}}
 
   void test_assignment() {
     p = A().class_member(); // expected-warning {{object backing the pointer p will be destroyed at the end of the full-expression}}
