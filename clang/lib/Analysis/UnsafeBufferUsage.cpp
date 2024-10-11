@@ -427,6 +427,45 @@ AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
   //    -  e. g. "Try harder to find a NamedDecl to point at in the note."
   //    already duplicated
   //  - call both from Sema and from here
+  std::function<bool(const Expr *exp, const ConstantArrayType *CATy,
+                     unsigned int limit)>
+      SafeMaskedAccess;
+  unsigned int RecLimit = 5;
+  llvm::APInt Max;
+  bool Initialized = false;
+
+  SafeMaskedAccess = [&](const Expr *exp, const ConstantArrayType *CATy,
+                         unsigned int RecLimit) -> bool {
+    if (RecLimit == 0)
+      return false;
+
+    RecLimit--;
+
+    if (const auto *IntLit = dyn_cast<IntegerLiteral>(exp)) {
+      const APInt ArrIdx = IntLit->getValue();
+      if (ArrIdx.isNonNegative() &&
+          ArrIdx.getLimitedValue() < CATy->getLimitedSize())
+        return true;
+      if (!Initialized) {
+        Max = ArrIdx;
+        Initialized = true;
+      } else {
+        Max = Max & ArrIdx.getLimitedValue();
+      }
+      if (Max.getLimitedValue() < CATy->getLimitedSize())
+        return true;
+    }
+
+    if (const auto *BinEx = dyn_cast<BinaryOperator>(exp)) {
+      if (SafeMaskedAccess(BinEx->getLHS()->IgnoreParenCasts(), CATy, RecLimit))
+        return true;
+      else if (SafeMaskedAccess(BinEx->getRHS()->IgnoreParenCasts(), CATy,
+                                RecLimit))
+        return true;
+    }
+
+    return false;
+  };
 
   const auto *BaseDRE =
       dyn_cast<DeclRefExpr>(Node.getBase()->IgnoreParenImpCasts());
@@ -446,6 +485,12 @@ AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
     if (ArrIdx.isNonNegative() &&
         ArrIdx.getLimitedValue() < CATy->getLimitedSize())
       return true;
+  } else if (const auto *BinEx = dyn_cast<BinaryOperator>(Node.getIdx())) {
+    if (BinEx->getOpcode() != BO_And)
+      return false;
+
+    Max.setAllBits();
+    return SafeMaskedAccess(Node.getIdx(), CATy, RecLimit);
   }
 
   return false;
