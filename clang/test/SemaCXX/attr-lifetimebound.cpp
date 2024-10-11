@@ -75,6 +75,30 @@ namespace usage_ok {
   }
 }
 
+namespace default_args {
+  using IntArray = int[];
+  const int *defaultparam1(const int &def1 [[clang::lifetimebound]] = 0); // #def1
+  const int &defaultparam_array([[clang::lifetimebound]] const int *p = IntArray{1, 2, 3}); // #def2
+  struct A {
+    A(const char*, const int& def3 [[clang::lifetimebound]] = 0); // #def3
+  };
+  const int &defaultparam2(const int &def4 [[clang::lifetimebound]] = 0); // #def4
+  const int &defaultparam3(const int &def5 [[clang::lifetimebound]] = defaultparam2()); // #def5
+
+  void test_default_args() {
+    const int *c = defaultparam1(); // expected-warning {{temporary whose address is used as value of local variable 'c' will be destroyed at the end of the full-expression}} expected-note@#def1 {{initializing parameter 'def1' with default argument}}
+    A a = A(""); // expected-warning {{temporary whose address is used as value of local variable 'a' will be destroyed at the end of the full-expression}} expected-note@#def3 {{initializing parameter 'def3' with default argument}}
+    const int &s = defaultparam2(); // expected-warning {{temporary bound to local reference 's' will be destroyed at the end of the full-expression}} expected-note@#def4 {{initializing parameter 'def4' with default argument}}
+    const int &t = defaultparam3(); // expected-warning {{temporary bound to local reference 't' will be destroyed at the end of the full-expression}} expected-note@#def4 {{initializing parameter 'def4' with default argument}} expected-note@#def5 {{initializing parameter 'def5' with default argument}}
+    const int &u = defaultparam_array(); // expected-warning {{temporary bound to local reference 'u' will be destroyed at the end of the full-expression}} expected-note@#def2 {{initializing parameter 'p' with default argument}}
+    int local;
+    const int &v = defaultparam2(local); // no warning
+    const int &w = defaultparam2(1); // expected-warning {{temporary bound to local reference 'w' will be destroyed at the end of the full-expression}}
+    int x = defaultparam2(1); // FIXME: This should warn
+    x = defaultparam2(1); // FIXME: This should warn
+  }
+}
+
 namespace std {
   using size_t = __SIZE_TYPE__;
   template<typename T>
