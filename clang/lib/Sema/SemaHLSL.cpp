@@ -1898,8 +1898,12 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
     QualType ArgTy = Arg->getType();
     QualType EltTy = ArgTy;
 
-    if (auto *VecTy = EltTy->getAs<VectorType>())
+    QualType ResTy = SemaRef.Context.UnsignedIntTy;
+
+    if (auto *VecTy = EltTy->getAs<VectorType>()) {
       EltTy = VecTy->getElementType();
+      ResTy = SemaRef.Context.getVectorType(ResTy, VecTy->getNumElements(), VecTy->getVectorKind());
+    }
 
     if (!EltTy->isIntegerType()) {
       Diag(Arg->getBeginLoc(), diag::err_builtin_invalid_arg_type)
@@ -1907,7 +1911,7 @@ bool SemaHLSL::CheckBuiltinFunctionCall(unsigned BuiltinID, CallExpr *TheCall) {
       return true;
     }
 
-    TheCall->setType(ArgTy);
+    TheCall->setType(ResTy);
     break;
   }
   case Builtin::BI__builtin_hlsl_select: {
