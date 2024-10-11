@@ -18,9 +18,13 @@ namespace usage_invalid {
 
 namespace usage_ok {
   struct IntRef { int *target; };
+  using IntArray = int[];
 
+  const int *defaultparam(const int &def1 [[clang::lifetimebound]] = 0); // #def1
   int &refparam(int &param [[clang::lifetimebound]]);
   int &classparam(IntRef param [[clang::lifetimebound]]);
+  const int *c = defaultparam(); // expected-warning {{temporary whose address is used as value of local variable 'c' will be destroyed at the end of the full-expression}} expected-note@#def1 {{initializing parameter 'def1' with default argument}}
+  const int &defaultparam_array([[clang::lifetimebound]] const int *p = IntArray{1, 2, 3}); // #def2
 
   // Do not diagnose non-void return types; they can still be lifetime-bound.
   long long ptrintcast(int &param [[clang::lifetimebound]]) {
@@ -34,13 +38,20 @@ namespace usage_ok {
   struct A {
     A();
     A(int);
+    A(const char*, const int& def3 [[clang::lifetimebound]] = 0); // #def3
     int *class_member() [[clang::lifetimebound]];
     operator int*() [[clang::lifetimebound]];
+    static const int &defaulted_param(const int &def4 [[clang::lifetimebound]] = 0); // #def4
+    static const int &defaulted_param2(const int &def5 [[clang::lifetimebound]] = defaulted_param()); // #def5
   };
 
   int *p = A().class_member(); // expected-warning {{temporary whose address is used as value of local variable 'p' will be destroyed at the end of the full-expression}}
   int *q = A(); // expected-warning {{temporary whose address is used as value of local variable 'q' will be destroyed at the end of the full-expression}}
   int *r = A(1); // expected-warning {{temporary whose address is used as value of local variable 'r' will be destroyed at the end of the full-expression}}
+  A a = A(""); // expected-warning {{temporary whose address is used as value of local variable 'a' will be destroyed at the end of the full-expression}} expected-note@#def3 {{initializing parameter 'def3' with default argument}}
+  const int &s = A::defaulted_param(); // expected-warning {{temporary bound to local reference 's' will be destroyed at the end of the full-expression}} expected-note@#def4 {{initializing parameter 'def4' with default argument}}
+  const int &t = A::defaulted_param2(); // expected-warning {{temporary bound to local reference 't' will be destroyed at the end of the full-expression}} expected-note@#def4 {{initializing parameter 'def4' with default argument}} expected-note@#def5 {{initializing parameter 'def5' with default argument}}
+  const int &u = defaultparam_array(); // expected-warning {{temporary bound to local reference 'u' will be destroyed at the end of the full-expression}} expected-note@#def2 {{initializing parameter 'p' with default argument}}
 
   void test_assignment() {
     p = A().class_member(); // expected-warning {{object backing the pointer p will be destroyed at the end of the full-expression}}
