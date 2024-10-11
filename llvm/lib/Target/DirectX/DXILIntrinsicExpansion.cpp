@@ -65,6 +65,8 @@ static bool isIntrinsicExpansion(Function &F) {
   case Intrinsic::dx_sign:
   case Intrinsic::dx_step:
   case Intrinsic::dx_radians:
+  case Intrinsic::dx_wave_active_sum:
+  case Intrinsic::dx_wave_active_usum:
     return true;
   }
   return false;
@@ -451,6 +453,19 @@ static Value *expandRadiansIntrinsic(CallInst *Orig) {
   return Builder.CreateFMul(X, PiOver180);
 }
 
+template <int OpcodeVal, bool Signed>
+static Value *expandWaveActiveOpIntrinsic(CallInst *Orig) {
+  Value *X = Orig->getOperand(0);
+  Type *Ty = X->getType();
+
+  IRBuilder<> Builder(Orig);
+  IntegerType *IntTy = IntegerType::get(Builder.getContext(), 8);
+  Constant *Opcode = ConstantInt::get(IntTy, OpcodeVal);
+  Constant *SOp = ConstantInt::get(IntTy, Signed ? 0 : 1);
+  return Builder.CreateIntrinsic(Ty, Intrinsic::dx_wave_active_op,
+                                 {X, Opcode, SOp}, nullptr, "dx.active.op");
+}
+
 static Intrinsic::ID getMaxForClamp(Type *ElemTy,
                                     Intrinsic::ID ClampIntrinsic) {
   if (ClampIntrinsic == Intrinsic::dx_uclamp)
@@ -573,6 +588,12 @@ static bool expandIntrinsic(Function &F, CallInst *Orig) {
     break;
   case Intrinsic::dx_radians:
     Result = expandRadiansIntrinsic(Orig);
+    break;
+  case Intrinsic::dx_wave_active_sum:
+    Result = expandWaveActiveOpIntrinsic<0, true>(Orig);
+    break;
+  case Intrinsic::dx_wave_active_usum:
+    Result = expandWaveActiveOpIntrinsic<0, false>(Orig);
     break;
   }
   if (Result) {
