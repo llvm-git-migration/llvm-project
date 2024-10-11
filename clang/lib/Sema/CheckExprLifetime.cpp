@@ -194,6 +194,7 @@ struct IndirectLocalPathEntry {
     GslReferenceInit,
     GslPointerInit,
     GslPointerAssignment,
+    DefaultArg,
   } Kind;
   Expr *E;
   union {
@@ -371,25 +372,33 @@ static bool implicitObjectParamIsLifetimeBound(const FunctionDecl *FD) {
 static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
                                        LocalVisitor Visit) {
   const FunctionDecl *Callee;
-  ArrayRef<Expr *> Args;
+  llvm::SmallVector<Expr *, 8> Args;
 
   if (auto *CE = dyn_cast<CallExpr>(Call)) {
     Callee = CE->getDirectCallee();
-    Args = llvm::ArrayRef(CE->getArgs(), CE->getNumArgs());
+    Args.append(CE->getArgs(), CE->getArgs() + CE->getNumArgs());
   } else {
     auto *CCE = cast<CXXConstructExpr>(Call);
     Callee = CCE->getConstructor();
-    Args = llvm::ArrayRef(CCE->getArgs(), CCE->getNumArgs());
+    Args.append(CCE->getArgs(), CCE->getArgs() + CCE->getNumArgs());
   }
   if (!Callee)
     return;
+
+  for (Expr *&Arg : Args) {
+    if (auto *DAE = dyn_cast<CXXDefaultArgExpr>(Arg)) {
+      Path.push_back(
+          {IndirectLocalPathEntry::DefaultArg, DAE, DAE->getParam()});
+      Arg = DAE->getExpr();
+    }
+  }
 
   bool EnableGSLAnalysis = !Callee->getASTContext().getDiagnostics().isIgnored(
       diag::warn_dangling_lifetime_pointer, SourceLocation());
   Expr *ObjectArg = nullptr;
   if (isa<CXXOperatorCallExpr>(Call) && Callee->isCXXInstanceMember()) {
     ObjectArg = Args[0];
-    Args = Args.slice(1);
+    Args.erase(Args.begin() + 1);
   } else if (auto *MCE = dyn_cast<CXXMemberCallExpr>(Call)) {
     ObjectArg = MCE->getImplicitObjectArgument();
   }
@@ -916,6 +925,9 @@ static SourceRange nextPathEntryRange(const IndirectLocalPath &Path, unsigned I,
       if (!Path[I].Capture->capturesVariable())
         continue;
       return Path[I].E->getSourceRange();
+
+    case IndirectLocalPathEntry::DefaultArg:
+      return cast<CXXDefaultArgExpr>(Path[I].E)->getUsedLocation();
     }
   }
   return E->getSourceRange();
@@ -1221,7 +1233,7 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         break;
       }
 
-      case IndirectLocalPathEntry::LambdaCaptureInit:
+      case IndirectLocalPathEntry::LambdaCaptureInit: {
         if (!Elem.Capture->capturesVariable())
           break;
         // FIXME: We can't easily tell apart an init-capture from a nested
@@ -1233,6 +1245,15 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
             << (Elem.Capture->getCaptureKind() == LCK_ByRef) << VD
             << nextPathEntryRange(Path, I + 1, L);
         break;
+      }
+
+      case IndirectLocalPathEntry::DefaultArg: {
+        const auto *DAE = cast<CXXDefaultArgExpr>(Elem.E);
+        SemaRef.Diag(DAE->getParam()->getDefaultArgRange().getBegin(),
+                     diag::note_init_with_default_argument)
+            << DAE->getParam() << nextPathEntryRange(Path, I + 1, L);
+        break;
+      }
       }
     }
 
