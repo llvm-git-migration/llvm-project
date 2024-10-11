@@ -66,6 +66,8 @@ static bool isIntrinsicExpansion(Function &F) {
   case Intrinsic::dx_sign:
   case Intrinsic::dx_step:
   case Intrinsic::dx_radians:
+  case Intrinsic::dx_wave_active_sum:
+  case Intrinsic::dx_wave_active_usum:
     return true;
   }
   return false;
