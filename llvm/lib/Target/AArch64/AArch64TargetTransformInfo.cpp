@@ -2150,6 +2150,34 @@ static std::optional<Instruction *> instCombineSVEInsr(InstCombiner &IC,
   return std::nullopt;
 }
 
+
+static std::optional<Instruction *> instCombineDMB(InstCombiner &IC,
+                                                   IntrinsicInst &II) {
+  // If this barrier is post-dominated by identical one we can remove it
+  auto *NI = II.getNextNonDebugInstruction();
+  int LookaheadThreshold = 10;
+  auto CanSkipOver = [](Instruction *I){
+    return !I->mayReadOrWriteMemory() && !I->mayHaveSideEffects();
+  };
+  while (--LookaheadThreshold && !isa<IntrinsicInst>(NI)) {
+    if (!CanSkipOver(NI))
+      break;
+    auto *NIBB = NI->getParent();
+    NI = NI->getNextNonDebugInstruction();
+    if (!NI) {
+      if (auto *SuccBB = NIBB->getUniqueSuccessor())
+        NI = SuccBB->getFirstNonPHIOrDbgOrLifetime();
+      else
+        break;
+    }
+  }
+  auto *NextDMB = dyn_cast_or_null<IntrinsicInst>(NI);
+  if (NextDMB && II.isIdenticalTo(NextDMB))
+    return IC.eraseInstFromFunction(II);
+
+  return std::nullopt;
+}
+
 std::optional<Instruction *>
 AArch64TTIImpl::instCombineIntrinsic(InstCombiner &IC,
                                      IntrinsicInst &II) const {
@@ -2157,6 +2185,8 @@ AArch64TTIImpl::instCombineIntrinsic(InstCombiner &IC,
   switch (IID) {
   default:
     break;
+  case Intrinsic::aarch64_dmb:
+    return instCombineDMB(IC, II);
   case Intrinsic::aarch64_sve_fcvt_bf16f32_v2:
   case Intrinsic::aarch64_sve_fcvt_f16f32:
   case Intrinsic::aarch64_sve_fcvt_f16f64:
