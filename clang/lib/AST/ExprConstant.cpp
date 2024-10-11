@@ -15340,7 +15340,6 @@ bool FloatExprEvaluator::VisitCallExpr(const CallExpr *E) {
     Result = minimumnum(Result, RHS);
     return true;
   }
-
   }
 }
 
