@@ -234,3 +234,28 @@ note: candidate function not viable: requires single argument 'x', but 2 argumen
             ]
         )
         check(["expression --\na\n+\nb", "error: <user", "a", "error: <user", "b"])
+
+    def test_command_expr_sbdata(self):
+        """Test that the source and caret positions LLDB prints are correct"""
+        self.build()
+
+        (target, process, thread, bkpt) = lldbutil.run_to_source_breakpoint(
+            self, "// Break here", self.main_source_spec
+        )
+        interp = self.dbg.GetCommandInterpreter()
+        cro = lldb.SBCommandReturnObject()
+        interp.HandleCommand("expression -- a+b", cro)
+        diags = cro.GetErrorData()
+        self.assertEqual(diags.GetValueForKey("version").GetFloatValue(), 1.0)
+        details = diags.GetValueForKey("details")
+        diag = details.GetItemAtIndex(0)
+        self.assertEqual(str(diag.GetValueForKey("severity")), "error")
+        self.assertIn("undeclared identifier 'a'", str(diag.GetValueForKey("message")))
+        self.assertIn("user expression", str(diag.GetValueForKey("rendered")))
+        sloc = diag.GetValueForKey("source_location")
+        self.assertIn("user expression", str(sloc.GetValueForKey("file")))
+        self.assertFalse(sloc.GetValueForKey("hidden").GetBooleanValue())
+        self.assertTrue(sloc.GetValueForKey("in_user_input").GetBooleanValue())
+        diag = details.GetItemAtIndex(1)
+        self.assertIn("undeclared identifier 'b'", str(diag.GetValueForKey("message")))
+

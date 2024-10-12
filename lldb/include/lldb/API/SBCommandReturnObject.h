@@ -45,13 +45,14 @@ public:
   const char *GetOutput();
 
   const char *GetError();
+  SBStructuredData GetErrorData();
 
 #ifndef SWIG
   LLDB_DEPRECATED_FIXME("Use PutOutput(SBFile) or PutOutput(FileSP)",
                         "PutOutput(SBFile)")
   size_t PutOutput(FILE *fh);
 #endif
-
+\
   size_t PutOutput(SBFile file);
 
   size_t PutOutput(FileSP BORROWED);
