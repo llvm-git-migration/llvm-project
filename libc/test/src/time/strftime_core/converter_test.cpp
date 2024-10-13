@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/stdio/printf_core/writer.h"
-#include "src/stdio/strftime_core/converter.h"
-#include "src/stdio/strftime_core/core_structs.h"
+#include "src/time/strftime_core/converter.h"
+#include "src/time/strftime_core/core_structs.h"
 
 #include "test/UnitTest/Test.h"
 
@@ -64,8 +64,8 @@ TEST_F(LlvmLibcStrftimeConverterTest, WeekdayConversion) {
 
   wb.buff[wb.buff_cur] = '\0';
 
-  ASSERT_STREQ(str, "Monday");
-  ASSERT_EQ(writer.get_chars_written(), 6);
+  ASSERT_STREQ(str, "Mon");
+  ASSERT_EQ(writer.get_chars_written(), 3);
 }
 TEST_F(LlvmLibcStrftimeConverterTest, AbbreviatedMonthNameConversion) {
   LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
@@ -317,4 +317,126 @@ TEST_F(LlvmLibcStrftimeConverterTest, IsoYearEdgeCaseConversionStartOfYear) {
   // The ISO year for this date is 2022, not 2023
   ASSERT_STREQ(str, "2022");
   ASSERT_EQ(writer.get_chars_written(), 4);
+}
+
+TEST_F(LlvmLibcStrftimeConverterTest, WeekNumberSundayFirstDayConversion) {
+  LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
+  LIBC_NAMESPACE::strftime_core::tm time;
+
+  // Set the time for a known Sunday (2023-05-07, which is a Sunday)
+  time.tm_year = 123; // Represents 2023
+  time.tm_mon = 4;    // May (0-based)
+  time.tm_mday = 7;   // 7th day of the month
+  time.tm_wday = 0;   // Sunday (0-based, 0 is Sunday)
+  time.tm_yday = 126; // 126th day of the year
+
+  simple_conv.has_conv = true;
+  simple_conv.raw_string = "%U"; // Week number (Sunday is first day of week)
+  simple_conv.conv_name = 'U';
+  simple_conv.time = &time;
+
+  LIBC_NAMESPACE::strftime_core::convert(&writer, simple_conv);
+
+  wb.buff[wb.buff_cur] = '\0';
+
+  // The week number for May 7, 2023 (Sunday as first day) should be 19
+  ASSERT_STREQ(str, "19");
+  ASSERT_EQ(writer.get_chars_written(), 2);
+}
+
+TEST_F(LlvmLibcStrftimeConverterTest, WeekNumberMondayFirstDayConversion) {
+  LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
+  LIBC_NAMESPACE::strftime_core::tm time;
+
+  // Set the time for a known Monday (2023-05-08, which is a Monday)
+  time.tm_year = 123; // Represents 2023
+  time.tm_mon = 4;    // May (0-based)
+  time.tm_mday = 8;   // 8th day of the month
+  time.tm_wday = 1;   // Monday (0-based, 1 is Monday)
+  time.tm_yday = 127; // 127th day of the year
+
+  simple_conv.has_conv = true;
+  simple_conv.raw_string = "%W"; // Week number (Monday is first day of week)
+  simple_conv.conv_name = 'W';
+  simple_conv.time = &time;
+
+  LIBC_NAMESPACE::strftime_core::convert(&writer, simple_conv);
+
+  wb.buff[wb.buff_cur] = '\0';
+
+  // The week number for May 8, 2023 (Monday as first day) should be 19
+  ASSERT_STREQ(str, "19");
+  ASSERT_EQ(writer.get_chars_written(), 2);
+}
+
+TEST_F(LlvmLibcStrftimeConverterTest, ISO8601WeekNumberConversion) {
+  LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
+  LIBC_NAMESPACE::strftime_core::tm time;
+
+  // Set the time for a known date (2023-05-10)
+  time.tm_year = 123; // Represents 2023
+  time.tm_mon = 4;    // May (0-based)
+  time.tm_mday = 10;  // 10th day of the month
+  time.tm_wday = 3;   // Wednesday (0-based, 3 is Wednesday)
+  time.tm_yday = 129; // 129th day of the year
+
+  simple_conv.has_conv = true;
+  simple_conv.raw_string = "%V"; // ISO 8601 week number
+  simple_conv.conv_name = 'V';
+  simple_conv.time = &time;
+
+  LIBC_NAMESPACE::strftime_core::convert(&writer, simple_conv);
+
+  wb.buff[wb.buff_cur] = '\0';
+
+  // The ISO week number for May 10, 2023 should be 19
+  ASSERT_STREQ(str, "19");
+  ASSERT_EQ(writer.get_chars_written(), 2);
+}
+
+TEST_F(LlvmLibcStrftimeConverterTest, DayOfYearConversion) {
+  LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
+  LIBC_NAMESPACE::strftime_core::tm time;
+
+  // Set the time for a known date (2023-02-25)
+  time.tm_year = 123; // Represents 2023
+  time.tm_mon = 1;    // February (0-based)
+  time.tm_mday = 25;  // 25th day of the month
+  time.tm_yday = 55;  // 55th day of the year
+
+  simple_conv.has_conv = true;
+  simple_conv.raw_string = "%j"; // Day of the year
+  simple_conv.conv_name = 'j';
+  simple_conv.time = &time;
+
+  LIBC_NAMESPACE::strftime_core::convert(&writer, simple_conv);
+
+  wb.buff[wb.buff_cur] = '\0';
+
+  // The day of the year for February 25, 2023 should be 056 (padded)
+  ASSERT_STREQ(str, "056");
+  ASSERT_EQ(writer.get_chars_written(), 3);
+}
+
+TEST_F(LlvmLibcStrftimeConverterTest, ISO8601DateConversion) {
+  LIBC_NAMESPACE::strftime_core::FormatSection simple_conv;
+  LIBC_NAMESPACE::strftime_core::tm time;
+
+  // Set the time for a known date (2023-05-10)
+  time.tm_year = 123; // Represents 2023
+  time.tm_mon = 4;    // May (0-based)
+  time.tm_mday = 10;  // 10th day of the month
+
+  simple_conv.has_conv = true;
+  simple_conv.raw_string = "%F"; // ISO 8601 date format
+  simple_conv.conv_name = 'F';
+  simple_conv.time = &time;
+
+  LIBC_NAMESPACE::strftime_core::convert(&writer, simple_conv);
+
+  wb.buff[wb.buff_cur] = '\0';
+
+  // The ISO date format for May 10, 2023 should be 2023-05-10
+  ASSERT_STREQ(str, "2023-05-10");
+  ASSERT_EQ(writer.get_chars_written(), 10);
 }
