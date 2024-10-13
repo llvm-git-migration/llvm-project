@@ -293,7 +293,9 @@ class LLVM_IntrOpBase<Dialect dialect, string opName, string enumName,
                       bit requiresAccessGroup = 0, bit requiresAliasAnalysis = 0,
                       bit requiresFastmath = 0,
                       list<int> immArgPositions = [],
-                      list<string> immArgAttrNames = []>
+                      list<string> immArgAttrNames = [],
+                      string opBundleSizesAttrName = "",
+                      string opBundleTagsAttrName = "">
     : LLVM_OpBase<dialect, opName, !listconcat(
         !if(!gt(requiresAccessGroup, 0),
             [DeclareOpInterfaceMethods<AccessGroupOpInterface>], []),
@@ -319,11 +321,14 @@ class LLVM_IntrOpBase<Dialect dialect, string opName, string enumName,
   string immArgPositionsCpp = "{" # !interleave(immArgPositions, ", ") # "}";
   string immArgAttrNamesCpp = "{" # !interleave(!foreach(name, immArgAttrNames,
     "StringLiteral(\"" # name # "\")"), ", ") # "}";
+  string opBundleSizesAttrNameCpp = "StringLiteral(\"" # opBundleSizesAttrName # "\")";
+  string opBundleTagsAttrNameCpp = "StringLiteral(\"" # opBundleTagsAttrName # "\")";
   string baseLlvmBuilder = [{
     auto *inst = LLVM::detail::createIntrinsicCall(
       builder, moduleTranslation, &opInst, llvm::Intrinsic::}] # !interleave([
         enumName, "" # numResults, overloadedResultsCpp, overloadedOperandsCpp,
-        immArgPositionsCpp, immArgAttrNamesCpp], ",") # [{);
+        immArgPositionsCpp, immArgAttrNamesCpp, opBundleSizesAttrNameCpp], ",")
+        # ", " # opBundleTagsAttrNameCpp # [{);
     (void) inst;
     }];
   string baseLlvmBuilderCoda = !if(!gt(numResults, 0), "$res = inst;", "");
@@ -336,8 +341,11 @@ class LLVM_IntrOpBase<Dialect dialect, string opName, string enumName,
     SmallVector<NamedAttribute> mlirAttrs;
     if (failed(moduleImport.convertIntrinsicArguments(
       llvmOperands,
+      opBundles,
       }] # immArgPositionsCpp # [{,
       }] # immArgAttrNamesCpp # [{,
+      }] # opBundleSizesAttrNameCpp # [{,
+      }] # opBundleTagsAttrNameCpp # [{,
       mlirOperands,
       mlirAttrs))
     ) {
@@ -382,11 +390,14 @@ class LLVM_IntrOp<string mnem, list<int> overloadedResults,
                   int numResults, bit requiresAccessGroup = 0,
                   bit requiresAliasAnalysis = 0, bit requiresFastmath = 0,
                   list<int> immArgPositions = [],
-                  list<string> immArgAttrNames = []>
+                  list<string> immArgAttrNames = [],
+                  string opBundleSizesAttrName = "",
+                  string opBundleTagsAttrName = "">
     : LLVM_IntrOpBase<LLVM_Dialect, "intr." # mnem, !subst(".", "_", mnem),
                       overloadedResults, overloadedOperands, traits,
                       numResults, requiresAccessGroup, requiresAliasAnalysis,
-                      requiresFastmath, immArgPositions, immArgAttrNames>;
+                      requiresFastmath, immArgPositions, immArgAttrNames,
+                      opBundleSizesAttrName, opBundleTagsAttrName>;
 
 // Base class for LLVM intrinsic operations returning no results. Places the
 // intrinsic into the LLVM dialect and prefixes its name with "intr.".
@@ -407,10 +418,13 @@ class LLVM_ZeroResultIntrOp<string mnem, list<int> overloadedOperands = [],
                             bit requiresAccessGroup = 0,
                             bit requiresAliasAnalysis = 0,
                             list<int> immArgPositions = [],
-                            list<string> immArgAttrNames = []>
+                            list<string> immArgAttrNames = [],
+                            string opBundleSizesAttrName = "",
+                            string opBundleTagsAttrName = "">
     : LLVM_IntrOp<mnem, [], overloadedOperands, traits, /*numResults=*/0,
                   requiresAccessGroup, requiresAliasAnalysis,
-                  /*requiresFastMath=*/0, immArgPositions, immArgAttrNames>;
+                  /*requiresFastMath=*/0, immArgPositions, immArgAttrNames,
+                  opBundleSizesAttrName, opBundleTagsAttrName>;
 
 // Base class for LLVM intrinsic operations returning one result. Places the
 // intrinsic into the LLVM dialect and prefixes its name with "intr.". This is

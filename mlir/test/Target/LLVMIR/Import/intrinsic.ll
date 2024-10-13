@@ -612,7 +612,7 @@ define void @va_intrinsics_test(ptr %0, ptr %1, ...) {
 ; CHECK-LABEL: @assume
 ; CHECK-SAME:  %[[TRUE:[a-zA-Z0-9]+]]
 define void @assume(i1 %true) {
-  ; CHECK:  "llvm.intr.assume"(%[[TRUE]]) : (i1) -> ()
+  ; CHECK:  llvm.intr.assume %[[TRUE]] : (i1) -> ()
   call void @llvm.assume(i1 %true)
   ret void
 }

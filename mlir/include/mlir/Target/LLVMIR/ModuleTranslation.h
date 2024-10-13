@@ -431,8 +431,8 @@ llvm::CallInst *createIntrinsicCall(
     llvm::IRBuilderBase &builder, ModuleTranslation &moduleTranslation,
     Operation *intrOp, llvm::Intrinsic::ID intrinsic, unsigned numResults,
     ArrayRef<unsigned> overloadedResults, ArrayRef<unsigned> overloadedOperands,
-    ArrayRef<unsigned> immArgPositions,
-    ArrayRef<StringLiteral> immArgAttrNames);
+    ArrayRef<unsigned> immArgPositions, ArrayRef<StringLiteral> immArgAttrNames,
+    StringLiteral opBundleSizesAttrName, StringLiteral opBundleTagsAttrName);
 
 } // namespace detail
 

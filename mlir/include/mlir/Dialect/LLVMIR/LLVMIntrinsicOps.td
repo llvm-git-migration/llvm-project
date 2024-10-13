@@ -365,8 +365,8 @@ class LLVM_ConstrainedIntr<string mnem, int numArgs,
     SmallVector<Value> mlirOperands;
     SmallVector<NamedAttribute> mlirAttrs;
     if (failed(moduleImport.convertIntrinsicArguments(
-        llvmOperands.take_front( }] # numArgs # [{),
-        {}, {}, mlirOperands, mlirAttrs))) {
+        llvmOperands.take_front( }] # numArgs # [{), {}, {}, {},
+        StringLiteral(""), StringLiteral(""), mlirOperands, mlirAttrs))) {
       return failure();
     }
 
@@ -426,7 +426,31 @@ def LLVM_USHLSat : LLVM_BinarySameArgsIntrOpI<"ushl.sat">;
 //
 
 def LLVM_AssumeOp
-  : LLVM_ZeroResultIntrOp<"assume", []>, Arguments<(ins I1:$cond)>;
+    : LLVM_ZeroResultIntrOp<"assume", /*overloadedOperands=*/[], /*traits=*/[],
+                            /*requiresAccessGroup=*/0,
+                            /*requiresAliasAnalysis=*/0,
+                            /*immArgPositions=*/[], /*immArgAttrNames=*/[],
+                            /*opBundleSizesAttrName=*/"op_bundle_sizes",
+                            /*opBundleTagsAttrName=*/"op_bundle_tags"> {
+  let arguments = (ins I1:$cond,
+                       VariadicOfVariadic<LLVM_Type,
+                                         "op_bundle_sizes">:$op_bundle_operands,
+                       DenseI32ArrayAttr:$op_bundle_sizes,
+                       OptionalAttr<ArrayAttr>:$op_bundle_tags);
+
+  let assemblyFormat = [{
+    $cond
+    ( custom<OpBundles>($op_bundle_operands, type($op_bundle_operands),
+                        $op_bundle_tags)^ )?
+    `:` `(` type($cond) `)` `->` `(` `)` attr-dict
+  }];
+
+  let builders = [
+    OpBuilder<(ins "Value":$cond)>
+  ];
+
+  let hasVerifier = 1;
+}
 
 def LLVM_SSACopyOp : LLVM_OneResultIntrOp<"ssa.copy", [], [0],
                                             [Pure, SameOperandsAndResultType]> {

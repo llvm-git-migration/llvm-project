@@ -55,6 +55,7 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
+#include <numeric>
 #include <optional>
 
 #define DEBUG_TYPE "llvm-dialect-to-llvm-ir"
@@ -848,14 +849,46 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
     llvm::IRBuilderBase &builder, ModuleTranslation &moduleTranslation,
     Operation *intrOp, llvm::Intrinsic::ID intrinsic, unsigned numResults,
     ArrayRef<unsigned> overloadedResults, ArrayRef<unsigned> overloadedOperands,
-    ArrayRef<unsigned> immArgPositions,
-    ArrayRef<StringLiteral> immArgAttrNames) {
+    ArrayRef<unsigned> immArgPositions, ArrayRef<StringLiteral> immArgAttrNames,
+    StringLiteral opBundleSizesAttrName, StringLiteral opBundleTagsAttrName) {
   assert(immArgPositions.size() == immArgAttrNames.size() &&
          "LLVM `immArgPositions` and MLIR `immArgAttrNames` should have equal "
          "length");
 
+  SmallVector<llvm::OperandBundleDef> opBundles;
+  size_t numOpBundleOperands = 0;
+  if (!opBundleSizesAttrName.empty()) {
+    auto opBundleSizesAttr =
+        llvm::cast<DenseI32ArrayAttr>(intrOp->getAttr(opBundleSizesAttrName));
+    ArrayRef<int> opBundleSizes = opBundleSizesAttr.asArrayRef();
+
+    auto opBundleTagsAttr =
+        llvm::cast<ArrayAttr>(intrOp->getAttr(opBundleTagsAttrName));
+    assert(opBundleSizes.size() == opBundleTagsAttr.size() &&
+           "operand bundles and tags do not match");
+
+    numOpBundleOperands =
+        std::reduce(opBundleSizes.begin(), opBundleSizes.end());
+    assert(numOpBundleOperands <= intrOp->getNumOperands() &&
+           "operand bundle operands is more than the number of operands");
+
+    ValueRange operands = intrOp->getOperands().take_back(numOpBundleOperands);
+    size_t nextOperandIdx = 0;
+    opBundles.reserve(opBundleSizesAttr.size());
+
+    for (auto [opBundleTagAttr, bundleSize] :
+         llvm::zip(opBundleTagsAttr, opBundleSizes)) {
+      auto bundleTag = llvm::cast<StringAttr>(opBundleTagAttr).str();
+      auto bundleOperands = moduleTranslation.lookupValues(
+          operands.slice(nextOperandIdx, bundleSize));
+      opBundles.emplace_back(std::move(bundleTag), std::move(bundleOperands));
+      nextOperandIdx += bundleSize;
+    }
+  }
+
   // Map operands and attributes to LLVM values.
-  auto operands = moduleTranslation.lookupValues(intrOp->getOperands());
+  auto opOperands = intrOp->getOperands().drop_back(numOpBundleOperands);
+  auto operands = moduleTranslation.lookupValues(opOperands);
   SmallVector<llvm::Value *> args(immArgPositions.size() + operands.size());
   for (auto [immArgPos, immArgName] :
        llvm::zip(immArgPositions, immArgAttrNames)) {
@@ -890,7 +923,7 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
   llvm::Function *llvmIntr = llvm::Intrinsic::getOrInsertDeclaration(
       module, intrinsic, overloadedTypes);
 
-  return builder.CreateCall(llvmIntr, args);
+  return builder.CreateCall(llvmIntr, args, opBundles);
 }
 
 /// Given a single MLIR operation, create the corresponding LLVM IR operation

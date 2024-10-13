@@ -239,8 +239,11 @@ public:
   /// corresponding MLIR attribute names.
   LogicalResult
   convertIntrinsicArguments(ArrayRef<llvm::Value *> values,
+                            ArrayRef<llvm::OperandBundleUse> opBundles,
                             ArrayRef<unsigned> immArgPositions,
                             ArrayRef<StringLiteral> immArgAttrNames,
+                            StringLiteral opBundleSizesAttrName,
+                            StringLiteral opBundleTagsAttrName,
                             SmallVectorImpl<Value> &valuesOut,
                             SmallVectorImpl<NamedAttribute> &attrsOut);
 

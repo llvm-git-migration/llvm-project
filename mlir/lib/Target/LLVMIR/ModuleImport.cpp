@@ -1291,8 +1291,10 @@ ModuleImport::convertValues(ArrayRef<llvm::Value *> values) {
 }
 
 LogicalResult ModuleImport::convertIntrinsicArguments(
-    ArrayRef<llvm::Value *> values, ArrayRef<unsigned> immArgPositions,
-    ArrayRef<StringLiteral> immArgAttrNames, SmallVectorImpl<Value> &valuesOut,
+    ArrayRef<llvm::Value *> values, ArrayRef<llvm::OperandBundleUse> opBundles,
+    ArrayRef<unsigned> immArgPositions, ArrayRef<StringLiteral> immArgAttrNames,
+    StringLiteral opBundleSizesAttrName, StringLiteral opBundleTagsAttrName,
+    SmallVectorImpl<Value> &valuesOut,
     SmallVectorImpl<NamedAttribute> &attrsOut) {
   assert(immArgPositions.size() == immArgAttrNames.size() &&
          "LLVM `immArgPositions` and MLIR `immArgAttrNames` should have equal "
@@ -1319,6 +1321,37 @@ LogicalResult ModuleImport::convertIntrinsicArguments(
     if (failed(mlirValue))
       return failure();
     valuesOut.push_back(*mlirValue);
+  }
+
+  SmallVector<int> opBundleSizes;
+  SmallVector<Attribute> opBundleTagAttrs;
+  if (!opBundles.empty()) {
+    opBundleSizes.reserve(opBundles.size());
+    opBundleTagAttrs.reserve(opBundles.size());
+
+    for (const llvm::OperandBundleUse &bundle : opBundles) {
+      opBundleSizes.push_back(bundle.Inputs.size());
+      opBundleTagAttrs.push_back(StringAttr::get(context, bundle.getTagName()));
+
+      for (const llvm::Use &opBundleOperand : bundle.Inputs) {
+        auto operandMlirValue = convertValue(opBundleOperand.get());
+        if (failed(operandMlirValue))
+          return failure();
+        valuesOut.push_back(*operandMlirValue);
+      }
+    }
+  }
+  if (!opBundleSizesAttrName.empty()) {
+    auto opBundleSizesAttr = DenseI32ArrayAttr::get(context, opBundleSizes);
+    auto opBundleSizesAttrNameAttr =
+        StringAttr::get(context, opBundleSizesAttrName);
+    attrsOut.push_back({opBundleSizesAttrNameAttr, opBundleSizesAttr});
+  }
+  if (!opBundleTagsAttrName.empty()) {
+    auto opBundleTagsAttr = ArrayAttr::get(context, opBundleTagAttrs);
+    auto opBundleTagsAttrNameAttr =
+        StringAttr::get(context, opBundleTagsAttrName);
+    attrsOut.push_back({opBundleTagsAttrNameAttr, opBundleTagsAttr});
   }
 
   return success();
