@@ -82,7 +82,7 @@ public:
         // 1 : N type conversion.
         Type origType = op.getResultTypes()[i - 1];
         Value mat = typeConverter->materializeSourceConversion(
-            rewriter, op.getLoc(), origType, mappedValue);
+            rewriter, op.getLoc(), origType, mappedValue, origType);
         if (!mat) {
           return rewriter.notifyMatchFailure(
               op, "Failed to materialize 1:N type conversion");

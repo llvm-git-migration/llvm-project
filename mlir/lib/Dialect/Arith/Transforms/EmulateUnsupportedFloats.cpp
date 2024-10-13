@@ -97,12 +97,12 @@ void mlir::arith::populateEmulateUnsupportedFloatsConversions(
     // All other types legal
     return type;
   });
-  converter.addTargetMaterialization(
-      [](OpBuilder &b, Type target, ValueRange input, Location loc) {
-        auto extFOp = b.create<arith::ExtFOp>(loc, target, input);
-        extFOp.setFastmath(arith::FastMathFlags::contract);
-        return extFOp;
-      });
+  converter.addTargetMaterialization([](OpBuilder &b, Location loc, Type target,
+                                        ValueRange input, Type originalType) {
+    auto extFOp = b.create<arith::ExtFOp>(loc, target, input);
+    extFOp.setFastmath(arith::FastMathFlags::contract);
+    return extFOp;
+  });
 }
 
 void mlir::arith::populateEmulateUnsupportedFloatsPatterns(

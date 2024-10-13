@@ -1185,7 +1185,7 @@ private:
           Type indexType = getIndexType();
           if (dimSize.getType() != indexType)
             dimSize = typeConverter->materializeTargetConversion(
-                rewriter, loc, indexType, dimSize);
+                rewriter, loc, indexType, dimSize, dimSize.getType());
           assert(dimSize && "Invalid memref element type");
         }
 

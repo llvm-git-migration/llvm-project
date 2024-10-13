@@ -159,8 +159,8 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
   // insert a target materialization from the original block argument type to
   // a legal type.
   addArgumentMaterialization(
-      [&](OpBuilder &builder, UnrankedMemRefType resultType, ValueRange inputs,
-          Location loc) -> std::optional<Value> {
+      [&](OpBuilder &builder, Location loc, UnrankedMemRefType resultType,
+          ValueRange inputs, Type originalType) -> std::optional<Value> {
         if (inputs.size() == 1) {
           // Bare pointers are not supported for unranked memrefs because a
           // memref descriptor cannot be built just from a bare pointer.
@@ -174,9 +174,9 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
         return builder.create<UnrealizedConversionCastOp>(loc, resultType, desc)
             .getResult(0);
       });
-  addArgumentMaterialization([&](OpBuilder &builder, MemRefType resultType,
-                                 ValueRange inputs,
-                                 Location loc) -> std::optional<Value> {
+  addArgumentMaterialization([&](OpBuilder &builder, Location loc,
+                                 MemRefType resultType, ValueRange inputs,
+                                 Type originalType) -> std::optional<Value> {
     Value desc;
     if (inputs.size() == 1) {
       // This is a bare pointer. We allow bare pointers only for function entry
@@ -201,18 +201,18 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
   });
   // Add generic source and target materializations to handle cases where
   // non-LLVM types persist after an LLVM conversion.
-  addSourceMaterialization([&](OpBuilder &builder, Type resultType,
-                               ValueRange inputs,
-                               Location loc) -> std::optional<Value> {
+  addSourceMaterialization([&](OpBuilder &builder, Location loc,
+                               Type resultType, ValueRange inputs,
+                               Type originalType) -> std::optional<Value> {
     if (inputs.size() != 1)
       return std::nullopt;
 
     return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
         .getResult(0);
   });
-  addTargetMaterialization([&](OpBuilder &builder, Type resultType,
-                               ValueRange inputs,
-                               Location loc) -> std::optional<Value> {
+  addTargetMaterialization([&](OpBuilder &builder, Location loc,
+                               Type resultType, ValueRange inputs,
+                               Type originalType) -> std::optional<Value> {
     if (inputs.size() != 1)
       return std::nullopt;
 

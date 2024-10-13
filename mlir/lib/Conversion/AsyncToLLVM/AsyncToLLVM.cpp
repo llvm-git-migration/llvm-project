@@ -281,8 +281,8 @@ public:
 
     // Use UnrealizedConversionCast as the bridge so that we don't need to pull
     // in patterns for other dialects.
-    auto addUnrealizedCast = [](OpBuilder &builder, Type type,
-                                ValueRange inputs, Location loc) {
+    auto addUnrealizedCast = [](OpBuilder &builder, Location loc, Type type,
+                                ValueRange inputs, Type originalType) {
       auto cast = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
       return std::optional<Value>(cast.getResult(0));
     };

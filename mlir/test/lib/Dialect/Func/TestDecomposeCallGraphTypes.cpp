@@ -43,9 +43,10 @@ static LogicalResult buildDecomposeTuple(OpBuilder &builder, Location loc,
 /// Creates a `test.make_tuple` op out of the given inputs building a tuple of
 /// type `resultType`. If that type is nested, each nested tuple is built
 /// recursively with another `test.make_tuple` op.
-static std::optional<Value> buildMakeTupleOp(OpBuilder &builder,
+static std::optional<Value> buildMakeTupleOp(OpBuilder &builder, Location loc,
                                              TupleType resultType,
-                                             ValueRange inputs, Location loc) {
+                                             ValueRange inputs,
+                                             Type originalType) {
   // Build one value for each element at this nesting level.
   SmallVector<Value> elements;
   elements.reserve(resultType.getTypes().size());
@@ -64,8 +65,9 @@ static std::optional<Value> buildMakeTupleOp(OpBuilder &builder,
       inputIt += numNestedFlattenedTypes;
 
       // Recurse on the values for the nested TupleType.
-      std::optional<Value> res = buildMakeTupleOp(builder, nestedTupleType,
-                                                  nestedFlattenedelements, loc);
+      std::optional<Value> res =
+          buildMakeTupleOp(builder, loc, nestedTupleType,
+                           nestedFlattenedelements, /*originalType=*/Type());
       if (!res.has_value())
         return {};
 

@@ -148,8 +148,8 @@ populateDecomposeTuplesTestPatterns(const TypeConverter &typeConverter,
 /// This function has been copied (with small adaptions) from
 /// TestDecomposeCallGraphTypes.cpp.
 static std::optional<SmallVector<Value>>
-buildGetTupleElementOps(OpBuilder &builder, TypeRange resultTypes, Value input,
-                        Location loc) {
+buildGetTupleElementOps(OpBuilder &builder, Location loc, TypeRange resultTypes,
+                        Value input, Type originalType) {
   TupleType inputType = dyn_cast<TupleType>(input.getType());
   if (!inputType)
     return {};
@@ -163,7 +163,8 @@ buildGetTupleElementOps(OpBuilder &builder, TypeRange resultTypes, Value input,
       SmallVector<Type> flatRecursiveTypes;
       nestedTupleType.getFlattenedTypes(flatRecursiveTypes);
       std::optional<SmallVector<Value>> resursiveValues =
-          buildGetTupleElementOps(builder, flatRecursiveTypes, element, loc);
+          buildGetTupleElementOps(builder, loc, flatRecursiveTypes, element,
+                                  /*originalType=*/Type());
       if (!resursiveValues.has_value())
         return {};
       values.append(resursiveValues.value());
@@ -180,9 +181,10 @@ buildGetTupleElementOps(OpBuilder &builder, TypeRange resultTypes, Value input,
 ///
 /// This function has been copied (with small adaptions) from
 /// TestDecomposeCallGraphTypes.cpp.
-static std::optional<Value> buildMakeTupleOp(OpBuilder &builder,
+static std::optional<Value> buildMakeTupleOp(OpBuilder &builder, Location loc,
                                              TupleType resultType,
-                                             ValueRange inputs, Location loc) {
+                                             ValueRange inputs,
+                                             Type originalType) {
   // Build one value for each element at this nesting level.
   SmallVector<Value> elements;
   elements.reserve(resultType.getTypes().size());
@@ -201,8 +203,9 @@ static std::optional<Value> buildMakeTupleOp(OpBuilder &builder,
       inputIt += numNestedFlattenedTypes;
 
       // Recurse on the values for the nested TupleType.
-      std::optional<Value> res = buildMakeTupleOp(builder, nestedTupleType,
-                                                  nestedFlattenedelements, loc);
+      std::optional<Value> res =
+          buildMakeTupleOp(builder, loc, nestedTupleType,
+                           nestedFlattenedelements, /*originalType=*/Type());
       if (!res.has_value())
         return {};
 

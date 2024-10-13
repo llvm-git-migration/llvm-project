@@ -31,22 +31,24 @@ void mlir::tosa::populateTosaTypeConversion(TypeConverter &converter) {
       return {};
     return type.clone(converted);
   });
-  converter.addSourceMaterialization([&](OpBuilder &builder, Type resultType,
-                                         ValueRange inputs,
-                                         Location loc) -> std::optional<Value> {
-    if (inputs.size() != 1)
-      return std::nullopt;
+  converter.addSourceMaterialization(
+      [&](OpBuilder &builder, Location loc, Type resultType, ValueRange inputs,
+          Type originalType) -> std::optional<Value> {
+        if (inputs.size() != 1)
+          return std::nullopt;
 
-    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
-        .getResult(0);
-  });
-  converter.addTargetMaterialization([&](OpBuilder &builder, Type resultType,
-                                         ValueRange inputs,
-                                         Location loc) -> std::optional<Value> {
-    if (inputs.size() != 1)
-      return std::nullopt;
+        return builder
+            .create<UnrealizedConversionCastOp>(loc, resultType, inputs)
+            .getResult(0);
+      });
+  converter.addTargetMaterialization(
+      [&](OpBuilder &builder, Location loc, Type resultType, ValueRange inputs,
+          Type originalType) -> std::optional<Value> {
+        if (inputs.size() != 1)
+          return std::nullopt;
 
-    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
-        .getResult(0);
-  });
+        return builder
+            .create<UnrealizedConversionCastOp>(loc, resultType, inputs)
+            .getResult(0);
+      });
 }

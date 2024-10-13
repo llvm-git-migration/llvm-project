@@ -71,12 +71,13 @@ void mlir::math::populateExtendToSupportedTypesTypeConverter(
 
         return std::nullopt;
       });
-  typeConverter.addTargetMaterialization(
-      [](OpBuilder &b, Type target, ValueRange input, Location loc) {
-        auto extFOp = b.create<arith::ExtFOp>(loc, target, input);
-        extFOp.setFastmath(arith::FastMathFlags::contract);
-        return extFOp;
-      });
+  typeConverter.addTargetMaterialization([](OpBuilder &b, Location loc,
+                                            Type target, ValueRange input,
+                                            Type originalType) {
+    auto extFOp = b.create<arith::ExtFOp>(loc, target, input);
+    extFOp.setFastmath(arith::FastMathFlags::contract);
+    return extFOp;
+  });
 }
 
 void mlir::math::populateExtendToSupportedTypesConversionTarget(

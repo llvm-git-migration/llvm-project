@@ -424,9 +424,9 @@ mlir::SparseIterationTypeConverter::SparseIterationTypeConverter() {
   addConversion(convertIteratorType);
   addConversion(convertIterSpaceType);
 
-  addSourceMaterialization([](OpBuilder &builder, IterSpaceType spTp,
-                              ValueRange inputs,
-                              Location loc) -> std::optional<Value> {
+  addSourceMaterialization([](OpBuilder &builder, Location loc,
+                              IterSpaceType spTp, ValueRange inputs,
+                              Type originalType) -> std::optional<Value> {
     return builder
         .create<UnrealizedConversionCastOp>(loc, TypeRange(spTp), inputs)
         .getResult(0);

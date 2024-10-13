@@ -28,8 +28,9 @@ namespace mlir {
 using namespace mlir;
 using namespace mlir::linalg;
 
-static Value sourceMaterializationCallback(OpBuilder &builder, Type type,
-                                           ValueRange inputs, Location loc) {
+static Value sourceMaterializationCallback(OpBuilder &builder, Location loc,
+                                           Type type, ValueRange inputs,
+                                           Type originalType) {
   assert(inputs.size() == 1);
   auto inputType = inputs[0].getType();
   if (isa<TensorType>(inputType))
@@ -148,8 +149,8 @@ public:
     });
 
     // A tensor value is detensoried by extracting its element(s).
-    addTargetMaterialization([](OpBuilder &builder, Type type,
-                                ValueRange inputs, Location loc) -> Value {
+    addTargetMaterialization([](OpBuilder &builder, Location loc, Type type,
+                                ValueRange inputs, Type originalType) -> Value {
       return builder.create<tensor::ExtractOp>(loc, inputs[0], ValueRange{});
     });
 

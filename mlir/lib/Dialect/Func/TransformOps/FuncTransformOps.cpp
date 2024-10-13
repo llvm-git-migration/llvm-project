@@ -161,7 +161,7 @@ transform::CastAndCallOp::apply(transform::TransformRewriter &rewriter,
        llvm::zip_equal(inputs, targetFunction.getArgumentTypes())) {
     if (input.getType() != type) {
       Value newInput = converter.materializeSourceConversion(
-          rewriter, input.getLoc(), type, input);
+          rewriter, input.getLoc(), type, input, type);
       if (!newInput) {
         return emitDefiniteFailure() << "Failed to materialize conversion of "
                                      << input << " to type " << type;
@@ -180,7 +180,8 @@ transform::CastAndCallOp::apply(transform::TransformRewriter &rewriter,
     Value convertedOutput = newOutput;
     if (output.getType() != newOutput.getType()) {
       convertedOutput = converter.materializeTargetConversion(
-          rewriter, output.getLoc(), output.getType(), newOutput);
+          rewriter, output.getLoc(), output.getType(), newOutput,
+          output.getType());
       if (!convertedOutput) {
         return emitDefiniteFailure()
                << "Failed to materialize conversion of " << newOutput

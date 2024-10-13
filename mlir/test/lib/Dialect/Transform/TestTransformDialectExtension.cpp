@@ -869,9 +869,9 @@ public:
     addConversion([](RankedTensorType type) -> Type {
       return MemRefType::get(type.getShape(), type.getElementType());
     });
-    auto unrealizedCastConverter = [&](OpBuilder &builder, Type resultType,
-                                       ValueRange inputs,
-                                       Location loc) -> std::optional<Value> {
+    auto unrealizedCastConverter =
+        [&](OpBuilder &builder, Location loc, Type resultType,
+            ValueRange inputs, Type originalType) -> std::optional<Value> {
       if (inputs.size() != 1)
         return std::nullopt;
       return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)

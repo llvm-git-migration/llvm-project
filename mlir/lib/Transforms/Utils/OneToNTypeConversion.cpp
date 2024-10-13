@@ -21,11 +21,12 @@ std::optional<SmallVector<Value>>
 OneToNTypeConverter::materializeTargetConversion(OpBuilder &builder,
                                                  Location loc,
                                                  TypeRange resultTypes,
-                                                 Value input) const {
+                                                 Value input,
+                                                 Type originalType) const {
   for (const OneToNMaterializationCallbackFn &fn :
        llvm::reverse(oneToNTargetMaterializations)) {
     if (std::optional<SmallVector<Value>> result =
-            fn(builder, resultTypes, input, loc))
+            fn(builder, loc, resultTypes, input, originalType))
       return *result;
   }
   return std::nullopt;
@@ -370,9 +371,12 @@ applyPartialOneToNConversion(Operation *op, OneToNTypeConverter &typeConverter,
       // Target materialization.
       assert(!areOperandTypesLegal && areResultsTypesLegal &&
              operands.size() == 1 && "found unexpected target cast");
+      // Note: The original type is unknown. We currently do not keep track of
+      // that information.
       std::optional<SmallVector<Value>> maybeResults =
           typeConverter.materializeTargetConversion(
-              rewriter, castOp->getLoc(), resultTypes, operands.front());
+              rewriter, castOp->getLoc(), resultTypes, operands.front(),
+              /*originalType=*/Type());
       if (!maybeResults) {
         emitError(castOp->getLoc())
             << "failed to create target materialization";
@@ -388,7 +392,7 @@ applyPartialOneToNConversion(Operation *op, OneToNTypeConverter &typeConverter,
         // Source materialization.
         maybeResult = typeConverter.materializeSourceConversion(
             rewriter, castOp->getLoc(), resultTypes.front(),
-            castOp.getOperands());
+            castOp.getOperands(), resultTypes.front());
       } else {
         // Argument materialization.
         assert(castKind == getCastKindName(CastKind::Argument) &&
@@ -396,7 +400,7 @@ applyPartialOneToNConversion(Operation *op, OneToNTypeConverter &typeConverter,
         assert(llvm::all_of(operands, llvm::IsaPred<BlockArgument>));
         maybeResult = typeConverter.materializeArgumentConversion(
             rewriter, castOp->getLoc(), resultTypes.front(),
-            castOp.getOperands());
+            castOp.getOperands(), resultTypes.front());
       }
       if (!maybeResult.has_value() || !maybeResult.value()) {
         emitError(castOp->getLoc())

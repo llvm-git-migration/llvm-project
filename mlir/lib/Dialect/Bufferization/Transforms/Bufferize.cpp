@@ -42,8 +42,9 @@ using namespace mlir::bufferization;
 // BufferizeTypeConverter
 //===----------------------------------------------------------------------===//
 
-static Value materializeToTensor(OpBuilder &builder, TensorType type,
-                                 ValueRange inputs, Location loc) {
+static Value materializeToTensor(OpBuilder &builder, Location loc,
+                                 TensorType type, ValueRange inputs,
+                                 Type originalType) {
   assert(inputs.size() == 1);
   assert(isa<BaseMemRefType>(inputs[0].getType()));
   return builder.create<bufferization::ToTensorOp>(loc, type, inputs[0]);
@@ -63,8 +64,9 @@ BufferizeTypeConverter::BufferizeTypeConverter() {
   });
   addArgumentMaterialization(materializeToTensor);
   addSourceMaterialization(materializeToTensor);
-  addTargetMaterialization([](OpBuilder &builder, BaseMemRefType type,
-                              ValueRange inputs, Location loc) -> Value {
+  addTargetMaterialization([](OpBuilder &builder, Location loc,
+                              BaseMemRefType type, ValueRange inputs,
+                              Type originalType) -> Value {
     assert(inputs.size() == 1 && "expected exactly one input");
 
     if (auto inputType = dyn_cast<MemRefType>(inputs[0].getType())) {

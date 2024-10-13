@@ -170,7 +170,7 @@ public:
 
   /// All of the following materializations require function objects that are
   /// convertible to the following form:
-  ///   `std::optional<Value>(OpBuilder &, T, ValueRange, Location)`,
+  ///   `std::optional<Value>(OpBuilder &, Location, T, ValueRange, Type)`,
   /// where `T` is any subclass of `Type`. This function is responsible for
   /// creating an operation, using the OpBuilder and Location provided, that
   /// "casts" a range of values into a single value of the given type `T`. It
@@ -178,13 +178,19 @@ public:
   /// it failed but other materialization can be attempted, and `nullptr` on
   /// unrecoverable failure. Materialization functions must be provided when a
   /// type conversion may persist after the conversion has finished.
+  ///
+  /// The type that is provided as the 5-th argument is the original type of
+  /// value. For more details, see the documentation below.
 
   /// This method registers a materialization that will be called when
   /// converting (potentially multiple) block arguments that were the result of
   /// a signature conversion of a single block argument, to a single SSA value
   /// with the old block argument type.
+  ///
+  /// Note: The original type matches the result type `T` for argument
+  /// materializations.
   template <typename FnT, typename T = typename llvm::function_traits<
-                              std::decay_t<FnT>>::template arg_t<1>>
+                              std::decay_t<FnT>>::template arg_t<2>>
   void addArgumentMaterialization(FnT &&callback) {
     argumentMaterializations.emplace_back(
         wrapMaterialization<T>(std::forward<FnT>(callback)));
@@ -194,8 +200,11 @@ public:
   /// converting a legal replacement value back to an illegal source type.
   /// This is used when some uses of the original, illegal value must persist
   /// beyond the main conversion.
+  ///
+  /// Note: The original type matches the result type `T` for source
+  /// materializations.
   template <typename FnT, typename T = typename llvm::function_traits<
-                              std::decay_t<FnT>>::template arg_t<1>>
+                              std::decay_t<FnT>>::template arg_t<2>>
   void addSourceMaterialization(FnT &&callback) {
     sourceMaterializations.emplace_back(
         wrapMaterialization<T>(std::forward<FnT>(callback)));
@@ -203,8 +212,19 @@ public:
 
   /// This method registers a materialization that will be called when
   /// converting an illegal (source) value to a legal (target) type.
+  ///
+  /// Note: For target materializations, the original type can be
+  /// different from the type of the input. For example, let's assume that a
+  /// conversion pattern "P1" replaced an SSA value "v1" (type "t1") with "v2"
+  /// (type "t2"). Then a different conversion pattern "P2" matches an op that
+  /// has "v1" as an operand. Let's furthermore assume that "P2" determines
+  /// that the legalized type of "t1" is "t3", which may be different from
+  /// "t2". In this example, the target materialization callback will be
+  /// invoked with: outputType = "t3", inputs = "v2", originalType = "t1". Note
+  /// that the original type "t1" cannot be recovered from just "t3" and "v2";
+  /// that's why the originalType parameter exists.
   template <typename FnT, typename T = typename llvm::function_traits<
-                              std::decay_t<FnT>>::template arg_t<1>>
+                              std::decay_t<FnT>>::template arg_t<2>>
   void addTargetMaterialization(FnT &&callback) {
     targetMaterializations.emplace_back(
         wrapMaterialization<T>(std::forward<FnT>(callback)));
@@ -303,20 +323,22 @@ public:
   /// `add*Materialization` for more information on the context for these
   /// methods.
   Value materializeArgumentConversion(OpBuilder &builder, Location loc,
-                                      Type resultType,
-                                      ValueRange inputs) const {
+                                      Type resultType, ValueRange inputs,
+                                      Type originalType) const {
     return materializeConversion(argumentMaterializations, builder, loc,
-                                 resultType, inputs);
+                                 resultType, inputs, originalType);
   }
   Value materializeSourceConversion(OpBuilder &builder, Location loc,
-                                    Type resultType, ValueRange inputs) const {
+                                    Type resultType, ValueRange inputs,
+                                    Type originalType) const {
     return materializeConversion(sourceMaterializations, builder, loc,
-                                 resultType, inputs);
+                                 resultType, inputs, originalType);
   }
   Value materializeTargetConversion(OpBuilder &builder, Location loc,
-                                    Type resultType, ValueRange inputs) const {
+                                    Type resultType, ValueRange inputs,
+                                    Type originalType) const {
     return materializeConversion(targetMaterializations, builder, loc,
-                                 resultType, inputs);
+                                 resultType, inputs, originalType);
   }
 
   /// Convert an attribute present `attr` from within the type `type` using
@@ -334,8 +356,10 @@ private:
       Type, SmallVectorImpl<Type> &)>;
 
   /// The signature of the callback used to materialize a conversion.
+  ///
+  /// Arguments: builder, location, result type, inputs, original type
   using MaterializationCallbackFn = std::function<std::optional<Value>(
-      OpBuilder &, Type, ValueRange, Location)>;
+      OpBuilder &, Location, Type, ValueRange, Type)>;
 
   /// The signature of the callback used to convert a type attribute.
   using TypeAttributeConversionCallbackFn =
@@ -346,7 +370,7 @@ private:
   Value
   materializeConversion(ArrayRef<MaterializationCallbackFn> materializations,
                         OpBuilder &builder, Location loc, Type resultType,
-                        ValueRange inputs) const;
+                        ValueRange inputs, Type originalType) const;
 
   /// Generate a wrapper for the given callback. This allows for accepting
   /// different callback forms, that all compose into a single version.
@@ -394,10 +418,10 @@ private:
   template <typename T, typename FnT>
   MaterializationCallbackFn wrapMaterialization(FnT &&callback) const {
     return [callback = std::forward<FnT>(callback)](
-               OpBuilder &builder, Type resultType, ValueRange inputs,
-               Location loc) -> std::optional<Value> {
+               OpBuilder &builder, Location loc, Type resultType,
+               ValueRange inputs, Type originalType) -> std::optional<Value> {
       if (T derivedType = dyn_cast<T>(resultType))
-        return callback(builder, derivedType, inputs, loc);
+        return callback(builder, loc, derivedType, inputs, originalType);
       return std::nullopt;
     };
   }

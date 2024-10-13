@@ -177,7 +177,8 @@ struct DecomposeCallGraphTypesForCallOp
       } else {
         // Materialize a single Value to replace the original Value.
         Value materialized = getTypeConverter()->materializeArgumentConversion(
-            rewriter, op.getLoc(), op.getType(i), decomposedValues);
+            rewriter, op.getLoc(), op.getType(i), decomposedValues,
+            op.getType(i));
         replacedValues.push_back(materialized);
       }
     }

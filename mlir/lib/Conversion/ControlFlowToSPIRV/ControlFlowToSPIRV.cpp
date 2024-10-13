@@ -46,7 +46,7 @@ static LogicalResult legalizeBlockArguments(Block &block, Operation *op,
     Location loc = arg.getLoc();
     Value newArg = block.insertArgument(argNum, newTy, loc);
     Value convertedValue = converter.materializeSourceConversion(
-        builder, op->getLoc(), ty, newArg);
+        builder, op->getLoc(), ty, newArg, ty);
     if (!convertedValue) {
       return rewriter.notifyMatchFailure(
           op, llvm::formatv("failed to cast new argument {0} to type {1})",

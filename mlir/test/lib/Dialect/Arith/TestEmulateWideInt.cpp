@@ -58,8 +58,9 @@ struct TestEmulateWideIntPass
     // function argument and return types of the processed function.
     // TODO: Consider extending `arith.bitcast` to support scalar-to-1D-vector
     // casts (and vice versa) and using it insted of `llvm.bitcast`.
-    auto addBitcast = [](OpBuilder &builder, Type type, ValueRange inputs,
-                         Location loc) -> std::optional<Value> {
+    auto addBitcast = [](OpBuilder &builder, Location loc, Type type,
+                         ValueRange inputs,
+                         Type originalType) -> std::optional<Value> {
       auto cast = builder.create<LLVM::BitcastOp>(loc, type, inputs);
       return cast->getResult(0);
     };

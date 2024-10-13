@@ -173,9 +173,9 @@ public:
   }
 
   static mlir::Value materializeProcedure(mlir::OpBuilder &builder,
-                                          BoxProcType type,
+                                          mlir::Location loc, BoxProcType type,
                                           mlir::ValueRange inputs,
-                                          mlir::Location loc) {
+                                          mlir::Type originalType) {
     assert(inputs.size() == 1);
     return builder.create<ConvertOp>(loc, unwrapRefType(type.getEleTy()),
                                      inputs[0]);

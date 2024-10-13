@@ -44,9 +44,10 @@ struct PDLLTypeConverter : public TypeConverter {
     return success();
   }
   /// Hook for materializing a conversion.
-  static std::optional<Value> materializeCast(OpBuilder &builder,
+  static std::optional<Value> materializeCast(OpBuilder &builder, Location loc,
                                               Type resultType,
-                                              ValueRange inputs, Location loc) {
+                                              ValueRange inputs,
+                                              Type originalType) {
     return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
         .getResult(0);
   }

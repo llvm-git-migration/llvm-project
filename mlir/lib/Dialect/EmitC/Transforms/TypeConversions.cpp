@@ -17,9 +17,9 @@ using namespace mlir;
 namespace {
 
 std::optional<Value> materializeAsUnrealizedCast(OpBuilder &builder,
-                                                 Type resultType,
+                                                 Location loc, Type resultType,
                                                  ValueRange inputs,
-                                                 Location loc) {
+                                                 Type originalType) {
   if (inputs.size() != 1)
     return std::nullopt;
 

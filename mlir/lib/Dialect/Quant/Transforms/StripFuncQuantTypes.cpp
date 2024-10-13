@@ -36,21 +36,22 @@ class QuantizedTypeConverter : public TypeConverter {
   static Type convertQuantizedType(QuantizedType quantizedType) {
     return quantizedType.getStorageType();
   }
-  
+
   static Type convertTensorType(TensorType tensorType) {
-    if (auto quantizedType = dyn_cast<QuantizedType>(tensorType.getElementType()))
+    if (auto quantizedType =
+            dyn_cast<QuantizedType>(tensorType.getElementType()))
       return tensorType.clone(convertQuantizedType(quantizedType));
     return tensorType;
   }
 
-  static Value materializeConversion(OpBuilder &builder, Type type,
-                                     ValueRange inputs, Location loc) {
+  static Value materializeConversion(OpBuilder &builder, Location loc,
+                                     Type type, ValueRange inputs,
+                                     Type originalType) {
     assert(inputs.size() == 1);
     return builder.create<quant::StorageCastOp>(loc, type, inputs[0]);
   }
 
 public:
-
   explicit QuantizedTypeConverter() {
     addConversion([](Type type) { return type; });
     addConversion(convertQuantizedType);
@@ -63,7 +64,8 @@ public:
 };
 
 // Conversion pass
-class StripFuncQuantTypes : public impl::StripFuncQuantTypesBase<StripFuncQuantTypes> {
+class StripFuncQuantTypes
+    : public impl::StripFuncQuantTypesBase<StripFuncQuantTypes> {
 
   // Return whether a type is considered legal when occurring in the header of
   // a function or as an operand to a 'return' op.
@@ -74,11 +76,10 @@ class StripFuncQuantTypes : public impl::StripFuncQuantTypesBase<StripFuncQuantT
   }
 
 public:
-
   void runOnOperation() override {
-    
+
     auto moduleOp = cast<ModuleOp>(getOperation());
-    auto* context = &getContext();
+    auto *context = &getContext();
 
     QuantizedTypeConverter typeConverter;
     ConversionTarget target(*context);
@@ -111,4 +112,3 @@ public:
 
 } // namespace quant
 } // namespace mlir
-

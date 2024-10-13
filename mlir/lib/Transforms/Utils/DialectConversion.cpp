@@ -683,10 +683,10 @@ enum MaterializationKind {
 /// conversion.
 class UnresolvedMaterializationRewrite : public OperationRewrite {
 public:
-  UnresolvedMaterializationRewrite(
-      ConversionPatternRewriterImpl &rewriterImpl,
-      UnrealizedConversionCastOp op, const TypeConverter *converter = nullptr,
-      MaterializationKind kind = MaterializationKind::Target);
+  UnresolvedMaterializationRewrite(ConversionPatternRewriterImpl &rewriterImpl,
+                                   UnrealizedConversionCastOp op,
+                                   const TypeConverter *converter,
+                                   MaterializationKind kind, Type originalType);
 
   static bool classof(const IRRewrite *rewrite) {
     return rewrite->getKind() == Kind::UnresolvedMaterialization;
@@ -708,11 +708,15 @@ public:
     return converterAndKind.getInt();
   }
 
+  Type getOriginalType() const { return originalType; }
+
 private:
   /// The corresponding type converter to use when resolving this
   /// materialization, and the kind of this materialization.
   llvm::PointerIntPair<const TypeConverter *, 2, MaterializationKind>
       converterAndKind;
+
+  Type originalType;
 };
 } // namespace
 
@@ -808,6 +812,7 @@ struct ConversionPatternRewriterImpl : public RewriterBase::Listener {
   Value buildUnresolvedMaterialization(MaterializationKind kind,
                                        OpBuilder::InsertPoint ip, Location loc,
                                        ValueRange inputs, Type outputType,
+                                       Type originalType,
                                        const TypeConverter *converter);
 
   //===--------------------------------------------------------------------===//
@@ -1034,9 +1039,9 @@ void CreateOperationRewrite::rollback() {
 
 UnresolvedMaterializationRewrite::UnresolvedMaterializationRewrite(
     ConversionPatternRewriterImpl &rewriterImpl, UnrealizedConversionCastOp op,
-    const TypeConverter *converter, MaterializationKind kind)
+    const TypeConverter *converter, MaterializationKind kind, Type originalType)
     : OperationRewrite(Kind::UnresolvedMaterialization, rewriterImpl, op),
-      converterAndKind(converter, kind) {
+      converterAndKind(converter, kind), originalType(originalType) {
   rewriterImpl.unresolvedMaterializations[op] = this;
 }
 
@@ -1139,7 +1144,7 @@ LogicalResult ConversionPatternRewriterImpl::remapValues(
       Value castValue = buildUnresolvedMaterialization(
           MaterializationKind::Target, computeInsertPoint(newOperand),
           operandLoc, /*inputs=*/newOperand, /*outputType=*/desiredType,
-          currentTypeConverter);
+          /*originalType=*/origType, currentTypeConverter);
       mapping.map(newOperand, castValue);
       newOperand = castValue;
     }
@@ -1255,7 +1260,7 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
           MaterializationKind::Source,
           OpBuilder::InsertPoint(newBlock, newBlock->begin()), origArg.getLoc(),
           /*inputs=*/ValueRange(),
-          /*outputType=*/origArgType, converter);
+          /*outputType=*/origArgType, /*originalType=*/origArgType, converter);
       mapping.map(origArg, repl);
       appendRewrite<ReplaceBlockArgRewrite>(block, origArg);
       continue;
@@ -1280,7 +1285,8 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
     Value argMat = buildUnresolvedMaterialization(
         MaterializationKind::Argument,
         OpBuilder::InsertPoint(newBlock, newBlock->begin()), origArg.getLoc(),
-        /*inputs=*/replArgs, origArgType, converter);
+        /*inputs=*/replArgs, /*outputType=*/origArgType,
+        /*originalType=*/origArgType, converter);
     mapping.map(origArg, argMat);
 
     Type legalOutputType;
@@ -1299,7 +1305,8 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
     if (legalOutputType && legalOutputType != origArgType) {
       Value targetMat = buildUnresolvedMaterialization(
           MaterializationKind::Target, computeInsertPoint(argMat),
-          origArg.getLoc(), argMat, legalOutputType, converter);
+          origArg.getLoc(), /*inputs=*/argMat, /*outputType=*/legalOutputType,
+          /*originalType=*/origArgType, converter);
       mapping.map(argMat, targetMat);
     }
     appendRewrite<ReplaceBlockArgRewrite>(block, origArg);
@@ -1322,7 +1329,8 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
 /// of input operands.
 Value ConversionPatternRewriterImpl::buildUnresolvedMaterialization(
     MaterializationKind kind, OpBuilder::InsertPoint ip, Location loc,
-    ValueRange inputs, Type outputType, const TypeConverter *converter) {
+    ValueRange inputs, Type outputType, Type originalType,
+    const TypeConverter *converter) {
   // Avoid materializing an unnecessary cast.
   if (inputs.size() == 1 && inputs.front().getType() == outputType)
     return inputs.front();
@@ -1333,7 +1341,8 @@ Value ConversionPatternRewriterImpl::buildUnresolvedMaterialization(
   builder.setInsertionPoint(ip.getBlock(), ip.getPoint());
   auto convertOp =
       builder.create<UnrealizedConversionCastOp>(loc, outputType, inputs);
-  appendRewrite<UnresolvedMaterializationRewrite>(convertOp, converter, kind);
+  appendRewrite<UnresolvedMaterializationRewrite>(convertOp, converter, kind,
+                                                  originalType);
   return convertOp.getResult(0);
 }
 
@@ -1381,7 +1390,8 @@ void ConversionPatternRewriterImpl::notifyOpReplaced(Operation *op,
       newValue = buildUnresolvedMaterialization(
           MaterializationKind::Source, computeInsertPoint(result),
           result.getLoc(), /*inputs=*/ValueRange(),
-          /*outputType=*/result.getType(), currentTypeConverter);
+          /*outputType=*/result.getType(), /*originalType=*/result.getType(),
+          currentTypeConverter);
     }
 
     // Remap, and check for any result type changes.
@@ -2400,7 +2410,8 @@ legalizeUnresolvedMaterialization(RewriterBase &rewriter,
     case MaterializationKind::Argument:
       // Try to materialize an argument conversion.
       newMaterialization = converter->materializeArgumentConversion(
-          rewriter, op->getLoc(), outputType, inputOperands);
+          rewriter, op->getLoc(), outputType, inputOperands,
+          rewrite->getOriginalType());
       if (newMaterialization)
         break;
       // If an argument materialization failed, fallback to trying a target
@@ -2408,11 +2419,13 @@ legalizeUnresolvedMaterialization(RewriterBase &rewriter,
       [[fallthrough]];
     case MaterializationKind::Target:
       newMaterialization = converter->materializeTargetConversion(
-          rewriter, op->getLoc(), outputType, inputOperands);
+          rewriter, op->getLoc(), outputType, inputOperands,
+          rewrite->getOriginalType());
       break;
     case MaterializationKind::Source:
       newMaterialization = converter->materializeSourceConversion(
-          rewriter, op->getLoc(), outputType, inputOperands);
+          rewriter, op->getLoc(), outputType, inputOperands,
+          rewrite->getOriginalType());
       break;
     }
     if (newMaterialization) {
@@ -2565,7 +2578,7 @@ void OperationConverter::finalize(ConversionPatternRewriter &rewriter) {
           MaterializationKind::Source, computeInsertPoint(newValue),
           originalValue.getLoc(),
           /*inputs=*/newValue, /*outputType=*/originalValue.getType(),
-          converter);
+          /*originalType=*/originalValue.getType(), converter);
       rewriterImpl.mapping.map(originalValue, castValue);
       inverseMapping[castValue].push_back(originalValue);
       llvm::erase(inverseMapping[newValue], originalValue);
@@ -2789,9 +2802,10 @@ TypeConverter::convertSignatureArgs(TypeRange types,
 
 Value TypeConverter::materializeConversion(
     ArrayRef<MaterializationCallbackFn> materializations, OpBuilder &builder,
-    Location loc, Type resultType, ValueRange inputs) const {
+    Location loc, Type resultType, ValueRange inputs, Type originalType) const {
   for (const MaterializationCallbackFn &fn : llvm::reverse(materializations))
-    if (std::optional<Value> result = fn(builder, resultType, inputs, loc))
+    if (std::optional<Value> result =
+            fn(builder, loc, resultType, inputs, originalType))
       return *result;
   return nullptr;
 }

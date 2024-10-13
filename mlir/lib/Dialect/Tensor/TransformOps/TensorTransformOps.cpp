@@ -150,26 +150,28 @@ void transform::ApplyRewriteTensorOpsAsConstantPatternsOp::populatePatterns(
 void transform::TypeConversionCastShapeDynamicDimsOp::
     populateTypeMaterializations(TypeConverter &converter) {
   bool ignoreDynamicInfo = getIgnoreDynamicInfo();
-  converter.addSourceMaterialization([ignoreDynamicInfo](
-                                         OpBuilder &builder, Type resultType,
-                                         ValueRange inputs,
-                                         Location loc) -> std::optional<Value> {
-    if (inputs.size() != 1) {
-      return std::nullopt;
-    }
-    Value input = inputs[0];
-    if (!ignoreDynamicInfo &&
-        !tensor::preservesStaticInformation(resultType, input.getType())) {
-      return std::nullopt;
-    }
-    if (!tensor::CastOp::areCastCompatible(input.getType(), resultType)) {
-      return std::nullopt;
-    }
-    return builder.create<tensor::CastOp>(loc, resultType, input).getResult();
-  });
-  converter.addTargetMaterialization([](OpBuilder &builder, Type resultType,
-                                        ValueRange inputs,
-                                        Location loc) -> std::optional<Value> {
+  converter.addSourceMaterialization(
+      [ignoreDynamicInfo](OpBuilder &builder, Location loc, Type resultType,
+                          ValueRange inputs,
+                          Type originalType) -> std::optional<Value> {
+        if (inputs.size() != 1) {
+          return std::nullopt;
+        }
+        Value input = inputs[0];
+        if (!ignoreDynamicInfo &&
+            !tensor::preservesStaticInformation(resultType, input.getType())) {
+          return std::nullopt;
+        }
+        if (!tensor::CastOp::areCastCompatible(input.getType(), resultType)) {
+          return std::nullopt;
+        }
+        return builder.create<tensor::CastOp>(loc, resultType, input)
+            .getResult();
+      });
+  converter.addTargetMaterialization([](OpBuilder &builder, Location loc,
+                                        Type resultType, ValueRange inputs,
+                                        Type originalType)
+                                         -> std::optional<Value> {
     if (inputs.size() != 1) {
       return std::nullopt;
     }

@@ -1140,9 +1140,10 @@ struct TestTypeConverter : public TypeConverter {
 
   /// Hook for materializing a conversion. This is necessary because we generate
   /// 1->N type mappings.
-  static std::optional<Value> materializeCast(OpBuilder &builder,
+  static std::optional<Value> materializeCast(OpBuilder &builder, Location loc,
                                               Type resultType,
-                                              ValueRange inputs, Location loc) {
+                                              ValueRange inputs,
+                                              Type originalType) {
     return builder.create<TestCastOp>(loc, resultType, inputs).getResult();
   }
 };
@@ -1691,9 +1692,9 @@ struct TestTypeConversionDriver
         });
 
     /// Add the legal set of type materializations.
-    converter.addSourceMaterialization([](OpBuilder &builder, Type resultType,
-                                          ValueRange inputs,
-                                          Location loc) -> Value {
+    converter.addSourceMaterialization([](OpBuilder &builder, Location loc,
+                                          Type resultType, ValueRange inputs,
+                                          Type originalType) -> Value {
       // Allow casting from F64 back to F32.
       if (!resultType.isF16() && inputs.size() == 1 &&
           inputs[0].getType().isF64())
@@ -1786,10 +1787,11 @@ struct TestTargetMaterializationWithNoUses
         return IntegerType::get(intTy.getContext(), 64);
       return intTy;
     });
-    converter.addTargetMaterialization(
-        [](OpBuilder &builder, Type type, ValueRange inputs, Location loc) {
-          return builder.create<TestCastOp>(loc, type, inputs).getResult();
-        });
+    converter.addTargetMaterialization([](OpBuilder &builder, Location loc,
+                                          Type type, ValueRange inputs,
+                                          Type originalType) {
+      return builder.create<TestCastOp>(loc, type, inputs).getResult();
+    });
 
     ConversionTarget target(getContext());
     target.addIllegalOp<TestTypeChangerOp>();

@@ -473,8 +473,8 @@ void mlir::vector::populateVectorLinearizeTypeConversionsAndLegality(
                            type.isScalable());
   });
 
-  auto materializeCast = [](OpBuilder &builder, Type type, ValueRange inputs,
-                            Location loc) -> Value {
+  auto materializeCast = [](OpBuilder &builder, Location loc, Type type,
+                            ValueRange inputs, Type originalType) -> Value {
     if (inputs.size() != 1 || !isa<VectorType>(inputs.front().getType()) ||
         !isa<VectorType>(type))
       return nullptr;

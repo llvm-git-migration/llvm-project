@@ -298,9 +298,10 @@ void LowerABIAttributesPass::runOnOperation() {
   SPIRVTypeConverter typeConverter(targetEnv);
 
   // Insert a bitcast in the case of a pointer type change.
-  typeConverter.addSourceMaterialization([](OpBuilder &builder,
+  typeConverter.addSourceMaterialization([](OpBuilder &builder, Location loc,
                                             spirv::PointerType type,
-                                            ValueRange inputs, Location loc) {
+                                            ValueRange inputs,
+                                            Type originalType) {
     if (inputs.size() != 1 || !isa<spirv::PointerType>(inputs[0].getType()))
       return Value();
     return builder.create<spirv::BitcastOp>(loc, type, inputs[0]).getResult();

@@ -44,8 +44,8 @@ public:
   /// materializations for 1:N type conversions, which materialize one value in
   /// a source type as N values in target types.
   using OneToNMaterializationCallbackFn =
-      std::function<std::optional<SmallVector<Value>>(OpBuilder &, TypeRange,
-                                                      Value, Location)>;
+      std::function<std::optional<SmallVector<Value>>(OpBuilder &, Location,
+                                                      TypeRange, Value, Type)>;
 
   /// Creates the mapping of the given range of original types to target types
   /// of the conversion and stores that mapping in the given (signature)
@@ -63,7 +63,8 @@ public:
   /// returns `std::nullopt`.
   std::optional<SmallVector<Value>>
   materializeTargetConversion(OpBuilder &builder, Location loc,
-                              TypeRange resultTypes, Value input) const;
+                              TypeRange resultTypes, Value input,
+                              Type originalType) const;
 
   /// Adds a 1:N target materialization to the converter. Such materializations
   /// build IR that converts N values with target types into 1 value of the

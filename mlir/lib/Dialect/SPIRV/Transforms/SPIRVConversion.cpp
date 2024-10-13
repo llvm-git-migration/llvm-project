@@ -1452,12 +1452,12 @@ SPIRVTypeConverter::SPIRVTypeConverter(spirv::TargetEnvAttr targetAttr,
   });
 
   // Register some last line of defense casting logic.
-  addSourceMaterialization(
-      [this](OpBuilder &builder, Type type, ValueRange inputs, Location loc) {
-        return castToSourceType(this->targetEnv, builder, type, inputs, loc);
-      });
-  addTargetMaterialization([](OpBuilder &builder, Type type, ValueRange inputs,
-                              Location loc) {
+  addSourceMaterialization([this](OpBuilder &builder, Location loc, Type type,
+                                  ValueRange inputs, Type originalType) {
+    return castToSourceType(this->targetEnv, builder, type, inputs, loc);
+  });
+  addTargetMaterialization([](OpBuilder &builder, Location loc, Type type,
+                              ValueRange inputs, Type originalType) {
     auto cast = builder.create<UnrealizedConversionCastOp>(loc, type, inputs);
     return std::optional<Value>(cast.getResult(0));
   });
