@@ -12,14 +12,16 @@
 #include "src/errno/libc_errno.h"
 #include "src/time/time_utils.h"
 
+#include "src/stdio/printf_core/writer.h"
+#include "src/time/strftime_core/strftime_main.h"
 namespace LIBC_NAMESPACE_DECL {
 
-using LIBC_NAMESPACE::time_utils::TimeConstants;
+size_t strftime(char *__restrict buffer, size_t buffsz, const char *__restrict format,
+                const struct tm *timeptr) {
 
-LLVM_LIBC_FUNCTION(size_t, strftime,
-                   (char *__restrict, size_t, const char *__restrict,
-                    const struct tm *)) {
-  // TODO: Implement this for the default locale.
+  printf_core::WriteBuffer wb(buffer, (buffsz > 0 ? buffsz - 1 : 0));
+  printf_core::Writer writer(&wb);
+  strftime_core::strftime_main(&writer, format, timeptr);
   return -1;
 }
 

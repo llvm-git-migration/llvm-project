@@ -15,8 +15,8 @@
 #include "src/__support/macros/config.h"
 #include "src/math/log10.h"
 #include "src/stdio/printf_core/writer.h"
-#include "src/stdio/strftime_core/core_structs.h"
-#include "src/stdio/strftime_core/time_internal_def.h"
+#include "src/time/strftime_core/core_structs.h"
+#include "src/time/strftime_core/time_internal_def.h"
 #include <time.h>
 
 namespace LIBC_NAMESPACE_DECL {

@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/stdio/printf_core/writer.h"
-#include "src/stdio/strftime_core/converter.h"
-#include "src/stdio/strftime_core/core_structs.h"
+#include "src/time/strftime_core/converter.h"
+#include "src/time/strftime_core/core_structs.h"
 
 #include "test/UnitTest/Test.h"
 

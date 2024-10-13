@@ -1,11 +1,11 @@
 add_libc_unittest(
   converter_test
   SUITE
-    libc_stdio_unittests
+    libc_time_unittests
   SRCS
     converter_test.cpp
   DEPENDS
-    libc.src.stdio.strftime_core.converter
+    libc.src.time.strftime_core.converter
     libc.src.stdio.printf_core.writer
-    libc.src.stdio.strftime_core.core_structs
+    libc.src.time.strftime_core.core_structs
 )

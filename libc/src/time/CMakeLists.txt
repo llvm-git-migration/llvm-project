@@ -103,28 +103,6 @@ add_entrypoint_object(
     libc.src.errno.errno
 )
 
-
-add_entrypoint_object(
-  strftime
-  SRCS
-    strftime.cpp
-  HDRS
-    strftime.h
-  DEPENDS
-    libc.include.time
-)
-
-add_entrypoint_object(
-  strftime_l
-  SRCS
-    strftime_l.cpp
-  HDRS
-    strftime_l.h
-  DEPENDS
-    libc.include.time
-    libc.include.locale
-)
-
 add_entrypoint_object(
   time
   ALIAS
@@ -158,4 +136,31 @@ add_entrypoint_object(
   ALIAS
   DEPENDS
     .${LIBC_TARGET_OS}.gettimeofday
+)
+
+add_subdirectory(strftime_core)
+
+add_entrypoint_object(
+  strftime
+  SRCS
+    strftime.cpp
+  HDRS
+    strftime.h
+  DEPENDS
+    libc.include.time
+    libc.src.time.strftime_core.strftime_main
+    libc.src.stdio.printf_core.writer
+)
+
+add_entrypoint_object(
+  strftime_l
+  SRCS
+    strftime_l.cpp
+  HDRS
+    strftime_l.h
+  DEPENDS
+    libc.include.time
+    libc.include.locale
+    libc.src.time.strftime_core.strftime_main
+    libc.src.stdio.printf_core.writer
 )

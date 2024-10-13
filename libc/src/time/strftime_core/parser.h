@@ -9,24 +9,7 @@
 #ifndef LLVM_LIBC_SRC_STDIO_STRFTIME_CORE_PARSER_H
 #define LLVM_LIBC_SRC_STDIO_STRFTIME_CORE_PARSER_H
 
-#include "include/llvm-libc-macros/stdfix-macros.h"
-#include "src/__support/CPP/algorithm.h" // max
-#include "src/__support/CPP/limits.h"
-#include "src/__support/CPP/optional.h"
-#include "src/__support/CPP/type_traits.h"
-#include "src/__support/macros/config.h"
-#include "src/__support/str_to_integer.h"
-#include "src/stdio/strftime_core/core_structs.h"
-// #include "src/stdio/strftime_core/printf_config.h"
-
-#include <stddef.h>
-
-#ifdef LIBC_INTERNAL_PRINTF_HAS_FIXED_POINT
-#include "src/__support/fixed_point/fx_rep.h"
-#endif // LIBC_INTERNAL_PRINTF_HAS_FIXED_POINT
-#ifndef LIBC_COPT_PRINTF_DISABLE_STRERROR
-#include "src/errno/libc_errno.h"
-#endif // LIBC_COPT_PRINTF_DISABLE_STRERROR
+#include <time.h>
 
 namespace LIBC_NAMESPACE_DECL {
 namespace strftime_core {
