@@ -1824,7 +1824,14 @@ bool SIInsertWaitcnts::generateWaitcntInstBefore(MachineInstr &MI,
   // Verify that the wait is actually needed.
   ScoreBrackets.simplifyWaitcnt(Wait);
 
-  if (ForceEmitZeroFlag)
+  // When forcing emit, we need to skip non-first terminators of a MBB because
+  // that would break the terminators of the MBB.
+  auto CheckIfMBBNonFirstTerminators = [](MachineInstr &MI) {
+    if (!MI.isTerminator())
+      return false;
+    return MI.getParent()->getFirstTerminator() != &MI;
+  };
+  if (ForceEmitZeroFlag && !CheckIfMBBNonFirstTerminators(MI))
     Wait = WCG->getAllZeroWaitcnt(/*IncludeVSCnt=*/false);
 
   if (ForceEmitWaitcnt[LOAD_CNT])
