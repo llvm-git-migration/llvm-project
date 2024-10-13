@@ -141,6 +141,12 @@ public:
     return true;
   }
 
+  bool checkCFProtectionReturnSupported(DiagnosticsEngine &Diags) const override {
+    if (ISAInfo->hasExtension("zimop"))
+      return true;
+    return TargetInfo::checkCFProtectionReturnSupported(Diags);
+  }
+
   CFBranchLabelSchemeKind getDefaultCFBranchLabelScheme() const override {
     return CFBranchLabelSchemeKind::FuncSig;
   }
