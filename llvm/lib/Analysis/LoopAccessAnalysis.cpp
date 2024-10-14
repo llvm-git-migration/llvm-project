@@ -1414,7 +1414,7 @@ static bool isNoWrapAddRec(Value *Ptr, const SCEVAddRecExpr *AR,
 
   // The arithmetic implied by an inbounds GEP can't overflow.
   const auto *GEP = dyn_cast<GetElementPtrInst>(Ptr);
-  if (!GEP || !GEP->isInBounds())
+  if (!GEP || !GEP->hasNoUnsignedSignedWrap())
     return false;
 
   // Make sure there is only one non-const index and analyze that.
@@ -1521,7 +1521,7 @@ llvm::getPtrStride(PredicatedScalarEvolution &PSE, Type *AccessTy, Value *Ptr,
   // and any memory access dependent on it would be immediate UB
   // when executed.
   if (auto *GEP = dyn_cast<GetElementPtrInst>(Ptr);
-      GEP && GEP->isInBounds() && (Stride == 1 || Stride == -1))
+      GEP && GEP->hasNoUnsignedSignedWrap() && (Stride == 1 || Stride == -1))
     return Stride;
 
   // If the null pointer is undefined, then a access sequence which would
