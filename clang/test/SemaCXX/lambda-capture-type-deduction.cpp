@@ -297,3 +297,19 @@ void __trans_tmp_1() {
 }
 
 }
+
+namespace GH47400 {
+
+struct Foo {};
+
+template <int, Foo f> struct Arr {};
+
+constexpr bool foo() {
+  constexpr Foo fff;
+  [&]<int is>() {
+    [&](Arr<is, fff>) {}({});
+  }.template operator()<42>();
+  return true;
+}
+
+} // namespace GH47400
