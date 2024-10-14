@@ -421,8 +421,8 @@ static OperandInfo getOperandInfo(const MachineInstr &MI,
   case RISCV::VWSUB_WX:
   // 11.14. Vector Widening Integer Multiply-Add Instructions
   // Destination EEW=2*SEW and EMUL=2*LMUL. Source EEW=SEW and EMUL=LMUL.
-  // Even though the add is a 2*SEW addition, the operands of the add are the
-  // Dest which is 2*SEW and the result of the multiply which is 2*SEW.
+  // A SEW-bit*SEW-bit multiply of the sources forms a 2*SEW-bit value, which
+  // is then added to the 2*SEW-bit Dest.
   case RISCV::VWMACCU_VV:
   case RISCV::VWMACCU_VX:
   case RISCV::VWMACC_VV:
@@ -552,9 +552,13 @@ static bool isSupportedInstr(const MachineInstr &MI) {
   // 11.13. Vector Single-Width Integer Multiply-Add Instructions
   // FIXME: Add support for 11.13 instructions
   // 11.14. Vector Widening Integer Multiply-Add Instructions
-  // FIXME: Add support for 11.14 instructions
-  case RISCV::VWMACC_VX:
+  case RISCV::VWMACCU_VV:
   case RISCV::VWMACCU_VX:
+  case RISCV::VWMACC_VV:
+  case RISCV::VWMACC_VX:
+  case RISCV::VWMACCSU_VV:
+  case RISCV::VWMACCSU_VX:
+  case RISCV::VWMACCUS_VX:
   // 11.15. Vector Integer Merge Instructions
   // FIXME: Add support for 11.15 instructions
   // 11.16. Vector Integer Move Instructions
