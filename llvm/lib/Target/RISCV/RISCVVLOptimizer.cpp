@@ -550,7 +550,14 @@ static bool isSupportedInstr(const MachineInstr &MI) {
   // 11.12. Vector Widening Integer Multiply Instructions
   // FIXME: Add support for 11.12 instructions
   // 11.13. Vector Single-Width Integer Multiply-Add Instructions
-  // FIXME: Add support for 11.13 instructions
+  case RISCV::VMACC_VV:
+  case RISCV::VMACC_VX:
+  case RISCV::VNMSAC_VV:
+  case RISCV::VNMSAC_VX:
+  case RISCV::VMADD_VV:
+  case RISCV::VMADD_VX:
+  case RISCV::VNMSUB_VV:
+  case RISCV::VNMSUB_VX:
   // 11.14. Vector Widening Integer Multiply-Add Instructions
   // FIXME: Add support for 11.14 instructions
   case RISCV::VWMACC_VX:
