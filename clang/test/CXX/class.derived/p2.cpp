@@ -7,3 +7,15 @@ namespace PR5840 {
   int Base = 10;
   struct Derived : Base {};
 }
+
+namespace issue_number {
+  struct x {};
+  namespace
+  {
+      namespace x
+      {
+          struct y : x
+          {};
+      }
+  }
+}
