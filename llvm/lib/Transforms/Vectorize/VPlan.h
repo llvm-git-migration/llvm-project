@@ -1706,6 +1706,21 @@ public:
   void print(raw_ostream &O, const Twine &Indent,
              VPSlotTracker &SlotTracker) const override;
 #endif
+
+  bool onlyFirstLaneUsed(const VPValue *Op) const override {
+    assert(is_contained(operands(), Op) &&
+           "Op must be an operand of the recipe");
+    SmallVector<unsigned, 4> Idx;
+    for (const auto &I : enumerate(operands()))
+      if (Op == I.value())
+        Idx.push_back(I.index());
+
+    return all_of(Idx, [this](unsigned I) {
+      return isVectorIntrinsicWithScalarOpAtArg(VectorIntrinsicID, I) ||
+             (VPIntrinsic::isVPIntrinsic(VectorIntrinsicID) &&
+              I == getNumOperands() - 1);
+    });
+  }
 };
 
 /// A recipe for widening Call instructions using library calls.
