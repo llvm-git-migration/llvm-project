@@ -1,4 +1,5 @@
 // RUN: mlir-opt %s -split-input-file -verify-diagnostics | FileCheck %s
+// RUN: mlir-opt %s -split-input-file -verify-diagnostics -convert-to-llvm | mlir-translate -mlir-to-llvmir | FileCheck %s -check-prefix=ROCDL2LLVM
 
 func.func @rocdl_special_regs() -> i32 {
   // CHECK-LABEL: rocdl_special_regs
@@ -386,4 +387,27 @@ gpu.module @module_1 [#rocdl.target<O = 1, chip = "gfx900", abi = "500", link = 
 }
 
 gpu.module @module_2 [#rocdl.target<chip = "gfx900">, #rocdl.target<chip = "gfx90a">] {
+}
+
+// -----
+
+// ROCDL2LLVM: @rocdl_sched_barrier
+func.func @rocdl_sched_barrier() {
+  // ROCDL2LLVM-NEXT: call void @llvm.amdgcn.sched.barrier(i32 0)
+  rocdl.sched.barrier 0
+  llvm.return
+}
+
+// ROCDL2LLVM: @rocdl_sched_group_barrier
+func.func @rocdl_sched_group_barrier() {
+  // ROCDL2LLVM-NEXT: call void @llvm.amdgcn.sched.group.barrier(i32 8, i32 1, i32 0)
+  rocdl.sched.group.barrier 8, 1, 0
+  llvm.return
+}
+
+// ROCDL2LLVM: @rocdl_iglp_opt
+func.func @rocdl_iglp_opt() {
+  // ROCDL2LLVM-NEXT: call void @llvm.amdgcn.iglp.opt(i32 0)
+  rocdl.iglp.opt 0
+  llvm.return
 }
