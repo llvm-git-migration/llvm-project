@@ -1398,7 +1398,7 @@ static void AddParamAndFnBasicAttributes(const CallBase &CB,
         if (!Arg)
           continue;
 
-        if (AL.hasParamAttr(I, Attribute::ByVal))
+        if (NewInnerCB->getParamAttr(I, Attribute::ByVal).isValid())
           // It's unsound to propagate memory attributes to byval arguments.
           // Even if CalledFunction doesn't e.g. write to the argument,
           // the call to NewInnerCB may write to its by-value copy.
@@ -1407,24 +1407,29 @@ static void AddParamAndFnBasicAttributes(const CallBase &CB,
         unsigned ArgNo = Arg->getArgNo();
         // If so, propagate its access attributes.
         AL = AL.addParamAttributes(Context, I, ValidParamAttrs[ArgNo]);
+        auto NewCBHasParamAttr = [&](Attribute::AttrKind Kind) {
+          return AL.hasParamAttr(I, Kind) ||
+                 NewInnerCB->getParamAttr(I, Kind).isValid();
+        };
+
         // We can have conflicting attributes from the inner callsite and
         // to-be-inlined callsite. In that case, choose the most
         // restrictive.
 
         // readonly + writeonly means we can never deref so make readnone.
-        if (AL.hasParamAttr(I, Attribute::ReadOnly) &&
-            AL.hasParamAttr(I, Attribute::WriteOnly))
+        if (NewCBHasParamAttr(Attribute::ReadOnly) &&
+            NewCBHasParamAttr(Attribute::WriteOnly))
           AL = AL.addParamAttribute(Context, I, Attribute::ReadNone);
 
         // If have readnone, need to clear readonly/writeonly
-        if (AL.hasParamAttr(I, Attribute::ReadNone)) {
+        if (NewCBHasParamAttr(Attribute::ReadNone)) {
           AL = AL.removeParamAttribute(Context, I, Attribute::ReadOnly);
           AL = AL.removeParamAttribute(Context, I, Attribute::WriteOnly);
         }
 
         // Writable cannot exist in conjunction w/ readonly/readnone
-        if (AL.hasParamAttr(I, Attribute::ReadOnly) ||
-            AL.hasParamAttr(I, Attribute::ReadNone))
+        if (NewCBHasParamAttr(Attribute::ReadOnly) ||
+            NewCBHasParamAttr(Attribute::ReadNone))
           AL = AL.removeParamAttribute(Context, I, Attribute::Writable);
       }
       NewInnerCB->setAttributes(AL);
