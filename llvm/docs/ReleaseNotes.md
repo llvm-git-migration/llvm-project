@@ -242,6 +242,10 @@ Changes to the C API
 
 * Added `LLVMAtomicRMWBinOpUSubCond` and `LLVMAtomicRMWBinOpUSubSat` to `LLVMAtomicRMWBinOp` enum for AtomicRMW instructions.
 
+* Added `LLVMIntrinsicCopyName` and changed `LLVMIntrinsicCopyOverloadedName`
+  and `LLVMIntrinsicCopyOverloadedName2` to return `const char *` instead of 
+  `const char *`.
+
 Changes to the CodeGen infrastructure
 -------------------------------------
 
