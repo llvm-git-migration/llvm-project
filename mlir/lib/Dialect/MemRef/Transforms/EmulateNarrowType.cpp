@@ -169,7 +169,7 @@ struct ConvertMemRefAllocation final : OpConversionPattern<OpTy> {
                       std::is_same<OpTy, memref::AllocaOp>(),
                   "expected only memref::AllocOp or memref::AllocaOp");
     auto currentType = cast<MemRefType>(op.getMemref().getType());
-    auto newResultType = dyn_cast<MemRefType>(
+    auto newResultType = dyn_cast_or_null<MemRefType>(
         this->getTypeConverter()->convertType(op.getType()));
     if (!newResultType) {
       return rewriter.notifyMatchFailure(
@@ -377,8 +377,8 @@ struct ConvertMemRefReinterpretCast final
   LogicalResult
   matchAndRewrite(memref::ReinterpretCastOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    MemRefType newTy =
-        dyn_cast<MemRefType>(getTypeConverter()->convertType(op.getType()));
+    MemRefType newTy = dyn_cast_or_null<MemRefType>(
+        getTypeConverter()->convertType(op.getType()));
     if (!newTy) {
       return rewriter.notifyMatchFailure(
           op->getLoc(),
@@ -466,7 +466,7 @@ struct ConvertMemRefSubview final : OpConversionPattern<memref::SubViewOp> {
   LogicalResult
   matchAndRewrite(memref::SubViewOp subViewOp, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    MemRefType newTy = dyn_cast<MemRefType>(
+    MemRefType newTy = dyn_cast_or_null<MemRefType>(
         getTypeConverter()->convertType(subViewOp.getType()));
     if (!newTy) {
       return rewriter.notifyMatchFailure(
@@ -632,14 +632,14 @@ void memref::populateMemRefNarrowTypeEmulationConversions(
         SmallVector<int64_t> strides;
         int64_t offset;
         if (failed(getStridesAndOffset(ty, strides, offset)))
-          return std::nullopt;
+          return nullptr;
         if (!strides.empty() && strides.back() != 1)
-          return std::nullopt;
+          return nullptr;
 
         auto newElemTy = IntegerType::get(ty.getContext(), loadStoreWidth,
                                           intTy.getSignedness());
         if (!newElemTy)
-          return std::nullopt;
+          return nullptr;
 
         StridedLayoutAttr layoutAttr;
         // If the offset is 0, we do not need a strided layout as the stride is
