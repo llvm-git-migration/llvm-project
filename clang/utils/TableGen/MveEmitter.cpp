@@ -1033,15 +1033,15 @@ public:
   // to expand Tablegen classes like 'Vector' which mean something different in
   // each member of a parametric family.
   const Type *getType(const Record *R, const Type *Param);
-  const Type *getType(DagInit *D, const Type *Param);
-  const Type *getType(Init *I, const Type *Param);
+  const Type *getType(const DagInit *D, const Type *Param);
+  const Type *getType(const Init *I, const Type *Param);
 
   // Functions that translate the Tablegen representation of an intrinsic's
   // code generation into a collection of Value objects (which will then be
   // reprocessed to read out the actual C++ code included by CGBuiltin.cpp).
-  Result::Ptr getCodeForDag(DagInit *D, const Result::Scope &Scope,
+  Result::Ptr getCodeForDag(const DagInit *D, const Result::Scope &Scope,
                             const Type *Param);
-  Result::Ptr getCodeForDagArg(DagInit *D, unsigned ArgNum,
+  Result::Ptr getCodeForDagArg(const DagInit *D, unsigned ArgNum,
                                const Result::Scope &Scope, const Type *Param);
   Result::Ptr getCodeForArg(unsigned ArgNum, const Type *ArgType, bool Promote,
                             bool Immediate);
@@ -1060,7 +1060,7 @@ public:
   void EmitBuiltinAliases(raw_ostream &OS);
 };
 
-const Type *EmitterBase::getType(Init *I, const Type *Param) {
+const Type *EmitterBase::getType(const Init *I, const Type *Param) {
   if (auto Dag = dyn_cast<DagInit>(I))
     return getType(Dag, Param);
   if (auto Def = dyn_cast<DefInit>(I))
@@ -1088,7 +1088,7 @@ const Type *EmitterBase::getType(const Record *R, const Type *Param) {
   PrintFatalError(R->getLoc(), "Could not convert this record into a type");
 }
 
-const Type *EmitterBase::getType(DagInit *D, const Type *Param) {
+const Type *EmitterBase::getType(const DagInit *D, const Type *Param) {
   // The meat of the getType system: types in the Tablegen are represented by a
   // dag whose operators select sub-cases of this function.
 
@@ -1156,7 +1156,8 @@ const Type *EmitterBase::getType(DagInit *D, const Type *Param) {
   PrintFatalError("Bad operator in type dag expression");
 }
 
-Result::Ptr EmitterBase::getCodeForDag(DagInit *D, const Result::Scope &Scope,
+Result::Ptr EmitterBase::getCodeForDag(const DagInit *D,
+                                       const Result::Scope &Scope,
                                        const Type *Param) {
   const Record *Op = cast<DefInit>(D->getOperator())->getDef();
 
@@ -1267,10 +1268,10 @@ Result::Ptr EmitterBase::getCodeForDag(DagInit *D, const Result::Scope &Scope,
   }
 }
 
-Result::Ptr EmitterBase::getCodeForDagArg(DagInit *D, unsigned ArgNum,
+Result::Ptr EmitterBase::getCodeForDagArg(const DagInit *D, unsigned ArgNum,
                                           const Result::Scope &Scope,
                                           const Type *Param) {
-  Init *Arg = D->getArg(ArgNum);
+  const Init *Arg = D->getArg(ArgNum);
   StringRef Name = D->getArgNameStr(ArgNum);
 
   if (!Name.empty()) {
@@ -1307,7 +1308,7 @@ Result::Ptr EmitterBase::getCodeForDagArg(DagInit *D, unsigned ArgNum,
 
   PrintError("bad DAG argument type for code generation");
   PrintNote("DAG: " + D->getAsString());
-  if (TypedInit *Typed = dyn_cast<TypedInit>(Arg))
+  if (const TypedInit *Typed = dyn_cast<TypedInit>(Arg))
     PrintNote("argument type: " + Typed->getType()->getAsString());
   PrintFatalNote("argument number " + Twine(ArgNum) + ": " + Arg->getAsString());
 }
@@ -1379,10 +1380,10 @@ ACLEIntrinsic::ACLEIntrinsic(EmitterBase &ME, const Record *R,
   HeaderOnly = R->getValueAsBit("headerOnly");
 
   // Process the intrinsic's argument list.
-  DagInit *ArgsDag = R->getValueAsDag("args");
+  const DagInit *ArgsDag = R->getValueAsDag("args");
   Result::Scope Scope;
   for (unsigned i = 0, e = ArgsDag->getNumArgs(); i < e; ++i) {
-    Init *TypeInit = ArgsDag->getArg(i);
+    const Init *TypeInit = ArgsDag->getArg(i);
 
     bool Promote = true;
     if (auto TypeDI = dyn_cast<DefInit>(TypeInit))
@@ -1444,7 +1445,7 @@ ACLEIntrinsic::ACLEIntrinsic(EmitterBase &ME, const Record *R,
 
   // Finally, go through the codegen dag and translate it into a Result object
   // (with an arbitrary DAG of depended-on Results hanging off it).
-  DagInit *CodeDag = R->getValueAsDag("codegen");
+  const DagInit *CodeDag = R->getValueAsDag("codegen");
   const Record *MainOp = cast<DefInit>(CodeDag->getOperator())->getDef();
   if (MainOp->isSubClassOf("CustomCodegen")) {
     // Or, if it's the special case of CustomCodegen, just accumulate
