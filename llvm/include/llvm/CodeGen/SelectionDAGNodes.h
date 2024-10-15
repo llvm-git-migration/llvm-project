@@ -410,12 +410,14 @@ public:
     NoFPExcept = 1 << 12,
     // Instructions with attached 'unpredictable' metadata on IR level.
     Unpredictable = 1 << 13,
+    // Compare instructions which may carry the samesign flag.
+    SameSign = 1 << 14,
 
     // NOTE: Please update LargestValue in LLVM_DECLARE_ENUM_AS_BITMASK below
     // the class definition when adding new flags.
 
     PoisonGeneratingFlags = NoUnsignedWrap | NoSignedWrap | Exact | Disjoint |
-                            NonNeg | NoNaNs | NoInfs,
+                            NonNeg | NoNaNs | NoInfs | SameSign,
   };
 
   /// Default constructor turns off all optimization flags.
@@ -437,6 +439,7 @@ public:
   void setNoSignedWrap(bool b) { setFlag<NoSignedWrap>(b); }
   void setExact(bool b) { setFlag<Exact>(b); }
   void setDisjoint(bool b) { setFlag<Disjoint>(b); }
+  void setSameSign(bool b) { setFlag<SameSign>(b); }
   void setNonNeg(bool b) { setFlag<NonNeg>(b); }
   void setNoNaNs(bool b) { setFlag<NoNaNs>(b); }
   void setNoInfs(bool b) { setFlag<NoInfs>(b); }
@@ -453,6 +456,7 @@ public:
   bool hasNoSignedWrap() const { return Flags & NoSignedWrap; }
   bool hasExact() const { return Flags & Exact; }
   bool hasDisjoint() const { return Flags & Disjoint; }
+  bool hasSameSign() const { return Flags & SameSign; }
   bool hasNonNeg() const { return Flags & NonNeg; }
   bool hasNoNaNs() const { return Flags & NoNaNs; }
   bool hasNoInfs() const { return Flags & NoInfs; }
@@ -474,7 +478,7 @@ public:
 };
 
 LLVM_DECLARE_ENUM_AS_BITMASK(decltype(SDNodeFlags::None),
-                             SDNodeFlags::Unpredictable);
+                             SDNodeFlags::SameSign);
 
 /// Represents one node in the SelectionDAG.
 ///
