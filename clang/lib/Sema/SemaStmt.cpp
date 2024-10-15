@@ -14,6 +14,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTDiagnostic.h"
 #include "clang/AST/ASTLambda.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/CharUnits.h"
 #include "clang/AST/DeclObjC.h"
@@ -204,23 +205,29 @@ static bool DiagnoseUnusedComparison(Sema &S, const Expr *E) {
   return true;
 }
 
-static bool DiagnoseNoDiscard(Sema &S, const WarnUnusedResultAttr *A,
-                              SourceLocation Loc, SourceRange R1,
-                              SourceRange R2, bool IsCtor) {
+static bool DiagnoseNoDiscard(Sema &S, const NamedDecl *OffendingDecl,
+                              const WarnUnusedResultAttr *A, SourceLocation Loc,
+                              SourceRange R1, SourceRange R2, bool IsCtor) {
   if (!A)
     return false;
   StringRef Msg = A->getMessage();
 
+  bool result;
   if (Msg.empty()) {
     if (IsCtor)
-      return S.Diag(Loc, diag::warn_unused_constructor) << A << R1 << R2;
-    return S.Diag(Loc, diag::warn_unused_result) << A << R1 << R2;
-  }
+      result = S.Diag(Loc, diag::warn_unused_constructor) << A << R1 << R2;
+    else
+      result = S.Diag(Loc, diag::warn_unused_result) << A << R1 << R2;
+  } else if (IsCtor)
+    result = S.Diag(Loc, diag::warn_unused_constructor_msg)
+             << A << Msg << R1 << R2;
+  else
+    result = S.Diag(Loc, diag::warn_unused_result_msg) << A << Msg << R1 << R2;
 
-  if (IsCtor)
-    return S.Diag(Loc, diag::warn_unused_constructor_msg) << A << Msg << R1
-                                                          << R2;
-  return S.Diag(Loc, diag::warn_unused_result_msg) << A << Msg << R1 << R2;
+  if (OffendingDecl)
+    S.Diag(A->getLocation(), diag::note_nodiscard_specified_here)
+        << OffendingDecl << A->getSpelling();
+  return result;
 }
 
 void Sema::DiagnoseUnusedExprResult(const Stmt *S, unsigned DiagID) {
@@ -290,9 +297,12 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S, unsigned DiagID) {
     if (E->getType()->isVoidType())
       return;
 
-    if (DiagnoseNoDiscard(*this, cast_or_null<WarnUnusedResultAttr>(
-                                     CE->getUnusedResultAttr(Context)),
-                          Loc, R1, R2, /*isCtor=*/false))
+    const NamedDecl *OffendingDecl;
+    const Attr *A;
+    std::tie(OffendingDecl, A) = CE->getUnusedResultAttr(Context);
+    if (DiagnoseNoDiscard(*this, OffendingDecl,
+                          cast_or_null<WarnUnusedResultAttr>(A), Loc, R1, R2,
+                          /*isCtor=*/false))
       return;
 
     // If the callee has attribute pure, const, or warn_unused_result, warn with
@@ -302,27 +312,38 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S, unsigned DiagID) {
     if (const Decl *FD = CE->getCalleeDecl()) {
       if (ShouldSuppress)
         return;
-      if (FD->hasAttr<PureAttr>()) {
+      if (const auto *A = FD->getAttr<PureAttr>()) {
         Diag(Loc, diag::warn_unused_call) << R1 << R2 << "pure";
+        if (OffendingDecl && !OffendingDecl->getIdentifier()->getBuiltinID())
+          Diag(A->getLocation(), diag::note_nodiscard_specified_here)
+              << OffendingDecl << "pure";
         return;
       }
-      if (FD->hasAttr<ConstAttr>()) {
+      if (const auto *A = FD->getAttr<ConstAttr>()) {
         Diag(Loc, diag::warn_unused_call) << R1 << R2 << "const";
+        if (OffendingDecl && !OffendingDecl->getIdentifier()->getBuiltinID())
+          Diag(A->getLocation(), diag::note_nodiscard_specified_here)
+              << OffendingDecl << "const";
         return;
       }
     }
   } else if (const auto *CE = dyn_cast<CXXConstructExpr>(E)) {
     if (const CXXConstructorDecl *Ctor = CE->getConstructor()) {
+      const NamedDecl *OffendingDecl = Ctor;
       const auto *A = Ctor->getAttr<WarnUnusedResultAttr>();
-      A = A ? A : Ctor->getParent()->getAttr<WarnUnusedResultAttr>();
-      if (DiagnoseNoDiscard(*this, A, Loc, R1, R2, /*isCtor=*/true))
+      if (!A) {
+        OffendingDecl = Ctor->getParent();
+        A = OffendingDecl->getAttr<WarnUnusedResultAttr>();
+      }
+      if (DiagnoseNoDiscard(*this, OffendingDecl, A, Loc, R1, R2,
+                            /*isCtor=*/true))
         return;
     }
   } else if (const auto *ILE = dyn_cast<InitListExpr>(E)) {
     if (const TagDecl *TD = ILE->getType()->getAsTagDecl()) {
 
-      if (DiagnoseNoDiscard(*this, TD->getAttr<WarnUnusedResultAttr>(), Loc, R1,
-                            R2, /*isCtor=*/false))
+      if (DiagnoseNoDiscard(*this, TD, TD->getAttr<WarnUnusedResultAttr>(), Loc,
+                            R1, R2, /*isCtor=*/false))
         return;
     }
   } else if (ShouldSuppress)
@@ -336,8 +357,8 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S, unsigned DiagID) {
     }
     const ObjCMethodDecl *MD = ME->getMethodDecl();
     if (MD) {
-      if (DiagnoseNoDiscard(*this, MD->getAttr<WarnUnusedResultAttr>(), Loc, R1,
-                            R2, /*isCtor=*/false))
+      if (DiagnoseNoDiscard(*this, MD, MD->getAttr<WarnUnusedResultAttr>(), Loc,
+                            R1, R2, /*isCtor=*/false))
         return;
     }
   } else if (const PseudoObjectExpr *POE = dyn_cast<PseudoObjectExpr>(E)) {

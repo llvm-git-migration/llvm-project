@@ -9290,6 +9290,8 @@ def warn_unused_result_typedef_unsupported_spelling : Warning<
 def warn_unused_volatile : Warning<
   "expression result unused; assign into a variable to force a volatile load">,
   InGroup<DiagGroup<"unused-volatile-lvalue">>;
+def note_nodiscard_specified_here : Note<
+  "%0 has been explicitly marked %1 here">;
 
 def ext_cxx14_attr : Extension<
   "use of the %0 attribute is a C++14 extension">, InGroup<CXX14Attrs>;
