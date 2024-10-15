@@ -188,7 +188,15 @@ public:
 
   /// This is a sorted container of registered operations for a deterministic
   /// and efficient `getRegisteredOperations` implementation.
-  SmallVector<RegisteredOperationName, 0> sortedRegisteredOperations;
+  SmallVector<std::pair<StringRef, RegisteredOperationName>, 0>
+      sortedRegisteredOperations;
+
+  /// This stores the transformed operations when calling
+  /// `getRegisteredOperations`.
+  SmallVector<RegisteredOperationName, 0> transformedOperations;
+
+  /// This returns the number of registered operations for a given dialect.
+  llvm::DenseMap<StringRef, size_t> getCountByDialectName;
 
   /// This is a list of dialects that are created referring to this context.
   /// The MLIRContext owns the objects. These need to be declared after the
@@ -708,7 +716,33 @@ void MLIRContext::printStackTraceOnDiagnostic(bool enable) {
 
 /// Return information about all registered operations.
 ArrayRef<RegisteredOperationName> MLIRContext::getRegisteredOperations() {
-  return impl->sortedRegisteredOperations;
+  impl->transformedOperations.clear();
+
+  SmallVector<RegisteredOperationName, 0> operations;
+  std::transform(impl->sortedRegisteredOperations.begin(),
+                 impl->sortedRegisteredOperations.end(),
+                 std::back_inserter(impl->transformedOperations),
+                 [](const auto &t) { return t.second; });
+
+  return impl->transformedOperations;
+}
+
+/// Return information for registered operations by dialect.
+ArrayRef<RegisteredOperationName>
+MLIRContext::getRegisteredOperationsByDialect(StringRef dialectName) {
+  impl->transformedOperations.clear();
+
+  auto lowerBound = std::lower_bound(
+      impl->sortedRegisteredOperations.begin(),
+      impl->sortedRegisteredOperations.end(), std::make_pair(dialectName, ""),
+      [](auto &lhs, auto &rhs) { return lhs.first.compare(rhs.first); });
+  auto count = impl->getCountByDialectName[dialectName];
+
+  std::transform(lowerBound, lowerBound + count,
+                 std::back_inserter(impl->transformedOperations),
+                 [](const auto &t) { return t.second; });
+
+  return impl->transformedOperations;
 }
 
 bool MLIRContext::isOperationRegistered(StringRef name) {
@@ -976,14 +1010,20 @@ void RegisteredOperationName::insert(
          "operation name registration must be successful");
 
   // Add emplaced operation name to the sorted operations container.
-  RegisteredOperationName &value = emplaced.first->second;
-  ctxImpl.sortedRegisteredOperations.insert(
-      llvm::upper_bound(ctxImpl.sortedRegisteredOperations, value,
-                        [](auto &lhs, auto &rhs) {
-                          return lhs.getIdentifier().compare(
-                              rhs.getIdentifier());
-                        }),
-      value);
+  StringRef dialectClass = impl->getDialect()->getNamespace();
+  ctxImpl.getCountByDialectName[dialectClass] += 1;
+
+  std::pair<StringRef, RegisteredOperationName> value = {
+      dialectClass, emplaced.first->second};
+
+  auto upperBound = llvm::upper_bound(
+      ctxImpl.sortedRegisteredOperations, value, [](auto &lhs, auto &rhs) {
+        if (lhs.first == rhs.first)
+          return lhs.second.getIdentifier().compare(rhs.second.getIdentifier());
+        return lhs.first.compare(rhs.first);
+      });
+
+  ctxImpl.sortedRegisteredOperations.insert(upperBound, value);
 }
 
 //===----------------------------------------------------------------------===//
