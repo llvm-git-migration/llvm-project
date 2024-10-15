@@ -16,6 +16,7 @@
 
 namespace LIBC_NAMESPACE_DECL {
 
+[[gnu::nothrow]]
 int setjmp(jmp_buf buf);
 
 } // namespace LIBC_NAMESPACE_DECL

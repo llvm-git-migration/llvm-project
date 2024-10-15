@@ -17,8 +17,13 @@
 
 namespace LIBC_NAMESPACE_DECL {
 
-[[gnu::naked]]
-LLVM_LIBC_FUNCTION(int, setjmp, (__jmp_buf * buf)) {
+LLVM_LIBC_FUNCTION_ATTR decltype(LIBC_NAMESPACE::setjmp) __setjmp_impl__ __asm__("setjmp");
+
+decltype(LIBC_NAMESPACE::setjmp) setjmp [[gnu::alias("setjmp"), gnu::nothrow]];
+
+[[gnu::naked, gnu::nothrow]]
+int __setjmp_impl__ (__jmp_buf *buf) {
+
   asm(R"(
       mov %%rbx, %c[rbx](%%rdi)
       mov %%rbp, %c[rbp](%%rdi)
