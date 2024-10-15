@@ -4,16 +4,8 @@
 define i8 @clastb_i8(<vscale x 16 x i8> %data, <vscale x 16 x i1> %pg, i8 %existing) {
 ; CHECK-LABEL: clastb_i8:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.b
-; CHECK-NEXT:    rdvl x9, #1
-; CHECK-NEXT:    rev p2.b, p0.b
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.b
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.b, xzr, x8
+; CHECK-NEXT:    lastb w8, p0, z0.b
 ; CHECK-NEXT:    ptest p0, p0.b
-; CHECK-NEXT:    lastb w8, p1, z0.b
 ; CHECK-NEXT:    csel w0, w8, w0, ne
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 16 x i1> @llvm.vector.reverse.nxv16i1(<vscale x 16 x i1> %pg)
@@ -31,15 +23,7 @@ define i8 @clastb_i8(<vscale x 16 x i8> %data, <vscale x 16 x i1> %pg, i8 %exist
 define i16 @clastb_i16(<vscale x 8 x i16> %data, <vscale x 8 x i1> %pg, i16 %existing) {
 ; CHECK-LABEL: clastb_i16:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.h
-; CHECK-NEXT:    cnth x9
-; CHECK-NEXT:    rev p2.h, p0.h
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.h
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.h, xzr, x8
-; CHECK-NEXT:    lastb w8, p1, z0.h
+; CHECK-NEXT:    lastb w8, p0, z0.h
 ; CHECK-NEXT:    ptrue p1.h
 ; CHECK-NEXT:    ptest p1, p0.b
 ; CHECK-NEXT:    csel w0, w8, w0, ne
@@ -59,15 +43,7 @@ define i16 @clastb_i16(<vscale x 8 x i16> %data, <vscale x 8 x i1> %pg, i16 %exi
 define i32 @clastb_i32(<vscale x 4 x i32> %data, <vscale x 4 x i1> %pg, i32 %existing) {
 ; CHECK-LABEL: clastb_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.s
-; CHECK-NEXT:    cntw x9
-; CHECK-NEXT:    rev p2.s, p0.s
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.s
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.s, xzr, x8
-; CHECK-NEXT:    lastb w8, p1, z0.s
+; CHECK-NEXT:    lastb w8, p0, z0.s
 ; CHECK-NEXT:    ptrue p1.s
 ; CHECK-NEXT:    ptest p1, p0.b
 ; CHECK-NEXT:    csel w0, w8, w0, ne
@@ -87,15 +63,7 @@ define i32 @clastb_i32(<vscale x 4 x i32> %data, <vscale x 4 x i1> %pg, i32 %exi
 define i64 @clastb_i64(<vscale x 2 x i64> %data, <vscale x 2 x i1> %pg, i64 %existing) {
 ; CHECK-LABEL: clastb_i64:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.d
-; CHECK-NEXT:    cntd x9
-; CHECK-NEXT:    rev p2.d, p0.d
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.d
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.d, xzr, x8
-; CHECK-NEXT:    lastb x8, p1, z0.d
+; CHECK-NEXT:    lastb x8, p0, z0.d
 ; CHECK-NEXT:    ptrue p1.d
 ; CHECK-NEXT:    ptest p1, p0.b
 ; CHECK-NEXT:    csel x0, x8, x0, ne
@@ -115,15 +83,7 @@ define i64 @clastb_i64(<vscale x 2 x i64> %data, <vscale x 2 x i1> %pg, i64 %exi
 define float @clastb_float(<vscale x 4 x float> %data, <vscale x 4 x i1> %pg, float %existing) {
 ; CHECK-LABEL: clastb_float:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.s
-; CHECK-NEXT:    cntw x9
-; CHECK-NEXT:    rev p2.s, p0.s
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.s
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.s, xzr, x8
-; CHECK-NEXT:    lastb s0, p1, z0.s
+; CHECK-NEXT:    lastb s0, p0, z0.s
 ; CHECK-NEXT:    ptrue p1.s
 ; CHECK-NEXT:    ptest p1, p0.b
 ; CHECK-NEXT:    fcsel s0, s0, s1, ne
@@ -143,15 +103,7 @@ define float @clastb_float(<vscale x 4 x float> %data, <vscale x 4 x i1> %pg, fl
 define double @clastb_double(<vscale x 2 x double> %data, <vscale x 2 x i1> %pg, double %existing) {
 ; CHECK-LABEL: clastb_double:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    ptrue p1.d
-; CHECK-NEXT:    cntd x9
-; CHECK-NEXT:    rev p2.d, p0.d
-; CHECK-NEXT:    brkb p1.b, p1/z, p2.b
-; CHECK-NEXT:    cntp x8, p1, p1.d
-; CHECK-NEXT:    mvn w8, w8
-; CHECK-NEXT:    add w8, w8, w9
-; CHECK-NEXT:    whilels p1.d, xzr, x8
-; CHECK-NEXT:    lastb d0, p1, z0.d
+; CHECK-NEXT:    lastb d0, p0, z0.d
 ; CHECK-NEXT:    ptrue p1.d
 ; CHECK-NEXT:    ptest p1, p0.b
 ; CHECK-NEXT:    fcsel d0, d0, d1, ne

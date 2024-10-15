@@ -19513,12 +19513,65 @@ performLastTrueTestVectorCombine(SDNode *N,
 }
 
 static SDValue
+performLastActiveExtractEltCombine(SDNode *N,
+                                   TargetLowering::DAGCombinerInfo &DCI,
+                                   const AArch64Subtarget *Subtarget) {
+  SDValue Index = N->getOperand(1);
+  // FIXME: Make this more generic. Should be a utility func somewhere?
+  if (Index.getOpcode() == ISD::ZERO_EXTEND)
+    Index = Index.getOperand(0);
+
+  // Looking for an add of an inverted value.
+  if (Index.getOpcode() != ISD::ADD)
+    return SDValue();
+
+  SDValue Size = Index.getOperand(1);
+
+  if (Size.getOpcode() == ISD::TRUNCATE)
+    Size = Size.getOperand(0);
+
+  // Check that we're looking at the size of the overall vector...
+  // FIXME: What about VSL codegen?
+  if (Size.getOpcode() != ISD::VSCALE)
+    return SDValue();
+
+  unsigned NElts = N->getOperand(0)->getValueType(0).getVectorElementCount().getKnownMinValue();
+  if (Size.getConstantOperandVal(0) != NElts)
+    return SDValue();
+
+  SDValue Invert = Index.getOperand(0);
+  if (Invert.getOpcode() != ISD::XOR)
+    return SDValue();
+
+  if (!Invert.getConstantOperandAPInt(1).isAllOnes())
+    return SDValue();
+
+  SDValue LZeroes = Invert.getOperand(0);
+  if (LZeroes.getOpcode() == ISD::TRUNCATE)
+    LZeroes = LZeroes.getOperand(0);
+
+  // Check that we're looking at a cttz.elts from a reversed predicate...
+  if (LZeroes.getOpcode() != AArch64ISD::CTTZ_ELTS)
+    return SDValue();
+
+  SDValue Pred = LZeroes.getOperand(0);
+  if (Pred.getOpcode() != ISD::VECTOR_REVERSE)
+    return SDValue();
+
+  // Matched a LASTB pattern.
+  return DCI.DAG.getNode(AArch64ISD::LASTB, SDLoc(N), N->getValueType(0),
+                         Pred.getOperand(0), N->getOperand(0));
+}
+
+static SDValue
 performExtractVectorEltCombine(SDNode *N, TargetLowering::DAGCombinerInfo &DCI,
                                const AArch64Subtarget *Subtarget) {
   assert(N->getOpcode() == ISD::EXTRACT_VECTOR_ELT);
   if (SDValue Res = performFirstTrueTestVectorCombine(N, DCI, Subtarget))
     return Res;
   if (SDValue Res = performLastTrueTestVectorCombine(N, DCI, Subtarget))
+    return Res;
+  if (SDValue Res = performLastActiveExtractEltCombine(N, DCI, Subtarget))
     return Res;
 
   SelectionDAG &DAG = DCI.DAG;
