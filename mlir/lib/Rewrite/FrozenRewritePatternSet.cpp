@@ -73,7 +73,7 @@ FrozenRewritePatternSet::FrozenRewritePatternSet(
   // Functor used to walk all of the operations registered in the context. This
   // is useful for patterns that get applied to multiple operations, such as
   // interface and trait based patterns.
-  std::vector<RegisteredOperationName> opInfos;
+  SmallVector<RegisteredOperationName> opInfos;
   auto addToOpsWhen =
       [&](std::unique_ptr<RewritePattern> &pattern,
           function_ref<bool(RegisteredOperationName)> callbackFn) {

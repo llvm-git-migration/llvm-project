@@ -195,7 +195,12 @@ public:
 
   /// Return a sorted array containing the information about all registered
   /// operations.
-  ArrayRef<RegisteredOperationName> getRegisteredOperations();
+  SmallVector<RegisteredOperationName, 0> getRegisteredOperations();
+
+  /// Return a sorted array containing the information for registered operations
+  /// filtered by dialect name.
+  SmallVector<RegisteredOperationName, 0>
+  getRegisteredOperationsByDialect(StringRef dialectName);
 
   /// Return true if this operation name is registered in this context.
   bool isOperationRegistered(StringRef name);
