@@ -39,3 +39,13 @@ Sections:
 
 # BSS: Contents of section .bss:
 # BSS-NEXT: <skipping contents of bss section at [12c8, 12cc)>
+
+# RUN: yaml2obj %p/Inputs/COFF/mips.yaml | llvm-objdump -s - | FileCheck %s --check-prefix=COFF-MIPS
+
+# COFF-MIPS: <stdin>:     file format coff-mips
+# COFF-MIPS: Contents of section .text:
+# COFF-MIPS:  0000 e8ffbd27 1400bfaf 0000013c 0000000c  ...'.......<....
+# COFF-MIPS:  0010 00002424 0000000c 00000000 00000224  ..$$...........$
+# COFF-MIPS:  0020 1400bf8f 0800e003 1800bd27           ...........'
+# COFF-MIPS: Contents of section .rdata:
+# COFF-MIPS:  0000 48656c6c 6f20576f 726c6421 00        Hello World!.

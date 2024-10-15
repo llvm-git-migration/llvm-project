@@ -343,6 +343,98 @@
 # COFF-ARM64-NEXT:     ComplexType: IMAGE_SYM_DTYPE_NULL
 # COFF-ARM64-NEXT:     StorageClass: IMAGE_SYM_CLASS_EXTERNAL
 
+# RUN: obj2yaml %p/Inputs/trivial-object-test.coff-mips | FileCheck %s --check-prefix COFF-MIPS
+
+# COFF-MIPS: header:
+# COFF-MIPS-NEXT:  Machine: IMAGE_FILE_MACHINE_R4000
+
+# COFF-MIPS: sections:
+# COFF-MIPS-NEXT:  - Name: .text
+# COFF-MIPS-NEXT:    Characteristics: [ IMAGE_SCN_CNT_CODE, IMAGE_SCN_MEM_EXECUTE, IMAGE_SCN_MEM_READ ]
+# COFF-MIPS-NEXT:    Alignment: 4
+# COFF-MIPS-NEXT:    SectionData:  E8FFBD271400BFAF0000013C0000000C000024240000000C00000000000002241400BF8F0800E0031800BD27
+
+# COFF-MIPS:    Relocations:
+# COFF-MIPS-NEXT:      - VirtualAddress: 8
+# COFF-MIPS-NEXT:        SymbolName: str
+# COFF-MIPS-NEXT:        Type: IMAGE_REL_MIPS_REFHI
+
+# COFF-MIPS:           - VirtualAddress: 8
+# COFF-MIPS-NEXT:        SymbolName: .text
+# COFF-MIPS-NEXT:        Type: IMAGE_REL_MIPS_PAIR
+
+# COFF-MIPS:           - VirtualAddress: 12
+# COFF-MIPS-NEXT:        SymbolName: puts
+# COFF-MIPS-NEXT:        Type: IMAGE_REL_MIPS_JMPADDR
+
+# COFF-MIPS:           - VirtualAddress: 16
+# COFF-MIPS-NEXT:        SymbolName: str
+# COFF-MIPS-NEXT:        Type: IMAGE_REL_MIPS_REFLO
+
+# COFF-MIPS:           - VirtualAddress: 20
+# COFF-MIPS-NEXT:        SymbolName: SomeOtherFunction
+# COFF-MIPS-NEXT:        Type: IMAGE_REL_MIPS_JMPADDR
+
+# COFF-MIPS:       - Name: .rdata
+# COFF-MIPS-NEXT:    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_READ ]
+# COFF-MIPS-NEXT:    Alignment: 4
+# COFF-MIPS-NEXT:    SectionData: 48656C6C6F20576F726C642100
+
+# COFF-MIPS: symbols:
+# COFF-MIPS-NEXT:  - Name: .text
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 1
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_STATIC
+# COFF-MIPS-NEXT:    SectionDefinition:
+# COFF-MIPS-NEXT:      Length:          44
+# COFF-MIPS-NEXT:      NumberOfRelocations: 5
+# COFF-MIPS-NEXT:      NumberOfLinenumbers: 0
+# COFF-MIPS-NEXT:      CheckSum:        3518661474
+# COFF-MIPS-NEXT:      Number:          1
+
+# COFF-MIPS:       - Name: .rdata
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 4
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_STATIC
+# COFF-MIPS-NEXT:    SectionDefinition:
+# COFF-MIPS-NEXT:      Length:          13
+# COFF-MIPS-NEXT:      NumberOfRelocations: 0
+# COFF-MIPS-NEXT:      NumberOfLinenumbers: 0
+# COFF-MIPS-NEXT:      CheckSum:        2461364801
+# COFF-MIPS-NEXT:      Number:          4
+
+# COFF-MIPS:       - Name: main
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 1
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_EXTERNAL
+
+# COFF-MIPS:       - Name: str
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 4
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_EXTERNAL
+
+# COFF-MIPS:       - Name: puts
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 0
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_EXTERNAL
+
+# COFF-MIPS:       - Name: SomeOtherFunction
+# COFF-MIPS-NEXT:    Value: 0
+# COFF-MIPS-NEXT:    SectionNumber: 0
+# COFF-MIPS-NEXT:    SimpleType: IMAGE_SYM_TYPE_NULL
+# COFF-MIPS-NEXT:    ComplexType: IMAGE_SYM_DTYPE_NULL
+# COFF-MIPS-NEXT:    StorageClass: IMAGE_SYM_CLASS_EXTERNAL
+
 # RUN: obj2yaml %p/Inputs/trivial-object-test.elf-mipsel | FileCheck %s --check-prefix ELF-MIPSEL
 
 # ELF-MIPSEL:      FileHeader:
