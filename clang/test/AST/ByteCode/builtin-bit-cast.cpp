@@ -102,6 +102,12 @@ namespace simple {
   static_assert(check_round_trip<unsigned>((int)0x87654321));
   static_assert(check_round_trip<unsigned>((int)0x0C05FEFE));
   // static_assert(round_trip<float>((int)0x0C05FEFE));
+
+
+  /// This works in GCC and in the bytecode interpreter, but the current interpreter
+  /// diagnoses it.
+  static_assert(__builtin_bit_cast(intptr_t, nullptr) == 0); // ref-error {{not an integral constant expression}} \
+                                                             // ref-note {{indeterminate value can only initialize an object}}
 }
 
 namespace bitint {
