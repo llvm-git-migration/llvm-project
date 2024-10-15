@@ -190,6 +190,9 @@ public:
   /// and efficient `getRegisteredOperations` implementation.
   SmallVector<RegisteredOperationName, 0> sortedRegisteredOperations;
 
+  /// This returns the number of registered operations for the given dialect.
+  size_t operationCount = 0;
+
   /// This is a list of dialects that are created referring to this context.
   /// The MLIRContext owns the objects. These need to be declared after the
   /// registered operations to ensure correct destruction order.
@@ -711,6 +714,27 @@ ArrayRef<RegisteredOperationName> MLIRContext::getRegisteredOperations() {
   return impl->sortedRegisteredOperations;
 }
 
+/// Return information for registered operations by dialect.
+ArrayRef<RegisteredOperationName>
+MLIRContext::getRegisteredOperationsByDialect(StringRef dialectName) {
+  auto lowerBound =
+      std::lower_bound(impl->sortedRegisteredOperations.begin(),
+                       impl->sortedRegisteredOperations.end(), dialectName,
+                       [](auto &lhs, auto &rhs) {
+                         return lhs.getDialect().getNamespace().compare(
+                             rhs.getDialect().getNamespace());
+                       });
+
+  auto upperBound =
+      std::lower_bound(lowerBound, impl->sortedRegisteredOperations.end(),
+                       dialectName, [](auto &lhs, auto &rhs) {
+                         return lhs.getDialect().getNamespace().compare(
+                             rhs.getDialect().getNamespace());
+                       });
+  size_t count = std::distance(lowerBound, upperBound);
+  return ArrayRef(lowerBound, count);
+}
+
 bool MLIRContext::isOperationRegistered(StringRef name) {
   return RegisteredOperationName::lookup(name, this).has_value();
 }
@@ -976,6 +1000,8 @@ void RegisteredOperationName::insert(
          "operation name registration must be successful");
 
   // Add emplaced operation name to the sorted operations container.
+  ctxImpl.operationCount += 1;
+
   RegisteredOperationName &value = emplaced.first->second;
   ctxImpl.sortedRegisteredOperations.insert(
       llvm::upper_bound(ctxImpl.sortedRegisteredOperations, value,
