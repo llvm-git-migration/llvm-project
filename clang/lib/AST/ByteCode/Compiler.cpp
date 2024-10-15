@@ -6426,7 +6426,7 @@ bool Compiler<Emitter>::emitBuiltinBitCast(const CastExpr *E) {
   QualType ToType = E->getType();
   std::optional<PrimType> ToT = classify(ToType);
 
-  assert(!DiscardResult && "Implement");
+  assert(!DiscardResult && "Implement DiscardResult mode for bitcasts.");
 
   if (ToType->isNullPtrType()) {
     if (!this->discard(SubExpr))
@@ -6449,7 +6449,7 @@ bool Compiler<Emitter>::emitBuiltinBitCast(const CastExpr *E) {
 
   if (!ToT || ToT == PT_Ptr) {
     // Conversion to an array or record type.
-    assert(false && "Implement");
+    assert(false && "Implement bitcast to pointers.");
   }
   assert(ToT);
 
