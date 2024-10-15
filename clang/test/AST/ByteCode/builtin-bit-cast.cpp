@@ -122,6 +122,13 @@ namespace bitint {
                                 // ref-note {{initializer of 'IB' is not a constant expression}}
 }
 
+/// FIXME: This is correct in the current interpreter.
+namespace LongDouble {
+  constexpr long double F = 12.0;
+  constexpr __int128 I = __builtin_bit_cast(__int128, F); // ref-error {{must be initialized by a constant expression}} \
+                                                          // ref-note {{indeterminate value can only initialize an object of type}}
+}
+
 namespace BitFields {
   struct BitFields {
     unsigned a : 2;
