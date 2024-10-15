@@ -4,9 +4,7 @@
 define i8 @clastb_i8(<vscale x 16 x i8> %data, <vscale x 16 x i1> %pg, i8 %existing) {
 ; CHECK-LABEL: clastb_i8:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb w8, p0, z0.b
-; CHECK-NEXT:    ptest p0, p0.b
-; CHECK-NEXT:    csel w0, w8, w0, ne
+; CHECK-NEXT:    clastb w0, p0, w0, z0.b
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 16 x i1> @llvm.vector.reverse.nxv16i1(<vscale x 16 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.i32.nxv16i1(<vscale x 16 x i1> %rev.pg, i1 false)
@@ -23,10 +21,7 @@ define i8 @clastb_i8(<vscale x 16 x i8> %data, <vscale x 16 x i1> %pg, i8 %exist
 define i16 @clastb_i16(<vscale x 8 x i16> %data, <vscale x 8 x i1> %pg, i16 %existing) {
 ; CHECK-LABEL: clastb_i16:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb w8, p0, z0.h
-; CHECK-NEXT:    ptrue p1.h
-; CHECK-NEXT:    ptest p1, p0.b
-; CHECK-NEXT:    csel w0, w8, w0, ne
+; CHECK-NEXT:    clastb w0, p0, w0, z0.h
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 8 x i1> @llvm.vector.reverse.nxv8i1(<vscale x 8 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.i32.nxv8i1(<vscale x 8 x i1> %rev.pg, i1 false)
@@ -43,10 +38,7 @@ define i16 @clastb_i16(<vscale x 8 x i16> %data, <vscale x 8 x i1> %pg, i16 %exi
 define i32 @clastb_i32(<vscale x 4 x i32> %data, <vscale x 4 x i1> %pg, i32 %existing) {
 ; CHECK-LABEL: clastb_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb w8, p0, z0.s
-; CHECK-NEXT:    ptrue p1.s
-; CHECK-NEXT:    ptest p1, p0.b
-; CHECK-NEXT:    csel w0, w8, w0, ne
+; CHECK-NEXT:    clastb w0, p0, w0, z0.s
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 4 x i1> @llvm.vector.reverse.nxv4i1(<vscale x 4 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.i32.nxv4i1(<vscale x 4 x i1> %rev.pg, i1 false)
@@ -63,10 +55,7 @@ define i32 @clastb_i32(<vscale x 4 x i32> %data, <vscale x 4 x i1> %pg, i32 %exi
 define i64 @clastb_i64(<vscale x 2 x i64> %data, <vscale x 2 x i1> %pg, i64 %existing) {
 ; CHECK-LABEL: clastb_i64:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb x8, p0, z0.d
-; CHECK-NEXT:    ptrue p1.d
-; CHECK-NEXT:    ptest p1, p0.b
-; CHECK-NEXT:    csel x0, x8, x0, ne
+; CHECK-NEXT:    clastb x0, p0, x0, z0.d
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 2 x i1> @llvm.vector.reverse.nxv2i1(<vscale x 2 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.i32.nxv2i1(<vscale x 2 x i1> %rev.pg, i1 false)
@@ -80,13 +69,10 @@ define i64 @clastb_i64(<vscale x 2 x i64> %data, <vscale x 2 x i1> %pg, i64 %exi
   ret i64 %res
 }
 
-define float @clastb_float(<vscale x 4 x float> %data, <vscale x 4 x i1> %pg, float %existing) {
+define float @clastb_float(float %existing, <vscale x 4 x float> %data, <vscale x 4 x i1> %pg) {
 ; CHECK-LABEL: clastb_float:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb s0, p0, z0.s
-; CHECK-NEXT:    ptrue p1.s
-; CHECK-NEXT:    ptest p1, p0.b
-; CHECK-NEXT:    fcsel s0, s0, s1, ne
+; CHECK-NEXT:    clastb s0, p0, s0, z1.s
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 4 x i1> @llvm.vector.reverse.nxv4i1(<vscale x 4 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.float.nxv4i1(<vscale x 4 x i1> %rev.pg, i1 false)
@@ -100,13 +86,10 @@ define float @clastb_float(<vscale x 4 x float> %data, <vscale x 4 x i1> %pg, fl
   ret float %res
 }
 
-define double @clastb_double(<vscale x 2 x double> %data, <vscale x 2 x i1> %pg, double %existing) {
+define double @clastb_double(double %existing, <vscale x 2 x double> %data, <vscale x 2 x i1> %pg) {
 ; CHECK-LABEL: clastb_double:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    lastb d0, p0, z0.d
-; CHECK-NEXT:    ptrue p1.d
-; CHECK-NEXT:    ptest p1, p0.b
-; CHECK-NEXT:    fcsel d0, d0, d1, ne
+; CHECK-NEXT:    clastb d0, p0, d0, z1.d
 ; CHECK-NEXT:    ret
   %rev.pg = call <vscale x 2 x i1> @llvm.vector.reverse.nxv2i1(<vscale x 2 x i1> %pg)
   %tz.cnt = call i32 @llvm.experimental.cttz.elts.i32.nxv2i1(<vscale x 2 x i1> %rev.pg, i1 false)

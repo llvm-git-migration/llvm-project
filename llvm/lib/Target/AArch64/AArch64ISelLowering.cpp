@@ -24416,6 +24416,50 @@ static SDValue foldCSELOfCSEL(SDNode *Op, SelectionDAG &DAG) {
   return DAG.getNode(AArch64ISD::CSEL, DL, VT, L, R, CCValue, Cond);
 }
 
+static SDValue foldCSELOfLASTB(SDNode *N, SelectionDAG &DAG) {
+  SDValue Op0 = N->getOperand(0);
+  SDValue Op1 = N->getOperand(1);
+  AArch64CC::CondCode CC =
+      static_cast<AArch64CC::CondCode>(N->getConstantOperandVal(2));
+  SDValue PTAny = N->getOperand(3);
+
+  // FIXME: Handle the inverse?
+  if (Op0.getOpcode() != AArch64ISD::LASTB)
+    return SDValue();
+
+  if (PTAny.getOpcode() != AArch64ISD::PTEST_ANY)
+    return SDValue();
+
+  // Get the predicate...
+  SDValue LBPred = Op0.getOperand(0);
+
+  // Look through reinterprets...
+  SDValue PTestPG = PTAny.getOperand(0);
+  if (PTestPG.getOpcode() == AArch64ISD::REINTERPRET_CAST)
+    PTestPG = PTestPG.getOperand(0);
+
+  SDValue PTestOp = PTAny.getOperand(1);
+  if (PTestOp.getOpcode() == AArch64ISD::REINTERPRET_CAST)
+    PTestOp = PTestOp.getOperand(0);
+
+  // And compare against the csel cmp.
+  // Make sure the same predicate is used.
+  if (PTestOp != LBPred)
+    return SDValue();
+
+  // Make sure that PG for the test is either the same as the input or
+  // an explicit ptrue.
+  // FIXME:... look for ptrue_all instead of just ptrue...
+  if (PTestPG != LBPred && PTestPG.getOpcode() != AArch64ISD::PTRUE)
+    return SDValue();
+
+  if (CC != AArch64CC::NE)
+    return SDValue();
+
+  return DAG.getNode(AArch64ISD::CLASTB_N, SDLoc(N), N->getValueType(0),
+                     LBPred, Op1, Op0.getOperand(1));
+}
+
 // Optimize CSEL instructions
 static SDValue performCSELCombine(SDNode *N,
                                   TargetLowering::DAGCombinerInfo &DCI,
@@ -24431,6 +24475,9 @@ static SDValue performCSELCombine(SDNode *N,
   // CSEL cttz(X), 0, ne(X, 0) -> AND cttz bitwidth-1
   if (SDValue Folded = foldCSELofCTTZ(N, DAG))
 		return Folded;
+
+  if (SDValue CLastB = foldCSELOfLASTB(N, DAG))
+    return CLastB;
 
   return performCONDCombine(N, DCI, DAG, 2, 3);
 }
