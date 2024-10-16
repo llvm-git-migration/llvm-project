@@ -106,7 +106,9 @@ public:
   }
 
   [[nodiscard]]
-  bool replaceFunctionWithOp(Function &F, dxil::OpCode DXILOp) {
+  bool replaceFunctionWithOp(
+      Function &F, dxil::OpCode DXILOp,
+      std::optional<SmallVector<Value *>> ExtraArgs = std::nullopt) {
     bool IsVectorArgExpansion = isVectorArgExpansion(F);
     return replaceFunction(F, [&](CallInst *CI) -> Error {
       SmallVector<Value *> Args;
@@ -116,6 +118,11 @@ public:
         Args.append(NewArgs.begin(), NewArgs.end());
       } else
         Args.append(CI->arg_begin(), CI->arg_end());
+
+      // Append any given alias arguments
+      if (ExtraArgs) {
+        Args.append(ExtraArgs->begin(), ExtraArgs->end());
+      }
 
       Expected<CallInst *> OpCall =
           OpBuilder.tryCreateOp(DXILOp, Args, CI->getName(), F.getReturnType());
