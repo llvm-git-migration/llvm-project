@@ -33,8 +33,7 @@ void test_svalbuilder_simplification(int x, int y) {
   if (x + y != 3)
     return;
   clang_analyzer_eval(-(x + y) == -3); // expected-warning{{TRUE}}
-  // FIXME Commutativity is not supported yet.
-  clang_analyzer_eval(-(y + x) == -3); // expected-warning{{UNKNOWN}}
+  clang_analyzer_eval(-(y + x) == -3); // expected-warning{{TRUE}}
 }
 
 int test_fp(int flag) {
