@@ -45,6 +45,7 @@ struct DXILOperationDesc {
   SmallVector<const Record *> AttrRecs;
   StringRef Intrinsic; // The llvm intrinsic map to OpName. Default is "" which
                        // means no map exists
+  SmallVector<StringRef> IntrinsicAliases;
   SmallVector<StringRef, 4>
       ShaderStages; // shader stages to which this applies, empty for all.
   int OverloadParamIndex;             // Index of parameter with overload type.
@@ -167,6 +168,15 @@ DXILOperationDesc::DXILOperationDesc(const Record *R) {
       // Remove the int_ from intrinsic name.
       Intrinsic = DefName.substr(4);
     }
+  }
+
+  Recs = R->getValueAsListOfDefs("aliases");
+
+  for (const Record *CR : Recs) {
+    auto DefName = CR->getName();
+    assert(DefName.starts_with("int_") && "invalid intrinsic name");
+    // Remove the int_ from intrinsic name.
+    IntrinsicAliases.push_back(DefName.substr(4));
   }
 }
 
@@ -388,6 +398,26 @@ static void emitDXILIntrinsicMap(ArrayRef<DXILOperationDesc> Ops,
   OS << "#endif\n\n";
 }
 
+/// Emit map of DXIL operation to LLVM or DirectX intrinsic alias
+/// \param A vector of DXIL Ops
+/// \param Output stream
+static void emitDXILIntrinsicAliasMap(ArrayRef<DXILOperationDesc> Ops,
+                                      raw_ostream &OS) {
+  OS << "#ifdef DXIL_OP_INTRINSIC_ALIAS\n";
+  OS << "\n";
+  for (const auto &Op : Ops) {
+    for (const auto &Alias : Op.IntrinsicAliases) {
+      if (Alias.empty())
+        continue;
+      OS << "DXIL_OP_INTRINSIC_ALIAS(dxil::OpCode::" << Op.OpName
+         << ", Intrinsic::" << Alias << ")\n";
+    }
+  }
+  OS << "\n";
+  OS << "#undef DXIL_OP_INTRINSIC_ALIAS\n";
+  OS << "#endif\n\n";
+}
+
 /// Emit DXIL operation table
 /// \param A vector of DXIL Ops
 /// \param Output stream
@@ -529,6 +559,7 @@ static void EmitDXILOperation(const RecordKeeper &Records, raw_ostream &OS) {
   emitDXILOpParamTypes(Records, OS);
   emitDXILOpFunctionTypes(DXILOps, OS);
   emitDXILIntrinsicMap(DXILOps, OS);
+  emitDXILIntrinsicAliasMap(DXILOps, OS);
   OS << "#ifdef DXIL_OP_OPERATION_TABLE\n\n";
   emitDXILOperationTableDataStructs(Records, OS);
   emitDXILOperationTable(DXILOps, OS);

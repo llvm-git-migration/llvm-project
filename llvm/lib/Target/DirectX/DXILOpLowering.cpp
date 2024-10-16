@@ -40,6 +40,19 @@ static bool isVectorArgExpansion(Function &F) {
   return false;
 }
 
+static SmallVector<Value *> getAliasArgs(Function &F, IRBuilder<> &Builder) {
+  switch (F.getIntrinsicID()) {
+  case Intrinsic::dx_wave_active_sum:
+    return getWaveActiveOpArgs<0, true>(F, Builder);
+  case Intrinsic::dx_wave_active_usum:
+    return getWaveActiveOpArgs<0, false>(F, Builder);
+  default:
+    break;
+  }
+  SmallVector<Value *, 0> Args;
+  return Args;
+}
+
 static SmallVector<Value *> populateOperands(Value *Arg, IRBuilder<> &Builder) {
   SmallVector<Value *> ExtractedElements;
   auto *VecArg = dyn_cast<FixedVectorType>(Arg->getType());
@@ -106,7 +119,9 @@ public:
   }
 
   [[nodiscard]]
-  bool replaceFunctionWithOp(Function &F, dxil::OpCode DXILOp) {
+  bool replaceFunctionWithOp(
+      Function &F, dxil::OpCode DXILOp,
+      std::optional<SmallVector<Value *>> AliasArgs = std::nullopt) {
     bool IsVectorArgExpansion = isVectorArgExpansion(F);
     return replaceFunction(F, [&](CallInst *CI) -> Error {
       SmallVector<Value *> Args;
@@ -116,6 +131,11 @@ public:
         Args.append(NewArgs.begin(), NewArgs.end());
       } else
         Args.append(CI->arg_begin(), CI->arg_end());
+
+      // Append any given alias arguments
+      if (AliasArgs) {
+        Args.append(AliasArgs->begin(), AliasArgs->end());
+      }
 
       Expected<CallInst *> OpCall =
           OpBuilder.tryCreateOp(DXILOp, Args, CI->getName(), F.getReturnType());
@@ -476,6 +496,13 @@ public:
   case Intrin:                                                                 \
     HasErrors |= replaceFunctionWithOp(F, OpCode);                             \
     break;
+#include "DXILOperation.inc"
+#define DXIL_OP_INTRINSIC_ALIAS(OpCode, Intrin)                                \
+  case Intrin: {                                                               \
+    SmallVector<Value *> AliasArgs = getAliasArgs(F, OpBuilder.getIRB());      \
+    HasErrors |= replaceFunctionWithOp(F, OpCode, AliasArgs);                  \
+    break;                                                                     \
+  }
 #include "DXILOperation.inc"
       case Intrinsic::dx_handle_fromBinding:
         HasErrors |= lowerHandleFromBinding(F);

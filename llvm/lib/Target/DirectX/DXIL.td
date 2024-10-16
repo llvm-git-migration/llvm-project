@@ -321,6 +321,9 @@ class DXILOp<int opcode, DXILOpClass opclass> {
 
   // Versioned attributes of operation
   list<Attributes> attributes = [];
+
+  // List of valid aliases
+  list<Intrinsic> aliases = [];
 }
 
 // Concrete definitions of DXIL Operations
