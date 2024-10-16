@@ -736,6 +736,11 @@ bool ScalarizerVisitor::splitCall(CallInst &CI) {
       Type *CurrType = cast<FixedVectorType>(CallType->getContainedType(I));
       if (PrevType != CurrType) {
         std::optional<VectorSplit> CurrVS = getVectorSplit(CurrType);
+        // This case does not seem to happen, but it is possible for
+        // VectorSplit.NumPacked >= NumElems. If that happens a VectorSplit
+        // is not returned and we will bailout of handling this call.
+        if (!CurrVS)
+          return false;
         Tys.push_back(CurrVS->SplitTy);
         PrevType = CurrType;
       }
