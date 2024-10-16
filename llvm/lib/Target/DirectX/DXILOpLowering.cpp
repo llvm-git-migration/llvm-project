@@ -40,6 +40,18 @@ static bool isVectorArgExpansion(Function &F) {
   return false;
 }
 
+template <int OpcodeVal, bool SOpVal>
+static SmallVector<Value *> getWaveActiveOpArgs(Function &F,
+                                                IRBuilder<> &Builder) {
+  SmallVector<Value *, 0> Args;
+  IntegerType *IntTy = IntegerType::get(Builder.getContext(), 8);
+  Constant *Opcode = ConstantInt::get(IntTy, OpcodeVal);
+  Constant *SOp = ConstantInt::get(IntTy, SOpVal ? 0 : 1);
+  Args.push_back(Opcode);
+  Args.push_back(SOp);
+  return Args;
+}
+
 static SmallVector<Value *> populateOperands(Value *Arg, IRBuilder<> &Builder) {
   SmallVector<Value *> ExtractedElements;
   auto *VecArg = dyn_cast<FixedVectorType>(Arg->getType());
@@ -495,6 +507,16 @@ public:
         break;
       case Intrinsic::dx_typedBufferStore:
         HasErrors |= lowerTypedBufferStore(F);
+        break;
+      case Intrinsic::dx_wave_active_sum:
+        HasErrors |= replaceFunctionWithOp(
+            F, dxil::OpCode::WaveActiveOp,
+            getWaveActiveOpArgs<0, true>(F, OpBuilder.getIRB()));
+        break;
+      case Intrinsic::dx_wave_active_usum:
+        HasErrors |= replaceFunctionWithOp(
+            F, dxil::OpCode::WaveActiveOp,
+            getWaveActiveOpArgs<0, false>(F, OpBuilder.getIRB()));
         break;
       }
       Updated = true;
