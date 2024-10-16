@@ -1295,6 +1295,8 @@ clang-format
 - Adds ``WrapNamespaceBodyWithEmptyLines`` option.
 - Adds the ``IndentExportBlock`` option.
 - Adds ``PenaltyBreakBeforeMemberAccess`` option.
+- Adds ``BinPackLongBracedLists`` option to override bin packing options in
+  long (20 item or more) braced list initializer lists.
 
 libclang
 --------
