@@ -27,7 +27,7 @@ define void @vp_smax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[SMAX:%.+]]> = call llvm.smax(ir<[[LD1]]>, ir<[[LD2]]>)
+; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[SMAX:%.+]]> = call llvm.vp.smax(ir<[[LD1]]>, ir<[[LD2]]>, vp<[[EVL]]>)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[SMAX]]>, vp<[[EVL]]>
@@ -39,20 +39,20 @@ define void @vp_smax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT: }
 
 entry:
-  br label %for.body
+  br label %loop
 
-for.body:
-  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
-  %arrayidx = getelementptr inbounds i32, ptr %b, i64 %indvars.iv
-  %0 = load i32, ptr %arrayidx, align 4
-  %arrayidx3 = getelementptr inbounds i32, ptr %c, i64 %indvars.iv
-  %1 = load i32, ptr %arrayidx3, align 4
+loop:
+  %iv = phi i64 [ %iv.next, %loop ], [ 0, %entry ]
+  %gep = getelementptr inbounds i32, ptr %b, i64 %iv
+  %0 = load i32, ptr %gep, align 4
+  %gep3 = getelementptr inbounds i32, ptr %c, i64 %iv
+  %1 = load i32, ptr %gep3, align 4
   %. = tail call i32 @llvm.smax.i32(i32 %0, i32 %1)
-  %arrayidx11 = getelementptr inbounds i32, ptr %a, i64 %indvars.iv
-  store i32 %., ptr %arrayidx11, align 4
-  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, %N
-  br i1 %exitcond.not, label %exit, label %for.body
+  %gep11 = getelementptr inbounds i32, ptr %a, i64 %iv
+  store i32 %., ptr %gep11, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, %N
+  br i1 %exitcond.not, label %exit, label %loop
 
 exit:
   ret void
@@ -80,7 +80,7 @@ define void @vp_smin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[SMIN:%.+]]> = call llvm.smin(ir<[[LD1]]>, ir<[[LD2]]>)
+; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[SMIN:%.+]]> = call llvm.vp.smin(ir<[[LD1]]>, ir<[[LD2]]>, vp<[[EVL]]>)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[SMIN]]>, vp<[[EVL]]>
@@ -92,20 +92,20 @@ define void @vp_smin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT: }
 
 entry:
-  br label %for.body
+  br label %loop
 
-for.body:
-  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
-  %arrayidx = getelementptr inbounds i32, ptr %b, i64 %indvars.iv
-  %0 = load i32, ptr %arrayidx, align 4
-  %arrayidx3 = getelementptr inbounds i32, ptr %c, i64 %indvars.iv
-  %1 = load i32, ptr %arrayidx3, align 4
+loop:
+  %iv = phi i64 [ %iv.next, %loop ], [ 0, %entry ]
+  %gep = getelementptr inbounds i32, ptr %b, i64 %iv
+  %0 = load i32, ptr %gep, align 4
+  %gep3 = getelementptr inbounds i32, ptr %c, i64 %iv
+  %1 = load i32, ptr %gep3, align 4
   %. = tail call i32 @llvm.smin.i32(i32 %0, i32 %1)
-  %arrayidx11 = getelementptr inbounds i32, ptr %a, i64 %indvars.iv
-  store i32 %., ptr %arrayidx11, align 4
-  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, %N
-  br i1 %exitcond.not, label %exit, label %for.body
+  %gep11 = getelementptr inbounds i32, ptr %a, i64 %iv
+  store i32 %., ptr %gep11, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, %N
+  br i1 %exitcond.not, label %exit, label %loop
 
 exit:
   ret void
@@ -133,7 +133,7 @@ define void @vp_umax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[UMAX:%.+]]> = call llvm.umax(ir<[[LD1]]>, ir<[[LD2]]>)
+; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[UMAX:%.+]]> = call llvm.vp.umax(ir<[[LD1]]>, ir<[[LD2]]>, vp<[[EVL]]>)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[UMAX]]>, vp<[[EVL]]>
@@ -145,20 +145,20 @@ define void @vp_umax(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT: }
 
 entry:
-  br label %for.body
+  br label %loop
 
-for.body:
-  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
-  %arrayidx = getelementptr inbounds i32, ptr %b, i64 %indvars.iv
-  %0 = load i32, ptr %arrayidx, align 4
-  %arrayidx3 = getelementptr inbounds i32, ptr %c, i64 %indvars.iv
-  %1 = load i32, ptr %arrayidx3, align 4
+loop:
+  %iv = phi i64 [ %iv.next, %loop ], [ 0, %entry ]
+  %gep = getelementptr inbounds i32, ptr %b, i64 %iv
+  %0 = load i32, ptr %gep, align 4
+  %gep3 = getelementptr inbounds i32, ptr %c, i64 %iv
+  %1 = load i32, ptr %gep3, align 4
   %. = tail call i32 @llvm.umax.i32(i32 %0, i32 %1)
-  %arrayidx11 = getelementptr inbounds i32, ptr %a, i64 %indvars.iv
-  store i32 %., ptr %arrayidx11, align 4
-  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, %N
-  br i1 %exitcond.not, label %exit, label %for.body
+  %gep11 = getelementptr inbounds i32, ptr %a, i64 %iv
+  store i32 %., ptr %gep11, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, %N
+  br i1 %exitcond.not, label %exit, label %loop
 
 exit:
   ret void
@@ -186,7 +186,7 @@ define void @vp_umin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT:     CLONE ir<[[GEP2:%.+]]> = getelementptr inbounds ir<%c>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR2:%[0-9]+]]> = vector-pointer ir<[[GEP2]]>
 ; IF-EVL-NEXT:     WIDEN ir<[[LD2:%.+]]> = vp.load vp<[[PTR2]]>, vp<[[EVL]]>
-; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[UMIN:%.+]]> = call llvm.umin(ir<[[LD1]]>, ir<[[LD2]]>)
+; IF-EVL-NEXT:     WIDEN-INTRINSIC ir<[[UMIN:%.+]]> = call llvm.vp.umin(ir<[[LD1]]>, ir<[[LD2]]>, vp<[[EVL]]>)
 ; IF-EVL-NEXT:     CLONE ir<[[GEP3:%.+]]> = getelementptr inbounds ir<%a>, vp<[[ST]]>
 ; IF-EVL-NEXT:     vp<[[PTR3:%[0-9]+]]> = vector-pointer ir<[[GEP3]]>
 ; IF-EVL-NEXT:     WIDEN vp.store vp<[[PTR3]]>, ir<[[UMIN]]>, vp<[[EVL]]>
@@ -198,20 +198,20 @@ define void @vp_umin(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; IF-EVL-NEXT: }
 
 entry:
-  br label %for.body
+  br label %loop
 
-for.body:
-  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]
-  %arrayidx = getelementptr inbounds i32, ptr %b, i64 %indvars.iv
-  %0 = load i32, ptr %arrayidx, align 4
-  %arrayidx3 = getelementptr inbounds i32, ptr %c, i64 %indvars.iv
-  %1 = load i32, ptr %arrayidx3, align 4
+loop:
+  %iv = phi i64 [ %iv.next, %loop ], [ 0, %entry ]
+  %gep = getelementptr inbounds i32, ptr %b, i64 %iv
+  %0 = load i32, ptr %gep, align 4
+  %gep3 = getelementptr inbounds i32, ptr %c, i64 %iv
+  %1 = load i32, ptr %gep3, align 4
   %. = tail call i32 @llvm.umin.i32(i32 %0, i32 %1)
-  %arrayidx11 = getelementptr inbounds i32, ptr %a, i64 %indvars.iv
-  store i32 %., ptr %arrayidx11, align 4
-  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
-  %exitcond.not = icmp eq i64 %indvars.iv.next, %N
-  br i1 %exitcond.not, label %exit, label %for.body
+  %gep11 = getelementptr inbounds i32, ptr %a, i64 %iv
+  store i32 %., ptr %gep11, align 4
+  %iv.next = add nuw nsw i64 %iv, 1
+  %exitcond.not = icmp eq i64 %iv.next, %N
+  br i1 %exitcond.not, label %exit, label %loop
 
 exit:
   ret void
