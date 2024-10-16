@@ -17324,10 +17324,9 @@ SDValue PPCTargetLowering::LowerFRAMEADDR(SDValue Op,
 
 Register PPCTargetLowering::getRegisterByName(const char* RegName, LLT VT,
                                               const MachineFunction &MF) const {
-  bool isPPC64 = Subtarget.isPPC64();
 
-  bool is64Bit = isPPC64 && VT == LLT::scalar(64);
-  if (!is64Bit && VT != LLT::scalar(32))
+  bool Is64Bit = Subtarget.isPPC64() && VT == LLT::scalar(64);
+  if (!Is64Bit && VT != LLT::scalar(32))
     report_fatal_error("Invalid register global variable type");
 
   Register Reg = MatchRegisterName(RegName);
@@ -17335,7 +17334,11 @@ Register PPCTargetLowering::getRegisterByName(const char* RegName, LLT VT,
     report_fatal_error(Twine("Invalid global name register \""
                               + StringRef(RegName)  + "\"."));
 
-  if (!Subtarget.getRegisterInfo()->getReservedRegs(MF).test(Reg))
+  // Convert GPR to GP8R register for 64bit.
+  if (Is64Bit && StringRef(RegName).starts_with_insensitive("r"))
+    Reg = Reg.id() - PPC::R0 + PPC::X0;
+
+  if (Subtarget.getRegisterInfo()->getReservedRegs(MF).test(Reg))
     report_fatal_error(Twine("Trying to obtain non-reservable register \"" +
                              StringRef(RegName) + "\"."));
   return Reg;
