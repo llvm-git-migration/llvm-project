@@ -1292,6 +1292,8 @@ clang-format
 - Adds support for bash globstar in ``.clang-format-ignore``.
 - Adds ``WrapNamespaceBodyWithEmptyLines`` option.
 - Adds the ``IndentExportBlock`` option.
+- Adds ``BinPackLongBracedLists`` option to override bin packing options in
+  long (20 item or more) braced list initializer lists.
 
 libclang
 --------
