@@ -86,29 +86,33 @@ extern "C" {
 CppTypeFor<TypeCategory::Integer, 1> RTDEF(IAll1)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 1>(x, source, line, dim, mask,
-      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL");
+      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 2> RTDEF(IAll2)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 2>(x, source, line, dim, mask,
-      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL");
+      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 4> RTDEF(IAll4)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 4>(x, source, line, dim, mask,
-      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL");
+      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IALL",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 8> RTDEF(IAll8)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 8>(x, source, line, dim, mask,
-      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x}, "IALL");
+      IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x}, "IALL",
+      /*allowUnsignedForInteger=*/true);
 }
 #ifdef __SIZEOF_INT128__
 CppTypeFor<TypeCategory::Integer, 16> RTDEF(IAll16)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 16>(x, source, line, dim,
       mask, IntegerAndAccumulator<CppTypeFor<TypeCategory::Integer, 16>>{x},
-      "IALL");
+      "IALL", /*allowUnsignedForInteger=*/true);
 }
 #endif
 void RTDEF(IAllDim)(Descriptor &result, const Descriptor &x, int dim,
@@ -124,29 +128,33 @@ void RTDEF(IAllDim)(Descriptor &result, const Descriptor &x, int dim,
 CppTypeFor<TypeCategory::Integer, 1> RTDEF(IAny1)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 1>(x, source, line, dim, mask,
-      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY");
+      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 2> RTDEF(IAny2)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 2>(x, source, line, dim, mask,
-      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY");
+      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 4> RTDEF(IAny4)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 4>(x, source, line, dim, mask,
-      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY");
+      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IANY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 8> RTDEF(IAny8)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 8>(x, source, line, dim, mask,
-      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x}, "IANY");
+      IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x}, "IANY",
+      /*allowUnsignedForInteger=*/true);
 }
 #ifdef __SIZEOF_INT128__
 CppTypeFor<TypeCategory::Integer, 16> RTDEF(IAny16)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 16>(x, source, line, dim,
       mask, IntegerOrAccumulator<CppTypeFor<TypeCategory::Integer, 16>>{x},
-      "IANY");
+      "IANY", /*allowUnsignedForInteger=*/true);
 }
 #endif
 void RTDEF(IAnyDim)(Descriptor &result, const Descriptor &x, int dim,
@@ -162,33 +170,33 @@ void RTDEF(IAnyDim)(Descriptor &result, const Descriptor &x, int dim,
 CppTypeFor<TypeCategory::Integer, 1> RTDEF(IParity1)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 1>(x, source, line, dim, mask,
-      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x},
-      "IPARITY");
+      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IPARITY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 2> RTDEF(IParity2)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 2>(x, source, line, dim, mask,
-      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x},
-      "IPARITY");
+      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IPARITY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 4> RTDEF(IParity4)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 4>(x, source, line, dim, mask,
-      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x},
-      "IPARITY");
+      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 4>>{x}, "IPARITY",
+      /*allowUnsignedForInteger=*/true);
 }
 CppTypeFor<TypeCategory::Integer, 8> RTDEF(IParity8)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 8>(x, source, line, dim, mask,
-      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x},
-      "IPARITY");
+      IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 8>>{x}, "IPARITY",
+      /*allowUnsignedForInteger=*/true);
 }
 #ifdef __SIZEOF_INT128__
 CppTypeFor<TypeCategory::Integer, 16> RTDEF(IParity16)(const Descriptor &x,
     const char *source, int line, int dim, const Descriptor *mask) {
   return GetTotalReduction<TypeCategory::Integer, 16>(x, source, line, dim,
       mask, IntegerXorAccumulator<CppTypeFor<TypeCategory::Integer, 16>>{x},
-      "IPARITY");
+      "IPARITY", /*allowUnsignedForInteger=*/true);
 }
 #endif
 void RTDEF(IParityDim)(Descriptor &result, const Descriptor &x, int dim,
