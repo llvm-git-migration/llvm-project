@@ -962,17 +962,21 @@ void VPWidenCallRecipe::print(raw_ostream &O, const Twine &Indent,
 void VPWidenIntrinsicRecipe::execute(VPTransformState &State) {
   assert(State.VF.isVector() && "not widening");
   State.setDebugLocFrom(getDebugLoc());
-
+  Intrinsic::ID FuncID =
+      VPIntrinsic::isVPIntrinsic(VectorIntrinsicID)
+          ? VPIntrinsic::getFunctionalIntrinsicIDForVP(VectorIntrinsicID)
+                .value()
+          : VectorIntrinsicID;
   SmallVector<Type *, 2> TysForDecl;
   // Add return type if intrinsic is overloaded on it.
-  if (isVectorIntrinsicWithOverloadTypeAtArg(VectorIntrinsicID, -1))
+  if (isVectorIntrinsicWithOverloadTypeAtArg(FuncID, -1))
     TysForDecl.push_back(VectorType::get(getResultType(), State.VF));
   SmallVector<Value *, 4> Args;
-  for (const auto &I : enumerate(operands())) {
+  for (const auto &I : enumerate(arg_operands())) {
     // Some intrinsics have a scalar argument - don't replace it with a
     // vector.
     Value *Arg;
-    if (isVectorIntrinsicWithScalarOpAtArg(VectorIntrinsicID, I.index()))
+    if (isVectorIntrinsicWithScalarOpAtArg(FuncID, I.index()))
       Arg = State.get(I.value(), VPLane(0));
     else
       Arg = State.get(I.value(), onlyFirstLaneUsed(I.value()));
@@ -981,18 +985,34 @@ void VPWidenIntrinsicRecipe::execute(VPTransformState &State) {
     Args.push_back(Arg);
   }
 
-  // Use vector version of the intrinsic.
-  Module *M = State.Builder.GetInsertBlock()->getModule();
-  Function *VectorF =
-      Intrinsic::getOrInsertDeclaration(M, VectorIntrinsicID, TysForDecl);
-  assert(VectorF && "Can't retrieve vector intrinsic.");
-
+  CallInst *V = nullptr;
   auto *CI = cast_or_null<CallInst>(getUnderlyingValue());
   SmallVector<OperandBundleDef, 1> OpBundles;
   if (CI)
     CI->getOperandBundlesAsDefs(OpBundles);
 
-  CallInst *V = State.Builder.CreateCall(VectorF, Args, OpBundles);
+  if (VPIntrinsic::isVPIntrinsic(VectorIntrinsicID)) {
+    // Use vector version of the vector predicate Intrinsic
+    IRBuilderBase &BuilderIR = State.Builder;
+    VectorBuilder VBuilder(BuilderIR);
+    Value *Mask = BuilderIR.CreateVectorSplat(State.VF, BuilderIR.getTrue());
+    // VPValue EVL = getOperand(getNumOperands() - 1);
+    VBuilder.setMask(Mask).setEVL(
+        State.get(getOperand(getNumOperands() - 1), /*NeedsScalar=*/true));
+    auto *TyReturn = VectorType::get(getResultType(), State.VF);
+    Value *VPInst = VBuilder.createSimpleIntrinsic(VectorIntrinsicID, TyReturn,
+                                                   Args, "vp.call");
+    if (VPInst) {
+      V = cast<CallInst>(VPInst);
+    }
+  } else {
+    // Use vector version of the intrinsic.
+    Module *M = State.Builder.GetInsertBlock()->getModule();
+    Function *VectorF =
+        Intrinsic::getOrInsertDeclaration(M, VectorIntrinsicID, TysForDecl);
+    assert(VectorF && "Can't retrieve vector intrinsic.");
+    V = State.Builder.CreateCall(VectorF, Args, OpBundles);
+  }
 
   setFlags(V);
 
@@ -1011,7 +1031,7 @@ InstructionCost VPWidenIntrinsicRecipe::computeCost(ElementCount VF,
   // clear Arguments.
   // TODO: Rework TTI interface to be independent of concrete IR values.
   SmallVector<const Value *> Arguments;
-  for (const auto &[Idx, Op] : enumerate(operands())) {
+  for (const auto &[Idx, Op] : enumerate(arg_operands())) {
     auto *V = Op->getUnderlyingValue();
     if (!V) {
       if (auto *UI = dyn_cast_or_null<CallBase>(getUnderlyingValue())) {
@@ -1040,6 +1060,14 @@ InstructionCost VPWidenIntrinsicRecipe::computeCost(ElementCount VF,
 
 StringRef VPWidenIntrinsicRecipe::getIntrinsicName() const {
   return Intrinsic::getBaseName(VectorIntrinsicID);
+}
+
+bool VPWidenIntrinsicRecipe::onlyFirstLaneUsed(const VPValue *Op) const {
+  assert(is_contained(operands(), Op) && "Op must be an operand of the recipe");
+  // Vector predication intrinsics only demand the the first lane the last
+  // operand (the EVL operand).
+  return VPIntrinsic::isVPIntrinsic(VectorIntrinsicID) &&
+         Op == getOperand(getNumOperands() - 1);
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)

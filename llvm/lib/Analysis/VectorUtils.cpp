@@ -169,6 +169,13 @@ Intrinsic::ID llvm::getVectorIntrinsicIDForCall(const CallInst *CI,
   return Intrinsic::not_intrinsic;
 }
 
+Intrinsic::ID llvm::getVPIntrinsicIDForCall(const CallInst *CI,
+                                            const TargetLibraryInfo *TLI) {
+  Intrinsic::ID ID = getIntrinsicForCallSite(*CI, TLI);
+
+  return VPIntrinsic::getForIntrinsic(ID);
+}
+
 /// Given a vector and an element number, see if the scalar value is
 /// already around as a register, for example if it were inserted then extracted
 /// from the vector.
