@@ -400,6 +400,69 @@ constexpr TypeBuilderFunc getModel<bool &>() {
     return fir::ReferenceType::get(f(context));
   };
 }
+template <>
+constexpr TypeBuilderFunc getModel<unsigned short>() {
+  return getModel<short>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<unsigned char *>() {
+  return getModel<char *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const unsigned char *>() {
+  return getModel<char *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<unsigned short *>() {
+  return getModel<short *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const unsigned short *>() {
+  return getModel<short *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<unsigned *>() {
+  return getModel<int *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const unsigned *>() {
+  return getModel<int *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<unsigned long *>() {
+  return getModel<long *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const unsigned long *>() {
+  return getModel<long *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<unsigned long long *>() {
+  return getModel<long long *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const unsigned long long *>() {
+  return getModel<long long *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<Fortran::common::uint128_t>() {
+  return getModel<Fortran::common::int128_t>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<Fortran::common::int128_t *>() {
+  return [](mlir::MLIRContext *context) -> mlir::Type {
+    TypeBuilderFunc f{getModel<Fortran::common::int128_t>()};
+    return fir::ReferenceType::get(f(context));
+  };
+}
+template <>
+constexpr TypeBuilderFunc getModel<Fortran::common::uint128_t *>() {
+  return getModel<Fortran::common::int128_t *>();
+}
+template <>
+constexpr TypeBuilderFunc getModel<const Fortran::common::uint128_t *>() {
+  return getModel<Fortran::common::int128_t *>();
+}
 
 // getModel<std::complex<T>> are not implemented on purpose.
 // Prefer passing/returning the complex by reference in the runtime to
@@ -511,6 +574,17 @@ REDUCTION_REF_OPERATION_MODEL(std::int64_t)
 REDUCTION_VALUE_OPERATION_MODEL(std::int64_t)
 REDUCTION_REF_OPERATION_MODEL(Fortran::common::int128_t)
 REDUCTION_VALUE_OPERATION_MODEL(Fortran::common::int128_t)
+
+REDUCTION_REF_OPERATION_MODEL(std::uint8_t)
+REDUCTION_VALUE_OPERATION_MODEL(std::uint8_t)
+REDUCTION_REF_OPERATION_MODEL(std::uint16_t)
+REDUCTION_VALUE_OPERATION_MODEL(std::uint16_t)
+REDUCTION_REF_OPERATION_MODEL(std::uint32_t)
+REDUCTION_VALUE_OPERATION_MODEL(std::uint32_t)
+REDUCTION_REF_OPERATION_MODEL(std::uint64_t)
+REDUCTION_VALUE_OPERATION_MODEL(std::uint64_t)
+REDUCTION_REF_OPERATION_MODEL(Fortran::common::uint128_t)
+REDUCTION_VALUE_OPERATION_MODEL(Fortran::common::uint128_t)
 
 REDUCTION_REF_OPERATION_MODEL(float)
 REDUCTION_VALUE_OPERATION_MODEL(float)
