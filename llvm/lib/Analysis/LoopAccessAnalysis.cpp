@@ -1412,7 +1412,7 @@ static bool isNoWrapAddRec(Value *Ptr, const SCEVAddRecExpr *AR,
   // Look through the potentially overflowing instruction to try to prove
   // non-wrapping for the *specific* value of Ptr.
 
-  // The arithmetic implied by an inbounds GEP can't overflow.
+  // The arithmetic implied by an nusw GEP can't overflow.
   const auto *GEP = dyn_cast<GetElementPtrInst>(Ptr);
   if (!GEP || !GEP->hasNoUnsignedSignedWrap())
     return false;
@@ -1516,7 +1516,7 @@ llvm::getPtrStride(PredicatedScalarEvolution &PSE, Type *AccessTy, Value *Ptr,
   if (isNoWrapAddRec(Ptr, AR, PSE, Lp))
     return Stride;
 
-  // An inbounds getelementptr that is a AddRec with a unit stride
+  // An nusw getelementptr that is a AddRec with a unit stride
   // cannot wrap per definition.  If it did, the result would be poison
   // and any memory access dependent on it would be immediate UB
   // when executed.
