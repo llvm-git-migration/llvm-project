@@ -76,7 +76,7 @@ define void @gep_3d_test ()  {
 define void @gep_4d_test ()  {
     ; CHECK: [[a:%.*]] = alloca [16 x i32], align 4
     ; CHECK-COUNT-16: getelementptr inbounds [16 x i32], ptr [[a]], i32 {{[0-9]|1[0-5]}}
-    ; CHECK-NOT: getelementptr inbounds [2x[2 x[2 x [2 x i32]]]],, ptr %1, i32 0, i32 0, i32 {{[0-1]}}
+    ; CHECK-NOT: getelementptr inbounds [2x[2 x[2 x [2 x i32]]]], ptr %1, i32 0, i32 0, i32 {{[0-1]}}
     ; CHECK-NOT: getelementptr inbounds [2 x[2 x [2 x i32]]], ptr {{.*}}, i32 0, i32 0, i32 {{[0-1]}}
     ; CHECK-NOT: getelementptr inbounds [2 x [2 x i32]], ptr {{.*}}, i32 0, i32 0, i32 {{[0-1]}}
     ; CHECK-NOT: getelementptr inbounds [2 x i32], [2 x i32]* {{.*}}, i32 0, i32 {{[0-1]}}
@@ -114,26 +114,36 @@ define void @gep_4d_test ()  {
     ret void
 }
 
-; CHECK-LABEL: bitcast_2d_test
-define void @bitcast_2d_test ()  {
-    ; CHECK: alloca [9 x i32], align 4
-    %1 = alloca [3 x [3 x i32]], align 4
-    bitcast [3 x [3 x i32]]* %1 to i8*
-    ret void
+
+@a = internal global [2 x [3 x [4 x i32]]] [[3 x [4 x i32]] [[4 x i32] [i32 0, i32 1, i32 2, i32 3], 
+                                                             [4 x i32] [i32 4, i32 5, i32 6, i32 7], 
+                                                             [4 x i32] [i32 8, i32 9, i32 10, i32 11]], 
+                                            [3 x [4 x i32]] [[4 x i32] [i32 12, i32 13, i32 14, i32 15], 
+                                                             [4 x i32] [i32 16, i32 17, i32 18, i32 19], 
+                                                             [4 x i32] [i32 20, i32 21, i32 22, i32 23]]], align 4
+
+@b = internal global [2 x [3 x [4 x i32]]] zeroinitializer, align 16
+
+define void @global_gep_load() {
+  ; CHECK: load i32, ptr getelementptr inbounds ([24 x i32], ptr @a.1dim, i32 6), align 4
+  ; CHECK-NOT: getelementptr inbounds [2 x [3 x [4 x i32]]]{{.*}}
+  ; CHECK-NOT: getelementptr inbounds [3 x [4 x i32]]{{.*}}
+  ; CHECK-NOT: getelementptr inbounds [4 x i32]{{.*}}
+  %1 = getelementptr inbounds [2 x [3 x [4 x i32]]], [2 x [3 x [4 x i32]]]* @a, i32 0, i32 0
+  %2 = getelementptr inbounds [3 x [4 x i32]], [3 x [4 x i32]]* %1, i32 0, i32 1
+  %3 = getelementptr inbounds [4 x i32], [4 x i32]* %2, i32 0, i32 2
+  %4 = load i32, i32* %3, align 4
+  ret void
 }
 
-; CHECK-LABEL: bitcast_3d_test
-define void @bitcast_3d_test ()  {
-    ; CHECK: alloca [8 x i32], align 4
-    %1 = alloca [2 x[2 x [2 x i32]]], align 4
-    bitcast [2 x[2 x [2 x i32]]]* %1 to i8*
-    ret void
-}
-
-; CHECK-LABEL: bitcast_4d_test
-define void @bitcast_4d_test ()  {
-    ; CHECK: alloca [16 x i32], align 4
-    %1 = alloca [2x[2 x[2 x [2 x i32]]]], align 4
-    bitcast [2x[2 x[2 x [2 x i32]]]]* %1 to i8*
-    ret void
+define void @global_gep_store() {
+  ; CHECK: store i32 1, ptr getelementptr inbounds ([24 x i32], ptr @b.1dim, i32 13), align 4
+  ; CHECK-NOT: getelementptr inbounds [2 x [3 x [4 x i32]]]{{.*}}
+  ; CHECK-NOT: getelementptr inbounds [3 x [4 x i32]]{{.*}}
+  ; CHECK-NOT: getelementptr inbounds [4 x i32]{{.*}}
+  %1 = getelementptr inbounds [2 x [3 x [4 x i32]]], [2 x [3 x [4 x i32]]]* @b, i32 0, i32 1
+  %2 = getelementptr inbounds [3 x [4 x i32]], [3 x [4 x i32]]* %1, i32 0, i32 0
+  %3 = getelementptr inbounds [4 x i32], [4 x i32]* %2, i32 0, i32 1
+  store i32 1, i32* %3, align 4
+  ret void
 }
