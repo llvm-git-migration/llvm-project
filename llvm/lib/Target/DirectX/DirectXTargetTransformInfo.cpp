@@ -28,6 +28,8 @@ bool DirectXTTIImpl::isTargetIntrinsicTriviallyScalarizable(
   switch (ID) {
   case Intrinsic::dx_frac:
   case Intrinsic::dx_rsqrt:
+  case Intrinsic::dx_wave_active_sum:
+  case Intrinsic::dx_wave_active_usum:
     return true;
   default:
     return false;

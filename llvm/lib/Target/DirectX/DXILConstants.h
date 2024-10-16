@@ -30,6 +30,18 @@ enum class OpParamType : unsigned {
 #include "DXILOperation.inc"
 };
 
+enum class SignedOpKind : unsigned {
+  Signed = 0,
+  Unsigned = 1,
+};
+
+enum class WaveOpKind : unsigned {
+  Sum = 0,
+  Product = 1,
+  Min = 2,
+  Max = 3,
+};
+
 } // namespace dxil
 } // namespace llvm
 

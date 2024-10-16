@@ -40,6 +40,18 @@ static bool isVectorArgExpansion(Function &F) {
   return false;
 }
 
+template <WaveOpKind OpVal, SignedOpKind SOpVal>
+static SmallVector<Value *> getWaveActiveOpArgs(Function &F,
+                                                IRBuilder<> &Builder) {
+  SmallVector<Value *, 0> Args;
+  IntegerType *IntTy = IntegerType::get(Builder.getContext(), 8);
+  Constant *Op = ConstantInt::get(IntTy, (unsigned)OpVal);
+  Constant *SOp = ConstantInt::get(IntTy, (unsigned)SOpVal);
+  Args.push_back(Op);
+  Args.push_back(SOp);
+  return Args;
+}
+
 static SmallVector<Value *> populateOperands(Value *Arg, IRBuilder<> &Builder) {
   SmallVector<Value *> ExtractedElements;
   auto *VecArg = dyn_cast<FixedVectorType>(Arg->getType());
@@ -495,6 +507,18 @@ public:
         break;
       case Intrinsic::dx_typedBufferStore:
         HasErrors |= lowerTypedBufferStore(F);
+        break;
+      case Intrinsic::dx_wave_active_sum:
+        HasErrors |= replaceFunctionWithOp(
+            F, dxil::OpCode::WaveActiveOp,
+            getWaveActiveOpArgs<WaveOpKind::Sum, SignedOpKind::Signed>(
+                F, OpBuilder.getIRB()));
+        break;
+      case Intrinsic::dx_wave_active_usum:
+        HasErrors |= replaceFunctionWithOp(
+            F, dxil::OpCode::WaveActiveOp,
+            getWaveActiveOpArgs<WaveOpKind::Sum, SignedOpKind::Unsigned>(
+                F, OpBuilder.getIRB()));
         break;
       }
       Updated = true;
