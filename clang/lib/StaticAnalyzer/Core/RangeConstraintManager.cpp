@@ -1939,10 +1939,7 @@ private:
   RangeSet::Factory F;
 
   RangeSet getRange(ProgramStateRef State, SymbolRef Sym);
-  RangeSet getRange(ProgramStateRef State, EquivalenceClass Class);
   ProgramStateRef setRange(ProgramStateRef State, SymbolRef Sym,
-                           RangeSet Range);
-  ProgramStateRef setRange(ProgramStateRef State, EquivalenceClass Class,
                            RangeSet Range);
 
   RangeSet getSymLTRange(ProgramStateRef St, SymbolRef Sym,
@@ -2866,12 +2863,14 @@ ConditionTruthVal RangeConstraintManager::checkNull(ProgramStateRef State,
 
 const llvm::APSInt *RangeConstraintManager::getSymVal(ProgramStateRef St,
                                                       SymbolRef Sym) const {
-  const RangeSet *T = getConstraint(St, Sym);
-  return T ? T->getConcreteValue() : nullptr;
+  auto &MutableSelf = const_cast<RangeConstraintManager &>(*this);
+  return MutableSelf.getRange(St, Sym).getConcreteValue();
 }
 
 const llvm::APSInt *RangeConstraintManager::getSymMinVal(ProgramStateRef St,
                                                          SymbolRef Sym) const {
+  // TODO: Use `getRange()` like in `getSymVal()`, but that would make some
+  // of the reports of `BitwiseShiftChecker` look awkward.
   const RangeSet *T = getConstraint(St, Sym);
   if (!T || T->isEmpty())
     return nullptr;
@@ -2880,6 +2879,8 @@ const llvm::APSInt *RangeConstraintManager::getSymMinVal(ProgramStateRef St,
 
 const llvm::APSInt *RangeConstraintManager::getSymMaxVal(ProgramStateRef St,
                                                          SymbolRef Sym) const {
+  // TODO: Use `getRange()` like in `getSymVal()`, but that would make some
+  // of the reports of `BitwiseShiftChecker` look awkward.
   const RangeSet *T = getConstraint(St, Sym);
   if (!T || T->isEmpty())
     return nullptr;
