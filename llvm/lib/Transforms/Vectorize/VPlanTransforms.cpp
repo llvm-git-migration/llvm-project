@@ -1351,7 +1351,8 @@ void VPlanTransforms::addActiveLaneMask(
 }
 
 /// Replace recipes with their EVL variants.
-static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
+static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL,
+                                         const TargetLibraryInfo &TLI) {
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
   VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType());
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
@@ -1381,6 +1382,18 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
                   return nullptr;
                 return new VPWidenEVLRecipe(*W, EVL);
               })
+              .Case<VPWidenIntrinsicRecipe>(
+                  [&](VPWidenIntrinsicRecipe *CInst) -> VPRecipeBase * {
+                    auto *CI = cast<CallInst>(CInst->getUnderlyingInstr());
+                    // VPValue *NewMask = GetNewMask(CInst->getMask());
+                    SmallVector<VPValue *> Ops(CInst->operands());
+                    Ops.push_back(&EVL);
+                    Intrinsic::ID VPID = getVPIntrinsicIDForCall(CI, &TLI);
+                    if (VPID == Intrinsic::not_intrinsic)
+                      return nullptr;
+                    return new VPWidenIntrinsicRecipe(
+                        *CI, VPID, Ops, CI->getType(), CI->getDebugLoc());
+                  })
               .Case<VPReductionRecipe>([&](VPReductionRecipe *Red) {
                 VPValue *NewMask = GetNewMask(Red->getCondOp());
                 return new VPReductionEVLRecipe(*Red, EVL, NewMask);
@@ -1439,7 +1452,8 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
 /// %NextEVLIV = add IVSize (cast i32 %VPEVVL to IVSize), %EVLPhi
 /// ...
 ///
-bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
+bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan,
+                                                 const TargetLibraryInfo &TLI) {
   VPBasicBlock *Header = Plan.getVectorLoopRegion()->getEntryBasicBlock();
   // The transform updates all users of inductions to work based on EVL, instead
   // of the VF directly. At the moment, widened inductions cannot be updated, so
@@ -1491,7 +1505,7 @@ bool VPlanTransforms::tryAddExplicitVectorLength(VPlan &Plan) {
   NextEVLIV->insertBefore(CanonicalIVIncrement);
   EVLPhi->addOperand(NextEVLIV);
 
-  transformRecipestoEVLRecipes(Plan, *VPEVL);
+  transformRecipestoEVLRecipes(Plan, *VPEVL, TLI);
 
   // Replace all uses of VPCanonicalIVPHIRecipe by
   // VPEVLBasedIVPHIRecipe except for the canonical IV increment.
