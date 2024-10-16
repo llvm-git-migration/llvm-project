@@ -17338,7 +17338,7 @@ Register PPCTargetLowering::getRegisterByName(const char* RegName, LLT VT,
   if (Is64Bit && StringRef(RegName).starts_with_insensitive("r"))
     Reg = Reg.id() - PPC::R0 + PPC::X0;
 
-  if (Subtarget.getRegisterInfo()->getReservedRegs(MF).test(Reg))
+  if (!Subtarget.getRegisterInfo()->getReservedRegs(MF).test(Reg))
     report_fatal_error(Twine("Trying to obtain non-reservable register \"" +
                              StringRef(RegName) + "\"."));
   return Reg;
