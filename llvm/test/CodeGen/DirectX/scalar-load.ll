@@ -46,7 +46,7 @@ define <4 x i32> @load_vec_test() #0 {
 ; CHECK-LABEL: load_static_array_of_vec_test
 define <4 x i32> @load_static_array_of_vec_test(i32 %index) #0 {
   ; DATACHECK: getelementptr [3 x [4 x i32]], ptr @staticArrayOfVecData.scalarized, i32 0, i32 %index
-  ; CHECK: getelementptr [12 x i32], ptr @staticArrayOfVecData.scalarized.1dim, i32 0, i32 %index
+  ; CHECK: getelementptr [12 x i32], ptr @staticArrayOfVecData.scalarized.1dim, i32 %index
   ; CHECK-COUNT-4: load i32, ptr {{.*}}, align 4
   ; CHECK-NOT: load i32, ptr {{.*}}, align 4
   %3 = getelementptr inbounds [3 x <4 x i32>], [3 x <4 x i32>]* @staticArrayOfVecData, i32 0, i32 %index
