@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Scalar/InferAlignment.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Instructions.h"
@@ -21,6 +22,8 @@
 #include "llvm/Transforms/Utils/Local.h"
 
 using namespace llvm;
+
+DenseMap<Value *, Value *> ValueToBasePtr;
 
 static bool tryToImproveAlign(
     const DataLayout &DL, Instruction *I,
@@ -36,8 +39,29 @@ static bool tryToImproveAlign(
       return true;
     }
   }
+
   // TODO: Also handle memory intrinsics.
   return false;
+}
+
+static bool needEnforceAlignment(Value *PtrOp, Instruction *I, Align PrefAlign,
+                                 const DataLayout &DL) {
+  auto it = ValueToBasePtr.find(PtrOp);
+  if (it != ValueToBasePtr.end()) {
+    Value *V = it->second;
+    Align CurrentAlign;
+    if (auto Alloca = dyn_cast<AllocaInst>(V))
+      CurrentAlign = Alloca->getAlign();
+    if (auto GO = dyn_cast<GlobalObject>(V))
+      CurrentAlign = GO->getPointerAlignment(DL);
+
+    if (PrefAlign <= CurrentAlign) {
+      setLoadStoreAlignment(I, CurrentAlign);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool inferAlignment(Function &F, AssumptionCache &AC, DominatorTree &DT) {
@@ -50,9 +74,15 @@ bool inferAlignment(Function &F, AssumptionCache &AC, DominatorTree &DT) {
     for (Instruction &I : BB) {
       Changed |= tryToImproveAlign(
           DL, &I, [&](Value *PtrOp, Align OldAlign, Align PrefAlign) {
-            if (PrefAlign > OldAlign)
-              return std::max(OldAlign,
-                              tryEnforceAlignment(PtrOp, PrefAlign, DL));
+            if (needEnforceAlignment(PtrOp, &I, PrefAlign, DL) &&
+                PrefAlign > OldAlign) {
+              Align NewAlign = tryEnforceAlignment(PtrOp, PrefAlign, DL);
+              if (NewAlign > OldAlign) {
+                ValueToBasePtr[PtrOp] = PtrOp->stripPointerCasts();
+                return NewAlign;
+              }
+            }
+
             return OldAlign;
           });
     }
