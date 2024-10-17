@@ -415,7 +415,7 @@ public:
     constexpr move_iterator& operator+=(difference_type n);
     constexpr move_iterator operator-(difference_type n) const;
     constexpr move_iterator& operator-=(difference_type n);
-    constexpr reference operator[](difference_type n) const; // Return type unspecified until C++20
+    constexpr reference operator[](difference_type n) const _LIBCPP_LIFETIMEBOUND; // Return type unspecified until C++20
 
     template<sentinel_for<Iterator> S>
       friend constexpr bool

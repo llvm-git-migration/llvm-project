@@ -454,7 +454,7 @@ public:
     constexpr
     add_lvalue_reference<T>::type operator*() const noexcept(see below);              // constexpr since C++23
     constexpr pointer operator->() const noexcept;                                    // constexpr since C++23
-    constexpr pointer get() const noexcept;                                           // constexpr since C++23
+    constexpr pointer get() const noexcept _LIBCPP_LIFETIMEBOUND;                                           // constexpr since C++23
     constexpr deleter_type& get_deleter() noexcept;                                   // constexpr since C++23
     constexpr const deleter_type& get_deleter() const noexcept;                       // constexpr since C++23
     constexpr explicit operator bool() const noexcept;                                // constexpr since C++23
@@ -493,8 +493,8 @@ public:
     constexpr unique_ptr& operator=(nullptr_t) noexcept;             // constexpr since C++23
 
     // observers
-    constexpr T& operator[](size_t i) const;                    // constexpr since C++23
-    constexpr pointer get() const noexcept;                     // constexpr since C++23
+    constexpr T& operator[](size_t i) const _LIBCPP_LIFETIMEBOUND;                    // constexpr since C++23
+    constexpr pointer get() const noexcept _LIBCPP_LIFETIMEBOUND;                     // constexpr since C++23
     constexpr deleter_type& get_deleter() noexcept;             // constexpr since C++23
     constexpr const deleter_type& get_deleter() const noexcept; // constexpr since C++23
     constexpr explicit operator bool() const noexcept;          // constexpr since C++23

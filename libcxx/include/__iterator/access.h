@@ -69,22 +69,22 @@ _LIBCPP_HIDE_FROM_ABI constexpr auto cend(const _Cp& __c) noexcept(noexcept(std:
 #else // defined(_LIBCPP_CXX03_LANG)
 
 template <class _Cp>
-_LIBCPP_HIDE_FROM_ABI typename _Cp::iterator begin(_Cp& __c) {
+_LIBCPP_HIDE_FROM_ABI typename _Cp::iterator begin(_Cp& __c) _LIBCPP_LIFETIMEBOUND {
   return __c.begin();
 }
 
 template <class _Cp>
-_LIBCPP_HIDE_FROM_ABI typename _Cp::const_iterator begin(const _Cp& __c) {
+_LIBCPP_HIDE_FROM_ABI typename _Cp::const_iterator begin(const _Cp& __c) _LIBCPP_LIFETIMEBOUND {
   return __c.begin();
 }
 
 template <class _Cp>
-_LIBCPP_HIDE_FROM_ABI typename _Cp::iterator end(_Cp& __c) {
+_LIBCPP_HIDE_FROM_ABI typename _Cp::iterator end(_Cp& __c) _LIBCPP_LIFETIMEBOUND {
   return __c.end();
 }
 
 template <class _Cp>
-_LIBCPP_HIDE_FROM_ABI typename _Cp::const_iterator end(const _Cp& __c) {
+_LIBCPP_HIDE_FROM_ABI typename _Cp::const_iterator end(const _Cp& __c) _LIBCPP_LIFETIMEBOUND {
   return __c.end();
 }
 

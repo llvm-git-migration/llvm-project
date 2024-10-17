@@ -32,7 +32,7 @@ public:
     template <class W2> constexpr observer_ptr(observer_ptr<W2>) noexcept;
 
     // observers
-    constexpr pointer get() const noexcept;
+    constexpr pointer get() const noexcept _LIBCPP_LIFETIMEBOUND;
     constexpr reference operator*() const;
     constexpr pointer operator->() const noexcept;
     constexpr explicit operator bool() const noexcept;

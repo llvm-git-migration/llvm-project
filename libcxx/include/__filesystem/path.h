@@ -864,8 +864,8 @@ public:
   class _LIBCPP_EXPORTED_FROM_ABI iterator;
   typedef iterator const_iterator;
 
-  iterator begin() const;
-  iterator end() const;
+  iterator begin() const _LIBCPP_LIFETIMEBOUND;
+  iterator end() const _LIBCPP_LIFETIMEBOUND;
 
 #  if !defined(_LIBCPP_HAS_NO_LOCALIZATION)
   template <

@@ -703,15 +703,15 @@ public:
 
   class const_iterator;
 
-  const tzdb& front() const noexcept;
+  const tzdb& front() const noexcept _LIBCPP_LIFETIMEBOUND;
 
-  const_iterator erase_after(const_iterator p);
+  const_iterator erase_after(const_iterator p) _LIBCPP_LIFETIMEBOUND;
 
-  const_iterator begin() const noexcept;
-  const_iterator end()   const noexcept;
+  const_iterator begin() const noexcept _LIBCPP_LIFETIMEBOUND;
+  const_iterator end()   const noexcept _LIBCPP_LIFETIMEBOUND;
 
-  const_iterator cbegin() const noexcept;
-  const_iterator cend()   const noexcept;
+  const_iterator cbegin() const noexcept _LIBCPP_LIFETIMEBOUND;
+  const_iterator cend()   const noexcept _LIBCPP_LIFETIMEBOUND;
 };
 
 // [time.zone.db.access], time zone database access

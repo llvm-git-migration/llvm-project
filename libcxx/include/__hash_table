@@ -891,10 +891,10 @@ public:
 
   _LIBCPP_HIDE_FROM_ABI size_type bucket_count() const _NOEXCEPT { return __bucket_list_.get_deleter().size(); }
 
-  _LIBCPP_HIDE_FROM_ABI iterator begin() _NOEXCEPT;
-  _LIBCPP_HIDE_FROM_ABI iterator end() _NOEXCEPT;
-  _LIBCPP_HIDE_FROM_ABI const_iterator begin() const _NOEXCEPT;
-  _LIBCPP_HIDE_FROM_ABI const_iterator end() const _NOEXCEPT;
+  _LIBCPP_HIDE_FROM_ABI iterator begin() _NOEXCEPT _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI iterator end() _NOEXCEPT _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI const_iterator begin() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI const_iterator end() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND;
 
   template <class _Key>
   _LIBCPP_HIDE_FROM_ABI size_type bucket(const _Key& __k) const {
@@ -904,15 +904,15 @@ public:
   }
 
   template <class _Key>
-  _LIBCPP_HIDE_FROM_ABI iterator find(const _Key& __x);
+  _LIBCPP_HIDE_FROM_ABI iterator find(const _Key& __x) _LIBCPP_LIFETIMEBOUND;
   template <class _Key>
-  _LIBCPP_HIDE_FROM_ABI const_iterator find(const _Key& __x) const;
+  _LIBCPP_HIDE_FROM_ABI const_iterator find(const _Key& __x) const _LIBCPP_LIFETIMEBOUND;
 
   typedef __hash_node_destructor<__node_allocator> _Dp;
   typedef unique_ptr<__node, _Dp> __node_holder;
 
-  _LIBCPP_HIDE_FROM_ABI iterator erase(const_iterator __p);
-  _LIBCPP_HIDE_FROM_ABI iterator erase(const_iterator __first, const_iterator __last);
+  _LIBCPP_HIDE_FROM_ABI iterator erase(const_iterator __p) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI iterator erase(const_iterator __first, const_iterator __last) _LIBCPP_LIFETIMEBOUND;
   template <class _Key>
   _LIBCPP_HIDE_FROM_ABI size_type __erase_unique(const _Key& __k);
   template <class _Key>
@@ -958,25 +958,25 @@ public:
     max_load_factor() = std::max(__mlf, load_factor());
   }
 
-  _LIBCPP_HIDE_FROM_ABI local_iterator begin(size_type __n) {
+  _LIBCPP_HIDE_FROM_ABI local_iterator begin(size_type __n) _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(
         __n < bucket_count(), "unordered container::begin(n) called with n >= bucket_count()");
     return local_iterator(__bucket_list_[__n], __n, bucket_count());
   }
 
-  _LIBCPP_HIDE_FROM_ABI local_iterator end(size_type __n) {
+  _LIBCPP_HIDE_FROM_ABI local_iterator end(size_type __n) _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(
         __n < bucket_count(), "unordered container::end(n) called with n >= bucket_count()");
     return local_iterator(nullptr, __n, bucket_count());
   }
 
-  _LIBCPP_HIDE_FROM_ABI const_local_iterator cbegin(size_type __n) const {
+  _LIBCPP_HIDE_FROM_ABI const_local_iterator cbegin(size_type __n) const _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(
         __n < bucket_count(), "unordered container::cbegin(n) called with n >= bucket_count()");
     return const_local_iterator(__bucket_list_[__n], __n, bucket_count());
   }
 
-  _LIBCPP_HIDE_FROM_ABI const_local_iterator cend(size_type __n) const {
+  _LIBCPP_HIDE_FROM_ABI const_local_iterator cend(size_type __n) const _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(
         __n < bucket_count(), "unordered container::cend(n) called with n >= bucket_count()");
     return const_local_iterator(nullptr, __n, bucket_count());

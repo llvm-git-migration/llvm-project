@@ -62,7 +62,7 @@ struct char_traits
 
     static int              compare(const char_type* s1, const char_type* s2, size_t n);
     static size_t           length(const char_type* s);
-    static const char_type* find(const char_type* s, size_t n, const char_type& a);
+    static const char_type* find(const char_type* s, size_t n, const char_type& a) _LIBCPP_LIFETIMEBOUND;
     static char_type*       move(char_type* s1, const char_type* s2, size_t n);
     static char_type*       copy(char_type* s1, const char_type* s2, size_t n);
     static char_type*       assign(char_type* s, size_t n, char_type a);
@@ -148,18 +148,18 @@ public:
     basic_string& operator=(value_type c);                                                      // constexpr since C++20
     basic_string& operator=(initializer_list<value_type>);                                      // constexpr since C++20
 
-    iterator       begin() noexcept;                                                            // constexpr since C++20
-    const_iterator begin() const noexcept;                                                      // constexpr since C++20
-    iterator       end() noexcept;                                                              // constexpr since C++20
-    const_iterator end() const noexcept;                                                        // constexpr since C++20
+    iterator       begin() noexcept _LIBCPP_LIFETIMEBOUND;                                                            // constexpr since C++20
+    const_iterator begin() const noexcept _LIBCPP_LIFETIMEBOUND;                                                      // constexpr since C++20
+    iterator       end() noexcept _LIBCPP_LIFETIMEBOUND;                                                              // constexpr since C++20
+    const_iterator end() const noexcept _LIBCPP_LIFETIMEBOUND;                                                        // constexpr since C++20
 
     reverse_iterator       rbegin() noexcept;                                                   // constexpr since C++20
     const_reverse_iterator rbegin() const noexcept;                                             // constexpr since C++20
     reverse_iterator       rend() noexcept;                                                     // constexpr since C++20
     const_reverse_iterator rend() const noexcept;                                               // constexpr since C++20
 
-    const_iterator         cbegin() const noexcept;                                             // constexpr since C++20
-    const_iterator         cend() const noexcept;                                               // constexpr since C++20
+    const_iterator         cbegin() const noexcept _LIBCPP_LIFETIMEBOUND;                                             // constexpr since C++20
+    const_iterator         cend() const noexcept _LIBCPP_LIFETIMEBOUND;                                               // constexpr since C++20
     const_reverse_iterator crbegin() const noexcept;                                            // constexpr since C++20
     const_reverse_iterator crend() const noexcept;                                              // constexpr since C++20
 
@@ -180,8 +180,8 @@ public:
     void clear() noexcept;                                                                      // constexpr since C++20
     bool empty() const noexcept;                                                                // constexpr since C++20
 
-    const_reference operator[](size_type pos) const;                                            // constexpr since C++20
-    reference       operator[](size_type pos);                                                  // constexpr since C++20
+    const_reference operator[](size_type pos) const _LIBCPP_LIFETIMEBOUND;                                            // constexpr since C++20
+    reference       operator[](size_type pos) _LIBCPP_LIFETIMEBOUND;                                                  // constexpr since C++20
 
     const_reference at(size_type n) const;                                                      // constexpr since C++20
     reference       at(size_type n);                                                            // constexpr since C++20
@@ -210,10 +210,10 @@ public:
 
     void push_back(value_type c);                                                               // constexpr since C++20
     void pop_back();                                                                            // constexpr since C++20
-    reference       front();                                                                    // constexpr since C++20
-    const_reference front() const;                                                              // constexpr since C++20
-    reference       back();                                                                     // constexpr since C++20
-    const_reference back() const;                                                               // constexpr since C++20
+    reference       front() _LIBCPP_LIFETIMEBOUND;                                                                    // constexpr since C++20
+    const_reference front() const _LIBCPP_LIFETIMEBOUND;                                                              // constexpr since C++20
+    reference       back() _LIBCPP_LIFETIMEBOUND;                                                                     // constexpr since C++20
+    const_reference back() const _LIBCPP_LIFETIMEBOUND;                                                               // constexpr since C++20
 
     basic_string& assign(const basic_string& str);                                              // constexpr since C++20
     template <class T>
@@ -231,27 +231,27 @@ public:
       constexpr basic_string& assign_range(R&& rg);                                             // C++23
     basic_string& assign(initializer_list<value_type>);                                         // constexpr since C++20
 
-    basic_string& insert(size_type pos1, const basic_string& str);                              // constexpr since C++20
+    basic_string& insert(size_type pos1, const basic_string& str) _LIBCPP_LIFETIMEBOUND;                              // constexpr since C++20
     template <class T>
-        basic_string& insert(size_type pos1, const T& t);                                       // constexpr since C++20
+        basic_string& insert(size_type pos1, const T& t) _LIBCPP_LIFETIMEBOUND;                                       // constexpr since C++20
     basic_string& insert(size_type pos1, const basic_string& str,
-                         size_type pos2, size_type n);                                          // constexpr since C++20
+                         size_type pos2, size_type n) _LIBCPP_LIFETIMEBOUND;                                          // constexpr since C++20
     template <class T>
-        basic_string& insert(size_type pos1, const T& t, size_type pos2, size_type n);          // C++17, constexpr since C++20
-    basic_string& insert(size_type pos, const value_type* s, size_type n=npos);                 // C++14, constexpr since C++20
-    basic_string& insert(size_type pos, const value_type* s);                                   // constexpr since C++20
-    basic_string& insert(size_type pos, size_type n, value_type c);                             // constexpr since C++20
-    iterator      insert(const_iterator p, value_type c);                                       // constexpr since C++20
-    iterator      insert(const_iterator p, size_type n, value_type c);                          // constexpr since C++20
+        basic_string& insert(size_type pos1, const T& t, size_type pos2, size_type n) _LIBCPP_LIFETIMEBOUND;          // C++17, constexpr since C++20
+    basic_string& insert(size_type pos, const value_type* s, size_type n=npos) _LIBCPP_LIFETIMEBOUND;                 // C++14, constexpr since C++20
+    basic_string& insert(size_type pos, const value_type* s) _LIBCPP_LIFETIMEBOUND;                                   // constexpr since C++20
+    basic_string& insert(size_type pos, size_type n, value_type c) _LIBCPP_LIFETIMEBOUND;                             // constexpr since C++20
+    iterator      insert(const_iterator p, value_type c) _LIBCPP_LIFETIMEBOUND;                                       // constexpr since C++20
+    iterator      insert(const_iterator p, size_type n, value_type c) _LIBCPP_LIFETIMEBOUND;                          // constexpr since C++20
     template<class InputIterator>
-        iterator insert(const_iterator p, InputIterator first, InputIterator last);             // constexpr since C++20
+        iterator insert(const_iterator p, InputIterator first, InputIterator last) _LIBCPP_LIFETIMEBOUND;             // constexpr since C++20
     template<container-compatible-range<charT> R>
-      constexpr iterator insert_range(const_iterator p, R&& rg);                                // C++23
-    iterator      insert(const_iterator p, initializer_list<value_type>);                       // constexpr since C++20
+      constexpr iterator insert_range(const_iterator p, R&& rg) _LIBCPP_LIFETIMEBOUND;                                // C++23
+    iterator      insert(const_iterator p, initializer_list<value_type>) _LIBCPP_LIFETIMEBOUND;                       // constexpr since C++20
 
-    basic_string& erase(size_type pos = 0, size_type n = npos);                                 // constexpr since C++20
-    iterator      erase(const_iterator position);                                               // constexpr since C++20
-    iterator      erase(const_iterator first, const_iterator last);                             // constexpr since C++20
+    basic_string& erase(size_type pos = 0, size_type n = npos) _LIBCPP_LIFETIMEBOUND;                                 // constexpr since C++20
+    iterator      erase(const_iterator position) _LIBCPP_LIFETIMEBOUND;                                               // constexpr since C++20
+    iterator      erase(const_iterator first, const_iterator last) _LIBCPP_LIFETIMEBOUND;                             // constexpr since C++20
 
     basic_string& replace(size_type pos1, size_type n1, const basic_string& str);               // constexpr since C++20
     template <class T>
@@ -1216,7 +1216,7 @@ public:
       __alloc_traits::deallocate(__alloc_, __get_long_pointer(), __get_long_cap());
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 operator __self_view() const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 operator __self_view() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     return __self_view(typename __self_view::__assume_valid(), data(), size());
   }
 
@@ -1251,16 +1251,16 @@ public:
 #endif
   _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& operator=(value_type __c);
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator begin() _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator begin() _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     return __make_iterator(__get_pointer());
   }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator begin() const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator begin() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     return __make_const_iterator(__get_pointer());
   }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator end() _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator end() _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     return __make_iterator(__get_pointer() + size());
   }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator end() const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator end() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     return __make_const_iterator(__get_pointer() + size());
   }
 
@@ -1277,8 +1277,8 @@ public:
     return const_reverse_iterator(begin());
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator cbegin() const _NOEXCEPT { return begin(); }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator cend() const _NOEXCEPT { return end(); }
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator cbegin() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return begin(); }
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_iterator cend() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return end(); }
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reverse_iterator crbegin() const _NOEXCEPT {
     return rbegin();
   }
@@ -1328,7 +1328,7 @@ public:
     return size() == 0;
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference operator[](size_type __pos) const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference operator[](size_type __pos) const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(__pos <= size(), "string index out of bounds");
     if (__builtin_constant_p(__pos) && !__fits_in_sso(__pos)) {
       return *(__get_long_pointer() + __pos);
@@ -1336,7 +1336,7 @@ public:
     return *(data() + __pos);
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference operator[](size_type __pos) _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference operator[](size_type __pos) _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(__pos <= size(), "string index out of bounds");
     if (__builtin_constant_p(__pos) && !__fits_in_sso(__pos)) {
       return *(__get_long_pointer() + __pos);
@@ -1436,22 +1436,22 @@ public:
   _LIBCPP_CONSTEXPR_SINCE_CXX20 void push_back(value_type __c);
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void pop_back();
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference front() _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference front() _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(!empty(), "string::front(): string is empty");
     return *__get_pointer();
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference front() const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference front() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(!empty(), "string::front(): string is empty");
     return *data();
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference back() _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference back() _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(!empty(), "string::back(): string is empty");
     return *(__get_pointer() + size() - 1);
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference back() const _NOEXCEPT {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 const_reference back() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
     _LIBCPP_ASSERT_VALID_ELEMENT_ACCESS(!empty(), "string::back(): string is empty");
     return *(data() + size() - 1);
   }
@@ -1539,13 +1539,13 @@ public:
 #endif // _LIBCPP_CXX03_LANG
 
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string&
-  insert(size_type __pos1, const basic_string& __str) {
+  insert(size_type __pos1, const basic_string& __str) _LIBCPP_LIFETIMEBOUND {
     return insert(__pos1, __str.data(), __str.size());
   }
 
   template <class _Tp, __enable_if_t<__can_be_converted_to_string_view<_CharT, _Traits, _Tp>::value, int> = 0>
   _LIBCPP_METHOD_TEMPLATE_IMPLICIT_INSTANTIATION_VIS _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string&
-  insert(size_type __pos1, const _Tp& __t) {
+  insert(size_type __pos1, const _Tp& __t) _LIBCPP_LIFETIMEBOUND {
     __self_view __sv = __t;
     return insert(__pos1, __sv.data(), __sv.size());
   }
@@ -1555,18 +1555,18 @@ public:
                               !__is_same_uncvref<_Tp, basic_string>::value,
                           int> = 0>
   _LIBCPP_METHOD_TEMPLATE_IMPLICIT_INSTANTIATION_VIS _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string&
-  insert(size_type __pos1, const _Tp& __t, size_type __pos2, size_type __n = npos);
+  insert(size_type __pos1, const _Tp& __t, size_type __pos2, size_type __n = npos) _LIBCPP_LIFETIMEBOUND;
 
   _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string&
-  insert(size_type __pos1, const basic_string& __str, size_type __pos2, size_type __n = npos);
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, const value_type* __s, size_type __n);
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, const value_type* __s);
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, size_type __n, value_type __c);
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator insert(const_iterator __pos, value_type __c);
+  insert(size_type __pos1, const basic_string& __str, size_type __pos2, size_type __n = npos) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, const value_type* __s, size_type __n) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, const value_type* __s) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& insert(size_type __pos, size_type __n, value_type __c) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator insert(const_iterator __pos, value_type __c) _LIBCPP_LIFETIMEBOUND;
 
 #if _LIBCPP_STD_VER >= 23
   template <_ContainerCompatibleRange<_CharT> _Range>
-  _LIBCPP_HIDE_FROM_ABI constexpr iterator insert_range(const_iterator __position, _Range&& __range) {
+  _LIBCPP_HIDE_FROM_ABI constexpr iterator insert_range(const_iterator __position, _Range&& __range) _LIBCPP_LIFETIMEBOUND {
     if constexpr (ranges::forward_range<_Range> || ranges::sized_range<_Range>) {
       auto __n = static_cast<size_type>(ranges::distance(__range));
       return __insert_with_size(__position, ranges::begin(__range), ranges::end(__range), __n);
@@ -1579,7 +1579,7 @@ public:
 #endif
 
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator
-  insert(const_iterator __pos, size_type __n, value_type __c) {
+  insert(const_iterator __pos, size_type __n, value_type __c) _LIBCPP_LIFETIMEBOUND {
     difference_type __p = __pos - begin();
     insert(static_cast<size_type>(__p), __n, __c);
     return begin() + __p;
@@ -1587,22 +1587,22 @@ public:
 
   template <class _InputIterator, __enable_if_t<__has_exactly_input_iterator_category<_InputIterator>::value, int> = 0>
   _LIBCPP_METHOD_TEMPLATE_IMPLICIT_INSTANTIATION_VIS _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator
-  insert(const_iterator __pos, _InputIterator __first, _InputIterator __last);
+  insert(const_iterator __pos, _InputIterator __first, _InputIterator __last) _LIBCPP_LIFETIMEBOUND;
 
   template <class _ForwardIterator, __enable_if_t<__has_forward_iterator_category<_ForwardIterator>::value, int> = 0>
   _LIBCPP_METHOD_TEMPLATE_IMPLICIT_INSTANTIATION_VIS _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator
-  insert(const_iterator __pos, _ForwardIterator __first, _ForwardIterator __last);
+  insert(const_iterator __pos, _ForwardIterator __first, _ForwardIterator __last) _LIBCPP_LIFETIMEBOUND;
 
 #ifndef _LIBCPP_CXX03_LANG
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator
-  insert(const_iterator __pos, initializer_list<value_type> __il) {
+  insert(const_iterator __pos, initializer_list<value_type> __il) _LIBCPP_LIFETIMEBOUND {
     return insert(__pos, __il.begin(), __il.end());
   }
 #endif // _LIBCPP_CXX03_LANG
 
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& erase(size_type __pos = 0, size_type __n = npos);
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator erase(const_iterator __pos);
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator erase(const_iterator __first, const_iterator __last);
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string& erase(size_type __pos = 0, size_type __n = npos) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator erase(const_iterator __pos) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 iterator erase(const_iterator __first, const_iterator __last) _LIBCPP_LIFETIMEBOUND;
 
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 basic_string&
   replace(size_type __pos1, size_type __n1, const basic_string& __str) {

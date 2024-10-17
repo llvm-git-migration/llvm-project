@@ -62,16 +62,16 @@ public:
     bool      empty() const;
     size_type size() const;
 
-    reference       front();
-    const_reference front() const;
-    reference       back();
-    const_reference back() const;
+    reference       front() _LIBCPP_LIFETIMEBOUND;
+    const_reference front() const _LIBCPP_LIFETIMEBOUND;
+    reference       back() _LIBCPP_LIFETIMEBOUND;
+    const_reference back() const _LIBCPP_LIFETIMEBOUND;
 
     void push(const value_type& v);
     void push(value_type&& v);
     template<container-compatible-range<T> R>
       void push_range(R&& rg); // C++23
-    template <class... Args> reference emplace(Args&&... args); // reference in C++17
+    template <class... Args> reference emplace(Args&&... args) _LIBCPP_LIFETIMEBOUND; // reference in C++17
     void pop();
 
     void swap(queue& q) noexcept(is_nothrow_swappable_v<Container>)
@@ -375,10 +375,10 @@ public:
   [[__nodiscard__]] _LIBCPP_HIDE_FROM_ABI bool empty() const { return c.empty(); }
   _LIBCPP_HIDE_FROM_ABI size_type size() const { return c.size(); }
 
-  _LIBCPP_HIDE_FROM_ABI reference front() { return c.front(); }
-  _LIBCPP_HIDE_FROM_ABI const_reference front() const { return c.front(); }
-  _LIBCPP_HIDE_FROM_ABI reference back() { return c.back(); }
-  _LIBCPP_HIDE_FROM_ABI const_reference back() const { return c.back(); }
+  _LIBCPP_HIDE_FROM_ABI reference front() _LIBCPP_LIFETIMEBOUND { return c.front(); }
+  _LIBCPP_HIDE_FROM_ABI const_reference front() const _LIBCPP_LIFETIMEBOUND { return c.front(); }
+  _LIBCPP_HIDE_FROM_ABI reference back() _LIBCPP_LIFETIMEBOUND { return c.back(); }
+  _LIBCPP_HIDE_FROM_ABI const_reference back() const _LIBCPP_LIFETIMEBOUND { return c.back(); }
 
   _LIBCPP_HIDE_FROM_ABI void push(const value_type& __v) { c.push_back(__v); }
 #ifndef _LIBCPP_CXX03_LANG

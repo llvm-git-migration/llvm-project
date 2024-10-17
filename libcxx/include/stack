@@ -62,7 +62,7 @@ public:
     void push(value_type&& x);
     template<container-compatible-range<T> R>
       void push_range(R&& rg); // C++23
-    template <class... Args> reference emplace(Args&&... args); // reference in C++17
+    template <class... Args> reference emplace(Args&&... args) _LIBCPP_LIFETIMEBOUND; // reference in C++17
     void pop();
 
     void swap(stack& c) noexcept(is_nothrow_swappable_v<Container>)

@@ -145,8 +145,8 @@
         class iterator;
         using const_iterator = iterator;
 
-        iterator begin() const;
-        iterator end() const;
+        iterator begin() const _LIBCPP_LIFETIMEBOUND;
+        iterator end() const _LIBCPP_LIFETIMEBOUND;
 
         template<class charT, class traits>
           friend basic_ostream<charT, traits>&
@@ -271,8 +271,8 @@
   };
 
     // enable directory_iterator range-based for statements
-    directory_iterator begin(directory_iterator iter) noexcept;
-    directory_iterator end(directory_iterator) noexcept;
+    directory_iterator begin(directory_iterator iter) noexcept _LIBCPP_LIFETIMEBOUND;
+    directory_iterator end(directory_iterator) noexcept _LIBCPP_LIFETIMEBOUND;
 
 class recursive_directory_iterator {
   public:
@@ -322,8 +322,8 @@ class recursive_directory_iterator {
   };
 
     // enable recursive_directory_iterator range-based for statements
-    recursive_directory_iterator begin(recursive_directory_iterator iter) noexcept;
-    recursive_directory_iterator end(recursive_directory_iterator) noexcept;
+    recursive_directory_iterator begin(recursive_directory_iterator iter) noexcept _LIBCPP_LIFETIMEBOUND;
+    recursive_directory_iterator end(recursive_directory_iterator) noexcept _LIBCPP_LIFETIMEBOUND;
 
   class file_status {
   public:

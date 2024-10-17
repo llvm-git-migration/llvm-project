@@ -322,7 +322,7 @@ namespace std {
 
     // [mdspan.mdspan.members], members
     template<class... OtherIndexTypes>
-      constexpr reference operator[](OtherIndexTypes... indices) const;
+      constexpr reference operator[](OtherIndexTypes... indices) const _LIBCPP_LIFETIMEBOUND;
     template<class OtherIndexType>
       constexpr reference operator[](span<OtherIndexType, rank()> indices) const;
     template<class OtherIndexType>
