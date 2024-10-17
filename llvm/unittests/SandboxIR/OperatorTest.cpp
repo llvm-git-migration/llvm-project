@@ -86,3 +86,56 @@ define void @foo(i8 %v1) {
   EXPECT_EQ(AddNUW->getNoWrapKind(),
             llvm::OverflowingBinaryOperator::NoUnsignedWrap);
 }
+
+TEST_F(OperatorTest, FPMathOperator) {
+  parseIR(C, R"IR(
+define void @foo(float %v1) {
+  %fadd = fadd float %v1, 42
+  %Fast = fadd fast float %v1, 42
+  %Reassoc = fmul reassoc float %v1, 42
+  %NNAN = fmul nnan float %v1, 42
+  %NINF = fmul ninf float %v1, 42
+  %NSZ = fmul nsz float %v1, 42
+  %ARCP = fmul arcp float %v1, 42
+  %CONTRACT = fmul contract float %v1, 42
+  %AFN = fmul afn double %v1, 42
+  ret void
+}
+)IR");
+  llvm::Function *LLVMF = &*M->getFunction("foo");
+  auto *LLVMBB = &*LLVMF->begin();
+  auto LLVMIt = LLVMBB->begin();
+
+  sandboxir::Context Ctx(C);
+  sandboxir::Function *F = Ctx.createFunction(LLVMF);
+  auto *BB = &*F->begin();
+  auto It = BB->begin();
+  auto TermIt = BB->getTerminator()->getIterator();
+  for (; It != TermIt; ++LLVMIt, ++It) {
+    auto *FPM = cast<sandboxir::FPMathOperator>(&*It++);
+    auto *LLVMFPM = cast<llvm::FPMathOperator>(&*LLVMIt++);
+    EXPECT_EQ(FPM->isFast(), LLVMFPM->isFast());
+    EXPECT_EQ(FPM->hasAllowReassoc(), LLVMFPM->hasAllowReassoc());
+    EXPECT_EQ(FPM->hasNoNaNs(), LLVMFPM->hasNoNaNs());
+    EXPECT_EQ(FPM->hasNoInfs(), LLVMFPM->hasNoInfs());
+    EXPECT_EQ(FPM->hasNoSignedZeros(), LLVMFPM->hasNoSignedZeros());
+    EXPECT_EQ(FPM->hasAllowReciprocal(), LLVMFPM->hasAllowReciprocal());
+    EXPECT_EQ(FPM->hasAllowContract(), LLVMFPM->hasAllowContract());
+    EXPECT_EQ(FPM->hasApproxFunc(), LLVMFPM->hasApproxFunc());
+
+    // There doesn't seem to be an operator== for FastMathFlags so let's do a
+    // string comparison instead.
+    std::string Str1;
+    raw_string_ostream SS1(Str1);
+    std::string Str2;
+    raw_string_ostream SS2(Str2);
+    FPM->getFastMathFlags().print(SS1);
+    LLVMFPM->getFastMathFlags().print(SS2);
+    EXPECT_EQ(Str1, Str2);
+
+    EXPECT_EQ(FPM->getFPAccuracy(), LLVMFPM->getFPAccuracy());
+    EXPECT_EQ(
+        sandboxir::FPMathOperator::isSupportedFloatingPointType(FPM->getType()),
+        llvm::FPMathOperator::isSupportedFloatingPointType(LLVMFPM->getType()));
+  }
+}
