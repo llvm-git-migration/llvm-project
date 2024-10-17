@@ -124,9 +124,9 @@ operator!=(const directory_iterator& __lhs, const directory_iterator& __rhs) noe
 }
 
 // enable directory_iterator range-based for statements
-inline _LIBCPP_HIDE_FROM_ABI directory_iterator begin(directory_iterator __iter) noexcept { return __iter; }
+inline _LIBCPP_HIDE_FROM_ABI directory_iterator begin(directory_iterator __iter) noexcept _LIBCPP_LIFETIMEBOUND { return __iter; }
 
-inline _LIBCPP_HIDE_FROM_ABI directory_iterator end(directory_iterator) noexcept { return directory_iterator(); }
+inline _LIBCPP_HIDE_FROM_ABI directory_iterator end(directory_iterator) noexcept _LIBCPP_LIFETIMEBOUND { return directory_iterator(); }
 
 _LIBCPP_AVAILABILITY_FILESYSTEM_LIBRARY_POP
 

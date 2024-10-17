@@ -133,11 +133,11 @@ operator!=(const recursive_directory_iterator& __lhs, const recursive_directory_
   return !(__lhs == __rhs);
 }
 // enable recursive_directory_iterator range-based for statements
-inline _LIBCPP_HIDE_FROM_ABI recursive_directory_iterator begin(recursive_directory_iterator __iter) noexcept {
+inline _LIBCPP_HIDE_FROM_ABI recursive_directory_iterator begin(recursive_directory_iterator __iter) noexcept _LIBCPP_LIFETIMEBOUND {
   return __iter;
 }
 
-inline _LIBCPP_HIDE_FROM_ABI recursive_directory_iterator end(recursive_directory_iterator) noexcept {
+inline _LIBCPP_HIDE_FROM_ABI recursive_directory_iterator end(recursive_directory_iterator) noexcept _LIBCPP_LIFETIMEBOUND {
   return recursive_directory_iterator();
 }
 
