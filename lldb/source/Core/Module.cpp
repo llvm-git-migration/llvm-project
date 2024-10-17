@@ -1093,8 +1093,8 @@ void Module::ReportWarningOptimization(
   ss << file_name
      << " was compiled with optimization - stepping may behave "
         "oddly; variables may not be available.";
-  Debugger::ReportWarning(std::string(ss.GetString()), debugger_id,
-                          &m_optimization_warning);
+  llvm::StringRef msg = ss.GetString();
+  Debugger::ReportWarning(msg.str(), debugger_id, GetDiagnosticOnceFlag(msg));
 }
 
 void Module::ReportWarningUnsupportedLanguage(
@@ -1104,8 +1104,8 @@ void Module::ReportWarningUnsupportedLanguage(
      << Language::GetNameForLanguageType(language)
      << "\". "
         "Inspection of frame variables will be limited.";
-  Debugger::ReportWarning(std::string(ss.GetString()), debugger_id,
-                          &m_language_warning);
+  llvm::StringRef msg = ss.GetString();
+  Debugger::ReportWarning(msg.str(), debugger_id, GetDiagnosticOnceFlag(msg));
 }
 
 void Module::ReportErrorIfModifyDetected(
@@ -1125,20 +1125,34 @@ void Module::ReportErrorIfModifyDetected(
   }
 }
 
+std::once_flag *Module::GetDiagnosticOnceFlag(llvm::StringRef msg) {
+  // The manual DWARF index holds the module mutex on one thread, then
+  // spawns multiple worker threads which all can emit diagnostics. If
+  // this happens we give up on deduplicating them.
+  if (!m_mutex.try_lock())
+    return nullptr;
+  auto &once_ptr = m_shown_diagnostics[llvm::stable_hash_name(msg)];
+  if (!once_ptr)
+    once_ptr = std::make_unique<std::once_flag>();
+  m_mutex.unlock();
+  return once_ptr.get();
+}
+
 void Module::ReportError(const llvm::formatv_object_base &payload) {
   StreamString strm;
   GetDescription(strm.AsRawOstream(), lldb::eDescriptionLevelBrief);
-  strm.PutChar(' ');
-  strm.PutCString(payload.str());
-  Debugger::ReportError(strm.GetString().str());
+  std::string msg = payload.str();
+  strm << ' ' << msg;
+  Debugger::ReportError(strm.GetString().str(), {}, GetDiagnosticOnceFlag(msg));
 }
 
 void Module::ReportWarning(const llvm::formatv_object_base &payload) {
   StreamString strm;
   GetDescription(strm.AsRawOstream(), lldb::eDescriptionLevelFull);
-  strm.PutChar(' ');
-  strm.PutCString(payload.str());
-  Debugger::ReportWarning(std::string(strm.GetString()));
+  std::string msg = payload.str();
+  strm << ' ' << msg;
+  Debugger::ReportWarning(strm.GetString().str(), {},
+                          GetDiagnosticOnceFlag(msg));
 }
 
 void Module::LogMessage(Log *log, const llvm::formatv_object_base &payload) {
