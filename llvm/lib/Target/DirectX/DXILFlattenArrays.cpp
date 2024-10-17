@@ -43,8 +43,9 @@ public:
 struct GEPData {
   ArrayType *ParentArrayType;
   Value *ParendOperand;
-  SmallVector<ConstantInt *> Indices;
+  SmallVector<Value *> Indices;
   SmallVector<uint64_t> Dims;
+  bool AllIndicesAreConstInt;
 };
 
 class DXILFlattenArraysVisitor
@@ -80,16 +81,20 @@ private:
   SmallVector<WeakTrackingVH, 32> PotentiallyDeadInstrs;
   DenseMap<GetElementPtrInst *, GEPData> GEPChainMap;
   bool finish();
-  ConstantInt *flattenIndices(ArrayRef<ConstantInt *> Indices,
-                              ArrayRef<uint64_t> Dims, IRBuilder<> &Builder);
-  void recursivelyCollectGEPs(
-      GetElementPtrInst &CurrGEP, ArrayType *FlattenedArrayType,
-      Value *PtrOperand,
-      SmallVector<ConstantInt *> Indices = SmallVector<ConstantInt *>(),
-      SmallVector<uint64_t> Dims = SmallVector<uint64_t>());
-  ConstantInt *computeFlatIndex(GetElementPtrInst& GEP);
+  ConstantInt *constFlattenIndices(ArrayRef<Value *> Indices,
+                                   ArrayRef<uint64_t> Dims,
+                                   IRBuilder<> &Builder);
+  Value *instructionFlattenIndices(ArrayRef<Value *> Indices,
+                                   ArrayRef<uint64_t> Dims,
+                                   IRBuilder<> &Builder);
+  void
+  recursivelyCollectGEPs(GetElementPtrInst &CurrGEP,
+                         ArrayType *FlattenedArrayType, Value *PtrOperand,
+                         SmallVector<Value *> Indices = SmallVector<Value *>(),
+                         SmallVector<uint64_t> Dims = SmallVector<uint64_t>(),
+                         bool AllIndicesAreConstInt = true);
+  ConstantInt *computeFlatIndex(GetElementPtrInst &GEP);
   bool visitGetElementPtrInstInGEPChain(GetElementPtrInst &GEP);
-  void recursivelyDeleteGEPs(GetElementPtrInst *CurrGEP = nullptr);
 };
 
 bool DXILFlattenArraysVisitor::finish() {
@@ -121,10 +126,8 @@ Type *DXILFlattenArraysVisitor::getBaseElementType(Type *ArrayTy) {
   return CurrArrayTy;
 }
 
-ConstantInt *
-DXILFlattenArraysVisitor::flattenIndices(ArrayRef<ConstantInt *> Indices,
-                                         ArrayRef<uint64_t> Dims,
-                                         IRBuilder<> &Builder) {
+ConstantInt *DXILFlattenArraysVisitor::constFlattenIndices(
+    ArrayRef<Value *> Indices, ArrayRef<uint64_t> Dims, IRBuilder<> &Builder) {
   assert(Indices.size() == Dims.size() &&
          "Indicies and dimmensions should be the same");
   unsigned FlatIndex = 0;
@@ -132,10 +135,27 @@ DXILFlattenArraysVisitor::flattenIndices(ArrayRef<ConstantInt *> Indices,
 
   for (int I = Indices.size() - 1; I >= 0; --I) {
     unsigned DimSize = Dims[I];
-    FlatIndex += Indices[I]->getZExtValue() * Multiplier;
+    ConstantInt *CIndex = dyn_cast<ConstantInt>(Indices[I]);
+    assert(CIndex && "This function expects all indicies to be ConstantInt");
+    FlatIndex += CIndex->getZExtValue() * Multiplier;
     Multiplier *= DimSize;
   }
   return Builder.getInt32(FlatIndex);
+}
+
+Value *DXILFlattenArraysVisitor::instructionFlattenIndices(
+    ArrayRef<Value *> Indices, ArrayRef<uint64_t> Dims, IRBuilder<> &Builder) {
+  Value *FlatIndex = Builder.getInt32(0);
+  unsigned Multiplier = 1;
+
+  for (unsigned I = 0; I < Indices.size(); ++I) {
+    unsigned DimSize = Dims[I];
+    Value *VDimSize = Builder.getInt32(DimSize * Multiplier);
+    Value *ScaledIndex = Builder.CreateMul(Indices[I], VDimSize);
+    FlatIndex = Builder.CreateAdd(FlatIndex, ScaledIndex);
+    Multiplier *= DimSize;
+  }
+  return FlatIndex;
 }
 
 bool DXILFlattenArraysVisitor::visitAllocaInst(AllocaInst &AI) {
@@ -156,58 +176,61 @@ bool DXILFlattenArraysVisitor::visitAllocaInst(AllocaInst &AI) {
   return true;
 }
 
-ConstantInt *DXILFlattenArraysVisitor::computeFlatIndex(GetElementPtrInst& GEP) {
+ConstantInt *
+DXILFlattenArraysVisitor::computeFlatIndex(GetElementPtrInst &GEP) {
   unsigned IndexAmount = GEP.getNumIndices();
   assert(IndexAmount >= 1 && "Need At least one Index");
-  if(IndexAmount == 1)
+  if (IndexAmount == 1)
     return dyn_cast<ConstantInt>(GEP.getOperand(GEP.getNumOperands() - 1));
 
   // Get the type of the base pointer.
   Type *BaseType = GEP.getSourceElementType();
 
-    // Determine the dimensions of the multi-dimensional array.
-    SmallVector<int64_t> Dimensions;
-    while (auto *ArrType = dyn_cast<ArrayType>(BaseType)) {
-        Dimensions.push_back(ArrType->getNumElements());
-        BaseType = ArrType->getElementType();
-    }
-    unsigned FlatIndex = 0;
-    unsigned Multiplier = 1; 
-    unsigned BitWidth = 32;
-    for (const Use &Index : GEP.indices()) {
-      ConstantInt *CurrentIndex = dyn_cast<ConstantInt>(Index);
-      BitWidth = CurrentIndex->getBitWidth();
-      if (!CurrentIndex)
-        return nullptr;
-      int64_t IndexValue = CurrentIndex->getSExtValue();
-      FlatIndex += IndexValue * Multiplier;
+  // Determine the dimensions of the multi-dimensional array.
+  SmallVector<int64_t> Dimensions;
+  while (auto *ArrType = dyn_cast<ArrayType>(BaseType)) {
+    Dimensions.push_back(ArrType->getNumElements());
+    BaseType = ArrType->getElementType();
+  }
+  unsigned FlatIndex = 0;
+  unsigned Multiplier = 1;
+  unsigned BitWidth = 32;
+  for (const Use &Index : GEP.indices()) {
+    ConstantInt *CurrentIndex = dyn_cast<ConstantInt>(Index);
+    BitWidth = CurrentIndex->getBitWidth();
+    if (!CurrentIndex)
+      return nullptr;
+    int64_t IndexValue = CurrentIndex->getSExtValue();
+    FlatIndex += IndexValue * Multiplier;
 
-      if (!Dimensions.empty()) {
-        Multiplier *= Dimensions.back(); // Use the last dimension size
-        Dimensions.pop_back(); // Remove the last dimension
-      }
+    if (!Dimensions.empty()) {
+      Multiplier *= Dimensions.back(); // Use the last dimension size
+      Dimensions.pop_back();           // Remove the last dimension
     }
-    return ConstantInt::get(GEP.getContext(), APInt(BitWidth, FlatIndex));
+  }
+  return ConstantInt::get(GEP.getContext(), APInt(BitWidth, FlatIndex));
 }
 
 void DXILFlattenArraysVisitor::recursivelyCollectGEPs(
-    GetElementPtrInst &CurrGEP, ArrayType *FlattenedArrayType, Value *PtrOperand,
-    SmallVector<ConstantInt *> Indices, SmallVector<uint64_t> Dims) {
-  ConstantInt *LastIndex = dyn_cast<ConstantInt>(CurrGEP.getOperand(CurrGEP .getNumOperands() - 1));
-  assert(LastIndex && "Flattening a GEP chain only work on constant indicies");
+    GetElementPtrInst &CurrGEP, ArrayType *FlattenedArrayType,
+    Value *PtrOperand, SmallVector<Value *> Indices, SmallVector<uint64_t> Dims,
+    bool AllIndicesAreConstInt) {
+  Value *LastIndex = CurrGEP.getOperand(CurrGEP.getNumOperands() - 1);
+  AllIndicesAreConstInt &= isa<ConstantInt>(LastIndex);
   Indices.push_back(LastIndex);
   assert(isa<ArrayType>(CurrGEP.getSourceElementType()));
   Dims.push_back(
       cast<ArrayType>(CurrGEP.getSourceElementType())->getNumElements());
   if (!isMultiDimensionalArray(CurrGEP.getSourceElementType())) {
-    GEPChainMap.insert({&CurrGEP,
-                        {std::move(FlattenedArrayType), PtrOperand,
-                         std::move(Indices), std::move(Dims)}});
+    GEPChainMap.insert(
+        {&CurrGEP,
+         {std::move(FlattenedArrayType), PtrOperand, std::move(Indices),
+          std::move(Dims), AllIndicesAreConstInt}});
   }
   for (auto *User : CurrGEP.users()) {
     if (GetElementPtrInst *NestedGEP = dyn_cast<GetElementPtrInst>(User)) {
-      recursivelyCollectGEPs(*NestedGEP, FlattenedArrayType, PtrOperand, Indices,
-                             Dims);
+      recursivelyCollectGEPs(*NestedGEP, FlattenedArrayType, PtrOperand,
+                             Indices, Dims, AllIndicesAreConstInt);
     }
   }
 }
@@ -216,8 +239,12 @@ bool DXILFlattenArraysVisitor::visitGetElementPtrInstInGEPChain(
     GetElementPtrInst &GEP) {
   IRBuilder<> Builder(&GEP);
   GEPData GEPInfo = GEPChainMap.at(&GEP);
-  ConstantInt *FlatIndex =
-      flattenIndices(GEPInfo.Indices, GEPInfo.Dims, Builder);
+  Value *FlatIndex;
+  if (GEPInfo.AllIndicesAreConstInt)
+    FlatIndex = constFlattenIndices(GEPInfo.Indices, GEPInfo.Dims, Builder);
+  else
+    FlatIndex =
+        instructionFlattenIndices(GEPInfo.Indices, GEPInfo.Dims, Builder);
 
   ArrayType *FlattenedArrayType = GEPInfo.ParentArrayType;
   Value *FlatGEP =
@@ -243,18 +270,17 @@ bool DXILFlattenArraysVisitor::visitGetElementPtrInst(GetElementPtrInst &GEP) {
       ArrayType::get(getBaseElementType(ArrType), TotalElements);
 
   Value *PtrOperand = GEP.getPointerOperand();
-  if(isa<ConstantInt>(GEP.getOperand(GEP.getNumOperands() - 1))) {
-    recursivelyCollectGEPs(GEP, FlattenedArrayType, PtrOperand);
-    PotentiallyDeadInstrs.emplace_back(&GEP);
-  } else {
+  // if(isa<ConstantInt>(GEP.getOperand(GEP.getNumOperands() - 1))) {
+  recursivelyCollectGEPs(GEP, FlattenedArrayType, PtrOperand);
+  PotentiallyDeadInstrs.emplace_back(&GEP);
+  /*} else {
     SmallVector<Value *> Indices(GEP.idx_begin(),GEP.idx_end());
      Value *FlatGEP =
       Builder.CreateGEP(FlattenedArrayType, PtrOperand, Indices,
                         GEP.getName() + ".flat", GEP.isInBounds());
-
   GEP.replaceAllUsesWith(FlatGEP);
   GEP.eraseFromParent();
-  }
+  }*/
   return true;
 }
 
@@ -274,7 +300,8 @@ bool DXILFlattenArraysVisitor::visit(Function &F) {
   return MadeChange;
 }
 
-static void collectElements(Constant *Init, SmallVectorImpl<Constant *> &Elements) {
+static void collectElements(Constant *Init,
+                            SmallVectorImpl<Constant *> &Elements) {
   // Base case: If Init is not an array, add it directly to the vector.
   if (!isa<ArrayType>(Init->getType())) {
     Elements.push_back(Init);
@@ -291,7 +318,9 @@ static void collectElements(Constant *Init, SmallVectorImpl<Constant *> &Element
       collectElements(DataArrayConstant->getElementAsConstant(I), Elements);
     }
   } else {
-    assert( false && "Expected a ConstantArray or ConstantDataArray for array initializer!");
+    assert(
+        false &&
+        "Expected a ConstantArray or ConstantDataArray for array initializer!");
   }
 }
 
@@ -311,7 +340,8 @@ static Constant *transformInitializer(Constant *Init, Type *OrigType,
 
   SmallVector<Constant *> FlattenedElements;
   collectElements(Init, FlattenedElements);
-  assert(FlattenedType->getNumElements() == FlattenedElements.size() && "The number of collected elements should match the FlattenedType");
+  assert(FlattenedType->getNumElements() == FlattenedElements.size() &&
+         "The number of collected elements should match the FlattenedType");
   return ConstantArray::get(FlattenedType, FlattenedElements);
 }
 
@@ -360,7 +390,7 @@ static bool flattenArrays(Module &M) {
   DenseMap<GlobalVariable *, GlobalVariable *> GlobalMap;
   flattenGlobalArrays(M, GlobalMap);
   for (auto &F : make_early_inc_range(M.functions())) {
-    if(F.isIntrinsic())
+    if (F.isIntrinsic())
       continue;
     MadeChange |= Impl.visit(F);
   }
