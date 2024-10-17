@@ -482,7 +482,7 @@ void CGHLSLRuntime::generateGlobalCtorDtorCalls() {
     auto *Token = getConvergenceToken(F.getEntryBlock());
     Instruction *IP = Token ? Token : &*F.getEntryBlock().begin();
     IRBuilder<> B(IP);
-    std::vector<OperandBundleDef> OB;
+    SmallVector<OperandBundleDef, 1> OB;
     if (Token) {
       llvm::Value *bundleArgs[] = {Token};
       OB.emplace_back("convergencectrl", bundleArgs);
