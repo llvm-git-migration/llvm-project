@@ -6,9 +6,8 @@ declare void @use(i8)
 define i1 @fold_sext_to_and(i8 %x) {
 ; CHECK-LABEL: define i1 @fold_sext_to_and(
 ; CHECK-SAME: i8 [[X:%.*]]) {
-; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
-; CHECK-NEXT:    [[TMP2:%.*]] = and i32 [[TMP1]], -2147483647
-; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i32 [[TMP2]], 1
+; CHECK-NEXT:    [[TMP1:%.*]] = and i8 [[X]], -127
+; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i8 [[TMP1]], 1
 ; CHECK-NEXT:    ret i1 [[TMP3]]
 ;
   %1 = sext i8 %x to i32
@@ -22,8 +21,8 @@ define i1 @fold_sext_to_and_multi_use(i8 %x) {
 ; CHECK-SAME: i8 [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = sext i8 [[X]] to i32
 ; CHECK-NEXT:    call void @use(i32 [[TMP1]])
-; CHECK-NEXT:    [[TMP2:%.*]] = and i32 [[TMP1]], -2147483647
-; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i32 [[TMP2]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = and i8 [[X]], -127
+; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i8 [[TMP2]], 1
 ; CHECK-NEXT:    ret i1 [[TMP3]]
 ;
   %1 = sext i8 %x to i32
