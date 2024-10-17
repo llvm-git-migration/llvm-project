@@ -734,6 +734,7 @@ def HasStdExtZfhOrZvfh
 def FeatureStdExtZvkb
     : RISCVExtension<"zvkb", 1, 0,
                      "'Zvkb' (Vector Bit-manipulation used in Cryptography)">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 52>;
 def HasStdExtZvkb : Predicate<"Subtarget->hasStdExtZvkb()">,
                     AssemblerPredicate<(all_of FeatureStdExtZvkb),
@@ -751,6 +752,7 @@ def HasStdExtZvbb : Predicate<"Subtarget->hasStdExtZvbb()">,
 def FeatureStdExtZvbc
     : RISCVExtension<"zvbc", 1, 0,
                      "'Zvbc' (Vector Carryless Multiplication)">,
+                     [FeatureStdExtZve64x]>,
       RISCVExtensionBitmask<0, 49>;
 def HasStdExtZvbc : Predicate<"Subtarget->hasStdExtZvbc()">,
                     AssemblerPredicate<(all_of FeatureStdExtZvbc),
@@ -767,6 +769,7 @@ def HasStdExtZvbcOrZvbc32e : Predicate<"Subtarget->hasStdExtZvbc() || Subtarget-
 def FeatureStdExtZvkg
     : RISCVExtension<"zvkg", 1, 0,
                      "'Zvkg' (Vector GCM instructions for Cryptography)">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 53>;
 def HasStdExtZvkg : Predicate<"Subtarget->hasStdExtZvkg()">,
                     AssemblerPredicate<(all_of FeatureStdExtZvkg),
@@ -783,6 +786,7 @@ def HasStdExtZvkgs : Predicate<"Subtarget->hasStdExtZvkgs()">,
 def FeatureStdExtZvkned
     : RISCVExtension<"zvkned", 1, 0,
                      "'Zvkned' (Vector AES Encryption & Decryption (Single Round))">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 54>;
 def HasStdExtZvkned : Predicate<"Subtarget->hasStdExtZvkned()">,
                       AssemblerPredicate<(all_of FeatureStdExtZvkned),
@@ -791,6 +795,7 @@ def HasStdExtZvkned : Predicate<"Subtarget->hasStdExtZvkned()">,
 def FeatureStdExtZvknha
     : RISCVExtension<"zvknha", 1, 0,
                      "'Zvknha' (Vector SHA-2 (SHA-256 only))">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 55>;
 def HasStdExtZvknha : Predicate<"Subtarget->hasStdExtZvknha()">,
                       AssemblerPredicate<(all_of FeatureStdExtZvknha),
@@ -799,6 +804,7 @@ def HasStdExtZvknha : Predicate<"Subtarget->hasStdExtZvknha()">,
 def FeatureStdExtZvknhb
     : RISCVExtension<"zvknhb", 1, 0,
                      "'Zvknhb' (Vector SHA-2 (SHA-256 and SHA-512))">,
+                     [FeatureStdExtZve64x]>,
       RISCVExtensionBitmask<0, 56>;
 def HasStdExtZvknhb : Predicate<"Subtarget->hasStdExtZvknhb()">,
                       AssemblerPredicate<(all_of FeatureStdExtZvknhb),
@@ -811,6 +817,7 @@ def HasStdExtZvknhaOrZvknhb : Predicate<"Subtarget->hasStdExtZvknha() || Subtarg
 def FeatureStdExtZvksed
     : RISCVExtension<"zvksed", 1, 0,
                      "'Zvksed' (SM4 Block Cipher Instructions)">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 57>;
 def HasStdExtZvksed : Predicate<"Subtarget->hasStdExtZvksed()">,
                       AssemblerPredicate<(all_of FeatureStdExtZvksed),
@@ -819,6 +826,7 @@ def HasStdExtZvksed : Predicate<"Subtarget->hasStdExtZvksed()">,
 def FeatureStdExtZvksh
     : RISCVExtension<"zvksh", 1, 0,
                      "'Zvksh' (SM3 Hash Function Instructions)">,
+                     [FeatureStdExtZve32x]>,
       RISCVExtensionBitmask<0, 58>;
 def HasStdExtZvksh : Predicate<"Subtarget->hasStdExtZvksh()">,
                      AssemblerPredicate<(all_of FeatureStdExtZvksh),
