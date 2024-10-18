@@ -2048,3 +2048,10 @@ let Requires = [{ {AArch64::FeaturePCDPHINT} }] in {
 
 // v9.6a Realm management extension enhancements
 def : RWSysReg<"GPCBW_EL3", 0b11, 0b110, 0b0010, 0b0001, 0b101>;
+
+// v9.6 FEAT_PoPS
+//
+let Requires = [{ {AArch64::FeaturePoPS} }] in {
+def : DC<"CIGDVAPS",  0b000, 0b0111, 0b1111, 0b101>;
+def : DC<"CIVAPS",    0b000, 0b0111, 0b1111, 0b001>;
+}
