@@ -1357,7 +1357,6 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   VPTypeAnalysis TypeInfo(CanonicalIVType);
   LLVMContext &Ctx = CanonicalIVType->getContext();
   SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
-  VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType());
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
     for (VPUser *U : collectUsersRecursively(HeaderMask)) {
       auto *CurRecipe = dyn_cast<VPRecipeBase>(U);
