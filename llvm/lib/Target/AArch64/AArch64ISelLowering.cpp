@@ -29184,7 +29184,10 @@ Value *AArch64TargetLowering::createComplexDeinterleavingIR(
 
   if (TyWidth > 128) {
     int Stride = Ty->getElementCount().getKnownMinValue() / 2;
-    int AccStride = cast<VectorType>(Accumulator->getType())->getElementCount().getKnownMinValue() / 2;
+    int AccStride = cast<VectorType>(Accumulator->getType())
+                        ->getElementCount()
+                        .getKnownMinValue() /
+                    2;
     auto *HalfTy = VectorType::getHalfElementsVectorType(Ty);
     auto *LowerSplitA = B.CreateExtractVector(HalfTy, InputA, B.getInt64(0));
     auto *LowerSplitB = B.CreateExtractVector(HalfTy, InputB, B.getInt64(0));
@@ -29195,19 +29198,22 @@ Value *AArch64TargetLowering::createComplexDeinterleavingIR(
     Value *LowerSplitAcc = nullptr;
     Value *UpperSplitAcc = nullptr;
     Type *FullTy = Ty;
-      FullTy = Accumulator->getType();
-      auto *HalfAccTy = VectorType::getHalfElementsVectorType(cast<VectorType>(Accumulator->getType()));
-      LowerSplitAcc = B.CreateExtractVector(HalfAccTy, Accumulator, B.getInt64(0));
-      UpperSplitAcc =
-          B.CreateExtractVector(HalfAccTy, Accumulator, B.getInt64(AccStride));
+    FullTy = Accumulator->getType();
+    auto *HalfAccTy = VectorType::getHalfElementsVectorType(
+        cast<VectorType>(Accumulator->getType()));
+    LowerSplitAcc =
+        B.CreateExtractVector(HalfAccTy, Accumulator, B.getInt64(0));
+    UpperSplitAcc =
+        B.CreateExtractVector(HalfAccTy, Accumulator, B.getInt64(AccStride));
     auto *LowerSplitInt = createComplexDeinterleavingIR(
         B, OperationType, Rotation, LowerSplitA, LowerSplitB, LowerSplitAcc);
     auto *UpperSplitInt = createComplexDeinterleavingIR(
         B, OperationType, Rotation, UpperSplitA, UpperSplitB, UpperSplitAcc);
 
-    auto *Result = B.CreateInsertVector(FullTy, PoisonValue::get(FullTy), LowerSplitInt,
-                                        B.getInt64(0));
-    return B.CreateInsertVector(FullTy, Result, UpperSplitInt, B.getInt64(AccStride));
+    auto *Result = B.CreateInsertVector(FullTy, PoisonValue::get(FullTy),
+                                        LowerSplitInt, B.getInt64(0));
+    return B.CreateInsertVector(FullTy, Result, UpperSplitInt,
+                                B.getInt64(AccStride));
   }
 
   if (OperationType == ComplexDeinterleavingOperation::CMulPartial) {
