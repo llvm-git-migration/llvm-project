@@ -1275,8 +1275,9 @@ static void genAttrParser(AttributeVariable *attr, MethodBody &body,
 // 'prop-dict' dictionary attr.
 static void genParsedAttrPropertiesSetter(OperationFormat &fmt, Operator &op,
                                           OpClass &opClass) {
-  // Not required unless 'prop-dict' is present.
-  if (!fmt.hasPropDict)
+  // Not required unless 'prop-dict' is present or we
+  // are not using properties.
+  if (!fmt.hasPropDict || !fmt.useProperties)
     return;
 
   SmallVector<MethodParameter> paramList;
@@ -1621,8 +1622,10 @@ void OperationFormat::genElementParser(FormatElement *element, MethodBody &body,
     body.unindent() << "}\n";
     body.unindent();
   } else if (isa<PropDictDirective>(element)) {
-    body << "  if (parseProperties(parser, result))\n"
-         << "    return ::mlir::failure();\n";
+    if (useProperties) {
+      body << "  if (parseProperties(parser, result))\n"
+           << "    return ::mlir::failure();\n";
+    }
   } else if (auto *customDir = dyn_cast<CustomDirective>(element)) {
     genCustomDirectiveParser(customDir, body, useProperties, opCppClassName);
   } else if (isa<OperandsDirective>(element)) {
@@ -2047,9 +2050,11 @@ static void genPropDictPrinter(OperationFormat &fmt, Operator &op,
     }
   }
 
-  body << "  _odsPrinter << \" \";\n"
-       << "  printProperties(this->getContext(), _odsPrinter, "
-          "getProperties(), elidedProps);\n";
+  if (fmt.useProperties) {
+    body << "  _odsPrinter << \" \";\n"
+         << "  printProperties(this->getContext(), _odsPrinter, "
+            "getProperties(), elidedProps);\n";
+  }
 }
 
 /// Generate the printer for the 'attr-dict' directive.
