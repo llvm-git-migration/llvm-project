@@ -129,7 +129,7 @@ subroutine more_invalid_atomic_update_stmts()
 
     !$omp atomic update
     !ERROR: Expected scalar variable on the LHS of atomic update assignment statement
-    !ERROR: Intrinsic procedure arguments in atomic update statement must have exactly one occurence of 'k' 
+    !ERROR: Intrinsic procedure arguments in atomic update statement must have exactly one occurence of 'k'
         k = max(x, y)
     
     !$omp atomic
