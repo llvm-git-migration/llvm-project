@@ -486,6 +486,8 @@ public:
   READ_FEATURE(OmpIfClause)
   READ_FEATURE(OmpIfClause::DirectiveNameModifier)
   READ_FEATURE(OmpLinearClause)
+  READ_FEATURE(OmpGrainsizeClause)
+  READ_FEATURE(OmpGrainsizeClause::Prescriptiveness)
   READ_FEATURE(OmpLinearClause::WithModifier)
   READ_FEATURE(OmpLinearClause::WithoutModifier)
   READ_FEATURE(OmpLinearModifier)
