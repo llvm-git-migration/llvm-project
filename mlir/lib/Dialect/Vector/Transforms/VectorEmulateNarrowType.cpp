@@ -24,6 +24,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cstdint>
+#include <optional>
 
 using namespace mlir;
 
@@ -102,6 +103,23 @@ static FailureOr<Operation *> getCompressedMaskOp(OpBuilder &rewriter,
   return newMask;
 }
 
+///
+static std::optional<int64_t>
+getFrontPaddingSize(ConversionPatternRewriter &rewriter, Location loc,
+                    const memref::LinearizedMemRefInfo linearizedInfo,
+                    bool isUnalignedEmulation) {
+  if (!isUnalignedEmulation)
+    return 0;
+  auto foldedFrontPaddingSize = getValueOrCreateConstantIndexOp(
+      rewriter, loc, linearizedInfo.frontPaddingSize);
+  // try to fold the front padding size into a constant
+  if (auto frontPadding = dyn_cast_or_null<arith::ConstantIndexOp>(
+          foldedFrontPaddingSize.getDefiningOp())) {
+    return frontPadding.value();
+  }
+  return std::nullopt;
+}
+
 namespace {
 
 //===----------------------------------------------------------------------===//
@@ -142,14 +160,17 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
     // vector<4xi8>
 
     auto origElements = op.getValueToStore().getType().getNumElements();
-    if (origElements % scale != 0)
-      return failure();
+
+    // if the size of vector we are loading is not byte-aligned, extra handling
+    // is needed
+    bool isUnalignedEmulation = origElements % scale != 0;
 
     auto stridedMetadata =
         rewriter.create<memref::ExtractStridedMetadataOp>(loc, op.getBase());
 
     OpFoldResult linearizedIndices;
-    std::tie(std::ignore, linearizedIndices) =
+    memref::LinearizedMemRefInfo linearizedInfo;
+    std::tie(linearizedInfo, linearizedIndices) =
         memref::getLinearizedMemRefOffsetAndSize(
             rewriter, loc, srcBits, dstBits,
             stridedMetadata.getConstifiedMixedOffset(),
@@ -157,14 +178,48 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
             stridedMetadata.getConstifiedMixedStrides(),
             getAsOpFoldResult(adaptor.getIndices()));
 
-    auto numElements = origElements / scale;
-    auto bitCast = rewriter.create<vector::BitCastOp>(
-        loc, VectorType::get(numElements, newElementType),
-        op.getValueToStore());
+    auto foldedFrontPaddingSize = getFrontPaddingSize(
+        rewriter, loc, linearizedInfo, isUnalignedEmulation);
 
-    rewriter.replaceOpWithNewOp<vector::StoreOp>(
-        op, bitCast.getResult(), adaptor.getBase(),
-        getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices));
+    if (!foldedFrontPaddingSize) {
+      // unimplemented case for dynamic front padding size
+      return failure();
+    }
+
+    auto numElements =
+        (*foldedFrontPaddingSize + origElements + scale - 1) / scale;
+    auto newVectorType = VectorType::get(numElements, newElementType);
+
+    if (isUnalignedEmulation) {
+      auto insertedVectorType =
+          VectorType::get(numElements * scale, oldElementType);
+
+      auto linearizedIndicesValue =
+          getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices);
+      auto passThru =
+          rewriter.create<vector::LoadOp>(loc, newVectorType, adaptor.getBase(),
+                                          ValueRange{linearizedIndicesValue});
+      auto bitcastedPassThru =
+          rewriter.create<vector::BitCastOp>(loc, insertedVectorType, passThru);
+
+      // just extract it and use it for the strided slice offset
+      auto insertStridedSlice = rewriter.create<vector::InsertStridedSliceOp>(
+          loc, insertedVectorType, op.getValueToStore(), bitcastedPassThru,
+          rewriter.getI64ArrayAttr({*foldedFrontPaddingSize}),
+          rewriter.getI64ArrayAttr({1}));
+      // bit cast the vector to the original type
+      auto bitCast = rewriter.create<vector::BitCastOp>(loc, newVectorType,
+                                                        insertStridedSlice);
+
+      rewriter.replaceOpWithNewOp<vector::StoreOp>(
+          op, bitCast.getResult(), adaptor.getBase(), linearizedIndicesValue);
+    } else {
+      auto bitCast = rewriter.create<vector::BitCastOp>(loc, newVectorType,
+                                                        op.getValueToStore());
+      rewriter.replaceOpWithNewOp<vector::StoreOp>(
+          op, bitCast.getResult(), adaptor.getBase(),
+          getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices));
+    }
     return success();
   }
 };
@@ -294,19 +349,31 @@ struct ConvertVectorLoad final : OpConversionPattern<vector::LoadOp> {
     // %1 = vector.load %0[%linear_index] : memref<6xi8>, vector<2xi8>
     // %2 = vector.bitcast %1 : vector<2xi8> to vector<4xi4>
     //
-    // TODO: Currently, only the even number of elements loading is supported.
-    // To deal with the odd number of elements, one has to extract the
-    // subvector at the proper offset after bit-casting.
+    // There are cases where the number of elements to load is not byte-aligned,
+    // for example:
+    //
+    // %1 = vector.load %0[%c1, %c0] : memref<3x3xi2>, vector<3xi2>
+    //
+    // we will have to load extra bytes and extract the exact slice in between.
+    //
+    // %1 = vector.load %0[%c2] : memref<3xi8>, vector<2xi8>
+    // %2 = vector.bitcast %1 : vector<2xi8> to vector<8xi2>
+    // %3 = vector.extract_strided_slice %1 {offsets = [2], sizes = [3], strides
+    // = [1]}
+    //        : vector<8xi2> to vector<3xi2>
+    //
+    // TODO: Currently the extract_strided_slice's attributes must be known at
+    // compile time as they must be constants.
 
     auto origElements = op.getVectorType().getNumElements();
-    if (origElements % scale != 0)
-      return failure();
+    bool isUnalignedEmulation = origElements % scale != 0;
 
     auto stridedMetadata =
         rewriter.create<memref::ExtractStridedMetadataOp>(loc, op.getBase());
 
     OpFoldResult linearizedIndices;
-    std::tie(std::ignore, linearizedIndices) =
+    memref::LinearizedMemRefInfo linearizedInfo;
+    std::tie(linearizedInfo, linearizedIndices) =
         memref::getLinearizedMemRefOffsetAndSize(
             rewriter, loc, srcBits, dstBits,
             stridedMetadata.getConstifiedMixedOffset(),
@@ -314,15 +381,35 @@ struct ConvertVectorLoad final : OpConversionPattern<vector::LoadOp> {
             stridedMetadata.getConstifiedMixedStrides(),
             getAsOpFoldResult(adaptor.getIndices()));
 
-    auto numElements = (origElements + scale - 1) / scale;
+    auto foldedFrontPaddingSize = getFrontPaddingSize(
+        rewriter, loc, linearizedInfo, isUnalignedEmulation);
+
+    if (!foldedFrontPaddingSize) {
+      // unimplemented case for dynamic front padding size
+      return failure();
+    }
+
+    auto numElements =
+        (*foldedFrontPaddingSize + origElements + scale - 1) / scale;
+    auto loadVectorType = VectorType::get(numElements, newElementType);
     auto newLoad = rewriter.create<vector::LoadOp>(
-        loc, VectorType::get(numElements, newElementType), adaptor.getBase(),
+        loc, loadVectorType, adaptor.getBase(),
         getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices));
 
+    auto newBitCastType = VectorType::get(numElements * scale, oldElementType);
     auto bitCast =
-        rewriter.create<vector::BitCastOp>(loc, op.getType(), newLoad);
+        rewriter.create<vector::BitCastOp>(loc, newBitCastType, newLoad);
 
-    rewriter.replaceOp(op, bitCast->getResult(0));
+    if (newBitCastType.getNumElements() != origElements) {
+      auto extractStridedSlice = rewriter.create<vector::ExtractStridedSliceOp>(
+          loc, op.getType(), bitCast,
+          rewriter.getI64ArrayAttr({*foldedFrontPaddingSize}),
+          rewriter.getI64ArrayAttr({origElements}),
+          rewriter.getI64ArrayAttr({1}));
+      rewriter.replaceOp(op, extractStridedSlice.getResult());
+    } else {
+      rewriter.replaceOp(op, bitCast->getResult(0));
+    }
     return success();
   }
 };
@@ -464,8 +551,8 @@ struct ConvertVectorTransferRead final
     int scale = dstBits / srcBits;
 
     auto origElements = op.getVectorType().getNumElements();
-    if (origElements % scale != 0)
-      return failure();
+
+    bool isUnalignedEmulation = origElements % scale != 0;
 
     auto newPadding = rewriter.create<arith::ExtUIOp>(loc, newElementType,
                                                       adaptor.getPadding());
@@ -474,7 +561,8 @@ struct ConvertVectorTransferRead final
         rewriter.create<memref::ExtractStridedMetadataOp>(loc, op.getSource());
 
     OpFoldResult linearizedIndices;
-    std::tie(std::ignore, linearizedIndices) =
+    memref::LinearizedMemRefInfo linearizedInfo;
+    std::tie(linearizedInfo, linearizedIndices) =
         memref::getLinearizedMemRefOffsetAndSize(
             rewriter, loc, srcBits, dstBits,
             stridedMetadata.getConstifiedMixedOffset(),
@@ -482,7 +570,16 @@ struct ConvertVectorTransferRead final
             stridedMetadata.getConstifiedMixedStrides(),
             getAsOpFoldResult(adaptor.getIndices()));
 
-    auto numElements = (origElements + scale - 1) / scale;
+    auto foldedFrontPaddingSize = getFrontPaddingSize(
+        rewriter, loc, linearizedInfo, isUnalignedEmulation);
+
+    if (!foldedFrontPaddingSize) {
+      // unimplemented case for dynamic front padding size
+      return failure();
+    }
+
+    auto numElements =
+        (*foldedFrontPaddingSize + origElements + scale - 1) / scale;
     auto newReadType = VectorType::get(numElements, newElementType);
 
     auto newRead = rewriter.create<vector::TransferReadOp>(
@@ -490,10 +587,21 @@ struct ConvertVectorTransferRead final
         getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices),
         newPadding);
 
+    auto bitCastType = VectorType::get(numElements * scale, oldElementType);
     auto bitCast =
-        rewriter.create<vector::BitCastOp>(loc, op.getType(), newRead);
+        rewriter.create<vector::BitCastOp>(loc, bitCastType, newRead);
 
-    rewriter.replaceOp(op, bitCast->getResult(0));
+    if (isUnalignedEmulation) {
+      // we only extract a portion of the vector.
+      rewriter.replaceOpWithNewOp<vector::ExtractStridedSliceOp>(
+          op, op.getType(), bitCast,
+          rewriter.getI64ArrayAttr({*foldedFrontPaddingSize}),
+          rewriter.getI64ArrayAttr({origElements}),
+          rewriter.getI64ArrayAttr({1}));
+    } else {
+      rewriter.replaceOp(op, bitCast->getResult(0));
+    }
+
     return success();
   }
 };
