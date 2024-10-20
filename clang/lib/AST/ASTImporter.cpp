@@ -8313,7 +8313,7 @@ ExpectedStmt ASTNodeImporter::VisitCXXNewExpr(CXXNewExpr *E) {
 
   return CXXNewExpr::Create(
       Importer.getToContext(), E->isGlobalNew(), ToOperatorNew,
-      ToOperatorDelete, E->passAlignment(), E->doesUsualArrayDeleteWantSize(),
+      ToOperatorDelete, E->implicitAllocationParameters(), E->doesUsualArrayDeleteWantSize(),
       ToPlacementArgs, ToTypeIdParens, ToArraySize, E->getInitializationStyle(),
       ToInitializer, ToType, ToAllocatedTypeSourceInfo, ToSourceRange,
       ToDirectInitRange);
