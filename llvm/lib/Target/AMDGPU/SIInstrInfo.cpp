@@ -2824,7 +2824,7 @@ MachineInstr *SIInstrInfo::commuteInstructionImpl(MachineInstr &MI, bool NewMI,
     if (isOperandLegal(MI, Src1Idx, &Src0))
       CommutedMI = swapRegAndNonRegOperand(MI, Src1, Src0);
   } else {
-      CommutedMI = swapNonRegOperands(MI, Src1, Src0);
+      CommutedMI = swapNonRegOperands(MI, Src0, Src1);
   }
 
   if (CommutedMI) {
