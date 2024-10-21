@@ -34,6 +34,8 @@ enum NodeType : unsigned {
   SRET_GLUE,
   MRET_GLUE,
   CALL,
+  TAIL,
+
   /// Select with condition operator - This selects between a true value and
   /// a false value (ops #3 and #4) based on the boolean result of comparing
   /// the lhs and rhs (ops #0 and #1) of a conditional expression with the
@@ -42,9 +44,16 @@ enum NodeType : unsigned {
   /// integer or floating point.
   SELECT_CC,
   BR_CC,
+
+  /// Turn a pair of `i<xlen>`s into a `riscv_i<xlen>_pair`.
+  BuildXLenPair,
+  /// Turn a `riscv_i<xlen>_pair` into a pair of `i<xlen>`s.
+  SplitXLenPair,
+
+  /// Turn a pair of `i32`s into an `f64`. Needed for rv32d/ilp32
   BuildPairF64,
+  /// Turn a `f64` into a pair of `i32`s. Needed for rv32d/ilp32
   SplitF64,
-  TAIL,
 
   // Add the Lo 12 bits from an address. Selected to ADDI.
   ADD_LO,
@@ -533,6 +542,9 @@ public:
   bool preferScalarizeSplat(SDNode *N) const override;
 
   bool softPromoteHalfType() const override { return true; }
+
+  EVT getAsmOperandValueType(const DataLayout &DL, Type *Ty,
+                             bool AllowUnknown = false) const override;
 
   /// Return the register type for a given MVT, ensuring vectors are treated
   /// as a series of gpr sized integers.
