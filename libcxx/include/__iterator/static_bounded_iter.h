@@ -31,9 +31,6 @@ _LIBCPP_PUSH_MACROS
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-// Iterator wrapper that carries the valid range it is allowed to access, but where
-// the size of that range is known at compile-time.
-//
 // This is an iterator wrapper for contiguous iterators that points within a range
 // whose size is known at compile-time. This is very similar to `__bounded_iter`,
 // except that we don't have to store the end of the range in physical memory since
