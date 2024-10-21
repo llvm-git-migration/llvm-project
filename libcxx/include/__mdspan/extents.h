@@ -79,7 +79,9 @@ template <class _Tp, size_t _Size>
 struct __possibly_empty_array {
   _Tp __vals_[_Size];
   _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t __index) _LIBCPP_LIFETIMEBOUND { return __vals_[__index]; }
-  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t __index) const _LIBCPP_LIFETIMEBOUND { return __vals_[__index]; }
+  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t __index) const _LIBCPP_LIFETIMEBOUND {
+    return __vals_[__index];
+  }
 };
 
 template <class _Tp>
