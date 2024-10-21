@@ -179,7 +179,7 @@
 // Changes the iterator type of `array` to a bounded iterator that keeps track of whether it's within the bounds of the
 // container and asserts it on every dereference and when performing iterator arithmetic.
 //
-// ABI impact: changes the iterator type of `array`.
+// ABI impact: changes the iterator type of `array`, its size and its layout.
 // #define _LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY
 
 // [[msvc::no_unique_address]] seems to mostly affect empty classes, so the padding scheme for Itanium doesn't work.
