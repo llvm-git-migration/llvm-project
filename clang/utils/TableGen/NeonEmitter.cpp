@@ -149,7 +149,8 @@ private:
     SInt,
     UInt,
     Poly,
-    BFloat16
+    BFloat16,
+    MFloat8,
   };
   TypeKind Kind;
   bool Immediate, Constant, Pointer;
@@ -194,10 +195,11 @@ public:
   bool isPoly() const { return Kind == Poly; }
   bool isSigned() const { return Kind == SInt; }
   bool isImmediate() const { return Immediate; }
+  bool isMFloat8() const { return Kind == MFloat8; }
   bool isFloat() const { return isFloating() && ElementBitwidth == 32; }
   bool isDouble() const { return isFloating() && ElementBitwidth == 64; }
   bool isHalf() const { return isFloating() && ElementBitwidth == 16; }
-  bool isChar() const { return ElementBitwidth == 8; }
+  bool isChar() const { return ElementBitwidth == 8 && !isMFloat8(); }
   bool isShort() const { return isInteger() && ElementBitwidth == 16; }
   bool isInt() const { return isInteger() && ElementBitwidth == 32; }
   bool isLong() const { return isInteger() && ElementBitwidth == 64; }
@@ -657,6 +659,8 @@ std::string Type::str() const {
     S += "float";
   else if (isBFloat16())
     S += "bfloat";
+  else if (isMFloat8())
+    S += "mfloat";
   else
     S += "int";
 
@@ -699,6 +703,9 @@ std::string Type::builtin_str() const {
   else if (isBFloat16()) {
     assert(ElementBitwidth == 16 && "BFloat16 can only be 16 bits");
     S += "y";
+  } else if (isMFloat8()) {
+    assert(ElementBitwidth == 8 && "MFloat8 can only be 8 bits");
+    S += "c";
   } else
     switch (ElementBitwidth) {
     case 16: S += "h"; break;
@@ -779,6 +786,8 @@ Type Type::fromTypedefName(StringRef Name) {
     T.Kind = Poly;
   } else if (Name.consume_front("bfloat")) {
     T.Kind = BFloat16;
+  } else if (Name.consume_front("mfp")) {
+    T.Kind = MFloat8;
   } else {
     assert(Name.starts_with("int"));
     Name = Name.drop_front(3);
@@ -878,6 +887,10 @@ void Type::applyTypespec(bool &Quad) {
     case 'b':
       Kind = BFloat16;
       ElementBitwidth = 16;
+      break;
+    case 'm':
+      Kind = MFloat8;
+      ElementBitwidth = 8;
       break;
     default:
       llvm_unreachable("Unhandled type code!");
@@ -993,6 +1006,9 @@ std::string Intrinsic::getInstTypeCode(Type T, ClassKind CK) const {
   if (T.isBFloat16())
     return "bf16";
 
+  if (T.isMFloat8())
+    return "mfp8";
+
   if (T.isPoly())
     typeCode = 'p';
   else if (T.isInteger())
@@ -1030,7 +1046,7 @@ std::string Intrinsic::getBuiltinTypeStr() {
 
   Type RetT = getReturnType();
   if ((LocalCK == ClassI || LocalCK == ClassW) && RetT.isScalar() &&
-      !RetT.isFloating() && !RetT.isBFloat16())
+      !RetT.isFloating() && !RetT.isBFloat16() && !RetT.isMFloat8())
     RetT.makeInteger(RetT.getElementSizeInBits(), false);
 
   // Since the return value must be one type, return a vector type of the
@@ -2587,9 +2603,9 @@ void NeonEmitter::runVectorTypes(raw_ostream &OS) {
   OS << "typedef float float32_t;\n";
   OS << "typedef __fp16 float16_t;\n";
 
-  OS << "#if defined(__aarch64__) || defined(__arm64ec__)\n";
   OS << "typedef __MFloat8x8_t mfloat8x8_t;\n";
   OS << "typedef __MFloat8x16_t mfloat8x16_t;\n";
+  OS << "#if defined(__aarch64__) || defined(__arm64ec__)\n";
   OS << "typedef double float64_t;\n";
   OS << "#endif\n\n";
 

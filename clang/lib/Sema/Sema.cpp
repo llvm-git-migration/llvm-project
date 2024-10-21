@@ -476,11 +476,22 @@ void Sema::Initialize() {
 #include "clang/Basic/OpenCLExtensionTypes.def"
   }
 
+  // Thumb is targetting ARM cpu and can use neon types
+  if (Context.getTargetInfo().getTriple().isThumb() ||
+      Context.getTargetInfo().getTriple().isARM()) {
+#define SVE_VECTOR_TYPE(Name, MangledName, Id, SingletonId)
+#define SVE_PREDICATE_TYPE(Name, MangledName, Id, SingletonId)
+#define SVE_OPAQUE_TYPE(Name, MangledName, Id, SingletonId)
+#define AARCH64_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                \
+  addImplicitTypedef(Name, Context.SingletonId);
+#include "clang/Basic/AArch64SVEACLETypes.def"
+  }
+
   if (Context.getTargetInfo().hasAArch64SVETypes() ||
       (Context.getAuxTargetInfo() &&
        Context.getAuxTargetInfo()->hasAArch64SVETypes())) {
-#define SVE_TYPE(Name, Id, SingletonId) \
-    addImplicitTypedef(Name, Context.SingletonId);
+#define SVE_TYPE(Name, Id, SingletonId)                                        \
+  addImplicitTypedef(Name, Context.SingletonId);
 #include "clang/Basic/AArch64SVEACLETypes.def"
   }
 

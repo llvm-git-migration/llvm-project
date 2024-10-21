@@ -1411,10 +1411,19 @@ void ASTContext::InitBuiltinTypes(const TargetInfo &Target,
 #include "clang/Basic/HLSLIntangibleTypes.def"
   }
 
+  if (Target.getTriple().isThumb() || Target.getTriple().isARM()) {
+#define SVE_VECTOR_TYPE(Name, MangledName, Id, SingletonId)
+#define SVE_PREDICATE_TYPE(Name, MangledName, Id, SingletonId)
+#define SVE_OPAQUE_TYPE(Name, MangledName, Id, SingletonId)
+#define AARCH64_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                \
+  InitBuiltinType(SingletonId, BuiltinType::Id);
+#include "clang/Basic/AArch64SVEACLETypes.def"
+  }
+
   if (Target.hasAArch64SVETypes() ||
       (AuxTarget && AuxTarget->hasAArch64SVETypes())) {
-#define SVE_TYPE(Name, Id, SingletonId) \
-    InitBuiltinType(SingletonId, BuiltinType::Id);
+#define SVE_TYPE(Name, Id, SingletonId)                                        \
+  InitBuiltinType(SingletonId, BuiltinType::Id);
 #include "clang/Basic/AArch64SVEACLETypes.def"
   }
 
