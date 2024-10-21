@@ -1,5 +1,7 @@
 // RUN: %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=trace-pc-guard -mllvm -sanitizer-coverage-gated-trace-callbacks=1 -o - | FileCheck %s --check-prefixes=CHECK,GATED
 // RUN: %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=trace-pc-guard -mllvm -sanitizer-coverage-gated-trace-callbacks=0 -o - | FileCheck %s --check-prefixes=CHECK,PLAIN
+// RUN: %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=trace-pc-guard,trace-cmp -mllvm -sanitizer-coverage-gated-trace-callbacks=1 -o - | FileCheck %s --check-prefixes=CHECK,GATED,GATEDCMP
+// RUN: %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=trace-pc-guard,trace-cmp -mllvm -sanitizer-coverage-gated-trace-callbacks=0 -o - | FileCheck %s --check-prefixes=CHECK,PLAIN,PLAINCMP
 // RUN: not %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=trace-pc -mllvm -sanitizer-coverage-gated-trace-callbacks=1 -o /dev/null 2>&1 | FileCheck %s --check-prefixes=INCOMPATIBLE
 // RUN: not %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=inline-8bit-counters -mllvm -sanitizer-coverage-gated-trace-callbacks=1 -o /dev/null 2>&1 | FileCheck %s --check-prefixes=INCOMPATIBLE
 // RUN: not %clang %s -target arm64-apple-darwin -emit-llvm -S -fsanitize-coverage=inline-bool-flag -mllvm -sanitizer-coverage-gated-trace-callbacks=1 -o /dev/null 2>&1 | FileCheck %s --check-prefixes=INCOMPATIBLE
@@ -9,7 +11,7 @@
 // PLAIN-NOT: section "__DATA,__sancov_gate"
 
 // Produce an error for all incompatible sanitizer coverage modes.
-// INCOMPATIBLE: error: 'sanitizer-coverage-gated-trace-callbacks' is only supported with trace-pc-guard
+// INCOMPATIBLE: error: 'sanitizer-coverage-gated-trace-callbacks' is only supported with trace-pc-guard and trace-cmp
 
 int x[10];
 
