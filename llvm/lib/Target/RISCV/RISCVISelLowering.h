@@ -35,6 +35,7 @@ enum NodeType : unsigned {
   MRET_GLUE,
   CALL,
   TAIL,
+
   /// Select with condition operator - This selects between a true value and
   /// a false value (ops #3 and #4) based on the boolean result of comparing
   /// the lhs and rhs (ops #0 and #1) of a conditional expression with the
@@ -43,6 +44,18 @@ enum NodeType : unsigned {
   /// integer or floating point.
   SELECT_CC,
   BR_CC,
+
+  /// Turn a pair of `i<xlen>`s into a `riscv_i<xlen>_pair`.
+  /// - Output: `riscv_i<xlen>_pair`
+  /// - Input 0: `i<xlen>` low-order bits, for even register.
+  /// - Input 1: `i<xlen>` high-order bits, for odd register.
+  BuildGPRPair,
+
+  /// Turn a `riscv_i<xlen>_pair` into a pair of `i<xlen>`s.
+  /// - Output 0: `i<xlen>` low-order bits, from even register.
+  /// - Output 1: `i<xlen>` high-order bits, from odd register.
+  /// - Input: `riscv_i<xlen>_pair`
+  SplitGPRPair,
 
   /// Turns a pair of `i32`s into an `f64`. Needed for rv32d/ilp32.
   /// - Output: `f64`.
@@ -543,6 +556,9 @@ public:
   bool preferScalarizeSplat(SDNode *N) const override;
 
   bool softPromoteHalfType() const override { return true; }
+
+  EVT getAsmOperandValueType(const DataLayout &DL, Type *Ty,
+                             bool AllowUnknown = false) const override;
 
   /// Return the register type for a given MVT, ensuring vectors are treated
   /// as a series of gpr sized integers.
