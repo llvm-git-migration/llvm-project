@@ -33,6 +33,7 @@
 #include "mlir/Support/ThreadLocalCache.h"
 #include "llvm/ADT/PointerEmbeddedInt.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"

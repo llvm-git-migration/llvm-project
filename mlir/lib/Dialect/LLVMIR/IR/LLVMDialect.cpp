@@ -3441,6 +3441,24 @@ void LLVM::AssumeOp::build(OpBuilder &builder, OperationState &state,
                /*op_bundle_tags=*/{});
 }
 
+void LLVM::AssumeOp::build(
+    OpBuilder &builder, OperationState &state, mlir::Value cond,
+    ArrayRef<llvm::OperandBundleDefT<mlir::Value>> opBundles) {
+  SmallVector<mlir::ValueRange> opBundleOperands;
+  SmallVector<mlir::Attribute> opBundleTags;
+  opBundleOperands.reserve(opBundles.size());
+  opBundleTags.reserve(opBundles.size());
+
+  for (const llvm::OperandBundleDefT<mlir::Value> &bundle : opBundles) {
+    opBundleOperands.emplace_back(bundle.inputs());
+    opBundleTags.push_back(
+        StringAttr::get(builder.getContext(), bundle.getTag()));
+  }
+
+  auto opBundleTagsAttr = ArrayAttr::get(builder.getContext(), opBundleTags);
+  return build(builder, state, cond, opBundleOperands, opBundleTagsAttr);
+}
+
 LogicalResult LLVM::AssumeOp::verify() { return verifyOperandBundles(*this); }
 
 //===----------------------------------------------------------------------===//

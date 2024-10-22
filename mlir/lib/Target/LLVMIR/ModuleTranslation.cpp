@@ -849,30 +849,34 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
     llvm::IRBuilderBase &builder, ModuleTranslation &moduleTranslation,
     Operation *intrOp, llvm::Intrinsic::ID intrinsic, unsigned numResults,
     ArrayRef<unsigned> overloadedResults, ArrayRef<unsigned> overloadedOperands,
-    ArrayRef<unsigned> immArgPositions,
-    ArrayRef<StringLiteral> immArgAttrNames) {
+    ArrayRef<unsigned> immArgPositions, ArrayRef<StringLiteral> immArgAttrNames,
+    ArrayRef<ArrayRef<unsigned>> opBundleOperandPositions,
+    ArrayRef<StringLiteral> opBundleTags) {
   assert(immArgPositions.size() == immArgAttrNames.size() &&
          "LLVM `immArgPositions` and MLIR `immArgAttrNames` should have equal "
          "length");
+  assert(opBundleOperandPositions.size() == opBundleTags.size() &&
+         "operand bundles and tags do not match");
 
   SmallVector<llvm::OperandBundleDef> opBundles;
-  size_t numOpBundleOperands = 0;
+
+  size_t numVariadicOpBundleOperands = 0;
   auto opBundleSizesAttr = cast_if_present<DenseI32ArrayAttr>(
       intrOp->getAttr(LLVMDialect::getOpBundleSizesAttrName()));
   auto opBundleTagsAttr = cast_if_present<ArrayAttr>(
       intrOp->getAttr(LLVMDialect::getOpBundleTagsAttrName()));
-
   if (opBundleSizesAttr && opBundleTagsAttr) {
     ArrayRef<int> opBundleSizes = opBundleSizesAttr.asArrayRef();
     assert(opBundleSizes.size() == opBundleTagsAttr.size() &&
            "operand bundles and tags do not match");
 
-    numOpBundleOperands =
+    numVariadicOpBundleOperands =
         std::accumulate(opBundleSizes.begin(), opBundleSizes.end(), size_t(0));
-    assert(numOpBundleOperands <= intrOp->getNumOperands() &&
+    assert(numVariadicOpBundleOperands <= intrOp->getNumOperands() &&
            "operand bundle operands is more than the number of operands");
 
-    ValueRange operands = intrOp->getOperands().take_back(numOpBundleOperands);
+    ValueRange operands =
+        intrOp->getOperands().take_back(numVariadicOpBundleOperands);
     size_t nextOperandIdx = 0;
     opBundles.reserve(opBundleSizesAttr.size());
 
@@ -887,9 +891,29 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
   }
 
   // Map operands and attributes to LLVM values.
-  auto opOperands = intrOp->getOperands().drop_back(numOpBundleOperands);
+  auto opOperands =
+      intrOp->getOperands().drop_back(numVariadicOpBundleOperands);
   auto operands = moduleTranslation.lookupValues(opOperands);
-  SmallVector<llvm::Value *> args(immArgPositions.size() + operands.size());
+
+  // Map operand bundle operands to LLVM operand bundles.
+  DenseSet<unsigned> opBundleOperandPositionsSet;
+  for (auto [positions, tag] :
+       llvm::zip(opBundleOperandPositions, opBundleTags)) {
+    opBundleOperandPositionsSet.insert(positions.begin(), positions.end());
+
+    SmallVector<llvm::Value *> bundleArgs;
+    bundleArgs.reserve(positions.size());
+    for (unsigned idx : positions) {
+      assert(idx < operands.size() &&
+             "op bundle operand index is out of range");
+      bundleArgs.push_back(operands[idx]);
+    }
+
+    opBundles.emplace_back(tag.str(), std::move(bundleArgs));
+  }
+
+  SmallVector<llvm::Value *> args(immArgPositions.size() + operands.size() -
+                                  opBundleOperandPositionsSet.size());
   for (auto [immArgPos, immArgName] :
        llvm::zip(immArgPositions, immArgAttrNames)) {
     auto attr = llvm::cast<TypedAttr>(intrOp->getAttr(immArgName));
@@ -900,8 +924,11 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
   }
   unsigned opArg = 0;
   for (auto &arg : args) {
-    if (!arg)
+    if (!arg) {
+      while (opBundleOperandPositionsSet.contains(opArg))
+        ++opArg;
       arg = operands[opArg++];
+    }
   }
 
   // Resolve overloaded intrinsic declaration.
@@ -923,6 +950,8 @@ llvm::CallInst *mlir::LLVM::detail::createIntrinsicCall(
   llvm::Function *llvmIntr = llvm::Intrinsic::getOrInsertDeclaration(
       module, intrinsic, overloadedTypes);
 
+  llvm::outs() << "debug: createIntrinsicCall: num args = " << args.size()
+               << ", num op bundles = " << opBundles.size() << "\n";
   return builder.CreateCall(llvmIntr, args, opBundles);
 }
 

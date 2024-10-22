@@ -450,10 +450,44 @@ def LLVM_AssumeOp
   }];
 
   let builders = [
-    OpBuilder<(ins "Value":$cond)>
+    OpBuilder<(ins "Value":$cond)>,
+    OpBuilder<(ins "Value":$cond,
+                   "ArrayRef<llvm::OperandBundleDefT<Value>>":$opBundles)>
   ];
 
   let hasVerifier = 1;
+}
+
+class LLVM_AssumeOpBase<string mnem, list<int> opBundleOperandPositions,
+                        string opBundleTag>
+    : LLVM_IntrOp<"assume." # mnem, /*overloadedResults=*/[],
+                  /*overloadedOperands=*/[], /*traits=*/[],
+                  /*numResults=*/0, /*enumName=*/"assume",
+                  /*enableMlirBuilder=*/0, /*requiresAccessGroup=*/0,
+                  /*requiresAliasAnalysis=*/0, /*requiresFastmath=*/0,
+                  /*requiresOpBundles=*/0, /*immArgPositions=*/[],
+                  /*immArgAttrNames=*/[],
+                  /*opBundleOperandPositions=*/[opBundleOperandPositions],
+                  /*opBundleTags=*/[opBundleTag]> {
+  dag args = (ins I1:$cond);
+}
+
+def LLVM_AssumeAlignOp : LLVM_AssumeOpBase<"align", [1, 2], "align"> {
+  let arguments = !con(args, (ins LLVM_AnyPointer:$ptr, AnyInteger:$align));
+
+  let assemblyFormat = [{
+    $cond `,` $ptr `,` $align attr-dict `:` functional-type(operands, results)
+  }];
+}
+
+def LLVM_AssumeSeparateStorageOp
+    : LLVM_AssumeOpBase<"separate_storage", [1, 2], "separate_storage"> {
+  let arguments = !con(
+    args, (ins LLVM_AnyPointer:$ptr1, LLVM_AnyPointer:$ptr2));
+
+  let assemblyFormat = [{
+    $cond `,` $ptr1 `,` $ptr2 attr-dict `:` functional-type(operands, results)
+  }];
 }
 
 def LLVM_SSACopyOp : LLVM_OneResultIntrOp<"ssa.copy", [], [0],

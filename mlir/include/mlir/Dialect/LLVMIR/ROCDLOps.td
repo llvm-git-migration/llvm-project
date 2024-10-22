@@ -97,7 +97,7 @@ class ROCDL_IntrOp<string mnemonic, list<int> overloadedResults,
   list<string> immArgAttrNames = []> :
   LLVM_IntrOpBase<ROCDL_Dialect,  mnemonic,
     "amdgcn_" # !subst(".", "_", mnemonic), overloadedResults,
-    overloadedOperands, traits, numResults, requiresAccessGroup,
+    overloadedOperands, traits, numResults, 1, requiresAccessGroup,
     requiresAliasAnalysis, 0, 0, immArgPositions, immArgAttrNames>;
 
 //===----------------------------------------------------------------------===//
