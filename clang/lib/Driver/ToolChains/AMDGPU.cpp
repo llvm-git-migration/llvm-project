@@ -306,15 +306,18 @@ RocmInstallationDetector::getInstallationPathCandidates() {
       LatestVer = Ver;
     }
   }
+
+ if (!isHostWindows()) {
   if (!LatestROCm.empty())
     ROCmSearchDirs.emplace_back(D.SysRoot + "/opt/" + LatestROCm,
                                 /*StrictChecking=*/true);
 
-  ROCmSearchDirs.emplace_back(D.SysRoot + "/usr/local",
-                              /*StrictChecking=*/true);
-  ROCmSearchDirs.emplace_back(D.SysRoot + "/usr",
-                              /*StrictChecking=*/true);
-
+    ROCmSearchDirs.emplace_back(D.SysRoot + "/usr/local",
+                                /*StrictChecking=*/true);
+    ROCmSearchDirs.emplace_back(D.SysRoot + "/usr",
+                                /*StrictChecking=*/true);
+ }
+  
   DoPrintROCmSearchDirs();
   return ROCmSearchDirs;
 }
@@ -376,10 +379,10 @@ RocmInstallationDetector::RocmInstallationDetector(
                           .str();
   }
 
-  if (DetectHIPRuntime)
-    detectHIPRuntime();
-  if (DetectDeviceLib)
-    detectDeviceLibrary();
+  // Windows needs to exclude linux style paths from the list of paths to search,
+  // so delay these detection functions until after the constructor
+
+
 }
 
 void RocmInstallationDetector::detectDeviceLibrary() {
@@ -703,6 +706,7 @@ AMDGPUToolChain::AMDGPUToolChain(const Driver &D, const llvm::Triple &Triple,
     : Generic_ELF(D, Triple, Args),
       OptionsDefault(
           {{options::OPT_O, "3"}, {options::OPT_cl_std_EQ, "CL1.2"}}) {
+  RocmInstallation->init();
   // Check code object version options. Emit warnings for legacy options
   // and errors for the last invalid code object version options.
   // It is done here to avoid repeated warning or error messages for
@@ -835,8 +839,11 @@ bool AMDGPUToolChain::isWave64(const llvm::opt::ArgList &DriverArgs,
 
 /// ROCM Toolchain
 ROCMToolChain::ROCMToolChain(const Driver &D, const llvm::Triple &Triple,
-                             const ArgList &Args)
+                             const ArgList &Args, bool isHostTCMSVC)
     : AMDGPUToolChain(D, Triple, Args) {
+  RocmInstallation->setHostWindows(isHostTCMSVC);
+  if (isHostTCMSVC) 
+    RocmInstallation->init(true, false);
   RocmInstallation->detectDeviceLibrary();
 }
 
