@@ -127,7 +127,7 @@ def : ProcessorModel<"generic", NoSchedModel,
                        FeatureNontrappingFPToInt, FeatureReferenceTypes,
                        FeatureCallIndirectOverlong, FeatureSignExt]>;
 
-def : ProcessorModel<"trail1", NoSchedModel,
+def : ProcessorModel<"lime1", NoSchedModel,
                       [FeatureMultivalue, FeatureMutableGlobals,
                        FeatureCallIndirectOverlong, FeatureSignExt,
                        FeatureBulkMemoryOpt, FeatureNontrappingFPToInt,
