@@ -25,6 +25,8 @@ void func() {
 #if TEST_STD_VER >= 23
   auto&& v5 = std::forward_like<int&&>(int{});               // expected-warning {{temporary bound to local reference 'v5' will be destroyed at the end of the full-expression}}
 #endif
-  auto &&v6 = std::vector<int>(2)[1];                        // expected-warning {{temporary bound to local reference 'v6' will be destroyed at the end of the full-expression}}
-  auto v7 = std::set<int>().insert(1);                       // expected-warning {{temporary bound to local reference 'v7' will be destroyed at the end of the full-expression}}
+  auto&& v6 = std::vector<int>(2)
+      [1]; // expected-warning {{temporary bound to local reference 'v6' will be destroyed at the end of the full-expression}}
+  auto v7 = std::set<int>().insert(
+      1); // expected-warning {{temporary bound to local reference 'v7' will be destroyed at the end of the full-expression}}
 }

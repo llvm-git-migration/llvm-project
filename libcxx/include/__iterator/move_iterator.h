@@ -174,7 +174,8 @@ public:
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference operator*() const {
     return static_cast<reference>(*__current_);
   }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference
+  operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
     return static_cast<reference>(__current_[__n]);
   }
 

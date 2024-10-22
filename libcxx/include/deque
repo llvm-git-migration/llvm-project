@@ -811,7 +811,8 @@ public:
   _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __p, _InputIter __f, _InputIter __l) _LIBCPP_LIFETIMEBOUND;
   template <class _ForwardIterator,
             __enable_if_t<__has_exactly_forward_iterator_category<_ForwardIterator>::value, int> = 0>
-  _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __p, _ForwardIterator __f, _ForwardIterator __l) _LIBCPP_LIFETIMEBOUND;
+  _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __p, _ForwardIterator __f, _ForwardIterator __l)
+      _LIBCPP_LIFETIMEBOUND;
   template <class _BiIter, __enable_if_t<__has_bidirectional_iterator_category<_BiIter>::value, int> = 0>
   _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __p, _BiIter __f, _BiIter __l) _LIBCPP_LIFETIMEBOUND;
 

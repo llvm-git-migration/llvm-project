@@ -905,7 +905,8 @@ public:
     return (__x.__seg_ - __y.__seg_) * __bits_per_word + __x.__ctz_ - __y.__ctz_;
   }
 
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference
+  operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
     return *(*this + __n);
   }
 
