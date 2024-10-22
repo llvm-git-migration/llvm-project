@@ -180,7 +180,8 @@ public:
     current += __n;
     return *this;
   }
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference
+  operator[](difference_type __n) const _LIBCPP_LIFETIMEBOUND {
     return *(*this + __n);
   }
 

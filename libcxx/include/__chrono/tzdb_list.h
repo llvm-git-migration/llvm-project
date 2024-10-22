@@ -55,12 +55,16 @@ public:
 
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const tzdb& front() const noexcept _LIBCPP_LIFETIMEBOUND { return __front(); }
 
-  _LIBCPP_HIDE_FROM_ABI const_iterator erase_after(const_iterator __p) _LIBCPP_LIFETIMEBOUND { return __erase_after(__p); }
+  _LIBCPP_HIDE_FROM_ABI const_iterator erase_after(const_iterator __p) _LIBCPP_LIFETIMEBOUND {
+    return __erase_after(__p);
+  }
 
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const_iterator begin() const noexcept _LIBCPP_LIFETIMEBOUND { return __begin(); }
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const_iterator end() const noexcept _LIBCPP_LIFETIMEBOUND { return __end(); }
 
-  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const_iterator cbegin() const noexcept _LIBCPP_LIFETIMEBOUND { return __cbegin(); }
+  [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const_iterator cbegin() const noexcept _LIBCPP_LIFETIMEBOUND {
+    return __cbegin();
+  }
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI const_iterator cend() const noexcept _LIBCPP_LIFETIMEBOUND { return __cend(); }
 
   [[nodiscard]] _LIBCPP_HIDE_FROM_ABI __impl& __implementation() { return *__impl_; }
