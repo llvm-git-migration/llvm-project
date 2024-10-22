@@ -3060,6 +3060,7 @@ Generic_GCC::Generic_GCC(const Driver &D, const llvm::Triple &Triple,
     : ToolChain(D, Triple, Args), GCCInstallation(D),
       CudaInstallation(D, Triple, Args), RocmInstallation(D, Triple, Args) {
   getProgramPaths().push_back(getDriver().Dir);
+  RocmInstallation->init();
 }
 
 Generic_GCC::~Generic_GCC() {}
