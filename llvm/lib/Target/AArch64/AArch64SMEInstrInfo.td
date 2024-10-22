@@ -1024,3 +1024,8 @@ let Predicates = [HasSME2p2, HasSMEF8F16], Uses = [FPMR, FPCR] in {
 let Predicates = [HasSME2p2, HasSMEF16F16] in {
   def FTMOPA_M2ZZZI_HtoH : sme_tmopa_16b<0b10001, ZZ_h_mul_r, ZPR16, "ftmopa">;
 } // [HasSME2p2, HasSMEF16F16]
+
+let Predicates = [HasSME2p2, HasSMEB16B16] in {
+  defm BFMOP4A : sme2_bfmop4as_non_widening<0, "bfmop4a">;
+  defm BFMOP4S : sme2_bfmop4as_non_widening<1, "bfmop4s">;
+}
