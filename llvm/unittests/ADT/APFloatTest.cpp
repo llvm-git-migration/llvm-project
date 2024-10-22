@@ -7614,6 +7614,15 @@ TEST(APFloatTest, ConvertDoubleToE8M0FNU) {
   EXPECT_EQ(status, APFloat::opUnderflow | APFloat::opInexact);
 }
 
+TEST(APFloatTest, Float8E8M0FNUBitcastToAPInt) {
+  // Regression test for verifying the low bit of the exponent when bitcasting
+  // to integer (zero mantissa).
+  APFloat f0(APFloat::Float8E8M0FNU(), "0.5");
+  APFloat f1(APFloat::Float8E8M0FNU(), "1.0");
+  EXPECT_EQ(f0.bitcastToAPInt(), 126) << f0;
+  EXPECT_EQ(f1.bitcastToAPInt(), 127) << f1;
+}
+
 TEST(APFloatTest, Float6E3M2FNFromString) {
   // Exactly representable
   EXPECT_EQ(28, APFloat(APFloat::Float6E3M2FN(), "28").convertToDouble());
