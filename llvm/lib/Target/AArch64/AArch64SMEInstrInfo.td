@@ -1034,3 +1034,8 @@ let Predicates = [HasSME2, HasSVEBFSCALE] in {
   defm BFMUL : sme2_bfmul_single<"bfmul">;
   defm BFMUL : sme2_bfmul_multi<"bfmul">;
 } //[HasSME2, HasSVEBFSCALE]
+
+let Predicates = [HasSME2p2, HasSMEB16B16] in {
+  defm BFMOP4A : sme2_bfmop4as_non_widening<0, "bfmop4a">;
+  defm BFMOP4S : sme2_bfmop4as_non_widening<1, "bfmop4s">;
+}
