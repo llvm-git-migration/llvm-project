@@ -499,10 +499,6 @@ public:
   /// Fix the vectorized code, taking care of header phi's, and more.
   void fixVectorizedLoop(VPTransformState &State);
 
-  /// For all vectorized CSAs, replace uses of live-out scalar from the orignal
-  /// loop with the extracted scalar from the vector loop for.
-  void fixCSALiveOuts(VPTransformState &State, VPlan &Plan);
-
   // Return true if any runtime check is added.
   bool areSafetyChecksAdded() { return AddedSafetyChecks; }
 
@@ -2943,25 +2939,6 @@ LoopVectorizationCostModel::getVectorIntrinsicCost(CallInst *CI,
                                    TargetTransformInfo::TCK_RecipThroughput);
 }
 
-void InnerLoopVectorizer::fixCSALiveOuts(VPTransformState &State, VPlan &Plan) {
-  for (const auto &CSA : Plan.getCSAStates()) {
-    VPCSADataUpdateRecipe *VPDataUpdate = CSA.second->getDataUpdate();
-    assert(VPDataUpdate &&
-           "VPDataUpdate must have been introduced prior to fixing live outs");
-    Value *V = VPDataUpdate->getUnderlyingValue();
-    Value *ExtractedScalar =
-        State.get(CSA.second->getExtractScalarRecipe(), /*NeedsScalar=*/true);
-    // Fix LCSSAPhis
-    llvm::SmallPtrSet<PHINode *, 2> ToFix;
-    for (User *U : V->users())
-      if (auto *Phi = dyn_cast<PHINode>(U);
-          Phi && Phi->getParent() == LoopExitBlock)
-        ToFix.insert(Phi);
-    for (PHINode *Phi : ToFix)
-      Phi->addIncoming(ExtractedScalar, LoopMiddleBlock);
-  }
-}
-
 void InnerLoopVectorizer::fixVectorizedLoop(VPTransformState &State) {
   // Fix widened non-induction PHIs by setting up the PHI operands.
   if (EnableVPlanNativePath)
@@ -2997,7 +2974,7 @@ void InnerLoopVectorizer::fixVectorizedLoop(VPTransformState &State) {
       fixupIVUsers(Entry.first, Entry.second,
                    getOrCreateVectorTripCount(nullptr),
                    IVEndValues[Entry.first], LoopMiddleBlock, State);
-    fixCSALiveOuts(State, Plan);
+                   IVEndValues[Entry.first], LoopMiddleBlock, Plan, State);
   }
 
   for (Instruction *PI : PredicatedInstructions)
@@ -8845,7 +8822,7 @@ static void
 addCSAPostprocessRecipes(VPRecipeBuilder &RecipeBuilder,
                          const LoopVectorizationLegality::CSAList &CSAs,
                          VPBasicBlock *MiddleVPBB, DebugLoc DL, VFRange &Range,
-                         VPlan &Plan) {
+                         VPlan &Plan, Loop *OrigLoop) {
   // Don't build CSA for VF=ElementCount::getFixed(1)
   if (LoopVectorizationPlanner::getDecisionAndClampRange(
           [&](ElementCount VF) { return VF.isScalar(); }, Range))
@@ -8897,6 +8874,14 @@ addCSAPostprocessRecipes(VPRecipeBuilder &RecipeBuilder,
     // Update CSAState with new recipes
     CSAState->setExtractScalarRecipe(ExtractScalarRecipe);
     CSAState->setVPAnyActive(VPAnyActive);
+
+    // Add live out for the CSA. We should be in LCSSA, so we are looking for
+    // Phi users in the unique exit block of the original updated value.
+    BasicBlock *OrigExit = OrigLoop->getUniqueExitBlock();
+    assert(OrigExit && "Expected a single exit block");
+    for (User *U :VPDataUpdate->getUnderlyingValue()->users())
+      if (auto *Phi = dyn_cast<PHINode>(U); Phi && Phi->getParent() == OrigExit)
+        Plan.addLiveOut(Phi, ExtractScalarRecipe);
   }
 }
 
