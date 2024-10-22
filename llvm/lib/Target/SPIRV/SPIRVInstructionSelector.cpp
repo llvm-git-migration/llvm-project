@@ -231,7 +231,7 @@ private:
                          MachineInstr &I) const;
 
   bool selectWaveActiveCountBits(Register ResVReg, const SPIRVType *ResType,
-                                MachineInstr &I) const;
+                                 MachineInstr &I) const;
 
   bool selectWaveReadLaneAt(Register ResVReg, const SPIRVType *ResType,
                             MachineInstr &I) const;
@@ -1765,9 +1765,8 @@ bool SPIRVInstructionSelector::selectSign(Register ResVReg,
   return Result;
 }
 
-bool SPIRVInstructionSelector::selectWaveActiveCountBits(Register ResVReg,
-                                                         const SPIRVType *ResType,
-                                                         MachineInstr &I) const {
+bool SPIRVInstructionSelector::selectWaveActiveCountBits(
+    Register ResVReg, const SPIRVType *ResType, MachineInstr &I) const {
   assert(I.getNumOperands() == 3);
   assert(I.getOperand(2).isReg());
   MachineBasicBlock &BB = *I.getParent();
@@ -1777,22 +1776,21 @@ bool SPIRVInstructionSelector::selectWaveActiveCountBits(Register ResVReg,
   SPIRVType *BallotType = GR.getOrCreateSPIRVVectorType(IntTy, 4, I, TII);
 
   bool Result =
-      BuildMI(BB, I, I.getDebugLoc(),
-              TII.get(SPIRV::OpGroupNonUniformBallot))
+      BuildMI(BB, I, I.getDebugLoc(), TII.get(SPIRV::OpGroupNonUniformBallot))
           .addDef(BallotReg)
           .addUse(GR.getSPIRVTypeID(BallotType))
           .addUse(GR.getOrCreateConstInt(SPIRV::Scope::Subgroup, I, IntTy, TII))
           .addUse(I.getOperand(2).getReg());
 
   Result |=
-    BuildMI(BB, I, I.getDebugLoc(),
-            TII.get(SPIRV::OpGroupNonUniformBallotBitCount))
-        .addDef(ResVReg)
-        .addUse(GR.getSPIRVTypeID(ResType))
-        .addUse(GR.getOrCreateConstInt(SPIRV::Scope::Subgroup, I, IntTy, TII))
-        .addImm(0)
-        .addUse(BallotReg)
-        .constrainAllUses(TII, TRI, RBI);
+      BuildMI(BB, I, I.getDebugLoc(),
+              TII.get(SPIRV::OpGroupNonUniformBallotBitCount))
+          .addDef(ResVReg)
+          .addUse(GR.getSPIRVTypeID(ResType))
+          .addUse(GR.getOrCreateConstInt(SPIRV::Scope::Subgroup, I, IntTy, TII))
+          .addImm(0)
+          .addUse(BallotReg)
+          .constrainAllUses(TII, TRI, RBI);
 
   return Result;
 }
