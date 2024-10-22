@@ -1004,3 +1004,8 @@ let Predicates = [HasSME2p2] in {
   defm BFMOP4A : sme2_bfmop4as_widening<0, "bfmop4a">;
   defm BFMOP4S : sme2_bfmop4as_widening<1, "bfmop4s">;
 }
+
+let Predicates = [HasSME2p2, HasSMEB16B16] in {
+  defm BFMOP4A : sme2_bfmop4as_non_widening<0, "bfmop4a">;
+  defm BFMOP4S : sme2_bfmop4as_non_widening<1, "bfmop4s">;
+}
