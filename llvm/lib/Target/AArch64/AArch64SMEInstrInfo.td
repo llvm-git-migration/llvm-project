@@ -1004,6 +1004,8 @@ let Predicates = [HasSME2p2] in {
   def FTMOPA_M2ZZZI_HtoS  : sme_tmopa_32b<0b11000, ZZ_h_mul_r, ZPR16, "ftmopa">;
   def FTMOPA_M2ZZZI_StoS  : sme_tmopa_32b<0b00000, ZZ_s_mul_r, ZPR32, "ftmopa">;
   def BFTMOPA_M2ZZZI_HtoS : sme_tmopa_32b<0b10000, ZZ_h_mul_r, ZPR16, "bftmopa">;
+  defm FMOP4A : sme2_fmop4as_fp32_non_widening<0, "fmop4a">;
+  defm FMOP4S : sme2_fmop4as_fp32_non_widening<1, "fmop4s">;
 } // [HasSME2p2]
 
 let Predicates = [HasSME2p2, HasSMEB16B16] in {
