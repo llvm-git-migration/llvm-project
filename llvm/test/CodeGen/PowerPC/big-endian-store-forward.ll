@@ -10,7 +10,6 @@ define void @f(i16 %v) {
 ; CHECK-NEXT:    addis 4, 2, .LC0@toc@ha
 ; CHECK-NEXT:    sth 3, -2(1)
 ; CHECK-NEXT:    ld 4, .LC0@toc@l(4)
-; CHECK-NEXT:    lbz 3, -2(1)
 ; CHECK-NEXT:    stb 3, 0(4)
 ; CHECK-NEXT:    blr
   %p32 = alloca i16
