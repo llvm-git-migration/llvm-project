@@ -154,6 +154,7 @@ bool VPRecipeBase::mayHaveSideEffects() const {
   case VPDerivedIVSC:
   case VPPredInstPHISC:
   case VPScalarCastSC:
+  case VPVectorPointerSC:
   case VPReverseVectorPointerSC:
     return false;
   case VPInstructionSC:
@@ -1881,6 +1882,9 @@ void VPVectorPointerRecipe::print(raw_ostream &O, const Twine &Indent,
   O << Indent;
   printAsOperand(O, SlotTracker);
   O << " = vector-pointer ";
+
+  if (isInBounds())
+    O << "inbounds ";
 
   printOperands(O, SlotTracker);
 }
