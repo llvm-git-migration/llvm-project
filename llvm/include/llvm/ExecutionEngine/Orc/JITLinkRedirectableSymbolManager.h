@@ -59,6 +59,7 @@ private:
             ObjLinkingLayer.getExecutionSession().getTargetTriple())),
         PtrJumpStubCreator(jitlink::getPointerJumpStubCreator(
             ObjLinkingLayer.getExecutionSession().getTargetTriple())) {
+    ErrorAsOutParameter _(&Err);
     if (!AnonymousPtrCreator || !PtrJumpStubCreator)
       Err = make_error<StringError>("Architecture not supported",
                                     inconvertibleErrorCode());
