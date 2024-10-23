@@ -6,16 +6,10 @@
 define i64 @callee_float_in_regs(i64 %a, float %b) nounwind {
 ; CHECK-LABEL: callee_float_in_regs:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    addi.d $sp, $sp, -16
-; CHECK-NEXT:    st.d $ra, $sp, 8 # 8-byte Folded Spill
-; CHECK-NEXT:    st.d $fp, $sp, 0 # 8-byte Folded Spill
-; CHECK-NEXT:    move $fp, $a0
-; CHECK-NEXT:    move $a0, $a1
-; CHECK-NEXT:    bl %plt(__fixsfdi)
-; CHECK-NEXT:    add.d $a0, $fp, $a0
-; CHECK-NEXT:    ld.d $fp, $sp, 0 # 8-byte Folded Reload
-; CHECK-NEXT:    ld.d $ra, $sp, 8 # 8-byte Folded Reload
-; CHECK-NEXT:    addi.d $sp, $sp, 16
+; CHECK-NEXT:    movgr2fr.w $fa0, $a1
+; CHECK-NEXT:    ftintrz.l.s $fa0, $fa0
+; CHECK-NEXT:    movfr2gr.d $a1, $fa0
+; CHECK-NEXT:    add.d $a0, $a0, $a1
 ; CHECK-NEXT:    ret
   %b_fptosi = fptosi float %b to i64
   %1 = add i64 %a, %b_fptosi
@@ -27,7 +21,8 @@ define i64 @caller_float_in_regs() nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    addi.d $sp, $sp, -16
 ; CHECK-NEXT:    st.d $ra, $sp, 8 # 8-byte Folded Spill
-; CHECK-NEXT:    lu12i.w $a1, 262144
+; CHECK-NEXT:    vldi $vr0, -1280
+; CHECK-NEXT:    movfr2gr.s $a1, $fa0
 ; CHECK-NEXT:    ori $a0, $zero, 1
 ; CHECK-NEXT:    bl %plt(callee_float_in_regs)
 ; CHECK-NEXT:    ld.d $ra, $sp, 8 # 8-byte Folded Reload
@@ -59,7 +54,7 @@ define i64 @caller_float_on_stack() nounwind {
 ; CHECK-NEXT:    ori $a2, $zero, 2
 ; CHECK-NEXT:    ori $a4, $zero, 3
 ; CHECK-NEXT:    ori $a6, $zero, 4
-; CHECK-NEXT:    st.d $a1, $sp, 0
+; CHECK-NEXT:    st.w $a1, $sp, 0
 ; CHECK-NEXT:    move $a1, $zero
 ; CHECK-NEXT:    move $a3, $zero
 ; CHECK-NEXT:    move $a5, $zero
@@ -75,7 +70,8 @@ define i64 @caller_float_on_stack() nounwind {
 define float @callee_tiny_scalar_ret() nounwind {
 ; CHECK-LABEL: callee_tiny_scalar_ret:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    lu12i.w $a0, 260096
+; CHECK-NEXT:    vldi $vr0, -1168
+; CHECK-NEXT:    movfr2gr.s $a0, $fa0
 ; CHECK-NEXT:    ret
   ret float 1.0
 }
@@ -86,7 +82,8 @@ define i64 @caller_tiny_scalar_ret() nounwind {
 ; CHECK-NEXT:    addi.d $sp, $sp, -16
 ; CHECK-NEXT:    st.d $ra, $sp, 8 # 8-byte Folded Spill
 ; CHECK-NEXT:    bl %plt(callee_tiny_scalar_ret)
-; CHECK-NEXT:    addi.w $a0, $a0, 0
+; CHECK-NEXT:    movgr2fr.w $fa0, $a0
+; CHECK-NEXT:    movfr2gr.s $a0, $fa0
 ; CHECK-NEXT:    ld.d $ra, $sp, 8 # 8-byte Folded Reload
 ; CHECK-NEXT:    addi.d $sp, $sp, 16
 ; CHECK-NEXT:    ret

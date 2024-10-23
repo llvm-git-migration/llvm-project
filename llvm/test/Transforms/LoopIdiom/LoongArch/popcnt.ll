@@ -2,7 +2,7 @@
 ; RUN: opt -passes=loop-idiom -mtriple=loongarch32 -mattr=+lsx -S < %s | FileCheck %s --check-prefix=CPOP
 ; RUN: opt -passes=loop-idiom -mtriple=loongarch64 -mattr=+lsx -S < %s | FileCheck %s --check-prefix=CPOP
 ; RUN: opt -passes=loop-idiom -mtriple=loongarch32 -S < %s | FileCheck %s --check-prefix=NOCPOP
-; RUN: opt -passes=loop-idiom -mtriple=loongarch64 -S < %s | FileCheck %s --check-prefix=NOCPOP
+; RUN: opt -passes=loop-idiom -mtriple=loongarch64 -S < %s | FileCheck %s --check-prefix=CPOP
 
 ; Mostly copied from RISCV version.
 
