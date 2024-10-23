@@ -13,6 +13,7 @@
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ThreadSafeAllocator.h"
+#include "llvm/Support/TrailingObjects.h"
 #include "llvm/Support/raw_ostream.h"
 #include <memory>
 
@@ -54,9 +55,16 @@ static_assert(sizeof(TrieContent) ==
                   ThreadSafeTrieRawHashMapBase::TrieContentBaseSize,
               "Check header assumption!");
 
-class TrieSubtrie final : public TrieNode {
+class TrieSubtrie final
+    : public TrieNode,
+      private TrailingObjects<TrieSubtrie, LazyAtomicPointer<TrieNode>> {
 public:
-  TrieNode *get(size_t I) const { return Slots[I].load(); }
+  using Slot = LazyAtomicPointer<TrieNode>;
+
+  Slot &get(size_t I) { return getTrailingObjects<Slot>()[I]; }
+  TrieNode *load(size_t I) { return get(I).load(); }
+
+  unsigned size() const { return Size; }
 
   TrieSubtrie *
   sink(size_t I, TrieContent &Content, size_t NumSubtrieBits, size_t NewI,
@@ -67,6 +75,12 @@ public:
   explicit TrieSubtrie(size_t StartBit, size_t NumBits);
 
   static bool classof(const TrieNode *TN) { return TN->IsSubtrie; }
+
+  static constexpr size_t sizeToAlloc(unsigned NumBits) {
+    assert(NumBits < 20 && "Tries should have fewer than ~1M slots");
+    size_t Count = 1u << NumBits;
+    return totalSizeToAlloc<LazyAtomicPointer<TrieNode>>(Count);
+  }
 
 private:
   // FIXME: Use a bitset to speed up access:
@@ -91,38 +105,28 @@ private:
   // For debugging.
   unsigned StartBit = 0;
   unsigned NumBits = 0;
+  unsigned Size = 0;
   friend class llvm::ThreadSafeTrieRawHashMapBase;
+  friend class TrailingObjects;
 
 public:
   /// Linked list for ownership of tries. The pointer is owned by TrieSubtrie.
   std::atomic<TrieSubtrie *> Next;
-
-  /// The (co-allocated) slots of the subtrie.
-  MutableArrayRef<LazyAtomicPointer<TrieNode>> Slots;
 };
 } // end namespace
 
-// Compute the trailing object size in the trie node. This is the size of \c
-// Slots in TrieNodes that pointing to the children.
-static size_t getTrieTailSize(size_t NumBits) {
-  return sizeof(TrieNode *) * (1u << NumBits);
-}
-
 std::unique_ptr<TrieSubtrie> TrieSubtrie::create(size_t StartBit,
                                                  size_t NumBits) {
-  size_t Size = sizeof(TrieSubtrie) + getTrieTailSize(NumBits);
-  void *Memory = ::malloc(Size);
+  void *Memory = ::malloc(sizeToAlloc(NumBits));
   TrieSubtrie *S = ::new (Memory) TrieSubtrie(StartBit, NumBits);
   return std::unique_ptr<TrieSubtrie>(S);
 }
 
 TrieSubtrie::TrieSubtrie(size_t StartBit, size_t NumBits)
-    : TrieNode(true), StartBit(StartBit), NumBits(NumBits), Next(nullptr),
-      Slots(reinterpret_cast<LazyAtomicPointer<TrieNode> *>(
-                reinterpret_cast<char *>(this) + sizeof(TrieSubtrie)),
-            (1u << NumBits)) {
-  for (auto *I = Slots.begin(), *E = Slots.end(); I != E; ++I)
-    new (I) LazyAtomicPointer<TrieNode>(nullptr);
+    : TrieNode(true), StartBit(StartBit), NumBits(NumBits), Size(1u << NumBits),
+      Next(nullptr) {
+  for (unsigned I = 0; I < Size; ++I)
+    new (&get(I)) Slot(nullptr);
 
   static_assert(
       std::is_trivially_destructible<LazyAtomicPointer<TrieNode>>::value,
@@ -140,14 +144,14 @@ TrieSubtrie *TrieSubtrie::sink(
   assert(NumSubtrieBits > 0);
   std::unique_ptr<TrieSubtrie> S = create(StartBit + NumBits, NumSubtrieBits);
 
-  assert(NewI < S->Slots.size());
-  S->Slots[NewI].store(&Content);
+  assert(NewI < Size);
+  S->get(NewI).store(&Content);
 
   // Using compare_exchange to atomically add back the new sub-trie to the trie
   // in the place of the exsiting object.
   TrieNode *ExistingNode = &Content;
-  assert(I < Slots.size());
-  if (Slots[I].compare_exchange_strong(ExistingNode, S.get()))
+  assert(I < Size);
+  if (get(I).compare_exchange_strong(ExistingNode, S.get()))
     return Saver(std::move(S));
 
   // Another thread created a subtrie already. Return it and let "S" be
@@ -155,9 +159,12 @@ TrieSubtrie *TrieSubtrie::sink(
   return cast<TrieSubtrie>(ExistingNode);
 }
 
-struct ThreadSafeTrieRawHashMapBase::ImplType {
+class ThreadSafeTrieRawHashMapBase::ImplType final
+    : private TrailingObjects<ThreadSafeTrieRawHashMapBase::ImplType,
+                              TrieSubtrie> {
+public:
   static std::unique_ptr<ImplType> create(size_t StartBit, size_t NumBits) {
-    size_t Size = sizeof(ImplType) + getTrieTailSize(NumBits);
+    size_t Size = sizeof(ImplType) + TrieSubtrie::sizeToAlloc(NumBits);
     void *Memory = ::malloc(Size);
     ImplType *Impl = ::new (Memory) ImplType(StartBit, NumBits);
     return std::unique_ptr<ImplType>(Impl);
@@ -174,12 +181,15 @@ struct ThreadSafeTrieRawHashMapBase::ImplType {
     // Root.Next. This works by repeatedly setting S->Next to a candidate value
     // of Root.Next (initially nullptr), then setting Root.Next to S once the
     // candidate matches reality.
-    while (!Root.Next.compare_exchange_weak(CurrentHead, S.get()))
+    while (!getRoot()->Next.compare_exchange_weak(CurrentHead, S.get()))
       S->Next.exchange(CurrentHead);
 
     // Ownership transferred to subtrie successfully. Release the unique_ptr.
     return S.release();
   }
+
+  // Get the root which is the trailing object.
+  TrieSubtrie *getRoot() { return getTrailingObjects<TrieSubtrie>(); }
 
   static void *operator new(size_t Size) { return ::malloc(Size); }
   void operator delete(void *Ptr) { ::free(Ptr); }
@@ -188,10 +198,13 @@ struct ThreadSafeTrieRawHashMapBase::ImplType {
   /// content lazily (taking the hash as a separate parameter), in case of
   /// collision.
   ThreadSafeAllocator<BumpPtrAllocator> ContentAlloc;
-  TrieSubtrie Root; // Must be last! Tail-allocated.
 
 private:
-  ImplType(size_t StartBit, size_t NumBits) : Root(StartBit, NumBits) {}
+  friend class TrailingObjects;
+
+  ImplType(size_t StartBit, size_t NumBits) {
+    ::new (getRoot()) TrieSubtrie(StartBit, NumBits);
+  }
 };
 
 ThreadSafeTrieRawHashMapBase::ImplType &
@@ -221,7 +234,7 @@ ThreadSafeTrieRawHashMapBase::find(ArrayRef<uint8_t> Hash) const {
   if (!Impl)
     return PointerBase();
 
-  TrieSubtrie *S = &Impl->Root;
+  TrieSubtrie *S = Impl->getRoot();
   IndexGenerator IndexGen{NumRootBits, NumSubtrieBits, Hash};
   size_t Index = IndexGen.next();
   while (Index != IndexGen.end()) {
@@ -249,7 +262,7 @@ ThreadSafeTrieRawHashMapBase::PointerBase ThreadSafeTrieRawHashMapBase::insert(
   assert(!Hash.empty() && "Uninitialized hash");
 
   ImplType &Impl = getOrCreateImpl();
-  TrieSubtrie *S = &Impl.Root;
+  TrieSubtrie *S = Impl.getRoot();
   IndexGenerator IndexGen{NumRootBits, NumSubtrieBits, Hash};
   size_t Index;
   if (Hint.isHint()) {
@@ -263,7 +276,7 @@ ThreadSafeTrieRawHashMapBase::PointerBase ThreadSafeTrieRawHashMapBase::insert(
     // Load the node from the slot, allocating and calling the constructor if
     // the slot is empty.
     bool Generated = false;
-    TrieNode &Existing = S->Slots[Index].loadOrGenerate([&]() {
+    TrieNode &Existing = S->get(Index).loadOrGenerate([&]() {
       Generated = true;
 
       // Construct the value itself at the tail.
@@ -321,7 +334,15 @@ ThreadSafeTrieRawHashMapBase::ThreadSafeTrieRawHashMapBase(
       ContentOffset(ContentOffset),
       NumRootBits(NumRootBits ? *NumRootBits : DefaultNumRootBits),
       NumSubtrieBits(NumSubtrieBits ? *NumSubtrieBits : DefaultNumSubtrieBits),
-      ImplPtr(nullptr) {}
+      ImplPtr(nullptr) {
+  // Assertion checks for reasonable configuration. The settings below are not
+  // hard limits on most platforms, but a reasonable configuration should fall
+  // within those limits.
+  assert((!NumRootBits || *NumRootBits < 20) &&
+         "Root should have fewer than ~1M slots");
+  assert((!NumSubtrieBits || *NumSubtrieBits < 10) &&
+         "Subtries should have fewer than ~1K slots");
+}
 
 ThreadSafeTrieRawHashMapBase::ThreadSafeTrieRawHashMapBase(
     ThreadSafeTrieRawHashMapBase &&RHS)
@@ -349,14 +370,14 @@ void ThreadSafeTrieRawHashMapBase::destroyImpl(
   // FIXME: Once we have bitsets (see FIXME in TrieSubtrie class), use them
   // facilitate sparse iteration here.
   if (Destructor)
-    for (TrieSubtrie *Trie = &Impl->Root; Trie; Trie = Trie->Next.load())
-      for (auto &Slot : Trie->Slots)
-        if (auto *Content = dyn_cast_or_null<TrieContent>(Slot.load()))
+    for (TrieSubtrie *Trie = Impl->getRoot(); Trie; Trie = Trie->Next.load())
+      for (unsigned I = 0; I < Trie->size(); ++I)
+        if (auto *Content = dyn_cast_or_null<TrieContent>(Trie->load(I)))
           Destructor(Content->getValuePointer());
 
   // Destroy the subtries. Incidentally, this destroys them in the reverse order
   // of saving.
-  TrieSubtrie *Trie = Impl->Root.Next;
+  TrieSubtrie *Trie = Impl->getRoot()->Next;
   while (Trie) {
     TrieSubtrie *Next = Trie->Next.exchange(nullptr);
     delete Trie;
@@ -369,7 +390,7 @@ ThreadSafeTrieRawHashMapBase::getRoot() const {
   ImplType *Impl = ImplPtr.load();
   if (!Impl)
     return PointerBase();
-  return PointerBase(&Impl->Root);
+  return PointerBase(Impl->getRoot());
 }
 
 unsigned ThreadSafeTrieRawHashMapBase::getStartBit(
@@ -401,8 +422,8 @@ unsigned ThreadSafeTrieRawHashMapBase::getNumSlotUsed(
   if (!S)
     return 0;
   unsigned Num = 0;
-  for (unsigned I = 0, E = S->Slots.size(); I < E; ++I)
-    if (auto *E = S->Slots[I].load())
+  for (unsigned I = 0, E = S->size(); I < E; ++I)
+    if (auto *E = S->load(I))
       ++Num;
   return Num;
 }
@@ -424,8 +445,8 @@ std::string ThreadSafeTrieRawHashMapBase::getTriePrefixAsString(
   while (Current) {
     TrieSubtrie *Next = nullptr;
     // Find first used slot in the trie.
-    for (unsigned I = 0, E = Current->Slots.size(); I < E; ++I) {
-      auto *S = Current->get(I);
+    for (unsigned I = 0, E = Current->size(); I < E; ++I) {
+      auto *S = Current->load(I);
       if (!S)
         continue;
 
@@ -473,7 +494,7 @@ unsigned ThreadSafeTrieRawHashMapBase::getNumTries() const {
   if (!Impl)
     return 0;
   unsigned Num = 0;
-  for (TrieSubtrie *Trie = &Impl->Root; Trie; Trie = Trie->Next.load())
+  for (TrieSubtrie *Trie = Impl->getRoot(); Trie; Trie = Trie->Next.load())
     ++Num;
   return Num;
 }

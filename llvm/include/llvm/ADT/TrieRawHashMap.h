@@ -171,7 +171,7 @@ private:
   const unsigned short ContentOffset;
   unsigned short NumRootBits;
   unsigned short NumSubtrieBits;
-  struct ImplType;
+  class ImplType;
   // ImplPtr is owned by ThreadSafeTrieRawHashMapBase and needs to be freed in
   // destoryImpl.
   std::atomic<ImplType *> ImplPtr;
