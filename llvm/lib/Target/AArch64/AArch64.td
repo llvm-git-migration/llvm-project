@@ -58,7 +58,7 @@ include "AArch64SystemOperands.td"
 
 class AArch64Unsupported { list<Predicate> F; }
 
-let F = [HasSVE2p1, HasSVE2p1_or_HasSME2, HasSVE2p1_or_HasSME2p1] in
+let F = [HasSVE2p1, HasSVE2p1_or_HasSME2, HasSVE2p1_or_HasSME2p1, HasSVE2p2orSME2p2] in
 def SVE2p1Unsupported : AArch64Unsupported;
 
 def SVE2Unsupported : AArch64Unsupported {
@@ -73,7 +73,7 @@ def SVEUnsupported : AArch64Unsupported {
                       SVE2Unsupported.F);
 }
 
-let F = [HasSME2p1, HasSVE2p1_or_HasSME2p1] in
+let F = [HasSME2p1, HasSVE2p1_or_HasSME2p1, HasSVE2p2orSME2p2] in
 def SME2p1Unsupported : AArch64Unsupported;
 
 def SME2Unsupported : AArch64Unsupported {
