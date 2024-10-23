@@ -31,6 +31,7 @@ protected:
   bool HasFeatureLASX;
   bool HasFeatureFrecipe;
   bool HasFeatureLAM_BH;
+  bool HasFeatureLAMCAS;
   bool HasFeatureLD_SEQ_SA;
 
 public:
@@ -42,6 +43,7 @@ public:
     HasFeatureLASX = false;
     HasFeatureFrecipe = false;
     HasFeatureLAM_BH = false;
+    HasFeatureLAMCAS = false;
     HasFeatureLD_SEQ_SA = false;
     LongDoubleWidth = 128;
     LongDoubleAlign = 128;
