@@ -516,6 +516,8 @@ DebugTypeGenerator::convertType(mlir::Type Ty, mlir::LLVM::DIFileAttr fileAttr,
     return convertPointerLikeType(elTy, fileAttr, scope, declOp,
                                   /*genAllocated=*/false,
                                   /*genAssociated=*/false);
+  } else if (mlir::isa<mlir::NoneType>(Ty)) {
+    return mlir::LLVM::DINullTypeAttr::get(context);
   } else if (auto boxTy = mlir::dyn_cast_or_null<fir::BoxType>(Ty)) {
     auto elTy = boxTy.getElementType();
     if (auto seqTy = mlir::dyn_cast_or_null<fir::SequenceType>(elTy))
