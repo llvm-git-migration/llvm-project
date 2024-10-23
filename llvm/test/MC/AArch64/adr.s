@@ -19,7 +19,7 @@
   adr x5, (0xffffffff000f1000 - 0xffffffff00000000 + Symbol)
   adr x6, Symbol + (0xffffffff000f1000 - 0xffffffff00000000)
 
-// CHECK-NEXT: adrp x0, 0x0
+// CHECK-NEXT: adrp x0, 0x0 -- fail test on both platforms!
 // CHECK-NEXT: R_AARCH64_ADR_PREL_PG_HI21	Symbol
 // CHECK-NEXT: adrp x2, 0x0
 // CHECK-NEXT: R_AARCH64_ADR_PREL_PG_HI21	Symbol
