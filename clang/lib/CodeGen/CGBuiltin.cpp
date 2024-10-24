@@ -18730,8 +18730,8 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
 
     Intrinsic::ID ID = CGM.getHLSLRuntime().getDot4AddI8PackedIntrinsic();
     return Builder.CreateIntrinsic(
-        /*ReturnType=*/C->getType(), ID,
-        ArrayRef<Value *>{A, B, C}, nullptr, "hlsl.dot4add.i8packed");
+        /*ReturnType=*/C->getType(), ID, ArrayRef<Value *>{A, B, C}, nullptr,
+        "hlsl.dot4add.i8packed");
   }
   case Builtin::BI__builtin_hlsl_lerp: {
     Value *X = EmitScalarExpr(E->getArg(0));
