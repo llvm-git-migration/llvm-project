@@ -79,6 +79,7 @@ jobs:
           path: |
             **/test-results.xml
             **/*.abilist
+            **/CMakeConfigureLog.yaml
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
@@ -123,6 +124,7 @@ jobs:
           path: |
             **/test-results.xml
             **/*.abilist
+            **/CMakeConfigureLog.yaml
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
@@ -186,6 +188,7 @@ jobs:
           path: |
             **/test-results.xml
             **/*.abilist
+            **/CMakeConfigureLog.yaml
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
@@ -228,6 +231,7 @@ jobs:
           path: |
             **/test-results.xml
             **/*.abilist
+            **/CMakeConfigureLog.yaml
             **/CMakeError.log
             **/CMakeOutput.log
             **/crash_diagnostics/*
