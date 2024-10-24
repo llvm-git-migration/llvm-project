@@ -232,6 +232,47 @@ SYMBOL(ssize, std::, <string_view>)
 SYMBOL(ssize, std::, <unordered_map>)
 SYMBOL(ssize, std::, <unordered_set>)
 SYMBOL(ssize, std::, <vector>)
+// C++ [range.access.general]: ... the customization point objects
+// in [range.access] are available when the header <iterator> is included.
+SYMBOL(begin, std::ranges::, <ranges>)
+SYMBOL(begin, std::ranges::, <iterator>)
+SYMBOL(cbegin, std::ranges::, <ranges>)
+SYMBOL(cbegin, std::ranges::, <iterator>)
+SYMBOL(cdata, std::ranges::, <ranges>)
+SYMBOL(cdata, std::ranges::, <iterator>)
+SYMBOL(cend, std::ranges::, <ranges>)
+SYMBOL(cend, std::ranges::, <iterator>)
+SYMBOL(crbegin, std::ranges::, <ranges>)
+SYMBOL(crbegin, std::ranges::, <iterator>)
+SYMBOL(crend, std::ranges::, <ranges>)
+SYMBOL(crend, std::ranges::, <iterator>)
+SYMBOL(data, std::ranges::, <ranges>)
+SYMBOL(data, std::ranges::, <iterator>)
+SYMBOL(empty, std::ranges::, <ranges>)
+SYMBOL(empty, std::ranges::, <iterator>)
+SYMBOL(end, std::ranges::, <ranges>)
+SYMBOL(end, std::ranges::, <iterator>)
+SYMBOL(rbegin, std::ranges::, <ranges>)
+SYMBOL(rbegin, std::ranges::, <iterator>)
+SYMBOL(rend, std::ranges::, <ranges>)
+SYMBOL(rend, std::ranges::, <iterator>)
+SYMBOL(size, std::ranges::, <ranges>)
+SYMBOL(size, std::ranges::, <iterator>)
+SYMBOL(ssize, std::ranges::, <ranges>)
+SYMBOL(ssize, std::ranges::, <iterator>)
+
+// FIXME lost after generator update - variants, probably should not be removed
+SYMBOL(abs, std::chrono::, <chrono>)
+SYMBOL(ceil, std::chrono::, <chrono>)
+SYMBOL(floor, std::chrono::, <chrono>)
+SYMBOL(from_stream, std::chrono::, <chrono>)
+SYMBOL(round, std::chrono::, <chrono>)
+SYMBOL(begin, std::filesystem::, <filesystem>)
+SYMBOL(end, std::filesystem::, <filesystem>)
+SYMBOL(get, std::ranges::, <ranges>)
+
+// Ignore specializations
+SYMBOL(hash, std::, <functional>)
 
 // Add headers for generic integer-type abs.
 // Ignore other variants (std::complex, std::valarray, std::intmax_t)
@@ -352,20 +393,23 @@ SYMBOL(get, std::, /*no headers*/)
 // providing the type.
 SYMBOL(make_error_code, std::, /*no headers*/)
 SYMBOL(make_error_condition, std::, /*no headers*/)
+// Similar to std::get, has variants for multiple containers
+// (vector, deque, list, etc.)
+SYMBOL(erase, std::, /*no headers*/)
+SYMBOL(erase_if, std::, /*no headers*/)
 
 // cppreference symbol index page was missing these symbols.
 // Remove them when the cppreference offline archive catches up.
-SYMBOL(index_sequence, std::, <utility>)
-SYMBOL(index_sequence_for, std::, <utility>)
-SYMBOL(make_index_sequence, std::, <utility>)
-SYMBOL(make_integer_sequence, std::, <utility>)
+SYMBOL(regular_invocable, std::, <concepts>)
 
 // Symbols missing from the generated symbol map as reported by users.
 // Remove when the generator starts producing them.
-SYMBOL(make_any, std::, <any>)
-SYMBOL(any_cast, std::, <any>)
 SYMBOL(div, std::, <cstdlib>)
 SYMBOL(abort, std::, <cstdlib>)
+SYMBOL(atomic_wait, std::, <atomic>)
+SYMBOL(atomic_wait_explicit, std::, <atomic>)
+SYMBOL(move_backward, std::, <algorithm>)
+SYMBOL(month_weekday, std::chrono::, <chrono>)
 
 // These are C symbols that are not under std namespace.
 SYMBOL(localtime_r, None, <ctime>)
