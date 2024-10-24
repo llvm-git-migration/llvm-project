@@ -526,7 +526,7 @@ bool llvm::extractParts(Register Reg, LLT RegTy, LLT MainTy, LLT &LeftoverTy,
         RegTy.getScalarSizeInBits() == MainTy.getScalarSizeInBits() &&
         LeftoverNumElts > 1) {
       LeftoverTy =
-          LLT::fixed_vector(LeftoverNumElts, RegTy.getScalarSizeInBits());
+          LLT::fixed_vector(LeftoverNumElts, RegTy.getElementType());
 
       // Unmerge the SrcReg to LeftoverTy vectors
       SmallVector<Register, 4> UnmergeValues;
