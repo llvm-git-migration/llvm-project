@@ -90,12 +90,14 @@ private:
   void
   recursivelyCollectGEPs(GetElementPtrInst &CurrGEP,
                          ArrayType *FlattenedArrayType, Value *PtrOperand,
-                         unsigned &UseCount,
+                         unsigned &GEPChainUseCount,
                          SmallVector<Value *> Indices = SmallVector<Value *>(),
                          SmallVector<uint64_t> Dims = SmallVector<uint64_t>(),
                          bool AllIndicesAreConstInt = true);
   ConstantInt *computeFlatIndex(GetElementPtrInst &GEP);
   bool visitGetElementPtrInstInGEPChain(GetElementPtrInst &GEP);
+  bool visitGetElementPtrInstInGEPChainBase(GEPData &GEPInfo,
+                                            GetElementPtrInst &GEP);
 };
 
 bool DXILFlattenArraysVisitor::finish() {
@@ -217,7 +219,7 @@ DXILFlattenArraysVisitor::computeFlatIndex(GetElementPtrInst &GEP) {
 
 void DXILFlattenArraysVisitor::recursivelyCollectGEPs(
     GetElementPtrInst &CurrGEP, ArrayType *FlattenedArrayType,
-    Value *PtrOperand, unsigned &UseCount, SmallVector<Value *> Indices,
+    Value *PtrOperand, unsigned &GEPChainUseCount, SmallVector<Value *> Indices,
     SmallVector<uint64_t> Dims, bool AllIndicesAreConstInt) {
   Value *LastIndex = CurrGEP.getOperand(CurrGEP.getNumOperands() - 1);
   AllIndicesAreConstInt &= isa<ConstantInt>(LastIndex);
@@ -225,32 +227,40 @@ void DXILFlattenArraysVisitor::recursivelyCollectGEPs(
   assert(isa<ArrayType>(CurrGEP.getSourceElementType()));
   Dims.push_back(
       cast<ArrayType>(CurrGEP.getSourceElementType())->getNumElements());
-  if (!isMultiDimensionalArray(CurrGEP.getSourceElementType())) {
+  bool IsMultiDimArr = isMultiDimensionalArray(CurrGEP.getSourceElementType());
+  if (!IsMultiDimArr) {
+    assert(GEPChainUseCount < FlattenedArrayType->getNumElements());
     GEPChainMap.insert(
         {&CurrGEP,
          {std::move(FlattenedArrayType), PtrOperand, std::move(Indices),
           std::move(Dims), AllIndicesAreConstInt}});
+    return;
   }
+  bool GepUses = false;
   for (auto *User : CurrGEP.users()) {
     if (GetElementPtrInst *NestedGEP = dyn_cast<GetElementPtrInst>(User)) {
       recursivelyCollectGEPs(*NestedGEP, FlattenedArrayType, PtrOperand,
-                             ++UseCount, Indices, Dims, AllIndicesAreConstInt);
+                             ++GEPChainUseCount, Indices, Dims, AllIndicesAreConstInt);
+      GepUses = true;
     }
   }
-  assert(Dims.size() == Indices.size());
-  // If the std::moves did not happen the gep chain is incomplete
-  // let save the last state.
-  if (!Dims.empty())
+  // This case is just incase the gep chain doesn't end with a 1d array.
+  if(IsMultiDimArr && GEPChainUseCount > 0 && !GepUses) {
     GEPChainMap.insert(
         {&CurrGEP,
          {std::move(FlattenedArrayType), PtrOperand, std::move(Indices),
           std::move(Dims), AllIndicesAreConstInt}});
+  }
 }
 
 bool DXILFlattenArraysVisitor::visitGetElementPtrInstInGEPChain(
     GetElementPtrInst &GEP) {
-  IRBuilder<> Builder(&GEP);
   GEPData GEPInfo = GEPChainMap.at(&GEP);
+  return visitGetElementPtrInstInGEPChainBase(GEPInfo, GEP);
+}
+bool DXILFlattenArraysVisitor::visitGetElementPtrInstInGEPChainBase(
+    GEPData &GEPInfo, GetElementPtrInst &GEP) {
+  IRBuilder<> Builder(&GEP);
   Value *FlatIndex;
   if (GEPInfo.AllIndicesAreConstInt)
     FlatIndex = constFlattenIndices(GEPInfo.Indices, GEPInfo.Dims, Builder);
@@ -282,22 +292,25 @@ bool DXILFlattenArraysVisitor::visitGetElementPtrInst(GetElementPtrInst &GEP) {
       ArrayType::get(getBaseElementType(ArrType), TotalElements);
 
   Value *PtrOperand = GEP.getPointerOperand();
-  // if(isa<ConstantInt>(GEP.getOperand(GEP.getNumOperands() - 1))) {
-  unsigned UseCount = 0;
-  recursivelyCollectGEPs(GEP, FlattenedArrayType, PtrOperand, UseCount);
-  if (UseCount == 0)
-    visitGetElementPtrInstInGEPChain(GEP);
-  else
-    PotentiallyDeadInstrs.emplace_back(&GEP);
-  /*} else {
-    SmallVector<Value *> Indices(GEP.idx_begin(),GEP.idx_end());
-     Value *FlatGEP =
-      Builder.CreateGEP(FlattenedArrayType, PtrOperand, Indices,
-                        GEP.getName() + ".flat", GEP.isInBounds());
-  GEP.replaceAllUsesWith(FlatGEP);
-  GEP.eraseFromParent();
-  }*/
-  return true;
+
+  unsigned GEPChainUseCount = 0;
+  recursivelyCollectGEPs(GEP, FlattenedArrayType, PtrOperand, GEPChainUseCount);
+  
+  // NOTE: hasNUses(0) is not the same as GEPChainUseCount == 0.
+  // Here recursion is used to get the length of the GEP chain.
+  // Handle zero uses here because there won't be an update via 
+  // a child in the chain later.
+  if (GEPChainUseCount == 0) {
+    SmallVector<Value *> Indices({GEP.getOperand(GEP.getNumOperands() - 1)});
+    SmallVector<uint64_t> Dims({ArrType->getNumElements()});
+    bool AllIndicesAreConstInt = isa<ConstantInt>(Indices[0]);
+    GEPData GEPInfo{std::move(FlattenedArrayType), PtrOperand,
+                    std::move(Indices), std::move(Dims), AllIndicesAreConstInt};
+    return visitGetElementPtrInstInGEPChainBase(GEPInfo, GEP);
+  }
+  
+  PotentiallyDeadInstrs.emplace_back(&GEP);
+  return false;
 }
 
 bool DXILFlattenArraysVisitor::visit(Function &F) {

@@ -136,6 +136,49 @@ define void @global_gep_load() {
   ret void
 }
 
+define void @global_gep_load_index(i32 %row, i32 %col, i32 %timeIndex) {
+; CHECK-LABEL: define void @global_gep_load_index(
+; CHECK-SAME: i32 [[ROW:%.*]], i32 [[COL:%.*]], i32 [[TIMEINDEX:%.*]]) {
+; CHECK-NEXT:    [[TMP1:%.*]] = mul i32 [[TIMEINDEX]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = add i32 0, [[TMP1]]
+; CHECK-NEXT:    [[TMP3:%.*]] = mul i32 [[COL]], 4
+; CHECK-NEXT:    [[TMP4:%.*]] = add i32 [[TMP2]], [[TMP3]]
+; CHECK-NEXT:    [[TMP5:%.*]] = mul i32 [[ROW]], 12
+; CHECK-NEXT:    [[TMP6:%.*]] = add i32 [[TMP4]], [[TMP5]]
+; CHECK-NEXT:    [[DOTFLAT:%.*]] = getelementptr inbounds [24 x i32], ptr @a.1dim, i32 [[TMP6]]
+; CHECK-NOT: getelementptr inbounds [2 x [3 x [4 x i32]]]{{.*}}
+; CHECK-NOT: getelementptr inbounds [3 x [4 x i32]]{{.*}}
+; CHECK-NOT: getelementptr inbounds [4 x i32]{{.*}}
+; CHECK-NEXT:    [[TMP7:%.*]] = load i32, ptr [[DOTFLAT]], align 4
+; CHECK-NEXT:    ret void
+;
+  %1 = getelementptr inbounds [2 x [3 x [4 x i32]]], [2 x [3 x [4 x i32]]]* @a, i32 0, i32 %row
+  %2 = getelementptr inbounds [3 x [4 x i32]], [3 x [4 x i32]]* %1, i32 0, i32 %col
+  %3 = getelementptr inbounds [4 x i32], [4 x i32]* %2, i32 0, i32 %timeIndex
+  %4 = load i32, i32* %3, align 4
+  ret void
+}
+
+define void @global_incomplete_gep_chain(i32 %row, i32 %col) {
+; CHECK-LABEL: define void @global_incomplete_gep_chain(
+; CHECK-SAME: i32 [[ROW:%.*]], i32 [[COL:%.*]]) {
+; CHECK-NEXT:    [[TMP1:%.*]] = mul i32 [[COL]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = add i32 0, [[TMP1]]
+; CHECK-NEXT:    [[TMP3:%.*]] = mul i32 [[ROW]], 3
+; CHECK-NEXT:    [[TMP4:%.*]] = add i32 [[TMP2]], [[TMP3]]
+; CHECK-NEXT:    [[DOTFLAT:%.*]] = getelementptr inbounds [24 x i32], ptr @a.1dim, i32 [[TMP4]]
+; CHECK-NOT: getelementptr inbounds [2 x [3 x [4 x i32]]]{{.*}}
+; CHECK-NOT: getelementptr inbounds [3 x [4 x i32]]{{.*}}
+; CHECK-NOT: getelementptr inbounds [4 x i32]{{.*}}
+; CHECK-NEXT:    [[TMP5:%.*]] = load i32, ptr [[DOTFLAT]], align 4
+; CHECK-NEXT:    ret void
+;
+  %1 = getelementptr inbounds [2 x [3 x [4 x i32]]], [2 x [3 x [4 x i32]]]* @a, i32 0, i32 %row
+  %2 = getelementptr inbounds [3 x [4 x i32]], [3 x [4 x i32]]* %1, i32 0, i32 %col
+  %4 = load i32, i32* %2, align 4
+  ret void
+}
+
 define void @global_gep_store() {
   ; CHECK: store i32 1, ptr getelementptr inbounds ([24 x i32], ptr @b.1dim, i32 13), align 4
   ; CHECK-NOT: getelementptr inbounds [2 x [3 x [4 x i32]]]{{.*}}
