@@ -643,6 +643,10 @@ std::optional<Expr<LogicalResult>> Relate(parser::ContextualMessages &messages,
               Expr<SomeInteger> &&iy) -> std::optional<Expr<LogicalResult>> {
             return PromoteAndRelate(opr, std::move(ix), std::move(iy));
           },
+          [=](Expr<SomeUnsigned> &&ix,
+              Expr<SomeUnsigned> &&iy) -> std::optional<Expr<LogicalResult>> {
+            return PromoteAndRelate(opr, std::move(ix), std::move(iy));
+          },
           [=](Expr<SomeReal> &&rx,
               Expr<SomeReal> &&ry) -> std::optional<Expr<LogicalResult>> {
             return PromoteAndRelate(opr, std::move(rx), std::move(ry));

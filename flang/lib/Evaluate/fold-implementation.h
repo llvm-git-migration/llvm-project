@@ -1735,7 +1735,8 @@ Expr<TO> FoldOperation(
         if (auto value{GetScalarConstantValue<Operand>(kindExpr)}) {
           FoldingContext &ctx{msvcWorkaround.context};
           if constexpr (TO::category == TypeCategory::Integer) {
-            if constexpr (FromCat == TypeCategory::Integer) {
+            if constexpr (FromCat == TypeCategory::Integer ||
+                FromCat == TypeCategory::Unsigned) {
               auto converted{Scalar<TO>::ConvertSigned(*value)};
               if (converted.overflow &&
                   msvcWorkaround.context.languageFeatures().ShouldWarn(
@@ -1762,9 +1763,20 @@ Expr<TO> FoldOperation(
               }
               return ScalarConstantToExpr(std::move(converted.value));
             }
+          } else if constexpr (TO::category == TypeCategory::Unsigned) {
+            if constexpr (FromCat == TypeCategory::Integer ||
+                FromCat == TypeCategory::Unsigned) {
+              return Expr<TO>{
+                  Constant<TO>{Scalar<TO>::ConvertUnsigned(*value).value}};
+            } else if constexpr (FromCat == TypeCategory::Real) {
+              return Expr<TO>{
+                  Constant<TO>{value->template ToInteger<Scalar<TO>>().value}};
+            }
           } else if constexpr (TO::category == TypeCategory::Real) {
-            if constexpr (FromCat == TypeCategory::Integer) {
-              auto converted{Scalar<TO>::FromInteger(*value)};
+            if constexpr (FromCat == TypeCategory::Integer ||
+                FromCat == TypeCategory::Unsigned) {
+              auto converted{Scalar<TO>::FromInteger(
+                  *value, FromCat == TypeCategory::Unsigned)};
               if (!converted.flags.empty()) {
                 char buffer[64];
                 std::snprintf(buffer, sizeof buffer,
