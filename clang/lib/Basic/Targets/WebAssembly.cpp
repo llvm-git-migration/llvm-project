@@ -165,7 +165,6 @@ bool WebAssemblyTargetInfo::initFeatureMap(
     Features["mutable-globals"] = true;
     Features["nontrapping-fptoint"] = true;
     Features["reference-types"] = true;
-    Features["call-indirect-overlong"] = true;
     Features["sign-ext"] = true;
   };
   auto addLime1Features = [&]() {

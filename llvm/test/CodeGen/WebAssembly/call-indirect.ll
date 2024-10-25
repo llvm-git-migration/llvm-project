@@ -1,4 +1,4 @@
-; RUN: llc < %s -asm-verbose=false -mattr=-reference-types,call-indirect-overlong -O2 | FileCheck --check-prefixes=CHECK,NOREF %s
+; RUN: llc < %s -asm-verbose=false -mattr=-reference-types,-call-indirect-overlong -O2 | FileCheck --check-prefixes=CHECK,NOREF %s
 ; RUN: llc < %s -asm-verbose=false -mattr=+call-indirect-overlong -O2 | FileCheck --check-prefixes=CHECK,REF %s
 ; RUN: llc < %s -asm-verbose=false -O2 --filetype=obj | obj2yaml | FileCheck --check-prefix=OBJ %s
 
