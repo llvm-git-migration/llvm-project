@@ -30,15 +30,40 @@ fi
 
 function at-exit {
   python3 "${MONOREPO_ROOT}"/.ci/generate_test_report.py ":linux: Linux x64 Test Results" \
-    "linux-x64-test-results" "${BUILD_DIR}"/test-results*.xml
+    "linux-x64-test-results" "${BUILD_DIR}"/*-test-results.xml
 
   mkdir -p artifacts
   ccache --print-stats > artifacts/ccache_stats.txt
 }
 trap at-exit EXIT
 
+function ninja-targets {
+  # $0 is the ninja arguments to use
+  # $1 is the list of targets
+  # $3 is is an optional postfix to add to the target name when renaming result files.
+  set +e
+  err_code=0
+  local -n ninja_args=$0
+  for target in $1; do
+    ninja ${ninja_args} ${target}
+    new_err_code=$?
+    if [[ $new_err_code -ne 0 ]]; then
+      err_code=${new_err_code}
+    fi
+    mv "${BUILD_DIR}/test-results.xml" "${BUILD_DIR}/$1${2:-""}-test-results.xml"
+  done
+
+  if [[ $err_code -ne 0 ]]; then
+   exit $err_code
+  fi
+
+  set -e
+}
+
 projects="${1}"
 targets="${2}"
+
+lit_args="-v --xunit-xml-output ${BUILD_DIR}/test-results.xml --timeout=1200 --time-tests"
 
 echo "--- cmake"
 pip install -q -r "${MONOREPO_ROOT}"/mlir/python/requirements.txt
@@ -51,7 +76,7 @@ cmake -S "${MONOREPO_ROOT}"/llvm -B "${BUILD_DIR}" \
       -D LLVM_ENABLE_ASSERTIONS=ON \
       -D LLVM_BUILD_EXAMPLES=ON \
       -D COMPILER_RT_BUILD_LIBFUZZER=OFF \
-      -D LLVM_LIT_ARGS="-v --xunit-xml-output ${BUILD_DIR}/test-results.xml --timeout=1200 --time-tests" \
+      -D LLVM_LIT_ARGS="${lit_args}" \
       -D LLVM_ENABLE_LLD=ON \
       -D CMAKE_CXX_FLAGS=-gmlt \
       -D LLVM_CCACHE_BUILD=ON \
@@ -59,8 +84,9 @@ cmake -S "${MONOREPO_ROOT}"/llvm -B "${BUILD_DIR}" \
       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
 echo "--- ninja"
-# Targets are not escaped as they are passed as separate arguments.
-ninja -C "${BUILD_DIR}" -k 0 ${targets}
+
+projects_args=("-C", "${BUILD_DIR}", "-k")
+ninja-targets project_args $targets
 
 runtimes="${3}"
 runtime_targets="${4}"
@@ -91,11 +117,15 @@ if [[ "${runtimes}" != "" ]]; then
       -D CMAKE_BUILD_TYPE=RelWithDebInfo \
       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
       -D LIBCXX_TEST_PARAMS="std=c++03" \
-      -D LIBCXXABI_TEST_PARAMS="std=c++03"
+      -D LIBCXXABI_TEST_PARAMS="std=c++03" \
+      -D LLVM_LIT_ARGS="${lit_args}"
 
   echo "--- ninja runtimes C++03"
 
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+  # TODO: there's no way to tell a failure here apart from a failure of the same
+  # test in the other build mode.
+  runtimes_args=("-vC", "${RUNTIMES_BUILD_DIR}")
+  ninja-targets runtimes_args ${runtimes_targets} "-cpp03"
 
   echo "--- cmake runtimes C++26"
 
@@ -109,10 +139,11 @@ if [[ "${runtimes}" != "" ]]; then
       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
       -D LIBCXX_TEST_PARAMS="std=c++26" \
       -D LIBCXXABI_TEST_PARAMS="std=c++26"
+      -D LLVM_LIT_ARGS="${lit_args}"
 
   echo "--- ninja runtimes C++26"
 
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+  ninja-targets runtimes_args ${runtimes_targets} "-cpp26"
 
   echo "--- cmake runtimes clang modules"
 
@@ -125,9 +156,10 @@ if [[ "${runtimes}" != "" ]]; then
       -D CMAKE_BUILD_TYPE=RelWithDebInfo \
       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
       -D LIBCXX_TEST_PARAMS="enable_modules=clang" \
-      -D LIBCXXABI_TEST_PARAMS="enable_modules=clang"
+      -D LIBCXXABI_TEST_PARAMS="enable_modules=clang" \
+      -D LLVM_LIT_ARGS="${lit_args}"
 
   echo "--- ninja runtimes clang modules"
   
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+  ninja-targets runtimes_args ${runtimes_targets} "-modules"
 fi
