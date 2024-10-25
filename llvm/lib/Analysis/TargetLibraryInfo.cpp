@@ -300,6 +300,7 @@ static void initializeLibCalls(TargetLibraryInfoImpl &TLI, const Triple &T,
       TLI.setUnavailable(LibFunc_expf);
       TLI.setUnavailable(LibFunc_floorf);
       TLI.setUnavailable(LibFunc_fmodf);
+      TLI.setUnavailable(LibFunc_hypotf);
       TLI.setUnavailable(LibFunc_log10f);
       TLI.setUnavailable(LibFunc_logf);
       TLI.setUnavailable(LibFunc_modff);
@@ -331,6 +332,7 @@ static void initializeLibCalls(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc_floorl);
     TLI.setUnavailable(LibFunc_fmodl);
     TLI.setUnavailable(LibFunc_frexpl);
+    TLI.setUnavailable(LibFunc_hypotl);
     TLI.setUnavailable(LibFunc_ldexpl);
     TLI.setUnavailable(LibFunc_log10l);
     TLI.setUnavailable(LibFunc_logl);
@@ -367,6 +369,8 @@ static void initializeLibCalls(TargetLibraryInfoImpl &TLI, const Triple &T,
       TLI.setUnavailable(LibFunc_fmaxf);
       TLI.setUnavailable(LibFunc_fmin);
       TLI.setUnavailable(LibFunc_fminf);
+      TLI.setAvailableWithName(LibFunc_hypot, "_hypot");
+      TLI.setAvailableWithName(LibFunc_hypotf, "_hypotf");
       TLI.setUnavailable(LibFunc_log1p);
       TLI.setUnavailable(LibFunc_log1pf);
       TLI.setUnavailable(LibFunc_log2);
