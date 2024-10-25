@@ -207,6 +207,11 @@ void transform::ApplyTransferToScfPatternsOp::populatePatterns(
   populateVectorToSCFConversionPatterns(patterns, vectorTransferToSCFOptions);
 }
 
+void transform::ApplyLowerStepToArithConstantOp::populatePatterns(
+    RewritePatternSet &patterns) {
+  populateVectorStepLoweringPatterns(patterns);
+}
+
 //===----------------------------------------------------------------------===//
 // Transform op registration
 //===----------------------------------------------------------------------===//

@@ -180,6 +180,7 @@ module attributes {transform.with_named_sequence} {
     %func = transform.structured.match ops{["func.func"]} in %arg1
       : (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith_constant
       transform.apply_patterns.canonicalization
       transform.apply_patterns.linalg.tiling_canonicalization
     } : !transform.any_op
