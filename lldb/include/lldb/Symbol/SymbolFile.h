@@ -422,6 +422,13 @@ public:
   /// hasn't been indexed yet, or a valid duration if it has.
   virtual StatsDuration::Duration GetDebugInfoIndexTime() { return {}; }
 
+  /// Reset the time taken to parse the debug information.
+  virtual void ResetDebugInfoParseTime() {}
+
+  /// Reset the time it took to index the debug information in the object
+  /// file.
+  virtual void ResetDebugInfoIndexTime() {}
+
   /// Get the additional modules that this symbol file uses to parse debug info.
   ///
   /// Some debug info is stored in stand alone object files that are represented

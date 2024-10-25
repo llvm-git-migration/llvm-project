@@ -555,6 +555,18 @@ StatsDuration::Duration SymbolFileOnDemand::GetDebugInfoIndexTime() {
   return m_sym_file_impl->GetDebugInfoIndexTime();
 }
 
+void SymbolFileOnDemand::ResetDebugInfoParseTime() {
+  LLDB_LOG(GetLog(), "[{0}] {1} is not skipped", GetSymbolFileName(),
+           __FUNCTION__);
+  return m_sym_file_impl->ResetDebugInfoParseTime();
+}
+
+void SymbolFileOnDemand::ResetDebugInfoIndexTime() {
+  LLDB_LOG(GetLog(), "[{0}] {1} is not skipped", GetSymbolFileName(),
+           __FUNCTION__);
+  return m_sym_file_impl->ResetDebugInfoIndexTime();
+}
+
 void SymbolFileOnDemand::SetLoadDebugInfoEnabled() {
   if (m_debug_info_enabled)
     return;

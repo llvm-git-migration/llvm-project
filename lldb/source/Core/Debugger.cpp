@@ -789,6 +789,7 @@ void Debugger::Destroy(DebuggerSP &debugger_sp) {
       (*debugger_sp->GetAsyncErrorStream()) << result.GetErrorData() << '\n';
   }
 
+  DebuggerStats::ResetStatistics(*debugger_sp, nullptr);
   debugger_sp->Clear();
 
   if (g_debugger_list_ptr && g_debugger_list_mutex_ptr) {
