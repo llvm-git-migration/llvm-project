@@ -2662,6 +2662,8 @@ public:
 #include "clang/Basic/HLSLIntangibleTypes.def"
   bool isHLSLSpecificType() const; // Any HLSL specific type
   bool isHLSLIntangibleType() const; // Any HLSL intangible type
+  bool isHLSLLineVectorLayoutCompatibleType()
+      const; // Any HLSL line vector layout compatible type
   bool isHLSLAttributedResourceType() const;
 
   /// Determines if this type, which must satisfy
@@ -8455,6 +8457,12 @@ inline bool Type::isHLSLIntangibleType() const {
   return
 #include "clang/Basic/HLSLIntangibleTypes.def"
       isHLSLAttributedResourceType();
+}
+
+inline bool Type::isHLSLLineVectorLayoutCompatibleType() const {
+#define HLSL_LINE_VECTOR_LAYOUT_COMPATIBLE_TYPE(Name, Id, SingletonId)         \
+  is##Id##Type() ||
+  return isHLSLAttributedResourceType();
 }
 
 inline bool Type::isHLSLSpecificType() const {
