@@ -32,6 +32,11 @@ module attributes {transform.with_named_sequence} {
     %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
     %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
     %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
+    %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %func {
+       transform.apply_patterns.vector.step_to_arith
+    } : !transform.any_op
     transform.yield
   }
 }
@@ -172,6 +177,11 @@ module attributes {transform.with_named_sequence} {
     %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
     %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
     %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+    %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %func {
+       transform.apply_patterns.vector.step_to_arith
+    } : !transform.any_op
     transform.yield
   }
 }
@@ -207,8 +217,9 @@ func.func @vectorize_nd_tensor_extract_transfer_read_complex(%6: tensor<45x80x16
 // CHECK-DAG:       %[[VAL_8:.*]] = arith.constant 0.000000e+00 : f32
 // CHECK-DAG:       %[[VAL_9:.*]] = arith.constant 0 : index
 // CHECK-DAG:       %[[VAL_10:.*]] = arith.constant 79 : index
-// CHECK:           %[[VAL_11:.*]] = arith.addi %[[VAL_1]], %[[VAL_2]] : index
-// CHECK:           %[[VAL_12:.*]] = vector.broadcast %[[VAL_11]] : index to vector<1x4xindex>
+// CHECK-DAG:       %[[VAL_1_BCAST:.*]] = vector.broadcast %[[VAL_1]] : index to vector<1x4xindex>
+// CHECK-DAG:       %[[VAL_2_BCAST:.*]] = vector.broadcast %[[VAL_2]] : index to vector<1x4xindex>
+// CHECK:           %[[VAL_12:.*]] = arith.addi %[[VAL_1_BCAST]], %[[VAL_2_BCAST]] : vector<1x4xindex>
 // CHECK:           %[[VAL_13:.*]] = vector.broadcast %[[VAL_3]] : index to vector<4xindex>
 // CHECK:           %[[VAL_14:.*]] = arith.addi %[[VAL_13]], %[[VAL_6]] : vector<4xindex>
 // CHECK:           %[[VAL_15:.*]] = vector.broadcast %[[VAL_4]] : index to vector<4xindex>
@@ -226,6 +237,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+       transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -306,6 +322,11 @@ module attributes {transform.with_named_sequence} {
     %0 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
     %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
     %2 = transform.structured.vectorize_children_and_apply_patterns %1 {vectorize_nd_extract} : (!transform.any_op) -> !transform.any_op
+    %func = transform.structured.match ops{["func.func"]} in %arg0
+       : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+    } : !transform.any_op
     transform.yield
   }
 }
@@ -321,8 +342,9 @@ module attributes {transform.with_named_sequence} {
 // CHECK-DAG: %[[CST_3:.*]] = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
 // CHECK: %[[EMPTY:.*]] = tensor.empty() : tensor<8x1xf32>
 // CHECK: %[[B1:.*]] = vector.broadcast %[[CST_3]] : vector<8xindex> to vector<1x8xindex>
-// CHECK: %[[ADDI_ARG1:.*]] = arith.addi %[[ARG1]], %[[ARG1]] : index
-// CHECK: %[[B2:.*]] = vector.broadcast %[[ADDI_ARG1]] : index to vector<1xindex>
+// CHECK: %[[ARG1_BCAST0:.*]] = vector.broadcast %arg1 : index to vector<1xindex>
+// CHECK: %[[ARG1_BCAST1:.*]] = vector.broadcast %arg1 : index to vector<1xindex>
+// CHECK: %[[B2:.*]] = arith.addi %[[ARG1_BCAST0]], %[[ARG1_BCAST1]] : vector<1xindex>
 // CHECK: %[[MULI_1:.*]] = arith.muli %[[B1]], %[[CST_0]] : vector<1x8xindex>
 // CHECK: %[[MULI_2:.*]] = arith.muli %[[MULI_1]], %[[CST]] : vector<1x8xindex>
 // CHECK: %[[T:.*]] = vector.transpose %[[MULI_2]], [1, 0] : vector<1x8xindex> to vector<8x1xindex>
@@ -357,17 +379,22 @@ module attributes {transform.with_named_sequence} {
     %0 = transform.structured.match ops{["linalg.generic"]} in %arg2 : (!transform.any_op) -> !transform.any_op
     %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
     %2 = transform.structured.vectorize_children_and_apply_patterns %1 {vectorize_nd_extract} : (!transform.any_op) -> !transform.any_op
+    %func = transform.structured.match ops{["func.func"]} in %arg2
+       : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+    } : !transform.any_op
     transform.yield
   }
 }
 
 // CHECK-LABEL:   func.func @index_from_output_column_vector_gather_load(
 // CHECK-SAME:      %[[SRC:.*]]: tensor<8x128xf32>) -> tensor<8x1xf32> {
+// CHECK:           %[[IDX_VEC:.*]] = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
 // CHECK:           %[[C128:.*]] = arith.constant dense<128> : vector<1x8xindex>
 // CHECK:           %[[C0:.*]] = arith.constant 0 : index
 // CHECK:           %[[PASS_THRU:.*]] = arith.constant dense<0.000000e+00> : vector<8x1xf32>
 // CHECK:           %[[MASK:.*]] = arith.constant dense<true> : vector<8x1xi1>
-// CHECK:           %[[IDX_VEC:.*]] = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
 // CHECK:           %[[OUT:.*]] = tensor.empty() : tensor<8x1xf32>
 // CHECK:           %[[B:.*]] = vector.broadcast %[[IDX_VEC]] : vector<8xindex> to vector<1x8xindex>
 // CHECK:           %[[MUL:.*]] = arith.muli %[[B]], %[[C128]] : vector<1x8xindex>
@@ -404,16 +431,21 @@ module attributes {transform.with_named_sequence} {
     %0 = transform.structured.match ops{["linalg.generic"]} in %arg2 : (!transform.any_op) -> !transform.any_op
     %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
     %2 = transform.structured.vectorize_children_and_apply_patterns %1 {vectorize_nd_extract} : (!transform.any_op) -> !transform.any_op
+    %func = transform.structured.match ops{["func.func"]} in %arg2
+       : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+    } : !transform.any_op
     transform.yield
   }
 }
 
 // CHECK-LABEL:   func.func @index_from_output_column_vector_contiguous_load(
 // CHECK-SAME:      %[[SRC:.*]]: tensor<8x128xf32>) -> tensor<8x1xf32> {
+// CHECK:           %[[IDX_VEC:.*]] = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
 // CHECK:           %[[C0:.*]] = arith.constant 0 : index
 // CHECK:           %[[PASS_THRU:.*]] = arith.constant dense<0.000000e+00> : vector<8x1xf32>
 // CHECK:           %[[MASK:.*]] = arith.constant dense<true> : vector<8x1xi1>
-// CHECK:           %[[IDX_VEC:.*]] = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
 // CHECK:           %[[OUT:.*]] = tensor.empty() : tensor<8x1xf32>
 // CHECK:           %[[B:.*]] = vector.broadcast %[[IDX_VEC]] : vector<8xindex> to vector<1x8xindex>
 // CHECK:           %[[TR:.*]] = vector.transpose %[[B]], [1, 0] : vector<1x8xindex> to vector<8x1xindex>
@@ -464,6 +496,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -508,6 +545,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -599,6 +641,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -641,6 +688,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -683,6 +735,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -724,6 +781,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }
@@ -798,6 +860,11 @@ module attributes {transform.with_named_sequence} {
      %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!transform.any_op) -> !transform.any_op
      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
      %2 = transform.structured.vectorize_children_and_apply_patterns %1 { vectorize_nd_extract } : (!transform.any_op) -> !transform.any_op
+     %func = transform.structured.match ops{["func.func"]} in %arg1
+       : (!transform.any_op) -> !transform.any_op
+     transform.apply_patterns to %func {
+      transform.apply_patterns.vector.step_to_arith
+     } : !transform.any_op
      transform.yield
    }
 }

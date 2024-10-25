@@ -453,4 +453,13 @@ def ApplyVectorReductionToContractPatternsOp : Op<Transform_Dialect,
   let assemblyFormat = "attr-dict";
 }
 
+def ApplyLowerStepToArithOps : Op<Transform_Dialect,
+    "apply_patterns.vector.step_to_arith",
+    [DeclareOpInterfaceMethods<PatternDescriptorOpInterface>]> {
+  let description = [{
+    Convert vector.step to arith if not using scalable vectors.
+  }];
+  let assemblyFormat = "attr-dict";
+}
+
 #endif // VECTOR_TRANSFORM_OPS
