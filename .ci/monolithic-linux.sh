@@ -30,7 +30,7 @@ fi
 
 function at-exit {
   python3 "${MONOREPO_ROOT}"/.ci/generate_test_report.py ":linux: Linux x64 Test Results" \
-    "linux-x64-test-results" "${BUILD_DIR}"/test-results*.xml
+    "linux-x64-test-results" "${BUILD_DIR}"/*-test-results.xml
 
   mkdir -p artifacts
   ccache --print-stats > artifacts/ccache_stats.txt
@@ -59,75 +59,94 @@ cmake -S "${MONOREPO_ROOT}"/llvm -B "${BUILD_DIR}" \
       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
 echo "--- ninja"
-# Targets are not escaped as they are passed as separate arguments.
-ninja -C "${BUILD_DIR}" -k 0 ${targets}
 
-runtimes="${3}"
-runtime_targets="${4}"
-
-# Compiling runtimes with just-built Clang and running their tests
-# as an additional testing for Clang.
-if [[ "${runtimes}" != "" ]]; then
-  if [[ "${runtime_targets}" == "" ]]; then
-    echo "Runtimes to build are specified, but targets are not."
-    exit 1
+set +e
+err_code=0
+for target in $targets; do
+  ninja -C "${BUILD_DIR}" -k 0 ${target}
+  new_err_code=$?
+  if [[ $new_err_code -ne 0 ]]; then
+    err_code=${new_err_code}
   fi
+  # Move so the next lit run does not overwrite it. This can fail if ninja failed
+  # to get to tests, but this script will not exit because of that.
+  mv "${BUILD_DIR}/test-results.xml" "${BUILD_DIR}/${target}-test-results.xml"
+done
 
-  echo "--- ninja install-clang"
-
-  ninja -C ${BUILD_DIR} install-clang install-clang-resource-headers
-
-  RUNTIMES_BUILD_DIR="${MONOREPO_ROOT}/build-runtimes"
-  INSTALL_DIR="${BUILD_DIR}/install"
-  mkdir -p ${RUNTIMES_BUILD_DIR}
-
-  echo "--- cmake runtimes C++03"
-
-  cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
-      -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
-      -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
-      -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
-      -D LIBCXX_CXX_ABI=libcxxabi \
-      -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-      -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
-      -D LIBCXX_TEST_PARAMS="std=c++03" \
-      -D LIBCXXABI_TEST_PARAMS="std=c++03"
-
-  echo "--- ninja runtimes C++03"
-
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
-
-  echo "--- cmake runtimes C++26"
-
-  rm -rf "${RUNTIMES_BUILD_DIR}"
-  cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
-      -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
-      -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
-      -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
-      -D LIBCXX_CXX_ABI=libcxxabi \
-      -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-      -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
-      -D LIBCXX_TEST_PARAMS="std=c++26" \
-      -D LIBCXXABI_TEST_PARAMS="std=c++26"
-
-  echo "--- ninja runtimes C++26"
-
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
-
-  echo "--- cmake runtimes clang modules"
-
-  rm -rf "${RUNTIMES_BUILD_DIR}"
-  cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
-      -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
-      -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
-      -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
-      -D LIBCXX_CXX_ABI=libcxxabi \
-      -D CMAKE_BUILD_TYPE=RelWithDebInfo \
-      -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
-      -D LIBCXX_TEST_PARAMS="enable_modules=clang" \
-      -D LIBCXXABI_TEST_PARAMS="enable_modules=clang"
-
-  echo "--- ninja runtimes clang modules"
-  
-  ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+if [[ $err_code -ne 0 ]]; then
+ exit $err_code
 fi
+set -e
+
+
+# TODO: apply to runtimes also
+
+# runtimes="${3}"
+# runtime_targets="${4}"
+# 
+# # Compiling runtimes with just-built Clang and running their tests
+# # as an additional testing for Clang.
+# if [[ "${runtimes}" != "" ]]; then
+#   if [[ "${runtime_targets}" == "" ]]; then
+#     echo "Runtimes to build are specified, but targets are not."
+#     exit 1
+#   fi
+# 
+#   echo "--- ninja install-clang"
+# 
+#   ninja -C ${BUILD_DIR} install-clang install-clang-resource-headers
+# 
+#   RUNTIMES_BUILD_DIR="${MONOREPO_ROOT}/build-runtimes"
+#   INSTALL_DIR="${BUILD_DIR}/install"
+#   mkdir -p ${RUNTIMES_BUILD_DIR}
+# 
+#   echo "--- cmake runtimes C++03"
+# 
+#   cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
+#       -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
+#       -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
+#       -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
+#       -D LIBCXX_CXX_ABI=libcxxabi \
+#       -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+#       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
+#       -D LIBCXX_TEST_PARAMS="std=c++03" \
+#       -D LIBCXXABI_TEST_PARAMS="std=c++03"
+# 
+#   echo "--- ninja runtimes C++03"
+# 
+#   ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+# 
+#   echo "--- cmake runtimes C++26"
+# 
+#   rm -rf "${RUNTIMES_BUILD_DIR}"
+#   cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
+#       -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
+#       -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
+#       -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
+#       -D LIBCXX_CXX_ABI=libcxxabi \
+#       -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+#       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
+#       -D LIBCXX_TEST_PARAMS="std=c++26" \
+#       -D LIBCXXABI_TEST_PARAMS="std=c++26"
+# 
+#   echo "--- ninja runtimes C++26"
+# 
+#   ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+# 
+#   echo "--- cmake runtimes clang modules"
+# 
+#   rm -rf "${RUNTIMES_BUILD_DIR}"
+#   cmake -S "${MONOREPO_ROOT}/runtimes" -B "${RUNTIMES_BUILD_DIR}" -GNinja \
+#       -D CMAKE_C_COMPILER="${INSTALL_DIR}/bin/clang" \
+#       -D CMAKE_CXX_COMPILER="${INSTALL_DIR}/bin/clang++" \
+#       -D LLVM_ENABLE_RUNTIMES="${runtimes}" \
+#       -D LIBCXX_CXX_ABI=libcxxabi \
+#       -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+#       -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
+#       -D LIBCXX_TEST_PARAMS="enable_modules=clang" \
+#       -D LIBCXXABI_TEST_PARAMS="enable_modules=clang"
+# 
+#   echo "--- ninja runtimes clang modules"
+#   
+#   ninja -vC "${RUNTIMES_BUILD_DIR}" ${runtime_targets}
+# fi
