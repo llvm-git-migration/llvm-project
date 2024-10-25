@@ -152,7 +152,8 @@ define void @fp_iv_loop2(ptr noalias nocapture %A, i32 %N) {
 ; AUTO_VEC:       for.end.loopexit.unr-lcssa:
 ; AUTO_VEC-NEXT:    [[INDVARS_IV_UNR:%.*]] = phi i64 [ 0, [[FOR_BODY_PREHEADER]] ], [ [[INDVARS_IV_NEXT_7]], [[FOR_BODY]] ]
 ; AUTO_VEC-NEXT:    [[X_06_UNR:%.*]] = phi float [ 1.000000e+00, [[FOR_BODY_PREHEADER]] ], [ [[CONV1_7]], [[FOR_BODY]] ]
-; AUTO_VEC-NEXT:    [[LCMP_MOD_NOT:%.*]] = icmp eq i64 [[XTRAITER]], 0
+; AUTO_VEC-NEXT:    [[TMP1:%.*]] = and i32 [[N]], 7
+; AUTO_VEC-NEXT:    [[LCMP_MOD_NOT:%.*]] = icmp eq i32 [[TMP1]], 0
 ; AUTO_VEC-NEXT:    br i1 [[LCMP_MOD_NOT]], label [[FOR_END]], label [[FOR_BODY_EPIL:%.*]]
 ; AUTO_VEC:       for.body.epil:
 ; AUTO_VEC-NEXT:    [[INDVARS_IV_EPIL:%.*]] = phi i64 [ [[INDVARS_IV_NEXT_EPIL:%.*]], [[FOR_BODY_EPIL]] ], [ [[INDVARS_IV_UNR]], [[FOR_END_LOOPEXIT_UNR_LCSSA]] ]

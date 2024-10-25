@@ -65,7 +65,8 @@ define void @vdiv(ptr %x, ptr %y, double %a, i32 %N) #0 {
 ; CHECK:       for.body.preheader9:
 ; CHECK-NEXT:    [[INDVARS_IV_PH:%.*]] = phi i64 [ 0, [[FOR_BODY_PREHEADER]] ], [ [[N_VEC]], [[MIDDLE_BLOCK]] ]
 ; CHECK-NEXT:    [[XTRAITER:%.*]] = and i64 [[WIDE_TRIP_COUNT]], 7
-; CHECK-NEXT:    [[LCMP_MOD_NOT:%.*]] = icmp eq i64 [[XTRAITER]], 0
+; CHECK-NEXT:    [[TMP38:%.*]] = and i32 [[N]], 7
+; CHECK-NEXT:    [[LCMP_MOD_NOT:%.*]] = icmp eq i32 [[TMP38]], 0
 ; CHECK-NEXT:    br i1 [[LCMP_MOD_NOT]], label [[FOR_BODY_PROL_LOOPEXIT:%.*]], label [[FOR_BODY_PROL_PREHEADER:%.*]]
 ; CHECK:       for.body.prol.preheader:
 ; CHECK-NEXT:    [[TMP18:%.*]] = fdiv fast double 1.000000e+00, [[A]]
