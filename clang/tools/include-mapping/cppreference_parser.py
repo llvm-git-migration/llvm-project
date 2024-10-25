@@ -7,7 +7,7 @@
 #
 # ===------------------------------------------------------------------------===#
 
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 import collections
 import multiprocessing
@@ -89,6 +89,23 @@ def _ParseSymbolPage(symbol_page_html, symbol_name):
     return headers or all_headers
 
 
+def _ParseSymbolVariant(caption):
+    if not (isinstance(caption, NavigableString) and "(" in caption):
+        return None
+
+    if ')' in caption.text:  # (locale), (algorithm), etc.
+        return caption.text.strip(" ()")
+
+    second_part = caption.next_sibling
+    if isinstance(second_part, Tag) and second_part.name == "code":
+        # (<code>std::complex</code>), etc.
+        third_part = second_part.next_sibling
+        if isinstance(third_part, NavigableString) and third_part.text.startswith(')'):
+            return second_part.text
+    return None
+
+
+
 def _ParseIndexPage(index_page_html):
     """Parse index page.
     The index page lists all std symbols and hrefs to their detailed pages
@@ -107,9 +124,7 @@ def _ParseIndexPage(index_page_html):
         # This accidentally accepts begin/end despite the (iterator) caption: the
         # (since C++11) note is first. They are good symbols, so the bug is unfixed.
         caption = symbol_href.next_sibling
-        variant = None
-        if isinstance(caption, NavigableString) and "(" in caption:
-            variant = caption.text.strip(" ()")
+        variant = _ParseSymbolVariant(caption)
         symbol_tt = symbol_href.find("tt")
         if symbol_tt:
             symbols.append(
@@ -192,6 +207,16 @@ def GetSymbols(parse_pages):
     variants_to_accept = {
         # std::remove<> has variant algorithm.
         "std::remove": ("algorithm"),
+        # These functions don't have a generic version, and all variants are defined in <chrono>
+        "std::chrono::abs": ("std::chrono::duration"),
+        "std::chrono::ceil": ("std::chrono::duration"),
+        "std::chrono::floor": ("std::chrono::duration"),
+        "std::chrono::from_stream": ("std::chrono::day"),
+        "std::chrono::round": ("std::chrono::duration"),
+        # Same, but in <filesystem>
+        "std::filesystem::begin": ("std::filesystem::directory_iterator"),
+        "std::filesystem::end": ("std::filesystem::directory_iterator"),
+        "std::ranges::get": ("std::ranges::subrange"),
     }
     symbols = []
     # Run many workers to process individual symbol pages under the symbol index.
