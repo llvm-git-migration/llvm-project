@@ -1462,15 +1462,22 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
         assert(OrigMask && "Unmasked recipe when folding tail");
         return HeaderMask == OrigMask ? nullptr : OrigMask;
       };
+      auto SetEVLForReversePointer = [&EVL](VPValue *V) -> void {
+        if (auto R =
+                dyn_cast<VPReverseVectorPointerRecipe>(V->getDefiningRecipe()))
+          R->setOperand(1, &EVL);
+      };
 
       VPRecipeBase *NewRecipe =
           TypeSwitch<VPRecipeBase *, VPRecipeBase *>(CurRecipe)
               .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
                 VPValue *NewMask = GetNewMask(L->getMask());
+                SetEVLForReversePointer(L->getOperand(0));
                 return new VPWidenLoadEVLRecipe(*L, EVL, NewMask);
               })
               .Case<VPWidenStoreRecipe>([&](VPWidenStoreRecipe *S) {
                 VPValue *NewMask = GetNewMask(S->getMask());
+                SetEVLForReversePointer(S->getOperand(0));
                 return new VPWidenStoreEVLRecipe(*S, EVL, NewMask);
               })
               .Case<VPWidenRecipe>([&](VPWidenRecipe *W) -> VPRecipeBase * {
