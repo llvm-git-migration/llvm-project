@@ -1457,8 +1457,8 @@ void VPWidenEVLRecipe::execute(VPTransformState &State) {
   unsigned Opcode = getOpcode();
   // TODO: Support other opcodes
   if (Opcode == Instruction::ICmp || Opcode == Instruction::FCmp) {
-    Value *Op1 = State.get(getOperand(0), 0);
-    Value *Op2 = State.get(getOperand(1), 0);
+    Value *Op1 = State.get(getOperand(0));
+    Value *Op2 = State.get(getOperand(1));
     auto &Ctx = State.Builder.getContext();
     Value *Pred = MetadataAsValue::get(
         Ctx, MDString::get(Ctx, CmpInst::getPredicateName(getPredicate())));
@@ -1471,10 +1471,10 @@ void VPWidenEVLRecipe::execute(VPTransformState &State) {
     VectorType *RetType = VectorType::get(Type::getInt1Ty(Ctx), State.VF);
     Value *VPInst = Builder.createVectorInstruction(Opcode, RetType,
                                                     {Op1, Op2, Pred}, "vp.op");
-    if (auto *VecOp = dyn_cast<CastInst>(VPInst))
-      VecOp->copyIRFlags(getUnderlyingInstr());
+    if (isa<FPMathOperator>(VPInst))
+      setFlags(cast<Instruction>(VPInst));
 
-    State.set(this, VPInst, 0);
+    State.set(this, VPInst);
     State.addMetadata(VPInst,
                       dyn_cast_or_null<Instruction>(getUnderlyingValue()));
     return;
