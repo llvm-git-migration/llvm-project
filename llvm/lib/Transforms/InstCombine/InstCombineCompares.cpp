@@ -7687,6 +7687,30 @@ Instruction *InstCombinerImpl::visitICmpInst(ICmpInst &I) {
   if (Instruction *Res = foldReductionIdiom(I, Builder, DL))
     return Res;
 
+  {
+    Value *A;
+    const APInt *C1, *C2;
+    ICmpInst::Predicate PredEq = ICmpInst::ICMP_EQ;
+    if (I.getPredicate() == PredEq) {
+      // c2 must be positive
+      // sext(a) & c1 == c2 --> a & c3 == trunc(c2)
+      if (match(Op0, m_And(m_SExtLike(m_Value(A)), m_APInt(C1))) && match(Op1, m_APInt(C2))) {
+        if (C2->isNonNegative()) {
+          Type *InputTy = A->getType();
+          unsigned TargetBitSize = InputTy->getScalarSizeInBits();
+          // Count the number of 1s in C1 high bits of size TargetBitSize.
+          unsigned Leading1sCount = C1->lshr(C1->getBitWidth() - TargetBitSize).popcount();
+          APInt TruncC1 = C1->trunc(TargetBitSize);
+          if (Leading1sCount > 0) {
+            TruncC1.setBit(TargetBitSize - 1);
+          }
+          Value *AndInst = Builder.CreateAnd(A, TruncC1);
+          return new ICmpInst(PredEq, AndInst, ConstantInt::get(InputTy, C2->trunc(TargetBitSize)));
+        }
+      }
+    }
+  }
+
   return Changed ? &I : nullptr;
 }
 
