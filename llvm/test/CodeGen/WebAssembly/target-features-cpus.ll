@@ -14,10 +14,13 @@ target triple = "wasm32-unknown-unknown"
 
 ; generic: +call-indirect-overlong, +multivalue, +mutable-globals, +reference-types, +sign-ext
 ; GENERIC-LABEL: .custom_section.target_features,"",@
-; GENERIC-NEXT: .int8  6
+; GENERIC-NEXT: .int8  8
 ; GENERIC-NEXT: .int8  43
 ; GENERIC-NEXT: .int8  11
 ; GENERIC-NEXT: .ascii  "bulk-memory"
+; GENERIC-NEXT: .int8  43
+; GENERIC-NEXT: .int8  15
+; GENERIC-NEXT: .ascii  "bulk-memory-opt"
 ; GENERIC-NEXT: .int8  43
 ; GENERIC-NEXT: .int8  22
 ; GENERIC-NEXT: .ascii  "call-indirect-overlong"
@@ -37,15 +40,16 @@ target triple = "wasm32-unknown-unknown"
 ; GENERIC-NEXT: .int8  8
 ; GENERIC-NEXT: .ascii  "sign-ext"
 
-; lime1: +bulk-memory-opt, +call-indirect-overlong, +extended-const, +multivalue, +mutable-globals, +nontrapping-fptoint, +sign-ext
+; lime1: +bulk-memory-opt, +call-indirect-overlong, +extended-const, +multivalue,
+;        +mutable-globals, +nontrapping-fptoint, +sign-ext
 ; LIME1-LABEL: .custom_section.target_features,"",@
-; LIME1-NEXT: .int8  6
+; LIME1-NEXT: .int8  7
 ; LIME1-NEXT: .int8  43
 ; LIME1-NEXT: .int8  15
-; LIME1-NEXT: .int8  "bulk-memory-opt"
+; LIME1-NEXT: .ascii  "bulk-memory-opt"
 ; LIME1-NEXT: .int8  43
 ; LIME1-NEXT: .int8  22
-; LIME1-NEXT: .int8  "call-indirect-overlong"
+; LIME1-NEXT: .ascii  "call-indirect-overlong"
 ; LIME1-NEXT: .int8  43
 ; LIME1-NEXT: .int8  14
 ; LIME1-NEXT: .ascii  "extended-const"
@@ -68,7 +72,7 @@ target triple = "wasm32-unknown-unknown"
 ;                +mutable-globals, +nontrapping-fptoint, +relaxed-simd,
 ;                +reference-types, +simd128, +sign-ext, +tail-call
 ; BLEEDING-EDGE-LABEL: .section  .custom_section.target_features,"",@
-; BLEEDING-EDGE-NEXT: .int8  14
+; BLEEDING-EDGE-NEXT: .int8  16
 ; BLEEDING-EDGE-NEXT: .int8  43
 ; BLEEDING-EDGE-NEXT: .int8  7
 ; BLEEDING-EDGE-NEXT: .ascii  "atomics"
