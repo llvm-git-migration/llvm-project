@@ -525,9 +525,13 @@ protected:
   _LIBCPP_HIDE_FROM_ABI bool empty() const _NOEXCEPT { return __sz() == 0; }
 
   _LIBCPP_HIDE_FROM_ABI iterator begin() _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return iterator(__end_.__next_); }
-  _LIBCPP_HIDE_FROM_ABI const_iterator begin() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return const_iterator(__end_.__next_); }
+  _LIBCPP_HIDE_FROM_ABI const_iterator begin() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
+    return const_iterator(__end_.__next_);
+  }
   _LIBCPP_HIDE_FROM_ABI iterator end() _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return iterator(__end_as_link()); }
-  _LIBCPP_HIDE_FROM_ABI const_iterator end() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND { return const_iterator(__end_as_link()); }
+  _LIBCPP_HIDE_FROM_ABI const_iterator end() const _NOEXCEPT _LIBCPP_LIFETIMEBOUND {
+    return const_iterator(__end_as_link());
+  }
 
   _LIBCPP_HIDE_FROM_ABI void swap(__list_imp& __c)
 #if _LIBCPP_STD_VER >= 14

@@ -1442,7 +1442,8 @@ _LIBCPP_HIDE_FROM_ABI constexpr add_pointer_t<_Tp> get_if(variant<_Types...>* __
 }
 
 template <class _Tp, class... _Types>
-_LIBCPP_HIDE_FROM_ABI constexpr add_pointer_t<const _Tp> get_if(const variant<_Types...>* __v) noexcept _LIBCPP_LIFETIMEBOUND {
+_LIBCPP_HIDE_FROM_ABI constexpr add_pointer_t<const _Tp>
+get_if(const variant<_Types...>* __v) noexcept _LIBCPP_LIFETIMEBOUND {
   static_assert(!is_void_v<_Tp>);
   return std::get_if<__find_exactly_one_t<_Tp, _Types...>::value>(__v);
 }
