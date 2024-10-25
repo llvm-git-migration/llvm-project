@@ -167,10 +167,23 @@ func.func @vectorize_linalg_index(%arg0: tensor<3x3x?xf32>, %arg1: tensor<1x1x?x
 // CHECK-DAG:          %[[C2:.*]] = arith.constant 2 : index
 // CHECK:        %[[DST_DIM2:.*]] = tensor.dim %[[DST]], %[[C2]] : tensor<1x1x?xf32>
 // CHECK:        %[[MASK:.*]] = vector.create_mask %[[C1]], %[[C1]], %[[DST_DIM2]] : vector<1x1x[4]xi1>
-// CHECK:       %[[INDEX_VEC:.*]] = vector.step : vector<[4]xindex>
-// CHECK:            %[[READ:.*]] = vector.mask %[[MASK]] { vector.transfer_read %[[SRC]][%c0, %c0, %2], %cst {in_bounds = [true, true, true]} : tensor<3x3x?xf32>, vector<1x1x[4]xf32> } : vector<1x1x[4]xi1> -> vector<1x1x[4]xf32>
-// CHECK:             %[[OUT:.*]] = vector.mask %[[MASK]] { vector.transfer_write %[[READ]], %[[DST]]{{\[}}%[[C0]], %[[C0]], %[[C0]]] {in_bounds = [true, true, true]} : vector<1x1x[4]xf32>, tensor<1x1x?xf32> } : vector<1x1x[4]xi1> -> tensor<1x1x?xf32>
-// CHECK:           return %[[OUT]] : tensor<1x1x?xf32>
+
+// CHECK-DAG: %[[STEP1:.+]]  = vector.step : vector<1xindex>
+// CHECK-DAG: %[[STEP1B:.+]] = vector.broadcast %[[STEP1]] : vector<1xindex> to vector<1x1x[4]xindex>
+// CHECK-DAG: %[[STEP1B_CAST:.+]] = vector.shape_cast %[[STEP1B]] : vector<1x1x[4]xindex> to vector<[4]xindex>
+// CHECK-DAG: %[[STEP1B_ELEMENT:.+]] = vector.extractelement %[[STEP1B_CAST]][%c0_i32 : i32] : vector<[4]xindex>
+
+// CHECK-DAG: %[[STEP2:.+]] = vector.step : vector<1xindex>
+// CHECK-DAG: %[[STEP2B:.+]] = vector.broadcast %[[STEP2]] : vector<1xindex> to vector<1x1x[4]xindex>
+// CHECK-DAG: %[[STEP2B_CAST:.+]] = vector.shape_cast %[[STEP2B]] : vector<1x1x[4]xindex> to vector<[4]xindex>
+// CHECK-DAG: %[[STEP2B_ELEMENT:.+]] = vector.extractelement %[[STEP2B_CAST]][%c0_i32 : i32] : vector<[4]xindex>
+
+// CHECK-DAG: %[[STEP_SCALABLE:.+]] = vector.step : vector<[4]xindex>
+// CHECK-DAG: %[[STEP_SCALABLE_ELEMENT:.+]] = vector.extractelement %[[STEP_SCALABLE]][%c0_i32 : i32] : vector<[4]xindex>
+
+// CHECK: %[[READ:.*]] = vector.mask %[[MASK]] { vector.transfer_read %[[SRC]][%[[STEP1B_ELEMENT]], %[[STEP2B_ELEMENT]], %[[STEP_SCALABLE_ELEMENT]]], %cst {in_bounds = [true, true, true]} : tensor<3x3x?xf32>, vector<1x1x[4]xf32> } : vector<1x1x[4]xi1> -> vector<1x1x[4]xf32>
+// CHECK: %[[OUT:.*]] = vector.mask %[[MASK]] { vector.transfer_write %[[READ]], %[[DST]]{{\[}}%[[C0]], %[[C0]], %[[C0]]] {in_bounds = [true, true, true]} : vector<1x1x[4]xf32>, tensor<1x1x?xf32> } : vector<1x1x[4]xi1> -> tensor<1x1x?xf32>
+// CHECK: return %[[OUT]] : tensor<1x1x?xf32>
 
 module attributes {transform.with_named_sequence} {
   transform.named_sequence @__transform_main(%arg1: !transform.any_op {transform.readonly}) {
