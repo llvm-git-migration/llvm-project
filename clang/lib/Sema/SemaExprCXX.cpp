@@ -5714,7 +5714,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
     if (DiagnoseVLAInCXXTypeTrait(Self, TInfo,
                                   tok::kw___builtin_hlsl_is_intangible))
       return false;
-    return Self.HLSL().IsIntangibleType(T);
+    return T->isHLSLIntangibleType();
 
   case UTT_IsLineVectorLayoutCompatibleType:
     assert(Self.getLangOpts().HLSL &&

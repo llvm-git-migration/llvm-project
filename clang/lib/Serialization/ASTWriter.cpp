@@ -3070,9 +3070,9 @@ void ASTWriter::WriteSubmodules(Module *WritingModule) {
         Module::HK_PrivateTextual},
       {SUBMODULE_EXCLUDED_HEADER, ExcludedHeaderAbbrev, Module::HK_Excluded}
     };
-    for (auto &HL : HeaderLists) {
+    for (const auto &HL : HeaderLists) {
       RecordData::value_type Record[] = {HL.RecordKind};
-      for (auto &H : Mod->Headers[HL.HeaderKind])
+      for (const auto &H : Mod->getHeaders(HL.HeaderKind))
         Stream.EmitRecordWithBlob(HL.Abbrev, Record, H.NameAsWritten);
     }
 
@@ -4905,6 +4905,12 @@ ASTFileSignature ASTWriter::WriteAST(Sema &SemaRef, StringRef OutputFile,
   this->BaseDirectory.clear();
 
   WritingAST = false;
+
+  if (WritingModule && SemaRef.PP.getHeaderSearchInfo()
+                           .getHeaderSearchOpts()
+                           .ModulesValidateOncePerBuildSession)
+    updateModuleTimestamp(OutputFile);
+
   if (ShouldCacheASTInMemory) {
     // Construct MemoryBuffer and update buffer manager.
     ModuleCache.addBuiltPCM(OutputFile,
