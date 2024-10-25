@@ -547,6 +547,8 @@ public:
   NODE_ENUM(OmpOrderClause, Type)
   NODE(parser, OmpOrderModifier)
   NODE_ENUM(OmpOrderModifier, Kind)
+  NODE(parser, OmpBindClause)
+  NODE_ENUM(OmpBindClause, Type)
   NODE(parser, OmpProcBindClause)
   NODE_ENUM(OmpProcBindClause, Type)
   NODE_ENUM(OmpReductionClause, ReductionModifier)
