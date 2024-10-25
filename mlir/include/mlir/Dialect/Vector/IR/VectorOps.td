@@ -1819,17 +1819,17 @@ def Vector_MaskedLoadOp :
   Vector_Op<"maskedload">,
     Arguments<(ins Arg<AnyMemRef, "", [MemRead]>:$base,
                Variadic<Index>:$indices,
-               VectorOfRankAndType<[1], [I1]>:$mask,
-               VectorOfRank<[1]>:$pass_thru)>,
-    Results<(outs VectorOfRank<[1]>:$result)> {
+               VectorOf<[I1]>:$mask,
+               AnyVector:$pass_thru)>,
+    Results<(outs AnyVector:$result)> {
 
   let summary = "loads elements from memory into a vector as defined by a mask vector";
 
   let description = [{
-    The masked load reads elements from memory into a 1-D vector as defined
-    by a base with indices and a 1-D mask vector. When the mask is set, the
+    The masked load reads elements from memory into a vector as defined
+    by a base with indices and a mask vector. When the mask is set, the
     element is read from memory. Otherwise, the corresponding element is taken
-    from a 1-D pass-through vector. Informally the semantics are:
+    from a pass-through vector. Informally the semantics are:
     ```
     result[0] := if mask[0] then base[i + 0] else pass_thru[0]
     result[1] := if mask[1] then base[i + 1] else pass_thru[1]
@@ -1882,14 +1882,14 @@ def Vector_MaskedStoreOp :
   Vector_Op<"maskedstore">,
     Arguments<(ins Arg<AnyMemRef, "", [MemWrite]>:$base,
                Variadic<Index>:$indices,
-               VectorOfRankAndType<[1], [I1]>:$mask,
-               VectorOfRank<[1]>:$valueToStore)> {
+               VectorOf<[I1]>:$mask,
+               AnyVector:$valueToStore)> {
 
   let summary = "stores elements from a vector into memory as defined by a mask vector";
 
   let description = [{
-    The masked store operation writes elements from a 1-D vector into memory
-    as defined by a base with indices and a 1-D mask vector. When the mask is
+    The masked store operation writes elements from a vector into memory
+    as defined by a base with indices and a mask vector. When the mask is
     set, the corresponding element from the vector is written to memory. Otherwise,
     no action is taken for the element. Informally the semantics are:
     ```
@@ -2076,17 +2076,17 @@ def Vector_ExpandLoadOp :
   Vector_Op<"expandload">,
     Arguments<(ins Arg<AnyMemRef, "", [MemRead]>:$base,
                Variadic<Index>:$indices,
-               VectorOfRankAndType<[1], [I1]>:$mask,
-               VectorOfRank<[1]>:$pass_thru)>,
-    Results<(outs VectorOfRank<[1]>:$result)> {
+               VectorOf<[I1]>:$mask,
+               AnyVector:$pass_thru)>,
+    Results<(outs AnyVector:$result)> {
 
   let summary = "reads elements from memory and spreads them into a vector as defined by a mask";
 
   let description = [{
-    The expand load reads elements from memory into a 1-D vector as defined
-    by a base with indices and a 1-D mask vector. When the mask is set, the
+    The expand load reads elements from memory into a vector as defined
+    by a base with indices and a mask vector. When the mask is set, the
     next element is read from memory. Otherwise, the corresponding element
-    is taken from a 1-D pass-through vector. Informally the semantics are:
+    is taken from a pass-through vector. Informally the semantics are:
     ```
     index = i
     result[0] := if mask[0] then base[index++] else pass_thru[0]
@@ -2140,14 +2140,14 @@ def Vector_CompressStoreOp :
   Vector_Op<"compressstore">,
     Arguments<(ins Arg<AnyMemRef, "", [MemWrite]>:$base,
                Variadic<Index>:$indices,
-               VectorOfRankAndType<[1], [I1]>:$mask,
-               VectorOfRank<[1]>:$valueToStore)> {
+               VectorOf<[I1]>:$mask,
+               AnyVector:$valueToStore)> {
 
   let summary = "writes elements selectively from a vector as defined by a mask";
 
   let description = [{
-    The compress store operation writes elements from a 1-D vector into memory
-    as defined by a base with indices and a 1-D mask vector. When the mask is
+    The compress store operation writes elements from a vector into memory
+    as defined by a base with indices and a mask vector. When the mask is
     set, the corresponding element from the vector is written next to memory.
     Otherwise, no action is taken for the element. Informally the semantics are:
     ```
