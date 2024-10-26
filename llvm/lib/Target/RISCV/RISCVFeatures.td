@@ -1029,6 +1029,10 @@ def FeatureStdExtSvpbmt
     : RISCVExtension<"svpbmt", 1, 0,
                      "'Svpbmt' (Page-Based Memory Types)">;
 
+def FeatureStdExtSvvptc
+    : RISCVExtension<"svvptc", 1, 0,
+                     "'svvptc' (Obviating Memory-Management Instructions after Marking PTEs Valid)">;                     
+
 // Pointer Masking extensions
 
 // A supervisor-level extension that provides pointer masking for the next lower
