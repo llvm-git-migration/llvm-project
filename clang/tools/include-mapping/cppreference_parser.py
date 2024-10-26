@@ -40,7 +40,7 @@ def _HasClass(tag, *classes):
     return False
 
 
-def _ParseSymbolPage(symbol_page_html, symbol_name):
+def _ParseSymbolPage(symbol_page_html, symbol_name, qual_name):
     """Parse symbol page and retrieve the include header defined in this page.
     The symbol page provides header for the symbol, specifically in
     "Defined in header <header>" section. An example:
@@ -69,7 +69,7 @@ def _ParseSymbolPage(symbol_page_html, symbol_name):
                 was_decl = True
                 # Symbols are in the first cell.
                 found_symbols = row.find("td").stripped_strings
-                if not symbol_name in found_symbols:
+                if not (symbol_name in found_symbols or qual_name in found_symbols):
                     continue
                 headers.update(current_headers)
             elif _HasClass(row, "t-dsc-header"):
@@ -137,9 +137,9 @@ def _ParseIndexPage(index_page_html):
     return symbols
 
 
-def _ReadSymbolPage(path, name):
+def _ReadSymbolPage(path, name, qual_name):
     with open(path) as f:
-        return _ParseSymbolPage(f.read(), name)
+        return _ParseSymbolPage(f.read(), name, qual_name)
 
 
 def _GetSymbols(pool, root_dir, index_page_name, namespace, variants_to_accept):
@@ -161,8 +161,9 @@ def _GetSymbols(pool, root_dir, index_page_name, namespace, variants_to_accept):
         for symbol_name, symbol_page_path, variant in _ParseIndexPage(f.read()):
             # Variant symbols (e.g. the std::locale version of isalpha) add ambiguity.
             # FIXME: use these as a fallback rather than ignoring entirely.
+            qualified_symbol_name = (namespace or "") + symbol_name
             variants_for_symbol = variants_to_accept.get(
-                (namespace or "") + symbol_name, ()
+                qualified_symbol_name, ()
             )
             if variant and variant not in variants_for_symbol:
                 continue
@@ -171,7 +172,7 @@ def _GetSymbols(pool, root_dir, index_page_name, namespace, variants_to_accept):
                 results.append(
                     (
                         symbol_name,
-                        pool.apply_async(_ReadSymbolPage, (path, symbol_name)),
+                        pool.apply_async(_ReadSymbolPage, (path, symbol_name, qualified_symbol_name)),
                     )
                 )
             else:
