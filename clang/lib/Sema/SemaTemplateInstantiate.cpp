@@ -3435,10 +3435,10 @@ bool Sema::SubstDefaultArgument(
       //   template<typename T> void f(T a, int = decltype(a)());
       //   void g() { f(0); }
       LIS = std::make_unique<LocalInstantiationScope>(*this);
-      FunctionDecl *PatternFD = FD->getTemplateInstantiationPattern(
-          /*ForDefinition*/ false);
-      if (addInstantiatedParametersToScope(FD, PatternFD, *LIS, TemplateArgs))
-        return true;
+      if (FunctionDecl *PatternFD =
+              FD->getTemplateInstantiationPattern(/*ForDefinition*/ false))
+        if (addInstantiatedParametersToScope(FD, PatternFD, *LIS, TemplateArgs))
+          return true;
     }
 
     runWithSufficientStackSpace(Loc, [&] {

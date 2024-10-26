@@ -561,6 +561,8 @@ Bug Fixes to C++ Support
   const-default-constructible even if a union member has a default member initializer.
   (#GH95854).
 - Fixed an assertion failure when evaluating an invalid expression in an array initializer (#GH112140)
+- Fixed an assertion failure caused by an invalid template instantiation pattern
+  for adding instantiated parameters to the scope in friend functions with defaulted parameters. (#GH113324).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^

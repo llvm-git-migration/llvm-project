@@ -185,3 +185,10 @@ template<typename T> struct S {
   friend void X::f(T::type);
 };
 }
+
+namespace GH113324 {
+template <typename = int> struct ct {
+  friend void f(ct, int = 0); // expected-error {{friend declaration specifying a default argument must be a definition}}
+};
+void test() { f(ct<>{}); }
+}
