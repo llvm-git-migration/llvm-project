@@ -2656,6 +2656,18 @@ struct FormatStyle {
   /// \version 12
   EmptyLineBeforeAccessModifierStyle EmptyLineBeforeAccessModifier;
 
+  /// TODO: Descriptive comment.
+  enum EnableSortIncludesOptions : int8_t {
+    /// TODO: Descriptive comment.
+    ESI_Always,
+    /// TODO: Descriptive comment.
+    ESI_IfFormatEnabled,
+    /// TODO: Descriptive comment.
+    ESI_Never,
+  };
+
+  EnableSortIncludesOptions EnableSortIncludes;
+
   /// If ``true``, clang-format detects whether function calls and
   /// definitions are formatted with one parameter per line.
   ///
@@ -5203,6 +5215,7 @@ struct FormatStyle {
            DisableFormat == R.DisableFormat &&
            EmptyLineAfterAccessModifier == R.EmptyLineAfterAccessModifier &&
            EmptyLineBeforeAccessModifier == R.EmptyLineBeforeAccessModifier &&
+           EnableSortIncludes == R.EnableSortIncludes &&
            ExperimentalAutoDetectBinPacking ==
                R.ExperimentalAutoDetectBinPacking &&
            FixNamespaceComments == R.FixNamespaceComments &&
