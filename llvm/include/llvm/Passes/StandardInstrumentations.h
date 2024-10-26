@@ -23,6 +23,7 @@
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/OptBisect.h"
 #include "llvm/IR/PassTimingInfo.h"
+#include "llvm/IR/StructuralHash.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/TimeProfiler.h"
@@ -177,6 +178,36 @@ public:
 
   void registerCallbacks(PassInstrumentationCallbacks &PIC,
                          ModuleAnalysisManager &MAM);
+};
+
+struct PreservedFunctionHashAnalysis
+    : public AnalysisInfoMixin<PreservedFunctionHashAnalysis> {
+  static AnalysisKey Key;
+
+  struct FunctionHash {
+    uint64_t Hash;
+  };
+
+  using Result = FunctionHash;
+
+  Result run(Function &F, FunctionAnalysisManager &FAM) {
+    return Result{StructuralHash(F)};
+  }
+};
+
+struct PreservedModuleHashAnalysis
+    : public AnalysisInfoMixin<PreservedModuleHashAnalysis> {
+  static AnalysisKey Key;
+
+  struct ModuleHash {
+    uint64_t Hash;
+  };
+
+  using Result = ModuleHash;
+
+  Result run(Module &F, ModuleAnalysisManager &FAM) {
+    return Result{StructuralHash(F)};
+  }
 };
 
 // Base class for classes that report changes to the IR.

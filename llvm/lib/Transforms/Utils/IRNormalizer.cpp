@@ -26,6 +26,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
+#include "llvm/Passes/StandardInstrumentations.h"
 #include "llvm/PassRegistry.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Transforms/Utils.h"
@@ -691,5 +692,8 @@ SetVector<int> IRNormalizer::getOutputFootprint(
 PreservedAnalyses IRNormalizerPass::run(Function &F,
                                         FunctionAnalysisManager &AM) const {
   IRNormalizer{}.runOnFunction(F);
-  return PreservedAnalyses::all();
+  auto PA = PreservedAnalyses::all();
+  PA.abandon<PreservedFunctionHashAnalysis>();
+  PA.abandon<PreservedModuleHashAnalysis>();
+  return PA;
 }

@@ -28,7 +28,6 @@
 #include "llvm/IR/PassInstrumentation.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/PrintPasses.h"
-#include "llvm/IR/StructuralHash.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/CrashRecoveryContext.h"
@@ -1296,37 +1295,7 @@ public:
 
 AnalysisKey PreservedCFGCheckerAnalysis::Key;
 
-struct PreservedFunctionHashAnalysis
-    : public AnalysisInfoMixin<PreservedFunctionHashAnalysis> {
-  static AnalysisKey Key;
-
-  struct FunctionHash {
-    uint64_t Hash;
-  };
-
-  using Result = FunctionHash;
-
-  Result run(Function &F, FunctionAnalysisManager &FAM) {
-    return Result{StructuralHash(F)};
-  }
-};
-
 AnalysisKey PreservedFunctionHashAnalysis::Key;
-
-struct PreservedModuleHashAnalysis
-    : public AnalysisInfoMixin<PreservedModuleHashAnalysis> {
-  static AnalysisKey Key;
-
-  struct ModuleHash {
-    uint64_t Hash;
-  };
-
-  using Result = ModuleHash;
-
-  Result run(Module &F, ModuleAnalysisManager &FAM) {
-    return Result{StructuralHash(F)};
-  }
-};
 
 AnalysisKey PreservedModuleHashAnalysis::Key;
 
