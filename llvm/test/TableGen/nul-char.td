@@ -6,10 +6,10 @@
 
 #ifdef ERROR1
 
-// ERROR1: error: NUL character is invalid in source; treated as space
-// ERROR1: error: NUL character is invalid in source; treated as space
-// ERROR1: error: NUL character is invalid in source; treated as space
-// ERROR1: error: NUL character is invalid in source; treated as space
+// ERROR1: error: nul character is invalid in source; treated as space
+// ERROR1: error: nul character is invalid in source; treated as space
+// ERROR1: error: nul character is invalid in source; treated as space
+// ERROR1: error: nul character is invalid in source; treated as space
 // ERROR1: error: expected ';' after declaration
 
 def Foo@ {
