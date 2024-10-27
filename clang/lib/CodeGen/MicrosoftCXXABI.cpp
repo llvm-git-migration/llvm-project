@@ -431,6 +431,7 @@ public:
   bool usesThreadWrapperFunction(const VarDecl *VD) const override {
     return getContext().getLangOpts().isCompatibleWithMSVC(
                LangOptions::MSVC2019_5) &&
+           getContext().getLangOpts().TlsGuards &&
            (!isEmittedWithConstantInitializer(VD) || mayNeedDestruction(VD));
   }
   LValue EmitThreadLocalVarDeclLValue(CodeGenFunction &CGF, const VarDecl *VD,
