@@ -186,11 +186,35 @@ static void checkSafeToTileToForall(TilingInterface op,
   }
 }
 
+/// Returns true if `size` is dynamic multiplication of `stride`.
+/// i.e. , `size = stride * k` where stride may be a constant or a dynamic.
+static bool dynamiclyDivisible(OpFoldResult size, OpFoldResult stride) {
+  Value dynamicSize = dyn_cast_if_present<Value>(size);
+  if (!dynamicSize)
+    return false;
+  auto mulOp = dynamicSize.getDefiningOp<arith::MulIOp>();
+  if (!mulOp)
+    return false;
+  if (Value dynamicStride = dyn_cast_if_present<Value>(stride))
+    return mulOp.getLhs() == dynamicStride || mulOp.getRhs() == dynamicStride;
+  std::optional<int64_t> strideAsInt = getConstantIntValue(stride);
+  std::optional<int64_t> lhsAsInt = getConstantIntValue(mulOp.getLhs());
+  std::optional<int64_t> rhsAsInt = getConstantIntValue(mulOp.getRhs());
+  if (strideAsInt && lhsAsInt && *strideAsInt == *lhsAsInt)
+    return true;
+  if (strideAsInt && rhsAsInt && *strideAsInt == *rhsAsInt)
+    return true;
+
+  return false;
+}
+
 /// Check if `stride` evenly divides the trip count `size - offset`.
 static bool tileDividesIterationDomain(Range loopRange) {
   std::optional<int64_t> offsetAsInt = getConstantIntValue(loopRange.offset);
   if (!offsetAsInt)
     return false;
+  if (*offsetAsInt == 0 && dynamiclyDivisible(loopRange.size, loopRange.stride))
+    return true;
   std::optional<int64_t> sizeAsInt = getConstantIntValue(loopRange.size);
   if (!sizeAsInt)
     return false;
