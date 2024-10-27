@@ -186,6 +186,7 @@ COMPATIBLE_LANGOPT(RecoveryAST, 1, 1, "Preserve expressions in AST when encounte
 COMPATIBLE_LANGOPT(RecoveryASTType, 1, 1, "Preserve the type in recovery expressions")
 
 BENIGN_LANGOPT(ThreadsafeStatics , 1, 1, "thread-safe static initializers")
+BENIGN_LANGOPT(TlsGuards , 1, 1, "on-demand TLS initialization")
 LANGOPT(POSIXThreads      , 1, 0, "POSIX thread support")
 LANGOPT(Blocks            , 1, 0, "blocks extension to C")
 BENIGN_LANGOPT(EmitAllDecls      , 1, 0, "emitting all declarations")

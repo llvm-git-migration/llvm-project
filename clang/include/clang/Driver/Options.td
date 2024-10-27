@@ -4063,6 +4063,11 @@ defm threadsafe_statics : BoolFOption<"threadsafe-statics",
   NegFlag<SetFalse, [], [ClangOption, CC1Option],
           "Do not emit code to make initialization of local statics thread safe">,
   PosFlag<SetTrue>>;
+defm tls_guards : BoolFOption<"tls-guards",
+  LangOpts<"TlsGuards">, DefaultTrue,
+  NegFlag<SetFalse, [], [ClangOption, CC1Option],
+          "Do not emit code to perform on-demand initialization of thread-local variables">,
+  PosFlag<SetTrue>>;
 def ftime_report : Flag<["-"], "ftime-report">, Group<f_Group>,
   Visibility<[ClangOption, CC1Option]>,
   MarshallingInfoFlag<CodeGenOpts<"TimePasses">>;
@@ -8610,6 +8615,12 @@ def _SLASH_Zc_threadSafeInit : CLFlag<"Zc:threadSafeInit">,
 def _SLASH_Zc_threadSafeInit_ : CLFlag<"Zc:threadSafeInit-">,
   HelpText<"Disable thread-safe initialization of static variables">,
   Alias<fno_threadsafe_statics>;
+def _SLASH_Zc_tlsGuards : CLFlag<"Zc:tlsGuards">,
+  HelpText<"Enable on-demand initialization of thread-local variables">,
+  Alias<ftls_guards>;
+def _SLASH_Zc_tlsGuards_ : CLFlag<"Zc:tlsGuards-">,
+  HelpText<"Disable on-demand initialization of thread-local variables">,
+  Alias<fno_tls_guards>;
 def _SLASH_Zc_trigraphs : CLFlag<"Zc:trigraphs">,
   HelpText<"Enable trigraphs">, Alias<ftrigraphs>;
 def _SLASH_Zc_trigraphs_off : CLFlag<"Zc:trigraphs-">,
