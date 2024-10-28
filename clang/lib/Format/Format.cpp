@@ -1163,6 +1163,7 @@ template <> struct MappingTraits<FormatStyle> {
     IO.mapOptional("TemplateNames", Style.TemplateNames);
     IO.mapOptional("TypeNames", Style.TypeNames);
     IO.mapOptional("TypenameMacros", Style.TypenameMacros);
+    IO.mapOptional("ConfigFile", Style.ConfigFile);
     IO.mapOptional("UseTab", Style.UseTab);
     IO.mapOptional("VerilogBreakBetweenInstancePorts",
                    Style.VerilogBreakBetweenInstancePorts);
@@ -2046,6 +2047,11 @@ ParseError validateQualifierOrder(FormatStyle *Style) {
   return ParseError::Success;
 }
 
+llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>>
+loadAndParseConfigFile(StringRef ConfigFile, llvm::vfs::FileSystem *FS,
+                       FormatStyle *Style, bool AllowUnknownOptions,
+                       llvm::SourceMgr::DiagHandlerTy DiagHandler);
+
 std::error_code parseConfiguration(llvm::MemoryBufferRef Config,
                                    FormatStyle *Style, bool AllowUnknownOptions,
                                    llvm::SourceMgr::DiagHandlerTy DiagHandler,
@@ -2102,6 +2108,14 @@ std::error_code parseConfiguration(llvm::MemoryBufferRef Config,
     StyleSet.Add(std::move(DefaultStyle));
   }
   *Style = *StyleSet.Get(Language);
+  if (const StringRef ConfigFile{Style->ConfigFile}; !ConfigFile.empty()) {
+    auto *FS = llvm::vfs::getRealFileSystem().get();
+    assert(FS);
+    const auto Text = loadAndParseConfigFile(ConfigFile, FS, Style,
+                                             AllowUnknownOptions, DiagHandler);
+    if (Text.getError())
+      return make_error_code(ParseError::Error);
+  }
   if (Style->InsertTrailingCommas != FormatStyle::TCS_None &&
       Style->BinPackArguments) {
     // See comment on FormatStyle::TSC_Wrapped.
