@@ -248,6 +248,7 @@ static_library("builtins") {
       "divtf3.c",
       "extenddftf2.c",
       "extendhftf2.c",
+      "extendhfxf2.c",
       "extendsftf2.c",
       "fixtfdi.c",
       "fixtfsi.c",
