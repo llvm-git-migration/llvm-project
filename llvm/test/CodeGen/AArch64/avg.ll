@@ -146,3 +146,197 @@ define <16 x i16> @sext_avgceils_mismatch(<16 x i4> %a0, <16 x i8> %a1) {
   %avg = sub <16 x i16> %or, %shift
   ret <16 x i16> %avg
 }
+
+define <16 x i16> @add_avgflooru(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgflooru:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    uhadd v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    uhadd v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ret
+  %add = add nuw <16 x i16> %a0, %a1
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgflooru_mismatch(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgflooru_mismatch:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    add v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    add v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ushr v1.8h, v1.8h, #1
+; CHECK-NEXT:    ushr v0.8h, v0.8h, #1
+; CHECK-NEXT:    ret
+  %add = add <16 x i16> %a0, %a1
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceilu(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceilu:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    urhadd v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    urhadd v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ret
+  %add0 = add nuw <16 x i16> %a0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %add = add nuw <16 x i16> %a1, %add0
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceilu2(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceilu2:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    urhadd v1.8h, v3.8h, v1.8h
+; CHECK-NEXT:    urhadd v0.8h, v2.8h, v0.8h
+; CHECK-NEXT:    ret
+  %add0 = add nuw <16 x i16> %a1, %a0
+  %add = add nuw <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceilu_mismatch1(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceilu_mismatch1:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v4.8h, #1
+; CHECK-NEXT:    add v1.8h, v3.8h, v1.8h
+; CHECK-NEXT:    add v0.8h, v2.8h, v0.8h
+; CHECK-NEXT:    uhadd v0.8h, v0.8h, v4.8h
+; CHECK-NEXT:    uhadd v1.8h, v1.8h, v4.8h
+; CHECK-NEXT:    ret
+  %add0 = add <16 x i16> %a1, %a0
+  %add = add nuw <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceilu_mismatch2(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceilu_mismatch2:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    mvn v3.16b, v3.16b
+; CHECK-NEXT:    mvn v2.16b, v2.16b
+; CHECK-NEXT:    sub v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    sub v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ushr v0.8h, v0.8h, #1
+; CHECK-NEXT:    ushr v1.8h, v1.8h, #1
+; CHECK-NEXT:    ret
+  %add0 = add nuw <16 x i16> %a1, %a0
+  %add = add <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceilu_mismatch3(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceilu_mismatch3:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    mvn v3.16b, v3.16b
+; CHECK-NEXT:    mvn v2.16b, v2.16b
+; CHECK-NEXT:    sub v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    sub v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ushr v0.8h, v0.8h, #1
+; CHECK-NEXT:    ushr v1.8h, v1.8h, #1
+; CHECK-NEXT:    ret
+  %add0 = add nuw <16 x i16> %a1, %a0
+  %add = add <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = lshr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgfloors(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgfloors:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    shadd v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    shadd v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    ret
+  %add = add nsw <16 x i16> %a0, %a1
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgfloors_mismatch(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgfloors_mismatch:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    add v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    add v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    sshr v1.8h, v1.8h, #1
+; CHECK-NEXT:    sshr v0.8h, v0.8h, #1
+; CHECK-NEXT:    ret
+  %add = add <16 x i16> %a0, %a1
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceils(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceils:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    mvn v1.16b, v1.16b
+; CHECK-NEXT:    mvn v0.16b, v0.16b
+; CHECK-NEXT:    sub v1.8h, v3.8h, v1.8h
+; CHECK-NEXT:    sub v0.8h, v2.8h, v0.8h
+; CHECK-NEXT:    sshr v1.8h, v1.8h, #1
+; CHECK-NEXT:    sshr v0.8h, v0.8h, #1
+; CHECK-NEXT:    ret
+  %add0 = add nsw <16 x i16> %a0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %add = add nsw <16 x i16> %a1, %add0
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceils2(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceils2:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    srhadd v1.8h, v3.8h, v1.8h
+; CHECK-NEXT:    srhadd v0.8h, v2.8h, v0.8h
+; CHECK-NEXT:    ret
+  %add0 = add nsw <16 x i16> %a1, %a0
+  %add = add nsw <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceils_mismatch1(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceils_mismatch1:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v4.8h, #1
+; CHECK-NEXT:    add v1.8h, v3.8h, v1.8h
+; CHECK-NEXT:    add v0.8h, v2.8h, v0.8h
+; CHECK-NEXT:    shadd v0.8h, v0.8h, v4.8h
+; CHECK-NEXT:    shadd v1.8h, v1.8h, v4.8h
+; CHECK-NEXT:    ret
+  %add0 = add <16 x i16> %a1, %a0
+  %add = add nsw <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceils_mismatch2(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceils_mismatch2:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    mvn v3.16b, v3.16b
+; CHECK-NEXT:    mvn v2.16b, v2.16b
+; CHECK-NEXT:    sub v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    sub v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    sshr v0.8h, v0.8h, #1
+; CHECK-NEXT:    sshr v1.8h, v1.8h, #1
+; CHECK-NEXT:    ret
+  %add0 = add nsw <16 x i16> %a1, %a0
+  %add = add <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
+
+define <16 x i16> @add_avgceils_mismatch3(<16 x i16> %a0, <16 x i16> %a1) {
+; CHECK-LABEL: add_avgceils_mismatch3:
+; CHECK:       // %bb.0:
+; CHECK-NEXT:    mvn v3.16b, v3.16b
+; CHECK-NEXT:    mvn v2.16b, v2.16b
+; CHECK-NEXT:    sub v1.8h, v1.8h, v3.8h
+; CHECK-NEXT:    sub v0.8h, v0.8h, v2.8h
+; CHECK-NEXT:    sshr v0.8h, v0.8h, #1
+; CHECK-NEXT:    sshr v1.8h, v1.8h, #1
+; CHECK-NEXT:    ret
+  %add0 = add nsw <16 x i16> %a1, %a0
+  %add = add <16 x i16> %add0, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  %avg = ashr <16 x i16> %add, <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>
+  ret <16 x i16> %avg
+}
