@@ -119,7 +119,6 @@ define half @fun3(half %Op0, ptr %Dst, ptr %Src) {
 ; CHECK-NEXT:    br %r14
 entry:
   store half %Op0, ptr %Dst
-
   %Res = load half, ptr %Src
   ret half %Res
 }
