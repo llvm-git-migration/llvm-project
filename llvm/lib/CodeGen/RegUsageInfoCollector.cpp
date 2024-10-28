@@ -126,7 +126,7 @@ bool RegUsageInfoCollector::run(MachineFunction &MF) {
   const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
   const LLVMTargetMachine &TM = MF.getTarget();
 
-  LLVM_DEBUG(dbgs() << " -------------------- Reg Usage Info Collector"
+  LLVM_DEBUG(dbgs() << " -------------------- Register Usage Information Collector Pass"
                     << " -------------------- \nFunction Name : "
                     << MF.getName() << '\n');
 
