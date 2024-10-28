@@ -4744,6 +4744,12 @@ def HLSLAny : LangBuiltin<"HLSL_LANG"> {
   let Prototype = "bool(...)";
 }
 
+def HLSLAsDouble : LangBuiltin<"HLSL_LANG"> {
+  let Spellings = ["__builtin_hlsl_asdouble"];
+  let Attributes = [NoThrow, Const];
+  let Prototype = "void(...)";
+}
+
 def HLSLWaveActiveCountBits : LangBuiltin<"HLSL_LANG"> {
   let Spellings = ["__builtin_hlsl_wave_active_count_bits"];
   let Attributes = [NoThrow, Const];
