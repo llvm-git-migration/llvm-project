@@ -6005,6 +6005,14 @@ void computeKnownFPClass(const Value *V, const APInt &DemandedElts,
         if (match(IncValue, m_Select(m_Value(), m_Specific(P), m_Value(V))) ||
             match(IncValue, m_Select(m_Value(), m_Value(V), m_Specific(P))))
           IncValue = V;
+        // Same around 2-operand phi nodes
+        if (auto *IncPhi = dyn_cast<PHINode>(IncValue);
+            IncPhi && IncPhi->getNumIncomingValues() == 2) {
+          if (IncPhi->getIncomingValue(0) == P)
+            IncValue = IncPhi->getIncomingValue(1);
+          if (IncPhi->getIncomingValue(1) == P)
+            IncValue = IncPhi->getIncomingValue(0);
+        }
 
         KnownFPClass KnownSrc;
         // Recurse, but cap the recursion to two levels, because we don't want
