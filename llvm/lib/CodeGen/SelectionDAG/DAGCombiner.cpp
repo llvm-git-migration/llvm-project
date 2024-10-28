@@ -401,6 +401,8 @@ namespace {
     SDValue PromoteExtend(SDValue Op);
     bool PromoteLoad(SDValue Op);
 
+    SDValue combineAVG(SDNode *N);
+
     SDValue combineMinNumMaxNum(const SDLoc &DL, EVT VT, SDValue LHS,
                                 SDValue RHS, SDValue True, SDValue False,
                                 ISD::CondCode CC);
@@ -5352,6 +5354,20 @@ SDValue DAGCombiner::visitAVG(SDNode *N) {
       return DAG.getNode(
           ISD::AVGCEILU, DL, VT, N1,
           DAG.getNode(ISD::ADD, DL, VT, N0, DAG.getAllOnesConstant(DL, VT)));
+  }
+
+  // Fold avgfloor((add nw x,y), 1) -> avgceil(x,y)
+  // Fold avgfloor((add nw x,1), y) -> avgceil(x,y)
+  if (Opcode == ISD::AVGFLOORU || Opcode == ISD::AVGFLOORS) {
+    SDValue Add;
+    if(sd_match(N, m_c_BinOp(Opcode, m_AllOf(m_Value(Add), m_Add(m_Value(X), m_Value(Y))), m_One())) ||
+       sd_match(N, m_c_BinOp(Opcode, m_AllOf(m_Value(Add), m_Add(m_Value(X), m_One())), m_Value(Y)))) {
+      if (IsSigned) {
+        if (hasOperation(ISD::AVGCEILS, VT) && Add->getFlags().hasNoSignedWrap())
+          return DAG.getNode(ISD::AVGCEILS, DL, VT, X, Y);
+        } else if (hasOperation(ISD::AVGCEILU, VT) && Add->getFlags().hasNoUnsignedWrap())
+          return DAG.getNode(ISD::AVGCEILU, DL, VT, X, Y);
+    }
   }
 
   return SDValue();
@@ -10626,6 +10642,9 @@ SDValue DAGCombiner::visitSRA(SDNode *N) {
   if (SDValue NarrowLoad = reduceLoadWidth(N))
     return NarrowLoad;
 
+  if (SDValue AVG = combineAVG(N))
+    return AVG;
+
   return SDValue();
 }
 
@@ -10879,6 +10898,9 @@ SDValue DAGCombiner::visitSRL(SDNode *N) {
   // it matches the appropriate pattern detected in combineShiftToMULH.
   if (SDValue MULH = combineShiftToMULH(N, DL, DAG, TLI))
     return MULH;
+
+  if (SDValue AVG = combineAVG(N))
+    return AVG;
 
   return SDValue();
 }
@@ -11391,6 +11413,56 @@ static SDValue combineMinNumMaxNumImpl(const SDLoc &DL, EVT VT, SDValue LHS,
   default:
     return SDValue();
   }
+}
+
+SDValue DAGCombiner::combineAVG(SDNode *N) {
+  const auto Opcode = N->getOpcode();
+
+  // Convert (sr[al] (add n[su]w x, y)) -> (avgfloor[su] x, y)
+  if (Opcode != ISD::SRA && Opcode != ISD::SRL)
+    return SDValue();
+
+  unsigned FloorISD = 0;
+  auto VT = N->getValueType(0);
+  unsigned Shift = N->getOpcode();
+  bool IsUnsigned = false;
+  // Decide wether signed or unsigned.
+  switch (Shift) {
+  case ISD::SRA:
+    if (hasOperation(ISD::AVGFLOORS, VT))
+      FloorISD = ISD::AVGFLOORS;
+    break;
+  case ISD::SRL:
+    IsUnsigned = true;
+    if (hasOperation(ISD::AVGFLOORU, VT))
+      FloorISD = ISD::AVGFLOORU;
+    break;
+  default:
+    return SDValue();
+  }
+
+  // We don't have any valid avgs, bail out.
+  if (!FloorISD)
+    return SDValue();
+
+  // Captured values.
+  SDValue A, B, Add;
+
+  // Match floor average as it is common to both floor/ceil avgs.
+  if (!sd_match(N, m_BinOp(Shift,
+                           m_AllOf(m_Value(Add), m_Add(m_Value(A), m_Value(B))),
+                           m_One())))
+    return SDValue();
+
+  // Can't optimize adds that may wrap.
+  if (IsUnsigned && !Add->getFlags().hasNoUnsignedWrap())
+    return SDValue();
+
+  if (!IsUnsigned && !Add->getFlags().hasNoSignedWrap())
+    return SDValue();
+
+  return DAG.getNode(FloorISD, SDLoc(N), N->getValueType(0),
+                     {A, B});
 }
 
 /// Generate Min/Max node
