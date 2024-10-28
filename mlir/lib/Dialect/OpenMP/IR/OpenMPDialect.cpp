@@ -1949,6 +1949,29 @@ LogicalResult LoopWrapperInterface::verifyImpl() {
 }
 
 //===----------------------------------------------------------------------===//
+// LoopOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult LoopOp::verify() {
+  return verifyReductionVarList(*this, getReductionSyms(), getReductionVars(),
+                                getReductionByref());
+}
+
+LogicalResult LoopOp::verifyRegions() {
+  Region &region = getRegion();
+
+  // Minimal amount of checks to verify the only nested op is an
+  // `omp.loop_nest`. A more extensive vierfication is done by the
+  // `LoopWrapperInterface` trait but the difference is that `omp.loop` cannot
+  // have another nested `LoopWrapperInterface`.
+  if (range_size(region.getOps()) != 1 || !isa<LoopNestOp>(*region.op_begin()))
+    return emitError() << "`omp.loop` expected to have a single nested "
+                          "operation which is a `omp.loop_nest`";
+
+  return success();
+}
+
+//===----------------------------------------------------------------------===//
 // WsloopOp
 //===----------------------------------------------------------------------===//
 
