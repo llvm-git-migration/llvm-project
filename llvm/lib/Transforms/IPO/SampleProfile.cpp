@@ -192,7 +192,7 @@ static cl::opt<bool> ProfileSizeInline(
 // Since profiles are consumed by many passes, turning on this option has
 // side effects. For instance, pre-link SCC inliner would see merged profiles
 // and inline the hot functions (that are skipped in this pass).
-static cl::opt<bool> DisableSampleLoaderInlining(
+cl::opt<bool> DisableSampleLoaderInlining(
     "disable-sample-loader-inlining", cl::Hidden, cl::init(false),
     cl::desc("If true, artifically skip inline transformation in sample-loader "
              "pass, and merge (or scale) profiles (as configured by "

@@ -302,6 +302,7 @@ static cl::opt<std::string> InstrumentColdFuncOnlyPath(
 
 extern cl::opt<std::string> UseCtxProfile;
 extern cl::opt<bool> PGOInstrumentColdFunctionOnly;
+extern cl::opt<bool> DisableSampleLoaderInlining;
 
 namespace llvm {
 extern cl::opt<bool> EnableMemProfContextDisambiguation;
@@ -2137,6 +2138,18 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
 
   if (PGOOpt && PGOOpt->DebugInfoForProfiling)
     MPM.addPass(createModuleToFunctionPassAdaptor(AddDiscriminatorsPass()));
+
+  if (PGOOpt && PGOOpt->Action == PGOOptions::SampleUse) {
+    // Explicitly disable sample loader inlining in O0 pipeline.
+    if (!DisableSampleLoaderInlining.getNumOccurrences())
+      DisableSampleLoaderInlining = true;
+    MPM.addPass(SampleProfileLoaderPass(PGOOpt->ProfileFile,
+                                        PGOOpt->ProfileRemappingFile,
+                                        ThinOrFullLTOPhase::None));
+    // Cache ProfileSummaryAnalysis once to avoid the potential need to insert
+    // RequireAnalysisPass for PSI before subsequent non-module passes.
+    MPM.addPass(RequireAnalysisPass<ProfileSummaryAnalysis, Module>());
+  }
 
   invokePipelineEarlySimplificationEPCallbacks(MPM, Level);
 
