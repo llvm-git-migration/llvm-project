@@ -799,7 +799,7 @@ MVT SystemZTargetLowering::getRegisterTypeForCallingConv(
   if (VT.isVector() && VT.getSizeInBits() == 128 &&
       VT.getVectorNumElements() == 1)
     return MVT::v16i8;
-  // Keep f16 so that they can be recognized and handled.
+  // Keep f16 so it can be recognized and handled.
   if (VT == MVT::f16)
     return MVT::f16;
   return TargetLowering::getRegisterTypeForCallingConv(Context, CC, VT);
@@ -1625,10 +1625,13 @@ bool SystemZTargetLowering::splitValueIntoRegisterParts(
 
   // Convert f16 to f32 (Out-arg).
   if (PartVT == MVT::f16) {
-    assert(NumParts == 1 && "");
-    SDValue I16Val = DAG.getBitcast(MVT::i16, Val);
-    SDValue I32Val = DAG.getAnyExtOrTrunc(I16Val, DL, MVT::i32);
-    Parts[0] = DAG.getBitcast(MVT::f32, I32Val);
+    assert(NumParts == 1 && "f16 only needs one register.");
+    SDValue F16Vec = DAG.getNode(ISD::INSERT_VECTOR_ELT, DL, MVT::v8f16,
+                                 DAG.getUNDEF(MVT::v8f16), Val,
+                                 DAG.getVectorIdxConstant(0, DL));
+    SDValue F32Vec = DAG.getBitcast(MVT::v4f32, F16Vec);
+    Parts[0] = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, DL, MVT::f32,
+                           F32Vec, DAG.getVectorIdxConstant(0, DL));
     return true;
   }
 
@@ -1654,9 +1657,13 @@ static SDValue convertF32ToF16(SDValue F32Val, SelectionDAG &DAG,
                                const SDLoc &DL) {
   assert(F32Val->getOpcode() == ISD::CopyFromReg &&
          "Only expecting to handle f16 with CopyFromReg here.");
-  SDValue I32Val = DAG.getBitcast(MVT::i32, F32Val);
-  SDValue I16Val = DAG.getAnyExtOrTrunc(I32Val, DL, MVT::i16);
-  return DAG.getBitcast(MVT::f16, I16Val);
+
+  SDValue F32Vec = DAG.getNode(ISD::INSERT_VECTOR_ELT, DL, MVT::v4f32,
+                                 DAG.getUNDEF(MVT::v4f32), F32Val,
+                                 DAG.getVectorIdxConstant(0, DL));
+  SDValue F16Vec = DAG.getBitcast(MVT::v8f16, F32Vec);
+  return DAG.getNode(ISD::EXTRACT_VECTOR_ELT, DL, MVT::f16,
+                     F16Vec, DAG.getVectorIdxConstant(0, DL));
 }
 
 SDValue SystemZTargetLowering::LowerFormalArguments(

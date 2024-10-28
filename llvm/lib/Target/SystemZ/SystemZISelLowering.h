@@ -471,11 +471,6 @@ public:
   }
   bool softPromoteHalfType() const override { return true; }
   bool useFPRegsForHalfType() const override { return true; }
-  bool shouldKeepZExtForFP16Conv() const override {
-    // Keep the zero extension from 16 bits if present (as with incoming
-    // arguments).
-    return true;
-  }
   bool hasInlineStackProbe(const MachineFunction &MF) const override;
   AtomicExpansionKind shouldCastAtomicLoadInIR(LoadInst *LI) const override;
   AtomicExpansionKind shouldCastAtomicStoreInIR(StoreInst *SI) const override;
