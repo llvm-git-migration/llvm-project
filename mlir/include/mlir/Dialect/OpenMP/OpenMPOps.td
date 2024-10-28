@@ -382,6 +382,50 @@ def LoopNestOp : OpenMP_Op<"loop_nest", traits = [
 // 2.9.2 Workshare Loop Construct
 //===----------------------------------------------------------------------===//
 
+def LoopOp : OpenMP_Op<"loop", traits = [
+    DeclareOpInterfaceMethods<LoopWrapperInterface>, NoTerminator, SingleBlock,
+    AttrSizedOperandSegments
+  ], clauses = [
+    OpenMP_BindClause, OpenMP_PrivateClause, OpenMP_OrderClause,
+    OpenMP_ReductionClause
+  ], singleRegion = true> {
+  let summary = "loop construct";
+  let description = [{
+    A loop construct specifies that the logical iterations of the associated loops
+    may execute concurrently and permits the encountering threads to execute the
+    loop accordingly. A loop construct is a worksharing construct if its binding
+    region is the innermost enclosing parallel region. Otherwise it is not a work-
+    sharing region. The directive asserts that the iterations of the associated
+    loops may execute in any order, including concurrently. Each logical iteration
+    is executed once per instance of the loop region that is encountered by exactly
+    one thread that is a member of the binding thread set.
+
+    The body region can only contain a single block which must contain a single
+    operation, this operation must be an `omp.loop_nest`.
+
+    ```
+    omp.loop <clauses> {
+      omp.loop_nest (%i1, %i2) : index = (%c0, %c0) to (%c10, %c10) step (%c1, %c1) {
+        %a = load %arrA[%i1, %i2] : memref<?x?xf32>
+        %b = load %arrB[%i1, %i2] : memref<?x?xf32>
+        %sum = arith.addf %a, %b : f32
+        store %sum, %arrC[%i1, %i2] : memref<?x?xf32>
+        omp.yield
+      }
+    }
+    ```
+  }] # clausesDescription;
+
+  let assemblyFormat = clausesAssemblyFormat # [{
+    custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
+        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $reduction_syms) attr-dict
+  }];
+
+  let hasVerifier = 1;
+  let hasRegionVerifier = 1;
+}
+
 def WsloopOp : OpenMP_Op<"wsloop", traits = [
     AttrSizedOperandSegments, DeclareOpInterfaceMethods<ComposableOpInterface>,
     DeclareOpInterfaceMethods<LoopWrapperInterface>, NoTerminator,
