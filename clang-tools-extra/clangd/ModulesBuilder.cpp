@@ -127,10 +127,10 @@ struct ModuleFile {
   std::string ModuleFilePath;
 };
 
-bool IsModuleFileUpToDate(
-    PathRef ModuleFilePath,
-    const PrerequisiteModules &RequisiteModules) {
-IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
+bool IsModuleFileUpToDate(PathRef ModuleFilePath,
+                          const PrerequisiteModules &RequisiteModules,
+                          llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS) {
+  IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
       CompilerInstance::createDiagnostics(new DiagnosticOptions());
 
   auto HSOpts = std::make_shared<HeaderSearchOptions>();
@@ -141,7 +141,11 @@ IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
   PCHContainerOperations PCHOperations;
   std::unique_ptr<ASTUnit> Unit = ASTUnit::LoadFromASTFile(
       ModuleFilePath.str(), PCHOperations.getRawReader(), ASTUnit::LoadASTOnly,
-      Diags, FileSystemOptions(), std::move(HSOpts));
+      Diags, FileSystemOptions(), std::move(HSOpts),
+      /*LangOpts=*/nullptr, /*OnlyLocalDecls=*/false,
+      /*CaptureDiagnostics=*/CaptureDiagsKind::None,
+      /*AllowASTWithCompilerErrors=*/false, /*UserFilesAreVolatile=*/false,
+      VFS);
 
   if (!Unit)
     return false;
@@ -167,10 +171,12 @@ IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
 
 bool IsModuleFilesUpToDate(
     llvm::SmallVector<PathRef> ModuleFilePaths,
-    const PrerequisiteModules &RequisiteModules) {
-  return llvm::all_of(ModuleFilePaths, [&RequisiteModules](auto ModuleFilePath) {
-    return IsModuleFileUpToDate(ModuleFilePath, RequisiteModules);
-  });
+    const PrerequisiteModules &RequisiteModules,
+    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS) {
+  return llvm::all_of(
+      ModuleFilePaths, [&RequisiteModules, VFS](auto ModuleFilePath) {
+        return IsModuleFileUpToDate(ModuleFilePath, RequisiteModules, VFS);
+      });
 }
 
 // StandalonePrerequisiteModules - stands for PrerequisiteModules for which all
@@ -347,7 +353,7 @@ bool StandalonePrerequisiteModules::canReuse(
   SmallVector<StringRef> BMIPaths;
   for (auto &MF : RequiredModules)
     BMIPaths.push_back(MF.ModuleFilePath);
-  return IsModuleFilesUpToDate(BMIPaths, *this);
+  return IsModuleFilesUpToDate(BMIPaths, *this, VFS);
 }
 
 } // namespace clangd
