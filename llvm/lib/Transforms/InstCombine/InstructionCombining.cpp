@@ -1773,17 +1773,33 @@ Instruction *InstCombinerImpl::foldOpIntoPhi(Instruction &I, PHINode *PN) {
   if (NumPHIValues == 0)
     return nullptr;
 
-  // We normally only transform phis with a single use.  However, if a PHI has
-  // multiple uses and they are all the same operation, we can fold *all* of the
-  // uses into the PHI.
+  // We normally only transform phis with a single use.
+  bool AllUsesIdentical = false;
+  bool MultipleUses = false;
   if (!PN->hasOneUse()) {
-    // Walk the use list for the instruction, comparing them to I.
+    // Exceptions:
+    //   - All uses are identical.
+    //   - All uses are shufflevector instructions that fully simplify; this
+    //     helps interleave -> phi -> 2x de-interleave+de patterns.
+    if (isa<ShuffleVectorInst>(I)) {
+      MultipleUses = true;
+    }
+    AllUsesIdentical = true;
+    unsigned NumUses = 0;
     for (User *U : PN->users()) {
+      ++NumUses;
       Instruction *UI = cast<Instruction>(U);
-      if (UI != &I && !I.isIdenticalTo(UI))
+      if (UI == &I)
+        continue;
+
+      if (!I.isIdenticalTo(UI))
+        AllUsesIdentical = false;
+      // Only inspect first 4 uses to avoid quadratic complexity.
+      if (!isa<ShuffleVectorInst>(UI) || NumUses > 4)
+        MultipleUses = false;
+      if (!AllUsesIdentical && !MultipleUses)
         return nullptr;
     }
-    // Otherwise, we can replace *all* users with the new PHI we form.
   }
 
   // Check that all operands are phi-translatable.
@@ -1833,6 +1849,11 @@ Instruction *InstCombinerImpl::foldOpIntoPhi(Instruction &I, PHINode *PN) {
       NewPhiValues.push_back(nullptr);
       continue;
     }
+
+    // Be conservative in MultipleUses case and do not allow non-simplified
+    // vals.
+    if (MultipleUses)
+      return nullptr;
 
     if (SeenNonSimplifiedInVal)
       return nullptr; // More than one non-simplified value.
@@ -1895,17 +1916,21 @@ Instruction *InstCombinerImpl::foldOpIntoPhi(Instruction &I, PHINode *PN) {
   for (unsigned i = 0; i != NumPHIValues; ++i)
     NewPN->addIncoming(NewPhiValues[i], PN->getIncomingBlock(i));
 
-  for (User *U : make_early_inc_range(PN->users())) {
-    Instruction *User = cast<Instruction>(U);
-    if (User == &I)
-      continue;
-    replaceInstUsesWith(*User, NewPN);
-    eraseInstFromFunction(*User);
+  if (AllUsesIdentical) {
+    for (User *U : make_early_inc_range(PN->users())) {
+      Instruction *User = cast<Instruction>(U);
+      if (User == &I)
+        continue;
+      replaceInstUsesWith(*User, NewPN);
+      eraseInstFromFunction(*User);
+    }
   }
 
-  replaceAllDbgUsesWith(const_cast<PHINode &>(*PN),
-                        const_cast<PHINode &>(*NewPN),
-                        const_cast<PHINode &>(*PN), DT);
+  if (!MultipleUses || AllUsesIdentical) {
+    replaceAllDbgUsesWith(const_cast<PHINode &>(*PN),
+                          const_cast<PHINode &>(*NewPN),
+                          const_cast<PHINode &>(*PN), DT);
+  }
   return replaceInstUsesWith(I, NewPN);
 }
 
