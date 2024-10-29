@@ -66,7 +66,7 @@ llvm.func @distribute(%lb : i32, %ub : i32, %step : i32) {
 // -----
 
 llvm.func @ordered_region_par_level_simd() {
-  // expected-error@below {{parallelization-level clause set not yet supported}}
+  // expected-error@below {{parallelization-level clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.ordered.region}}
   omp.ordered.region par_level_simd {
     omp.terminator
@@ -105,7 +105,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @sections_private(%x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.sections}}
   omp.sections private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.terminator
@@ -161,7 +161,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @simd_private(%lb : i32, %ub : i32, %step : i32, %x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.simd}}
   omp.simd private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.loop_nest (%iv) : i32 = (%lb) to (%ub) step (%step) {
@@ -221,7 +221,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @single_private(%x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.single}}
   omp.single private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.terminator
@@ -462,7 +462,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @task_private(%x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.task}}
   omp.task private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.terminator
@@ -575,7 +575,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @teams_private(%x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.teams}}
   omp.teams private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.terminator
@@ -659,7 +659,7 @@ omp.private {type = private} @x.privatizer : !llvm.ptr alloc {
   omp.yield(%1 : !llvm.ptr)
 }
 llvm.func @wsloop_private(%lb : i32, %ub : i32, %step : i32, %x : !llvm.ptr) {
-  // expected-error@below {{privatization clauses not yet supported}}
+  // expected-error@below {{privatization clause not yet supported}}
   // expected-error@below {{LLVM Translation failed for operation: omp.wsloop}}
   omp.wsloop private(@x.privatizer %x -> %arg0 : !llvm.ptr) {
     omp.loop_nest (%iv) : i32 = (%lb) to (%ub) step (%step) {
