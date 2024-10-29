@@ -1161,15 +1161,17 @@ parameters of a function. Parameter attributes are considered to be part
 of the function, not of the function type, so functions with different
 parameter attributes can have the same function type.
 
-Parameter attributes are simple keywords that follow the type specified.
-If multiple parameter attributes are needed, they are space separated.
-For example:
+Parameter attributes are simple keywords that follow the specified type.
+When multiple parameter attributes are required, they are separated by
+spaces. Additionally, target-dependent attributes can be provided as a
+string. For example:
 
 .. code-block:: llvm
 
     declare i32 @printf(ptr noalias nocapture, ...)
     declare i32 @atoi(i8 zeroext)
     declare signext i8 @returns_signed_char()
+    define void @baz(i32 "amdgpu-flat-work-group-size"="1,256" %x)
 
 Note that any attributes for the function result (``nonnull``,
 ``signext``) come before the result type.
@@ -1843,9 +1845,10 @@ a function. Function attributes are considered to be part of the
 function, not of the function type, so functions with different function
 attributes can have the same function type.
 
-Function attributes are simple keywords that follow the type specified.
-If multiple attributes are needed, they are space separated. For
-example:
+Function attributes are simple keywords that follow the specified type. 
+When multiple attributes are required, they are separated by spaces.
+Additionally, target-dependent attributes can be provided as a string.
+For example:
 
 .. code-block:: llvm
 
@@ -1853,6 +1856,7 @@ example:
     define void @f() alwaysinline { ... }
     define void @f() alwaysinline optsize { ... }
     define void @f() optsize { ... }
+    define void @f() "no-sse" { ... }
 
 ``alignstack(<n>)``
     This attribute indicates that, when emitting the prologue and
