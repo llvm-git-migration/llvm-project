@@ -50,7 +50,8 @@ def RetCC_SystemZ_ELF : CallingConv<[
   // other floating-point argument registers available for code that
   // doesn't care about the ABI.  All floating-point argument registers
   // are call-clobbered, so we can use all of them here.
-  CCIfType<[f16, f32], CCAssignToReg<[F0S, F2S, F4S, F6S]>>,
+  CCIfType<[f16], CCAssignToReg<[F0H, F2H, F4H, F6H]>>,
+  CCIfType<[f32], CCAssignToReg<[F0S, F2S, F4S, F6S]>>,
   CCIfType<[f64], CCAssignToReg<[F0D, F2D, F4D, F6D]>>,
 
   // Similarly for vectors, with V24 being the ABI-compliant choice.
@@ -115,7 +116,8 @@ def CC_SystemZ_ELF : CallingConv<[
   CCIfType<[i64], CCAssignToReg<[R2D, R3D, R4D, R5D, R6D]>>,
 
   // The first 4 float and double arguments are passed in even registers F0-F6.
-  CCIfType<[f16, f32], CCAssignToReg<[F0S, F2S, F4S, F6S]>>,
+  CCIfType<[f16], CCAssignToReg<[F0H, F2H, F4H, F6H]>>,
+  CCIfType<[f32], CCAssignToReg<[F0S, F2S, F4S, F6S]>>,
   CCIfType<[f64], CCAssignToReg<[F0D, F2D, F4D, F6D]>>,
 
   // The first 8 named vector arguments are passed in V24-V31.  Sub-128 vectors
