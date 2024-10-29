@@ -74,16 +74,26 @@ using InstOrderMap = DenseMap<MachineInstr *, unsigned>;
 /// M[A] > M[B] guarantees that A is dominated by B.
 /// If \p New is not in \p M, return \p Old. Otherwise if \p Old is null, return
 /// \p New.
+/// If \p New is part of an EHPad and is not dominated by \p EHBarrier, return
+/// \p Old, because the start of the landingpad is required to be the first
+/// non-PHI instruction.
 static MachineInstr *FindDominatedInstruction(MachineInstr &New,
                                               MachineInstr *Old,
+                                              MachineInstr *EHBarrier,
                                               const InstOrderMap &M) {
   auto NewIter = M.find(&New);
   if (NewIter == M.end())
     return Old;
+  unsigned OrderNew = NewIter->second;
+  if (EHBarrier) {
+    unsigned OrderBarrier = M.find(EHBarrier)->second;
+    if (OrderBarrier > OrderNew) {
+      return Old;
+    }
+  }
   if (Old == nullptr)
     return &New;
   unsigned OrderOld = M.find(Old)->second;
-  unsigned OrderNew = NewIter->second;
   if (OrderOld != OrderNew)
     return OrderOld < OrderNew ? &New : Old;
   // OrderOld == OrderNew, we need to iterate down from Old to see if it
@@ -125,14 +135,19 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
     if (MBB.empty())
       continue;
     bool SawStore = false;
+    bool IsEHPad = MBB.isEHPad();
+    MachineInstr *EHBarrier = nullptr;
     BuildInstOrderMap(MBB.begin(), IOM);
     UseMap.clear();
 
     for (MachineBasicBlock::iterator Next = MBB.begin(); Next != MBB.end();) {
       MachineInstr &MI = *Next;
       ++Next;
+
       if (MI.isPHI() || MI.isDebugOrPseudoInstr())
         continue;
+      if (IsEHPad && !EHBarrier && MI.isEHLabel())
+        EHBarrier = &MI;
       if (MI.mayStore())
         SawStore = true;
 
@@ -201,7 +216,7 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
           MachineInstr &DefInstr = *MRI.def_instr_begin(Reg);
           if (!TII.isCopyInstr(DefInstr))
             NumEligibleUse++;
-          Insert = FindDominatedInstruction(DefInstr, Insert, IOM);
+          Insert = FindDominatedInstruction(DefInstr, Insert, EHBarrier, IOM);
         } else {
           Insert = nullptr;
           break;
