@@ -125,6 +125,8 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
     if (MBB.empty())
       continue;
     bool SawStore = false;
+    bool IsEHPad = MBB.isEHPad();
+    bool SawEHLabel = false;
     BuildInstOrderMap(MBB.begin(), IOM);
     UseMap.clear();
 
@@ -135,6 +137,13 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
         continue;
       if (MI.mayStore())
         SawStore = true;
+      if (IsEHPad && !SawEHLabel && MI.isEHLabel()) {
+        // If MI is the first EHLabel of an EHPad, it should become a 
+	// barrier for code motion. IOM is rebuild from the next instruction 
+	// to prevent later instructions from being moved before this MI.
+        SawEHLabel = true;
+        BuildInstOrderMap(Next, IOM);
+      }
 
       unsigned CurrentOrder = IOM[&MI];
       unsigned Barrier = 0;
