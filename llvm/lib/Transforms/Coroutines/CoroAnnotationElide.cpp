@@ -26,6 +26,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Utils/CallGraphUpdater.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 
 #include <cassert>
 
@@ -93,7 +94,15 @@ static void processCall(CallBase *CB, Function *Caller, Function *NewCallee,
 
   NewCB->removeFnAttr(llvm::Attribute::CoroElideSafe);
   CB->replaceAllUsesWith(NewCB);
-  CB->eraseFromParent();
+
+  InlineFunctionInfo IFI;
+  InlineResult IR = InlineFunction(*NewCB, IFI);
+  if (IR.isSuccess()) {
+    CB->eraseFromParent();
+  } else {
+    NewCB->replaceAllUsesWith(CB);
+    NewCB->eraseFromParent();
+  }
 }
 
 PreservedAnalyses CoroAnnotationElidePass::run(LazyCallGraph::SCC &C,
