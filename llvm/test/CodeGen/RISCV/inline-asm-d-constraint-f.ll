@@ -75,7 +75,6 @@ define double @constraint_f_double_abi_name(double %a) nounwind {
 define double @constraint_gpr(double %x) {
 ; RV32F-LABEL: constraint_gpr:
 ; RV32F:       # %bb.0:
-; RV32F-NEXT:    .cfi_def_cfa_offset 0
 ; RV32F-NEXT:    #APP
 ; RV32F-NEXT:    mv a0, a0
 ; RV32F-NEXT:    #NO_APP
@@ -83,7 +82,6 @@ define double @constraint_gpr(double %x) {
 ;
 ; RV64F-LABEL: constraint_gpr:
 ; RV64F:       # %bb.0:
-; RV64F-NEXT:    .cfi_def_cfa_offset 0
 ; RV64F-NEXT:    #APP
 ; RV64F-NEXT:    mv a0, a0
 ; RV64F-NEXT:    #NO_APP
