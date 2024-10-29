@@ -447,7 +447,14 @@ public:
     return TargetLowering::getNumRegisters(Context, VT);
   }
   MVT getRegisterTypeForCallingConv(LLVMContext &Context, CallingConv::ID CC,
-                                    EVT VT) const override;
+                                    EVT VT) const override {
+    // 128-bit single-element vector types are passed like other vectors,
+    // not like their element type.
+    if (VT.isVector() && VT.getSizeInBits() == 128 &&
+        VT.getVectorNumElements() == 1)
+      return MVT::v16i8;
+    return TargetLowering::getRegisterTypeForCallingConv(Context, CC, VT);
+  }
   bool isCheapToSpeculateCtlz(Type *) const override { return true; }
   bool isCheapToSpeculateCttz(Type *) const override { return true; }
   bool preferZeroCompareBranch() const override { return true; }
@@ -469,8 +476,6 @@ public:
     // LD, and having the full constant in memory enables reg/mem opcodes.
     return VT != MVT::f64;
   }
-  bool softPromoteHalfType() const override { return true; }
-  bool useFPRegsForHalfType() const override { return true; }
   bool hasInlineStackProbe(const MachineFunction &MF) const override;
   AtomicExpansionKind shouldCastAtomicLoadInIR(LoadInst *LI) const override;
   AtomicExpansionKind shouldCastAtomicStoreInIR(StoreInst *SI) const override;
@@ -714,6 +719,11 @@ private:
   SDValue lowerSIGN_EXTEND_VECTOR_INREG(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerZERO_EXTEND_VECTOR_INREG(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerShift(SDValue Op, SelectionDAG &DAG, unsigned ByScalar) const;
+  SDValue LowerFP_EXTEND(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerFP_ROUND(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerLoadF16(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerStoreF16(SDValue Op, SelectionDAG &DAG) const;
+
   SDValue lowerIS_FPCLASS(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerGET_ROUNDING(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerREADCYCLECOUNTER(SDValue Op, SelectionDAG &DAG) const;
