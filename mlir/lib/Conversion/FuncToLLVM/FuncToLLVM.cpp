@@ -284,10 +284,8 @@ static void restoreByValRefArgumentType(
   for (const auto &[arg, oldArg, byValRefAttr] :
        llvm::zip(funcOp.getArguments(), oldBlockArgs, byValRefNonPtrAttrs)) {
     // Skip argument if no `llvm.byval` or `llvm.byref` attribute.
-    if (!byValRefAttr) {
-      llvm::errs() << "NO ATTR!\n";
+    if (!byValRefAttr)
       continue;
-    }
 
     // Insert load to retrieve the actual argument passed by value/reference.
     assert(isa<LLVM::LLVMPointerType>(arg.getType()) &&
