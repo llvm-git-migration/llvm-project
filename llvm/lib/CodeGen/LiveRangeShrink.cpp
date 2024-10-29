@@ -125,10 +125,13 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
     if (MBB.empty())
       continue;
     bool SawStore = false;
-    BuildInstOrderMap(MBB.begin(), IOM);
+    MachineBasicBlock::iterator Next = MBB.begin();
+    if (MBB.isEHPad())
+      Next = MBB.SkipPHIsLabelsAndDebug(Next);
+    BuildInstOrderMap(Next, IOM);
     UseMap.clear();
 
-    for (MachineBasicBlock::iterator Next = MBB.begin(); Next != MBB.end();) {
+    while (Next != MBB.end()) {
       MachineInstr &MI = *Next;
       ++Next;
       if (MI.isPHI() || MI.isDebugOrPseudoInstr())
