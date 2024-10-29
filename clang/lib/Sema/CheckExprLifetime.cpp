@@ -1094,6 +1094,24 @@ static bool pathOnlyHandlesGslPointer(IndirectLocalPath &Path) {
   return false;
 }
 
+static bool
+isLifetimeboundInterleaveInGSL(llvm::ArrayRef<IndirectLocalPathEntry> PathRef) {
+  if (auto FirstGSLPointer = llvm::find_if(
+          PathRef,
+          [](const IndirectLocalPathEntry &Path) {
+            return Path.Kind == IndirectLocalPathEntry::GslPointerInit ||
+                   Path.Kind == IndirectLocalPathEntry::GslPointerAssignment;
+          });
+      FirstGSLPointer != PathRef.end()) {
+    return llvm::find_if(
+               PathRef.drop_front(FirstGSLPointer - PathRef.begin() + 1),
+               [](const IndirectLocalPathEntry &Path) {
+                 return Path.Kind == IndirectLocalPathEntry::LifetimeBoundCall;
+               }) != PathRef.end();
+  }
+  return false;
+}
+
 static bool isAssignmentOperatorLifetimeBound(CXXMethodDecl *CMD) {
   if (!CMD)
     return false;
@@ -1141,7 +1159,8 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         //   someContainer.add(std::move(localUniquePtr));
         //   return p;
         IsLocalGslOwner = isRecordWithAttr<OwnerAttr>(L->getType());
-        if (pathContainsInit(Path) || !IsLocalGslOwner)
+        if (pathContainsInit(Path) || !IsLocalGslOwner ||
+            isLifetimeboundInterleaveInGSL(Path))
           return false;
       } else {
         IsGslPtrValueFromGslTempOwner =
@@ -1152,6 +1171,8 @@ static void checkExprLifetimeImpl(Sema &SemaRef,
         // a local or temporary owner or the address of a local variable/param.
         if (!IsGslPtrValueFromGslTempOwner)
           return true;
+        if (isLifetimeboundInterleaveInGSL(Path))
+          return false;
       }
     }
 

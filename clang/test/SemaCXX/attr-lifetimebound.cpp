@@ -153,7 +153,7 @@ namespace p0936r0_examples {
   void f() {
     std::string_view sv = "hi";
     std::string_view sv2 = sv + sv; // expected-warning {{temporary}}
-    sv2 = sv + sv; // expected-warning {{object backing the pointer}}
+    sv2 = sv + sv; // FIXME: warn here too.
   }
 
   struct X { int a, b; };

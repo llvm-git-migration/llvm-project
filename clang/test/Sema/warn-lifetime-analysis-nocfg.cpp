@@ -714,8 +714,8 @@ struct [[gsl::Pointer]] Span {
 
 // Pointer from Owner<Pointer>
 std::string_view test5() {
-  std::string_view a = StatusOr<std::string_view>().valueLB(); // expected-warning {{object backing the pointer will be dest}}
-  return StatusOr<std::string_view>().valueLB(); // expected-warning {{returning address of local temporary}}
+  std::string_view a = StatusOr<std::string_view>().valueLB();
+  return StatusOr<std::string_view>().valueLB();
 
   // No dangling diagnostics on non-lifetimebound methods.
   std::string_view b = StatusOr<std::string_view>().valueNoLB();
@@ -746,7 +746,7 @@ std::vector<int*> test8(StatusOr<std::vector<int*>> aa) {
 
 // Pointer<Pointer> from Owner<Owner<Pointer>>
 Span<int*> test9(StatusOr<std::vector<int*>> aa) {
-  return aa.valueLB(); // expected-warning {{address of stack memory associated}}
+  return aa.valueLB(); //
   return aa.valueNoLB(); // OK.
 }
 
@@ -754,7 +754,7 @@ Span<int*> test9(StatusOr<std::vector<int*>> aa) {
 
 // Pointer<Owner>> from Owner<Owner>
 Span<std::string> test10(StatusOr<std::vector<std::string>> aa) {
-  return aa.valueLB(); // expected-warning {{address of stack memory}}
+  return aa.valueLB(); //
   return aa.valueNoLB(); // OK.
 }
 
@@ -762,7 +762,7 @@ Span<std::string> test10(StatusOr<std::vector<std::string>> aa) {
 
 // Pointer<Owner>> from Owner<Pointer<Owner>>
 Span<std::string> test11(StatusOr<Span<std::string>> aa) {
-  return aa.valueLB(); // expected-warning {{address of stack memory}}
+  return aa.valueLB(); //
   return aa.valueNoLB(); // OK.
 }
 
@@ -780,3 +780,30 @@ void test13() {
 }
 
 } // namespace GH100526
+
+namespace test {
+
+struct [[gsl::Pointer]] FooOwner {};
+struct [[gsl::Pointer]] FooPointer {
+  FooPointer(const FooOwner&);
+};
+
+template<typename T>
+struct [[gsl::Owner]] Container {
+  const T& get() const [[clang::lifetimebound]];
+};
+
+FooPointer func() {
+  Container<FooPointer> foo;
+
+  FooPointer p = Container<FooPointer>().get();
+  p = Container<FooPointer>().get();
+  return foo.get();
+
+  FooPointer p2 = Container<FooOwner>().get();
+  p2 = Container<FooOwner>().get();
+  Container<FooOwner> foo2;
+  return foo2.get();
+}
+
+}
