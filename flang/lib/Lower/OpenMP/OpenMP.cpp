@@ -2040,10 +2040,10 @@ static void genLoopClauses(
     mlir::omp::LoopOperands &clauseOps,
     llvm::SmallVectorImpl<const semantics::Symbol *> &reductionSyms) {
   ClauseProcessor cp(converter, semaCtx, clauses);
+  cp.processBind(clauseOps);
   cp.processOrder(clauseOps);
   cp.processReduction(loc, clauseOps, reductionSyms);
-  cp.processTODO<clause::Bind, clause::Lastprivate>(
-      loc, llvm::omp::Directive::OMPD_loop);
+  cp.processTODO<clause::Lastprivate>(loc, llvm::omp::Directive::OMPD_loop);
 }
 
 static void genLoopOp(lower::AbstractConverter &converter,
