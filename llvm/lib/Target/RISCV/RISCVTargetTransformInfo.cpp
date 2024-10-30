@@ -1523,9 +1523,17 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
       ISD != ISD::FADD)
     return BaseT::getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
 
+  Type *ElementTy = Ty->getElementType();
+  // We can't promote f16/bf16 fadd reductions.
+  if (ISD == ISD::FADD &&
+      ((ElementTy->isHalfTy() && !ST->hasVInstructionsF16()) ||
+       ElementTy->isBFloatTy())) {
+    // We can't lower scalable vectors, but we can expand fixed vectors.
+    return BaseT::getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
+  }
+
   std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Ty);
   SmallVector<unsigned, 3> Opcodes;
-  Type *ElementTy = Ty->getElementType();
   if (ElementTy->isIntegerTy(1)) {
     if (ISD == ISD::AND) {
       // Example sequences:
@@ -1578,11 +1586,6 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
     Opcodes = {RISCV::VMV_S_X, RISCV::VREDAND_VS, RISCV::VMV_X_S};
     break;
   case ISD::FADD:
-    // We can't promote f16/bf16 fadd reductions.
-    if ((LT.second.getVectorElementType() == MVT::f16 &&
-         !ST->hasVInstructionsF16()) ||
-        LT.second.getVectorElementType() == MVT::bf16)
-      return InstructionCost::getInvalid();
     SplitOp = RISCV::VFADD_VV;
     Opcodes = {RISCV::VFMV_S_F, RISCV::VFREDUSUM_VS, RISCV::VFMV_F_S};
     break;
