@@ -1037,7 +1037,7 @@ public:
   void setInstantiatedFromUsingShadowDecl(UsingShadowDecl *Inst,
                                           UsingShadowDecl *Pattern);
 
-  FieldDecl *getInstantiatedFromUnnamedFieldDecl(FieldDecl *Field);
+  FieldDecl *getInstantiatedFromUnnamedFieldDecl(FieldDecl *Field) const;
 
   void setInstantiatedFromUnnamedFieldDecl(FieldDecl *Inst, FieldDecl *Tmpl);
 
