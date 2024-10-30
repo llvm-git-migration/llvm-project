@@ -33,6 +33,17 @@ struct weak_ptr {
   bool expired() const;
 };
 
+template <typename T>
+struct optional {
+  optional();
+  void reset();
+};
+
+struct any {
+  any();
+  void reset();
+};
+
 template <typename T1, typename T2>
 struct pair {};
 
@@ -994,10 +1005,10 @@ void standardContainerAssignIsReinit() {
   }
 }
 
-// Resetting the standard smart pointer types using reset() is treated as a
+// Resetting the standard smart owning types using reset() is treated as a
 // re-initialization. (We don't test std::weak_ptr<> because it can't be
 // dereferenced directly.)
-void standardSmartPointerResetIsReinit() {
+void resetIsReinit() {
   {
     std::unique_ptr<A> ptr;
     std::move(ptr);
@@ -1009,6 +1020,20 @@ void standardSmartPointerResetIsReinit() {
     std::move(ptr);
     ptr.reset(new A);
     *ptr;
+  }
+  {
+    std::optional<A> opt;
+    std::move(opt);
+    opt.reset();
+    std::optional<A> opt2 = opt;
+    (void)opt2;
+  }
+  {
+    std::any a;
+    std::move(a);
+    a.reset();
+    std::any a2 = a;
+    (void)a2;
   }
 }
 

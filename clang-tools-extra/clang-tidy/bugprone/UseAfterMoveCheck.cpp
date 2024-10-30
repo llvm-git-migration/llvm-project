@@ -242,7 +242,7 @@ void UseAfterMoveFinder::getUsesAndReinits(
   });
 }
 
-bool isStandardSmartPointer(const ValueDecl *VD) {
+bool isStandardResettableOwner(const ValueDecl *VD) {
   const Type *TheType = VD->getType().getNonReferenceType().getTypePtrOrNull();
   if (!TheType)
     return false;
@@ -256,7 +256,8 @@ bool isStandardSmartPointer(const ValueDecl *VD) {
     return false;
 
   StringRef Name = ID->getName();
-  if (Name != "unique_ptr" && Name != "shared_ptr" && Name != "weak_ptr")
+  if (Name != "unique_ptr" && Name != "shared_ptr" && Name != "weak_ptr" &&
+      Name != "optional" && Name != "any")
     return false;
 
   return RecordDecl->getDeclContext()->isStdNamespace();
@@ -279,7 +280,7 @@ void UseAfterMoveFinder::getDeclRefs(
         if (DeclRef && BlockMap->blockContainingStmt(DeclRef) == Block) {
           // Ignore uses of a standard smart pointer that don't dereference the
           // pointer.
-          if (Operator || !isStandardSmartPointer(DeclRef->getDecl())) {
+          if (Operator || !isStandardResettableOwner(DeclRef->getDecl())) {
             DeclRefs->insert(DeclRef);
           }
         }
@@ -315,9 +316,10 @@ void UseAfterMoveFinder::getReinits(
           "::std::unordered_map", "::std::unordered_multiset",
           "::std::unordered_multimap"))))));
 
-  auto StandardSmartPointerTypeMatcher = hasType(hasUnqualifiedDesugaredType(
-      recordType(hasDeclaration(cxxRecordDecl(hasAnyName(
-          "::std::unique_ptr", "::std::shared_ptr", "::std::weak_ptr"))))));
+  auto StandardResettableOwnerTypeMatcher = hasType(
+      hasUnqualifiedDesugaredType(recordType(hasDeclaration(cxxRecordDecl(
+          hasAnyName("::std::unique_ptr", "::std::shared_ptr",
+                     "::std::weak_ptr", "::std::optional", "::std::any"))))));
 
   // Matches different types of reinitialization.
   auto ReinitMatcher =
@@ -340,7 +342,7 @@ void UseAfterMoveFinder::getReinits(
                    callee(cxxMethodDecl(hasAnyName("clear", "assign")))),
                // reset() on standard smart pointers.
                cxxMemberCallExpr(
-                   on(expr(DeclRefMatcher, StandardSmartPointerTypeMatcher)),
+                   on(expr(DeclRefMatcher, StandardResettableOwnerTypeMatcher)),
                    callee(cxxMethodDecl(hasName("reset")))),
                // Methods that have the [[clang::reinitializes]] attribute.
                cxxMemberCallExpr(
