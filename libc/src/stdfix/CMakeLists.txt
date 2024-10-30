@@ -37,9 +37,22 @@ foreach(suffix IN ITEMS hr r lr hk k lk uhr ur ulr uhk uk ulk)
       round${suffix}.h
     SRCS
       round${suffix}.cpp
+    DEPENDS
+      libc.src.__support.fixed_point.fx_bits
+  )
+endforeach()
+
+foreach(prefix IN ITEMS hr r lr hk k lk uhr ur ulr uhk uk ulk)
+  add_entrypoint_object(
+    ${prefix}bits
+    HDRS
+      ${prefix}bits.h
+    SRCS
+      ${prefix}bits.cpp
     COMPILE_OPTIONS
       -O3
     DEPENDS
+      libc.src.__support.CPP.bit
       libc.src.__support.fixed_point.fx_bits
   )
 endforeach()
