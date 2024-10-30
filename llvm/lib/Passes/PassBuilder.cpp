@@ -114,6 +114,7 @@
 #include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/CodeGen/MachinePostDominators.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/MachineSink.h"
 #include "llvm/CodeGen/MachineTraceMetrics.h"
 #include "llvm/CodeGen/MachineVerifier.h"
 #include "llvm/CodeGen/OptimizePHIs.h"
@@ -1275,6 +1276,11 @@ parseRegAllocFastPassOptions(PassBuilder &PB, StringRef Params) {
 Expected<RealtimeSanitizerOptions> parseRtSanPassOptions(StringRef Params) {
   RealtimeSanitizerOptions Result;
   return Result;
+}
+
+Expected<bool> parseMachineSinkingPassOptions(StringRef Params) {
+  return PassBuilder::parseSinglePassOption(Params, "enable-sink-fold",
+                                            "MachineSinkingPass");
 }
 
 } // namespace

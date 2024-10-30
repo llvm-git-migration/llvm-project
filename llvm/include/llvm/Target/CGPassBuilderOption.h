@@ -32,6 +32,7 @@ struct CGPassBuilderOption {
   bool EnableImplicitNullChecks = false;
   bool EnableBlockPlacementStats = false;
   bool EnableMachineFunctionSplitter = false;
+  bool EnableSinkAndFold = false;
   bool MISchedPostRA = false;
   bool EarlyLiveIntervals = false;
   bool GCEmptyBlocks = false;
