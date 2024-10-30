@@ -12,7 +12,7 @@
 #include "include/llvm-libc-macros/stdfix-macros.h"
 #include "src/__support/CPP/bit.h"
 #include "src/__support/CPP/type_traits.h"
-#include "src/__support/macros/attributes.h"   // LIBC_INLINE
+#include "src/__support/macros/attributes.h" // LIBC_INLINE
 #include "src/__support/macros/config.h"
 #include "src/__support/macros/optimization.h" // LIBC_UNLIKELY
 #include "src/__support/math_extras.h"
@@ -161,6 +161,10 @@ template <typename T> LIBC_INLINE constexpr T round(T x, int n) {
   T rounding_mask =
       (shift == FXRep::TOTAL_LEN) ? FXRep::ZERO() : (all_ones << shift);
   return bit_and((x + round_bit), rounding_mask);
+}
+
+template <typename T, typename XType> LIBC_INLINE constexpr T fx_bits(XType x) {
+  return cpp::bit_cast<T, XType>(x);
 }
 
 } // namespace fixed_point
