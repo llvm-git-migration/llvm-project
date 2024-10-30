@@ -1346,7 +1346,7 @@ Decl *TemplateDeclInstantiator::VisitFieldDecl(FieldDecl *D) {
   if (Invalid)
     Field->setInvalidDecl();
 
-  if (!Field->getDeclName()) {
+  if (!Field->getDeclName() || Field->isPlaceholderVar(SemaRef.getLangOpts())) {
     // Keep track of where this decl came from.
     SemaRef.Context.setInstantiatedFromUnnamedFieldDecl(Field, D);
   }
