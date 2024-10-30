@@ -11,8 +11,9 @@
 
 #include "include/llvm-libc-macros/stdfix-macros.h"
 #include "src/__support/CPP/bit.h"
+#include "src/__support/CPP/limits.h" // numeric_limits
 #include "src/__support/CPP/type_traits.h"
-#include "src/__support/macros/attributes.h"   // LIBC_INLINE
+#include "src/__support/macros/attributes.h" // LIBC_INLINE
 #include "src/__support/macros/config.h"
 #include "src/__support/macros/optimization.h" // LIBC_UNLIKELY
 #include "src/__support/math_extras.h"
@@ -64,6 +65,23 @@ public:
       // exact type match.
       static_assert(cpp::always_false<XType>);
     }
+  }
+
+  // Clause 6.2.6.3 of ISO/IEC TR 18037 defines the value bits of a fixed-point
+  // type to include the integral and fraction bits but not padding nor sign
+  // bits.
+  //
+  // This function returns the value bits, right-aligned, as an unsigned integer
+  // type which is at least large enough to hold them all.
+  //
+  // Note the integral and fraction bits are contiguous. The rightmost bits in
+  // the returned value are the fraciton bits, then immediately left of those
+  // are the integral bits.
+  //
+  // Any left-padding in the return value is guaranteed to be zero.
+  LIBC_INLINE constexpr StorageType get_value_bits() {
+    constexpr StorageType VALUE_MASK = INTEGRAL_MASK | FRACTION_MASK;
+    return (value & VALUE_MASK) >> FRACTION_OFFSET;
   }
 
   LIBC_INLINE constexpr StorageType get_fraction() {
@@ -140,6 +158,25 @@ template <typename T> LIBC_INLINE constexpr T abs(T x) {
       return FXRep::MAX();
     return (x < FXRep::ZERO() ? -x : x);
   }
+}
+
+template <typename T>
+LIBC_INLINE constexpr cpp::enable_if_t<cpp::is_fixed_point_v<T>, int>
+countls(T x) {
+  using FXRep = FXRep<T>;
+  using BitType = typename FXRep::StorageType;
+  constexpr int CONTAIN_LEN = cpp::numeric_limits<BitType>::digits;
+  constexpr int PADDING_LEN = CONTAIN_LEN - FXRep::VALUE_LEN;
+
+  if constexpr (FXRep::SIGN_LEN != 0) {
+    if (x < 0) {
+      x = -(x + FXRep::EPS());
+    }
+  }
+
+  FXBits<T> fxbits(x);
+  BitType value_bits = fxbits.get_value_bits();
+  return cpp::countl_zero(value_bits) - PADDING_LEN;
 }
 
 // Round-to-nearest, tie-to-(+Inf)
