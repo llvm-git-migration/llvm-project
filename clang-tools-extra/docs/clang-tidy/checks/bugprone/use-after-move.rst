@@ -196,9 +196,10 @@ Any occurrence of the moved variable that is not a reinitialization (see below)
 is considered to be a use.
 
 An exception to this are objects of type ``std::unique_ptr``,
-``std::shared_ptr`` and ``std::weak_ptr``, which have defined move behavior
-(objects of these classes are guaranteed to be empty after they have been moved
-from). Therefore, an object of these classes will only be considered to be used
+``std::shared_ptr``, ``std::weak_ptr``, ``std::optional``, and ``std::any``,
+which have defined move behavior (objects of these classes are guaranteed to be
+empty after they have been moved from).
+Therefore, an object of these classes will only be considered to be used
 if it is dereferenced, i.e. if ``operator*``, ``operator->`` or ``operator[]``
 (in the case of ``std::unique_ptr<T []>``) is called on it.
 
@@ -222,7 +223,8 @@ The check considers a variable to be reinitialized in the following cases:
     ``unordered_multimap``.
 
   - ``reset()`` is called on the variable and the variable is of type
-    ``std::unique_ptr``, ``std::shared_ptr`` or ``std::weak_ptr``.
+    ``std::unique_ptr``, ``std::shared_ptr``, ``std::weak_ptr``,
+    ``std::optional``, or ``std::any``.
 
   - A member function marked with the ``[[clang::reinitializes]]`` attribute is
     called on the variable.
