@@ -966,25 +966,22 @@ private:
                         const ParseMemoryInst &Later);
 
   Value *getOrCreateResult(Instruction *Inst, Type *ExpectedType) const {
-    if (!isa<IntrinsicInst, LoadInst, StoreInst>(Inst))
-      llvm_unreachable("Instruction not supported");
+    assert((isa<IntrinsicInst, LoadInst, StoreInst>(Inst)) &&
+           "Instruction not supported");
 
     // The load or the store's first operand.
     Value *V;
     if (auto *II = dyn_cast<IntrinsicInst>(Inst)) {
-      if (isHandledNonTargetIntrinsic(II->getIntrinsicID()))
-        switch (II->getIntrinsicID()) {
-        case Intrinsic::masked_load:
-          V = II;
-          break;
-        case Intrinsic::masked_store:
-          V = II->getOperand(0);
-          break;
-        default:
-          return nullptr;
-        }
-      else
+      switch (II->getIntrinsicID()) {
+      case Intrinsic::masked_load:
+        V = II;
+        break;
+      case Intrinsic::masked_store:
+        V = II->getOperand(0);
+        break;
+      default:
         return TTI.getOrCreateResultFromMemIntrinsic(II, ExpectedType);
+      }
     } else {
       V = isa<LoadInst>(Inst) ? Inst : cast<StoreInst>(Inst)->getValueOperand();
     }
