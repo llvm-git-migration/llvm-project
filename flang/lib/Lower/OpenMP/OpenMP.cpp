@@ -2023,6 +2023,39 @@ static void genStandaloneDo(lower::AbstractConverter &converter,
                 llvm::omp::Directive::OMPD_do, dsp);
 }
 
+static void genLoopOp(lower::AbstractConverter &converter,
+                      lower::SymMap &symTable,
+                      semantics::SemanticsContext &semaCtx,
+                      lower::pft::Evaluation &eval, mlir::Location loc,
+                      const ConstructQueue &queue,
+                      ConstructQueue::const_iterator item) {
+  mlir::omp::LoopOperands loopClauseOps;
+  ClauseProcessor cp(converter, semaCtx, item->clauses);
+  cp.processTODO<clause::Bind, clause::Collapse, clause::Lastprivate,
+                 clause::Order, clause::Private, clause::Reduction>(
+      loc, llvm::omp::Directive::OMPD_loop);
+
+  DataSharingProcessor dsp(converter, semaCtx, item->clauses, eval,
+                           /*shouldCollectPreDeterminedSymbols=*/true,
+                           /*useDelayedPrivatization=*/true, &symTable);
+  dsp.processStep1(&loopClauseOps);
+
+  mlir::omp::LoopNestOperands loopNestClauseOps;
+  llvm::SmallVector<const semantics::Symbol *> iv;
+  genLoopNestClauses(converter, semaCtx, eval, item->clauses, loc,
+                     loopNestClauseOps, iv);
+
+  EntryBlockArgs loopArgs;
+  loopArgs.priv.syms = dsp.getDelayedPrivSymbols();
+  loopArgs.priv.vars = loopClauseOps.privateVars;
+
+  auto loopOp =
+      genWrapperOp<mlir::omp::LoopOp>(converter, loc, loopClauseOps, loopArgs);
+  genLoopNestOp(converter, symTable, semaCtx, eval, loc, queue, item,
+                loopNestClauseOps, iv, {{loopOp, loopArgs}},
+                llvm::omp::Directive::OMPD_loop, dsp);
+}
+
 static void genStandaloneParallel(lower::AbstractConverter &converter,
                                   lower::SymMap &symTable,
                                   semantics::SemanticsContext &semaCtx,
@@ -2459,7 +2492,7 @@ static void genOMPDispatch(lower::AbstractConverter &converter,
     genStandaloneDo(converter, symTable, semaCtx, eval, loc, queue, item);
     break;
   case llvm::omp::Directive::OMPD_loop:
-    TODO(loc, "Unhandled directive " + llvm::omp::getOpenMPDirectiveName(dir));
+    genLoopOp(converter, symTable, semaCtx, eval, loc, queue, item);
     break;
   case llvm::omp::Directive::OMPD_masked:
     genMaskedOp(converter, symTable, semaCtx, eval, loc, queue, item);
