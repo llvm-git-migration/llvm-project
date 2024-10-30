@@ -574,6 +574,7 @@ Bug Fixes to C++ Support
   (#GH95854).
 - Fixed an assertion failure when evaluating an invalid expression in an array initializer. (#GH112140)
 - Fixed an assertion failure in range calculations for conditional throw expressions. (#GH111854)
+- Name independent data members were not correctly initialized from default member initializers. (#GH114069)
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
