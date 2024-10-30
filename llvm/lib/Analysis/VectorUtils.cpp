@@ -115,6 +115,10 @@ bool llvm::isTriviallyVectorizable(Intrinsic::ID ID) {
 /// Identifies if the vector form of the intrinsic has a scalar operand.
 bool llvm::isVectorIntrinsicWithScalarOpAtArg(Intrinsic::ID ID,
                                               unsigned ScalarOpdIdx) {
+  if (VPIntrinsic::isVPIntrinsic(ID) &&
+      (ScalarOpdIdx == VPIntrinsic::getVectorLengthParamPos(ID)))
+    return true;
+
   switch (ID) {
   case Intrinsic::abs:
   case Intrinsic::ctlz:
@@ -127,6 +131,8 @@ bool llvm::isVectorIntrinsicWithScalarOpAtArg(Intrinsic::ID ID,
   case Intrinsic::umul_fix:
   case Intrinsic::umul_fix_sat:
     return (ScalarOpdIdx == 2);
+  case Intrinsic::experimental_vp_splat:
+    return (ScalarOpdIdx == 0);
   default:
     return false;
   }
@@ -148,6 +154,8 @@ bool llvm::isVectorIntrinsicWithOverloadTypeAtArg(Intrinsic::ID ID,
     return OpdIdx == 0;
   case Intrinsic::powi:
     return OpdIdx == -1 || OpdIdx == 1;
+  case Intrinsic::experimental_vp_splat:
+    return OpdIdx == -1;
   default:
     return OpdIdx == -1;
   }
