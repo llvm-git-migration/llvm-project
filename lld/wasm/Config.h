@@ -79,6 +79,8 @@ struct Configuration {
   // Because dyamanic linking under Wasm is still experimental we default to
   // static linking
   bool isStatic = true;
+  bool thinLTOEmitIndexFiles;
+  bool thinLTOIndexOnly;
   bool trace;
   uint64_t globalBase;
   uint64_t initialHeap;
@@ -95,16 +97,18 @@ struct Configuration {
   unsigned ltoo;
   llvm::CodeGenOptLevel ltoCgo;
   unsigned optimize;
-  llvm::StringRef thinLTOJobs;
   bool ltoDebugPassManager;
   UnresolvedPolicy unresolvedSymbols;
   BuildIdKind buildId = BuildIdKind::None;
 
   llvm::StringRef entry;
+  llvm::StringRef ltoObjPath;
   llvm::StringRef mapFile;
   llvm::StringRef outputFile;
   llvm::StringRef soName;
   llvm::StringRef thinLTOCacheDir;
+  llvm::StringRef thinLTOJobs;
+  llvm::StringRef thinLTOIndexOnlyArg;
   llvm::StringRef whyExtract;
 
   llvm::StringSet<> allowUndefinedSymbols;

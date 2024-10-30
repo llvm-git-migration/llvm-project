@@ -11,7 +11,9 @@
 #include "InputFiles.h"
 #include "Symbols.h"
 #include "lld/Common/Args.h"
+#include "lld/Common/CommonLinkerContext.h"
 #include "lld/Common/ErrorHandler.h"
+#include "lld/Common/Filesystem.h"
 #include "lld/Common/Strings.h"
 #include "lld/Common/TargetOptionsCommandFlags.h"
 #include "llvm/ADT/STLExtras.h"
@@ -27,6 +29,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cstddef>
@@ -36,9 +39,10 @@
 #include <vector>
 
 using namespace llvm;
+using namespace lld::wasm;
+using namespace lld;
 
-namespace lld::wasm {
-static std::unique_ptr<lto::LTO> createLTO() {
+static lto::Config createConfig() {
   lto::Config c;
   c.Options = initTargetOptionsFromCodeGenFlags();
 
@@ -52,6 +56,7 @@ static std::unique_ptr<lto::LTO> createLTO() {
   c.MAttrs = getMAttrs();
   c.CGOptLevel = config->ltoCgo;
   c.DebugPassManager = config->ltoDebugPassManager;
+  c.AlwaysEmitRegularLTOObj = !config->ltoObjPath.empty();
 
   if (config->relocatable)
     c.RelocModel = std::nullopt;
@@ -63,13 +68,30 @@ static std::unique_ptr<lto::LTO> createLTO() {
   if (config->saveTemps)
     checkError(c.addSaveTemps(config->outputFile.str() + ".",
                               /*UseInputModulePath*/ true));
-  lto::ThinBackend backend = lto::createInProcessThinBackend(
-      llvm::heavyweight_hardware_concurrency(config->thinLTOJobs));
-  return std::make_unique<lto::LTO>(std::move(c), backend,
-                                     config->ltoPartitions);
+  return c;
 }
 
-BitcodeCompiler::BitcodeCompiler() : ltoObj(createLTO()) {}
+namespace lld::wasm {
+
+BitcodeCompiler::BitcodeCompiler() {
+  // Initialize indexFile.
+  if (!config->thinLTOIndexOnlyArg.empty())
+    indexFile = openFile(config->thinLTOIndexOnlyArg);
+
+  // Initialize ltoObj.
+  lto::ThinBackend backend;
+  auto onIndexWrite = [&](StringRef s) { thinIndices.erase(s); };
+  if (config->thinLTOIndexOnly) {
+    backend = lto::createWriteIndexesThinBackend(
+        llvm::hardware_concurrency(config->thinLTOJobs),
+        "", "", "", false, indexFile.get(), onIndexWrite);
+  } else {
+    backend = lto::createInProcessThinBackend(
+        llvm::heavyweight_hardware_concurrency(config->thinLTOJobs));
+  }
+  ltoObj =
+      std::make_unique<lto::LTO>(createConfig(), backend, config->ltoPartitions);
+}
 
 BitcodeCompiler::~BitcodeCompiler() = default;
 
@@ -89,6 +111,9 @@ void BitcodeCompiler::add(BitcodeFile &f) {
   unsigned symNum = 0;
   ArrayRef<Symbol *> syms = f.getSymbols();
   std::vector<lto::SymbolResolution> resols(syms.size());
+
+  if (config->thinLTOEmitIndexFiles)
+    thinIndices.insert(obj.getName());
 
   // Provide a resolution to the LTO API for each symbol.
   for (const lto::InputFile::Symbol &objSym : obj.symbols()) {
@@ -136,25 +161,66 @@ std::vector<StringRef> BitcodeCompiler::compile() {
 
   checkError(ltoObj->run(
       [&](size_t task, const Twine &moduleName) {
+        buf[task].first = moduleName.str();
         return std::make_unique<CachedFileStream>(
-            std::make_unique<raw_svector_ostream>(buf[task]));
+            std::make_unique<raw_svector_ostream>(buf[task].second));
       },
       cache));
 
   if (!config->thinLTOCacheDir.empty())
     pruneCache(config->thinLTOCacheDir, config->thinLTOCachePolicy, files);
 
+  if (config->thinLTOIndexOnly) {
+    if (!config->ltoObjPath.empty())
+      saveBuffer(buf[0].second, config->ltoObjPath);
+
+    // ThinLTO with index only option is required to generate only the index
+    // files. After that, we exit from linker and ThinLTO backend runs in a
+    // distributed environment.
+    if (indexFile)
+      indexFile->close();
+    return {};
+  }
+
   std::vector<StringRef> ret;
   for (unsigned i = 0; i != maxTasks; ++i) {
-    if (buf[i].empty())
+    StringRef objBuf = buf[i].second;
+    StringRef bitcodeFilePath = buf[i].first;
+    if (objBuf.empty())
       continue;
-    if (config->saveTemps) {
-      if (i == 0)
-        saveBuffer(buf[i], config->outputFile + ".lto.o");
-      else
-        saveBuffer(buf[i], config->outputFile + Twine(i) + ".lto.o");
+    ret.emplace_back(objBuf.data(), objBuf.size());
+    if (!config->saveTemps)
+      continue;
+
+    // If the input bitcode file is path/to/x.o and -o specifies a.out, the
+    // corresponding native relocatable file path will look like:
+    // path/to/a.out.lto.x.o.
+    StringRef ltoObjName;
+    if (bitcodeFilePath == "ld-temp.o") {
+      ltoObjName =
+          saver().save(Twine(config->outputFile) + ".lto" +
+                       (i == 0 ? Twine("") : Twine('.') + Twine(i)) + ".o");
+    } else {
+      StringRef directory = sys::path::parent_path(bitcodeFilePath);
+      // For an archive member, which has an identifier like "d/a.a(coll.o at
+      // 8)" (see BitcodeFile::BitcodeFile), use the filename; otherwise, use
+      // the stem (d/a.o => a).
+      StringRef baseName = bitcodeFilePath.ends_with(")")
+                               ? sys::path::filename(bitcodeFilePath) : sys::path::stem(bitcodeFilePath);
+      StringRef outputFileBaseName = sys::path::filename(config->outputFile);
+      SmallString<256> path;
+      sys::path::append(path, directory,
+                        outputFileBaseName + ".lto." + baseName + ".o");
+      sys::path::remove_dots(path, true);
+      ltoObjName = saver().save(path.str());
     }
-    ret.emplace_back(buf[i].data(), buf[i].size());
+    saveBuffer(objBuf, ltoObjName);
+  }
+
+  if (!config->ltoObjPath.empty()) {
+    saveBuffer(buf[0].second, config->ltoObjPath);
+    for (unsigned i = 1; i != maxTasks; ++i)
+      saveBuffer(buf[i].second, config->ltoObjPath + Twine(i));
   }
 
   for (std::unique_ptr<MemoryBuffer> &file : files)
