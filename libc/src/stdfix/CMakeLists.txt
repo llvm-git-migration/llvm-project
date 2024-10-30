@@ -2,6 +2,20 @@ if(NOT LIBC_COMPILER_HAS_FIXED_POINT)
   return()
 endif()
 
+foreach(suffix IN ITEMS hr r lr hk k lk uhr ur ulr uhk uk ulk)
+  add_entrypoint_object(
+    countls${suffix}
+    HDRS
+      countls${suffix}.h
+    SRCS
+      countls${suffix}.cpp
+    COMPILE_OPTIONS
+      -O3
+    DEPENDS
+      libc.src.__support.fixed_point.fx_bits
+  )
+endforeach()
+
 foreach(suffix IN ITEMS hr r lr hk k lk)
   add_entrypoint_object(
     abs${suffix}
