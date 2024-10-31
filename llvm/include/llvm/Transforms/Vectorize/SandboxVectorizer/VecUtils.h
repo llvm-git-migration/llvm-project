@@ -66,6 +66,40 @@ public:
     }
     return true;
   }
+
+  /// \Returns the number of vector lanes of \p Ty or 1 if not a vector.
+  /// NOTE: It asserts that \p Ty is a fixed vector type.
+  static unsigned getNumLanes(Type *Ty) {
+    assert(!isa<ScalableVectorType>(Ty) && "Expect fixed vector");
+    if (!isa<FixedVectorType>(Ty))
+      return 1;
+    return cast<FixedVectorType>(Ty)->getNumElements();
+  }
+
+  /// \Returns the expected vector lanes of \p V or 1 if not a vector.
+  /// NOTE: It asserts that \p V is a fixed vector.
+  static int getNumLanes(Value *V) {
+    return VecUtils::getNumLanes(Utils::getExpectedType(V));
+  }
+
+  /// \Returns the total number of lanes across all values in \p Bndl.
+  static unsigned getNumLanes(ArrayRef<Value *> Bndl) {
+    unsigned Lanes = 0;
+    for (Value *V : Bndl)
+      Lanes += getNumLanes(V);
+    return Lanes;
+  }
+
+  /// \Returns <NumElts x ElemTy>.
+  /// It works for both scalar and vector \p ElemTy.
+  static Type *getWideType(Type *ElemTy, unsigned NumElts) {
+    if (ElemTy->isVectorTy()) {
+      auto *VecTy = cast<FixedVectorType>(ElemTy);
+      ElemTy = VecTy->getElementType();
+      NumElts = VecTy->getNumElements() * NumElts;
+    }
+    return FixedVectorType::get(ElemTy, NumElts);
+  }
 };
 
 } // namespace llvm::sandboxir
