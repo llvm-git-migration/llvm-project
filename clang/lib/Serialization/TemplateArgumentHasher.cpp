@@ -137,12 +137,16 @@ void TemplateArgumentHasher::AddTemplateName(TemplateName Name) {
   case TemplateName::SubstTemplateTemplateParmPack:
     BailedOut = true;
     break;
-  case TemplateName::UsingTemplate:
+  case TemplateName::UsingTemplate: {
     UsingShadowDecl *USD = Name.getAsUsingShadowDecl();
     if (USD)
       AddDecl(USD->getTargetDecl());
     else
       BailedOut = true;
+    break;
+  }
+  case TemplateName::DeducedTemplate:
+    AddTemplateName(Name.getAsDeducedTemplateName()->getUnderlying());
     break;
   }
 }
