@@ -3773,7 +3773,9 @@ public:
   VPBasicBlock *getEntry() { return Entry; }
   const VPBasicBlock *getEntry() const { return Entry; }
 
-  /// Methods to support access to the middle block.
+  /// Returns the 'middle' block of the plan, that is the block that selects
+  /// whether to execute the scalar tail loop or the exit block from the loop
+  /// latch.
   const VPBasicBlock *getMiddleBlock() const {
     return cast<VPBasicBlock>(getVectorLoopRegion()->getSingleSuccessor());
   }
