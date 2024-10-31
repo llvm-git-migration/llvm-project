@@ -1306,6 +1306,30 @@ getIntegerPairAttribute(const Function &F, StringRef Name,
   return Ints;
 }
 
+std::optional<std::pair<unsigned, unsigned>>
+getIntegerPairAttribute(const Function &F, StringRef Name,
+                        bool OnlyFirstRequired) {
+  Attribute A = F.getFnAttribute(Name);
+  if (!A.isStringAttribute())
+    return std::nullopt;
+
+  LLVMContext &Ctx = F.getContext();
+  std::pair<unsigned, unsigned> Ints;
+  std::pair<StringRef, StringRef> Strs = A.getValueAsString().split(',');
+  if (Strs.first.trim().getAsInteger(0, Ints.first)) {
+    Ctx.emitError("can't parse first integer attribute " + Name);
+    return std::nullopt;
+  }
+  if (Strs.second.trim().getAsInteger(0, Ints.second)) {
+    if (!OnlyFirstRequired || !Strs.second.trim().empty()) {
+      Ctx.emitError("can't parse second integer attribute " + Name);
+      return std::nullopt;
+    }
+  }
+
+  return Ints;
+}
+
 SmallVector<unsigned> getIntegerVecAttribute(const Function &F, StringRef Name,
                                              unsigned Size) {
   assert(Size > 2);
