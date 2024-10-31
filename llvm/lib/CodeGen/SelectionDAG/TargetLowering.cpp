@@ -808,6 +808,24 @@ SDValue TargetLowering::SimplifyMultipleUseDemandedBits(
     }
     break;
   }
+  case ISD::SRL: {
+    // If we are only demanding sign bits then we can use the shift source
+    // directly.
+    if (std::optional<uint64_t> MaxSA =
+            DAG.getValidMaximumShiftAmount(Op, DemandedElts, Depth + 1)) {
+      SDValue Op0 = Op.getOperand(0);
+      unsigned ShAmt = *MaxSA;
+      unsigned NumSignBits =
+          DAG.ComputeNumSignBits(Op0, DemandedElts, Depth + 1);
+      unsigned LoDemandedBits = DemandedBits.countr_zero();
+      unsigned HiDemandedBits = DemandedBits.countl_zero();
+      // Must already be signbits in DemandedBits bounds, and can't demand any
+      // shifted in zeroes.
+      if (HiDemandedBits >= ShAmt && LoDemandedBits >= (BitWidth - NumSignBits))
+        return Op0;
+    }
+    break;
+  }
   case ISD::SETCC: {
     SDValue Op0 = Op.getOperand(0);
     SDValue Op1 = Op.getOperand(1);
