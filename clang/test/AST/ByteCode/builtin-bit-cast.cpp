@@ -108,7 +108,7 @@ namespace simple {
   static_assert(check_round_trip<unsigned>((int)0x12345678));
   static_assert(check_round_trip<unsigned>((int)0x87654321));
   static_assert(check_round_trip<unsigned>((int)0x0C05FEFE));
-  // static_assert(round_trip<float>((int)0x0C05FEFE));
+  static_assert(round_trip<float>((int)0x0C05FEFE));
 
 
   /// This works in GCC and in the bytecode interpreter, but the current interpreter
@@ -454,3 +454,57 @@ struct ref_mem {
 // both-error@+2 {{constexpr variable 'run_ref_mem' must be initialized by a constant expression}}
 // both-note@+1 {{bit_cast from a type with a reference member is not allowed in a constant expression}}
 constexpr intptr_t run_ref_mem = __builtin_bit_cast(intptr_t, ref_mem{global_int});
+
+namespace test_long_double {
+#ifdef __x86_64
+#if 0
+constexpr __int128_t test_cast_to_int128 = bit_cast<__int128_t>((long double)0); // expected-error{{must be initialized by a constant expression}}\
+                                                                                 // expected-note{{in call}}
+#endif
+constexpr long double ld = 3.1425926539;
+
+struct bytes {
+  unsigned char d[16];
+};
+
+// static_assert(round_trip<bytes>(ld), "");
+
+static_assert(round_trip<long double>(10.0L));
+
+#if 0
+constexpr bool f(bool read_uninit) {
+  bytes b = bit_cast<bytes>(ld);
+  unsigned char ld_bytes[10] = {
+    0x0,  0x48, 0x9f, 0x49, 0xf0,
+    0x3c, 0x20, 0xc9, 0x0,  0x40,
+  };
+
+  for (int i = 0; i != 10; ++i)
+    if (ld_bytes[i] != b.d[i])
+      return false;
+
+  if (read_uninit && b.d[10]) // expected-note{{read of uninitialized object is not allowed in a constant expression}}
+    return false;
+
+  return true;
+}
+
+static_assert(f(/*read_uninit=*/false), "");
+static_assert(f(/*read_uninit=*/true), ""); // expected-error{{static assertion expression is not an integral constant expression}} \
+                                            // expected-note{{in call to 'f(true)'}}
+#endif
+constexpr bytes ld539 = {
+  0x0, 0x0,  0x0,  0x0,
+  0x0, 0x0,  0xc0, 0x86,
+  0x8, 0x40, 0x0,  0x0,
+  0x0, 0x0,  0x0,  0x0,
+};
+
+constexpr long double fivehundredandthirtynine = 539.0;
+
+static_assert(bit_cast<long double>(ld539) == fivehundredandthirtynine, "");
+
+#else
+static_assert(round_trip<__int128_t>(34.0L));
+#endif
+}
