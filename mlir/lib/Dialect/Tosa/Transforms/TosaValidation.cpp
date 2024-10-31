@@ -521,8 +521,9 @@ LogicalResult TosaValidation::applyVariableCheck(Operation *op) {
 
 bool TosaValidation::isValidElementType(Type type) {
   if (isa<FloatType>(type)) {
-    if (!isEnabledProfile(TosaProfileEnum::MainInference))
-      return false;
+	if (!isEnabledProfile(TosaProfileEnum::Undefined) &&
+		!isEnabledProfile(TosaProfileEnum::MainInference))
+       return false;
     return type.isF32() || type.isF16() || type.isBF16();
   }
   if (auto intTy = dyn_cast<IntegerType>(type)) {
