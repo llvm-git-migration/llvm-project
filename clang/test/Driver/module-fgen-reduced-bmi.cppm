@@ -29,13 +29,35 @@
 //
 // RUN: %clang -std=c++20 Hello.cc -fexperimental-modules-reduced-bmi -Wall -Werror \
 // RUN:     -c -o Hello.o -### 2>&1 | FileCheck Hello.cc
+//
+// RUN: %clang -std=c++20 Hello.cppm -fmodule-output=Hello.pcm \
+// RUN:     -fmodules-reduced-bmi -c -o Hello.o -### 2>&1 | FileCheck Hello.cppm
+//
+// RUN: %clang -std=c++20 Hello.cppm \
+// RUN:     -fmodules-reduced-bmi -c -o Hello.o -### 2>&1 | \
+// RUN:         FileCheck Hello.cppm --check-prefix=CHECK-UNSPECIFIED
+//
+// RUN: %clang -std=c++20 Hello.cppm \
+// RUN:     -fmodules-reduced-bmi -c -### 2>&1 | \
+// RUN:         FileCheck Hello.cppm --check-prefix=CHECK-NO-O
+//
+// RUN: %clang -std=c++20 Hello.cppm \
+// RUN:     -fmodules-reduced-bmi -c -o AnotherName.o -### 2>&1 | \
+// RUN:         FileCheck Hello.cppm --check-prefix=CHECK-ANOTHER-NAME
+//
+// RUN: %clang -std=c++20 Hello.cppm --precompile -fmodules-reduced-bmi \
+// RUN:     -o Hello.full.pcm -### 2>&1 | FileCheck Hello.cppm \
+// RUN:     --check-prefix=CHECK-EMIT-MODULE-INTERFACE
+//
+// RUN: %clang -std=c++20 Hello.cc -fmodules-reduced-bmi -Wall -Werror \
+// RUN:     -c -o Hello.o -### 2>&1 | FileCheck Hello.cc
 
 //--- Hello.cppm
 export module Hello;
 
 // Test that we won't generate the emit-module-interface as 2 phase compilation model.
 // CHECK-NOT: -emit-module-interface
-// CHECK: "-fexperimental-modules-reduced-bmi"
+// CHECK: "-fmodules-reduced-bmi"
 
 // CHECK-UNSPECIFIED: -fmodule-output=Hello.pcm
 
@@ -48,4 +70,4 @@ export module Hello;
 
 //--- Hello.cc
 
-// CHECK-NOT: "-fexperimental-modules-reduced-bmi"
+// CHECK-NOT: "-fmodules-reduced-bmi"
