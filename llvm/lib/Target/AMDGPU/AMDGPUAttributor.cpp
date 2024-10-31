@@ -168,9 +168,19 @@ public:
     return ST.supportsGetDoorbellID();
   }
 
-  std::pair<unsigned, unsigned> getFlatWorkGroupSizes(const Function &F) {
+  std::optional<std::pair<unsigned, unsigned>>
+  getFlatWorkGroupSizeAttr(const Function &F) const {
+    Attribute A = F.getFnAttribute("amdgpu-flat-work-group-size");
+    if (!A.isStringAttribute())
+      return std::nullopt;
     const GCNSubtarget &ST = TM.getSubtarget<GCNSubtarget>(F);
     return ST.getFlatWorkGroupSizes(F);
+  }
+
+  std::pair<unsigned, unsigned>
+  getDefaultFlatWorkGroupSize(const Function &F) const {
+    const GCNSubtarget &ST = TM.getSubtarget<GCNSubtarget>(F);
+    return ST.getDefaultFlatWorkGroupSize(F.getCallingConv());
   }
 
   std::pair<unsigned, unsigned>
@@ -707,8 +717,7 @@ struct AAAMDSizeRangeAttribute
   /// See AbstractAttribute::trackStatistics()
   void trackStatistics() const override {}
 
-  template <class AttributeImpl>
-  ChangeStatus updateImplImpl(Attributor &A) {
+  template <class AttributeImpl> ChangeStatus updateImplImpl(Attributor &A) {
     ChangeStatus Change = ChangeStatus::UNCHANGED;
 
     auto CheckCallSite = [&](AbstractCallSite CS) {
@@ -728,10 +737,41 @@ struct AAAMDSizeRangeAttribute
     };
 
     bool AllCallSitesKnown = true;
-    if (!A.checkForAllCallSites(CheckCallSite, *this, true, AllCallSitesKnown))
+    if (!A.checkForAllCallSites(CheckCallSite, *this,
+                                /*RequireAllCallSites=*/true,
+                                AllCallSitesKnown))
       return indicatePessimisticFixpoint();
 
     return Change;
+  }
+
+  /// Clamp the assumed range to the default value ([Min, Max]) and emit the
+  /// attribute if it is not same as default.
+  ChangeStatus
+  emitAttributeIfNotDefaultAfterClamp(Attributor &A,
+                                      std::pair<unsigned, unsigned> Default) {
+    auto [Min, Max] = Default;
+    unsigned Lower = getAssumed().getLower().getZExtValue();
+    unsigned Upper = getAssumed().getUpper().getZExtValue();
+
+    // Clamp the range to the default value.
+    if (Lower < Min)
+      Lower = Min;
+    if (Upper > Max + 1)
+      Upper = Max + 1;
+
+    // No manifest if the value is same as default after clamp.
+    if (Lower == Min && Upper == Max + 1)
+      return ChangeStatus::UNCHANGED;
+
+    Function *F = getAssociatedFunction();
+    LLVMContext &Ctx = F->getContext();
+    SmallString<10> Buffer;
+    raw_svector_ostream OS(Buffer);
+    OS << Lower << ',' << Upper - 1;
+    return A.manifestAttrs(getIRPosition(),
+                           {Attribute::get(Ctx, AttrName, OS.str())},
+                           /*ForceReplace=*/true);
   }
 
   ChangeStatus emitAttributeIfNotDefault(Attributor &A, unsigned Min,
@@ -768,13 +808,21 @@ struct AAAMDFlatWorkGroupSize : public AAAMDSizeRangeAttribute {
   void initialize(Attributor &A) override {
     Function *F = getAssociatedFunction();
     auto &InfoCache = static_cast<AMDGPUInformationCache &>(A.getInfoCache());
-    unsigned MinGroupSize, MaxGroupSize;
-    std::tie(MinGroupSize, MaxGroupSize) = InfoCache.getFlatWorkGroupSizes(*F);
-    intersectKnown(
-        ConstantRange(APInt(32, MinGroupSize), APInt(32, MaxGroupSize + 1)));
 
-    if (AMDGPU::isEntryFunctionCC(F->getCallingConv()))
-      indicatePessimisticFixpoint();
+    bool HasAttr = false;
+    auto [Min, Max] = InfoCache.getDefaultFlatWorkGroupSize(*F);
+
+    if (auto Attr = InfoCache.getFlatWorkGroupSizeAttr(*F)) {
+      std::tie(Min, Max) = *Attr;
+      HasAttr = true;
+    }
+
+    ConstantRange Range(APInt(32, Min), APInt(32, Max + 1));
+    IntegerRangeState RangeState(Range);
+    clampStateAndIndicateChange(this->getState(), RangeState);
+
+    if (HasAttr || AMDGPU::isEntryFunctionCC(F->getCallingConv()))
+      indicateOptimisticFixpoint();
   }
 
   ChangeStatus updateImpl(Attributor &A) override {
@@ -788,9 +836,8 @@ struct AAAMDFlatWorkGroupSize : public AAAMDSizeRangeAttribute {
   ChangeStatus manifest(Attributor &A) override {
     Function *F = getAssociatedFunction();
     auto &InfoCache = static_cast<AMDGPUInformationCache &>(A.getInfoCache());
-    unsigned Min, Max;
-    std::tie(Min, Max) = InfoCache.getMaximumFlatWorkGroupRange(*F);
-    return emitAttributeIfNotDefault(A, Min, Max);
+    auto [Min, Max] = InfoCache.getMaximumFlatWorkGroupRange(*F);
+    return emitAttributeIfNotDefaultAfterClamp(A, {Min, Max});
   }
 
   /// See AbstractAttribute::getName()
