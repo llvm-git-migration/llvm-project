@@ -713,7 +713,9 @@ class STORE_2RI14<bits<32> op>
 let hasSideEffects = 0, mayLoad = 1, mayStore = 1, Constraints = "@earlyclobber $rd" in
 class AM_3R<bits<32> op>
     : Fmt3R<op, (outs GPR:$rd), (ins GPR:$rk, GPRMemAtomic:$rj),
-            "$rd, $rk, $rj">;
+            "$rd, $rk, $rj"> {
+  let IsSubjectToAMORdConstraint = 1;
+}
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
 class LLBase<bits<32> op>
