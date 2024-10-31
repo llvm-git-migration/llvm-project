@@ -46,8 +46,7 @@ def vfp_f16imm : Operand<f16>,
                  PatLeaf<(f16 fpimm), [{
       return ARM_AM::getFP16Imm(N->getValueAPF()) != -1;
     }], SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = ARM_AM::getFP16Imm(InVal);
+      uint32_t enc = ARM_AM::getFP16Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>> {
   let PrintMethod = "printFPImmOperand";
@@ -55,8 +54,7 @@ def vfp_f16imm : Operand<f16>,
 }
 
 def vfp_f32f16imm_xform : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = ARM_AM::getFP32FP16Imm(InVal);
+      uint32_t enc = ARM_AM::getFP32FP16Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 
@@ -65,8 +63,7 @@ def vfp_f32f16imm : PatLeaf<(f32 fpimm), [{
     }], vfp_f32f16imm_xform>;
 
 def vfp_f32imm_xform : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = ARM_AM::getFP32Imm(InVal);
+      uint32_t enc = ARM_AM::getFP32Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 
@@ -88,8 +85,7 @@ def vfp_f32imm : Operand<f32>,
 }
 
 def vfp_f64imm_xform : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = ARM_AM::getFP64Imm(InVal);
+      uint32_t enc = ARM_AM::getFP64Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 

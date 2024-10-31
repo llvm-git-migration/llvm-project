@@ -1390,14 +1390,12 @@ def arith_uxtx : ComplexPattern<i64, 2, "SelectArithUXTXRegister", []>;
 // Floating-point immediate.
 
 def fpimm16XForm : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = AArch64_AM::getFP16Imm(InVal);
+      uint32_t enc = AArch64_AM::getFP16Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 
 def fpimm32XForm : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = AArch64_AM::getFP32Imm(InVal);
+      uint32_t enc = AArch64_AM::getFP32Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 
@@ -1409,8 +1407,7 @@ def fpimm32SIMDModImmType4XForm : SDNodeXForm<fpimm, [{
     }]>;
 
 def fpimm64XForm : SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
-      uint32_t enc = AArch64_AM::getFP64Imm(InVal);
+      uint32_t enc = AArch64_AM::getFP64Imm(N->getValueAPF());
       return CurDAG->getTargetConstant(enc, SDLoc(N), MVT::i32);
     }]>;
 
@@ -1681,7 +1678,6 @@ def simdimmtype10 : Operand<i32>,
       return AArch64_AM::isAdvSIMDModImmType10(
                  Imm.bitcastToAPInt().getZExtValue());
     }], SDNodeXForm<fpimm, [{
-      APFloat InVal = N->getValueAPF();
       uint32_t enc = AArch64_AM::encodeAdvSIMDModImmType10(N->getValueAPF()
                                                            .bitcastToAPInt()
                                                            .getZExtValue());
