@@ -712,7 +712,7 @@ void Dependence::dump(raw_ostream &OS) const {
 // tbaa, non-overlapping regions etc), then it is known there is no dependecy.
 // Otherwise the underlying objects are checked to see if they point to
 // different identifiable objects.
-static AliasResult underlyingObjectsAlias(AAResults *AA,
+static AliasResult underlyingObjectsAlias(BatchAAResults &BAA,
                                           const DataLayout &DL,
                                           const MemoryLocation &LocA,
                                           const MemoryLocation &LocB) {
@@ -722,7 +722,7 @@ static AliasResult underlyingObjectsAlias(AAResults *AA,
       MemoryLocation::getBeforeOrAfter(LocA.Ptr, LocA.AATags);
   MemoryLocation LocBS =
       MemoryLocation::getBeforeOrAfter(LocB.Ptr, LocB.AATags);
-  if (AA->isNoAlias(LocAS, LocBS))
+  if (BAA.isNoAlias(LocAS, LocBS))
     return AliasResult::NoAlias;
 
   // Check the underlying objects are the same
@@ -3606,7 +3606,7 @@ DependenceInfo::depends(Instruction *Src, Instruction *Dst,
   Value *SrcPtr = getLoadStorePointerOperand(Src);
   Value *DstPtr = getLoadStorePointerOperand(Dst);
 
-  switch (underlyingObjectsAlias(AA, F->getDataLayout(),
+  switch (underlyingObjectsAlias(BAA, F->getDataLayout(),
                                  MemoryLocation::get(Dst),
                                  MemoryLocation::get(Src))) {
   case AliasResult::MayAlias:
@@ -4033,7 +4033,7 @@ const SCEV *DependenceInfo::getSplitIteration(const Dependence &Dep,
   Value *SrcPtr = getLoadStorePointerOperand(Src);
   Value *DstPtr = getLoadStorePointerOperand(Dst);
   assert(underlyingObjectsAlias(
-             AA, F->getDataLayout(), MemoryLocation::get(Dst),
+             BAA, F->getDataLayout(), MemoryLocation::get(Dst),
              MemoryLocation::get(Src)) == AliasResult::MustAlias);
 
   // establish loop nesting levels

@@ -40,12 +40,12 @@
 #define LLVM_ANALYSIS_DEPENDENCEANALYSIS_H
 
 #include "llvm/ADT/SmallBitVector.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 
 namespace llvm {
-  class AAResults;
   template <typename T> class ArrayRef;
   class Loop;
   class LoopInfo;
@@ -294,7 +294,9 @@ namespace llvm {
   public:
     DependenceInfo(Function *F, AAResults *AA, ScalarEvolution *SE,
                    LoopInfo *LI)
-        : AA(AA), SE(SE), LI(LI), F(F) {}
+        : BAA(*AA), SE(SE), LI(LI), F(F) {
+      BAA.enableCrossIterationMode();
+    }
 
     /// Handle transitive invalidation when the cached analysis results go away.
     bool invalidate(Function &F, const PreservedAnalyses &PA,
@@ -355,7 +357,7 @@ namespace llvm {
     Function *getFunction() const { return F; }
 
   private:
-    AAResults *AA;
+    BatchAAResults BAA;
     ScalarEvolution *SE;
     LoopInfo *LI;
     Function *F;
