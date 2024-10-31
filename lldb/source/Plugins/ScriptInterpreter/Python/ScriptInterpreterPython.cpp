@@ -98,29 +98,24 @@ public:
 #endif
 
 #if LLDB_EMBED_PYTHON_HOME
-    typedef wchar_t *str_type;
-    static str_type g_python_home = []() -> str_type {
-      const char *lldb_python_home = LLDB_PYTHON_HOME;
-      const char *absolute_python_home = nullptr;
-      llvm::SmallString<64> path;
-      if (llvm::sys::path::is_absolute(lldb_python_home)) {
-        absolute_python_home = lldb_python_home;
-      } else {
-        FileSpec spec = HostInfo::GetShlibDir();
-        if (!spec)
-          return nullptr;
-        spec.GetPath(path);
-        llvm::sys::path::append(path, lldb_python_home);
-        absolute_python_home = path.c_str();
-      }
-      size_t size = 0;
-      return Py_DecodeLocale(absolute_python_home, &size);
+    static std::string g_python_home = []() -> std::string {
+      if (llvm::sys::path::is_absolute(LLDB_PYTHON_HOME))
+        return LLDB_PYTHON_HOME;
+
+      FileSpec spec = HostInfo::GetShlibDir();
+      if (!spec)
+        return {};
+      spec.AppendPathComponent(LLDB_PYTHON_HOME);
+      return spec.GetPath();
     }();
-    if (g_python_home != nullptr) {
+    if (!g_python_home.empty()) {
 #if (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 8) || (PY_MAJOR_VERSION > 3)
-      PyConfig_SetBytesString(&config, &config.home, g_python_home);
+      PyConfig_SetBytesString(&config, &config.home, g_python_home.c_str());
 #else
-      Py_SetPythonHome(g_python_home);
+      size_t size = 0;
+      wchar_t *python_home_w = Py_DecodeLocale(g_python_home.c_str(), &size);
+      Py_SetPythonHome(python_home_w);
+      PyMem_RawFree(python_home_w);
 #endif
     }
 #endif

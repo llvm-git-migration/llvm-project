@@ -661,6 +661,7 @@ X86 Support
 
 - Supported intrinsics for ``MOVRS AND AVX10.2``.
   * Supported intrinsics of ``_mm(256|512)_(mask(z))_loadrs_epi(8|16|32|64)``.
+- Support ISA of ``AMX-FP8``.
 
 Arm and AArch64 Support
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -744,6 +745,8 @@ AST Matchers
   binding in the first matcher and using it in the second matcher.
 
 - Fixed a crash when traverse lambda expr with invalid captures. (#GH106444)
+
+- Fixed ``isInstantiated`` and ``isInTemplateInstantiation`` to also match for variable templates. (#GH110666)
 
 - Ensure ``hasName`` matches template specializations across inline namespaces,
   making `matchesNodeFullSlow` and `matchesNodeFullFast` consistent.
