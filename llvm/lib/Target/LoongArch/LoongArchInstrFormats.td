@@ -32,6 +32,11 @@ class LAInst<dag outs, dag ins, string opcstr, string opnstr,
   let InOperandList = ins;
   let AsmString = opcstr # "\t" # opnstr;
   let Pattern = pattern;
+
+  // Target-specific instruction info and defaults
+
+  bit IsSubjectToAMORdConstraint = 0;
+  let TSFlags{0} = IsSubjectToAMORdConstraint;
 }
 
 // Pseudo instructions
