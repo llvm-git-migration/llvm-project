@@ -5496,6 +5496,13 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
     }
     case Intrinsic::amdgcn_mov_dpp8:
       return LaneOp.addImm(MI.getOperand(3).getImm()).getReg(0);
+    case Intrinsic::amdgcn_update_dpp:
+      return LaneOp.addUse(Src1)
+          .addImm(MI.getOperand(4).getImm())
+          .addImm(MI.getOperand(5).getImm())
+          .addImm(MI.getOperand(6).getImm())
+          .addImm(MI.getOperand(7).getImm())
+          .getReg(0);
     default:
       llvm_unreachable("unhandled lane op");
     }
@@ -5505,7 +5512,7 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
   Register Src0 = MI.getOperand(2).getReg();
   Register Src1, Src2;
   if (IID == Intrinsic::amdgcn_readlane || IID == Intrinsic::amdgcn_writelane ||
-      IsSetInactive || IsPermLane16) {
+      IID == Intrinsic::amdgcn_update_dpp || IsSetInactive || IsPermLane16) {
     Src1 = MI.getOperand(3).getReg();
     if (IID == Intrinsic::amdgcn_writelane || IsPermLane16) {
       Src2 = MI.getOperand(4).getReg();
@@ -5515,7 +5522,14 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
   LLT Ty = MRI.getType(DstReg);
   unsigned Size = Ty.getSizeInBits();
 
-  if (Size == 32) {
+  unsigned SplitSize =
+      (IID == Intrinsic::amdgcn_update_dpp && (Size % 64 == 0) &&
+       ST.hasDPALU_DPP() &&
+       AMDGPU::isLegalDPALU_DPPControl(MI.getOperand(4).getImm()))
+          ? 64
+          : 32;
+
+  if (Size == SplitSize) {
     // Already legal
     return true;
   }
@@ -5523,7 +5537,7 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
   if (Size < 32) {
     Src0 = B.buildAnyExt(S32, Src0).getReg(0);
 
-    if (IsSetInactive || IsPermLane16)
+    if (IID == Intrinsic::amdgcn_update_dpp ||IsSetInactive || IsPermLane16)
       Src1 = B.buildAnyExt(LLT::scalar(32), Src1).getReg(0);
 
     if (IID == Intrinsic::amdgcn_writelane)
@@ -5535,31 +5549,28 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
     return true;
   }
 
-  if (Size % 32 != 0)
+  if (Size % SplitSize != 0)
     return false;
 
-  LLT PartialResTy = S32;
+  LLT PartialResTy = LLT::scalar(SplitSize);
   if (Ty.isVector()) {
     LLT EltTy = Ty.getElementType();
-    switch (EltTy.getSizeInBits()) {
-    case 16:
-      PartialResTy = Ty.changeElementCount(ElementCount::getFixed(2));
-      break;
-    case 32:
+    unsigned EltSize =
+        EltTy.getSizeInBits();
+    if (EltSize == SplitSize)
       PartialResTy = EltTy;
-      break;
-    default:
-      // Handle all other cases via S32 pieces;
-      break;
-    }
+    else if (EltSize == 16 || EltSize == 32)
+      PartialResTy =
+          Ty.changeElementCount(ElementCount::getFixed(SplitSize / EltSize));
+    // Handle all other cases via S32/S64 pieces;
   }
 
-  SmallVector<Register, 2> PartialRes;
-  unsigned NumParts = Size / 32;
+  SmallVector<Register, 4> PartialRes;
+  unsigned NumParts = Size / SplitSize;
   MachineInstrBuilder Src0Parts = B.buildUnmerge(PartialResTy, Src0);
   MachineInstrBuilder Src1Parts, Src2Parts;
 
-  if (IsSetInactive || IsPermLane16)
+  if (IID == Intrinsic::amdgcn_update_dpp || IsSetInactive || IsPermLane16)
     Src1Parts = B.buildUnmerge(PartialResTy, Src1);
 
   if (IID == Intrinsic::amdgcn_writelane)
@@ -5568,7 +5579,7 @@ bool AMDGPULegalizerInfo::legalizeLaneOp(LegalizerHelper &Helper,
   for (unsigned i = 0; i < NumParts; ++i) {
     Src0 = Src0Parts.getReg(i);
 
-    if (IsSetInactive || IsPermLane16)
+    if (IID == Intrinsic::amdgcn_update_dpp || IsSetInactive || IsPermLane16)
       Src1 = Src1Parts.getReg(i);
 
     if (IID == Intrinsic::amdgcn_writelane)
@@ -7532,6 +7543,7 @@ bool AMDGPULegalizerInfo::legalizeIntrinsic(LegalizerHelper &Helper,
   case Intrinsic::amdgcn_set_inactive:
   case Intrinsic::amdgcn_set_inactive_chain_arg:
   case Intrinsic::amdgcn_mov_dpp8:
+  case Intrinsic::amdgcn_update_dpp:
     return legalizeLaneOp(Helper, MI, IntrID);
   case Intrinsic::amdgcn_s_buffer_prefetch_data:
     return legalizeSBufferPrefetch(Helper, MI);
