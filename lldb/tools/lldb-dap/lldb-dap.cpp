@@ -239,14 +239,16 @@ int AcceptConnection(llvm::StringRef program_path,
                                     (struct sockaddr *)&cli_addr, &clilen);
     if (clientfd < 0) {
       if (log)
-        *log << "error: accept (" << strerror(errno) << ")" << std::endl;
+        *log << "error: accept (" << llvm::sys::StrError(errno) << ")"
+             << std::endl;
       perror("error: accept(int, struct sockaddr *, socklen_t *)");
       break;
     }
 
     std::thread t([program_path, pre_init_commands, log, default_repl_mode,
                    clientfd]() {
-      printf("accepted client fd %d\n", clientfd);
+      if (log)
+        *log << "client[" << clientfd << "] connected\n";
       DAP dap = DAP(program_path, log, default_repl_mode);
       dap.debug_adaptor_path = program_path;
 
@@ -260,16 +262,18 @@ int AcceptConnection(llvm::StringRef program_path,
         dap.pre_init_commands.push_back(arg);
       }
 
-      bool CleanExit = true;
       if (auto Err = dap.Loop()) {
-        llvm::errs() << "Transport Error: " << llvm::toString(std::move(Err))
-                     << "\n";
-        CleanExit = false;
+        if (log)
+          *log << "Transport Error: " << llvm::toString(std::move(Err)) << "\n";
       }
 
-      printf("closing client fd %d ? %s\n", clientfd,
-             CleanExit ? "true" : "false");
+      if (log)
+        *log << "client[" << clientfd << "] connection closed\n";
+#if defined(_WIN32)
+      closesocket(clientfd);
+#else
       close(clientfd);
+#endif
     });
     t.detach();
   }
@@ -5174,7 +5178,7 @@ int main(int argc, char *argv[]) {
 
   // stdout/stderr redirection to the IDE's console
   int new_stdout_fd = dup(fileno(stdout));
-  SetupRedirection(dap, new_stdout_fd, fileno(stderr));
+  SetupRedirection(dap, fileno(stdout), fileno(stderr));
 
   // Register request callbacks.
   RegisterRequestCallbacks(dap);
@@ -5189,8 +5193,8 @@ int main(int argc, char *argv[]) {
 
   bool CleanExit = true;
   if (auto Err = dap.Loop()) {
-    if (dap.log)
-      *dap.log << "Transport Error: " << llvm::toString(std::move(Err)) << "\n";
+    if (log)
+      *log << "Transport Error: " << llvm::toString(std::move(Err)) << "\n";
     CleanExit = false;
   }
 

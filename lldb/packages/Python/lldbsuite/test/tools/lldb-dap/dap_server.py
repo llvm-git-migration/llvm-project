@@ -1181,7 +1181,7 @@ class DebugAdaptorServer(DebugCommunication):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(("127.0.0.1", port))
             DebugCommunication.__init__(
-                self, s.makefile("r"), s.makefile("w"), init_commands
+                self, s.makefile("rb"), s.makefile("wb"), init_commands
             )
 
     def get_pid(self):
