@@ -1568,6 +1568,12 @@ unsigned LoongArchAsmParser::checkTargetMatchPredicate(MCInst &Inst) {
       MCRegister Rj = Inst.getOperand(2).getReg();
       if ((Rd == Rk || Rd == Rj) && Rd != LoongArch::R0)
         return Match_RequiresAMORdDifferRkRj;
+    } else if (Opc >= LoongArch::AMCAS_B && Opc <= LoongArch::AMCAS__DB_W) {
+      MCRegister Rd = Inst.getOperand(0).getReg();
+      MCRegister Rk = Inst.getOperand(2).getReg();
+      MCRegister Rj = Inst.getOperand(3).getReg();
+      if ((Rd == Rk || Rd == Rj) && Rd != LoongArch::R0)
+        return Match_RequiresAMORdDifferRkRj;
     }
     break;
   case LoongArch::PseudoLA_TLS_DESC:
