@@ -112,20 +112,15 @@ static Value *handleHlslClip(const CallExpr *E, CodeGenFunction *CGF) {
   if (const auto *VecTy = E->getArg(0)->getType()->getAs<clang::VectorType>()) {
     FZeroConst = ConstantVector::getSplat(
         ElementCount::getFixed(VecTy->getNumElements()), FZeroConst);
-    CMP = CGF->Builder.CreateFCmpOLT(Op0, FZeroConst);
+    auto *FCompInst = CGF->Builder.CreateFCmpOLT(Op0, FZeroConst);
+    CMP = CGF->Builder.CreateIntrinsic(
+        CGF->Builder.getInt1Ty(), CGF->CGM.getHLSLRuntime().getAnyIntrinsic(), {FCompInst}, nullptr);
   } else
     CMP = CGF->Builder.CreateFCmpOLT(Op0, FZeroConst);
 
   if (CGF->CGM.getTarget().getTriple().isDXIL())
     return CGF->Builder.CreateIntrinsic(CGF->VoidTy, llvm::Intrinsic::dx_clip,
                                         {CMP}, nullptr);
-
-  if (const auto *VecTy = E->getArg(0)->getType()->getAs<clang::VectorType>()){
-
-    CMP = CGF->Builder.CreateIntrinsic(CGF->Builder.getInt1Ty(), llvm::Intrinsic::spv_any,
-                                        {CMP}, nullptr);
-  }
-    
 
   BasicBlock *LT0 = CGF->createBasicBlock("lt0", CGF->CurFn);
   BasicBlock *End = CGF->createBasicBlock("end", CGF->CurFn);
