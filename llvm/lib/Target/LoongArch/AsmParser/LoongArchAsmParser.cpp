@@ -1562,7 +1562,8 @@ unsigned LoongArchAsmParser::checkTargetMatchPredicate(MCInst &Inst) {
   unsigned Opc = Inst.getOpcode();
   switch (Opc) {
   default:
-    if (Opc >= LoongArch::AMADD_D && Opc <= LoongArch::AMXOR_W) {
+    if (Opc >= LoongArch::AMADD_D && Opc <= LoongArch::AMXOR_W &&
+        !(Opc >= LoongArch::AMCAS_B && Opc <= LoongArch::AMCAS__DB_W)) {
       MCRegister Rd = Inst.getOperand(0).getReg();
       MCRegister Rk = Inst.getOperand(1).getReg();
       MCRegister Rj = Inst.getOperand(2).getReg();
