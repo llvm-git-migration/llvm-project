@@ -375,9 +375,9 @@ def UseNegativeImmediates
     : Predicate<"false">, AssemblerPredicate<(all_of (not FeatureNoNegativeImmediates)),
                                              "NegativeImmediates">;
 
-def UseScalarIncVL : Predicate<"Subtarget->useScalarIncVL()">;
+def UseScalarIncVL : Predicate<"!Subtarget->dontUseScalarIncVL()">;
 
-def NoUseScalarIncVL : Predicate<"!Subtarget->useScalarIncVL()">;
+def NoUseScalarIncVL : Predicate<"Subtarget->dontUseScalarIncVL()">;
 
 def UseSVEFPLD1R : Predicate<"!Subtarget->noSVEFPLD1R()">;
 
