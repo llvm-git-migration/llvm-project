@@ -103,6 +103,12 @@ struct MFMA_F8F6F4_Info {
   uint8_t NumRegsSrcB;
 };
 
+struct True16D16Info {
+  unsigned T16Op;
+  unsigned HiOp;
+  unsigned LoOp;
+};
+
 #define GET_MIMGBaseOpcode_DECL
 #define GET_MIMGDim_DECL
 #define GET_MIMGEncoding_DECL
@@ -112,6 +118,7 @@ struct MFMA_F8F6F4_Info {
 #define GET_MAIInstInfoTable_DECL
 #define GET_MAIInstInfoTable_DECL
 #define GET_isMFMA_F8F6F4Table_DECL
+#define GET_True16D16Table_DECL
 #include "AMDGPUGenSearchableTables.inc"
 
 namespace IsaInfo {
