@@ -817,12 +817,14 @@ to LLVM ops. At the moment, SPIR-V module attributes are ignored.
 
 ## `mlir-spirv-cpu-runner`
 
-`mlir-spirv-cpu-runner` allows to execute `gpu` dialect kernel on the CPU via
-SPIR-V to LLVM dialect conversion. Currently, only single-threaded kernel is
+`mlir-spirv-cpu-runner` is the name of a formerly separate tool that allows to
+execute `gpu` dialect kernel on the CPU via SPIR-V to LLVM dialect conversion.
+This runner is now merged with the `mlir-cpu-runner`; pass the
+`--link-nested-modules` flag. Currently, only single-threaded kernels are
 supported.
 
-To build the runner, add the following option to `cmake`: `bash
--DMLIR_ENABLE_SPIRV_CPU_RUNNER=1`
+To build the required runtime libaries, add the following option to `cmake`:
+`-DMLIR_ENABLE_SPIRV_CPU_RUNNER=1`
 
 ### Pipeline
 
