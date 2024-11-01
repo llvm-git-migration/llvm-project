@@ -15,7 +15,7 @@ main:
     jumpr r31
     .size   main, .-main
 
-    .org 0x800000
+    .org 0x1000000
 
     .globl myfn
     .type  myfn, @function
@@ -26,11 +26,11 @@ myfn:
 # CHECK:  Disassembly of section .text:
 
 # CHECK-NONPIC:  000200b4 <__trampoline_for_myfn_from_.text.thunk>:
-# CHECK-NONPIC:  { immext(#0x800000)
-# CHECK-NONPIC:    jump 0x8200bc }
+# CHECK-NONPIC:  { immext(#0x1000000)
+# CHECK-NONPIC:    jump 0x10200bc }
 # CHECK-PIC:     00010150 <__trampoline_for_myfn_from_.text.thunk>:
-# CHECK-PIC:     { immext(#0x800000)
-# CHECK-PIC:       r14 = add(pc,##0x80000c) }
+# CHECK-PIC:     { immext(#0x1000000)
+# CHECK-PIC:       r14 = add(pc,##0x100000c) }
 # CHECK-PIC:     { jumpr r14 }
 
 # CHECK-NONPIC:  000200bc <main>:
@@ -39,6 +39,6 @@ myfn:
 # CHECK-PIC:       call 0x10150
 # CHECK:           jumpr r31
 
-# CHECK-NONPIC:  008200bc <myfn>:
-# CHECK-PIC:     0081015c <myfn>:
+# CHECK-NONPIC:  010200bc <myfn>:
+# CHECK-PIC:     0101015c <myfn>:
 # CHECK:           jumpr r31

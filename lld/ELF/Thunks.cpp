@@ -351,42 +351,16 @@ public:
   void addSymbols(ThunkSection &isec) override;
 };
 
-static const uint32_t MASK_END_PACKET = 3 << 14;
-static const uint32_t END_OF_PACKET = 3 << 14;
-static const uint32_t END_OF_DUPLEX = 0 << 14;
-
-static std::optional<int32_t> getRealAddend(const InputSection &isec,
-                                            const Relocation &rel) {
-  const ArrayRef<uint8_t> SectContents = isec.content();
-  if (SectContents.size() < sizeof(int32_t))
-    // FIXME: assert?  emit a diagnostic?
-    return std::nullopt;
-  int32_t offset = rel.offset;
-
-  // Search as many as 4 instructions:
-  for (int i = 0; i < 4; i++) {
-    uint32_t instWord = 0;
-    const ArrayRef<uint8_t> InstWordContents = SectContents.drop_front(offset);
-    ::memcpy(&instWord, InstWordContents.data(), sizeof(instWord));
-    if (((instWord & MASK_END_PACKET) == END_OF_PACKET) ||
-        ((instWord & MASK_END_PACKET) == END_OF_DUPLEX))
-      break;
-    offset += sizeof(instWord);
-  }
-  return offset - rel.offset;
-}
 // Hexagon CPUs need thunks for <<FIXME TBD>>
 // when their destination is out of range [0, 0x_?].
 class HexagonThunk : public Thunk {
 public:
   HexagonThunk(Ctx &ctx, const InputSection &isec, Relocation &rel,
                Symbol &dest)
-      : Thunk(ctx, dest, 0), RealAddend(getRealAddend(isec, rel)),
-        RelOffset(rel.offset) {
+      : Thunk(ctx, dest, 0), RelOffset(rel.offset) {
     alignment = 4;
   }
-  std::optional<int32_t> RealAddend;
-  int32_t RelOffset;
+  uint32_t RelOffset;
   uint32_t size() override { return ctx.arg.isPic ? 12 : 8; }
   void writeTo(uint8_t *buf) override;
   void addSymbols(ThunkSection &isec) override;
