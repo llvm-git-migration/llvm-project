@@ -49,6 +49,7 @@
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RuntimeLibcallUtil.h"
+#include "llvm/CodeGen/SDPatternMatch.h"
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/TargetInstrInfo.h"
@@ -19140,15 +19141,17 @@ Value *PPCTargetLowering::emitMaskedAtomicCmpXchgIntrinsic(
 
 bool PPCTargetLowering::isDesirableToCommuteWithShift(
     const SDNode *N, CombineLevel Level) const {
+  using namespace llvm::SDPatternMatch;
   assert((N->getOpcode() == ISD::SHL || N->getOpcode() == ISD::SRA ||
           N->getOpcode() == ISD::SRL) &&
          "Expected shift op");
 
   SDValue ShiftLHS = N->getOperand(0);
-  if ((ShiftLHS.getOpcode() == ISD::SIGN_EXTEND &&
-       !(ShiftLHS->hasOneUse() && ShiftLHS.getOperand(0)->hasOneUse())) ||
-      !ShiftLHS->hasOneUse())
-    return false;
+  SDValue Add;
 
-  return true;
+  if (ShiftLHS->hasOneUse() ||
+      sd_match(ShiftLHS, m_OneUse(m_SExt(m_OneUse(m_Value(Add))))))
+    return true;
+
+  return false;
 }
