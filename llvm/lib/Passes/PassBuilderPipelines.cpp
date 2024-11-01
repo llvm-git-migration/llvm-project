@@ -384,9 +384,9 @@ void PassBuilder::invokePipelineStartEPCallbacks(ModulePassManager &MPM,
     C(MPM, Level);
 }
 void PassBuilder::invokePipelineEarlySimplificationEPCallbacks(
-    ModulePassManager &MPM, OptimizationLevel Level) {
+    ModulePassManager &MPM, OptimizationLevel Level, bool LTOPreLink) {
   for (auto &C : PipelineEarlySimplificationEPCallbacks)
-    C(MPM, Level);
+    C(MPM, Level, LTOPreLink);
 }
 
 // Helper to add AnnotationRemarksPass.
@@ -1140,7 +1140,10 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
     MPM.addPass(LowerTypeTestsPass(nullptr, nullptr,
                                    lowertypetests::DropTestKind::Assume));
 
-  invokePipelineEarlySimplificationEPCallbacks(MPM, Level);
+  bool LTOPreLink = (Phase == ThinOrFullLTOPhase::FullLTOPreLink) ||
+                    (Phase == ThinOrFullLTOPhase::ThinLTOPreLink);
+
+  invokePipelineEarlySimplificationEPCallbacks(MPM, Level, LTOPreLink);
 
   // Interprocedural constant propagation now that basic cleanup has occurred
   // and prior to optimizing globals.
@@ -2155,7 +2158,7 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
   if (PGOOpt && PGOOpt->DebugInfoForProfiling)
     MPM.addPass(createModuleToFunctionPassAdaptor(AddDiscriminatorsPass()));
 
-  invokePipelineEarlySimplificationEPCallbacks(MPM, Level);
+  invokePipelineEarlySimplificationEPCallbacks(MPM, Level, LTOPreLink);
 
   // Build a minimal pipeline based on the semantics required by LLVM,
   // which is just that always inlining occurs. Further, disable generating
