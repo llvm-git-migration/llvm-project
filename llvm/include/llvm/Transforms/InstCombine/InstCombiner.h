@@ -37,6 +37,7 @@ namespace llvm {
 class AAResults;
 class AssumptionCache;
 class OptimizationRemarkEmitter;
+class LazyValueInfo;
 class ProfileSummaryInfo;
 class TargetLibraryInfo;
 class TargetTransformInfo;
@@ -72,6 +73,7 @@ protected:
   // Required analyses.
   AssumptionCache &AC;
   TargetLibraryInfo &TLI;
+  LazyValueInfo &LVI;
   DominatorTree &DT;
   const DataLayout &DL;
   SimplifyQuery SQ;
@@ -101,14 +103,15 @@ public:
   InstCombiner(InstructionWorklist &Worklist, BuilderTy &Builder,
                bool MinimizeSize, AAResults *AA, AssumptionCache &AC,
                TargetLibraryInfo &TLI, TargetTransformInfo &TTI,
-               DominatorTree &DT, OptimizationRemarkEmitter &ORE,
-               BlockFrequencyInfo *BFI, BranchProbabilityInfo *BPI,
-               ProfileSummaryInfo *PSI, const DataLayout &DL,
+               LazyValueInfo &LVI, DominatorTree &DT,
+               OptimizationRemarkEmitter &ORE, BlockFrequencyInfo *BFI,
+               BranchProbabilityInfo *BPI, ProfileSummaryInfo *PSI,
+               const DataLayout &DL,
                ReversePostOrderTraversal<BasicBlock *> &RPOT)
       : TTIForTargetIntrinsicsOnly(TTI), Builder(Builder), Worklist(Worklist),
-        MinimizeSize(MinimizeSize), AA(AA), AC(AC), TLI(TLI), DT(DT), DL(DL),
-        SQ(DL, &TLI, &DT, &AC, nullptr, /*UseInstrInfo*/ true,
-           /*CanUseUndef*/ true, &DC),
+        MinimizeSize(MinimizeSize), AA(AA), AC(AC), TLI(TLI), LVI(LVI), DT(DT),
+        DL(DL), SQ(DL, &TLI, &DT, &AC, nullptr, /*UseInstrInfo*/ true,
+                   /*CanUseUndef*/ true, &DC),
         ORE(ORE), BFI(BFI), BPI(BPI), PSI(PSI), RPOT(RPOT) {}
 
   virtual ~InstCombiner() = default;

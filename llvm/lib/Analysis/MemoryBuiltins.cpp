@@ -16,6 +16,8 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/LazyValueInfo.h"
 #include "llvm/Analysis/TargetFolder.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/Utils/Local.h"
@@ -590,19 +592,28 @@ Value *llvm::lowerObjectSizeCall(IntrinsicInst *ObjectSize,
                                  const TargetLibraryInfo *TLI,
                                  bool MustSucceed) {
   return lowerObjectSizeCall(ObjectSize, DL, TLI, /*AAResults=*/nullptr,
-                             MustSucceed);
+                             /*LazyValueInfo=*/nullptr, MustSucceed);
 }
 
 Value *llvm::lowerObjectSizeCall(
     IntrinsicInst *ObjectSize, const DataLayout &DL,
     const TargetLibraryInfo *TLI, AAResults *AA, bool MustSucceed,
     SmallVectorImpl<Instruction *> *InsertedInstructions) {
+  return lowerObjectSizeCall(ObjectSize, DL, TLI, AA, /*LazyValueInfo=*/nullptr,
+                             MustSucceed, InsertedInstructions);
+}
+
+Value *llvm::lowerObjectSizeCall(
+    IntrinsicInst *ObjectSize, const DataLayout &DL,
+    const TargetLibraryInfo *TLI, AAResults *AA, LazyValueInfo *LVI,
+    bool MustSucceed, SmallVectorImpl<Instruction *> *InsertedInstructions) {
   assert(ObjectSize->getIntrinsicID() == Intrinsic::objectsize &&
          "ObjectSize must be a call to llvm.objectsize!");
 
   bool MaxVal = cast<ConstantInt>(ObjectSize->getArgOperand(1))->isZero();
   ObjectSizeOpts EvalOptions;
   EvalOptions.AA = AA;
+  EvalOptions.LVI = LVI;
 
   // Unless we have to fold this to something, try to be as accurate as
   // possible.
@@ -716,7 +727,6 @@ OffsetSpan ObjectSizeOffsetVisitor::computeImpl(Value *V) {
   // value that is passed to computeImpl.
   IntTyBits = DL.getIndexTypeSizeInBits(V->getType());
   Zero = APInt::getZero(IntTyBits);
-
   OffsetSpan ORT = computeValue(V);
 
   bool IndexTypeSizeChanged = InitialIntTyBits != IntTyBits;
@@ -794,6 +804,17 @@ OffsetSpan ObjectSizeOffsetVisitor::visitAllocaInst(AllocaInst &I) {
     Size = Size.umul_ov(NumElems, Overflow);
     return Overflow ? ObjectSizeOffsetVisitor::unknown()
                     : OffsetSpan(Zero, align(Size, I.getAlign()));
+  } else if (Options.LVI) {
+    ConstantRange CR =
+        Options.LVI->getConstantRange(const_cast<Value *>(ArraySize), &I, true);
+    if (CR.isFullSet())
+      return ObjectSizeOffsetVisitor::unknown();
+    APInt Bound;
+    if (Options.EvalMode == ObjectSizeOpts::Mode::Max)
+      Bound = CR.getUnsignedMax();
+    else
+      Bound = CR.getUnsignedMin();
+    return OffsetSpan(Zero, align(Bound, I.getAlign()));
   }
   return ObjectSizeOffsetVisitor::unknown();
 }
@@ -811,7 +832,23 @@ OffsetSpan ObjectSizeOffsetVisitor::visitArgument(Argument &A) {
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitCallBase(CallBase &CB) {
-  if (std::optional<APInt> Size = getAllocSize(&CB, TLI))
+  if (std::optional<APInt> Size =
+          getAllocSize(&CB, TLI, [&CB, this](const Value *V) -> const Value * {
+            if (!Options.LVI)
+              return V;
+            if (!V->getType()->isIntegerTy())
+              return V;
+            ConstantRange CR = Options.LVI->getConstantRange(
+                const_cast<Value *>(V), &CB, true);
+            if (CR.isFullSet())
+              return V;
+            APInt Bound;
+            if (Options.EvalMode == ObjectSizeOpts::Mode::Max)
+              Bound = CR.getUnsignedMax();
+            else
+              Bound = CR.getUnsignedMin();
+            return ConstantInt::get(V->getType(), Bound);
+          }))
     return OffsetSpan(Zero, *Size);
   return ObjectSizeOffsetVisitor::unknown();
 }
@@ -854,6 +891,42 @@ OffsetSpan ObjectSizeOffsetVisitor::visitGlobalVariable(GlobalVariable &GV) {
 
   APInt Size(IntTyBits, DL.getTypeAllocSize(GV.getValueType()));
   return OffsetSpan(Zero, align(Size, GV.getAlign()));
+}
+
+OffsetSpan ObjectSizeOffsetVisitor::visitGetElementPtr(GetElementPtrInst &GEP) {
+  OffsetSpan PtrData = computeImpl(GEP.getPointerOperand());
+  if (!PtrData.bothKnown())
+    return ObjectSizeOffsetVisitor::unknown();
+
+  if (!Options.LVI)
+    return ObjectSizeOffsetVisitor::unknown();
+
+  if (Options.EvalMode == ObjectSizeOpts::Mode::Min ||
+      Options.EvalMode == ObjectSizeOpts::Mode::Max) {
+    unsigned BitWidth = PtrData.After.getBitWidth();
+    APInt ConstantOffset = Zero;
+    SmallMapVector<Value *, APInt, 4> VariableOffsets;
+    if (!GEP.collectOffset(DL, BitWidth, VariableOffsets, ConstantOffset))
+      return ObjectSizeOffsetVisitor::unknown();
+
+    ConstantRange AccumulatedRange = ConstantOffset;
+    for (auto const &VO : VariableOffsets) {
+      ConstantRange CR = Options.LVI->getConstantRange(VO.first, &GEP, true);
+      if (CR.isFullSet())
+        return ObjectSizeOffsetVisitor::unknown();
+
+      AccumulatedRange = AccumulatedRange.add(CR.multiply(VO.second));
+    }
+
+    APInt Bound;
+    if (Options.EvalMode == ObjectSizeOpts::Mode::Min)
+      Bound = AccumulatedRange.getSignedMax();
+    else
+      Bound = AccumulatedRange.getSignedMin();
+
+    return {PtrData.Before + Bound, PtrData.After - Bound};
+  }
+  return ObjectSizeOffsetVisitor::unknown();
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitIntToPtrInst(IntToPtrInst &) {

@@ -22,9 +22,10 @@ namespace llvm {
 class DominatorTree;
 class Function;
 class TargetLibraryInfo;
+class LazyValueInfo;
 
 bool lowerConstantIntrinsics(Function &F, const TargetLibraryInfo &TLI,
-                             DominatorTree *DT);
+                             DominatorTree *DT, LazyValueInfo *LVI);
 
 struct LowerConstantIntrinsicsPass :
     PassInfoMixin<LowerConstantIntrinsicsPass> {
