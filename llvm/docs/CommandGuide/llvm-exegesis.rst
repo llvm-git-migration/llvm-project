@@ -33,11 +33,13 @@ snippets.
 SUPPORTED PLATFORMS
 -------------------
 
-:program:`llvm-exegesis` currently only supports X86 (64-bit only), ARM (AArch64
-only), MIPS, and PowerPC (PowerPC64LE only) on Linux for benchmarking. Not all
-benchmarking functionality is guaranteed to work on every platform.
-:program:`llvm-exegesis` also has a separate analysis mode that is supported
-on every platform that LLVM is.
+:program:`llvm-exegesis` currently only supports X86 (64-bit only), ARM
+(AArch64 only and very experimental), MIPS, and PowerPC (PowerPC64LE only) on
+Linux for benchmarking. Not all benchmarking functionality is guaranteed to
+work on every platform. :program:`llvm-exegesis` also has a separate analysis
+mode that is supported on every platform that LLVM is. See README.md for
+more information on the libpfm4 dependency and how to configure and build
+:program:`llvm-exegesis` from source.
 
 SNIPPET ANNOTATIONS
 -------------------

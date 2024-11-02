@@ -13,8 +13,16 @@ Analysis mode in `llvm-exegesis` is supported on all platforms on which LLVM is.
 #### Currently Supported Operating Systems for Benchmarking
 
 Currently, `llvm-exegesis`  only supports benchmarking on Linux. This is mainly
-due to a dependency on the Linux perf subsystem for reading performance
-counters.
+due to a dependency on the Linux perf subsystem and libpfm4 for reading
+performance counters. For benchmarking, LLVM needs to be configured and build
+with `LLVM_ENABLE_LIBPFM` enabled. Benchmarking might fail if the target cpu is
+not supported by libpfm. This can be checked by putting libpfm in verbose/debug
+mode with environment variables `LIBPFM_VERBOSE` and `LIBFM_DEBUG`. If libpfm
+is installed in a non-standard location, LLVM can be configured to look for the
+libpfm library and header file locations by setting environment variables
+`LIBRARY_PATH`, `C_INCLUDE_PATH`, and `CPLUS_INCLUDE_PATH`. In that case variable
+`LD_LIBRARY_PATH` needs to be set too so that `llvm-exegesis` can find the
+library at execution time.
 
 The subprocess execution mode and memory annotations currently only supports
 Linux due to a heavy reliance on many Linux specific syscalls/syscall
@@ -28,7 +36,7 @@ architectures:
   * 64-bit only due to this being the only implemented calling convention
     in `llvm-exegesis` currently.
 * ARM
-  * AArch64 only
+  * Very experimental AArch64 support only, most opcodes probably won't work.
 * MIPS
 * PowerPC (PowerPC64LE only)
 
