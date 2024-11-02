@@ -15,6 +15,7 @@
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/DomTreeUpdater.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/InstructionSimplify.h"
@@ -99,7 +100,7 @@ static bool replaceConditionalBranchesOnConstant(Instruction *II,
 }
 
 bool llvm::lowerConstantIntrinsics(Function &F, const TargetLibraryInfo &TLI,
-                                   DominatorTree *DT) {
+                                   DominatorTree *DT, AssumptionCache *AC) {
   std::optional<DomTreeUpdater> DTU;
   if (DT)
     DTU.emplace(DT, DomTreeUpdater::UpdateStrategy::Lazy);
@@ -143,7 +144,8 @@ bool llvm::lowerConstantIntrinsics(Function &F, const TargetLibraryInfo &TLI,
       IsConstantIntrinsicsHandled++;
       break;
     case Intrinsic::objectsize:
-      NewValue = lowerObjectSizeCall(II, DL, &TLI, true);
+      NewValue = lowerObjectSizeCall(II, DL, &TLI, /*AA=*/nullptr, DT,
+                                     /*AC=*/AC, true);
       LLVM_DEBUG(dbgs() << "Folding " << *II << " to " << *NewValue << "\n");
       ObjectSizeIntrinsicsHandled++;
       break;
@@ -159,9 +161,11 @@ bool llvm::lowerConstantIntrinsics(Function &F, const TargetLibraryInfo &TLI,
 PreservedAnalyses
 LowerConstantIntrinsicsPass::run(Function &F, FunctionAnalysisManager &AM) {
   if (lowerConstantIntrinsics(F, AM.getResult<TargetLibraryAnalysis>(F),
-                              AM.getCachedResult<DominatorTreeAnalysis>(F))) {
+                              AM.getCachedResult<DominatorTreeAnalysis>(F),
+                              AM.getCachedResult<AssumptionAnalysis>(F))) {
     PreservedAnalyses PA;
     PA.preserve<DominatorTreeAnalysis>();
+    PA.preserve<AssumptionAnalysis>();
     return PA;
   }
 

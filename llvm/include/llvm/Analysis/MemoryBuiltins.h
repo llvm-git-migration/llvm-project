@@ -29,9 +29,11 @@ namespace llvm {
 
 class AllocaInst;
 class AAResults;
+class AssumptionCache;
 class Argument;
 class ConstantPointerNull;
 class DataLayout;
+class DominatorTree;
 class ExtractElementInst;
 class ExtractValueInst;
 class GEPOperator;
@@ -160,8 +162,12 @@ struct ObjectSizeOpts {
   /// though they can't be evaluated. Otherwise, null is always considered to
   /// point to a 0 byte region of memory.
   bool NullIsUnknownSize = false;
-  /// If set, used for more accurate evaluation
+  /// If set, used for more accurate evaluation.
   AAResults *AA = nullptr;
+  /// If set, used for more accurate evaluation.
+  AssumptionCache *AC = nullptr;
+  /// If set, used for more accurate evaluation.
+  DominatorTree *DT = nullptr;
 };
 
 /// Compute the size of the object pointed by Ptr. Returns true and the
@@ -184,6 +190,12 @@ Value *lowerObjectSizeCall(IntrinsicInst *ObjectSize, const DataLayout &DL,
 Value *lowerObjectSizeCall(
     IntrinsicInst *ObjectSize, const DataLayout &DL,
     const TargetLibraryInfo *TLI, AAResults *AA, bool MustSucceed,
+    SmallVectorImpl<Instruction *> *InsertedInstructions = nullptr);
+
+Value *lowerObjectSizeCall(
+    IntrinsicInst *ObjectSize, const DataLayout &DL,
+    const TargetLibraryInfo *TLI, AAResults *AA, DominatorTree *DT,
+    AssumptionCache *AC, bool MustSucceed,
     SmallVectorImpl<Instruction *> *InsertedInstructions = nullptr);
 
 /// SizeOffsetType - A base template class for the object size visitors. Used
@@ -275,6 +287,7 @@ public:
   OffsetSpan visitExtractValueInst(ExtractValueInst &I);
   OffsetSpan visitGlobalAlias(GlobalAlias &GA);
   OffsetSpan visitGlobalVariable(GlobalVariable &GV);
+  OffsetSpan visitGetElementPtr(GetElementPtrInst &GEP);
   OffsetSpan visitIntToPtrInst(IntToPtrInst &);
   OffsetSpan visitLoadInst(LoadInst &I);
   OffsetSpan visitPHINode(PHINode &);
