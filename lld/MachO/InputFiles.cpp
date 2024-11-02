@@ -1730,6 +1730,14 @@ DylibFile::DylibFile(MemoryBufferRef mb, DylibFile *umbrella,
                       ? this
                       : this->umbrella;
 
+  if (!canBeImplicitlyLinked) {
+    for (auto *cmd : findCommands<sub_client_command>(hdr, LC_SUB_CLIENT)) {
+      StringRef allowedClient{reinterpret_cast<const char *>(cmd) +
+                              cmd->client};
+      allowedClients.push_back(allowedClient);
+    }
+  }
+
   const auto *dyldInfo = findCommand<dyld_info_command>(hdr, LC_DYLD_INFO_ONLY);
   const auto *exportsTrie =
       findCommand<linkedit_data_command>(hdr, LC_DYLD_EXPORTS_TRIE);
