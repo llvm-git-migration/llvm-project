@@ -300,19 +300,16 @@ define i1 @known_non_zero_phi_phi_test() {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    br label [[LOOP:%.*]]
 ; CHECK:       loop:
-; CHECK-NEXT:    [[INDVAR:%.*]] = phi i8 [ 2, [[ENTRY:%.*]] ], [ [[CONTAIN:%.*]], [[LOOP_BB1:%.*]] ]
 ; CHECK-NEXT:    [[COND0:%.*]] = call i1 @cond()
-; CHECK-NEXT:    br i1 [[COND0]], label [[LOOP_BB0:%.*]], label [[LOOP_BB1]]
+; CHECK-NEXT:    br i1 [[COND0]], label [[LOOP_BB0:%.*]], label [[LOOP_BB1:%.*]]
 ; CHECK:       loop.bb0:
 ; CHECK-NEXT:    call void @side.effect()
 ; CHECK-NEXT:    br label [[LOOP_BB1]]
 ; CHECK:       loop.bb1:
-; CHECK-NEXT:    [[CONTAIN]] = phi i8 [ 1, [[LOOP_BB0]] ], [ [[INDVAR]], [[LOOP]] ]
 ; CHECK-NEXT:    [[COND1:%.*]] = call i1 @cond()
 ; CHECK-NEXT:    br i1 [[COND1]], label [[EXIT:%.*]], label [[LOOP]]
 ; CHECK:       exit:
-; CHECK-NEXT:    [[BOOL:%.*]] = icmp eq i8 [[CONTAIN]], 0
-; CHECK-NEXT:    ret i1 [[BOOL]]
+; CHECK-NEXT:    ret i1 false
 ;
 entry:
   br label %loop
@@ -345,8 +342,7 @@ define i1 @known_non_zero_phi_select_test() {
 ; CHECK-NEXT:    [[COND1:%.*]] = call i1 @cond()
 ; CHECK-NEXT:    br i1 [[COND1]], label [[EXIT:%.*]], label [[LOOP]]
 ; CHECK:       exit:
-; CHECK-NEXT:    [[BOOL:%.*]] = icmp eq i8 [[CONTAIN]], 0
-; CHECK-NEXT:    ret i1 [[BOOL]]
+; CHECK-NEXT:    ret i1 false
 ;
 entry:
   br label %loop

@@ -3032,18 +3032,36 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
       return true;
 
     // Check if all incoming values are non-zero using recursion.
-    SimplifyQuery RecQ = Q.getWithoutCondContext();
-    unsigned NewDepth = std::max(Depth, MaxAnalysisRecursionDepth - 1);
     return llvm::all_of(PN->operands(), [&](const Use &U) {
-      if (U.get() == PN)
+      Value *IncValue = U.get();
+      if (IncValue == PN)
         return true;
-      RecQ.CxtI = PN->getIncomingBlock(U)->getTerminator();
+
+      Instruction *CxtI = PN->getIncomingBlock(U)->getTerminator();
+      unsigned NewDepth = std::max(Depth, MaxAnalysisRecursionDepth - 1);
+      if (auto *SI = dyn_cast<SelectInst>(IncValue)) {
+        if (SI->getTrueValue() == PN || SI->getFalseValue() == PN) {
+          IncValue = SI->getTrueValue() == PN ? SI->getFalseValue()
+                                              : SI->getTrueValue();
+          NewDepth = Depth;
+        }
+      } else if (auto *IncPhi = dyn_cast<PHINode>(IncValue);
+                 IncPhi && IncPhi->getNumIncomingValues() == 2) {
+        for (int Idx = 0; Idx < 2; ++Idx) {
+          if (IncPhi->getIncomingValue(Idx) == PN) {
+            IncValue = IncPhi->getIncomingValue(1 - Idx);
+            CxtI = IncPhi->getIncomingBlock(1 - Idx)->getTerminator();
+            break;
+          }
+        }
+      }
+      SimplifyQuery RecQ = Q.getWithoutCondContext().getWithInstruction(CxtI);
       // Check if the branch on the phi excludes zero.
       ICmpInst::Predicate Pred;
       Value *X;
       BasicBlock *TrueSucc, *FalseSucc;
       if (match(RecQ.CxtI,
-                m_Br(m_c_ICmp(Pred, m_Specific(U.get()), m_Value(X)),
+                m_Br(m_c_ICmp(Pred, m_Specific(IncValue), m_Value(X)),
                      m_BasicBlock(TrueSucc), m_BasicBlock(FalseSucc)))) {
         // Check for cases of duplicate successors.
         if ((TrueSucc == PN->getParent()) != (FalseSucc == PN->getParent())) {
@@ -3055,7 +3073,7 @@ static bool isKnownNonZeroFromOperator(const Operator *I,
         }
       }
       // Finally recurse on the edge and check it directly.
-      return isKnownNonZero(U.get(), DemandedElts, RecQ, NewDepth);
+      return isKnownNonZero(IncValue, DemandedElts, RecQ, NewDepth);
     });
   }
   case Instruction::InsertElement: {
