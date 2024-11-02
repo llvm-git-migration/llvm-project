@@ -1572,6 +1572,7 @@ static void computeKnownBitsFromOperator(const Operator *I,
         // edges so we don't overly clamp analysis.
         unsigned IncDepth = MaxAnalysisRecursionDepth - 1;
 
+		Instruction *CxtI = P->getIncomingBlock(u)->getTerminator();
         // If the Use is a select of this phi, use the knownbit of the other
         // operand to break the recursion.
         if (auto *SI = dyn_cast<SelectInst>(IncValue)) {
@@ -1580,14 +1581,22 @@ static void computeKnownBitsFromOperator(const Operator *I,
                                                : SI->getTrueValue();
             IncDepth = Depth + 1;
           }
+        } else if (auto *IncPhi = dyn_cast<PHINode>(IncValue);
+                   IncPhi && IncPhi->getNumIncomingValues() == 2) {
+          for (int Idx = 0; Idx < 2; ++Idx) {
+            if (IncPhi->getIncomingValue(Idx) == P) {
+              IncValue = IncPhi->getIncomingValue(1 - Idx);
+              CxtI = IncPhi->getIncomingBlock(1 - Idx)->getTerminator();
+              break;
+            }
+          }
         }
 
         // Change the context instruction to the "edge" that flows into the
         // phi. This is important because that is where the value is actually
         // "evaluated" even though it is used later somewhere else. (see also
         // D69571).
-        SimplifyQuery RecQ = Q.getWithoutCondContext();
-        RecQ.CxtI = P->getIncomingBlock(u)->getTerminator();
+        SimplifyQuery RecQ = Q.getWithoutCondContext().getWithInstruction(CxtI);
 
         Known2 = KnownBits(BitWidth);
         computeKnownBits(IncValue, DemandedElts, Known2, IncDepth, RecQ);
