@@ -16,6 +16,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/TargetFolder.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/Utils/Local.h"
@@ -25,6 +26,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalAlias.h"
 #include "llvm/IR/GlobalVariable.h"
@@ -590,12 +592,22 @@ Value *llvm::lowerObjectSizeCall(IntrinsicInst *ObjectSize,
                                  const TargetLibraryInfo *TLI,
                                  bool MustSucceed) {
   return lowerObjectSizeCall(ObjectSize, DL, TLI, /*AAResults=*/nullptr,
-                             MustSucceed);
+                             /*DT=*/nullptr,
+                             /*AC=*/nullptr, MustSucceed);
 }
 
 Value *llvm::lowerObjectSizeCall(
     IntrinsicInst *ObjectSize, const DataLayout &DL,
     const TargetLibraryInfo *TLI, AAResults *AA, bool MustSucceed,
+    SmallVectorImpl<Instruction *> *InsertedInstructions) {
+  return lowerObjectSizeCall(ObjectSize, DL, TLI, AA, /*DT=*/nullptr,
+                             /*AC=*/nullptr, MustSucceed, InsertedInstructions);
+}
+
+Value *llvm::lowerObjectSizeCall(
+    IntrinsicInst *ObjectSize, const DataLayout &DL,
+    const TargetLibraryInfo *TLI, AAResults *AA, DominatorTree *DT,
+    AssumptionCache *AC, bool MustSucceed,
     SmallVectorImpl<Instruction *> *InsertedInstructions) {
   assert(ObjectSize->getIntrinsicID() == Intrinsic::objectsize &&
          "ObjectSize must be a call to llvm.objectsize!");
@@ -603,6 +615,8 @@ Value *llvm::lowerObjectSizeCall(
   bool MaxVal = cast<ConstantInt>(ObjectSize->getArgOperand(1))->isZero();
   ObjectSizeOpts EvalOptions;
   EvalOptions.AA = AA;
+  EvalOptions.DT = DT;
+  EvalOptions.AC = AC;
 
   // Unless we have to fold this to something, try to be as accurate as
   // possible.
@@ -716,7 +730,6 @@ OffsetSpan ObjectSizeOffsetVisitor::computeImpl(Value *V) {
   // value that is passed to computeImpl.
   IntTyBits = DL.getIndexTypeSizeInBits(V->getType());
   Zero = APInt::getZero(IntTyBits);
-
   OffsetSpan ORT = computeValue(V);
 
   bool IndexTypeSizeChanged = InitialIntTyBits != IntTyBits;
@@ -794,6 +807,19 @@ OffsetSpan ObjectSizeOffsetVisitor::visitAllocaInst(AllocaInst &I) {
     Size = Size.umul_ov(NumElems, Overflow);
     return Overflow ? ObjectSizeOffsetVisitor::unknown()
                     : OffsetSpan(Zero, align(Size, I.getAlign()));
+  } else {
+    ConstantRange CR = computeConstantRange(ArraySize, /*ForSigned*/ false,
+                                            /*UseInstrInfo*/ true,
+                                            /*AssumptionCache=*/Options.AC,
+                                            /*CtxtI=*/&I, /*DT=*/Options.DT);
+    if (CR.isFullSet())
+      return ObjectSizeOffsetVisitor::unknown();
+    APInt Bound;
+    if (Options.EvalMode == ObjectSizeOpts::Mode::Max)
+      Bound = CR.getUnsignedMax();
+    else
+      Bound = CR.getUnsignedMin();
+    return OffsetSpan(Zero, align(Bound, I.getAlign()));
   }
   return ObjectSizeOffsetVisitor::unknown();
 }
@@ -811,7 +837,23 @@ OffsetSpan ObjectSizeOffsetVisitor::visitArgument(Argument &A) {
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitCallBase(CallBase &CB) {
-  if (std::optional<APInt> Size = getAllocSize(&CB, TLI))
+  if (std::optional<APInt> Size =
+          getAllocSize(&CB, TLI, [&CB, this](const Value *V) -> const Value * {
+            if (!V->getType()->isIntegerTy())
+              return V;
+            ConstantRange CR = computeConstantRange(
+                V, /*ForSigned*/ false, /*UseInstrInfo*/ true,
+                /*AssumptionCache=*/Options.AC,
+                /*CtxtI=*/&CB, /*DT=*/Options.DT);
+            if (CR.isFullSet())
+              return V;
+            APInt Bound;
+            if (Options.EvalMode == ObjectSizeOpts::Mode::Max)
+              Bound = CR.getUnsignedMax();
+            else
+              Bound = CR.getUnsignedMin();
+            return ConstantInt::get(V->getType(), Bound);
+          }))
     return OffsetSpan(Zero, *Size);
   return ObjectSizeOffsetVisitor::unknown();
 }
@@ -854,6 +896,42 @@ OffsetSpan ObjectSizeOffsetVisitor::visitGlobalVariable(GlobalVariable &GV) {
 
   APInt Size(IntTyBits, DL.getTypeAllocSize(GV.getValueType()));
   return OffsetSpan(Zero, align(Size, GV.getAlign()));
+}
+
+OffsetSpan ObjectSizeOffsetVisitor::visitGetElementPtr(GetElementPtrInst &GEP) {
+  OffsetSpan PtrData = computeImpl(GEP.getPointerOperand());
+  if (!PtrData.bothKnown())
+    return ObjectSizeOffsetVisitor::unknown();
+
+  if (Options.EvalMode == ObjectSizeOpts::Mode::Min ||
+      Options.EvalMode == ObjectSizeOpts::Mode::Max) {
+    unsigned BitWidth = PtrData.After.getBitWidth();
+    APInt ConstantOffset = Zero;
+    SmallMapVector<Value *, APInt, 4> VariableOffsets;
+    if (!GEP.collectOffset(DL, BitWidth, VariableOffsets, ConstantOffset))
+      return ObjectSizeOffsetVisitor::unknown();
+
+    ConstantRange AccumulatedRange = ConstantOffset;
+    for (auto const &VO : VariableOffsets) {
+      ConstantRange CR = computeConstantRange(
+          VO.first, /*ForSigned*/ true, /*UseInstrInfo*/ true,
+          /*AssumptionCache=*/Options.AC,
+          /*CtxtI=*/&GEP, /*DT=*/Options.DT);
+      if (CR.isFullSet())
+        return ObjectSizeOffsetVisitor::unknown();
+
+      AccumulatedRange = AccumulatedRange.add(CR.multiply(VO.second));
+    }
+
+    APInt Bound;
+    if (Options.EvalMode == ObjectSizeOpts::Mode::Min)
+      Bound = AccumulatedRange.getSignedMax();
+    else
+      Bound = AccumulatedRange.getSignedMin();
+
+    return {PtrData.Before + Bound, PtrData.After - Bound};
+  }
+  return ObjectSizeOffsetVisitor::unknown();
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitIntToPtrInst(IntToPtrInst &) {
