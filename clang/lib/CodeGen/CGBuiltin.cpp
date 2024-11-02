@@ -18634,6 +18634,36 @@ static Intrinsic::ID getDotProductIntrinsic(CGHLSLRuntime &RT, QualType QT) {
   return RT.getUDotIntrinsic();
 }
 
+Value *handleAsDoubleBuiltin(CodeGenFunction &CGF, const CallExpr *E) {
+  assert((E->getArg(0)->getType()->hasUnsignedIntegerRepresentation() &&
+          E->getArg(1)->getType()->hasUnsignedIntegerRepresentation()) &&
+         "asdouble operands types mismatch");
+  Value *OpLowBits = CGF.EmitScalarExpr(E->getArg(0));
+  Value *OpHighBits = CGF.EmitScalarExpr(E->getArg(1));
+
+  llvm::Type *ResultType = CGF.DoubleTy;
+  int N = 1;
+  if (auto *VTy = E->getArg(0)->getType()->getAs<clang::VectorType>()) {
+    N = VTy->getNumElements();
+    ResultType = llvm::FixedVectorType::get(CGF.DoubleTy, N);
+  }
+
+  if (!E->getArg(0)->getType()->isVectorType()) {
+    OpLowBits = CGF.Builder.CreateVectorSplat(1, OpLowBits);
+    OpHighBits = CGF.Builder.CreateVectorSplat(1, OpHighBits);
+  }
+
+  llvm::SmallVector<int> Mask;
+  for (int i = 0; i < N; i++) {
+    Mask.push_back(i);
+    Mask.push_back(i + N);
+  }
+
+  Value *BitVec = CGF.Builder.CreateShuffleVector(OpLowBits, OpHighBits, Mask);
+
+  return CGF.Builder.CreateBitCast(BitVec, ResultType);
+}
+
 Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
                                             const CallExpr *E,
                                             ReturnValueSlot ReturnValue) {
@@ -18655,6 +18685,8 @@ Value *CodeGenFunction::EmitHLSLBuiltinExpr(unsigned BuiltinID,
         CGM.getHLSLRuntime().getAnyIntrinsic(), ArrayRef<Value *>{Op0}, nullptr,
         "hlsl.any");
   }
+  case Builtin::BI__builtin_hlsl_asdouble:
+    return handleAsDoubleBuiltin(*this, E);
   case Builtin::BI__builtin_hlsl_elementwise_clamp: {
     Value *OpX = EmitScalarExpr(E->getArg(0));
     Value *OpMin = EmitScalarExpr(E->getArg(1));
