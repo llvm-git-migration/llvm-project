@@ -385,7 +385,6 @@ class MxMoveToCCRPseudo<MxOperand MEMOp>
 
 let mayLoad = 1 in
 foreach AM = MxMoveSupportedAMs in {
-  def MOV32c # AM : MxMoveToCCRPseudo<!cast<MxOpBundle>("MxOp32AddrMode_"#AM).Op>;
   def MOV16c # AM : MxMoveToCCR<!cast<MxOpBundle>("MxOp16AddrMode_"#AM).Op,
                                 !cast<MxEncMemOp>("MxMoveSrcOpEnc_"#AM)>;
   def MOV8c # AM  : MxMoveToCCRPseudo<!cast<MxOpBundle>("MxOp8AddrMode_"#AM).Op>;
@@ -426,9 +425,6 @@ class MxMoveFromCCR_RPseudo<MxOperand MEMOp>
 
 let mayStore = 1 in
 foreach AM = MxMoveSupportedAMs in {
-  def MOV32 # AM # c
-    : MxMoveFromCCR_M<!cast<MxOpBundle>("MxOp32AddrMode_"#AM).Op,
-                      !cast<MxEncMemOp>("MxMoveDstOpEnc_"#AM)>;
   def MOV16 # AM # c
     : MxMoveFromCCR_M<!cast<MxOpBundle>("MxOp16AddrMode_"#AM).Op,
                       !cast<MxEncMemOp>("MxMoveDstOpEnc_"#AM)>;

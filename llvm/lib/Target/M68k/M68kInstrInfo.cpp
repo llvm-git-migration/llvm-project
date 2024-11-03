@@ -30,9 +30,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 
-#include <cassert>
 #include <functional>
-#include <iterator>
 
 using namespace llvm;
 
