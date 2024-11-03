@@ -298,7 +298,9 @@ static cl::opt<bool> UseLoopVersioningLICM(
 
 static cl::opt<std::string> InstrumentColdFuncOnlyPath(
     "instrument-cold-function-only-path", cl::init(""),
-    cl::desc("File path for cold function only instrumentation"), cl::Hidden);
+    cl::desc("File path for cold function only instrumentation(requires use "
+             "with --pgo-instrument-cold-function-only)"),
+    cl::Hidden);
 
 extern cl::opt<std::string> UseCtxProfile;
 extern cl::opt<bool> PGOInstrumentColdFunctionOnly;
@@ -1188,10 +1190,13 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
   const bool IsCtxProfUse =
       !UseCtxProfile.empty() && Phase == ThinOrFullLTOPhase::ThinLTOPreLink;
 
-  // Enable cold function coverage instrumentation if
-  // InstrumentColdFuncOnlyPath is provided.
-  const bool IsColdFuncOnlyInstrGen = PGOInstrumentColdFunctionOnly =
-      IsPGOPreLink && !InstrumentColdFuncOnlyPath.empty();
+  assert(
+      (InstrumentColdFuncOnlyPath.empty() || PGOInstrumentColdFunctionOnly) &&
+      "--instrument-cold-function-only-path is provided but "
+      "--pgo-instrument-cold-function-only is not enabled");
+  const bool IsColdFuncOnlyInstrGen = PGOInstrumentColdFunctionOnly &&
+                                      IsPGOPreLink &&
+                                      !InstrumentColdFuncOnlyPath.empty();
 
   if (IsPGOInstrGen || IsPGOInstrUse || IsMemprofUse || IsCtxProfGen ||
       IsCtxProfUse || IsColdFuncOnlyInstrGen)
@@ -1596,9 +1601,9 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
 
 ModulePassManager
 PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
-                                           bool LTOPreLink) {
+                                           ThinOrFullLTOPhase Phase) {
   if (Level == OptimizationLevel::O0)
-    return buildO0DefaultPipeline(Level, LTOPreLink);
+    return buildO0DefaultPipeline(Level, Phase);
 
   ModulePassManager MPM;
 
@@ -1614,14 +1619,11 @@ PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
   // Apply module pipeline start EP callback.
   invokePipelineStartEPCallbacks(MPM, Level);
 
-  const ThinOrFullLTOPhase LTOPhase = LTOPreLink
-                                          ? ThinOrFullLTOPhase::FullLTOPreLink
-                                          : ThinOrFullLTOPhase::None;
   // Add the core simplification pipeline.
-  MPM.addPass(buildModuleSimplificationPipeline(Level, LTOPhase));
+  MPM.addPass(buildModuleSimplificationPipeline(Level, Phase));
 
   // Now add the optimization pipeline.
-  MPM.addPass(buildModuleOptimizationPipeline(Level, LTOPhase));
+  MPM.addPass(buildModuleOptimizationPipeline(Level, Phase));
 
   if (PGOOpt && PGOOpt->PseudoProbeForProfiling &&
       PGOOpt->Action == PGOOptions::SampleUse)
@@ -1630,7 +1632,7 @@ PassBuilder::buildPerModuleDefaultPipeline(OptimizationLevel Level,
   // Emit annotation remarks.
   addAnnotationRemarksPass(MPM);
 
-  if (LTOPreLink)
+  if (isLTOPreLink(Phase))
     addRequiredLTOPreLinkPasses(MPM);
   return MPM;
 }
@@ -1644,6 +1646,13 @@ PassBuilder::buildFatLTODefaultPipeline(OptimizationLevel Level, bool ThinLTO,
   else
     MPM.addPass(buildLTOPreLinkDefaultPipeline(Level));
   MPM.addPass(EmbedBitcodePass(ThinLTO, EmitSummary));
+
+  // If we're doing FatLTO w/ CFI enabled, we don't want the type tests in the
+  // object code, only in the bitcode section, so drop it before we run
+  // module optimization and generate machine code. If llvm.type.test() isn't in
+  // the IR, this won't do anything.
+  MPM.addPass(
+      LowerTypeTestsPass(nullptr, nullptr, lowertypetests::DropTestKind::All));
 
   // Use the ThinLTO post-link pipeline with sample profiling
   if (ThinLTO && PGOOpt && PGOOpt->Action == PGOOptions::SampleUse)
@@ -1661,7 +1670,7 @@ PassBuilder::buildFatLTODefaultPipeline(OptimizationLevel Level, bool ThinLTO,
 ModulePassManager
 PassBuilder::buildThinLTOPreLinkDefaultPipeline(OptimizationLevel Level) {
   if (Level == OptimizationLevel::O0)
-    return buildO0DefaultPipeline(Level, /*LTOPreLink*/true);
+    return buildO0DefaultPipeline(Level, ThinOrFullLTOPhase::ThinLTOPreLink);
 
   ModulePassManager MPM;
 
@@ -1782,7 +1791,7 @@ ModulePassManager
 PassBuilder::buildLTOPreLinkDefaultPipeline(OptimizationLevel Level) {
   // FIXME: We should use a customized pre-link pipeline!
   return buildPerModuleDefaultPipeline(Level,
-                                       /* LTOPreLink */ true);
+                                       ThinOrFullLTOPhase::FullLTOPreLink);
 }
 
 ModulePassManager
@@ -2112,8 +2121,9 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
   return MPM;
 }
 
-ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
-                                                      bool LTOPreLink) {
+ModulePassManager
+PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
+                                    ThinOrFullLTOPhase Phase) {
   assert(Level == OptimizationLevel::O0 &&
          "buildO0DefaultPipeline should only be used with O0");
 
@@ -2208,7 +2218,7 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
 
   invokeOptimizerLastEPCallbacks(MPM, Level);
 
-  if (LTOPreLink)
+  if (isLTOPreLink(Phase))
     addRequiredLTOPreLinkPasses(MPM);
 
   MPM.addPass(createModuleToFunctionPassAdaptor(AnnotationRemarksPass()));
