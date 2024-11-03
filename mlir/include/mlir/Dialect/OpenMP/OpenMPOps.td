@@ -170,7 +170,7 @@ def ParallelOp : OpenMP_Op<"parallel", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 
@@ -215,7 +215,7 @@ def TeamsOp : OpenMP_Op<"teams", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 
@@ -274,7 +274,7 @@ def SectionsOp : OpenMP_Op<"sections", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 
@@ -422,7 +422,7 @@ def WsloopOp : OpenMP_Op<"wsloop", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 
@@ -476,7 +476,7 @@ def SimdOp : OpenMP_Op<"simd", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 
@@ -680,7 +680,7 @@ def TaskloopOp : OpenMP_Op<"taskloop", traits = [
     custom<InReductionPrivateReductionRegion>(
         $region, $in_reduction_vars, type($in_reduction_vars),
         $in_reduction_byref, $in_reduction_syms, $private_vars,
-        type($private_vars), $private_syms, $reduction_vars,
+        type($private_vars), $private_syms, $reduction_mod, $reduction_vars,
         type($reduction_vars), $reduction_byref, $reduction_syms) attr-dict
   }];
 
@@ -1555,6 +1555,26 @@ def CancellationPointOp : OpenMP_Op<"cancellation_point", clauses = [
 
   let builders = [
     OpBuilder<(ins CArg<"const CancellationPointOperands &">:$clauses)>
+  ];
+
+  let hasVerifier = 1;
+}
+
+def ScanOp : OpenMP_Op<"scan", [
+    AttrSizedOperandSegments, RecipeInterface, IsolatedFromAbove
+  ], clauses = [
+  OpenMP_InclusiveClause, OpenMP_ExclusiveClause]> {
+  let summary = "scan directive";
+  let description = [{
+    The scan directive allows to specify scan reduction. Scan directive
+    should be enclosed with in a parent directive along with which , a
+    reduction clause with `InScan` modifier must be specified. Scan directive
+    allows to separate code blocks to input phase and scan phase in the region
+    enclosed by the parent.
+  }] # clausesDescription;
+
+  let builders = [
+    OpBuilder<(ins CArg<"const ScanOperands &">:$clauses)>
   ];
 
   let hasVerifier = 1;
