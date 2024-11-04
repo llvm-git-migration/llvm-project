@@ -522,3 +522,20 @@ module char
     call scalar('a')
   end
 end
+
+subroutine bug114080(arg)
+  character(*) :: arg(..)
+  interface
+   subroutine sub1(arg1) bind(c)
+     character(1) :: arg1(2,4)
+   end subroutine
+  end interface
+  !WARNING: Assumed-rank character array should not be storage sequence associated with a dummy argument
+  call sub1(arg)
+  !WARNING: Assumed-rank character array should not be storage sequence associated with a dummy argument
+  call sub2(arg)
+  contains
+    subroutine sub2(arg2)
+      character(*) :: arg2(10)
+    end subroutine sub2
+end subroutine
