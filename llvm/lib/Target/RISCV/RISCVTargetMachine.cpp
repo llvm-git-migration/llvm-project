@@ -337,8 +337,9 @@ public:
       : TargetPassConfig(TM, PM) {
     if (TM.getOptLevel() != CodeGenOptLevel::None)
       substitutePass(&PostRASchedulerID, &PostMachineSchedulerID);
-    setEnableSinkAndFold(EnableSinkFold);
-    EnableLoopTermFold = true;
+    getRISCVTargetMachine().Options.EnableSinkAndFold = true;
+    // setEnableSinkAndFold(EnableSinkFold);
+    EnableLoopTermFold = EnableSinkFold;
   }
 
   RISCVTargetMachine &getRISCVTargetMachine() const {
