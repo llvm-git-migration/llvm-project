@@ -12,7 +12,6 @@
 #include <__config>
 #include <__type_traits/conditional.h>
 #include <__type_traits/copy_cv.h>
-#include <__type_traits/is_enum.h>
 #include <__type_traits/is_integral.h>
 #include <__type_traits/is_unsigned.h>
 #include <__type_traits/nat.h>
@@ -47,7 +46,7 @@ typedef __type_list<unsigned char,
         > > > > > __unsigned_types;
 // clang-format on
 
-template <class _Tp, bool = is_integral<_Tp>::value || is_enum<_Tp>::value>
+template <class _Tp, bool = is_integral<_Tp>::value || __is_enum(_Tp)>
 struct __make_unsigned{};
 
 template <class _Tp>
@@ -72,7 +71,7 @@ template <> struct __make_unsigned<__uint128_t,        true> {typedef __uint128_
 // clang-format on
 
 template <class _Tp>
-using __make_unsigned_t = __copy_cv_t<_Tp, typename __make_unsigned<__remove_cv_t<_Tp> >::type>;
+using __make_unsigned_t = __copy_cv_t<_Tp, typename __make_unsigned<__remove_cv_t<_Tp>>::type>;
 
 #endif // __has_builtin(__make_unsigned)
 
