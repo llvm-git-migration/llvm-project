@@ -2145,67 +2145,16 @@ struct DenseMapInfo<T,
 };
 
 /// Add support for llvm style casts.
-/// We provide a cast between To and From if To and From is mlir::OpInterface or
+/// We provide a cast between To and From if To and From is mlir::OpState or
 /// derives from it.
 template <typename To, typename From>
 struct CastInfo<
     To, From,
     std::enable_if_t<
-        std::is_base_of_v<mlir::OpInterface<To, typename To::InterfaceTraits>,
-                          To> &&
-            std::is_base_of_v<mlir::OpInterface<std::remove_const_t<From>,
-                                                typename std::remove_const_t<
-                                                    From>::InterfaceTraits>,
-                              std::remove_const_t<From>>,
+        std::is_base_of_v<mlir::OpState, To> &&
+            std::is_base_of_v<mlir::OpState, std::remove_const_t<From>>,
         void>> : NullableValueCastFailed<To>,
                  DefaultDoCastIfPossible<To, From, CastInfo<To, From>> {
-
-  static inline bool isPossible(From &val) {
-    if constexpr (std::is_same_v<To, From>)
-      return true;
-    else
-      return mlir::OpInterface<To, typename To::InterfaceTraits>::
-          InterfaceBase::classof(
-              const_cast<std::remove_const_t<From> &>(val).getOperation());
-  }
-
-  static inline To doCast(From &val) {
-    return To(const_cast<std::remove_const_t<From> &>(val).getOperation());
-  }
-};
-
-template <typename OpT, typename = void>
-struct is_concrete_op_type : public std::false_type {};
-
-template <typename OpT, template <typename T> typename... Traits>
-constexpr auto concrete_op_base_type_impl(std::tuple<Traits<OpT>...>) {
-  return mlir::Op<OpT, Traits...>(nullptr);
-}
-
-template <typename OpT>
-using concrete_op_base_type =
-    decltype(concrete_op_base_type_impl<OpT>(typename OpT::traits()));
-
-template <typename OpT>
-struct is_concrete_op_type<
-    OpT, std::enable_if_t<std::is_base_of_v<concrete_op_base_type<OpT>, OpT>>>
-    : public std::true_type {};
-
-/// Add support for llvm style casts.
-/// We provide a cast between To and From if To is mlir::Op<ConcreteType,
-/// Trait0, Trait1, ...> or derives from it and From is mlir::OpInterface or
-/// derives from it.
-template <typename To, typename From>
-struct CastInfo<
-    To, From,
-    std::enable_if_t<
-        is_concrete_op_type<To>() &&
-        std::is_base_of_v<mlir::OpInterface<std::remove_const_t<From>,
-                                            typename std::remove_const_t<
-                                                From>::InterfaceTraits>,
-                          std::remove_const_t<From>>>>
-    : NullableValueCastFailed<To>,
-      DefaultDoCastIfPossible<To, From, CastInfo<To, From>> {
 
   static inline bool isPossible(From &val) {
     if constexpr (std::is_same_v<To, From>)
