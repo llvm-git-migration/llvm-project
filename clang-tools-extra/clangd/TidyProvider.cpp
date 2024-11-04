@@ -46,7 +46,7 @@ public:
         [this](std::optional<llvm::StringRef> Data) {
           Value.reset();
           if (Data && !Data->empty()) {
-            tidy::DiagCallback Diagnostics = [](const llvm::SMDiagnostic &D) {
+            auto Diagnostics = [](const llvm::SMDiagnostic &D) {
               switch (D.getKind()) {
               case llvm::SourceMgr::DK_Error:
                 elog("tidy-config error at {0}:{1}:{2}: {3}", D.getFilename(),
@@ -159,12 +159,15 @@ TidyProviderRef provideEnvironment() {
     return Ret;
   }();
 
-  if (User)
-    return
-        [](tidy::ClangTidyOptions &Opts, llvm::StringRef) { Opts.User = User; };
+  if (User) {
+    static const auto Provider = [](tidy::ClangTidyOptions &Opts, llvm::StringRef) { Opts.User = User; };
+    return Provider;
+  }
   // FIXME: Once function_ref and unique_function operator= operators handle
   // null values, this can return null.
-  return [](tidy::ClangTidyOptions &, llvm::StringRef) {};
+  static const auto EmptyProvider = [](tidy::ClangTidyOptions &,
+                                       llvm::StringRef) {};
+  return EmptyProvider;
 }
 
 TidyProviderRef provideDefaultChecks() {
@@ -178,10 +181,11 @@ TidyProviderRef provideDefaultChecks() {
       "bugprone-suspicious-missing-comma", "bugprone-unused-raii",
       "bugprone-unused-return-value", "misc-unused-using-decls",
       "misc-unused-alias-decls", "misc-definitions-in-headers");
-  return [](tidy::ClangTidyOptions &Opts, llvm::StringRef) {
+  static auto Provider =  [](tidy::ClangTidyOptions &Opts, llvm::StringRef) {
     if (!Opts.Checks || Opts.Checks->empty())
       Opts.Checks = DefaultChecks;
   };
+  return Provider;
 }
 
 TidyProvider addTidyChecks(llvm::StringRef Checks,
@@ -252,7 +256,7 @@ TidyProvider disableUnusableChecks(llvm::ArrayRef<std::string> ExtraBadChecks) {
 }
 
 TidyProviderRef provideClangdConfig() {
-  return [](tidy::ClangTidyOptions &Opts, llvm::StringRef) {
+  static const auto Provider = [](tidy::ClangTidyOptions &Opts, llvm::StringRef) {
     const auto &CurTidyConfig = Config::current().Diagnostics.ClangTidy;
     if (!CurTidyConfig.Checks.empty())
       mergeCheckList(Opts.Checks, CurTidyConfig.Checks);
@@ -262,6 +266,7 @@ TidyProviderRef provideClangdConfig() {
                                          tidy::ClangTidyOptions::ClangTidyValue(
                                              CheckOption.getValue(), 10000U));
   };
+  return Provider;
 }
 
 TidyProvider provideClangTidyFiles(ThreadsafeFS &TFS) {
