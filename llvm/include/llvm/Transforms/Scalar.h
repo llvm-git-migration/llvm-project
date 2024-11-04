@@ -153,9 +153,16 @@ extern char &InferAddressSpacesID;
 
 //===----------------------------------------------------------------------===//
 //
-// TLSVariableHoist - This pass reduce duplicated TLS address call.
+// LowerExpectIntrinsics - Removes llvm.expect intrinsics and creates
+// "block_weights" metadata.
+FunctionPass *createLowerExpectIntrinsicPass();
+
+//===----------------------------------------------------------------------===//
 //
-FunctionPass *createTLSVariableHoistPass();
+// LowerConstantIntrinsicss - Expand any remaining llvm.objectsize and
+// llvm.is.constant intrinsic calls, even for the unknown cases.
+//
+FunctionPass *createLowerConstantIntrinsicsPass();
 
 //===----------------------------------------------------------------------===//
 //
