@@ -231,53 +231,6 @@ public:
   }
 };
 
-class VPInstruction;
-class VPCSAHeaderPHIRecipe;
-class VPCSADataUpdateRecipe;
-class VPCSAExtractScalarRecipe;
-
-/// VPCSAState holds information required to vectorize a conditional scalar
-/// assignment.
-class VPCSAState {
-  VPValue *VPInitScalar = nullptr;
-  VPValue *VPInitData = nullptr;
-  VPInstruction *VPMaskPhi = nullptr;
-  VPInstruction *VPAnyActive = nullptr;
-  VPCSAHeaderPHIRecipe *VPPhiRecipe = nullptr;
-  VPCSADataUpdateRecipe *VPDataUpdate = nullptr;
-  VPCSAExtractScalarRecipe *VPExtractScalar = nullptr;
-
-public:
-  VPCSAState(VPValue *VPInitScalar, VPValue *InitData,
-             VPInstruction *MaskPhi)
-      : VPInitScalar(VPInitScalar), VPInitData(InitData), VPMaskPhi(MaskPhi) {}
-
-  VPCSAState(VPValue *VPInitScalar) : VPInitScalar(VPInitScalar) {}
-
-  VPValue *getVPInitScalar() const { return VPInitScalar; }
-
-  VPValue *getVPInitData() const { return VPInitData; }
-
-  VPInstruction *getVPMaskPhi() const { return VPMaskPhi; }
-
-  void setVPAnyActive(VPInstruction *AnyActive) { VPAnyActive = AnyActive; }
-  VPInstruction *getVPAnyActive() { return VPAnyActive; }
-
-  VPCSAHeaderPHIRecipe *getPhiRecipe() const { return VPPhiRecipe; }
-
-  void setPhiRecipe(VPCSAHeaderPHIRecipe *R) { VPPhiRecipe = R; }
-
-  VPCSADataUpdateRecipe *getDataUpdate() const { return VPDataUpdate; }
-  void setDataUpdate(VPCSADataUpdateRecipe *R) { VPDataUpdate = R; }
-
-  void setExtractScalarRecipe(VPCSAExtractScalarRecipe *R) {
-    VPExtractScalar = R;
-  }
-  VPCSAExtractScalarRecipe *getExtractScalarRecipe() const {
-    return VPExtractScalar;
-  }
-};
-
 /// VPTransformState holds information passed down when "executing" a VPlan,
 /// needed for generating the output IR.
 struct VPTransformState {
@@ -2893,7 +2846,10 @@ public:
   }
 
   VPValue *getVPInitData() { return getOperand(0); }
-  VPValue *getVPNewData() { return getOperand(1); }
+
+  VPValue *NewData = nullptr;
+  void setDataUpdate(VPValue *V) { NewData = V; }
+  VPValue *getVPNewData() { return NewData; }
 };
 
 class VPCSADataUpdateRecipe final : public VPSingleDefRecipe {
@@ -2947,15 +2903,17 @@ public:
 };
 
 class VPCSAExtractScalarRecipe final : public VPSingleDefRecipe {
+  BasicBlock *OrigExit = nullptr;
 public:
-  VPCSAExtractScalarRecipe(ArrayRef<VPValue *> Operands)
-      : VPSingleDefRecipe(VPDef::VPCSAExtractScalarSC, Operands) {}
+  VPCSAExtractScalarRecipe(ArrayRef<VPValue *> Operands, BasicBlock *OrigExit)
+      : VPSingleDefRecipe(VPDef::VPCSAExtractScalarSC, Operands),
+        OrigExit(OrigExit) {}
 
   ~VPCSAExtractScalarRecipe() override = default;
 
   VPCSAExtractScalarRecipe *clone() override {
     SmallVector<VPValue *> Ops(operands());
-    return new VPCSAExtractScalarRecipe(Ops);
+    return new VPCSAExtractScalarRecipe(Ops, OrigExit);
   }
 
   void execute(VPTransformState &State) override;
@@ -2968,6 +2926,8 @@ public:
   void print(raw_ostream &O, const Twine &Indent,
              VPSlotTracker &SlotTracker) const override;
 #endif
+
+  VP_CLASSOF_IMPL(VPDef::VPCSAExtractScalarSC)
 
   VPValue *getVPInitScalar() const { return getOperand(0); }
   VPValue *getVPMaskSel() const { return getOperand(1); }
@@ -3948,11 +3908,6 @@ class VPlan {
   /// definitions are VPValues that hold a pointer to their underlying IR.
   SmallVector<VPValue *, 16> VPLiveInsToFree;
 
-  /// Values used outside the plan. It contains live-outs that need fixing. Any
-  /// live-out that is fixed outside VPlan needs to be removed. The remaining
-  /// live-outs are fixed via VPLiveOut::fixPhi.
-  MapVector<PHINode *, VPLiveOut *> LiveOuts;
-
   /// Mapping from SCEVs to the VPValues representing their expansions.
   /// NOTE: This mapping is temporary and will be removed once all users have
   /// been modeled in VPlan directly.
@@ -4002,12 +3957,6 @@ public:
                                      PredicatedScalarEvolution &PSE,
                                      bool RequiresScalarEpilogueCheck,
                                      bool TailFolded, Loop *TheLoop);
-
-  void addCSAState(PHINode *Phi, VPCSAState *S) { CSAStates.insert({Phi, S}); }
-
-  MapVector<PHINode *, VPCSAState *> const &getCSAStates() const {
-    return CSAStates;
-  }
 
   /// Prepare the plan for execution, setting up the required live-in values.
   void prepareToExecute(Value *TripCount, Value *VectorTripCount,
