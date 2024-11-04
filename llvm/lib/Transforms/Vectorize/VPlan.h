@@ -231,53 +231,6 @@ public:
   }
 };
 
-class VPInstruction;
-class VPCSAHeaderPHIRecipe;
-class VPCSADataUpdateRecipe;
-class VPCSAExtractScalarRecipe;
-
-/// VPCSAState holds information required to vectorize a conditional scalar
-/// assignment.
-class VPCSAState {
-  VPValue *VPInitScalar = nullptr;
-  VPValue *VPInitData = nullptr;
-  VPInstruction *VPMaskPhi = nullptr;
-  VPInstruction *VPAnyActive = nullptr;
-  VPCSAHeaderPHIRecipe *VPPhiRecipe = nullptr;
-  VPCSADataUpdateRecipe *VPDataUpdate = nullptr;
-  VPCSAExtractScalarRecipe *VPExtractScalar = nullptr;
-
-public:
-  VPCSAState(VPValue *VPInitScalar, VPValue *InitData,
-             VPInstruction *MaskPhi)
-      : VPInitScalar(VPInitScalar), VPInitData(InitData), VPMaskPhi(MaskPhi) {}
-
-  VPCSAState(VPValue *VPInitScalar) : VPInitScalar(VPInitScalar) {}
-
-  VPValue *getVPInitScalar() const { return VPInitScalar; }
-
-  VPValue *getVPInitData() const { return VPInitData; }
-
-  VPInstruction *getVPMaskPhi() const { return VPMaskPhi; }
-
-  void setVPAnyActive(VPInstruction *AnyActive) { VPAnyActive = AnyActive; }
-  VPInstruction *getVPAnyActive() { return VPAnyActive; }
-
-  VPCSAHeaderPHIRecipe *getPhiRecipe() const { return VPPhiRecipe; }
-
-  void setPhiRecipe(VPCSAHeaderPHIRecipe *R) { VPPhiRecipe = R; }
-
-  VPCSADataUpdateRecipe *getDataUpdate() const { return VPDataUpdate; }
-  void setDataUpdate(VPCSADataUpdateRecipe *R) { VPDataUpdate = R; }
-
-  void setExtractScalarRecipe(VPCSAExtractScalarRecipe *R) {
-    VPExtractScalar = R;
-  }
-  VPCSAExtractScalarRecipe *getExtractScalarRecipe() const {
-    return VPExtractScalar;
-  }
-};
-
 /// VPTransformState holds information passed down when "executing" a VPlan,
 /// needed for generating the output IR.
 struct VPTransformState {
@@ -2893,7 +2846,10 @@ public:
   }
 
   VPValue *getVPInitData() { return getOperand(0); }
-  VPValue *getVPNewData() { return getOperand(1); }
+
+  VPValue *NewData = nullptr;
+  void setDataUpdate(VPValue *V) { NewData = V; }
+  VPValue *getVPNewData() { return NewData; }
 };
 
 class VPCSADataUpdateRecipe final : public VPSingleDefRecipe {
@@ -2968,6 +2924,8 @@ public:
   void print(raw_ostream &O, const Twine &Indent,
              VPSlotTracker &SlotTracker) const override;
 #endif
+
+  VP_CLASSOF_IMPL(VPDef::VPCSAExtractScalarSC)
 
   VPValue *getVPInitScalar() const { return getOperand(0); }
   VPValue *getVPMaskSel() const { return getOperand(1); }
@@ -4002,12 +3960,6 @@ public:
                                      PredicatedScalarEvolution &PSE,
                                      bool RequiresScalarEpilogueCheck,
                                      bool TailFolded, Loop *TheLoop);
-
-  void addCSAState(PHINode *Phi, VPCSAState *S) { CSAStates.insert({Phi, S}); }
-
-  MapVector<PHINode *, VPCSAState *> const &getCSAStates() const {
-    return CSAStates;
-  }
 
   /// Prepare the plan for execution, setting up the required live-in values.
   void prepareToExecute(Value *TripCount, Value *VectorTripCount,
