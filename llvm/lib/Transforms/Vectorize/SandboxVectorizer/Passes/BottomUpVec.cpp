@@ -181,8 +181,6 @@ Value *BottomUpVec::vectorizeRec(ArrayRef<Value *> Bndl) {
     }
     NewVec = createVectorInstr(Bndl, VecOperands);
 
-    // TODO: Notify DAG/Scheduler about new instruction
-
     // TODO: Collect potentially dead instructions.
     break;
   }
@@ -198,7 +196,8 @@ void BottomUpVec::tryVectorize(ArrayRef<Value *> Bndl) { vectorizeRec(Bndl); }
 
 bool BottomUpVec::runOnFunction(Function &F, const Analyses &A) {
   Legality = std::make_unique<LegalityAnalysis>(
-      A.getAA(), A.getScalarEvolution(), F.getParent()->getDataLayout());
+      A.getAA(), A.getScalarEvolution(), F.getParent()->getDataLayout(),
+      F.getContext());
   Change = false;
   // TODO: Start from innermost BBs first
   for (auto &BB : F) {
