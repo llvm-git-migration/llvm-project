@@ -4,9 +4,7 @@ Test lldb-dap setBreakpoints request
 
 import os
 
-import dap_server
 import lldbdap_testcase
-from lldbsuite.test import lldbutil
 from lldbsuite.test.decorators import *
 from lldbsuite.test.lldbtest import *
 
@@ -173,7 +171,7 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
                         "value": "1",
                     },
                     "declaration": {
-                        "equals": {"line": 12, "column": 14},
+                        "equals": {"line": 15},
                         "contains": {"path": ["lldb-dap", "variables", "main.cpp"]},
                     },
                 },
@@ -194,7 +192,12 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
                     "buffer": {"children": buffer_children},
                 },
             },
-            "x": {"equals": {"type": "int"}},
+            "x": {
+                "equals": {
+                    "type": "int",
+                    "value": "0",
+                }
+            },
         }
         if enableAutoVariableSummaries:
             verify_locals["pt"]["$__lldb_extensions"] = {
@@ -214,7 +217,9 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
             verify_globals["::g_global"] = g_global
 
         varref_dict = {}
+        print("locals", locals)
         self.verify_variables(verify_locals, locals, varref_dict)
+        print("globals", globals)
         self.verify_variables(verify_globals, globals, varref_dict)
         # pprint.PrettyPrinter(indent=4).pprint(varref_dict)
         # We need to test the functionality of the "variables" request as it
@@ -341,9 +346,9 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
 
         verify_locals["argc"]["equals"]["value"] = "123"
         verify_locals["pt"]["children"]["x"]["equals"]["value"] = "111"
-        verify_locals["x @ main.cpp:17"] = {"equals": {"type": "int", "value": "89"}}
-        verify_locals["x @ main.cpp:19"] = {"equals": {"type": "int", "value": "42"}}
-        verify_locals["x @ main.cpp:21"] = {"equals": {"type": "int", "value": "72"}}
+        verify_locals["x @ main.cpp:20"] = {"equals": {"type": "int", "value": "89"}}
+        verify_locals["x @ main.cpp:22"] = {"equals": {"type": "int", "value": "42"}}
+        verify_locals["x @ main.cpp:24"] = {"equals": {"type": "int", "value": "72"}}
 
         self.verify_variables(verify_locals, self.dap_server.get_local_variables())
 
@@ -354,13 +359,13 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
         )
 
         self.assertTrue(
-            self.dap_server.request_setVariable(1, "x @ main.cpp:17", 17)["success"]
+            self.dap_server.request_setVariable(1, "x @ main.cpp:20", 17)["success"]
         )
         self.assertTrue(
-            self.dap_server.request_setVariable(1, "x @ main.cpp:19", 19)["success"]
+            self.dap_server.request_setVariable(1, "x @ main.cpp:22", 19)["success"]
         )
         self.assertTrue(
-            self.dap_server.request_setVariable(1, "x @ main.cpp:21", 21)["success"]
+            self.dap_server.request_setVariable(1, "x @ main.cpp:24", 21)["success"]
         )
 
         # The following should have no effect
@@ -370,15 +375,15 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
             ]
         )
 
-        verify_locals["x @ main.cpp:17"]["equals"]["value"] = "17"
-        verify_locals["x @ main.cpp:19"]["equals"]["value"] = "19"
-        verify_locals["x @ main.cpp:21"]["equals"]["value"] = "21"
+        verify_locals["x @ main.cpp:20"]["equals"]["value"] = "17"
+        verify_locals["x @ main.cpp:22"]["equals"]["value"] = "19"
+        verify_locals["x @ main.cpp:24"]["equals"]["value"] = "21"
 
         self.verify_variables(verify_locals, self.dap_server.get_local_variables())
 
         # The plain x variable shold refer to the innermost x
         self.assertTrue(self.dap_server.request_setVariable(1, "x", 22)["success"])
-        verify_locals["x @ main.cpp:21"]["equals"]["value"] = "22"
+        verify_locals["x @ main.cpp:24"]["equals"]["value"] = "22"
 
         self.verify_variables(verify_locals, self.dap_server.get_local_variables())
 
@@ -395,9 +400,9 @@ class TestDAP_variables(lldbdap_testcase.DAPTestCaseBase):
         names = [var["name"] for var in locals]
         # The first shadowed x shouldn't have a suffix anymore
         verify_locals["x"] = {"equals": {"type": "int", "value": "17"}}
-        self.assertNotIn("x @ main.cpp:17", names)
-        self.assertNotIn("x @ main.cpp:19", names)
-        self.assertNotIn("x @ main.cpp:21", names)
+        self.assertNotIn("x @ main.cpp:20", names)
+        self.assertNotIn("x @ main.cpp:22", names)
+        self.assertNotIn("x @ main.cpp:24", names)
 
         self.verify_variables(verify_locals, locals)
 

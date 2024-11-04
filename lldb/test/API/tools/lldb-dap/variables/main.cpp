@@ -1,3 +1,4 @@
+#include <vector>
 
 #define BUFFER_SIZE 16
 struct PointType {
@@ -5,10 +6,12 @@ struct PointType {
   int y;
   int buffer[BUFFER_SIZE];
 };
-#include <vector>
+
+int test_indexedVariables();
+
 int g_global = 123;
 static int s_global = 234;
-int test_indexedVariables();
+
 int main(int argc, char const *argv[]) {
   static float s_local = 2.25;
   PointType pt = {11, 22, {0}};
