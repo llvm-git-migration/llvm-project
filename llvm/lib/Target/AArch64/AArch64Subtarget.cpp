@@ -335,6 +335,13 @@ void AArch64Subtarget::initializeProperties(bool HasMinSize) {
 
   if (AArch64MinimumJumpTableEntries.getNumOccurrences() > 0 || !HasMinSize)
     MinimumJumpTableEntries = AArch64MinimumJumpTableEntries;
+
+  // If SVE2 or SME is present (we are not SVE-1 only) and UseScalarIncVL is not
+  // otherwise set, enable it by default.
+  if (hasSVE2() || hasSME()) {
+    if (!getFeatureString().contains("use-scalar-inc-vl"))
+      UseScalarIncVL = true;
+  }
 }
 
 AArch64Subtarget::AArch64Subtarget(const Triple &TT, StringRef CPU,

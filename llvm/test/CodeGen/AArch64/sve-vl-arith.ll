@@ -2,6 +2,7 @@
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve -verify-machineinstrs < %s | FileCheck %s -check-prefix=NO_SCALAR_INC
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve -mattr=+use-scalar-inc-vl -verify-machineinstrs < %s | FileCheck %s
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve2 -verify-machineinstrs < %s | FileCheck %s
+; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve2 -mattr=-use-scalar-inc-vl -verify-machineinstrs < %s | FileCheck %s -check-prefix=NO_SCALAR_INC
 
 define <vscale x 8 x i16> @inch_vec(<vscale x 8 x i16> %a) {
 ; NO_SCALAR_INC-LABEL: inch_vec:

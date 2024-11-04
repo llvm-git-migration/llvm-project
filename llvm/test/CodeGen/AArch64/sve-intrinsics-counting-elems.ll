@@ -3,6 +3,8 @@
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve -mattr=+use-scalar-inc-vl < %s | FileCheck %s -check-prefix=USE_SCALAR_INC
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve2 < %s | FileCheck %s -check-prefix=USE_SCALAR_INC
 ; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sme -force-streaming < %s | FileCheck %s -check-prefix=USE_SCALAR_INC
+; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sve2 -mattr=-use-scalar-inc-vl < %s | FileCheck %s
+; RUN: llc -mtriple=aarch64-linux-gnu -mattr=+sme -mattr=-use-scalar-inc-vl -force-streaming < %s | FileCheck %s
 
 ;
 ; CNTB
