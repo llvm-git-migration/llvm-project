@@ -933,6 +933,17 @@ public:
   };
 };
 
+/// Represents a logical shift right.
+class GLshr : public GenericMachineInstr {
+public:
+  Register getSrcReg() const { return getOperand(1).getReg(); }
+  Register getShiftReg() const { return getOperand(2).getReg(); }
+
+  static bool classof(const MachineInstr *MI) {
+    return MI->getOpcode() == TargetOpcode::G_LSHR;
+  };
+};
+
 /// Represents a threeway compare.
 class GSUCmp : public GenericMachineInstr {
 public:
