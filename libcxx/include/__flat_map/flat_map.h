@@ -19,6 +19,7 @@
 #include <__algorithm/ranges_stable_sort.h>
 #include <__algorithm/ranges_unique.h>
 #include <__algorithm/ranges_upper_bound.h>
+#include <__algorithm/remove_if.h>
 #include <__compare/synth_three_way.h>
 #include <__concepts/convertible_to.h>
 #include <__concepts/swappable.h>
@@ -52,10 +53,9 @@
 #include <__type_traits/maybe_const.h>
 #include <__utility/exception_guard.h>
 #include <__utility/pair.h>
+#include <__vector/vector.h>
 #include <initializer_list>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
