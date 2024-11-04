@@ -142,13 +142,13 @@ __declspec(noinline) void *_recalloc_base(void *p, size_t n, size_t elem_size) {
   return _recalloc(p, n, elem_size);
 }
 
-__declspec(noinline) void *_aligned_malloc(size_t alignment, size_t size) {
+__declspec(noinline) void *_aligned_malloc(size_t size, size_t alignment) {
   GET_STACK_TRACE_MALLOC;
   return asan_aligned_alloc(alignment, size, &stack);
 }
 
-__declspec(noinline) void *_aligned_realloc(void *p, size_t alignment,
-                                            size_t size) {
+__declspec(noinline) void *_aligned_realloc(void *p, size_t size,
+                                            size_t alignment) {
   GET_STACK_TRACE_MALLOC;
   void *n = asan_aligned_alloc(alignment, size, &stack);
   if (n) {
@@ -161,6 +161,12 @@ __declspec(noinline) void *_aligned_realloc(void *p, size_t alignment,
 }
 
 __declspec(noinline) void *_aligned_free(void *p) { free(p); }
+
+__declspec(noinline) size_t _aligned_msize(void *p) {
+  GET_CURRENT_PC_BP_SP;
+
+  return asan_malloc_usable_size(p, pc, bp);
+}
 
 __declspec(noinline) void *_expand(void *memblock, size_t size) {
   // _expand is used in realloc-like functions to resize the buffer if possible.
@@ -192,9 +198,6 @@ __declspec(dllexport) void *__cdecl __asan_recalloc(void *const ptr,
                                                     const size_t size) {
   return _recalloc(ptr, nmemb, size);
 }
-
-// TODO(timurrrr): Might want to add support for _aligned_* allocation
-// functions to detect a bit more bugs.  Those functions seem to wrap malloc().
 
 int _CrtDbgReport(int, const char*, int,
                   const char*, const char*, ...) {
@@ -515,6 +518,10 @@ void ReplaceSystemMalloc() {
   TryToOverrideFunction("_msize_base", (uptr)_msize);
   TryToOverrideFunction("_expand", (uptr)_expand);
   TryToOverrideFunction("_expand_base", (uptr)_expand);
+  TryToOverrideFunction("_aligned_malloc", (uptr)_aligned_malloc);
+  TryToOverrideFunction("_aligned_realloc", (uptr)_aligned_realloc);
+  TryToOverrideFunction("_aligned_free", (uptr)_aligned_free);
+  TryToOverrideFunction("_aligned_msize", (uptr)_aligned_msize);
 
   if (flags()->windows_hook_rtl_allocators) {
     ASAN_INTERCEPT_FUNC(HeapSize);
