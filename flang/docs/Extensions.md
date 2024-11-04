@@ -391,6 +391,9 @@ end
   has the SAVE attribute and was initialized.
 * `PRINT namelistname` is accepted and interpreted as
   `WRITE(*,NML=namelistname)`, a near-universal extension.
+* A contiguous assumed-rank array can be storage associated with a
+  non-assumed-rank dummy array if it otherwise meets the requirements
+  for storage association in F'2023 15.5.2.12.
 
 ### Extensions supported when enabled by options
 

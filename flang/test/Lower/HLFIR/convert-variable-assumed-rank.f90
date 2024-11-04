@@ -19,12 +19,12 @@ end subroutine
 
 subroutine test_character_explicit_len(x, n)
   integer(8) :: n
-  character(n) :: x(..)
+  character(n), contiguous :: x(..)
   call takes_char(x)
 end subroutine
 
 subroutine test_character_assumed_len(x)
-  character(*) :: x(..)
+  character(*), contiguous :: x(..)
   call takes_char(x)
 end subroutine
 
@@ -58,7 +58,7 @@ end subroutine
 ! CHECK:         }
 
 ! CHECK-LABEL:   func.func @_QMassumed_rank_testsPtest_character_explicit_len(
-! CHECK-SAME:                                                                 %[[VAL_0:.*]]: !fir.box<!fir.array<*:!fir.char<1,?>>> {fir.bindc_name = "x"},
+! CHECK-SAME:                                                                 %[[VAL_0:.*]]: !fir.box<!fir.array<*:!fir.char<1,?>>> {fir.bindc_name = "x", fir.contiguous},
 ! CHECK-SAME:                                                                 %[[VAL_1:.*]]: !fir.ref<i64> {fir.bindc_name = "n"}) {
 ! CHECK:           %[[VAL_2:.*]] = fir.dummy_scope : !fir.dscope
 ! CHECK:           %[[VAL_3:.*]]:2 = hlfir.declare %[[VAL_1]] dummy_scope %[[VAL_2]] {uniq_name = "_QMassumed_rank_testsFtest_character_explicit_lenEn"} : (!fir.ref<i64>, !fir.dscope) -> (!fir.ref<i64>, !fir.ref<i64>)
@@ -66,15 +66,15 @@ end subroutine
 ! CHECK:           %[[VAL_5:.*]] = arith.constant 0 : i64
 ! CHECK:           %[[VAL_6:.*]] = arith.cmpi sgt, %[[VAL_4]], %[[VAL_5]] : i64
 ! CHECK:           %[[VAL_7:.*]] = arith.select %[[VAL_6]], %[[VAL_4]], %[[VAL_5]] : i64
-! CHECK:           %[[VAL_8:.*]]:2 = hlfir.declare %[[VAL_0]] typeparams %[[VAL_7]] dummy_scope %[[VAL_2]] {uniq_name = "_QMassumed_rank_testsFtest_character_explicit_lenEx"} : (!fir.box<!fir.array<*:!fir.char<1,?>>>, i64, !fir.dscope) -> (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.box<!fir.array<*:!fir.char<1,?>>>)
+! CHECK:           %[[VAL_8:.*]]:2 = hlfir.declare %[[VAL_0]] typeparams %[[VAL_7]] dummy_scope %[[VAL_2]] {fortran_attrs = #fir.var_attrs<contiguous>, uniq_name = "_QMassumed_rank_testsFtest_character_explicit_lenEx"} : (!fir.box<!fir.array<*:!fir.char<1,?>>>, i64, !fir.dscope) -> (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.box<!fir.array<*:!fir.char<1,?>>>)
 ! CHECK:           fir.call @_QPtakes_char(%[[VAL_8]]#0) fastmath<contract> : (!fir.box<!fir.array<*:!fir.char<1,?>>>) -> ()
 ! CHECK:           return
 ! CHECK:         }
 
 ! CHECK-LABEL:   func.func @_QMassumed_rank_testsPtest_character_assumed_len(
-! CHECK-SAME:                                                                %[[VAL_0:.*]]: !fir.box<!fir.array<*:!fir.char<1,?>>> {fir.bindc_name = "x"}) {
+! CHECK-SAME:                                                                %[[VAL_0:.*]]: !fir.box<!fir.array<*:!fir.char<1,?>>> {fir.bindc_name = "x", fir.contiguous}) {
 ! CHECK:           %[[VAL_1:.*]] = fir.dummy_scope : !fir.dscope
-! CHECK:           %[[VAL_2:.*]]:2 = hlfir.declare %[[VAL_0]] dummy_scope %[[VAL_1]] {uniq_name = "_QMassumed_rank_testsFtest_character_assumed_lenEx"} : (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.dscope) -> (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.box<!fir.array<*:!fir.char<1,?>>>)
+! CHECK:           %[[VAL_2:.*]]:2 = hlfir.declare %[[VAL_0]] dummy_scope %[[VAL_1]] {fortran_attrs = #fir.var_attrs<contiguous>, uniq_name = "_QMassumed_rank_testsFtest_character_assumed_lenEx"} : (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.dscope) -> (!fir.box<!fir.array<*:!fir.char<1,?>>>, !fir.box<!fir.array<*:!fir.char<1,?>>>)
 ! CHECK:           fir.call @_QPtakes_char(%[[VAL_2]]#0) fastmath<contract> : (!fir.box<!fir.array<*:!fir.char<1,?>>>) -> ()
 ! CHECK:           return
 ! CHECK:         }
