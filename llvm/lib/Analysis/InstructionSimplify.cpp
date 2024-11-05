@@ -4617,10 +4617,10 @@ static Value *simplifySelectWithFakeICmpEq(Value *CmpLHS, Value *CmpRHS,
 
 /// Try to simplify a select instruction when its condition operand is an
 /// integer equality comparison.
-static Value *simplifySelectWithICmpEq(Value *CmpLHS, Value *CmpRHS,
-                                       Value *TrueVal, Value *FalseVal,
-                                       const SimplifyQuery &Q,
-                                       unsigned MaxRecurse) {
+static Value *simplifySelectWithEquivalence(Value *CmpLHS, Value *CmpRHS,
+                                            Value *TrueVal, Value *FalseVal,
+                                            const SimplifyQuery &Q,
+                                            unsigned MaxRecurse) {
   if (simplifyWithOpReplaced(FalseVal, CmpLHS, CmpRHS, Q.getWithoutUndef(),
                              /* AllowRefinement */ false,
                              /* DropFlags */ nullptr, MaxRecurse) == TrueVal)
@@ -4635,23 +4635,21 @@ static Value *simplifySelectWithICmpEq(Value *CmpLHS, Value *CmpRHS,
 
 /// Try to simplify a select instruction when its condition operand is an
 /// integer comparison.
-static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
-                                         Value *FalseVal,
-                                         const SimplifyQuery &Q,
-                                         unsigned MaxRecurse) {
+static Value *simplifySelectWithCmpCond(Value *CondVal, Value *TrueVal,
+                                        Value *FalseVal, const SimplifyQuery &Q,
+                                        unsigned MaxRecurse) {
   ICmpInst::Predicate Pred;
   Value *CmpLHS, *CmpRHS;
-  if (!match(CondVal, m_ICmp(Pred, m_Value(CmpLHS), m_Value(CmpRHS))))
+  if (!match(CondVal, m_Cmp(Pred, m_Value(CmpLHS), m_Value(CmpRHS))))
     return nullptr;
+  auto *CI = cast<CmpInst>(CondVal);
 
   if (Value *V = simplifyCmpSelOfMaxMin(CmpLHS, CmpRHS, Pred, TrueVal, FalseVal))
     return V;
 
-  // Canonicalize ne to eq predicate.
-  if (Pred == ICmpInst::ICMP_NE) {
-    Pred = ICmpInst::ICMP_EQ;
+  // Canonicalize the equivalence, of which equality is a subset.
+  if (CI->isEquivalence(/*Invert=*/true))
     std::swap(TrueVal, FalseVal);
-  }
 
   // Check for integer min/max with a limit constant:
   // X > MIN_INT ? X : MIN_INT --> X
@@ -4659,9 +4657,7 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
   if (TrueVal->getType()->isIntOrIntVectorTy()) {
     Value *X, *Y;
     SelectPatternFlavor SPF =
-        matchDecomposedSelectPattern(cast<ICmpInst>(CondVal), TrueVal, FalseVal,
-                                     X, Y)
-            .Flavor;
+        matchDecomposedSelectPattern(CI, TrueVal, FalseVal, X, Y).Flavor;
     if (SelectPatternResult::isMinOrMax(SPF) && Pred == getMinMaxPred(SPF)) {
       APInt LimitC = getMinMaxLimit(getInverseMinMaxFlavor(SPF),
                                     X->getType()->getScalarSizeInBits());
@@ -4670,7 +4666,7 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
     }
   }
 
-  if (Pred == ICmpInst::ICMP_EQ && match(CmpRHS, m_Zero())) {
+  if (CI->isEquality() && match(CmpRHS, m_Zero())) {
     Value *X;
     const APInt *Y;
     if (match(CmpLHS, m_And(m_Value(X), m_APInt(Y))))
@@ -4698,7 +4694,7 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
     // (ShAmt == 0) ? X : fshl(X, X, ShAmt) --> fshl(X, X, ShAmt)
     // (ShAmt == 0) ? X : fshr(X, X, ShAmt) --> fshr(X, X, ShAmt)
     if (match(FalseVal, isRotate) && TrueVal == X && CmpLHS == ShAmt &&
-        Pred == ICmpInst::ICMP_EQ)
+        CI->isEquality())
       return FalseVal;
 
     // X == 0 ? abs(X) : -abs(X) --> -abs(X)
@@ -4720,12 +4716,12 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
   // If we have a scalar equality comparison, then we know the value in one of
   // the arms of the select. See if substituting this value into the arm and
   // simplifying the result yields the same value as the other arm.
-  if (Pred == ICmpInst::ICMP_EQ) {
-    if (Value *V = simplifySelectWithICmpEq(CmpLHS, CmpRHS, TrueVal, FalseVal,
-                                            Q, MaxRecurse))
+  if (CI->isEquivalence() || CI->isEquivalence(/*Invert=*/true)) {
+    if (Value *V = simplifySelectWithEquivalence(CmpLHS, CmpRHS, TrueVal,
+                                                 FalseVal, Q, MaxRecurse))
       return V;
-    if (Value *V = simplifySelectWithICmpEq(CmpRHS, CmpLHS, TrueVal, FalseVal,
-                                            Q, MaxRecurse))
+    if (Value *V = simplifySelectWithEquivalence(CmpRHS, CmpLHS, TrueVal,
+                                                 FalseVal, Q, MaxRecurse))
       return V;
 
     Value *X;
@@ -4734,11 +4730,11 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
     if (match(CmpLHS, m_Or(m_Value(X), m_Value(Y))) &&
         match(CmpRHS, m_Zero())) {
       // (X | Y) == 0 implies X == 0 and Y == 0.
-      if (Value *V = simplifySelectWithICmpEq(X, CmpRHS, TrueVal, FalseVal, Q,
-                                              MaxRecurse))
+      if (Value *V = simplifySelectWithEquivalence(X, CmpRHS, TrueVal, FalseVal,
+                                                   Q, MaxRecurse))
         return V;
-      if (Value *V = simplifySelectWithICmpEq(Y, CmpRHS, TrueVal, FalseVal, Q,
-                                              MaxRecurse))
+      if (Value *V = simplifySelectWithEquivalence(Y, CmpRHS, TrueVal, FalseVal,
+                                                   Q, MaxRecurse))
         return V;
     }
 
@@ -4746,11 +4742,11 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
     if (match(CmpLHS, m_And(m_Value(X), m_Value(Y))) &&
         match(CmpRHS, m_AllOnes())) {
       // (X & Y) == -1 implies X == -1 and Y == -1.
-      if (Value *V = simplifySelectWithICmpEq(X, CmpRHS, TrueVal, FalseVal, Q,
-                                              MaxRecurse))
+      if (Value *V = simplifySelectWithEquivalence(X, CmpRHS, TrueVal, FalseVal,
+                                                   Q, MaxRecurse))
         return V;
-      if (Value *V = simplifySelectWithICmpEq(Y, CmpRHS, TrueVal, FalseVal, Q,
-                                              MaxRecurse))
+      if (Value *V = simplifySelectWithEquivalence(Y, CmpRHS, TrueVal, FalseVal,
+                                                   Q, MaxRecurse))
         return V;
     }
   }
@@ -4952,7 +4948,7 @@ static Value *simplifySelectInst(Value *Cond, Value *TrueVal, Value *FalseVal,
   }
 
   if (Value *V =
-          simplifySelectWithICmpCond(Cond, TrueVal, FalseVal, Q, MaxRecurse))
+          simplifySelectWithCmpCond(Cond, TrueVal, FalseVal, Q, MaxRecurse))
     return V;
 
   if (Value *V = simplifySelectWithFCmp(Cond, TrueVal, FalseVal, Q))

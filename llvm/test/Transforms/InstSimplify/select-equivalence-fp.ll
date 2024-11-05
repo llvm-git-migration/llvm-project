@@ -3,10 +3,7 @@
 
 define float @select_fcmp_fsub_oeq(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fsub_oeq(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FADD:%.*]] = fsub float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float [[FADD]], float 0.000000e+00
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 0.000000e+00
 ;
   %fcmp = fcmp oeq float %y, 2.
   %fadd = fsub float %y, 2.
@@ -42,10 +39,7 @@ define float @select_fcmp_fsub_ueq(float %x, float %y) {
 
 define float @select_fcmp_fsub_ueq_nnan(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fsub_ueq_nnan(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp nnan ueq float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FADD:%.*]] = fsub float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float [[FADD]], float 0.000000e+00
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 0.000000e+00
 ;
   %fcmp = fcmp nnan ueq float %y, 2.
   %fadd = fsub float %y, 2.
@@ -55,10 +49,7 @@ define float @select_fcmp_fsub_ueq_nnan(float %x, float %y) {
 
 define float @select_fcmp_fsub_une(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fsub_une(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp une float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FADD:%.*]] = fsub float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float 0.000000e+00, float [[FADD]]
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 0.000000e+00
 ;
   %fcmp = fcmp une float %y, 2.
   %fadd = fsub float %y, 2.
@@ -94,10 +85,7 @@ define float @select_fcmp_fsub_one(float %x, float %y) {
 
 define float @select_fcmp_fsub_one_nnan(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fsub_one_nnan(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp nnan one float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FADD:%.*]] = fsub float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float 0.000000e+00, float [[FADD]]
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 0.000000e+00
 ;
   %fcmp = fcmp nnan one float %y, 2.
   %fadd = fsub float %y, 2.
@@ -107,10 +95,7 @@ define float @select_fcmp_fsub_one_nnan(float %x, float %y) {
 
 define float @select_fcmp_fadd(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fadd(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FADD:%.*]] = fadd float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float [[FADD]], float 4.000000e+00
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 4.000000e+00
 ;
   %fcmp = fcmp oeq float %y, 2.
   %fadd = fadd float %y, 2.
@@ -120,10 +105,7 @@ define float @select_fcmp_fadd(float %x, float %y) {
 
 define <2 x float> @select_fcmp_fadd_vec(<2 x float> %x, <2 x float> %y) {
 ; CHECK-LABEL: @select_fcmp_fadd_vec(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq <2 x float> [[Y:%.*]], <float 2.000000e+00, float 2.000000e+00>
-; CHECK-NEXT:    [[FADD:%.*]] = fadd <2 x float> [[Y]], <float 2.000000e+00, float 2.000000e+00>
-; CHECK-NEXT:    [[SEL:%.*]] = select <2 x i1> [[FCMP]], <2 x float> [[FADD]], <2 x float> <float 4.000000e+00, float 4.000000e+00>
-; CHECK-NEXT:    ret <2 x float> [[SEL]]
+; CHECK-NEXT:    ret <2 x float> <float 4.000000e+00, float 4.000000e+00>
 ;
   %fcmp = fcmp oeq <2 x float> %y, <float 2., float 2.>
   %fadd = fadd <2 x float> %y, <float 2., float 2.>
@@ -134,10 +116,7 @@ define <2 x float> @select_fcmp_fadd_vec(<2 x float> %x, <2 x float> %y) {
 
 define float @select_fcmp_fdiv(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_fdiv(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq float [[Y:%.*]], 2.000000e+00
-; CHECK-NEXT:    [[FDIV:%.*]] = fdiv float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float [[FDIV]], float 1.000000e+00
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 1.000000e+00
 ;
   %fcmp = fcmp oeq float %y, 2.
   %fdiv = fdiv float %y, 2.
@@ -147,10 +126,7 @@ define float @select_fcmp_fdiv(float %x, float %y) {
 
 define float @select_fcmp_frem(float %x, float %y) {
 ; CHECK-LABEL: @select_fcmp_frem(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq float [[Y:%.*]], 3.000000e+00
-; CHECK-NEXT:    [[FREM:%.*]] = frem float [[Y]], 2.000000e+00
-; CHECK-NEXT:    [[SEL:%.*]] = select i1 [[FCMP]], float [[FREM]], float 1.000000e+00
-; CHECK-NEXT:    ret float [[SEL]]
+; CHECK-NEXT:    ret float 1.000000e+00
 ;
   %fcmp = fcmp oeq float %y, 3.
   %frem = frem float %y, 2.
@@ -160,10 +136,7 @@ define float @select_fcmp_frem(float %x, float %y) {
 
 define <2 x float> @select_fcmp_insertelement(<2 x float> %x, <2 x float> %y) {
 ; CHECK-LABEL: @select_fcmp_insertelement(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp oeq <2 x float> [[Y:%.*]], <float 2.000000e+00, float 2.000000e+00>
-; CHECK-NEXT:    [[INSERT:%.*]] = insertelement <2 x float> [[Y]], float 4.000000e+00, i64 0
-; CHECK-NEXT:    [[RETVAL:%.*]] = select <2 x i1> [[CMP]], <2 x float> [[INSERT]], <2 x float> <float 4.000000e+00, float 2.000000e+00>
-; CHECK-NEXT:    ret <2 x float> [[RETVAL]]
+; CHECK-NEXT:    ret <2 x float> <float 4.000000e+00, float 2.000000e+00>
 ;
   %fcmp = fcmp oeq <2 x float> %y, <float 2., float 2.>
   %insert = insertelement <2 x float> %y, float 4., i64 0
@@ -173,10 +146,7 @@ define <2 x float> @select_fcmp_insertelement(<2 x float> %x, <2 x float> %y) {
 
 define <4 x float> @select_fcmp_shufflevector_select(<4 x float> %x, <4 x float> %y) {
 ; CHECK-LABEL: @select_fcmp_shufflevector_select(
-; CHECK-NEXT:    [[FCMP:%.*]] = fcmp oeq <4 x float> [[Y:%.*]], <float 2.000000e+00, float 2.000000e+00, float 2.000000e+00, float 2.000000e+00>
-; CHECK-NEXT:    [[SHUFFLE:%.*]] = shufflevector <4 x float> [[Y]], <4 x float> poison, <4 x i32> <i32 4, i32 1, i32 6, i32 3>
-; CHECK-NEXT:    [[SEL:%.*]] = select <4 x i1> [[FCMP]], <4 x float> [[SHUFFLE]], <4 x float> <float poison, float 2.000000e+00, float poison, float 2.000000e+00>
-; CHECK-NEXT:    ret <4 x float> [[SEL]]
+; CHECK-NEXT:    ret <4 x float> <float poison, float 2.000000e+00, float poison, float 2.000000e+00>
 ;
   %fcmp = fcmp oeq <4 x float> %y, <float 2., float 2., float 2., float 2.>
   %shuffle = shufflevector <4 x float> %y, <4 x float> poison, <4 x i32> <i32 4, i32 1, i32 6, i32 3>
