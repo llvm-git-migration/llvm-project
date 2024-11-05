@@ -258,9 +258,17 @@ static void stubifyDirectory(const StringRef InputPath, Context &Ctx) {
     // Skip header directories (include/Headers/PrivateHeaders) and module
     // files.
     StringRef Path = IT->path();
-    if (Path.ends_with("/include") || Path.ends_with("/Headers") ||
-        Path.ends_with("/PrivateHeaders") || Path.ends_with("/Modules") ||
-        Path.ends_with(".map") || Path.ends_with(".modulemap")) {
+    if (sys::fs::is_directory(Path)) {
+      const StringRef Stem = sys::path::stem(Path);
+      if (Stem == "include" || Stem == "Headers" || Stem == "PrivateHeaders" ||
+          Stem == "Modules") {
+        IT.no_push();
+        continue;
+      }
+    }
+
+    // Skip module files too.
+    if (Path.ends_with(".map") || Path.ends_with(".modulemap")) {
       IT.no_push();
       continue;
     }
