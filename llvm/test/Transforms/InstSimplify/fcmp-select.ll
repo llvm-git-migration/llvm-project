@@ -124,9 +124,7 @@ define double @ueq_zero_nsz(double %x) {
 
 define double @ueq_zero_nsz_nnan(double %x) {
 ; CHECK-LABEL: @ueq_zero_nsz_nnan(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp nnan ueq double [[X:%.*]], 0.000000e+00
-; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
-; CHECK-NEXT:    ret double [[COND]]
+; CHECK-NEXT:    ret double 0.000000e+00
 ;
   %cmp = fcmp nnan ueq double %x, 0.0
   %cond = select nsz i1 %cmp, double %x, double 0.0
@@ -168,9 +166,7 @@ define double @one_zero_nsz(double %x) {
 
 define double @one_zero_nsz_nnan(double %x) {
 ; CHECK-LABEL: @one_zero_nsz_nnan(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp nnan one double [[X:%.*]], 0.000000e+00
-; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
-; CHECK-NEXT:    ret double [[COND]]
+; CHECK-NEXT:    ret double [[COND:%.*]]
 ;
   %cmp = fcmp nnan one double %x, 0.0
   %cond = select nsz i1 %cmp, double %x, double 0.0
