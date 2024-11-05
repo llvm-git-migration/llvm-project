@@ -1,6 +1,6 @@
 int *funcToAnnotate(int *p);
 
-// TODO: support annotating ctors and 'this'.
+// TODO: support annotating ctors.
 struct MyClass {
     MyClass(int*);
     int *annotateThis();

@@ -23,6 +23,7 @@
 #include "llvm/Support/VersionTuple.h"
 #include "llvm/Support/YAMLTraits.h"
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 using namespace clang;
@@ -68,7 +69,7 @@ template <> struct ScalarEnumerationTraits<MethodKind> {
 
 namespace {
 struct Param {
-  unsigned Position;
+  int Position;
   std::optional<bool> NoEscape = false;
   std::optional<bool> Lifetimebound = false;
   std::optional<NullabilityKind> Nullability;
@@ -730,7 +731,9 @@ public:
     }
   }
 
-  void convertParams(const ParamsSeq &Params, FunctionInfo &OutInfo) {
+  std::optional<ParamInfo> convertParams(const ParamsSeq &Params,
+                                         FunctionInfo &OutInfo) {
+    std::optional<ParamInfo> thisOrSelf;
     for (const auto &P : Params) {
       ParamInfo PI;
       if (P.Nullability)
@@ -739,10 +742,16 @@ public:
       PI.setLifetimebound(P.Lifetimebound);
       PI.setType(std::string(P.Type));
       PI.setRetainCountConvention(P.RetainCountConvention);
-      if (OutInfo.Params.size() <= P.Position)
+      if (static_cast<int>(OutInfo.Params.size()) <= P.Position)
         OutInfo.Params.resize(P.Position + 1);
-      OutInfo.Params[P.Position] |= PI;
+      if (P.Position < -1)
+        emitError("parameter position smaller than -1 is not valid");
+      else if (P.Position == -1)
+        thisOrSelf = PI;
+      else
+        OutInfo.Params[P.Position] |= PI;
     }
+    return thisOrSelf;
   }
 
   void convertNullability(const NullabilitySeq &Nullability,
@@ -818,7 +827,7 @@ public:
     MI.ResultType = std::string(M.ResultType);
 
     // Translate parameter information.
-    convertParams(M.Params, MI);
+    MI.Self = convertParams(M.Params, MI);
 
     // Translate nullability info.
     convertNullability(M.Nullability, M.NullabilityOfRet, MI, M.Selector);
@@ -926,11 +935,17 @@ public:
                          TheNamespace.Items, SwiftVersion);
   }
 
-  void convertFunction(const Function &Function, FunctionInfo &FI) {
+  template <typename FuncOrMethodInfo>
+  void convertFunction(const Function &Function, FuncOrMethodInfo &FI) {
     convertAvailability(Function.Availability, FI, Function.Name);
     FI.setSwiftPrivate(Function.SwiftPrivate);
     FI.SwiftName = std::string(Function.SwiftName);
-    convertParams(Function.Params, FI);
+    if constexpr (std::is_same_v<FuncOrMethodInfo, CXXMethodInfo>) {
+      FI.This = convertParams(Function.Params, FI);
+    } else {
+      if (convertParams(Function.Params, FI))
+        emitError("position -1 is only valid for C++ and Objective-C methods");
+    }
     convertNullability(Function.Nullability, Function.NullabilityOfRet, FI,
                        Function.Name);
     FI.ResultType = std::string(Function.ResultType);
