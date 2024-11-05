@@ -1347,7 +1347,7 @@ private:
 
   bool softPromoteHalfType() const override { return true; }
 
-  virtual bool hasMultiplePredicateRegisters(EVT VT) const {
+  virtual bool hasMultiplePredicateRegisters(EVT VT) const override {
     return VT.isVector();
   }
 };
