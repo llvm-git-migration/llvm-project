@@ -6,7 +6,6 @@
 ;
 ; Tests for 16-bit floating point (half).
 
-
 ; Incoming half arguments added together and returned.
 define half @fun0(half %Op0, half %Op1) {
 ; NOVEC-LABEL: fun0:
@@ -680,6 +679,6 @@ define void @fun11() {
 ; VECTOR-NEXT:    lmg %r14, %r15, 272(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
-  call half @foo2(half 0.0, half 1.0, half 0.375)
+  call void @foo2(half 0.0, half 1.0, half 0.375)
   ret void
 }
