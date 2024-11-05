@@ -94,12 +94,12 @@ public:
 
     // True if the backend supports operations on the half LLVM IR type.
     // By setting this to false, conversions will happen for _Float16 around
-    // a statement by default with operations done in float. However, if
+    // a statement by default, with operations done in float. However, if
     // -ffloat16-excess-precision=none is given, no conversions will be made
     // and instead the backend will promote each half operation to float
     // individually.
     HasLegalHalfType = false;
-    // Allow half arguments and return values.
+    // Allow half arguments and return values (__fp16).
     HalfArgsAndReturns = true;
     // Support _Float16.
     HasFloat16 = true;

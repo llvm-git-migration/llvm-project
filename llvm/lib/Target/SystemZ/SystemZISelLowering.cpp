@@ -523,7 +523,9 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
     setTruncStoreAction(VT, MVT::f16, Expand);
   }
   setOperationAction(ISD::LOAD, MVT::f16, Custom);
+  setOperationAction(ISD::ATOMIC_LOAD, MVT::f16, Custom);
   setOperationAction(ISD::STORE, MVT::f16, Custom);
+  setOperationAction(ISD::ATOMIC_STORE, MVT::f16, Custom);
   setOperationAction(ISD::FP_ROUND, MVT::f16, Custom);
   setOperationAction(ISD::FP_EXTEND, MVT::f32, Custom);
   setOperationAction(ISD::FP_EXTEND, MVT::f64, Custom);
@@ -4596,6 +4598,22 @@ SDValue SystemZTargetLowering::lowerATOMIC_FENCE(SDValue Op,
   return DAG.getNode(ISD::MEMBARRIER, DL, MVT::Other, Op.getOperand(0));
 }
 
+SDValue SystemZTargetLowering::lowerATOMIC_LOAD(SDValue Op,
+                                                SelectionDAG &DAG) const {
+  MVT RegVT = Op.getSimpleValueType();
+  if (RegVT.getSizeInBits() == 128)
+    return lowerATOMIC_LDST_I128(Op, DAG);
+  return lowerLoadF16(Op, DAG);
+}
+
+SDValue SystemZTargetLowering::lowerATOMIC_STORE(SDValue Op,
+                                                 SelectionDAG &DAG) const {
+  auto *Node = cast<AtomicSDNode>(Op.getNode());
+  if (Node->getMemoryVT().getSizeInBits() == 128)
+    return lowerATOMIC_LDST_I128(Op, DAG);
+  return lowerStoreF16(Op, DAG);
+}
+
 SDValue SystemZTargetLowering::lowerATOMIC_LDST_I128(SDValue Op,
                                                      SelectionDAG &DAG) const {
   auto *Node = cast<AtomicSDNode>(Op.getNode());
@@ -6218,15 +6236,25 @@ SDValue SystemZTargetLowering::lowerLoadF16(SDValue Op,
   MVT RegVT = Op.getSimpleValueType();
   if (RegVT != MVT::f16)
     return SDValue();
-  LoadSDNode *Ld = cast<LoadSDNode>(Op.getNode());
-  SDLoc DL(Ld);
-  assert(EVT(RegVT) == Ld->getMemoryVT() && "Expected non-extending f16 load");
+
+  SDLoc DL(Op);
+  SDValue NewLd;
+  if (auto *AtomicLd = dyn_cast<AtomicSDNode>(Op.getNode())) {
+    assert(EVT(RegVT) == AtomicLd->getMemoryVT() && "Unhandled f16 load");
+    NewLd = DAG.getAtomic(ISD::ATOMIC_LOAD, DL, MVT::i16, MVT::i32,
+                          AtomicLd->getChain(), AtomicLd->getBasePtr(),
+                          AtomicLd->getMemOperand());
+    cast<AtomicSDNode>(NewLd)->setExtensionType(ISD::EXTLOAD);
+  } else {
+    LoadSDNode *Ld = cast<LoadSDNode>(Op.getNode());
+    assert(EVT(RegVT) == Ld->getMemoryVT() && "Unhandled f16 load");
+    NewLd = DAG.getExtLoad(ISD::EXTLOAD, DL, MVT::i32, Ld->getChain(),
+                           Ld->getBasePtr(), Ld->getPointerInfo(),
+                           MVT::i16, Ld->getOriginalAlign(),
+                           Ld->getMemOperand()->getFlags());
+  }
   // Load as integer, shift and insert into upper 2 bytes of the FP register.
   // TODO: Use VLEH if available.
-  SDValue NewLd = DAG.getExtLoad(ISD::EXTLOAD, DL, MVT::i32, Ld->getChain(),
-                                 Ld->getBasePtr(), Ld->getPointerInfo(),
-                                 MVT::i16, Ld->getOriginalAlign(),
-                                 Ld->getMemOperand()->getFlags());
   SDValue Shft = DAG.getNode(ISD::SHL, DL, MVT::i32, NewLd,
                              DAG.getConstant(16, DL, MVT::i32));
   SDValue BCast = DAG.getNode(ISD::BITCAST, DL, MVT::f32, Shft);
@@ -6237,20 +6265,25 @@ SDValue SystemZTargetLowering::lowerLoadF16(SDValue Op,
 
 SDValue SystemZTargetLowering::lowerStoreF16(SDValue Op,
                                              SelectionDAG &DAG) const {
-  StoreSDNode *St = cast<StoreSDNode>(Op.getNode());
-  SDLoc DL(St);
-  SDValue StoredVal = St->getValue();
+  SDValue StoredVal = Op->getOperand(1);
   MVT StoreVT = StoredVal.getSimpleValueType();
   if (StoreVT != MVT::f16)
     return SDValue();
-  // Move into a GPR, shift and store the 2 bytes.
-  // TODO: Use VSTEH if available.
+
+  // Move into a GPR, shift and store the 2 bytes.  TODO: Use VSTEH if available.
+  SDLoc DL(Op);
   SDNode *U32 = DAG.getMachineNode(TargetOpcode::IMPLICIT_DEF, DL, MVT::f32);
   SDValue In32 = DAG.getTargetInsertSubreg(SystemZ::subreg_h16, DL,
                                            MVT::f32, SDValue(U32, 0), StoredVal);
   SDValue BCast = DAG.getNode(ISD::BITCAST, DL, MVT::i32, In32);
   SDValue Shft = DAG.getNode(ISD::SRL, DL, MVT::i32, BCast,
                              DAG.getConstant(16, DL, MVT::i32));
+
+  if (auto *AtomicSt = dyn_cast<AtomicSDNode>(Op.getNode()))
+    return DAG.getAtomic(ISD::ATOMIC_STORE, DL, MVT::i16, AtomicSt->getChain(),
+                         Shft, AtomicSt->getBasePtr(), AtomicSt->getMemOperand());
+
+  StoreSDNode *St = cast<StoreSDNode>(Op.getNode());
   return DAG.getTruncStore(St->getChain(), DL, Shft, St->getBasePtr(),
                            MVT::i16, St->getMemOperand());
 }
@@ -6374,8 +6407,9 @@ SDValue SystemZTargetLowering::LowerOperation(SDValue Op,
   case ISD::ATOMIC_SWAP:
     return lowerATOMIC_LOAD_OP(Op, DAG, SystemZISD::ATOMIC_SWAPW);
   case ISD::ATOMIC_STORE:
+    return lowerATOMIC_STORE(Op, DAG);
   case ISD::ATOMIC_LOAD:
-    return lowerATOMIC_LDST_I128(Op, DAG);
+    return lowerATOMIC_LOAD(Op, DAG);
   case ISD::ATOMIC_LOAD_ADD:
     return lowerATOMIC_LOAD_OP(Op, DAG, SystemZISD::ATOMIC_LOADW_ADD);
   case ISD::ATOMIC_LOAD_SUB:
