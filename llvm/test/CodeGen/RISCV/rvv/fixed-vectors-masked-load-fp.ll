@@ -12,13 +12,8 @@ define void @masked_load_v1bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; CHECK-NEXT:    vfwcvtbf16.f.f.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, zero
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
-; CHECK-NEXT:    vmfeq.vf v8, v9, fa5
-; CHECK-NEXT:    vfirst.m a1, v8
-; CHECK-NEXT:    # implicit-def: $v8
-; CHECK-NEXT:    bnez a1, .LBB0_2
-; CHECK-NEXT:  # %bb.1: # %cond.load
-; CHECK-NEXT:    vle16.v v8, (a0)
-; CHECK-NEXT:  .LBB0_2: # %else
+; CHECK-NEXT:    vmfeq.vf v0, v9, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
 ; CHECK-NEXT:    vse16.v v8, (a2)
 ; CHECK-NEXT:    ret
   %m = load <1 x bfloat>, ptr %m_ptr
@@ -47,13 +42,8 @@ define void @masked_load_v1f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFHMIN-NEXT:    vfwcvt.f.f.v v9, v8
 ; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmfeq.vf v8, v9, fa5
-; ZVFHMIN-NEXT:    vfirst.m a1, v8
-; ZVFHMIN-NEXT:    # implicit-def: $v8
-; ZVFHMIN-NEXT:    bnez a1, .LBB1_2
-; ZVFHMIN-NEXT:  # %bb.1: # %cond.load
-; ZVFHMIN-NEXT:    vle16.v v8, (a0)
-; ZVFHMIN-NEXT:  .LBB1_2: # %else
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v9, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; ZVFHMIN-NEXT:    ret
   %m = load <1 x half>, ptr %m_ptr
@@ -118,28 +108,8 @@ define void @masked_load_v2bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; CHECK-NEXT:    vfwcvtbf16.f.f.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, zero
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
-; CHECK-NEXT:    vmfeq.vf v8, v9, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e8, mf8, ta, ma
-; CHECK-NEXT:    vmv.x.s a1, v8
-; CHECK-NEXT:    andi a3, a1, 1
-; CHECK-NEXT:    # implicit-def: $v8
-; CHECK-NEXT:    beqz a3, .LBB4_2
-; CHECK-NEXT:  # %bb.1: # %cond.load
-; CHECK-NEXT:    lh a3, 0(a0)
-; CHECK-NEXT:    fmv.x.h a4, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; CHECK-NEXT:    vmv.v.x v8, a3
-; CHECK-NEXT:    vslide1down.vx v8, v8, a4
-; CHECK-NEXT:  .LBB4_2: # %else
-; CHECK-NEXT:    andi a1, a1, 2
-; CHECK-NEXT:    beqz a1, .LBB4_4
-; CHECK-NEXT:  # %bb.3: # %cond.load1
-; CHECK-NEXT:    lh a0, 2(a0)
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a0
-; CHECK-NEXT:    vslideup.vi v8, v9, 1
-; CHECK-NEXT:  .LBB4_4: # %else2
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
+; CHECK-NEXT:    vmfeq.vf v0, v9, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
 ; CHECK-NEXT:    vse16.v v8, (a2)
 ; CHECK-NEXT:    ret
   %m = load <2 x bfloat>, ptr %m_ptr
@@ -168,28 +138,8 @@ define void @masked_load_v2f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFHMIN-NEXT:    vfwcvt.f.f.v v9, v8
 ; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmfeq.vf v8, v9, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e8, mf8, ta, ma
-; ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; ZVFHMIN-NEXT:    andi a3, a1, 1
-; ZVFHMIN-NEXT:    # implicit-def: $v8
-; ZVFHMIN-NEXT:    beqz a3, .LBB5_2
-; ZVFHMIN-NEXT:  # %bb.1: # %cond.load
-; ZVFHMIN-NEXT:    lh a3, 0(a0)
-; ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; ZVFHMIN-NEXT:    vmv.v.x v8, a3
-; ZVFHMIN-NEXT:    vslide1down.vx v8, v8, a4
-; ZVFHMIN-NEXT:  .LBB5_2: # %else
-; ZVFHMIN-NEXT:    andi a1, a1, 2
-; ZVFHMIN-NEXT:    beqz a1, .LBB5_4
-; ZVFHMIN-NEXT:  # %bb.3: # %cond.load1
-; ZVFHMIN-NEXT:    lh a0, 2(a0)
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a0
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 1
-; ZVFHMIN-NEXT:  .LBB5_4: # %else2
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v9, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; ZVFHMIN-NEXT:    ret
   %m = load <2 x half>, ptr %m_ptr
@@ -254,54 +204,8 @@ define void @masked_load_v4bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; CHECK-NEXT:    vfwcvtbf16.f.f.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, zero
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
-; CHECK-NEXT:    vmfeq.vf v8, v9, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
-; CHECK-NEXT:    vmv.x.s a1, v8
-; CHECK-NEXT:    andi a3, a1, 1
-; CHECK-NEXT:    # implicit-def: $v8
-; CHECK-NEXT:    bnez a3, .LBB8_5
-; CHECK-NEXT:  # %bb.1: # %else
-; CHECK-NEXT:    andi a3, a1, 2
-; CHECK-NEXT:    bnez a3, .LBB8_6
-; CHECK-NEXT:  .LBB8_2: # %else2
-; CHECK-NEXT:    andi a3, a1, 4
-; CHECK-NEXT:    bnez a3, .LBB8_7
-; CHECK-NEXT:  .LBB8_3: # %else5
-; CHECK-NEXT:    andi a1, a1, 8
-; CHECK-NEXT:    beqz a1, .LBB8_8
-; CHECK-NEXT:  .LBB8_4: # %cond.load7
-; CHECK-NEXT:    lh a0, 6(a0)
-; CHECK-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a0
-; CHECK-NEXT:    vslideup.vi v8, v9, 3
-; CHECK-NEXT:    vse16.v v8, (a2)
-; CHECK-NEXT:    ret
-; CHECK-NEXT:  .LBB8_5: # %cond.load
-; CHECK-NEXT:    lh a3, 0(a0)
-; CHECK-NEXT:    fmv.x.h a4, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
-; CHECK-NEXT:    vmv.v.x v8, a4
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf2, tu, ma
-; CHECK-NEXT:    vmv.s.x v8, a3
-; CHECK-NEXT:    andi a3, a1, 2
-; CHECK-NEXT:    beqz a3, .LBB8_2
-; CHECK-NEXT:  .LBB8_6: # %cond.load1
-; CHECK-NEXT:    lh a3, 2(a0)
-; CHECK-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vsetivli zero, 2, e16, mf2, tu, ma
-; CHECK-NEXT:    vslideup.vi v8, v9, 1
-; CHECK-NEXT:    andi a3, a1, 4
-; CHECK-NEXT:    beqz a3, .LBB8_3
-; CHECK-NEXT:  .LBB8_7: # %cond.load4
-; CHECK-NEXT:    lh a3, 4(a0)
-; CHECK-NEXT:    vsetivli zero, 3, e16, mf2, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 2
-; CHECK-NEXT:    andi a1, a1, 8
-; CHECK-NEXT:    bnez a1, .LBB8_4
-; CHECK-NEXT:  .LBB8_8:
-; CHECK-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
+; CHECK-NEXT:    vmfeq.vf v0, v9, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
 ; CHECK-NEXT:    vse16.v v8, (a2)
 ; CHECK-NEXT:    ret
   %m = load <4 x bfloat>, ptr %m_ptr
@@ -330,54 +234,8 @@ define void @masked_load_v4f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFHMIN-NEXT:    vfwcvt.f.f.v v9, v8
 ; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
-; ZVFHMIN-NEXT:    vmfeq.vf v8, v9, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
-; ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; ZVFHMIN-NEXT:    andi a3, a1, 1
-; ZVFHMIN-NEXT:    # implicit-def: $v8
-; ZVFHMIN-NEXT:    bnez a3, .LBB9_5
-; ZVFHMIN-NEXT:  # %bb.1: # %else
-; ZVFHMIN-NEXT:    andi a3, a1, 2
-; ZVFHMIN-NEXT:    bnez a3, .LBB9_6
-; ZVFHMIN-NEXT:  .LBB9_2: # %else2
-; ZVFHMIN-NEXT:    andi a3, a1, 4
-; ZVFHMIN-NEXT:    bnez a3, .LBB9_7
-; ZVFHMIN-NEXT:  .LBB9_3: # %else5
-; ZVFHMIN-NEXT:    andi a1, a1, 8
-; ZVFHMIN-NEXT:    beqz a1, .LBB9_8
-; ZVFHMIN-NEXT:  .LBB9_4: # %cond.load7
-; ZVFHMIN-NEXT:    lh a0, 6(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a0
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 3
-; ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; ZVFHMIN-NEXT:    ret
-; ZVFHMIN-NEXT:  .LBB9_5: # %cond.load
-; ZVFHMIN-NEXT:    lh a3, 0(a0)
-; ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf2, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; ZVFHMIN-NEXT:    andi a3, a1, 2
-; ZVFHMIN-NEXT:    beqz a3, .LBB9_2
-; ZVFHMIN-NEXT:  .LBB9_6: # %cond.load1
-; ZVFHMIN-NEXT:    lh a3, 2(a0)
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vsetivli zero, 2, e16, mf2, tu, ma
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 1
-; ZVFHMIN-NEXT:    andi a3, a1, 4
-; ZVFHMIN-NEXT:    beqz a3, .LBB9_3
-; ZVFHMIN-NEXT:  .LBB9_7: # %cond.load4
-; ZVFHMIN-NEXT:    lh a3, 4(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 3, e16, mf2, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 2
-; ZVFHMIN-NEXT:    andi a1, a1, 8
-; ZVFHMIN-NEXT:    bnez a1, .LBB9_4
-; ZVFHMIN-NEXT:  .LBB9_8:
-; ZVFHMIN-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v9, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; ZVFHMIN-NEXT:    ret
   %m = load <4 x half>, ptr %m_ptr
@@ -442,94 +300,8 @@ define void @masked_load_v8bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; CHECK-NEXT:    vfwcvtbf16.f.f.v v10, v8
 ; CHECK-NEXT:    fmv.w.x fa5, zero
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
-; CHECK-NEXT:    vmfeq.vf v8, v10, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
-; CHECK-NEXT:    vmv.x.s a1, v8
-; CHECK-NEXT:    andi a3, a1, 1
-; CHECK-NEXT:    # implicit-def: $v8
-; CHECK-NEXT:    bnez a3, .LBB12_9
-; CHECK-NEXT:  # %bb.1: # %else
-; CHECK-NEXT:    andi a3, a1, 2
-; CHECK-NEXT:    bnez a3, .LBB12_10
-; CHECK-NEXT:  .LBB12_2: # %else2
-; CHECK-NEXT:    andi a3, a1, 4
-; CHECK-NEXT:    bnez a3, .LBB12_11
-; CHECK-NEXT:  .LBB12_3: # %else5
-; CHECK-NEXT:    andi a3, a1, 8
-; CHECK-NEXT:    bnez a3, .LBB12_12
-; CHECK-NEXT:  .LBB12_4: # %else8
-; CHECK-NEXT:    andi a3, a1, 16
-; CHECK-NEXT:    bnez a3, .LBB12_13
-; CHECK-NEXT:  .LBB12_5: # %else11
-; CHECK-NEXT:    andi a3, a1, 32
-; CHECK-NEXT:    bnez a3, .LBB12_14
-; CHECK-NEXT:  .LBB12_6: # %else14
-; CHECK-NEXT:    andi a3, a1, 64
-; CHECK-NEXT:    bnez a3, .LBB12_15
-; CHECK-NEXT:  .LBB12_7: # %else17
-; CHECK-NEXT:    andi a1, a1, -128
-; CHECK-NEXT:    beqz a1, .LBB12_16
-; CHECK-NEXT:  .LBB12_8: # %cond.load19
-; CHECK-NEXT:    lh a0, 14(a0)
-; CHECK-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a0
-; CHECK-NEXT:    vslideup.vi v8, v9, 7
-; CHECK-NEXT:    vse16.v v8, (a2)
-; CHECK-NEXT:    ret
-; CHECK-NEXT:  .LBB12_9: # %cond.load
-; CHECK-NEXT:    lh a3, 0(a0)
-; CHECK-NEXT:    fmv.x.h a4, fa5
-; CHECK-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
-; CHECK-NEXT:    vmv.v.x v8, a4
-; CHECK-NEXT:    vsetvli zero, zero, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v8, a3
-; CHECK-NEXT:    andi a3, a1, 2
-; CHECK-NEXT:    beqz a3, .LBB12_2
-; CHECK-NEXT:  .LBB12_10: # %cond.load1
-; CHECK-NEXT:    lh a3, 2(a0)
-; CHECK-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; CHECK-NEXT:    vslideup.vi v8, v9, 1
-; CHECK-NEXT:    andi a3, a1, 4
-; CHECK-NEXT:    beqz a3, .LBB12_3
-; CHECK-NEXT:  .LBB12_11: # %cond.load4
-; CHECK-NEXT:    lh a3, 4(a0)
-; CHECK-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 2
-; CHECK-NEXT:    andi a3, a1, 8
-; CHECK-NEXT:    beqz a3, .LBB12_4
-; CHECK-NEXT:  .LBB12_12: # %cond.load7
-; CHECK-NEXT:    lh a3, 6(a0)
-; CHECK-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 3
-; CHECK-NEXT:    andi a3, a1, 16
-; CHECK-NEXT:    beqz a3, .LBB12_5
-; CHECK-NEXT:  .LBB12_13: # %cond.load10
-; CHECK-NEXT:    lh a3, 8(a0)
-; CHECK-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 4
-; CHECK-NEXT:    andi a3, a1, 32
-; CHECK-NEXT:    beqz a3, .LBB12_6
-; CHECK-NEXT:  .LBB12_14: # %cond.load13
-; CHECK-NEXT:    lh a3, 10(a0)
-; CHECK-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 5
-; CHECK-NEXT:    andi a3, a1, 64
-; CHECK-NEXT:    beqz a3, .LBB12_7
-; CHECK-NEXT:  .LBB12_15: # %cond.load16
-; CHECK-NEXT:    lh a3, 12(a0)
-; CHECK-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; CHECK-NEXT:    vmv.s.x v9, a3
-; CHECK-NEXT:    vslideup.vi v8, v9, 6
-; CHECK-NEXT:    andi a1, a1, -128
-; CHECK-NEXT:    bnez a1, .LBB12_8
-; CHECK-NEXT:  .LBB12_16:
-; CHECK-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; CHECK-NEXT:    vmfeq.vf v0, v10, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
 ; CHECK-NEXT:    vse16.v v8, (a2)
 ; CHECK-NEXT:    ret
   %m = load <8 x bfloat>, ptr %m_ptr
@@ -558,94 +330,8 @@ define void @masked_load_v8f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFHMIN-NEXT:    vfwcvt.f.f.v v10, v8
 ; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
-; ZVFHMIN-NEXT:    vmfeq.vf v8, v10, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
-; ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; ZVFHMIN-NEXT:    andi a3, a1, 1
-; ZVFHMIN-NEXT:    # implicit-def: $v8
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_9
-; ZVFHMIN-NEXT:  # %bb.1: # %else
-; ZVFHMIN-NEXT:    andi a3, a1, 2
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_10
-; ZVFHMIN-NEXT:  .LBB13_2: # %else2
-; ZVFHMIN-NEXT:    andi a3, a1, 4
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_11
-; ZVFHMIN-NEXT:  .LBB13_3: # %else5
-; ZVFHMIN-NEXT:    andi a3, a1, 8
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_12
-; ZVFHMIN-NEXT:  .LBB13_4: # %else8
-; ZVFHMIN-NEXT:    andi a3, a1, 16
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_13
-; ZVFHMIN-NEXT:  .LBB13_5: # %else11
-; ZVFHMIN-NEXT:    andi a3, a1, 32
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_14
-; ZVFHMIN-NEXT:  .LBB13_6: # %else14
-; ZVFHMIN-NEXT:    andi a3, a1, 64
-; ZVFHMIN-NEXT:    bnez a3, .LBB13_15
-; ZVFHMIN-NEXT:  .LBB13_7: # %else17
-; ZVFHMIN-NEXT:    andi a1, a1, -128
-; ZVFHMIN-NEXT:    beqz a1, .LBB13_16
-; ZVFHMIN-NEXT:  .LBB13_8: # %cond.load19
-; ZVFHMIN-NEXT:    lh a0, 14(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a0
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 7
-; ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; ZVFHMIN-NEXT:    ret
-; ZVFHMIN-NEXT:  .LBB13_9: # %cond.load
-; ZVFHMIN-NEXT:    lh a3, 0(a0)
-; ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
-; ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; ZVFHMIN-NEXT:    andi a3, a1, 2
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_2
-; ZVFHMIN-NEXT:  .LBB13_10: # %cond.load1
-; ZVFHMIN-NEXT:    lh a3, 2(a0)
-; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 1
-; ZVFHMIN-NEXT:    andi a3, a1, 4
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_3
-; ZVFHMIN-NEXT:  .LBB13_11: # %cond.load4
-; ZVFHMIN-NEXT:    lh a3, 4(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 2
-; ZVFHMIN-NEXT:    andi a3, a1, 8
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_4
-; ZVFHMIN-NEXT:  .LBB13_12: # %cond.load7
-; ZVFHMIN-NEXT:    lh a3, 6(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 3
-; ZVFHMIN-NEXT:    andi a3, a1, 16
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_5
-; ZVFHMIN-NEXT:  .LBB13_13: # %cond.load10
-; ZVFHMIN-NEXT:    lh a3, 8(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 4
-; ZVFHMIN-NEXT:    andi a3, a1, 32
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_6
-; ZVFHMIN-NEXT:  .LBB13_14: # %cond.load13
-; ZVFHMIN-NEXT:    lh a3, 10(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 5
-; ZVFHMIN-NEXT:    andi a3, a1, 64
-; ZVFHMIN-NEXT:    beqz a3, .LBB13_7
-; ZVFHMIN-NEXT:  .LBB13_15: # %cond.load16
-; ZVFHMIN-NEXT:    lh a3, 12(a0)
-; ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; ZVFHMIN-NEXT:    vmv.s.x v9, a3
-; ZVFHMIN-NEXT:    vslideup.vi v8, v9, 6
-; ZVFHMIN-NEXT:    andi a1, a1, -128
-; ZVFHMIN-NEXT:    bnez a1, .LBB13_8
-; ZVFHMIN-NEXT:  .LBB13_16:
-; ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, ta, ma
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v10, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; ZVFHMIN-NEXT:    ret
   %m = load <8 x half>, ptr %m_ptr
@@ -703,359 +389,17 @@ define void @masked_load_v8f64(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 declare <8 x double> @llvm.masked.load.v8f64(ptr, i32, <8 x i1>, <8 x double>)
 
 define void @masked_load_v16bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
-; RV32-LABEL: masked_load_v16bf16:
-; RV32:       # %bb.0:
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-NEXT:    vle16.v v8, (a1)
-; RV32-NEXT:    vfwcvtbf16.f.f.v v12, v8
-; RV32-NEXT:    fmv.w.x fa5, zero
-; RV32-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
-; RV32-NEXT:    vmfeq.vf v8, v12, fa5
-; RV32-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV32-NEXT:    vmv.x.s a1, v8
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    # implicit-def: $v8m2
-; RV32-NEXT:    bnez a3, .LBB16_18
-; RV32-NEXT:  # %bb.1: # %else
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    bnez a3, .LBB16_19
-; RV32-NEXT:  .LBB16_2: # %else2
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    bnez a3, .LBB16_20
-; RV32-NEXT:  .LBB16_3: # %else5
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    bnez a3, .LBB16_21
-; RV32-NEXT:  .LBB16_4: # %else8
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    bnez a3, .LBB16_22
-; RV32-NEXT:  .LBB16_5: # %else11
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    bnez a3, .LBB16_23
-; RV32-NEXT:  .LBB16_6: # %else14
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    bnez a3, .LBB16_24
-; RV32-NEXT:  .LBB16_7: # %else17
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    bnez a3, .LBB16_25
-; RV32-NEXT:  .LBB16_8: # %else20
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    bnez a3, .LBB16_26
-; RV32-NEXT:  .LBB16_9: # %else23
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    bnez a3, .LBB16_27
-; RV32-NEXT:  .LBB16_10: # %else26
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    bnez a3, .LBB16_28
-; RV32-NEXT:  .LBB16_11: # %else29
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bltz a3, .LBB16_29
-; RV32-NEXT:  .LBB16_12: # %else32
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bltz a3, .LBB16_30
-; RV32-NEXT:  .LBB16_13: # %else35
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bltz a3, .LBB16_31
-; RV32-NEXT:  .LBB16_14: # %else38
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bgez a3, .LBB16_16
-; RV32-NEXT:  .LBB16_15: # %cond.load40
-; RV32-NEXT:    lh a3, 28(a0)
-; RV32-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 14
-; RV32-NEXT:  .LBB16_16: # %else41
-; RV32-NEXT:    lui a3, 1048568
-; RV32-NEXT:    and a1, a1, a3
-; RV32-NEXT:    beqz a1, .LBB16_32
-; RV32-NEXT:  # %bb.17: # %cond.load43
-; RV32-NEXT:    lh a0, 30(a0)
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-NEXT:    vmv.s.x v10, a0
-; RV32-NEXT:    vslideup.vi v8, v10, 15
-; RV32-NEXT:    vse16.v v8, (a2)
-; RV32-NEXT:    ret
-; RV32-NEXT:  .LBB16_18: # %cond.load
-; RV32-NEXT:    lh a3, 0(a0)
-; RV32-NEXT:    fmv.x.h a4, fa5
-; RV32-NEXT:    vmv.v.x v8, a4
-; RV32-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v8, a3
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    beqz a3, .LBB16_2
-; RV32-NEXT:  .LBB16_19: # %cond.load1
-; RV32-NEXT:    lh a3, 2(a0)
-; RV32-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v10, 1
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    beqz a3, .LBB16_3
-; RV32-NEXT:  .LBB16_20: # %cond.load4
-; RV32-NEXT:    lh a3, 4(a0)
-; RV32-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 2
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    beqz a3, .LBB16_4
-; RV32-NEXT:  .LBB16_21: # %cond.load7
-; RV32-NEXT:    lh a3, 6(a0)
-; RV32-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 3
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    beqz a3, .LBB16_5
-; RV32-NEXT:  .LBB16_22: # %cond.load10
-; RV32-NEXT:    lh a3, 8(a0)
-; RV32-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 4
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    beqz a3, .LBB16_6
-; RV32-NEXT:  .LBB16_23: # %cond.load13
-; RV32-NEXT:    lh a3, 10(a0)
-; RV32-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 5
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    beqz a3, .LBB16_7
-; RV32-NEXT:  .LBB16_24: # %cond.load16
-; RV32-NEXT:    lh a3, 12(a0)
-; RV32-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 6
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    beqz a3, .LBB16_8
-; RV32-NEXT:  .LBB16_25: # %cond.load19
-; RV32-NEXT:    lh a3, 14(a0)
-; RV32-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 7
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    beqz a3, .LBB16_9
-; RV32-NEXT:  .LBB16_26: # %cond.load22
-; RV32-NEXT:    lh a3, 16(a0)
-; RV32-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 8
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    beqz a3, .LBB16_10
-; RV32-NEXT:  .LBB16_27: # %cond.load25
-; RV32-NEXT:    lh a3, 18(a0)
-; RV32-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 9
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    beqz a3, .LBB16_11
-; RV32-NEXT:  .LBB16_28: # %cond.load28
-; RV32-NEXT:    lh a3, 20(a0)
-; RV32-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 10
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bgez a3, .LBB16_12
-; RV32-NEXT:  .LBB16_29: # %cond.load31
-; RV32-NEXT:    lh a3, 22(a0)
-; RV32-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 11
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bgez a3, .LBB16_13
-; RV32-NEXT:  .LBB16_30: # %cond.load34
-; RV32-NEXT:    lh a3, 24(a0)
-; RV32-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 12
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bgez a3, .LBB16_14
-; RV32-NEXT:  .LBB16_31: # %cond.load37
-; RV32-NEXT:    lh a3, 26(a0)
-; RV32-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v10, a3
-; RV32-NEXT:    vslideup.vi v8, v10, 13
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bltz a3, .LBB16_15
-; RV32-NEXT:    j .LBB16_16
-; RV32-NEXT:  .LBB16_32:
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-NEXT:    vse16.v v8, (a2)
-; RV32-NEXT:    ret
-;
-; RV64-LABEL: masked_load_v16bf16:
-; RV64:       # %bb.0:
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-NEXT:    vle16.v v8, (a1)
-; RV64-NEXT:    vfwcvtbf16.f.f.v v12, v8
-; RV64-NEXT:    fmv.w.x fa5, zero
-; RV64-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
-; RV64-NEXT:    vmfeq.vf v8, v12, fa5
-; RV64-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV64-NEXT:    vmv.x.s a1, v8
-; RV64-NEXT:    andi a3, a1, 1
-; RV64-NEXT:    # implicit-def: $v8m2
-; RV64-NEXT:    bnez a3, .LBB16_18
-; RV64-NEXT:  # %bb.1: # %else
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    bnez a3, .LBB16_19
-; RV64-NEXT:  .LBB16_2: # %else2
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    bnez a3, .LBB16_20
-; RV64-NEXT:  .LBB16_3: # %else5
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    bnez a3, .LBB16_21
-; RV64-NEXT:  .LBB16_4: # %else8
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    bnez a3, .LBB16_22
-; RV64-NEXT:  .LBB16_5: # %else11
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    bnez a3, .LBB16_23
-; RV64-NEXT:  .LBB16_6: # %else14
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    bnez a3, .LBB16_24
-; RV64-NEXT:  .LBB16_7: # %else17
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    bnez a3, .LBB16_25
-; RV64-NEXT:  .LBB16_8: # %else20
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    bnez a3, .LBB16_26
-; RV64-NEXT:  .LBB16_9: # %else23
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    bnez a3, .LBB16_27
-; RV64-NEXT:  .LBB16_10: # %else26
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    bnez a3, .LBB16_28
-; RV64-NEXT:  .LBB16_11: # %else29
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bltz a3, .LBB16_29
-; RV64-NEXT:  .LBB16_12: # %else32
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bltz a3, .LBB16_30
-; RV64-NEXT:  .LBB16_13: # %else35
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bltz a3, .LBB16_31
-; RV64-NEXT:  .LBB16_14: # %else38
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bgez a3, .LBB16_16
-; RV64-NEXT:  .LBB16_15: # %cond.load40
-; RV64-NEXT:    lh a3, 28(a0)
-; RV64-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 14
-; RV64-NEXT:  .LBB16_16: # %else41
-; RV64-NEXT:    lui a3, 1048568
-; RV64-NEXT:    and a1, a1, a3
-; RV64-NEXT:    beqz a1, .LBB16_32
-; RV64-NEXT:  # %bb.17: # %cond.load43
-; RV64-NEXT:    lh a0, 30(a0)
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-NEXT:    vmv.s.x v10, a0
-; RV64-NEXT:    vslideup.vi v8, v10, 15
-; RV64-NEXT:    vse16.v v8, (a2)
-; RV64-NEXT:    ret
-; RV64-NEXT:  .LBB16_18: # %cond.load
-; RV64-NEXT:    lh a3, 0(a0)
-; RV64-NEXT:    fmv.x.h a4, fa5
-; RV64-NEXT:    vmv.v.x v8, a4
-; RV64-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v8, a3
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    beqz a3, .LBB16_2
-; RV64-NEXT:  .LBB16_19: # %cond.load1
-; RV64-NEXT:    lh a3, 2(a0)
-; RV64-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-NEXT:    vslideup.vi v8, v10, 1
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    beqz a3, .LBB16_3
-; RV64-NEXT:  .LBB16_20: # %cond.load4
-; RV64-NEXT:    lh a3, 4(a0)
-; RV64-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 2
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    beqz a3, .LBB16_4
-; RV64-NEXT:  .LBB16_21: # %cond.load7
-; RV64-NEXT:    lh a3, 6(a0)
-; RV64-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 3
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    beqz a3, .LBB16_5
-; RV64-NEXT:  .LBB16_22: # %cond.load10
-; RV64-NEXT:    lh a3, 8(a0)
-; RV64-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 4
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    beqz a3, .LBB16_6
-; RV64-NEXT:  .LBB16_23: # %cond.load13
-; RV64-NEXT:    lh a3, 10(a0)
-; RV64-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 5
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    beqz a3, .LBB16_7
-; RV64-NEXT:  .LBB16_24: # %cond.load16
-; RV64-NEXT:    lh a3, 12(a0)
-; RV64-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 6
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    beqz a3, .LBB16_8
-; RV64-NEXT:  .LBB16_25: # %cond.load19
-; RV64-NEXT:    lh a3, 14(a0)
-; RV64-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 7
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    beqz a3, .LBB16_9
-; RV64-NEXT:  .LBB16_26: # %cond.load22
-; RV64-NEXT:    lh a3, 16(a0)
-; RV64-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 8
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    beqz a3, .LBB16_10
-; RV64-NEXT:  .LBB16_27: # %cond.load25
-; RV64-NEXT:    lh a3, 18(a0)
-; RV64-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 9
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    beqz a3, .LBB16_11
-; RV64-NEXT:  .LBB16_28: # %cond.load28
-; RV64-NEXT:    lh a3, 20(a0)
-; RV64-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 10
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bgez a3, .LBB16_12
-; RV64-NEXT:  .LBB16_29: # %cond.load31
-; RV64-NEXT:    lh a3, 22(a0)
-; RV64-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 11
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bgez a3, .LBB16_13
-; RV64-NEXT:  .LBB16_30: # %cond.load34
-; RV64-NEXT:    lh a3, 24(a0)
-; RV64-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 12
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bgez a3, .LBB16_14
-; RV64-NEXT:  .LBB16_31: # %cond.load37
-; RV64-NEXT:    lh a3, 26(a0)
-; RV64-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v10, a3
-; RV64-NEXT:    vslideup.vi v8, v10, 13
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bltz a3, .LBB16_15
-; RV64-NEXT:    j .LBB16_16
-; RV64-NEXT:  .LBB16_32:
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-NEXT:    vse16.v v8, (a2)
-; RV64-NEXT:    ret
+; CHECK-LABEL: masked_load_v16bf16:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
+; CHECK-NEXT:    vle16.v v8, (a1)
+; CHECK-NEXT:    vfwcvtbf16.f.f.v v12, v8
+; CHECK-NEXT:    fmv.w.x fa5, zero
+; CHECK-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
+; CHECK-NEXT:    vmfeq.vf v0, v12, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
+; CHECK-NEXT:    vse16.v v8, (a2)
+; CHECK-NEXT:    ret
   %m = load <16 x bfloat>, ptr %m_ptr
   %mask = fcmp oeq <16 x bfloat> %m, zeroinitializer
   %load = call <16 x bfloat> @llvm.masked.load.v16bf16(ptr %a, i32 8, <16 x i1> %mask, <16 x bfloat> undef)
@@ -1075,359 +419,17 @@ define void @masked_load_v16f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFH-NEXT:    vse16.v v8, (a2)
 ; ZVFH-NEXT:    ret
 ;
-; RV32-ZVFHMIN-LABEL: masked_load_v16f16:
-; RV32-ZVFHMIN:       # %bb.0:
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a1)
-; RV32-ZVFHMIN-NEXT:    vfwcvt.f.f.v v12, v8
-; RV32-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmfeq.vf v8, v12, fa5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    # implicit-def: $v8m2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_18
-; RV32-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_19
-; RV32-ZVFHMIN-NEXT:  .LBB17_2: # %else2
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_20
-; RV32-ZVFHMIN-NEXT:  .LBB17_3: # %else5
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_21
-; RV32-ZVFHMIN-NEXT:  .LBB17_4: # %else8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_22
-; RV32-ZVFHMIN-NEXT:  .LBB17_5: # %else11
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_23
-; RV32-ZVFHMIN-NEXT:  .LBB17_6: # %else14
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_24
-; RV32-ZVFHMIN-NEXT:  .LBB17_7: # %else17
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_25
-; RV32-ZVFHMIN-NEXT:  .LBB17_8: # %else20
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_26
-; RV32-ZVFHMIN-NEXT:  .LBB17_9: # %else23
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_27
-; RV32-ZVFHMIN-NEXT:  .LBB17_10: # %else26
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB17_28
-; RV32-ZVFHMIN-NEXT:  .LBB17_11: # %else29
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB17_29
-; RV32-ZVFHMIN-NEXT:  .LBB17_12: # %else32
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB17_30
-; RV32-ZVFHMIN-NEXT:  .LBB17_13: # %else35
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB17_31
-; RV32-ZVFHMIN-NEXT:  .LBB17_14: # %else38
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB17_16
-; RV32-ZVFHMIN-NEXT:  .LBB17_15: # %cond.load40
-; RV32-ZVFHMIN-NEXT:    lh a3, 28(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 14
-; RV32-ZVFHMIN-NEXT:  .LBB17_16: # %else41
-; RV32-ZVFHMIN-NEXT:    lui a3, 1048568
-; RV32-ZVFHMIN-NEXT:    and a1, a1, a3
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB17_32
-; RV32-ZVFHMIN-NEXT:  # %bb.17: # %cond.load43
-; RV32-ZVFHMIN-NEXT:    lh a0, 30(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a0
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 15
-; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV32-ZVFHMIN-NEXT:    ret
-; RV32-ZVFHMIN-NEXT:  .LBB17_18: # %cond.load
-; RV32-ZVFHMIN-NEXT:    lh a3, 0(a0)
-; RV32-ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; RV32-ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_2
-; RV32-ZVFHMIN-NEXT:  .LBB17_19: # %cond.load1
-; RV32-ZVFHMIN-NEXT:    lh a3, 2(a0)
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 1
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_3
-; RV32-ZVFHMIN-NEXT:  .LBB17_20: # %cond.load4
-; RV32-ZVFHMIN-NEXT:    lh a3, 4(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 2
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_4
-; RV32-ZVFHMIN-NEXT:  .LBB17_21: # %cond.load7
-; RV32-ZVFHMIN-NEXT:    lh a3, 6(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 3
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_5
-; RV32-ZVFHMIN-NEXT:  .LBB17_22: # %cond.load10
-; RV32-ZVFHMIN-NEXT:    lh a3, 8(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_6
-; RV32-ZVFHMIN-NEXT:  .LBB17_23: # %cond.load13
-; RV32-ZVFHMIN-NEXT:    lh a3, 10(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 5
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_7
-; RV32-ZVFHMIN-NEXT:  .LBB17_24: # %cond.load16
-; RV32-ZVFHMIN-NEXT:    lh a3, 12(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 6
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_8
-; RV32-ZVFHMIN-NEXT:  .LBB17_25: # %cond.load19
-; RV32-ZVFHMIN-NEXT:    lh a3, 14(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 7
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_9
-; RV32-ZVFHMIN-NEXT:  .LBB17_26: # %cond.load22
-; RV32-ZVFHMIN-NEXT:    lh a3, 16(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_10
-; RV32-ZVFHMIN-NEXT:  .LBB17_27: # %cond.load25
-; RV32-ZVFHMIN-NEXT:    lh a3, 18(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 9
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB17_11
-; RV32-ZVFHMIN-NEXT:  .LBB17_28: # %cond.load28
-; RV32-ZVFHMIN-NEXT:    lh a3, 20(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 10
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB17_12
-; RV32-ZVFHMIN-NEXT:  .LBB17_29: # %cond.load31
-; RV32-ZVFHMIN-NEXT:    lh a3, 22(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 11
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB17_13
-; RV32-ZVFHMIN-NEXT:  .LBB17_30: # %cond.load34
-; RV32-ZVFHMIN-NEXT:    lh a3, 24(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 12
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB17_14
-; RV32-ZVFHMIN-NEXT:  .LBB17_31: # %cond.load37
-; RV32-ZVFHMIN-NEXT:    lh a3, 26(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 13
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB17_15
-; RV32-ZVFHMIN-NEXT:    j .LBB17_16
-; RV32-ZVFHMIN-NEXT:  .LBB17_32:
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV32-ZVFHMIN-NEXT:    ret
-;
-; RV64-ZVFHMIN-LABEL: masked_load_v16f16:
-; RV64-ZVFHMIN:       # %bb.0:
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-ZVFHMIN-NEXT:    vle16.v v8, (a1)
-; RV64-ZVFHMIN-NEXT:    vfwcvt.f.f.v v12, v8
-; RV64-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmfeq.vf v8, v12, fa5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    # implicit-def: $v8m2
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_18
-; RV64-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_19
-; RV64-ZVFHMIN-NEXT:  .LBB17_2: # %else2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_20
-; RV64-ZVFHMIN-NEXT:  .LBB17_3: # %else5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_21
-; RV64-ZVFHMIN-NEXT:  .LBB17_4: # %else8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_22
-; RV64-ZVFHMIN-NEXT:  .LBB17_5: # %else11
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_23
-; RV64-ZVFHMIN-NEXT:  .LBB17_6: # %else14
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_24
-; RV64-ZVFHMIN-NEXT:  .LBB17_7: # %else17
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_25
-; RV64-ZVFHMIN-NEXT:  .LBB17_8: # %else20
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_26
-; RV64-ZVFHMIN-NEXT:  .LBB17_9: # %else23
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_27
-; RV64-ZVFHMIN-NEXT:  .LBB17_10: # %else26
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB17_28
-; RV64-ZVFHMIN-NEXT:  .LBB17_11: # %else29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB17_29
-; RV64-ZVFHMIN-NEXT:  .LBB17_12: # %else32
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB17_30
-; RV64-ZVFHMIN-NEXT:  .LBB17_13: # %else35
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB17_31
-; RV64-ZVFHMIN-NEXT:  .LBB17_14: # %else38
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB17_16
-; RV64-ZVFHMIN-NEXT:  .LBB17_15: # %cond.load40
-; RV64-ZVFHMIN-NEXT:    lh a3, 28(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 14
-; RV64-ZVFHMIN-NEXT:  .LBB17_16: # %else41
-; RV64-ZVFHMIN-NEXT:    lui a3, 1048568
-; RV64-ZVFHMIN-NEXT:    and a1, a1, a3
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB17_32
-; RV64-ZVFHMIN-NEXT:  # %bb.17: # %cond.load43
-; RV64-ZVFHMIN-NEXT:    lh a0, 30(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a0
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 15
-; RV64-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV64-ZVFHMIN-NEXT:    ret
-; RV64-ZVFHMIN-NEXT:  .LBB17_18: # %cond.load
-; RV64-ZVFHMIN-NEXT:    lh a3, 0(a0)
-; RV64-ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; RV64-ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_2
-; RV64-ZVFHMIN-NEXT:  .LBB17_19: # %cond.load1
-; RV64-ZVFHMIN-NEXT:    lh a3, 2(a0)
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 1
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_3
-; RV64-ZVFHMIN-NEXT:  .LBB17_20: # %cond.load4
-; RV64-ZVFHMIN-NEXT:    lh a3, 4(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_4
-; RV64-ZVFHMIN-NEXT:  .LBB17_21: # %cond.load7
-; RV64-ZVFHMIN-NEXT:    lh a3, 6(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_5
-; RV64-ZVFHMIN-NEXT:  .LBB17_22: # %cond.load10
-; RV64-ZVFHMIN-NEXT:    lh a3, 8(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 4
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_6
-; RV64-ZVFHMIN-NEXT:  .LBB17_23: # %cond.load13
-; RV64-ZVFHMIN-NEXT:    lh a3, 10(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_7
-; RV64-ZVFHMIN-NEXT:  .LBB17_24: # %cond.load16
-; RV64-ZVFHMIN-NEXT:    lh a3, 12(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 6
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_8
-; RV64-ZVFHMIN-NEXT:  .LBB17_25: # %cond.load19
-; RV64-ZVFHMIN-NEXT:    lh a3, 14(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 7
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_9
-; RV64-ZVFHMIN-NEXT:  .LBB17_26: # %cond.load22
-; RV64-ZVFHMIN-NEXT:    lh a3, 16(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_10
-; RV64-ZVFHMIN-NEXT:  .LBB17_27: # %cond.load25
-; RV64-ZVFHMIN-NEXT:    lh a3, 18(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 9
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB17_11
-; RV64-ZVFHMIN-NEXT:  .LBB17_28: # %cond.load28
-; RV64-ZVFHMIN-NEXT:    lh a3, 20(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 10
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB17_12
-; RV64-ZVFHMIN-NEXT:  .LBB17_29: # %cond.load31
-; RV64-ZVFHMIN-NEXT:    lh a3, 22(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 11
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB17_13
-; RV64-ZVFHMIN-NEXT:  .LBB17_30: # %cond.load34
-; RV64-ZVFHMIN-NEXT:    lh a3, 24(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 12
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB17_14
-; RV64-ZVFHMIN-NEXT:  .LBB17_31: # %cond.load37
-; RV64-ZVFHMIN-NEXT:    lh a3, 26(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v10, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v10, 13
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB17_15
-; RV64-ZVFHMIN-NEXT:    j .LBB17_16
-; RV64-ZVFHMIN-NEXT:  .LBB17_32:
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
-; RV64-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV64-ZVFHMIN-NEXT:    ret
+; ZVFHMIN-LABEL: masked_load_v16f16:
+; ZVFHMIN:       # %bb.0:
+; ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, ta, ma
+; ZVFHMIN-NEXT:    vle16.v v8, (a1)
+; ZVFHMIN-NEXT:    vfwcvt.f.f.v v12, v8
+; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
+; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v12, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
+; ZVFHMIN-NEXT:    vse16.v v8, (a2)
+; ZVFHMIN-NEXT:    ret
   %m = load <16 x half>, ptr %m_ptr
   %mask = fcmp oeq <16 x half> %m, zeroinitializer
   %load = call <16 x half> @llvm.masked.load.v16f16(ptr %a, i32 8, <16 x i1> %mask, <16 x half> undef)
@@ -1483,680 +485,18 @@ define void @masked_load_v16f64(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 declare <16 x double> @llvm.masked.load.v16f64(ptr, i32, <16 x i1>, <16 x double>)
 
 define void @masked_load_v32bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
-; RV32-LABEL: masked_load_v32bf16:
-; RV32:       # %bb.0:
-; RV32-NEXT:    li a3, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
-; RV32-NEXT:    vle16.v v8, (a1)
-; RV32-NEXT:    vfwcvtbf16.f.f.v v16, v8
-; RV32-NEXT:    fmv.w.x fa5, zero
-; RV32-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
-; RV32-NEXT:    vmfeq.vf v8, v16, fa5
-; RV32-NEXT:    vmv.x.s a1, v8
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    # implicit-def: $v8m4
-; RV32-NEXT:    bnez a3, .LBB20_34
-; RV32-NEXT:  # %bb.1: # %else
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    bnez a3, .LBB20_35
-; RV32-NEXT:  .LBB20_2: # %else2
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    bnez a3, .LBB20_36
-; RV32-NEXT:  .LBB20_3: # %else5
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    bnez a3, .LBB20_37
-; RV32-NEXT:  .LBB20_4: # %else8
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    bnez a3, .LBB20_38
-; RV32-NEXT:  .LBB20_5: # %else11
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    bnez a3, .LBB20_39
-; RV32-NEXT:  .LBB20_6: # %else14
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    bnez a3, .LBB20_40
-; RV32-NEXT:  .LBB20_7: # %else17
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    bnez a3, .LBB20_41
-; RV32-NEXT:  .LBB20_8: # %else20
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    bnez a3, .LBB20_42
-; RV32-NEXT:  .LBB20_9: # %else23
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    bnez a3, .LBB20_43
-; RV32-NEXT:  .LBB20_10: # %else26
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    bnez a3, .LBB20_44
-; RV32-NEXT:  .LBB20_11: # %else29
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bltz a3, .LBB20_45
-; RV32-NEXT:  .LBB20_12: # %else32
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bltz a3, .LBB20_46
-; RV32-NEXT:  .LBB20_13: # %else35
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bltz a3, .LBB20_47
-; RV32-NEXT:  .LBB20_14: # %else38
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bltz a3, .LBB20_48
-; RV32-NEXT:  .LBB20_15: # %else41
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bltz a3, .LBB20_49
-; RV32-NEXT:  .LBB20_16: # %else44
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bltz a3, .LBB20_50
-; RV32-NEXT:  .LBB20_17: # %else47
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bltz a3, .LBB20_51
-; RV32-NEXT:  .LBB20_18: # %else50
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bltz a3, .LBB20_52
-; RV32-NEXT:  .LBB20_19: # %else53
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bltz a3, .LBB20_53
-; RV32-NEXT:  .LBB20_20: # %else56
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bltz a3, .LBB20_54
-; RV32-NEXT:  .LBB20_21: # %else59
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bltz a3, .LBB20_55
-; RV32-NEXT:  .LBB20_22: # %else62
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bltz a3, .LBB20_56
-; RV32-NEXT:  .LBB20_23: # %else65
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bltz a3, .LBB20_57
-; RV32-NEXT:  .LBB20_24: # %else68
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bltz a3, .LBB20_58
-; RV32-NEXT:  .LBB20_25: # %else71
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bltz a3, .LBB20_59
-; RV32-NEXT:  .LBB20_26: # %else74
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bltz a3, .LBB20_60
-; RV32-NEXT:  .LBB20_27: # %else77
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bltz a3, .LBB20_61
-; RV32-NEXT:  .LBB20_28: # %else80
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bltz a3, .LBB20_62
-; RV32-NEXT:  .LBB20_29: # %else83
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bltz a3, .LBB20_63
-; RV32-NEXT:  .LBB20_30: # %else86
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bltz a3, .LBB20_64
-; RV32-NEXT:  .LBB20_31: # %else89
-; RV32-NEXT:    bgez a1, .LBB20_33
-; RV32-NEXT:  .LBB20_32: # %cond.load91
-; RV32-NEXT:    lh a0, 62(a0)
-; RV32-NEXT:    li a1, 32
-; RV32-NEXT:    vsetvli zero, a1, e16, m4, ta, ma
-; RV32-NEXT:    vmv.s.x v12, a0
-; RV32-NEXT:    vslideup.vi v8, v12, 31
-; RV32-NEXT:  .LBB20_33: # %else92
-; RV32-NEXT:    li a0, 32
-; RV32-NEXT:    vsetvli zero, a0, e16, m4, ta, ma
-; RV32-NEXT:    vse16.v v8, (a2)
-; RV32-NEXT:    ret
-; RV32-NEXT:  .LBB20_34: # %cond.load
-; RV32-NEXT:    lh a3, 0(a0)
-; RV32-NEXT:    fmv.x.h a4, fa5
-; RV32-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV32-NEXT:    vmv.v.x v8, a4
-; RV32-NEXT:    vsetvli zero, zero, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v8, a3
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    beqz a3, .LBB20_2
-; RV32-NEXT:  .LBB20_35: # %cond.load1
-; RV32-NEXT:    lh a3, 2(a0)
-; RV32-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v12, 1
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    beqz a3, .LBB20_3
-; RV32-NEXT:  .LBB20_36: # %cond.load4
-; RV32-NEXT:    lh a3, 4(a0)
-; RV32-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 2
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    beqz a3, .LBB20_4
-; RV32-NEXT:  .LBB20_37: # %cond.load7
-; RV32-NEXT:    lh a3, 6(a0)
-; RV32-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 3
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    beqz a3, .LBB20_5
-; RV32-NEXT:  .LBB20_38: # %cond.load10
-; RV32-NEXT:    lh a3, 8(a0)
-; RV32-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 4
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    beqz a3, .LBB20_6
-; RV32-NEXT:  .LBB20_39: # %cond.load13
-; RV32-NEXT:    lh a3, 10(a0)
-; RV32-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 5
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    beqz a3, .LBB20_7
-; RV32-NEXT:  .LBB20_40: # %cond.load16
-; RV32-NEXT:    lh a3, 12(a0)
-; RV32-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 6
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    beqz a3, .LBB20_8
-; RV32-NEXT:  .LBB20_41: # %cond.load19
-; RV32-NEXT:    lh a3, 14(a0)
-; RV32-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 7
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    beqz a3, .LBB20_9
-; RV32-NEXT:  .LBB20_42: # %cond.load22
-; RV32-NEXT:    lh a3, 16(a0)
-; RV32-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 8
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    beqz a3, .LBB20_10
-; RV32-NEXT:  .LBB20_43: # %cond.load25
-; RV32-NEXT:    lh a3, 18(a0)
-; RV32-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 9
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    beqz a3, .LBB20_11
-; RV32-NEXT:  .LBB20_44: # %cond.load28
-; RV32-NEXT:    lh a3, 20(a0)
-; RV32-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 10
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bgez a3, .LBB20_12
-; RV32-NEXT:  .LBB20_45: # %cond.load31
-; RV32-NEXT:    lh a3, 22(a0)
-; RV32-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 11
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bgez a3, .LBB20_13
-; RV32-NEXT:  .LBB20_46: # %cond.load34
-; RV32-NEXT:    lh a3, 24(a0)
-; RV32-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 12
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bgez a3, .LBB20_14
-; RV32-NEXT:  .LBB20_47: # %cond.load37
-; RV32-NEXT:    lh a3, 26(a0)
-; RV32-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 13
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bgez a3, .LBB20_15
-; RV32-NEXT:  .LBB20_48: # %cond.load40
-; RV32-NEXT:    lh a3, 28(a0)
-; RV32-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 14
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bgez a3, .LBB20_16
-; RV32-NEXT:  .LBB20_49: # %cond.load43
-; RV32-NEXT:    lh a3, 30(a0)
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 15
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bgez a3, .LBB20_17
-; RV32-NEXT:  .LBB20_50: # %cond.load46
-; RV32-NEXT:    lh a3, 32(a0)
-; RV32-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 16
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bgez a3, .LBB20_18
-; RV32-NEXT:  .LBB20_51: # %cond.load49
-; RV32-NEXT:    lh a3, 34(a0)
-; RV32-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 17
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bgez a3, .LBB20_19
-; RV32-NEXT:  .LBB20_52: # %cond.load52
-; RV32-NEXT:    lh a3, 36(a0)
-; RV32-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 18
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bgez a3, .LBB20_20
-; RV32-NEXT:  .LBB20_53: # %cond.load55
-; RV32-NEXT:    lh a3, 38(a0)
-; RV32-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 19
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bgez a3, .LBB20_21
-; RV32-NEXT:  .LBB20_54: # %cond.load58
-; RV32-NEXT:    lh a3, 40(a0)
-; RV32-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 20
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bgez a3, .LBB20_22
-; RV32-NEXT:  .LBB20_55: # %cond.load61
-; RV32-NEXT:    lh a3, 42(a0)
-; RV32-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 21
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bgez a3, .LBB20_23
-; RV32-NEXT:  .LBB20_56: # %cond.load64
-; RV32-NEXT:    lh a3, 44(a0)
-; RV32-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 22
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bgez a3, .LBB20_24
-; RV32-NEXT:  .LBB20_57: # %cond.load67
-; RV32-NEXT:    lh a3, 46(a0)
-; RV32-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 23
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bgez a3, .LBB20_25
-; RV32-NEXT:  .LBB20_58: # %cond.load70
-; RV32-NEXT:    lh a3, 48(a0)
-; RV32-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 24
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bgez a3, .LBB20_26
-; RV32-NEXT:  .LBB20_59: # %cond.load73
-; RV32-NEXT:    lh a3, 50(a0)
-; RV32-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 25
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bgez a3, .LBB20_27
-; RV32-NEXT:  .LBB20_60: # %cond.load76
-; RV32-NEXT:    lh a3, 52(a0)
-; RV32-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 26
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bgez a3, .LBB20_28
-; RV32-NEXT:  .LBB20_61: # %cond.load79
-; RV32-NEXT:    lh a3, 54(a0)
-; RV32-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 27
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bgez a3, .LBB20_29
-; RV32-NEXT:  .LBB20_62: # %cond.load82
-; RV32-NEXT:    lh a3, 56(a0)
-; RV32-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 28
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bgez a3, .LBB20_30
-; RV32-NEXT:  .LBB20_63: # %cond.load85
-; RV32-NEXT:    lh a3, 58(a0)
-; RV32-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 29
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bgez a3, .LBB20_31
-; RV32-NEXT:  .LBB20_64: # %cond.load88
-; RV32-NEXT:    lh a3, 60(a0)
-; RV32-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v12, a3
-; RV32-NEXT:    vslideup.vi v8, v12, 30
-; RV32-NEXT:    bltz a1, .LBB20_32
-; RV32-NEXT:    j .LBB20_33
-;
-; RV64-LABEL: masked_load_v32bf16:
-; RV64:       # %bb.0:
-; RV64-NEXT:    li a3, 32
-; RV64-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
-; RV64-NEXT:    vle16.v v8, (a1)
-; RV64-NEXT:    vfwcvtbf16.f.f.v v16, v8
-; RV64-NEXT:    fmv.w.x fa5, zero
-; RV64-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
-; RV64-NEXT:    vmfeq.vf v8, v16, fa5
-; RV64-NEXT:    vmv.x.s a1, v8
-; RV64-NEXT:    andi a3, a1, 1
-; RV64-NEXT:    # implicit-def: $v8m4
-; RV64-NEXT:    bnez a3, .LBB20_35
-; RV64-NEXT:  # %bb.1: # %else
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    bnez a3, .LBB20_36
-; RV64-NEXT:  .LBB20_2: # %else2
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    bnez a3, .LBB20_37
-; RV64-NEXT:  .LBB20_3: # %else5
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    bnez a3, .LBB20_38
-; RV64-NEXT:  .LBB20_4: # %else8
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    bnez a3, .LBB20_39
-; RV64-NEXT:  .LBB20_5: # %else11
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    bnez a3, .LBB20_40
-; RV64-NEXT:  .LBB20_6: # %else14
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    bnez a3, .LBB20_41
-; RV64-NEXT:  .LBB20_7: # %else17
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    bnez a3, .LBB20_42
-; RV64-NEXT:  .LBB20_8: # %else20
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    bnez a3, .LBB20_43
-; RV64-NEXT:  .LBB20_9: # %else23
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    bnez a3, .LBB20_44
-; RV64-NEXT:  .LBB20_10: # %else26
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    bnez a3, .LBB20_45
-; RV64-NEXT:  .LBB20_11: # %else29
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bltz a3, .LBB20_46
-; RV64-NEXT:  .LBB20_12: # %else32
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bltz a3, .LBB20_47
-; RV64-NEXT:  .LBB20_13: # %else35
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bltz a3, .LBB20_48
-; RV64-NEXT:  .LBB20_14: # %else38
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bltz a3, .LBB20_49
-; RV64-NEXT:  .LBB20_15: # %else41
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bltz a3, .LBB20_50
-; RV64-NEXT:  .LBB20_16: # %else44
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bltz a3, .LBB20_51
-; RV64-NEXT:  .LBB20_17: # %else47
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bltz a3, .LBB20_52
-; RV64-NEXT:  .LBB20_18: # %else50
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bltz a3, .LBB20_53
-; RV64-NEXT:  .LBB20_19: # %else53
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bltz a3, .LBB20_54
-; RV64-NEXT:  .LBB20_20: # %else56
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bltz a3, .LBB20_55
-; RV64-NEXT:  .LBB20_21: # %else59
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bltz a3, .LBB20_56
-; RV64-NEXT:  .LBB20_22: # %else62
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bltz a3, .LBB20_57
-; RV64-NEXT:  .LBB20_23: # %else65
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bltz a3, .LBB20_58
-; RV64-NEXT:  .LBB20_24: # %else68
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bltz a3, .LBB20_59
-; RV64-NEXT:  .LBB20_25: # %else71
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bltz a3, .LBB20_60
-; RV64-NEXT:  .LBB20_26: # %else74
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bltz a3, .LBB20_61
-; RV64-NEXT:  .LBB20_27: # %else77
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bltz a3, .LBB20_62
-; RV64-NEXT:  .LBB20_28: # %else80
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bltz a3, .LBB20_63
-; RV64-NEXT:  .LBB20_29: # %else83
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bltz a3, .LBB20_64
-; RV64-NEXT:  .LBB20_30: # %else86
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bgez a3, .LBB20_32
-; RV64-NEXT:  .LBB20_31: # %cond.load88
-; RV64-NEXT:    lh a3, 60(a0)
-; RV64-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 30
-; RV64-NEXT:  .LBB20_32: # %else89
-; RV64-NEXT:    lui a3, 524288
-; RV64-NEXT:    and a1, a1, a3
-; RV64-NEXT:    beqz a1, .LBB20_34
-; RV64-NEXT:  # %bb.33: # %cond.load91
-; RV64-NEXT:    lh a0, 62(a0)
-; RV64-NEXT:    li a1, 32
-; RV64-NEXT:    vsetvli zero, a1, e16, m4, ta, ma
-; RV64-NEXT:    vmv.s.x v12, a0
-; RV64-NEXT:    vslideup.vi v8, v12, 31
-; RV64-NEXT:  .LBB20_34: # %else92
-; RV64-NEXT:    li a0, 32
-; RV64-NEXT:    vsetvli zero, a0, e16, m4, ta, ma
-; RV64-NEXT:    vse16.v v8, (a2)
-; RV64-NEXT:    ret
-; RV64-NEXT:  .LBB20_35: # %cond.load
-; RV64-NEXT:    lh a3, 0(a0)
-; RV64-NEXT:    fmv.x.h a4, fa5
-; RV64-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV64-NEXT:    vmv.v.x v8, a4
-; RV64-NEXT:    vsetvli zero, zero, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v8, a3
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    beqz a3, .LBB20_2
-; RV64-NEXT:  .LBB20_36: # %cond.load1
-; RV64-NEXT:    lh a3, 2(a0)
-; RV64-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-NEXT:    vslideup.vi v8, v12, 1
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    beqz a3, .LBB20_3
-; RV64-NEXT:  .LBB20_37: # %cond.load4
-; RV64-NEXT:    lh a3, 4(a0)
-; RV64-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 2
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    beqz a3, .LBB20_4
-; RV64-NEXT:  .LBB20_38: # %cond.load7
-; RV64-NEXT:    lh a3, 6(a0)
-; RV64-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 3
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    beqz a3, .LBB20_5
-; RV64-NEXT:  .LBB20_39: # %cond.load10
-; RV64-NEXT:    lh a3, 8(a0)
-; RV64-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 4
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    beqz a3, .LBB20_6
-; RV64-NEXT:  .LBB20_40: # %cond.load13
-; RV64-NEXT:    lh a3, 10(a0)
-; RV64-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 5
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    beqz a3, .LBB20_7
-; RV64-NEXT:  .LBB20_41: # %cond.load16
-; RV64-NEXT:    lh a3, 12(a0)
-; RV64-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 6
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    beqz a3, .LBB20_8
-; RV64-NEXT:  .LBB20_42: # %cond.load19
-; RV64-NEXT:    lh a3, 14(a0)
-; RV64-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 7
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    beqz a3, .LBB20_9
-; RV64-NEXT:  .LBB20_43: # %cond.load22
-; RV64-NEXT:    lh a3, 16(a0)
-; RV64-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 8
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    beqz a3, .LBB20_10
-; RV64-NEXT:  .LBB20_44: # %cond.load25
-; RV64-NEXT:    lh a3, 18(a0)
-; RV64-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 9
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    beqz a3, .LBB20_11
-; RV64-NEXT:  .LBB20_45: # %cond.load28
-; RV64-NEXT:    lh a3, 20(a0)
-; RV64-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 10
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bgez a3, .LBB20_12
-; RV64-NEXT:  .LBB20_46: # %cond.load31
-; RV64-NEXT:    lh a3, 22(a0)
-; RV64-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 11
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bgez a3, .LBB20_13
-; RV64-NEXT:  .LBB20_47: # %cond.load34
-; RV64-NEXT:    lh a3, 24(a0)
-; RV64-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 12
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bgez a3, .LBB20_14
-; RV64-NEXT:  .LBB20_48: # %cond.load37
-; RV64-NEXT:    lh a3, 26(a0)
-; RV64-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 13
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bgez a3, .LBB20_15
-; RV64-NEXT:  .LBB20_49: # %cond.load40
-; RV64-NEXT:    lh a3, 28(a0)
-; RV64-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 14
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bgez a3, .LBB20_16
-; RV64-NEXT:  .LBB20_50: # %cond.load43
-; RV64-NEXT:    lh a3, 30(a0)
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 15
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bgez a3, .LBB20_17
-; RV64-NEXT:  .LBB20_51: # %cond.load46
-; RV64-NEXT:    lh a3, 32(a0)
-; RV64-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 16
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bgez a3, .LBB20_18
-; RV64-NEXT:  .LBB20_52: # %cond.load49
-; RV64-NEXT:    lh a3, 34(a0)
-; RV64-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 17
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bgez a3, .LBB20_19
-; RV64-NEXT:  .LBB20_53: # %cond.load52
-; RV64-NEXT:    lh a3, 36(a0)
-; RV64-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 18
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bgez a3, .LBB20_20
-; RV64-NEXT:  .LBB20_54: # %cond.load55
-; RV64-NEXT:    lh a3, 38(a0)
-; RV64-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 19
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bgez a3, .LBB20_21
-; RV64-NEXT:  .LBB20_55: # %cond.load58
-; RV64-NEXT:    lh a3, 40(a0)
-; RV64-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 20
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bgez a3, .LBB20_22
-; RV64-NEXT:  .LBB20_56: # %cond.load61
-; RV64-NEXT:    lh a3, 42(a0)
-; RV64-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 21
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bgez a3, .LBB20_23
-; RV64-NEXT:  .LBB20_57: # %cond.load64
-; RV64-NEXT:    lh a3, 44(a0)
-; RV64-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 22
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bgez a3, .LBB20_24
-; RV64-NEXT:  .LBB20_58: # %cond.load67
-; RV64-NEXT:    lh a3, 46(a0)
-; RV64-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 23
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bgez a3, .LBB20_25
-; RV64-NEXT:  .LBB20_59: # %cond.load70
-; RV64-NEXT:    lh a3, 48(a0)
-; RV64-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 24
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bgez a3, .LBB20_26
-; RV64-NEXT:  .LBB20_60: # %cond.load73
-; RV64-NEXT:    lh a3, 50(a0)
-; RV64-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 25
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bgez a3, .LBB20_27
-; RV64-NEXT:  .LBB20_61: # %cond.load76
-; RV64-NEXT:    lh a3, 52(a0)
-; RV64-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 26
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bgez a3, .LBB20_28
-; RV64-NEXT:  .LBB20_62: # %cond.load79
-; RV64-NEXT:    lh a3, 54(a0)
-; RV64-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 27
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bgez a3, .LBB20_29
-; RV64-NEXT:  .LBB20_63: # %cond.load82
-; RV64-NEXT:    lh a3, 56(a0)
-; RV64-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 28
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bgez a3, .LBB20_30
-; RV64-NEXT:  .LBB20_64: # %cond.load85
-; RV64-NEXT:    lh a3, 58(a0)
-; RV64-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v12, a3
-; RV64-NEXT:    vslideup.vi v8, v12, 29
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bltz a3, .LBB20_31
-; RV64-NEXT:    j .LBB20_32
+; CHECK-LABEL: masked_load_v32bf16:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    li a3, 32
+; CHECK-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
+; CHECK-NEXT:    vle16.v v8, (a1)
+; CHECK-NEXT:    vfwcvtbf16.f.f.v v16, v8
+; CHECK-NEXT:    fmv.w.x fa5, zero
+; CHECK-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
+; CHECK-NEXT:    vmfeq.vf v0, v16, fa5
+; CHECK-NEXT:    vle16.v v8, (a0), v0.t
+; CHECK-NEXT:    vse16.v v8, (a2)
+; CHECK-NEXT:    ret
   %m = load <32 x bfloat>, ptr %m_ptr
   %mask = fcmp oeq <32 x bfloat> %m, zeroinitializer
   %load = call <32 x bfloat> @llvm.masked.load.v32bf16(ptr %a, i32 8, <32 x i1> %mask, <32 x bfloat> undef)
@@ -2177,680 +517,18 @@ define void @masked_load_v32f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; ZVFH-NEXT:    vse16.v v8, (a2)
 ; ZVFH-NEXT:    ret
 ;
-; RV32-ZVFHMIN-LABEL: masked_load_v32f16:
-; RV32-ZVFHMIN:       # %bb.0:
-; RV32-ZVFHMIN-NEXT:    li a3, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a1)
-; RV32-ZVFHMIN-NEXT:    vfwcvt.f.f.v v16, v8
-; RV32-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmfeq.vf v8, v16, fa5
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    # implicit-def: $v8m4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_34
-; RV32-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_35
-; RV32-ZVFHMIN-NEXT:  .LBB21_2: # %else2
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_36
-; RV32-ZVFHMIN-NEXT:  .LBB21_3: # %else5
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_37
-; RV32-ZVFHMIN-NEXT:  .LBB21_4: # %else8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_38
-; RV32-ZVFHMIN-NEXT:  .LBB21_5: # %else11
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_39
-; RV32-ZVFHMIN-NEXT:  .LBB21_6: # %else14
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_40
-; RV32-ZVFHMIN-NEXT:  .LBB21_7: # %else17
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_41
-; RV32-ZVFHMIN-NEXT:  .LBB21_8: # %else20
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_42
-; RV32-ZVFHMIN-NEXT:  .LBB21_9: # %else23
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_43
-; RV32-ZVFHMIN-NEXT:  .LBB21_10: # %else26
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB21_44
-; RV32-ZVFHMIN-NEXT:  .LBB21_11: # %else29
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_45
-; RV32-ZVFHMIN-NEXT:  .LBB21_12: # %else32
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_46
-; RV32-ZVFHMIN-NEXT:  .LBB21_13: # %else35
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_47
-; RV32-ZVFHMIN-NEXT:  .LBB21_14: # %else38
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_48
-; RV32-ZVFHMIN-NEXT:  .LBB21_15: # %else41
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_49
-; RV32-ZVFHMIN-NEXT:  .LBB21_16: # %else44
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_50
-; RV32-ZVFHMIN-NEXT:  .LBB21_17: # %else47
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_51
-; RV32-ZVFHMIN-NEXT:  .LBB21_18: # %else50
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_52
-; RV32-ZVFHMIN-NEXT:  .LBB21_19: # %else53
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_53
-; RV32-ZVFHMIN-NEXT:  .LBB21_20: # %else56
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_54
-; RV32-ZVFHMIN-NEXT:  .LBB21_21: # %else59
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_55
-; RV32-ZVFHMIN-NEXT:  .LBB21_22: # %else62
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_56
-; RV32-ZVFHMIN-NEXT:  .LBB21_23: # %else65
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_57
-; RV32-ZVFHMIN-NEXT:  .LBB21_24: # %else68
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_58
-; RV32-ZVFHMIN-NEXT:  .LBB21_25: # %else71
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_59
-; RV32-ZVFHMIN-NEXT:  .LBB21_26: # %else74
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_60
-; RV32-ZVFHMIN-NEXT:  .LBB21_27: # %else77
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_61
-; RV32-ZVFHMIN-NEXT:  .LBB21_28: # %else80
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_62
-; RV32-ZVFHMIN-NEXT:  .LBB21_29: # %else83
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_63
-; RV32-ZVFHMIN-NEXT:  .LBB21_30: # %else86
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB21_64
-; RV32-ZVFHMIN-NEXT:  .LBB21_31: # %else89
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB21_33
-; RV32-ZVFHMIN-NEXT:  .LBB21_32: # %cond.load91
-; RV32-ZVFHMIN-NEXT:    lh a0, 62(a0)
-; RV32-ZVFHMIN-NEXT:    li a1, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a0
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 31
-; RV32-ZVFHMIN-NEXT:  .LBB21_33: # %else92
-; RV32-ZVFHMIN-NEXT:    li a0, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV32-ZVFHMIN-NEXT:    ret
-; RV32-ZVFHMIN-NEXT:  .LBB21_34: # %cond.load
-; RV32-ZVFHMIN-NEXT:    lh a3, 0(a0)
-; RV32-ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_2
-; RV32-ZVFHMIN-NEXT:  .LBB21_35: # %cond.load1
-; RV32-ZVFHMIN-NEXT:    lh a3, 2(a0)
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 1
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_3
-; RV32-ZVFHMIN-NEXT:  .LBB21_36: # %cond.load4
-; RV32-ZVFHMIN-NEXT:    lh a3, 4(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 2
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_4
-; RV32-ZVFHMIN-NEXT:  .LBB21_37: # %cond.load7
-; RV32-ZVFHMIN-NEXT:    lh a3, 6(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 3
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_5
-; RV32-ZVFHMIN-NEXT:  .LBB21_38: # %cond.load10
-; RV32-ZVFHMIN-NEXT:    lh a3, 8(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_6
-; RV32-ZVFHMIN-NEXT:  .LBB21_39: # %cond.load13
-; RV32-ZVFHMIN-NEXT:    lh a3, 10(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 5
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_7
-; RV32-ZVFHMIN-NEXT:  .LBB21_40: # %cond.load16
-; RV32-ZVFHMIN-NEXT:    lh a3, 12(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 6
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_8
-; RV32-ZVFHMIN-NEXT:  .LBB21_41: # %cond.load19
-; RV32-ZVFHMIN-NEXT:    lh a3, 14(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 7
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_9
-; RV32-ZVFHMIN-NEXT:  .LBB21_42: # %cond.load22
-; RV32-ZVFHMIN-NEXT:    lh a3, 16(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 8
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_10
-; RV32-ZVFHMIN-NEXT:  .LBB21_43: # %cond.load25
-; RV32-ZVFHMIN-NEXT:    lh a3, 18(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 9
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB21_11
-; RV32-ZVFHMIN-NEXT:  .LBB21_44: # %cond.load28
-; RV32-ZVFHMIN-NEXT:    lh a3, 20(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 10
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_12
-; RV32-ZVFHMIN-NEXT:  .LBB21_45: # %cond.load31
-; RV32-ZVFHMIN-NEXT:    lh a3, 22(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 11
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_13
-; RV32-ZVFHMIN-NEXT:  .LBB21_46: # %cond.load34
-; RV32-ZVFHMIN-NEXT:    lh a3, 24(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 12
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_14
-; RV32-ZVFHMIN-NEXT:  .LBB21_47: # %cond.load37
-; RV32-ZVFHMIN-NEXT:    lh a3, 26(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 13
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_15
-; RV32-ZVFHMIN-NEXT:  .LBB21_48: # %cond.load40
-; RV32-ZVFHMIN-NEXT:    lh a3, 28(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 14
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_16
-; RV32-ZVFHMIN-NEXT:  .LBB21_49: # %cond.load43
-; RV32-ZVFHMIN-NEXT:    lh a3, 30(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 15
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_17
-; RV32-ZVFHMIN-NEXT:  .LBB21_50: # %cond.load46
-; RV32-ZVFHMIN-NEXT:    lh a3, 32(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 16
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_18
-; RV32-ZVFHMIN-NEXT:  .LBB21_51: # %cond.load49
-; RV32-ZVFHMIN-NEXT:    lh a3, 34(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 17
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_19
-; RV32-ZVFHMIN-NEXT:  .LBB21_52: # %cond.load52
-; RV32-ZVFHMIN-NEXT:    lh a3, 36(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 18
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_20
-; RV32-ZVFHMIN-NEXT:  .LBB21_53: # %cond.load55
-; RV32-ZVFHMIN-NEXT:    lh a3, 38(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 19
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_21
-; RV32-ZVFHMIN-NEXT:  .LBB21_54: # %cond.load58
-; RV32-ZVFHMIN-NEXT:    lh a3, 40(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 20
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_22
-; RV32-ZVFHMIN-NEXT:  .LBB21_55: # %cond.load61
-; RV32-ZVFHMIN-NEXT:    lh a3, 42(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 21
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_23
-; RV32-ZVFHMIN-NEXT:  .LBB21_56: # %cond.load64
-; RV32-ZVFHMIN-NEXT:    lh a3, 44(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 22
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_24
-; RV32-ZVFHMIN-NEXT:  .LBB21_57: # %cond.load67
-; RV32-ZVFHMIN-NEXT:    lh a3, 46(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 23
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_25
-; RV32-ZVFHMIN-NEXT:  .LBB21_58: # %cond.load70
-; RV32-ZVFHMIN-NEXT:    lh a3, 48(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 24
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_26
-; RV32-ZVFHMIN-NEXT:  .LBB21_59: # %cond.load73
-; RV32-ZVFHMIN-NEXT:    lh a3, 50(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 25
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_27
-; RV32-ZVFHMIN-NEXT:  .LBB21_60: # %cond.load76
-; RV32-ZVFHMIN-NEXT:    lh a3, 52(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 26
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_28
-; RV32-ZVFHMIN-NEXT:  .LBB21_61: # %cond.load79
-; RV32-ZVFHMIN-NEXT:    lh a3, 54(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 27
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_29
-; RV32-ZVFHMIN-NEXT:  .LBB21_62: # %cond.load82
-; RV32-ZVFHMIN-NEXT:    lh a3, 56(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 28
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_30
-; RV32-ZVFHMIN-NEXT:  .LBB21_63: # %cond.load85
-; RV32-ZVFHMIN-NEXT:    lh a3, 58(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 29
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB21_31
-; RV32-ZVFHMIN-NEXT:  .LBB21_64: # %cond.load88
-; RV32-ZVFHMIN-NEXT:    lh a3, 60(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 30
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB21_32
-; RV32-ZVFHMIN-NEXT:    j .LBB21_33
-;
-; RV64-ZVFHMIN-LABEL: masked_load_v32f16:
-; RV64-ZVFHMIN:       # %bb.0:
-; RV64-ZVFHMIN-NEXT:    li a3, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vle16.v v8, (a1)
-; RV64-ZVFHMIN-NEXT:    vfwcvt.f.f.v v16, v8
-; RV64-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmfeq.vf v8, v16, fa5
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    # implicit-def: $v8m4
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_35
-; RV64-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_36
-; RV64-ZVFHMIN-NEXT:  .LBB21_2: # %else2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_37
-; RV64-ZVFHMIN-NEXT:  .LBB21_3: # %else5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_38
-; RV64-ZVFHMIN-NEXT:  .LBB21_4: # %else8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_39
-; RV64-ZVFHMIN-NEXT:  .LBB21_5: # %else11
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_40
-; RV64-ZVFHMIN-NEXT:  .LBB21_6: # %else14
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_41
-; RV64-ZVFHMIN-NEXT:  .LBB21_7: # %else17
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_42
-; RV64-ZVFHMIN-NEXT:  .LBB21_8: # %else20
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_43
-; RV64-ZVFHMIN-NEXT:  .LBB21_9: # %else23
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_44
-; RV64-ZVFHMIN-NEXT:  .LBB21_10: # %else26
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB21_45
-; RV64-ZVFHMIN-NEXT:  .LBB21_11: # %else29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_46
-; RV64-ZVFHMIN-NEXT:  .LBB21_12: # %else32
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_47
-; RV64-ZVFHMIN-NEXT:  .LBB21_13: # %else35
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_48
-; RV64-ZVFHMIN-NEXT:  .LBB21_14: # %else38
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_49
-; RV64-ZVFHMIN-NEXT:  .LBB21_15: # %else41
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_50
-; RV64-ZVFHMIN-NEXT:  .LBB21_16: # %else44
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_51
-; RV64-ZVFHMIN-NEXT:  .LBB21_17: # %else47
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_52
-; RV64-ZVFHMIN-NEXT:  .LBB21_18: # %else50
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_53
-; RV64-ZVFHMIN-NEXT:  .LBB21_19: # %else53
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_54
-; RV64-ZVFHMIN-NEXT:  .LBB21_20: # %else56
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_55
-; RV64-ZVFHMIN-NEXT:  .LBB21_21: # %else59
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_56
-; RV64-ZVFHMIN-NEXT:  .LBB21_22: # %else62
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_57
-; RV64-ZVFHMIN-NEXT:  .LBB21_23: # %else65
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_58
-; RV64-ZVFHMIN-NEXT:  .LBB21_24: # %else68
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_59
-; RV64-ZVFHMIN-NEXT:  .LBB21_25: # %else71
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_60
-; RV64-ZVFHMIN-NEXT:  .LBB21_26: # %else74
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_61
-; RV64-ZVFHMIN-NEXT:  .LBB21_27: # %else77
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_62
-; RV64-ZVFHMIN-NEXT:  .LBB21_28: # %else80
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_63
-; RV64-ZVFHMIN-NEXT:  .LBB21_29: # %else83
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_64
-; RV64-ZVFHMIN-NEXT:  .LBB21_30: # %else86
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_32
-; RV64-ZVFHMIN-NEXT:  .LBB21_31: # %cond.load88
-; RV64-ZVFHMIN-NEXT:    lh a3, 60(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 30
-; RV64-ZVFHMIN-NEXT:  .LBB21_32: # %else89
-; RV64-ZVFHMIN-NEXT:    lui a3, 524288
-; RV64-ZVFHMIN-NEXT:    and a1, a1, a3
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB21_34
-; RV64-ZVFHMIN-NEXT:  # %bb.33: # %cond.load91
-; RV64-ZVFHMIN-NEXT:    lh a0, 62(a0)
-; RV64-ZVFHMIN-NEXT:    li a1, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a0
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 31
-; RV64-ZVFHMIN-NEXT:  .LBB21_34: # %else92
-; RV64-ZVFHMIN-NEXT:    li a0, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vse16.v v8, (a2)
-; RV64-ZVFHMIN-NEXT:    ret
-; RV64-ZVFHMIN-NEXT:  .LBB21_35: # %cond.load
-; RV64-ZVFHMIN-NEXT:    lh a3, 0(a0)
-; RV64-ZVFHMIN-NEXT:    fmv.x.h a4, fa5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.v.x v8, a4
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v8, a3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_2
-; RV64-ZVFHMIN-NEXT:  .LBB21_36: # %cond.load1
-; RV64-ZVFHMIN-NEXT:    lh a3, 2(a0)
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m4, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 1
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_3
-; RV64-ZVFHMIN-NEXT:  .LBB21_37: # %cond.load4
-; RV64-ZVFHMIN-NEXT:    lh a3, 4(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_4
-; RV64-ZVFHMIN-NEXT:  .LBB21_38: # %cond.load7
-; RV64-ZVFHMIN-NEXT:    lh a3, 6(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_5
-; RV64-ZVFHMIN-NEXT:  .LBB21_39: # %cond.load10
-; RV64-ZVFHMIN-NEXT:    lh a3, 8(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 4
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_6
-; RV64-ZVFHMIN-NEXT:  .LBB21_40: # %cond.load13
-; RV64-ZVFHMIN-NEXT:    lh a3, 10(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_7
-; RV64-ZVFHMIN-NEXT:  .LBB21_41: # %cond.load16
-; RV64-ZVFHMIN-NEXT:    lh a3, 12(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 6
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_8
-; RV64-ZVFHMIN-NEXT:  .LBB21_42: # %cond.load19
-; RV64-ZVFHMIN-NEXT:    lh a3, 14(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 7
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_9
-; RV64-ZVFHMIN-NEXT:  .LBB21_43: # %cond.load22
-; RV64-ZVFHMIN-NEXT:    lh a3, 16(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_10
-; RV64-ZVFHMIN-NEXT:  .LBB21_44: # %cond.load25
-; RV64-ZVFHMIN-NEXT:    lh a3, 18(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 9
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB21_11
-; RV64-ZVFHMIN-NEXT:  .LBB21_45: # %cond.load28
-; RV64-ZVFHMIN-NEXT:    lh a3, 20(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 10
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_12
-; RV64-ZVFHMIN-NEXT:  .LBB21_46: # %cond.load31
-; RV64-ZVFHMIN-NEXT:    lh a3, 22(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 11
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_13
-; RV64-ZVFHMIN-NEXT:  .LBB21_47: # %cond.load34
-; RV64-ZVFHMIN-NEXT:    lh a3, 24(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 12
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_14
-; RV64-ZVFHMIN-NEXT:  .LBB21_48: # %cond.load37
-; RV64-ZVFHMIN-NEXT:    lh a3, 26(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 13
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_15
-; RV64-ZVFHMIN-NEXT:  .LBB21_49: # %cond.load40
-; RV64-ZVFHMIN-NEXT:    lh a3, 28(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 14
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_16
-; RV64-ZVFHMIN-NEXT:  .LBB21_50: # %cond.load43
-; RV64-ZVFHMIN-NEXT:    lh a3, 30(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 15
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_17
-; RV64-ZVFHMIN-NEXT:  .LBB21_51: # %cond.load46
-; RV64-ZVFHMIN-NEXT:    lh a3, 32(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 16
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_18
-; RV64-ZVFHMIN-NEXT:  .LBB21_52: # %cond.load49
-; RV64-ZVFHMIN-NEXT:    lh a3, 34(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 17
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_19
-; RV64-ZVFHMIN-NEXT:  .LBB21_53: # %cond.load52
-; RV64-ZVFHMIN-NEXT:    lh a3, 36(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 18
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_20
-; RV64-ZVFHMIN-NEXT:  .LBB21_54: # %cond.load55
-; RV64-ZVFHMIN-NEXT:    lh a3, 38(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 19
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_21
-; RV64-ZVFHMIN-NEXT:  .LBB21_55: # %cond.load58
-; RV64-ZVFHMIN-NEXT:    lh a3, 40(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 20
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_22
-; RV64-ZVFHMIN-NEXT:  .LBB21_56: # %cond.load61
-; RV64-ZVFHMIN-NEXT:    lh a3, 42(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 21
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_23
-; RV64-ZVFHMIN-NEXT:  .LBB21_57: # %cond.load64
-; RV64-ZVFHMIN-NEXT:    lh a3, 44(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 22
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_24
-; RV64-ZVFHMIN-NEXT:  .LBB21_58: # %cond.load67
-; RV64-ZVFHMIN-NEXT:    lh a3, 46(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 23
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_25
-; RV64-ZVFHMIN-NEXT:  .LBB21_59: # %cond.load70
-; RV64-ZVFHMIN-NEXT:    lh a3, 48(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 24
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_26
-; RV64-ZVFHMIN-NEXT:  .LBB21_60: # %cond.load73
-; RV64-ZVFHMIN-NEXT:    lh a3, 50(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 25
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_27
-; RV64-ZVFHMIN-NEXT:  .LBB21_61: # %cond.load76
-; RV64-ZVFHMIN-NEXT:    lh a3, 52(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 26
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_28
-; RV64-ZVFHMIN-NEXT:  .LBB21_62: # %cond.load79
-; RV64-ZVFHMIN-NEXT:    lh a3, 54(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 27
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_29
-; RV64-ZVFHMIN-NEXT:  .LBB21_63: # %cond.load82
-; RV64-ZVFHMIN-NEXT:    lh a3, 56(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 28
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB21_30
-; RV64-ZVFHMIN-NEXT:  .LBB21_64: # %cond.load85
-; RV64-ZVFHMIN-NEXT:    lh a3, 58(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v12, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v12, 29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB21_31
-; RV64-ZVFHMIN-NEXT:    j .LBB21_32
+; ZVFHMIN-LABEL: masked_load_v32f16:
+; ZVFHMIN:       # %bb.0:
+; ZVFHMIN-NEXT:    li a3, 32
+; ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, ta, ma
+; ZVFHMIN-NEXT:    vle16.v v8, (a1)
+; ZVFHMIN-NEXT:    vfwcvt.f.f.v v16, v8
+; ZVFHMIN-NEXT:    fmv.w.x fa5, zero
+; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, m8, ta, ma
+; ZVFHMIN-NEXT:    vmfeq.vf v0, v16, fa5
+; ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
+; ZVFHMIN-NEXT:    vse16.v v8, (a2)
+; ZVFHMIN-NEXT:    ret
   %m = load <32 x half>, ptr %m_ptr
   %mask = fcmp oeq <32 x half> %m, zeroinitializer
   %load = call <32 x half> @llvm.masked.load.v32f16(ptr %a, i32 8, <32 x i1> %mask, <32 x half> undef)
@@ -2930,8 +608,8 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    sw s0, 376(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    addi s0, sp, 384
 ; RV32-NEXT:    andi sp, sp, -128
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV32-NEXT:    li a3, 64
+; RV32-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV32-NEXT:    vle16.v v8, (a1)
 ; RV32-NEXT:    addi a1, sp, 128
 ; RV32-NEXT:    vse16.v v8, (a1)
@@ -3020,11 +698,11 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    vmv.x.s a3, v8
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v8
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
-; RV32-NEXT:    sb a3, 64(sp)
+; RV32-NEXT:    feq.s a4, fa4, fa5
+; RV32-NEXT:    sb a4, 64(sp)
 ; RV32-NEXT:    sb a1, 80(sp)
 ; RV32-NEXT:    lh a1, 226(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
@@ -3112,10 +790,10 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV32-NEXT:    vslidedown.vi v10, v8, 7
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 6
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -3128,7 +806,7 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    feq.s a6, fa4, fa5
 ; RV32-NEXT:    sb a6, 69(sp)
 ; RV32-NEXT:    sb a5, 70(sp)
-; RV32-NEXT:    sb a3, 71(sp)
+; RV32-NEXT:    sb a4, 71(sp)
 ; RV32-NEXT:    sb a1, 97(sp)
 ; RV32-NEXT:    vslidedown.vi v10, v8, 4
 ; RV32-NEXT:    vmv.x.s a1, v10
@@ -3136,10 +814,10 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 3
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 2
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -3152,7 +830,7 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    feq.s a6, fa4, fa5
 ; RV32-NEXT:    sb a6, 65(sp)
 ; RV32-NEXT:    sb a5, 66(sp)
-; RV32-NEXT:    sb a3, 67(sp)
+; RV32-NEXT:    sb a4, 67(sp)
 ; RV32-NEXT:    sb a1, 68(sp)
 ; RV32-NEXT:    lh a1, 254(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
@@ -3231,10 +909,10 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 14
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 13
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -3247,7 +925,7 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    feq.s a6, fa4, fa5
 ; RV32-NEXT:    sb a6, 76(sp)
 ; RV32-NEXT:    sb a5, 77(sp)
-; RV32-NEXT:    sb a3, 78(sp)
+; RV32-NEXT:    sb a4, 78(sp)
 ; RV32-NEXT:    sb a1, 79(sp)
 ; RV32-NEXT:    vslidedown.vi v10, v8, 11
 ; RV32-NEXT:    vmv.x.s a1, v10
@@ -3255,10 +933,10 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 10
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 9
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -3271,789 +949,20 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    feq.s a6, fa4, fa5
 ; RV32-NEXT:    sb a6, 72(sp)
 ; RV32-NEXT:    sb a5, 73(sp)
-; RV32-NEXT:    sb a3, 74(sp)
+; RV32-NEXT:    sb a4, 74(sp)
 ; RV32-NEXT:    sb a1, 75(sp)
 ; RV32-NEXT:    addi a1, sp, 64
-; RV32-NEXT:    vsetvli zero, a4, e8, m4, ta, ma
+; RV32-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
 ; RV32-NEXT:    vle8.v v8, (a1)
 ; RV32-NEXT:    vand.vi v8, v8, 1
-; RV32-NEXT:    vmsne.vi v16, v8, 0
-; RV32-NEXT:    vsetvli zero, a4, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a3, v16
-; RV32-NEXT:    andi a1, a3, 1
-; RV32-NEXT:    # implicit-def: $v8m8
-; RV32-NEXT:    bnez a1, .LBB24_69
-; RV32-NEXT:  # %bb.1: # %else
-; RV32-NEXT:    andi a1, a3, 2
-; RV32-NEXT:    bnez a1, .LBB24_70
-; RV32-NEXT:  .LBB24_2: # %else2
-; RV32-NEXT:    andi a1, a3, 4
-; RV32-NEXT:    bnez a1, .LBB24_71
-; RV32-NEXT:  .LBB24_3: # %else5
-; RV32-NEXT:    andi a1, a3, 8
-; RV32-NEXT:    bnez a1, .LBB24_72
-; RV32-NEXT:  .LBB24_4: # %else8
-; RV32-NEXT:    andi a1, a3, 16
-; RV32-NEXT:    bnez a1, .LBB24_73
-; RV32-NEXT:  .LBB24_5: # %else11
-; RV32-NEXT:    andi a1, a3, 32
-; RV32-NEXT:    bnez a1, .LBB24_74
-; RV32-NEXT:  .LBB24_6: # %else14
-; RV32-NEXT:    andi a1, a3, 64
-; RV32-NEXT:    bnez a1, .LBB24_75
-; RV32-NEXT:  .LBB24_7: # %else17
-; RV32-NEXT:    andi a1, a3, 128
-; RV32-NEXT:    bnez a1, .LBB24_76
-; RV32-NEXT:  .LBB24_8: # %else20
-; RV32-NEXT:    andi a1, a3, 256
-; RV32-NEXT:    bnez a1, .LBB24_77
-; RV32-NEXT:  .LBB24_9: # %else23
-; RV32-NEXT:    andi a1, a3, 512
-; RV32-NEXT:    bnez a1, .LBB24_78
-; RV32-NEXT:  .LBB24_10: # %else26
-; RV32-NEXT:    andi a1, a3, 1024
-; RV32-NEXT:    bnez a1, .LBB24_79
-; RV32-NEXT:  .LBB24_11: # %else29
-; RV32-NEXT:    slli a1, a3, 20
-; RV32-NEXT:    bltz a1, .LBB24_80
-; RV32-NEXT:  .LBB24_12: # %else32
-; RV32-NEXT:    slli a1, a3, 19
-; RV32-NEXT:    bltz a1, .LBB24_81
-; RV32-NEXT:  .LBB24_13: # %else35
-; RV32-NEXT:    slli a1, a3, 18
-; RV32-NEXT:    bltz a1, .LBB24_82
-; RV32-NEXT:  .LBB24_14: # %else38
-; RV32-NEXT:    slli a1, a3, 17
-; RV32-NEXT:    bltz a1, .LBB24_83
-; RV32-NEXT:  .LBB24_15: # %else41
-; RV32-NEXT:    slli a1, a3, 16
-; RV32-NEXT:    bltz a1, .LBB24_84
-; RV32-NEXT:  .LBB24_16: # %else44
-; RV32-NEXT:    slli a1, a3, 15
-; RV32-NEXT:    bltz a1, .LBB24_85
-; RV32-NEXT:  .LBB24_17: # %else47
-; RV32-NEXT:    slli a1, a3, 14
-; RV32-NEXT:    bltz a1, .LBB24_86
-; RV32-NEXT:  .LBB24_18: # %else50
-; RV32-NEXT:    slli a1, a3, 13
-; RV32-NEXT:    bltz a1, .LBB24_87
-; RV32-NEXT:  .LBB24_19: # %else53
-; RV32-NEXT:    slli a1, a3, 12
-; RV32-NEXT:    bltz a1, .LBB24_88
-; RV32-NEXT:  .LBB24_20: # %else56
-; RV32-NEXT:    slli a1, a3, 11
-; RV32-NEXT:    bltz a1, .LBB24_89
-; RV32-NEXT:  .LBB24_21: # %else59
-; RV32-NEXT:    slli a1, a3, 10
-; RV32-NEXT:    bltz a1, .LBB24_90
-; RV32-NEXT:  .LBB24_22: # %else62
-; RV32-NEXT:    slli a1, a3, 9
-; RV32-NEXT:    bltz a1, .LBB24_91
-; RV32-NEXT:  .LBB24_23: # %else65
-; RV32-NEXT:    slli a1, a3, 8
-; RV32-NEXT:    bltz a1, .LBB24_92
-; RV32-NEXT:  .LBB24_24: # %else68
-; RV32-NEXT:    slli a1, a3, 7
-; RV32-NEXT:    bltz a1, .LBB24_93
-; RV32-NEXT:  .LBB24_25: # %else71
-; RV32-NEXT:    slli a1, a3, 6
-; RV32-NEXT:    bltz a1, .LBB24_94
-; RV32-NEXT:  .LBB24_26: # %else74
-; RV32-NEXT:    slli a1, a3, 5
-; RV32-NEXT:    bltz a1, .LBB24_95
-; RV32-NEXT:  .LBB24_27: # %else77
-; RV32-NEXT:    slli a1, a3, 4
-; RV32-NEXT:    bltz a1, .LBB24_96
-; RV32-NEXT:  .LBB24_28: # %else80
-; RV32-NEXT:    slli a1, a3, 3
-; RV32-NEXT:    bgez a1, .LBB24_30
-; RV32-NEXT:  .LBB24_29: # %cond.load82
-; RV32-NEXT:    lh a1, 56(a0)
-; RV32-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 28
-; RV32-NEXT:  .LBB24_30: # %else83
-; RV32-NEXT:    slli a4, a3, 2
-; RV32-NEXT:    li a1, 32
-; RV32-NEXT:    bgez a4, .LBB24_32
-; RV32-NEXT:  # %bb.31: # %cond.load85
-; RV32-NEXT:    lh a4, 58(a0)
-; RV32-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a4
-; RV32-NEXT:    vslideup.vi v8, v20, 29
-; RV32-NEXT:  .LBB24_32: # %else86
-; RV32-NEXT:    slli a4, a3, 1
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vsrl.vx v16, v16, a1
-; RV32-NEXT:    bgez a4, .LBB24_34
-; RV32-NEXT:  # %bb.33: # %cond.load88
-; RV32-NEXT:    lh a1, 60(a0)
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v20, 30
-; RV32-NEXT:  .LBB24_34: # %else89
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a1, v16
-; RV32-NEXT:    bltz a3, .LBB24_97
-; RV32-NEXT:  # %bb.35: # %else92
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    bnez a3, .LBB24_98
-; RV32-NEXT:  .LBB24_36: # %else95
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    bnez a3, .LBB24_99
-; RV32-NEXT:  .LBB24_37: # %else98
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    bnez a3, .LBB24_100
-; RV32-NEXT:  .LBB24_38: # %else101
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    bnez a3, .LBB24_101
-; RV32-NEXT:  .LBB24_39: # %else104
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    bnez a3, .LBB24_102
-; RV32-NEXT:  .LBB24_40: # %else107
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    bnez a3, .LBB24_103
-; RV32-NEXT:  .LBB24_41: # %else110
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    bnez a3, .LBB24_104
-; RV32-NEXT:  .LBB24_42: # %else113
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    bnez a3, .LBB24_105
-; RV32-NEXT:  .LBB24_43: # %else116
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    bnez a3, .LBB24_106
-; RV32-NEXT:  .LBB24_44: # %else119
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    bnez a3, .LBB24_107
-; RV32-NEXT:  .LBB24_45: # %else122
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    bnez a3, .LBB24_108
-; RV32-NEXT:  .LBB24_46: # %else125
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bltz a3, .LBB24_109
-; RV32-NEXT:  .LBB24_47: # %else128
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bltz a3, .LBB24_110
-; RV32-NEXT:  .LBB24_48: # %else131
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bltz a3, .LBB24_111
-; RV32-NEXT:  .LBB24_49: # %else134
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bltz a3, .LBB24_112
-; RV32-NEXT:  .LBB24_50: # %else137
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bltz a3, .LBB24_113
-; RV32-NEXT:  .LBB24_51: # %else140
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bltz a3, .LBB24_114
-; RV32-NEXT:  .LBB24_52: # %else143
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bltz a3, .LBB24_115
-; RV32-NEXT:  .LBB24_53: # %else146
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bltz a3, .LBB24_116
-; RV32-NEXT:  .LBB24_54: # %else149
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bltz a3, .LBB24_117
-; RV32-NEXT:  .LBB24_55: # %else152
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bltz a3, .LBB24_118
-; RV32-NEXT:  .LBB24_56: # %else155
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bltz a3, .LBB24_119
-; RV32-NEXT:  .LBB24_57: # %else158
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bltz a3, .LBB24_120
-; RV32-NEXT:  .LBB24_58: # %else161
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bltz a3, .LBB24_121
-; RV32-NEXT:  .LBB24_59: # %else164
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bltz a3, .LBB24_122
-; RV32-NEXT:  .LBB24_60: # %else167
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bltz a3, .LBB24_123
-; RV32-NEXT:  .LBB24_61: # %else170
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bltz a3, .LBB24_124
-; RV32-NEXT:  .LBB24_62: # %else173
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bltz a3, .LBB24_125
-; RV32-NEXT:  .LBB24_63: # %else176
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bltz a3, .LBB24_126
-; RV32-NEXT:  .LBB24_64: # %else179
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bltz a3, .LBB24_127
-; RV32-NEXT:  .LBB24_65: # %else182
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bltz a3, .LBB24_128
-; RV32-NEXT:  .LBB24_66: # %else185
-; RV32-NEXT:    bgez a1, .LBB24_68
-; RV32-NEXT:  .LBB24_67: # %cond.load187
-; RV32-NEXT:    lh a0, 126(a0)
-; RV32-NEXT:    li a1, 64
-; RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a0
-; RV32-NEXT:    li a0, 63
-; RV32-NEXT:    vslideup.vx v8, v16, a0
-; RV32-NEXT:  .LBB24_68: # %else188
-; RV32-NEXT:    li a0, 64
-; RV32-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV32-NEXT:    vmsne.vi v0, v8, 0
+; RV32-NEXT:    vle16.v v8, (a0), v0.t
 ; RV32-NEXT:    vse16.v v8, (a2)
 ; RV32-NEXT:    addi sp, s0, -384
 ; RV32-NEXT:    lw ra, 380(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    lw s0, 376(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    addi sp, sp, 384
 ; RV32-NEXT:    ret
-; RV32-NEXT:  .LBB24_69: # %cond.load
-; RV32-NEXT:    lh a1, 0(a0)
-; RV32-NEXT:    fmv.x.h a5, fa5
-; RV32-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV32-NEXT:    vmv.v.x v8, a5
-; RV32-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV32-NEXT:    vmv.s.x v8, a1
-; RV32-NEXT:    andi a1, a3, 2
-; RV32-NEXT:    beqz a1, .LBB24_2
-; RV32-NEXT:  .LBB24_70: # %cond.load1
-; RV32-NEXT:    lh a1, 2(a0)
-; RV32-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 1
-; RV32-NEXT:    andi a1, a3, 4
-; RV32-NEXT:    beqz a1, .LBB24_3
-; RV32-NEXT:  .LBB24_71: # %cond.load4
-; RV32-NEXT:    lh a1, 4(a0)
-; RV32-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 2
-; RV32-NEXT:    andi a1, a3, 8
-; RV32-NEXT:    beqz a1, .LBB24_4
-; RV32-NEXT:  .LBB24_72: # %cond.load7
-; RV32-NEXT:    lh a1, 6(a0)
-; RV32-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 3
-; RV32-NEXT:    andi a1, a3, 16
-; RV32-NEXT:    beqz a1, .LBB24_5
-; RV32-NEXT:  .LBB24_73: # %cond.load10
-; RV32-NEXT:    lh a1, 8(a0)
-; RV32-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 4
-; RV32-NEXT:    andi a1, a3, 32
-; RV32-NEXT:    beqz a1, .LBB24_6
-; RV32-NEXT:  .LBB24_74: # %cond.load13
-; RV32-NEXT:    lh a1, 10(a0)
-; RV32-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 5
-; RV32-NEXT:    andi a1, a3, 64
-; RV32-NEXT:    beqz a1, .LBB24_7
-; RV32-NEXT:  .LBB24_75: # %cond.load16
-; RV32-NEXT:    lh a1, 12(a0)
-; RV32-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 6
-; RV32-NEXT:    andi a1, a3, 128
-; RV32-NEXT:    beqz a1, .LBB24_8
-; RV32-NEXT:  .LBB24_76: # %cond.load19
-; RV32-NEXT:    lh a1, 14(a0)
-; RV32-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 7
-; RV32-NEXT:    andi a1, a3, 256
-; RV32-NEXT:    beqz a1, .LBB24_9
-; RV32-NEXT:  .LBB24_77: # %cond.load22
-; RV32-NEXT:    lh a1, 16(a0)
-; RV32-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 8
-; RV32-NEXT:    andi a1, a3, 512
-; RV32-NEXT:    beqz a1, .LBB24_10
-; RV32-NEXT:  .LBB24_78: # %cond.load25
-; RV32-NEXT:    lh a1, 18(a0)
-; RV32-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 9
-; RV32-NEXT:    andi a1, a3, 1024
-; RV32-NEXT:    beqz a1, .LBB24_11
-; RV32-NEXT:  .LBB24_79: # %cond.load28
-; RV32-NEXT:    lh a1, 20(a0)
-; RV32-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 10
-; RV32-NEXT:    slli a1, a3, 20
-; RV32-NEXT:    bgez a1, .LBB24_12
-; RV32-NEXT:  .LBB24_80: # %cond.load31
-; RV32-NEXT:    lh a1, 22(a0)
-; RV32-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 11
-; RV32-NEXT:    slli a1, a3, 19
-; RV32-NEXT:    bgez a1, .LBB24_13
-; RV32-NEXT:  .LBB24_81: # %cond.load34
-; RV32-NEXT:    lh a1, 24(a0)
-; RV32-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 12
-; RV32-NEXT:    slli a1, a3, 18
-; RV32-NEXT:    bgez a1, .LBB24_14
-; RV32-NEXT:  .LBB24_82: # %cond.load37
-; RV32-NEXT:    lh a1, 26(a0)
-; RV32-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 13
-; RV32-NEXT:    slli a1, a3, 17
-; RV32-NEXT:    bgez a1, .LBB24_15
-; RV32-NEXT:  .LBB24_83: # %cond.load40
-; RV32-NEXT:    lh a1, 28(a0)
-; RV32-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 14
-; RV32-NEXT:    slli a1, a3, 16
-; RV32-NEXT:    bgez a1, .LBB24_16
-; RV32-NEXT:  .LBB24_84: # %cond.load43
-; RV32-NEXT:    lh a1, 30(a0)
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 15
-; RV32-NEXT:    slli a1, a3, 15
-; RV32-NEXT:    bgez a1, .LBB24_17
-; RV32-NEXT:  .LBB24_85: # %cond.load46
-; RV32-NEXT:    lh a1, 32(a0)
-; RV32-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 16
-; RV32-NEXT:    slli a1, a3, 14
-; RV32-NEXT:    bgez a1, .LBB24_18
-; RV32-NEXT:  .LBB24_86: # %cond.load49
-; RV32-NEXT:    lh a1, 34(a0)
-; RV32-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 17
-; RV32-NEXT:    slli a1, a3, 13
-; RV32-NEXT:    bgez a1, .LBB24_19
-; RV32-NEXT:  .LBB24_87: # %cond.load52
-; RV32-NEXT:    lh a1, 36(a0)
-; RV32-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 18
-; RV32-NEXT:    slli a1, a3, 12
-; RV32-NEXT:    bgez a1, .LBB24_20
-; RV32-NEXT:  .LBB24_88: # %cond.load55
-; RV32-NEXT:    lh a1, 38(a0)
-; RV32-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 19
-; RV32-NEXT:    slli a1, a3, 11
-; RV32-NEXT:    bgez a1, .LBB24_21
-; RV32-NEXT:  .LBB24_89: # %cond.load58
-; RV32-NEXT:    lh a1, 40(a0)
-; RV32-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 20
-; RV32-NEXT:    slli a1, a3, 10
-; RV32-NEXT:    bgez a1, .LBB24_22
-; RV32-NEXT:  .LBB24_90: # %cond.load61
-; RV32-NEXT:    lh a1, 42(a0)
-; RV32-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 21
-; RV32-NEXT:    slli a1, a3, 9
-; RV32-NEXT:    bgez a1, .LBB24_23
-; RV32-NEXT:  .LBB24_91: # %cond.load64
-; RV32-NEXT:    lh a1, 44(a0)
-; RV32-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 22
-; RV32-NEXT:    slli a1, a3, 8
-; RV32-NEXT:    bgez a1, .LBB24_24
-; RV32-NEXT:  .LBB24_92: # %cond.load67
-; RV32-NEXT:    lh a1, 46(a0)
-; RV32-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 23
-; RV32-NEXT:    slli a1, a3, 7
-; RV32-NEXT:    bgez a1, .LBB24_25
-; RV32-NEXT:  .LBB24_93: # %cond.load70
-; RV32-NEXT:    lh a1, 48(a0)
-; RV32-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 24
-; RV32-NEXT:    slli a1, a3, 6
-; RV32-NEXT:    bgez a1, .LBB24_26
-; RV32-NEXT:  .LBB24_94: # %cond.load73
-; RV32-NEXT:    lh a1, 50(a0)
-; RV32-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 25
-; RV32-NEXT:    slli a1, a3, 5
-; RV32-NEXT:    bgez a1, .LBB24_27
-; RV32-NEXT:  .LBB24_95: # %cond.load76
-; RV32-NEXT:    lh a1, 52(a0)
-; RV32-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 26
-; RV32-NEXT:    slli a1, a3, 4
-; RV32-NEXT:    bgez a1, .LBB24_28
-; RV32-NEXT:  .LBB24_96: # %cond.load79
-; RV32-NEXT:    lh a1, 54(a0)
-; RV32-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 27
-; RV32-NEXT:    slli a1, a3, 3
-; RV32-NEXT:    bltz a1, .LBB24_29
-; RV32-NEXT:    j .LBB24_30
-; RV32-NEXT:  .LBB24_97: # %cond.load91
-; RV32-NEXT:    lh a3, 62(a0)
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v16, 31
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    beqz a3, .LBB24_36
-; RV32-NEXT:  .LBB24_98: # %cond.load94
-; RV32-NEXT:    lh a3, 64(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 33
-; RV32-NEXT:    li a4, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    beqz a3, .LBB24_37
-; RV32-NEXT:  .LBB24_99: # %cond.load97
-; RV32-NEXT:    lh a3, 66(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 34
-; RV32-NEXT:    li a4, 33
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    beqz a3, .LBB24_38
-; RV32-NEXT:  .LBB24_100: # %cond.load100
-; RV32-NEXT:    lh a3, 68(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 35
-; RV32-NEXT:    li a4, 34
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    beqz a3, .LBB24_39
-; RV32-NEXT:  .LBB24_101: # %cond.load103
-; RV32-NEXT:    lh a3, 70(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 36
-; RV32-NEXT:    li a4, 35
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    beqz a3, .LBB24_40
-; RV32-NEXT:  .LBB24_102: # %cond.load106
-; RV32-NEXT:    lh a3, 72(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 37
-; RV32-NEXT:    li a4, 36
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    beqz a3, .LBB24_41
-; RV32-NEXT:  .LBB24_103: # %cond.load109
-; RV32-NEXT:    lh a3, 74(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 38
-; RV32-NEXT:    li a4, 37
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    beqz a3, .LBB24_42
-; RV32-NEXT:  .LBB24_104: # %cond.load112
-; RV32-NEXT:    lh a3, 76(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 39
-; RV32-NEXT:    li a4, 38
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    beqz a3, .LBB24_43
-; RV32-NEXT:  .LBB24_105: # %cond.load115
-; RV32-NEXT:    lh a3, 78(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 40
-; RV32-NEXT:    li a4, 39
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    beqz a3, .LBB24_44
-; RV32-NEXT:  .LBB24_106: # %cond.load118
-; RV32-NEXT:    lh a3, 80(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 41
-; RV32-NEXT:    li a4, 40
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    beqz a3, .LBB24_45
-; RV32-NEXT:  .LBB24_107: # %cond.load121
-; RV32-NEXT:    lh a3, 82(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 42
-; RV32-NEXT:    li a4, 41
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    beqz a3, .LBB24_46
-; RV32-NEXT:  .LBB24_108: # %cond.load124
-; RV32-NEXT:    lh a3, 84(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 43
-; RV32-NEXT:    li a4, 42
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bgez a3, .LBB24_47
-; RV32-NEXT:  .LBB24_109: # %cond.load127
-; RV32-NEXT:    lh a3, 86(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 44
-; RV32-NEXT:    li a4, 43
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bgez a3, .LBB24_48
-; RV32-NEXT:  .LBB24_110: # %cond.load130
-; RV32-NEXT:    lh a3, 88(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 45
-; RV32-NEXT:    li a4, 44
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bgez a3, .LBB24_49
-; RV32-NEXT:  .LBB24_111: # %cond.load133
-; RV32-NEXT:    lh a3, 90(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 46
-; RV32-NEXT:    li a4, 45
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bgez a3, .LBB24_50
-; RV32-NEXT:  .LBB24_112: # %cond.load136
-; RV32-NEXT:    lh a3, 92(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 47
-; RV32-NEXT:    li a4, 46
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bgez a3, .LBB24_51
-; RV32-NEXT:  .LBB24_113: # %cond.load139
-; RV32-NEXT:    lh a3, 94(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 48
-; RV32-NEXT:    li a4, 47
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bgez a3, .LBB24_52
-; RV32-NEXT:  .LBB24_114: # %cond.load142
-; RV32-NEXT:    lh a3, 96(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 49
-; RV32-NEXT:    li a4, 48
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bgez a3, .LBB24_53
-; RV32-NEXT:  .LBB24_115: # %cond.load145
-; RV32-NEXT:    lh a3, 98(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 50
-; RV32-NEXT:    li a4, 49
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bgez a3, .LBB24_54
-; RV32-NEXT:  .LBB24_116: # %cond.load148
-; RV32-NEXT:    lh a3, 100(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 51
-; RV32-NEXT:    li a4, 50
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bgez a3, .LBB24_55
-; RV32-NEXT:  .LBB24_117: # %cond.load151
-; RV32-NEXT:    lh a3, 102(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 52
-; RV32-NEXT:    li a4, 51
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bgez a3, .LBB24_56
-; RV32-NEXT:  .LBB24_118: # %cond.load154
-; RV32-NEXT:    lh a3, 104(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 53
-; RV32-NEXT:    li a4, 52
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bgez a3, .LBB24_57
-; RV32-NEXT:  .LBB24_119: # %cond.load157
-; RV32-NEXT:    lh a3, 106(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 54
-; RV32-NEXT:    li a4, 53
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bgez a3, .LBB24_58
-; RV32-NEXT:  .LBB24_120: # %cond.load160
-; RV32-NEXT:    lh a3, 108(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 55
-; RV32-NEXT:    li a4, 54
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bgez a3, .LBB24_59
-; RV32-NEXT:  .LBB24_121: # %cond.load163
-; RV32-NEXT:    lh a3, 110(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 56
-; RV32-NEXT:    li a4, 55
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bgez a3, .LBB24_60
-; RV32-NEXT:  .LBB24_122: # %cond.load166
-; RV32-NEXT:    lh a3, 112(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 57
-; RV32-NEXT:    li a4, 56
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bgez a3, .LBB24_61
-; RV32-NEXT:  .LBB24_123: # %cond.load169
-; RV32-NEXT:    lh a3, 114(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 58
-; RV32-NEXT:    li a4, 57
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bgez a3, .LBB24_62
-; RV32-NEXT:  .LBB24_124: # %cond.load172
-; RV32-NEXT:    lh a3, 116(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 59
-; RV32-NEXT:    li a4, 58
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bgez a3, .LBB24_63
-; RV32-NEXT:  .LBB24_125: # %cond.load175
-; RV32-NEXT:    lh a3, 118(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 60
-; RV32-NEXT:    li a4, 59
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bgez a3, .LBB24_64
-; RV32-NEXT:  .LBB24_126: # %cond.load178
-; RV32-NEXT:    lh a3, 120(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 61
-; RV32-NEXT:    li a4, 60
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bgez a3, .LBB24_65
-; RV32-NEXT:  .LBB24_127: # %cond.load181
-; RV32-NEXT:    lh a3, 122(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 62
-; RV32-NEXT:    li a4, 61
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bgez a3, .LBB24_66
-; RV32-NEXT:  .LBB24_128: # %cond.load184
-; RV32-NEXT:    lh a3, 124(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 63
-; RV32-NEXT:    li a4, 62
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:    bltz a1, .LBB24_67
-; RV32-NEXT:    j .LBB24_68
 ;
 ; RV64-LABEL: masked_load_v64bf16:
 ; RV64:       # %bb.0:
@@ -4409,786 +1318,14 @@ define void @masked_load_v64bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
 ; RV64-NEXT:    vle8.v v8, (a1)
 ; RV64-NEXT:    vand.vi v8, v8, 1
-; RV64-NEXT:    vmsne.vi v12, v8, 0
-; RV64-NEXT:    vsetvli zero, a3, e64, m1, ta, ma
-; RV64-NEXT:    vmv.x.s a1, v12
-; RV64-NEXT:    andi a4, a1, 1
-; RV64-NEXT:    # implicit-def: $v8m8
-; RV64-NEXT:    bnez a4, .LBB24_66
-; RV64-NEXT:  # %bb.1: # %else
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    bnez a3, .LBB24_67
-; RV64-NEXT:  .LBB24_2: # %else2
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    bnez a3, .LBB24_68
-; RV64-NEXT:  .LBB24_3: # %else5
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    bnez a3, .LBB24_69
-; RV64-NEXT:  .LBB24_4: # %else8
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    bnez a3, .LBB24_70
-; RV64-NEXT:  .LBB24_5: # %else11
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    bnez a3, .LBB24_71
-; RV64-NEXT:  .LBB24_6: # %else14
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    bnez a3, .LBB24_72
-; RV64-NEXT:  .LBB24_7: # %else17
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    bnez a3, .LBB24_73
-; RV64-NEXT:  .LBB24_8: # %else20
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    bnez a3, .LBB24_74
-; RV64-NEXT:  .LBB24_9: # %else23
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    bnez a3, .LBB24_75
-; RV64-NEXT:  .LBB24_10: # %else26
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    bnez a3, .LBB24_76
-; RV64-NEXT:  .LBB24_11: # %else29
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bltz a3, .LBB24_77
-; RV64-NEXT:  .LBB24_12: # %else32
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bltz a3, .LBB24_78
-; RV64-NEXT:  .LBB24_13: # %else35
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bltz a3, .LBB24_79
-; RV64-NEXT:  .LBB24_14: # %else38
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bltz a3, .LBB24_80
-; RV64-NEXT:  .LBB24_15: # %else41
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bltz a3, .LBB24_81
-; RV64-NEXT:  .LBB24_16: # %else44
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bltz a3, .LBB24_82
-; RV64-NEXT:  .LBB24_17: # %else47
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bltz a3, .LBB24_83
-; RV64-NEXT:  .LBB24_18: # %else50
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bltz a3, .LBB24_84
-; RV64-NEXT:  .LBB24_19: # %else53
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bltz a3, .LBB24_85
-; RV64-NEXT:  .LBB24_20: # %else56
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bltz a3, .LBB24_86
-; RV64-NEXT:  .LBB24_21: # %else59
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bltz a3, .LBB24_87
-; RV64-NEXT:  .LBB24_22: # %else62
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bltz a3, .LBB24_88
-; RV64-NEXT:  .LBB24_23: # %else65
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bltz a3, .LBB24_89
-; RV64-NEXT:  .LBB24_24: # %else68
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bltz a3, .LBB24_90
-; RV64-NEXT:  .LBB24_25: # %else71
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bltz a3, .LBB24_91
-; RV64-NEXT:  .LBB24_26: # %else74
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bltz a3, .LBB24_92
-; RV64-NEXT:  .LBB24_27: # %else77
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bltz a3, .LBB24_93
-; RV64-NEXT:  .LBB24_28: # %else80
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bltz a3, .LBB24_94
-; RV64-NEXT:  .LBB24_29: # %else83
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bltz a3, .LBB24_95
-; RV64-NEXT:  .LBB24_30: # %else86
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bltz a3, .LBB24_96
-; RV64-NEXT:  .LBB24_31: # %else89
-; RV64-NEXT:    slli a3, a1, 32
-; RV64-NEXT:    bltz a3, .LBB24_97
-; RV64-NEXT:  .LBB24_32: # %else92
-; RV64-NEXT:    slli a3, a1, 31
-; RV64-NEXT:    bltz a3, .LBB24_98
-; RV64-NEXT:  .LBB24_33: # %else95
-; RV64-NEXT:    slli a3, a1, 30
-; RV64-NEXT:    bltz a3, .LBB24_99
-; RV64-NEXT:  .LBB24_34: # %else98
-; RV64-NEXT:    slli a3, a1, 29
-; RV64-NEXT:    bltz a3, .LBB24_100
-; RV64-NEXT:  .LBB24_35: # %else101
-; RV64-NEXT:    slli a3, a1, 28
-; RV64-NEXT:    bltz a3, .LBB24_101
-; RV64-NEXT:  .LBB24_36: # %else104
-; RV64-NEXT:    slli a3, a1, 27
-; RV64-NEXT:    bltz a3, .LBB24_102
-; RV64-NEXT:  .LBB24_37: # %else107
-; RV64-NEXT:    slli a3, a1, 26
-; RV64-NEXT:    bltz a3, .LBB24_103
-; RV64-NEXT:  .LBB24_38: # %else110
-; RV64-NEXT:    slli a3, a1, 25
-; RV64-NEXT:    bltz a3, .LBB24_104
-; RV64-NEXT:  .LBB24_39: # %else113
-; RV64-NEXT:    slli a3, a1, 24
-; RV64-NEXT:    bltz a3, .LBB24_105
-; RV64-NEXT:  .LBB24_40: # %else116
-; RV64-NEXT:    slli a3, a1, 23
-; RV64-NEXT:    bltz a3, .LBB24_106
-; RV64-NEXT:  .LBB24_41: # %else119
-; RV64-NEXT:    slli a3, a1, 22
-; RV64-NEXT:    bltz a3, .LBB24_107
-; RV64-NEXT:  .LBB24_42: # %else122
-; RV64-NEXT:    slli a3, a1, 21
-; RV64-NEXT:    bltz a3, .LBB24_108
-; RV64-NEXT:  .LBB24_43: # %else125
-; RV64-NEXT:    slli a3, a1, 20
-; RV64-NEXT:    bltz a3, .LBB24_109
-; RV64-NEXT:  .LBB24_44: # %else128
-; RV64-NEXT:    slli a3, a1, 19
-; RV64-NEXT:    bltz a3, .LBB24_110
-; RV64-NEXT:  .LBB24_45: # %else131
-; RV64-NEXT:    slli a3, a1, 18
-; RV64-NEXT:    bltz a3, .LBB24_111
-; RV64-NEXT:  .LBB24_46: # %else134
-; RV64-NEXT:    slli a3, a1, 17
-; RV64-NEXT:    bltz a3, .LBB24_112
-; RV64-NEXT:  .LBB24_47: # %else137
-; RV64-NEXT:    slli a3, a1, 16
-; RV64-NEXT:    bltz a3, .LBB24_113
-; RV64-NEXT:  .LBB24_48: # %else140
-; RV64-NEXT:    slli a3, a1, 15
-; RV64-NEXT:    bltz a3, .LBB24_114
-; RV64-NEXT:  .LBB24_49: # %else143
-; RV64-NEXT:    slli a3, a1, 14
-; RV64-NEXT:    bltz a3, .LBB24_115
-; RV64-NEXT:  .LBB24_50: # %else146
-; RV64-NEXT:    slli a3, a1, 13
-; RV64-NEXT:    bltz a3, .LBB24_116
-; RV64-NEXT:  .LBB24_51: # %else149
-; RV64-NEXT:    slli a3, a1, 12
-; RV64-NEXT:    bltz a3, .LBB24_117
-; RV64-NEXT:  .LBB24_52: # %else152
-; RV64-NEXT:    slli a3, a1, 11
-; RV64-NEXT:    bltz a3, .LBB24_118
-; RV64-NEXT:  .LBB24_53: # %else155
-; RV64-NEXT:    slli a3, a1, 10
-; RV64-NEXT:    bltz a3, .LBB24_119
-; RV64-NEXT:  .LBB24_54: # %else158
-; RV64-NEXT:    slli a3, a1, 9
-; RV64-NEXT:    bltz a3, .LBB24_120
-; RV64-NEXT:  .LBB24_55: # %else161
-; RV64-NEXT:    slli a3, a1, 8
-; RV64-NEXT:    bltz a3, .LBB24_121
-; RV64-NEXT:  .LBB24_56: # %else164
-; RV64-NEXT:    slli a3, a1, 7
-; RV64-NEXT:    bltz a3, .LBB24_122
-; RV64-NEXT:  .LBB24_57: # %else167
-; RV64-NEXT:    slli a3, a1, 6
-; RV64-NEXT:    bltz a3, .LBB24_123
-; RV64-NEXT:  .LBB24_58: # %else170
-; RV64-NEXT:    slli a3, a1, 5
-; RV64-NEXT:    bltz a3, .LBB24_124
-; RV64-NEXT:  .LBB24_59: # %else173
-; RV64-NEXT:    slli a3, a1, 4
-; RV64-NEXT:    bltz a3, .LBB24_125
-; RV64-NEXT:  .LBB24_60: # %else176
-; RV64-NEXT:    slli a3, a1, 3
-; RV64-NEXT:    bltz a3, .LBB24_126
-; RV64-NEXT:  .LBB24_61: # %else179
-; RV64-NEXT:    slli a3, a1, 2
-; RV64-NEXT:    bltz a3, .LBB24_127
-; RV64-NEXT:  .LBB24_62: # %else182
-; RV64-NEXT:    slli a3, a1, 1
-; RV64-NEXT:    bltz a3, .LBB24_128
-; RV64-NEXT:  .LBB24_63: # %else185
-; RV64-NEXT:    bgez a1, .LBB24_65
-; RV64-NEXT:  .LBB24_64: # %cond.load187
-; RV64-NEXT:    lh a0, 126(a0)
-; RV64-NEXT:    li a1, 64
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a0
-; RV64-NEXT:    li a0, 63
-; RV64-NEXT:    vslideup.vx v8, v16, a0
-; RV64-NEXT:  .LBB24_65: # %else188
-; RV64-NEXT:    li a0, 64
-; RV64-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV64-NEXT:    vmsne.vi v0, v8, 0
+; RV64-NEXT:    vle16.v v8, (a0), v0.t
 ; RV64-NEXT:    vse16.v v8, (a2)
 ; RV64-NEXT:    addi sp, s0, -384
 ; RV64-NEXT:    ld ra, 376(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    ld s0, 368(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    addi sp, sp, 384
 ; RV64-NEXT:    ret
-; RV64-NEXT:  .LBB24_66: # %cond.load
-; RV64-NEXT:    lh a4, 0(a0)
-; RV64-NEXT:    fmv.x.h a5, fa5
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
-; RV64-NEXT:    vmv.v.x v8, a5
-; RV64-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV64-NEXT:    vmv.s.x v8, a4
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    beqz a3, .LBB24_2
-; RV64-NEXT:  .LBB24_67: # %cond.load1
-; RV64-NEXT:    lh a3, 2(a0)
-; RV64-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 1
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    beqz a3, .LBB24_3
-; RV64-NEXT:  .LBB24_68: # %cond.load4
-; RV64-NEXT:    lh a3, 4(a0)
-; RV64-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 2
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    beqz a3, .LBB24_4
-; RV64-NEXT:  .LBB24_69: # %cond.load7
-; RV64-NEXT:    lh a3, 6(a0)
-; RV64-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 3
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    beqz a3, .LBB24_5
-; RV64-NEXT:  .LBB24_70: # %cond.load10
-; RV64-NEXT:    lh a3, 8(a0)
-; RV64-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 4
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    beqz a3, .LBB24_6
-; RV64-NEXT:  .LBB24_71: # %cond.load13
-; RV64-NEXT:    lh a3, 10(a0)
-; RV64-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 5
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    beqz a3, .LBB24_7
-; RV64-NEXT:  .LBB24_72: # %cond.load16
-; RV64-NEXT:    lh a3, 12(a0)
-; RV64-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 6
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    beqz a3, .LBB24_8
-; RV64-NEXT:  .LBB24_73: # %cond.load19
-; RV64-NEXT:    lh a3, 14(a0)
-; RV64-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 7
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    beqz a3, .LBB24_9
-; RV64-NEXT:  .LBB24_74: # %cond.load22
-; RV64-NEXT:    lh a3, 16(a0)
-; RV64-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 8
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    beqz a3, .LBB24_10
-; RV64-NEXT:  .LBB24_75: # %cond.load25
-; RV64-NEXT:    lh a3, 18(a0)
-; RV64-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 9
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    beqz a3, .LBB24_11
-; RV64-NEXT:  .LBB24_76: # %cond.load28
-; RV64-NEXT:    lh a3, 20(a0)
-; RV64-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 10
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bgez a3, .LBB24_12
-; RV64-NEXT:  .LBB24_77: # %cond.load31
-; RV64-NEXT:    lh a3, 22(a0)
-; RV64-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 11
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bgez a3, .LBB24_13
-; RV64-NEXT:  .LBB24_78: # %cond.load34
-; RV64-NEXT:    lh a3, 24(a0)
-; RV64-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 12
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bgez a3, .LBB24_14
-; RV64-NEXT:  .LBB24_79: # %cond.load37
-; RV64-NEXT:    lh a3, 26(a0)
-; RV64-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 13
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bgez a3, .LBB24_15
-; RV64-NEXT:  .LBB24_80: # %cond.load40
-; RV64-NEXT:    lh a3, 28(a0)
-; RV64-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 14
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bgez a3, .LBB24_16
-; RV64-NEXT:  .LBB24_81: # %cond.load43
-; RV64-NEXT:    lh a3, 30(a0)
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 15
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bgez a3, .LBB24_17
-; RV64-NEXT:  .LBB24_82: # %cond.load46
-; RV64-NEXT:    lh a3, 32(a0)
-; RV64-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 16
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bgez a3, .LBB24_18
-; RV64-NEXT:  .LBB24_83: # %cond.load49
-; RV64-NEXT:    lh a3, 34(a0)
-; RV64-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 17
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bgez a3, .LBB24_19
-; RV64-NEXT:  .LBB24_84: # %cond.load52
-; RV64-NEXT:    lh a3, 36(a0)
-; RV64-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 18
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bgez a3, .LBB24_20
-; RV64-NEXT:  .LBB24_85: # %cond.load55
-; RV64-NEXT:    lh a3, 38(a0)
-; RV64-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 19
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bgez a3, .LBB24_21
-; RV64-NEXT:  .LBB24_86: # %cond.load58
-; RV64-NEXT:    lh a3, 40(a0)
-; RV64-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 20
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bgez a3, .LBB24_22
-; RV64-NEXT:  .LBB24_87: # %cond.load61
-; RV64-NEXT:    lh a3, 42(a0)
-; RV64-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 21
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bgez a3, .LBB24_23
-; RV64-NEXT:  .LBB24_88: # %cond.load64
-; RV64-NEXT:    lh a3, 44(a0)
-; RV64-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 22
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bgez a3, .LBB24_24
-; RV64-NEXT:  .LBB24_89: # %cond.load67
-; RV64-NEXT:    lh a3, 46(a0)
-; RV64-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 23
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bgez a3, .LBB24_25
-; RV64-NEXT:  .LBB24_90: # %cond.load70
-; RV64-NEXT:    lh a3, 48(a0)
-; RV64-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 24
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bgez a3, .LBB24_26
-; RV64-NEXT:  .LBB24_91: # %cond.load73
-; RV64-NEXT:    lh a3, 50(a0)
-; RV64-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 25
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bgez a3, .LBB24_27
-; RV64-NEXT:  .LBB24_92: # %cond.load76
-; RV64-NEXT:    lh a3, 52(a0)
-; RV64-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 26
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bgez a3, .LBB24_28
-; RV64-NEXT:  .LBB24_93: # %cond.load79
-; RV64-NEXT:    lh a3, 54(a0)
-; RV64-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 27
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bgez a3, .LBB24_29
-; RV64-NEXT:  .LBB24_94: # %cond.load82
-; RV64-NEXT:    lh a3, 56(a0)
-; RV64-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 28
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bgez a3, .LBB24_30
-; RV64-NEXT:  .LBB24_95: # %cond.load85
-; RV64-NEXT:    lh a3, 58(a0)
-; RV64-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 29
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bgez a3, .LBB24_31
-; RV64-NEXT:  .LBB24_96: # %cond.load88
-; RV64-NEXT:    lh a3, 60(a0)
-; RV64-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    vslideup.vi v8, v16, 30
-; RV64-NEXT:    slli a3, a1, 32
-; RV64-NEXT:    bgez a3, .LBB24_32
-; RV64-NEXT:  .LBB24_97: # %cond.load91
-; RV64-NEXT:    lh a3, 62(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 32
-; RV64-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV64-NEXT:    vslideup.vi v8, v16, 31
-; RV64-NEXT:    slli a3, a1, 31
-; RV64-NEXT:    bgez a3, .LBB24_33
-; RV64-NEXT:  .LBB24_98: # %cond.load94
-; RV64-NEXT:    lh a3, 64(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 33
-; RV64-NEXT:    li a4, 32
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 30
-; RV64-NEXT:    bgez a3, .LBB24_34
-; RV64-NEXT:  .LBB24_99: # %cond.load97
-; RV64-NEXT:    lh a3, 66(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 34
-; RV64-NEXT:    li a4, 33
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 29
-; RV64-NEXT:    bgez a3, .LBB24_35
-; RV64-NEXT:  .LBB24_100: # %cond.load100
-; RV64-NEXT:    lh a3, 68(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 35
-; RV64-NEXT:    li a4, 34
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 28
-; RV64-NEXT:    bgez a3, .LBB24_36
-; RV64-NEXT:  .LBB24_101: # %cond.load103
-; RV64-NEXT:    lh a3, 70(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 36
-; RV64-NEXT:    li a4, 35
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 27
-; RV64-NEXT:    bgez a3, .LBB24_37
-; RV64-NEXT:  .LBB24_102: # %cond.load106
-; RV64-NEXT:    lh a3, 72(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 37
-; RV64-NEXT:    li a4, 36
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 26
-; RV64-NEXT:    bgez a3, .LBB24_38
-; RV64-NEXT:  .LBB24_103: # %cond.load109
-; RV64-NEXT:    lh a3, 74(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 38
-; RV64-NEXT:    li a4, 37
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 25
-; RV64-NEXT:    bgez a3, .LBB24_39
-; RV64-NEXT:  .LBB24_104: # %cond.load112
-; RV64-NEXT:    lh a3, 76(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 39
-; RV64-NEXT:    li a4, 38
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 24
-; RV64-NEXT:    bgez a3, .LBB24_40
-; RV64-NEXT:  .LBB24_105: # %cond.load115
-; RV64-NEXT:    lh a3, 78(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 40
-; RV64-NEXT:    li a4, 39
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 23
-; RV64-NEXT:    bgez a3, .LBB24_41
-; RV64-NEXT:  .LBB24_106: # %cond.load118
-; RV64-NEXT:    lh a3, 80(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 41
-; RV64-NEXT:    li a4, 40
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 22
-; RV64-NEXT:    bgez a3, .LBB24_42
-; RV64-NEXT:  .LBB24_107: # %cond.load121
-; RV64-NEXT:    lh a3, 82(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 42
-; RV64-NEXT:    li a4, 41
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 21
-; RV64-NEXT:    bgez a3, .LBB24_43
-; RV64-NEXT:  .LBB24_108: # %cond.load124
-; RV64-NEXT:    lh a3, 84(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 43
-; RV64-NEXT:    li a4, 42
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 20
-; RV64-NEXT:    bgez a3, .LBB24_44
-; RV64-NEXT:  .LBB24_109: # %cond.load127
-; RV64-NEXT:    lh a3, 86(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 44
-; RV64-NEXT:    li a4, 43
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 19
-; RV64-NEXT:    bgez a3, .LBB24_45
-; RV64-NEXT:  .LBB24_110: # %cond.load130
-; RV64-NEXT:    lh a3, 88(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 45
-; RV64-NEXT:    li a4, 44
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 18
-; RV64-NEXT:    bgez a3, .LBB24_46
-; RV64-NEXT:  .LBB24_111: # %cond.load133
-; RV64-NEXT:    lh a3, 90(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 46
-; RV64-NEXT:    li a4, 45
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 17
-; RV64-NEXT:    bgez a3, .LBB24_47
-; RV64-NEXT:  .LBB24_112: # %cond.load136
-; RV64-NEXT:    lh a3, 92(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 47
-; RV64-NEXT:    li a4, 46
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 16
-; RV64-NEXT:    bgez a3, .LBB24_48
-; RV64-NEXT:  .LBB24_113: # %cond.load139
-; RV64-NEXT:    lh a3, 94(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 48
-; RV64-NEXT:    li a4, 47
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 15
-; RV64-NEXT:    bgez a3, .LBB24_49
-; RV64-NEXT:  .LBB24_114: # %cond.load142
-; RV64-NEXT:    lh a3, 96(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 49
-; RV64-NEXT:    li a4, 48
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 14
-; RV64-NEXT:    bgez a3, .LBB24_50
-; RV64-NEXT:  .LBB24_115: # %cond.load145
-; RV64-NEXT:    lh a3, 98(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 50
-; RV64-NEXT:    li a4, 49
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 13
-; RV64-NEXT:    bgez a3, .LBB24_51
-; RV64-NEXT:  .LBB24_116: # %cond.load148
-; RV64-NEXT:    lh a3, 100(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 51
-; RV64-NEXT:    li a4, 50
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 12
-; RV64-NEXT:    bgez a3, .LBB24_52
-; RV64-NEXT:  .LBB24_117: # %cond.load151
-; RV64-NEXT:    lh a3, 102(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 52
-; RV64-NEXT:    li a4, 51
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 11
-; RV64-NEXT:    bgez a3, .LBB24_53
-; RV64-NEXT:  .LBB24_118: # %cond.load154
-; RV64-NEXT:    lh a3, 104(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 53
-; RV64-NEXT:    li a4, 52
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 10
-; RV64-NEXT:    bgez a3, .LBB24_54
-; RV64-NEXT:  .LBB24_119: # %cond.load157
-; RV64-NEXT:    lh a3, 106(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 54
-; RV64-NEXT:    li a4, 53
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 9
-; RV64-NEXT:    bgez a3, .LBB24_55
-; RV64-NEXT:  .LBB24_120: # %cond.load160
-; RV64-NEXT:    lh a3, 108(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 55
-; RV64-NEXT:    li a4, 54
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 8
-; RV64-NEXT:    bgez a3, .LBB24_56
-; RV64-NEXT:  .LBB24_121: # %cond.load163
-; RV64-NEXT:    lh a3, 110(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 56
-; RV64-NEXT:    li a4, 55
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 7
-; RV64-NEXT:    bgez a3, .LBB24_57
-; RV64-NEXT:  .LBB24_122: # %cond.load166
-; RV64-NEXT:    lh a3, 112(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 57
-; RV64-NEXT:    li a4, 56
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 6
-; RV64-NEXT:    bgez a3, .LBB24_58
-; RV64-NEXT:  .LBB24_123: # %cond.load169
-; RV64-NEXT:    lh a3, 114(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 58
-; RV64-NEXT:    li a4, 57
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 5
-; RV64-NEXT:    bgez a3, .LBB24_59
-; RV64-NEXT:  .LBB24_124: # %cond.load172
-; RV64-NEXT:    lh a3, 116(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 59
-; RV64-NEXT:    li a4, 58
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 4
-; RV64-NEXT:    bgez a3, .LBB24_60
-; RV64-NEXT:  .LBB24_125: # %cond.load175
-; RV64-NEXT:    lh a3, 118(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 60
-; RV64-NEXT:    li a4, 59
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 3
-; RV64-NEXT:    bgez a3, .LBB24_61
-; RV64-NEXT:  .LBB24_126: # %cond.load178
-; RV64-NEXT:    lh a3, 120(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 61
-; RV64-NEXT:    li a4, 60
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 2
-; RV64-NEXT:    bgez a3, .LBB24_62
-; RV64-NEXT:  .LBB24_127: # %cond.load181
-; RV64-NEXT:    lh a3, 122(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 62
-; RV64-NEXT:    li a4, 61
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    slli a3, a1, 1
-; RV64-NEXT:    bgez a3, .LBB24_63
-; RV64-NEXT:  .LBB24_128: # %cond.load184
-; RV64-NEXT:    lh a3, 124(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 63
-; RV64-NEXT:    li a4, 62
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a4
-; RV64-NEXT:    bltz a1, .LBB24_64
-; RV64-NEXT:    j .LBB24_65
   %m = load <64 x bfloat>, ptr %m_ptr
   %mask = fcmp oeq <64 x bfloat> %m, zeroinitializer
   %load = call <64 x bfloat> @llvm.masked.load.v64bf16(ptr %a, i32 8, <64 x i1> %mask, <64 x bfloat> undef)
@@ -5216,8 +1353,8 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    sw s0, 376(sp) # 4-byte Folded Spill
 ; RV32-ZVFHMIN-NEXT:    addi s0, sp, 384
 ; RV32-ZVFHMIN-NEXT:    andi sp, sp, -128
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV32-ZVFHMIN-NEXT:    li a3, 64
+; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a1)
 ; RV32-ZVFHMIN-NEXT:    addi a1, sp, 128
 ; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a1)
@@ -5306,11 +1443,11 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v8
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v8
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a3, 64(sp)
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a4, 64(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 80(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 226(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
@@ -5398,10 +1535,10 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 7
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 6
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -5414,7 +1551,7 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    sb a6, 69(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a5, 70(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 71(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 71(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 97(sp)
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 4
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
@@ -5422,10 +1559,10 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 3
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 2
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -5438,7 +1575,7 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    sb a6, 65(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a5, 66(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 67(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 67(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 68(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 254(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
@@ -5517,10 +1654,10 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 14
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 13
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -5533,7 +1670,7 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    sb a6, 76(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a5, 77(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 78(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 78(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 79(sp)
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 11
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
@@ -5541,10 +1678,10 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 10
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 9
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -5557,789 +1694,20 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    sb a6, 72(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a5, 73(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 74(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 74(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 75(sp)
 ; RV32-ZVFHMIN-NEXT:    addi a1, sp, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e8, m4, ta, ma
+; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vle8.v v8, (a1)
 ; RV32-ZVFHMIN-NEXT:    vand.vi v8, v8, 1
-; RV32-ZVFHMIN-NEXT:    vmsne.vi v16, v8, 0
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v16
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1
-; RV32-ZVFHMIN-NEXT:    # implicit-def: $v8m8
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_69
-; RV32-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_70
-; RV32-ZVFHMIN-NEXT:  .LBB25_2: # %else2
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_71
-; RV32-ZVFHMIN-NEXT:  .LBB25_3: # %else5
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_72
-; RV32-ZVFHMIN-NEXT:  .LBB25_4: # %else8
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_73
-; RV32-ZVFHMIN-NEXT:  .LBB25_5: # %else11
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_74
-; RV32-ZVFHMIN-NEXT:  .LBB25_6: # %else14
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_75
-; RV32-ZVFHMIN-NEXT:  .LBB25_7: # %else17
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_76
-; RV32-ZVFHMIN-NEXT:  .LBB25_8: # %else20
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_77
-; RV32-ZVFHMIN-NEXT:  .LBB25_9: # %else23
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_78
-; RV32-ZVFHMIN-NEXT:  .LBB25_10: # %else26
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB25_79
-; RV32-ZVFHMIN-NEXT:  .LBB25_11: # %else29
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_80
-; RV32-ZVFHMIN-NEXT:  .LBB25_12: # %else32
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_81
-; RV32-ZVFHMIN-NEXT:  .LBB25_13: # %else35
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_82
-; RV32-ZVFHMIN-NEXT:  .LBB25_14: # %else38
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_83
-; RV32-ZVFHMIN-NEXT:  .LBB25_15: # %else41
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_84
-; RV32-ZVFHMIN-NEXT:  .LBB25_16: # %else44
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_85
-; RV32-ZVFHMIN-NEXT:  .LBB25_17: # %else47
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_86
-; RV32-ZVFHMIN-NEXT:  .LBB25_18: # %else50
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_87
-; RV32-ZVFHMIN-NEXT:  .LBB25_19: # %else53
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_88
-; RV32-ZVFHMIN-NEXT:  .LBB25_20: # %else56
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_89
-; RV32-ZVFHMIN-NEXT:  .LBB25_21: # %else59
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_90
-; RV32-ZVFHMIN-NEXT:  .LBB25_22: # %else62
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_91
-; RV32-ZVFHMIN-NEXT:  .LBB25_23: # %else65
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_92
-; RV32-ZVFHMIN-NEXT:  .LBB25_24: # %else68
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_93
-; RV32-ZVFHMIN-NEXT:  .LBB25_25: # %else71
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_94
-; RV32-ZVFHMIN-NEXT:  .LBB25_26: # %else74
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_95
-; RV32-ZVFHMIN-NEXT:  .LBB25_27: # %else77
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_96
-; RV32-ZVFHMIN-NEXT:  .LBB25_28: # %else80
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_30
-; RV32-ZVFHMIN-NEXT:  .LBB25_29: # %cond.load82
-; RV32-ZVFHMIN-NEXT:    lh a1, 56(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 28
-; RV32-ZVFHMIN-NEXT:  .LBB25_30: # %else83
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    li a1, 32
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB25_32
-; RV32-ZVFHMIN-NEXT:  # %bb.31: # %cond.load85
-; RV32-ZVFHMIN-NEXT:    lh a4, 58(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 29
-; RV32-ZVFHMIN-NEXT:  .LBB25_32: # %else86
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vsrl.vx v16, v16, a1
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB25_34
-; RV32-ZVFHMIN-NEXT:  # %bb.33: # %cond.load88
-; RV32-ZVFHMIN-NEXT:    lh a1, 60(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 30
-; RV32-ZVFHMIN-NEXT:  .LBB25_34: # %else89
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v16
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_97
-; RV32-ZVFHMIN-NEXT:  # %bb.35: # %else92
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_98
-; RV32-ZVFHMIN-NEXT:  .LBB25_36: # %else95
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_99
-; RV32-ZVFHMIN-NEXT:  .LBB25_37: # %else98
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_100
-; RV32-ZVFHMIN-NEXT:  .LBB25_38: # %else101
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_101
-; RV32-ZVFHMIN-NEXT:  .LBB25_39: # %else104
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_102
-; RV32-ZVFHMIN-NEXT:  .LBB25_40: # %else107
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_103
-; RV32-ZVFHMIN-NEXT:  .LBB25_41: # %else110
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_104
-; RV32-ZVFHMIN-NEXT:  .LBB25_42: # %else113
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_105
-; RV32-ZVFHMIN-NEXT:  .LBB25_43: # %else116
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_106
-; RV32-ZVFHMIN-NEXT:  .LBB25_44: # %else119
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_107
-; RV32-ZVFHMIN-NEXT:  .LBB25_45: # %else122
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB25_108
-; RV32-ZVFHMIN-NEXT:  .LBB25_46: # %else125
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_109
-; RV32-ZVFHMIN-NEXT:  .LBB25_47: # %else128
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_110
-; RV32-ZVFHMIN-NEXT:  .LBB25_48: # %else131
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_111
-; RV32-ZVFHMIN-NEXT:  .LBB25_49: # %else134
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_112
-; RV32-ZVFHMIN-NEXT:  .LBB25_50: # %else137
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_113
-; RV32-ZVFHMIN-NEXT:  .LBB25_51: # %else140
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_114
-; RV32-ZVFHMIN-NEXT:  .LBB25_52: # %else143
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_115
-; RV32-ZVFHMIN-NEXT:  .LBB25_53: # %else146
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_116
-; RV32-ZVFHMIN-NEXT:  .LBB25_54: # %else149
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_117
-; RV32-ZVFHMIN-NEXT:  .LBB25_55: # %else152
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_118
-; RV32-ZVFHMIN-NEXT:  .LBB25_56: # %else155
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_119
-; RV32-ZVFHMIN-NEXT:  .LBB25_57: # %else158
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_120
-; RV32-ZVFHMIN-NEXT:  .LBB25_58: # %else161
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_121
-; RV32-ZVFHMIN-NEXT:  .LBB25_59: # %else164
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_122
-; RV32-ZVFHMIN-NEXT:  .LBB25_60: # %else167
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_123
-; RV32-ZVFHMIN-NEXT:  .LBB25_61: # %else170
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_124
-; RV32-ZVFHMIN-NEXT:  .LBB25_62: # %else173
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_125
-; RV32-ZVFHMIN-NEXT:  .LBB25_63: # %else176
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_126
-; RV32-ZVFHMIN-NEXT:  .LBB25_64: # %else179
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_127
-; RV32-ZVFHMIN-NEXT:  .LBB25_65: # %else182
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB25_128
-; RV32-ZVFHMIN-NEXT:  .LBB25_66: # %else185
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_68
-; RV32-ZVFHMIN-NEXT:  .LBB25_67: # %cond.load187
-; RV32-ZVFHMIN-NEXT:    lh a0, 126(a0)
-; RV32-ZVFHMIN-NEXT:    li a1, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a0
-; RV32-ZVFHMIN-NEXT:    li a0, 63
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a0
-; RV32-ZVFHMIN-NEXT:  .LBB25_68: # %else188
-; RV32-ZVFHMIN-NEXT:    li a0, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV32-ZVFHMIN-NEXT:    vmsne.vi v0, v8, 0
+; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; RV32-ZVFHMIN-NEXT:    addi sp, s0, -384
 ; RV32-ZVFHMIN-NEXT:    lw ra, 380(sp) # 4-byte Folded Reload
 ; RV32-ZVFHMIN-NEXT:    lw s0, 376(sp) # 4-byte Folded Reload
 ; RV32-ZVFHMIN-NEXT:    addi sp, sp, 384
 ; RV32-ZVFHMIN-NEXT:    ret
-; RV32-ZVFHMIN-NEXT:  .LBB25_69: # %cond.load
-; RV32-ZVFHMIN-NEXT:    lh a1, 0(a0)
-; RV32-ZVFHMIN-NEXT:    fmv.x.h a5, fa5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.v.x v8, a5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v8, a1
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_2
-; RV32-ZVFHMIN-NEXT:  .LBB25_70: # %cond.load1
-; RV32-ZVFHMIN-NEXT:    lh a1, 2(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 1
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_3
-; RV32-ZVFHMIN-NEXT:  .LBB25_71: # %cond.load4
-; RV32-ZVFHMIN-NEXT:    lh a1, 4(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 2
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_4
-; RV32-ZVFHMIN-NEXT:  .LBB25_72: # %cond.load7
-; RV32-ZVFHMIN-NEXT:    lh a1, 6(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 3
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_5
-; RV32-ZVFHMIN-NEXT:  .LBB25_73: # %cond.load10
-; RV32-ZVFHMIN-NEXT:    lh a1, 8(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 4
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_6
-; RV32-ZVFHMIN-NEXT:  .LBB25_74: # %cond.load13
-; RV32-ZVFHMIN-NEXT:    lh a1, 10(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 5
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_7
-; RV32-ZVFHMIN-NEXT:  .LBB25_75: # %cond.load16
-; RV32-ZVFHMIN-NEXT:    lh a1, 12(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 6
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_8
-; RV32-ZVFHMIN-NEXT:  .LBB25_76: # %cond.load19
-; RV32-ZVFHMIN-NEXT:    lh a1, 14(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 7
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_9
-; RV32-ZVFHMIN-NEXT:  .LBB25_77: # %cond.load22
-; RV32-ZVFHMIN-NEXT:    lh a1, 16(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 8
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_10
-; RV32-ZVFHMIN-NEXT:  .LBB25_78: # %cond.load25
-; RV32-ZVFHMIN-NEXT:    lh a1, 18(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 9
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB25_11
-; RV32-ZVFHMIN-NEXT:  .LBB25_79: # %cond.load28
-; RV32-ZVFHMIN-NEXT:    lh a1, 20(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 10
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_12
-; RV32-ZVFHMIN-NEXT:  .LBB25_80: # %cond.load31
-; RV32-ZVFHMIN-NEXT:    lh a1, 22(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 11
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_13
-; RV32-ZVFHMIN-NEXT:  .LBB25_81: # %cond.load34
-; RV32-ZVFHMIN-NEXT:    lh a1, 24(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 12
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_14
-; RV32-ZVFHMIN-NEXT:  .LBB25_82: # %cond.load37
-; RV32-ZVFHMIN-NEXT:    lh a1, 26(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 13
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_15
-; RV32-ZVFHMIN-NEXT:  .LBB25_83: # %cond.load40
-; RV32-ZVFHMIN-NEXT:    lh a1, 28(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 14
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_16
-; RV32-ZVFHMIN-NEXT:  .LBB25_84: # %cond.load43
-; RV32-ZVFHMIN-NEXT:    lh a1, 30(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 15
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_17
-; RV32-ZVFHMIN-NEXT:  .LBB25_85: # %cond.load46
-; RV32-ZVFHMIN-NEXT:    lh a1, 32(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 16
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_18
-; RV32-ZVFHMIN-NEXT:  .LBB25_86: # %cond.load49
-; RV32-ZVFHMIN-NEXT:    lh a1, 34(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 17
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_19
-; RV32-ZVFHMIN-NEXT:  .LBB25_87: # %cond.load52
-; RV32-ZVFHMIN-NEXT:    lh a1, 36(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 18
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_20
-; RV32-ZVFHMIN-NEXT:  .LBB25_88: # %cond.load55
-; RV32-ZVFHMIN-NEXT:    lh a1, 38(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 19
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_21
-; RV32-ZVFHMIN-NEXT:  .LBB25_89: # %cond.load58
-; RV32-ZVFHMIN-NEXT:    lh a1, 40(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 20
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_22
-; RV32-ZVFHMIN-NEXT:  .LBB25_90: # %cond.load61
-; RV32-ZVFHMIN-NEXT:    lh a1, 42(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 21
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_23
-; RV32-ZVFHMIN-NEXT:  .LBB25_91: # %cond.load64
-; RV32-ZVFHMIN-NEXT:    lh a1, 44(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 22
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_24
-; RV32-ZVFHMIN-NEXT:  .LBB25_92: # %cond.load67
-; RV32-ZVFHMIN-NEXT:    lh a1, 46(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 23
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_25
-; RV32-ZVFHMIN-NEXT:  .LBB25_93: # %cond.load70
-; RV32-ZVFHMIN-NEXT:    lh a1, 48(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 24
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_26
-; RV32-ZVFHMIN-NEXT:  .LBB25_94: # %cond.load73
-; RV32-ZVFHMIN-NEXT:    lh a1, 50(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 25
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_27
-; RV32-ZVFHMIN-NEXT:  .LBB25_95: # %cond.load76
-; RV32-ZVFHMIN-NEXT:    lh a1, 52(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 26
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB25_28
-; RV32-ZVFHMIN-NEXT:  .LBB25_96: # %cond.load79
-; RV32-ZVFHMIN-NEXT:    lh a1, 54(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 27
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_29
-; RV32-ZVFHMIN-NEXT:    j .LBB25_30
-; RV32-ZVFHMIN-NEXT:  .LBB25_97: # %cond.load91
-; RV32-ZVFHMIN-NEXT:    lh a3, 62(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 31
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_36
-; RV32-ZVFHMIN-NEXT:  .LBB25_98: # %cond.load94
-; RV32-ZVFHMIN-NEXT:    lh a3, 64(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 33
-; RV32-ZVFHMIN-NEXT:    li a4, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_37
-; RV32-ZVFHMIN-NEXT:  .LBB25_99: # %cond.load97
-; RV32-ZVFHMIN-NEXT:    lh a3, 66(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 34
-; RV32-ZVFHMIN-NEXT:    li a4, 33
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_38
-; RV32-ZVFHMIN-NEXT:  .LBB25_100: # %cond.load100
-; RV32-ZVFHMIN-NEXT:    lh a3, 68(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 35
-; RV32-ZVFHMIN-NEXT:    li a4, 34
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_39
-; RV32-ZVFHMIN-NEXT:  .LBB25_101: # %cond.load103
-; RV32-ZVFHMIN-NEXT:    lh a3, 70(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 36
-; RV32-ZVFHMIN-NEXT:    li a4, 35
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_40
-; RV32-ZVFHMIN-NEXT:  .LBB25_102: # %cond.load106
-; RV32-ZVFHMIN-NEXT:    lh a3, 72(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 37
-; RV32-ZVFHMIN-NEXT:    li a4, 36
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_41
-; RV32-ZVFHMIN-NEXT:  .LBB25_103: # %cond.load109
-; RV32-ZVFHMIN-NEXT:    lh a3, 74(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 38
-; RV32-ZVFHMIN-NEXT:    li a4, 37
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_42
-; RV32-ZVFHMIN-NEXT:  .LBB25_104: # %cond.load112
-; RV32-ZVFHMIN-NEXT:    lh a3, 76(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 39
-; RV32-ZVFHMIN-NEXT:    li a4, 38
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_43
-; RV32-ZVFHMIN-NEXT:  .LBB25_105: # %cond.load115
-; RV32-ZVFHMIN-NEXT:    lh a3, 78(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 40
-; RV32-ZVFHMIN-NEXT:    li a4, 39
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_44
-; RV32-ZVFHMIN-NEXT:  .LBB25_106: # %cond.load118
-; RV32-ZVFHMIN-NEXT:    lh a3, 80(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 41
-; RV32-ZVFHMIN-NEXT:    li a4, 40
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_45
-; RV32-ZVFHMIN-NEXT:  .LBB25_107: # %cond.load121
-; RV32-ZVFHMIN-NEXT:    lh a3, 82(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 42
-; RV32-ZVFHMIN-NEXT:    li a4, 41
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB25_46
-; RV32-ZVFHMIN-NEXT:  .LBB25_108: # %cond.load124
-; RV32-ZVFHMIN-NEXT:    lh a3, 84(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 43
-; RV32-ZVFHMIN-NEXT:    li a4, 42
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_47
-; RV32-ZVFHMIN-NEXT:  .LBB25_109: # %cond.load127
-; RV32-ZVFHMIN-NEXT:    lh a3, 86(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 44
-; RV32-ZVFHMIN-NEXT:    li a4, 43
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_48
-; RV32-ZVFHMIN-NEXT:  .LBB25_110: # %cond.load130
-; RV32-ZVFHMIN-NEXT:    lh a3, 88(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 45
-; RV32-ZVFHMIN-NEXT:    li a4, 44
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_49
-; RV32-ZVFHMIN-NEXT:  .LBB25_111: # %cond.load133
-; RV32-ZVFHMIN-NEXT:    lh a3, 90(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 46
-; RV32-ZVFHMIN-NEXT:    li a4, 45
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_50
-; RV32-ZVFHMIN-NEXT:  .LBB25_112: # %cond.load136
-; RV32-ZVFHMIN-NEXT:    lh a3, 92(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 47
-; RV32-ZVFHMIN-NEXT:    li a4, 46
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_51
-; RV32-ZVFHMIN-NEXT:  .LBB25_113: # %cond.load139
-; RV32-ZVFHMIN-NEXT:    lh a3, 94(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 48
-; RV32-ZVFHMIN-NEXT:    li a4, 47
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_52
-; RV32-ZVFHMIN-NEXT:  .LBB25_114: # %cond.load142
-; RV32-ZVFHMIN-NEXT:    lh a3, 96(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 49
-; RV32-ZVFHMIN-NEXT:    li a4, 48
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_53
-; RV32-ZVFHMIN-NEXT:  .LBB25_115: # %cond.load145
-; RV32-ZVFHMIN-NEXT:    lh a3, 98(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 50
-; RV32-ZVFHMIN-NEXT:    li a4, 49
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_54
-; RV32-ZVFHMIN-NEXT:  .LBB25_116: # %cond.load148
-; RV32-ZVFHMIN-NEXT:    lh a3, 100(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 51
-; RV32-ZVFHMIN-NEXT:    li a4, 50
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_55
-; RV32-ZVFHMIN-NEXT:  .LBB25_117: # %cond.load151
-; RV32-ZVFHMIN-NEXT:    lh a3, 102(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 52
-; RV32-ZVFHMIN-NEXT:    li a4, 51
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_56
-; RV32-ZVFHMIN-NEXT:  .LBB25_118: # %cond.load154
-; RV32-ZVFHMIN-NEXT:    lh a3, 104(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 53
-; RV32-ZVFHMIN-NEXT:    li a4, 52
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_57
-; RV32-ZVFHMIN-NEXT:  .LBB25_119: # %cond.load157
-; RV32-ZVFHMIN-NEXT:    lh a3, 106(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 54
-; RV32-ZVFHMIN-NEXT:    li a4, 53
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_58
-; RV32-ZVFHMIN-NEXT:  .LBB25_120: # %cond.load160
-; RV32-ZVFHMIN-NEXT:    lh a3, 108(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 55
-; RV32-ZVFHMIN-NEXT:    li a4, 54
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_59
-; RV32-ZVFHMIN-NEXT:  .LBB25_121: # %cond.load163
-; RV32-ZVFHMIN-NEXT:    lh a3, 110(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 56
-; RV32-ZVFHMIN-NEXT:    li a4, 55
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_60
-; RV32-ZVFHMIN-NEXT:  .LBB25_122: # %cond.load166
-; RV32-ZVFHMIN-NEXT:    lh a3, 112(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 57
-; RV32-ZVFHMIN-NEXT:    li a4, 56
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_61
-; RV32-ZVFHMIN-NEXT:  .LBB25_123: # %cond.load169
-; RV32-ZVFHMIN-NEXT:    lh a3, 114(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 58
-; RV32-ZVFHMIN-NEXT:    li a4, 57
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_62
-; RV32-ZVFHMIN-NEXT:  .LBB25_124: # %cond.load172
-; RV32-ZVFHMIN-NEXT:    lh a3, 116(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 59
-; RV32-ZVFHMIN-NEXT:    li a4, 58
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_63
-; RV32-ZVFHMIN-NEXT:  .LBB25_125: # %cond.load175
-; RV32-ZVFHMIN-NEXT:    lh a3, 118(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 60
-; RV32-ZVFHMIN-NEXT:    li a4, 59
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_64
-; RV32-ZVFHMIN-NEXT:  .LBB25_126: # %cond.load178
-; RV32-ZVFHMIN-NEXT:    lh a3, 120(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 61
-; RV32-ZVFHMIN-NEXT:    li a4, 60
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_65
-; RV32-ZVFHMIN-NEXT:  .LBB25_127: # %cond.load181
-; RV32-ZVFHMIN-NEXT:    lh a3, 122(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 62
-; RV32-ZVFHMIN-NEXT:    li a4, 61
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB25_66
-; RV32-ZVFHMIN-NEXT:  .LBB25_128: # %cond.load184
-; RV32-ZVFHMIN-NEXT:    lh a3, 124(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 63
-; RV32-ZVFHMIN-NEXT:    li a4, 62
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB25_67
-; RV32-ZVFHMIN-NEXT:    j .LBB25_68
 ;
 ; RV64-ZVFHMIN-LABEL: masked_load_v64f16:
 ; RV64-ZVFHMIN:       # %bb.0:
@@ -6695,786 +2063,14 @@ define void @masked_load_v64f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
 ; RV64-ZVFHMIN-NEXT:    vle8.v v8, (a1)
 ; RV64-ZVFHMIN-NEXT:    vand.vi v8, v8, 1
-; RV64-ZVFHMIN-NEXT:    vmsne.vi v12, v8, 0
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e64, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v12
-; RV64-ZVFHMIN-NEXT:    andi a4, a1, 1
-; RV64-ZVFHMIN-NEXT:    # implicit-def: $v8m8
-; RV64-ZVFHMIN-NEXT:    bnez a4, .LBB25_66
-; RV64-ZVFHMIN-NEXT:  # %bb.1: # %else
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_67
-; RV64-ZVFHMIN-NEXT:  .LBB25_2: # %else2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_68
-; RV64-ZVFHMIN-NEXT:  .LBB25_3: # %else5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_69
-; RV64-ZVFHMIN-NEXT:  .LBB25_4: # %else8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_70
-; RV64-ZVFHMIN-NEXT:  .LBB25_5: # %else11
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_71
-; RV64-ZVFHMIN-NEXT:  .LBB25_6: # %else14
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_72
-; RV64-ZVFHMIN-NEXT:  .LBB25_7: # %else17
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_73
-; RV64-ZVFHMIN-NEXT:  .LBB25_8: # %else20
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_74
-; RV64-ZVFHMIN-NEXT:  .LBB25_9: # %else23
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_75
-; RV64-ZVFHMIN-NEXT:  .LBB25_10: # %else26
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB25_76
-; RV64-ZVFHMIN-NEXT:  .LBB25_11: # %else29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_77
-; RV64-ZVFHMIN-NEXT:  .LBB25_12: # %else32
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_78
-; RV64-ZVFHMIN-NEXT:  .LBB25_13: # %else35
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_79
-; RV64-ZVFHMIN-NEXT:  .LBB25_14: # %else38
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_80
-; RV64-ZVFHMIN-NEXT:  .LBB25_15: # %else41
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_81
-; RV64-ZVFHMIN-NEXT:  .LBB25_16: # %else44
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_82
-; RV64-ZVFHMIN-NEXT:  .LBB25_17: # %else47
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_83
-; RV64-ZVFHMIN-NEXT:  .LBB25_18: # %else50
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_84
-; RV64-ZVFHMIN-NEXT:  .LBB25_19: # %else53
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_85
-; RV64-ZVFHMIN-NEXT:  .LBB25_20: # %else56
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_86
-; RV64-ZVFHMIN-NEXT:  .LBB25_21: # %else59
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_87
-; RV64-ZVFHMIN-NEXT:  .LBB25_22: # %else62
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_88
-; RV64-ZVFHMIN-NEXT:  .LBB25_23: # %else65
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_89
-; RV64-ZVFHMIN-NEXT:  .LBB25_24: # %else68
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_90
-; RV64-ZVFHMIN-NEXT:  .LBB25_25: # %else71
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_91
-; RV64-ZVFHMIN-NEXT:  .LBB25_26: # %else74
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_92
-; RV64-ZVFHMIN-NEXT:  .LBB25_27: # %else77
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_93
-; RV64-ZVFHMIN-NEXT:  .LBB25_28: # %else80
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_94
-; RV64-ZVFHMIN-NEXT:  .LBB25_29: # %else83
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_95
-; RV64-ZVFHMIN-NEXT:  .LBB25_30: # %else86
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_96
-; RV64-ZVFHMIN-NEXT:  .LBB25_31: # %else89
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_97
-; RV64-ZVFHMIN-NEXT:  .LBB25_32: # %else92
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 31
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_98
-; RV64-ZVFHMIN-NEXT:  .LBB25_33: # %else95
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 30
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_99
-; RV64-ZVFHMIN-NEXT:  .LBB25_34: # %else98
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 29
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_100
-; RV64-ZVFHMIN-NEXT:  .LBB25_35: # %else101
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 28
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_101
-; RV64-ZVFHMIN-NEXT:  .LBB25_36: # %else104
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 27
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_102
-; RV64-ZVFHMIN-NEXT:  .LBB25_37: # %else107
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 26
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_103
-; RV64-ZVFHMIN-NEXT:  .LBB25_38: # %else110
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 25
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_104
-; RV64-ZVFHMIN-NEXT:  .LBB25_39: # %else113
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 24
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_105
-; RV64-ZVFHMIN-NEXT:  .LBB25_40: # %else116
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 23
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_106
-; RV64-ZVFHMIN-NEXT:  .LBB25_41: # %else119
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 22
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_107
-; RV64-ZVFHMIN-NEXT:  .LBB25_42: # %else122
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 21
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_108
-; RV64-ZVFHMIN-NEXT:  .LBB25_43: # %else125
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_109
-; RV64-ZVFHMIN-NEXT:  .LBB25_44: # %else128
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_110
-; RV64-ZVFHMIN-NEXT:  .LBB25_45: # %else131
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_111
-; RV64-ZVFHMIN-NEXT:  .LBB25_46: # %else134
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_112
-; RV64-ZVFHMIN-NEXT:  .LBB25_47: # %else137
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_113
-; RV64-ZVFHMIN-NEXT:  .LBB25_48: # %else140
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_114
-; RV64-ZVFHMIN-NEXT:  .LBB25_49: # %else143
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_115
-; RV64-ZVFHMIN-NEXT:  .LBB25_50: # %else146
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_116
-; RV64-ZVFHMIN-NEXT:  .LBB25_51: # %else149
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_117
-; RV64-ZVFHMIN-NEXT:  .LBB25_52: # %else152
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_118
-; RV64-ZVFHMIN-NEXT:  .LBB25_53: # %else155
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_119
-; RV64-ZVFHMIN-NEXT:  .LBB25_54: # %else158
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_120
-; RV64-ZVFHMIN-NEXT:  .LBB25_55: # %else161
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_121
-; RV64-ZVFHMIN-NEXT:  .LBB25_56: # %else164
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_122
-; RV64-ZVFHMIN-NEXT:  .LBB25_57: # %else167
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_123
-; RV64-ZVFHMIN-NEXT:  .LBB25_58: # %else170
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_124
-; RV64-ZVFHMIN-NEXT:  .LBB25_59: # %else173
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_125
-; RV64-ZVFHMIN-NEXT:  .LBB25_60: # %else176
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_126
-; RV64-ZVFHMIN-NEXT:  .LBB25_61: # %else179
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_127
-; RV64-ZVFHMIN-NEXT:  .LBB25_62: # %else182
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB25_128
-; RV64-ZVFHMIN-NEXT:  .LBB25_63: # %else185
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB25_65
-; RV64-ZVFHMIN-NEXT:  .LBB25_64: # %cond.load187
-; RV64-ZVFHMIN-NEXT:    lh a0, 126(a0)
-; RV64-ZVFHMIN-NEXT:    li a1, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a0
-; RV64-ZVFHMIN-NEXT:    li a0, 63
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a0
-; RV64-ZVFHMIN-NEXT:  .LBB25_65: # %else188
-; RV64-ZVFHMIN-NEXT:    li a0, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV64-ZVFHMIN-NEXT:    vmsne.vi v0, v8, 0
+; RV64-ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; RV64-ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; RV64-ZVFHMIN-NEXT:    addi sp, s0, -384
 ; RV64-ZVFHMIN-NEXT:    ld ra, 376(sp) # 8-byte Folded Reload
 ; RV64-ZVFHMIN-NEXT:    ld s0, 368(sp) # 8-byte Folded Reload
 ; RV64-ZVFHMIN-NEXT:    addi sp, sp, 384
 ; RV64-ZVFHMIN-NEXT:    ret
-; RV64-ZVFHMIN-NEXT:  .LBB25_66: # %cond.load
-; RV64-ZVFHMIN-NEXT:    lh a4, 0(a0)
-; RV64-ZVFHMIN-NEXT:    fmv.x.h a5, fa5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.v.x v8, a5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v8, a4
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_2
-; RV64-ZVFHMIN-NEXT:  .LBB25_67: # %cond.load1
-; RV64-ZVFHMIN-NEXT:    lh a3, 2(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 1
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_3
-; RV64-ZVFHMIN-NEXT:  .LBB25_68: # %cond.load4
-; RV64-ZVFHMIN-NEXT:    lh a3, 4(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_4
-; RV64-ZVFHMIN-NEXT:  .LBB25_69: # %cond.load7
-; RV64-ZVFHMIN-NEXT:    lh a3, 6(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_5
-; RV64-ZVFHMIN-NEXT:  .LBB25_70: # %cond.load10
-; RV64-ZVFHMIN-NEXT:    lh a3, 8(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 4
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_6
-; RV64-ZVFHMIN-NEXT:  .LBB25_71: # %cond.load13
-; RV64-ZVFHMIN-NEXT:    lh a3, 10(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_7
-; RV64-ZVFHMIN-NEXT:  .LBB25_72: # %cond.load16
-; RV64-ZVFHMIN-NEXT:    lh a3, 12(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 6
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_8
-; RV64-ZVFHMIN-NEXT:  .LBB25_73: # %cond.load19
-; RV64-ZVFHMIN-NEXT:    lh a3, 14(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 7
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_9
-; RV64-ZVFHMIN-NEXT:  .LBB25_74: # %cond.load22
-; RV64-ZVFHMIN-NEXT:    lh a3, 16(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_10
-; RV64-ZVFHMIN-NEXT:  .LBB25_75: # %cond.load25
-; RV64-ZVFHMIN-NEXT:    lh a3, 18(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 9
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB25_11
-; RV64-ZVFHMIN-NEXT:  .LBB25_76: # %cond.load28
-; RV64-ZVFHMIN-NEXT:    lh a3, 20(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 10
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_12
-; RV64-ZVFHMIN-NEXT:  .LBB25_77: # %cond.load31
-; RV64-ZVFHMIN-NEXT:    lh a3, 22(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 11
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_13
-; RV64-ZVFHMIN-NEXT:  .LBB25_78: # %cond.load34
-; RV64-ZVFHMIN-NEXT:    lh a3, 24(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 12
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_14
-; RV64-ZVFHMIN-NEXT:  .LBB25_79: # %cond.load37
-; RV64-ZVFHMIN-NEXT:    lh a3, 26(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 13
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_15
-; RV64-ZVFHMIN-NEXT:  .LBB25_80: # %cond.load40
-; RV64-ZVFHMIN-NEXT:    lh a3, 28(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 14
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_16
-; RV64-ZVFHMIN-NEXT:  .LBB25_81: # %cond.load43
-; RV64-ZVFHMIN-NEXT:    lh a3, 30(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 15
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_17
-; RV64-ZVFHMIN-NEXT:  .LBB25_82: # %cond.load46
-; RV64-ZVFHMIN-NEXT:    lh a3, 32(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 16
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_18
-; RV64-ZVFHMIN-NEXT:  .LBB25_83: # %cond.load49
-; RV64-ZVFHMIN-NEXT:    lh a3, 34(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 17
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_19
-; RV64-ZVFHMIN-NEXT:  .LBB25_84: # %cond.load52
-; RV64-ZVFHMIN-NEXT:    lh a3, 36(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 18
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_20
-; RV64-ZVFHMIN-NEXT:  .LBB25_85: # %cond.load55
-; RV64-ZVFHMIN-NEXT:    lh a3, 38(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 19
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_21
-; RV64-ZVFHMIN-NEXT:  .LBB25_86: # %cond.load58
-; RV64-ZVFHMIN-NEXT:    lh a3, 40(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 20
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_22
-; RV64-ZVFHMIN-NEXT:  .LBB25_87: # %cond.load61
-; RV64-ZVFHMIN-NEXT:    lh a3, 42(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 21
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_23
-; RV64-ZVFHMIN-NEXT:  .LBB25_88: # %cond.load64
-; RV64-ZVFHMIN-NEXT:    lh a3, 44(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 22
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_24
-; RV64-ZVFHMIN-NEXT:  .LBB25_89: # %cond.load67
-; RV64-ZVFHMIN-NEXT:    lh a3, 46(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 23
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_25
-; RV64-ZVFHMIN-NEXT:  .LBB25_90: # %cond.load70
-; RV64-ZVFHMIN-NEXT:    lh a3, 48(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 24
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_26
-; RV64-ZVFHMIN-NEXT:  .LBB25_91: # %cond.load73
-; RV64-ZVFHMIN-NEXT:    lh a3, 50(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 25
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_27
-; RV64-ZVFHMIN-NEXT:  .LBB25_92: # %cond.load76
-; RV64-ZVFHMIN-NEXT:    lh a3, 52(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 26
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_28
-; RV64-ZVFHMIN-NEXT:  .LBB25_93: # %cond.load79
-; RV64-ZVFHMIN-NEXT:    lh a3, 54(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 27
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_29
-; RV64-ZVFHMIN-NEXT:  .LBB25_94: # %cond.load82
-; RV64-ZVFHMIN-NEXT:    lh a3, 56(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 28
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_30
-; RV64-ZVFHMIN-NEXT:  .LBB25_95: # %cond.load85
-; RV64-ZVFHMIN-NEXT:    lh a3, 58(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_31
-; RV64-ZVFHMIN-NEXT:  .LBB25_96: # %cond.load88
-; RV64-ZVFHMIN-NEXT:    lh a3, 60(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 30
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_32
-; RV64-ZVFHMIN-NEXT:  .LBB25_97: # %cond.load91
-; RV64-ZVFHMIN-NEXT:    lh a3, 62(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v16, 31
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 31
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_33
-; RV64-ZVFHMIN-NEXT:  .LBB25_98: # %cond.load94
-; RV64-ZVFHMIN-NEXT:    lh a3, 64(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 33
-; RV64-ZVFHMIN-NEXT:    li a4, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 30
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_34
-; RV64-ZVFHMIN-NEXT:  .LBB25_99: # %cond.load97
-; RV64-ZVFHMIN-NEXT:    lh a3, 66(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 34
-; RV64-ZVFHMIN-NEXT:    li a4, 33
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 29
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_35
-; RV64-ZVFHMIN-NEXT:  .LBB25_100: # %cond.load100
-; RV64-ZVFHMIN-NEXT:    lh a3, 68(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 35
-; RV64-ZVFHMIN-NEXT:    li a4, 34
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 28
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_36
-; RV64-ZVFHMIN-NEXT:  .LBB25_101: # %cond.load103
-; RV64-ZVFHMIN-NEXT:    lh a3, 70(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 36
-; RV64-ZVFHMIN-NEXT:    li a4, 35
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 27
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_37
-; RV64-ZVFHMIN-NEXT:  .LBB25_102: # %cond.load106
-; RV64-ZVFHMIN-NEXT:    lh a3, 72(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 37
-; RV64-ZVFHMIN-NEXT:    li a4, 36
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 26
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_38
-; RV64-ZVFHMIN-NEXT:  .LBB25_103: # %cond.load109
-; RV64-ZVFHMIN-NEXT:    lh a3, 74(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 38
-; RV64-ZVFHMIN-NEXT:    li a4, 37
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 25
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_39
-; RV64-ZVFHMIN-NEXT:  .LBB25_104: # %cond.load112
-; RV64-ZVFHMIN-NEXT:    lh a3, 76(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 39
-; RV64-ZVFHMIN-NEXT:    li a4, 38
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 24
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_40
-; RV64-ZVFHMIN-NEXT:  .LBB25_105: # %cond.load115
-; RV64-ZVFHMIN-NEXT:    lh a3, 78(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 40
-; RV64-ZVFHMIN-NEXT:    li a4, 39
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 23
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_41
-; RV64-ZVFHMIN-NEXT:  .LBB25_106: # %cond.load118
-; RV64-ZVFHMIN-NEXT:    lh a3, 80(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 41
-; RV64-ZVFHMIN-NEXT:    li a4, 40
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 22
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_42
-; RV64-ZVFHMIN-NEXT:  .LBB25_107: # %cond.load121
-; RV64-ZVFHMIN-NEXT:    lh a3, 82(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 42
-; RV64-ZVFHMIN-NEXT:    li a4, 41
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 21
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_43
-; RV64-ZVFHMIN-NEXT:  .LBB25_108: # %cond.load124
-; RV64-ZVFHMIN-NEXT:    lh a3, 84(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 43
-; RV64-ZVFHMIN-NEXT:    li a4, 42
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_44
-; RV64-ZVFHMIN-NEXT:  .LBB25_109: # %cond.load127
-; RV64-ZVFHMIN-NEXT:    lh a3, 86(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 44
-; RV64-ZVFHMIN-NEXT:    li a4, 43
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_45
-; RV64-ZVFHMIN-NEXT:  .LBB25_110: # %cond.load130
-; RV64-ZVFHMIN-NEXT:    lh a3, 88(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 45
-; RV64-ZVFHMIN-NEXT:    li a4, 44
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_46
-; RV64-ZVFHMIN-NEXT:  .LBB25_111: # %cond.load133
-; RV64-ZVFHMIN-NEXT:    lh a3, 90(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 46
-; RV64-ZVFHMIN-NEXT:    li a4, 45
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_47
-; RV64-ZVFHMIN-NEXT:  .LBB25_112: # %cond.load136
-; RV64-ZVFHMIN-NEXT:    lh a3, 92(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 47
-; RV64-ZVFHMIN-NEXT:    li a4, 46
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_48
-; RV64-ZVFHMIN-NEXT:  .LBB25_113: # %cond.load139
-; RV64-ZVFHMIN-NEXT:    lh a3, 94(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 48
-; RV64-ZVFHMIN-NEXT:    li a4, 47
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_49
-; RV64-ZVFHMIN-NEXT:  .LBB25_114: # %cond.load142
-; RV64-ZVFHMIN-NEXT:    lh a3, 96(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 49
-; RV64-ZVFHMIN-NEXT:    li a4, 48
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_50
-; RV64-ZVFHMIN-NEXT:  .LBB25_115: # %cond.load145
-; RV64-ZVFHMIN-NEXT:    lh a3, 98(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 50
-; RV64-ZVFHMIN-NEXT:    li a4, 49
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_51
-; RV64-ZVFHMIN-NEXT:  .LBB25_116: # %cond.load148
-; RV64-ZVFHMIN-NEXT:    lh a3, 100(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 51
-; RV64-ZVFHMIN-NEXT:    li a4, 50
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_52
-; RV64-ZVFHMIN-NEXT:  .LBB25_117: # %cond.load151
-; RV64-ZVFHMIN-NEXT:    lh a3, 102(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 52
-; RV64-ZVFHMIN-NEXT:    li a4, 51
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_53
-; RV64-ZVFHMIN-NEXT:  .LBB25_118: # %cond.load154
-; RV64-ZVFHMIN-NEXT:    lh a3, 104(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 53
-; RV64-ZVFHMIN-NEXT:    li a4, 52
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_54
-; RV64-ZVFHMIN-NEXT:  .LBB25_119: # %cond.load157
-; RV64-ZVFHMIN-NEXT:    lh a3, 106(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 54
-; RV64-ZVFHMIN-NEXT:    li a4, 53
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_55
-; RV64-ZVFHMIN-NEXT:  .LBB25_120: # %cond.load160
-; RV64-ZVFHMIN-NEXT:    lh a3, 108(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 55
-; RV64-ZVFHMIN-NEXT:    li a4, 54
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_56
-; RV64-ZVFHMIN-NEXT:  .LBB25_121: # %cond.load163
-; RV64-ZVFHMIN-NEXT:    lh a3, 110(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 56
-; RV64-ZVFHMIN-NEXT:    li a4, 55
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_57
-; RV64-ZVFHMIN-NEXT:  .LBB25_122: # %cond.load166
-; RV64-ZVFHMIN-NEXT:    lh a3, 112(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 57
-; RV64-ZVFHMIN-NEXT:    li a4, 56
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_58
-; RV64-ZVFHMIN-NEXT:  .LBB25_123: # %cond.load169
-; RV64-ZVFHMIN-NEXT:    lh a3, 114(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 58
-; RV64-ZVFHMIN-NEXT:    li a4, 57
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_59
-; RV64-ZVFHMIN-NEXT:  .LBB25_124: # %cond.load172
-; RV64-ZVFHMIN-NEXT:    lh a3, 116(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 59
-; RV64-ZVFHMIN-NEXT:    li a4, 58
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_60
-; RV64-ZVFHMIN-NEXT:  .LBB25_125: # %cond.load175
-; RV64-ZVFHMIN-NEXT:    lh a3, 118(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 60
-; RV64-ZVFHMIN-NEXT:    li a4, 59
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_61
-; RV64-ZVFHMIN-NEXT:  .LBB25_126: # %cond.load178
-; RV64-ZVFHMIN-NEXT:    lh a3, 120(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 61
-; RV64-ZVFHMIN-NEXT:    li a4, 60
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_62
-; RV64-ZVFHMIN-NEXT:  .LBB25_127: # %cond.load181
-; RV64-ZVFHMIN-NEXT:    lh a3, 122(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 62
-; RV64-ZVFHMIN-NEXT:    li a4, 61
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB25_63
-; RV64-ZVFHMIN-NEXT:  .LBB25_128: # %cond.load184
-; RV64-ZVFHMIN-NEXT:    lh a3, 124(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 63
-; RV64-ZVFHMIN-NEXT:    li a4, 62
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB25_64
-; RV64-ZVFHMIN-NEXT:    j .LBB25_65
   %m = load <64 x half>, ptr %m_ptr
   %mask = fcmp oeq <64 x half> %m, zeroinitializer
   %load = call <64 x half> @llvm.masked.load.v64f16(ptr %a, i32 8, <64 x i1> %mask, <64 x half> undef)
@@ -7518,8 +2114,8 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    sw s0, 504(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    addi s0, sp, 512
 ; RV32-NEXT:    andi sp, sp, -128
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV32-NEXT:    li a3, 64
+; RV32-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV32-NEXT:    vle16.v v16, (a1)
 ; RV32-NEXT:    addi a1, a1, 128
 ; RV32-NEXT:    vle16.v v8, (a1)
@@ -7532,272 +2128,182 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa5
 ; RV32-NEXT:    fmv.w.x fa5, zero
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 32(sp)
+; RV32-NEXT:    sb a1, 96(sp)
 ; RV32-NEXT:    lh a1, 318(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 31(sp)
+; RV32-NEXT:    sb a1, 95(sp)
 ; RV32-NEXT:    lh a1, 316(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 30(sp)
+; RV32-NEXT:    sb a1, 94(sp)
 ; RV32-NEXT:    lh a1, 314(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 29(sp)
+; RV32-NEXT:    sb a1, 93(sp)
 ; RV32-NEXT:    lh a1, 312(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 28(sp)
+; RV32-NEXT:    sb a1, 92(sp)
 ; RV32-NEXT:    lh a1, 310(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 27(sp)
+; RV32-NEXT:    sb a1, 91(sp)
 ; RV32-NEXT:    lh a1, 308(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 26(sp)
+; RV32-NEXT:    sb a1, 90(sp)
 ; RV32-NEXT:    lh a1, 306(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 25(sp)
+; RV32-NEXT:    sb a1, 89(sp)
 ; RV32-NEXT:    lh a1, 304(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 24(sp)
+; RV32-NEXT:    sb a1, 88(sp)
 ; RV32-NEXT:    lh a1, 302(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 23(sp)
+; RV32-NEXT:    sb a1, 87(sp)
 ; RV32-NEXT:    lh a1, 300(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 22(sp)
+; RV32-NEXT:    sb a1, 86(sp)
 ; RV32-NEXT:    lh a1, 298(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 21(sp)
+; RV32-NEXT:    sb a1, 85(sp)
 ; RV32-NEXT:    lh a1, 296(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 20(sp)
+; RV32-NEXT:    sb a1, 84(sp)
 ; RV32-NEXT:    lh a1, 294(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 19(sp)
+; RV32-NEXT:    sb a1, 83(sp)
 ; RV32-NEXT:    lh a1, 292(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 18(sp)
+; RV32-NEXT:    sb a1, 82(sp)
 ; RV32-NEXT:    lh a1, 290(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 17(sp)
+; RV32-NEXT:    sb a1, 81(sp)
 ; RV32-NEXT:    lh a1, 288(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    vmv.x.s a3, v16
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v16
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
-; RV32-NEXT:    sb a3, 0(sp)
-; RV32-NEXT:    sb a1, 16(sp)
-; RV32-NEXT:    lh a1, 192(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 96(sp)
-; RV32-NEXT:    lh a1, 190(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 95(sp)
-; RV32-NEXT:    lh a1, 188(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 94(sp)
-; RV32-NEXT:    lh a1, 186(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 93(sp)
-; RV32-NEXT:    lh a1, 184(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 92(sp)
-; RV32-NEXT:    lh a1, 182(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 91(sp)
-; RV32-NEXT:    lh a1, 180(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 90(sp)
-; RV32-NEXT:    lh a1, 178(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 89(sp)
-; RV32-NEXT:    lh a1, 176(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 88(sp)
-; RV32-NEXT:    lh a1, 174(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 87(sp)
-; RV32-NEXT:    lh a1, 172(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 86(sp)
-; RV32-NEXT:    lh a1, 170(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 85(sp)
-; RV32-NEXT:    lh a1, 168(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 84(sp)
-; RV32-NEXT:    lh a1, 166(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 83(sp)
-; RV32-NEXT:    lh a1, 164(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 82(sp)
-; RV32-NEXT:    lh a1, 162(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 81(sp)
-; RV32-NEXT:    lh a1, 160(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    vmv.x.s a3, v8
-; RV32-NEXT:    fmv.h.x fa4, a3
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
-; RV32-NEXT:    sb a3, 64(sp)
+; RV32-NEXT:    feq.s a4, fa4, fa5
+; RV32-NEXT:    sb a4, 64(sp)
 ; RV32-NEXT:    sb a1, 80(sp)
 ; RV32-NEXT:    lh a1, 354(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 49(sp)
+; RV32-NEXT:    sb a1, 113(sp)
 ; RV32-NEXT:    lh a1, 352(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 48(sp)
+; RV32-NEXT:    sb a1, 112(sp)
 ; RV32-NEXT:    lh a1, 350(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 47(sp)
+; RV32-NEXT:    sb a1, 111(sp)
 ; RV32-NEXT:    lh a1, 348(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 46(sp)
+; RV32-NEXT:    sb a1, 110(sp)
 ; RV32-NEXT:    lh a1, 346(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 45(sp)
+; RV32-NEXT:    sb a1, 109(sp)
 ; RV32-NEXT:    lh a1, 344(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 44(sp)
+; RV32-NEXT:    sb a1, 108(sp)
 ; RV32-NEXT:    lh a1, 342(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 43(sp)
+; RV32-NEXT:    sb a1, 107(sp)
 ; RV32-NEXT:    lh a1, 340(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 42(sp)
+; RV32-NEXT:    sb a1, 106(sp)
 ; RV32-NEXT:    lh a1, 338(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 41(sp)
+; RV32-NEXT:    sb a1, 105(sp)
 ; RV32-NEXT:    lh a1, 336(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 40(sp)
+; RV32-NEXT:    sb a1, 104(sp)
 ; RV32-NEXT:    lh a1, 334(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 39(sp)
+; RV32-NEXT:    sb a1, 103(sp)
 ; RV32-NEXT:    lh a1, 332(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 38(sp)
+; RV32-NEXT:    sb a1, 102(sp)
 ; RV32-NEXT:    lh a1, 330(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 37(sp)
+; RV32-NEXT:    sb a1, 101(sp)
 ; RV32-NEXT:    lh a1, 328(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 36(sp)
+; RV32-NEXT:    sb a1, 100(sp)
 ; RV32-NEXT:    lh a1, 326(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 35(sp)
+; RV32-NEXT:    sb a1, 99(sp)
 ; RV32-NEXT:    lh a1, 324(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 34(sp)
+; RV32-NEXT:    sb a1, 98(sp)
 ; RV32-NEXT:    lh a1, 322(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV32-NEXT:    vslidedown.vi v10, v16, 7
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 6
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -7808,20 +2314,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 5(sp)
-; RV32-NEXT:    sb a5, 6(sp)
-; RV32-NEXT:    sb a3, 7(sp)
-; RV32-NEXT:    sb a1, 33(sp)
+; RV32-NEXT:    sb a6, 69(sp)
+; RV32-NEXT:    sb a5, 70(sp)
+; RV32-NEXT:    sb a4, 71(sp)
+; RV32-NEXT:    sb a1, 97(sp)
 ; RV32-NEXT:    vslidedown.vi v10, v16, 4
 ; RV32-NEXT:    vmv.x.s a1, v10
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 3
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 2
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -7832,207 +2338,80 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 1(sp)
-; RV32-NEXT:    sb a5, 2(sp)
-; RV32-NEXT:    sb a3, 3(sp)
-; RV32-NEXT:    sb a1, 4(sp)
-; RV32-NEXT:    lh a1, 226(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 113(sp)
-; RV32-NEXT:    lh a1, 224(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 112(sp)
-; RV32-NEXT:    lh a1, 222(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 111(sp)
-; RV32-NEXT:    lh a1, 220(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 110(sp)
-; RV32-NEXT:    lh a1, 218(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 109(sp)
-; RV32-NEXT:    lh a1, 216(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 108(sp)
-; RV32-NEXT:    lh a1, 214(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 107(sp)
-; RV32-NEXT:    lh a1, 212(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 106(sp)
-; RV32-NEXT:    lh a1, 210(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 105(sp)
-; RV32-NEXT:    lh a1, 208(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 104(sp)
-; RV32-NEXT:    lh a1, 206(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 103(sp)
-; RV32-NEXT:    lh a1, 204(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 102(sp)
-; RV32-NEXT:    lh a1, 202(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 101(sp)
-; RV32-NEXT:    lh a1, 200(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 100(sp)
-; RV32-NEXT:    lh a1, 198(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 99(sp)
-; RV32-NEXT:    lh a1, 196(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 98(sp)
-; RV32-NEXT:    lh a1, 194(sp)
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 7
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 6
-; RV32-NEXT:    vmv.x.s a5, v10
-; RV32-NEXT:    fmv.h.x fa4, a5
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a5, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 5
-; RV32-NEXT:    vmv.x.s a6, v10
-; RV32-NEXT:    fmv.h.x fa4, a6
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 69(sp)
-; RV32-NEXT:    sb a5, 70(sp)
-; RV32-NEXT:    sb a3, 71(sp)
-; RV32-NEXT:    sb a1, 97(sp)
-; RV32-NEXT:    vslidedown.vi v10, v8, 4
-; RV32-NEXT:    vmv.x.s a1, v10
-; RV32-NEXT:    fmv.h.x fa4, a1
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 3
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 2
-; RV32-NEXT:    vmv.x.s a5, v10
-; RV32-NEXT:    fmv.h.x fa4, a5
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a5, fa4, fa5
-; RV32-NEXT:    vslidedown.vi v10, v8, 1
-; RV32-NEXT:    vmv.x.s a6, v10
-; RV32-NEXT:    fmv.h.x fa4, a6
-; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a6, fa4, fa5
 ; RV32-NEXT:    sb a6, 65(sp)
 ; RV32-NEXT:    sb a5, 66(sp)
-; RV32-NEXT:    sb a3, 67(sp)
+; RV32-NEXT:    sb a4, 67(sp)
 ; RV32-NEXT:    sb a1, 68(sp)
 ; RV32-NEXT:    lh a1, 382(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 63(sp)
+; RV32-NEXT:    sb a1, 127(sp)
 ; RV32-NEXT:    lh a1, 380(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 62(sp)
+; RV32-NEXT:    sb a1, 126(sp)
 ; RV32-NEXT:    lh a1, 378(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 61(sp)
+; RV32-NEXT:    sb a1, 125(sp)
 ; RV32-NEXT:    lh a1, 376(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 60(sp)
+; RV32-NEXT:    sb a1, 124(sp)
 ; RV32-NEXT:    lh a1, 374(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 59(sp)
+; RV32-NEXT:    sb a1, 123(sp)
 ; RV32-NEXT:    lh a1, 372(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 58(sp)
+; RV32-NEXT:    sb a1, 122(sp)
 ; RV32-NEXT:    lh a1, 370(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 57(sp)
+; RV32-NEXT:    sb a1, 121(sp)
 ; RV32-NEXT:    lh a1, 368(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 56(sp)
+; RV32-NEXT:    sb a1, 120(sp)
 ; RV32-NEXT:    lh a1, 366(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 55(sp)
+; RV32-NEXT:    sb a1, 119(sp)
 ; RV32-NEXT:    lh a1, 364(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 54(sp)
+; RV32-NEXT:    sb a1, 118(sp)
 ; RV32-NEXT:    lh a1, 362(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 53(sp)
+; RV32-NEXT:    sb a1, 117(sp)
 ; RV32-NEXT:    lh a1, 360(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 52(sp)
+; RV32-NEXT:    sb a1, 116(sp)
 ; RV32-NEXT:    lh a1, 358(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 51(sp)
+; RV32-NEXT:    sb a1, 115(sp)
 ; RV32-NEXT:    lh a1, 356(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 50(sp)
+; RV32-NEXT:    sb a1, 114(sp)
 ; RV32-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV32-NEXT:    vslidedown.vi v10, v16, 15
 ; RV32-NEXT:    vmv.x.s a1, v10
@@ -8040,10 +2419,10 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 14
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 13
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -8054,20 +2433,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 12(sp)
-; RV32-NEXT:    sb a5, 13(sp)
-; RV32-NEXT:    sb a3, 14(sp)
-; RV32-NEXT:    sb a1, 15(sp)
+; RV32-NEXT:    sb a6, 76(sp)
+; RV32-NEXT:    sb a5, 77(sp)
+; RV32-NEXT:    sb a4, 78(sp)
+; RV32-NEXT:    sb a1, 79(sp)
 ; RV32-NEXT:    vslidedown.vi v10, v16, 11
 ; RV32-NEXT:    vmv.x.s a1, v10
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 10
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v16, 9
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -8078,90 +2457,309 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 8(sp)
-; RV32-NEXT:    sb a5, 9(sp)
-; RV32-NEXT:    sb a3, 10(sp)
-; RV32-NEXT:    sb a1, 11(sp)
+; RV32-NEXT:    sb a6, 72(sp)
+; RV32-NEXT:    sb a5, 73(sp)
+; RV32-NEXT:    sb a4, 74(sp)
+; RV32-NEXT:    sb a1, 75(sp)
+; RV32-NEXT:    lh a1, 192(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 32(sp)
+; RV32-NEXT:    lh a1, 190(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 31(sp)
+; RV32-NEXT:    lh a1, 188(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 30(sp)
+; RV32-NEXT:    lh a1, 186(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 29(sp)
+; RV32-NEXT:    lh a1, 184(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 28(sp)
+; RV32-NEXT:    lh a1, 182(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 27(sp)
+; RV32-NEXT:    lh a1, 180(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 26(sp)
+; RV32-NEXT:    lh a1, 178(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 25(sp)
+; RV32-NEXT:    lh a1, 176(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 24(sp)
+; RV32-NEXT:    lh a1, 174(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 23(sp)
+; RV32-NEXT:    lh a1, 172(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 22(sp)
+; RV32-NEXT:    lh a1, 170(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 21(sp)
+; RV32-NEXT:    lh a1, 168(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 20(sp)
+; RV32-NEXT:    lh a1, 166(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 19(sp)
+; RV32-NEXT:    lh a1, 164(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 18(sp)
+; RV32-NEXT:    lh a1, 162(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 17(sp)
+; RV32-NEXT:    lh a1, 160(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    vmv.x.s a4, v8
+; RV32-NEXT:    fmv.h.x fa4, a4
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a4, fa4, fa5
+; RV32-NEXT:    sb a4, 0(sp)
+; RV32-NEXT:    sb a1, 16(sp)
+; RV32-NEXT:    lh a1, 226(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 49(sp)
+; RV32-NEXT:    lh a1, 224(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 48(sp)
+; RV32-NEXT:    lh a1, 222(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 47(sp)
+; RV32-NEXT:    lh a1, 220(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 46(sp)
+; RV32-NEXT:    lh a1, 218(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 45(sp)
+; RV32-NEXT:    lh a1, 216(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 44(sp)
+; RV32-NEXT:    lh a1, 214(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 43(sp)
+; RV32-NEXT:    lh a1, 212(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 42(sp)
+; RV32-NEXT:    lh a1, 210(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 41(sp)
+; RV32-NEXT:    lh a1, 208(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 40(sp)
+; RV32-NEXT:    lh a1, 206(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 39(sp)
+; RV32-NEXT:    lh a1, 204(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 38(sp)
+; RV32-NEXT:    lh a1, 202(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 37(sp)
+; RV32-NEXT:    lh a1, 200(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 36(sp)
+; RV32-NEXT:    lh a1, 198(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 35(sp)
+; RV32-NEXT:    lh a1, 196(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    sb a1, 34(sp)
+; RV32-NEXT:    lh a1, 194(sp)
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
+; RV32-NEXT:    vslidedown.vi v10, v8, 7
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a4, fa4, fa5
+; RV32-NEXT:    vslidedown.vi v10, v8, 6
+; RV32-NEXT:    vmv.x.s a5, v10
+; RV32-NEXT:    fmv.h.x fa4, a5
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a5, fa4, fa5
+; RV32-NEXT:    vslidedown.vi v10, v8, 5
+; RV32-NEXT:    vmv.x.s a6, v10
+; RV32-NEXT:    fmv.h.x fa4, a6
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a6, fa4, fa5
+; RV32-NEXT:    sb a6, 5(sp)
+; RV32-NEXT:    sb a5, 6(sp)
+; RV32-NEXT:    sb a4, 7(sp)
+; RV32-NEXT:    sb a1, 33(sp)
+; RV32-NEXT:    vslidedown.vi v10, v8, 4
+; RV32-NEXT:    vmv.x.s a1, v10
+; RV32-NEXT:    fmv.h.x fa4, a1
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a1, fa4, fa5
+; RV32-NEXT:    vslidedown.vi v10, v8, 3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a4, fa4, fa5
+; RV32-NEXT:    vslidedown.vi v10, v8, 2
+; RV32-NEXT:    vmv.x.s a5, v10
+; RV32-NEXT:    fmv.h.x fa4, a5
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a5, fa4, fa5
+; RV32-NEXT:    vslidedown.vi v10, v8, 1
+; RV32-NEXT:    vmv.x.s a6, v10
+; RV32-NEXT:    fmv.h.x fa4, a6
+; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV32-NEXT:    feq.s a6, fa4, fa5
+; RV32-NEXT:    sb a6, 1(sp)
+; RV32-NEXT:    sb a5, 2(sp)
+; RV32-NEXT:    sb a4, 3(sp)
+; RV32-NEXT:    sb a1, 4(sp)
 ; RV32-NEXT:    lh a1, 254(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 127(sp)
+; RV32-NEXT:    sb a1, 63(sp)
 ; RV32-NEXT:    lh a1, 252(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 126(sp)
+; RV32-NEXT:    sb a1, 62(sp)
 ; RV32-NEXT:    lh a1, 250(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 125(sp)
+; RV32-NEXT:    sb a1, 61(sp)
 ; RV32-NEXT:    lh a1, 248(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 124(sp)
+; RV32-NEXT:    sb a1, 60(sp)
 ; RV32-NEXT:    lh a1, 246(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 123(sp)
+; RV32-NEXT:    sb a1, 59(sp)
 ; RV32-NEXT:    lh a1, 244(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 122(sp)
+; RV32-NEXT:    sb a1, 58(sp)
 ; RV32-NEXT:    lh a1, 242(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 121(sp)
+; RV32-NEXT:    sb a1, 57(sp)
 ; RV32-NEXT:    lh a1, 240(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 120(sp)
+; RV32-NEXT:    sb a1, 56(sp)
 ; RV32-NEXT:    lh a1, 238(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 119(sp)
+; RV32-NEXT:    sb a1, 55(sp)
 ; RV32-NEXT:    lh a1, 236(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 118(sp)
+; RV32-NEXT:    sb a1, 54(sp)
 ; RV32-NEXT:    lh a1, 234(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 117(sp)
+; RV32-NEXT:    sb a1, 53(sp)
 ; RV32-NEXT:    lh a1, 232(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 116(sp)
+; RV32-NEXT:    sb a1, 52(sp)
 ; RV32-NEXT:    lh a1, 230(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 115(sp)
+; RV32-NEXT:    sb a1, 51(sp)
 ; RV32-NEXT:    lh a1, 228(sp)
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
-; RV32-NEXT:    sb a1, 114(sp)
+; RV32-NEXT:    sb a1, 50(sp)
+; RV32-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV32-NEXT:    vslidedown.vi v10, v8, 15
 ; RV32-NEXT:    vmv.x.s a1, v10
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 14
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 13
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -8172,20 +2770,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 76(sp)
-; RV32-NEXT:    sb a5, 77(sp)
-; RV32-NEXT:    sb a3, 78(sp)
-; RV32-NEXT:    sb a1, 79(sp)
+; RV32-NEXT:    sb a6, 12(sp)
+; RV32-NEXT:    sb a5, 13(sp)
+; RV32-NEXT:    sb a4, 14(sp)
+; RV32-NEXT:    sb a1, 15(sp)
 ; RV32-NEXT:    vslidedown.vi v10, v8, 11
 ; RV32-NEXT:    vmv.x.s a1, v10
 ; RV32-NEXT:    fmv.h.x fa4, a1
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a1, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 10
-; RV32-NEXT:    vmv.x.s a3, v10
-; RV32-NEXT:    fmv.h.x fa4, a3
+; RV32-NEXT:    vmv.x.s a4, v10
+; RV32-NEXT:    fmv.h.x fa4, a4
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV32-NEXT:    feq.s a3, fa4, fa5
+; RV32-NEXT:    feq.s a4, fa4, fa5
 ; RV32-NEXT:    vslidedown.vi v10, v8, 9
 ; RV32-NEXT:    vmv.x.s a5, v10
 ; RV32-NEXT:    fmv.h.x fa4, a5
@@ -8196,1027 +2794,23 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    fmv.h.x fa4, a6
 ; RV32-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV32-NEXT:    feq.s a6, fa4, fa5
-; RV32-NEXT:    sb a6, 72(sp)
-; RV32-NEXT:    sb a5, 73(sp)
-; RV32-NEXT:    sb a3, 74(sp)
-; RV32-NEXT:    sb a1, 75(sp)
-; RV32-NEXT:    li a1, 128
-; RV32-NEXT:    mv a3, sp
-; RV32-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; RV32-NEXT:    vle8.v v8, (a3)
-; RV32-NEXT:    vand.vi v8, v8, 1
-; RV32-NEXT:    vmsne.vi v16, v8, 0
-; RV32-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a3, v16
-; RV32-NEXT:    andi a1, a3, 1
-; RV32-NEXT:    beqz a1, .LBB27_2
-; RV32-NEXT:  # %bb.1: # %cond.load
-; RV32-NEXT:    lh a1, 0(a0)
-; RV32-NEXT:    fmv.x.h a5, fa5
-; RV32-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV32-NEXT:    vmv.v.x v8, a5
-; RV32-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV32-NEXT:    vmv.s.x v8, a1
-; RV32-NEXT:    andi a1, a3, 2
-; RV32-NEXT:    bnez a1, .LBB27_3
-; RV32-NEXT:    j .LBB27_4
-; RV32-NEXT:  .LBB27_2:
-; RV32-NEXT:    # implicit-def: $v8m8
-; RV32-NEXT:    andi a1, a3, 2
-; RV32-NEXT:    beqz a1, .LBB27_4
-; RV32-NEXT:  .LBB27_3: # %cond.load1
-; RV32-NEXT:    lh a1, 2(a0)
-; RV32-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 1
-; RV32-NEXT:  .LBB27_4: # %else2
-; RV32-NEXT:    andi a1, a3, 4
-; RV32-NEXT:    bnez a1, .LBB27_74
-; RV32-NEXT:  # %bb.5: # %else5
-; RV32-NEXT:    andi a1, a3, 8
-; RV32-NEXT:    bnez a1, .LBB27_75
-; RV32-NEXT:  .LBB27_6: # %else8
-; RV32-NEXT:    andi a1, a3, 16
-; RV32-NEXT:    bnez a1, .LBB27_76
-; RV32-NEXT:  .LBB27_7: # %else11
-; RV32-NEXT:    andi a1, a3, 32
-; RV32-NEXT:    bnez a1, .LBB27_77
-; RV32-NEXT:  .LBB27_8: # %else14
-; RV32-NEXT:    andi a1, a3, 64
-; RV32-NEXT:    bnez a1, .LBB27_78
-; RV32-NEXT:  .LBB27_9: # %else17
-; RV32-NEXT:    andi a1, a3, 128
-; RV32-NEXT:    bnez a1, .LBB27_79
-; RV32-NEXT:  .LBB27_10: # %else20
-; RV32-NEXT:    andi a1, a3, 256
-; RV32-NEXT:    bnez a1, .LBB27_80
-; RV32-NEXT:  .LBB27_11: # %else23
-; RV32-NEXT:    andi a1, a3, 512
-; RV32-NEXT:    bnez a1, .LBB27_81
-; RV32-NEXT:  .LBB27_12: # %else26
-; RV32-NEXT:    andi a1, a3, 1024
-; RV32-NEXT:    bnez a1, .LBB27_82
-; RV32-NEXT:  .LBB27_13: # %else29
-; RV32-NEXT:    slli a1, a3, 20
-; RV32-NEXT:    bltz a1, .LBB27_83
-; RV32-NEXT:  .LBB27_14: # %else32
-; RV32-NEXT:    slli a1, a3, 19
-; RV32-NEXT:    bltz a1, .LBB27_84
-; RV32-NEXT:  .LBB27_15: # %else35
-; RV32-NEXT:    slli a1, a3, 18
-; RV32-NEXT:    bltz a1, .LBB27_85
-; RV32-NEXT:  .LBB27_16: # %else38
-; RV32-NEXT:    slli a1, a3, 17
-; RV32-NEXT:    bltz a1, .LBB27_86
-; RV32-NEXT:  .LBB27_17: # %else41
-; RV32-NEXT:    slli a1, a3, 16
-; RV32-NEXT:    bltz a1, .LBB27_87
-; RV32-NEXT:  .LBB27_18: # %else44
-; RV32-NEXT:    slli a1, a3, 15
-; RV32-NEXT:    bltz a1, .LBB27_88
-; RV32-NEXT:  .LBB27_19: # %else47
-; RV32-NEXT:    slli a1, a3, 14
-; RV32-NEXT:    bltz a1, .LBB27_89
-; RV32-NEXT:  .LBB27_20: # %else50
-; RV32-NEXT:    slli a1, a3, 13
-; RV32-NEXT:    bltz a1, .LBB27_90
-; RV32-NEXT:  .LBB27_21: # %else53
-; RV32-NEXT:    slli a1, a3, 12
-; RV32-NEXT:    bltz a1, .LBB27_91
-; RV32-NEXT:  .LBB27_22: # %else56
-; RV32-NEXT:    slli a1, a3, 11
-; RV32-NEXT:    bltz a1, .LBB27_92
-; RV32-NEXT:  .LBB27_23: # %else59
-; RV32-NEXT:    slli a1, a3, 10
-; RV32-NEXT:    bltz a1, .LBB27_93
-; RV32-NEXT:  .LBB27_24: # %else62
-; RV32-NEXT:    slli a1, a3, 9
-; RV32-NEXT:    bltz a1, .LBB27_94
-; RV32-NEXT:  .LBB27_25: # %else65
-; RV32-NEXT:    slli a1, a3, 8
-; RV32-NEXT:    bltz a1, .LBB27_95
-; RV32-NEXT:  .LBB27_26: # %else68
-; RV32-NEXT:    slli a1, a3, 7
-; RV32-NEXT:    bltz a1, .LBB27_96
-; RV32-NEXT:  .LBB27_27: # %else71
-; RV32-NEXT:    slli a1, a3, 6
-; RV32-NEXT:    bltz a1, .LBB27_97
-; RV32-NEXT:  .LBB27_28: # %else74
-; RV32-NEXT:    slli a1, a3, 5
-; RV32-NEXT:    bltz a1, .LBB27_98
-; RV32-NEXT:  .LBB27_29: # %else77
-; RV32-NEXT:    slli a1, a3, 4
-; RV32-NEXT:    bltz a1, .LBB27_99
-; RV32-NEXT:  .LBB27_30: # %else80
-; RV32-NEXT:    slli a1, a3, 3
-; RV32-NEXT:    bgez a1, .LBB27_32
-; RV32-NEXT:  .LBB27_31: # %cond.load82
-; RV32-NEXT:    lh a1, 56(a0)
-; RV32-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    vslideup.vi v8, v20, 28
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:  .LBB27_32: # %else83
-; RV32-NEXT:    slli a4, a3, 2
-; RV32-NEXT:    li a1, 32
-; RV32-NEXT:    bgez a4, .LBB27_34
-; RV32-NEXT:  # %bb.33: # %cond.load85
-; RV32-NEXT:    lh a4, 58(a0)
-; RV32-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a4
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    vslideup.vi v8, v20, 29
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:  .LBB27_34: # %else86
-; RV32-NEXT:    slli a4, a3, 1
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vsrl.vx v17, v16, a1
-; RV32-NEXT:    bgez a4, .LBB27_36
-; RV32-NEXT:  # %bb.35: # %cond.load88
-; RV32-NEXT:    lh a4, 60(a0)
-; RV32-NEXT:    vmv.s.x v20, a4
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v20, 30
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:  .LBB27_36: # %else89
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a4, v17
-; RV32-NEXT:    bltz a3, .LBB27_100
-; RV32-NEXT:  # %bb.37: # %else92
-; RV32-NEXT:    andi a3, a4, 1
-; RV32-NEXT:    bnez a3, .LBB27_101
-; RV32-NEXT:  .LBB27_38: # %else95
-; RV32-NEXT:    andi a3, a4, 2
-; RV32-NEXT:    bnez a3, .LBB27_102
-; RV32-NEXT:  .LBB27_39: # %else98
-; RV32-NEXT:    andi a3, a4, 4
-; RV32-NEXT:    bnez a3, .LBB27_103
-; RV32-NEXT:  .LBB27_40: # %else101
-; RV32-NEXT:    andi a3, a4, 8
-; RV32-NEXT:    bnez a3, .LBB27_104
-; RV32-NEXT:  .LBB27_41: # %else104
-; RV32-NEXT:    andi a3, a4, 16
-; RV32-NEXT:    bnez a3, .LBB27_105
-; RV32-NEXT:  .LBB27_42: # %else107
-; RV32-NEXT:    andi a3, a4, 32
-; RV32-NEXT:    bnez a3, .LBB27_106
-; RV32-NEXT:  .LBB27_43: # %else110
-; RV32-NEXT:    andi a3, a4, 64
-; RV32-NEXT:    bnez a3, .LBB27_107
-; RV32-NEXT:  .LBB27_44: # %else113
-; RV32-NEXT:    andi a3, a4, 128
-; RV32-NEXT:    bnez a3, .LBB27_108
-; RV32-NEXT:  .LBB27_45: # %else116
-; RV32-NEXT:    andi a3, a4, 256
-; RV32-NEXT:    bnez a3, .LBB27_109
-; RV32-NEXT:  .LBB27_46: # %else119
-; RV32-NEXT:    andi a3, a4, 512
-; RV32-NEXT:    bnez a3, .LBB27_110
-; RV32-NEXT:  .LBB27_47: # %else122
-; RV32-NEXT:    andi a3, a4, 1024
-; RV32-NEXT:    bnez a3, .LBB27_111
-; RV32-NEXT:  .LBB27_48: # %else125
-; RV32-NEXT:    slli a3, a4, 20
-; RV32-NEXT:    bltz a3, .LBB27_112
-; RV32-NEXT:  .LBB27_49: # %else128
-; RV32-NEXT:    slli a3, a4, 19
-; RV32-NEXT:    bltz a3, .LBB27_113
-; RV32-NEXT:  .LBB27_50: # %else131
-; RV32-NEXT:    slli a3, a4, 18
-; RV32-NEXT:    bltz a3, .LBB27_114
-; RV32-NEXT:  .LBB27_51: # %else134
-; RV32-NEXT:    slli a3, a4, 17
-; RV32-NEXT:    bltz a3, .LBB27_115
-; RV32-NEXT:  .LBB27_52: # %else137
-; RV32-NEXT:    slli a3, a4, 16
-; RV32-NEXT:    bltz a3, .LBB27_116
-; RV32-NEXT:  .LBB27_53: # %else140
-; RV32-NEXT:    slli a3, a4, 15
-; RV32-NEXT:    bltz a3, .LBB27_117
-; RV32-NEXT:  .LBB27_54: # %else143
-; RV32-NEXT:    slli a3, a4, 14
-; RV32-NEXT:    bltz a3, .LBB27_118
-; RV32-NEXT:  .LBB27_55: # %else146
-; RV32-NEXT:    slli a3, a4, 13
-; RV32-NEXT:    bltz a3, .LBB27_119
-; RV32-NEXT:  .LBB27_56: # %else149
-; RV32-NEXT:    slli a3, a4, 12
-; RV32-NEXT:    bltz a3, .LBB27_120
-; RV32-NEXT:  .LBB27_57: # %else152
-; RV32-NEXT:    slli a3, a4, 11
-; RV32-NEXT:    bltz a3, .LBB27_121
-; RV32-NEXT:  .LBB27_58: # %else155
-; RV32-NEXT:    slli a3, a4, 10
-; RV32-NEXT:    bltz a3, .LBB27_122
-; RV32-NEXT:  .LBB27_59: # %else158
-; RV32-NEXT:    slli a3, a4, 9
-; RV32-NEXT:    bltz a3, .LBB27_123
-; RV32-NEXT:  .LBB27_60: # %else161
-; RV32-NEXT:    slli a3, a4, 8
-; RV32-NEXT:    bltz a3, .LBB27_124
-; RV32-NEXT:  .LBB27_61: # %else164
-; RV32-NEXT:    slli a3, a4, 7
-; RV32-NEXT:    bltz a3, .LBB27_125
-; RV32-NEXT:  .LBB27_62: # %else167
-; RV32-NEXT:    slli a3, a4, 6
-; RV32-NEXT:    bltz a3, .LBB27_126
-; RV32-NEXT:  .LBB27_63: # %else170
-; RV32-NEXT:    slli a3, a4, 5
-; RV32-NEXT:    bltz a3, .LBB27_127
-; RV32-NEXT:  .LBB27_64: # %else173
-; RV32-NEXT:    slli a3, a4, 4
-; RV32-NEXT:    bltz a3, .LBB27_128
-; RV32-NEXT:  .LBB27_65: # %else176
-; RV32-NEXT:    slli a3, a4, 3
-; RV32-NEXT:    bltz a3, .LBB27_129
-; RV32-NEXT:  .LBB27_66: # %else179
-; RV32-NEXT:    slli a3, a4, 2
-; RV32-NEXT:    bgez a3, .LBB27_68
-; RV32-NEXT:  .LBB27_67: # %cond.load181
-; RV32-NEXT:    lh a3, 122(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 62
-; RV32-NEXT:    li a5, 61
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:  .LBB27_68: # %else182
-; RV32-NEXT:    slli a3, a4, 1
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vslidedown.vi v24, v16, 1
-; RV32-NEXT:    bgez a3, .LBB27_70
-; RV32-NEXT:  # %bb.69: # %cond.load184
-; RV32-NEXT:    lh a3, 124(a0)
-; RV32-NEXT:    vmv.s.x v16, a3
-; RV32-NEXT:    li a3, 63
-; RV32-NEXT:    li a5, 62
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a5
-; RV32-NEXT:  .LBB27_70: # %else185
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a3, v24
-; RV32-NEXT:    bgez a4, .LBB27_72
-; RV32-NEXT:  # %bb.71: # %cond.load187
-; RV32-NEXT:    lh a4, 126(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vmv.s.x v16, a4
-; RV32-NEXT:    li a4, 63
-; RV32-NEXT:    vsetvli zero, a5, e16, m8, ta, ma
-; RV32-NEXT:    vslideup.vx v8, v16, a4
-; RV32-NEXT:  .LBB27_72: # %else188
-; RV32-NEXT:    andi a4, a3, 1
-; RV32-NEXT:    beqz a4, .LBB27_130
-; RV32-NEXT:  # %bb.73: # %cond.load190
-; RV32-NEXT:    lh a4, 128(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v16, a4
-; RV32-NEXT:    andi a4, a3, 2
-; RV32-NEXT:    bnez a4, .LBB27_131
-; RV32-NEXT:    j .LBB27_132
-; RV32-NEXT:  .LBB27_74: # %cond.load4
-; RV32-NEXT:    lh a1, 4(a0)
-; RV32-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 2
-; RV32-NEXT:    andi a1, a3, 8
-; RV32-NEXT:    beqz a1, .LBB27_6
-; RV32-NEXT:  .LBB27_75: # %cond.load7
-; RV32-NEXT:    lh a1, 6(a0)
-; RV32-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 3
-; RV32-NEXT:    andi a1, a3, 16
-; RV32-NEXT:    beqz a1, .LBB27_7
-; RV32-NEXT:  .LBB27_76: # %cond.load10
-; RV32-NEXT:    lh a1, 8(a0)
-; RV32-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 4
-; RV32-NEXT:    andi a1, a3, 32
-; RV32-NEXT:    beqz a1, .LBB27_8
-; RV32-NEXT:  .LBB27_77: # %cond.load13
-; RV32-NEXT:    lh a1, 10(a0)
-; RV32-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 5
-; RV32-NEXT:    andi a1, a3, 64
-; RV32-NEXT:    beqz a1, .LBB27_9
-; RV32-NEXT:  .LBB27_78: # %cond.load16
-; RV32-NEXT:    lh a1, 12(a0)
-; RV32-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 6
-; RV32-NEXT:    andi a1, a3, 128
-; RV32-NEXT:    beqz a1, .LBB27_10
-; RV32-NEXT:  .LBB27_79: # %cond.load19
-; RV32-NEXT:    lh a1, 14(a0)
-; RV32-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v17, a1
-; RV32-NEXT:    vslideup.vi v8, v17, 7
-; RV32-NEXT:    andi a1, a3, 256
-; RV32-NEXT:    beqz a1, .LBB27_11
-; RV32-NEXT:  .LBB27_80: # %cond.load22
-; RV32-NEXT:    lh a1, 16(a0)
-; RV32-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 8
-; RV32-NEXT:    andi a1, a3, 512
-; RV32-NEXT:    beqz a1, .LBB27_12
-; RV32-NEXT:  .LBB27_81: # %cond.load25
-; RV32-NEXT:    lh a1, 18(a0)
-; RV32-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 9
-; RV32-NEXT:    andi a1, a3, 1024
-; RV32-NEXT:    beqz a1, .LBB27_13
-; RV32-NEXT:  .LBB27_82: # %cond.load28
-; RV32-NEXT:    lh a1, 20(a0)
-; RV32-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 10
-; RV32-NEXT:    slli a1, a3, 20
-; RV32-NEXT:    bgez a1, .LBB27_14
-; RV32-NEXT:  .LBB27_83: # %cond.load31
-; RV32-NEXT:    lh a1, 22(a0)
-; RV32-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 11
-; RV32-NEXT:    slli a1, a3, 19
-; RV32-NEXT:    bgez a1, .LBB27_15
-; RV32-NEXT:  .LBB27_84: # %cond.load34
-; RV32-NEXT:    lh a1, 24(a0)
-; RV32-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 12
-; RV32-NEXT:    slli a1, a3, 18
-; RV32-NEXT:    bgez a1, .LBB27_16
-; RV32-NEXT:  .LBB27_85: # %cond.load37
-; RV32-NEXT:    lh a1, 26(a0)
-; RV32-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 13
-; RV32-NEXT:    slli a1, a3, 17
-; RV32-NEXT:    bgez a1, .LBB27_17
-; RV32-NEXT:  .LBB27_86: # %cond.load40
-; RV32-NEXT:    lh a1, 28(a0)
-; RV32-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 14
-; RV32-NEXT:    slli a1, a3, 16
-; RV32-NEXT:    bgez a1, .LBB27_18
-; RV32-NEXT:  .LBB27_87: # %cond.load43
-; RV32-NEXT:    lh a1, 30(a0)
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v18, a1
-; RV32-NEXT:    vslideup.vi v8, v18, 15
-; RV32-NEXT:    slli a1, a3, 15
-; RV32-NEXT:    bgez a1, .LBB27_19
-; RV32-NEXT:  .LBB27_88: # %cond.load46
-; RV32-NEXT:    lh a1, 32(a0)
-; RV32-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 16
-; RV32-NEXT:    slli a1, a3, 14
-; RV32-NEXT:    bgez a1, .LBB27_20
-; RV32-NEXT:  .LBB27_89: # %cond.load49
-; RV32-NEXT:    lh a1, 34(a0)
-; RV32-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 17
-; RV32-NEXT:    slli a1, a3, 13
-; RV32-NEXT:    bgez a1, .LBB27_21
-; RV32-NEXT:  .LBB27_90: # %cond.load52
-; RV32-NEXT:    lh a1, 36(a0)
-; RV32-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 18
-; RV32-NEXT:    slli a1, a3, 12
-; RV32-NEXT:    bgez a1, .LBB27_22
-; RV32-NEXT:  .LBB27_91: # %cond.load55
-; RV32-NEXT:    lh a1, 38(a0)
-; RV32-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 19
-; RV32-NEXT:    slli a1, a3, 11
-; RV32-NEXT:    bgez a1, .LBB27_23
-; RV32-NEXT:  .LBB27_92: # %cond.load58
-; RV32-NEXT:    lh a1, 40(a0)
-; RV32-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 20
-; RV32-NEXT:    slli a1, a3, 10
-; RV32-NEXT:    bgez a1, .LBB27_24
-; RV32-NEXT:  .LBB27_93: # %cond.load61
-; RV32-NEXT:    lh a1, 42(a0)
-; RV32-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 21
-; RV32-NEXT:    slli a1, a3, 9
-; RV32-NEXT:    bgez a1, .LBB27_25
-; RV32-NEXT:  .LBB27_94: # %cond.load64
-; RV32-NEXT:    lh a1, 44(a0)
-; RV32-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 22
-; RV32-NEXT:    slli a1, a3, 8
-; RV32-NEXT:    bgez a1, .LBB27_26
-; RV32-NEXT:  .LBB27_95: # %cond.load67
-; RV32-NEXT:    lh a1, 46(a0)
-; RV32-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 23
-; RV32-NEXT:    slli a1, a3, 7
-; RV32-NEXT:    bgez a1, .LBB27_27
-; RV32-NEXT:  .LBB27_96: # %cond.load70
-; RV32-NEXT:    lh a1, 48(a0)
-; RV32-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 24
-; RV32-NEXT:    slli a1, a3, 6
-; RV32-NEXT:    bgez a1, .LBB27_28
-; RV32-NEXT:  .LBB27_97: # %cond.load73
-; RV32-NEXT:    lh a1, 50(a0)
-; RV32-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vslideup.vi v8, v20, 25
-; RV32-NEXT:    slli a1, a3, 5
-; RV32-NEXT:    bgez a1, .LBB27_29
-; RV32-NEXT:  .LBB27_98: # %cond.load76
-; RV32-NEXT:    lh a1, 52(a0)
-; RV32-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    vslideup.vi v8, v20, 26
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:    slli a1, a3, 4
-; RV32-NEXT:    bgez a1, .LBB27_30
-; RV32-NEXT:  .LBB27_99: # %cond.load79
-; RV32-NEXT:    lh a1, 54(a0)
-; RV32-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v20, a1
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    vslideup.vi v8, v20, 27
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:    slli a1, a3, 3
-; RV32-NEXT:    bltz a1, .LBB27_31
-; RV32-NEXT:    j .LBB27_32
-; RV32-NEXT:  .LBB27_100: # %cond.load91
-; RV32-NEXT:    lh a3, 62(a0)
-; RV32-NEXT:    vmv.s.x v20, a3
-; RV32-NEXT:    vmv8r.v v24, v8
-; RV32-NEXT:    li a3, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v8, v20, 31
-; RV32-NEXT:    vmv4r.v v24, v8
-; RV32-NEXT:    vmv8r.v v8, v24
-; RV32-NEXT:    andi a3, a4, 1
-; RV32-NEXT:    beqz a3, .LBB27_38
-; RV32-NEXT:  .LBB27_101: # %cond.load94
-; RV32-NEXT:    lh a3, 64(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 33
-; RV32-NEXT:    li a5, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 2
-; RV32-NEXT:    beqz a3, .LBB27_39
-; RV32-NEXT:  .LBB27_102: # %cond.load97
-; RV32-NEXT:    lh a3, 66(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 34
-; RV32-NEXT:    li a5, 33
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 4
-; RV32-NEXT:    beqz a3, .LBB27_40
-; RV32-NEXT:  .LBB27_103: # %cond.load100
-; RV32-NEXT:    lh a3, 68(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 35
-; RV32-NEXT:    li a5, 34
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 8
-; RV32-NEXT:    beqz a3, .LBB27_41
-; RV32-NEXT:  .LBB27_104: # %cond.load103
-; RV32-NEXT:    lh a3, 70(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 36
-; RV32-NEXT:    li a5, 35
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 16
-; RV32-NEXT:    beqz a3, .LBB27_42
-; RV32-NEXT:  .LBB27_105: # %cond.load106
-; RV32-NEXT:    lh a3, 72(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 37
-; RV32-NEXT:    li a5, 36
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 32
-; RV32-NEXT:    beqz a3, .LBB27_43
-; RV32-NEXT:  .LBB27_106: # %cond.load109
-; RV32-NEXT:    lh a3, 74(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 38
-; RV32-NEXT:    li a5, 37
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 64
-; RV32-NEXT:    beqz a3, .LBB27_44
-; RV32-NEXT:  .LBB27_107: # %cond.load112
-; RV32-NEXT:    lh a3, 76(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 39
-; RV32-NEXT:    li a5, 38
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 128
-; RV32-NEXT:    beqz a3, .LBB27_45
-; RV32-NEXT:  .LBB27_108: # %cond.load115
-; RV32-NEXT:    lh a3, 78(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 40
-; RV32-NEXT:    li a5, 39
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 256
-; RV32-NEXT:    beqz a3, .LBB27_46
-; RV32-NEXT:  .LBB27_109: # %cond.load118
-; RV32-NEXT:    lh a3, 80(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 41
-; RV32-NEXT:    li a5, 40
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 512
-; RV32-NEXT:    beqz a3, .LBB27_47
-; RV32-NEXT:  .LBB27_110: # %cond.load121
-; RV32-NEXT:    lh a3, 82(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 42
-; RV32-NEXT:    li a5, 41
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    andi a3, a4, 1024
-; RV32-NEXT:    beqz a3, .LBB27_48
-; RV32-NEXT:  .LBB27_111: # %cond.load124
-; RV32-NEXT:    lh a3, 84(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 43
-; RV32-NEXT:    li a5, 42
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 20
-; RV32-NEXT:    bgez a3, .LBB27_49
-; RV32-NEXT:  .LBB27_112: # %cond.load127
-; RV32-NEXT:    lh a3, 86(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 44
-; RV32-NEXT:    li a5, 43
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 19
-; RV32-NEXT:    bgez a3, .LBB27_50
-; RV32-NEXT:  .LBB27_113: # %cond.load130
-; RV32-NEXT:    lh a3, 88(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 45
-; RV32-NEXT:    li a5, 44
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 18
-; RV32-NEXT:    bgez a3, .LBB27_51
-; RV32-NEXT:  .LBB27_114: # %cond.load133
-; RV32-NEXT:    lh a3, 90(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 46
-; RV32-NEXT:    li a5, 45
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 17
-; RV32-NEXT:    bgez a3, .LBB27_52
-; RV32-NEXT:  .LBB27_115: # %cond.load136
-; RV32-NEXT:    lh a3, 92(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 47
-; RV32-NEXT:    li a5, 46
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 16
-; RV32-NEXT:    bgez a3, .LBB27_53
-; RV32-NEXT:  .LBB27_116: # %cond.load139
-; RV32-NEXT:    lh a3, 94(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 48
-; RV32-NEXT:    li a5, 47
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 15
-; RV32-NEXT:    bgez a3, .LBB27_54
-; RV32-NEXT:  .LBB27_117: # %cond.load142
-; RV32-NEXT:    lh a3, 96(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 49
-; RV32-NEXT:    li a5, 48
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 14
-; RV32-NEXT:    bgez a3, .LBB27_55
-; RV32-NEXT:  .LBB27_118: # %cond.load145
-; RV32-NEXT:    lh a3, 98(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 50
-; RV32-NEXT:    li a5, 49
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 13
-; RV32-NEXT:    bgez a3, .LBB27_56
-; RV32-NEXT:  .LBB27_119: # %cond.load148
-; RV32-NEXT:    lh a3, 100(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 51
-; RV32-NEXT:    li a5, 50
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 12
-; RV32-NEXT:    bgez a3, .LBB27_57
-; RV32-NEXT:  .LBB27_120: # %cond.load151
-; RV32-NEXT:    lh a3, 102(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 52
-; RV32-NEXT:    li a5, 51
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 11
-; RV32-NEXT:    bgez a3, .LBB27_58
-; RV32-NEXT:  .LBB27_121: # %cond.load154
-; RV32-NEXT:    lh a3, 104(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 53
-; RV32-NEXT:    li a5, 52
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 10
-; RV32-NEXT:    bgez a3, .LBB27_59
-; RV32-NEXT:  .LBB27_122: # %cond.load157
-; RV32-NEXT:    lh a3, 106(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 54
-; RV32-NEXT:    li a5, 53
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 9
-; RV32-NEXT:    bgez a3, .LBB27_60
-; RV32-NEXT:  .LBB27_123: # %cond.load160
-; RV32-NEXT:    lh a3, 108(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 55
-; RV32-NEXT:    li a5, 54
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 8
-; RV32-NEXT:    bgez a3, .LBB27_61
-; RV32-NEXT:  .LBB27_124: # %cond.load163
-; RV32-NEXT:    lh a3, 110(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 56
-; RV32-NEXT:    li a5, 55
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 7
-; RV32-NEXT:    bgez a3, .LBB27_62
-; RV32-NEXT:  .LBB27_125: # %cond.load166
-; RV32-NEXT:    lh a3, 112(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 57
-; RV32-NEXT:    li a5, 56
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 6
-; RV32-NEXT:    bgez a3, .LBB27_63
-; RV32-NEXT:  .LBB27_126: # %cond.load169
-; RV32-NEXT:    lh a3, 114(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 58
-; RV32-NEXT:    li a5, 57
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 5
-; RV32-NEXT:    bgez a3, .LBB27_64
-; RV32-NEXT:  .LBB27_127: # %cond.load172
-; RV32-NEXT:    lh a3, 116(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 59
-; RV32-NEXT:    li a5, 58
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 4
-; RV32-NEXT:    bgez a3, .LBB27_65
-; RV32-NEXT:  .LBB27_128: # %cond.load175
-; RV32-NEXT:    lh a3, 118(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 60
-; RV32-NEXT:    li a5, 59
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 3
-; RV32-NEXT:    bgez a3, .LBB27_66
-; RV32-NEXT:  .LBB27_129: # %cond.load178
-; RV32-NEXT:    lh a3, 120(a0)
-; RV32-NEXT:    li a5, 64
-; RV32-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 61
-; RV32-NEXT:    li a5, 60
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v8, v24, a5
-; RV32-NEXT:    slli a3, a4, 2
-; RV32-NEXT:    bltz a3, .LBB27_67
-; RV32-NEXT:    j .LBB27_68
-; RV32-NEXT:  .LBB27_130:
-; RV32-NEXT:    # implicit-def: $v16m8
-; RV32-NEXT:    andi a4, a3, 2
-; RV32-NEXT:    beqz a4, .LBB27_132
-; RV32-NEXT:  .LBB27_131: # %cond.load193
-; RV32-NEXT:    lh a4, 130(a0)
-; RV32-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 1
-; RV32-NEXT:  .LBB27_132: # %else194
-; RV32-NEXT:    andi a4, a3, 4
-; RV32-NEXT:    bnez a4, .LBB27_198
-; RV32-NEXT:  # %bb.133: # %else197
-; RV32-NEXT:    andi a4, a3, 8
-; RV32-NEXT:    bnez a4, .LBB27_199
-; RV32-NEXT:  .LBB27_134: # %else200
-; RV32-NEXT:    andi a4, a3, 16
-; RV32-NEXT:    bnez a4, .LBB27_200
-; RV32-NEXT:  .LBB27_135: # %else203
-; RV32-NEXT:    andi a4, a3, 32
-; RV32-NEXT:    bnez a4, .LBB27_201
-; RV32-NEXT:  .LBB27_136: # %else206
-; RV32-NEXT:    andi a4, a3, 64
-; RV32-NEXT:    bnez a4, .LBB27_202
-; RV32-NEXT:  .LBB27_137: # %else209
-; RV32-NEXT:    andi a4, a3, 128
-; RV32-NEXT:    bnez a4, .LBB27_203
-; RV32-NEXT:  .LBB27_138: # %else212
-; RV32-NEXT:    andi a4, a3, 256
-; RV32-NEXT:    bnez a4, .LBB27_204
-; RV32-NEXT:  .LBB27_139: # %else215
-; RV32-NEXT:    andi a4, a3, 512
-; RV32-NEXT:    bnez a4, .LBB27_205
-; RV32-NEXT:  .LBB27_140: # %else218
-; RV32-NEXT:    andi a4, a3, 1024
-; RV32-NEXT:    bnez a4, .LBB27_206
-; RV32-NEXT:  .LBB27_141: # %else221
-; RV32-NEXT:    slli a4, a3, 20
-; RV32-NEXT:    bltz a4, .LBB27_207
-; RV32-NEXT:  .LBB27_142: # %else224
-; RV32-NEXT:    slli a4, a3, 19
-; RV32-NEXT:    bltz a4, .LBB27_208
-; RV32-NEXT:  .LBB27_143: # %else227
-; RV32-NEXT:    slli a4, a3, 18
-; RV32-NEXT:    bltz a4, .LBB27_209
-; RV32-NEXT:  .LBB27_144: # %else230
-; RV32-NEXT:    slli a4, a3, 17
-; RV32-NEXT:    bltz a4, .LBB27_210
-; RV32-NEXT:  .LBB27_145: # %else233
-; RV32-NEXT:    slli a4, a3, 16
-; RV32-NEXT:    bltz a4, .LBB27_211
-; RV32-NEXT:  .LBB27_146: # %else236
-; RV32-NEXT:    slli a4, a3, 15
-; RV32-NEXT:    bltz a4, .LBB27_212
-; RV32-NEXT:  .LBB27_147: # %else239
-; RV32-NEXT:    slli a4, a3, 14
-; RV32-NEXT:    bltz a4, .LBB27_213
-; RV32-NEXT:  .LBB27_148: # %else242
-; RV32-NEXT:    slli a4, a3, 13
-; RV32-NEXT:    bltz a4, .LBB27_214
-; RV32-NEXT:  .LBB27_149: # %else245
-; RV32-NEXT:    slli a4, a3, 12
-; RV32-NEXT:    bltz a4, .LBB27_215
-; RV32-NEXT:  .LBB27_150: # %else248
-; RV32-NEXT:    slli a4, a3, 11
-; RV32-NEXT:    bltz a4, .LBB27_216
-; RV32-NEXT:  .LBB27_151: # %else251
-; RV32-NEXT:    slli a4, a3, 10
-; RV32-NEXT:    bltz a4, .LBB27_217
-; RV32-NEXT:  .LBB27_152: # %else254
-; RV32-NEXT:    slli a4, a3, 9
-; RV32-NEXT:    bltz a4, .LBB27_218
-; RV32-NEXT:  .LBB27_153: # %else257
-; RV32-NEXT:    slli a4, a3, 8
-; RV32-NEXT:    bltz a4, .LBB27_219
-; RV32-NEXT:  .LBB27_154: # %else260
-; RV32-NEXT:    slli a4, a3, 7
-; RV32-NEXT:    bltz a4, .LBB27_220
-; RV32-NEXT:  .LBB27_155: # %else263
-; RV32-NEXT:    slli a4, a3, 6
-; RV32-NEXT:    bltz a4, .LBB27_221
-; RV32-NEXT:  .LBB27_156: # %else266
-; RV32-NEXT:    slli a4, a3, 5
-; RV32-NEXT:    bltz a4, .LBB27_222
-; RV32-NEXT:  .LBB27_157: # %else269
-; RV32-NEXT:    slli a4, a3, 4
-; RV32-NEXT:    bltz a4, .LBB27_223
-; RV32-NEXT:  .LBB27_158: # %else272
-; RV32-NEXT:    slli a4, a3, 3
-; RV32-NEXT:    bltz a4, .LBB27_224
-; RV32-NEXT:  .LBB27_159: # %else275
-; RV32-NEXT:    slli a4, a3, 2
-; RV32-NEXT:    bgez a4, .LBB27_161
-; RV32-NEXT:  .LBB27_160: # %cond.load277
-; RV32-NEXT:    lh a4, 186(a0)
-; RV32-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 29
-; RV32-NEXT:  .LBB27_161: # %else278
-; RV32-NEXT:    slli a4, a3, 1
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vsrl.vx v24, v24, a1
-; RV32-NEXT:    bgez a4, .LBB27_163
-; RV32-NEXT:  # %bb.162: # %cond.load280
-; RV32-NEXT:    lh a1, 188(a0)
-; RV32-NEXT:    vmv.s.x v28, a1
-; RV32-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v16, v28, 30
-; RV32-NEXT:  .LBB27_163: # %else281
-; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-NEXT:    vmv.x.s a1, v24
-; RV32-NEXT:    bltz a3, .LBB27_225
-; RV32-NEXT:  # %bb.164: # %else284
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    bnez a3, .LBB27_226
-; RV32-NEXT:  .LBB27_165: # %else287
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    bnez a3, .LBB27_227
-; RV32-NEXT:  .LBB27_166: # %else290
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    bnez a3, .LBB27_228
-; RV32-NEXT:  .LBB27_167: # %else293
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    bnez a3, .LBB27_229
-; RV32-NEXT:  .LBB27_168: # %else296
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    bnez a3, .LBB27_230
-; RV32-NEXT:  .LBB27_169: # %else299
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    bnez a3, .LBB27_231
-; RV32-NEXT:  .LBB27_170: # %else302
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    bnez a3, .LBB27_232
-; RV32-NEXT:  .LBB27_171: # %else305
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    bnez a3, .LBB27_233
-; RV32-NEXT:  .LBB27_172: # %else308
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    bnez a3, .LBB27_234
-; RV32-NEXT:  .LBB27_173: # %else311
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    bnez a3, .LBB27_235
-; RV32-NEXT:  .LBB27_174: # %else314
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    bnez a3, .LBB27_236
-; RV32-NEXT:  .LBB27_175: # %else317
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bltz a3, .LBB27_237
-; RV32-NEXT:  .LBB27_176: # %else320
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bltz a3, .LBB27_238
-; RV32-NEXT:  .LBB27_177: # %else323
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bltz a3, .LBB27_239
-; RV32-NEXT:  .LBB27_178: # %else326
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bltz a3, .LBB27_240
-; RV32-NEXT:  .LBB27_179: # %else329
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bltz a3, .LBB27_241
-; RV32-NEXT:  .LBB27_180: # %else332
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bltz a3, .LBB27_242
-; RV32-NEXT:  .LBB27_181: # %else335
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bltz a3, .LBB27_243
-; RV32-NEXT:  .LBB27_182: # %else338
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bltz a3, .LBB27_244
-; RV32-NEXT:  .LBB27_183: # %else341
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bltz a3, .LBB27_245
-; RV32-NEXT:  .LBB27_184: # %else344
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bltz a3, .LBB27_246
-; RV32-NEXT:  .LBB27_185: # %else347
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bltz a3, .LBB27_247
-; RV32-NEXT:  .LBB27_186: # %else350
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bltz a3, .LBB27_248
-; RV32-NEXT:  .LBB27_187: # %else353
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bltz a3, .LBB27_249
-; RV32-NEXT:  .LBB27_188: # %else356
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bltz a3, .LBB27_250
-; RV32-NEXT:  .LBB27_189: # %else359
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bltz a3, .LBB27_251
-; RV32-NEXT:  .LBB27_190: # %else362
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bltz a3, .LBB27_252
-; RV32-NEXT:  .LBB27_191: # %else365
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bltz a3, .LBB27_253
-; RV32-NEXT:  .LBB27_192: # %else368
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bltz a3, .LBB27_254
-; RV32-NEXT:  .LBB27_193: # %else371
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bltz a3, .LBB27_255
-; RV32-NEXT:  .LBB27_194: # %else374
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bltz a3, .LBB27_256
-; RV32-NEXT:  .LBB27_195: # %else377
-; RV32-NEXT:    bgez a1, .LBB27_197
-; RV32-NEXT:  .LBB27_196: # %cond.load379
-; RV32-NEXT:    lh a0, 254(a0)
-; RV32-NEXT:    li a1, 64
-; RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a0
-; RV32-NEXT:    li a0, 63
-; RV32-NEXT:    vslideup.vx v16, v24, a0
-; RV32-NEXT:  .LBB27_197: # %else380
-; RV32-NEXT:    li a0, 64
-; RV32-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV32-NEXT:    sb a6, 8(sp)
+; RV32-NEXT:    sb a5, 9(sp)
+; RV32-NEXT:    sb a4, 10(sp)
+; RV32-NEXT:    sb a1, 11(sp)
+; RV32-NEXT:    addi a1, sp, 64
+; RV32-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV32-NEXT:    vle8.v v8, (a1)
+; RV32-NEXT:    mv a1, sp
+; RV32-NEXT:    vle8.v v12, (a1)
+; RV32-NEXT:    vand.vi v16, v8, 1
+; RV32-NEXT:    vmsne.vi v8, v16, 0
+; RV32-NEXT:    vand.vi v12, v12, 1
+; RV32-NEXT:    vmsne.vi v0, v12, 0
+; RV32-NEXT:    addi a1, a0, 128
+; RV32-NEXT:    vle16.v v16, (a1), v0.t
+; RV32-NEXT:    vmv1r.v v0, v8
+; RV32-NEXT:    vle16.v v8, (a0), v0.t
 ; RV32-NEXT:    vse16.v v8, (a2)
 ; RV32-NEXT:    addi a0, a2, 128
 ; RV32-NEXT:    vse16.v v16, (a0)
@@ -9225,545 +2819,6 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-NEXT:    lw s0, 504(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    addi sp, sp, 512
 ; RV32-NEXT:    ret
-; RV32-NEXT:  .LBB27_198: # %cond.load196
-; RV32-NEXT:    lh a4, 132(a0)
-; RV32-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 2
-; RV32-NEXT:    andi a4, a3, 8
-; RV32-NEXT:    beqz a4, .LBB27_134
-; RV32-NEXT:  .LBB27_199: # %cond.load199
-; RV32-NEXT:    lh a4, 134(a0)
-; RV32-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 3
-; RV32-NEXT:    andi a4, a3, 16
-; RV32-NEXT:    beqz a4, .LBB27_135
-; RV32-NEXT:  .LBB27_200: # %cond.load202
-; RV32-NEXT:    lh a4, 136(a0)
-; RV32-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 4
-; RV32-NEXT:    andi a4, a3, 32
-; RV32-NEXT:    beqz a4, .LBB27_136
-; RV32-NEXT:  .LBB27_201: # %cond.load205
-; RV32-NEXT:    lh a4, 138(a0)
-; RV32-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 5
-; RV32-NEXT:    andi a4, a3, 64
-; RV32-NEXT:    beqz a4, .LBB27_137
-; RV32-NEXT:  .LBB27_202: # %cond.load208
-; RV32-NEXT:    lh a4, 140(a0)
-; RV32-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 6
-; RV32-NEXT:    andi a4, a3, 128
-; RV32-NEXT:    beqz a4, .LBB27_138
-; RV32-NEXT:  .LBB27_203: # %cond.load211
-; RV32-NEXT:    lh a4, 142(a0)
-; RV32-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-NEXT:    vmv.s.x v25, a4
-; RV32-NEXT:    vslideup.vi v16, v25, 7
-; RV32-NEXT:    andi a4, a3, 256
-; RV32-NEXT:    beqz a4, .LBB27_139
-; RV32-NEXT:  .LBB27_204: # %cond.load214
-; RV32-NEXT:    lh a4, 144(a0)
-; RV32-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 8
-; RV32-NEXT:    andi a4, a3, 512
-; RV32-NEXT:    beqz a4, .LBB27_140
-; RV32-NEXT:  .LBB27_205: # %cond.load217
-; RV32-NEXT:    lh a4, 146(a0)
-; RV32-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 9
-; RV32-NEXT:    andi a4, a3, 1024
-; RV32-NEXT:    beqz a4, .LBB27_141
-; RV32-NEXT:  .LBB27_206: # %cond.load220
-; RV32-NEXT:    lh a4, 148(a0)
-; RV32-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 10
-; RV32-NEXT:    slli a4, a3, 20
-; RV32-NEXT:    bgez a4, .LBB27_142
-; RV32-NEXT:  .LBB27_207: # %cond.load223
-; RV32-NEXT:    lh a4, 150(a0)
-; RV32-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 11
-; RV32-NEXT:    slli a4, a3, 19
-; RV32-NEXT:    bgez a4, .LBB27_143
-; RV32-NEXT:  .LBB27_208: # %cond.load226
-; RV32-NEXT:    lh a4, 152(a0)
-; RV32-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 12
-; RV32-NEXT:    slli a4, a3, 18
-; RV32-NEXT:    bgez a4, .LBB27_144
-; RV32-NEXT:  .LBB27_209: # %cond.load229
-; RV32-NEXT:    lh a4, 154(a0)
-; RV32-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 13
-; RV32-NEXT:    slli a4, a3, 17
-; RV32-NEXT:    bgez a4, .LBB27_145
-; RV32-NEXT:  .LBB27_210: # %cond.load232
-; RV32-NEXT:    lh a4, 156(a0)
-; RV32-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 14
-; RV32-NEXT:    slli a4, a3, 16
-; RV32-NEXT:    bgez a4, .LBB27_146
-; RV32-NEXT:  .LBB27_211: # %cond.load235
-; RV32-NEXT:    lh a4, 158(a0)
-; RV32-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-NEXT:    vmv.s.x v26, a4
-; RV32-NEXT:    vslideup.vi v16, v26, 15
-; RV32-NEXT:    slli a4, a3, 15
-; RV32-NEXT:    bgez a4, .LBB27_147
-; RV32-NEXT:  .LBB27_212: # %cond.load238
-; RV32-NEXT:    lh a4, 160(a0)
-; RV32-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 16
-; RV32-NEXT:    slli a4, a3, 14
-; RV32-NEXT:    bgez a4, .LBB27_148
-; RV32-NEXT:  .LBB27_213: # %cond.load241
-; RV32-NEXT:    lh a4, 162(a0)
-; RV32-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 17
-; RV32-NEXT:    slli a4, a3, 13
-; RV32-NEXT:    bgez a4, .LBB27_149
-; RV32-NEXT:  .LBB27_214: # %cond.load244
-; RV32-NEXT:    lh a4, 164(a0)
-; RV32-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 18
-; RV32-NEXT:    slli a4, a3, 12
-; RV32-NEXT:    bgez a4, .LBB27_150
-; RV32-NEXT:  .LBB27_215: # %cond.load247
-; RV32-NEXT:    lh a4, 166(a0)
-; RV32-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 19
-; RV32-NEXT:    slli a4, a3, 11
-; RV32-NEXT:    bgez a4, .LBB27_151
-; RV32-NEXT:  .LBB27_216: # %cond.load250
-; RV32-NEXT:    lh a4, 168(a0)
-; RV32-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 20
-; RV32-NEXT:    slli a4, a3, 10
-; RV32-NEXT:    bgez a4, .LBB27_152
-; RV32-NEXT:  .LBB27_217: # %cond.load253
-; RV32-NEXT:    lh a4, 170(a0)
-; RV32-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 21
-; RV32-NEXT:    slli a4, a3, 9
-; RV32-NEXT:    bgez a4, .LBB27_153
-; RV32-NEXT:  .LBB27_218: # %cond.load256
-; RV32-NEXT:    lh a4, 172(a0)
-; RV32-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 22
-; RV32-NEXT:    slli a4, a3, 8
-; RV32-NEXT:    bgez a4, .LBB27_154
-; RV32-NEXT:  .LBB27_219: # %cond.load259
-; RV32-NEXT:    lh a4, 174(a0)
-; RV32-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 23
-; RV32-NEXT:    slli a4, a3, 7
-; RV32-NEXT:    bgez a4, .LBB27_155
-; RV32-NEXT:  .LBB27_220: # %cond.load262
-; RV32-NEXT:    lh a4, 176(a0)
-; RV32-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 24
-; RV32-NEXT:    slli a4, a3, 6
-; RV32-NEXT:    bgez a4, .LBB27_156
-; RV32-NEXT:  .LBB27_221: # %cond.load265
-; RV32-NEXT:    lh a4, 178(a0)
-; RV32-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 25
-; RV32-NEXT:    slli a4, a3, 5
-; RV32-NEXT:    bgez a4, .LBB27_157
-; RV32-NEXT:  .LBB27_222: # %cond.load268
-; RV32-NEXT:    lh a4, 180(a0)
-; RV32-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 26
-; RV32-NEXT:    slli a4, a3, 4
-; RV32-NEXT:    bgez a4, .LBB27_158
-; RV32-NEXT:  .LBB27_223: # %cond.load271
-; RV32-NEXT:    lh a4, 182(a0)
-; RV32-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 27
-; RV32-NEXT:    slli a4, a3, 3
-; RV32-NEXT:    bgez a4, .LBB27_159
-; RV32-NEXT:  .LBB27_224: # %cond.load274
-; RV32-NEXT:    lh a4, 184(a0)
-; RV32-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-NEXT:    vmv.s.x v28, a4
-; RV32-NEXT:    vslideup.vi v16, v28, 28
-; RV32-NEXT:    slli a4, a3, 2
-; RV32-NEXT:    bltz a4, .LBB27_160
-; RV32-NEXT:    j .LBB27_161
-; RV32-NEXT:  .LBB27_225: # %cond.load283
-; RV32-NEXT:    lh a3, 190(a0)
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-NEXT:    vslideup.vi v16, v24, 31
-; RV32-NEXT:    andi a3, a1, 1
-; RV32-NEXT:    beqz a3, .LBB27_165
-; RV32-NEXT:  .LBB27_226: # %cond.load286
-; RV32-NEXT:    lh a3, 192(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 33
-; RV32-NEXT:    li a4, 32
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 2
-; RV32-NEXT:    beqz a3, .LBB27_166
-; RV32-NEXT:  .LBB27_227: # %cond.load289
-; RV32-NEXT:    lh a3, 194(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 34
-; RV32-NEXT:    li a4, 33
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 4
-; RV32-NEXT:    beqz a3, .LBB27_167
-; RV32-NEXT:  .LBB27_228: # %cond.load292
-; RV32-NEXT:    lh a3, 196(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 35
-; RV32-NEXT:    li a4, 34
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 8
-; RV32-NEXT:    beqz a3, .LBB27_168
-; RV32-NEXT:  .LBB27_229: # %cond.load295
-; RV32-NEXT:    lh a3, 198(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 36
-; RV32-NEXT:    li a4, 35
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 16
-; RV32-NEXT:    beqz a3, .LBB27_169
-; RV32-NEXT:  .LBB27_230: # %cond.load298
-; RV32-NEXT:    lh a3, 200(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 37
-; RV32-NEXT:    li a4, 36
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 32
-; RV32-NEXT:    beqz a3, .LBB27_170
-; RV32-NEXT:  .LBB27_231: # %cond.load301
-; RV32-NEXT:    lh a3, 202(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 38
-; RV32-NEXT:    li a4, 37
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 64
-; RV32-NEXT:    beqz a3, .LBB27_171
-; RV32-NEXT:  .LBB27_232: # %cond.load304
-; RV32-NEXT:    lh a3, 204(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 39
-; RV32-NEXT:    li a4, 38
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 128
-; RV32-NEXT:    beqz a3, .LBB27_172
-; RV32-NEXT:  .LBB27_233: # %cond.load307
-; RV32-NEXT:    lh a3, 206(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 40
-; RV32-NEXT:    li a4, 39
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 256
-; RV32-NEXT:    beqz a3, .LBB27_173
-; RV32-NEXT:  .LBB27_234: # %cond.load310
-; RV32-NEXT:    lh a3, 208(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 41
-; RV32-NEXT:    li a4, 40
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 512
-; RV32-NEXT:    beqz a3, .LBB27_174
-; RV32-NEXT:  .LBB27_235: # %cond.load313
-; RV32-NEXT:    lh a3, 210(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 42
-; RV32-NEXT:    li a4, 41
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    andi a3, a1, 1024
-; RV32-NEXT:    beqz a3, .LBB27_175
-; RV32-NEXT:  .LBB27_236: # %cond.load316
-; RV32-NEXT:    lh a3, 212(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 43
-; RV32-NEXT:    li a4, 42
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 20
-; RV32-NEXT:    bgez a3, .LBB27_176
-; RV32-NEXT:  .LBB27_237: # %cond.load319
-; RV32-NEXT:    lh a3, 214(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 44
-; RV32-NEXT:    li a4, 43
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 19
-; RV32-NEXT:    bgez a3, .LBB27_177
-; RV32-NEXT:  .LBB27_238: # %cond.load322
-; RV32-NEXT:    lh a3, 216(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 45
-; RV32-NEXT:    li a4, 44
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 18
-; RV32-NEXT:    bgez a3, .LBB27_178
-; RV32-NEXT:  .LBB27_239: # %cond.load325
-; RV32-NEXT:    lh a3, 218(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 46
-; RV32-NEXT:    li a4, 45
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 17
-; RV32-NEXT:    bgez a3, .LBB27_179
-; RV32-NEXT:  .LBB27_240: # %cond.load328
-; RV32-NEXT:    lh a3, 220(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 47
-; RV32-NEXT:    li a4, 46
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 16
-; RV32-NEXT:    bgez a3, .LBB27_180
-; RV32-NEXT:  .LBB27_241: # %cond.load331
-; RV32-NEXT:    lh a3, 222(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 48
-; RV32-NEXT:    li a4, 47
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 15
-; RV32-NEXT:    bgez a3, .LBB27_181
-; RV32-NEXT:  .LBB27_242: # %cond.load334
-; RV32-NEXT:    lh a3, 224(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 49
-; RV32-NEXT:    li a4, 48
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 14
-; RV32-NEXT:    bgez a3, .LBB27_182
-; RV32-NEXT:  .LBB27_243: # %cond.load337
-; RV32-NEXT:    lh a3, 226(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 50
-; RV32-NEXT:    li a4, 49
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 13
-; RV32-NEXT:    bgez a3, .LBB27_183
-; RV32-NEXT:  .LBB27_244: # %cond.load340
-; RV32-NEXT:    lh a3, 228(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 51
-; RV32-NEXT:    li a4, 50
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 12
-; RV32-NEXT:    bgez a3, .LBB27_184
-; RV32-NEXT:  .LBB27_245: # %cond.load343
-; RV32-NEXT:    lh a3, 230(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 52
-; RV32-NEXT:    li a4, 51
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 11
-; RV32-NEXT:    bgez a3, .LBB27_185
-; RV32-NEXT:  .LBB27_246: # %cond.load346
-; RV32-NEXT:    lh a3, 232(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 53
-; RV32-NEXT:    li a4, 52
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 10
-; RV32-NEXT:    bgez a3, .LBB27_186
-; RV32-NEXT:  .LBB27_247: # %cond.load349
-; RV32-NEXT:    lh a3, 234(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 54
-; RV32-NEXT:    li a4, 53
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 9
-; RV32-NEXT:    bgez a3, .LBB27_187
-; RV32-NEXT:  .LBB27_248: # %cond.load352
-; RV32-NEXT:    lh a3, 236(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 55
-; RV32-NEXT:    li a4, 54
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 8
-; RV32-NEXT:    bgez a3, .LBB27_188
-; RV32-NEXT:  .LBB27_249: # %cond.load355
-; RV32-NEXT:    lh a3, 238(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 56
-; RV32-NEXT:    li a4, 55
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 7
-; RV32-NEXT:    bgez a3, .LBB27_189
-; RV32-NEXT:  .LBB27_250: # %cond.load358
-; RV32-NEXT:    lh a3, 240(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 57
-; RV32-NEXT:    li a4, 56
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 6
-; RV32-NEXT:    bgez a3, .LBB27_190
-; RV32-NEXT:  .LBB27_251: # %cond.load361
-; RV32-NEXT:    lh a3, 242(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 58
-; RV32-NEXT:    li a4, 57
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 5
-; RV32-NEXT:    bgez a3, .LBB27_191
-; RV32-NEXT:  .LBB27_252: # %cond.load364
-; RV32-NEXT:    lh a3, 244(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 59
-; RV32-NEXT:    li a4, 58
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 4
-; RV32-NEXT:    bgez a3, .LBB27_192
-; RV32-NEXT:  .LBB27_253: # %cond.load367
-; RV32-NEXT:    lh a3, 246(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 60
-; RV32-NEXT:    li a4, 59
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 3
-; RV32-NEXT:    bgez a3, .LBB27_193
-; RV32-NEXT:  .LBB27_254: # %cond.load370
-; RV32-NEXT:    lh a3, 248(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 61
-; RV32-NEXT:    li a4, 60
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 2
-; RV32-NEXT:    bgez a3, .LBB27_194
-; RV32-NEXT:  .LBB27_255: # %cond.load373
-; RV32-NEXT:    lh a3, 250(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 62
-; RV32-NEXT:    li a4, 61
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    slli a3, a1, 1
-; RV32-NEXT:    bgez a3, .LBB27_195
-; RV32-NEXT:  .LBB27_256: # %cond.load376
-; RV32-NEXT:    lh a3, 252(a0)
-; RV32-NEXT:    li a4, 64
-; RV32-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-NEXT:    vmv.s.x v24, a3
-; RV32-NEXT:    li a3, 63
-; RV32-NEXT:    li a4, 62
-; RV32-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-NEXT:    vslideup.vx v16, v24, a4
-; RV32-NEXT:    bltz a1, .LBB27_196
-; RV32-NEXT:    j .LBB27_197
 ;
 ; RV64-LABEL: masked_load_v128bf16:
 ; RV64:       # %bb.0:
@@ -9772,8 +2827,8 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    sd s0, 496(sp) # 8-byte Folded Spill
 ; RV64-NEXT:    addi s0, sp, 512
 ; RV64-NEXT:    andi sp, sp, -128
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV64-NEXT:    li a3, 64
+; RV64-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV64-NEXT:    vle16.v v16, (a1)
 ; RV64-NEXT:    addi a1, a1, 128
 ; RV64-NEXT:    vle16.v v8, (a1)
@@ -9786,272 +2841,182 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa5
 ; RV64-NEXT:    fmv.w.x fa5, zero
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 32(sp)
+; RV64-NEXT:    sb a1, 96(sp)
 ; RV64-NEXT:    lh a1, 318(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 31(sp)
+; RV64-NEXT:    sb a1, 95(sp)
 ; RV64-NEXT:    lh a1, 316(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 30(sp)
+; RV64-NEXT:    sb a1, 94(sp)
 ; RV64-NEXT:    lh a1, 314(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 29(sp)
+; RV64-NEXT:    sb a1, 93(sp)
 ; RV64-NEXT:    lh a1, 312(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 28(sp)
+; RV64-NEXT:    sb a1, 92(sp)
 ; RV64-NEXT:    lh a1, 310(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 27(sp)
+; RV64-NEXT:    sb a1, 91(sp)
 ; RV64-NEXT:    lh a1, 308(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 26(sp)
+; RV64-NEXT:    sb a1, 90(sp)
 ; RV64-NEXT:    lh a1, 306(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 25(sp)
+; RV64-NEXT:    sb a1, 89(sp)
 ; RV64-NEXT:    lh a1, 304(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 24(sp)
+; RV64-NEXT:    sb a1, 88(sp)
 ; RV64-NEXT:    lh a1, 302(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 23(sp)
+; RV64-NEXT:    sb a1, 87(sp)
 ; RV64-NEXT:    lh a1, 300(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 22(sp)
+; RV64-NEXT:    sb a1, 86(sp)
 ; RV64-NEXT:    lh a1, 298(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 21(sp)
+; RV64-NEXT:    sb a1, 85(sp)
 ; RV64-NEXT:    lh a1, 296(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 20(sp)
+; RV64-NEXT:    sb a1, 84(sp)
 ; RV64-NEXT:    lh a1, 294(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 19(sp)
+; RV64-NEXT:    sb a1, 83(sp)
 ; RV64-NEXT:    lh a1, 292(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 18(sp)
+; RV64-NEXT:    sb a1, 82(sp)
 ; RV64-NEXT:    lh a1, 290(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 17(sp)
+; RV64-NEXT:    sb a1, 81(sp)
 ; RV64-NEXT:    lh a1, 288(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    vmv.x.s a3, v16
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v16
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
-; RV64-NEXT:    sb a3, 0(sp)
-; RV64-NEXT:    sb a1, 16(sp)
-; RV64-NEXT:    lh a1, 192(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 96(sp)
-; RV64-NEXT:    lh a1, 190(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 95(sp)
-; RV64-NEXT:    lh a1, 188(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 94(sp)
-; RV64-NEXT:    lh a1, 186(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 93(sp)
-; RV64-NEXT:    lh a1, 184(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 92(sp)
-; RV64-NEXT:    lh a1, 182(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 91(sp)
-; RV64-NEXT:    lh a1, 180(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 90(sp)
-; RV64-NEXT:    lh a1, 178(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 89(sp)
-; RV64-NEXT:    lh a1, 176(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 88(sp)
-; RV64-NEXT:    lh a1, 174(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 87(sp)
-; RV64-NEXT:    lh a1, 172(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 86(sp)
-; RV64-NEXT:    lh a1, 170(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 85(sp)
-; RV64-NEXT:    lh a1, 168(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 84(sp)
-; RV64-NEXT:    lh a1, 166(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 83(sp)
-; RV64-NEXT:    lh a1, 164(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 82(sp)
-; RV64-NEXT:    lh a1, 162(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 81(sp)
-; RV64-NEXT:    lh a1, 160(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    vmv.x.s a3, v8
-; RV64-NEXT:    fmv.h.x fa4, a3
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
-; RV64-NEXT:    sb a3, 64(sp)
+; RV64-NEXT:    feq.s a4, fa4, fa5
+; RV64-NEXT:    sb a4, 64(sp)
 ; RV64-NEXT:    sb a1, 80(sp)
 ; RV64-NEXT:    lh a1, 354(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 49(sp)
+; RV64-NEXT:    sb a1, 113(sp)
 ; RV64-NEXT:    lh a1, 352(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 48(sp)
+; RV64-NEXT:    sb a1, 112(sp)
 ; RV64-NEXT:    lh a1, 350(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 47(sp)
+; RV64-NEXT:    sb a1, 111(sp)
 ; RV64-NEXT:    lh a1, 348(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 46(sp)
+; RV64-NEXT:    sb a1, 110(sp)
 ; RV64-NEXT:    lh a1, 346(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 45(sp)
+; RV64-NEXT:    sb a1, 109(sp)
 ; RV64-NEXT:    lh a1, 344(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 44(sp)
+; RV64-NEXT:    sb a1, 108(sp)
 ; RV64-NEXT:    lh a1, 342(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 43(sp)
+; RV64-NEXT:    sb a1, 107(sp)
 ; RV64-NEXT:    lh a1, 340(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 42(sp)
+; RV64-NEXT:    sb a1, 106(sp)
 ; RV64-NEXT:    lh a1, 338(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 41(sp)
+; RV64-NEXT:    sb a1, 105(sp)
 ; RV64-NEXT:    lh a1, 336(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 40(sp)
+; RV64-NEXT:    sb a1, 104(sp)
 ; RV64-NEXT:    lh a1, 334(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 39(sp)
+; RV64-NEXT:    sb a1, 103(sp)
 ; RV64-NEXT:    lh a1, 332(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 38(sp)
+; RV64-NEXT:    sb a1, 102(sp)
 ; RV64-NEXT:    lh a1, 330(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 37(sp)
+; RV64-NEXT:    sb a1, 101(sp)
 ; RV64-NEXT:    lh a1, 328(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 36(sp)
+; RV64-NEXT:    sb a1, 100(sp)
 ; RV64-NEXT:    lh a1, 326(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 35(sp)
+; RV64-NEXT:    sb a1, 99(sp)
 ; RV64-NEXT:    lh a1, 324(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 34(sp)
+; RV64-NEXT:    sb a1, 98(sp)
 ; RV64-NEXT:    lh a1, 322(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV64-NEXT:    vslidedown.vi v10, v16, 7
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 6
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10062,20 +3027,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 5(sp)
-; RV64-NEXT:    sb a5, 6(sp)
-; RV64-NEXT:    sb a3, 7(sp)
-; RV64-NEXT:    sb a1, 33(sp)
+; RV64-NEXT:    sb a6, 69(sp)
+; RV64-NEXT:    sb a5, 70(sp)
+; RV64-NEXT:    sb a4, 71(sp)
+; RV64-NEXT:    sb a1, 97(sp)
 ; RV64-NEXT:    vslidedown.vi v10, v16, 4
 ; RV64-NEXT:    vmv.x.s a1, v10
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 3
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 2
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10086,207 +3051,80 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 1(sp)
-; RV64-NEXT:    sb a5, 2(sp)
-; RV64-NEXT:    sb a3, 3(sp)
-; RV64-NEXT:    sb a1, 4(sp)
-; RV64-NEXT:    lh a1, 226(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 113(sp)
-; RV64-NEXT:    lh a1, 224(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 112(sp)
-; RV64-NEXT:    lh a1, 222(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 111(sp)
-; RV64-NEXT:    lh a1, 220(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 110(sp)
-; RV64-NEXT:    lh a1, 218(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 109(sp)
-; RV64-NEXT:    lh a1, 216(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 108(sp)
-; RV64-NEXT:    lh a1, 214(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 107(sp)
-; RV64-NEXT:    lh a1, 212(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 106(sp)
-; RV64-NEXT:    lh a1, 210(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 105(sp)
-; RV64-NEXT:    lh a1, 208(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 104(sp)
-; RV64-NEXT:    lh a1, 206(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 103(sp)
-; RV64-NEXT:    lh a1, 204(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 102(sp)
-; RV64-NEXT:    lh a1, 202(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 101(sp)
-; RV64-NEXT:    lh a1, 200(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 100(sp)
-; RV64-NEXT:    lh a1, 198(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 99(sp)
-; RV64-NEXT:    lh a1, 196(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 98(sp)
-; RV64-NEXT:    lh a1, 194(sp)
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 7
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 6
-; RV64-NEXT:    vmv.x.s a5, v10
-; RV64-NEXT:    fmv.h.x fa4, a5
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a5, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 5
-; RV64-NEXT:    vmv.x.s a6, v10
-; RV64-NEXT:    fmv.h.x fa4, a6
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 69(sp)
-; RV64-NEXT:    sb a5, 70(sp)
-; RV64-NEXT:    sb a3, 71(sp)
-; RV64-NEXT:    sb a1, 97(sp)
-; RV64-NEXT:    vslidedown.vi v10, v8, 4
-; RV64-NEXT:    vmv.x.s a1, v10
-; RV64-NEXT:    fmv.h.x fa4, a1
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 3
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 2
-; RV64-NEXT:    vmv.x.s a5, v10
-; RV64-NEXT:    fmv.h.x fa4, a5
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a5, fa4, fa5
-; RV64-NEXT:    vslidedown.vi v10, v8, 1
-; RV64-NEXT:    vmv.x.s a6, v10
-; RV64-NEXT:    fmv.h.x fa4, a6
-; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a6, fa4, fa5
 ; RV64-NEXT:    sb a6, 65(sp)
 ; RV64-NEXT:    sb a5, 66(sp)
-; RV64-NEXT:    sb a3, 67(sp)
+; RV64-NEXT:    sb a4, 67(sp)
 ; RV64-NEXT:    sb a1, 68(sp)
 ; RV64-NEXT:    lh a1, 382(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 63(sp)
+; RV64-NEXT:    sb a1, 127(sp)
 ; RV64-NEXT:    lh a1, 380(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 62(sp)
+; RV64-NEXT:    sb a1, 126(sp)
 ; RV64-NEXT:    lh a1, 378(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 61(sp)
+; RV64-NEXT:    sb a1, 125(sp)
 ; RV64-NEXT:    lh a1, 376(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 60(sp)
+; RV64-NEXT:    sb a1, 124(sp)
 ; RV64-NEXT:    lh a1, 374(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 59(sp)
+; RV64-NEXT:    sb a1, 123(sp)
 ; RV64-NEXT:    lh a1, 372(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 58(sp)
+; RV64-NEXT:    sb a1, 122(sp)
 ; RV64-NEXT:    lh a1, 370(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 57(sp)
+; RV64-NEXT:    sb a1, 121(sp)
 ; RV64-NEXT:    lh a1, 368(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 56(sp)
+; RV64-NEXT:    sb a1, 120(sp)
 ; RV64-NEXT:    lh a1, 366(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 55(sp)
+; RV64-NEXT:    sb a1, 119(sp)
 ; RV64-NEXT:    lh a1, 364(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 54(sp)
+; RV64-NEXT:    sb a1, 118(sp)
 ; RV64-NEXT:    lh a1, 362(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 53(sp)
+; RV64-NEXT:    sb a1, 117(sp)
 ; RV64-NEXT:    lh a1, 360(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 52(sp)
+; RV64-NEXT:    sb a1, 116(sp)
 ; RV64-NEXT:    lh a1, 358(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 51(sp)
+; RV64-NEXT:    sb a1, 115(sp)
 ; RV64-NEXT:    lh a1, 356(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 50(sp)
+; RV64-NEXT:    sb a1, 114(sp)
 ; RV64-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV64-NEXT:    vslidedown.vi v10, v16, 15
 ; RV64-NEXT:    vmv.x.s a1, v10
@@ -10294,10 +3132,10 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 14
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 13
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10308,20 +3146,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 12(sp)
-; RV64-NEXT:    sb a5, 13(sp)
-; RV64-NEXT:    sb a3, 14(sp)
-; RV64-NEXT:    sb a1, 15(sp)
+; RV64-NEXT:    sb a6, 76(sp)
+; RV64-NEXT:    sb a5, 77(sp)
+; RV64-NEXT:    sb a4, 78(sp)
+; RV64-NEXT:    sb a1, 79(sp)
 ; RV64-NEXT:    vslidedown.vi v10, v16, 11
 ; RV64-NEXT:    vmv.x.s a1, v10
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 10
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v16, 9
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10332,90 +3170,309 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 8(sp)
-; RV64-NEXT:    sb a5, 9(sp)
-; RV64-NEXT:    sb a3, 10(sp)
-; RV64-NEXT:    sb a1, 11(sp)
+; RV64-NEXT:    sb a6, 72(sp)
+; RV64-NEXT:    sb a5, 73(sp)
+; RV64-NEXT:    sb a4, 74(sp)
+; RV64-NEXT:    sb a1, 75(sp)
+; RV64-NEXT:    lh a1, 192(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 32(sp)
+; RV64-NEXT:    lh a1, 190(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 31(sp)
+; RV64-NEXT:    lh a1, 188(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 30(sp)
+; RV64-NEXT:    lh a1, 186(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 29(sp)
+; RV64-NEXT:    lh a1, 184(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 28(sp)
+; RV64-NEXT:    lh a1, 182(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 27(sp)
+; RV64-NEXT:    lh a1, 180(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 26(sp)
+; RV64-NEXT:    lh a1, 178(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 25(sp)
+; RV64-NEXT:    lh a1, 176(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 24(sp)
+; RV64-NEXT:    lh a1, 174(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 23(sp)
+; RV64-NEXT:    lh a1, 172(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 22(sp)
+; RV64-NEXT:    lh a1, 170(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 21(sp)
+; RV64-NEXT:    lh a1, 168(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 20(sp)
+; RV64-NEXT:    lh a1, 166(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 19(sp)
+; RV64-NEXT:    lh a1, 164(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 18(sp)
+; RV64-NEXT:    lh a1, 162(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 17(sp)
+; RV64-NEXT:    lh a1, 160(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    vmv.x.s a4, v8
+; RV64-NEXT:    fmv.h.x fa4, a4
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a4, fa4, fa5
+; RV64-NEXT:    sb a4, 0(sp)
+; RV64-NEXT:    sb a1, 16(sp)
+; RV64-NEXT:    lh a1, 226(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 49(sp)
+; RV64-NEXT:    lh a1, 224(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 48(sp)
+; RV64-NEXT:    lh a1, 222(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 47(sp)
+; RV64-NEXT:    lh a1, 220(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 46(sp)
+; RV64-NEXT:    lh a1, 218(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 45(sp)
+; RV64-NEXT:    lh a1, 216(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 44(sp)
+; RV64-NEXT:    lh a1, 214(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 43(sp)
+; RV64-NEXT:    lh a1, 212(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 42(sp)
+; RV64-NEXT:    lh a1, 210(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 41(sp)
+; RV64-NEXT:    lh a1, 208(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 40(sp)
+; RV64-NEXT:    lh a1, 206(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 39(sp)
+; RV64-NEXT:    lh a1, 204(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 38(sp)
+; RV64-NEXT:    lh a1, 202(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 37(sp)
+; RV64-NEXT:    lh a1, 200(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 36(sp)
+; RV64-NEXT:    lh a1, 198(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 35(sp)
+; RV64-NEXT:    lh a1, 196(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    sb a1, 34(sp)
+; RV64-NEXT:    lh a1, 194(sp)
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
+; RV64-NEXT:    vslidedown.vi v10, v8, 7
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a4, fa4, fa5
+; RV64-NEXT:    vslidedown.vi v10, v8, 6
+; RV64-NEXT:    vmv.x.s a5, v10
+; RV64-NEXT:    fmv.h.x fa4, a5
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a5, fa4, fa5
+; RV64-NEXT:    vslidedown.vi v10, v8, 5
+; RV64-NEXT:    vmv.x.s a6, v10
+; RV64-NEXT:    fmv.h.x fa4, a6
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a6, fa4, fa5
+; RV64-NEXT:    sb a6, 5(sp)
+; RV64-NEXT:    sb a5, 6(sp)
+; RV64-NEXT:    sb a4, 7(sp)
+; RV64-NEXT:    sb a1, 33(sp)
+; RV64-NEXT:    vslidedown.vi v10, v8, 4
+; RV64-NEXT:    vmv.x.s a1, v10
+; RV64-NEXT:    fmv.h.x fa4, a1
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a1, fa4, fa5
+; RV64-NEXT:    vslidedown.vi v10, v8, 3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a4, fa4, fa5
+; RV64-NEXT:    vslidedown.vi v10, v8, 2
+; RV64-NEXT:    vmv.x.s a5, v10
+; RV64-NEXT:    fmv.h.x fa4, a5
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a5, fa4, fa5
+; RV64-NEXT:    vslidedown.vi v10, v8, 1
+; RV64-NEXT:    vmv.x.s a6, v10
+; RV64-NEXT:    fmv.h.x fa4, a6
+; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
+; RV64-NEXT:    feq.s a6, fa4, fa5
+; RV64-NEXT:    sb a6, 1(sp)
+; RV64-NEXT:    sb a5, 2(sp)
+; RV64-NEXT:    sb a4, 3(sp)
+; RV64-NEXT:    sb a1, 4(sp)
 ; RV64-NEXT:    lh a1, 254(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 127(sp)
+; RV64-NEXT:    sb a1, 63(sp)
 ; RV64-NEXT:    lh a1, 252(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 126(sp)
+; RV64-NEXT:    sb a1, 62(sp)
 ; RV64-NEXT:    lh a1, 250(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 125(sp)
+; RV64-NEXT:    sb a1, 61(sp)
 ; RV64-NEXT:    lh a1, 248(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 124(sp)
+; RV64-NEXT:    sb a1, 60(sp)
 ; RV64-NEXT:    lh a1, 246(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 123(sp)
+; RV64-NEXT:    sb a1, 59(sp)
 ; RV64-NEXT:    lh a1, 244(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 122(sp)
+; RV64-NEXT:    sb a1, 58(sp)
 ; RV64-NEXT:    lh a1, 242(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 121(sp)
+; RV64-NEXT:    sb a1, 57(sp)
 ; RV64-NEXT:    lh a1, 240(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 120(sp)
+; RV64-NEXT:    sb a1, 56(sp)
 ; RV64-NEXT:    lh a1, 238(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 119(sp)
+; RV64-NEXT:    sb a1, 55(sp)
 ; RV64-NEXT:    lh a1, 236(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 118(sp)
+; RV64-NEXT:    sb a1, 54(sp)
 ; RV64-NEXT:    lh a1, 234(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 117(sp)
+; RV64-NEXT:    sb a1, 53(sp)
 ; RV64-NEXT:    lh a1, 232(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 116(sp)
+; RV64-NEXT:    sb a1, 52(sp)
 ; RV64-NEXT:    lh a1, 230(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 115(sp)
+; RV64-NEXT:    sb a1, 51(sp)
 ; RV64-NEXT:    lh a1, 228(sp)
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
-; RV64-NEXT:    sb a1, 114(sp)
+; RV64-NEXT:    sb a1, 50(sp)
+; RV64-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV64-NEXT:    vslidedown.vi v10, v8, 15
 ; RV64-NEXT:    vmv.x.s a1, v10
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v8, 14
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v8, 13
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10426,20 +3483,20 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 76(sp)
-; RV64-NEXT:    sb a5, 77(sp)
-; RV64-NEXT:    sb a3, 78(sp)
-; RV64-NEXT:    sb a1, 79(sp)
+; RV64-NEXT:    sb a6, 12(sp)
+; RV64-NEXT:    sb a5, 13(sp)
+; RV64-NEXT:    sb a4, 14(sp)
+; RV64-NEXT:    sb a1, 15(sp)
 ; RV64-NEXT:    vslidedown.vi v10, v8, 11
 ; RV64-NEXT:    vmv.x.s a1, v10
 ; RV64-NEXT:    fmv.h.x fa4, a1
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a1, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v8, 10
-; RV64-NEXT:    vmv.x.s a3, v10
-; RV64-NEXT:    fmv.h.x fa4, a3
+; RV64-NEXT:    vmv.x.s a4, v10
+; RV64-NEXT:    fmv.h.x fa4, a4
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
-; RV64-NEXT:    feq.s a3, fa4, fa5
+; RV64-NEXT:    feq.s a4, fa4, fa5
 ; RV64-NEXT:    vslidedown.vi v10, v8, 9
 ; RV64-NEXT:    vmv.x.s a5, v10
 ; RV64-NEXT:    fmv.h.x fa4, a5
@@ -10450,1017 +3507,23 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    fmv.h.x fa4, a6
 ; RV64-NEXT:    fcvt.s.bf16 fa4, fa4
 ; RV64-NEXT:    feq.s a6, fa4, fa5
-; RV64-NEXT:    sb a6, 72(sp)
-; RV64-NEXT:    sb a5, 73(sp)
-; RV64-NEXT:    sb a3, 74(sp)
-; RV64-NEXT:    sb a1, 75(sp)
-; RV64-NEXT:    li a1, 128
-; RV64-NEXT:    mv a3, sp
-; RV64-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; RV64-NEXT:    vle8.v v8, (a3)
-; RV64-NEXT:    vand.vi v8, v8, 1
-; RV64-NEXT:    vmsne.vi v16, v8, 0
-; RV64-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
-; RV64-NEXT:    vmv.x.s a3, v16
-; RV64-NEXT:    andi a1, a3, 1
-; RV64-NEXT:    beqz a1, .LBB27_2
-; RV64-NEXT:  # %bb.1: # %cond.load
-; RV64-NEXT:    lh a1, 0(a0)
-; RV64-NEXT:    fmv.x.h a5, fa5
-; RV64-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV64-NEXT:    vmv.v.x v8, a5
-; RV64-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV64-NEXT:    vmv.s.x v8, a1
-; RV64-NEXT:    andi a1, a3, 2
-; RV64-NEXT:    bnez a1, .LBB27_3
-; RV64-NEXT:    j .LBB27_4
-; RV64-NEXT:  .LBB27_2:
-; RV64-NEXT:    # implicit-def: $v8m8
-; RV64-NEXT:    andi a1, a3, 2
-; RV64-NEXT:    beqz a1, .LBB27_4
-; RV64-NEXT:  .LBB27_3: # %cond.load1
-; RV64-NEXT:    lh a1, 2(a0)
-; RV64-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 1
-; RV64-NEXT:  .LBB27_4: # %else2
-; RV64-NEXT:    andi a1, a3, 4
-; RV64-NEXT:    bnez a1, .LBB27_71
-; RV64-NEXT:  # %bb.5: # %else5
-; RV64-NEXT:    andi a1, a3, 8
-; RV64-NEXT:    bnez a1, .LBB27_72
-; RV64-NEXT:  .LBB27_6: # %else8
-; RV64-NEXT:    andi a1, a3, 16
-; RV64-NEXT:    bnez a1, .LBB27_73
-; RV64-NEXT:  .LBB27_7: # %else11
-; RV64-NEXT:    andi a1, a3, 32
-; RV64-NEXT:    bnez a1, .LBB27_74
-; RV64-NEXT:  .LBB27_8: # %else14
-; RV64-NEXT:    andi a1, a3, 64
-; RV64-NEXT:    bnez a1, .LBB27_75
-; RV64-NEXT:  .LBB27_9: # %else17
-; RV64-NEXT:    andi a1, a3, 128
-; RV64-NEXT:    bnez a1, .LBB27_76
-; RV64-NEXT:  .LBB27_10: # %else20
-; RV64-NEXT:    andi a1, a3, 256
-; RV64-NEXT:    bnez a1, .LBB27_77
-; RV64-NEXT:  .LBB27_11: # %else23
-; RV64-NEXT:    andi a1, a3, 512
-; RV64-NEXT:    bnez a1, .LBB27_78
-; RV64-NEXT:  .LBB27_12: # %else26
-; RV64-NEXT:    andi a1, a3, 1024
-; RV64-NEXT:    bnez a1, .LBB27_79
-; RV64-NEXT:  .LBB27_13: # %else29
-; RV64-NEXT:    slli a1, a3, 52
-; RV64-NEXT:    bltz a1, .LBB27_80
-; RV64-NEXT:  .LBB27_14: # %else32
-; RV64-NEXT:    slli a1, a3, 51
-; RV64-NEXT:    bltz a1, .LBB27_81
-; RV64-NEXT:  .LBB27_15: # %else35
-; RV64-NEXT:    slli a1, a3, 50
-; RV64-NEXT:    bltz a1, .LBB27_82
-; RV64-NEXT:  .LBB27_16: # %else38
-; RV64-NEXT:    slli a1, a3, 49
-; RV64-NEXT:    bltz a1, .LBB27_83
-; RV64-NEXT:  .LBB27_17: # %else41
-; RV64-NEXT:    slli a1, a3, 48
-; RV64-NEXT:    bltz a1, .LBB27_84
-; RV64-NEXT:  .LBB27_18: # %else44
-; RV64-NEXT:    slli a1, a3, 47
-; RV64-NEXT:    bltz a1, .LBB27_85
-; RV64-NEXT:  .LBB27_19: # %else47
-; RV64-NEXT:    slli a1, a3, 46
-; RV64-NEXT:    bltz a1, .LBB27_86
-; RV64-NEXT:  .LBB27_20: # %else50
-; RV64-NEXT:    slli a1, a3, 45
-; RV64-NEXT:    bltz a1, .LBB27_87
-; RV64-NEXT:  .LBB27_21: # %else53
-; RV64-NEXT:    slli a1, a3, 44
-; RV64-NEXT:    bltz a1, .LBB27_88
-; RV64-NEXT:  .LBB27_22: # %else56
-; RV64-NEXT:    slli a1, a3, 43
-; RV64-NEXT:    bltz a1, .LBB27_89
-; RV64-NEXT:  .LBB27_23: # %else59
-; RV64-NEXT:    slli a1, a3, 42
-; RV64-NEXT:    bltz a1, .LBB27_90
-; RV64-NEXT:  .LBB27_24: # %else62
-; RV64-NEXT:    slli a1, a3, 41
-; RV64-NEXT:    bltz a1, .LBB27_91
-; RV64-NEXT:  .LBB27_25: # %else65
-; RV64-NEXT:    slli a1, a3, 40
-; RV64-NEXT:    bltz a1, .LBB27_92
-; RV64-NEXT:  .LBB27_26: # %else68
-; RV64-NEXT:    slli a1, a3, 39
-; RV64-NEXT:    bltz a1, .LBB27_93
-; RV64-NEXT:  .LBB27_27: # %else71
-; RV64-NEXT:    slli a1, a3, 38
-; RV64-NEXT:    bltz a1, .LBB27_94
-; RV64-NEXT:  .LBB27_28: # %else74
-; RV64-NEXT:    slli a1, a3, 37
-; RV64-NEXT:    bltz a1, .LBB27_95
-; RV64-NEXT:  .LBB27_29: # %else77
-; RV64-NEXT:    slli a1, a3, 36
-; RV64-NEXT:    bltz a1, .LBB27_96
-; RV64-NEXT:  .LBB27_30: # %else80
-; RV64-NEXT:    slli a1, a3, 35
-; RV64-NEXT:    bltz a1, .LBB27_97
-; RV64-NEXT:  .LBB27_31: # %else83
-; RV64-NEXT:    slli a1, a3, 34
-; RV64-NEXT:    bltz a1, .LBB27_98
-; RV64-NEXT:  .LBB27_32: # %else86
-; RV64-NEXT:    slli a1, a3, 33
-; RV64-NEXT:    bltz a1, .LBB27_99
-; RV64-NEXT:  .LBB27_33: # %else89
-; RV64-NEXT:    slli a1, a3, 32
-; RV64-NEXT:    bltz a1, .LBB27_100
-; RV64-NEXT:  .LBB27_34: # %else92
-; RV64-NEXT:    slli a1, a3, 31
-; RV64-NEXT:    bltz a1, .LBB27_101
-; RV64-NEXT:  .LBB27_35: # %else95
-; RV64-NEXT:    slli a1, a3, 30
-; RV64-NEXT:    bltz a1, .LBB27_102
-; RV64-NEXT:  .LBB27_36: # %else98
-; RV64-NEXT:    slli a1, a3, 29
-; RV64-NEXT:    bltz a1, .LBB27_103
-; RV64-NEXT:  .LBB27_37: # %else101
-; RV64-NEXT:    slli a1, a3, 28
-; RV64-NEXT:    bltz a1, .LBB27_104
-; RV64-NEXT:  .LBB27_38: # %else104
-; RV64-NEXT:    slli a1, a3, 27
-; RV64-NEXT:    bltz a1, .LBB27_105
-; RV64-NEXT:  .LBB27_39: # %else107
-; RV64-NEXT:    slli a1, a3, 26
-; RV64-NEXT:    bltz a1, .LBB27_106
-; RV64-NEXT:  .LBB27_40: # %else110
-; RV64-NEXT:    slli a1, a3, 25
-; RV64-NEXT:    bltz a1, .LBB27_107
-; RV64-NEXT:  .LBB27_41: # %else113
-; RV64-NEXT:    slli a1, a3, 24
-; RV64-NEXT:    bltz a1, .LBB27_108
-; RV64-NEXT:  .LBB27_42: # %else116
-; RV64-NEXT:    slli a1, a3, 23
-; RV64-NEXT:    bltz a1, .LBB27_109
-; RV64-NEXT:  .LBB27_43: # %else119
-; RV64-NEXT:    slli a1, a3, 22
-; RV64-NEXT:    bltz a1, .LBB27_110
-; RV64-NEXT:  .LBB27_44: # %else122
-; RV64-NEXT:    slli a1, a3, 21
-; RV64-NEXT:    bltz a1, .LBB27_111
-; RV64-NEXT:  .LBB27_45: # %else125
-; RV64-NEXT:    slli a1, a3, 20
-; RV64-NEXT:    bltz a1, .LBB27_112
-; RV64-NEXT:  .LBB27_46: # %else128
-; RV64-NEXT:    slli a1, a3, 19
-; RV64-NEXT:    bltz a1, .LBB27_113
-; RV64-NEXT:  .LBB27_47: # %else131
-; RV64-NEXT:    slli a1, a3, 18
-; RV64-NEXT:    bltz a1, .LBB27_114
-; RV64-NEXT:  .LBB27_48: # %else134
-; RV64-NEXT:    slli a1, a3, 17
-; RV64-NEXT:    bltz a1, .LBB27_115
-; RV64-NEXT:  .LBB27_49: # %else137
-; RV64-NEXT:    slli a1, a3, 16
-; RV64-NEXT:    bltz a1, .LBB27_116
-; RV64-NEXT:  .LBB27_50: # %else140
-; RV64-NEXT:    slli a1, a3, 15
-; RV64-NEXT:    bltz a1, .LBB27_117
-; RV64-NEXT:  .LBB27_51: # %else143
-; RV64-NEXT:    slli a1, a3, 14
-; RV64-NEXT:    bltz a1, .LBB27_118
-; RV64-NEXT:  .LBB27_52: # %else146
-; RV64-NEXT:    slli a1, a3, 13
-; RV64-NEXT:    bltz a1, .LBB27_119
-; RV64-NEXT:  .LBB27_53: # %else149
-; RV64-NEXT:    slli a1, a3, 12
-; RV64-NEXT:    bltz a1, .LBB27_120
-; RV64-NEXT:  .LBB27_54: # %else152
-; RV64-NEXT:    slli a1, a3, 11
-; RV64-NEXT:    bltz a1, .LBB27_121
-; RV64-NEXT:  .LBB27_55: # %else155
-; RV64-NEXT:    slli a1, a3, 10
-; RV64-NEXT:    bltz a1, .LBB27_122
-; RV64-NEXT:  .LBB27_56: # %else158
-; RV64-NEXT:    slli a1, a3, 9
-; RV64-NEXT:    bltz a1, .LBB27_123
-; RV64-NEXT:  .LBB27_57: # %else161
-; RV64-NEXT:    slli a1, a3, 8
-; RV64-NEXT:    bltz a1, .LBB27_124
-; RV64-NEXT:  .LBB27_58: # %else164
-; RV64-NEXT:    slli a1, a3, 7
-; RV64-NEXT:    bltz a1, .LBB27_125
-; RV64-NEXT:  .LBB27_59: # %else167
-; RV64-NEXT:    slli a1, a3, 6
-; RV64-NEXT:    bltz a1, .LBB27_126
-; RV64-NEXT:  .LBB27_60: # %else170
-; RV64-NEXT:    slli a1, a3, 5
-; RV64-NEXT:    bltz a1, .LBB27_127
-; RV64-NEXT:  .LBB27_61: # %else173
-; RV64-NEXT:    slli a1, a3, 4
-; RV64-NEXT:    bltz a1, .LBB27_128
-; RV64-NEXT:  .LBB27_62: # %else176
-; RV64-NEXT:    slli a1, a3, 3
-; RV64-NEXT:    bltz a1, .LBB27_129
-; RV64-NEXT:  .LBB27_63: # %else179
-; RV64-NEXT:    slli a1, a3, 2
-; RV64-NEXT:    bgez a1, .LBB27_65
-; RV64-NEXT:  .LBB27_64: # %cond.load181
-; RV64-NEXT:    lh a1, 122(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 62
-; RV64-NEXT:    li a4, 61
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:  .LBB27_65: # %else182
-; RV64-NEXT:    slli a1, a3, 1
-; RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV64-NEXT:    vslidedown.vi v16, v16, 1
-; RV64-NEXT:    bgez a1, .LBB27_67
-; RV64-NEXT:  # %bb.66: # %cond.load184
-; RV64-NEXT:    lh a1, 124(a0)
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 63
-; RV64-NEXT:    li a4, 62
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:  .LBB27_67: # %else185
-; RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV64-NEXT:    vmv.x.s a1, v16
-; RV64-NEXT:    bgez a3, .LBB27_69
-; RV64-NEXT:  # %bb.68: # %cond.load187
-; RV64-NEXT:    lh a3, 126(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    li a3, 63
-; RV64-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV64-NEXT:    vslideup.vx v8, v16, a3
-; RV64-NEXT:  .LBB27_69: # %else188
-; RV64-NEXT:    andi a3, a1, 1
-; RV64-NEXT:    beqz a3, .LBB27_130
-; RV64-NEXT:  # %bb.70: # %cond.load190
-; RV64-NEXT:    lh a3, 128(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v16, a3
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    bnez a3, .LBB27_131
-; RV64-NEXT:    j .LBB27_132
-; RV64-NEXT:  .LBB27_71: # %cond.load4
-; RV64-NEXT:    lh a1, 4(a0)
-; RV64-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 2
-; RV64-NEXT:    andi a1, a3, 8
-; RV64-NEXT:    beqz a1, .LBB27_6
-; RV64-NEXT:  .LBB27_72: # %cond.load7
-; RV64-NEXT:    lh a1, 6(a0)
-; RV64-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 3
-; RV64-NEXT:    andi a1, a3, 16
-; RV64-NEXT:    beqz a1, .LBB27_7
-; RV64-NEXT:  .LBB27_73: # %cond.load10
-; RV64-NEXT:    lh a1, 8(a0)
-; RV64-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 4
-; RV64-NEXT:    andi a1, a3, 32
-; RV64-NEXT:    beqz a1, .LBB27_8
-; RV64-NEXT:  .LBB27_74: # %cond.load13
-; RV64-NEXT:    lh a1, 10(a0)
-; RV64-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 5
-; RV64-NEXT:    andi a1, a3, 64
-; RV64-NEXT:    beqz a1, .LBB27_9
-; RV64-NEXT:  .LBB27_75: # %cond.load16
-; RV64-NEXT:    lh a1, 12(a0)
-; RV64-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 6
-; RV64-NEXT:    andi a1, a3, 128
-; RV64-NEXT:    beqz a1, .LBB27_10
-; RV64-NEXT:  .LBB27_76: # %cond.load19
-; RV64-NEXT:    lh a1, 14(a0)
-; RV64-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v17, a1
-; RV64-NEXT:    vslideup.vi v8, v17, 7
-; RV64-NEXT:    andi a1, a3, 256
-; RV64-NEXT:    beqz a1, .LBB27_11
-; RV64-NEXT:  .LBB27_77: # %cond.load22
-; RV64-NEXT:    lh a1, 16(a0)
-; RV64-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 8
-; RV64-NEXT:    andi a1, a3, 512
-; RV64-NEXT:    beqz a1, .LBB27_12
-; RV64-NEXT:  .LBB27_78: # %cond.load25
-; RV64-NEXT:    lh a1, 18(a0)
-; RV64-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 9
-; RV64-NEXT:    andi a1, a3, 1024
-; RV64-NEXT:    beqz a1, .LBB27_13
-; RV64-NEXT:  .LBB27_79: # %cond.load28
-; RV64-NEXT:    lh a1, 20(a0)
-; RV64-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 10
-; RV64-NEXT:    slli a1, a3, 52
-; RV64-NEXT:    bgez a1, .LBB27_14
-; RV64-NEXT:  .LBB27_80: # %cond.load31
-; RV64-NEXT:    lh a1, 22(a0)
-; RV64-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 11
-; RV64-NEXT:    slli a1, a3, 51
-; RV64-NEXT:    bgez a1, .LBB27_15
-; RV64-NEXT:  .LBB27_81: # %cond.load34
-; RV64-NEXT:    lh a1, 24(a0)
-; RV64-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 12
-; RV64-NEXT:    slli a1, a3, 50
-; RV64-NEXT:    bgez a1, .LBB27_16
-; RV64-NEXT:  .LBB27_82: # %cond.load37
-; RV64-NEXT:    lh a1, 26(a0)
-; RV64-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 13
-; RV64-NEXT:    slli a1, a3, 49
-; RV64-NEXT:    bgez a1, .LBB27_17
-; RV64-NEXT:  .LBB27_83: # %cond.load40
-; RV64-NEXT:    lh a1, 28(a0)
-; RV64-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 14
-; RV64-NEXT:    slli a1, a3, 48
-; RV64-NEXT:    bgez a1, .LBB27_18
-; RV64-NEXT:  .LBB27_84: # %cond.load43
-; RV64-NEXT:    lh a1, 30(a0)
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v18, a1
-; RV64-NEXT:    vslideup.vi v8, v18, 15
-; RV64-NEXT:    slli a1, a3, 47
-; RV64-NEXT:    bgez a1, .LBB27_19
-; RV64-NEXT:  .LBB27_85: # %cond.load46
-; RV64-NEXT:    lh a1, 32(a0)
-; RV64-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 16
-; RV64-NEXT:    slli a1, a3, 46
-; RV64-NEXT:    bgez a1, .LBB27_20
-; RV64-NEXT:  .LBB27_86: # %cond.load49
-; RV64-NEXT:    lh a1, 34(a0)
-; RV64-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 17
-; RV64-NEXT:    slli a1, a3, 45
-; RV64-NEXT:    bgez a1, .LBB27_21
-; RV64-NEXT:  .LBB27_87: # %cond.load52
-; RV64-NEXT:    lh a1, 36(a0)
-; RV64-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 18
-; RV64-NEXT:    slli a1, a3, 44
-; RV64-NEXT:    bgez a1, .LBB27_22
-; RV64-NEXT:  .LBB27_88: # %cond.load55
-; RV64-NEXT:    lh a1, 38(a0)
-; RV64-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 19
-; RV64-NEXT:    slli a1, a3, 43
-; RV64-NEXT:    bgez a1, .LBB27_23
-; RV64-NEXT:  .LBB27_89: # %cond.load58
-; RV64-NEXT:    lh a1, 40(a0)
-; RV64-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 20
-; RV64-NEXT:    slli a1, a3, 42
-; RV64-NEXT:    bgez a1, .LBB27_24
-; RV64-NEXT:  .LBB27_90: # %cond.load61
-; RV64-NEXT:    lh a1, 42(a0)
-; RV64-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 21
-; RV64-NEXT:    slli a1, a3, 41
-; RV64-NEXT:    bgez a1, .LBB27_25
-; RV64-NEXT:  .LBB27_91: # %cond.load64
-; RV64-NEXT:    lh a1, 44(a0)
-; RV64-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 22
-; RV64-NEXT:    slli a1, a3, 40
-; RV64-NEXT:    bgez a1, .LBB27_26
-; RV64-NEXT:  .LBB27_92: # %cond.load67
-; RV64-NEXT:    lh a1, 46(a0)
-; RV64-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 23
-; RV64-NEXT:    slli a1, a3, 39
-; RV64-NEXT:    bgez a1, .LBB27_27
-; RV64-NEXT:  .LBB27_93: # %cond.load70
-; RV64-NEXT:    lh a1, 48(a0)
-; RV64-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 24
-; RV64-NEXT:    slli a1, a3, 38
-; RV64-NEXT:    bgez a1, .LBB27_28
-; RV64-NEXT:  .LBB27_94: # %cond.load73
-; RV64-NEXT:    lh a1, 50(a0)
-; RV64-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vslideup.vi v8, v20, 25
-; RV64-NEXT:    slli a1, a3, 37
-; RV64-NEXT:    bgez a1, .LBB27_29
-; RV64-NEXT:  .LBB27_95: # %cond.load76
-; RV64-NEXT:    lh a1, 52(a0)
-; RV64-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    vslideup.vi v8, v20, 26
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 36
-; RV64-NEXT:    bgez a1, .LBB27_30
-; RV64-NEXT:  .LBB27_96: # %cond.load79
-; RV64-NEXT:    lh a1, 54(a0)
-; RV64-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    vslideup.vi v8, v20, 27
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 35
-; RV64-NEXT:    bgez a1, .LBB27_31
-; RV64-NEXT:  .LBB27_97: # %cond.load82
-; RV64-NEXT:    lh a1, 56(a0)
-; RV64-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    vslideup.vi v8, v20, 28
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 34
-; RV64-NEXT:    bgez a1, .LBB27_32
-; RV64-NEXT:  .LBB27_98: # %cond.load85
-; RV64-NEXT:    lh a1, 58(a0)
-; RV64-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    vslideup.vi v8, v20, 29
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 33
-; RV64-NEXT:    bgez a1, .LBB27_33
-; RV64-NEXT:  .LBB27_99: # %cond.load88
-; RV64-NEXT:    lh a1, 60(a0)
-; RV64-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    vslideup.vi v8, v20, 30
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 32
-; RV64-NEXT:    bgez a1, .LBB27_34
-; RV64-NEXT:  .LBB27_100: # %cond.load91
-; RV64-NEXT:    lh a1, 62(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v20, a1
-; RV64-NEXT:    vmv8r.v v24, v8
-; RV64-NEXT:    li a1, 32
-; RV64-NEXT:    vsetvli zero, a1, e16, m4, tu, ma
-; RV64-NEXT:    vslideup.vi v8, v20, 31
-; RV64-NEXT:    vmv4r.v v24, v8
-; RV64-NEXT:    vmv8r.v v8, v24
-; RV64-NEXT:    slli a1, a3, 31
-; RV64-NEXT:    bgez a1, .LBB27_35
-; RV64-NEXT:  .LBB27_101: # %cond.load94
-; RV64-NEXT:    lh a1, 64(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 33
-; RV64-NEXT:    li a4, 32
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 30
-; RV64-NEXT:    bgez a1, .LBB27_36
-; RV64-NEXT:  .LBB27_102: # %cond.load97
-; RV64-NEXT:    lh a1, 66(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 34
-; RV64-NEXT:    li a4, 33
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 29
-; RV64-NEXT:    bgez a1, .LBB27_37
-; RV64-NEXT:  .LBB27_103: # %cond.load100
-; RV64-NEXT:    lh a1, 68(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 35
-; RV64-NEXT:    li a4, 34
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 28
-; RV64-NEXT:    bgez a1, .LBB27_38
-; RV64-NEXT:  .LBB27_104: # %cond.load103
-; RV64-NEXT:    lh a1, 70(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 36
-; RV64-NEXT:    li a4, 35
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 27
-; RV64-NEXT:    bgez a1, .LBB27_39
-; RV64-NEXT:  .LBB27_105: # %cond.load106
-; RV64-NEXT:    lh a1, 72(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 37
-; RV64-NEXT:    li a4, 36
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 26
-; RV64-NEXT:    bgez a1, .LBB27_40
-; RV64-NEXT:  .LBB27_106: # %cond.load109
-; RV64-NEXT:    lh a1, 74(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 38
-; RV64-NEXT:    li a4, 37
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 25
-; RV64-NEXT:    bgez a1, .LBB27_41
-; RV64-NEXT:  .LBB27_107: # %cond.load112
-; RV64-NEXT:    lh a1, 76(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 39
-; RV64-NEXT:    li a4, 38
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 24
-; RV64-NEXT:    bgez a1, .LBB27_42
-; RV64-NEXT:  .LBB27_108: # %cond.load115
-; RV64-NEXT:    lh a1, 78(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 40
-; RV64-NEXT:    li a4, 39
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 23
-; RV64-NEXT:    bgez a1, .LBB27_43
-; RV64-NEXT:  .LBB27_109: # %cond.load118
-; RV64-NEXT:    lh a1, 80(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 41
-; RV64-NEXT:    li a4, 40
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 22
-; RV64-NEXT:    bgez a1, .LBB27_44
-; RV64-NEXT:  .LBB27_110: # %cond.load121
-; RV64-NEXT:    lh a1, 82(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 42
-; RV64-NEXT:    li a4, 41
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 21
-; RV64-NEXT:    bgez a1, .LBB27_45
-; RV64-NEXT:  .LBB27_111: # %cond.load124
-; RV64-NEXT:    lh a1, 84(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 43
-; RV64-NEXT:    li a4, 42
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 20
-; RV64-NEXT:    bgez a1, .LBB27_46
-; RV64-NEXT:  .LBB27_112: # %cond.load127
-; RV64-NEXT:    lh a1, 86(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 44
-; RV64-NEXT:    li a4, 43
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 19
-; RV64-NEXT:    bgez a1, .LBB27_47
-; RV64-NEXT:  .LBB27_113: # %cond.load130
-; RV64-NEXT:    lh a1, 88(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 45
-; RV64-NEXT:    li a4, 44
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 18
-; RV64-NEXT:    bgez a1, .LBB27_48
-; RV64-NEXT:  .LBB27_114: # %cond.load133
-; RV64-NEXT:    lh a1, 90(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 46
-; RV64-NEXT:    li a4, 45
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 17
-; RV64-NEXT:    bgez a1, .LBB27_49
-; RV64-NEXT:  .LBB27_115: # %cond.load136
-; RV64-NEXT:    lh a1, 92(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 47
-; RV64-NEXT:    li a4, 46
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 16
-; RV64-NEXT:    bgez a1, .LBB27_50
-; RV64-NEXT:  .LBB27_116: # %cond.load139
-; RV64-NEXT:    lh a1, 94(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 48
-; RV64-NEXT:    li a4, 47
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 15
-; RV64-NEXT:    bgez a1, .LBB27_51
-; RV64-NEXT:  .LBB27_117: # %cond.load142
-; RV64-NEXT:    lh a1, 96(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 49
-; RV64-NEXT:    li a4, 48
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 14
-; RV64-NEXT:    bgez a1, .LBB27_52
-; RV64-NEXT:  .LBB27_118: # %cond.load145
-; RV64-NEXT:    lh a1, 98(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 50
-; RV64-NEXT:    li a4, 49
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 13
-; RV64-NEXT:    bgez a1, .LBB27_53
-; RV64-NEXT:  .LBB27_119: # %cond.load148
-; RV64-NEXT:    lh a1, 100(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 51
-; RV64-NEXT:    li a4, 50
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 12
-; RV64-NEXT:    bgez a1, .LBB27_54
-; RV64-NEXT:  .LBB27_120: # %cond.load151
-; RV64-NEXT:    lh a1, 102(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 52
-; RV64-NEXT:    li a4, 51
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 11
-; RV64-NEXT:    bgez a1, .LBB27_55
-; RV64-NEXT:  .LBB27_121: # %cond.load154
-; RV64-NEXT:    lh a1, 104(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 53
-; RV64-NEXT:    li a4, 52
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 10
-; RV64-NEXT:    bgez a1, .LBB27_56
-; RV64-NEXT:  .LBB27_122: # %cond.load157
-; RV64-NEXT:    lh a1, 106(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 54
-; RV64-NEXT:    li a4, 53
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 9
-; RV64-NEXT:    bgez a1, .LBB27_57
-; RV64-NEXT:  .LBB27_123: # %cond.load160
-; RV64-NEXT:    lh a1, 108(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 55
-; RV64-NEXT:    li a4, 54
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 8
-; RV64-NEXT:    bgez a1, .LBB27_58
-; RV64-NEXT:  .LBB27_124: # %cond.load163
-; RV64-NEXT:    lh a1, 110(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 56
-; RV64-NEXT:    li a4, 55
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 7
-; RV64-NEXT:    bgez a1, .LBB27_59
-; RV64-NEXT:  .LBB27_125: # %cond.load166
-; RV64-NEXT:    lh a1, 112(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 57
-; RV64-NEXT:    li a4, 56
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 6
-; RV64-NEXT:    bgez a1, .LBB27_60
-; RV64-NEXT:  .LBB27_126: # %cond.load169
-; RV64-NEXT:    lh a1, 114(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 58
-; RV64-NEXT:    li a4, 57
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 5
-; RV64-NEXT:    bgez a1, .LBB27_61
-; RV64-NEXT:  .LBB27_127: # %cond.load172
-; RV64-NEXT:    lh a1, 116(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 59
-; RV64-NEXT:    li a4, 58
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 4
-; RV64-NEXT:    bgez a1, .LBB27_62
-; RV64-NEXT:  .LBB27_128: # %cond.load175
-; RV64-NEXT:    lh a1, 118(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 60
-; RV64-NEXT:    li a4, 59
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 3
-; RV64-NEXT:    bgez a1, .LBB27_63
-; RV64-NEXT:  .LBB27_129: # %cond.load178
-; RV64-NEXT:    lh a1, 120(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a1
-; RV64-NEXT:    li a1, 61
-; RV64-NEXT:    li a4, 60
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v8, v24, a4
-; RV64-NEXT:    slli a1, a3, 2
-; RV64-NEXT:    bltz a1, .LBB27_64
-; RV64-NEXT:    j .LBB27_65
-; RV64-NEXT:  .LBB27_130:
-; RV64-NEXT:    # implicit-def: $v16m8
-; RV64-NEXT:    andi a3, a1, 2
-; RV64-NEXT:    beqz a3, .LBB27_132
-; RV64-NEXT:  .LBB27_131: # %cond.load193
-; RV64-NEXT:    lh a3, 130(a0)
-; RV64-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 1
-; RV64-NEXT:  .LBB27_132: # %else194
-; RV64-NEXT:    andi a3, a1, 4
-; RV64-NEXT:    bnez a3, .LBB27_196
-; RV64-NEXT:  # %bb.133: # %else197
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    bnez a3, .LBB27_197
-; RV64-NEXT:  .LBB27_134: # %else200
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    bnez a3, .LBB27_198
-; RV64-NEXT:  .LBB27_135: # %else203
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    bnez a3, .LBB27_199
-; RV64-NEXT:  .LBB27_136: # %else206
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    bnez a3, .LBB27_200
-; RV64-NEXT:  .LBB27_137: # %else209
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    bnez a3, .LBB27_201
-; RV64-NEXT:  .LBB27_138: # %else212
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    bnez a3, .LBB27_202
-; RV64-NEXT:  .LBB27_139: # %else215
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    bnez a3, .LBB27_203
-; RV64-NEXT:  .LBB27_140: # %else218
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    bnez a3, .LBB27_204
-; RV64-NEXT:  .LBB27_141: # %else221
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bltz a3, .LBB27_205
-; RV64-NEXT:  .LBB27_142: # %else224
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bltz a3, .LBB27_206
-; RV64-NEXT:  .LBB27_143: # %else227
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bltz a3, .LBB27_207
-; RV64-NEXT:  .LBB27_144: # %else230
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bltz a3, .LBB27_208
-; RV64-NEXT:  .LBB27_145: # %else233
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bltz a3, .LBB27_209
-; RV64-NEXT:  .LBB27_146: # %else236
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bltz a3, .LBB27_210
-; RV64-NEXT:  .LBB27_147: # %else239
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bltz a3, .LBB27_211
-; RV64-NEXT:  .LBB27_148: # %else242
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bltz a3, .LBB27_212
-; RV64-NEXT:  .LBB27_149: # %else245
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bltz a3, .LBB27_213
-; RV64-NEXT:  .LBB27_150: # %else248
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bltz a3, .LBB27_214
-; RV64-NEXT:  .LBB27_151: # %else251
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bltz a3, .LBB27_215
-; RV64-NEXT:  .LBB27_152: # %else254
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bltz a3, .LBB27_216
-; RV64-NEXT:  .LBB27_153: # %else257
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bltz a3, .LBB27_217
-; RV64-NEXT:  .LBB27_154: # %else260
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bltz a3, .LBB27_218
-; RV64-NEXT:  .LBB27_155: # %else263
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bltz a3, .LBB27_219
-; RV64-NEXT:  .LBB27_156: # %else266
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bltz a3, .LBB27_220
-; RV64-NEXT:  .LBB27_157: # %else269
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bltz a3, .LBB27_221
-; RV64-NEXT:  .LBB27_158: # %else272
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bltz a3, .LBB27_222
-; RV64-NEXT:  .LBB27_159: # %else275
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bltz a3, .LBB27_223
-; RV64-NEXT:  .LBB27_160: # %else278
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bltz a3, .LBB27_224
-; RV64-NEXT:  .LBB27_161: # %else281
-; RV64-NEXT:    slli a3, a1, 32
-; RV64-NEXT:    bltz a3, .LBB27_225
-; RV64-NEXT:  .LBB27_162: # %else284
-; RV64-NEXT:    slli a3, a1, 31
-; RV64-NEXT:    bltz a3, .LBB27_226
-; RV64-NEXT:  .LBB27_163: # %else287
-; RV64-NEXT:    slli a3, a1, 30
-; RV64-NEXT:    bltz a3, .LBB27_227
-; RV64-NEXT:  .LBB27_164: # %else290
-; RV64-NEXT:    slli a3, a1, 29
-; RV64-NEXT:    bltz a3, .LBB27_228
-; RV64-NEXT:  .LBB27_165: # %else293
-; RV64-NEXT:    slli a3, a1, 28
-; RV64-NEXT:    bltz a3, .LBB27_229
-; RV64-NEXT:  .LBB27_166: # %else296
-; RV64-NEXT:    slli a3, a1, 27
-; RV64-NEXT:    bltz a3, .LBB27_230
-; RV64-NEXT:  .LBB27_167: # %else299
-; RV64-NEXT:    slli a3, a1, 26
-; RV64-NEXT:    bltz a3, .LBB27_231
-; RV64-NEXT:  .LBB27_168: # %else302
-; RV64-NEXT:    slli a3, a1, 25
-; RV64-NEXT:    bltz a3, .LBB27_232
-; RV64-NEXT:  .LBB27_169: # %else305
-; RV64-NEXT:    slli a3, a1, 24
-; RV64-NEXT:    bltz a3, .LBB27_233
-; RV64-NEXT:  .LBB27_170: # %else308
-; RV64-NEXT:    slli a3, a1, 23
-; RV64-NEXT:    bltz a3, .LBB27_234
-; RV64-NEXT:  .LBB27_171: # %else311
-; RV64-NEXT:    slli a3, a1, 22
-; RV64-NEXT:    bltz a3, .LBB27_235
-; RV64-NEXT:  .LBB27_172: # %else314
-; RV64-NEXT:    slli a3, a1, 21
-; RV64-NEXT:    bltz a3, .LBB27_236
-; RV64-NEXT:  .LBB27_173: # %else317
-; RV64-NEXT:    slli a3, a1, 20
-; RV64-NEXT:    bltz a3, .LBB27_237
-; RV64-NEXT:  .LBB27_174: # %else320
-; RV64-NEXT:    slli a3, a1, 19
-; RV64-NEXT:    bltz a3, .LBB27_238
-; RV64-NEXT:  .LBB27_175: # %else323
-; RV64-NEXT:    slli a3, a1, 18
-; RV64-NEXT:    bltz a3, .LBB27_239
-; RV64-NEXT:  .LBB27_176: # %else326
-; RV64-NEXT:    slli a3, a1, 17
-; RV64-NEXT:    bltz a3, .LBB27_240
-; RV64-NEXT:  .LBB27_177: # %else329
-; RV64-NEXT:    slli a3, a1, 16
-; RV64-NEXT:    bltz a3, .LBB27_241
-; RV64-NEXT:  .LBB27_178: # %else332
-; RV64-NEXT:    slli a3, a1, 15
-; RV64-NEXT:    bltz a3, .LBB27_242
-; RV64-NEXT:  .LBB27_179: # %else335
-; RV64-NEXT:    slli a3, a1, 14
-; RV64-NEXT:    bltz a3, .LBB27_243
-; RV64-NEXT:  .LBB27_180: # %else338
-; RV64-NEXT:    slli a3, a1, 13
-; RV64-NEXT:    bltz a3, .LBB27_244
-; RV64-NEXT:  .LBB27_181: # %else341
-; RV64-NEXT:    slli a3, a1, 12
-; RV64-NEXT:    bltz a3, .LBB27_245
-; RV64-NEXT:  .LBB27_182: # %else344
-; RV64-NEXT:    slli a3, a1, 11
-; RV64-NEXT:    bltz a3, .LBB27_246
-; RV64-NEXT:  .LBB27_183: # %else347
-; RV64-NEXT:    slli a3, a1, 10
-; RV64-NEXT:    bltz a3, .LBB27_247
-; RV64-NEXT:  .LBB27_184: # %else350
-; RV64-NEXT:    slli a3, a1, 9
-; RV64-NEXT:    bltz a3, .LBB27_248
-; RV64-NEXT:  .LBB27_185: # %else353
-; RV64-NEXT:    slli a3, a1, 8
-; RV64-NEXT:    bltz a3, .LBB27_249
-; RV64-NEXT:  .LBB27_186: # %else356
-; RV64-NEXT:    slli a3, a1, 7
-; RV64-NEXT:    bltz a3, .LBB27_250
-; RV64-NEXT:  .LBB27_187: # %else359
-; RV64-NEXT:    slli a3, a1, 6
-; RV64-NEXT:    bltz a3, .LBB27_251
-; RV64-NEXT:  .LBB27_188: # %else362
-; RV64-NEXT:    slli a3, a1, 5
-; RV64-NEXT:    bltz a3, .LBB27_252
-; RV64-NEXT:  .LBB27_189: # %else365
-; RV64-NEXT:    slli a3, a1, 4
-; RV64-NEXT:    bltz a3, .LBB27_253
-; RV64-NEXT:  .LBB27_190: # %else368
-; RV64-NEXT:    slli a3, a1, 3
-; RV64-NEXT:    bltz a3, .LBB27_254
-; RV64-NEXT:  .LBB27_191: # %else371
-; RV64-NEXT:    slli a3, a1, 2
-; RV64-NEXT:    bltz a3, .LBB27_255
-; RV64-NEXT:  .LBB27_192: # %else374
-; RV64-NEXT:    slli a3, a1, 1
-; RV64-NEXT:    bltz a3, .LBB27_256
-; RV64-NEXT:  .LBB27_193: # %else377
-; RV64-NEXT:    bgez a1, .LBB27_195
-; RV64-NEXT:  .LBB27_194: # %cond.load379
-; RV64-NEXT:    lh a0, 254(a0)
-; RV64-NEXT:    li a1, 64
-; RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a0
-; RV64-NEXT:    li a0, 63
-; RV64-NEXT:    vslideup.vx v16, v24, a0
-; RV64-NEXT:  .LBB27_195: # %else380
-; RV64-NEXT:    li a0, 64
-; RV64-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV64-NEXT:    sb a6, 8(sp)
+; RV64-NEXT:    sb a5, 9(sp)
+; RV64-NEXT:    sb a4, 10(sp)
+; RV64-NEXT:    sb a1, 11(sp)
+; RV64-NEXT:    addi a1, sp, 64
+; RV64-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV64-NEXT:    vle8.v v8, (a1)
+; RV64-NEXT:    mv a1, sp
+; RV64-NEXT:    vle8.v v12, (a1)
+; RV64-NEXT:    vand.vi v16, v8, 1
+; RV64-NEXT:    vmsne.vi v8, v16, 0
+; RV64-NEXT:    vand.vi v12, v12, 1
+; RV64-NEXT:    vmsne.vi v0, v12, 0
+; RV64-NEXT:    addi a1, a0, 128
+; RV64-NEXT:    vle16.v v16, (a1), v0.t
+; RV64-NEXT:    vmv1r.v v0, v8
+; RV64-NEXT:    vle16.v v8, (a0), v0.t
 ; RV64-NEXT:    vse16.v v8, (a2)
 ; RV64-NEXT:    addi a0, a2, 128
 ; RV64-NEXT:    vse16.v v16, (a0)
@@ -11469,560 +3532,6 @@ define void @masked_load_v128bf16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-NEXT:    ld s0, 496(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    addi sp, sp, 512
 ; RV64-NEXT:    ret
-; RV64-NEXT:  .LBB27_196: # %cond.load196
-; RV64-NEXT:    lh a3, 132(a0)
-; RV64-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 2
-; RV64-NEXT:    andi a3, a1, 8
-; RV64-NEXT:    beqz a3, .LBB27_134
-; RV64-NEXT:  .LBB27_197: # %cond.load199
-; RV64-NEXT:    lh a3, 134(a0)
-; RV64-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 3
-; RV64-NEXT:    andi a3, a1, 16
-; RV64-NEXT:    beqz a3, .LBB27_135
-; RV64-NEXT:  .LBB27_198: # %cond.load202
-; RV64-NEXT:    lh a3, 136(a0)
-; RV64-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 4
-; RV64-NEXT:    andi a3, a1, 32
-; RV64-NEXT:    beqz a3, .LBB27_136
-; RV64-NEXT:  .LBB27_199: # %cond.load205
-; RV64-NEXT:    lh a3, 138(a0)
-; RV64-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 5
-; RV64-NEXT:    andi a3, a1, 64
-; RV64-NEXT:    beqz a3, .LBB27_137
-; RV64-NEXT:  .LBB27_200: # %cond.load208
-; RV64-NEXT:    lh a3, 140(a0)
-; RV64-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 6
-; RV64-NEXT:    andi a3, a1, 128
-; RV64-NEXT:    beqz a3, .LBB27_138
-; RV64-NEXT:  .LBB27_201: # %cond.load211
-; RV64-NEXT:    lh a3, 142(a0)
-; RV64-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 7
-; RV64-NEXT:    andi a3, a1, 256
-; RV64-NEXT:    beqz a3, .LBB27_139
-; RV64-NEXT:  .LBB27_202: # %cond.load214
-; RV64-NEXT:    lh a3, 144(a0)
-; RV64-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 8
-; RV64-NEXT:    andi a3, a1, 512
-; RV64-NEXT:    beqz a3, .LBB27_140
-; RV64-NEXT:  .LBB27_203: # %cond.load217
-; RV64-NEXT:    lh a3, 146(a0)
-; RV64-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 9
-; RV64-NEXT:    andi a3, a1, 1024
-; RV64-NEXT:    beqz a3, .LBB27_141
-; RV64-NEXT:  .LBB27_204: # %cond.load220
-; RV64-NEXT:    lh a3, 148(a0)
-; RV64-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 10
-; RV64-NEXT:    slli a3, a1, 52
-; RV64-NEXT:    bgez a3, .LBB27_142
-; RV64-NEXT:  .LBB27_205: # %cond.load223
-; RV64-NEXT:    lh a3, 150(a0)
-; RV64-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 11
-; RV64-NEXT:    slli a3, a1, 51
-; RV64-NEXT:    bgez a3, .LBB27_143
-; RV64-NEXT:  .LBB27_206: # %cond.load226
-; RV64-NEXT:    lh a3, 152(a0)
-; RV64-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 12
-; RV64-NEXT:    slli a3, a1, 50
-; RV64-NEXT:    bgez a3, .LBB27_144
-; RV64-NEXT:  .LBB27_207: # %cond.load229
-; RV64-NEXT:    lh a3, 154(a0)
-; RV64-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 13
-; RV64-NEXT:    slli a3, a1, 49
-; RV64-NEXT:    bgez a3, .LBB27_145
-; RV64-NEXT:  .LBB27_208: # %cond.load232
-; RV64-NEXT:    lh a3, 156(a0)
-; RV64-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 14
-; RV64-NEXT:    slli a3, a1, 48
-; RV64-NEXT:    bgez a3, .LBB27_146
-; RV64-NEXT:  .LBB27_209: # %cond.load235
-; RV64-NEXT:    lh a3, 158(a0)
-; RV64-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 15
-; RV64-NEXT:    slli a3, a1, 47
-; RV64-NEXT:    bgez a3, .LBB27_147
-; RV64-NEXT:  .LBB27_210: # %cond.load238
-; RV64-NEXT:    lh a3, 160(a0)
-; RV64-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 16
-; RV64-NEXT:    slli a3, a1, 46
-; RV64-NEXT:    bgez a3, .LBB27_148
-; RV64-NEXT:  .LBB27_211: # %cond.load241
-; RV64-NEXT:    lh a3, 162(a0)
-; RV64-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 17
-; RV64-NEXT:    slli a3, a1, 45
-; RV64-NEXT:    bgez a3, .LBB27_149
-; RV64-NEXT:  .LBB27_212: # %cond.load244
-; RV64-NEXT:    lh a3, 164(a0)
-; RV64-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 18
-; RV64-NEXT:    slli a3, a1, 44
-; RV64-NEXT:    bgez a3, .LBB27_150
-; RV64-NEXT:  .LBB27_213: # %cond.load247
-; RV64-NEXT:    lh a3, 166(a0)
-; RV64-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 19
-; RV64-NEXT:    slli a3, a1, 43
-; RV64-NEXT:    bgez a3, .LBB27_151
-; RV64-NEXT:  .LBB27_214: # %cond.load250
-; RV64-NEXT:    lh a3, 168(a0)
-; RV64-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 20
-; RV64-NEXT:    slli a3, a1, 42
-; RV64-NEXT:    bgez a3, .LBB27_152
-; RV64-NEXT:  .LBB27_215: # %cond.load253
-; RV64-NEXT:    lh a3, 170(a0)
-; RV64-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 21
-; RV64-NEXT:    slli a3, a1, 41
-; RV64-NEXT:    bgez a3, .LBB27_153
-; RV64-NEXT:  .LBB27_216: # %cond.load256
-; RV64-NEXT:    lh a3, 172(a0)
-; RV64-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 22
-; RV64-NEXT:    slli a3, a1, 40
-; RV64-NEXT:    bgez a3, .LBB27_154
-; RV64-NEXT:  .LBB27_217: # %cond.load259
-; RV64-NEXT:    lh a3, 174(a0)
-; RV64-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 23
-; RV64-NEXT:    slli a3, a1, 39
-; RV64-NEXT:    bgez a3, .LBB27_155
-; RV64-NEXT:  .LBB27_218: # %cond.load262
-; RV64-NEXT:    lh a3, 176(a0)
-; RV64-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 24
-; RV64-NEXT:    slli a3, a1, 38
-; RV64-NEXT:    bgez a3, .LBB27_156
-; RV64-NEXT:  .LBB27_219: # %cond.load265
-; RV64-NEXT:    lh a3, 178(a0)
-; RV64-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 25
-; RV64-NEXT:    slli a3, a1, 37
-; RV64-NEXT:    bgez a3, .LBB27_157
-; RV64-NEXT:  .LBB27_220: # %cond.load268
-; RV64-NEXT:    lh a3, 180(a0)
-; RV64-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 26
-; RV64-NEXT:    slli a3, a1, 36
-; RV64-NEXT:    bgez a3, .LBB27_158
-; RV64-NEXT:  .LBB27_221: # %cond.load271
-; RV64-NEXT:    lh a3, 182(a0)
-; RV64-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 27
-; RV64-NEXT:    slli a3, a1, 35
-; RV64-NEXT:    bgez a3, .LBB27_159
-; RV64-NEXT:  .LBB27_222: # %cond.load274
-; RV64-NEXT:    lh a3, 184(a0)
-; RV64-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 28
-; RV64-NEXT:    slli a3, a1, 34
-; RV64-NEXT:    bgez a3, .LBB27_160
-; RV64-NEXT:  .LBB27_223: # %cond.load277
-; RV64-NEXT:    lh a3, 186(a0)
-; RV64-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 29
-; RV64-NEXT:    slli a3, a1, 33
-; RV64-NEXT:    bgez a3, .LBB27_161
-; RV64-NEXT:  .LBB27_224: # %cond.load280
-; RV64-NEXT:    lh a3, 188(a0)
-; RV64-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    vslideup.vi v16, v24, 30
-; RV64-NEXT:    slli a3, a1, 32
-; RV64-NEXT:    bgez a3, .LBB27_162
-; RV64-NEXT:  .LBB27_225: # %cond.load283
-; RV64-NEXT:    lh a3, 190(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 32
-; RV64-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV64-NEXT:    vslideup.vi v16, v24, 31
-; RV64-NEXT:    slli a3, a1, 31
-; RV64-NEXT:    bgez a3, .LBB27_163
-; RV64-NEXT:  .LBB27_226: # %cond.load286
-; RV64-NEXT:    lh a3, 192(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 33
-; RV64-NEXT:    li a4, 32
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 30
-; RV64-NEXT:    bgez a3, .LBB27_164
-; RV64-NEXT:  .LBB27_227: # %cond.load289
-; RV64-NEXT:    lh a3, 194(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 34
-; RV64-NEXT:    li a4, 33
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 29
-; RV64-NEXT:    bgez a3, .LBB27_165
-; RV64-NEXT:  .LBB27_228: # %cond.load292
-; RV64-NEXT:    lh a3, 196(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 35
-; RV64-NEXT:    li a4, 34
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 28
-; RV64-NEXT:    bgez a3, .LBB27_166
-; RV64-NEXT:  .LBB27_229: # %cond.load295
-; RV64-NEXT:    lh a3, 198(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 36
-; RV64-NEXT:    li a4, 35
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 27
-; RV64-NEXT:    bgez a3, .LBB27_167
-; RV64-NEXT:  .LBB27_230: # %cond.load298
-; RV64-NEXT:    lh a3, 200(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 37
-; RV64-NEXT:    li a4, 36
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 26
-; RV64-NEXT:    bgez a3, .LBB27_168
-; RV64-NEXT:  .LBB27_231: # %cond.load301
-; RV64-NEXT:    lh a3, 202(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 38
-; RV64-NEXT:    li a4, 37
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 25
-; RV64-NEXT:    bgez a3, .LBB27_169
-; RV64-NEXT:  .LBB27_232: # %cond.load304
-; RV64-NEXT:    lh a3, 204(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 39
-; RV64-NEXT:    li a4, 38
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 24
-; RV64-NEXT:    bgez a3, .LBB27_170
-; RV64-NEXT:  .LBB27_233: # %cond.load307
-; RV64-NEXT:    lh a3, 206(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 40
-; RV64-NEXT:    li a4, 39
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 23
-; RV64-NEXT:    bgez a3, .LBB27_171
-; RV64-NEXT:  .LBB27_234: # %cond.load310
-; RV64-NEXT:    lh a3, 208(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 41
-; RV64-NEXT:    li a4, 40
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 22
-; RV64-NEXT:    bgez a3, .LBB27_172
-; RV64-NEXT:  .LBB27_235: # %cond.load313
-; RV64-NEXT:    lh a3, 210(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 42
-; RV64-NEXT:    li a4, 41
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 21
-; RV64-NEXT:    bgez a3, .LBB27_173
-; RV64-NEXT:  .LBB27_236: # %cond.load316
-; RV64-NEXT:    lh a3, 212(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 43
-; RV64-NEXT:    li a4, 42
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 20
-; RV64-NEXT:    bgez a3, .LBB27_174
-; RV64-NEXT:  .LBB27_237: # %cond.load319
-; RV64-NEXT:    lh a3, 214(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 44
-; RV64-NEXT:    li a4, 43
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 19
-; RV64-NEXT:    bgez a3, .LBB27_175
-; RV64-NEXT:  .LBB27_238: # %cond.load322
-; RV64-NEXT:    lh a3, 216(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 45
-; RV64-NEXT:    li a4, 44
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 18
-; RV64-NEXT:    bgez a3, .LBB27_176
-; RV64-NEXT:  .LBB27_239: # %cond.load325
-; RV64-NEXT:    lh a3, 218(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 46
-; RV64-NEXT:    li a4, 45
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 17
-; RV64-NEXT:    bgez a3, .LBB27_177
-; RV64-NEXT:  .LBB27_240: # %cond.load328
-; RV64-NEXT:    lh a3, 220(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 47
-; RV64-NEXT:    li a4, 46
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 16
-; RV64-NEXT:    bgez a3, .LBB27_178
-; RV64-NEXT:  .LBB27_241: # %cond.load331
-; RV64-NEXT:    lh a3, 222(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 48
-; RV64-NEXT:    li a4, 47
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 15
-; RV64-NEXT:    bgez a3, .LBB27_179
-; RV64-NEXT:  .LBB27_242: # %cond.load334
-; RV64-NEXT:    lh a3, 224(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 49
-; RV64-NEXT:    li a4, 48
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 14
-; RV64-NEXT:    bgez a3, .LBB27_180
-; RV64-NEXT:  .LBB27_243: # %cond.load337
-; RV64-NEXT:    lh a3, 226(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 50
-; RV64-NEXT:    li a4, 49
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 13
-; RV64-NEXT:    bgez a3, .LBB27_181
-; RV64-NEXT:  .LBB27_244: # %cond.load340
-; RV64-NEXT:    lh a3, 228(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 51
-; RV64-NEXT:    li a4, 50
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 12
-; RV64-NEXT:    bgez a3, .LBB27_182
-; RV64-NEXT:  .LBB27_245: # %cond.load343
-; RV64-NEXT:    lh a3, 230(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 52
-; RV64-NEXT:    li a4, 51
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 11
-; RV64-NEXT:    bgez a3, .LBB27_183
-; RV64-NEXT:  .LBB27_246: # %cond.load346
-; RV64-NEXT:    lh a3, 232(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 53
-; RV64-NEXT:    li a4, 52
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 10
-; RV64-NEXT:    bgez a3, .LBB27_184
-; RV64-NEXT:  .LBB27_247: # %cond.load349
-; RV64-NEXT:    lh a3, 234(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 54
-; RV64-NEXT:    li a4, 53
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 9
-; RV64-NEXT:    bgez a3, .LBB27_185
-; RV64-NEXT:  .LBB27_248: # %cond.load352
-; RV64-NEXT:    lh a3, 236(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 55
-; RV64-NEXT:    li a4, 54
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 8
-; RV64-NEXT:    bgez a3, .LBB27_186
-; RV64-NEXT:  .LBB27_249: # %cond.load355
-; RV64-NEXT:    lh a3, 238(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 56
-; RV64-NEXT:    li a4, 55
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 7
-; RV64-NEXT:    bgez a3, .LBB27_187
-; RV64-NEXT:  .LBB27_250: # %cond.load358
-; RV64-NEXT:    lh a3, 240(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 57
-; RV64-NEXT:    li a4, 56
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 6
-; RV64-NEXT:    bgez a3, .LBB27_188
-; RV64-NEXT:  .LBB27_251: # %cond.load361
-; RV64-NEXT:    lh a3, 242(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 58
-; RV64-NEXT:    li a4, 57
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 5
-; RV64-NEXT:    bgez a3, .LBB27_189
-; RV64-NEXT:  .LBB27_252: # %cond.load364
-; RV64-NEXT:    lh a3, 244(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 59
-; RV64-NEXT:    li a4, 58
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 4
-; RV64-NEXT:    bgez a3, .LBB27_190
-; RV64-NEXT:  .LBB27_253: # %cond.load367
-; RV64-NEXT:    lh a3, 246(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 60
-; RV64-NEXT:    li a4, 59
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 3
-; RV64-NEXT:    bgez a3, .LBB27_191
-; RV64-NEXT:  .LBB27_254: # %cond.load370
-; RV64-NEXT:    lh a3, 248(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 61
-; RV64-NEXT:    li a4, 60
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 2
-; RV64-NEXT:    bgez a3, .LBB27_192
-; RV64-NEXT:  .LBB27_255: # %cond.load373
-; RV64-NEXT:    lh a3, 250(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 62
-; RV64-NEXT:    li a4, 61
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    slli a3, a1, 1
-; RV64-NEXT:    bgez a3, .LBB27_193
-; RV64-NEXT:  .LBB27_256: # %cond.load376
-; RV64-NEXT:    lh a3, 252(a0)
-; RV64-NEXT:    li a4, 64
-; RV64-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-NEXT:    vmv.s.x v24, a3
-; RV64-NEXT:    li a3, 63
-; RV64-NEXT:    li a4, 62
-; RV64-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-NEXT:    vslideup.vx v16, v24, a4
-; RV64-NEXT:    bltz a1, .LBB27_194
-; RV64-NEXT:    j .LBB27_195
   %m = load <128 x bfloat>, ptr %m_ptr
   %mask = fcmp oeq <128 x bfloat> %m, zeroinitializer
   %load = call <128 x bfloat> @llvm.masked.load.v128bf16(ptr %a, i32 8, <128 x i1> %mask, <128 x bfloat> undef)
@@ -12058,8 +3567,8 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    sw s0, 504(sp) # 4-byte Folded Spill
 ; RV32-ZVFHMIN-NEXT:    addi s0, sp, 512
 ; RV32-ZVFHMIN-NEXT:    andi sp, sp, -128
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV32-ZVFHMIN-NEXT:    li a3, 64
+; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vle16.v v16, (a1)
 ; RV32-ZVFHMIN-NEXT:    addi a1, a1, 128
 ; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a1)
@@ -12072,272 +3581,182 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 32(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 96(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 318(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 31(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 95(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 316(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 30(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 94(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 314(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 29(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 93(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 312(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 28(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 92(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 310(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 27(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 91(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 308(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 26(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 90(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 306(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 25(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 89(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 304(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 24(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 88(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 302(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 23(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 87(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 300(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 22(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 86(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 298(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 21(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 85(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 296(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 20(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 84(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 294(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 19(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 83(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 292(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 18(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 82(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 290(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 17(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 81(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 288(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v16
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v16
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a3, 0(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 16(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 192(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 96(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 190(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 95(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 188(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 94(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 186(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 93(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 184(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 92(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 182(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 91(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 180(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 90(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 178(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 89(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 176(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 88(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 174(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 87(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 172(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 86(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 170(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 85(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 168(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 84(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 166(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 83(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 164(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 82(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 162(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 81(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 160(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v8
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a3, 64(sp)
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a4, 64(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 80(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 354(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 49(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 113(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 352(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 48(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 112(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 350(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 47(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 111(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 348(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 46(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 110(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 346(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 45(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 109(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 344(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 44(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 108(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 342(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 43(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 107(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 340(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 42(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 106(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 338(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 41(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 105(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 336(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 40(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 104(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 334(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 39(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 103(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 332(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 38(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 102(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 330(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 37(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 101(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 328(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 36(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 100(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 326(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 35(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 99(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 324(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 34(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 98(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 322(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 7
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 6
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12348,20 +3767,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 5(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 6(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 7(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 33(sp)
+; RV32-ZVFHMIN-NEXT:    sb a6, 69(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 70(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 71(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 97(sp)
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 4
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 3
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 2
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12372,207 +3791,80 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 1(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 2(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 3(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 4(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 226(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 113(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 224(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 112(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 222(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 111(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 220(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 110(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 218(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 109(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 216(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 108(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 214(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 107(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 212(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 106(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 210(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 105(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 208(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 104(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 206(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 103(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 204(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 102(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 202(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 101(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 200(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 100(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 198(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 99(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 196(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 98(sp)
-; RV32-ZVFHMIN-NEXT:    lh a1, 194(sp)
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 7
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 6
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 5
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a6, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 69(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 70(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 71(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 97(sp)
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 4
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 3
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 2
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 1
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a6, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
-; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    sb a6, 65(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a5, 66(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 67(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 67(sp)
 ; RV32-ZVFHMIN-NEXT:    sb a1, 68(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 382(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 63(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 127(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 380(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 62(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 126(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 378(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 61(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 125(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 376(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 60(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 124(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 374(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 59(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 123(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 372(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 58(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 122(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 370(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 57(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 121(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 368(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 56(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 120(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 366(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 55(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 119(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 364(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 54(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 118(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 362(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 53(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 117(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 360(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 52(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 116(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 358(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 51(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 115(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 356(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 50(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 114(sp)
 ; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 15
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
@@ -12580,10 +3872,10 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 14
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 13
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12594,20 +3886,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 12(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 13(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 14(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 15(sp)
+; RV32-ZVFHMIN-NEXT:    sb a6, 76(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 77(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 78(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 79(sp)
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 11
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 10
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 9
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12618,90 +3910,309 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 8(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 9(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 10(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 11(sp)
+; RV32-ZVFHMIN-NEXT:    sb a6, 72(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 73(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 74(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 75(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 192(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 32(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 190(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 31(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 188(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 30(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 186(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 29(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 184(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 28(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 182(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 27(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 180(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 26(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 178(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 25(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 176(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 24(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 174(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 23(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 172(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 22(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 170(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 21(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 168(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 20(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 166(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 19(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 164(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 18(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 162(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 17(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 160(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v8
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a4, 0(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 16(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 226(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 49(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 224(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 48(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 222(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 47(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 220(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 46(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 218(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 45(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 216(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 44(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 214(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 43(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 212(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 42(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 210(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 41(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 208(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 40(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 206(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 39(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 204(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 38(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 202(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 37(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 200(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 36(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 198(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 35(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 196(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a1, 34(sp)
+; RV32-ZVFHMIN-NEXT:    lh a1, 194(sp)
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 7
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 6
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 5
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a6, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a6, 5(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 6(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 7(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 33(sp)
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 4
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 2
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 1
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a6, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
+; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    sb a6, 1(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 2(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 3(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 4(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 254(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 127(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 63(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 252(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 126(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 62(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 250(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 125(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 61(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 248(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 124(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 60(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 246(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 123(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 59(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 244(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 122(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 58(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 242(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 121(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 57(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 240(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 120(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 56(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 238(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 119(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 55(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 236(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 118(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 54(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 234(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 117(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 53(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 232(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 116(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 52(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 230(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 115(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 51(sp)
 ; RV32-ZVFHMIN-NEXT:    lh a1, 228(sp)
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a1, 114(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 50(sp)
+; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 15
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 14
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 13
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12712,20 +4223,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 76(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 77(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 78(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 79(sp)
+; RV32-ZVFHMIN-NEXT:    sb a6, 12(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 13(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 14(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 15(sp)
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 11
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 10
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV32-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV32-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV32-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 9
 ; RV32-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -12736,1027 +4247,23 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV32-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV32-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV32-ZVFHMIN-NEXT:    sb a6, 72(sp)
-; RV32-ZVFHMIN-NEXT:    sb a5, 73(sp)
-; RV32-ZVFHMIN-NEXT:    sb a3, 74(sp)
-; RV32-ZVFHMIN-NEXT:    sb a1, 75(sp)
-; RV32-ZVFHMIN-NEXT:    li a1, 128
-; RV32-ZVFHMIN-NEXT:    mv a3, sp
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vle8.v v8, (a3)
-; RV32-ZVFHMIN-NEXT:    vand.vi v8, v8, 1
-; RV32-ZVFHMIN-NEXT:    vmsne.vi v16, v8, 0
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v16
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_2
-; RV32-ZVFHMIN-NEXT:  # %bb.1: # %cond.load
-; RV32-ZVFHMIN-NEXT:    lh a1, 0(a0)
-; RV32-ZVFHMIN-NEXT:    fmv.x.h a5, fa5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.v.x v8, a5
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v8, a1
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_3
-; RV32-ZVFHMIN-NEXT:    j .LBB28_4
-; RV32-ZVFHMIN-NEXT:  .LBB28_2:
-; RV32-ZVFHMIN-NEXT:    # implicit-def: $v8m8
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_4
-; RV32-ZVFHMIN-NEXT:  .LBB28_3: # %cond.load1
-; RV32-ZVFHMIN-NEXT:    lh a1, 2(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 1
-; RV32-ZVFHMIN-NEXT:  .LBB28_4: # %else2
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_74
-; RV32-ZVFHMIN-NEXT:  # %bb.5: # %else5
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_75
-; RV32-ZVFHMIN-NEXT:  .LBB28_6: # %else8
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_76
-; RV32-ZVFHMIN-NEXT:  .LBB28_7: # %else11
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_77
-; RV32-ZVFHMIN-NEXT:  .LBB28_8: # %else14
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_78
-; RV32-ZVFHMIN-NEXT:  .LBB28_9: # %else17
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_79
-; RV32-ZVFHMIN-NEXT:  .LBB28_10: # %else20
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_80
-; RV32-ZVFHMIN-NEXT:  .LBB28_11: # %else23
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_81
-; RV32-ZVFHMIN-NEXT:  .LBB28_12: # %else26
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a1, .LBB28_82
-; RV32-ZVFHMIN-NEXT:  .LBB28_13: # %else29
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_83
-; RV32-ZVFHMIN-NEXT:  .LBB28_14: # %else32
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_84
-; RV32-ZVFHMIN-NEXT:  .LBB28_15: # %else35
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_85
-; RV32-ZVFHMIN-NEXT:  .LBB28_16: # %else38
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_86
-; RV32-ZVFHMIN-NEXT:  .LBB28_17: # %else41
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_87
-; RV32-ZVFHMIN-NEXT:  .LBB28_18: # %else44
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_88
-; RV32-ZVFHMIN-NEXT:  .LBB28_19: # %else47
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_89
-; RV32-ZVFHMIN-NEXT:  .LBB28_20: # %else50
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_90
-; RV32-ZVFHMIN-NEXT:  .LBB28_21: # %else53
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_91
-; RV32-ZVFHMIN-NEXT:  .LBB28_22: # %else56
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_92
-; RV32-ZVFHMIN-NEXT:  .LBB28_23: # %else59
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_93
-; RV32-ZVFHMIN-NEXT:  .LBB28_24: # %else62
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_94
-; RV32-ZVFHMIN-NEXT:  .LBB28_25: # %else65
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_95
-; RV32-ZVFHMIN-NEXT:  .LBB28_26: # %else68
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_96
-; RV32-ZVFHMIN-NEXT:  .LBB28_27: # %else71
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_97
-; RV32-ZVFHMIN-NEXT:  .LBB28_28: # %else74
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_98
-; RV32-ZVFHMIN-NEXT:  .LBB28_29: # %else77
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_99
-; RV32-ZVFHMIN-NEXT:  .LBB28_30: # %else80
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_32
-; RV32-ZVFHMIN-NEXT:  .LBB28_31: # %cond.load82
-; RV32-ZVFHMIN-NEXT:    lh a1, 56(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 28
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:  .LBB28_32: # %else83
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    li a1, 32
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_34
-; RV32-ZVFHMIN-NEXT:  # %bb.33: # %cond.load85
-; RV32-ZVFHMIN-NEXT:    lh a4, 58(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a4
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 29
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:  .LBB28_34: # %else86
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vsrl.vx v17, v16, a1
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_36
-; RV32-ZVFHMIN-NEXT:  # %bb.35: # %cond.load88
-; RV32-ZVFHMIN-NEXT:    lh a4, 60(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a4
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 30
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:  .LBB28_36: # %else89
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a4, v17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_100
-; RV32-ZVFHMIN-NEXT:  # %bb.37: # %else92
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 1
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_101
-; RV32-ZVFHMIN-NEXT:  .LBB28_38: # %else95
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_102
-; RV32-ZVFHMIN-NEXT:  .LBB28_39: # %else98
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_103
-; RV32-ZVFHMIN-NEXT:  .LBB28_40: # %else101
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 8
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_104
-; RV32-ZVFHMIN-NEXT:  .LBB28_41: # %else104
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 16
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_105
-; RV32-ZVFHMIN-NEXT:  .LBB28_42: # %else107
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 32
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_106
-; RV32-ZVFHMIN-NEXT:  .LBB28_43: # %else110
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 64
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_107
-; RV32-ZVFHMIN-NEXT:  .LBB28_44: # %else113
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 128
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_108
-; RV32-ZVFHMIN-NEXT:  .LBB28_45: # %else116
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 256
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_109
-; RV32-ZVFHMIN-NEXT:  .LBB28_46: # %else119
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 512
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_110
-; RV32-ZVFHMIN-NEXT:  .LBB28_47: # %else122
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_111
-; RV32-ZVFHMIN-NEXT:  .LBB28_48: # %else125
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 20
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_112
-; RV32-ZVFHMIN-NEXT:  .LBB28_49: # %else128
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 19
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_113
-; RV32-ZVFHMIN-NEXT:  .LBB28_50: # %else131
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 18
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_114
-; RV32-ZVFHMIN-NEXT:  .LBB28_51: # %else134
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_115
-; RV32-ZVFHMIN-NEXT:  .LBB28_52: # %else137
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 16
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_116
-; RV32-ZVFHMIN-NEXT:  .LBB28_53: # %else140
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 15
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_117
-; RV32-ZVFHMIN-NEXT:  .LBB28_54: # %else143
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 14
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_118
-; RV32-ZVFHMIN-NEXT:  .LBB28_55: # %else146
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 13
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_119
-; RV32-ZVFHMIN-NEXT:  .LBB28_56: # %else149
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 12
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_120
-; RV32-ZVFHMIN-NEXT:  .LBB28_57: # %else152
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 11
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_121
-; RV32-ZVFHMIN-NEXT:  .LBB28_58: # %else155
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 10
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_122
-; RV32-ZVFHMIN-NEXT:  .LBB28_59: # %else158
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 9
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_123
-; RV32-ZVFHMIN-NEXT:  .LBB28_60: # %else161
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 8
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_124
-; RV32-ZVFHMIN-NEXT:  .LBB28_61: # %else164
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 7
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_125
-; RV32-ZVFHMIN-NEXT:  .LBB28_62: # %else167
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 6
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_126
-; RV32-ZVFHMIN-NEXT:  .LBB28_63: # %else170
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 5
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_127
-; RV32-ZVFHMIN-NEXT:  .LBB28_64: # %else173
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 4
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_128
-; RV32-ZVFHMIN-NEXT:  .LBB28_65: # %else176
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 3
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_129
-; RV32-ZVFHMIN-NEXT:  .LBB28_66: # %else179
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 2
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_68
-; RV32-ZVFHMIN-NEXT:  .LBB28_67: # %cond.load181
-; RV32-ZVFHMIN-NEXT:    lh a3, 122(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 62
-; RV32-ZVFHMIN-NEXT:    li a5, 61
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:  .LBB28_68: # %else182
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vslidedown.vi v24, v16, 1
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_70
-; RV32-ZVFHMIN-NEXT:  # %bb.69: # %cond.load184
-; RV32-ZVFHMIN-NEXT:    lh a3, 124(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 63
-; RV32-ZVFHMIN-NEXT:    li a5, 62
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a5
-; RV32-ZVFHMIN-NEXT:  .LBB28_70: # %else185
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a3, v24
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_72
-; RV32-ZVFHMIN-NEXT:  # %bb.71: # %cond.load187
-; RV32-ZVFHMIN-NEXT:    lh a4, 126(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a4
-; RV32-ZVFHMIN-NEXT:    li a4, 63
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a4
-; RV32-ZVFHMIN-NEXT:  .LBB28_72: # %else188
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 1
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_130
-; RV32-ZVFHMIN-NEXT:  # %bb.73: # %cond.load190
-; RV32-ZVFHMIN-NEXT:    lh a4, 128(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v16, a4
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_131
-; RV32-ZVFHMIN-NEXT:    j .LBB28_132
-; RV32-ZVFHMIN-NEXT:  .LBB28_74: # %cond.load4
-; RV32-ZVFHMIN-NEXT:    lh a1, 4(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 2
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_6
-; RV32-ZVFHMIN-NEXT:  .LBB28_75: # %cond.load7
-; RV32-ZVFHMIN-NEXT:    lh a1, 6(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 3
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_7
-; RV32-ZVFHMIN-NEXT:  .LBB28_76: # %cond.load10
-; RV32-ZVFHMIN-NEXT:    lh a1, 8(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 4
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_8
-; RV32-ZVFHMIN-NEXT:  .LBB28_77: # %cond.load13
-; RV32-ZVFHMIN-NEXT:    lh a1, 10(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 5
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_9
-; RV32-ZVFHMIN-NEXT:  .LBB28_78: # %cond.load16
-; RV32-ZVFHMIN-NEXT:    lh a1, 12(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 6
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_10
-; RV32-ZVFHMIN-NEXT:  .LBB28_79: # %cond.load19
-; RV32-ZVFHMIN-NEXT:    lh a1, 14(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 7
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_11
-; RV32-ZVFHMIN-NEXT:  .LBB28_80: # %cond.load22
-; RV32-ZVFHMIN-NEXT:    lh a1, 16(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 8
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_12
-; RV32-ZVFHMIN-NEXT:  .LBB28_81: # %cond.load25
-; RV32-ZVFHMIN-NEXT:    lh a1, 18(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 9
-; RV32-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a1, .LBB28_13
-; RV32-ZVFHMIN-NEXT:  .LBB28_82: # %cond.load28
-; RV32-ZVFHMIN-NEXT:    lh a1, 20(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 10
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_14
-; RV32-ZVFHMIN-NEXT:  .LBB28_83: # %cond.load31
-; RV32-ZVFHMIN-NEXT:    lh a1, 22(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 11
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_15
-; RV32-ZVFHMIN-NEXT:  .LBB28_84: # %cond.load34
-; RV32-ZVFHMIN-NEXT:    lh a1, 24(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 12
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_16
-; RV32-ZVFHMIN-NEXT:  .LBB28_85: # %cond.load37
-; RV32-ZVFHMIN-NEXT:    lh a1, 26(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 13
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_17
-; RV32-ZVFHMIN-NEXT:  .LBB28_86: # %cond.load40
-; RV32-ZVFHMIN-NEXT:    lh a1, 28(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 14
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_18
-; RV32-ZVFHMIN-NEXT:  .LBB28_87: # %cond.load43
-; RV32-ZVFHMIN-NEXT:    lh a1, 30(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 15
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_19
-; RV32-ZVFHMIN-NEXT:  .LBB28_88: # %cond.load46
-; RV32-ZVFHMIN-NEXT:    lh a1, 32(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 16
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_20
-; RV32-ZVFHMIN-NEXT:  .LBB28_89: # %cond.load49
-; RV32-ZVFHMIN-NEXT:    lh a1, 34(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 17
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_21
-; RV32-ZVFHMIN-NEXT:  .LBB28_90: # %cond.load52
-; RV32-ZVFHMIN-NEXT:    lh a1, 36(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 18
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_22
-; RV32-ZVFHMIN-NEXT:  .LBB28_91: # %cond.load55
-; RV32-ZVFHMIN-NEXT:    lh a1, 38(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 19
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_23
-; RV32-ZVFHMIN-NEXT:  .LBB28_92: # %cond.load58
-; RV32-ZVFHMIN-NEXT:    lh a1, 40(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 20
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_24
-; RV32-ZVFHMIN-NEXT:  .LBB28_93: # %cond.load61
-; RV32-ZVFHMIN-NEXT:    lh a1, 42(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 21
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_25
-; RV32-ZVFHMIN-NEXT:  .LBB28_94: # %cond.load64
-; RV32-ZVFHMIN-NEXT:    lh a1, 44(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 22
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_26
-; RV32-ZVFHMIN-NEXT:  .LBB28_95: # %cond.load67
-; RV32-ZVFHMIN-NEXT:    lh a1, 46(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 23
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_27
-; RV32-ZVFHMIN-NEXT:  .LBB28_96: # %cond.load70
-; RV32-ZVFHMIN-NEXT:    lh a1, 48(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 24
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_28
-; RV32-ZVFHMIN-NEXT:  .LBB28_97: # %cond.load73
-; RV32-ZVFHMIN-NEXT:    lh a1, 50(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 25
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_29
-; RV32-ZVFHMIN-NEXT:  .LBB28_98: # %cond.load76
-; RV32-ZVFHMIN-NEXT:    lh a1, 52(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 26
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_30
-; RV32-ZVFHMIN-NEXT:  .LBB28_99: # %cond.load79
-; RV32-ZVFHMIN-NEXT:    lh a1, 54(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 27
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_31
-; RV32-ZVFHMIN-NEXT:    j .LBB28_32
-; RV32-ZVFHMIN-NEXT:  .LBB28_100: # %cond.load91
-; RV32-ZVFHMIN-NEXT:    lh a3, 62(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v20, a3
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    li a3, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 31
-; RV32-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV32-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 1
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_38
-; RV32-ZVFHMIN-NEXT:  .LBB28_101: # %cond.load94
-; RV32-ZVFHMIN-NEXT:    lh a3, 64(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 33
-; RV32-ZVFHMIN-NEXT:    li a5, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 2
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_39
-; RV32-ZVFHMIN-NEXT:  .LBB28_102: # %cond.load97
-; RV32-ZVFHMIN-NEXT:    lh a3, 66(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 34
-; RV32-ZVFHMIN-NEXT:    li a5, 33
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 4
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_40
-; RV32-ZVFHMIN-NEXT:  .LBB28_103: # %cond.load100
-; RV32-ZVFHMIN-NEXT:    lh a3, 68(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 35
-; RV32-ZVFHMIN-NEXT:    li a5, 34
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 8
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_41
-; RV32-ZVFHMIN-NEXT:  .LBB28_104: # %cond.load103
-; RV32-ZVFHMIN-NEXT:    lh a3, 70(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 36
-; RV32-ZVFHMIN-NEXT:    li a5, 35
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 16
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_42
-; RV32-ZVFHMIN-NEXT:  .LBB28_105: # %cond.load106
-; RV32-ZVFHMIN-NEXT:    lh a3, 72(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 37
-; RV32-ZVFHMIN-NEXT:    li a5, 36
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 32
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_43
-; RV32-ZVFHMIN-NEXT:  .LBB28_106: # %cond.load109
-; RV32-ZVFHMIN-NEXT:    lh a3, 74(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 38
-; RV32-ZVFHMIN-NEXT:    li a5, 37
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 64
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_44
-; RV32-ZVFHMIN-NEXT:  .LBB28_107: # %cond.load112
-; RV32-ZVFHMIN-NEXT:    lh a3, 76(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 39
-; RV32-ZVFHMIN-NEXT:    li a5, 38
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 128
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_45
-; RV32-ZVFHMIN-NEXT:  .LBB28_108: # %cond.load115
-; RV32-ZVFHMIN-NEXT:    lh a3, 78(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 40
-; RV32-ZVFHMIN-NEXT:    li a5, 39
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 256
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_46
-; RV32-ZVFHMIN-NEXT:  .LBB28_109: # %cond.load118
-; RV32-ZVFHMIN-NEXT:    lh a3, 80(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 41
-; RV32-ZVFHMIN-NEXT:    li a5, 40
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 512
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_47
-; RV32-ZVFHMIN-NEXT:  .LBB28_110: # %cond.load121
-; RV32-ZVFHMIN-NEXT:    lh a3, 82(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 42
-; RV32-ZVFHMIN-NEXT:    li a5, 41
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    andi a3, a4, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_48
-; RV32-ZVFHMIN-NEXT:  .LBB28_111: # %cond.load124
-; RV32-ZVFHMIN-NEXT:    lh a3, 84(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 43
-; RV32-ZVFHMIN-NEXT:    li a5, 42
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 20
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_49
-; RV32-ZVFHMIN-NEXT:  .LBB28_112: # %cond.load127
-; RV32-ZVFHMIN-NEXT:    lh a3, 86(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 44
-; RV32-ZVFHMIN-NEXT:    li a5, 43
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 19
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_50
-; RV32-ZVFHMIN-NEXT:  .LBB28_113: # %cond.load130
-; RV32-ZVFHMIN-NEXT:    lh a3, 88(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 45
-; RV32-ZVFHMIN-NEXT:    li a5, 44
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 18
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_51
-; RV32-ZVFHMIN-NEXT:  .LBB28_114: # %cond.load133
-; RV32-ZVFHMIN-NEXT:    lh a3, 90(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 46
-; RV32-ZVFHMIN-NEXT:    li a5, 45
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 17
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_52
-; RV32-ZVFHMIN-NEXT:  .LBB28_115: # %cond.load136
-; RV32-ZVFHMIN-NEXT:    lh a3, 92(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 47
-; RV32-ZVFHMIN-NEXT:    li a5, 46
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 16
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_53
-; RV32-ZVFHMIN-NEXT:  .LBB28_116: # %cond.load139
-; RV32-ZVFHMIN-NEXT:    lh a3, 94(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 48
-; RV32-ZVFHMIN-NEXT:    li a5, 47
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 15
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_54
-; RV32-ZVFHMIN-NEXT:  .LBB28_117: # %cond.load142
-; RV32-ZVFHMIN-NEXT:    lh a3, 96(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 49
-; RV32-ZVFHMIN-NEXT:    li a5, 48
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 14
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_55
-; RV32-ZVFHMIN-NEXT:  .LBB28_118: # %cond.load145
-; RV32-ZVFHMIN-NEXT:    lh a3, 98(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 50
-; RV32-ZVFHMIN-NEXT:    li a5, 49
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 13
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_56
-; RV32-ZVFHMIN-NEXT:  .LBB28_119: # %cond.load148
-; RV32-ZVFHMIN-NEXT:    lh a3, 100(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 51
-; RV32-ZVFHMIN-NEXT:    li a5, 50
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 12
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_57
-; RV32-ZVFHMIN-NEXT:  .LBB28_120: # %cond.load151
-; RV32-ZVFHMIN-NEXT:    lh a3, 102(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 52
-; RV32-ZVFHMIN-NEXT:    li a5, 51
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 11
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_58
-; RV32-ZVFHMIN-NEXT:  .LBB28_121: # %cond.load154
-; RV32-ZVFHMIN-NEXT:    lh a3, 104(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 53
-; RV32-ZVFHMIN-NEXT:    li a5, 52
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 10
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_59
-; RV32-ZVFHMIN-NEXT:  .LBB28_122: # %cond.load157
-; RV32-ZVFHMIN-NEXT:    lh a3, 106(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 54
-; RV32-ZVFHMIN-NEXT:    li a5, 53
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 9
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_60
-; RV32-ZVFHMIN-NEXT:  .LBB28_123: # %cond.load160
-; RV32-ZVFHMIN-NEXT:    lh a3, 108(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 55
-; RV32-ZVFHMIN-NEXT:    li a5, 54
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 8
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_61
-; RV32-ZVFHMIN-NEXT:  .LBB28_124: # %cond.load163
-; RV32-ZVFHMIN-NEXT:    lh a3, 110(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 56
-; RV32-ZVFHMIN-NEXT:    li a5, 55
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 7
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_62
-; RV32-ZVFHMIN-NEXT:  .LBB28_125: # %cond.load166
-; RV32-ZVFHMIN-NEXT:    lh a3, 112(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 57
-; RV32-ZVFHMIN-NEXT:    li a5, 56
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 6
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_63
-; RV32-ZVFHMIN-NEXT:  .LBB28_126: # %cond.load169
-; RV32-ZVFHMIN-NEXT:    lh a3, 114(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 58
-; RV32-ZVFHMIN-NEXT:    li a5, 57
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 5
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_64
-; RV32-ZVFHMIN-NEXT:  .LBB28_127: # %cond.load172
-; RV32-ZVFHMIN-NEXT:    lh a3, 116(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 59
-; RV32-ZVFHMIN-NEXT:    li a5, 58
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 4
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_65
-; RV32-ZVFHMIN-NEXT:  .LBB28_128: # %cond.load175
-; RV32-ZVFHMIN-NEXT:    lh a3, 118(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 60
-; RV32-ZVFHMIN-NEXT:    li a5, 59
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 3
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_66
-; RV32-ZVFHMIN-NEXT:  .LBB28_129: # %cond.load178
-; RV32-ZVFHMIN-NEXT:    lh a3, 120(a0)
-; RV32-ZVFHMIN-NEXT:    li a5, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a5, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 61
-; RV32-ZVFHMIN-NEXT:    li a5, 60
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a5
-; RV32-ZVFHMIN-NEXT:    slli a3, a4, 2
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_67
-; RV32-ZVFHMIN-NEXT:    j .LBB28_68
-; RV32-ZVFHMIN-NEXT:  .LBB28_130:
-; RV32-ZVFHMIN-NEXT:    # implicit-def: $v16m8
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_132
-; RV32-ZVFHMIN-NEXT:  .LBB28_131: # %cond.load193
-; RV32-ZVFHMIN-NEXT:    lh a4, 130(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 1
-; RV32-ZVFHMIN-NEXT:  .LBB28_132: # %else194
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 4
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_198
-; RV32-ZVFHMIN-NEXT:  # %bb.133: # %else197
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 8
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_199
-; RV32-ZVFHMIN-NEXT:  .LBB28_134: # %else200
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 16
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_200
-; RV32-ZVFHMIN-NEXT:  .LBB28_135: # %else203
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 32
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_201
-; RV32-ZVFHMIN-NEXT:  .LBB28_136: # %else206
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 64
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_202
-; RV32-ZVFHMIN-NEXT:  .LBB28_137: # %else209
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 128
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_203
-; RV32-ZVFHMIN-NEXT:  .LBB28_138: # %else212
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 256
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_204
-; RV32-ZVFHMIN-NEXT:  .LBB28_139: # %else215
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 512
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_205
-; RV32-ZVFHMIN-NEXT:  .LBB28_140: # %else218
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a4, .LBB28_206
-; RV32-ZVFHMIN-NEXT:  .LBB28_141: # %else221
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 20
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_207
-; RV32-ZVFHMIN-NEXT:  .LBB28_142: # %else224
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 19
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_208
-; RV32-ZVFHMIN-NEXT:  .LBB28_143: # %else227
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 18
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_209
-; RV32-ZVFHMIN-NEXT:  .LBB28_144: # %else230
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 17
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_210
-; RV32-ZVFHMIN-NEXT:  .LBB28_145: # %else233
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 16
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_211
-; RV32-ZVFHMIN-NEXT:  .LBB28_146: # %else236
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 15
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_212
-; RV32-ZVFHMIN-NEXT:  .LBB28_147: # %else239
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 14
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_213
-; RV32-ZVFHMIN-NEXT:  .LBB28_148: # %else242
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 13
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_214
-; RV32-ZVFHMIN-NEXT:  .LBB28_149: # %else245
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 12
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_215
-; RV32-ZVFHMIN-NEXT:  .LBB28_150: # %else248
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 11
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_216
-; RV32-ZVFHMIN-NEXT:  .LBB28_151: # %else251
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 10
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_217
-; RV32-ZVFHMIN-NEXT:  .LBB28_152: # %else254
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 9
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_218
-; RV32-ZVFHMIN-NEXT:  .LBB28_153: # %else257
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 8
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_219
-; RV32-ZVFHMIN-NEXT:  .LBB28_154: # %else260
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 7
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_220
-; RV32-ZVFHMIN-NEXT:  .LBB28_155: # %else263
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 6
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_221
-; RV32-ZVFHMIN-NEXT:  .LBB28_156: # %else266
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 5
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_222
-; RV32-ZVFHMIN-NEXT:  .LBB28_157: # %else269
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 4
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_223
-; RV32-ZVFHMIN-NEXT:  .LBB28_158: # %else272
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 3
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_224
-; RV32-ZVFHMIN-NEXT:  .LBB28_159: # %else275
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_161
-; RV32-ZVFHMIN-NEXT:  .LBB28_160: # %cond.load277
-; RV32-ZVFHMIN-NEXT:    lh a4, 186(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 29
-; RV32-ZVFHMIN-NEXT:  .LBB28_161: # %else278
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vsrl.vx v24, v24, a1
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_163
-; RV32-ZVFHMIN-NEXT:  # %bb.162: # %cond.load280
-; RV32-ZVFHMIN-NEXT:    lh a1, 188(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a1
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 30
-; RV32-ZVFHMIN-NEXT:  .LBB28_163: # %else281
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.x.s a1, v24
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_225
-; RV32-ZVFHMIN-NEXT:  # %bb.164: # %else284
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_226
-; RV32-ZVFHMIN-NEXT:  .LBB28_165: # %else287
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_227
-; RV32-ZVFHMIN-NEXT:  .LBB28_166: # %else290
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_228
-; RV32-ZVFHMIN-NEXT:  .LBB28_167: # %else293
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_229
-; RV32-ZVFHMIN-NEXT:  .LBB28_168: # %else296
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_230
-; RV32-ZVFHMIN-NEXT:  .LBB28_169: # %else299
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_231
-; RV32-ZVFHMIN-NEXT:  .LBB28_170: # %else302
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_232
-; RV32-ZVFHMIN-NEXT:  .LBB28_171: # %else305
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_233
-; RV32-ZVFHMIN-NEXT:  .LBB28_172: # %else308
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_234
-; RV32-ZVFHMIN-NEXT:  .LBB28_173: # %else311
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_235
-; RV32-ZVFHMIN-NEXT:  .LBB28_174: # %else314
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    bnez a3, .LBB28_236
-; RV32-ZVFHMIN-NEXT:  .LBB28_175: # %else317
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_237
-; RV32-ZVFHMIN-NEXT:  .LBB28_176: # %else320
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_238
-; RV32-ZVFHMIN-NEXT:  .LBB28_177: # %else323
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_239
-; RV32-ZVFHMIN-NEXT:  .LBB28_178: # %else326
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_240
-; RV32-ZVFHMIN-NEXT:  .LBB28_179: # %else329
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_241
-; RV32-ZVFHMIN-NEXT:  .LBB28_180: # %else332
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_242
-; RV32-ZVFHMIN-NEXT:  .LBB28_181: # %else335
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_243
-; RV32-ZVFHMIN-NEXT:  .LBB28_182: # %else338
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_244
-; RV32-ZVFHMIN-NEXT:  .LBB28_183: # %else341
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_245
-; RV32-ZVFHMIN-NEXT:  .LBB28_184: # %else344
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_246
-; RV32-ZVFHMIN-NEXT:  .LBB28_185: # %else347
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_247
-; RV32-ZVFHMIN-NEXT:  .LBB28_186: # %else350
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_248
-; RV32-ZVFHMIN-NEXT:  .LBB28_187: # %else353
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_249
-; RV32-ZVFHMIN-NEXT:  .LBB28_188: # %else356
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_250
-; RV32-ZVFHMIN-NEXT:  .LBB28_189: # %else359
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_251
-; RV32-ZVFHMIN-NEXT:  .LBB28_190: # %else362
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_252
-; RV32-ZVFHMIN-NEXT:  .LBB28_191: # %else365
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_253
-; RV32-ZVFHMIN-NEXT:  .LBB28_192: # %else368
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_254
-; RV32-ZVFHMIN-NEXT:  .LBB28_193: # %else371
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_255
-; RV32-ZVFHMIN-NEXT:  .LBB28_194: # %else374
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bltz a3, .LBB28_256
-; RV32-ZVFHMIN-NEXT:  .LBB28_195: # %else377
-; RV32-ZVFHMIN-NEXT:    bgez a1, .LBB28_197
-; RV32-ZVFHMIN-NEXT:  .LBB28_196: # %cond.load379
-; RV32-ZVFHMIN-NEXT:    lh a0, 254(a0)
-; RV32-ZVFHMIN-NEXT:    li a1, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a0
-; RV32-ZVFHMIN-NEXT:    li a0, 63
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a0
-; RV32-ZVFHMIN-NEXT:  .LBB28_197: # %else380
-; RV32-ZVFHMIN-NEXT:    li a0, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV32-ZVFHMIN-NEXT:    sb a6, 8(sp)
+; RV32-ZVFHMIN-NEXT:    sb a5, 9(sp)
+; RV32-ZVFHMIN-NEXT:    sb a4, 10(sp)
+; RV32-ZVFHMIN-NEXT:    sb a1, 11(sp)
+; RV32-ZVFHMIN-NEXT:    addi a1, sp, 64
+; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV32-ZVFHMIN-NEXT:    vle8.v v8, (a1)
+; RV32-ZVFHMIN-NEXT:    mv a1, sp
+; RV32-ZVFHMIN-NEXT:    vle8.v v12, (a1)
+; RV32-ZVFHMIN-NEXT:    vand.vi v16, v8, 1
+; RV32-ZVFHMIN-NEXT:    vmsne.vi v8, v16, 0
+; RV32-ZVFHMIN-NEXT:    vand.vi v12, v12, 1
+; RV32-ZVFHMIN-NEXT:    vmsne.vi v0, v12, 0
+; RV32-ZVFHMIN-NEXT:    addi a1, a0, 128
+; RV32-ZVFHMIN-NEXT:    vle16.v v16, (a1), v0.t
+; RV32-ZVFHMIN-NEXT:    vmv1r.v v0, v8
+; RV32-ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; RV32-ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; RV32-ZVFHMIN-NEXT:    addi a0, a2, 128
 ; RV32-ZVFHMIN-NEXT:    vse16.v v16, (a0)
@@ -13765,545 +4272,6 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV32-ZVFHMIN-NEXT:    lw s0, 504(sp) # 4-byte Folded Reload
 ; RV32-ZVFHMIN-NEXT:    addi sp, sp, 512
 ; RV32-ZVFHMIN-NEXT:    ret
-; RV32-ZVFHMIN-NEXT:  .LBB28_198: # %cond.load196
-; RV32-ZVFHMIN-NEXT:    lh a4, 132(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 2
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 8
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_134
-; RV32-ZVFHMIN-NEXT:  .LBB28_199: # %cond.load199
-; RV32-ZVFHMIN-NEXT:    lh a4, 134(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 3
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 16
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_135
-; RV32-ZVFHMIN-NEXT:  .LBB28_200: # %cond.load202
-; RV32-ZVFHMIN-NEXT:    lh a4, 136(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 4
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 32
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_136
-; RV32-ZVFHMIN-NEXT:  .LBB28_201: # %cond.load205
-; RV32-ZVFHMIN-NEXT:    lh a4, 138(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 5
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 64
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_137
-; RV32-ZVFHMIN-NEXT:  .LBB28_202: # %cond.load208
-; RV32-ZVFHMIN-NEXT:    lh a4, 140(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 6
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 128
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_138
-; RV32-ZVFHMIN-NEXT:  .LBB28_203: # %cond.load211
-; RV32-ZVFHMIN-NEXT:    lh a4, 142(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v25, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v25, 7
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 256
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_139
-; RV32-ZVFHMIN-NEXT:  .LBB28_204: # %cond.load214
-; RV32-ZVFHMIN-NEXT:    lh a4, 144(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 8
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 512
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_140
-; RV32-ZVFHMIN-NEXT:  .LBB28_205: # %cond.load217
-; RV32-ZVFHMIN-NEXT:    lh a4, 146(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 9
-; RV32-ZVFHMIN-NEXT:    andi a4, a3, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a4, .LBB28_141
-; RV32-ZVFHMIN-NEXT:  .LBB28_206: # %cond.load220
-; RV32-ZVFHMIN-NEXT:    lh a4, 148(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 10
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 20
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_142
-; RV32-ZVFHMIN-NEXT:  .LBB28_207: # %cond.load223
-; RV32-ZVFHMIN-NEXT:    lh a4, 150(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 11
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 19
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_143
-; RV32-ZVFHMIN-NEXT:  .LBB28_208: # %cond.load226
-; RV32-ZVFHMIN-NEXT:    lh a4, 152(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 12
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 18
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_144
-; RV32-ZVFHMIN-NEXT:  .LBB28_209: # %cond.load229
-; RV32-ZVFHMIN-NEXT:    lh a4, 154(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 13
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 17
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_145
-; RV32-ZVFHMIN-NEXT:  .LBB28_210: # %cond.load232
-; RV32-ZVFHMIN-NEXT:    lh a4, 156(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 14
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 16
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_146
-; RV32-ZVFHMIN-NEXT:  .LBB28_211: # %cond.load235
-; RV32-ZVFHMIN-NEXT:    lh a4, 158(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v26, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v26, 15
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 15
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_147
-; RV32-ZVFHMIN-NEXT:  .LBB28_212: # %cond.load238
-; RV32-ZVFHMIN-NEXT:    lh a4, 160(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 16
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 14
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_148
-; RV32-ZVFHMIN-NEXT:  .LBB28_213: # %cond.load241
-; RV32-ZVFHMIN-NEXT:    lh a4, 162(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 17
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 13
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_149
-; RV32-ZVFHMIN-NEXT:  .LBB28_214: # %cond.load244
-; RV32-ZVFHMIN-NEXT:    lh a4, 164(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 18
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 12
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_150
-; RV32-ZVFHMIN-NEXT:  .LBB28_215: # %cond.load247
-; RV32-ZVFHMIN-NEXT:    lh a4, 166(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 19
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 11
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_151
-; RV32-ZVFHMIN-NEXT:  .LBB28_216: # %cond.load250
-; RV32-ZVFHMIN-NEXT:    lh a4, 168(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 20
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 10
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_152
-; RV32-ZVFHMIN-NEXT:  .LBB28_217: # %cond.load253
-; RV32-ZVFHMIN-NEXT:    lh a4, 170(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 21
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 9
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_153
-; RV32-ZVFHMIN-NEXT:  .LBB28_218: # %cond.load256
-; RV32-ZVFHMIN-NEXT:    lh a4, 172(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 22
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 8
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_154
-; RV32-ZVFHMIN-NEXT:  .LBB28_219: # %cond.load259
-; RV32-ZVFHMIN-NEXT:    lh a4, 174(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 23
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 7
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_155
-; RV32-ZVFHMIN-NEXT:  .LBB28_220: # %cond.load262
-; RV32-ZVFHMIN-NEXT:    lh a4, 176(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 24
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 6
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_156
-; RV32-ZVFHMIN-NEXT:  .LBB28_221: # %cond.load265
-; RV32-ZVFHMIN-NEXT:    lh a4, 178(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 25
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 5
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_157
-; RV32-ZVFHMIN-NEXT:  .LBB28_222: # %cond.load268
-; RV32-ZVFHMIN-NEXT:    lh a4, 180(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 26
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 4
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_158
-; RV32-ZVFHMIN-NEXT:  .LBB28_223: # %cond.load271
-; RV32-ZVFHMIN-NEXT:    lh a4, 182(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 27
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 3
-; RV32-ZVFHMIN-NEXT:    bgez a4, .LBB28_159
-; RV32-ZVFHMIN-NEXT:  .LBB28_224: # %cond.load274
-; RV32-ZVFHMIN-NEXT:    lh a4, 184(a0)
-; RV32-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v28, a4
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v28, 28
-; RV32-ZVFHMIN-NEXT:    slli a4, a3, 2
-; RV32-ZVFHMIN-NEXT:    bltz a4, .LBB28_160
-; RV32-ZVFHMIN-NEXT:    j .LBB28_161
-; RV32-ZVFHMIN-NEXT:  .LBB28_225: # %cond.load283
-; RV32-ZVFHMIN-NEXT:    lh a3, 190(a0)
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 31
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_165
-; RV32-ZVFHMIN-NEXT:  .LBB28_226: # %cond.load286
-; RV32-ZVFHMIN-NEXT:    lh a3, 192(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 33
-; RV32-ZVFHMIN-NEXT:    li a4, 32
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_166
-; RV32-ZVFHMIN-NEXT:  .LBB28_227: # %cond.load289
-; RV32-ZVFHMIN-NEXT:    lh a3, 194(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 34
-; RV32-ZVFHMIN-NEXT:    li a4, 33
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_167
-; RV32-ZVFHMIN-NEXT:  .LBB28_228: # %cond.load292
-; RV32-ZVFHMIN-NEXT:    lh a3, 196(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 35
-; RV32-ZVFHMIN-NEXT:    li a4, 34
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_168
-; RV32-ZVFHMIN-NEXT:  .LBB28_229: # %cond.load295
-; RV32-ZVFHMIN-NEXT:    lh a3, 198(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 36
-; RV32-ZVFHMIN-NEXT:    li a4, 35
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_169
-; RV32-ZVFHMIN-NEXT:  .LBB28_230: # %cond.load298
-; RV32-ZVFHMIN-NEXT:    lh a3, 200(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 37
-; RV32-ZVFHMIN-NEXT:    li a4, 36
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_170
-; RV32-ZVFHMIN-NEXT:  .LBB28_231: # %cond.load301
-; RV32-ZVFHMIN-NEXT:    lh a3, 202(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 38
-; RV32-ZVFHMIN-NEXT:    li a4, 37
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_171
-; RV32-ZVFHMIN-NEXT:  .LBB28_232: # %cond.load304
-; RV32-ZVFHMIN-NEXT:    lh a3, 204(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 39
-; RV32-ZVFHMIN-NEXT:    li a4, 38
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_172
-; RV32-ZVFHMIN-NEXT:  .LBB28_233: # %cond.load307
-; RV32-ZVFHMIN-NEXT:    lh a3, 206(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 40
-; RV32-ZVFHMIN-NEXT:    li a4, 39
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_173
-; RV32-ZVFHMIN-NEXT:  .LBB28_234: # %cond.load310
-; RV32-ZVFHMIN-NEXT:    lh a3, 208(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 41
-; RV32-ZVFHMIN-NEXT:    li a4, 40
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_174
-; RV32-ZVFHMIN-NEXT:  .LBB28_235: # %cond.load313
-; RV32-ZVFHMIN-NEXT:    lh a3, 210(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 42
-; RV32-ZVFHMIN-NEXT:    li a4, 41
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV32-ZVFHMIN-NEXT:    beqz a3, .LBB28_175
-; RV32-ZVFHMIN-NEXT:  .LBB28_236: # %cond.load316
-; RV32-ZVFHMIN-NEXT:    lh a3, 212(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 43
-; RV32-ZVFHMIN-NEXT:    li a4, 42
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_176
-; RV32-ZVFHMIN-NEXT:  .LBB28_237: # %cond.load319
-; RV32-ZVFHMIN-NEXT:    lh a3, 214(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 44
-; RV32-ZVFHMIN-NEXT:    li a4, 43
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_177
-; RV32-ZVFHMIN-NEXT:  .LBB28_238: # %cond.load322
-; RV32-ZVFHMIN-NEXT:    lh a3, 216(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 45
-; RV32-ZVFHMIN-NEXT:    li a4, 44
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_178
-; RV32-ZVFHMIN-NEXT:  .LBB28_239: # %cond.load325
-; RV32-ZVFHMIN-NEXT:    lh a3, 218(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 46
-; RV32-ZVFHMIN-NEXT:    li a4, 45
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_179
-; RV32-ZVFHMIN-NEXT:  .LBB28_240: # %cond.load328
-; RV32-ZVFHMIN-NEXT:    lh a3, 220(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 47
-; RV32-ZVFHMIN-NEXT:    li a4, 46
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_180
-; RV32-ZVFHMIN-NEXT:  .LBB28_241: # %cond.load331
-; RV32-ZVFHMIN-NEXT:    lh a3, 222(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 48
-; RV32-ZVFHMIN-NEXT:    li a4, 47
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_181
-; RV32-ZVFHMIN-NEXT:  .LBB28_242: # %cond.load334
-; RV32-ZVFHMIN-NEXT:    lh a3, 224(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 49
-; RV32-ZVFHMIN-NEXT:    li a4, 48
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_182
-; RV32-ZVFHMIN-NEXT:  .LBB28_243: # %cond.load337
-; RV32-ZVFHMIN-NEXT:    lh a3, 226(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 50
-; RV32-ZVFHMIN-NEXT:    li a4, 49
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_183
-; RV32-ZVFHMIN-NEXT:  .LBB28_244: # %cond.load340
-; RV32-ZVFHMIN-NEXT:    lh a3, 228(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 51
-; RV32-ZVFHMIN-NEXT:    li a4, 50
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_184
-; RV32-ZVFHMIN-NEXT:  .LBB28_245: # %cond.load343
-; RV32-ZVFHMIN-NEXT:    lh a3, 230(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 52
-; RV32-ZVFHMIN-NEXT:    li a4, 51
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_185
-; RV32-ZVFHMIN-NEXT:  .LBB28_246: # %cond.load346
-; RV32-ZVFHMIN-NEXT:    lh a3, 232(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 53
-; RV32-ZVFHMIN-NEXT:    li a4, 52
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_186
-; RV32-ZVFHMIN-NEXT:  .LBB28_247: # %cond.load349
-; RV32-ZVFHMIN-NEXT:    lh a3, 234(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 54
-; RV32-ZVFHMIN-NEXT:    li a4, 53
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_187
-; RV32-ZVFHMIN-NEXT:  .LBB28_248: # %cond.load352
-; RV32-ZVFHMIN-NEXT:    lh a3, 236(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 55
-; RV32-ZVFHMIN-NEXT:    li a4, 54
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_188
-; RV32-ZVFHMIN-NEXT:  .LBB28_249: # %cond.load355
-; RV32-ZVFHMIN-NEXT:    lh a3, 238(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 56
-; RV32-ZVFHMIN-NEXT:    li a4, 55
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_189
-; RV32-ZVFHMIN-NEXT:  .LBB28_250: # %cond.load358
-; RV32-ZVFHMIN-NEXT:    lh a3, 240(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 57
-; RV32-ZVFHMIN-NEXT:    li a4, 56
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_190
-; RV32-ZVFHMIN-NEXT:  .LBB28_251: # %cond.load361
-; RV32-ZVFHMIN-NEXT:    lh a3, 242(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 58
-; RV32-ZVFHMIN-NEXT:    li a4, 57
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_191
-; RV32-ZVFHMIN-NEXT:  .LBB28_252: # %cond.load364
-; RV32-ZVFHMIN-NEXT:    lh a3, 244(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 59
-; RV32-ZVFHMIN-NEXT:    li a4, 58
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_192
-; RV32-ZVFHMIN-NEXT:  .LBB28_253: # %cond.load367
-; RV32-ZVFHMIN-NEXT:    lh a3, 246(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 60
-; RV32-ZVFHMIN-NEXT:    li a4, 59
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_193
-; RV32-ZVFHMIN-NEXT:  .LBB28_254: # %cond.load370
-; RV32-ZVFHMIN-NEXT:    lh a3, 248(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 61
-; RV32-ZVFHMIN-NEXT:    li a4, 60
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_194
-; RV32-ZVFHMIN-NEXT:  .LBB28_255: # %cond.load373
-; RV32-ZVFHMIN-NEXT:    lh a3, 250(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 62
-; RV32-ZVFHMIN-NEXT:    li a4, 61
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV32-ZVFHMIN-NEXT:    bgez a3, .LBB28_195
-; RV32-ZVFHMIN-NEXT:  .LBB28_256: # %cond.load376
-; RV32-ZVFHMIN-NEXT:    lh a3, 252(a0)
-; RV32-ZVFHMIN-NEXT:    li a4, 64
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV32-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV32-ZVFHMIN-NEXT:    li a3, 63
-; RV32-ZVFHMIN-NEXT:    li a4, 62
-; RV32-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV32-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV32-ZVFHMIN-NEXT:    bltz a1, .LBB28_196
-; RV32-ZVFHMIN-NEXT:    j .LBB28_197
 ;
 ; RV64-ZVFHMIN-LABEL: masked_load_v128f16:
 ; RV64-ZVFHMIN:       # %bb.0:
@@ -14312,8 +4280,8 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    sd s0, 496(sp) # 8-byte Folded Spill
 ; RV64-ZVFHMIN-NEXT:    addi s0, sp, 512
 ; RV64-ZVFHMIN-NEXT:    andi sp, sp, -128
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
+; RV64-ZVFHMIN-NEXT:    li a3, 64
+; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, ta, ma
 ; RV64-ZVFHMIN-NEXT:    vle16.v v16, (a1)
 ; RV64-ZVFHMIN-NEXT:    addi a1, a1, 128
 ; RV64-ZVFHMIN-NEXT:    vle16.v v8, (a1)
@@ -14326,272 +4294,182 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    fmv.w.x fa5, zero
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 32(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 96(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 318(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 31(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 95(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 316(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 30(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 94(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 314(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 29(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 93(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 312(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 28(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 92(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 310(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 27(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 91(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 308(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 26(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 90(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 306(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 25(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 89(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 304(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 24(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 88(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 302(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 23(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 87(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 300(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 22(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 86(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 298(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 21(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 85(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 296(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 20(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 84(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 294(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 19(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 83(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 292(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 18(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 82(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 290(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 17(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 81(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 288(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v16
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v16
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a3, 0(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 16(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 192(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 96(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 190(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 95(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 188(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 94(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 186(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 93(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 184(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 92(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 182(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 91(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 180(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 90(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 178(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 89(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 176(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 88(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 174(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 87(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 172(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 86(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 170(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 85(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 168(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 84(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 166(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 83(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 164(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 82(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 162(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 81(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 160(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v8
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a3, 64(sp)
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a4, 64(sp)
 ; RV64-ZVFHMIN-NEXT:    sb a1, 80(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 354(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 49(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 113(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 352(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 48(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 112(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 350(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 47(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 111(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 348(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 46(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 110(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 346(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 45(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 109(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 344(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 44(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 108(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 342(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 43(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 107(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 340(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 42(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 106(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 338(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 41(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 105(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 336(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 40(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 104(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 334(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 39(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 103(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 332(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 38(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 102(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 330(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 37(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 101(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 328(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 36(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 100(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 326(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 35(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 99(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 324(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 34(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 98(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 322(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 7
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 6
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14602,20 +4480,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 5(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 6(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 7(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 33(sp)
+; RV64-ZVFHMIN-NEXT:    sb a6, 69(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 70(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 71(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 97(sp)
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 4
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 3
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 2
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14626,207 +4504,80 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 1(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 2(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 3(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 4(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 226(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 113(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 224(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 112(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 222(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 111(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 220(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 110(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 218(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 109(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 216(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 108(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 214(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 107(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 212(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 106(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 210(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 105(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 208(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 104(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 206(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 103(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 204(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 102(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 202(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 101(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 200(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 100(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 198(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 99(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 196(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 98(sp)
-; RV64-ZVFHMIN-NEXT:    lh a1, 194(sp)
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 7
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 6
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 5
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a6, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 69(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 70(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 71(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 97(sp)
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 4
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 3
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 2
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 1
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a6, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
-; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    sb a6, 65(sp)
 ; RV64-ZVFHMIN-NEXT:    sb a5, 66(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 67(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 67(sp)
 ; RV64-ZVFHMIN-NEXT:    sb a1, 68(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 382(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 63(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 127(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 380(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 62(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 126(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 378(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 61(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 125(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 376(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 60(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 124(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 374(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 59(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 123(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 372(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 58(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 122(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 370(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 57(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 121(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 368(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 56(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 120(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 366(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 55(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 119(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 364(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 54(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 118(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 362(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 53(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 117(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 360(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 52(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 116(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 358(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 51(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 115(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 356(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 50(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 114(sp)
 ; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 15
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
@@ -14834,10 +4585,10 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 14
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 13
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14848,20 +4599,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 12(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 13(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 14(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 15(sp)
+; RV64-ZVFHMIN-NEXT:    sb a6, 76(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 77(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 78(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 79(sp)
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 11
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 10
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v16, 9
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14872,90 +4623,309 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 8(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 9(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 10(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 11(sp)
+; RV64-ZVFHMIN-NEXT:    sb a6, 72(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 73(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 74(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 75(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 192(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 32(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 190(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 31(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 188(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 30(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 186(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 29(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 184(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 28(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 182(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 27(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 180(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 26(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 178(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 25(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 176(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 24(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 174(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 23(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 172(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 22(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 170(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 21(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 168(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 20(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 166(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 19(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 164(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 18(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 162(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 17(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 160(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v8
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a4, 0(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 16(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 226(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 49(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 224(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 48(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 222(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 47(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 220(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 46(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 218(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 45(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 216(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 44(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 214(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 43(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 212(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 42(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 210(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 41(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 208(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 40(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 206(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 39(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 204(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 38(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 202(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 37(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 200(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 36(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 198(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 35(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 196(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a1, 34(sp)
+; RV64-ZVFHMIN-NEXT:    lh a1, 194(sp)
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m1, ta, ma
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 7
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 6
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 5
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a6, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a6, 5(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 6(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 7(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 33(sp)
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 4
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 2
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a5, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 1
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a6, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
+; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
+; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    sb a6, 1(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 2(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 3(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 4(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 254(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 127(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 63(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 252(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 126(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 62(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 250(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 125(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 61(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 248(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 124(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 60(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 246(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 123(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 59(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 244(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 122(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 58(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 242(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 121(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 57(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 240(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 120(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 56(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 238(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 119(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 55(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 236(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 118(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 54(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 234(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 117(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 53(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 232(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 116(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 52(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 230(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 115(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 51(sp)
 ; RV64-ZVFHMIN-NEXT:    lh a1, 228(sp)
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a1, 114(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 50(sp)
+; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e16, m2, ta, ma
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 15
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 14
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 13
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14966,20 +4936,20 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 76(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 77(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 78(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 79(sp)
+; RV64-ZVFHMIN-NEXT:    sb a6, 12(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 13(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 14(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 15(sp)
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 11
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a1
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a1, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 10
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v10
-; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a3
+; RV64-ZVFHMIN-NEXT:    vmv.x.s a4, v10
+; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a4
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
-; RV64-ZVFHMIN-NEXT:    feq.s a3, fa4, fa5
+; RV64-ZVFHMIN-NEXT:    feq.s a4, fa4, fa5
 ; RV64-ZVFHMIN-NEXT:    vslidedown.vi v10, v8, 9
 ; RV64-ZVFHMIN-NEXT:    vmv.x.s a5, v10
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a5
@@ -14990,1017 +4960,23 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    fmv.h.x fa4, a6
 ; RV64-ZVFHMIN-NEXT:    fcvt.s.h fa4, fa4
 ; RV64-ZVFHMIN-NEXT:    feq.s a6, fa4, fa5
-; RV64-ZVFHMIN-NEXT:    sb a6, 72(sp)
-; RV64-ZVFHMIN-NEXT:    sb a5, 73(sp)
-; RV64-ZVFHMIN-NEXT:    sb a3, 74(sp)
-; RV64-ZVFHMIN-NEXT:    sb a1, 75(sp)
-; RV64-ZVFHMIN-NEXT:    li a1, 128
-; RV64-ZVFHMIN-NEXT:    mv a3, sp
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vle8.v v8, (a3)
-; RV64-ZVFHMIN-NEXT:    vand.vi v8, v8, 1
-; RV64-ZVFHMIN-NEXT:    vmsne.vi v16, v8, 0
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a3, v16
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 1
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_2
-; RV64-ZVFHMIN-NEXT:  # %bb.1: # %cond.load
-; RV64-ZVFHMIN-NEXT:    lh a1, 0(a0)
-; RV64-ZVFHMIN-NEXT:    fmv.x.h a5, fa5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.v.x v8, a5
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, zero, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v8, a1
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_3
-; RV64-ZVFHMIN-NEXT:    j .LBB28_4
-; RV64-ZVFHMIN-NEXT:  .LBB28_2:
-; RV64-ZVFHMIN-NEXT:    # implicit-def: $v8m8
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 2
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_4
-; RV64-ZVFHMIN-NEXT:  .LBB28_3: # %cond.load1
-; RV64-ZVFHMIN-NEXT:    lh a1, 2(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 1
-; RV64-ZVFHMIN-NEXT:  .LBB28_4: # %else2
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 4
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_71
-; RV64-ZVFHMIN-NEXT:  # %bb.5: # %else5
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_72
-; RV64-ZVFHMIN-NEXT:  .LBB28_6: # %else8
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_73
-; RV64-ZVFHMIN-NEXT:  .LBB28_7: # %else11
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_74
-; RV64-ZVFHMIN-NEXT:  .LBB28_8: # %else14
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_75
-; RV64-ZVFHMIN-NEXT:  .LBB28_9: # %else17
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_76
-; RV64-ZVFHMIN-NEXT:  .LBB28_10: # %else20
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_77
-; RV64-ZVFHMIN-NEXT:  .LBB28_11: # %else23
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_78
-; RV64-ZVFHMIN-NEXT:  .LBB28_12: # %else26
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV64-ZVFHMIN-NEXT:    bnez a1, .LBB28_79
-; RV64-ZVFHMIN-NEXT:  .LBB28_13: # %else29
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 52
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_80
-; RV64-ZVFHMIN-NEXT:  .LBB28_14: # %else32
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 51
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_81
-; RV64-ZVFHMIN-NEXT:  .LBB28_15: # %else35
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 50
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_82
-; RV64-ZVFHMIN-NEXT:  .LBB28_16: # %else38
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 49
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_83
-; RV64-ZVFHMIN-NEXT:  .LBB28_17: # %else41
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 48
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_84
-; RV64-ZVFHMIN-NEXT:  .LBB28_18: # %else44
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 47
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_85
-; RV64-ZVFHMIN-NEXT:  .LBB28_19: # %else47
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 46
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_86
-; RV64-ZVFHMIN-NEXT:  .LBB28_20: # %else50
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 45
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_87
-; RV64-ZVFHMIN-NEXT:  .LBB28_21: # %else53
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 44
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_88
-; RV64-ZVFHMIN-NEXT:  .LBB28_22: # %else56
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 43
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_89
-; RV64-ZVFHMIN-NEXT:  .LBB28_23: # %else59
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 42
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_90
-; RV64-ZVFHMIN-NEXT:  .LBB28_24: # %else62
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 41
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_91
-; RV64-ZVFHMIN-NEXT:  .LBB28_25: # %else65
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 40
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_92
-; RV64-ZVFHMIN-NEXT:  .LBB28_26: # %else68
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 39
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_93
-; RV64-ZVFHMIN-NEXT:  .LBB28_27: # %else71
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 38
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_94
-; RV64-ZVFHMIN-NEXT:  .LBB28_28: # %else74
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 37
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_95
-; RV64-ZVFHMIN-NEXT:  .LBB28_29: # %else77
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 36
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_96
-; RV64-ZVFHMIN-NEXT:  .LBB28_30: # %else80
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 35
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_97
-; RV64-ZVFHMIN-NEXT:  .LBB28_31: # %else83
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 34
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_98
-; RV64-ZVFHMIN-NEXT:  .LBB28_32: # %else86
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 33
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_99
-; RV64-ZVFHMIN-NEXT:  .LBB28_33: # %else89
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 32
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_100
-; RV64-ZVFHMIN-NEXT:  .LBB28_34: # %else92
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 31
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_101
-; RV64-ZVFHMIN-NEXT:  .LBB28_35: # %else95
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 30
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_102
-; RV64-ZVFHMIN-NEXT:  .LBB28_36: # %else98
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 29
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_103
-; RV64-ZVFHMIN-NEXT:  .LBB28_37: # %else101
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 28
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_104
-; RV64-ZVFHMIN-NEXT:  .LBB28_38: # %else104
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 27
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_105
-; RV64-ZVFHMIN-NEXT:  .LBB28_39: # %else107
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 26
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_106
-; RV64-ZVFHMIN-NEXT:  .LBB28_40: # %else110
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 25
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_107
-; RV64-ZVFHMIN-NEXT:  .LBB28_41: # %else113
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 24
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_108
-; RV64-ZVFHMIN-NEXT:  .LBB28_42: # %else116
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 23
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_109
-; RV64-ZVFHMIN-NEXT:  .LBB28_43: # %else119
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 22
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_110
-; RV64-ZVFHMIN-NEXT:  .LBB28_44: # %else122
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 21
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_111
-; RV64-ZVFHMIN-NEXT:  .LBB28_45: # %else125
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_112
-; RV64-ZVFHMIN-NEXT:  .LBB28_46: # %else128
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_113
-; RV64-ZVFHMIN-NEXT:  .LBB28_47: # %else131
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_114
-; RV64-ZVFHMIN-NEXT:  .LBB28_48: # %else134
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_115
-; RV64-ZVFHMIN-NEXT:  .LBB28_49: # %else137
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_116
-; RV64-ZVFHMIN-NEXT:  .LBB28_50: # %else140
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_117
-; RV64-ZVFHMIN-NEXT:  .LBB28_51: # %else143
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_118
-; RV64-ZVFHMIN-NEXT:  .LBB28_52: # %else146
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_119
-; RV64-ZVFHMIN-NEXT:  .LBB28_53: # %else149
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_120
-; RV64-ZVFHMIN-NEXT:  .LBB28_54: # %else152
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_121
-; RV64-ZVFHMIN-NEXT:  .LBB28_55: # %else155
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_122
-; RV64-ZVFHMIN-NEXT:  .LBB28_56: # %else158
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_123
-; RV64-ZVFHMIN-NEXT:  .LBB28_57: # %else161
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_124
-; RV64-ZVFHMIN-NEXT:  .LBB28_58: # %else164
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_125
-; RV64-ZVFHMIN-NEXT:  .LBB28_59: # %else167
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_126
-; RV64-ZVFHMIN-NEXT:  .LBB28_60: # %else170
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_127
-; RV64-ZVFHMIN-NEXT:  .LBB28_61: # %else173
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_128
-; RV64-ZVFHMIN-NEXT:  .LBB28_62: # %else176
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_129
-; RV64-ZVFHMIN-NEXT:  .LBB28_63: # %else179
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 2
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_65
-; RV64-ZVFHMIN-NEXT:  .LBB28_64: # %cond.load181
-; RV64-ZVFHMIN-NEXT:    lh a1, 122(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 62
-; RV64-ZVFHMIN-NEXT:    li a4, 61
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:  .LBB28_65: # %else182
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 1
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vslidedown.vi v16, v16, 1
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_67
-; RV64-ZVFHMIN-NEXT:  # %bb.66: # %cond.load184
-; RV64-ZVFHMIN-NEXT:    lh a1, 124(a0)
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 63
-; RV64-ZVFHMIN-NEXT:    li a4, 62
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:  .LBB28_67: # %else185
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.x.s a1, v16
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_69
-; RV64-ZVFHMIN-NEXT:  # %bb.68: # %cond.load187
-; RV64-ZVFHMIN-NEXT:    lh a3, 126(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 63
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v16, a3
-; RV64-ZVFHMIN-NEXT:  .LBB28_69: # %else188
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_130
-; RV64-ZVFHMIN-NEXT:  # %bb.70: # %cond.load190
-; RV64-ZVFHMIN-NEXT:    lh a3, 128(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v16, a3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_131
-; RV64-ZVFHMIN-NEXT:    j .LBB28_132
-; RV64-ZVFHMIN-NEXT:  .LBB28_71: # %cond.load4
-; RV64-ZVFHMIN-NEXT:    lh a1, 4(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 2
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 8
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_6
-; RV64-ZVFHMIN-NEXT:  .LBB28_72: # %cond.load7
-; RV64-ZVFHMIN-NEXT:    lh a1, 6(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 3
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 16
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_7
-; RV64-ZVFHMIN-NEXT:  .LBB28_73: # %cond.load10
-; RV64-ZVFHMIN-NEXT:    lh a1, 8(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 4
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 32
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_8
-; RV64-ZVFHMIN-NEXT:  .LBB28_74: # %cond.load13
-; RV64-ZVFHMIN-NEXT:    lh a1, 10(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 5
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 64
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_9
-; RV64-ZVFHMIN-NEXT:  .LBB28_75: # %cond.load16
-; RV64-ZVFHMIN-NEXT:    lh a1, 12(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 6
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 128
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_10
-; RV64-ZVFHMIN-NEXT:  .LBB28_76: # %cond.load19
-; RV64-ZVFHMIN-NEXT:    lh a1, 14(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v17, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v17, 7
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 256
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_11
-; RV64-ZVFHMIN-NEXT:  .LBB28_77: # %cond.load22
-; RV64-ZVFHMIN-NEXT:    lh a1, 16(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 8
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 512
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_12
-; RV64-ZVFHMIN-NEXT:  .LBB28_78: # %cond.load25
-; RV64-ZVFHMIN-NEXT:    lh a1, 18(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 9
-; RV64-ZVFHMIN-NEXT:    andi a1, a3, 1024
-; RV64-ZVFHMIN-NEXT:    beqz a1, .LBB28_13
-; RV64-ZVFHMIN-NEXT:  .LBB28_79: # %cond.load28
-; RV64-ZVFHMIN-NEXT:    lh a1, 20(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 10
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 52
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_14
-; RV64-ZVFHMIN-NEXT:  .LBB28_80: # %cond.load31
-; RV64-ZVFHMIN-NEXT:    lh a1, 22(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 11
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 51
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_15
-; RV64-ZVFHMIN-NEXT:  .LBB28_81: # %cond.load34
-; RV64-ZVFHMIN-NEXT:    lh a1, 24(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 12
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 50
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_16
-; RV64-ZVFHMIN-NEXT:  .LBB28_82: # %cond.load37
-; RV64-ZVFHMIN-NEXT:    lh a1, 26(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 13
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 49
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_17
-; RV64-ZVFHMIN-NEXT:  .LBB28_83: # %cond.load40
-; RV64-ZVFHMIN-NEXT:    lh a1, 28(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 14
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 48
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_18
-; RV64-ZVFHMIN-NEXT:  .LBB28_84: # %cond.load43
-; RV64-ZVFHMIN-NEXT:    lh a1, 30(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v18, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v18, 15
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 47
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_19
-; RV64-ZVFHMIN-NEXT:  .LBB28_85: # %cond.load46
-; RV64-ZVFHMIN-NEXT:    lh a1, 32(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 16
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 46
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_20
-; RV64-ZVFHMIN-NEXT:  .LBB28_86: # %cond.load49
-; RV64-ZVFHMIN-NEXT:    lh a1, 34(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 17
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 45
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_21
-; RV64-ZVFHMIN-NEXT:  .LBB28_87: # %cond.load52
-; RV64-ZVFHMIN-NEXT:    lh a1, 36(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 18
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 44
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_22
-; RV64-ZVFHMIN-NEXT:  .LBB28_88: # %cond.load55
-; RV64-ZVFHMIN-NEXT:    lh a1, 38(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 19
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 43
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_23
-; RV64-ZVFHMIN-NEXT:  .LBB28_89: # %cond.load58
-; RV64-ZVFHMIN-NEXT:    lh a1, 40(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 20
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 42
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_24
-; RV64-ZVFHMIN-NEXT:  .LBB28_90: # %cond.load61
-; RV64-ZVFHMIN-NEXT:    lh a1, 42(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 21
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 41
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_25
-; RV64-ZVFHMIN-NEXT:  .LBB28_91: # %cond.load64
-; RV64-ZVFHMIN-NEXT:    lh a1, 44(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 22
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 40
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_26
-; RV64-ZVFHMIN-NEXT:  .LBB28_92: # %cond.load67
-; RV64-ZVFHMIN-NEXT:    lh a1, 46(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 23
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 39
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_27
-; RV64-ZVFHMIN-NEXT:  .LBB28_93: # %cond.load70
-; RV64-ZVFHMIN-NEXT:    lh a1, 48(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 38
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_28
-; RV64-ZVFHMIN-NEXT:  .LBB28_94: # %cond.load73
-; RV64-ZVFHMIN-NEXT:    lh a1, 50(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 25
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 37
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_29
-; RV64-ZVFHMIN-NEXT:  .LBB28_95: # %cond.load76
-; RV64-ZVFHMIN-NEXT:    lh a1, 52(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 26
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 36
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_30
-; RV64-ZVFHMIN-NEXT:  .LBB28_96: # %cond.load79
-; RV64-ZVFHMIN-NEXT:    lh a1, 54(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 27
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 35
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_31
-; RV64-ZVFHMIN-NEXT:  .LBB28_97: # %cond.load82
-; RV64-ZVFHMIN-NEXT:    lh a1, 56(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 28
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 34
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_32
-; RV64-ZVFHMIN-NEXT:  .LBB28_98: # %cond.load85
-; RV64-ZVFHMIN-NEXT:    lh a1, 58(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 29
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 33
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_33
-; RV64-ZVFHMIN-NEXT:  .LBB28_99: # %cond.load88
-; RV64-ZVFHMIN-NEXT:    lh a1, 60(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 30
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 32
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_34
-; RV64-ZVFHMIN-NEXT:  .LBB28_100: # %cond.load91
-; RV64-ZVFHMIN-NEXT:    lh a1, 62(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v20, a1
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    li a1, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v8, v20, 31
-; RV64-ZVFHMIN-NEXT:    vmv4r.v v24, v8
-; RV64-ZVFHMIN-NEXT:    vmv8r.v v8, v24
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 31
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_35
-; RV64-ZVFHMIN-NEXT:  .LBB28_101: # %cond.load94
-; RV64-ZVFHMIN-NEXT:    lh a1, 64(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 33
-; RV64-ZVFHMIN-NEXT:    li a4, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 30
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_36
-; RV64-ZVFHMIN-NEXT:  .LBB28_102: # %cond.load97
-; RV64-ZVFHMIN-NEXT:    lh a1, 66(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 34
-; RV64-ZVFHMIN-NEXT:    li a4, 33
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 29
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_37
-; RV64-ZVFHMIN-NEXT:  .LBB28_103: # %cond.load100
-; RV64-ZVFHMIN-NEXT:    lh a1, 68(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 35
-; RV64-ZVFHMIN-NEXT:    li a4, 34
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 28
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_38
-; RV64-ZVFHMIN-NEXT:  .LBB28_104: # %cond.load103
-; RV64-ZVFHMIN-NEXT:    lh a1, 70(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 36
-; RV64-ZVFHMIN-NEXT:    li a4, 35
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 27
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_39
-; RV64-ZVFHMIN-NEXT:  .LBB28_105: # %cond.load106
-; RV64-ZVFHMIN-NEXT:    lh a1, 72(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 37
-; RV64-ZVFHMIN-NEXT:    li a4, 36
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 26
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_40
-; RV64-ZVFHMIN-NEXT:  .LBB28_106: # %cond.load109
-; RV64-ZVFHMIN-NEXT:    lh a1, 74(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 38
-; RV64-ZVFHMIN-NEXT:    li a4, 37
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 25
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_41
-; RV64-ZVFHMIN-NEXT:  .LBB28_107: # %cond.load112
-; RV64-ZVFHMIN-NEXT:    lh a1, 76(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 39
-; RV64-ZVFHMIN-NEXT:    li a4, 38
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 24
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_42
-; RV64-ZVFHMIN-NEXT:  .LBB28_108: # %cond.load115
-; RV64-ZVFHMIN-NEXT:    lh a1, 78(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 40
-; RV64-ZVFHMIN-NEXT:    li a4, 39
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 23
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_43
-; RV64-ZVFHMIN-NEXT:  .LBB28_109: # %cond.load118
-; RV64-ZVFHMIN-NEXT:    lh a1, 80(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 41
-; RV64-ZVFHMIN-NEXT:    li a4, 40
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 22
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_44
-; RV64-ZVFHMIN-NEXT:  .LBB28_110: # %cond.load121
-; RV64-ZVFHMIN-NEXT:    lh a1, 82(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 42
-; RV64-ZVFHMIN-NEXT:    li a4, 41
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 21
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_45
-; RV64-ZVFHMIN-NEXT:  .LBB28_111: # %cond.load124
-; RV64-ZVFHMIN-NEXT:    lh a1, 84(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 43
-; RV64-ZVFHMIN-NEXT:    li a4, 42
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 20
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_46
-; RV64-ZVFHMIN-NEXT:  .LBB28_112: # %cond.load127
-; RV64-ZVFHMIN-NEXT:    lh a1, 86(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 44
-; RV64-ZVFHMIN-NEXT:    li a4, 43
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 19
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_47
-; RV64-ZVFHMIN-NEXT:  .LBB28_113: # %cond.load130
-; RV64-ZVFHMIN-NEXT:    lh a1, 88(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 45
-; RV64-ZVFHMIN-NEXT:    li a4, 44
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 18
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_48
-; RV64-ZVFHMIN-NEXT:  .LBB28_114: # %cond.load133
-; RV64-ZVFHMIN-NEXT:    lh a1, 90(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 46
-; RV64-ZVFHMIN-NEXT:    li a4, 45
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 17
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_49
-; RV64-ZVFHMIN-NEXT:  .LBB28_115: # %cond.load136
-; RV64-ZVFHMIN-NEXT:    lh a1, 92(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 47
-; RV64-ZVFHMIN-NEXT:    li a4, 46
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 16
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_50
-; RV64-ZVFHMIN-NEXT:  .LBB28_116: # %cond.load139
-; RV64-ZVFHMIN-NEXT:    lh a1, 94(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 48
-; RV64-ZVFHMIN-NEXT:    li a4, 47
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 15
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_51
-; RV64-ZVFHMIN-NEXT:  .LBB28_117: # %cond.load142
-; RV64-ZVFHMIN-NEXT:    lh a1, 96(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 49
-; RV64-ZVFHMIN-NEXT:    li a4, 48
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 14
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_52
-; RV64-ZVFHMIN-NEXT:  .LBB28_118: # %cond.load145
-; RV64-ZVFHMIN-NEXT:    lh a1, 98(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 50
-; RV64-ZVFHMIN-NEXT:    li a4, 49
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 13
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_53
-; RV64-ZVFHMIN-NEXT:  .LBB28_119: # %cond.load148
-; RV64-ZVFHMIN-NEXT:    lh a1, 100(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 51
-; RV64-ZVFHMIN-NEXT:    li a4, 50
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 12
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_54
-; RV64-ZVFHMIN-NEXT:  .LBB28_120: # %cond.load151
-; RV64-ZVFHMIN-NEXT:    lh a1, 102(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 52
-; RV64-ZVFHMIN-NEXT:    li a4, 51
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 11
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_55
-; RV64-ZVFHMIN-NEXT:  .LBB28_121: # %cond.load154
-; RV64-ZVFHMIN-NEXT:    lh a1, 104(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 53
-; RV64-ZVFHMIN-NEXT:    li a4, 52
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 10
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_56
-; RV64-ZVFHMIN-NEXT:  .LBB28_122: # %cond.load157
-; RV64-ZVFHMIN-NEXT:    lh a1, 106(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 54
-; RV64-ZVFHMIN-NEXT:    li a4, 53
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 9
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_57
-; RV64-ZVFHMIN-NEXT:  .LBB28_123: # %cond.load160
-; RV64-ZVFHMIN-NEXT:    lh a1, 108(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 55
-; RV64-ZVFHMIN-NEXT:    li a4, 54
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 8
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_58
-; RV64-ZVFHMIN-NEXT:  .LBB28_124: # %cond.load163
-; RV64-ZVFHMIN-NEXT:    lh a1, 110(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 56
-; RV64-ZVFHMIN-NEXT:    li a4, 55
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 7
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_59
-; RV64-ZVFHMIN-NEXT:  .LBB28_125: # %cond.load166
-; RV64-ZVFHMIN-NEXT:    lh a1, 112(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 57
-; RV64-ZVFHMIN-NEXT:    li a4, 56
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 6
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_60
-; RV64-ZVFHMIN-NEXT:  .LBB28_126: # %cond.load169
-; RV64-ZVFHMIN-NEXT:    lh a1, 114(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 58
-; RV64-ZVFHMIN-NEXT:    li a4, 57
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 5
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_61
-; RV64-ZVFHMIN-NEXT:  .LBB28_127: # %cond.load172
-; RV64-ZVFHMIN-NEXT:    lh a1, 116(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 59
-; RV64-ZVFHMIN-NEXT:    li a4, 58
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 4
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_62
-; RV64-ZVFHMIN-NEXT:  .LBB28_128: # %cond.load175
-; RV64-ZVFHMIN-NEXT:    lh a1, 118(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 60
-; RV64-ZVFHMIN-NEXT:    li a4, 59
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 3
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_63
-; RV64-ZVFHMIN-NEXT:  .LBB28_129: # %cond.load178
-; RV64-ZVFHMIN-NEXT:    lh a1, 120(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a1
-; RV64-ZVFHMIN-NEXT:    li a1, 61
-; RV64-ZVFHMIN-NEXT:    li a4, 60
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v8, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a1, a3, 2
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_64
-; RV64-ZVFHMIN-NEXT:    j .LBB28_65
-; RV64-ZVFHMIN-NEXT:  .LBB28_130:
-; RV64-ZVFHMIN-NEXT:    # implicit-def: $v16m8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_132
-; RV64-ZVFHMIN-NEXT:  .LBB28_131: # %cond.load193
-; RV64-ZVFHMIN-NEXT:    lh a3, 130(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 2, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 1
-; RV64-ZVFHMIN-NEXT:  .LBB28_132: # %else194
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_196
-; RV64-ZVFHMIN-NEXT:  # %bb.133: # %else197
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_197
-; RV64-ZVFHMIN-NEXT:  .LBB28_134: # %else200
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_198
-; RV64-ZVFHMIN-NEXT:  .LBB28_135: # %else203
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_199
-; RV64-ZVFHMIN-NEXT:  .LBB28_136: # %else206
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_200
-; RV64-ZVFHMIN-NEXT:  .LBB28_137: # %else209
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_201
-; RV64-ZVFHMIN-NEXT:  .LBB28_138: # %else212
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_202
-; RV64-ZVFHMIN-NEXT:  .LBB28_139: # %else215
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_203
-; RV64-ZVFHMIN-NEXT:  .LBB28_140: # %else218
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    bnez a3, .LBB28_204
-; RV64-ZVFHMIN-NEXT:  .LBB28_141: # %else221
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_205
-; RV64-ZVFHMIN-NEXT:  .LBB28_142: # %else224
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_206
-; RV64-ZVFHMIN-NEXT:  .LBB28_143: # %else227
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_207
-; RV64-ZVFHMIN-NEXT:  .LBB28_144: # %else230
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_208
-; RV64-ZVFHMIN-NEXT:  .LBB28_145: # %else233
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_209
-; RV64-ZVFHMIN-NEXT:  .LBB28_146: # %else236
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_210
-; RV64-ZVFHMIN-NEXT:  .LBB28_147: # %else239
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_211
-; RV64-ZVFHMIN-NEXT:  .LBB28_148: # %else242
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_212
-; RV64-ZVFHMIN-NEXT:  .LBB28_149: # %else245
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_213
-; RV64-ZVFHMIN-NEXT:  .LBB28_150: # %else248
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_214
-; RV64-ZVFHMIN-NEXT:  .LBB28_151: # %else251
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_215
-; RV64-ZVFHMIN-NEXT:  .LBB28_152: # %else254
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_216
-; RV64-ZVFHMIN-NEXT:  .LBB28_153: # %else257
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_217
-; RV64-ZVFHMIN-NEXT:  .LBB28_154: # %else260
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_218
-; RV64-ZVFHMIN-NEXT:  .LBB28_155: # %else263
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_219
-; RV64-ZVFHMIN-NEXT:  .LBB28_156: # %else266
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_220
-; RV64-ZVFHMIN-NEXT:  .LBB28_157: # %else269
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_221
-; RV64-ZVFHMIN-NEXT:  .LBB28_158: # %else272
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_222
-; RV64-ZVFHMIN-NEXT:  .LBB28_159: # %else275
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_223
-; RV64-ZVFHMIN-NEXT:  .LBB28_160: # %else278
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_224
-; RV64-ZVFHMIN-NEXT:  .LBB28_161: # %else281
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_225
-; RV64-ZVFHMIN-NEXT:  .LBB28_162: # %else284
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 31
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_226
-; RV64-ZVFHMIN-NEXT:  .LBB28_163: # %else287
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 30
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_227
-; RV64-ZVFHMIN-NEXT:  .LBB28_164: # %else290
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 29
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_228
-; RV64-ZVFHMIN-NEXT:  .LBB28_165: # %else293
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 28
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_229
-; RV64-ZVFHMIN-NEXT:  .LBB28_166: # %else296
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 27
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_230
-; RV64-ZVFHMIN-NEXT:  .LBB28_167: # %else299
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 26
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_231
-; RV64-ZVFHMIN-NEXT:  .LBB28_168: # %else302
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 25
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_232
-; RV64-ZVFHMIN-NEXT:  .LBB28_169: # %else305
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 24
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_233
-; RV64-ZVFHMIN-NEXT:  .LBB28_170: # %else308
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 23
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_234
-; RV64-ZVFHMIN-NEXT:  .LBB28_171: # %else311
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 22
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_235
-; RV64-ZVFHMIN-NEXT:  .LBB28_172: # %else314
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 21
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_236
-; RV64-ZVFHMIN-NEXT:  .LBB28_173: # %else317
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_237
-; RV64-ZVFHMIN-NEXT:  .LBB28_174: # %else320
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_238
-; RV64-ZVFHMIN-NEXT:  .LBB28_175: # %else323
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_239
-; RV64-ZVFHMIN-NEXT:  .LBB28_176: # %else326
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_240
-; RV64-ZVFHMIN-NEXT:  .LBB28_177: # %else329
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_241
-; RV64-ZVFHMIN-NEXT:  .LBB28_178: # %else332
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_242
-; RV64-ZVFHMIN-NEXT:  .LBB28_179: # %else335
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_243
-; RV64-ZVFHMIN-NEXT:  .LBB28_180: # %else338
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_244
-; RV64-ZVFHMIN-NEXT:  .LBB28_181: # %else341
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_245
-; RV64-ZVFHMIN-NEXT:  .LBB28_182: # %else344
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_246
-; RV64-ZVFHMIN-NEXT:  .LBB28_183: # %else347
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_247
-; RV64-ZVFHMIN-NEXT:  .LBB28_184: # %else350
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_248
-; RV64-ZVFHMIN-NEXT:  .LBB28_185: # %else353
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_249
-; RV64-ZVFHMIN-NEXT:  .LBB28_186: # %else356
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_250
-; RV64-ZVFHMIN-NEXT:  .LBB28_187: # %else359
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_251
-; RV64-ZVFHMIN-NEXT:  .LBB28_188: # %else362
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_252
-; RV64-ZVFHMIN-NEXT:  .LBB28_189: # %else365
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_253
-; RV64-ZVFHMIN-NEXT:  .LBB28_190: # %else368
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_254
-; RV64-ZVFHMIN-NEXT:  .LBB28_191: # %else371
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_255
-; RV64-ZVFHMIN-NEXT:  .LBB28_192: # %else374
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    bltz a3, .LBB28_256
-; RV64-ZVFHMIN-NEXT:  .LBB28_193: # %else377
-; RV64-ZVFHMIN-NEXT:    bgez a1, .LBB28_195
-; RV64-ZVFHMIN-NEXT:  .LBB28_194: # %cond.load379
-; RV64-ZVFHMIN-NEXT:    lh a0, 254(a0)
-; RV64-ZVFHMIN-NEXT:    li a1, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a0
-; RV64-ZVFHMIN-NEXT:    li a0, 63
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a0
-; RV64-ZVFHMIN-NEXT:  .LBB28_195: # %else380
-; RV64-ZVFHMIN-NEXT:    li a0, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a0, e16, m8, ta, ma
+; RV64-ZVFHMIN-NEXT:    sb a6, 8(sp)
+; RV64-ZVFHMIN-NEXT:    sb a5, 9(sp)
+; RV64-ZVFHMIN-NEXT:    sb a4, 10(sp)
+; RV64-ZVFHMIN-NEXT:    sb a1, 11(sp)
+; RV64-ZVFHMIN-NEXT:    addi a1, sp, 64
+; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV64-ZVFHMIN-NEXT:    vle8.v v8, (a1)
+; RV64-ZVFHMIN-NEXT:    mv a1, sp
+; RV64-ZVFHMIN-NEXT:    vle8.v v12, (a1)
+; RV64-ZVFHMIN-NEXT:    vand.vi v16, v8, 1
+; RV64-ZVFHMIN-NEXT:    vmsne.vi v8, v16, 0
+; RV64-ZVFHMIN-NEXT:    vand.vi v12, v12, 1
+; RV64-ZVFHMIN-NEXT:    vmsne.vi v0, v12, 0
+; RV64-ZVFHMIN-NEXT:    addi a1, a0, 128
+; RV64-ZVFHMIN-NEXT:    vle16.v v16, (a1), v0.t
+; RV64-ZVFHMIN-NEXT:    vmv1r.v v0, v8
+; RV64-ZVFHMIN-NEXT:    vle16.v v8, (a0), v0.t
 ; RV64-ZVFHMIN-NEXT:    vse16.v v8, (a2)
 ; RV64-ZVFHMIN-NEXT:    addi a0, a2, 128
 ; RV64-ZVFHMIN-NEXT:    vse16.v v16, (a0)
@@ -16009,560 +4985,6 @@ define void @masked_load_v128f16(ptr %a, ptr %m_ptr, ptr %res_ptr) nounwind {
 ; RV64-ZVFHMIN-NEXT:    ld s0, 496(sp) # 8-byte Folded Reload
 ; RV64-ZVFHMIN-NEXT:    addi sp, sp, 512
 ; RV64-ZVFHMIN-NEXT:    ret
-; RV64-ZVFHMIN-NEXT:  .LBB28_196: # %cond.load196
-; RV64-ZVFHMIN-NEXT:    lh a3, 132(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 3, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 2
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_134
-; RV64-ZVFHMIN-NEXT:  .LBB28_197: # %cond.load199
-; RV64-ZVFHMIN-NEXT:    lh a3, 134(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 4, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 3
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_135
-; RV64-ZVFHMIN-NEXT:  .LBB28_198: # %cond.load202
-; RV64-ZVFHMIN-NEXT:    lh a3, 136(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 5, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 4
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_136
-; RV64-ZVFHMIN-NEXT:  .LBB28_199: # %cond.load205
-; RV64-ZVFHMIN-NEXT:    lh a3, 138(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 6, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 5
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 64
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_137
-; RV64-ZVFHMIN-NEXT:  .LBB28_200: # %cond.load208
-; RV64-ZVFHMIN-NEXT:    lh a3, 140(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 7, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 6
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 128
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_138
-; RV64-ZVFHMIN-NEXT:  .LBB28_201: # %cond.load211
-; RV64-ZVFHMIN-NEXT:    lh a3, 142(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 8, e16, m1, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 7
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 256
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_139
-; RV64-ZVFHMIN-NEXT:  .LBB28_202: # %cond.load214
-; RV64-ZVFHMIN-NEXT:    lh a3, 144(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 9, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 8
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 512
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_140
-; RV64-ZVFHMIN-NEXT:  .LBB28_203: # %cond.load217
-; RV64-ZVFHMIN-NEXT:    lh a3, 146(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 10, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 9
-; RV64-ZVFHMIN-NEXT:    andi a3, a1, 1024
-; RV64-ZVFHMIN-NEXT:    beqz a3, .LBB28_141
-; RV64-ZVFHMIN-NEXT:  .LBB28_204: # %cond.load220
-; RV64-ZVFHMIN-NEXT:    lh a3, 148(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 11, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 10
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 52
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_142
-; RV64-ZVFHMIN-NEXT:  .LBB28_205: # %cond.load223
-; RV64-ZVFHMIN-NEXT:    lh a3, 150(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 12, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 11
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 51
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_143
-; RV64-ZVFHMIN-NEXT:  .LBB28_206: # %cond.load226
-; RV64-ZVFHMIN-NEXT:    lh a3, 152(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 13, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 12
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 50
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_144
-; RV64-ZVFHMIN-NEXT:  .LBB28_207: # %cond.load229
-; RV64-ZVFHMIN-NEXT:    lh a3, 154(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 14, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 13
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 49
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_145
-; RV64-ZVFHMIN-NEXT:  .LBB28_208: # %cond.load232
-; RV64-ZVFHMIN-NEXT:    lh a3, 156(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 15, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 14
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 48
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_146
-; RV64-ZVFHMIN-NEXT:  .LBB28_209: # %cond.load235
-; RV64-ZVFHMIN-NEXT:    lh a3, 158(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 16, e16, m2, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 15
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 47
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_147
-; RV64-ZVFHMIN-NEXT:  .LBB28_210: # %cond.load238
-; RV64-ZVFHMIN-NEXT:    lh a3, 160(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 17, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 16
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 46
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_148
-; RV64-ZVFHMIN-NEXT:  .LBB28_211: # %cond.load241
-; RV64-ZVFHMIN-NEXT:    lh a3, 162(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 18, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 17
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 45
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_149
-; RV64-ZVFHMIN-NEXT:  .LBB28_212: # %cond.load244
-; RV64-ZVFHMIN-NEXT:    lh a3, 164(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 19, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 18
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 44
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_150
-; RV64-ZVFHMIN-NEXT:  .LBB28_213: # %cond.load247
-; RV64-ZVFHMIN-NEXT:    lh a3, 166(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 20, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 19
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 43
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_151
-; RV64-ZVFHMIN-NEXT:  .LBB28_214: # %cond.load250
-; RV64-ZVFHMIN-NEXT:    lh a3, 168(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 21, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 20
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 42
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_152
-; RV64-ZVFHMIN-NEXT:  .LBB28_215: # %cond.load253
-; RV64-ZVFHMIN-NEXT:    lh a3, 170(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 22, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 21
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 41
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_153
-; RV64-ZVFHMIN-NEXT:  .LBB28_216: # %cond.load256
-; RV64-ZVFHMIN-NEXT:    lh a3, 172(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 23, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 22
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 40
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_154
-; RV64-ZVFHMIN-NEXT:  .LBB28_217: # %cond.load259
-; RV64-ZVFHMIN-NEXT:    lh a3, 174(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 24, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 23
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 39
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_155
-; RV64-ZVFHMIN-NEXT:  .LBB28_218: # %cond.load262
-; RV64-ZVFHMIN-NEXT:    lh a3, 176(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 25, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 24
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 38
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_156
-; RV64-ZVFHMIN-NEXT:  .LBB28_219: # %cond.load265
-; RV64-ZVFHMIN-NEXT:    lh a3, 178(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 26, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 25
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 37
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_157
-; RV64-ZVFHMIN-NEXT:  .LBB28_220: # %cond.load268
-; RV64-ZVFHMIN-NEXT:    lh a3, 180(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 27, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 26
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 36
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_158
-; RV64-ZVFHMIN-NEXT:  .LBB28_221: # %cond.load271
-; RV64-ZVFHMIN-NEXT:    lh a3, 182(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 28, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 27
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 35
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_159
-; RV64-ZVFHMIN-NEXT:  .LBB28_222: # %cond.load274
-; RV64-ZVFHMIN-NEXT:    lh a3, 184(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 29, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 28
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 34
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_160
-; RV64-ZVFHMIN-NEXT:  .LBB28_223: # %cond.load277
-; RV64-ZVFHMIN-NEXT:    lh a3, 186(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 30, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 29
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 33
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_161
-; RV64-ZVFHMIN-NEXT:  .LBB28_224: # %cond.load280
-; RV64-ZVFHMIN-NEXT:    lh a3, 188(a0)
-; RV64-ZVFHMIN-NEXT:    vsetivli zero, 31, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 30
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 32
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_162
-; RV64-ZVFHMIN-NEXT:  .LBB28_225: # %cond.load283
-; RV64-ZVFHMIN-NEXT:    lh a3, 190(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m4, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vi v16, v24, 31
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 31
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_163
-; RV64-ZVFHMIN-NEXT:  .LBB28_226: # %cond.load286
-; RV64-ZVFHMIN-NEXT:    lh a3, 192(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 33
-; RV64-ZVFHMIN-NEXT:    li a4, 32
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 30
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_164
-; RV64-ZVFHMIN-NEXT:  .LBB28_227: # %cond.load289
-; RV64-ZVFHMIN-NEXT:    lh a3, 194(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 34
-; RV64-ZVFHMIN-NEXT:    li a4, 33
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 29
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_165
-; RV64-ZVFHMIN-NEXT:  .LBB28_228: # %cond.load292
-; RV64-ZVFHMIN-NEXT:    lh a3, 196(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 35
-; RV64-ZVFHMIN-NEXT:    li a4, 34
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 28
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_166
-; RV64-ZVFHMIN-NEXT:  .LBB28_229: # %cond.load295
-; RV64-ZVFHMIN-NEXT:    lh a3, 198(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 36
-; RV64-ZVFHMIN-NEXT:    li a4, 35
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 27
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_167
-; RV64-ZVFHMIN-NEXT:  .LBB28_230: # %cond.load298
-; RV64-ZVFHMIN-NEXT:    lh a3, 200(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 37
-; RV64-ZVFHMIN-NEXT:    li a4, 36
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 26
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_168
-; RV64-ZVFHMIN-NEXT:  .LBB28_231: # %cond.load301
-; RV64-ZVFHMIN-NEXT:    lh a3, 202(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 38
-; RV64-ZVFHMIN-NEXT:    li a4, 37
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 25
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_169
-; RV64-ZVFHMIN-NEXT:  .LBB28_232: # %cond.load304
-; RV64-ZVFHMIN-NEXT:    lh a3, 204(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 39
-; RV64-ZVFHMIN-NEXT:    li a4, 38
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 24
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_170
-; RV64-ZVFHMIN-NEXT:  .LBB28_233: # %cond.load307
-; RV64-ZVFHMIN-NEXT:    lh a3, 206(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 40
-; RV64-ZVFHMIN-NEXT:    li a4, 39
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 23
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_171
-; RV64-ZVFHMIN-NEXT:  .LBB28_234: # %cond.load310
-; RV64-ZVFHMIN-NEXT:    lh a3, 208(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 41
-; RV64-ZVFHMIN-NEXT:    li a4, 40
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 22
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_172
-; RV64-ZVFHMIN-NEXT:  .LBB28_235: # %cond.load313
-; RV64-ZVFHMIN-NEXT:    lh a3, 210(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 42
-; RV64-ZVFHMIN-NEXT:    li a4, 41
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 21
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_173
-; RV64-ZVFHMIN-NEXT:  .LBB28_236: # %cond.load316
-; RV64-ZVFHMIN-NEXT:    lh a3, 212(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 43
-; RV64-ZVFHMIN-NEXT:    li a4, 42
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 20
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_174
-; RV64-ZVFHMIN-NEXT:  .LBB28_237: # %cond.load319
-; RV64-ZVFHMIN-NEXT:    lh a3, 214(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 44
-; RV64-ZVFHMIN-NEXT:    li a4, 43
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 19
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_175
-; RV64-ZVFHMIN-NEXT:  .LBB28_238: # %cond.load322
-; RV64-ZVFHMIN-NEXT:    lh a3, 216(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 45
-; RV64-ZVFHMIN-NEXT:    li a4, 44
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 18
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_176
-; RV64-ZVFHMIN-NEXT:  .LBB28_239: # %cond.load325
-; RV64-ZVFHMIN-NEXT:    lh a3, 218(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 46
-; RV64-ZVFHMIN-NEXT:    li a4, 45
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 17
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_177
-; RV64-ZVFHMIN-NEXT:  .LBB28_240: # %cond.load328
-; RV64-ZVFHMIN-NEXT:    lh a3, 220(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 47
-; RV64-ZVFHMIN-NEXT:    li a4, 46
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 16
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_178
-; RV64-ZVFHMIN-NEXT:  .LBB28_241: # %cond.load331
-; RV64-ZVFHMIN-NEXT:    lh a3, 222(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 48
-; RV64-ZVFHMIN-NEXT:    li a4, 47
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 15
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_179
-; RV64-ZVFHMIN-NEXT:  .LBB28_242: # %cond.load334
-; RV64-ZVFHMIN-NEXT:    lh a3, 224(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 49
-; RV64-ZVFHMIN-NEXT:    li a4, 48
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 14
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_180
-; RV64-ZVFHMIN-NEXT:  .LBB28_243: # %cond.load337
-; RV64-ZVFHMIN-NEXT:    lh a3, 226(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 50
-; RV64-ZVFHMIN-NEXT:    li a4, 49
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 13
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_181
-; RV64-ZVFHMIN-NEXT:  .LBB28_244: # %cond.load340
-; RV64-ZVFHMIN-NEXT:    lh a3, 228(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 51
-; RV64-ZVFHMIN-NEXT:    li a4, 50
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 12
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_182
-; RV64-ZVFHMIN-NEXT:  .LBB28_245: # %cond.load343
-; RV64-ZVFHMIN-NEXT:    lh a3, 230(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 52
-; RV64-ZVFHMIN-NEXT:    li a4, 51
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 11
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_183
-; RV64-ZVFHMIN-NEXT:  .LBB28_246: # %cond.load346
-; RV64-ZVFHMIN-NEXT:    lh a3, 232(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 53
-; RV64-ZVFHMIN-NEXT:    li a4, 52
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 10
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_184
-; RV64-ZVFHMIN-NEXT:  .LBB28_247: # %cond.load349
-; RV64-ZVFHMIN-NEXT:    lh a3, 234(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 54
-; RV64-ZVFHMIN-NEXT:    li a4, 53
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 9
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_185
-; RV64-ZVFHMIN-NEXT:  .LBB28_248: # %cond.load352
-; RV64-ZVFHMIN-NEXT:    lh a3, 236(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 55
-; RV64-ZVFHMIN-NEXT:    li a4, 54
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 8
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_186
-; RV64-ZVFHMIN-NEXT:  .LBB28_249: # %cond.load355
-; RV64-ZVFHMIN-NEXT:    lh a3, 238(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 56
-; RV64-ZVFHMIN-NEXT:    li a4, 55
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 7
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_187
-; RV64-ZVFHMIN-NEXT:  .LBB28_250: # %cond.load358
-; RV64-ZVFHMIN-NEXT:    lh a3, 240(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 57
-; RV64-ZVFHMIN-NEXT:    li a4, 56
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 6
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_188
-; RV64-ZVFHMIN-NEXT:  .LBB28_251: # %cond.load361
-; RV64-ZVFHMIN-NEXT:    lh a3, 242(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 58
-; RV64-ZVFHMIN-NEXT:    li a4, 57
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 5
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_189
-; RV64-ZVFHMIN-NEXT:  .LBB28_252: # %cond.load364
-; RV64-ZVFHMIN-NEXT:    lh a3, 244(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 59
-; RV64-ZVFHMIN-NEXT:    li a4, 58
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 4
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_190
-; RV64-ZVFHMIN-NEXT:  .LBB28_253: # %cond.load367
-; RV64-ZVFHMIN-NEXT:    lh a3, 246(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 60
-; RV64-ZVFHMIN-NEXT:    li a4, 59
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 3
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_191
-; RV64-ZVFHMIN-NEXT:  .LBB28_254: # %cond.load370
-; RV64-ZVFHMIN-NEXT:    lh a3, 248(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 61
-; RV64-ZVFHMIN-NEXT:    li a4, 60
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 2
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_192
-; RV64-ZVFHMIN-NEXT:  .LBB28_255: # %cond.load373
-; RV64-ZVFHMIN-NEXT:    lh a3, 250(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 62
-; RV64-ZVFHMIN-NEXT:    li a4, 61
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    slli a3, a1, 1
-; RV64-ZVFHMIN-NEXT:    bgez a3, .LBB28_193
-; RV64-ZVFHMIN-NEXT:  .LBB28_256: # %cond.load376
-; RV64-ZVFHMIN-NEXT:    lh a3, 252(a0)
-; RV64-ZVFHMIN-NEXT:    li a4, 64
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a4, e16, m1, ta, ma
-; RV64-ZVFHMIN-NEXT:    vmv.s.x v24, a3
-; RV64-ZVFHMIN-NEXT:    li a3, 63
-; RV64-ZVFHMIN-NEXT:    li a4, 62
-; RV64-ZVFHMIN-NEXT:    vsetvli zero, a3, e16, m8, tu, ma
-; RV64-ZVFHMIN-NEXT:    vslideup.vx v16, v24, a4
-; RV64-ZVFHMIN-NEXT:    bltz a1, .LBB28_194
-; RV64-ZVFHMIN-NEXT:    j .LBB28_195
   %m = load <128 x half>, ptr %m_ptr
   %mask = fcmp oeq <128 x half> %m, zeroinitializer
   %load = call <128 x half> @llvm.masked.load.v128f16(ptr %a, i32 8, <128 x i1> %mask, <128 x half> undef)
