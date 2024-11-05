@@ -2389,7 +2389,7 @@ public:
                                                EVT VT) const {
     // If a target has multiple condition registers, then it likely has logical
     // operations on those registers.
-    if (hasMultiplePredicateRegisters(VT))
+    if (hasMultiplePredicateRegisters(MVT::i1))
       return false;
     // Only do the transform if the value won't be split into multiple
     // registers.
