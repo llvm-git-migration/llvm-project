@@ -732,7 +732,6 @@ def BufferStore : DXILOp<69, bufferStore> {
 
 def UpdateCounter : DXILOp<70, bufferUpdateCounter> {
   let Doc = "increments/decrements a buffer counter";
-  let LLVMIntrinsic = int_dx_updateCounter;
   let arguments = [
     HandleTy, Int8Ty
   ];
