@@ -7726,3 +7726,53 @@ bool CombinerHelper::matchShuffleUndefRHS(MachineInstr &MI,
 
   return true;
 }
+
+bool CombinerHelper::matchShuffleDisjointMask(MachineInstr &MI,
+                                              BuildFnTy &MatchInfo) {
+
+  auto &Shuffle = cast<GShuffleVector>(MI);
+  // If any of the two inputs is already undef, don't check the mask again to
+  // prevent infinite loop
+  if (getOpcodeDef(TargetOpcode::G_IMPLICIT_DEF, Shuffle.getSrc1Reg(), MRI))
+    return false;
+
+  if (getOpcodeDef(TargetOpcode::G_IMPLICIT_DEF, Shuffle.getSrc2Reg(), MRI))
+    return false;
+
+  ArrayRef<int> Mask = Shuffle.getMask();
+  const LLT Src1Ty = MRI.getType(Shuffle.getSrc1Reg());
+
+  const unsigned NumSrcElems = Src1Ty.isVector() ? Src1Ty.getNumElements() : 1;
+
+  bool TouchesSrc1 = false;
+  bool TouchesSrc2 = false;
+  const unsigned NumElems = Mask.size();
+  for (unsigned Idx = 0; Idx < NumElems; ++Idx) {
+    if (Mask[Idx] < 0)
+      continue;
+
+    if (Mask[Idx] < (int)NumSrcElems)
+      TouchesSrc1 = true;
+    else
+      TouchesSrc2 = true;
+  }
+
+  if (!(TouchesSrc1 ^ TouchesSrc2))
+    return false;
+
+  MatchInfo = [=, &Shuffle](MachineIRBuilder &B) {
+    Register Undef = B.buildUndef(Src1Ty).getReg(0);
+    Register NewSrc1;
+    Register NewSrc2;
+    if (TouchesSrc1) {
+      NewSrc1 = Shuffle.getSrc1Reg();
+      NewSrc2 = Undef;
+    } else {
+      NewSrc1 = Undef;
+      NewSrc2 = Shuffle.getSrc2Reg();
+    }
+    B.buildShuffleVector(Shuffle.getReg(0), NewSrc1, NewSrc2, Mask);
+  };
+
+  return true;
+}
