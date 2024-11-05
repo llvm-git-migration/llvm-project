@@ -84,6 +84,16 @@ entry:
 }
 
 define void @test4(ptr %in) {
+; CHECK-LABEL: @test4(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    br label [[LABEL0:%.*]]
+; CHECK:       label0:
+; CHECK-NEXT:    br label [[LABEL2:%.*]]
+; CHECK:       label1:
+; CHECK-NEXT:    br label [[LABEL2]]
+; CHECK:       label2:
+; CHECK-NEXT:    br label [[LABEL0]]
+;
 entry:
   br label %label0
 
