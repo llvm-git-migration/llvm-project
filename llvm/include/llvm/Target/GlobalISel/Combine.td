@@ -1576,6 +1576,14 @@ def expand_const_fpowi : GICombineRule<
           [{ return Helper.matchFPowIExpansion(*${root}, ${imm}.getCImm()->getSExtValue()); }]),
    (apply [{ Helper.applyExpandFPowI(*${root}, ${imm}.getCImm()->getSExtValue()); }])>;
 
+def combine_shuffle_undef_rhs : GICombineRule<
+  (defs root:$root, build_fn_matchinfo:$matchinfo),
+  (match (G_IMPLICIT_DEF $undef),
+         (G_SHUFFLE_VECTOR $root, $src1, $undef, $mask):$root,
+        [{ return Helper.matchShuffleUndefRHS(*${root}, ${matchinfo}); }]),
+  (apply [{ Helper.applyBuildFn(*${root}, ${matchinfo}); }])
+>;
+
 // match_extract_of_element and insert_vector_elt_oob must be the first!
 def vector_ops_combines: GICombineGroup<[
 match_extract_of_element_undef_vector,
@@ -1948,7 +1956,7 @@ def all_combines : GICombineGroup<[integer_reassoc_combines, trivial_combines,
     fsub_to_fneg, commute_constant_to_rhs, match_ands, match_ors,
     combine_concat_vector, match_addos,
     sext_trunc, zext_trunc, prefer_sign_combines, combine_shuffle_concat,
-    combine_use_vector_truncate, merge_combines]>;
+    combine_use_vector_truncate, merge_combines, combine_shuffle_undef_rhs]>;
 
 // A combine group used to for prelegalizer combiners at -O0. The combines in
 // this group have been selected based on experiments to balance code size and
