@@ -3,7 +3,7 @@
 ; RUN: llc < %s -mtriple=s390x-linux-gnu | FileCheck %s --check-prefix=CHECK-OPT
 ; RUN: llc < %s -mtriple=s390x-linux-gnu -enable-unsafe-fp-math | FileCheck %s --check-prefix=CHECK-OPT
 
-; Test f16 libcalls.
+; Test f16 libcall.
 define half @f0(half %x) {
 ; CHECK-OPT-LABEL: f0:
 ; CHECK-OPT-NOT: brasl %r14, __extendhfsf2@PLT

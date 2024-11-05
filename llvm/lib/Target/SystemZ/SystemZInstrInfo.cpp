@@ -996,7 +996,30 @@ void SystemZInstrInfo::storeRegToStackSlot(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI, Register SrcReg,
     bool isKill, int FrameIdx, const TargetRegisterClass *RC,
     const TargetRegisterInfo *TRI, Register VReg) const {
+  MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
+
+  // There are no fp16 load/store instructions, so need to save/restore via
+  // GPR (TODO: Use VSTEH in case of vector support).
+  if (RC == &SystemZ::FP16BitRegClass) {
+    assert(!MRI.isSSA() && MRI.getNumVirtRegs() &&
+           "Expected non-SSA form with virtual registers.");
+    Register GR64Reg = MRI.createVirtualRegister(&SystemZ::GR64BitRegClass);
+    Register FP64Reg = MRI.createVirtualRegister(&SystemZ::FP64BitRegClass);
+    BuildMI(MBB, MBBI, DL, get(SystemZ::COPY))
+      .addReg(FP64Reg, RegState::DefineNoRead, SystemZ::subreg_h16)
+      .addReg(SrcReg, getKillRegState(isKill));
+    BuildMI(MBB, MBBI, DL, get(SystemZ::LGDR), GR64Reg)
+      .addReg(FP64Reg, RegState::Kill);
+    BuildMI(MBB, MBBI, DL, get(SystemZ::SRLG), GR64Reg)
+      .addReg(GR64Reg)
+      .addReg(0)
+      .addImm(48);
+    addFrameReference(BuildMI(MBB, MBBI, DL, get(SystemZ::STH))
+                        .addReg(GR64Reg, RegState::Kill, SystemZ::subreg_l32),
+                      FrameIdx);
+    return;
+  }
 
   // Callers may expect a single instruction, so keep 128-bit moves
   // together for now and lower them after register allocation.
@@ -1013,7 +1036,30 @@ void SystemZInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                             const TargetRegisterClass *RC,
                                             const TargetRegisterInfo *TRI,
                                             Register VReg) const {
+  MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
+
+  // There are no fp16 load/store instructions, so need to save/restore via
+  // GPR (TODO: Use VLEH in case of vector support).
+  if (RC == &SystemZ::FP16BitRegClass) {
+    assert(!MRI.isSSA() && MRI.getNumVirtRegs() &&
+           "Expected non-SSA form with virtual registers.");
+    Register GR64Reg = MRI.createVirtualRegister(&SystemZ::GR64BitRegClass);
+    Register FP64Reg = MRI.createVirtualRegister(&SystemZ::FP64BitRegClass);
+    addFrameReference(BuildMI(MBB, MBBI, DL, get(SystemZ::LH))
+                        .addReg(GR64Reg, RegState::DefineNoRead,
+                                SystemZ::subreg_l32),
+                      FrameIdx);
+    BuildMI(MBB, MBBI, DL, get(SystemZ::SLLG), GR64Reg)
+      .addReg(GR64Reg)
+      .addReg(0)
+      .addImm(48);
+    BuildMI(MBB, MBBI, DL, get(SystemZ::LDGR), FP64Reg)
+      .addReg(GR64Reg, RegState::Kill);
+    BuildMI(MBB, MBBI, DL, get(SystemZ::COPY), DestReg)
+      .addReg(FP64Reg, RegState::Kill, SystemZ::subreg_h16);
+    return;
+  }
 
   // Callers may expect a single instruction, so keep 128-bit moves
   // together for now and lower them after register allocation.
