@@ -17927,7 +17927,6 @@ AArch64TargetLowering::isDesirableToCommuteWithShift(const SDNode *N,
 
   SDValue ShiftLHS = N->getOperand(0);
   EVT VT = N->getValueType(0);
-  SDValue Add;
 
   if (!ShiftLHS->hasOneUse())
     return false;
@@ -17954,7 +17953,6 @@ AArch64TargetLowering::isDesirableToCommuteWithShift(const SDNode *N,
       }
     }
   }
-
   return true;
 }
 
