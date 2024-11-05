@@ -334,6 +334,18 @@ public:
   /// This class represents a saved insertion point.
   class InsertPoint {
   public:
+    /// Finds the closest insertion point where all given values are defined
+    /// and can be used without a dominance violation. (Does not account for
+    /// IsolatedFromAbove regions.) Returns an "empty" insertion point if there
+    /// is no such insertion point.
+    static InsertPoint findClosest(ArrayRef<Value> values);
+
+    /// Creates a new insertion point right after the given value. If the given
+    /// value is a block argument, the insertion point points to the beginning
+    /// of the block. Otherwise, it points to the place right after the op that
+    /// defines the value.
+    static InsertPoint after(Value value);
+
     /// Creates a new insertion point which doesn't point to anything.
     InsertPoint() = default;
 

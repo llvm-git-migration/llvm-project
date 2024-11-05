@@ -641,3 +641,76 @@ void OpBuilder::cloneRegionBefore(Region &region, Region &parent,
 void OpBuilder::cloneRegionBefore(Region &region, Block *before) {
   cloneRegionBefore(region, *before->getParent(), before->getIterator());
 }
+
+//===----------------------------------------------------------------------===//
+// InsertPoint
+//===----------------------------------------------------------------------===//
+
+OpBuilder::InsertPoint OpBuilder::InsertPoint::after(Value value) {
+  if (auto blockArg = dyn_cast<BlockArgument>(value))
+    return InsertPoint(blockArg.getOwner(), blockArg.getOwner()->begin());
+  Operation *op = value.getDefiningOp();
+  return InsertPoint(op->getBlock(), ++op->getIterator());
+}
+
+/// Helper function that returns "true" if:
+/// - `a` is a proper ancestor of `b`
+/// - or: there is a path from `a` to `b`
+static bool isAncestorOrBefore(Block *a, Block *b) {
+  if (a->getParentOp()->isProperAncestor(b->getParentOp()))
+    return true;
+  if (a->getParent() != b->getParent())
+    return false;
+  return a->isReachable(b);
+}
+
+OpBuilder::InsertPoint
+OpBuilder::InsertPoint::findClosest(ArrayRef<Value> values) {
+  // Compute the insertion point after the first value.
+  assert(!values.empty() && "expected at least one value");
+  InsertPoint result = InsertPoint::after(values.front());
+
+  // Check all other values and update the insertion point as needed.
+  for (Value v : values.drop_front()) {
+    InsertPoint pt = InsertPoint::after(v);
+
+    if (pt.getBlock() == result.getBlock()) {
+      // Both values belong to the same block. Modify the iterator (but keep
+      // the block) if needed: take the later one of the two insertion points.
+      Block *block = pt.getBlock();
+      if (pt.getPoint() == block->end()) {
+        // `pt` points to the end of the block: take `pt`.
+        result = pt;
+        continue;
+      } else if (result.getPoint() == block->end()) {
+        // `result` points to the end of the block: nothing to do.
+        continue;
+      }
+      // Neither `pt` nor `result` point to the end of the block, so both
+      // iterators point to an operation. Set `result` to the later one of the
+      // two insertion point.
+      if (result.getPoint()->isBeforeInBlock(&*pt.getPoint()))
+        result = pt;
+      continue;
+    }
+
+    if (isAncestorOrBefore(result.getBlock(), pt.getBlock())) {
+      // `result` is an ancestor of `pt`. Therefore, `pt` is a valid insertion
+      // point for `v` and all previous values.
+      result = pt;
+      continue;
+    }
+
+    if (isAncestorOrBefore(pt.getBlock(), result.getBlock())) {
+      // `pt` is an ancestor of `result`. Therefore, `result` is a valid
+      // insertion point for `v` and all previous values.
+      continue;
+    }
+
+    // `pt` and `result` are in different subtrees: neither is an ancestor of
+    // the other. In that case, there is no suitable insertion point.
+    return InsertPoint();
+  }
+
+  return result;
+}

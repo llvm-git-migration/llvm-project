@@ -53,16 +53,6 @@ static void logFailure(llvm::ScopedPrinter &os, StringRef fmt, Args &&...args) {
   });
 }
 
-/// Helper function that computes an insertion point where the given value is
-/// defined and can be used without a dominance violation.
-static OpBuilder::InsertPoint computeInsertPoint(Value value) {
-  Block *insertBlock = value.getParentBlock();
-  Block::iterator insertPt = insertBlock->begin();
-  if (OpResult inputRes = dyn_cast<OpResult>(value))
-    insertPt = ++inputRes.getOwner()->getIterator();
-  return OpBuilder::InsertPoint(insertBlock, insertPt);
-}
-
 //===----------------------------------------------------------------------===//
 // ConversionValueMapping
 //===----------------------------------------------------------------------===//
@@ -1147,8 +1137,9 @@ LogicalResult ConversionPatternRewriterImpl::remapValues(
       // that the value was replaced with a value of different type and no
       // source materialization was created yet.
       Value castValue = buildUnresolvedMaterialization(
-          MaterializationKind::Target, computeInsertPoint(newOperand),
-          operandLoc, /*inputs=*/newOperand, /*outputType=*/desiredType,
+          MaterializationKind::Target,
+          OpBuilder::InsertPoint::after(newOperand), operandLoc,
+          /*inputs=*/newOperand, /*outputType=*/desiredType,
           /*originalType=*/origType, currentTypeConverter);
       mapping.map(newOperand, castValue);
       newOperand = castValue;
@@ -1309,7 +1300,7 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
     }
     if (legalOutputType && legalOutputType != origArgType) {
       Value targetMat = buildUnresolvedMaterialization(
-          MaterializationKind::Target, computeInsertPoint(argMat),
+          MaterializationKind::Target, OpBuilder::InsertPoint::after(argMat),
           origArg.getLoc(), /*inputs=*/argMat, /*outputType=*/legalOutputType,
           /*originalType=*/origArgType, converter);
       mapping.map(argMat, targetMat);
@@ -1401,7 +1392,7 @@ void ConversionPatternRewriterImpl::notifyOpReplaced(Operation *op,
 
       // Materialize a replacement value "out of thin air".
       newValue = buildUnresolvedMaterialization(
-          MaterializationKind::Source, computeInsertPoint(result),
+          MaterializationKind::Source, OpBuilder::InsertPoint::after(result),
           result.getLoc(), /*inputs=*/ValueRange(),
           /*outputType=*/result.getType(), /*originalType=*/Type(),
           currentTypeConverter);
@@ -2596,7 +2587,7 @@ void OperationConverter::finalize(ConversionPatternRewriter &rewriter) {
       Value newValue = rewriterImpl.mapping.lookupOrNull(originalValue);
       assert(newValue && "replacement value not found");
       Value castValue = rewriterImpl.buildUnresolvedMaterialization(
-          MaterializationKind::Source, computeInsertPoint(newValue),
+          MaterializationKind::Source, OpBuilder::InsertPoint::after(newValue),
           originalValue.getLoc(),
           /*inputs=*/newValue, /*outputType=*/originalValue.getType(),
           /*originalType=*/Type(), converter);
