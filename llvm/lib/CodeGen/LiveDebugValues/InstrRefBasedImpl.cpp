@@ -1022,7 +1022,7 @@ MLocTracker::MLocTracker(MachineFunction &MF, const TargetInstrInfo &TII,
                          const TargetLowering &TLI)
     : MF(MF), TII(TII), TRI(TRI), TLI(TLI),
       LocIdxToIDNum(ValueIDNum::EmptyValue), LocIdxToLocID(0) {
-  NumRegs = TRI.getNumRegs();
+  NumRegs = TRI.getNumSupportedRegs(MF);
   reset();
   LocIDToLocIdx.resize(NumRegs, LocIdx::MakeIllegalLoc());
   assert(NumRegs < (1u << NUM_LOC_BITS)); // Detect bit packing failure
@@ -1878,7 +1878,8 @@ void InstrRefBasedLDV::transferRegisterDef(MachineInstr &MI) {
     if (MO.isReg() && MO.isDef() && MO.getReg() && MO.getReg().isPhysical() &&
         !IgnoreSPAlias(MO.getReg())) {
       // Remove ranges of all aliased registers.
-      for (MCRegAliasIterator RAI(MO.getReg(), TRI, true); RAI.isValid(); ++RAI)
+      for (MCRegAliasIterator RAI(MO.getReg(), TRI, true);
+           RAI.isValid() && *RAI < NumRegs; ++RAI)
         // FIXME: Can we break out of this loop early if no insertion occurs?
         DeadRegs.insert(*RAI);
     } else if (MO.isRegMask()) {
@@ -1952,7 +1953,8 @@ void InstrRefBasedLDV::transferRegisterDef(MachineInstr &MI) {
 
 void InstrRefBasedLDV::performCopy(Register SrcRegNum, Register DstRegNum) {
   // In all circumstances, re-def all aliases. It's definitely a new value now.
-  for (MCRegAliasIterator RAI(DstRegNum, TRI, true); RAI.isValid(); ++RAI)
+  for (MCRegAliasIterator RAI(DstRegNum, TRI, true);
+       RAI.isValid() && *RAI < NumRegs; ++RAI)
     MTracker->defReg(*RAI, CurBB, CurInst);
 
   ValueIDNum SrcValue = MTracker->readReg(SrcRegNum);
@@ -2117,7 +2119,8 @@ bool InstrRefBasedLDV::transferSpillOrRestoreInst(MachineInstr &MI) {
     // stack slot.
 
     // Def all registers that alias the destination.
-    for (MCRegAliasIterator RAI(Reg, TRI, true); RAI.isValid(); ++RAI)
+    for (MCRegAliasIterator RAI(Reg, TRI, true);
+         RAI.isValid() && *RAI < NumRegs; ++RAI)
       MTracker->defReg(*RAI, CurBB, CurInst);
 
     // Now find subregisters within the destination register, and load values
@@ -2302,11 +2305,12 @@ void InstrRefBasedLDV::produceMLocTransferFunction(
   // appropriate clobbers.
   SmallVector<BitVector, 32> BlockMasks;
   BlockMasks.resize(MaxNumBlocks);
+  NumRegs = TRI->getNumSupportedRegs(MF);
 
   // Reserve one bit per register for the masks described above.
-  unsigned BVWords = MachineOperand::getRegMaskSize(TRI->getNumRegs());
+  unsigned BVWords = MachineOperand::getRegMaskSize(NumRegs);
   for (auto &BV : BlockMasks)
-    BV.resize(TRI->getNumRegs(), true);
+    BV.resize(NumRegs, true);
 
   // Step through all instructions and inhale the transfer function.
   for (auto &MBB : MF) {
@@ -2370,11 +2374,11 @@ void InstrRefBasedLDV::produceMLocTransferFunction(
   }
 
   // Compute a bitvector of all the registers that are tracked in this block.
-  BitVector UsedRegs(TRI->getNumRegs());
+  BitVector UsedRegs(NumRegs);
   for (auto Location : MTracker->locations()) {
     unsigned ID = MTracker->LocIdxToLocID[Location.Idx];
     // Ignore stack slots, and aliases of the stack pointer.
-    if (ID >= TRI->getNumRegs() || MTracker->SPAliases.count(ID))
+    if (ID >= NumRegs || MTracker->SPAliases.count(ID))
       continue;
     UsedRegs.set(ID);
   }
