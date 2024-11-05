@@ -18723,6 +18723,9 @@ SDValue DAGCombiner::rebuildSetCC(SDValue N) {
     SDValue Op0 = N->getOperand(0);
     SDValue Op1 = N->getOperand(1);
 
+    if (!TLI.isOperationLegal(ISD::SETCC, Op0.getValueType()))
+      return SDValue();
+
     if (Op0.getOpcode() != ISD::SETCC && Op1.getOpcode() != ISD::SETCC) {
       bool Equal = false;
       // (brcond (xor (xor x, y), -1)) -> (brcond (setcc x, y, eq))
