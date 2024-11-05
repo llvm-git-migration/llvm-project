@@ -82,3 +82,30 @@ entry:
   store <4 x i32> %4, ptr %8, align 4
   ret void
 }
+
+define void @test4(ptr %in) {
+entry:
+  br label %label0
+
+label0:
+  %0 = load <8 x float>, ptr %in, align 4
+  %1 = shufflevector <8 x float> %0, <8 x float> zeroinitializer, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %2 = shufflevector <8 x float> %0, <8 x float> zeroinitializer, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %3 = call <4 x float> @llvm.fma.v4f32(<4 x float> %1, <4 x float> zeroinitializer, <4 x float> zeroinitializer)
+  %4 = call <4 x float> @llvm.fma.v4f32(<4 x float> %2, <4 x float> zeroinitializer, <4 x float> zeroinitializer)
+  %5 = call <4 x float> @llvm.fma.v4f32(<4 x float> %1, <4 x float> zeroinitializer, <4 x float> zeroinitializer)
+  %6 = call <4 x float> @llvm.fma.v4f32(<4 x float> %2, <4 x float> zeroinitializer, <4 x float> zeroinitializer)
+  br label %label2
+
+label1:
+  br label %label2
+
+label2:
+  %7 = phi <4 x float> [ %3, %label0 ], [ zeroinitializer, %label1 ]
+  %8 = phi <4 x float> [ %4, %label0 ], [ zeroinitializer, %label1 ]
+  %9 = phi <4 x float> [ %5, %label0 ], [ zeroinitializer, %label1 ]
+  %10 = phi <4 x float> [ %6, %label0 ], [ zeroinitializer, %label1 ]
+  br label %label0
+}
+
+declare <4 x float> @llvm.fma.v4f32(<4 x float>, <4 x float>, <4 x float>)
