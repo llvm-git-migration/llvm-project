@@ -153,6 +153,20 @@ Value *BottomUpVec::createVectorInstr(ArrayRef<Value *> Bndl,
   // TODO: Propagate debug info.
 }
 
+void BottomUpVec::tryEraseDeadInstrs() {
+  bool Change = true;
+  while (Change) {
+    Change = false;
+    for (Instruction *I : make_early_inc_range(DeadInstrCandidates)) {
+      if (I->hasNUses(0)) {
+        Change = true;
+        I->eraseFromParent();
+        DeadInstrCandidates.erase(I);
+      }
+    }
+  }
+}
+
 Value *BottomUpVec::vectorizeRec(ArrayRef<Value *> Bndl) {
   Value *NewVec = nullptr;
   const auto &LegalityRes = Legality->canVectorize(Bndl);
@@ -182,7 +196,11 @@ Value *BottomUpVec::vectorizeRec(ArrayRef<Value *> Bndl) {
     }
     NewVec = createVectorInstr(Bndl, VecOperands);
 
-    // TODO: Collect potentially dead instructions.
+    // Collect the original scalar instructions as they may be dead.
+    if (NewVec != nullptr) {
+      for (Value *V : Bndl)
+        DeadInstrCandidates.insert(cast<Instruction>(V));
+    }
     break;
   }
   case LegalityResultID::Pack: {
@@ -194,7 +212,9 @@ Value *BottomUpVec::vectorizeRec(ArrayRef<Value *> Bndl) {
 }
 
 bool BottomUpVec::tryVectorize(ArrayRef<Value *> Bndl) {
+  DeadInstrCandidates.clear();
   vectorizeRec(Bndl);
+  tryEraseDeadInstrs();
   return Change;
 }
 
