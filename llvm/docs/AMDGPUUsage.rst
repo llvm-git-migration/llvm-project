@@ -576,6 +576,11 @@ Generic processor code objects are versioned. See :ref:`amdgpu-generic-processor
                                                                                                   - ``v_dot2_f32_f16``
 
 
+     ``gfx9-4-generic``   ``amdgcn``     - ``gfx940``      - xnack            - Absolute flat   No restrictions.
+                                         - ``gfx941``                           scratch
+                                         - ``gfx942``
+
+
      ``gfx10-1-generic``  ``amdgcn``     - ``gfx1010``     - xnack            - Absolute flat   - The following instructions are
                                          - ``gfx1011``     - wavefrontsize64    scratch           not available on ``gfx1011``
                                          - ``gfx1012``     - cumode                               and ``gfx1012``

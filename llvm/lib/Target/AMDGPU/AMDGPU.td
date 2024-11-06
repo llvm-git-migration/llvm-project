@@ -1478,6 +1478,10 @@ def FeatureISAVersion9_4_2 : FeatureSet<
   !listconcat(FeatureISAVersion9_4_Common.Features,
     [])>;
 
+def FeatureISAVersion9_4_Generic : FeatureSet<
+  !listconcat(FeatureISAVersion9_4_Common.Features,
+    [FeatureRequiresCOV6])>;
+
 def FeatureISAVersion10_Common : FeatureSet<
   [FeatureGFX10,
    FeatureLDSBankCount32,
