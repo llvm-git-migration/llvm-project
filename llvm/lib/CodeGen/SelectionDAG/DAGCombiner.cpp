@@ -1329,6 +1329,38 @@ SDValue DAGCombiner::reassociateReduction(unsigned RedOpc, unsigned Opc,
                        DAG.getNode(Opc, DL, N0.getOperand(0).getValueType(),
                                    N0.getOperand(0), N1.getOperand(0)));
   }
+
+  // Reassociate add(add(vecreduce(a), b), add(vecreduce(c), d)) into
+  // add(vecreduce(add(a, c)), add(b, d)), to combine the reductions into a
+  // single node.
+  if (N0.getOpcode() == Opc && N1.getOpcode() == Opc && N0->hasOneUse() &&
+      N1->hasOneUse()) {
+    SDValue N00 = N0.getOperand(0);
+    SDValue N01 = N0.getOperand(1);
+    if (N00.getOpcode() != RedOpc && N01.getOpcode() == RedOpc)
+      std::swap(N00, N01);
+    if (N00.getOpcode() == RedOpc && N01.getOpcode() != RedOpc &&
+        N00->hasOneUse()) {
+      SDValue N10 = N1.getOperand(0);
+      SDValue N11 = N1.getOperand(1);
+      if (N10.getOpcode() != RedOpc && N11.getOpcode() == RedOpc)
+        std::swap(N10, N11);
+
+      if (N10.getOpcode() == RedOpc &&
+          N00.getOperand(0).getValueType() ==
+              N10.getOperand(0).getValueType() &&
+          N10->hasOneUse() &&
+          hasOperation(Opc, N00.getOperand(0).getValueType()) &&
+          TLI.shouldReassociateReduction(RedOpc, VT)) {
+        SelectionDAG::FlagInserter FlagsInserter(DAG, Flags);
+        SDValue Add = DAG.getNode(Opc, DL, N00.getOperand(0).getValueType(),
+                                  N00.getOperand(0), N10.getOperand(0));
+        SDValue Red = DAG.getNode(RedOpc, DL, VT, Add);
+        SDValue Add2 = DAG.getNode(Opc, DL, VT, N01, N11);
+        return DAG.getNode(Opc, DL, VT, Red, Add2);
+      }
+    }
+  }
   return SDValue();
 }
 
@@ -17098,12 +17130,15 @@ SDValue DAGCombiner::visitFADD(SDNode *N) {
                            DAG.getConstantFP(4.0, DL, VT));
       }
     }
+  } // enable-unsafe-fp-math && AllowNewConst
 
+  if (((Options.UnsafeFPMath && Options.NoSignedZerosFPMath) ||
+       (Flags.hasAllowReassociation() && Flags.hasNoSignedZeros()))) {
     // Fold fadd(vecreduce(x), vecreduce(y)) -> vecreduce(fadd(x, y))
     if (SDValue SD = reassociateReduction(ISD::VECREDUCE_FADD, ISD::FADD, DL,
                                           VT, N0, N1, Flags))
       return SD;
-  } // enable-unsafe-fp-math
+  }
 
   // FADD -> FMA combines:
   if (SDValue Fused = visitFADDForFMACombine<EmptyMatchContext>(N)) {
