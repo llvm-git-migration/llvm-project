@@ -2,7 +2,7 @@
 ; RUN: opt -mtriple=riscv64-unknown-linux-gnu -mattr=+v -vector-library=sleefgnuabi -replace-with-veclib -S < %s | FileCheck %s
 
 ;.
-; CHECK: @llvm.compiler.used = appending global [16 x ptr] [ptr @Sleef_cosdx_u10rvvm2, ptr @Sleef_cosfx_u10rvvm2, ptr @Sleef_expfx_u10rvvm2, ptr @Sleef_exp10dx_u10rvvm2, ptr @Sleef_exp10fx_u10rvvm2, ptr @Sleef_exp2dx_u10rvvm2, ptr @Sleef_exp2fx_u10rvvm2, ptr @Sleef_logfx_u10rvvm2, ptr @Sleef_log10dx_u10rvvm2, ptr @Sleef_log10fx_u10rvvm2, ptr @Sleef_log2dx_u10rvvm2, ptr @Sleef_log2fx_u10rvvm2, ptr @Sleef_powdx_u10rvvm2, ptr @Sleef_powfx_u10rvvm2, ptr @Sleef_sindx_u10rvvm2, ptr @Sleef_sinfx_u10rvvm2], section "llvm.metadata"
+; CHECK: @llvm.compiler.used = appending global [21 x ptr] [ptr @Sleef_cosdx_u10rvvm2, ptr @Sleef_cosfx_u10rvvm2, ptr @Sleef_expfx_u10rvvm2, ptr @Sleef_exp10dx_u10rvvm2, ptr @Sleef_exp10fx_u10rvvm2, ptr @Sleef_exp2dx_u10rvvm2, ptr @Sleef_exp2fx_u10rvvm2, ptr @Sleef_fmadx_rvvm2, ptr @Sleef_fmafx_rvvm2, ptr @Sleef_logdx_u10rvvm2, ptr @Sleef_logfx_u10rvvm2, ptr @Sleef_log10dx_u10rvvm2, ptr @Sleef_log10fx_u10rvvm2, ptr @Sleef_log2dx_u10rvvm2, ptr @Sleef_log2fx_u10rvvm2, ptr @Sleef_powdx_u10rvvm2, ptr @Sleef_powfx_u10rvvm2, ptr @Sleef_sindx_u10rvvm2, ptr @Sleef_sinfx_u10rvvm2, ptr @Sleef_sqrtdx_u05rvvm2, ptr @Sleef_sqrtfx_u05rvvm2], section "llvm.metadata"
 ;.
 define <vscale x 2 x double> @llvm_ceil_vscale_f64(<vscale x 2 x double> %in) {
 ; CHECK-LABEL: define <vscale x 2 x double> @llvm_ceil_vscale_f64(
@@ -167,7 +167,7 @@ define <vscale x 4 x float> @llvm_floor_vscale_f32(<vscale x 4 x float> %in) {
 define <vscale x 2 x double> @llvm_fma_vscale_f64(<vscale x 2 x double> %a, <vscale x 2 x double> %b, <vscale x 2 x double> %c ) {
 ; CHECK-LABEL: define <vscale x 2 x double> @llvm_fma_vscale_f64(
 ; CHECK-SAME: <vscale x 2 x double> [[A:%.*]], <vscale x 2 x double> [[B:%.*]], <vscale x 2 x double> [[C:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @llvm.fma.nxv2f64(<vscale x 2 x double> [[A]], <vscale x 2 x double> [[B]], <vscale x 2 x double> [[C]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @Sleef_fmadx_rvvm2(<vscale x 2 x double> [[A]], <vscale x 2 x double> [[B]], <vscale x 2 x double> [[C]])
 ; CHECK-NEXT:    ret <vscale x 2 x double> [[TMP1]]
 ;
   %1 = call fast <vscale x 2 x double> @llvm.fma.nxv2f64(<vscale x 2 x double> %a, <vscale x 2 x double> %b, <vscale x 2 x double> %c)
@@ -177,7 +177,7 @@ define <vscale x 2 x double> @llvm_fma_vscale_f64(<vscale x 2 x double> %a, <vsc
 define <vscale x 4 x float> @llvm_fma_vscale_f32(<vscale x 4 x float> %a, <vscale x 4 x float> %b, <vscale x 4 x float> %c) {
 ; CHECK-LABEL: define <vscale x 4 x float> @llvm_fma_vscale_f32(
 ; CHECK-SAME: <vscale x 4 x float> [[A:%.*]], <vscale x 4 x float> [[B:%.*]], <vscale x 4 x float> [[C:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 4 x float> @llvm.fma.nxv4f32(<vscale x 4 x float> [[A]], <vscale x 4 x float> [[B]], <vscale x 4 x float> [[C]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 4 x float> @Sleef_fmafx_rvvm2(<vscale x 4 x float> [[A]], <vscale x 4 x float> [[B]], <vscale x 4 x float> [[C]])
 ; CHECK-NEXT:    ret <vscale x 4 x float> [[TMP1]]
 ;
   %1 = call fast <vscale x 4 x float> @llvm.fma.nxv4f32(<vscale x 4 x float> %a, <vscale x 4 x float> %b, <vscale x 4 x float> %c)
@@ -187,7 +187,7 @@ define <vscale x 4 x float> @llvm_fma_vscale_f32(<vscale x 4 x float> %a, <vscal
 define <vscale x 2 x double> @llvm_log_vscale_f64(<vscale x 2 x double> %in) {
 ; CHECK-LABEL: define <vscale x 2 x double> @llvm_log_vscale_f64(
 ; CHECK-SAME: <vscale x 2 x double> [[IN:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @llvm.log.nxv2f64(<vscale x 2 x double> [[IN]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @Sleef_logdx_u10rvvm2(<vscale x 2 x double> [[IN]])
 ; CHECK-NEXT:    ret <vscale x 2 x double> [[TMP1]]
 ;
   %1 = call fast <vscale x 2 x double> @llvm.log.nxv2f64(<vscale x 2 x double> %in)
@@ -387,7 +387,7 @@ define <vscale x 4 x float> @llvm_sin_vscale_f32(<vscale x 4 x float> %in) {
 define <vscale x 2 x double> @llvm_sqrt_vscale_f64(<vscale x 2 x double> %in) {
 ; CHECK-LABEL: define <vscale x 2 x double> @llvm_sqrt_vscale_f64(
 ; CHECK-SAME: <vscale x 2 x double> [[IN:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @llvm.sqrt.nxv2f64(<vscale x 2 x double> [[IN]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 2 x double> @Sleef_sqrtdx_u05rvvm2(<vscale x 2 x double> [[IN]])
 ; CHECK-NEXT:    ret <vscale x 2 x double> [[TMP1]]
 ;
   %1 = call fast <vscale x 2 x double> @llvm.sqrt.nxv2f64(<vscale x 2 x double> %in)
@@ -397,7 +397,7 @@ define <vscale x 2 x double> @llvm_sqrt_vscale_f64(<vscale x 2 x double> %in) {
 define <vscale x 4 x float> @llvm_sqrt_vscale_f32(<vscale x 4 x float> %in) {
 ; CHECK-LABEL: define <vscale x 4 x float> @llvm_sqrt_vscale_f32(
 ; CHECK-SAME: <vscale x 4 x float> [[IN:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 4 x float> @llvm.sqrt.nxv4f32(<vscale x 4 x float> [[IN]])
+; CHECK-NEXT:    [[TMP1:%.*]] = call fast <vscale x 4 x float> @Sleef_sqrtfx_u05rvvm2(<vscale x 4 x float> [[IN]])
 ; CHECK-NEXT:    ret <vscale x 4 x float> [[TMP1]]
 ;
   %1 = call fast <vscale x 4 x float> @llvm.sqrt.nxv4f32(<vscale x 4 x float> %in)

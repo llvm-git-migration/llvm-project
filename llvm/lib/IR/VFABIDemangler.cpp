@@ -42,7 +42,7 @@ static ParseRet tryParseISA(StringRef &MangledName, VFISAKind &ISA) {
     ISA = StringSwitch<VFISAKind>(MangledName.take_front(1))
               .Case("n", VFISAKind::AdvancedSIMD)
               .Case("s", VFISAKind::SVE)
-              .Case("v", VFISAKind::RVV)
+              .Case("r", VFISAKind::RVV)
               .Case("b", VFISAKind::SSE)
               .Case("c", VFISAKind::AVX)
               .Case("d", VFISAKind::AVX2)

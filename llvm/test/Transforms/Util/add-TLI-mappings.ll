@@ -296,9 +296,9 @@ attributes #0 = { nounwind readnone }
 ; SLEEFGNUABI-SAME:   _ZGVsMxv_llvm.log10.f32(_ZGVsMxv_log10f)" }
 
 ; SLEEFGNUABI_RISCV:      attributes #[[SIN]] = { "vector-function-abi-variant"=
-; SLEEFGNUABI_RISCV-SAME:   "_ZGVvNxv_sin(Sleef_sindx_u10rvvm2)" }
+; SLEEFGNUABI_RISCV-SAME:   "_ZGVrNxv_sin(Sleef_sindx_u10rvvm2)" }
 ; SLEEFGNUABI_RISCV:      attributes #[[LOG10]] = { "vector-function-abi-variant"=
-; SLEEFGNUABI_RISCV-SAME:   "_ZGVvNxv_llvm.log10.f32(Sleef_log10fx_u10rvvm2)" }
+; SLEEFGNUABI_RISCV-SAME:   "_ZGVrNxv_llvm.log10.f32(Sleef_log10fx_u10rvvm2)" }
 
 ; ARMPL:      attributes #[[MODF]] = { "vector-function-abi-variant"=
 ; ARMPL-SAME:    "_ZGV_LLVM_N2vl8_modf(armpl_vmodfq_f64),
