@@ -22,10 +22,10 @@ define void @zext_mload_avgflooru(ptr %p1, ptr %p2, <vscale x 8 x i1> %mask) {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ld1b { z0.h }, p0/z, [x0]
 ; CHECK-NEXT:    ld1b { z1.h }, p0/z, [x1]
-; CHECK-NEXT:    and z0.h, z0.h, #0xff
-; CHECK-NEXT:    and z1.h, z1.h, #0xff
+; CHECK-NEXT:    eor z2.d, z0.d, z1.d
+; CHECK-NEXT:    and z0.d, z0.d, z1.d
+; CHECK-NEXT:    lsr z1.h, z2.h, #1
 ; CHECK-NEXT:    add z0.h, z0.h, z1.h
-; CHECK-NEXT:    lsr z0.h, z0.h, #1
 ; CHECK-NEXT:    st1h { z0.h }, p0, [x0]
 ; CHECK-NEXT:    ret
   %ld1 = call <vscale x 8 x i8> @llvm.masked.load(ptr %p1, i32 16, <vscale x 8 x i1> %mask, <vscale x 8 x i8> zeroinitializer)
@@ -78,12 +78,10 @@ define void @zext_mload_avgceilu(ptr %p1, ptr %p2, <vscale x 8 x i1> %mask) {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ld1b { z0.h }, p0/z, [x0]
 ; CHECK-NEXT:    ld1b { z1.h }, p0/z, [x1]
-; CHECK-NEXT:    mov z2.h, #-1 // =0xffffffffffffffff
-; CHECK-NEXT:    and z0.h, z0.h, #0xff
-; CHECK-NEXT:    and z1.h, z1.h, #0xff
-; CHECK-NEXT:    eor z0.d, z0.d, z2.d
-; CHECK-NEXT:    sub z0.h, z1.h, z0.h
-; CHECK-NEXT:    lsr z0.h, z0.h, #1
+; CHECK-NEXT:    eor z2.d, z0.d, z1.d
+; CHECK-NEXT:    orr z0.d, z0.d, z1.d
+; CHECK-NEXT:    lsr z1.h, z2.h, #1
+; CHECK-NEXT:    sub z0.h, z0.h, z1.h
 ; CHECK-NEXT:    st1b { z0.h }, p0, [x0]
 ; CHECK-NEXT:    ret
   %ld1 = call <vscale x 8 x i8> @llvm.masked.load(ptr %p1, i32 16, <vscale x 8 x i1> %mask, <vscale x 8 x i8> zeroinitializer)
