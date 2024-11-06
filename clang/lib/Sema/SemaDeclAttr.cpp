@@ -6961,7 +6961,6 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     handleWrapsAttr(S, D, AL, true);
     break;
 
-
   // Microsoft attributes:
   case ParsedAttr::AT_LayoutVersion:
     handleLayoutVersion(S, D, AL);
