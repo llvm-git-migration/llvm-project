@@ -30,4 +30,9 @@ body: |
 
     ; CHECK: Bad machine code: G_UNMERGE_VALUES scalar source operand does not match scalar destination operands
     %17:_(s32), %18:_(s32), %19:_(s32) = G_UNMERGE_VALUES %14
+
+    ; CHECK-NOT: Bad machine code
+    %20:_(<4 x p0>) = IMPLICIT_DEF
+    %21:_(<2 x s64>), %22:_(<2 x s64>) = G_UNMERGE_VALUES %20
+    %23:_(s64), %24:_(s64), %25:_(s64), %26:_(s64) = G_UNMERGE_VALUES %20
 ...
