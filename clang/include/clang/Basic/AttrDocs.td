@@ -7670,6 +7670,26 @@ The full documentation is available here: https://docs.microsoft.com/en-us/windo
   }];
 }
 
+def VkExtBuiltinInputDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``vk::ext_builtin_input`` attribute applies to HLSL global variables.
+The ``BuiltIn`` value is the ID of the BuiltIn in the SPIR-V specification.
+
+The full documentation is available here: https://microsoft.github.io/hlsl-specs/proposals/0011-inline-spirv.html
+  }];
+}
+
+def VkExtBuiltinOutputDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``vk::ext_builtin_output`` attribute applies to HLSL global variables.
+The ``BuiltIn`` value is the ID of the BuiltIn in the SPIR-V specification.
+
+The full documentation is available here: https://microsoft.github.io/hlsl-specs/proposals/0011-inline-spirv.html
+  }];
+}
+
 def HLSLSV_ShaderTypeAttrDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{

@@ -525,6 +525,29 @@ void CGHLSLRuntime::generateGlobalCtorDtorCalls() {
 
 void CGHLSLRuntime::handleGlobalVarDefinition(const VarDecl *VD,
                                               llvm::GlobalVariable *GV) {
+
+  if (HLSLVkExtBuiltinInputAttr *BuiltinAttr =
+          VD->getAttr<HLSLVkExtBuiltinInputAttr>()) {
+    LLVMContext &Ctx = CGM.getLLVMContext();
+    IRBuilder<> B(Ctx);
+    MDNode *Decoration = MDNode::get(
+        Ctx, {ConstantAsMetadata::get(B.getInt32(11 /* BuiltIn */)),
+              ConstantAsMetadata::get(B.getInt32(BuiltinAttr->getBuiltIn()))});
+    MDNode *Val = MDNode::get(Ctx, {Decoration});
+    GV->setMetadata("spirv.Decorations", Val);
+  }
+
+  if (HLSLVkExtBuiltinOutputAttr *BuiltinAttr =
+          VD->getAttr<HLSLVkExtBuiltinOutputAttr>()) {
+    LLVMContext &Ctx = CGM.getLLVMContext();
+    IRBuilder<> B(Ctx);
+    MDNode *Decoration = MDNode::get(
+        Ctx, {ConstantAsMetadata::get(B.getInt32(11 /* BuiltIn */)),
+              ConstantAsMetadata::get(B.getInt32(BuiltinAttr->getBuiltIn()))});
+    MDNode *Val = MDNode::get(Ctx, {Decoration});
+    GV->setMetadata("spirv.Decorations", Val);
+  }
+
   // If the global variable has resource binding, add it to the list of globals
   // that need resource binding initialization.
   const HLSLResourceBindingAttr *RBA = VD->getAttr<HLSLResourceBindingAttr>();

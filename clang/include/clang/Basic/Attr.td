@@ -164,6 +164,16 @@ def HLSLBufferObj : SubsetSubject<HLSLBuffer,
                     [{isa<HLSLBufferDecl>(S)}],
                     "cbuffer/tbuffer">;
 
+def HLSLInputBuiltin : SubsetSubject<Var,
+                             [{S->hasGlobalStorage() && S->getType().isConstQualified() &&
+                               S->getStorageClass()==StorageClass::SC_Extern}],
+                             "static const global variables">;
+
+def HLSLOutputBuiltin : SubsetSubject<Var,
+                             [{S->hasGlobalStorage() && !S->getType().isConstQualified() &&
+                               S->getStorageClass()==StorageClass::SC_Extern}],
+                             "static const global variables">;
+
 def ClassTmpl : SubsetSubject<CXXRecord, [{S->getDescribedClassTemplate()}],
                               "class templates">;
 
@@ -4586,6 +4596,22 @@ def HLSLNumThreads: InheritableAttr {
   let Subjects = SubjectList<[HLSLEntry]>;
   let LangOpts = [HLSL];
   let Documentation = [NumThreadsDocs];
+}
+
+def HLSLVkExtBuiltinInput: InheritableAttr {
+  let Spellings = [CXX11<"vk", "ext_builtin_input">];
+  let Args = [IntArgument<"BuiltIn">];
+  let Subjects = SubjectList<[HLSLInputBuiltin], ErrorDiag>;
+  let LangOpts = [HLSL];
+  let Documentation = [VkExtBuiltinInputDocs];
+}
+
+def HLSLVkExtBuiltinOutput: InheritableAttr {
+  let Spellings = [CXX11<"vk", "ext_builtin_output">];
+  let Args = [IntArgument<"BuiltIn">];
+  let Subjects = SubjectList<[HLSLOutputBuiltin], ErrorDiag>;
+  let LangOpts = [HLSL];
+  let Documentation = [VkExtBuiltinOutputDocs];
 }
 
 def HLSLSV_GroupIndex: HLSLAnnotationAttr {
