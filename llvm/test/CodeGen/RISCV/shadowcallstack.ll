@@ -63,9 +63,7 @@ define i32 @f3() shadowcallstack {
 ; RV32-NEXT:    .cfi_offset ra, -4
 ; RV32-NEXT:    call bar
 ; RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32-NEXT:    .cfi_restore ra
 ; RV32-NEXT:    addi sp, sp, 16
-; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    lw ra, -4(gp)
 ; RV32-NEXT:    addi gp, gp, -4
 ; RV32-NEXT:    .cfi_restore gp
@@ -82,9 +80,7 @@ define i32 @f3() shadowcallstack {
 ; RV64-NEXT:    .cfi_offset ra, -8
 ; RV64-NEXT:    call bar
 ; RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
-; RV64-NEXT:    .cfi_restore ra
 ; RV64-NEXT:    addi sp, sp, 16
-; RV64-NEXT:    .cfi_def_cfa_offset 0
 ; RV64-NEXT:    ld ra, -8(gp)
 ; RV64-NEXT:    addi gp, gp, -8
 ; RV64-NEXT:    .cfi_restore gp
@@ -101,10 +97,10 @@ define i32 @f3() shadowcallstack {
 ; RV32-ZICFISS-NEXT:    .cfi_offset ra, -4
 ; RV32-ZICFISS-NEXT:    call bar
 ; RV32-ZICFISS-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32-ZICFISS-NEXT:    .cfi_restore ra
 ; RV32-ZICFISS-NEXT:    addi sp, sp, 16
-; RV32-ZICFISS-NEXT:    .cfi_def_cfa_offset 0
-; RV32-ZICFISS-NEXT:    sspopchk ra
+; RV32-ZICFISS-NEXT:    lw ra, -4(gp)
+; RV32-ZICFISS-NEXT:    addi gp, gp, -4
+; RV32-ZICFISS-NEXT:    .cfi_restore gp
 ; RV32-ZICFISS-NEXT:    ret
 ;
 ; RV64-ZICFISS-LABEL: f3:
@@ -118,10 +114,10 @@ define i32 @f3() shadowcallstack {
 ; RV64-ZICFISS-NEXT:    .cfi_offset ra, -8
 ; RV64-ZICFISS-NEXT:    call bar
 ; RV64-ZICFISS-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
-; RV64-ZICFISS-NEXT:    .cfi_restore ra
 ; RV64-ZICFISS-NEXT:    addi sp, sp, 16
-; RV64-ZICFISS-NEXT:    .cfi_def_cfa_offset 0
-; RV64-ZICFISS-NEXT:    sspopchk ra
+; RV64-ZICFISS-NEXT:    ld ra, -8(gp)
+; RV64-ZICFISS-NEXT:    addi gp, gp, -8
+; RV64-ZICFISS-NEXT:    .cfi_restore gp
 ; RV64-ZICFISS-NEXT:    ret
   %res = call i32 @bar()
   %res1 = add i32 %res, 1
@@ -158,12 +154,7 @@ define i32 @f4() shadowcallstack {
 ; RV32-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    lw s1, 4(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    lw s2, 0(sp) # 4-byte Folded Reload
-; RV32-NEXT:    .cfi_restore ra
-; RV32-NEXT:    .cfi_restore s0
-; RV32-NEXT:    .cfi_restore s1
-; RV32-NEXT:    .cfi_restore s2
 ; RV32-NEXT:    addi sp, sp, 16
-; RV32-NEXT:    .cfi_def_cfa_offset 0
 ; RV32-NEXT:    lw ra, -4(gp)
 ; RV32-NEXT:    addi gp, gp, -4
 ; RV32-NEXT:    .cfi_restore gp
@@ -198,12 +189,7 @@ define i32 @f4() shadowcallstack {
 ; RV64-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
-; RV64-NEXT:    .cfi_restore ra
-; RV64-NEXT:    .cfi_restore s0
-; RV64-NEXT:    .cfi_restore s1
-; RV64-NEXT:    .cfi_restore s2
 ; RV64-NEXT:    addi sp, sp, 32
-; RV64-NEXT:    .cfi_def_cfa_offset 0
 ; RV64-NEXT:    ld ra, -8(gp)
 ; RV64-NEXT:    addi gp, gp, -8
 ; RV64-NEXT:    .cfi_restore gp
@@ -238,10 +224,6 @@ define i32 @f4() shadowcallstack {
 ; RV32-ZICFISS-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; RV32-ZICFISS-NEXT:    lw s1, 4(sp) # 4-byte Folded Reload
 ; RV32-ZICFISS-NEXT:    lw s2, 0(sp) # 4-byte Folded Reload
-; RV32-ZICFISS-NEXT:    .cfi_restore ra
-; RV32-ZICFISS-NEXT:    .cfi_restore s0
-; RV32-ZICFISS-NEXT:    .cfi_restore s1
-; RV32-ZICFISS-NEXT:    .cfi_restore s2
 ; RV32-ZICFISS-NEXT:    addi sp, sp, 16
 ; RV32-ZICFISS-NEXT:    lw ra, -4(gp)
 ; RV32-ZICFISS-NEXT:    addi gp, gp, -4
@@ -277,10 +259,6 @@ define i32 @f4() shadowcallstack {
 ; RV64-ZICFISS-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; RV64-ZICFISS-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; RV64-ZICFISS-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
-; RV64-ZICFISS-NEXT:    .cfi_restore ra
-; RV64-ZICFISS-NEXT:    .cfi_restore s0
-; RV64-ZICFISS-NEXT:    .cfi_restore s1
-; RV64-ZICFISS-NEXT:    .cfi_restore s2
 ; RV64-ZICFISS-NEXT:    addi sp, sp, 32
 ; RV64-ZICFISS-NEXT:    ld ra, -8(gp)
 ; RV64-ZICFISS-NEXT:    addi gp, gp, -8
