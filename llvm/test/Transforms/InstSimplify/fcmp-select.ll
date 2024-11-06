@@ -111,6 +111,28 @@ define double @oeq_zero_nsz(double %x) {
   ret double %cond
 }
 
+define double @ueq_zero_nsz(double %x) {
+; CHECK-LABEL: @ueq_zero_nsz(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ueq double [[X:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
+; CHECK-NEXT:    ret double [[COND]]
+;
+  %cmp = fcmp ueq double %x, 0.0
+  %cond = select nsz i1 %cmp, double %x, double 0.0
+  ret double %cond
+}
+
+define double @ueq_zero_nsz_nnan(double %x) {
+; CHECK-LABEL: @ueq_zero_nsz_nnan(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp nnan ueq double [[X:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
+; CHECK-NEXT:    ret double [[COND]]
+;
+  %cmp = fcmp nnan ueq double %x, 0.0
+  %cond = select nsz i1 %cmp, double %x, double 0.0
+  ret double %cond
+}
+
 ; X == 0.0 ? 0.0 : X --> X
 
 define float @oeq_zero_swapped_nsz(float %x) {
@@ -130,6 +152,28 @@ define double @une_zero_nsz(double %x) {
 ;
   %cmp = fcmp une double %x, 0.0
   %cond = select nsz ninf i1 %cmp, double %x, double 0.0
+  ret double %cond
+}
+
+define double @one_zero_nsz(double %x) {
+; CHECK-LABEL: @one_zero_nsz(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp one double [[X:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
+; CHECK-NEXT:    ret double [[COND]]
+;
+  %cmp = fcmp one double %x, 0.0
+  %cond = select nsz i1 %cmp, double %x, double 0.0
+  ret double %cond
+}
+
+define double @one_zero_nsz_nnan(double %x) {
+; CHECK-LABEL: @one_zero_nsz_nnan(
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp nnan one double [[X:%.*]], 0.000000e+00
+; CHECK-NEXT:    [[COND:%.*]] = select nsz i1 [[CMP]], double [[X]], double 0.000000e+00
+; CHECK-NEXT:    ret double [[COND]]
+;
+  %cmp = fcmp nnan one double %x, 0.0
+  %cond = select nsz i1 %cmp, double %x, double 0.0
   ret double %cond
 }
 
