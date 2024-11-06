@@ -186,6 +186,10 @@ Changes in existing checks
   <clang-tidy/checks/bugprone/unsafe-functions>` check to allow specifying
   additional functions to match.
 
+- Improved :doc:`bugprone-throw-keyword-missing
+  <clang-tidy/checks/bugprone/throw-keyword-missing>` by fixing a false positive
+  when using non-static member initializers and a constructor.
+
 - Improved :doc:`cert-flp30-c <clang-tidy/checks/cert/flp30-c>` check to
   fix false positive that floating point variable is only used in increment
   expression.
