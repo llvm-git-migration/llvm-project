@@ -719,6 +719,12 @@ def FeatureAtomicFaddRtnInsts : SubtargetFeature<"atomic-fadd-rtn-insts",
   [FeatureFlatGlobalInsts]
 >;
 
+def FeatureXF32Insts : SubtargetFeature<"xf32-insts",
+  "HasXF32Insts",
+  "true",
+  "Has v_mfma_f32_16x16x8xf32 and v_mfma_f32_32x32x4xf32 instructions"
+>;
+
 def FeatureAtomicFMinFMaxF32GlobalInsts : SubtargetFeature<"atomic-fmin-fmax-global-f32",
   "HasAtomicFMinFMaxF32GlobalInsts",
   "true",
@@ -1444,9 +1450,6 @@ def FeatureISAVersion9_4_Common : FeatureSet<
    FeatureDPALU_DPP,
    FeaturePackedFP32Ops,
    FeatureMAIInsts,
-   FeatureFP8Insts,
-   FeatureFP8ConversionInsts,
-   FeatureCvtFP8VOP1Bug,
    FeaturePkFmacF16Inst,
    FeatureAtomicFaddRtnInsts,
    FeatureAtomicFaddNoRtnInsts,
@@ -1468,15 +1471,36 @@ def FeatureISAVersion9_4_Common : FeatureSet<
 
 def FeatureISAVersion9_4_0 : FeatureSet<
   !listconcat(FeatureISAVersion9_4_Common.Features,
-    [FeatureForceStoreSC0SC1])>;
+    [
+      FeatureForceStoreSC0SC1,
+      FeatureFP8Insts,
+      FeatureFP8ConversionInsts,
+      FeatureCvtFP8VOP1Bug,
+      FeatureXF32Insts
+    ])>;
 
 def FeatureISAVersion9_4_1 : FeatureSet<
   !listconcat(FeatureISAVersion9_4_Common.Features,
-    [FeatureForceStoreSC0SC1])>;
+    [
+      FeatureForceStoreSC0SC1,
+      FeatureFP8Insts,
+      FeatureFP8ConversionInsts,
+      FeatureCvtFP8VOP1Bug,
+      FeatureXF32Insts
+    ])>;
 
 def FeatureISAVersion9_4_2 : FeatureSet<
   !listconcat(FeatureISAVersion9_4_Common.Features,
-    [])>;
+    [
+      FeatureFP8Insts,
+      FeatureFP8ConversionInsts,
+      FeatureCvtFP8VOP1Bug,
+      FeatureXF32Insts
+    ])>;
+
+def FeatureISAVersion9_4_Generic : FeatureSet<
+  !listconcat(FeatureISAVersion9_4_Common.Features,
+    [FeatureRequiresCOV6])>;
 
 def FeatureISAVersion10_Common : FeatureSet<
   [FeatureGFX10,
@@ -2020,6 +2044,9 @@ def HasRestrictedSOffset : Predicate<"Subtarget->hasRestrictedSOffset()">,
   AssemblerPredicate<(all_of FeatureHasRestrictedSOffset)>;
 def HasUnrestrictedSOffset : Predicate<"!Subtarget->hasRestrictedSOffset()">,
   AssemblerPredicate<(all_of (not FeatureHasRestrictedSOffset))>;
+
+def HasXF32Insts : Predicate<"Subtarget->hasXF32Insts()">,
+  AssemblerPredicate<(all_of FeatureXF32Insts)>;
 
 def D16PreservesUnusedBits :
   Predicate<"Subtarget->d16PreservesUnusedBits()">,

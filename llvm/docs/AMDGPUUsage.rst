@@ -576,6 +576,17 @@ Generic processor code objects are versioned. See :ref:`amdgpu-generic-processor
                                                                                                   - ``v_dot2_f32_f16``
 
 
+     ``gfx9-4-generic``   ``amdgcn``     - ``gfx940``      - xnack            - Absolute flat   - FP8 related instructions are not available.
+                                         - ``gfx941``                           scratch         - The following instructions are not available:
+                                         - ``gfx942``
+                                                                                                  - ``v_mfma_f32_16x16x8_xf32``
+                                                                                                  - ``v_mfma_f32_32x32x4xf32``
+                                                                                                  - ``v_cvt_f32_fp8``
+                                                                                                  - ``v_cvt_f32_bf8``
+                                                                                                  - ``v_cvt_pk_f32_fp8``
+                                                                                                  - ``v_cvt_pk_f32_bf8``
+
+
      ``gfx10-1-generic``  ``amdgcn``     - ``gfx1010``     - xnack            - Absolute flat   - The following instructions are
                                          - ``gfx1011``     - wavefrontsize64    scratch           not available on ``gfx1011``
                                          - ``gfx1012``     - cumode                               and ``gfx1012``
