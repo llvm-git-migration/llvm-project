@@ -1442,9 +1442,10 @@ Error IRLinker::linkModuleFlagsMetadata() {
       // Emit an error if the values differ.
       if (SrcOp->getOperand(2) != DstOp->getOperand(2))
         return stringErr("linking module flags '" + ID->getString() +
-                         "': IDs have conflicting values in '" +
-                         SrcM->getModuleIdentifier() + "' and '" +
-                         DstM.getModuleIdentifier() + "'");
+                 "': IDs have conflicting values: '" + *SrcOp->getOperand(2) +
+                 "' from " + SrcM->getModuleIdentifier() + ", and '" +
+                 *DstOp->getOperand(2) << "' from " 
+                 DstM.getModuleIdentifier());
       continue;
     }
     case Module::Warning: {
