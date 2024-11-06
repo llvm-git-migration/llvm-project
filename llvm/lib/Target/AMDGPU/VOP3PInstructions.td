@@ -775,6 +775,11 @@ let SubtargetPredicate = HasFP8Insts, is_gfx940_xdl = 1 in {
   defm V_MFMA_F32_32X32X16_FP8_FP8 : MAIInst<"v_mfma_f32_32x32x16_fp8_fp8", "F32_I64_X16",    int_amdgcn_mfma_f32_32x32x16_fp8_fp8>;
 } // End SubtargetPredicate = HasFP8Insts, is_gfx940_xdl = 1
 
+let SubtargetPredicate = HasXF32Insts, is_gfx940_xdl = 1 in {
+  defm V_MFMA_F32_16X16X8XF32      : MAIInst<"v_mfma_f32_16x16x8xf32",      "F32_V2F32_X16",  int_amdgcn_mfma_f32_16x16x8_xf32>;
+  defm V_MFMA_F32_32X32X4XF32      : MAIInst<"v_mfma_f32_32x32x4xf32",      "F32_V2F32_X32",  int_amdgcn_mfma_f32_32x32x4_xf32>;
+} // End SubtargetPredicate = HasXF32Insts, is_gfx940_xdl = 1
+
 multiclass SMFMACInst<string OpName, string P, SDPatternOperator node> {
   let Constraints = "$vdst = $src2", DisableEncoding = "$src2",
       isConvergent = 1, mayRaiseFPException = 0, ReadsModeReg = 1, is_gfx940_xdl = 1 in {
