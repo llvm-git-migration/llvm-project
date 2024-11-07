@@ -1324,7 +1324,7 @@ static const VecDesc VecFuncs_SLEEFGNUABI_VFScalable[] = {
 #undef TLI_DEFINE_SLEEFGNUABI_SCALABLE_VECFUNCS
 };
 
-static const VecDesc VecFuncs_SKEEFGNUABI_VFScalableRISCV[] = {
+static const VecDesc VecFuncs_SLEEFGNUABI_VFScalableRISCV[] = {
 #define TLI_DEFINE_SLEEFGNUABI_SCALABLE_VECFUNCS_RISCV
 #define TLI_DEFINE_VECFUNC(SCAL, VEC, VF, MASK, VABI_PREFIX)                   \
   {SCAL, VEC, VF, MASK, VABI_PREFIX},
@@ -1382,7 +1382,7 @@ void TargetLibraryInfoImpl::addVectorizableFunctionsFromVecLib(
       addVectorizableFunctions(VecFuncs_SLEEFGNUABI_VFScalable);
       break;
     case llvm::Triple::riscv64:
-      addVectorizableFunctions(VecFuncs_SKEEFGNUABI_VFScalableRISCV);
+      addVectorizableFunctions(VecFuncs_SLEEFGNUABI_VFScalableRISCV);
       break;
     }
     break;
