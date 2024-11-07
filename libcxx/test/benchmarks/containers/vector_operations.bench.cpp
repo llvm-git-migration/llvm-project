@@ -91,4 +91,18 @@ BENCHMARK_CAPTURE(BM_AssignInputIterIter<100>,
                   getRandomIntegerInputsWithLength<int>)
     ->Args({TestNumInputs, TestNumInputs});
 
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_empty, vector_int, std::vector<int>{}, getRandomIntegerInputs<int>)
+    ->Arg(TestNumInputs);
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_halffull, vector_int, std::vector<int>{}, getRandomIntegerInputs<int>)
+    ->Arg(TestNumInputs);
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_full, vector_int, std::vector<int>{}, getRandomIntegerInputs<int>)
+    ->Arg(TestNumInputs);
+
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_empty, vector_string, std::vector<std::string>{}, getSSORandomStringInputs)
+    ->Arg(TestNumInputs);
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_halffull, vector_string, std::vector<std::string>{}, getSSORandomStringInputs)
+    ->Arg(TestNumInputs);
+BENCHMARK_CAPTURE(BM_insert_inputiteriter_full, vector_string, std::vector<std::string>{}, getSSORandomStringInputs)
+    ->Arg(TestNumInputs);
+
 BENCHMARK_MAIN();
