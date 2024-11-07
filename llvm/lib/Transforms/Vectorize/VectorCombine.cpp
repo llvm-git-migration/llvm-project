@@ -2703,8 +2703,9 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
   Mask[InsIdx] = ExtIdx + NumElts;
   // Cost
   ExtractElementInst *Ext;
-  if ((Ext = dyn_cast<ExtractElementInst>(I.getOperand(0))) == nullptr)
-    Ext = dyn_cast<ExtractElementInst>(I.getOperand(1));
+  Ext = isa<ExtractElementInst>(I.getOperand(0))
+            ? cast<ExtractElementInst>(I.getOperand(0))
+            : cast<ExtractElementInst>(I.getOperand(1));
 
   TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
   InstructionCost OldCost =
