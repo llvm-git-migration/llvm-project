@@ -1,0 +1,29 @@
+# RUN: yaml2obj %s -o %t
+# RUN: llvm-objdump -p %t 2>&1 | FileCheck --check-prefix=BROKEN-VERDEF -DFILE=%t %s
+
+# BROKEN-VERDEF: Version definitions:
+# BROKEN-VERDEF-NEXT: warning: '[[FILE]]': out-of-bound while parsing verdaux entries, corrupted verdef section
+
+--- !ELF
+FileHeader:
+  Class:           ELFCLASS64
+  Data:            ELFDATA2LSB
+  Type:            ET_DYN
+  Machine:         EM_X86_64
+  Entry:           0x0000000000001000
+Sections:
+  - Name:            .gnu.version_d
+    Type:            SHT_GNU_verdef
+    Flags:           [ SHF_ALLOC ]
+    Address:         0x0000000000000230
+    AddressAlign:    0x0000000000000004
+    Entries:
+      - Version:         1
+        Flags:           44
+        VersionNdx:      0
+        Hash:            12345
+        AuxVOffset:      0x45
+        Names:
+          - VERSION_1
+DynamicSymbols: []
+...
