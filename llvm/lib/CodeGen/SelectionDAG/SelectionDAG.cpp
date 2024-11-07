@@ -2519,6 +2519,7 @@ bool SelectionDAG::expandMultipleResultFPLibCall(
     unsigned ResNo = StoreValue.getResNo();
     Type *StoreType = StoreValue.getValueType().getTypeForEVT(Ctx);
     if (CallRetResNo == ResNo || !ST->isSimple() ||
+        !isa<const Value *>(ST->getPointerInfo().V) ||
         ST->getAddressSpace() != 0 ||
         ST->getAlign() <
             getDataLayout().getABITypeAlign(StoreType->getScalarType()) ||
