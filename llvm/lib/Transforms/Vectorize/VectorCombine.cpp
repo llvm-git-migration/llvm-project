@@ -2698,7 +2698,7 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
   if (ExtIdx >= NumElts)
     return false;
 
-  SmallVector<int> Mask(NumElts);
+  SmallVector<int> Mask(NumElts, 0);
   std::iota(Mask.begin(), Mask.end(), 0);
   Mask[InsIdx] = ExtIdx + NumElts;
   // Cost
