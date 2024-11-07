@@ -52,10 +52,12 @@
 # RESULT-NEXT: fp64-fp16-output-denormals: false
 # RESULT-NEXT: highBitsOf32BitAddress: 4276993775
 # RESULT-NEXT: occupancy:       8
+# RESULT-NEXT: numPhysicalVGPRSpillLanes: 0
 # RESULT-NEXT: wwmReservedRegs:
 # RESULT-NEXT: - '$vgpr2'
 # RESULT-NEXT: - '$vgpr3'
 # RESULT-NEXT: vgprForAGPRCopy: '$vgpr33'
+# RESULT-NEXT: body:
 
 # RESULT: S_NOP 0, implicit $sgpr48_sgpr49_sgpr50_sgpr51
 # RESULT: S_NOP 0, implicit $vgpr33
