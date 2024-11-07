@@ -799,6 +799,38 @@ TEST(Interception, EmptyExportTable) {
   EXPECT_EQ(0U, FunPtr);
 }
 
+TEST(Interception, GetInstructionSize) {
+
+  struct {
+    SIZE_T size;
+    u8 instr[16];
+    SIZE_T rel_offset;
+  } data[] = {
+    /* sort list */
+    {  1, { 0x50 }, 0 },  // 50 : push eax / rax
+  };
+
+  SIZE_T size;
+  SIZE_T rel_offset;
+
+  for (unsigned int i = 0; i < sizeof(data)/sizeof(*data); i++) {
+    rel_offset = ~0L;
+    size = __interception::test_GetInstructionSize((uptr)data[i].instr, &rel_offset);
+    EXPECT_EQ(data[i].size, size)
+            << "  with i=" << i << " ( "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[0] << " "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[1] << " "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[2] << " "
+            << ")";
+    EXPECT_EQ(data[i].rel_offset, rel_offset)
+            << "  with i=" << i << " ( "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[0] << " "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[1] << " "
+            << std::setfill('0') << std::setw(2) << std::right << std::hex << (int)data[i].instr[2] << " "
+            << ")";
+  }
+}
+
 }  // namespace __interception
 
 #    endif  // !SANITIZER_WINDOWS_ARM64

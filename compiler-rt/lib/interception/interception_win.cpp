@@ -917,6 +917,11 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
   return 0;
 }
 
+// Unfortunately size_t is not known when compiling asan_allocator.cpp
+SIZE_T test_GetInstructionSize(uptr address, SIZE_T* rel_offset) {
+  return GetInstructionSize(address, rel_offset);
+}
+
 // Returns 0 on error.
 static size_t RoundUpToInstrBoundary(size_t size, uptr address) {
   size_t cursor = 0;
