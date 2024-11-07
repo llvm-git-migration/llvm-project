@@ -2757,8 +2757,8 @@ public:
 /// A recipe to represent inloop MulAccreduction operations, performing a
 /// reduction on a vector operand into a scalar value, and adding the result to
 /// a chain. This recipe is high level abstract which will generate
-/// VPReductionRecipe VPWidenRecipe(mul)and VPWidenCastRecipe before execution.
-/// The Operands are {ChainOp, VecOp1, VecOp2, [Condition]}.
+/// VPReductionRecipe VPWidenRecipe(mul) and VPWidenCastRecipes before
+/// execution. The Operands are {ChainOp, VecOp1, VecOp2, [Condition]}.
 class VPMulAccRecipe : public VPSingleDefRecipe {
   /// The recurrence decriptor for the reduction in question.
   const RecurrenceDescriptor &RdxDesc;
@@ -2778,6 +2778,8 @@ class VPMulAccRecipe : public VPSingleDefRecipe {
 
   /// Is this MulAcc recipe contains extend recipes?
   bool IsExtended;
+  /// Is this reciep contains outer extend instuction?
+  bool IsOuterExtended = false;
 
 protected:
   VPMulAccRecipe(const unsigned char SC, const RecurrenceDescriptor &R,
@@ -2797,6 +2799,7 @@ protected:
       addOperand(CondOp);
     }
     IsExtended = true;
+    IsOuterExtended = ExtInstr != nullptr;
   }
 
   VPMulAccRecipe(const unsigned char SC, const RecurrenceDescriptor &R,
