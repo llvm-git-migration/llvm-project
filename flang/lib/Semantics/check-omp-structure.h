@@ -131,6 +131,9 @@ public:
   void Enter(const parser::OmpAtomicCapture &);
   void Leave(const parser::OmpAtomic &);
 
+  void Enter(const parser::ProcedureDesignator &);
+  void Enter(const parser::Designator &);
+
 #define GEN_FLANG_CLAUSE_CHECK_ENTER
 #include "llvm/Frontend/OpenMP/OMP.inc"
 
