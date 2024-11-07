@@ -23,7 +23,7 @@ define dso_local void @uitofp_preserve_nneg(ptr nocapture noundef writeonly %res
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], [[VECTOR_BODY]] ]
 ; CHECK-NEXT:    [[VEC_IND:%.*]] = phi <4 x i32> [ <i32 0, i32 1, i32 2, i32 3>, [[VECTOR_PH]] ], [ [[VEC_IND_NEXT:%.*]], [[VECTOR_BODY]] ]
-; CHECK-NEXT:    [[TMP0:%.*]] = uitofp <4 x i32> [[VEC_IND]] to <4 x float>
+; CHECK-NEXT:    [[TMP0:%.*]] = uitofp nneg <4 x i32> [[VEC_IND]] to <4 x float>
 ; CHECK-NEXT:    [[TMP1:%.*]] = tail call <4 x float> @llvm.fmuladd.v4f32(<4 x float> [[BROADCAST_SPLAT]], <4 x float> [[TMP0]], <4 x float> [[BROADCAST_SPLAT3]])
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr inbounds float, ptr [[RESULT:%.*]], i64 [[INDEX]]
 ; CHECK-NEXT:    store <4 x float> [[TMP1]], ptr [[TMP2]], align 4

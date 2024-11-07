@@ -48,10 +48,11 @@
 ; CHECK-NEXT: fp64-fp16-output-denormals: true
 ; CHECK-NEXT: highBitsOf32BitAddress: 0
 ; CHECK-NEXT: occupancy: 8
+; CHECK-NEXT: numPhysicalVGPRSpillLanes: 0
 ; CHECK-NEXT: vgprForAGPRCopy: ''
 ; CHECK-NEXT: sgprForEXECCopy: '$sgpr100_sgpr101'
 ; CHECK-NEXT: longBranchReservedReg: ''
-; CHECK-NEXT: hasInitWholeWave: false
+; CHECK-NEXT: hasInitWholeWave: false    
 ; CHECK-NEXT: body:
 define amdgpu_kernel void @kernel(i32 %arg0, i64 %arg1, <16 x i32> %arg2) {
   %gep = getelementptr inbounds [512 x float], ptr addrspace(3) @lds, i32 0, i32 %arg0
@@ -94,6 +95,7 @@ define amdgpu_kernel void @kernel(i32 %arg0, i64 %arg1, <16 x i32> %arg2) {
 ; CHECK-NEXT: fp64-fp16-output-denormals: true
 ; CHECK-NEXT: highBitsOf32BitAddress: 0
 ; CHECK-NEXT: occupancy: 10
+; CHECK-NEXT: numPhysicalVGPRSpillLanes: 0
 ; CHECK-NEXT: vgprForAGPRCopy: ''
 ; CHECK-NEXT: sgprForEXECCopy: '$sgpr100_sgpr101'
 ; CHECK-NEXT: longBranchReservedReg: ''
@@ -164,6 +166,7 @@ define amdgpu_ps void @gds_size_shader(i32 %arg0, i32 inreg %arg1) #5 {
 ; CHECK-NEXT: fp64-fp16-output-denormals: true
 ; CHECK-NEXT: highBitsOf32BitAddress: 0
 ; CHECK-NEXT: occupancy: 8
+; CHECK-NEXT: numPhysicalVGPRSpillLanes: 0
 ; CHECK-NEXT: vgprForAGPRCopy: ''
 ; CHECK-NEXT: sgprForEXECCopy: '$sgpr100_sgpr101'
 ; CHECK-NEXT: longBranchReservedReg: ''
@@ -216,6 +219,7 @@ define void @function() {
 ; CHECK-NEXT: fp64-fp16-output-denormals: true
 ; CHECK-NEXT: highBitsOf32BitAddress: 0
 ; CHECK-NEXT: occupancy: 8
+; CHECK-NEXT: numPhysicalVGPRSpillLanes: 0
 ; CHECK-NEXT: vgprForAGPRCopy: ''
 ; CHECK-NEXT: sgprForEXECCopy: '$sgpr100_sgpr101'
 ; CHECK-NEXT: longBranchReservedReg: ''

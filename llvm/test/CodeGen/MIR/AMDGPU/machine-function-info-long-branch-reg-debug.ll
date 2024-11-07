@@ -39,6 +39,7 @@
 ; CHECK-NEXT: fp64-fp16-output-denormals: true
 ; CHECK-NEXT: BitsOf32BitAddress: 0
 ; CHECK-NEXT: occupancy:       8
+; CHECK-NEXT: numPhysicalVGPRSpillLanes: 0
 ; CHECK-NEXT: vgprForAGPRCopy: ''
 ; CHECK-NEXT: sgprForEXECCopy: '$sgpr100_sgpr101'
 ; CHECK-NEXT: longBranchReservedReg: '$sgpr2_sgpr3'

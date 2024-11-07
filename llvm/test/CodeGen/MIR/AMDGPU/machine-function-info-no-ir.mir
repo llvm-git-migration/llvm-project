@@ -48,6 +48,7 @@
 # FULL-NEXT: fp64-fp16-output-denormals: true
 # FULL-NEXT:  highBitsOf32BitAddress: 0
 # FULL-NEXT:  occupancy: 8
+# FULL-NEXT:  numPhysicalVGPRSpillLanes: 0
 # FULL-NEXT:  vgprForAGPRCopy: ''
 # FULL-NEXT:  sgprForEXECCopy: ''
 # FULL-NEXT:  longBranchReservedReg: ''
@@ -81,6 +82,7 @@
 # SIMPLE-NEXT: workItemIDY:     { reg: '$vgpr31', mask: 1047552 }
 # SIMPLE-NEXT: workItemIDZ:     { reg: '$vgpr31', mask: 1072693248 }
 # SIMPLE-NEXT: occupancy: 8
+# SIMPLE-NEXT: numPhysicalVGPRSpillLanes: 0
 # SIMPLE-NEXT: body:
 name: kernel0
 machineFunctionInfo:
@@ -152,6 +154,7 @@ body:             |
 # FULL-NEXT: fp64-fp16-output-denormals: true
 # FULL-NEXT:  highBitsOf32BitAddress: 0
 # FULL-NEXT:  occupancy: 8
+# FULL-NEXT: numPhysicalVGPRSpillLanes: 0
 # FULL-NEXT: vgprForAGPRCopy: ''
 # FULL-NEXT: sgprForEXECCopy: ''
 # FULL-NEXT: longBranchReservedReg: ''
@@ -174,6 +177,7 @@ body:             |
 # SIMPLE-NEXT: workItemIDY:     { reg: '$vgpr31', mask: 1047552 }
 # SIMPLE-NEXT: workItemIDZ:     { reg: '$vgpr31', mask: 1072693248 }
 # SIMPLE-NEXT:  occupancy: 8
+# SIMPLE-NEXT:  numPhysicalVGPRSpillLanes: 0
 # SIMPLE-NEXT: body:
 
 name: no_mfi
@@ -227,6 +231,7 @@ body:             |
 # FULL-NEXT: fp64-fp16-output-denormals: true
 # FULL-NEXT:  highBitsOf32BitAddress: 0
 # FULL-NEXT:  occupancy: 8
+# FULL-NEXT: numPhysicalVGPRSpillLanes: 0
 # FULL-NEXT: vgprForAGPRCopy: ''
 # FULL-NEXT: sgprForEXECCopy: ''
 # FULL-NEXT: longBranchReservedReg: ''
@@ -249,6 +254,7 @@ body:             |
 # SIMPLE-NEXT: workItemIDY:     { reg: '$vgpr31', mask: 1047552 }
 # SIMPLE-NEXT: workItemIDZ:     { reg: '$vgpr31', mask: 1072693248 }
 # SIMPLE-NEXT:  occupancy: 8
+# SIMPLE-NEXT:  numPhysicalVGPRSpillLanes: 0
 # SIMPLE-NEXT: body:
 
 name: empty_mfi
@@ -303,6 +309,7 @@ body:             |
 # FULL-NEXT: fp64-fp16-output-denormals: true
 # FULL-NEXT:  highBitsOf32BitAddress: 0
 # FULL-NEXT:  occupancy: 8
+# FULL-NEXT: numPhysicalVGPRSpillLanes: 0
 # FULL-NEXT: vgprForAGPRCopy: ''
 # FULL-NEXT: sgprForEXECCopy: ''
 # FULL-NEXT: longBranchReservedReg: ''
@@ -326,6 +333,7 @@ body:             |
 # SIMPLE-NEXT: workItemIDY:     { reg: '$vgpr31', mask: 1047552 }
 # SIMPLE-NEXT: workItemIDZ:     { reg: '$vgpr31', mask: 1072693248 }
 # SIMPLE-NEXT: occupancy: 8
+# SIMPLE-NEXT: numPhysicalVGPRSpillLanes: 0
 # SIMPLE-NEXT: body:
 
 name: empty_mfi_entry_func
