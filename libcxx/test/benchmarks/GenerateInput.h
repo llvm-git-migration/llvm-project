@@ -53,6 +53,7 @@ inline std::vector<IntT> getDuplicateIntegerInputs(size_t N) {
 template <class IntT>
 inline std::vector<IntT> getSortedIntegerInputs(size_t N) {
   std::vector<IntT> inputs;
+  inputs.reserve(N);
   for (size_t i = 0; i < N; i += 1)
     inputs.push_back(i);
   return inputs;
@@ -61,6 +62,7 @@ inline std::vector<IntT> getSortedIntegerInputs(size_t N) {
 template <class IntT>
 std::vector<IntT> getSortedLargeIntegerInputs(size_t N) {
   std::vector<IntT> inputs;
+  inputs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     inputs.push_back(i + N);
   }
@@ -78,6 +80,7 @@ std::vector<IntT> getSortedTopBitsIntegerInputs(size_t N) {
 template <class IntT>
 inline std::vector<IntT> getReverseSortedIntegerInputs(size_t N) {
   std::vector<IntT> inputs;
+  inputs.reserve(N);
   std::size_t i = N;
   while (i > 0) {
     --i;
@@ -100,6 +103,7 @@ std::vector<IntT> getPipeOrganIntegerInputs(size_t N) {
 template <class IntT>
 std::vector<IntT> getRandomIntegerInputs(size_t N) {
   std::vector<IntT> inputs;
+  inputs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     inputs.push_back(getRandomInteger<IntT>(0, std::numeric_limits<IntT>::max()));
   }
@@ -113,6 +117,7 @@ inline std::vector<std::string> getDuplicateStringInputs(size_t N) {
 
 inline std::vector<std::string> getRandomStringInputs(size_t N) {
   std::vector<std::string> inputs;
+  inputs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     inputs.push_back(getRandomString(1024));
   }
@@ -121,6 +126,7 @@ inline std::vector<std::string> getRandomStringInputs(size_t N) {
 
 inline std::vector<std::string> getPrefixedRandomStringInputs(size_t N) {
   std::vector<std::string> inputs;
+  inputs.reserve(N);
   constexpr int kSuffixLength = 32;
   const std::string prefix    = getRandomString(1024 - kSuffixLength);
   for (size_t i = 0; i < N; ++i) {
