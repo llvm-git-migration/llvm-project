@@ -668,7 +668,13 @@ STATISTIC(ObjectVisitorArgument,
 STATISTIC(ObjectVisitorLoad,
           "Number of load instructions with unsolved size and offset");
 
-APInt ObjectSizeOffsetVisitor::align(APInt Size, MaybeAlign Alignment) {
+/// Align \p Size according to \p Alignment. If \p Size is greater than
+/// getSignedMaxValue(), set it as unknown as we can only represent signed value
+/// in OffsetSpan.
+APInt ObjectSizeOffsetVisitor::alignAndCap(APInt Size, MaybeAlign Alignment) {
+  if (Size.isNegative())
+    return APInt();
+
   if (Options.RoundToAlign && Alignment)
     return APInt(IntTyBits, alignTo(Size.getZExtValue(), *Alignment));
   return Size;
@@ -780,8 +786,9 @@ OffsetSpan ObjectSizeOffsetVisitor::visitAllocaInst(AllocaInst &I) {
   if (!isUIntN(IntTyBits, ElemSize.getKnownMinValue()))
     return ObjectSizeOffsetVisitor::unknown();
   APInt Size(IntTyBits, ElemSize.getKnownMinValue());
+
   if (!I.isArrayAllocation())
-    return OffsetSpan(Zero, align(Size, I.getAlign()));
+    return OffsetSpan(Zero, alignAndCap(Size, I.getAlign()));
 
   Value *ArraySize = I.getArraySize();
   if (const ConstantInt *C = dyn_cast<ConstantInt>(ArraySize)) {
@@ -791,8 +798,9 @@ OffsetSpan ObjectSizeOffsetVisitor::visitAllocaInst(AllocaInst &I) {
 
     bool Overflow;
     Size = Size.umul_ov(NumElems, Overflow);
+
     return Overflow ? ObjectSizeOffsetVisitor::unknown()
-                    : OffsetSpan(Zero, align(Size, I.getAlign()));
+                    : OffsetSpan(Zero, alignAndCap(Size, I.getAlign()));
   }
   return ObjectSizeOffsetVisitor::unknown();
 }
@@ -806,12 +814,16 @@ OffsetSpan ObjectSizeOffsetVisitor::visitArgument(Argument &A) {
   }
 
   APInt Size(IntTyBits, DL.getTypeAllocSize(MemoryTy));
-  return OffsetSpan(Zero, align(Size, A.getParamAlign()));
+  return OffsetSpan(Zero, alignAndCap(Size, A.getParamAlign()));
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitCallBase(CallBase &CB) {
-  if (std::optional<APInt> Size = getAllocSize(&CB, TLI))
+  if (std::optional<APInt> Size = getAllocSize(&CB, TLI)) {
+    // Very large unsigned value cannot be represented as OffsetSpan.
+    if (Size->isNegative())
+      return ObjectSizeOffsetVisitor::unknown();
     return OffsetSpan(Zero, *Size);
+  }
   return ObjectSizeOffsetVisitor::unknown();
 }
 
@@ -852,7 +864,7 @@ OffsetSpan ObjectSizeOffsetVisitor::visitGlobalVariable(GlobalVariable &GV) {
     return ObjectSizeOffsetVisitor::unknown();
 
   APInt Size(IntTyBits, DL.getTypeAllocSize(GV.getValueType()));
-  return OffsetSpan(Zero, align(Size, GV.getAlign()));
+  return OffsetSpan(Zero, alignAndCap(Size, GV.getAlign()));
 }
 
 OffsetSpan ObjectSizeOffsetVisitor::visitIntToPtrInst(IntToPtrInst &) {
