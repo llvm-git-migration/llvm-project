@@ -38,3 +38,10 @@ void constant_idx_unsafe(unsigned idx) {
                         // expected-note@-1{{change type of 'buffer' to 'std::array' to label it for hardening}}
   buffer[10] = 0;       // expected-note{{used in buffer access here}}
 }
+
+void constant_id_string() {
+  char safe_char = "abc"[1]; // no-warning
+  char abcd[5] = "abc";
+  abcd[2]; // no-warning
+  safe_char = "abc"[3]; //expected-warning{{unsafe buffer access}}
+}
