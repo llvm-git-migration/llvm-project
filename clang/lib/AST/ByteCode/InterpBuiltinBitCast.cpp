@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "InterpBuiltinBitCast.h"
+#include "BitcastBuffer.h"
 #include "Boolean.h"
 #include "Context.h"
 #include "Floating.h"
@@ -17,6 +18,8 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Basic/TargetInfo.h"
+#include <bitset>
+#include <cmath>
 
 using namespace clang;
 using namespace clang::interp;
@@ -61,79 +64,10 @@ using DataFunc = llvm::function_ref<bool(const Pointer &P, PrimType Ty,
     }                                                                          \
   } while (0)
 
-static bool bitof(std::byte B, unsigned BitIndex) {
-  return (B & (std::byte{1} << BitIndex)) != std::byte{0};
-}
-
 static void swapBytes(std::byte *M, size_t N) {
   for (size_t I = 0; I != (N / 2); ++I)
     std::swap(M[I], M[N - 1 - I]);
 }
-
-/// Track what bits have been initialized to known values and which ones
-/// have indeterminate value.
-/// All offsets are in bits.
-struct BitcastBuffer {
-  size_t SizeInBits = 0;
-  llvm::SmallVector<std::byte> Data;
-
-  BitcastBuffer() = default;
-
-  size_t size() const { return SizeInBits; }
-
-  const std::byte *data() const { return Data.data(); }
-
-  std::byte *getBytes(unsigned BitOffset) const {
-    assert(BitOffset % 8 == 0);
-    assert(BitOffset < SizeInBits);
-    return const_cast<std::byte *>(data() + (BitOffset / 8));
-  }
-
-  bool allInitialized() const {
-    // FIXME: Implement.
-    return true;
-  }
-
-  bool atByteBoundary() const { return (Data.size() * 8) == SizeInBits; }
-
-  void pushBit(bool Value) {
-    if (atByteBoundary())
-      Data.push_back(std::byte{0});
-
-    if (Value)
-      Data.back() |= (std::byte{1} << (SizeInBits % 8));
-    ++SizeInBits;
-  }
-
-  void pushData(const std::byte *data, size_t BitWidth, bool BigEndianTarget) {
-    bool OnlyFullBytes = BitWidth % 8 == 0;
-    unsigned NBytes = BitWidth / 8;
-
-    size_t BitsHandled = 0;
-    // Read all full bytes first
-    for (size_t I = 0; I != NBytes; ++I) {
-      std::byte B =
-          BigEndianTarget ? data[NBytes - OnlyFullBytes - I] : data[I];
-      for (unsigned X = 0; X != 8; ++X) {
-        pushBit(bitof(B, X));
-        ++BitsHandled;
-      }
-    }
-
-    if (BitsHandled == BitWidth)
-      return;
-
-    // Rest of the bits.
-    assert((BitWidth - BitsHandled) < 8);
-    std::byte B = BigEndianTarget ? data[0] : data[NBytes];
-    for (size_t I = 0, E = (BitWidth - BitsHandled); I != E; ++I) {
-      pushBit(bitof(B, I));
-      ++BitsHandled;
-    }
-
-    assert(BitsHandled == BitWidth);
-  }
-};
 
 /// We use this to recursively iterate over all fields and elemends of a pointer
 /// and extract relevant data for a bitcast.
@@ -148,28 +82,28 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, size_t Offset,
 
   // Primitive arrays.
   if (FieldDesc->isPrimitiveArray()) {
-    bool BigEndianTarget = Ctx.getASTContext().getTargetInfo().isBigEndian();
     QualType ElemType = FieldDesc->getElemQualType();
     size_t ElemSizeInBits = Ctx.getASTContext().getTypeSize(ElemType);
     PrimType ElemT = *Ctx.classify(ElemType);
     // Special case, since the bools here are packed.
     bool PackedBools = FieldDesc->getType()->isExtVectorBoolType();
+    unsigned NumElems = FieldDesc->getNumElems();
     bool Ok = true;
-    for (unsigned I = 0; I != FieldDesc->getNumElems(); ++I) {
-      unsigned Index = BigEndianTarget ? (FieldDesc->getNumElems() - 1 - I) : I;
+    for (unsigned I = 0; I != NumElems; ++I) {
+      unsigned Index = I;
       Ok = Ok && F(P.atIndex(Index), ElemT, Offset, PackedBools);
-      Offset += ElemSizeInBits;
+      Offset += PackedBools ? 1 : ElemSizeInBits;
     }
     return Ok;
   }
 
   // Composite arrays.
   if (FieldDesc->isCompositeArray()) {
-    bool BigEndianTarget = Ctx.getASTContext().getTargetInfo().isBigEndian();
+    // bool BigEndianTarget = Ctx.getASTContext().getTargetInfo().isBigEndian();
     QualType ElemType = FieldDesc->getElemQualType();
     size_t ElemSizeInBits = Ctx.getASTContext().getTypeSize(ElemType);
     for (unsigned I = 0; I != FieldDesc->getNumElems(); ++I) {
-      unsigned Index = BigEndianTarget ? (FieldDesc->getNumElems() - 1 - I) : I;
+      unsigned Index = I;
       enumerateData(P.atIndex(Index).narrow(), Ctx, Offset, F);
       Offset += ElemSizeInBits;
     }
@@ -178,7 +112,6 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, size_t Offset,
 
   // Records.
   if (FieldDesc->isRecord()) {
-    bool BigEndianTarget = Ctx.getASTContext().getTargetInfo().isBigEndian();
     const Record *R = FieldDesc->ElemRecord;
     const ASTRecordLayout &Layout =
         Ctx.getASTContext().getASTRecordLayout(R->getDecl());
@@ -186,8 +119,7 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, size_t Offset,
 
     auto enumerateFields = [&]() -> void {
       for (unsigned I = 0, N = R->getNumFields(); I != N; ++I) {
-        const Record::Field *Fi =
-            R->getField(BigEndianTarget ? (N - 1 - I) : I);
+        const Record::Field *Fi = R->getField(I);
         Pointer Elem = P.atField(Fi->Offset);
         size_t BitOffset =
             Offset + Layout.getFieldOffset(Fi->Decl->getFieldIndex());
@@ -196,7 +128,7 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, size_t Offset,
     };
     auto enumerateBases = [&]() -> void {
       for (unsigned I = 0, N = R->getNumBases(); I != N; ++I) {
-        const Record::Base *B = R->getBase(BigEndianTarget ? (N - 1 - I) : I);
+        const Record::Base *B = R->getBase(I);
         Pointer Elem = P.atField(B->Offset);
         CharUnits ByteOffset =
             Layout.getBaseClassOffset(cast<CXXRecordDecl>(B->Decl));
@@ -204,14 +136,8 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, size_t Offset,
         Ok = Ok && enumerateData(Elem, Ctx, BitOffset, F);
       }
     };
-
-    if (BigEndianTarget) {
-      enumerateFields();
-      enumerateBases();
-    } else {
-      enumerateBases();
-      enumerateFields();
-    }
+    enumerateBases();
+    enumerateFields();
 
     return Ok;
   }
@@ -295,26 +221,26 @@ static bool CheckBitcastType(InterpState &S, CodePtr OpPC, QualType T,
 static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
                                 BitcastBuffer &Buffer, bool ReturnOnUninit) {
   const ASTContext &ASTCtx = Ctx.getASTContext();
-  bool SwapData = (ASTCtx.getTargetInfo().isLittleEndian() !=
-                   llvm::sys::IsLittleEndianHost);
-  bool BigEndianTarget = ASTCtx.getTargetInfo().isBigEndian();
+  Endian TargetEndianness =
+      ASTCtx.getTargetInfo().isLittleEndian() ? Endian::Little : Endian::Big;
 
   return enumeratePointerFields(
       FromPtr, Ctx,
       [&](const Pointer &P, PrimType T, size_t BitOffset,
           bool PackedBools) -> bool {
-        if (!P.isInitialized()) {
-          assert(false && "Implement uninitialized value tracking");
-          return ReturnOnUninit;
-        }
+        // if (!P.isInitialized()) {
+        // assert(false && "Implement uninitialized value tracking");
+        // return ReturnOnUninit;
+        // }
 
-        assert(P.isInitialized());
+        // assert(P.isInitialized());
         // nullptr_t is a PT_Ptr for us, but it's still not std::is_pointer_v.
         if (T == PT_Ptr)
           assert(false && "Implement casting to pointer types");
 
         CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(P.getType());
         unsigned BitWidth = ASTCtx.toBits(ObjectReprChars);
+        unsigned FullSize = BitWidth;
         llvm::SmallVector<std::byte> Buff(ObjectReprChars.getQuantity());
         // Work around floating point types that contain unused padding bytes.
         // This is really just `long double` on x86, which is the only
@@ -328,7 +254,7 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
           F.bitcastToMemory(Buff.data());
           // Now, only (maybe) swap the actual size of the float, excluding the
           // padding bits.
-          if (SwapData)
+          if (llvm::sys::IsBigEndianHost)
             swapBytes(Buff.data(), NumBits / 8);
 
         } else {
@@ -337,20 +263,15 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
           else if (T == PT_Bool && PackedBools)
             BitWidth = 1;
 
-          BITCAST_TYPE_SWITCH(T, {
-            T Val = P.deref<T>();
-            Val.bitcastToMemory(Buff.data());
-          });
-          if (SwapData)
-            swapBytes(Buff.data(), ObjectReprChars.getQuantity());
+          BITCAST_TYPE_SWITCH(T,
+                              { P.deref<T>().bitcastToMemory(Buff.data()); });
+
+          if (llvm::sys::IsBigEndianHost)
+            swapBytes(Buff.data(), FullSize / 8);
         }
 
-        if (BitWidth != (Buff.size() * 8) && BigEndianTarget) {
-          Buffer.pushData(Buff.data() + (Buff.size() - 1 - (BitWidth / 8)),
-                          BitWidth, BigEndianTarget);
-        } else {
-          Buffer.pushData(Buff.data(), BitWidth, BigEndianTarget);
-        }
+        Buffer.pushData(Buff.data(), BitOffset, BitWidth, FullSize,
+                        TargetEndianness);
         return true;
       });
 }
@@ -362,7 +283,7 @@ bool clang::interp::DoBitCast(InterpState &S, CodePtr OpPC, const Pointer &Ptr,
   assert(Ptr.isBlockPointer());
   assert(Buff);
 
-  BitcastBuffer Buffer;
+  BitcastBuffer Buffer(BuffSize * 8);
   if (!CheckBitcastType(S, OpPC, Ptr.getType(), /*IsToType=*/false))
     return false;
 
@@ -371,13 +292,20 @@ bool clang::interp::DoBitCast(InterpState &S, CodePtr OpPC, const Pointer &Ptr,
   assert(Buffer.size() == BuffSize * 8);
 
   HasIndeterminateBits = !Buffer.allInitialized();
-  std::memcpy(Buff, Buffer.data(), BuffSize);
+
+  const ASTContext &ASTCtx = S.getASTContext();
+  Endian TargetEndianness =
+      ASTCtx.getTargetInfo().isLittleEndian() ? Endian::Little : Endian::Big;
+  auto B = Buffer.copyBits(0, BuffSize * 8, BuffSize * 8, TargetEndianness);
+
+  std::memcpy(Buff, B.get(), BuffSize);
 
   if (llvm::sys::IsBigEndianHost)
     swapBytes(Buff, BuffSize);
 
   return Success;
 }
+/// ---------------------------------------------------------------------------------------------------------------------
 
 bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
                                  const Pointer &FromPtr, Pointer &ToPtr) {
@@ -394,43 +322,59 @@ bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
   if (!CheckBitcastType(S, OpPC, ToType, /*IsToType=*/true))
     return false;
 
-  BitcastBuffer Buffer;
+  const ASTContext &ASTCtx = S.getASTContext();
+
+  CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(ToType);
+  BitcastBuffer Buffer(ASTCtx.toBits(ObjectReprChars));
   readPointerToBuffer(S.getContext(), FromPtr, Buffer,
                       /*ReturnOnUninit=*/false);
 
   // Now read the values out of the buffer again and into ToPtr.
-  const ASTContext &ASTCtx = S.getASTContext();
-  size_t BitOffset = 0;
+  Endian TargetEndianness =
+      ASTCtx.getTargetInfo().isLittleEndian() ? Endian::Little : Endian::Big;
   bool Success = enumeratePointerFields(
       ToPtr, S.getContext(),
-      [&](const Pointer &P, PrimType T, size_t _, bool PackedBools) -> bool {
+      [&](const Pointer &P, PrimType T, size_t BitOffset,
+          bool PackedBools) -> bool {
+        CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(P.getType());
+        unsigned FullBitWidth = ASTCtx.toBits(ObjectReprChars);
         if (T == PT_Float) {
-          CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(P.getType());
           const auto &Semantics = ASTCtx.getFloatTypeSemantics(P.getType());
           unsigned NumBits = llvm::APFloatBase::getSizeInBits(Semantics);
           assert(NumBits % 8 == 0);
           assert(NumBits <= ASTCtx.toBits(ObjectReprChars));
-          std::byte *M = Buffer.getBytes(BitOffset);
+          auto M = Buffer.copyBits(BitOffset, NumBits, FullBitWidth,
+                                   TargetEndianness);
 
           if (llvm::sys::IsBigEndianHost)
-            swapBytes(M, NumBits / 8);
+            swapBytes(M.get(), NumBits / 8);
 
-          P.deref<Floating>() = Floating::bitcastFromMemory(M, Semantics);
+          P.deref<Floating>() = Floating::bitcastFromMemory(M.get(), Semantics);
           P.initialize();
-          BitOffset += ASTCtx.toBits(ObjectReprChars);
           return true;
         }
 
+        unsigned BitWidth;
+        if (const FieldDecl *FD = P.getField(); FD && FD->isBitField())
+          BitWidth = FD->getBitWidthValue(ASTCtx);
+        else if (T == PT_Bool && PackedBools)
+          BitWidth = 1;
+        else
+          BitWidth = ASTCtx.toBits(ObjectReprChars);
+
+        auto Memory = Buffer.copyBits(BitOffset, BitWidth, FullBitWidth,
+                                      TargetEndianness);
+        if (llvm::sys::IsBigEndianHost)
+          swapBytes(Memory.get(), FullBitWidth / 8);
+
         BITCAST_TYPE_SWITCH_FIXED_SIZE(T, {
-          std::byte *M = Buffer.getBytes(BitOffset);
-
-          if (llvm::sys::IsBigEndianHost)
-            swapBytes(M, T::bitWidth() / 8);
-
-          P.deref<T>() = T::bitcastFromMemory(M, T::bitWidth());
-          P.initialize();
-          BitOffset += T::bitWidth();
+          if (BitWidth > 0)
+            P.deref<T>() = T::bitcastFromMemory(Memory.get(), T::bitWidth())
+                               .truncate(BitWidth);
+          else
+            P.deref<T>() = T::zero();
         });
+        P.initialize();
         return true;
       });
 
