@@ -406,7 +406,8 @@ public:
   InstructionCost getScalarizationOverhead(VectorType *Ty,
                                            const APInt &DemandedElts,
                                            bool Insert, bool Extract,
-                                           TTI::TargetCostKind CostKind);
+                                           TTI::TargetCostKind CostKind,
+                                           ArrayRef<Value *> VL = std::nullopt);
 
   /// Return the cost of the scaling factor used in the addressing
   /// mode represented by AM for this target, for a load/store
