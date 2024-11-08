@@ -2695,7 +2695,7 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
     return false;
 
   unsigned NumElts = VecTy->getNumElements();
-  if (ExtIdx >= NumElts)
+  if (ExtIdx >= NumElts || InsIdx >= NumElts)
     return false;
 
   SmallVector<int> Mask(NumElts, 0);
