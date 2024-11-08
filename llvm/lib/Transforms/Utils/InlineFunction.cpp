@@ -1477,6 +1477,15 @@ static void AddParamAndFnBasicAttributes(const CallBase &CB,
 
         // If so, propagate its access attributes.
         AL = AL.addParamAttributes(Context, I, ValidObjParamAttrs[ArgNo]);
+
+        // If the argument is not a pointer type, remove attributes which only
+        // apply to pointer types.
+        if (!NewInnerCB->getArgOperand(I)->getType()->isPointerTy()) {
+          AL = AL.removeParamAttribute(Context, I, Attribute::ReadNone);
+          AL = AL.removeParamAttribute(Context, I, Attribute::ReadOnly);
+          continue;
+        }
+
         // We can have conflicting attributes from the inner callsite and
         // to-be-inlined callsite. In that case, choose the most
         // restrictive.
