@@ -223,6 +223,10 @@ struct SizeOffsetAPInt : public SizeOffsetType<APInt, SizeOffsetAPInt> {
 
 /// OffsetSpan - Used internally by \p ObjectSizeOffsetVisitor. Represents a
 /// point in memory as a pair of allocated bytes before and after it.
+///
+/// \c Before and \c After fields are signed values. It makes it possible to
+/// represent out-of-bound access, e.g. as a result of a GEP, at the expense of
+/// not being able to represent very large allocation.
 struct OffsetSpan {
   APInt Before; /// Number of allocated bytes before this point.
   APInt After;  /// Number of allocated bytes after this point.
@@ -255,7 +259,7 @@ class ObjectSizeOffsetVisitor
   SmallDenseMap<Instruction *, OffsetSpan, 8> SeenInsts;
   unsigned InstructionsVisited;
 
-  APInt align(APInt Size, MaybeAlign Align);
+  APInt alignAndCap(APInt Size, MaybeAlign Align);
 
   static OffsetSpan unknown() { return OffsetSpan(); }
 
