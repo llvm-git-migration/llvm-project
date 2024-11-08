@@ -2163,13 +2163,9 @@ bool SPIRVInstructionSelector::selectClip(Register ResVReg,
 
   unsigned Opcode;
 
-  if (STI.isAtLeastSPIRVVer(VersionTuple(1, 6))) {
-    if (!STI.canUseExtension(
-            SPIRV::Extension::SPV_EXT_demote_to_helper_invocation))
-      report_fatal_error(
-          "llvm.spv.clip intrinsic: this instruction requires the following "
-          "SPIR-V extension: SPV_EXT_demote_to_helper_invocation",
-          false);
+  if (STI.canUseExtension(
+          SPIRV::Extension::SPV_EXT_demote_to_helper_invocation) ||
+      STI.isAtLeastSPIRVVer(llvm::VersionTuple(1, 6))) {
     Opcode = SPIRV::OpDemoteToHelperInvocation;
   } else {
     Opcode = SPIRV::OpKill;
