@@ -18,6 +18,7 @@
 #ifndef LLVM_CODEGEN_MACHINEFUNCTIONPASS_H
 #define LLVM_CODEGEN_MACHINEFUNCTIONPASS_H
 
+#include "llvm/CodeGen/DroppedVariableStats.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/Pass.h"
 
@@ -73,6 +74,7 @@ private:
                           const std::string &Banner) const override;
 
   bool runOnFunction(Function &F) override;
+  DroppedVariableStatsMIR DroppedVarStatsMF;
 };
 
 } // End llvm namespace
