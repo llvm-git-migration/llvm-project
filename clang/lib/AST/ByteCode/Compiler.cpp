@@ -2710,6 +2710,8 @@ bool Compiler<Emitter>::VisitMaterializeTemporaryExpr(
       return false;
     if (!this->visitInitializer(SubExpr))
       return false;
+    if (!this->emitFinishInit(SubExpr))
+      return false;
     if (IsStatic)
       return this->emitInitGlobalTempComp(TempDecl, E);
     return true;
