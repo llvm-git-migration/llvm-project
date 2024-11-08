@@ -16,6 +16,7 @@
 #include "RISCV.h"
 #include "RISCVFrameLowering.h"
 #include "RISCVTargetMachine.h"
+#include "llvm/CodeGen/MachineScheduler.h"
 #include "llvm/CodeGen/MacroFusion.h"
 #include "llvm/CodeGen/ScheduleDAGMutation.h"
 #include "llvm/MC/TargetRegistry.h"
@@ -198,4 +199,26 @@ unsigned RISCVSubtarget::getMinimumJumpTableEntries() const {
   return RISCVMinimumJumpTableEntries.getNumOccurrences() > 0
              ? RISCVMinimumJumpTableEntries
              : TuneInfo->MinimumJumpTableEntries;
+}
+
+void RISCVSubtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
+                                         unsigned NumRegionInstrs) const {
+  // Do bidirectional scheduling since it provides a more balanced scheduling
+  // leading to better performance. This will increase compile time.
+  Policy.OnlyTopDown = false;
+  Policy.OnlyBottomUp = false;
+
+  // Enabling or Disabling the latency heuristic is a close call: It seems to
+  // help nearly no benchmark on out-of-order architectures, on the other hand
+  // it regresses register pressure on a few benchmarking.
+  // FIXME: This is from AArch64, but we haven't evaluated it on RISC-V.
+  Policy.DisableLatencyHeuristic = true;
+
+  // Spilling is generally expensive on all RISC-V cores, so always enable
+  // register-pressure tracking. This will increase compile time.
+  Policy.ShouldTrackPressure = true;
+
+  // Enabling ShouldTrackLaneMasks when vector instructions are supported.
+  // TODO: Add extensions that need register pairs as well?
+  Policy.ShouldTrackLaneMasks = hasVInstructions();
 }
