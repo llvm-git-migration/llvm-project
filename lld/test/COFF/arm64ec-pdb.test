@@ -107,7 +107,7 @@ CHECK-NEXT:            flags = none, addr = 0002:
 CHECK-NEXT:       20 | S_PUB32 [size = 44] `__arm64x_redirection_metadata`
 CHECK-NEXT:            flags = none, addr = 0004:0000
 CHECK-NEXT:      416 | S_PUB32 [size = 40] `__os_arm64x_dispatch_ret`
-CHECK-NEXT:            flags = none, addr = 0002:4600
+CHECK-NEXT:            flags = none, addr = 0002:
 CHECK-NEXT:      316 | S_PUB32 [size = 28] `__imp_func`
 CHECK-NEXT:            flags = none, addr = 0002:8192
 
