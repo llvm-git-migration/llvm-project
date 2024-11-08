@@ -188,9 +188,8 @@ protected:
       static_assert((is_detected<is_function_pass_t, PassT>::value ||
                      is_detected<is_module_pass_t, PassT>::value) &&
                     "Only module pass and function pass are supported.");
-      bool Required = false;
-      if constexpr (is_detected<has_required_t, PassT>::value)
-        Required = PassT::isRequired();
+      bool Required = PassT::name().contains("RequireAnalysisPass") ||
+                      PassT::name().contains("PrinterPass");
       if (!PB.runBeforeAdding(Name) && !Required)
         return;
 
