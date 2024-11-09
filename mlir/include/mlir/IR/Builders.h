@@ -16,6 +16,7 @@
 namespace mlir {
 
 class AffineExpr;
+class PostDominanceInfo;
 class IRMapping;
 class UnknownLoc;
 class FileLineColLoc;
@@ -434,6 +435,19 @@ public:
       setInsertionPointToStart(blockArg.getOwner());
     }
   }
+
+  /// Sets the insertion point to a place that post-dominates the definitions
+  /// of all given values. Returns "failure" and leaves the current insertion
+  /// point unchanged if no such insertion point exists.
+  ///
+  /// There may be multiple suitable insertion points. This function chooses an
+  /// insertion right after one of the given values.
+  ///
+  /// Note: Some of the given values may already have gone out of scope at the
+  /// selected insertion point. (E.g., because they are defined in a nested
+  /// region.)
+  LogicalResult setInsertionPointAfterValues(ArrayRef<Value> values,
+                                             const PostDominanceInfo &domInfo);
 
   /// Sets the insertion point to the start of the specified block.
   void setInsertionPointToStart(Block *block) {
