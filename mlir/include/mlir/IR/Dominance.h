@@ -196,18 +196,18 @@ public:
 
   /// Return true if operation A properly postdominates operation B.
   bool properlyPostDominates(Operation *a, Operation *b,
-                             bool enclosingOpOk = true);
+                             bool enclosingOpOk = true) const;
 
   /// Return true if operation A postdominates operation B.
-  bool postDominates(Operation *a, Operation *b) {
+  bool postDominates(Operation *a, Operation *b) const {
     return a == b || properlyPostDominates(a, b);
   }
 
   /// Return true if the specified block A properly postdominates block B.
-  bool properlyPostDominates(Block *a, Block *b);
+  bool properlyPostDominates(Block *a, Block *b) const;
 
   /// Return true if the specified block A postdominates block B.
-  bool postDominates(Block *a, Block *b) {
+  bool postDominates(Block *a, Block *b) const {
     return a == b || properlyPostDominates(a, b);
   }
 };
