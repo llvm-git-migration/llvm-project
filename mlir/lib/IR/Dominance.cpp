@@ -352,13 +352,13 @@ bool DominanceInfo::properlyDominates(Value a, Operation *b) const {
 //===----------------------------------------------------------------------===//
 
 bool PostDominanceInfo::properlyPostDominates(Operation *a, Operation *b,
-                                              bool enclosingOpOk) {
+                                              bool enclosingOpOk) const {
   return super::properlyDominatesImpl(a->getBlock(), a->getIterator(),
                                       b->getBlock(), b->getIterator(),
                                       enclosingOpOk);
 }
 
-bool PostDominanceInfo::properlyPostDominates(Block *a, Block *b) {
+bool PostDominanceInfo::properlyPostDominates(Block *a, Block *b) const {
   return super::properlyDominatesImpl(a, a->end(), b, b->end(),
                                       /*enclosingOk=*/true);
 }
