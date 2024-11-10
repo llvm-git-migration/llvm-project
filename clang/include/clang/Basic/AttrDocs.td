@@ -3967,6 +3967,69 @@ Attribute ``trivial_abi`` has no effect in the following cases:
   }];
 }
 
+
+def LifetimeCaptureByDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+    The ``lifetime_capture_by(X)`` attribute on a function parameter or implicit object
+parameter indicates that references to arguments passed to such parameters may be
+captured by the capturing entity ``X``.
+
+The capturing entity ``X`` can be one of the following:
+- Another (named) function parameter. 
+  
+  .. code-block:: c++
+
+    void addToSet(std::string_view a [[clang::lifetime_capture_by(s)]], std::set<std::string_view>& s) {
+      s.insert(a);
+    }
+
+- ``this`` (in case of member functions).
+  
+  .. code-block:: c++
+
+    class S {
+      void addToSet(std::string_view a [[clang::lifetime_capture_by(this)]]) {
+        s.insert(a);
+      }
+      std::set<std::string_view> s;
+    };
+
+- 'global', 'unknown' (without quotes).
+  
+  .. code-block:: c++
+
+    std::set<std::string_view> s;
+    void addToSet(std::string_view a [[clang::lifetime_capture_by(global)]]) {
+      s.insert(a);
+    }
+    void addSomewhere(std::string_view a [[clang::lifetime_capture_by(unknown)]]);
+
+The attribute can be applied to the implicit ``this`` parameter of a member
+function by writing the attribute after the function type:
+
+.. code-block:: c++
+
+  struct S {
+    const char *data(std::set<S*>& s) [[clang::lifetime_capture_by(s)]] {
+      s.insert(this);
+    }
+  };
+
+The attribute supports specifying more than one capturing entities:
+
+.. code-block:: c++
+  
+  void addToSets(std::string_view a [[clang::lifetime_capture_by(s1, s2)]],
+                 std::set<std::string_view>& s1,
+                 std::set<std::string_view>& s2) {
+    s1.insert(a);
+    s2.insert(a);
+  }
+
+.. _`lifetimebound`: https://clang.llvm.org/docs/AttributeReference.html#lifetimebound
+  }];
+}
 def MSInheritanceDocs : Documentation {
   let Category = DocCatDecl;
   let Heading = "__single_inheritance, __multiple_inheritance, __virtual_inheritance";
