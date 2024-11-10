@@ -25,6 +25,7 @@
 #include "clang/AST/TextNodeDumper.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AddressSpaces.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/ExceptionSpecificationType.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
@@ -1909,6 +1910,12 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     OS << " [[clang::lifetimebound]]";
     return;
   }
+  if (T->getAttrKind() == attr::LifetimeCaptureBy) {
+    // FIXME: Print the attribute arguments once we have a way to retrieve these
+    // here.
+    OS << " [[clang::lifetime_capture_by(...)";
+    return;
+  }
 
   // The printing of the address_space attribute is handled by the qualifier
   // since it is still stored in the qualifier. Return early to prevent printing
@@ -1976,6 +1983,7 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
   case attr::SizedBy:
   case attr::SizedByOrNull:
   case attr::LifetimeBound:
+  case attr::LifetimeCaptureBy:
   case attr::TypeNonNull:
   case attr::TypeNullable:
   case attr::TypeNullableResult:
