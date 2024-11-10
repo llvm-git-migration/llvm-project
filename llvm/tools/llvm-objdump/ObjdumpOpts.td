@@ -38,6 +38,10 @@ def arch_name_EQ : Joined<["--"], "arch-name=">,
 def archive_headers : Flag<["--"], "archive-headers">,
   HelpText<"Display archive header information">;
 
+def binary : Flag<["--"], "binary">,
+  HelpText<"Treat the file as binary, to be combined with --triple=">;
+def : Flag<["-"], "b">, Alias<binary>, HelpText<"Alias for --binary">;
+
 defm build_id :
   Eq<"build-id", "Build ID to look up. Once found, added as an input file">,
   MetaVarName<"<hex>">;
