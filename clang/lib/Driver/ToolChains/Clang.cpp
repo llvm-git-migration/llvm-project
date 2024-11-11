@@ -7067,6 +7067,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   if (Args.hasArg(options::OPT_nogpulib))
     CmdArgs.push_back("-nogpulib");
 
+  if (Args.hasArg(options::OPT_fdefault_generic_addrspace))
+    CmdArgs.push_back("-fdefault-generic-addrspace");
+
   if (Arg *A = Args.getLastArg(options::OPT_fcf_protection_EQ)) {
     CmdArgs.push_back(
         Args.MakeArgString(Twine("-fcf-protection=") + A->getValue()));

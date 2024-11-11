@@ -1836,7 +1836,7 @@ QualType Sema::BuildPointerType(QualType T,
   if (getLangOpts().ObjCAutoRefCount)
     T = inferARCLifetimeForPointee(*this, T, Loc, /*reference*/ false);
 
-  if (getLangOpts().OpenCL)
+  if (getLangOpts().OpenCL || getLangOpts().OpenCLGenericAddressSpace)
     T = deduceOpenCLPointeeAddrSpace(*this, T);
 
   // In WebAssembly, pointers to reference types and pointers to tables are
@@ -1913,7 +1913,7 @@ QualType Sema::BuildReferenceType(QualType T, bool SpelledAsLValue,
   if (getLangOpts().ObjCAutoRefCount)
     T = inferARCLifetimeForPointee(*this, T, Loc, /*reference*/ true);
 
-  if (getLangOpts().OpenCL)
+  if (getLangOpts().OpenCL || getLangOpts().OpenCLGenericAddressSpace)
     T = deduceOpenCLPointeeAddrSpace(*this, T);
 
   // In WebAssembly, references to reference types and tables are illegal.
@@ -2741,7 +2741,7 @@ QualType Sema::BuildBlockPointerType(QualType T,
   if (checkQualifiedFunction(*this, T, Loc, QFK_BlockPointer))
     return QualType();
 
-  if (getLangOpts().OpenCL)
+  if (getLangOpts().OpenCL || getLangOpts().OpenCLGenericAddressSpace)
     T = deduceOpenCLPointeeAddrSpace(*this, T);
 
   return Context.getBlockPointerType(T);
@@ -5289,7 +5289,10 @@ static TypeSourceInfo *GetFullTypeForDeclarator(TypeProcessingState &state,
                      DeclaratorContext::LambdaExpr;
         };
 
-        if (state.getSema().getLangOpts().OpenCLCPlusPlus && IsClassMember()) {
+        if ((state.getSema().getLangOpts().OpenCLCPlusPlus ||
+             (!state.getSema().getLangOpts().OpenCL &&
+              state.getSema().getLangOpts().OpenCLGenericAddressSpace)) &&
+            IsClassMember()) {
           LangAS ASIdx = LangAS::Default;
           // Take address space attr if any and mark as invalid to avoid adding
           // them later while creating QualType.
