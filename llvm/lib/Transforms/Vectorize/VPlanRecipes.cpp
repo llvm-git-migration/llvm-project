@@ -2222,6 +2222,7 @@ InstructionCost VPReductionRecipe::computeCost(ElementCount VF,
 InstructionCost
 VPExtendedReductionRecipe::computeCost(ElementCount VF,
                                        VPCostContext &Ctx) const {
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   RecurKind RdxKind = RdxDesc.getRecurrenceKind();
   Type *ElementTy = getResultType();
   auto *VectorTy = cast<VectorType>(ToVectorTy(ElementTy, VF));
@@ -2252,7 +2253,7 @@ VPExtendedReductionRecipe::computeCost(ElementCount VF,
 
   // ExtendedReduction Cost
   InstructionCost ExtendedRedCost = Ctx.TTI.getExtendedReductionCost(
-      Opcode, IsZExt, ElementTy, SrcTy, RdxDesc.getFastMathFlags(), CostKind);
+      Opcode, isZExt(), ElementTy, SrcTy, RdxDesc.getFastMathFlags(), CostKind);
   // Check if folding ext into ExtendedReduction is profitable.
   if (ExtendedRedCost.isValid() &&
       ExtendedRedCost < ExtendedCost + ReductionCost) {
@@ -2263,6 +2264,7 @@ VPExtendedReductionRecipe::computeCost(ElementCount VF,
 
 InstructionCost VPMulAccRecipe::computeCost(ElementCount VF,
                                             VPCostContext &Ctx) const {
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   Type *ElementTy = IsExtended ? RdxDesc.getRecurrenceType()
                                : Ctx.Types.inferScalarType(getVecOp0());
   auto *VectorTy = cast<VectorType>(ToVectorTy(ElementTy, VF));
@@ -2388,6 +2390,7 @@ void VPReductionEVLRecipe::print(raw_ostream &O, const Twine &Indent,
 
 void VPExtendedReductionRecipe::print(raw_ostream &O, const Twine &Indent,
                                       VPSlotTracker &SlotTracker) const {
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   O << Indent << "EXTENDED-REDUCE ";
   printAsOperand(O, SlotTracker);
   O << " = ";
@@ -2410,6 +2413,7 @@ void VPExtendedReductionRecipe::print(raw_ostream &O, const Twine &Indent,
 
 void VPMulAccRecipe::print(raw_ostream &O, const Twine &Indent,
                            VPSlotTracker &SlotTracker) const {
+  const RecurrenceDescriptor &RdxDesc = getRecurrenceDescriptor();
   O << Indent << "MULACC-REDUCE ";
   printAsOperand(O, SlotTracker);
   O << " = ";
