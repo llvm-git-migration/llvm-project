@@ -18,34 +18,42 @@
 
 using namespace llvm;
 
-void DroppedVariableStats::registerCallbacks(
-    PassInstrumentationCallbacks &PIC) {
-  if (!DroppedVariableStatsEnabled)
-    return;
-
-  PIC.registerBeforeNonSkippedPassCallback(
-      [this](StringRef P, Any IR) { return this->runBeforePass(P, IR); });
-  PIC.registerAfterPassCallback(
-      [this](StringRef P, Any IR, const PreservedAnalyses &PA) {
-        return this->runAfterPass(P, IR, PA);
-      });
-  PIC.registerAfterPassInvalidatedCallback(
-      [this](StringRef P, const PreservedAnalyses &PA) {
-        return this->runAfterPassInvalidated(P, PA);
-      });
+bool DroppedVariableStats::isScopeChildOfOrEqualTo(DIScope *Scope,
+                                                   const DIScope *DbgValScope) {
+  while (Scope != nullptr) {
+    if (VisitedScope.find(Scope) == VisitedScope.end()) {
+      VisitedScope.insert(Scope);
+      if (Scope == DbgValScope) {
+        VisitedScope.clear();
+        return true;
+      }
+      Scope = Scope->getScope();
+    } else {
+      VisitedScope.clear();
+      return false;
+    }
+  }
+  return false;
 }
 
-void DroppedVariableStats::runBeforePass(StringRef PassID, Any IR) {
-  DebugVariablesStack.push_back({DenseMap<const Function *, DebugVariables>()});
-  InlinedAts.push_back({DenseMap<StringRef, DenseMap<VarID, DILocation *>>()});
-  if (auto *M = unwrapIR<Module>(IR))
-    return this->runOnModule(M, true);
-  if (auto *F = unwrapIR<Function>(IR))
-    return this->runOnFunction(F, true);
-  return;
+bool DroppedVariableStats::isInlinedAtChildOfOrEqualTo(
+    const DILocation *InlinedAt, const DILocation *DbgValInlinedAt) {
+  if (DbgValInlinedAt == InlinedAt)
+    return true;
+  if (!DbgValInlinedAt)
+    return false;
+  if (!InlinedAt)
+    return false;
+  auto *IA = InlinedAt;
+  while (IA) {
+    if (IA == DbgValInlinedAt)
+      return true;
+    IA = IA->getInlinedAt();
+  }
+  return false;
 }
 
-void DroppedVariableStats::runOnFunction(const Function *F, bool Before) {
+void DroppedVariableStatsIR::runOnFunction(const Function *F, bool Before) {
   auto &DebugVariables = DebugVariablesStack.back()[F];
   auto &VarIDSet = (Before ? DebugVariables.DebugVariablesBefore
                            : DebugVariables.DebugVariablesAfter);
@@ -68,26 +76,7 @@ void DroppedVariableStats::runOnFunction(const Function *F, bool Before) {
   }
 }
 
-void DroppedVariableStats::runOnModule(const Module *M, bool Before) {
-  for (auto &F : *M)
-    runOnFunction(&F, Before);
-}
-
-void DroppedVariableStats::removeVarFromAllSets(VarID Var, const Function *F) {
-  // Do not remove Var from the last element, it will be popped from the stack.
-  for (auto &DebugVariablesMap : llvm::drop_end(DebugVariablesStack))
-    DebugVariablesMap[F].DebugVariablesBefore.erase(Var);
-}
-
-void DroppedVariableStats::calculateDroppedVarStatsOnModule(
-    const Module *M, StringRef PassID, std::string FuncOrModName,
-    std::string PassLevel) {
-  for (auto &F : *M) {
-    calculateDroppedVarStatsOnFunction(&F, PassID, FuncOrModName, PassLevel);
-  }
-}
-
-void DroppedVariableStats::calculateDroppedVarStatsOnFunction(
+void DroppedVariableStatsIR::calculateDroppedVarStatsOnFunction(
     const Function *F, StringRef PassID, std::string FuncOrModName,
     std::string PassLevel) {
   unsigned DroppedCount = 0;
@@ -132,64 +121,30 @@ void DroppedVariableStats::calculateDroppedVarStatsOnFunction(
     PassDroppedVariables = false;
 }
 
-void DroppedVariableStats::runAfterPassInvalidated(
-    StringRef PassID, const PreservedAnalyses &PA) {
-  DebugVariablesStack.pop_back();
-  InlinedAts.pop_back();
+void DroppedVariableStatsIR::runOnModule(const Module *M, bool Before) {
+  for (auto &F : *M)
+    runOnFunction(&F, Before);
 }
 
-void DroppedVariableStats::runAfterPass(StringRef PassID, Any IR,
-                                        const PreservedAnalyses &PA) {
-  std::string PassLevel;
-  std::string FuncOrModName;
-  if (auto *M = unwrapIR<Module>(IR)) {
-    this->runOnModule(M, false);
-    PassLevel = "Module";
-    FuncOrModName = M->getName();
-    calculateDroppedVarStatsOnModule(M, PassID, FuncOrModName, PassLevel);
-  } else if (auto *F = unwrapIR<Function>(IR)) {
-    this->runOnFunction(F, false);
-    PassLevel = "Function";
-    FuncOrModName = F->getName();
-    calculateDroppedVarStatsOnFunction(F, PassID, FuncOrModName, PassLevel);
+void DroppedVariableStatsIR::calculateDroppedVarStatsOnModule(
+    const Module *M, StringRef PassID, std::string FuncOrModName,
+    std::string PassLevel) {
+  for (auto &F : *M) {
+    calculateDroppedVarStatsOnFunction(&F, PassID, FuncOrModName, PassLevel);
   }
-
-  DebugVariablesStack.pop_back();
-  InlinedAts.pop_back();
-  return;
 }
 
-bool DroppedVariableStats::isScopeChildOfOrEqualTo(DIScope *Scope,
-                                                   const DIScope *DbgValScope) {
-  while (Scope != nullptr) {
-    if (VisitedScope.find(Scope) == VisitedScope.end()) {
-      VisitedScope.insert(Scope);
-      if (Scope == DbgValScope) {
-        VisitedScope.clear();
-        return true;
-      }
-      Scope = Scope->getScope();
-    } else {
-      VisitedScope.clear();
-      return false;
-    }
-  }
-  return false;
-}
+void DroppedVariableStatsIR::registerCallbacks(
+    PassInstrumentationCallbacks &PIC) {
+  if (!DroppedVariableStatsEnabled)
+    return;
 
-bool DroppedVariableStats::isInlinedAtChildOfOrEqualTo(
-    const DILocation *InlinedAt, const DILocation *DbgValInlinedAt) {
-  if (DbgValInlinedAt == InlinedAt)
-    return true;
-  if (!DbgValInlinedAt)
-    return false;
-  if (!InlinedAt)
-    return false;
-  auto *IA = InlinedAt;
-  while (IA) {
-    if (IA == DbgValInlinedAt)
-      return true;
-    IA = IA->getInlinedAt();
-  }
-  return false;
+  PIC.registerBeforeNonSkippedPassCallback(
+      [this](StringRef P, Any IR) { return runBeforePass(IR); });
+  PIC.registerAfterPassCallback(
+      [this](StringRef P, Any IR, const PreservedAnalyses &PA) {
+        return runAfterPass(P, IR);
+      });
+  PIC.registerAfterPassInvalidatedCallback(
+      [this](StringRef P, const PreservedAnalyses &PA) { return cleanup(); });
 }
