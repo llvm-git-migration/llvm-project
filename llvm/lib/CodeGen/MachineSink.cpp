@@ -729,9 +729,6 @@ void MachineSinking::FindCycleSinkCandidates(
 PreservedAnalyses
 MachineSinkingPass::run(MachineFunction &MF,
                         MachineFunctionAnalysisManager &MFAM) {
-  if (MF.getFunction().hasOptNone())
-    return PreservedAnalyses::all();
-
   MachineSinking Impl(nullptr, &MFAM, EnableSinkAndFold);
   bool Changed = Impl.run(MF);
   if (!Changed)
@@ -740,6 +737,13 @@ MachineSinkingPass::run(MachineFunction &MF,
   PA.preserve<MachineCycleAnalysis>();
   PA.preserve<MachineLoopAnalysis>();
   return PA;
+}
+
+void MachineSinkingPass::printPipeline(
+    raw_ostream &OS, function_ref<StringRef(StringRef)> MapClassName2PassName) {
+  OS << "machine-sink";
+  if (EnableSinkAndFold)
+    OS << "<enable-sink-fold>";
 }
 
 bool MachineSinkingLegacy::runOnMachineFunction(MachineFunction &MF) {
