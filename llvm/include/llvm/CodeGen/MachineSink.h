@@ -19,7 +19,10 @@ class MachineSinkingPass : public PassInfoMixin<MachineSinkingPass> {
 public:
   MachineSinkingPass(bool EnableSinkAndFold = false)
       : EnableSinkAndFold(EnableSinkAndFold) {}
+
   PreservedAnalyses run(MachineFunction &MF, MachineFunctionAnalysisManager &);
+
+  void printPipeline(raw_ostream &OS, function_ref<StringRef(StringRef)> MapClassName2PassName);
 };
 
 } // namespace llvm
