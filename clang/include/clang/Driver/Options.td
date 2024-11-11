@@ -3714,6 +3714,9 @@ def fopenmp_assume_no_nested_parallelism : Flag<["-"], "fopenmp-assume-no-nested
 } // let Visibility = [ClangOption, CC1Option, FC1Option]
 } // let Flags = [NoArgumentUnused, HelpHidden]
 
+def fdefault_generic_addrspace : Flag<["-"], "fdefault-generic-addrspace">, Group<f_Group>,
+  Flags<[NoArgumentUnused]>, Visibility<[ClangOption, CC1Option]>,
+  HelpText<"Allow pointers to be implicitly casted to other address spaces.">;
 def fopenmp_offload_mandatory : Flag<["-"], "fopenmp-offload-mandatory">, Group<f_Group>,
   Flags<[NoArgumentUnused]>, Visibility<[ClangOption, CC1Option]>,
   HelpText<"Do not create a host fallback if offloading to the device fails.">,

@@ -3670,6 +3670,9 @@ void CompilerInvocationBase::GenerateLangArgs(const LangOptions &Opts,
   if (Opts.Blocks && !(Opts.OpenCL && Opts.OpenCLVersion == 200))
     GenerateArg(Consumer, OPT_fblocks);
 
+  if (Opts.OpenCLGenericAddressSpace)
+    GenerateArg(Consumer, OPT_fdefault_generic_addrspace);
+
   if (Opts.ConvergentFunctions)
     GenerateArg(Consumer, OPT_fconvergent_functions);
   else
@@ -3947,6 +3950,7 @@ bool CompilerInvocation::ParseLangArgs(LangOptions &Opts, ArgList &Args,
   // These need to be parsed now. They are used to set OpenCL defaults.
   Opts.IncludeDefaultHeader = Args.hasArg(OPT_finclude_default_header);
   Opts.DeclareOpenCLBuiltins = Args.hasArg(OPT_fdeclare_opencl_builtins);
+  Opts.OpenCLGenericAddressSpace = Args.hasArg(OPT_fdefault_generic_addrspace);
 
   LangOptions::setLangDefaults(Opts, IK.getLanguage(), T, Includes, LangStd);
 
