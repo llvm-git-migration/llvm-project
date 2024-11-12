@@ -44,16 +44,16 @@ enum NodeType : unsigned {
   SELECT_CC,
   BR_CC,
 
-  /// Turn a pair of `i<xlen>`s into a `riscv_i<xlen>_pair`.
-  /// - Output: `riscv_i<xlen>_pair`
+  /// Turn a pair of `i<xlen>`s into an even-odd register pair (`untyped`).
+  /// - Output: `untyped` even-odd register pair
   /// - Input 0: `i<xlen>` low-order bits, for even register.
   /// - Input 1: `i<xlen>` high-order bits, for odd register.
   BuildGPRPair,
 
-  /// Turn a `riscv_i<xlen>_pair` into a pair of `i<xlen>`s.
+  /// Turn an even-odd register pair (`untyped`) into a pair of `i<xlen>`s.
   /// - Output 0: `i<xlen>` low-order bits, from even register.
   /// - Output 1: `i<xlen>` high-order bits, from odd register.
-  /// - Input: `riscv_i<xlen>_pair`
+  /// - Input: `untyped` even-odd register pair
   SplitGPRPair,
 
   /// Turns a pair of `i32`s into an `f64`. Needed for rv32d/ilp32.
