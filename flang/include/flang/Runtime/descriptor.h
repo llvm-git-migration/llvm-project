@@ -467,6 +467,7 @@ public:
   RT_OFFLOAD_VAR_GROUP_END
 
   RT_API_ATTRS Descriptor &descriptor() {
+
     return *reinterpret_cast<Descriptor *>(storage_);
   }
   RT_API_ATTRS const Descriptor &descriptor() const {
