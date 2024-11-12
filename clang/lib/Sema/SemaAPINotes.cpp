@@ -647,6 +647,13 @@ static void ProcessAPINotes(Sema &S, TagDecl *D, const api_notes::TagInfo &Info,
       D->addAttr(SwiftAttrAttr::Create(S.Context, "~Copyable"));
   }
 
+  if (auto Escapable = Info.isSwiftEscapable()) {
+    if (*Escapable)
+      D->addAttr(SwiftAttrAttr::Create(S.Context, "Escapable"));
+    else
+      D->addAttr(SwiftAttrAttr::Create(S.Context, "~Escapable"));
+  }
+
   if (auto Extensibility = Info.EnumExtensibility) {
     using api_notes::EnumExtensibilityKind;
     bool ShouldAddAttribute = (*Extensibility != EnumExtensibilityKind::None);
