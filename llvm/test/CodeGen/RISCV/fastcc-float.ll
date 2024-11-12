@@ -18,11 +18,6 @@ define float @caller(<32 x float> %A) nounwind {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    addi sp, sp, -64
 ; CHECK-NEXT:    sw ra, 60(sp) # 4-byte Folded Spill
-; CHECK-NEXT:    fmv.w.x fa0, a0
-; CHECK-NEXT:    fmv.w.x fa1, a1
-; CHECK-NEXT:    fmv.w.x fa2, a2
-; CHECK-NEXT:    fmv.w.x fa3, a3
-; CHECK-NEXT:    fmv.w.x fa4, a4
 ; CHECK-NEXT:    flw ft0, 64(sp)
 ; CHECK-NEXT:    flw ft1, 68(sp)
 ; CHECK-NEXT:    flw ft2, 72(sp)
@@ -47,6 +42,11 @@ define float @caller(<32 x float> %A) nounwind {
 ; CHECK-NEXT:    flw fs9, 148(sp)
 ; CHECK-NEXT:    flw fs10, 152(sp)
 ; CHECK-NEXT:    flw fs11, 156(sp)
+; CHECK-NEXT:    fmv.w.x fa0, a0
+; CHECK-NEXT:    fmv.w.x fa1, a1
+; CHECK-NEXT:    fmv.w.x fa2, a2
+; CHECK-NEXT:    fmv.w.x fa3, a3
+; CHECK-NEXT:    fmv.w.x fa4, a4
 ; CHECK-NEXT:    fmv.w.x fa5, a5
 ; CHECK-NEXT:    fmv.w.x fa6, a6
 ; CHECK-NEXT:    fmv.w.x fa7, a7

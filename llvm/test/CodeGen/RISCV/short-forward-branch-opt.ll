@@ -423,10 +423,10 @@ define void @sextw_removal_ccor(i1 %c, i32 signext %arg, i32 signext %arg1, i32 
 ; NOSFB-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; NOSFB-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; NOSFB-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; NOSFB-NEXT:    mv s0, a2
 ; NOSFB-NEXT:    slli a0, a0, 63
 ; NOSFB-NEXT:    srai a0, a0, 63
 ; NOSFB-NEXT:    and a0, a0, a1
+; NOSFB-NEXT:    mv s0, a2
 ; NOSFB-NEXT:    or s1, a0, a3
 ; NOSFB-NEXT:  .LBB15_1: # %bb2
 ; NOSFB-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -542,10 +542,10 @@ define void @sextw_removal_ccaddw(i1 %c, i32 signext %arg, i32 signext %arg1, i3
 ; NOSFB-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; NOSFB-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; NOSFB-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; NOSFB-NEXT:    mv s0, a2
 ; NOSFB-NEXT:    slli a0, a0, 63
 ; NOSFB-NEXT:    srai a0, a0, 63
 ; NOSFB-NEXT:    and a0, a0, a3
+; NOSFB-NEXT:    mv s0, a2
 ; NOSFB-NEXT:    addw s1, a0, a1
 ; NOSFB-NEXT:  .LBB16_1: # %bb2
 ; NOSFB-NEXT:    # =>This Inner Loop Header: Depth=1

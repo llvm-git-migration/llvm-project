@@ -461,8 +461,8 @@ define <vscale x 1 x float> @test5(<vscale x 1 x float> %0, <vscale x 1 x float>
 ; CHECK-NEXT:    vfadd.vv v8, v8, v9
 ; CHECK-NEXT:    fsrm a2
 ; CHECK-NEXT:    frrm a0
-; CHECK-NEXT:    slli a0, a0, 2
 ; CHECK-NEXT:    lui a2, 66
+; CHECK-NEXT:    slli a0, a0, 2
 ; CHECK-NEXT:    addiw a2, a2, 769
 ; CHECK-NEXT:    srl a0, a2, a0
 ; CHECK-NEXT:    andi a0, a0, 7
@@ -477,8 +477,8 @@ define <vscale x 1 x float> @test5(<vscale x 1 x float> %0, <vscale x 1 x float>
 ; UNOPT-NEXT:    vfadd.vv v8, v8, v9
 ; UNOPT-NEXT:    fsrm a2
 ; UNOPT-NEXT:    frrm a0
-; UNOPT-NEXT:    slli a0, a0, 2
 ; UNOPT-NEXT:    lui a2, 66
+; UNOPT-NEXT:    slli a0, a0, 2
 ; UNOPT-NEXT:    addiw a2, a2, 769
 ; UNOPT-NEXT:    srl a0, a2, a0
 ; UNOPT-NEXT:    andi a0, a0, 7
@@ -588,8 +588,8 @@ define <vscale x 1 x float> @after_fsrm4(<vscale x 1 x float> %0, <vscale x 1 x 
 ; CHECK-LABEL: after_fsrm4:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    slli a0, a0, 32
-; CHECK-NEXT:    srli a0, a0, 30
 ; CHECK-NEXT:    lui a2, 66
+; CHECK-NEXT:    srli a0, a0, 30
 ; CHECK-NEXT:    addiw a2, a2, 769
 ; CHECK-NEXT:    srl a0, a2, a0
 ; CHECK-NEXT:    andi a0, a0, 7
@@ -601,8 +601,8 @@ define <vscale x 1 x float> @after_fsrm4(<vscale x 1 x float> %0, <vscale x 1 x 
 ; UNOPT-LABEL: after_fsrm4:
 ; UNOPT:       # %bb.0: # %entry
 ; UNOPT-NEXT:    slli a0, a0, 32
-; UNOPT-NEXT:    srli a0, a0, 30
 ; UNOPT-NEXT:    lui a2, 66
+; UNOPT-NEXT:    srli a0, a0, 30
 ; UNOPT-NEXT:    addiw a2, a2, 769
 ; UNOPT-NEXT:    srl a0, a2, a0
 ; UNOPT-NEXT:    andi a0, a0, 7

@@ -112,7 +112,6 @@ define i32 @test() nounwind {
 ; RV32I-NEXT:    call foo
 ; RV32I-NEXT:    j .LBB0_2
 ; RV32I-NEXT:  .LBB0_11: # %for.end
-; RV32I-NEXT:    li a0, 1
 ; RV32I-NEXT:    lw ra, 60(sp) # 4-byte Folded Reload
 ; RV32I-NEXT:    lw s0, 56(sp) # 4-byte Folded Reload
 ; RV32I-NEXT:    lw s1, 52(sp) # 4-byte Folded Reload
@@ -126,6 +125,7 @@ define i32 @test() nounwind {
 ; RV32I-NEXT:    lw s9, 20(sp) # 4-byte Folded Reload
 ; RV32I-NEXT:    lw s10, 16(sp) # 4-byte Folded Reload
 ; RV32I-NEXT:    lw s11, 12(sp) # 4-byte Folded Reload
+; RV32I-NEXT:    li a0, 1
 ; RV32I-NEXT:    addi sp, sp, 64
 ; RV32I-NEXT:    ret
 entry:

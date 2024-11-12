@@ -177,8 +177,8 @@ define i64 @caller_tiny_scalar_ret() nounwind {
 ; RV64I-FPELIM-NEXT:    addi sp, sp, -16
 ; RV64I-FPELIM-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64I-FPELIM-NEXT:    call callee_tiny_scalar_ret
-; RV64I-FPELIM-NEXT:    sext.w a0, a0
 ; RV64I-FPELIM-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; RV64I-FPELIM-NEXT:    sext.w a0, a0
 ; RV64I-FPELIM-NEXT:    addi sp, sp, 16
 ; RV64I-FPELIM-NEXT:    ret
 ;

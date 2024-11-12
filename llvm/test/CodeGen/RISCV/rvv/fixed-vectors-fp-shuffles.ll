@@ -138,10 +138,10 @@ define <4 x double> @vrgather_shuffle_xv_v4f64(<4 x double> %x) {
 define <4 x double> @vrgather_shuffle_vx_v4f64(<4 x double> %x) {
 ; CHECK-LABEL: vrgather_shuffle_vx_v4f64:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
-; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    lui a0, %hi(.LCPI9_0)
 ; CHECK-NEXT:    fld fa5, %lo(.LCPI9_0)(a0)
+; CHECK-NEXT:    vsetivli zero, 4, e16, mf2, ta, ma
+; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    li a0, 3
 ; CHECK-NEXT:    vmul.vx v12, v10, a0
 ; CHECK-NEXT:    vmv.v.i v0, 3

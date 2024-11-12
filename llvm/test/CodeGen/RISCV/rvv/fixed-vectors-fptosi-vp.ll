@@ -403,10 +403,10 @@ define <32 x i64> @vfptosi_v32i64_v32f64(<32 x double> %va, <32 x i1> %m, i32 ze
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB25_2:
 ; CHECK-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
-; CHECK-NEXT:    vfcvt.rtz.x.f.v v8, v8, v0.t
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
 ; CHECK-NEXT:    addi a0, a0, -1
+; CHECK-NEXT:    vfcvt.rtz.x.f.v v8, v8, v0.t
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m8, ta, ma
@@ -426,11 +426,11 @@ define <32 x i64> @vfptosi_v32i64_v32f64_unmasked(<32 x double> %va, i32 zeroext
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB26_2:
 ; CHECK-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
-; CHECK-NEXT:    vfcvt.rtz.x.f.v v8, v8
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    and a0, a0, a1
+; CHECK-NEXT:    vfcvt.rtz.x.f.v v8, v8
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m8, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v16, v16
 ; CHECK-NEXT:    ret

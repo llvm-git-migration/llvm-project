@@ -283,8 +283,8 @@ define <vscale x 2 x i64> @test_signed_v2f16_v2i64(<vscale x 2 x half> %f) {
 ; CHECK-LABEL: test_signed_v2f16_v2i64:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli a0, zero, e16, mf2, ta, ma
-; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfwcvt.f.f.v v9, v8
+; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vfwcvt.rtz.x.f.v v10, v9
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m2, ta, ma
@@ -298,8 +298,8 @@ define <vscale x 4 x i64> @test_signed_v4f16_v4i64(<vscale x 4 x half> %f) {
 ; CHECK-LABEL: test_signed_v4f16_v4i64:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli a0, zero, e16, m1, ta, ma
-; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfwcvt.f.f.v v10, v8
+; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
 ; CHECK-NEXT:    vfwcvt.rtz.x.f.v v12, v10
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m4, ta, ma

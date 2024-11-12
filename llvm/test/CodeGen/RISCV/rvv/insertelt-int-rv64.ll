@@ -638,10 +638,10 @@ define <vscale x 1 x i64> @insertelt_nxv1i64_imm(<vscale x 1 x i64> %v, i64 %elt
 define <vscale x 1 x i64> @insertelt_nxv1i64_idx(<vscale x 1 x i64> %v, i64 %elt, i32 %idx) {
 ; CHECK-LABEL: insertelt_nxv1i64_idx:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v9, a0
 ; CHECK-NEXT:    slli a1, a1, 32
 ; CHECK-NEXT:    srli a1, a1, 32
+; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
+; CHECK-NEXT:    vmv.s.x v9, a0
 ; CHECK-NEXT:    addi a0, a1, 1
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m1, tu, ma
 ; CHECK-NEXT:    vslideup.vx v8, v9, a1
@@ -674,10 +674,10 @@ define <vscale x 2 x i64> @insertelt_nxv2i64_imm(<vscale x 2 x i64> %v, i64 %elt
 define <vscale x 2 x i64> @insertelt_nxv2i64_idx(<vscale x 2 x i64> %v, i64 %elt, i32 %idx) {
 ; CHECK-LABEL: insertelt_nxv2i64_idx:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v10, a0
 ; CHECK-NEXT:    slli a1, a1, 32
 ; CHECK-NEXT:    srli a1, a1, 32
+; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
+; CHECK-NEXT:    vmv.s.x v10, a0
 ; CHECK-NEXT:    addi a0, a1, 1
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m2, tu, ma
 ; CHECK-NEXT:    vslideup.vx v8, v10, a1
@@ -710,10 +710,10 @@ define <vscale x 4 x i64> @insertelt_nxv4i64_imm(<vscale x 4 x i64> %v, i64 %elt
 define <vscale x 4 x i64> @insertelt_nxv4i64_idx(<vscale x 4 x i64> %v, i64 %elt, i32 %idx) {
 ; CHECK-LABEL: insertelt_nxv4i64_idx:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v12, a0
 ; CHECK-NEXT:    slli a1, a1, 32
 ; CHECK-NEXT:    srli a1, a1, 32
+; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
+; CHECK-NEXT:    vmv.s.x v12, a0
 ; CHECK-NEXT:    addi a0, a1, 1
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m4, tu, ma
 ; CHECK-NEXT:    vslideup.vx v8, v12, a1
@@ -746,10 +746,10 @@ define <vscale x 8 x i64> @insertelt_nxv8i64_imm(<vscale x 8 x i64> %v, i64 %elt
 define <vscale x 8 x i64> @insertelt_nxv8i64_idx(<vscale x 8 x i64> %v, i64 %elt, i32 %idx) {
 ; CHECK-LABEL: insertelt_nxv8i64_idx:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
-; CHECK-NEXT:    vmv.s.x v16, a0
 ; CHECK-NEXT:    slli a1, a1, 32
 ; CHECK-NEXT:    srli a1, a1, 32
+; CHECK-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
+; CHECK-NEXT:    vmv.s.x v16, a0
 ; CHECK-NEXT:    addi a0, a1, 1
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m8, tu, ma
 ; CHECK-NEXT:    vslideup.vx v8, v16, a1

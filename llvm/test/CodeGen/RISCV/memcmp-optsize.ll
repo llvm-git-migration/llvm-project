@@ -1718,8 +1718,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-NEXT:    ret
 ;
@@ -1729,8 +1729,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-NEXT:    ret
 ;
@@ -1740,8 +1740,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    ret
 ;
@@ -1751,8 +1751,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ret
 ;
@@ -1762,8 +1762,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBKB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBKB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    ret
 ;
@@ -1773,8 +1773,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ret
 ;
@@ -1784,8 +1784,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-V-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-V-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-V-NEXT:    ret
 ;
@@ -1795,8 +1795,8 @@ define i1 @bcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-V-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-V-NEXT:    seqz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-V-NEXT:    ret
 ;
@@ -1820,8 +1820,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-NEXT:    ret
 ;
@@ -1831,8 +1831,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-NEXT:    ret
 ;
@@ -1842,8 +1842,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    ret
 ;
@@ -1853,8 +1853,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ret
 ;
@@ -1864,8 +1864,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    ret
 ;
@@ -1875,8 +1875,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ret
 ;
@@ -1886,8 +1886,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-V-NEXT:    ret
 ;
@@ -1897,8 +1897,8 @@ define i1 @bcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-V-NEXT:    ret
 ;
@@ -1919,8 +1919,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-NEXT:    ret
 ;
@@ -1930,8 +1930,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-NEXT:    ret
 ;
@@ -1941,8 +1941,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    ret
 ;
@@ -1952,8 +1952,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ret
 ;
@@ -1963,8 +1963,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    ret
 ;
@@ -1974,8 +1974,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ret
 ;
@@ -1985,8 +1985,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-V-NEXT:    ret
 ;
@@ -1996,8 +1996,8 @@ define i1 @bcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-V-NEXT:    call bcmp
-; CHECK-ALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-V-NEXT:    ret
 ;
@@ -2283,8 +2283,8 @@ define i32 @memcmp_size_2(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a0, 0(a0)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a1, 0(a1)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a1, a1, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    sub a0, a0, a1
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    ret
@@ -2294,8 +2294,8 @@ define i32 @memcmp_size_2(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a1, a1, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    sub a0, a0, a1
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    ret
@@ -2305,8 +2305,8 @@ define i32 @memcmp_size_2(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a0, 0(a0)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a1, 0(a1)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a1, a1, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    sub a0, a0, a1
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    ret
@@ -2316,8 +2316,8 @@ define i32 @memcmp_size_2(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a1, a1, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    sub a0, a0, a1
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    ret
@@ -2452,8 +2452,8 @@ define i32 @memcmp_size_3(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a2, 0(a0)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a3, 0(a1)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a3, a3, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    bne a2, a3, .LBB24_2
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:  # %bb.1: # %loadbb1
@@ -2472,8 +2472,8 @@ define i32 @memcmp_size_3(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB24_2
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.1: # %loadbb1
@@ -2492,8 +2492,8 @@ define i32 @memcmp_size_3(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a2, 0(a0)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a3, 0(a1)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a3, a3, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    bne a2, a3, .LBB24_2
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:  # %bb.1: # %loadbb1
@@ -2512,8 +2512,8 @@ define i32 @memcmp_size_3(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB24_2
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.1: # %loadbb1
@@ -2668,8 +2668,8 @@ define i32 @memcmp_size_4(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    sltu a2, a1, a0
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    sltu a0, a0, a1
@@ -2692,8 +2692,8 @@ define i32 @memcmp_size_4(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    sltu a2, a1, a0
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    sltu a0, a0, a1
@@ -2848,8 +2848,8 @@ define i32 @memcmp_size_5(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB26_2
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.1: # %loadbb1
@@ -2886,8 +2886,8 @@ define i32 @memcmp_size_5(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB26_2
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.1: # %loadbb1
@@ -3037,8 +3037,8 @@ define i32 @memcmp_size_6(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a0, 4(a0)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    lh a1, 4(a1)
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    srli a3, a3, 16
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV32-ZBB-NEXT:  # %bb.2:
@@ -3055,16 +3055,16 @@ define i32 @memcmp_size_6(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.1: # %loadbb1
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a0, 4(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lh a1, 4(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 48
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.2:
@@ -3087,8 +3087,8 @@ define i32 @memcmp_size_6(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a0, 4(a0)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    lh a1, 4(a1)
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a2, a2, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    srli a3, a3, 16
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV32-ZBKB-NEXT:  # %bb.2:
@@ -3105,16 +3105,16 @@ define i32 @memcmp_size_6(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.1: # %loadbb1
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a0, 4(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lh a1, 4(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 48
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB27_3
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.2:
@@ -3278,16 +3278,16 @@ define i32 @memcmp_size_7(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB28_3
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.1: # %loadbb1
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a0, 3(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a1, 3(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    bne a2, a3, .LBB28_3
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:  # %bb.2:
@@ -3326,16 +3326,16 @@ define i32 @memcmp_size_7(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a2, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a3, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a2
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a3
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB28_3
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.1: # %loadbb1
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a0, 3(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a1, 3(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a2, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a3, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a2, a2, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a3, a3, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    bne a2, a3, .LBB28_3
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:  # %bb.2:
@@ -4449,12 +4449,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV32:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV32-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV32-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV32-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-NEXT:    lbu a1, 3(a1)
 ; CHECK-ALIGNED-RV32-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV32-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV32-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV32-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV32-NEXT:    lbu a3, 0(a0)
@@ -4475,12 +4475,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV64:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV64-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV64-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV64-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-NEXT:    lb a1, 3(a1)
 ; CHECK-ALIGNED-RV64-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV64-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV64-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV64-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV64-NEXT:    lbu a3, 0(a0)
@@ -4501,12 +4501,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV32-ZBB:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a1, 3(a1)
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lbu a3, 0(a0)
@@ -4527,12 +4527,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV64-ZBB:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    lb a1, 3(a1)
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    lbu a3, 0(a0)
@@ -4576,17 +4576,17 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a3, 1(a1)
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a4, 2(a1)
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lb a1, 3(a1)
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a5, 2(a0)
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    packh a2, a2, a3
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slli a4, a4, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a3, 0(a0)
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a4, 1(a0)
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lbu a5, 2(a0)
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    lb a0, 3(a0)
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slli a5, a5, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    or a1, a1, a2
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    packh a2, a3, a4
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slli a5, a5, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slli a0, a0, 24
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    or a0, a0, a5
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    or a0, a0, a2
@@ -4597,12 +4597,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV32-V:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV32-V-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV32-V-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-V-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV32-V-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV32-V-NEXT:    lbu a1, 3(a1)
 ; CHECK-ALIGNED-RV32-V-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV32-V-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-V-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV32-V-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV32-V-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV32-V-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV32-V-NEXT:    lbu a3, 0(a0)
@@ -4623,12 +4623,12 @@ define i1 @memcmp_eq_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-LABEL: memcmp_eq_zero:
 ; CHECK-ALIGNED-RV64-V:       # %bb.0: # %entry
 ; CHECK-ALIGNED-RV64-V-NEXT:    lbu a2, 1(a1)
-; CHECK-ALIGNED-RV64-V-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-V-NEXT:    lbu a4, 2(a1)
+; CHECK-ALIGNED-RV64-V-NEXT:    lbu a3, 0(a1)
 ; CHECK-ALIGNED-RV64-V-NEXT:    lb a1, 3(a1)
 ; CHECK-ALIGNED-RV64-V-NEXT:    slli a2, a2, 8
-; CHECK-ALIGNED-RV64-V-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-V-NEXT:    slli a4, a4, 16
+; CHECK-ALIGNED-RV64-V-NEXT:    or a2, a2, a3
 ; CHECK-ALIGNED-RV64-V-NEXT:    slli a1, a1, 24
 ; CHECK-ALIGNED-RV64-V-NEXT:    or a1, a1, a4
 ; CHECK-ALIGNED-RV64-V-NEXT:    lbu a3, 0(a0)
@@ -4666,8 +4666,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-NEXT:    ret
 ;
@@ -4677,8 +4677,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-NEXT:    ret
 ;
@@ -4688,8 +4688,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    ret
 ;
@@ -4699,8 +4699,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ret
 ;
@@ -4710,8 +4710,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBKB-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    ret
 ;
@@ -4721,8 +4721,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ret
 ;
@@ -4732,8 +4732,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-V-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-ALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-V-NEXT:    ret
 ;
@@ -4743,8 +4743,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-V-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-ALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-V-NEXT:    ret
 ;
@@ -4754,8 +4754,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-UNALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV32-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-UNALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-UNALIGNED-RV32-NEXT:    srli a0, a0, 31
 ; CHECK-UNALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV32-NEXT:    ret
 ;
@@ -4765,8 +4765,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-UNALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV64-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-UNALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-UNALIGNED-RV64-NEXT:    slti a0, a0, 0
 ; CHECK-UNALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV64-NEXT:    ret
 ;
@@ -4784,8 +4784,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    sltu a0, a0, a1
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    ret
@@ -4804,8 +4804,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    sltu a0, a0, a1
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    ret
@@ -4816,8 +4816,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-UNALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV32-V-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-UNALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-UNALIGNED-RV32-V-NEXT:    srli a0, a0, 31
 ; CHECK-UNALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV32-V-NEXT:    ret
 ;
@@ -4827,8 +4827,8 @@ define i1 @memcmp_lt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-UNALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV64-V-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-UNALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-UNALIGNED-RV64-V-NEXT:    slti a0, a0, 0
 ; CHECK-UNALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV64-V-NEXT:    ret
 entry:
@@ -4844,8 +4844,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-NEXT:    ret
 ;
@@ -4855,8 +4855,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-NEXT:    ret
 ;
@@ -4866,8 +4866,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBB-NEXT:    ret
 ;
@@ -4877,8 +4877,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBB-NEXT:    ret
 ;
@@ -4888,8 +4888,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-ZBKB-NEXT:    ret
 ;
@@ -4899,8 +4899,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-ZBKB-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-ZBKB-NEXT:    ret
 ;
@@ -4910,8 +4910,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-ALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV32-V-NEXT:    call memcmp
-; CHECK-ALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-ALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV32-V-NEXT:    ret
 ;
@@ -4921,8 +4921,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-ALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-ALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-ALIGNED-RV64-V-NEXT:    call memcmp
-; CHECK-ALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-ALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-ALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-ALIGNED-RV64-V-NEXT:    ret
 ;
@@ -4932,8 +4932,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-UNALIGNED-RV32-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV32-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-UNALIGNED-RV32-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV32-NEXT:    ret
 ;
@@ -4943,8 +4943,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-UNALIGNED-RV64-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV64-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-UNALIGNED-RV64-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV64-NEXT:    ret
 ;
@@ -4962,8 +4962,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    sltu a0, a1, a0
 ; CHECK-UNALIGNED-RV64-ZBB-NEXT:    ret
@@ -4982,8 +4982,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a0, 0(a0)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    lw a1, 0(a1)
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a0, a0
-; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    rev8 a1, a1
+; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a0, a0, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    srli a1, a1, 32
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    sltu a0, a1, a0
 ; CHECK-UNALIGNED-RV64-ZBKB-NEXT:    ret
@@ -4994,8 +4994,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV32-V-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; CHECK-UNALIGNED-RV32-V-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV32-V-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV32-V-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-UNALIGNED-RV32-V-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV32-V-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV32-V-NEXT:    ret
 ;
@@ -5005,8 +5005,8 @@ define i1 @memcmp_gt_zero(ptr %s1, ptr %s2) nounwind optsize {
 ; CHECK-UNALIGNED-RV64-V-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; CHECK-UNALIGNED-RV64-V-NEXT:    li a2, 4
 ; CHECK-UNALIGNED-RV64-V-NEXT:    call memcmp
-; CHECK-UNALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV64-V-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-UNALIGNED-RV64-V-NEXT:    sgtz a0, a0
 ; CHECK-UNALIGNED-RV64-V-NEXT:    addi sp, sp, 16
 ; CHECK-UNALIGNED-RV64-V-NEXT:    ret
 entry:

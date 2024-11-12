@@ -466,8 +466,8 @@ define void @strided_store_v32f64(<32 x double> %v, ptr %ptr, i32 signext %strid
 ; CHECK-NEXT:    li a3, 16
 ; CHECK-NEXT:  .LBB38_2:
 ; CHECK-NEXT:    vsetvli zero, a3, e64, m8, ta, ma
-; CHECK-NEXT:    vsse64.v v8, (a0), a1, v0.t
 ; CHECK-NEXT:    mul a3, a3, a1
+; CHECK-NEXT:    vsse64.v v8, (a0), a1, v0.t
 ; CHECK-NEXT:    add a0, a0, a3
 ; CHECK-NEXT:    addi a3, a2, -16
 ; CHECK-NEXT:    sltu a2, a2, a3
@@ -492,8 +492,8 @@ define void @strided_store_v32f64_allones_mask(<32 x double> %v, ptr %ptr, i32 s
 ; CHECK-NEXT:    li a3, 16
 ; CHECK-NEXT:  .LBB39_2:
 ; CHECK-NEXT:    vsetvli zero, a3, e64, m8, ta, ma
-; CHECK-NEXT:    vsse64.v v8, (a0), a1
 ; CHECK-NEXT:    mul a3, a3, a1
+; CHECK-NEXT:    vsse64.v v8, (a0), a1
 ; CHECK-NEXT:    add a0, a0, a3
 ; CHECK-NEXT:    addi a3, a2, -16
 ; CHECK-NEXT:    sltu a2, a2, a3

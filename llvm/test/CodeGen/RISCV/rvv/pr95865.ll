@@ -35,17 +35,17 @@ define i32 @main(i1 %arg.1, i64 %arg.2, i1 %arg.3, i64 %arg.4, i1 %arg.5, <vscal
 ; CHECK-NEXT:    .cfi_offset s9, -88
 ; CHECK-NEXT:    .cfi_offset s10, -96
 ; CHECK-NEXT:    .cfi_offset s11, -104
+; CHECK-NEXT:    ld a1, 112(sp)
 ; CHECK-NEXT:    li s2, 0
 ; CHECK-NEXT:    li a7, 8
 ; CHECK-NEXT:    li t0, 12
 ; CHECK-NEXT:    li s0, 4
 ; CHECK-NEXT:    li t1, 20
-; CHECK-NEXT:    ld a1, 112(sp)
-; CHECK-NEXT:    sd a1, 0(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; CHECK-NEXT:    vmv.v.i v8, 0
 ; CHECK-NEXT:    andi t3, a4, 1
 ; CHECK-NEXT:    li t2, 4
+; CHECK-NEXT:    sd a1, 0(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:  .LBB0_1: # %for.cond1.preheader.i
 ; CHECK-NEXT:    # =>This Loop Header: Depth=1
 ; CHECK-NEXT:    # Child Loop BB0_2 Depth 2
@@ -94,8 +94,8 @@ define i32 @main(i1 %arg.1, i64 %arg.2, i1 %arg.3, i64 %arg.4, i1 %arg.5, <vscal
 ; CHECK-NEXT:    # => This Inner Loop Header: Depth=5
 ; CHECK-NEXT:    addi s1, a5, 4
 ; CHECK-NEXT:    add a1, a4, a5
-; CHECK-NEXT:    vse32.v v8, (a1), v0.t
 ; CHECK-NEXT:    add a5, a5, a3
+; CHECK-NEXT:    vse32.v v8, (a1), v0.t
 ; CHECK-NEXT:    vse32.v v8, (a5), v0.t
 ; CHECK-NEXT:    mv a5, s1
 ; CHECK-NEXT:    bne s1, s0, .LBB0_5
@@ -143,16 +143,15 @@ define i32 @main(i1 %arg.1, i64 %arg.2, i1 %arg.3, i64 %arg.4, i1 %arg.5, <vscal
 ; CHECK-NEXT:  .LBB0_12: # %for.body7.us.19
 ; CHECK-NEXT:    vsetvli a0, zero, e32, m8, ta, ma
 ; CHECK-NEXT:    ld a0, 0(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    ld s11, 8(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    ld s10, 16(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    ld s9, 24(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    vmv.s.x v8, a0
 ; CHECK-NEXT:    vmv.v.i v16, 0
 ; CHECK-NEXT:    vsetivli zero, 2, e32, m1, tu, ma
 ; CHECK-NEXT:    vslideup.vi v16, v8, 1
 ; CHECK-NEXT:    vsetvli a0, zero, e32, m8, ta, ma
 ; CHECK-NEXT:    vmsne.vi v8, v16, 0
-; CHECK-NEXT:    vmv.x.s a0, v8
-; CHECK-NEXT:    snez a0, a0
-; CHECK-NEXT:    sb a0, 0(zero)
-; CHECK-NEXT:    li a0, 0
 ; CHECK-NEXT:    ld ra, 104(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s0, 96(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s1, 88(sp) # 8-byte Folded Reload
@@ -163,9 +162,10 @@ define i32 @main(i1 %arg.1, i64 %arg.2, i1 %arg.3, i64 %arg.4, i1 %arg.5, <vscal
 ; CHECK-NEXT:    ld s6, 48(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s7, 40(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s8, 32(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    ld s9, 24(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    ld s10, 16(sp) # 8-byte Folded Reload
-; CHECK-NEXT:    ld s11, 8(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    vmv.x.s a0, v8
+; CHECK-NEXT:    snez a0, a0
+; CHECK-NEXT:    sb a0, 0(zero)
+; CHECK-NEXT:    li a0, 0
 ; CHECK-NEXT:    .cfi_restore ra
 ; CHECK-NEXT:    .cfi_restore s0
 ; CHECK-NEXT:    .cfi_restore s1

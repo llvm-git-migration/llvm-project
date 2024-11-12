@@ -262,12 +262,12 @@ define half @flh_stack(half %a) nounwind {
 ; RV32IZFH-NEXT:    addi sp, sp, -16
 ; RV32IZFH-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32IZFH-NEXT:    fsw fs0, 8(sp) # 4-byte Folded Spill
-; RV32IZFH-NEXT:    fmv.h fs0, fa0
 ; RV32IZFH-NEXT:    addi a0, sp, 4
+; RV32IZFH-NEXT:    fmv.h fs0, fa0
 ; RV32IZFH-NEXT:    call notdead
 ; RV32IZFH-NEXT:    flh fa5, 4(sp)
-; RV32IZFH-NEXT:    fadd.h fa0, fa5, fs0
 ; RV32IZFH-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; RV32IZFH-NEXT:    fadd.h fa0, fa5, fs0
 ; RV32IZFH-NEXT:    flw fs0, 8(sp) # 4-byte Folded Reload
 ; RV32IZFH-NEXT:    addi sp, sp, 16
 ; RV32IZFH-NEXT:    ret
@@ -277,12 +277,12 @@ define half @flh_stack(half %a) nounwind {
 ; RV64IZFH-NEXT:    addi sp, sp, -16
 ; RV64IZFH-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64IZFH-NEXT:    fsw fs0, 4(sp) # 4-byte Folded Spill
-; RV64IZFH-NEXT:    fmv.h fs0, fa0
 ; RV64IZFH-NEXT:    mv a0, sp
+; RV64IZFH-NEXT:    fmv.h fs0, fa0
 ; RV64IZFH-NEXT:    call notdead
 ; RV64IZFH-NEXT:    flh fa5, 0(sp)
-; RV64IZFH-NEXT:    fadd.h fa0, fa5, fs0
 ; RV64IZFH-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; RV64IZFH-NEXT:    fadd.h fa0, fa5, fs0
 ; RV64IZFH-NEXT:    flw fs0, 4(sp) # 4-byte Folded Reload
 ; RV64IZFH-NEXT:    addi sp, sp, 16
 ; RV64IZFH-NEXT:    ret
@@ -296,8 +296,8 @@ define half @flh_stack(half %a) nounwind {
 ; RV32IZHINX-NEXT:    addi a0, sp, 4
 ; RV32IZHINX-NEXT:    call notdead
 ; RV32IZHINX-NEXT:    lh a0, 4(sp)
-; RV32IZHINX-NEXT:    fadd.h a0, a0, s0
 ; RV32IZHINX-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; RV32IZHINX-NEXT:    fadd.h a0, a0, s0
 ; RV32IZHINX-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; RV32IZHINX-NEXT:    addi sp, sp, 16
 ; RV32IZHINX-NEXT:    ret
@@ -311,8 +311,8 @@ define half @flh_stack(half %a) nounwind {
 ; RV64IZHINX-NEXT:    addi a0, sp, 12
 ; RV64IZHINX-NEXT:    call notdead
 ; RV64IZHINX-NEXT:    lh a0, 12(sp)
-; RV64IZHINX-NEXT:    fadd.h a0, a0, s0
 ; RV64IZHINX-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
+; RV64IZHINX-NEXT:    fadd.h a0, a0, s0
 ; RV64IZHINX-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; RV64IZHINX-NEXT:    addi sp, sp, 32
 ; RV64IZHINX-NEXT:    ret
@@ -322,16 +322,16 @@ define half @flh_stack(half %a) nounwind {
 ; RV32IZFHMIN-NEXT:    addi sp, sp, -16
 ; RV32IZFHMIN-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32IZFHMIN-NEXT:    fsw fs0, 8(sp) # 4-byte Folded Spill
-; RV32IZFHMIN-NEXT:    fmv.s fs0, fa0
 ; RV32IZFHMIN-NEXT:    addi a0, sp, 4
+; RV32IZFHMIN-NEXT:    fmv.s fs0, fa0
 ; RV32IZFHMIN-NEXT:    call notdead
 ; RV32IZFHMIN-NEXT:    flh fa5, 4(sp)
 ; RV32IZFHMIN-NEXT:    fcvt.s.h fa4, fs0
+; RV32IZFHMIN-NEXT:    flw fs0, 8(sp) # 4-byte Folded Reload
+; RV32IZFHMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZFHMIN-NEXT:    fcvt.s.h fa5, fa5
 ; RV32IZFHMIN-NEXT:    fadd.s fa5, fa5, fa4
 ; RV32IZFHMIN-NEXT:    fcvt.h.s fa0, fa5
-; RV32IZFHMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32IZFHMIN-NEXT:    flw fs0, 8(sp) # 4-byte Folded Reload
 ; RV32IZFHMIN-NEXT:    addi sp, sp, 16
 ; RV32IZFHMIN-NEXT:    ret
 ;
@@ -340,16 +340,16 @@ define half @flh_stack(half %a) nounwind {
 ; RV64IZFHMIN-NEXT:    addi sp, sp, -16
 ; RV64IZFHMIN-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64IZFHMIN-NEXT:    fsw fs0, 4(sp) # 4-byte Folded Spill
-; RV64IZFHMIN-NEXT:    fmv.s fs0, fa0
 ; RV64IZFHMIN-NEXT:    mv a0, sp
+; RV64IZFHMIN-NEXT:    fmv.s fs0, fa0
 ; RV64IZFHMIN-NEXT:    call notdead
 ; RV64IZFHMIN-NEXT:    flh fa5, 0(sp)
 ; RV64IZFHMIN-NEXT:    fcvt.s.h fa4, fs0
+; RV64IZFHMIN-NEXT:    flw fs0, 4(sp) # 4-byte Folded Reload
+; RV64IZFHMIN-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IZFHMIN-NEXT:    fcvt.s.h fa5, fa5
 ; RV64IZFHMIN-NEXT:    fadd.s fa5, fa5, fa4
 ; RV64IZFHMIN-NEXT:    fcvt.h.s fa0, fa5
-; RV64IZFHMIN-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
-; RV64IZFHMIN-NEXT:    flw fs0, 4(sp) # 4-byte Folded Reload
 ; RV64IZFHMIN-NEXT:    addi sp, sp, 16
 ; RV64IZFHMIN-NEXT:    ret
 ;
@@ -363,11 +363,11 @@ define half @flh_stack(half %a) nounwind {
 ; RV32IZHINXMIN-NEXT:    call notdead
 ; RV32IZHINXMIN-NEXT:    lh a0, 4(sp)
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h a1, s0
+; RV32IZHINXMIN-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
+; RV32IZHINXMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZHINXMIN-NEXT:    fcvt.s.h a0, a0
 ; RV32IZHINXMIN-NEXT:    fadd.s a0, a0, a1
 ; RV32IZHINXMIN-NEXT:    fcvt.h.s a0, a0
-; RV32IZHINXMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
-; RV32IZHINXMIN-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; RV32IZHINXMIN-NEXT:    addi sp, sp, 16
 ; RV32IZHINXMIN-NEXT:    ret
 ;
@@ -381,11 +381,11 @@ define half @flh_stack(half %a) nounwind {
 ; RV64IZHINXMIN-NEXT:    call notdead
 ; RV64IZHINXMIN-NEXT:    lh a0, 12(sp)
 ; RV64IZHINXMIN-NEXT:    fcvt.s.h a1, s0
+; RV64IZHINXMIN-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
+; RV64IZHINXMIN-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; RV64IZHINXMIN-NEXT:    fcvt.s.h a0, a0
 ; RV64IZHINXMIN-NEXT:    fadd.s a0, a0, a1
 ; RV64IZHINXMIN-NEXT:    fcvt.h.s a0, a0
-; RV64IZHINXMIN-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
-; RV64IZHINXMIN-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; RV64IZHINXMIN-NEXT:    addi sp, sp, 32
 ; RV64IZHINXMIN-NEXT:    ret
   %1 = alloca half, align 4
@@ -401,8 +401,8 @@ define dso_local void @fsh_stack(half %a, half %b) nounwind {
 ; RV32IZFH-NEXT:    addi sp, sp, -16
 ; RV32IZFH-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32IZFH-NEXT:    fadd.h fa5, fa0, fa1
-; RV32IZFH-NEXT:    fsh fa5, 8(sp)
 ; RV32IZFH-NEXT:    addi a0, sp, 8
+; RV32IZFH-NEXT:    fsh fa5, 8(sp)
 ; RV32IZFH-NEXT:    call notdead
 ; RV32IZFH-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZFH-NEXT:    addi sp, sp, 16
@@ -413,8 +413,8 @@ define dso_local void @fsh_stack(half %a, half %b) nounwind {
 ; RV64IZFH-NEXT:    addi sp, sp, -16
 ; RV64IZFH-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64IZFH-NEXT:    fadd.h fa5, fa0, fa1
-; RV64IZFH-NEXT:    fsh fa5, 4(sp)
 ; RV64IZFH-NEXT:    addi a0, sp, 4
+; RV64IZFH-NEXT:    fsh fa5, 4(sp)
 ; RV64IZFH-NEXT:    call notdead
 ; RV64IZFH-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IZFH-NEXT:    addi sp, sp, 16
@@ -452,8 +452,8 @@ define dso_local void @fsh_stack(half %a, half %b) nounwind {
 ; RV32IZFHMIN-NEXT:    fcvt.s.h fa4, fa0
 ; RV32IZFHMIN-NEXT:    fadd.s fa5, fa4, fa5
 ; RV32IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
-; RV32IZFHMIN-NEXT:    fsh fa5, 8(sp)
 ; RV32IZFHMIN-NEXT:    addi a0, sp, 8
+; RV32IZFHMIN-NEXT:    fsh fa5, 8(sp)
 ; RV32IZFHMIN-NEXT:    call notdead
 ; RV32IZFHMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IZFHMIN-NEXT:    addi sp, sp, 16
@@ -467,8 +467,8 @@ define dso_local void @fsh_stack(half %a, half %b) nounwind {
 ; RV64IZFHMIN-NEXT:    fcvt.s.h fa4, fa0
 ; RV64IZFHMIN-NEXT:    fadd.s fa5, fa4, fa5
 ; RV64IZFHMIN-NEXT:    fcvt.h.s fa5, fa5
-; RV64IZFHMIN-NEXT:    fsh fa5, 4(sp)
 ; RV64IZFHMIN-NEXT:    addi a0, sp, 4
+; RV64IZFHMIN-NEXT:    fsh fa5, 4(sp)
 ; RV64IZFHMIN-NEXT:    call notdead
 ; RV64IZFHMIN-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IZFHMIN-NEXT:    addi sp, sp, 16

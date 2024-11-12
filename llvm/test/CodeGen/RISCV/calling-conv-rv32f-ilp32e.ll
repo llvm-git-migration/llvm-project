@@ -60,9 +60,9 @@ define float @caller_onstack_f32_fadd(float %a, float %b) nounwind {
 ; RV32IF-ILP32E-NEXT:    sw ra, 16(sp) # 4-byte Folded Spill
 ; RV32IF-ILP32E-NEXT:    fmv.w.x fa5, a1
 ; RV32IF-ILP32E-NEXT:    fmv.w.x fa4, a0
+; RV32IF-ILP32E-NEXT:    li a1, 4
 ; RV32IF-ILP32E-NEXT:    fadd.s fa3, fa4, fa5
 ; RV32IF-ILP32E-NEXT:    fsub.s fa5, fa5, fa4
-; RV32IF-ILP32E-NEXT:    li a1, 4
 ; RV32IF-ILP32E-NEXT:    li a0, 1
 ; RV32IF-ILP32E-NEXT:    li a2, 2
 ; RV32IF-ILP32E-NEXT:    li a4, 3

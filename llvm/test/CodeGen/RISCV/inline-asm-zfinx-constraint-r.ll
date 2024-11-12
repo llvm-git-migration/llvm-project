@@ -63,8 +63,8 @@ define float @constraint_float_abi_name(float %a) nounwind {
 ; RV32FINX-NEXT:    #APP
 ; RV32FINX-NEXT:    fadd.s t0, a0, s0
 ; RV32FINX-NEXT:    #NO_APP
-; RV32FINX-NEXT:    mv a0, t0
 ; RV32FINX-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; RV32FINX-NEXT:    mv a0, t0
 ; RV32FINX-NEXT:    addi sp, sp, 16
 ; RV32FINX-NEXT:    ret
 ;
@@ -78,8 +78,8 @@ define float @constraint_float_abi_name(float %a) nounwind {
 ; RV64FINX-NEXT:    #APP
 ; RV64FINX-NEXT:    fadd.s t0, a0, s0
 ; RV64FINX-NEXT:    #NO_APP
-; RV64FINX-NEXT:    mv a0, t0
 ; RV64FINX-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; RV64FINX-NEXT:    mv a0, t0
 ; RV64FINX-NEXT:    addi sp, sp, 16
 ; RV64FINX-NEXT:    ret
   %1 = load float, ptr @gf

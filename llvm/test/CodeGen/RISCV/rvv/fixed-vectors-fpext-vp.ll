@@ -105,10 +105,10 @@ define <32 x double> @vfpext_v32f32_v32f64(<32 x float> %a, <32 x i1> %m, i32 ze
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB7_2:
 ; CHECK-NEXT:    vsetvli zero, a1, e32, m4, ta, ma
-; CHECK-NEXT:    vfwcvt.f.f.v v24, v8, v0.t
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
 ; CHECK-NEXT:    addi a0, a0, -1
+; CHECK-NEXT:    vfwcvt.f.f.v v24, v8, v0.t
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    vsetivli zero, 16, e32, m8, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 16

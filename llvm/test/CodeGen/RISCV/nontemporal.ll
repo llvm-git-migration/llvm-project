@@ -907,6 +907,9 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64-NEXT:    lbu t6, 96(a1)
+; CHECK-RV64-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV64-NEXT:    lbu a3, 8(a1)
 ; CHECK-RV64-NEXT:    lbu a4, 16(a1)
@@ -919,9 +922,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    lbu t3, 72(a1)
 ; CHECK-RV64-NEXT:    lbu t4, 80(a1)
 ; CHECK-RV64-NEXT:    lbu t5, 88(a1)
-; CHECK-RV64-NEXT:    lbu t6, 96(a1)
-; CHECK-RV64-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb t6, 12(a0)
@@ -931,6 +931,8 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb a1, 15(a0)
+; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb t2, 8(a0)
 ; CHECK-RV64-NEXT:    ntl.all
@@ -955,8 +957,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb a4, 2(a0)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb a5, 3(a0)
-; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    .cfi_restore s0
 ; CHECK-RV64-NEXT:    .cfi_restore s1
 ; CHECK-RV64-NEXT:    addi sp, sp, 16
@@ -971,6 +971,9 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32-NEXT:    lbu t6, 48(a1)
+; CHECK-RV32-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV32-NEXT:    lbu a3, 4(a1)
 ; CHECK-RV32-NEXT:    lbu a4, 8(a1)
@@ -983,9 +986,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    lbu t3, 36(a1)
 ; CHECK-RV32-NEXT:    lbu t4, 40(a1)
 ; CHECK-RV32-NEXT:    lbu t5, 44(a1)
-; CHECK-RV32-NEXT:    lbu t6, 48(a1)
-; CHECK-RV32-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb t6, 12(a0)
@@ -995,6 +995,8 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb a1, 15(a0)
+; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb t2, 8(a0)
 ; CHECK-RV32-NEXT:    ntl.all
@@ -1019,8 +1021,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb a4, 2(a0)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb a5, 3(a0)
-; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    .cfi_restore s0
 ; CHECK-RV32-NEXT:    .cfi_restore s1
 ; CHECK-RV32-NEXT:    addi sp, sp, 16
@@ -1035,6 +1035,9 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64C-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64C-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
+; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV64C-NEXT:    lbu a7, 8(a1)
 ; CHECK-RV64C-NEXT:    lbu t0, 16(a1)
@@ -1047,9 +1050,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    lbu a3, 72(a1)
 ; CHECK-RV64C-NEXT:    lbu a4, 80(a1)
 ; CHECK-RV64C-NEXT:    lbu a5, 88(a1)
-; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
-; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb a2, 12(a0)
@@ -1059,6 +1059,8 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb a1, 15(a0)
+; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
@@ -1083,8 +1085,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb t1, 3(a0)
-; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    .cfi_restore s0
 ; CHECK-RV64C-NEXT:    .cfi_restore s1
 ; CHECK-RV64C-NEXT:    addi sp, sp, 16
@@ -1099,6 +1099,9 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32C-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32C-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
+; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV32C-NEXT:    lbu a7, 4(a1)
 ; CHECK-RV32C-NEXT:    lbu t0, 8(a1)
@@ -1111,9 +1114,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    lbu a3, 36(a1)
 ; CHECK-RV32C-NEXT:    lbu a4, 40(a1)
 ; CHECK-RV32C-NEXT:    lbu a5, 44(a1)
-; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
-; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb a2, 12(a0)
@@ -1123,6 +1123,8 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb a1, 15(a0)
+; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
@@ -1147,8 +1149,6 @@ define void @test_nontemporal_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb t1, 3(a0)
-; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    .cfi_restore s0
 ; CHECK-RV32C-NEXT:    .cfi_restore s1
 ; CHECK-RV32C-NEXT:    addi sp, sp, 16
@@ -2333,6 +2333,9 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64-NEXT:    lbu t6, 96(a1)
+; CHECK-RV64-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV64-NEXT:    lbu a3, 8(a1)
 ; CHECK-RV64-NEXT:    lbu a4, 16(a1)
@@ -2345,9 +2348,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    lbu t3, 72(a1)
 ; CHECK-RV64-NEXT:    lbu t4, 80(a1)
 ; CHECK-RV64-NEXT:    lbu t5, 88(a1)
-; CHECK-RV64-NEXT:    lbu t6, 96(a1)
-; CHECK-RV64-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64-NEXT:    ntl.p1
 ; CHECK-RV64-NEXT:    sb t6, 12(a0)
@@ -2357,6 +2357,8 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64-NEXT:    ntl.p1
 ; CHECK-RV64-NEXT:    sb a1, 15(a0)
+; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    ntl.p1
 ; CHECK-RV64-NEXT:    sb t2, 8(a0)
 ; CHECK-RV64-NEXT:    ntl.p1
@@ -2381,8 +2383,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb a4, 2(a0)
 ; CHECK-RV64-NEXT:    ntl.p1
 ; CHECK-RV64-NEXT:    sb a5, 3(a0)
-; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    .cfi_restore s0
 ; CHECK-RV64-NEXT:    .cfi_restore s1
 ; CHECK-RV64-NEXT:    addi sp, sp, 16
@@ -2397,6 +2397,9 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32-NEXT:    lbu t6, 48(a1)
+; CHECK-RV32-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV32-NEXT:    lbu a3, 4(a1)
 ; CHECK-RV32-NEXT:    lbu a4, 8(a1)
@@ -2409,9 +2412,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    lbu t3, 36(a1)
 ; CHECK-RV32-NEXT:    lbu t4, 40(a1)
 ; CHECK-RV32-NEXT:    lbu t5, 44(a1)
-; CHECK-RV32-NEXT:    lbu t6, 48(a1)
-; CHECK-RV32-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32-NEXT:    ntl.p1
 ; CHECK-RV32-NEXT:    sb t6, 12(a0)
@@ -2421,6 +2421,8 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32-NEXT:    ntl.p1
 ; CHECK-RV32-NEXT:    sb a1, 15(a0)
+; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    ntl.p1
 ; CHECK-RV32-NEXT:    sb t2, 8(a0)
 ; CHECK-RV32-NEXT:    ntl.p1
@@ -2445,8 +2447,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb a4, 2(a0)
 ; CHECK-RV32-NEXT:    ntl.p1
 ; CHECK-RV32-NEXT:    sb a5, 3(a0)
-; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    .cfi_restore s0
 ; CHECK-RV32-NEXT:    .cfi_restore s1
 ; CHECK-RV32-NEXT:    addi sp, sp, 16
@@ -2461,6 +2461,9 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64C-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64C-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
+; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV64C-NEXT:    lbu a7, 8(a1)
 ; CHECK-RV64C-NEXT:    lbu t0, 16(a1)
@@ -2473,9 +2476,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    lbu a3, 72(a1)
 ; CHECK-RV64C-NEXT:    lbu a4, 80(a1)
 ; CHECK-RV64C-NEXT:    lbu a5, 88(a1)
-; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
-; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64C-NEXT:    c.ntl.p1
 ; CHECK-RV64C-NEXT:    sb a2, 12(a0)
@@ -2485,6 +2485,8 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.p1
 ; CHECK-RV64C-NEXT:    sb a1, 15(a0)
+; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    c.ntl.p1
 ; CHECK-RV64C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.p1
@@ -2509,8 +2511,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.p1
 ; CHECK-RV64C-NEXT:    sb t1, 3(a0)
-; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    .cfi_restore s0
 ; CHECK-RV64C-NEXT:    .cfi_restore s1
 ; CHECK-RV64C-NEXT:    addi sp, sp, 16
@@ -2525,6 +2525,9 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32C-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32C-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
+; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV32C-NEXT:    lbu a7, 4(a1)
 ; CHECK-RV32C-NEXT:    lbu t0, 8(a1)
@@ -2537,9 +2540,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    lbu a3, 36(a1)
 ; CHECK-RV32C-NEXT:    lbu a4, 40(a1)
 ; CHECK-RV32C-NEXT:    lbu a5, 44(a1)
-; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
-; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32C-NEXT:    c.ntl.p1
 ; CHECK-RV32C-NEXT:    sb a2, 12(a0)
@@ -2549,6 +2549,8 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.p1
 ; CHECK-RV32C-NEXT:    sb a1, 15(a0)
+; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    c.ntl.p1
 ; CHECK-RV32C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.p1
@@ -2573,8 +2575,6 @@ define void @test_nontemporal_P1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.p1
 ; CHECK-RV32C-NEXT:    sb t1, 3(a0)
-; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    .cfi_restore s0
 ; CHECK-RV32C-NEXT:    .cfi_restore s1
 ; CHECK-RV32C-NEXT:    addi sp, sp, 16
@@ -3759,6 +3759,9 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64-NEXT:    lbu t6, 96(a1)
+; CHECK-RV64-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV64-NEXT:    lbu a3, 8(a1)
 ; CHECK-RV64-NEXT:    lbu a4, 16(a1)
@@ -3771,9 +3774,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    lbu t3, 72(a1)
 ; CHECK-RV64-NEXT:    lbu t4, 80(a1)
 ; CHECK-RV64-NEXT:    lbu t5, 88(a1)
-; CHECK-RV64-NEXT:    lbu t6, 96(a1)
-; CHECK-RV64-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64-NEXT:    ntl.pall
 ; CHECK-RV64-NEXT:    sb t6, 12(a0)
@@ -3783,6 +3783,8 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64-NEXT:    ntl.pall
 ; CHECK-RV64-NEXT:    sb a1, 15(a0)
+; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    ntl.pall
 ; CHECK-RV64-NEXT:    sb t2, 8(a0)
 ; CHECK-RV64-NEXT:    ntl.pall
@@ -3807,8 +3809,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb a4, 2(a0)
 ; CHECK-RV64-NEXT:    ntl.pall
 ; CHECK-RV64-NEXT:    sb a5, 3(a0)
-; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    .cfi_restore s0
 ; CHECK-RV64-NEXT:    .cfi_restore s1
 ; CHECK-RV64-NEXT:    addi sp, sp, 16
@@ -3823,6 +3823,9 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32-NEXT:    lbu t6, 48(a1)
+; CHECK-RV32-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV32-NEXT:    lbu a3, 4(a1)
 ; CHECK-RV32-NEXT:    lbu a4, 8(a1)
@@ -3835,9 +3838,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    lbu t3, 36(a1)
 ; CHECK-RV32-NEXT:    lbu t4, 40(a1)
 ; CHECK-RV32-NEXT:    lbu t5, 44(a1)
-; CHECK-RV32-NEXT:    lbu t6, 48(a1)
-; CHECK-RV32-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32-NEXT:    ntl.pall
 ; CHECK-RV32-NEXT:    sb t6, 12(a0)
@@ -3847,6 +3847,8 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32-NEXT:    ntl.pall
 ; CHECK-RV32-NEXT:    sb a1, 15(a0)
+; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    ntl.pall
 ; CHECK-RV32-NEXT:    sb t2, 8(a0)
 ; CHECK-RV32-NEXT:    ntl.pall
@@ -3871,8 +3873,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb a4, 2(a0)
 ; CHECK-RV32-NEXT:    ntl.pall
 ; CHECK-RV32-NEXT:    sb a5, 3(a0)
-; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    .cfi_restore s0
 ; CHECK-RV32-NEXT:    .cfi_restore s1
 ; CHECK-RV32-NEXT:    addi sp, sp, 16
@@ -3887,6 +3887,9 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64C-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64C-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
+; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV64C-NEXT:    lbu a7, 8(a1)
 ; CHECK-RV64C-NEXT:    lbu t0, 16(a1)
@@ -3899,9 +3902,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    lbu a3, 72(a1)
 ; CHECK-RV64C-NEXT:    lbu a4, 80(a1)
 ; CHECK-RV64C-NEXT:    lbu a5, 88(a1)
-; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
-; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64C-NEXT:    c.ntl.pall
 ; CHECK-RV64C-NEXT:    sb a2, 12(a0)
@@ -3911,6 +3911,8 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.pall
 ; CHECK-RV64C-NEXT:    sb a1, 15(a0)
+; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    c.ntl.pall
 ; CHECK-RV64C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.pall
@@ -3935,8 +3937,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.pall
 ; CHECK-RV64C-NEXT:    sb t1, 3(a0)
-; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    .cfi_restore s0
 ; CHECK-RV64C-NEXT:    .cfi_restore s1
 ; CHECK-RV64C-NEXT:    addi sp, sp, 16
@@ -3951,6 +3951,9 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32C-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32C-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
+; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV32C-NEXT:    lbu a7, 4(a1)
 ; CHECK-RV32C-NEXT:    lbu t0, 8(a1)
@@ -3963,9 +3966,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    lbu a3, 36(a1)
 ; CHECK-RV32C-NEXT:    lbu a4, 40(a1)
 ; CHECK-RV32C-NEXT:    lbu a5, 44(a1)
-; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
-; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32C-NEXT:    c.ntl.pall
 ; CHECK-RV32C-NEXT:    sb a2, 12(a0)
@@ -3975,6 +3975,8 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.pall
 ; CHECK-RV32C-NEXT:    sb a1, 15(a0)
+; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    c.ntl.pall
 ; CHECK-RV32C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.pall
@@ -3999,8 +4001,6 @@ define void @test_nontemporal_PALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.pall
 ; CHECK-RV32C-NEXT:    sb t1, 3(a0)
-; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    .cfi_restore s0
 ; CHECK-RV32C-NEXT:    .cfi_restore s1
 ; CHECK-RV32C-NEXT:    addi sp, sp, 16
@@ -5185,6 +5185,9 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64-NEXT:    lbu t6, 96(a1)
+; CHECK-RV64-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV64-NEXT:    lbu a3, 8(a1)
 ; CHECK-RV64-NEXT:    lbu a4, 16(a1)
@@ -5197,9 +5200,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    lbu t3, 72(a1)
 ; CHECK-RV64-NEXT:    lbu t4, 80(a1)
 ; CHECK-RV64-NEXT:    lbu t5, 88(a1)
-; CHECK-RV64-NEXT:    lbu t6, 96(a1)
-; CHECK-RV64-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64-NEXT:    ntl.s1
 ; CHECK-RV64-NEXT:    sb t6, 12(a0)
@@ -5209,6 +5209,8 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64-NEXT:    ntl.s1
 ; CHECK-RV64-NEXT:    sb a1, 15(a0)
+; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    ntl.s1
 ; CHECK-RV64-NEXT:    sb t2, 8(a0)
 ; CHECK-RV64-NEXT:    ntl.s1
@@ -5233,8 +5235,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb a4, 2(a0)
 ; CHECK-RV64-NEXT:    ntl.s1
 ; CHECK-RV64-NEXT:    sb a5, 3(a0)
-; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    .cfi_restore s0
 ; CHECK-RV64-NEXT:    .cfi_restore s1
 ; CHECK-RV64-NEXT:    addi sp, sp, 16
@@ -5249,6 +5249,9 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32-NEXT:    lbu t6, 48(a1)
+; CHECK-RV32-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV32-NEXT:    lbu a3, 4(a1)
 ; CHECK-RV32-NEXT:    lbu a4, 8(a1)
@@ -5261,9 +5264,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    lbu t3, 36(a1)
 ; CHECK-RV32-NEXT:    lbu t4, 40(a1)
 ; CHECK-RV32-NEXT:    lbu t5, 44(a1)
-; CHECK-RV32-NEXT:    lbu t6, 48(a1)
-; CHECK-RV32-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32-NEXT:    ntl.s1
 ; CHECK-RV32-NEXT:    sb t6, 12(a0)
@@ -5273,6 +5273,8 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32-NEXT:    ntl.s1
 ; CHECK-RV32-NEXT:    sb a1, 15(a0)
+; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    ntl.s1
 ; CHECK-RV32-NEXT:    sb t2, 8(a0)
 ; CHECK-RV32-NEXT:    ntl.s1
@@ -5297,8 +5299,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb a4, 2(a0)
 ; CHECK-RV32-NEXT:    ntl.s1
 ; CHECK-RV32-NEXT:    sb a5, 3(a0)
-; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    .cfi_restore s0
 ; CHECK-RV32-NEXT:    .cfi_restore s1
 ; CHECK-RV32-NEXT:    addi sp, sp, 16
@@ -5313,6 +5313,9 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64C-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64C-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
+; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV64C-NEXT:    lbu a7, 8(a1)
 ; CHECK-RV64C-NEXT:    lbu t0, 16(a1)
@@ -5325,9 +5328,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    lbu a3, 72(a1)
 ; CHECK-RV64C-NEXT:    lbu a4, 80(a1)
 ; CHECK-RV64C-NEXT:    lbu a5, 88(a1)
-; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
-; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64C-NEXT:    c.ntl.s1
 ; CHECK-RV64C-NEXT:    sb a2, 12(a0)
@@ -5337,6 +5337,8 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.s1
 ; CHECK-RV64C-NEXT:    sb a1, 15(a0)
+; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    c.ntl.s1
 ; CHECK-RV64C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.s1
@@ -5361,8 +5363,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.s1
 ; CHECK-RV64C-NEXT:    sb t1, 3(a0)
-; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    .cfi_restore s0
 ; CHECK-RV64C-NEXT:    .cfi_restore s1
 ; CHECK-RV64C-NEXT:    addi sp, sp, 16
@@ -5377,6 +5377,9 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32C-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32C-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
+; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV32C-NEXT:    lbu a7, 4(a1)
 ; CHECK-RV32C-NEXT:    lbu t0, 8(a1)
@@ -5389,9 +5392,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    lbu a3, 36(a1)
 ; CHECK-RV32C-NEXT:    lbu a4, 40(a1)
 ; CHECK-RV32C-NEXT:    lbu a5, 44(a1)
-; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
-; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32C-NEXT:    c.ntl.s1
 ; CHECK-RV32C-NEXT:    sb a2, 12(a0)
@@ -5401,6 +5401,8 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.s1
 ; CHECK-RV32C-NEXT:    sb a1, 15(a0)
+; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    c.ntl.s1
 ; CHECK-RV32C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.s1
@@ -5425,8 +5427,6 @@ define void @test_nontemporal_S1_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.s1
 ; CHECK-RV32C-NEXT:    sb t1, 3(a0)
-; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    .cfi_restore s0
 ; CHECK-RV32C-NEXT:    .cfi_restore s1
 ; CHECK-RV32C-NEXT:    addi sp, sp, 16
@@ -6611,6 +6611,9 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64-NEXT:    lbu t6, 96(a1)
+; CHECK-RV64-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV64-NEXT:    lbu a3, 8(a1)
 ; CHECK-RV64-NEXT:    lbu a4, 16(a1)
@@ -6623,9 +6626,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    lbu t3, 72(a1)
 ; CHECK-RV64-NEXT:    lbu t4, 80(a1)
 ; CHECK-RV64-NEXT:    lbu t5, 88(a1)
-; CHECK-RV64-NEXT:    lbu t6, 96(a1)
-; CHECK-RV64-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb t6, 12(a0)
@@ -6635,6 +6635,8 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb a1, 15(a0)
+; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb t2, 8(a0)
 ; CHECK-RV64-NEXT:    ntl.all
@@ -6659,8 +6661,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64-NEXT:    sb a4, 2(a0)
 ; CHECK-RV64-NEXT:    ntl.all
 ; CHECK-RV64-NEXT:    sb a5, 3(a0)
-; CHECK-RV64-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64-NEXT:    .cfi_restore s0
 ; CHECK-RV64-NEXT:    .cfi_restore s1
 ; CHECK-RV64-NEXT:    addi sp, sp, 16
@@ -6675,6 +6675,9 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32-NEXT:    lbu t6, 48(a1)
+; CHECK-RV32-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a2, 0(a1)
 ; CHECK-RV32-NEXT:    lbu a3, 4(a1)
 ; CHECK-RV32-NEXT:    lbu a4, 8(a1)
@@ -6687,9 +6690,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    lbu t3, 36(a1)
 ; CHECK-RV32-NEXT:    lbu t4, 40(a1)
 ; CHECK-RV32-NEXT:    lbu t5, 44(a1)
-; CHECK-RV32-NEXT:    lbu t6, 48(a1)
-; CHECK-RV32-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb t6, 12(a0)
@@ -6699,6 +6699,8 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb a1, 15(a0)
+; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb t2, 8(a0)
 ; CHECK-RV32-NEXT:    ntl.all
@@ -6723,8 +6725,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32-NEXT:    sb a4, 2(a0)
 ; CHECK-RV32-NEXT:    ntl.all
 ; CHECK-RV32-NEXT:    sb a5, 3(a0)
-; CHECK-RV32-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32-NEXT:    .cfi_restore s0
 ; CHECK-RV32-NEXT:    .cfi_restore s1
 ; CHECK-RV32-NEXT:    addi sp, sp, 16
@@ -6739,6 +6739,9 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sd s1, 0(sp) # 8-byte Folded Spill
 ; CHECK-RV64C-NEXT:    .cfi_offset s0, -8
 ; CHECK-RV64C-NEXT:    .cfi_offset s1, -16
+; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
+; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
+; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV64C-NEXT:    lbu a7, 8(a1)
 ; CHECK-RV64C-NEXT:    lbu t0, 16(a1)
@@ -6751,9 +6754,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    lbu a3, 72(a1)
 ; CHECK-RV64C-NEXT:    lbu a4, 80(a1)
 ; CHECK-RV64C-NEXT:    lbu a5, 88(a1)
-; CHECK-RV64C-NEXT:    lbu a2, 96(a1)
-; CHECK-RV64C-NEXT:    lbu s0, 104(a1)
-; CHECK-RV64C-NEXT:    lbu s1, 112(a1)
 ; CHECK-RV64C-NEXT:    lbu a1, 120(a1)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb a2, 12(a0)
@@ -6763,6 +6763,8 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb a1, 15(a0)
+; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
+; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
@@ -6787,8 +6789,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV64C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV64C-NEXT:    c.ntl.all
 ; CHECK-RV64C-NEXT:    sb t1, 3(a0)
-; CHECK-RV64C-NEXT:    ld s0, 8(sp) # 8-byte Folded Reload
-; CHECK-RV64C-NEXT:    ld s1, 0(sp) # 8-byte Folded Reload
 ; CHECK-RV64C-NEXT:    .cfi_restore s0
 ; CHECK-RV64C-NEXT:    .cfi_restore s1
 ; CHECK-RV64C-NEXT:    addi sp, sp, 16
@@ -6803,6 +6803,9 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sw s1, 8(sp) # 4-byte Folded Spill
 ; CHECK-RV32C-NEXT:    .cfi_offset s0, -4
 ; CHECK-RV32C-NEXT:    .cfi_offset s1, -8
+; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
+; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
+; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a6, 0(a1)
 ; CHECK-RV32C-NEXT:    lbu a7, 4(a1)
 ; CHECK-RV32C-NEXT:    lbu t0, 8(a1)
@@ -6815,9 +6818,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    lbu a3, 36(a1)
 ; CHECK-RV32C-NEXT:    lbu a4, 40(a1)
 ; CHECK-RV32C-NEXT:    lbu a5, 44(a1)
-; CHECK-RV32C-NEXT:    lbu a2, 48(a1)
-; CHECK-RV32C-NEXT:    lbu s0, 52(a1)
-; CHECK-RV32C-NEXT:    lbu s1, 56(a1)
 ; CHECK-RV32C-NEXT:    lbu a1, 60(a1)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb a2, 12(a0)
@@ -6827,6 +6827,8 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb s1, 14(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb a1, 15(a0)
+; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
+; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb t6, 8(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
@@ -6851,8 +6853,6 @@ define void @test_nontemporal_ALL_store_v16i8(ptr %p, <16 x i8> %v) {
 ; CHECK-RV32C-NEXT:    sb t0, 2(a0)
 ; CHECK-RV32C-NEXT:    c.ntl.all
 ; CHECK-RV32C-NEXT:    sb t1, 3(a0)
-; CHECK-RV32C-NEXT:    lw s0, 12(sp) # 4-byte Folded Reload
-; CHECK-RV32C-NEXT:    lw s1, 8(sp) # 4-byte Folded Reload
 ; CHECK-RV32C-NEXT:    .cfi_restore s0
 ; CHECK-RV32C-NEXT:    .cfi_restore s1
 ; CHECK-RV32C-NEXT:    addi sp, sp, 16

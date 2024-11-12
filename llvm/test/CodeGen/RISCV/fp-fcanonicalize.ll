@@ -24,11 +24,11 @@ define half @fcanonicalize_f16(half %x) {
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
+; CHECK-NOFP16-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    lui a1, 1048560
 ; CHECK-NOFP16-RV64-NEXT:    or a0, a0, a1
 ; CHECK-NOFP16-RV64-NEXT:    fmv.w.x fa0, a0
-; CHECK-NOFP16-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_def_cfa_offset 0
@@ -48,11 +48,11 @@ define half @fcanonicalize_f16(half %x) {
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
+; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    lui a1, 1048560
 ; CHECK-NOFP16-RV32-NEXT:    or a0, a0, a1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a0
-; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_def_cfa_offset 0
@@ -76,11 +76,11 @@ define half @fcanonicalize_f16_nnan(half %x) {
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
+; CHECK-NOFP16-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    lui a1, 1048560
 ; CHECK-NOFP16-RV64-NEXT:    or a0, a0, a1
 ; CHECK-NOFP16-RV64-NEXT:    fmv.w.x fa0, a0
-; CHECK-NOFP16-RV64-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV64-NEXT:    addi sp, sp, 16
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_def_cfa_offset 0
@@ -100,11 +100,11 @@ define half @fcanonicalize_f16_nnan(half %x) {
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
+; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    lui a1, 1048560
 ; CHECK-NOFP16-RV32-NEXT:    or a0, a0, a1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a0
-; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV32-NEXT:    addi sp, sp, 16
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_def_cfa_offset 0
@@ -130,8 +130,8 @@ define <2 x half> @fcanonicalize_v2f16(<2 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset ra, -8
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset s0, -16
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset s1, -24
-; CHECK-NOFP16-RV64-NEXT:    mv s0, a1
 ; CHECK-NOFP16-RV64-NEXT:    fmv.w.x fa0, a0
+; CHECK-NOFP16-RV64-NEXT:    mv s0, a1
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
@@ -140,11 +140,11 @@ define <2 x half> @fcanonicalize_v2f16(<2 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
-; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV64-NEXT:    mv a0, s1
 ; CHECK-NOFP16-RV64-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
+; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore s0
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore s1
@@ -168,8 +168,8 @@ define <2 x half> @fcanonicalize_v2f16(<2 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset ra, -4
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset s0, -8
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset fs0, -16
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a0
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a1
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
@@ -178,11 +178,11 @@ define <2 x half> @fcanonicalize_v2f16(<2 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
-; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    mv a0, s0
 ; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    fld fs0, 0(sp) # 8-byte Folded Reload
+; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore s0
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore fs0
@@ -210,8 +210,8 @@ define <2 x half> @fcanonicalize_v2f16_nnan(<2 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset ra, -8
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset s0, -16
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_offset s1, -24
-; CHECK-NOFP16-RV64-NEXT:    mv s0, a1
 ; CHECK-NOFP16-RV64-NEXT:    fmv.w.x fa0, a0
+; CHECK-NOFP16-RV64-NEXT:    mv s0, a1
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
@@ -220,11 +220,11 @@ define <2 x half> @fcanonicalize_v2f16_nnan(<2 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
-; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV64-NEXT:    mv a0, s1
 ; CHECK-NOFP16-RV64-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; CHECK-NOFP16-RV64-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
+; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore s0
 ; CHECK-NOFP16-RV64-NEXT:    .cfi_restore s1
@@ -248,8 +248,8 @@ define <2 x half> @fcanonicalize_v2f16_nnan(<2 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset ra, -4
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset s0, -8
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_offset fs0, -16
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a0
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a1
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
@@ -258,11 +258,11 @@ define <2 x half> @fcanonicalize_v2f16_nnan(<2 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
-; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    mv a0, s0
 ; CHECK-NOFP16-RV32-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; CHECK-NOFP16-RV32-NEXT:    fld fs0, 0(sp) # 8-byte Folded Reload
+; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore ra
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore s0
 ; CHECK-NOFP16-RV32-NEXT:    .cfi_restore fs0
@@ -329,8 +329,8 @@ define <4 x half> @fcanonicalize_v4f16(<4 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s1, fa0
-; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
+; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s3, fs1
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
@@ -418,8 +418,8 @@ define <4 x half> @fcanonicalize_v4f16(<4 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s1, fa0
-; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs3, fs3
+; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s3, fs2
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0
@@ -508,8 +508,8 @@ define <4 x half> @fcanonicalize_v4f16_nnan(<4 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s1, fa0
-; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
+; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s3, fs1
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
@@ -597,8 +597,8 @@ define <4 x half> @fcanonicalize_v4f16_nnan(<4 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s1, fa0
-; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs3, fs3
+; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s3, fs2
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0
@@ -735,12 +735,12 @@ define <8 x half> @fcanonicalize_v8f16(<8 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s1, fa0
+; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs6
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s3, fs5
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s4, fs4
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s5, fs3
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s6, fs2
-; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s7, fs1
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
@@ -854,15 +854,15 @@ define <8 x half> @fcanonicalize_v8f16(<8 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs2, a2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs4, a3
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs5, a4
 ; CHECK-NOFP16-RV32-NEXT:    lhu a0, 16(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a2, 20(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a3, 24(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a1, 28(a1)
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs5, a4
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs6, a0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs7, a2
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs3, a3
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a1
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs3, a3
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.s fs1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.s fa0, fs3
@@ -900,12 +900,12 @@ define <8 x half> @fcanonicalize_v8f16(<8 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s1, fa0
+; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs1, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s3, fs4
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s4, fs5
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s5, fs6
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s6, fs7
-; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs1, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s7, fs3
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0
@@ -1062,12 +1062,12 @@ define <8 x half> @fcanonicalize_v8f16_nnan(<8 x half> %x) {
 ; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s1, fa0
+; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s2, fs6
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s3, fs5
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s4, fs4
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s5, fs3
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s6, fs2
-; CHECK-NOFP16-RV64-NEXT:    fmin.s fa0, fs0, fs0
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w s7, fs1
 ; CHECK-NOFP16-RV64-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV64-NEXT:    fmv.x.w a0, fa0
@@ -1181,15 +1181,15 @@ define <8 x half> @fcanonicalize_v8f16_nnan(<8 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs2, a2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs4, a3
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs5, a4
 ; CHECK-NOFP16-RV32-NEXT:    lhu a0, 16(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a2, 20(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a3, 24(a1)
 ; CHECK-NOFP16-RV32-NEXT:    lhu a1, 28(a1)
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs5, a4
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs6, a0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs7, a2
-; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs3, a3
 ; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fa0, a1
+; CHECK-NOFP16-RV32-NEXT:    fmv.w.x fs3, a3
 ; CHECK-NOFP16-RV32-NEXT:    call __extendhfsf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.s fs1, fa0
 ; CHECK-NOFP16-RV32-NEXT:    fmv.s fa0, fs3
@@ -1227,12 +1227,12 @@ define <8 x half> @fcanonicalize_v8f16_nnan(<8 x half> %x) {
 ; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fa0, fa0
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s1, fa0
+; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs1, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s2, fs2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s3, fs4
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s4, fs5
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s5, fs6
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s6, fs7
-; CHECK-NOFP16-RV32-NEXT:    fmin.s fa0, fs1, fs1
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w s7, fs3
 ; CHECK-NOFP16-RV32-NEXT:    call __truncsfhf2
 ; CHECK-NOFP16-RV32-NEXT:    fmv.x.w a0, fa0

@@ -15,43 +15,43 @@ define void @test(ptr %0, ptr %1) nounwind {
 ; CHECK-NEXT:    fsd fs4, 16(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    fsd fs5, 8(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    fsd fs6, 0(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    mv s0, a1
 ; CHECK-NEXT:    mv s1, a0
 ; CHECK-NEXT:    lhu a0, 12(a0)
+; CHECK-NEXT:    mv s0, a1
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs0, fa0
 ; CHECK-NEXT:    lhu a0, 10(s1)
+; CHECK-NEXT:    fmv.s fs0, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs1, fa0
 ; CHECK-NEXT:    lhu a0, 8(s1)
+; CHECK-NEXT:    fmv.s fs1, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs2, fa0
 ; CHECK-NEXT:    lhu a0, 6(s1)
+; CHECK-NEXT:    fmv.s fs2, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs3, fa0
 ; CHECK-NEXT:    lhu a0, 4(s1)
+; CHECK-NEXT:    fmv.s fs3, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs4, fa0
 ; CHECK-NEXT:    lhu a0, 2(s1)
+; CHECK-NEXT:    fmv.s fs4, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fmv.s fs5, fa0
 ; CHECK-NEXT:    lhu a0, 0(s1)
+; CHECK-NEXT:    fmv.s fs5, fa0
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
+; CHECK-NEXT:    lhu a0, 14(s1)
 ; CHECK-NEXT:    fcvt.d.s fs6, fa0
 ; CHECK-NEXT:    fcvt.d.s fs5, fs5
 ; CHECK-NEXT:    fcvt.d.s fs4, fs4
-; CHECK-NEXT:    lhu a0, 14(s1)
+; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    fcvt.d.s fs3, fs3
 ; CHECK-NEXT:    fcvt.d.s fs2, fs2
 ; CHECK-NEXT:    fcvt.d.s fs1, fs1
-; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    fcvt.d.s fs0, fs0
 ; CHECK-NEXT:    call __extendhfsf2
 ; CHECK-NEXT:    fcvt.d.s fa5, fa0

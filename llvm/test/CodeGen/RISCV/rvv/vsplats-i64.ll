@@ -168,8 +168,8 @@ define <vscale x 8 x i64> @vadd_vx_nxv8i64_11(<vscale x 8 x i64> %v) {
 ; RV32V:       # %bb.0:
 ; RV32V-NEXT:    addi sp, sp, -16
 ; RV32V-NEXT:    .cfi_def_cfa_offset 16
-; RV32V-NEXT:    li a0, 1
 ; RV32V-NEXT:    lui a1, 1028096
+; RV32V-NEXT:    li a0, 1
 ; RV32V-NEXT:    addi a1, a1, -1281
 ; RV32V-NEXT:    sw a1, 8(sp)
 ; RV32V-NEXT:    sw a0, 12(sp)

@@ -29,6 +29,7 @@ define <2 x float> @callee_v2f32(<2 x float> %x, <2 x float> %y) {
 define <4 x float> @callee_v4f32(<4 x float> %x, <4 x float> %y) {
 ; RV64-LABEL: callee_v4f32:
 ; RV64:       # %bb.0:
+; RV64-NEXT:    flw ft1, 0(sp)
 ; RV64-NEXT:    fmv.w.x fa5, a4
 ; RV64-NEXT:    fmv.w.x fa4, a7
 ; RV64-NEXT:    fmv.w.x fa3, a3
@@ -36,7 +37,6 @@ define <4 x float> @callee_v4f32(<4 x float> %x, <4 x float> %y) {
 ; RV64-NEXT:    fmv.w.x fa1, a2
 ; RV64-NEXT:    fmv.w.x fa0, a5
 ; RV64-NEXT:    fmv.w.x ft0, a1
-; RV64-NEXT:    flw ft1, 0(sp)
 ; RV64-NEXT:    fadd.s fa0, ft0, fa0
 ; RV64-NEXT:    fadd.s fa2, fa1, fa2
 ; RV64-NEXT:    fadd.s fa4, fa3, fa4

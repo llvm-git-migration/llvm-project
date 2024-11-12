@@ -43,8 +43,8 @@ define <4 x bfloat> @splat_idx_v4bf16(<4 x bfloat> %v, i64 %idx) {
 define <2 x bfloat> @buildvec_v2bf16(bfloat %a, bfloat %b) {
 ; RV32-NO-ZFBFMIN-LABEL: buildvec_v2bf16:
 ; RV32-NO-ZFBFMIN:       # %bb.0:
-; RV32-NO-ZFBFMIN-NEXT:    fmv.x.w a0, fa1
 ; RV32-NO-ZFBFMIN-NEXT:    fmv.x.w a1, fa0
+; RV32-NO-ZFBFMIN-NEXT:    fmv.x.w a0, fa1
 ; RV32-NO-ZFBFMIN-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; RV32-NO-ZFBFMIN-NEXT:    vmv.v.x v8, a1
 ; RV32-NO-ZFBFMIN-NEXT:    vslide1down.vx v8, v8, a0
@@ -52,8 +52,8 @@ define <2 x bfloat> @buildvec_v2bf16(bfloat %a, bfloat %b) {
 ;
 ; RV64-NO-ZFBFMIN-LABEL: buildvec_v2bf16:
 ; RV64-NO-ZFBFMIN:       # %bb.0:
-; RV64-NO-ZFBFMIN-NEXT:    fmv.x.w a0, fa1
 ; RV64-NO-ZFBFMIN-NEXT:    fmv.x.w a1, fa0
+; RV64-NO-ZFBFMIN-NEXT:    fmv.x.w a0, fa1
 ; RV64-NO-ZFBFMIN-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; RV64-NO-ZFBFMIN-NEXT:    vmv.v.x v8, a1
 ; RV64-NO-ZFBFMIN-NEXT:    vslide1down.vx v8, v8, a0
@@ -61,8 +61,8 @@ define <2 x bfloat> @buildvec_v2bf16(bfloat %a, bfloat %b) {
 ;
 ; RV32-ZFBFMIN-LABEL: buildvec_v2bf16:
 ; RV32-ZFBFMIN:       # %bb.0:
-; RV32-ZFBFMIN-NEXT:    fmv.x.h a0, fa1
 ; RV32-ZFBFMIN-NEXT:    fmv.x.h a1, fa0
+; RV32-ZFBFMIN-NEXT:    fmv.x.h a0, fa1
 ; RV32-ZFBFMIN-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; RV32-ZFBFMIN-NEXT:    vmv.v.x v8, a1
 ; RV32-ZFBFMIN-NEXT:    vslide1down.vx v8, v8, a0
@@ -70,8 +70,8 @@ define <2 x bfloat> @buildvec_v2bf16(bfloat %a, bfloat %b) {
 ;
 ; RV64-ZFBFMIN-LABEL: buildvec_v2bf16:
 ; RV64-ZFBFMIN:       # %bb.0:
-; RV64-ZFBFMIN-NEXT:    fmv.x.h a0, fa1
 ; RV64-ZFBFMIN-NEXT:    fmv.x.h a1, fa0
+; RV64-ZFBFMIN-NEXT:    fmv.x.h a0, fa1
 ; RV64-ZFBFMIN-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; RV64-ZFBFMIN-NEXT:    vmv.v.x v8, a1
 ; RV64-ZFBFMIN-NEXT:    vslide1down.vx v8, v8, a0

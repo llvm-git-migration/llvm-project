@@ -770,13 +770,13 @@ define void @lmul_16_align() nounwind {
 ; NOZBA-NEXT:    sub sp, sp, a0
 ; NOZBA-NEXT:    andi sp, sp, -128
 ; NOZBA-NEXT:    vsetvli a0, zero, e64, m8, ta, ma
-; NOZBA-NEXT:    vmv.v.i v8, 0
 ; NOZBA-NEXT:    csrr a0, vlenb
 ; NOZBA-NEXT:    add a0, sp, a0
-; NOZBA-NEXT:    addi a0, a0, 128
-; NOZBA-NEXT:    vs8r.v v8, (a0)
 ; NOZBA-NEXT:    csrr a1, vlenb
+; NOZBA-NEXT:    vmv.v.i v8, 0
+; NOZBA-NEXT:    addi a0, a0, 128
 ; NOZBA-NEXT:    slli a1, a1, 3
+; NOZBA-NEXT:    vs8r.v v8, (a0)
 ; NOZBA-NEXT:    add a0, a0, a1
 ; NOZBA-NEXT:    vs8r.v v8, (a0)
 ; NOZBA-NEXT:    vsetvli a0, zero, e64, m1, ta, ma
@@ -801,12 +801,12 @@ define void @lmul_16_align() nounwind {
 ; ZBA-NEXT:    sub sp, sp, a0
 ; ZBA-NEXT:    andi sp, sp, -128
 ; ZBA-NEXT:    vsetvli a0, zero, e64, m8, ta, ma
-; ZBA-NEXT:    vmv.v.i v8, 0
 ; ZBA-NEXT:    csrr a0, vlenb
 ; ZBA-NEXT:    add a0, sp, a0
+; ZBA-NEXT:    vmv.v.i v8, 0
 ; ZBA-NEXT:    addi a0, a0, 128
-; ZBA-NEXT:    vs8r.v v8, (a0)
 ; ZBA-NEXT:    csrr a1, vlenb
+; ZBA-NEXT:    vs8r.v v8, (a0)
 ; ZBA-NEXT:    sh3add a0, a1, a0
 ; ZBA-NEXT:    vs8r.v v8, (a0)
 ; ZBA-NEXT:    vsetvli a0, zero, e64, m1, ta, ma
@@ -833,13 +833,13 @@ define void @lmul_16_align() nounwind {
 ; NOMUL-NEXT:    sub sp, sp, a0
 ; NOMUL-NEXT:    andi sp, sp, -128
 ; NOMUL-NEXT:    vsetvli a0, zero, e64, m8, ta, ma
-; NOMUL-NEXT:    vmv.v.i v8, 0
 ; NOMUL-NEXT:    csrr a0, vlenb
 ; NOMUL-NEXT:    add a0, sp, a0
-; NOMUL-NEXT:    addi a0, a0, 128
-; NOMUL-NEXT:    vs8r.v v8, (a0)
 ; NOMUL-NEXT:    csrr a1, vlenb
+; NOMUL-NEXT:    vmv.v.i v8, 0
+; NOMUL-NEXT:    addi a0, a0, 128
 ; NOMUL-NEXT:    slli a1, a1, 3
+; NOMUL-NEXT:    vs8r.v v8, (a0)
 ; NOMUL-NEXT:    add a0, a0, a1
 ; NOMUL-NEXT:    vs8r.v v8, (a0)
 ; NOMUL-NEXT:    vsetvli a0, zero, e64, m1, ta, ma

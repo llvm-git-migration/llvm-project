@@ -964,8 +964,8 @@ declare <vscale x 2 x float> @llvm.riscv.vfredusum.nxv2f32.nxv2f32(
 define <vscale x 2 x float> @vfredusum(<vscale x 2 x float> %passthru, <vscale x 2 x float> %x, <vscale x 2 x float> %y, <vscale x 2 x i1> %m, i64 %vl) {
 ; CHECK-LABEL: vfredusum:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    fsrmi a1, 0
 ; CHECK-NEXT:    vmv1r.v v11, v8
+; CHECK-NEXT:    fsrmi a1, 0
 ; CHECK-NEXT:    vsetvli zero, a0, e32, m1, tu, ma
 ; CHECK-NEXT:    vfredusum.vs v11, v9, v10
 ; CHECK-NEXT:    vmerge.vvm v8, v8, v11, v0

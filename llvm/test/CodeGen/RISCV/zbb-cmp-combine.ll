@@ -214,21 +214,21 @@ define i1 @flo(float %c, float %a, float %b) {
 ; CHECK-RV64I-NEXT:    .cfi_offset s0, -16
 ; CHECK-RV64I-NEXT:    .cfi_offset s1, -24
 ; CHECK-RV64I-NEXT:    .cfi_offset s2, -32
-; CHECK-RV64I-NEXT:    mv s0, a2
 ; CHECK-RV64I-NEXT:    mv s1, a0
 ; CHECK-RV64I-NEXT:    mv a0, a1
 ; CHECK-RV64I-NEXT:    mv a1, s1
+; CHECK-RV64I-NEXT:    mv s0, a2
 ; CHECK-RV64I-NEXT:    call __gesf2
 ; CHECK-RV64I-NEXT:    mv s2, a0
 ; CHECK-RV64I-NEXT:    mv a0, s0
 ; CHECK-RV64I-NEXT:    mv a1, s1
 ; CHECK-RV64I-NEXT:    call __gesf2
 ; CHECK-RV64I-NEXT:    or a0, s2, a0
-; CHECK-RV64I-NEXT:    slti a0, a0, 0
 ; CHECK-RV64I-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; CHECK-RV64I-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; CHECK-RV64I-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; CHECK-RV64I-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
+; CHECK-RV64I-NEXT:    slti a0, a0, 0
 ; CHECK-RV64I-NEXT:    .cfi_restore ra
 ; CHECK-RV64I-NEXT:    .cfi_restore s0
 ; CHECK-RV64I-NEXT:    .cfi_restore s1
@@ -265,21 +265,21 @@ define i1 @dlo(double %c, double %a, double %b) {
 ; CHECK-NEXT:    .cfi_offset s0, -16
 ; CHECK-NEXT:    .cfi_offset s1, -24
 ; CHECK-NEXT:    .cfi_offset s2, -32
-; CHECK-NEXT:    mv s0, a2
 ; CHECK-NEXT:    mv s1, a0
 ; CHECK-NEXT:    mv a0, a1
 ; CHECK-NEXT:    mv a1, s1
+; CHECK-NEXT:    mv s0, a2
 ; CHECK-NEXT:    call __gedf2
 ; CHECK-NEXT:    mv s2, a0
 ; CHECK-NEXT:    mv a0, s0
 ; CHECK-NEXT:    mv a1, s1
 ; CHECK-NEXT:    call __gedf2
 ; CHECK-NEXT:    or a0, s2, a0
-; CHECK-NEXT:    slti a0, a0, 0
 ; CHECK-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    slti a0, a0, 0
 ; CHECK-NEXT:    .cfi_restore ra
 ; CHECK-NEXT:    .cfi_restore s0
 ; CHECK-NEXT:    .cfi_restore s1

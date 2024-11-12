@@ -191,9 +191,9 @@ define void @amomax_d_discard(ptr %a, i64 %b) nounwind {
 ; RV32-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s1, 20(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s2, 16(sp) # 4-byte Folded Spill
-; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    lw a4, 0(a0)
 ; RV32-NEXT:    lw a5, 4(a0)
+; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    mv s1, a2
 ; RV32-NEXT:    mv s2, a1
 ; RV32-NEXT:    j .LBB11_2
@@ -267,9 +267,9 @@ define void @amomaxu_d_discard(ptr %a, i64 %b) nounwind {
 ; RV32-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s1, 20(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s2, 16(sp) # 4-byte Folded Spill
-; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    lw a4, 0(a0)
 ; RV32-NEXT:    lw a5, 4(a0)
+; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    mv s1, a2
 ; RV32-NEXT:    mv s2, a1
 ; RV32-NEXT:    j .LBB13_2
@@ -343,9 +343,9 @@ define void @amomin_d_discard(ptr %a, i64 %b) nounwind {
 ; RV32-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s1, 20(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s2, 16(sp) # 4-byte Folded Spill
-; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    lw a4, 0(a0)
 ; RV32-NEXT:    lw a5, 4(a0)
+; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    mv s1, a2
 ; RV32-NEXT:    mv s2, a1
 ; RV32-NEXT:    j .LBB15_2
@@ -419,9 +419,9 @@ define void @amominu_d_discard(ptr %a, i64 %b) nounwind {
 ; RV32-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s1, 20(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s2, 16(sp) # 4-byte Folded Spill
-; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    lw a4, 0(a0)
 ; RV32-NEXT:    lw a5, 4(a0)
+; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    mv s1, a2
 ; RV32-NEXT:    mv s2, a1
 ; RV32-NEXT:    j .LBB17_2

@@ -11,8 +11,8 @@ define <8 x i7> @vmin_vv_v8i7(<8 x i7> %va, <8 x i7> %b, <8 x i1> %m, i32 zeroex
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, mf2, ta, ma
 ; CHECK-NEXT:    vsll.vi v9, v9, 1, v0.t
-; CHECK-NEXT:    vsra.vi v9, v9, 1, v0.t
 ; CHECK-NEXT:    vsll.vi v8, v8, 1, v0.t
+; CHECK-NEXT:    vsra.vi v9, v9, 1, v0.t
 ; CHECK-NEXT:    vsra.vi v8, v8, 1, v0.t
 ; CHECK-NEXT:    vmin.vv v8, v8, v9, v0.t
 ; CHECK-NEXT:    ret
@@ -267,8 +267,8 @@ declare <256 x i8> @llvm.vp.smin.v258i8(<256 x i8>, <256 x i8>, <256 x i1>, i32)
 define <256 x i8> @vmin_vx_v258i8(<256 x i8> %va, i8 %b, <256 x i1> %m, i32 zeroext %evl) {
 ; CHECK-LABEL: vmin_vx_v258i8:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    li a3, 128
+; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    vsetvli zero, a3, e8, m8, ta, ma
 ; CHECK-NEXT:    vlm.v v0, (a1)
 ; CHECK-NEXT:    addi a1, a2, -128
@@ -301,11 +301,11 @@ define <256 x i8> @vmin_vx_v258i8_unmasked(<256 x i8> %va, i8 %b, i32 zeroext %e
 ; CHECK-NEXT:    li a2, 128
 ; CHECK-NEXT:  .LBB23_2:
 ; CHECK-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
-; CHECK-NEXT:    vmin.vx v8, v8, a0
 ; CHECK-NEXT:    addi a2, a1, -128
 ; CHECK-NEXT:    sltu a1, a1, a2
 ; CHECK-NEXT:    addi a1, a1, -1
 ; CHECK-NEXT:    and a1, a1, a2
+; CHECK-NEXT:    vmin.vx v8, v8, a0
 ; CHECK-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
 ; CHECK-NEXT:    vmin.vx v16, v16, a0
 ; CHECK-NEXT:    ret
@@ -324,8 +324,8 @@ define <256 x i8> @vmin_vx_v258i8_evl129(<256 x i8> %va, i8 %b, <256 x i1> %m) {
 ; CHECK-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-NEXT:    vlm.v v24, (a1)
 ; CHECK-NEXT:    vmin.vx v8, v8, a0, v0.t
-; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vsetivli zero, 1, e8, m8, ta, ma
+; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vmin.vx v16, v16, a0, v0.t
 ; CHECK-NEXT:    ret
   %elt.head = insertelement <256 x i8> poison, i8 %b, i32 0
@@ -1036,12 +1036,12 @@ define <32 x i64> @vmin_vx_v32i64(<32 x i64> %va, <32 x i1> %m, i32 zeroext %evl
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB74_2:
-; CHECK-NEXT:    li a2, -1
 ; CHECK-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
-; CHECK-NEXT:    vmin.vx v8, v8, a2, v0.t
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
+; CHECK-NEXT:    li a2, -1
 ; CHECK-NEXT:    addi a0, a0, -1
+; CHECK-NEXT:    vmin.vx v8, v8, a2, v0.t
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vsetvli zero, a0, e64, m8, ta, ma

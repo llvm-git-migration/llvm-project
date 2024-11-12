@@ -160,10 +160,10 @@ define <32 x i64> @vsext_v32i64_v32i32(<32 x i32> %va, <32 x i1> %m, i32 zeroext
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB12_2:
 ; CHECK-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
-; CHECK-NEXT:    vsext.vf2 v24, v8, v0.t
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
 ; CHECK-NEXT:    addi a0, a0, -1
+; CHECK-NEXT:    vsext.vf2 v24, v8, v0.t
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    vsetivli zero, 16, e32, m8, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 16
@@ -186,10 +186,10 @@ define <32 x i64> @vsext_v32i64_v32i32_unmasked(<32 x i32> %va, i32 zeroext %evl
 ; CHECK-NEXT:    li a1, 16
 ; CHECK-NEXT:  .LBB13_2:
 ; CHECK-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
-; CHECK-NEXT:    vsext.vf2 v24, v8
 ; CHECK-NEXT:    addi a1, a0, -16
 ; CHECK-NEXT:    sltu a0, a0, a1
 ; CHECK-NEXT:    addi a0, a0, -1
+; CHECK-NEXT:    vsext.vf2 v24, v8
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    vsetivli zero, 16, e32, m8, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 16

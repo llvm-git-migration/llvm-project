@@ -141,7 +141,6 @@ define i32 @caller_float_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32FD:       # %bb.0:
 ; RV32-ILP32FD-NEXT:    addi sp, sp, -16
 ; RV32-ILP32FD-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32-ILP32FD-NEXT:    lui a1, 267520
 ; RV32-ILP32FD-NEXT:    lui a0, 262144
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa0, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 264192
@@ -155,6 +154,7 @@ define i32 @caller_float_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32FD-NEXT:    lui a0, 266752
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa5, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 267008
+; RV32-ILP32FD-NEXT:    lui a1, 267520
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa6, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 267264
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa7, a0
@@ -192,8 +192,8 @@ define i32 @caller_float_ret() nounwind {
 ; RV32-ILP32FD-NEXT:    addi sp, sp, -16
 ; RV32-ILP32FD-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32-ILP32FD-NEXT:    call callee_float_ret
-; RV32-ILP32FD-NEXT:    fmv.x.w a0, fa0
 ; RV32-ILP32FD-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; RV32-ILP32FD-NEXT:    fmv.x.w a0, fa0
 ; RV32-ILP32FD-NEXT:    addi sp, sp, 16
 ; RV32-ILP32FD-NEXT:    ret
   %1 = call float @callee_float_ret()

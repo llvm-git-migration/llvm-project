@@ -12,8 +12,8 @@ define bfloat @frem_bf16(bfloat %a, bfloat %b) nounwind {
 ; RV32IZFBFMIN-NEXT:    fcvt.s.bf16 fa0, fa0
 ; RV32IZFBFMIN-NEXT:    fcvt.s.bf16 fa1, fa1
 ; RV32IZFBFMIN-NEXT:    call fmodf
-; RV32IZFBFMIN-NEXT:    fcvt.bf16.s fa0, fa0
 ; RV32IZFBFMIN-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; RV32IZFBFMIN-NEXT:    fcvt.bf16.s fa0, fa0
 ; RV32IZFBFMIN-NEXT:    addi sp, sp, 16
 ; RV32IZFBFMIN-NEXT:    ret
 ;
@@ -24,8 +24,8 @@ define bfloat @frem_bf16(bfloat %a, bfloat %b) nounwind {
 ; RV64IZFBFMIN-NEXT:    fcvt.s.bf16 fa0, fa0
 ; RV64IZFBFMIN-NEXT:    fcvt.s.bf16 fa1, fa1
 ; RV64IZFBFMIN-NEXT:    call fmodf
-; RV64IZFBFMIN-NEXT:    fcvt.bf16.s fa0, fa0
 ; RV64IZFBFMIN-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; RV64IZFBFMIN-NEXT:    fcvt.bf16.s fa0, fa0
 ; RV64IZFBFMIN-NEXT:    addi sp, sp, 16
 ; RV64IZFBFMIN-NEXT:    ret
   %1 = frem bfloat %a, %b

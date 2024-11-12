@@ -213,8 +213,8 @@ define void @add32_reject() nounwind {
 ; RV32I-LABEL: add32_reject:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    lui a0, %hi(ga)
-; RV32I-NEXT:    lw a1, %lo(ga)(a0)
 ; RV32I-NEXT:    lui a2, %hi(gb)
+; RV32I-NEXT:    lw a1, %lo(ga)(a0)
 ; RV32I-NEXT:    lw a3, %lo(gb)(a2)
 ; RV32I-NEXT:    lui a4, 1
 ; RV32I-NEXT:    addi a4, a4, -1096
@@ -227,8 +227,8 @@ define void @add32_reject() nounwind {
 ; RV64I-LABEL: add32_reject:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    lui a0, %hi(ga)
-; RV64I-NEXT:    lw a1, %lo(ga)(a0)
 ; RV64I-NEXT:    lui a2, %hi(gb)
+; RV64I-NEXT:    lw a1, %lo(ga)(a0)
 ; RV64I-NEXT:    lw a3, %lo(gb)(a2)
 ; RV64I-NEXT:    lui a4, 1
 ; RV64I-NEXT:    addi a4, a4, -1096

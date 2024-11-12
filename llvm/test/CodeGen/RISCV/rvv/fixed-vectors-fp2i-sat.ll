@@ -151,8 +151,8 @@ define void @fp2si_v2f16_v2i64(ptr %x, ptr %y) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; CHECK-NEXT:    vle16.v v8, (a0)
-; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfwcvt.f.f.v v9, v8
+; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vfwcvt.rtz.x.f.v v8, v9
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m1, ta, ma
@@ -171,8 +171,8 @@ define void @fp2ui_v2f16_v2i64(ptr %x, ptr %y) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetivli zero, 2, e16, mf4, ta, ma
 ; CHECK-NEXT:    vle16.v v8, (a0)
-; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfwcvt.f.f.v v9, v8
+; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vfwcvt.rtz.xu.f.v v8, v9
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m1, ta, ma

@@ -292,11 +292,11 @@ define ptr @lwuib(ptr %base, i64 %a, ptr %addr.1) {
 define ptr @ldia(ptr %base, ptr %addr.2, i64 %a) {
 ; RV32XTHEADMEMIDX-LABEL: ldia:
 ; RV32XTHEADMEMIDX:       # %bb.0:
-; RV32XTHEADMEMIDX-NEXT:    lw a4, 4(a0)
 ; RV32XTHEADMEMIDX-NEXT:    lw a5, 0(a0)
+; RV32XTHEADMEMIDX-NEXT:    lw a4, 4(a0)
 ; RV32XTHEADMEMIDX-NEXT:    addi a0, a0, -128
-; RV32XTHEADMEMIDX-NEXT:    add a3, a4, a3
 ; RV32XTHEADMEMIDX-NEXT:    add a2, a5, a2
+; RV32XTHEADMEMIDX-NEXT:    add a3, a4, a3
 ; RV32XTHEADMEMIDX-NEXT:    sltu a4, a2, a5
 ; RV32XTHEADMEMIDX-NEXT:    add a3, a3, a4
 ; RV32XTHEADMEMIDX-NEXT:    sw a2, 0(a1)
@@ -455,10 +455,10 @@ define ptr @swib(ptr %base, i32 %a, i32 %b) {
 define ptr @sdia(ptr %base, i64 %a, i64 %b) {
 ; RV32XTHEADMEMIDX-LABEL: sdia:
 ; RV32XTHEADMEMIDX:       # %bb.0:
-; RV32XTHEADMEMIDX-NEXT:    addi a5, a0, 64
-; RV32XTHEADMEMIDX-NEXT:    add a2, a2, a4
 ; RV32XTHEADMEMIDX-NEXT:    add a3, a1, a3
+; RV32XTHEADMEMIDX-NEXT:    add a2, a2, a4
 ; RV32XTHEADMEMIDX-NEXT:    sltu a1, a3, a1
+; RV32XTHEADMEMIDX-NEXT:    addi a5, a0, 64
 ; RV32XTHEADMEMIDX-NEXT:    add a1, a2, a1
 ; RV32XTHEADMEMIDX-NEXT:    sw a3, 0(a0)
 ; RV32XTHEADMEMIDX-NEXT:    sw a1, 4(a0)
@@ -479,8 +479,8 @@ define ptr @sdia(ptr %base, i64 %a, i64 %b) {
 define ptr @sdib(ptr %base, i64 %a, i64 %b) {
 ; RV32XTHEADMEMIDX-LABEL: sdib:
 ; RV32XTHEADMEMIDX:       # %bb.0:
-; RV32XTHEADMEMIDX-NEXT:    add a2, a2, a4
 ; RV32XTHEADMEMIDX-NEXT:    add a3, a1, a3
+; RV32XTHEADMEMIDX-NEXT:    add a2, a2, a4
 ; RV32XTHEADMEMIDX-NEXT:    sltu a1, a3, a1
 ; RV32XTHEADMEMIDX-NEXT:    add a1, a2, a1
 ; RV32XTHEADMEMIDX-NEXT:    th.swib a3, (a0), 8, 0

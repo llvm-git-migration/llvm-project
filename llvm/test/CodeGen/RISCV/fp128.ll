@@ -34,8 +34,8 @@ define i32 @test_load_and_cmp() nounwind {
 ; RV32I-NEXT:    sw a4, 32(sp)
 ; RV32I-NEXT:    sw a5, 36(sp)
 ; RV32I-NEXT:    call __netf2
-; RV32I-NEXT:    snez a0, a0
 ; RV32I-NEXT:    lw ra, 44(sp) # 4-byte Folded Reload
+; RV32I-NEXT:    snez a0, a0
 ; RV32I-NEXT:    addi sp, sp, 48
 ; RV32I-NEXT:    ret
   %1 = load fp128, ptr @x, align 16

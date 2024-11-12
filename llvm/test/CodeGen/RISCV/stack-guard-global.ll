@@ -12,11 +12,11 @@ define void @foo(i64 %t) sspstrong nounwind {
 ; CHECK-NEXT:    addi s0, sp, 32
 ; CHECK-NEXT:    lui s1, %hi(__stack_chk_guard)
 ; CHECK-NEXT:    ld a1, %lo(__stack_chk_guard)(s1)
-; CHECK-NEXT:    sd a1, -32(s0)
 ; CHECK-NEXT:    slli a0, a0, 2
 ; CHECK-NEXT:    addi a0, a0, 15
 ; CHECK-NEXT:    andi a0, a0, -16
 ; CHECK-NEXT:    sub a0, sp, a0
+; CHECK-NEXT:    sd a1, -32(s0)
 ; CHECK-NEXT:    mv sp, a0
 ; CHECK-NEXT:    call baz
 ; CHECK-NEXT:    ld a0, %lo(__stack_chk_guard)(s1)

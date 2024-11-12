@@ -84,9 +84,9 @@ define i64 @lshr_by_complemented_64(i64 %x) {
 ; RV32I-NEXT:    mv a0, a3
 ; RV32I-NEXT:    j .LBB3_3
 ; RV32I-NEXT:  .LBB3_2:
-; RV32I-NEXT:    srl a4, a0, a4
 ; RV32I-NEXT:    li a5, 63
 ; RV32I-NEXT:    sub a5, a5, a0
+; RV32I-NEXT:    srl a4, a0, a4
 ; RV32I-NEXT:    not a0, a5
 ; RV32I-NEXT:    slli a1, a1, 1
 ; RV32I-NEXT:    sll a0, a1, a0
@@ -128,17 +128,17 @@ define i64 @ashr_by_complemented_64(i64 %x) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    mv a2, a0
 ; RV32I-NEXT:    li a0, 31
-; RV32I-NEXT:    sub a4, a0, a2
 ; RV32I-NEXT:    not a3, a2
+; RV32I-NEXT:    sub a4, a0, a2
 ; RV32I-NEXT:    sra a0, a1, a3
 ; RV32I-NEXT:    bltz a4, .LBB5_2
 ; RV32I-NEXT:  # %bb.1:
 ; RV32I-NEXT:    srai a1, a1, 31
 ; RV32I-NEXT:    ret
 ; RV32I-NEXT:  .LBB5_2:
-; RV32I-NEXT:    srl a3, a2, a3
 ; RV32I-NEXT:    li a4, 63
 ; RV32I-NEXT:    sub a4, a4, a2
+; RV32I-NEXT:    srl a3, a2, a3
 ; RV32I-NEXT:    not a2, a4
 ; RV32I-NEXT:    slli a1, a1, 1
 ; RV32I-NEXT:    sll a1, a1, a2
@@ -188,9 +188,9 @@ define i64 @shl_by_masked_complemented_64(i64 %x) {
 ; RV32I-NEXT:    sll a1, a0, a4
 ; RV32I-NEXT:    j .LBB7_3
 ; RV32I-NEXT:  .LBB7_2:
-; RV32I-NEXT:    sll a1, a1, a3
 ; RV32I-NEXT:    not a4, a4
 ; RV32I-NEXT:    srli a5, a0, 1
+; RV32I-NEXT:    sll a1, a1, a3
 ; RV32I-NEXT:    srl a4, a5, a4
 ; RV32I-NEXT:    or a1, a1, a4
 ; RV32I-NEXT:  .LBB7_3:
@@ -223,9 +223,9 @@ define i64 @lshr_by_masked_complemented_64(i64 %x) {
 ; RV32I-NEXT:    srl a0, a1, a4
 ; RV32I-NEXT:    j .LBB8_3
 ; RV32I-NEXT:  .LBB8_2:
-; RV32I-NEXT:    srl a0, a0, a3
 ; RV32I-NEXT:    not a4, a4
 ; RV32I-NEXT:    slli a5, a1, 1
+; RV32I-NEXT:    srl a0, a0, a3
 ; RV32I-NEXT:    sll a4, a5, a4
 ; RV32I-NEXT:    or a0, a0, a4
 ; RV32I-NEXT:  .LBB8_3:
@@ -261,9 +261,9 @@ define i64 @ashr_by_masked_complemented_64(i64 %x) {
 ; RV32I-NEXT:  .LBB9_2:
 ; RV32I-NEXT:    not a4, a0
 ; RV32I-NEXT:    sra a1, a2, a4
-; RV32I-NEXT:    srl a0, a0, a4
 ; RV32I-NEXT:    not a3, a3
 ; RV32I-NEXT:    slli a2, a2, 1
+; RV32I-NEXT:    srl a0, a0, a4
 ; RV32I-NEXT:    sll a2, a2, a3
 ; RV32I-NEXT:    or a0, a0, a2
 ; RV32I-NEXT:    ret

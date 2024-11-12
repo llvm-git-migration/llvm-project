@@ -244,15 +244,15 @@ define void @test_attributes(ptr byval(%struct2) %s) gc "statepoint-example" {
 ; CHECK-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    .cfi_offset ra, -8
 ; CHECK-NEXT:    ld a1, 16(a0)
+; CHECK-NEXT:    mv a2, sp
+; CHECK-NEXT:    li t2, 0
 ; CHECK-NEXT:    sd a1, 16(sp)
 ; CHECK-NEXT:    ld a1, 8(a0)
 ; CHECK-NEXT:    sd a1, 8(sp)
 ; CHECK-NEXT:    ld a0, 0(a0)
+; CHECK-NEXT:    li a1, 17
 ; CHECK-NEXT:    sd a0, 0(sp)
 ; CHECK-NEXT:    li a0, 42
-; CHECK-NEXT:    li a1, 17
-; CHECK-NEXT:    mv a2, sp
-; CHECK-NEXT:    li t2, 0
 ; CHECK-NEXT:    call consume_attributes
 ; CHECK-NEXT:  .Ltmp9:
 ; CHECK-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload

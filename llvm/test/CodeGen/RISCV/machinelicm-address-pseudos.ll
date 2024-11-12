@@ -149,9 +149,9 @@ define void @test_la_tls_gd(i32 signext %n) nounwind {
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s2, 0(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    mv s0, a0
-; RV32I-NEXT:    li s2, 0
 ; RV32I-NEXT:  .Lpcrel_hi3:
 ; RV32I-NEXT:    auipc a0, %tls_gd_pcrel_hi(gd)
+; RV32I-NEXT:    li s2, 0
 ; RV32I-NEXT:    addi s1, a0, %pcrel_lo(.Lpcrel_hi3)
 ; RV32I-NEXT:  .LBB3_1: # %loop
 ; RV32I-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -176,9 +176,9 @@ define void @test_la_tls_gd(i32 signext %n) nounwind {
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s2, 0(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    mv s0, a0
-; RV64I-NEXT:    li s2, 0
 ; RV64I-NEXT:  .Lpcrel_hi3:
 ; RV64I-NEXT:    auipc a0, %tls_gd_pcrel_hi(gd)
+; RV64I-NEXT:    li s2, 0
 ; RV64I-NEXT:    addi s1, a0, %pcrel_lo(.Lpcrel_hi3)
 ; RV64I-NEXT:  .LBB3_1: # %loop
 ; RV64I-NEXT:    # =>This Inner Loop Header: Depth=1

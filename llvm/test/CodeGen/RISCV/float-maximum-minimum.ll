@@ -380,8 +380,8 @@ define float @fminimum_nnan_op_f32(float %a, float %b) nounwind {
 ; RV32I-NEXT:    addi sp, sp, -16
 ; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a0
 ; RV32I-NEXT:    mv a1, a0
+; RV32I-NEXT:    mv s0, a0
 ; RV32I-NEXT:    call __addsf3
 ; RV32I-NEXT:    mv a1, a0
 ; RV32I-NEXT:    mv a0, s0
@@ -420,8 +420,8 @@ define float @fminimum_nnan_op_f32(float %a, float %b) nounwind {
 ; RV64I-NEXT:    addi sp, sp, -16
 ; RV64I-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s0, 0(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a0
 ; RV64I-NEXT:    mv a1, a0
+; RV64I-NEXT:    mv s0, a0
 ; RV64I-NEXT:    call __addsf3
 ; RV64I-NEXT:    mv a1, a0
 ; RV64I-NEXT:    mv a0, s0

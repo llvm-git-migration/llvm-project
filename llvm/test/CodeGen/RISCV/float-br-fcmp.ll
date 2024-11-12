@@ -967,9 +967,9 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV32IF-NEXT:    feq.s a0, fa0, fs0
 ; RV32IF-NEXT:    beqz a0, .LBB17_3
 ; RV32IF-NEXT:  # %bb.2: # %if.end4
-; RV32IF-NEXT:    li a0, 0
 ; RV32IF-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32IF-NEXT:    flw fs0, 8(sp) # 4-byte Folded Reload
+; RV32IF-NEXT:    li a0, 0
 ; RV32IF-NEXT:    addi sp, sp, 16
 ; RV32IF-NEXT:    ret
 ; RV32IF-NEXT:  .LBB17_3: # %if.then
@@ -991,9 +991,9 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV64IF-NEXT:    feq.s a0, fa0, fs0
 ; RV64IF-NEXT:    beqz a0, .LBB17_3
 ; RV64IF-NEXT:  # %bb.2: # %if.end4
-; RV64IF-NEXT:    li a0, 0
 ; RV64IF-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64IF-NEXT:    flw fs0, 4(sp) # 4-byte Folded Reload
+; RV64IF-NEXT:    li a0, 0
 ; RV64IF-NEXT:    addi sp, sp, 16
 ; RV64IF-NEXT:    ret
 ; RV64IF-NEXT:  .LBB17_3: # %if.then
@@ -1013,8 +1013,8 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV32IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV32IZFINX-NEXT:    beqz a0, .LBB17_3
 ; RV32IZFINX-NEXT:  # %bb.2: # %if.end4
-; RV32IZFINX-NEXT:    li a0, 0
 ; RV32IZFINX-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; RV32IZFINX-NEXT:    li a0, 0
 ; RV32IZFINX-NEXT:    addi sp, sp, 16
 ; RV32IZFINX-NEXT:    ret
 ; RV32IZFINX-NEXT:  .LBB17_3: # %if.then
@@ -1034,8 +1034,8 @@ define i32 @br_fcmp_store_load_stack_slot(float %a, float %b) nounwind {
 ; RV64IZFINX-NEXT:    feq.s a0, a0, zero
 ; RV64IZFINX-NEXT:    beqz a0, .LBB17_3
 ; RV64IZFINX-NEXT:  # %bb.2: # %if.end4
-; RV64IZFINX-NEXT:    li a0, 0
 ; RV64IZFINX-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; RV64IZFINX-NEXT:    li a0, 0
 ; RV64IZFINX-NEXT:    addi sp, sp, 16
 ; RV64IZFINX-NEXT:    ret
 ; RV64IZFINX-NEXT:  .LBB17_3: # %if.then

@@ -11,10 +11,10 @@
 define i32 @main() nounwind {
 ; RV32I-LABEL: main:
 ; RV32I:       # %bb.0: # %entry
-; RV32I-NEXT:    li a0, 0
 ; RV32I-NEXT:    lui a1, %hi(b)
-; RV32I-NEXT:    addi a1, a1, %lo(b)
 ; RV32I-NEXT:    lui a2, %hi(a)
+; RV32I-NEXT:    li a0, 0
+; RV32I-NEXT:    addi a1, a1, %lo(b)
 ; RV32I-NEXT:    addi a2, a2, %lo(a)
 ; RV32I-NEXT:    lui a3, 1
 ; RV32I-NEXT:  .LBB0_1: # %for.body

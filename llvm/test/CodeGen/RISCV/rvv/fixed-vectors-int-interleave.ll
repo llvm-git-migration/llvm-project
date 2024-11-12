@@ -418,27 +418,27 @@ define <64 x i32> @interleave_v32i32(<32 x i32> %x, <32 x i32> %y) {
 ; V128-NEXT:    vsetivli zero, 16, e32, m4, ta, ma
 ; V128-NEXT:    vwaddu.vv v24, v0, v8
 ; V128-NEXT:    li a0, -1
+; V128-NEXT:    lui a1, 699051
 ; V128-NEXT:    vwmaccu.vx v24, a0, v8
 ; V128-NEXT:    vsetivli zero, 16, e32, m8, ta, ma
 ; V128-NEXT:    vslidedown.vi v0, v16, 16
+; V128-NEXT:    addi a1, a1, -1366
 ; V128-NEXT:    vsetivli zero, 16, e32, m4, ta, ma
 ; V128-NEXT:    vwaddu.vv v8, v0, v16
-; V128-NEXT:    vwmaccu.vx v8, a0, v16
-; V128-NEXT:    lui a1, 699051
-; V128-NEXT:    addi a1, a1, -1366
 ; V128-NEXT:    vmv.s.x v0, a1
 ; V128-NEXT:    li a1, 32
+; V128-NEXT:    vwmaccu.vx v8, a0, v16
 ; V128-NEXT:    vsetvli zero, a1, e32, m8, ta, ma
-; V128-NEXT:    vmerge.vvm v24, v8, v24, v0
 ; V128-NEXT:    addi a1, sp, 16
+; V128-NEXT:    vmerge.vvm v24, v8, v24, v0
 ; V128-NEXT:    vl8r.v v8, (a1) # Unknown-size Folded Reload
 ; V128-NEXT:    vsetivli zero, 16, e32, m4, ta, ma
 ; V128-NEXT:    vwaddu.vv v0, v16, v8
 ; V128-NEXT:    vwmaccu.vx v0, a0, v8
-; V128-NEXT:    vmv8r.v v8, v0
-; V128-NEXT:    vmv8r.v v16, v24
 ; V128-NEXT:    csrr a0, vlenb
 ; V128-NEXT:    slli a0, a0, 3
+; V128-NEXT:    vmv8r.v v8, v0
+; V128-NEXT:    vmv8r.v v16, v24
 ; V128-NEXT:    add sp, sp, a0
 ; V128-NEXT:    .cfi_def_cfa sp, 16
 ; V128-NEXT:    addi sp, sp, 16

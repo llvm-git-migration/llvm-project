@@ -51,9 +51,9 @@ define i32 @caller_double_in_fpr_exhausted_gprs() nounwind {
 ; RV32-ILP32D:       # %bb.0:
 ; RV32-ILP32D-NEXT:    addi sp, sp, -16
 ; RV32-ILP32D-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32-ILP32D-NEXT:    li a1, 5
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI3_0)
 ; RV32-ILP32D-NEXT:    fld fa0, %lo(.LCPI3_0)(a0)
+; RV32-ILP32D-NEXT:    li a1, 5
 ; RV32-ILP32D-NEXT:    li a0, 1
 ; RV32-ILP32D-NEXT:    li a2, 2
 ; RV32-ILP32D-NEXT:    li a4, 3
@@ -147,7 +147,6 @@ define i32 @caller_double_in_gpr_and_stack_almost_exhausted_gprs_fprs() nounwind
 ; RV32-ILP32D:       # %bb.0:
 ; RV32-ILP32D-NEXT:    addi sp, sp, -16
 ; RV32-ILP32D-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32-ILP32D-NEXT:    lui a1, 262816
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI7_0)
 ; RV32-ILP32D-NEXT:    fld fa0, %lo(.LCPI7_0)(a0)
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI7_1)
@@ -164,6 +163,7 @@ define i32 @caller_double_in_gpr_and_stack_almost_exhausted_gprs_fprs() nounwind
 ; RV32-ILP32D-NEXT:    fld fa6, %lo(.LCPI7_6)(a0)
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI7_7)
 ; RV32-ILP32D-NEXT:    fld fa7, %lo(.LCPI7_7)(a0)
+; RV32-ILP32D-NEXT:    lui a1, 262816
 ; RV32-ILP32D-NEXT:    li a0, 1
 ; RV32-ILP32D-NEXT:    li a2, 3
 ; RV32-ILP32D-NEXT:    li a4, 5
@@ -203,7 +203,6 @@ define i32 @caller_double_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32D:       # %bb.0:
 ; RV32-ILP32D-NEXT:    addi sp, sp, -16
 ; RV32-ILP32D-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
-; RV32-ILP32D-NEXT:    lui a1, 262816
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI9_0)
 ; RV32-ILP32D-NEXT:    fld fa0, %lo(.LCPI9_0)(a0)
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI9_1)
@@ -220,6 +219,7 @@ define i32 @caller_double_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32D-NEXT:    fld fa6, %lo(.LCPI9_6)(a0)
 ; RV32-ILP32D-NEXT:    lui a0, %hi(.LCPI9_7)
 ; RV32-ILP32D-NEXT:    fld fa7, %lo(.LCPI9_7)(a0)
+; RV32-ILP32D-NEXT:    lui a1, 262816
 ; RV32-ILP32D-NEXT:    li a0, 1
 ; RV32-ILP32D-NEXT:    li a2, 3
 ; RV32-ILP32D-NEXT:    li a4, 5

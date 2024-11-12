@@ -92,9 +92,9 @@ define <2 x i16> @mgather_v2i16_align1(<2 x ptr> %ptrs, <2 x i1> %m, <2 x i16> %
 ; RV32-SLOW-NEXT:    vmv.x.s a1, v8
 ; RV32-SLOW-NEXT:    lbu a2, 1(a1)
 ; RV32-SLOW-NEXT:    lbu a1, 0(a1)
+; RV32-SLOW-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
 ; RV32-SLOW-NEXT:    slli a2, a2, 8
 ; RV32-SLOW-NEXT:    or a1, a2, a1
-; RV32-SLOW-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
 ; RV32-SLOW-NEXT:    vmv.s.x v9, a1
 ; RV32-SLOW-NEXT:    andi a0, a0, 2
 ; RV32-SLOW-NEXT:    beqz a0, .LBB4_2
@@ -129,9 +129,9 @@ define <2 x i16> @mgather_v2i16_align1(<2 x ptr> %ptrs, <2 x i1> %m, <2 x i16> %
 ; RV64-SLOW-NEXT:    vmv.x.s a1, v8
 ; RV64-SLOW-NEXT:    lbu a2, 1(a1)
 ; RV64-SLOW-NEXT:    lbu a1, 0(a1)
+; RV64-SLOW-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
 ; RV64-SLOW-NEXT:    slli a2, a2, 8
 ; RV64-SLOW-NEXT:    or a1, a2, a1
-; RV64-SLOW-NEXT:    vsetvli zero, zero, e16, m2, tu, ma
 ; RV64-SLOW-NEXT:    vmv.s.x v9, a1
 ; RV64-SLOW-NEXT:    andi a0, a0, 2
 ; RV64-SLOW-NEXT:    beqz a0, .LBB4_2
@@ -496,13 +496,13 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV32-SLOW-NEXT:    beqz a3, .LBB8_2
 ; RV32-SLOW-NEXT:  # %bb.1: # %cond.load
 ; RV32-SLOW-NEXT:    lbu a3, 1(a0)
-; RV32-SLOW-NEXT:    lbu a4, 0(a0)
 ; RV32-SLOW-NEXT:    lbu a5, 2(a0)
 ; RV32-SLOW-NEXT:    lbu a6, 3(a0)
+; RV32-SLOW-NEXT:    lbu a4, 0(a0)
 ; RV32-SLOW-NEXT:    slli a3, a3, 8
-; RV32-SLOW-NEXT:    or a3, a3, a4
 ; RV32-SLOW-NEXT:    slli a5, a5, 16
 ; RV32-SLOW-NEXT:    slli a6, a6, 24
+; RV32-SLOW-NEXT:    or a3, a3, a4
 ; RV32-SLOW-NEXT:    or a4, a6, a5
 ; RV32-SLOW-NEXT:    or a3, a4, a3
 ; RV32-SLOW-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
@@ -512,12 +512,12 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV32-SLOW-NEXT:    beqz a2, .LBB8_4
 ; RV32-SLOW-NEXT:  # %bb.3: # %cond.load1
 ; RV32-SLOW-NEXT:    lbu a2, 5(a0)
-; RV32-SLOW-NEXT:    lbu a3, 4(a0)
 ; RV32-SLOW-NEXT:    lbu a4, 6(a0)
+; RV32-SLOW-NEXT:    lbu a3, 4(a0)
 ; RV32-SLOW-NEXT:    lbu a0, 7(a0)
 ; RV32-SLOW-NEXT:    slli a2, a2, 8
-; RV32-SLOW-NEXT:    or a2, a2, a3
 ; RV32-SLOW-NEXT:    slli a4, a4, 16
+; RV32-SLOW-NEXT:    or a2, a2, a3
 ; RV32-SLOW-NEXT:    slli a0, a0, 24
 ; RV32-SLOW-NEXT:    or a0, a0, a4
 ; RV32-SLOW-NEXT:    or a0, a0, a2
@@ -540,13 +540,13 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV64-SLOW-NEXT:    beqz a3, .LBB8_2
 ; RV64-SLOW-NEXT:  # %bb.1: # %cond.load
 ; RV64-SLOW-NEXT:    lbu a3, 1(a0)
-; RV64-SLOW-NEXT:    lbu a4, 0(a0)
 ; RV64-SLOW-NEXT:    lbu a5, 2(a0)
 ; RV64-SLOW-NEXT:    lb a6, 3(a0)
+; RV64-SLOW-NEXT:    lbu a4, 0(a0)
 ; RV64-SLOW-NEXT:    slli a3, a3, 8
-; RV64-SLOW-NEXT:    or a3, a3, a4
 ; RV64-SLOW-NEXT:    slli a5, a5, 16
 ; RV64-SLOW-NEXT:    slli a6, a6, 24
+; RV64-SLOW-NEXT:    or a3, a3, a4
 ; RV64-SLOW-NEXT:    or a4, a6, a5
 ; RV64-SLOW-NEXT:    or a3, a4, a3
 ; RV64-SLOW-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
@@ -556,12 +556,12 @@ define void @masked_load_v2i32_align1(ptr %a, <2 x i32> %m, ptr %res_ptr) nounwi
 ; RV64-SLOW-NEXT:    beqz a2, .LBB8_4
 ; RV64-SLOW-NEXT:  # %bb.3: # %cond.load1
 ; RV64-SLOW-NEXT:    lbu a2, 5(a0)
-; RV64-SLOW-NEXT:    lbu a3, 4(a0)
 ; RV64-SLOW-NEXT:    lbu a4, 6(a0)
+; RV64-SLOW-NEXT:    lbu a3, 4(a0)
 ; RV64-SLOW-NEXT:    lb a0, 7(a0)
 ; RV64-SLOW-NEXT:    slli a2, a2, 8
-; RV64-SLOW-NEXT:    or a2, a2, a3
 ; RV64-SLOW-NEXT:    slli a4, a4, 16
+; RV64-SLOW-NEXT:    or a2, a2, a3
 ; RV64-SLOW-NEXT:    slli a0, a0, 24
 ; RV64-SLOW-NEXT:    or a0, a0, a4
 ; RV64-SLOW-NEXT:    or a0, a0, a2

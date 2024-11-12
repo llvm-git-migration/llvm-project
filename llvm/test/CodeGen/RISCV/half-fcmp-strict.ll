@@ -297,8 +297,8 @@ define i32 @fcmp_ord(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINXMIN-LABEL: fcmp_ord:
 ; CHECKIZHINXMIN:       # %bb.0:
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a1, a1
-; CHECKIZHINXMIN-NEXT:    feq.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECKIZHINXMIN-NEXT:    feq.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    feq.s a0, a0, a0
 ; CHECKIZHINXMIN-NEXT:    and a0, a0, a1
 ; CHECKIZHINXMIN-NEXT:    ret
@@ -318,8 +318,8 @@ define i32 @fcmp_ueq(half %a, half %b) nounwind strictfp {
 ; CHECK-NEXT:    feq.h zero, fa0, fa1
 ; CHECK-NEXT:    frflags a0
 ; CHECK-NEXT:    flt.h a2, fa1, fa0
-; CHECK-NEXT:    fsflags a0
 ; CHECK-NEXT:    or a1, a2, a1
+; CHECK-NEXT:    fsflags a0
 ; CHECK-NEXT:    xori a0, a1, 1
 ; CHECK-NEXT:    feq.h zero, fa1, fa0
 ; CHECK-NEXT:    ret
@@ -332,8 +332,8 @@ define i32 @fcmp_ueq(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINX-NEXT:    feq.h zero, a0, a1
 ; CHECKIZHINX-NEXT:    frflags a2
 ; CHECKIZHINX-NEXT:    flt.h a4, a1, a0
-; CHECKIZHINX-NEXT:    fsflags a2
 ; CHECKIZHINX-NEXT:    or a3, a4, a3
+; CHECKIZHINX-NEXT:    fsflags a2
 ; CHECKIZHINX-NEXT:    xori a2, a3, 1
 ; CHECKIZHINX-NEXT:    feq.h zero, a1, a0
 ; CHECKIZHINX-NEXT:    mv a0, a2
@@ -347,8 +347,8 @@ define i32 @fcmp_ueq(half %a, half %b) nounwind strictfp {
 ; CHECKIZFHMIN-NEXT:    feq.h zero, fa0, fa1
 ; CHECKIZFHMIN-NEXT:    frflags a0
 ; CHECKIZFHMIN-NEXT:    flt.h a2, fa1, fa0
-; CHECKIZFHMIN-NEXT:    fsflags a0
 ; CHECKIZFHMIN-NEXT:    or a1, a2, a1
+; CHECKIZFHMIN-NEXT:    fsflags a0
 ; CHECKIZFHMIN-NEXT:    xori a0, a1, 1
 ; CHECKIZFHMIN-NEXT:    feq.h zero, fa1, fa0
 ; CHECKIZFHMIN-NEXT:    ret
@@ -363,8 +363,8 @@ define i32 @fcmp_ueq(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINXMIN-NEXT:    feq.s zero, a2, a1
 ; CHECKIZHINXMIN-NEXT:    frflags a0
 ; CHECKIZHINXMIN-NEXT:    flt.s a4, a1, a2
-; CHECKIZHINXMIN-NEXT:    fsflags a0
 ; CHECKIZHINXMIN-NEXT:    or a3, a4, a3
+; CHECKIZHINXMIN-NEXT:    fsflags a0
 ; CHECKIZHINXMIN-NEXT:    xori a0, a3, 1
 ; CHECKIZHINXMIN-NEXT:    feq.s zero, a1, a2
 ; CHECKIZHINXMIN-NEXT:    ret
@@ -608,8 +608,8 @@ define i32 @fcmp_uno(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINXMIN-LABEL: fcmp_uno:
 ; CHECKIZHINXMIN:       # %bb.0:
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a1, a1
-; CHECKIZHINXMIN-NEXT:    feq.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECKIZHINXMIN-NEXT:    feq.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    feq.s a0, a0, a0
 ; CHECKIZHINXMIN-NEXT:    and a0, a0, a1
 ; CHECKIZHINXMIN-NEXT:    xori a0, a0, 1
@@ -823,8 +823,8 @@ define i32 @fcmps_ord(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINXMIN-LABEL: fcmps_ord:
 ; CHECKIZHINXMIN:       # %bb.0:
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a1, a1
-; CHECKIZHINXMIN-NEXT:    fle.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECKIZHINXMIN-NEXT:    fle.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fle.s a0, a0, a0
 ; CHECKIZHINXMIN-NEXT:    and a0, a0, a1
 ; CHECKIZHINXMIN-NEXT:    ret
@@ -1063,8 +1063,8 @@ define i32 @fcmps_uno(half %a, half %b) nounwind strictfp {
 ; CHECKIZHINXMIN-LABEL: fcmps_uno:
 ; CHECKIZHINXMIN:       # %bb.0:
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a1, a1
-; CHECKIZHINXMIN-NEXT:    fle.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fcvt.s.h a0, a0
+; CHECKIZHINXMIN-NEXT:    fle.s a1, a1, a1
 ; CHECKIZHINXMIN-NEXT:    fle.s a0, a0, a0
 ; CHECKIZHINXMIN-NEXT:    and a0, a0, a1
 ; CHECKIZHINXMIN-NEXT:    xori a0, a0, 1

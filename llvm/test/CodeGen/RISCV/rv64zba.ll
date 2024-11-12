@@ -1765,8 +1765,8 @@ entry:
 define i64 @sh6_sh3_add2(i64 noundef %x, i64 noundef %y, i64 noundef %z) {
 ; RV64I-LABEL: sh6_sh3_add2:
 ; RV64I:       # %bb.0: # %entry
-; RV64I-NEXT:    slli a2, a2, 3
 ; RV64I-NEXT:    slli a1, a1, 6
+; RV64I-NEXT:    slli a2, a2, 3
 ; RV64I-NEXT:    add a0, a1, a0
 ; RV64I-NEXT:    add a0, a0, a2
 ; RV64I-NEXT:    ret
@@ -2658,8 +2658,8 @@ define i64 @array_index_lshr_sh3_sh3(ptr %p, i64 %idx1, i64 %idx2) {
 ; RV64I-LABEL: array_index_lshr_sh3_sh3:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    srli a1, a1, 58
-; RV64I-NEXT:    slli a1, a1, 6
 ; RV64I-NEXT:    slli a2, a2, 3
+; RV64I-NEXT:    slli a1, a1, 6
 ; RV64I-NEXT:    add a0, a0, a2
 ; RV64I-NEXT:    add a0, a0, a1
 ; RV64I-NEXT:    ld a0, 0(a0)
@@ -2761,8 +2761,8 @@ define ptr @test_gep_gep_dont_crash(ptr %p, i64 %a1, i64 %a2) {
 ; RV64I-LABEL: test_gep_gep_dont_crash:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    srliw a2, a2, 6
-; RV64I-NEXT:    slli a2, a2, 3
 ; RV64I-NEXT:    slli a1, a1, 3
+; RV64I-NEXT:    slli a2, a2, 3
 ; RV64I-NEXT:    add a0, a0, a1
 ; RV64I-NEXT:    add a0, a0, a2
 ; RV64I-NEXT:    ret
@@ -3041,9 +3041,9 @@ entry:
 define i64 @srli_slliuw(i64 %1) {
 ; RV64I-LABEL: srli_slliuw:
 ; RV64I:       # %bb.0: # %entry
-; RV64I-NEXT:    slli a0, a0, 2
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    slli a1, a1, 36
+; RV64I-NEXT:    slli a0, a0, 2
 ; RV64I-NEXT:    addi a1, a1, -16
 ; RV64I-NEXT:    and a0, a0, a1
 ; RV64I-NEXT:    ret
@@ -3063,9 +3063,9 @@ entry:
 define i64 @srli_slliuw_canonical(i64 %0) {
 ; RV64I-LABEL: srli_slliuw_canonical:
 ; RV64I:       # %bb.0: # %entry
-; RV64I-NEXT:    slli a0, a0, 2
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    slli a1, a1, 36
+; RV64I-NEXT:    slli a0, a0, 2
 ; RV64I-NEXT:    addi a1, a1, -16
 ; RV64I-NEXT:    and a0, a0, a1
 ; RV64I-NEXT:    ret
@@ -3097,8 +3097,8 @@ entry:
 define i64 @srli_slli_i16(i64 %1) {
 ; CHECK-LABEL: srli_slli_i16:
 ; CHECK:       # %bb.0: # %entry
-; CHECK-NEXT:    slli a0, a0, 2
 ; CHECK-NEXT:    lui a1, 256
+; CHECK-NEXT:    slli a0, a0, 2
 ; CHECK-NEXT:    addiw a1, a1, -16
 ; CHECK-NEXT:    and a0, a0, a1
 ; CHECK-NEXT:    ret
@@ -3112,9 +3112,9 @@ entry:
 define i64 @srli_slliuw_2(i64 %1) {
 ; RV64I-LABEL: srli_slliuw_2:
 ; RV64I:       # %bb.0: # %entry
-; RV64I-NEXT:    srli a0, a0, 15
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    slli a1, a1, 35
+; RV64I-NEXT:    srli a0, a0, 15
 ; RV64I-NEXT:    addi a1, a1, -8
 ; RV64I-NEXT:    and a0, a0, a1
 ; RV64I-NEXT:    ret
@@ -3134,9 +3134,9 @@ entry:
 define i64 @srli_slliuw_canonical_2(i64 %0) {
 ; RV64I-LABEL: srli_slliuw_canonical_2:
 ; RV64I:       # %bb.0: # %entry
-; RV64I-NEXT:    srli a0, a0, 15
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    slli a1, a1, 35
+; RV64I-NEXT:    srli a0, a0, 15
 ; RV64I-NEXT:    addi a1, a1, -8
 ; RV64I-NEXT:    and a0, a0, a1
 ; RV64I-NEXT:    ret

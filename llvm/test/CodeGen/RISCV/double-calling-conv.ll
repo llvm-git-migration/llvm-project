@@ -92,8 +92,8 @@ define double @callee_double_split_reg_stack(i32 %a, i64 %b, i64 %c, double %d, 
 ;
 ; RV32IZFINXZDINX-LABEL: callee_double_split_reg_stack:
 ; RV32IZFINXZDINX:       # %bb.0:
-; RV32IZFINXZDINX-NEXT:    mv a0, a7
 ; RV32IZFINXZDINX-NEXT:    lw a1, 0(sp)
+; RV32IZFINXZDINX-NEXT:    mv a0, a7
 ; RV32IZFINXZDINX-NEXT:    mv a3, a6
 ; RV32IZFINXZDINX-NEXT:    mv a2, a5
 ; RV32IZFINXZDINX-NEXT:    fadd.d a0, a2, a0

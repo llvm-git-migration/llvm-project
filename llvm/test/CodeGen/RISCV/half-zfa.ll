@@ -333,8 +333,8 @@ define half @select_loadfpimm(half %x) nounwind {
 ; ZFHMIN-NEXT:    fmv.w.x fa4, zero
 ; ZFHMIN-NEXT:    fle.s a0, fa4, fa5
 ; ZFHMIN-NEXT:    xori a0, a0, 1
-; ZFHMIN-NEXT:    slli a0, a0, 1
 ; ZFHMIN-NEXT:    lui a1, %hi(.LCPI16_0)
+; ZFHMIN-NEXT:    slli a0, a0, 1
 ; ZFHMIN-NEXT:    addi a1, a1, %lo(.LCPI16_0)
 ; ZFHMIN-NEXT:    add a0, a1, a0
 ; ZFHMIN-NEXT:    flh fa0, 0(a0)

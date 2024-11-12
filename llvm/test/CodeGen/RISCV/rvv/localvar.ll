@@ -176,11 +176,11 @@ define void @local_var_m2_mix_local_scalar() {
 ; RV64IV-NEXT:    slli a0, a0, 2
 ; RV64IV-NEXT:    sub sp, sp, a0
 ; RV64IV-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x04, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 4 * vlenb
-; RV64IV-NEXT:    lw zero, 12(sp)
 ; RV64IV-NEXT:    csrr a0, vlenb
 ; RV64IV-NEXT:    slli a0, a0, 1
 ; RV64IV-NEXT:    add a0, sp, a0
 ; RV64IV-NEXT:    addi a0, a0, 16
+; RV64IV-NEXT:    lw zero, 12(sp)
 ; RV64IV-NEXT:    vl2r.v v8, (a0)
 ; RV64IV-NEXT:    addi a0, sp, 16
 ; RV64IV-NEXT:    vl2r.v v8, (a0)
@@ -225,18 +225,18 @@ define void @local_var_m2_with_varsize_object(i64 %n) {
 ; RV64IV-NEXT:    mv sp, a0
 ; RV64IV-NEXT:    csrr a1, vlenb
 ; RV64IV-NEXT:    slli a1, a1, 1
-; RV64IV-NEXT:    sub a1, s0, a1
-; RV64IV-NEXT:    addi a1, a1, -32
 ; RV64IV-NEXT:    csrr s1, vlenb
+; RV64IV-NEXT:    sub a1, s0, a1
 ; RV64IV-NEXT:    slli s1, s1, 1
+; RV64IV-NEXT:    addi a1, a1, -32
 ; RV64IV-NEXT:    sub s1, s0, s1
 ; RV64IV-NEXT:    addi s1, s1, -32
 ; RV64IV-NEXT:    call notdead
-; RV64IV-NEXT:    vl2r.v v8, (s1)
 ; RV64IV-NEXT:    csrr a0, vlenb
 ; RV64IV-NEXT:    slli a0, a0, 2
 ; RV64IV-NEXT:    sub a0, s0, a0
 ; RV64IV-NEXT:    addi a0, a0, -32
+; RV64IV-NEXT:    vl2r.v v8, (s1)
 ; RV64IV-NEXT:    vl2r.v v8, (a0)
 ; RV64IV-NEXT:    addi sp, s0, -32
 ; RV64IV-NEXT:    .cfi_def_cfa sp, 32
@@ -277,24 +277,24 @@ define void @local_var_m2_with_bp(i64 %n) {
 ; RV64IV-NEXT:    slli a1, a1, 2
 ; RV64IV-NEXT:    sub sp, sp, a1
 ; RV64IV-NEXT:    andi sp, sp, -128
-; RV64IV-NEXT:    mv s1, sp
 ; RV64IV-NEXT:    addi a0, a0, 15
 ; RV64IV-NEXT:    andi a0, a0, -16
 ; RV64IV-NEXT:    sub a0, sp, a0
+; RV64IV-NEXT:    mv s1, sp
 ; RV64IV-NEXT:    mv sp, a0
-; RV64IV-NEXT:    addi a1, s1, 128
 ; RV64IV-NEXT:    csrr a2, vlenb
 ; RV64IV-NEXT:    slli a2, a2, 1
-; RV64IV-NEXT:    add a2, s1, a2
-; RV64IV-NEXT:    addi a2, a2, 224
 ; RV64IV-NEXT:    csrr s2, vlenb
+; RV64IV-NEXT:    add a2, s1, a2
 ; RV64IV-NEXT:    slli s2, s2, 1
+; RV64IV-NEXT:    addi a1, s1, 128
+; RV64IV-NEXT:    addi a2, a2, 224
 ; RV64IV-NEXT:    add s2, s1, s2
 ; RV64IV-NEXT:    addi s2, s2, 224
 ; RV64IV-NEXT:    call notdead2
+; RV64IV-NEXT:    addi a0, s1, 224
 ; RV64IV-NEXT:    lw zero, 124(s1)
 ; RV64IV-NEXT:    vl2r.v v8, (s2)
-; RV64IV-NEXT:    addi a0, s1, 224
 ; RV64IV-NEXT:    vl2r.v v8, (a0)
 ; RV64IV-NEXT:    lw zero, 120(s1)
 ; RV64IV-NEXT:    addi sp, s0, -256

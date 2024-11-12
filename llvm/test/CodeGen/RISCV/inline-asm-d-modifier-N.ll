@@ -81,8 +81,8 @@ define double @constraint_f_double_abi_name(double %a) nounwind {
 ; RV32F-NEXT:    addi sp, sp, -16
 ; RV32F-NEXT:    sw a0, 8(sp)
 ; RV32F-NEXT:    sw a1, 12(sp)
-; RV32F-NEXT:    fld fa1, 8(sp)
 ; RV32F-NEXT:    lui a0, %hi(gd)
+; RV32F-NEXT:    fld fa1, 8(sp)
 ; RV32F-NEXT:    fld fs0, %lo(gd)(a0)
 ; RV32F-NEXT:    #APP
 ; RV32F-NEXT:    .insn 0x4, 0x02000053 | (0 << 7) | (11 << 15) | (8 << 20)

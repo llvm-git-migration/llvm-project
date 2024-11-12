@@ -1096,8 +1096,8 @@ define i32 @select_udiv_3(i1 zeroext %cond, i32 %a) {
 ; RV32IM:       # %bb.0: # %entry
 ; RV32IM-NEXT:    bnez a0, .LBB27_2
 ; RV32IM-NEXT:  # %bb.1: # %entry
-; RV32IM-NEXT:    srli a1, a1, 1
 ; RV32IM-NEXT:    lui a0, 199729
+; RV32IM-NEXT:    srli a1, a1, 1
 ; RV32IM-NEXT:    addi a0, a0, -975
 ; RV32IM-NEXT:    mulhu a1, a1, a0
 ; RV32IM-NEXT:    srli a1, a1, 2
@@ -1120,8 +1120,8 @@ define i32 @select_udiv_3(i1 zeroext %cond, i32 %a) {
 ;
 ; RV64IMXVTCONDOPS-LABEL: select_udiv_3:
 ; RV64IMXVTCONDOPS:       # %bb.0: # %entry
-; RV64IMXVTCONDOPS-NEXT:    srliw a2, a1, 1
 ; RV64IMXVTCONDOPS-NEXT:    lui a3, 199729
+; RV64IMXVTCONDOPS-NEXT:    srliw a2, a1, 1
 ; RV64IMXVTCONDOPS-NEXT:    addiw a3, a3, -975
 ; RV64IMXVTCONDOPS-NEXT:    mul a2, a2, a3
 ; RV64IMXVTCONDOPS-NEXT:    srli a2, a2, 34
@@ -1132,8 +1132,8 @@ define i32 @select_udiv_3(i1 zeroext %cond, i32 %a) {
 ;
 ; RV32IMZICOND-LABEL: select_udiv_3:
 ; RV32IMZICOND:       # %bb.0: # %entry
-; RV32IMZICOND-NEXT:    srli a2, a1, 1
 ; RV32IMZICOND-NEXT:    lui a3, 199729
+; RV32IMZICOND-NEXT:    srli a2, a1, 1
 ; RV32IMZICOND-NEXT:    addi a3, a3, -975
 ; RV32IMZICOND-NEXT:    mulhu a2, a2, a3
 ; RV32IMZICOND-NEXT:    srli a2, a2, 2
@@ -1144,8 +1144,8 @@ define i32 @select_udiv_3(i1 zeroext %cond, i32 %a) {
 ;
 ; RV64IMZICOND-LABEL: select_udiv_3:
 ; RV64IMZICOND:       # %bb.0: # %entry
-; RV64IMZICOND-NEXT:    srliw a2, a1, 1
 ; RV64IMZICOND-NEXT:    lui a3, 199729
+; RV64IMZICOND-NEXT:    srliw a2, a1, 1
 ; RV64IMZICOND-NEXT:    addiw a3, a3, -975
 ; RV64IMZICOND-NEXT:    mul a2, a2, a3
 ; RV64IMZICOND-NEXT:    srli a2, a2, 34
@@ -1496,8 +1496,8 @@ define i32 @select_cst_not4(i32 signext %a, i32 signext %b) {
 ; RV64IM-LABEL: select_cst_not4:
 ; RV64IM:       # %bb.0:
 ; RV64IM-NEXT:    slt a0, a0, a1
-; RV64IM-NEXT:    neg a0, a0
 ; RV64IM-NEXT:    lui a1, 524288
+; RV64IM-NEXT:    neg a0, a0
 ; RV64IM-NEXT:    addiw a1, a1, -1
 ; RV64IM-NEXT:    xor a0, a0, a1
 ; RV64IM-NEXT:    ret
@@ -1505,8 +1505,8 @@ define i32 @select_cst_not4(i32 signext %a, i32 signext %b) {
 ; RV64IMXVTCONDOPS-LABEL: select_cst_not4:
 ; RV64IMXVTCONDOPS:       # %bb.0:
 ; RV64IMXVTCONDOPS-NEXT:    slt a0, a0, a1
-; RV64IMXVTCONDOPS-NEXT:    neg a0, a0
 ; RV64IMXVTCONDOPS-NEXT:    lui a1, 524288
+; RV64IMXVTCONDOPS-NEXT:    neg a0, a0
 ; RV64IMXVTCONDOPS-NEXT:    addiw a1, a1, -1
 ; RV64IMXVTCONDOPS-NEXT:    xor a0, a0, a1
 ; RV64IMXVTCONDOPS-NEXT:    ret
@@ -1522,8 +1522,8 @@ define i32 @select_cst_not4(i32 signext %a, i32 signext %b) {
 ; RV64IMZICOND-LABEL: select_cst_not4:
 ; RV64IMZICOND:       # %bb.0:
 ; RV64IMZICOND-NEXT:    slt a0, a0, a1
-; RV64IMZICOND-NEXT:    neg a0, a0
 ; RV64IMZICOND-NEXT:    lui a1, 524288
+; RV64IMZICOND-NEXT:    neg a0, a0
 ; RV64IMZICOND-NEXT:    addiw a1, a1, -1
 ; RV64IMZICOND-NEXT:    xor a0, a0, a1
 ; RV64IMZICOND-NEXT:    ret
@@ -1536,8 +1536,8 @@ define i32 @select_cst_not5(i32 signext %a, i32 signext %b) {
 ; RV32IM-LABEL: select_cst_not5:
 ; RV32IM:       # %bb.0:
 ; RV32IM-NEXT:    slt a0, a0, a1
-; RV32IM-NEXT:    neg a0, a0
 ; RV32IM-NEXT:    lui a1, 16
+; RV32IM-NEXT:    neg a0, a0
 ; RV32IM-NEXT:    addi a1, a1, -5
 ; RV32IM-NEXT:    xor a0, a0, a1
 ; RV32IM-NEXT:    ret
@@ -1545,8 +1545,8 @@ define i32 @select_cst_not5(i32 signext %a, i32 signext %b) {
 ; RV64IM-LABEL: select_cst_not5:
 ; RV64IM:       # %bb.0:
 ; RV64IM-NEXT:    slt a0, a0, a1
-; RV64IM-NEXT:    neg a0, a0
 ; RV64IM-NEXT:    lui a1, 16
+; RV64IM-NEXT:    neg a0, a0
 ; RV64IM-NEXT:    addiw a1, a1, -5
 ; RV64IM-NEXT:    xor a0, a0, a1
 ; RV64IM-NEXT:    ret
@@ -1554,8 +1554,8 @@ define i32 @select_cst_not5(i32 signext %a, i32 signext %b) {
 ; RV64IMXVTCONDOPS-LABEL: select_cst_not5:
 ; RV64IMXVTCONDOPS:       # %bb.0:
 ; RV64IMXVTCONDOPS-NEXT:    slt a0, a0, a1
-; RV64IMXVTCONDOPS-NEXT:    neg a0, a0
 ; RV64IMXVTCONDOPS-NEXT:    lui a1, 16
+; RV64IMXVTCONDOPS-NEXT:    neg a0, a0
 ; RV64IMXVTCONDOPS-NEXT:    addiw a1, a1, -5
 ; RV64IMXVTCONDOPS-NEXT:    xor a0, a0, a1
 ; RV64IMXVTCONDOPS-NEXT:    ret
@@ -1563,8 +1563,8 @@ define i32 @select_cst_not5(i32 signext %a, i32 signext %b) {
 ; RV32IMZICOND-LABEL: select_cst_not5:
 ; RV32IMZICOND:       # %bb.0:
 ; RV32IMZICOND-NEXT:    slt a0, a0, a1
-; RV32IMZICOND-NEXT:    neg a0, a0
 ; RV32IMZICOND-NEXT:    lui a1, 16
+; RV32IMZICOND-NEXT:    neg a0, a0
 ; RV32IMZICOND-NEXT:    addi a1, a1, -5
 ; RV32IMZICOND-NEXT:    xor a0, a0, a1
 ; RV32IMZICOND-NEXT:    ret
@@ -1572,8 +1572,8 @@ define i32 @select_cst_not5(i32 signext %a, i32 signext %b) {
 ; RV64IMZICOND-LABEL: select_cst_not5:
 ; RV64IMZICOND:       # %bb.0:
 ; RV64IMZICOND-NEXT:    slt a0, a0, a1
-; RV64IMZICOND-NEXT:    neg a0, a0
 ; RV64IMZICOND-NEXT:    lui a1, 16
+; RV64IMZICOND-NEXT:    neg a0, a0
 ; RV64IMZICOND-NEXT:    addiw a1, a1, -5
 ; RV64IMZICOND-NEXT:    xor a0, a0, a1
 ; RV64IMZICOND-NEXT:    ret

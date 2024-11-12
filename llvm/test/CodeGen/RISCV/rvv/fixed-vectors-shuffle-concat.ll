@@ -211,10 +211,10 @@ define <32 x i32> @concat_8xv4i32(<4 x i32> %a, <4 x i32> %b, <4 x i32> %c, <4 x
 ; VLA-NEXT:    vmv1r.v v20, v14
 ; VLA-NEXT:    vmv1r.v v22, v13
 ; VLA-NEXT:    vmv1r.v v16, v12
+; VLA-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; VLA-NEXT:    vmv1r.v v14, v11
 ; VLA-NEXT:    vmv1r.v v12, v10
 ; VLA-NEXT:    vmv1r.v v10, v9
-; VLA-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; VLA-NEXT:    vslideup.vi v20, v18, 4
 ; VLA-NEXT:    vslideup.vi v16, v22, 4
 ; VLA-NEXT:    vsetivli zero, 16, e32, m4, ta, ma

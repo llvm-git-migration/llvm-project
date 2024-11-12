@@ -24,10 +24,10 @@ define void @caller(i32 %n) {
 ; RV32I-NEXT:    addi s0, sp, 64
 ; RV32I-NEXT:    .cfi_def_cfa s0, 0
 ; RV32I-NEXT:    andi sp, sp, -64
-; RV32I-NEXT:    mv s1, sp
 ; RV32I-NEXT:    addi a0, a0, 15
 ; RV32I-NEXT:    andi a0, a0, -16
 ; RV32I-NEXT:    sub a0, sp, a0
+; RV32I-NEXT:    mv s1, sp
 ; RV32I-NEXT:    mv sp, a0
 ; RV32I-NEXT:    mv a1, s1
 ; RV32I-NEXT:    call callee
@@ -56,10 +56,10 @@ define void @caller(i32 %n) {
 ; RV32I-ILP32E-NEXT:    addi s0, sp, 64
 ; RV32I-ILP32E-NEXT:    .cfi_def_cfa s0, 0
 ; RV32I-ILP32E-NEXT:    andi sp, sp, -64
-; RV32I-ILP32E-NEXT:    mv s1, sp
 ; RV32I-ILP32E-NEXT:    addi a0, a0, 3
 ; RV32I-ILP32E-NEXT:    andi a0, a0, -4
 ; RV32I-ILP32E-NEXT:    sub a0, sp, a0
+; RV32I-ILP32E-NEXT:    mv s1, sp
 ; RV32I-ILP32E-NEXT:    mv sp, a0
 ; RV32I-ILP32E-NEXT:    mv a1, s1
 ; RV32I-ILP32E-NEXT:    call callee
@@ -88,12 +88,12 @@ define void @caller(i32 %n) {
 ; RV64I-NEXT:    addi s0, sp, 64
 ; RV64I-NEXT:    .cfi_def_cfa s0, 0
 ; RV64I-NEXT:    andi sp, sp, -64
-; RV64I-NEXT:    mv s1, sp
 ; RV64I-NEXT:    slli a0, a0, 32
 ; RV64I-NEXT:    srli a0, a0, 32
 ; RV64I-NEXT:    addi a0, a0, 15
 ; RV64I-NEXT:    andi a0, a0, -16
 ; RV64I-NEXT:    sub a0, sp, a0
+; RV64I-NEXT:    mv s1, sp
 ; RV64I-NEXT:    mv sp, a0
 ; RV64I-NEXT:    mv a1, s1
 ; RV64I-NEXT:    call callee
@@ -122,12 +122,12 @@ define void @caller(i32 %n) {
 ; RV64I-LP64E-NEXT:    addi s0, sp, 64
 ; RV64I-LP64E-NEXT:    .cfi_def_cfa s0, 0
 ; RV64I-LP64E-NEXT:    andi sp, sp, -64
-; RV64I-LP64E-NEXT:    mv s1, sp
 ; RV64I-LP64E-NEXT:    slli a0, a0, 32
 ; RV64I-LP64E-NEXT:    srli a0, a0, 32
 ; RV64I-LP64E-NEXT:    addi a0, a0, 7
 ; RV64I-LP64E-NEXT:    andi a0, a0, -8
 ; RV64I-LP64E-NEXT:    sub a0, sp, a0
+; RV64I-LP64E-NEXT:    mv s1, sp
 ; RV64I-LP64E-NEXT:    mv sp, a0
 ; RV64I-LP64E-NEXT:    mv a1, s1
 ; RV64I-LP64E-NEXT:    call callee

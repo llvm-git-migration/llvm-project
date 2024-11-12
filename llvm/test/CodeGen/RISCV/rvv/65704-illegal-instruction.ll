@@ -20,7 +20,6 @@ define void @foo(<vscale x 8 x i8> %0) {
 ; CHECK-NEXT:    .cfi_offset s0, -16
 ; CHECK-NEXT:    .cfi_offset s1, -24
 ; CHECK-NEXT:    .cfi_offset s2, -32
-; CHECK-NEXT:    li s0, 0
 ; CHECK-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
 ; CHECK-NEXT:    vmv.v.i v9, 0
 ; CHECK-NEXT:    vsetivli zero, 0, e8, m1, tu, ma
@@ -29,6 +28,7 @@ define void @foo(<vscale x 8 x i8> %0) {
 ; CHECK-NEXT:    vmv.x.s s1, v9
 ; CHECK-NEXT:    vsetvli zero, zero, e8, m1, tu, ma
 ; CHECK-NEXT:    vslideup.vi v8, v9, 0
+; CHECK-NEXT:    li s0, 0
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m8, ta, ma
 ; CHECK-NEXT:    vmv.x.s s2, v8
 ; CHECK-NEXT:  .LBB0_1: # =>This Inner Loop Header: Depth=1

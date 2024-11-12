@@ -411,9 +411,9 @@ define float @fnmadd_s(float %a, float %b, float %c) nounwind strictfp {
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s2, 0(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    mv s1, a1
 ; RV32I-NEXT:    li a1, 0
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    call __addsf3
 ; RV32I-NEXT:    mv s2, a0
 ; RV32I-NEXT:    mv a0, s0
@@ -439,9 +439,9 @@ define float @fnmadd_s(float %a, float %b, float %c) nounwind strictfp {
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s2, 0(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    mv s1, a1
 ; RV64I-NEXT:    li a1, 0
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    call __addsf3
 ; RV64I-NEXT:    mv s2, a0
 ; RV64I-NEXT:    mv a0, s0
@@ -490,10 +490,10 @@ define float @fnmadd_s_2(float %a, float %b, float %c) nounwind strictfp {
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s2, 0(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    mv s1, a0
 ; RV32I-NEXT:    mv a0, a1
 ; RV32I-NEXT:    li a1, 0
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    call __addsf3
 ; RV32I-NEXT:    mv s2, a0
 ; RV32I-NEXT:    mv a0, s0
@@ -518,10 +518,10 @@ define float @fnmadd_s_2(float %a, float %b, float %c) nounwind strictfp {
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s2, 0(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    mv s1, a0
 ; RV64I-NEXT:    mv a0, a1
 ; RV64I-NEXT:    li a1, 0
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    call __addsf3
 ; RV64I-NEXT:    mv s2, a0
 ; RV64I-NEXT:    mv a0, s0
@@ -567,9 +567,9 @@ define float @fnmsub_s(float %a, float %b, float %c) nounwind strictfp {
 ; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    mv s1, a1
 ; RV32I-NEXT:    li a1, 0
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    call __addsf3
 ; RV32I-NEXT:    lui a1, 524288
 ; RV32I-NEXT:    xor a0, a0, a1
@@ -588,9 +588,9 @@ define float @fnmsub_s(float %a, float %b, float %c) nounwind strictfp {
 ; RV64I-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    mv s1, a1
 ; RV64I-NEXT:    li a1, 0
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    call __addsf3
 ; RV64I-NEXT:    lui a1, 524288
 ; RV64I-NEXT:    xor a0, a0, a1
@@ -628,10 +628,10 @@ define float @fnmsub_s_2(float %a, float %b, float %c) nounwind strictfp {
 ; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    mv s1, a0
 ; RV32I-NEXT:    mv a0, a1
 ; RV32I-NEXT:    li a1, 0
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    call __addsf3
 ; RV32I-NEXT:    lui a1, 524288
 ; RV32I-NEXT:    xor a1, a0, a1
@@ -650,10 +650,10 @@ define float @fnmsub_s_2(float %a, float %b, float %c) nounwind strictfp {
 ; RV64I-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    mv s1, a0
 ; RV64I-NEXT:    mv a0, a1
 ; RV64I-NEXT:    li a1, 0
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    call __addsf3
 ; RV64I-NEXT:    lui a1, 524288
 ; RV64I-NEXT:    xor a1, a0, a1

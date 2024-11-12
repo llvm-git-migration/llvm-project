@@ -807,8 +807,8 @@ define float @copysign_f32(float %a, float %b) nounwind {
 ; RV32I-LABEL: copysign_f32:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    lui a2, 524288
-; RV32I-NEXT:    and a1, a1, a2
 ; RV32I-NEXT:    slli a0, a0, 1
+; RV32I-NEXT:    and a1, a1, a2
 ; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    or a0, a0, a1
 ; RV32I-NEXT:    ret
@@ -816,8 +816,8 @@ define float @copysign_f32(float %a, float %b) nounwind {
 ; RV64I-LABEL: copysign_f32:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    lui a2, 524288
-; RV64I-NEXT:    and a1, a1, a2
 ; RV64I-NEXT:    slli a0, a0, 33
+; RV64I-NEXT:    and a1, a1, a2
 ; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    or a0, a0, a1
 ; RV64I-NEXT:    ret
@@ -1604,16 +1604,16 @@ define i1 @fpclass(float %x) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    slli a1, a0, 1
 ; RV32I-NEXT:    srli a1, a1, 1
-; RV32I-NEXT:    addi a2, a1, -1
 ; RV32I-NEXT:    lui a3, 2048
+; RV32I-NEXT:    lui a4, 522240
+; RV32I-NEXT:    addi a2, a1, -1
 ; RV32I-NEXT:    addi a3, a3, -1
+; RV32I-NEXT:    xor a5, a1, a4
 ; RV32I-NEXT:    sltu a2, a2, a3
 ; RV32I-NEXT:    slti a0, a0, 0
-; RV32I-NEXT:    and a2, a2, a0
 ; RV32I-NEXT:    seqz a3, a1
-; RV32I-NEXT:    lui a4, 522240
-; RV32I-NEXT:    xor a5, a1, a4
 ; RV32I-NEXT:    seqz a5, a5
+; RV32I-NEXT:    and a2, a2, a0
 ; RV32I-NEXT:    or a3, a3, a5
 ; RV32I-NEXT:    or a2, a3, a2
 ; RV32I-NEXT:    slt a3, a4, a1
@@ -1631,16 +1631,16 @@ define i1 @fpclass(float %x) {
 ; RV64I-NEXT:    sext.w a1, a0
 ; RV64I-NEXT:    slli a0, a0, 33
 ; RV64I-NEXT:    srli a0, a0, 33
-; RV64I-NEXT:    addi a2, a0, -1
 ; RV64I-NEXT:    lui a3, 2048
+; RV64I-NEXT:    lui a4, 522240
+; RV64I-NEXT:    addi a2, a0, -1
 ; RV64I-NEXT:    addiw a3, a3, -1
+; RV64I-NEXT:    xor a5, a0, a4
 ; RV64I-NEXT:    sltu a2, a2, a3
 ; RV64I-NEXT:    slti a1, a1, 0
-; RV64I-NEXT:    and a2, a2, a1
 ; RV64I-NEXT:    seqz a3, a0
-; RV64I-NEXT:    lui a4, 522240
-; RV64I-NEXT:    xor a5, a0, a4
 ; RV64I-NEXT:    seqz a5, a5
+; RV64I-NEXT:    and a2, a2, a1
 ; RV64I-NEXT:    or a3, a3, a5
 ; RV64I-NEXT:    or a2, a3, a2
 ; RV64I-NEXT:    slt a3, a4, a0
@@ -1732,8 +1732,8 @@ define i1 @isqnan_fpclass(float %x) {
 ; RV32I-LABEL: isqnan_fpclass:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    slli a0, a0, 1
-; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    lui a1, 523264
+; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    addi a1, a1, -1
 ; RV32I-NEXT:    slt a0, a1, a0
 ; RV32I-NEXT:    ret
@@ -1741,8 +1741,8 @@ define i1 @isqnan_fpclass(float %x) {
 ; RV64I-LABEL: isqnan_fpclass:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    slli a0, a0, 33
-; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    lui a1, 523264
+; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    addiw a1, a1, -1
 ; RV64I-NEXT:    slt a0, a1, a0
 ; RV64I-NEXT:    ret
@@ -1784,8 +1784,8 @@ define i1 @issnan_fpclass(float %x) {
 ; RV32I-NEXT:    slli a0, a0, 1
 ; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    lui a1, 523264
-; RV32I-NEXT:    slt a1, a0, a1
 ; RV32I-NEXT:    lui a2, 522240
+; RV32I-NEXT:    slt a1, a0, a1
 ; RV32I-NEXT:    slt a0, a2, a0
 ; RV32I-NEXT:    and a0, a0, a1
 ; RV32I-NEXT:    ret
@@ -1795,8 +1795,8 @@ define i1 @issnan_fpclass(float %x) {
 ; RV64I-NEXT:    slli a0, a0, 33
 ; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    lui a1, 523264
-; RV64I-NEXT:    slt a1, a0, a1
 ; RV64I-NEXT:    lui a2, 522240
+; RV64I-NEXT:    slt a1, a0, a1
 ; RV64I-NEXT:    slt a0, a2, a0
 ; RV64I-NEXT:    and a0, a0, a1
 ; RV64I-NEXT:    ret
@@ -2121,8 +2121,8 @@ define i1 @isnotfinite_fpclass(float %x) {
 ; RV32I-LABEL: isnotfinite_fpclass:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    slli a0, a0, 1
-; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    lui a1, 522240
+; RV32I-NEXT:    srli a0, a0, 1
 ; RV32I-NEXT:    addi a1, a1, -1
 ; RV32I-NEXT:    slt a0, a1, a0
 ; RV32I-NEXT:    ret
@@ -2130,8 +2130,8 @@ define i1 @isnotfinite_fpclass(float %x) {
 ; RV64I-LABEL: isnotfinite_fpclass:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    slli a0, a0, 33
-; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    lui a1, 522240
+; RV64I-NEXT:    srli a0, a0, 33
 ; RV64I-NEXT:    addiw a1, a1, -1
 ; RV64I-NEXT:    slt a0, a1, a0
 ; RV64I-NEXT:    ret

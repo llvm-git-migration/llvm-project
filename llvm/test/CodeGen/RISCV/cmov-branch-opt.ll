@@ -87,8 +87,8 @@ define signext i32 @test3(i32 signext %v, i32 signext %w, i32 signext %x, i32 si
 ; NOCMOV-NEXT:    seqz a4, a4
 ; NOCMOV-NEXT:    addi a4, a4, -1
 ; NOCMOV-NEXT:    and a1, a1, a4
-; NOCMOV-NEXT:    xor a0, a0, a1
 ; NOCMOV-NEXT:    and a3, a3, a4
+; NOCMOV-NEXT:    xor a0, a0, a1
 ; NOCMOV-NEXT:    xor a2, a2, a3
 ; NOCMOV-NEXT:    addw a0, a0, a2
 ; NOCMOV-NEXT:    ret

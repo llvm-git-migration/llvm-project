@@ -19,12 +19,12 @@ define void @constant_folding_crash(ptr %v54, <4 x ptr> %lanes.a, <4 x ptr> %lan
 ; RV32-LABEL: constant_folding_crash:
 ; RV32:       # %bb.0: # %entry
 ; RV32-NEXT:    lw a0, 8(a0)
+; RV32-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
+; RV32-NEXT:    vmv1r.v v11, v0
 ; RV32-NEXT:    andi a0, a0, 1
 ; RV32-NEXT:    seqz a0, a0
-; RV32-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
 ; RV32-NEXT:    vmv.v.x v10, a0
 ; RV32-NEXT:    vmsne.vi v10, v10, 0
-; RV32-NEXT:    vmv1r.v v11, v0
 ; RV32-NEXT:    vmv1r.v v0, v10
 ; RV32-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
 ; RV32-NEXT:    vmerge.vvm v8, v9, v8, v0
@@ -43,12 +43,12 @@ define void @constant_folding_crash(ptr %v54, <4 x ptr> %lanes.a, <4 x ptr> %lan
 ; RV64-LABEL: constant_folding_crash:
 ; RV64:       # %bb.0: # %entry
 ; RV64-NEXT:    ld a0, 8(a0)
+; RV64-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
+; RV64-NEXT:    vmv1r.v v13, v0
 ; RV64-NEXT:    andi a0, a0, 1
 ; RV64-NEXT:    seqz a0, a0
-; RV64-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
 ; RV64-NEXT:    vmv.v.x v12, a0
 ; RV64-NEXT:    vmsne.vi v12, v12, 0
-; RV64-NEXT:    vmv1r.v v13, v0
 ; RV64-NEXT:    vmv1r.v v0, v12
 ; RV64-NEXT:    vsetvli zero, zero, e64, m2, ta, ma
 ; RV64-NEXT:    vmerge.vvm v8, v10, v8, v0

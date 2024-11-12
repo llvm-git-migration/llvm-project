@@ -450,6 +450,7 @@ define <vscale x 64 x i8> @test_vp_reverse_nxv64i8_masked(<vscale x 64 x i8> %sr
 ; CHECK-NEXT:    vsetvli a3, zero, e16, m2, ta, ma
 ; CHECK-NEXT:    vid.v v16
 ; CHECK-NEXT:    vrsub.vx v24, v16, a2
+; CHECK-NEXT:    slli a1, a1, 3
 ; CHECK-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; CHECK-NEXT:    vrgatherei16.vv v23, v8, v24
 ; CHECK-NEXT:    vrgatherei16.vv v22, v9, v24
@@ -459,7 +460,6 @@ define <vscale x 64 x i8> @test_vp_reverse_nxv64i8_masked(<vscale x 64 x i8> %sr
 ; CHECK-NEXT:    vrgatherei16.vv v18, v13, v24
 ; CHECK-NEXT:    vrgatherei16.vv v17, v14, v24
 ; CHECK-NEXT:    vrgatherei16.vv v16, v15, v24
-; CHECK-NEXT:    slli a1, a1, 3
 ; CHECK-NEXT:    sub a1, a1, a0
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
 ; CHECK-NEXT:    vslidedown.vx v8, v16, a1, v0.t
@@ -476,6 +476,7 @@ define <vscale x 64 x i8> @test_vp_reverse_nxv64i8(<vscale x 64 x i8> %src, i32 
 ; CHECK-NEXT:    vsetvli a3, zero, e16, m2, ta, ma
 ; CHECK-NEXT:    vid.v v16
 ; CHECK-NEXT:    vrsub.vx v24, v16, a2
+; CHECK-NEXT:    slli a1, a1, 3
 ; CHECK-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; CHECK-NEXT:    vrgatherei16.vv v23, v8, v24
 ; CHECK-NEXT:    vrgatherei16.vv v22, v9, v24
@@ -485,7 +486,6 @@ define <vscale x 64 x i8> @test_vp_reverse_nxv64i8(<vscale x 64 x i8> %src, i32 
 ; CHECK-NEXT:    vrgatherei16.vv v18, v13, v24
 ; CHECK-NEXT:    vrgatherei16.vv v17, v14, v24
 ; CHECK-NEXT:    vrgatherei16.vv v16, v15, v24
-; CHECK-NEXT:    slli a1, a1, 3
 ; CHECK-NEXT:    sub a1, a1, a0
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
 ; CHECK-NEXT:    vslidedown.vx v8, v16, a1
@@ -518,15 +518,15 @@ define <vscale x 128 x i8> @test_vp_reverse_nxv128i8(<vscale x 128 x i8> %src, i
 ; CHECK-NEXT:    sub sp, sp, a3
 ; CHECK-NEXT:    andi sp, sp, -64
 ; CHECK-NEXT:    addi a3, sp, 64
+; CHECK-NEXT:    sub a6, a0, a1
 ; CHECK-NEXT:    add a4, a0, a3
+; CHECK-NEXT:    sltu a0, a0, a6
 ; CHECK-NEXT:    addi a4, a4, -1
 ; CHECK-NEXT:    li a5, -1
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-NEXT:    vsse8.v v8, (a4), a5
 ; CHECK-NEXT:    sub a4, a4, a2
-; CHECK-NEXT:    sub a6, a0, a1
-; CHECK-NEXT:    sltu a0, a0, a6
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    and a0, a0, a6
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
 ; CHECK-NEXT:    vsse8.v v16, (a4), a5

@@ -89,12 +89,12 @@ define fastcc <128 x i32> @ret_split_v128i32(ptr %x) {
 ; CHECK-NEXT:    addi a1, a1, 384
 ; CHECK-NEXT:    vle32.v v24, (a1)
 ; CHECK-NEXT:    vle32.v v0, (a2)
-; CHECK-NEXT:    vse32.v v16, (a0)
 ; CHECK-NEXT:    addi a1, a0, 384
+; CHECK-NEXT:    vse32.v v16, (a0)
 ; CHECK-NEXT:    vse32.v v24, (a1)
 ; CHECK-NEXT:    addi a1, a0, 256
-; CHECK-NEXT:    vse32.v v0, (a1)
 ; CHECK-NEXT:    addi a0, a0, 128
+; CHECK-NEXT:    vse32.v v0, (a1)
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    ret
   %v = load <128 x i32>, ptr %x

@@ -41,6 +41,9 @@ define float @spill_i32_to_float(i32 %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    flw fa0, 4(sp) # 4-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 156(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 152(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 148(sp) # 4-byte Folded Reload
@@ -63,9 +66,6 @@ define float @spill_i32_to_float(i32 %a) nounwind {
 ; RV32ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 160
 ; RV32ID-NEXT:    ret
 ;
@@ -102,6 +102,9 @@ define float @spill_i32_to_float(i32 %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    flw fa0, 4(sp) # 4-byte Folded Reload
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -124,9 +127,6 @@ define float @spill_i32_to_float(i32 %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   %1 = bitcast i32 %a to float
@@ -168,6 +168,9 @@ define i32 @spill_float_to_i32(float %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    lw a0, 4(sp) # 4-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 156(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 152(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 148(sp) # 4-byte Folded Reload
@@ -190,9 +193,6 @@ define i32 @spill_float_to_i32(float %a) nounwind {
 ; RV32ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 160
 ; RV32ID-NEXT:    ret
 ;
@@ -229,6 +229,9 @@ define i32 @spill_float_to_i32(float %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    ld a0, 0(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -251,9 +254,6 @@ define i32 @spill_float_to_i32(float %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   %1 = bitcast float %a to i32
@@ -297,6 +297,9 @@ define double @spill_i64_to_double(i64 %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    fld fa0, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 172(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 168(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 164(sp) # 4-byte Folded Reload
@@ -319,9 +322,6 @@ define double @spill_i64_to_double(i64 %a) nounwind {
 ; RV32ID-NEXT:    fld fs6, 64(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 176
 ; RV32ID-NEXT:    ret
 ;
@@ -358,6 +358,9 @@ define double @spill_i64_to_double(i64 %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    fld fa0, 0(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -380,9 +383,6 @@ define double @spill_i64_to_double(i64 %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   %1 = bitcast i64 %a to double
@@ -427,6 +427,8 @@ define i64 @spill_double_to_i64(double %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    lw a0, 12(sp) # 4-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw a1, 8(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 172(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 168(sp) # 4-byte Folded Reload
@@ -451,8 +453,6 @@ define i64 @spill_double_to_i64(double %a) nounwind {
 ; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 176
 ; RV32ID-NEXT:    ret
 ;
@@ -489,6 +489,9 @@ define i64 @spill_double_to_i64(double %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    ld a0, 0(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -511,9 +514,6 @@ define i64 @spill_double_to_i64(double %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   %1 = bitcast double %a to i64
@@ -554,7 +554,9 @@ define float @fill_i32_to_float(i32 %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    lw a0, 4(sp) # 4-byte Folded Reload
-; RV32ID-NEXT:    fmv.w.x fa0, a0
+; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 156(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 152(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 148(sp) # 4-byte Folded Reload
@@ -577,9 +579,7 @@ define float @fill_i32_to_float(i32 %a) nounwind {
 ; RV32ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fmv.w.x fa0, a0
 ; RV32ID-NEXT:    addi sp, sp, 160
 ; RV32ID-NEXT:    ret
 ;
@@ -615,7 +615,9 @@ define float @fill_i32_to_float(i32 %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    ld a0, 0(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fmv.w.x fa0, a0
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -638,9 +640,7 @@ define float @fill_i32_to_float(i32 %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fmv.w.x fa0, a0
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   call void asm sideeffect "", "~{x0},~{x1},~{x2},~{x3},~{x4},~{x5},~{x6},~{x7},~{x8},~{x9},~{x10},~{x11},~{x12},~{x13},~{x14},~{x15},~{x16},~{x17},~{x18},~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{x29},~{x30},~{x31},~{f0_d},~{f1_d},~{f2_d},~{f3_d},~{f4_d},~{f5_d},~{f6_d},~{f7_d},~{f8_d},~{f9_d},~{f10_d},~{f11_d},~{f12_d},~{f13_d},~{f14_d},~{f15_d},~{f16_d},~{f17_d},~{f18_d},~{f19_d},~{f20_d},~{f21_d},~{f22_d},~{f23_d},~{f24_d},~{f25_d},~{f26_d},~{f27_d},~{f28_d},~{f29_d},~{f30_d},~{f31_d}"() nounwind
@@ -681,7 +681,9 @@ define i32 @fill_float_to_i32(float %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    flw fa5, 4(sp) # 4-byte Folded Reload
-; RV32ID-NEXT:    fmv.x.w a0, fa5
+; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 156(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 152(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 148(sp) # 4-byte Folded Reload
@@ -704,9 +706,7 @@ define i32 @fill_float_to_i32(float %a) nounwind {
 ; RV32ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fmv.x.w a0, fa5
 ; RV32ID-NEXT:    addi sp, sp, 160
 ; RV32ID-NEXT:    ret
 ;
@@ -742,7 +742,9 @@ define i32 @fill_float_to_i32(float %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    flw fa5, 4(sp) # 4-byte Folded Reload
-; RV64ID-NEXT:    fmv.x.w a0, fa5
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -765,9 +767,7 @@ define i32 @fill_float_to_i32(float %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fmv.x.w a0, fa5
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   call void asm sideeffect "", "~{x0},~{x1},~{x2},~{x3},~{x4},~{x5},~{x6},~{x7},~{x8},~{x9},~{x10},~{x11},~{x12},~{x13},~{x14},~{x15},~{x16},~{x17},~{x18},~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{x29},~{x30},~{x31},~{f0_d},~{f1_d},~{f2_d},~{f3_d},~{f4_d},~{f5_d},~{f6_d},~{f7_d},~{f8_d},~{f9_d},~{f10_d},~{f11_d},~{f12_d},~{f13_d},~{f14_d},~{f15_d},~{f16_d},~{f17_d},~{f18_d},~{f19_d},~{f20_d},~{f21_d},~{f22_d},~{f23_d},~{f24_d},~{f25_d},~{f26_d},~{f27_d},~{f28_d},~{f29_d},~{f30_d},~{f31_d}"() nounwind
@@ -809,10 +809,19 @@ define double @fill_i64_to_double(i64 %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    lw a0, 8(sp) # 4-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs5, 72(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    sw a0, 16(sp)
 ; RV32ID-NEXT:    lw a0, 12(sp) # 4-byte Folded Reload
+; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs4, 80(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    sw a0, 20(sp)
 ; RV32ID-NEXT:    fld fa0, 16(sp)
+; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs6, 64(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs3, 88(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 172(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 168(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 164(sp) # 4-byte Folded Reload
@@ -829,15 +838,6 @@ define double @fill_i64_to_double(i64 %a) nounwind {
 ; RV32ID-NEXT:    fld fs0, 112(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs1, 104(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs2, 96(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs3, 88(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs4, 80(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs5, 72(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs6, 64(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 176
 ; RV32ID-NEXT:    ret
 ;
@@ -873,7 +873,9 @@ define double @fill_i64_to_double(i64 %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    ld a0, 0(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fmv.d.x fa0, a0
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -896,9 +898,7 @@ define double @fill_i64_to_double(i64 %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fmv.d.x fa0, a0
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   call void asm sideeffect "", "~{x0},~{x1},~{x2},~{x3},~{x4},~{x5},~{x6},~{x7},~{x8},~{x9},~{x10},~{x11},~{x12},~{x13},~{x14},~{x15},~{x16},~{x17},~{x18},~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{x29},~{x30},~{x31},~{f0_d},~{f1_d},~{f2_d},~{f3_d},~{f4_d},~{f5_d},~{f6_d},~{f7_d},~{f8_d},~{f9_d},~{f10_d},~{f11_d},~{f12_d},~{f13_d},~{f14_d},~{f15_d},~{f16_d},~{f17_d},~{f18_d},~{f19_d},~{f20_d},~{f21_d},~{f22_d},~{f23_d},~{f24_d},~{f25_d},~{f26_d},~{f27_d},~{f28_d},~{f29_d},~{f30_d},~{f31_d}"() nounwind
@@ -939,9 +939,14 @@ define i64 @fill_double_to_i64(double %a) nounwind {
 ; RV32ID-NEXT:    #APP
 ; RV32ID-NEXT:    #NO_APP
 ; RV32ID-NEXT:    fld fa5, 8(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fsd fa5, 16(sp)
 ; RV32ID-NEXT:    lw a0, 16(sp)
 ; RV32ID-NEXT:    lw a1, 20(sp)
+; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    lw ra, 172(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 168(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 164(sp) # 4-byte Folded Reload
@@ -962,11 +967,6 @@ define i64 @fill_double_to_i64(double %a) nounwind {
 ; RV32ID-NEXT:    fld fs4, 80(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs5, 72(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    fld fs6, 64(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs7, 56(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs8, 48(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs9, 40(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs10, 32(sp) # 8-byte Folded Reload
-; RV32ID-NEXT:    fld fs11, 24(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 176
 ; RV32ID-NEXT:    ret
 ;
@@ -1002,7 +1002,9 @@ define i64 @fill_double_to_i64(double %a) nounwind {
 ; RV64ID-NEXT:    #APP
 ; RV64ID-NEXT:    #NO_APP
 ; RV64ID-NEXT:    fld fa5, 0(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fmv.x.d a0, fa5
+; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld ra, 200(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s0, 192(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    ld s1, 184(sp) # 8-byte Folded Reload
@@ -1025,9 +1027,7 @@ define i64 @fill_double_to_i64(double %a) nounwind {
 ; RV64ID-NEXT:    fld fs6, 48(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs7, 40(sp) # 8-byte Folded Reload
 ; RV64ID-NEXT:    fld fs8, 32(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs9, 24(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs10, 16(sp) # 8-byte Folded Reload
-; RV64ID-NEXT:    fld fs11, 8(sp) # 8-byte Folded Reload
+; RV64ID-NEXT:    fmv.x.d a0, fa5
 ; RV64ID-NEXT:    addi sp, sp, 208
 ; RV64ID-NEXT:    ret
   call void asm sideeffect "", "~{x0},~{x1},~{x2},~{x3},~{x4},~{x5},~{x6},~{x7},~{x8},~{x9},~{x10},~{x11},~{x12},~{x13},~{x14},~{x15},~{x16},~{x17},~{x18},~{x19},~{x20},~{x21},~{x22},~{x23},~{x24},~{x25},~{x26},~{x27},~{x28},~{x29},~{x30},~{x31},~{f0_d},~{f1_d},~{f2_d},~{f3_d},~{f4_d},~{f5_d},~{f6_d},~{f7_d},~{f8_d},~{f9_d},~{f10_d},~{f11_d},~{f12_d},~{f13_d},~{f14_d},~{f15_d},~{f16_d},~{f17_d},~{f18_d},~{f19_d},~{f20_d},~{f21_d},~{f22_d},~{f23_d},~{f24_d},~{f25_d},~{f26_d},~{f27_d},~{f28_d},~{f29_d},~{f30_d},~{f31_d}"() nounwind

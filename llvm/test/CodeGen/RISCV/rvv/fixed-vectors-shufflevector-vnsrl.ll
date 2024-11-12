@@ -394,8 +394,8 @@ define void @vnsrl_0_i8_undef3(ptr %in, ptr %out) {
 ; CHECK-NEXT:    vrgather.vv v10, v8, v9
 ; CHECK-NEXT:    vid.v v9
 ; CHECK-NEXT:    vadd.vv v9, v9, v9
-; CHECK-NEXT:    vadd.vi v9, v9, -8
 ; CHECK-NEXT:    li a0, -32
+; CHECK-NEXT:    vadd.vi v9, v9, -8
 ; CHECK-NEXT:    vmv.s.x v0, a0
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 8
@@ -420,12 +420,12 @@ define void @vnsrl_0_i8_undef_negative(ptr %in, ptr %out) {
 ; CHECK-NEXT:    addi a0, a0, %lo(.LCPI17_0)
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf4, ta, ma
 ; CHECK-NEXT:    vle8.v v9, (a0)
+; CHECK-NEXT:    li a0, 48
+; CHECK-NEXT:    vmv.s.x v0, a0
 ; CHECK-NEXT:    vrgather.vv v10, v8, v9
 ; CHECK-NEXT:    vid.v v9
 ; CHECK-NEXT:    vadd.vv v9, v9, v9
 ; CHECK-NEXT:    vadd.vi v9, v9, -8
-; CHECK-NEXT:    li a0, 48
-; CHECK-NEXT:    vmv.s.x v0, a0
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 8
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf4, ta, mu

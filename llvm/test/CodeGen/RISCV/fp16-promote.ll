@@ -36,8 +36,8 @@ define double @test_fpextend_double(ptr %p) nounwind {
 ; CHECK-NEXT:    lhu a0, 0(a0)
 ; CHECK-NEXT:    fmv.w.x fa0, a0
 ; CHECK-NEXT:    call __extendhfsf2
-; CHECK-NEXT:    fcvt.d.s fa0, fa0
 ; CHECK-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
+; CHECK-NEXT:    fcvt.d.s fa0, fa0
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
   %a = load half, ptr %p
@@ -91,11 +91,11 @@ define void @test_fadd(ptr %p, ptr %q) nounwind {
 ; CHECK-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    fsd fs0, 16(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    fsd fs1, 8(sp) # 8-byte Folded Spill
+; CHECK-NEXT:    lhu a1, 0(a1)
 ; CHECK-NEXT:    mv s0, a0
 ; CHECK-NEXT:    lhu a0, 0(a0)
-; CHECK-NEXT:    lhu a1, 0(a1)
-; CHECK-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NEXT:    fmv.w.x fa0, a1
+; CHECK-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NEXT:    call __extendhfsf2
 ; CHECK-NEXT:    fmv.s fs1, fa0
 ; CHECK-NEXT:    fmv.s fa0, fs0
@@ -125,11 +125,11 @@ define void @test_fmul(ptr %p, ptr %q) nounwind {
 ; CHECK-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; CHECK-NEXT:    fsd fs0, 16(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    fsd fs1, 8(sp) # 8-byte Folded Spill
+; CHECK-NEXT:    lhu a1, 0(a1)
 ; CHECK-NEXT:    mv s0, a0
 ; CHECK-NEXT:    lhu a0, 0(a0)
-; CHECK-NEXT:    lhu a1, 0(a1)
-; CHECK-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NEXT:    fmv.w.x fa0, a1
+; CHECK-NEXT:    fmv.w.x fs0, a0
 ; CHECK-NEXT:    call __extendhfsf2
 ; CHECK-NEXT:    fmv.s fs1, fa0
 ; CHECK-NEXT:    fmv.s fa0, fs0

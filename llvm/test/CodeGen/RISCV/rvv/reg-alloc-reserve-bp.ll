@@ -21,10 +21,10 @@ define void @foo(ptr nocapture noundef %p1) {
 ; CHECK-NEXT:    slli a1, a1, 1
 ; CHECK-NEXT:    sub sp, sp, a1
 ; CHECK-NEXT:    andi sp, sp, -64
-; CHECK-NEXT:    mv s1, sp
-; CHECK-NEXT:    mv s2, a0
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (a0)
+; CHECK-NEXT:    mv s1, sp
+; CHECK-NEXT:    mv s2, a0
 ; CHECK-NEXT:    addi a0, s1, 160
 ; CHECK-NEXT:    vs2r.v v8, (a0) # Unknown-size Folded Spill
 ; CHECK-NEXT:    addi sp, sp, -16
@@ -40,9 +40,9 @@ define void @foo(ptr nocapture noundef %p1) {
 ; CHECK-NEXT:    sd t0, 0(sp)
 ; CHECK-NEXT:    call bar
 ; CHECK-NEXT:    addi sp, sp, 16
+; CHECK-NEXT:    addi a0, s1, 160
 ; CHECK-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; CHECK-NEXT:    vle32.v v8, (s2)
-; CHECK-NEXT:    addi a0, s1, 160
 ; CHECK-NEXT:    vl2r.v v10, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    vfadd.vv v8, v10, v8
 ; CHECK-NEXT:    vse32.v v8, (s2)

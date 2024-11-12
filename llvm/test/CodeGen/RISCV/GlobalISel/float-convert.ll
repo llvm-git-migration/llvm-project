@@ -302,16 +302,16 @@ define signext i16 @fcvt_w_s_i16(float %a) nounwind {
 define zeroext i16 @fcvt_wu_s_i16(float %a) nounwind {
 ; RV32IF-LABEL: fcvt_wu_s_i16:
 ; RV32IF:       # %bb.0:
-; RV32IF-NEXT:    fcvt.wu.s a0, fa0, rtz
 ; RV32IF-NEXT:    lui a1, 16
+; RV32IF-NEXT:    fcvt.wu.s a0, fa0, rtz
 ; RV32IF-NEXT:    addi a1, a1, -1
 ; RV32IF-NEXT:    and a0, a0, a1
 ; RV32IF-NEXT:    ret
 ;
 ; RV64IF-LABEL: fcvt_wu_s_i16:
 ; RV64IF:       # %bb.0:
-; RV64IF-NEXT:    fcvt.wu.s a0, fa0, rtz
 ; RV64IF-NEXT:    lui a1, 16
+; RV64IF-NEXT:    fcvt.wu.s a0, fa0, rtz
 ; RV64IF-NEXT:    addiw a1, a1, -1
 ; RV64IF-NEXT:    and a0, a0, a1
 ; RV64IF-NEXT:    ret

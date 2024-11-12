@@ -29,8 +29,8 @@ define void @last_chance_recoloring_failure() {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add a0, sp, a0
-; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    csrr a1, vlenb
+; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    slli a1, a1, 2
 ; CHECK-NEXT:    vs4r.v v16, (a0) # Unknown-size Folded Spill
 ; CHECK-NEXT:    add a0, a0, a1
@@ -46,8 +46,8 @@ define void @last_chance_recoloring_failure() {
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add a0, sp, a0
-; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    csrr a1, vlenb
+; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    slli a1, a1, 2
 ; CHECK-NEXT:    vl4r.v v16, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    add a0, a0, a1
@@ -89,8 +89,8 @@ define void @last_chance_recoloring_failure() {
 ; SUBREGLIVENESS-NEXT:    csrr a0, vlenb
 ; SUBREGLIVENESS-NEXT:    slli a0, a0, 3
 ; SUBREGLIVENESS-NEXT:    add a0, sp, a0
-; SUBREGLIVENESS-NEXT:    addi a0, a0, 16
 ; SUBREGLIVENESS-NEXT:    csrr a1, vlenb
+; SUBREGLIVENESS-NEXT:    addi a0, a0, 16
 ; SUBREGLIVENESS-NEXT:    slli a1, a1, 2
 ; SUBREGLIVENESS-NEXT:    vs4r.v v16, (a0) # Unknown-size Folded Spill
 ; SUBREGLIVENESS-NEXT:    add a0, a0, a1
@@ -106,8 +106,8 @@ define void @last_chance_recoloring_failure() {
 ; SUBREGLIVENESS-NEXT:    csrr a0, vlenb
 ; SUBREGLIVENESS-NEXT:    slli a0, a0, 3
 ; SUBREGLIVENESS-NEXT:    add a0, sp, a0
-; SUBREGLIVENESS-NEXT:    addi a0, a0, 16
 ; SUBREGLIVENESS-NEXT:    csrr a1, vlenb
+; SUBREGLIVENESS-NEXT:    addi a0, a0, 16
 ; SUBREGLIVENESS-NEXT:    slli a1, a1, 2
 ; SUBREGLIVENESS-NEXT:    vl4r.v v16, (a0) # Unknown-size Folded Reload
 ; SUBREGLIVENESS-NEXT:    add a0, a0, a1

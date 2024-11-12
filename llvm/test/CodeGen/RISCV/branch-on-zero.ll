@@ -128,8 +128,8 @@ define i32 @test_lshr2(ptr nocapture %x, ptr nocapture readonly %y, i32 %n) {
 ; RV32-NEXT:    # =>This Inner Loop Header: Depth=1
 ; RV32-NEXT:    lw a3, 0(a1)
 ; RV32-NEXT:    addi a4, a1, 4
-; RV32-NEXT:    slli a3, a3, 1
 ; RV32-NEXT:    addi a1, a0, 4
+; RV32-NEXT:    slli a3, a3, 1
 ; RV32-NEXT:    sw a3, 0(a0)
 ; RV32-NEXT:    mv a0, a1
 ; RV32-NEXT:    mv a1, a4
@@ -152,8 +152,8 @@ define i32 @test_lshr2(ptr nocapture %x, ptr nocapture readonly %y, i32 %n) {
 ; RV64-NEXT:    # =>This Inner Loop Header: Depth=1
 ; RV64-NEXT:    lw a3, 0(a1)
 ; RV64-NEXT:    addi a4, a1, 4
-; RV64-NEXT:    slli a3, a3, 1
 ; RV64-NEXT:    addi a1, a0, 4
+; RV64-NEXT:    slli a3, a3, 1
 ; RV64-NEXT:    sw a3, 0(a0)
 ; RV64-NEXT:    mv a0, a1
 ; RV64-NEXT:    mv a1, a4

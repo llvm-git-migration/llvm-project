@@ -181,9 +181,9 @@ define i64 @sdiv64_pow2_2(i64 %a) {
 ; RV32I:       # %bb.0: # %entry
 ; RV32I-NEXT:    srli a2, a1, 31
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 1
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 1
 ; RV32I-NEXT:    slli a0, a1, 31
 ; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    srai a1, a1, 1
@@ -205,15 +205,15 @@ define i64 @sdiv64_pow2_negative_2(i64 %a) {
 ; RV32I:       # %bb.0: # %entry
 ; RV32I-NEXT:    srli a2, a1, 31
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 1
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 1
 ; RV32I-NEXT:    slli a0, a1, 31
 ; RV32I-NEXT:    or a3, a3, a0
-; RV32I-NEXT:    neg a0, a3
-; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    srai a1, a1, 1
+; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    neg a1, a1
+; RV32I-NEXT:    neg a0, a3
 ; RV32I-NEXT:    sub a1, a1, a2
 ; RV32I-NEXT:    ret
 ;
@@ -235,9 +235,9 @@ define i64 @sdiv64_pow2_2048(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 21
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 11
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 11
 ; RV32I-NEXT:    slli a0, a1, 21
 ; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    srai a1, a1, 11
@@ -261,15 +261,15 @@ define i64 @sdiv64_pow2_negative_2048(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 21
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 11
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 11
 ; RV32I-NEXT:    slli a0, a1, 21
 ; RV32I-NEXT:    or a3, a3, a0
-; RV32I-NEXT:    neg a0, a3
-; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    srai a1, a1, 11
+; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    neg a1, a1
+; RV32I-NEXT:    neg a0, a3
 ; RV32I-NEXT:    sub a1, a1, a2
 ; RV32I-NEXT:    ret
 ;
@@ -292,9 +292,9 @@ define i64 @sdiv64_pow2_4096(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 20
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 12
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 12
 ; RV32I-NEXT:    slli a0, a1, 20
 ; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    srai a1, a1, 12
@@ -318,15 +318,15 @@ define i64 @sdiv64_pow2_negative_4096(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 20
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 12
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 12
 ; RV32I-NEXT:    slli a0, a1, 20
 ; RV32I-NEXT:    or a3, a3, a0
-; RV32I-NEXT:    neg a0, a3
-; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    srai a1, a1, 12
+; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    neg a1, a1
+; RV32I-NEXT:    neg a0, a3
 ; RV32I-NEXT:    sub a1, a1, a2
 ; RV32I-NEXT:    ret
 ;
@@ -349,9 +349,9 @@ define i64 @sdiv64_pow2_65536(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 16
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 16
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 16
 ; RV32I-NEXT:    slli a0, a1, 16
 ; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    srai a1, a1, 16
@@ -375,15 +375,15 @@ define i64 @sdiv64_pow2_negative_65536(i64 %a) {
 ; RV32I-NEXT:    srai a2, a1, 31
 ; RV32I-NEXT:    srli a2, a2, 16
 ; RV32I-NEXT:    add a2, a0, a2
-; RV32I-NEXT:    srli a3, a2, 16
 ; RV32I-NEXT:    sltu a0, a2, a0
 ; RV32I-NEXT:    add a1, a1, a0
+; RV32I-NEXT:    srli a3, a2, 16
 ; RV32I-NEXT:    slli a0, a1, 16
 ; RV32I-NEXT:    or a3, a3, a0
-; RV32I-NEXT:    neg a0, a3
-; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    srai a1, a1, 16
+; RV32I-NEXT:    snez a2, a3
 ; RV32I-NEXT:    neg a1, a1
+; RV32I-NEXT:    neg a0, a3
 ; RV32I-NEXT:    sub a1, a1, a2
 ; RV32I-NEXT:    ret
 ;

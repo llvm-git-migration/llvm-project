@@ -510,7 +510,6 @@ declare <vscale x 16 x double> @llvm.vp.load.nxv16f64.p0(ptr, <vscale x 16 x i1>
 define <vscale x 16 x double> @vpload_nxv16f64(ptr %ptr, <vscale x 16 x i1> %m, i32 zeroext %evl) {
 ; CHECK-LABEL: vpload_nxv16f64:
 ; CHECK:       # %bb.0:
-; CHECK-NEXT:    vmv1r.v v8, v0
 ; CHECK-NEXT:    csrr a2, vlenb
 ; CHECK-NEXT:    sub a3, a1, a2
 ; CHECK-NEXT:    sltu a4, a1, a3
@@ -518,6 +517,7 @@ define <vscale x 16 x double> @vpload_nxv16f64(ptr %ptr, <vscale x 16 x i1> %m, 
 ; CHECK-NEXT:    and a3, a4, a3
 ; CHECK-NEXT:    slli a4, a2, 3
 ; CHECK-NEXT:    srli a5, a2, 3
+; CHECK-NEXT:    vmv1r.v v8, v0
 ; CHECK-NEXT:    vsetvli a6, zero, e8, mf4, ta, ma
 ; CHECK-NEXT:    vslidedown.vx v0, v0, a5
 ; CHECK-NEXT:    add a4, a0, a4

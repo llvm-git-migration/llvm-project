@@ -104,19 +104,19 @@ define signext i32 @sad_2block_16xi8_as_i32(ptr %a, ptr %b, i32 signext %stridea
 ; CHECK-NEXT:    vle8.v v11, (a1)
 ; CHECK-NEXT:    vminu.vv v12, v8, v9
 ; CHECK-NEXT:    vmaxu.vv v8, v8, v9
-; CHECK-NEXT:    vsub.vv v8, v8, v12
-; CHECK-NEXT:    vminu.vv v9, v10, v11
 ; CHECK-NEXT:    add a0, a0, a2
 ; CHECK-NEXT:    add a1, a1, a3
+; CHECK-NEXT:    vsub.vv v8, v8, v12
 ; CHECK-NEXT:    vle8.v v12, (a0)
 ; CHECK-NEXT:    vle8.v v13, (a1)
+; CHECK-NEXT:    vminu.vv v9, v10, v11
 ; CHECK-NEXT:    vmaxu.vv v10, v10, v11
 ; CHECK-NEXT:    vsub.vv v9, v10, v9
+; CHECK-NEXT:    add a0, a0, a2
+; CHECK-NEXT:    add a1, a1, a3
 ; CHECK-NEXT:    vwaddu.vv v10, v9, v8
 ; CHECK-NEXT:    vminu.vv v8, v12, v13
 ; CHECK-NEXT:    vmaxu.vv v9, v12, v13
-; CHECK-NEXT:    add a0, a0, a2
-; CHECK-NEXT:    add a1, a1, a3
 ; CHECK-NEXT:    vle8.v v12, (a0)
 ; CHECK-NEXT:    vle8.v v13, (a1)
 ; CHECK-NEXT:    vsub.vv v8, v9, v8

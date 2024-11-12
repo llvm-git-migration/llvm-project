@@ -42,11 +42,12 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    .cfi_escape 0x0f, 0x0e, 0x72, 0x00, 0x11, 0x90, 0x03, 0x22, 0x11, 0x06, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 400 + 6 * vlenb
 ; NOREMAT-NEXT:    li a2, 32
 ; NOREMAT-NEXT:    vsetvli zero, a2, e32, m2, ta, ma
-; NOREMAT-NEXT:    vle32.v v8, (a0)
 ; NOREMAT-NEXT:    addi a2, a0, 512
+; NOREMAT-NEXT:    vle32.v v8, (a0)
 ; NOREMAT-NEXT:    vle32.v v10, (a2)
 ; NOREMAT-NEXT:    addi a2, a0, 1024
 ; NOREMAT-NEXT:    vle32.v v12, (a2)
+; NOREMAT-NEXT:    li a5, 5
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v10
 ; NOREMAT-NEXT:    vle32.v v8, (a2)
 ; NOREMAT-NEXT:    addi a2, a0, 1536
@@ -60,7 +61,6 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    vle32.v v12, (a2)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; NOREMAT-NEXT:    vle32.v v8, (a2)
-; NOREMAT-NEXT:    li a5, 5
 ; NOREMAT-NEXT:    slli a2, a5, 9
 ; NOREMAT-NEXT:    sd a2, 264(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a2, a0, a2
@@ -71,10 +71,10 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    slli a3, a2, 10
 ; NOREMAT-NEXT:    sd a3, 256(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, a3
+; NOREMAT-NEXT:    li a4, 7
 ; NOREMAT-NEXT:    vle32.v v12, (a3)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; NOREMAT-NEXT:    vle32.v v8, (a3)
-; NOREMAT-NEXT:    li a4, 7
 ; NOREMAT-NEXT:    slli a3, a4, 9
 ; NOREMAT-NEXT:    sd a3, 248(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, a3
@@ -96,23 +96,23 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    slli a6, a5, 10
 ; NOREMAT-NEXT:    sd a6, 232(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    li s8, 11
 ; NOREMAT-NEXT:    vle32.v v12, (a6)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; NOREMAT-NEXT:    vle32.v v8, (a6)
-; NOREMAT-NEXT:    li s8, 11
 ; NOREMAT-NEXT:    slli a6, s8, 9
+; NOREMAT-NEXT:    slli a2, a2, 11
 ; NOREMAT-NEXT:    sd a6, 224(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    sd a2, 216(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    vle32.v v14, (a6)
+; NOREMAT-NEXT:    add a2, a0, a2
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v12
 ; NOREMAT-NEXT:    vle32.v v10, (a6)
-; NOREMAT-NEXT:    slli a2, a2, 11
-; NOREMAT-NEXT:    sd a2, 216(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a2, a0, a2
 ; NOREMAT-NEXT:    vle32.v v12, (a2)
+; NOREMAT-NEXT:    li s2, 13
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; NOREMAT-NEXT:    vle32.v v8, (a2)
-; NOREMAT-NEXT:    li s2, 13
 ; NOREMAT-NEXT:    slli a2, s2, 9
 ; NOREMAT-NEXT:    sd a2, 208(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a2, a0, a2
@@ -120,161 +120,145 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v12
 ; NOREMAT-NEXT:    vle32.v v10, (a2)
 ; NOREMAT-NEXT:    slli a2, a4, 10
+; NOREMAT-NEXT:    slli a5, a5, 11
 ; NOREMAT-NEXT:    sd a2, 200(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a2, a0, a2
+; NOREMAT-NEXT:    sd a5, 160(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    vle32.v v12, (a2)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; NOREMAT-NEXT:    vle32.v v8, (a2)
 ; NOREMAT-NEXT:    li a2, 15
+; NOREMAT-NEXT:    add a5, a0, a5
+; NOREMAT-NEXT:    li s10, 21
 ; NOREMAT-NEXT:    slli a6, a2, 9
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v12
+; NOREMAT-NEXT:    vle32.v v2, (a5)
+; NOREMAT-NEXT:    vle32.v v12, (a5)
+; NOREMAT-NEXT:    slli a5, s10, 9
 ; NOREMAT-NEXT:    sd a6, 192(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    sd a5, 152(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    vle32.v v26, (a6)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v12
 ; NOREMAT-NEXT:    vle32.v v16, (a6)
 ; NOREMAT-NEXT:    lui a6, 2
 ; NOREMAT-NEXT:    add a6, a0, a6
 ; NOREMAT-NEXT:    vle32.v v28, (a6)
 ; NOREMAT-NEXT:    vle32.v v10, (a6)
 ; NOREMAT-NEXT:    li a6, 17
+; NOREMAT-NEXT:    add a5, a0, a5
 ; NOREMAT-NEXT:    slli a6, a6, 9
+; NOREMAT-NEXT:    vle32.v v24, (a5)
+; NOREMAT-NEXT:    vle32.v v14, (a5)
+; NOREMAT-NEXT:    slli a5, s8, 10
 ; NOREMAT-NEXT:    sd a6, 184(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    li t0, 17
 ; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    sd a5, 144(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    add a5, a0, a5
+; NOREMAT-NEXT:    li s6, 23
 ; NOREMAT-NEXT:    vle32.v v30, (a6)
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
+; NOREMAT-NEXT:    vle32.v v26, (a5)
+; NOREMAT-NEXT:    vle32.v v8, (a5)
+; NOREMAT-NEXT:    slli a5, s6, 9
 ; NOREMAT-NEXT:    vle32.v v18, (a6)
 ; NOREMAT-NEXT:    slli a6, a3, 10
+; NOREMAT-NEXT:    sd a5, 136(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    sd a6, 176(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    add a5, a0, a5
 ; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v28
+; NOREMAT-NEXT:    vle32.v v28, (a5)
+; NOREMAT-NEXT:    vle32.v v16, (a5)
+; NOREMAT-NEXT:    lui a5, 3
 ; NOREMAT-NEXT:    vle32.v v6, (a6)
 ; NOREMAT-NEXT:    vle32.v v20, (a6)
 ; NOREMAT-NEXT:    li a6, 19
+; NOREMAT-NEXT:    add a5, a0, a5
+; NOREMAT-NEXT:    li s3, 25
 ; NOREMAT-NEXT:    slli a6, a6, 9
-; NOREMAT-NEXT:    sd a6, 168(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    li a7, 19
-; NOREMAT-NEXT:    add a6, a0, a6
-; NOREMAT-NEXT:    vle32.v v4, (a6)
-; NOREMAT-NEXT:    vle32.v v22, (a6)
-; NOREMAT-NEXT:    slli a5, a5, 11
-; NOREMAT-NEXT:    sd a5, 160(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v2, (a5)
-; NOREMAT-NEXT:    vle32.v v12, (a5)
-; NOREMAT-NEXT:    li s10, 21
-; NOREMAT-NEXT:    slli a5, s10, 9
-; NOREMAT-NEXT:    sd a5, 152(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v24, (a5)
-; NOREMAT-NEXT:    vle32.v v14, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
-; NOREMAT-NEXT:    slli a5, s8, 10
-; NOREMAT-NEXT:    sd a5, 144(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v26, (a5)
-; NOREMAT-NEXT:    vle32.v v8, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v28
-; NOREMAT-NEXT:    li s6, 23
-; NOREMAT-NEXT:    slli a5, s6, 9
-; NOREMAT-NEXT:    sd a5, 136(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v28, (a5)
-; NOREMAT-NEXT:    vle32.v v16, (a5)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v30
-; NOREMAT-NEXT:    lui a5, 3
-; NOREMAT-NEXT:    add a5, a0, a5
 ; NOREMAT-NEXT:    vle32.v v30, (a5)
 ; NOREMAT-NEXT:    vle32.v v10, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v6
-; NOREMAT-NEXT:    li s3, 25
 ; NOREMAT-NEXT:    slli a5, s3, 9
-; NOREMAT-NEXT:    sd a5, 128(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v6, (a5)
-; NOREMAT-NEXT:    vle32.v v18, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v4
-; NOREMAT-NEXT:    slli a5, s2, 10
-; NOREMAT-NEXT:    sd a5, 120(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v4, (a5)
-; NOREMAT-NEXT:    vle32.v v20, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v2
-; NOREMAT-NEXT:    li t5, 27
-; NOREMAT-NEXT:    slli a5, t5, 9
-; NOREMAT-NEXT:    sd a5, 112(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a5, a0, a5
-; NOREMAT-NEXT:    vle32.v v2, (a5)
-; NOREMAT-NEXT:    vle32.v v22, (a5)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v24
 ; NOREMAT-NEXT:    slli a4, a4, 11
+; NOREMAT-NEXT:    sd a6, 168(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    add a6, a0, a6
+; NOREMAT-NEXT:    sd a5, 128(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    sd a4, 104(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    vle32.v v4, (a6)
+; NOREMAT-NEXT:    vle32.v v22, (a6)
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v6
 ; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v4
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v2
+; NOREMAT-NEXT:    li t2, 29
+; NOREMAT-NEXT:    add a5, a0, a5
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v24
 ; NOREMAT-NEXT:    vle32.v v24, (a4)
 ; NOREMAT-NEXT:    vle32.v v12, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v26
-; NOREMAT-NEXT:    li t2, 29
 ; NOREMAT-NEXT:    slli a4, t2, 9
+; NOREMAT-NEXT:    vle32.v v6, (a5)
+; NOREMAT-NEXT:    vle32.v v18, (a5)
+; NOREMAT-NEXT:    slli a5, s2, 10
 ; NOREMAT-NEXT:    sd a4, 96(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sd a5, 120(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    add a5, a0, a5
+; NOREMAT-NEXT:    li t5, 27
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v26
 ; NOREMAT-NEXT:    vle32.v v26, (a4)
 ; NOREMAT-NEXT:    vle32.v v14, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v28
 ; NOREMAT-NEXT:    slli a4, a2, 10
+; NOREMAT-NEXT:    vle32.v v4, (a5)
+; NOREMAT-NEXT:    vle32.v v20, (a5)
+; NOREMAT-NEXT:    slli a5, t5, 9
 ; NOREMAT-NEXT:    sd a4, 88(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sd a5, 112(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v28
 ; NOREMAT-NEXT:    vle32.v v28, (a4)
 ; NOREMAT-NEXT:    vle32.v v8, (a4)
 ; NOREMAT-NEXT:    csrr a4, vlenb
 ; NOREMAT-NEXT:    slli a4, a4, 2
+; NOREMAT-NEXT:    add a5, a0, a5
 ; NOREMAT-NEXT:    add a4, sp, a4
+; NOREMAT-NEXT:    vle32.v v2, (a5)
+; NOREMAT-NEXT:    vle32.v v22, (a5)
 ; NOREMAT-NEXT:    addi a4, a4, 288
-; NOREMAT-NEXT:    vs2r.v v8, (a4) # Unknown-size Folded Spill
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v30
 ; NOREMAT-NEXT:    li a5, 31
+; NOREMAT-NEXT:    vs2r.v v8, (a4) # Unknown-size Folded Spill
 ; NOREMAT-NEXT:    slli a4, a5, 9
+; NOREMAT-NEXT:    slli a3, a3, 11
 ; NOREMAT-NEXT:    sd a4, 80(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    lui a6, 4
+; NOREMAT-NEXT:    sd a3, 48(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v30
 ; NOREMAT-NEXT:    vle32.v v30, (a4)
 ; NOREMAT-NEXT:    vle32.v v16, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v6
-; NOREMAT-NEXT:    lui a6, 4
 ; NOREMAT-NEXT:    add a4, a0, a6
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v6
 ; NOREMAT-NEXT:    vle32.v v6, (a4)
 ; NOREMAT-NEXT:    vle32.v v8, (a4)
 ; NOREMAT-NEXT:    csrr a4, vlenb
 ; NOREMAT-NEXT:    slli a4, a4, 1
 ; NOREMAT-NEXT:    add a4, sp, a4
 ; NOREMAT-NEXT:    addi a4, a4, 288
+; NOREMAT-NEXT:    add a3, a0, a3
 ; NOREMAT-NEXT:    vs2r.v v8, (a4) # Unknown-size Folded Spill
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v4
-; NOREMAT-NEXT:    addiw a4, a6, 512
-; NOREMAT-NEXT:    sd a4, 72(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a4, a0, a4
-; NOREMAT-NEXT:    vle32.v v4, (a4)
-; NOREMAT-NEXT:    vle32.v v18, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v2
-; NOREMAT-NEXT:    slli a4, t0, 10
-; NOREMAT-NEXT:    sd a4, 64(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a4, a0, a4
-; NOREMAT-NEXT:    vle32.v v2, (a4)
-; NOREMAT-NEXT:    vle32.v v20, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v24
-; NOREMAT-NEXT:    addiw a4, a6, 1536
-; NOREMAT-NEXT:    sd a4, 56(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a4, a0, a4
-; NOREMAT-NEXT:    vle32.v v0, (a4)
-; NOREMAT-NEXT:    vle32.v v22, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v26
-; NOREMAT-NEXT:    slli a3, a3, 11
-; NOREMAT-NEXT:    sd a3, 48(sp) # 8-byte Folded Spill
-; NOREMAT-NEXT:    add a3, a0, a3
-; NOREMAT-NEXT:    vle32.v v12, (a3)
 ; NOREMAT-NEXT:    vle32.v v8, (a3)
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v2
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v24
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v26
+; NOREMAT-NEXT:    vle32.v v12, (a3)
 ; NOREMAT-NEXT:    addi a3, sp, 288
-; NOREMAT-NEXT:    vs2r.v v8, (a3) # Unknown-size Folded Spill
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v28
 ; NOREMAT-NEXT:    lui s1, 5
+; NOREMAT-NEXT:    vs2r.v v8, (a3) # Unknown-size Folded Spill
 ; NOREMAT-NEXT:    addiw a3, s1, -1536
+; NOREMAT-NEXT:    addiw a4, a6, 512
 ; NOREMAT-NEXT:    sd a3, 40(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sd a4, 72(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, a3
 ; NOREMAT-NEXT:    vle32.v v8, (a3)
 ; NOREMAT-NEXT:    vle32.v v24, (a3)
@@ -283,16 +267,29 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    add a3, sp, a3
 ; NOREMAT-NEXT:    addi a3, a3, 288
 ; NOREMAT-NEXT:    vl2r.v v10, (a3) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v30
+; NOREMAT-NEXT:    li a7, 19
+; NOREMAT-NEXT:    li t0, 17
+; NOREMAT-NEXT:    add a4, a0, a4
 ; NOREMAT-NEXT:    slli a3, a7, 10
+; NOREMAT-NEXT:    vle32.v v4, (a4)
+; NOREMAT-NEXT:    vle32.v v18, (a4)
+; NOREMAT-NEXT:    slli a4, t0, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v28
 ; NOREMAT-NEXT:    sd a3, 32(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sd a4, 64(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, a3
+; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v30
 ; NOREMAT-NEXT:    vle32.v v10, (a3)
 ; NOREMAT-NEXT:    vle32.v v14, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v6
 ; NOREMAT-NEXT:    addiw a3, s1, -512
+; NOREMAT-NEXT:    vle32.v v2, (a4)
+; NOREMAT-NEXT:    vle32.v v20, (a4)
+; NOREMAT-NEXT:    addiw a4, a6, 1536
 ; NOREMAT-NEXT:    sd a3, 24(sp) # 8-byte Folded Spill
+; NOREMAT-NEXT:    sd a4, 56(sp) # 8-byte Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, a3
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v6
 ; NOREMAT-NEXT:    vle32.v v6, (a3)
 ; NOREMAT-NEXT:    vle32.v v16, (a3)
 ; NOREMAT-NEXT:    csrr a3, vlenb
@@ -300,51 +297,54 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    add a3, sp, a3
 ; NOREMAT-NEXT:    addi a3, a3, 288
 ; NOREMAT-NEXT:    vl2r.v v26, (a3) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v26, v4
 ; NOREMAT-NEXT:    add a3, a0, s1
-; NOREMAT-NEXT:    vle32.v v26, (a3)
 ; NOREMAT-NEXT:    vle32.v v28, (a3)
+; NOREMAT-NEXT:    add a4, a0, a4
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v26, v4
+; NOREMAT-NEXT:    vle32.v v26, (a3)
 ; NOREMAT-NEXT:    csrr a3, vlenb
 ; NOREMAT-NEXT:    slli a3, a3, 2
 ; NOREMAT-NEXT:    add a3, sp, a3
+; NOREMAT-NEXT:    vle32.v v0, (a4)
 ; NOREMAT-NEXT:    addi a3, a3, 288
-; NOREMAT-NEXT:    vs2r.v v28, (a3) # Unknown-size Folded Spill
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
 ; NOREMAT-NEXT:    addiw ra, s1, 512
+; NOREMAT-NEXT:    vle32.v v22, (a4)
+; NOREMAT-NEXT:    vs2r.v v28, (a3) # Unknown-size Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, ra
+; NOREMAT-NEXT:    slli s11, s10, 10
 ; NOREMAT-NEXT:    vle32.v v28, (a3)
 ; NOREMAT-NEXT:    vle32.v v30, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v0
-; NOREMAT-NEXT:    slli s11, s10, 10
 ; NOREMAT-NEXT:    add a3, a0, s11
+; NOREMAT-NEXT:    addiw s10, s1, 1536
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
 ; NOREMAT-NEXT:    vle32.v v4, (a3)
 ; NOREMAT-NEXT:    vle32.v v18, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v12
-; NOREMAT-NEXT:    addiw s10, s1, 1536
 ; NOREMAT-NEXT:    add a3, a0, s10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v0
 ; NOREMAT-NEXT:    vle32.v v2, (a3)
 ; NOREMAT-NEXT:    vle32.v v20, (a3)
 ; NOREMAT-NEXT:    addi a3, sp, 288
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v12
 ; NOREMAT-NEXT:    vl2r.v v12, (a3) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v8
 ; NOREMAT-NEXT:    slli s9, s8, 11
+; NOREMAT-NEXT:    lui t0, 6
 ; NOREMAT-NEXT:    add a3, a0, s9
+; NOREMAT-NEXT:    addiw s8, t0, -1536
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v8
 ; NOREMAT-NEXT:    vle32.v v0, (a3)
 ; NOREMAT-NEXT:    vle32.v v12, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v24, v10
-; NOREMAT-NEXT:    lui t0, 6
-; NOREMAT-NEXT:    addiw s8, t0, -1536
 ; NOREMAT-NEXT:    add a3, a0, s8
+; NOREMAT-NEXT:    slli s7, s6, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v24, v10
 ; NOREMAT-NEXT:    vle32.v v8, (a3)
 ; NOREMAT-NEXT:    vle32.v v22, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
-; NOREMAT-NEXT:    slli s7, s6, 10
 ; NOREMAT-NEXT:    add a3, a0, s7
+; NOREMAT-NEXT:    addiw s6, t0, -512
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
 ; NOREMAT-NEXT:    vle32.v v10, (a3)
 ; NOREMAT-NEXT:    vle32.v v14, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v26
-; NOREMAT-NEXT:    addiw s6, t0, -512
 ; NOREMAT-NEXT:    add a3, a0, s6
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v26
 ; NOREMAT-NEXT:    vle32.v v6, (a3)
 ; NOREMAT-NEXT:    vle32.v v16, (a3)
 ; NOREMAT-NEXT:    csrr a3, vlenb
@@ -352,17 +352,16 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    add a3, sp, a3
 ; NOREMAT-NEXT:    addi a3, a3, 288
 ; NOREMAT-NEXT:    vl2r.v v24, (a3) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v24, v28
 ; NOREMAT-NEXT:    add a3, a0, t0
-; NOREMAT-NEXT:    vle32.v v24, (a3)
 ; NOREMAT-NEXT:    vle32.v v26, (a3)
+; NOREMAT-NEXT:    addiw s5, t0, 512
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v24, v28
+; NOREMAT-NEXT:    vle32.v v24, (a3)
 ; NOREMAT-NEXT:    csrr a3, vlenb
 ; NOREMAT-NEXT:    slli a3, a3, 2
 ; NOREMAT-NEXT:    add a3, sp, a3
 ; NOREMAT-NEXT:    addi a3, a3, 288
 ; NOREMAT-NEXT:    vs2r.v v26, (a3) # Unknown-size Folded Spill
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v30, v4
-; NOREMAT-NEXT:    addiw s5, t0, 512
 ; NOREMAT-NEXT:    add a3, a0, s5
 ; NOREMAT-NEXT:    vle32.v v26, (a3)
 ; NOREMAT-NEXT:    vle32.v v28, (a3)
@@ -370,36 +369,37 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    slli a3, a3, 1
 ; NOREMAT-NEXT:    add a3, sp, a3
 ; NOREMAT-NEXT:    addi a3, a3, 288
-; NOREMAT-NEXT:    vs2r.v v28, (a3) # Unknown-size Folded Spill
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
 ; NOREMAT-NEXT:    slli s4, s3, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v30, v4
+; NOREMAT-NEXT:    vs2r.v v28, (a3) # Unknown-size Folded Spill
 ; NOREMAT-NEXT:    add a3, a0, s4
+; NOREMAT-NEXT:    addiw s3, t0, 1536
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
 ; NOREMAT-NEXT:    vle32.v v28, (a3)
 ; NOREMAT-NEXT:    vle32.v v18, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v0
-; NOREMAT-NEXT:    addiw s3, t0, 1536
 ; NOREMAT-NEXT:    add a3, a0, s3
+; NOREMAT-NEXT:    slli s2, s2, 11
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v0
 ; NOREMAT-NEXT:    vle32.v v30, (a3)
 ; NOREMAT-NEXT:    vle32.v v20, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v8
-; NOREMAT-NEXT:    slli s2, s2, 11
 ; NOREMAT-NEXT:    add a3, a0, s2
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v8
 ; NOREMAT-NEXT:    vle32.v v4, (a3)
 ; NOREMAT-NEXT:    vle32.v v12, (a3)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v10
 ; NOREMAT-NEXT:    lui a3, 7
 ; NOREMAT-NEXT:    addiw s0, a3, -1536
 ; NOREMAT-NEXT:    add a4, a0, s0
+; NOREMAT-NEXT:    slli t6, t5, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v10
 ; NOREMAT-NEXT:    vle32.v v2, (a4)
 ; NOREMAT-NEXT:    vle32.v v22, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
-; NOREMAT-NEXT:    slli t6, t5, 10
 ; NOREMAT-NEXT:    add a4, a0, t6
+; NOREMAT-NEXT:    addiw t5, a3, -512
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
 ; NOREMAT-NEXT:    vle32.v v0, (a4)
 ; NOREMAT-NEXT:    vle32.v v14, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v24
-; NOREMAT-NEXT:    addiw t5, a3, -512
 ; NOREMAT-NEXT:    add a4, a0, t5
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v24
 ; NOREMAT-NEXT:    vle32.v v6, (a4)
 ; NOREMAT-NEXT:    vle32.v v16, (a4)
 ; NOREMAT-NEXT:    csrr a4, vlenb
@@ -407,8 +407,10 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    add a4, sp, a4
 ; NOREMAT-NEXT:    addi a4, a4, 288
 ; NOREMAT-NEXT:    vl2r.v v8, (a4) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
 ; NOREMAT-NEXT:    add a4, a0, a3
+; NOREMAT-NEXT:    addiw t4, a3, 512
+; NOREMAT-NEXT:    slli t3, t2, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
 ; NOREMAT-NEXT:    vle32.v v26, (a4)
 ; NOREMAT-NEXT:    vle32.v v8, (a4)
 ; NOREMAT-NEXT:    csrr a4, vlenb
@@ -416,47 +418,45 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    add a4, sp, a4
 ; NOREMAT-NEXT:    addi a4, a4, 288
 ; NOREMAT-NEXT:    vl2r.v v10, (a4) # Unknown-size Folded Reload
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v28
-; NOREMAT-NEXT:    addiw t4, a3, 512
 ; NOREMAT-NEXT:    add a4, a0, t4
-; NOREMAT-NEXT:    vle32.v v10, (a4)
+; NOREMAT-NEXT:    slli t1, a2, 11
 ; NOREMAT-NEXT:    vle32.v v24, (a4)
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v10, v28
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v18, v30
-; NOREMAT-NEXT:    slli t3, t2, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v4
+; NOREMAT-NEXT:    vle32.v v10, (a4)
 ; NOREMAT-NEXT:    add a4, a0, t3
+; NOREMAT-NEXT:    addiw t2, a3, 1536
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v2
+; NOREMAT-NEXT:    add a2, a0, t1
 ; NOREMAT-NEXT:    vle32.v v18, (a4)
 ; NOREMAT-NEXT:    vle32.v v28, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v20, v4
-; NOREMAT-NEXT:    addiw t2, a3, 1536
 ; NOREMAT-NEXT:    add a4, a0, t2
-; NOREMAT-NEXT:    vle32.v v20, (a4)
-; NOREMAT-NEXT:    vle32.v v30, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v12, v2
-; NOREMAT-NEXT:    slli t1, a2, 11
-; NOREMAT-NEXT:    add a2, a0, t1
 ; NOREMAT-NEXT:    vle32.v v12, (a2)
 ; NOREMAT-NEXT:    vle32.v v4, (a2)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v22, v0
 ; NOREMAT-NEXT:    lui a2, 8
+; NOREMAT-NEXT:    vle32.v v20, (a4)
 ; NOREMAT-NEXT:    addiw a7, a2, -1536
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
+; NOREMAT-NEXT:    vle32.v v30, (a4)
 ; NOREMAT-NEXT:    add a4, a0, a7
+; NOREMAT-NEXT:    slli a6, a5, 10
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v26
 ; NOREMAT-NEXT:    vle32.v v22, (a4)
 ; NOREMAT-NEXT:    vle32.v v2, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
-; NOREMAT-NEXT:    slli a6, a5, 10
 ; NOREMAT-NEXT:    add a4, a0, a6
+; NOREMAT-NEXT:    addiw a5, a2, -512
+; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v10
 ; NOREMAT-NEXT:    vle32.v v14, (a4)
 ; NOREMAT-NEXT:    vle32.v v6, (a4)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v16, v26
-; NOREMAT-NEXT:    addiw a5, a2, -512
 ; NOREMAT-NEXT:    add a4, a0, a5
-; NOREMAT-NEXT:    vle32.v v16, (a4)
-; NOREMAT-NEXT:    vle32.v v26, (a4)
-; NOREMAT-NEXT:    add a0, a0, a2
-; NOREMAT-NEXT:    vle32.v v0, (a0)
-; NOREMAT-NEXT:    sf.vc.vv 3, 0, v8, v10
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v24, v18
+; NOREMAT-NEXT:    vle32.v v16, (a4)
+; NOREMAT-NEXT:    add a0, a0, a2
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v28, v20
+; NOREMAT-NEXT:    vle32.v v26, (a4)
+; NOREMAT-NEXT:    vle32.v v0, (a0)
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v30, v12
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v4, v22
 ; NOREMAT-NEXT:    sf.vc.vv 3, 0, v2, v14
@@ -468,300 +468,300 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    addi a0, a1, 1536
 ; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    ld a0, 272(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 264(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 256(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 248(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    lui a0, 1
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 240(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 232(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 224(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 216(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 208(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 200(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 192(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    lui a0, 2
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 184(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 176(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 168(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 160(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 152(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 144(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 136(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    lui a0, 3
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 128(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 120(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 112(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 104(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 96(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 88(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 80(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    lui a0, 4
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 72(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 64(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 56(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 48(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 40(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 32(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    ld a0, 24(sp) # 8-byte Folded Reload
-; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    vse32.v v8, (a0)
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s1, a1, s1
-; NOREMAT-NEXT:    vse32.v v8, (s1)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add ra, a1, ra
-; NOREMAT-NEXT:    vse32.v v8, (ra)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 264(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s11, a1, s11
-; NOREMAT-NEXT:    vse32.v v8, (s11)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s10, a1, s10
-; NOREMAT-NEXT:    vse32.v v8, (s10)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 256(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s9, a1, s9
-; NOREMAT-NEXT:    vse32.v v8, (s9)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s8, a1, s8
-; NOREMAT-NEXT:    vse32.v v8, (s8)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 248(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s7, a1, s7
-; NOREMAT-NEXT:    vse32.v v8, (s7)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s6, a1, s6
-; NOREMAT-NEXT:    vse32.v v8, (s6)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    lui a0, 1
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 240(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t0, a1, t0
-; NOREMAT-NEXT:    vse32.v v8, (t0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s5, a1, s5
-; NOREMAT-NEXT:    vse32.v v8, (s5)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 232(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s4, a1, s4
-; NOREMAT-NEXT:    vse32.v v8, (s4)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s3, a1, s3
-; NOREMAT-NEXT:    vse32.v v8, (s3)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 224(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s2, a1, s2
-; NOREMAT-NEXT:    vse32.v v8, (s2)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add s0, a1, s0
-; NOREMAT-NEXT:    vse32.v v8, (s0)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 216(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t6, a1, t6
-; NOREMAT-NEXT:    vse32.v v8, (t6)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t5, a1, t5
-; NOREMAT-NEXT:    vse32.v v8, (t5)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 208(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a3, a1, a3
-; NOREMAT-NEXT:    vse32.v v8, (a3)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t4, a1, t4
-; NOREMAT-NEXT:    vse32.v v8, (t4)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 200(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t3, a1, t3
-; NOREMAT-NEXT:    vse32.v v8, (t3)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t2, a1, t2
-; NOREMAT-NEXT:    vse32.v v8, (t2)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 192(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add t1, a1, t1
-; NOREMAT-NEXT:    vse32.v v8, (t1)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a7, a1, a7
-; NOREMAT-NEXT:    vse32.v v8, (a7)
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    lui a0, 2
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 184(sp) # 8-byte Folded Reload
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a6, a1, a6
+; NOREMAT-NEXT:    add a5, a1, a5
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 176(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 168(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 160(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 152(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 144(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 136(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    lui a0, 3
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 128(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 120(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 112(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 104(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 96(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 88(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 80(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    lui a0, 4
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 72(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 64(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 56(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 48(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 40(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 32(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    ld a0, 24(sp) # 8-byte Folded Reload
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    add a0, a1, a0
+; NOREMAT-NEXT:    vse32.v v8, (a0)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s1)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (ra)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s11)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s10)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s9)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s8)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s7)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s6)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t0)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s5)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s4)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s3)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s2)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (s0)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t6)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t5)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (a3)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t4)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t3)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t2)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (t1)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (a7)
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a6)
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    add a5, a1, a5
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
-; NOREMAT-NEXT:    vse32.v v8, (a5)
 ; NOREMAT-NEXT:    add a0, a1, a2
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v8, (a5)
 ; NOREMAT-NEXT:    vse32.v v10, (a0)
 ; NOREMAT-NEXT:    addiw a0, a2, 512
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a0)
 ; NOREMAT-NEXT:    addiw a0, a2, 1024
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
 ; NOREMAT-NEXT:    vse32.v v10, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    addiw a0, a2, 1536
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a0)
 ; NOREMAT-NEXT:    li a0, 17
 ; NOREMAT-NEXT:    slli a0, a0, 11
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v10, (a0)
 ; NOREMAT-NEXT:    lui a0, 9
 ; NOREMAT-NEXT:    addiw a2, a0, -1536
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, -1024
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, -512
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a2)
 ; NOREMAT-NEXT:    add a2, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, 512
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, 1024
-; NOREMAT-NEXT:    add a2, a1, a2
-; NOREMAT-NEXT:    vse32.v v10, (a2)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    addiw a0, a0, 1536
+; NOREMAT-NEXT:    add a2, a1, a2
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
+; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    vse32.v v8, (a0)
 ; NOREMAT-NEXT:    li a0, 19
 ; NOREMAT-NEXT:    slli a0, a0, 11
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    add a0, a1, a0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v10, (a0)
 ; NOREMAT-NEXT:    lui a0, 10
 ; NOREMAT-NEXT:    addiw a2, a0, -1536
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, -1024
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    addiw a2, a0, -512
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add a2, a1, a2
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; NOREMAT-NEXT:    vse32.v v8, (a2)
 ; NOREMAT-NEXT:    add a2, a1, a0
-; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    addiw a0, a0, 512
 ; NOREMAT-NEXT:    add a0, a1, a0
 ; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; NOREMAT-NEXT:    vse32.v v10, (a2)
 ; NOREMAT-NEXT:    vse32.v v8, (a0)
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    csrr a0, vlenb
 ; NOREMAT-NEXT:    li a1, 6
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    mul a0, a0, a1
+; NOREMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; NOREMAT-NEXT:    add sp, sp, a0
 ; NOREMAT-NEXT:    .cfi_def_cfa sp, 400
 ; NOREMAT-NEXT:    ld ra, 392(sp) # 8-byte Folded Reload
@@ -826,11 +826,12 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    .cfi_offset s11, -104
 ; REMAT-NEXT:    li a2, 32
 ; REMAT-NEXT:    vsetvli zero, a2, e32, m2, ta, ma
-; REMAT-NEXT:    vle32.v v8, (a0)
 ; REMAT-NEXT:    addi a2, a0, 512
+; REMAT-NEXT:    vle32.v v8, (a0)
 ; REMAT-NEXT:    vle32.v v10, (a2)
 ; REMAT-NEXT:    addi a2, a0, 1024
 ; REMAT-NEXT:    vle32.v v12, (a2)
+; REMAT-NEXT:    lui ra, 5
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v10
 ; REMAT-NEXT:    vle32.v v8, (a2)
 ; REMAT-NEXT:    addi a2, a0, 1536
@@ -947,11 +948,11 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    slli a2, a2, 10
 ; REMAT-NEXT:    add a2, a0, a2
 ; REMAT-NEXT:    vle32.v v26, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; REMAT-NEXT:    vle32.v v12, (a2)
 ; REMAT-NEXT:    li a2, 23
 ; REMAT-NEXT:    slli a2, a2, 9
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v14
 ; REMAT-NEXT:    vle32.v v28, (a2)
 ; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    lui a2, 3
@@ -978,218 +979,217 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    add a2, a0, a2
 ; REMAT-NEXT:    vle32.v v24, (a2)
 ; REMAT-NEXT:    vle32.v v8, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v26
 ; REMAT-NEXT:    li a2, 29
 ; REMAT-NEXT:    slli a2, a2, 9
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v26
 ; REMAT-NEXT:    vle32.v v26, (a2)
 ; REMAT-NEXT:    vle32.v v10, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v28
 ; REMAT-NEXT:    li a2, 15
 ; REMAT-NEXT:    slli a2, a2, 10
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v28
 ; REMAT-NEXT:    vle32.v v28, (a2)
 ; REMAT-NEXT:    vle32.v v12, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v30
 ; REMAT-NEXT:    li a2, 31
 ; REMAT-NEXT:    slli a2, a2, 9
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v30
 ; REMAT-NEXT:    vle32.v v30, (a2)
 ; REMAT-NEXT:    vle32.v v14, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v16, v6
 ; REMAT-NEXT:    lui a2, 4
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v16, v6
 ; REMAT-NEXT:    vle32.v v6, (a2)
 ; REMAT-NEXT:    vle32.v v16, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v4
 ; REMAT-NEXT:    lui a2, 4
 ; REMAT-NEXT:    addiw a2, a2, 512
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v4
 ; REMAT-NEXT:    vle32.v v4, (a2)
 ; REMAT-NEXT:    vle32.v v18, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v2
 ; REMAT-NEXT:    li a2, 17
 ; REMAT-NEXT:    slli a2, a2, 10
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v2
 ; REMAT-NEXT:    vle32.v v2, (a2)
 ; REMAT-NEXT:    vle32.v v20, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v24
 ; REMAT-NEXT:    lui a2, 4
 ; REMAT-NEXT:    addiw a2, a2, 1536
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v24
 ; REMAT-NEXT:    vle32.v v24, (a2)
 ; REMAT-NEXT:    vle32.v v22, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
 ; REMAT-NEXT:    li a2, 9
 ; REMAT-NEXT:    slli a2, a2, 11
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v26
 ; REMAT-NEXT:    vle32.v v26, (a2)
 ; REMAT-NEXT:    vle32.v v8, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v28
 ; REMAT-NEXT:    lui a2, 5
 ; REMAT-NEXT:    addiw a2, a2, -1536
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v28
 ; REMAT-NEXT:    vle32.v v28, (a2)
 ; REMAT-NEXT:    vle32.v v10, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v30
 ; REMAT-NEXT:    li a2, 19
+; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v30
 ; REMAT-NEXT:    slli a2, a2, 10
 ; REMAT-NEXT:    add a2, a0, a2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
+; REMAT-NEXT:    addiw ra, ra, -512
 ; REMAT-NEXT:    vle32.v v30, (a2)
 ; REMAT-NEXT:    vle32.v v12, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v6
-; REMAT-NEXT:    lui ra, 5
-; REMAT-NEXT:    addiw ra, ra, -512
 ; REMAT-NEXT:    add a2, a0, ra
-; REMAT-NEXT:    vle32.v v6, (a2)
-; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v16, v4
 ; REMAT-NEXT:    lui s11, 5
+; REMAT-NEXT:    lui s10, 5
+; REMAT-NEXT:    vle32.v v6, (a2)
+; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    add a2, a0, s11
+; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
+; REMAT-NEXT:    addiw s10, s10, 512
+; REMAT-NEXT:    li s9, 21
 ; REMAT-NEXT:    vle32.v v4, (a2)
 ; REMAT-NEXT:    vle32.v v16, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v2
-; REMAT-NEXT:    lui s10, 5
-; REMAT-NEXT:    addiw s10, s10, 512
 ; REMAT-NEXT:    add a2, a0, s10
+; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v24
+; REMAT-NEXT:    slli s9, s9, 10
+; REMAT-NEXT:    lui s8, 5
 ; REMAT-NEXT:    vle32.v v2, (a2)
 ; REMAT-NEXT:    vle32.v v18, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v24
-; REMAT-NEXT:    li s9, 21
-; REMAT-NEXT:    slli s9, s9, 10
 ; REMAT-NEXT:    add a2, a0, s9
+; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v26
+; REMAT-NEXT:    addiw s8, s8, 1536
+; REMAT-NEXT:    li s7, 11
 ; REMAT-NEXT:    vle32.v v24, (a2)
 ; REMAT-NEXT:    vle32.v v20, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v26
-; REMAT-NEXT:    lui s8, 5
-; REMAT-NEXT:    addiw s8, s8, 1536
 ; REMAT-NEXT:    add a2, a0, s8
+; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v28
+; REMAT-NEXT:    slli s7, s7, 11
+; REMAT-NEXT:    lui s6, 6
 ; REMAT-NEXT:    vle32.v v26, (a2)
 ; REMAT-NEXT:    vle32.v v22, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v28
-; REMAT-NEXT:    li s7, 11
-; REMAT-NEXT:    slli s7, s7, 11
 ; REMAT-NEXT:    add a2, a0, s7
+; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v30
+; REMAT-NEXT:    addiw s6, s6, -1536
+; REMAT-NEXT:    li s5, 23
 ; REMAT-NEXT:    vle32.v v28, (a2)
 ; REMAT-NEXT:    vle32.v v8, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v30
-; REMAT-NEXT:    lui s6, 6
-; REMAT-NEXT:    addiw s6, s6, -1536
 ; REMAT-NEXT:    add a2, a0, s6
+; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v6
+; REMAT-NEXT:    slli s5, s5, 10
+; REMAT-NEXT:    lui s4, 6
 ; REMAT-NEXT:    vle32.v v30, (a2)
 ; REMAT-NEXT:    vle32.v v10, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v6
-; REMAT-NEXT:    li s5, 23
-; REMAT-NEXT:    slli s5, s5, 10
 ; REMAT-NEXT:    add a2, a0, s5
+; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v4
+; REMAT-NEXT:    addiw s4, s4, -512
 ; REMAT-NEXT:    vle32.v v6, (a2)
 ; REMAT-NEXT:    vle32.v v12, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v4
-; REMAT-NEXT:    lui s4, 6
-; REMAT-NEXT:    addiw s4, s4, -512
 ; REMAT-NEXT:    add a2, a0, s4
-; REMAT-NEXT:    vle32.v v4, (a2)
-; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v16, v2
 ; REMAT-NEXT:    lui s3, 6
+; REMAT-NEXT:    lui s2, 6
+; REMAT-NEXT:    vle32.v v4, (a2)
+; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    add a2, a0, s3
+; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v24
+; REMAT-NEXT:    addiw s2, s2, 512
+; REMAT-NEXT:    li s1, 25
 ; REMAT-NEXT:    vle32.v v2, (a2)
 ; REMAT-NEXT:    vle32.v v16, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v24
-; REMAT-NEXT:    lui s2, 6
-; REMAT-NEXT:    addiw s2, s2, 512
 ; REMAT-NEXT:    add a2, a0, s2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v26
+; REMAT-NEXT:    slli s1, s1, 10
+; REMAT-NEXT:    lui s0, 6
 ; REMAT-NEXT:    vle32.v v0, (a2)
 ; REMAT-NEXT:    vle32.v v18, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v26
-; REMAT-NEXT:    li s1, 25
-; REMAT-NEXT:    slli s1, s1, 10
 ; REMAT-NEXT:    add a2, a0, s1
+; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v28
+; REMAT-NEXT:    addiw s0, s0, 1536
+; REMAT-NEXT:    li t6, 13
 ; REMAT-NEXT:    vle32.v v26, (a2)
 ; REMAT-NEXT:    vle32.v v20, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v28
-; REMAT-NEXT:    lui s0, 6
-; REMAT-NEXT:    addiw s0, s0, 1536
 ; REMAT-NEXT:    add a2, a0, s0
+; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v30
+; REMAT-NEXT:    slli t6, t6, 11
+; REMAT-NEXT:    lui t5, 7
 ; REMAT-NEXT:    vle32.v v28, (a2)
 ; REMAT-NEXT:    vle32.v v22, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v30
-; REMAT-NEXT:    li t6, 13
-; REMAT-NEXT:    slli t6, t6, 11
 ; REMAT-NEXT:    add a2, a0, t6
+; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v6
+; REMAT-NEXT:    addiw t5, t5, -1536
+; REMAT-NEXT:    li t4, 27
 ; REMAT-NEXT:    vle32.v v30, (a2)
 ; REMAT-NEXT:    vle32.v v24, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v6
-; REMAT-NEXT:    lui t5, 7
-; REMAT-NEXT:    addiw t5, t5, -1536
 ; REMAT-NEXT:    add a2, a0, t5
+; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v4
+; REMAT-NEXT:    slli t4, t4, 10
+; REMAT-NEXT:    lui t3, 7
 ; REMAT-NEXT:    vle32.v v6, (a2)
 ; REMAT-NEXT:    vle32.v v10, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v4
-; REMAT-NEXT:    li t4, 27
-; REMAT-NEXT:    slli t4, t4, 10
 ; REMAT-NEXT:    add a2, a0, t4
+; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v2
+; REMAT-NEXT:    addiw t3, t3, -512
 ; REMAT-NEXT:    vle32.v v4, (a2)
 ; REMAT-NEXT:    vle32.v v12, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v2
-; REMAT-NEXT:    lui t3, 7
-; REMAT-NEXT:    addiw t3, t3, -512
 ; REMAT-NEXT:    add a2, a0, t3
-; REMAT-NEXT:    vle32.v v2, (a2)
-; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v16, v0
 ; REMAT-NEXT:    lui t2, 7
+; REMAT-NEXT:    lui t1, 7
+; REMAT-NEXT:    vle32.v v2, (a2)
+; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    add a2, a0, t2
+; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v26
+; REMAT-NEXT:    addiw t1, t1, 512
+; REMAT-NEXT:    li t0, 29
 ; REMAT-NEXT:    vle32.v v0, (a2)
 ; REMAT-NEXT:    vle32.v v8, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v26
-; REMAT-NEXT:    lui t1, 7
-; REMAT-NEXT:    addiw t1, t1, 512
 ; REMAT-NEXT:    add a2, a0, t1
+; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v28
+; REMAT-NEXT:    slli t0, t0, 10
+; REMAT-NEXT:    lui a7, 7
 ; REMAT-NEXT:    vle32.v v16, (a2)
 ; REMAT-NEXT:    vle32.v v18, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v20, v28
-; REMAT-NEXT:    li t0, 29
-; REMAT-NEXT:    slli t0, t0, 10
 ; REMAT-NEXT:    add a2, a0, t0
+; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v30
+; REMAT-NEXT:    addiw a7, a7, 1536
+; REMAT-NEXT:    li a6, 15
 ; REMAT-NEXT:    vle32.v v20, (a2)
 ; REMAT-NEXT:    vle32.v v26, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v22, v30
-; REMAT-NEXT:    lui a7, 7
-; REMAT-NEXT:    addiw a7, a7, 1536
 ; REMAT-NEXT:    add a2, a0, a7
+; REMAT-NEXT:    sf.vc.vv 3, 0, v24, v6
+; REMAT-NEXT:    slli a6, a6, 11
+; REMAT-NEXT:    lui a5, 8
 ; REMAT-NEXT:    vle32.v v22, (a2)
 ; REMAT-NEXT:    vle32.v v28, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v24, v6
-; REMAT-NEXT:    li a6, 15
-; REMAT-NEXT:    slli a6, a6, 11
 ; REMAT-NEXT:    add a2, a0, a6
+; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v4
+; REMAT-NEXT:    addiw a5, a5, -1536
+; REMAT-NEXT:    li a4, 31
 ; REMAT-NEXT:    vle32.v v24, (a2)
 ; REMAT-NEXT:    vle32.v v30, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v10, v4
-; REMAT-NEXT:    lui a5, 8
-; REMAT-NEXT:    addiw a5, a5, -1536
 ; REMAT-NEXT:    add a2, a0, a5
+; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v2
+; REMAT-NEXT:    slli a4, a4, 10
+; REMAT-NEXT:    lui a3, 8
 ; REMAT-NEXT:    vle32.v v10, (a2)
 ; REMAT-NEXT:    vle32.v v6, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v12, v2
-; REMAT-NEXT:    li a4, 31
-; REMAT-NEXT:    slli a4, a4, 10
 ; REMAT-NEXT:    add a2, a0, a4
+; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v0
+; REMAT-NEXT:    addiw a3, a3, -512
 ; REMAT-NEXT:    vle32.v v12, (a2)
 ; REMAT-NEXT:    vle32.v v4, (a2)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v14, v0
-; REMAT-NEXT:    lui a3, 8
-; REMAT-NEXT:    addiw a3, a3, -512
 ; REMAT-NEXT:    add a2, a0, a3
+; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v16
 ; REMAT-NEXT:    vle32.v v14, (a2)
 ; REMAT-NEXT:    vle32.v v2, (a2)
 ; REMAT-NEXT:    lui a2, 8
-; REMAT-NEXT:    add a0, a0, a2
-; REMAT-NEXT:    vle32.v v0, (a0)
-; REMAT-NEXT:    sf.vc.vv 3, 0, v8, v16
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v18, v20
+; REMAT-NEXT:    add a0, a0, a2
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v26, v22
+; REMAT-NEXT:    vle32.v v0, (a0)
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v28, v24
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v30, v10
 ; REMAT-NEXT:    sf.vc.vv 3, 0, v6, v12
@@ -1201,175 +1201,175 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    addi a0, a1, 1536
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 1
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 5
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 3
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 7
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 1
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 9
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 5
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 11
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 3
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 13
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 7
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 15
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 2
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 17
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 9
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 19
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 5
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 21
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 11
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 23
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 3
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 25
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 13
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 27
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 7
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 29
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 15
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 31
 ; REMAT-NEXT:    slli a0, a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 4
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 4
 ; REMAT-NEXT:    addiw a0, a0, 512
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 17
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 4
 ; REMAT-NEXT:    addiw a0, a0, 1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 9
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    lui a0, 5
 ; REMAT-NEXT:    addiw a0, a0, -1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    li a0, 19
 ; REMAT-NEXT:    slli a0, a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
@@ -1446,95 +1446,90 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    vse32.v v8, (a4)
 ; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a3, a1, a3
+; REMAT-NEXT:    lui a0, 8
 ; REMAT-NEXT:    vse32.v v8, (a3)
 ; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; REMAT-NEXT:    addiw a0, a0, 512
 ; REMAT-NEXT:    add a2, a1, a2
 ; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
-; REMAT-NEXT:    vse32.v v8, (a2)
-; REMAT-NEXT:    lui a0, 8
-; REMAT-NEXT:    addiw a0, a0, 512
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; REMAT-NEXT:    vse32.v v8, (a2)
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 8
 ; REMAT-NEXT:    addiw a0, a0, 1024
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 8
 ; REMAT-NEXT:    addiw a0, a0, 1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    li a0, 17
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, -1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, -1024
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, -512
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 9
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, 512
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, 1024
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 9
 ; REMAT-NEXT:    addiw a0, a0, 1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    li a0, 19
 ; REMAT-NEXT:    slli a0, a0, 11
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 10
 ; REMAT-NEXT:    addiw a0, a0, -1536
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 10
 ; REMAT-NEXT:    addiw a0, a0, -1024
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 10
 ; REMAT-NEXT:    addiw a0, a0, -512
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v10, 0
 ; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    vse32.v v10, (a0)
 ; REMAT-NEXT:    lui a0, 10
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    add a0, a1, a0
 ; REMAT-NEXT:    vse32.v v8, (a0)
 ; REMAT-NEXT:    lui a0, 10
 ; REMAT-NEXT:    addiw a0, a0, 512
-; REMAT-NEXT:    add a0, a1, a0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; REMAT-NEXT:    vse32.v v8, (a0)
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
-; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    ld ra, 104(sp) # 8-byte Folded Reload
 ; REMAT-NEXT:    ld s0, 96(sp) # 8-byte Folded Reload
 ; REMAT-NEXT:    ld s1, 88(sp) # 8-byte Folded Reload
@@ -1548,6 +1543,11 @@ define void @test(ptr %0, ptr %1, i64 %2) {
 ; REMAT-NEXT:    ld s9, 24(sp) # 8-byte Folded Reload
 ; REMAT-NEXT:    ld s10, 16(sp) # 8-byte Folded Reload
 ; REMAT-NEXT:    ld s11, 8(sp) # 8-byte Folded Reload
+; REMAT-NEXT:    add a0, a1, a0
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; REMAT-NEXT:    vse32.v v8, (a0)
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
+; REMAT-NEXT:    sf.vc.v.i 2, 0, v8, 0
 ; REMAT-NEXT:    .cfi_restore ra
 ; REMAT-NEXT:    .cfi_restore s0
 ; REMAT-NEXT:    .cfi_restore s1

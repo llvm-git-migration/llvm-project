@@ -94,11 +94,11 @@ define i1 @sink_li(ptr %text, ptr %text.addr.0) nounwind {
 ; CHECK-NEXT:    jalr s1
 ; CHECK-NEXT:    li a1, 1
 ; CHECK-NEXT:  .LBB0_26: # %return
-; CHECK-NEXT:    mv a0, a1
 ; CHECK-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    mv a0, a1
 ; CHECK-NEXT:    addi sp, sp, 32
 ; CHECK-NEXT:    ret
 entry:

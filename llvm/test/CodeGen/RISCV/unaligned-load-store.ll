@@ -86,12 +86,12 @@ define i32 @load_i32(ptr %p) {
 ; SLOWBASE-LABEL: load_i32:
 ; SLOWBASE:       # %bb.0:
 ; SLOWBASE-NEXT:    lbu a1, 1(a0)
-; SLOWBASE-NEXT:    lbu a2, 0(a0)
 ; SLOWBASE-NEXT:    lbu a3, 2(a0)
+; SLOWBASE-NEXT:    lbu a2, 0(a0)
 ; SLOWBASE-NEXT:    lbu a0, 3(a0)
 ; SLOWBASE-NEXT:    slli a1, a1, 8
-; SLOWBASE-NEXT:    or a1, a1, a2
 ; SLOWBASE-NEXT:    slli a3, a3, 16
+; SLOWBASE-NEXT:    or a1, a1, a2
 ; SLOWBASE-NEXT:    slli a0, a0, 24
 ; SLOWBASE-NEXT:    or a0, a0, a3
 ; SLOWBASE-NEXT:    or a0, a0, a1
@@ -133,13 +133,13 @@ define i64 @load_i64(ptr %p) {
 ; RV32I-LABEL: load_i64:
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    lbu a1, 1(a0)
-; RV32I-NEXT:    lbu a2, 0(a0)
 ; RV32I-NEXT:    lbu a3, 2(a0)
 ; RV32I-NEXT:    lbu a4, 3(a0)
+; RV32I-NEXT:    lbu a2, 0(a0)
 ; RV32I-NEXT:    slli a1, a1, 8
-; RV32I-NEXT:    or a1, a1, a2
 ; RV32I-NEXT:    slli a3, a3, 16
 ; RV32I-NEXT:    slli a4, a4, 24
+; RV32I-NEXT:    or a1, a1, a2
 ; RV32I-NEXT:    or a2, a4, a3
 ; RV32I-NEXT:    lbu a3, 4(a0)
 ; RV32I-NEXT:    lbu a4, 5(a0)
@@ -158,13 +158,13 @@ define i64 @load_i64(ptr %p) {
 ; RV64I-LABEL: load_i64:
 ; RV64I:       # %bb.0:
 ; RV64I-NEXT:    lbu a1, 1(a0)
-; RV64I-NEXT:    lbu a2, 0(a0)
 ; RV64I-NEXT:    lbu a3, 2(a0)
 ; RV64I-NEXT:    lbu a4, 3(a0)
+; RV64I-NEXT:    lbu a2, 0(a0)
 ; RV64I-NEXT:    slli a1, a1, 8
-; RV64I-NEXT:    or a1, a1, a2
 ; RV64I-NEXT:    slli a3, a3, 16
 ; RV64I-NEXT:    slli a4, a4, 24
+; RV64I-NEXT:    or a1, a1, a2
 ; RV64I-NEXT:    or a3, a4, a3
 ; RV64I-NEXT:    lbu a2, 4(a0)
 ; RV64I-NEXT:    lbu a4, 5(a0)
@@ -205,11 +205,11 @@ define i64 @load_i64(ptr %p) {
 ; RV64IZBKB-NEXT:    lbu a2, 5(a0)
 ; RV64IZBKB-NEXT:    lbu a3, 6(a0)
 ; RV64IZBKB-NEXT:    lbu a4, 7(a0)
+; RV64IZBKB-NEXT:    lbu a5, 2(a0)
 ; RV64IZBKB-NEXT:    packh a1, a1, a2
 ; RV64IZBKB-NEXT:    packh a2, a3, a4
 ; RV64IZBKB-NEXT:    lbu a3, 0(a0)
 ; RV64IZBKB-NEXT:    lbu a4, 1(a0)
-; RV64IZBKB-NEXT:    lbu a5, 2(a0)
 ; RV64IZBKB-NEXT:    lbu a0, 3(a0)
 ; RV64IZBKB-NEXT:    slli a2, a2, 16
 ; RV64IZBKB-NEXT:    or a1, a2, a1
@@ -563,8 +563,8 @@ define void @store_large_constant(ptr %x) {
 ; RV32I-FAST-LABEL: store_large_constant:
 ; RV32I-FAST:       # %bb.0:
 ; RV32I-FAST-NEXT:    lui a1, 1043916
-; RV32I-FAST-NEXT:    addi a1, a1, -1384
 ; RV32I-FAST-NEXT:    lui a2, 484675
+; RV32I-FAST-NEXT:    addi a1, a1, -1384
 ; RV32I-FAST-NEXT:    addi a2, a2, 528
 ; RV32I-FAST-NEXT:    sw a2, 0(a0)
 ; RV32I-FAST-NEXT:    sw a1, 4(a0)

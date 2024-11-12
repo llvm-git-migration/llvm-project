@@ -78,6 +78,7 @@ define i64 @ctz_nxv8i1_no_range(<vscale x 8 x i16> %a) {
 ; RV32-NEXT:    vlse64.v v8, (a2), zero
 ; RV32-NEXT:    vid.v v16
 ; RV32-NEXT:    li a2, -1
+; RV32-NEXT:    li a4, 32
 ; RV32-NEXT:    vmadd.vx v16, a2, v8
 ; RV32-NEXT:    addi a2, sp, 32
 ; RV32-NEXT:    vl2r.v v8, (a2) # Unknown-size Folded Reload
@@ -89,16 +90,15 @@ define i64 @ctz_nxv8i1_no_range(<vscale x 8 x i16> %a) {
 ; RV32-NEXT:    vand.vv v8, v16, v8
 ; RV32-NEXT:    vredmaxu.vs v8, v8, v8
 ; RV32-NEXT:    vmv.x.s a2, v8
-; RV32-NEXT:    sltu a3, a0, a2
-; RV32-NEXT:    li a4, 32
 ; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; RV32-NEXT:    vsrl.vx v8, v8, a4
+; RV32-NEXT:    sltu a3, a0, a2
 ; RV32-NEXT:    vmv.x.s a4, v8
-; RV32-NEXT:    sub a1, a1, a4
-; RV32-NEXT:    sub a1, a1, a3
 ; RV32-NEXT:    sub a0, a0, a2
 ; RV32-NEXT:    csrr a2, vlenb
+; RV32-NEXT:    sub a1, a1, a4
 ; RV32-NEXT:    slli a2, a2, 1
+; RV32-NEXT:    sub a1, a1, a3
 ; RV32-NEXT:    add sp, sp, a2
 ; RV32-NEXT:    .cfi_def_cfa sp, 48
 ; RV32-NEXT:    lw ra, 44(sp) # 4-byte Folded Reload

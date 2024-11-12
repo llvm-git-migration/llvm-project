@@ -208,9 +208,9 @@ define i64 @add1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    neg a0, a0
 ; RV32I-NEXT:    and a4, a0, a4
-; RV32I-NEXT:    add a2, a2, a4
 ; RV32I-NEXT:    and a0, a0, a3
 ; RV32I-NEXT:    add a0, a1, a0
+; RV32I-NEXT:    add a2, a2, a4
 ; RV32I-NEXT:    sltu a1, a0, a1
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    ret
@@ -225,9 +225,9 @@ define i64 @add1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: add1:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a4, a4, a0
-; RV32XVENTANACONDOPS-NEXT:    add a2, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a3, a0
 ; RV32XVENTANACONDOPS-NEXT:    add a0, a1, a0
+; RV32XVENTANACONDOPS-NEXT:    add a2, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    add a1, a2, a1
 ; RV32XVENTANACONDOPS-NEXT:    ret
@@ -247,9 +247,9 @@ define i64 @add1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: add1:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.eqz a4, a4, a0
-; RV32ZICOND-NEXT:    add a2, a2, a4
 ; RV32ZICOND-NEXT:    czero.eqz a0, a3, a0
 ; RV32ZICOND-NEXT:    add a0, a1, a0
+; RV32ZICOND-NEXT:    add a2, a2, a4
 ; RV32ZICOND-NEXT:    sltu a1, a0, a1
 ; RV32ZICOND-NEXT:    add a1, a2, a1
 ; RV32ZICOND-NEXT:    ret
@@ -269,9 +269,9 @@ define i64 @add2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    neg a0, a0
 ; RV32I-NEXT:    and a2, a0, a2
-; RV32I-NEXT:    add a2, a4, a2
 ; RV32I-NEXT:    and a0, a0, a1
 ; RV32I-NEXT:    add a0, a3, a0
+; RV32I-NEXT:    add a2, a4, a2
 ; RV32I-NEXT:    sltu a1, a0, a3
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    ret
@@ -286,9 +286,9 @@ define i64 @add2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: add2:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a2, a2, a0
-; RV32XVENTANACONDOPS-NEXT:    add a2, a4, a2
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a1, a0
 ; RV32XVENTANACONDOPS-NEXT:    add a0, a3, a0
+; RV32XVENTANACONDOPS-NEXT:    add a2, a4, a2
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a0, a3
 ; RV32XVENTANACONDOPS-NEXT:    add a1, a2, a1
 ; RV32XVENTANACONDOPS-NEXT:    ret
@@ -308,9 +308,9 @@ define i64 @add2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: add2:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.eqz a2, a2, a0
-; RV32ZICOND-NEXT:    add a2, a4, a2
 ; RV32ZICOND-NEXT:    czero.eqz a0, a1, a0
 ; RV32ZICOND-NEXT:    add a0, a3, a0
+; RV32ZICOND-NEXT:    add a2, a4, a2
 ; RV32ZICOND-NEXT:    sltu a1, a0, a3
 ; RV32ZICOND-NEXT:    add a1, a2, a1
 ; RV32ZICOND-NEXT:    ret
@@ -330,9 +330,9 @@ define i64 @add3(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a0, a0, -1
 ; RV32I-NEXT:    and a4, a0, a4
-; RV32I-NEXT:    add a2, a2, a4
 ; RV32I-NEXT:    and a0, a0, a3
 ; RV32I-NEXT:    add a0, a1, a0
+; RV32I-NEXT:    add a2, a2, a4
 ; RV32I-NEXT:    sltu a1, a0, a1
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    ret
@@ -347,9 +347,9 @@ define i64 @add3(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: add3:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a4, a4, a0
-; RV32XVENTANACONDOPS-NEXT:    add a2, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a3, a0
 ; RV32XVENTANACONDOPS-NEXT:    add a0, a1, a0
+; RV32XVENTANACONDOPS-NEXT:    add a2, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    add a1, a2, a1
 ; RV32XVENTANACONDOPS-NEXT:    ret
@@ -369,9 +369,9 @@ define i64 @add3(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: add3:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.nez a4, a4, a0
-; RV32ZICOND-NEXT:    add a2, a2, a4
 ; RV32ZICOND-NEXT:    czero.nez a0, a3, a0
 ; RV32ZICOND-NEXT:    add a0, a1, a0
+; RV32ZICOND-NEXT:    add a2, a2, a4
 ; RV32ZICOND-NEXT:    sltu a1, a0, a1
 ; RV32ZICOND-NEXT:    add a1, a2, a1
 ; RV32ZICOND-NEXT:    ret
@@ -391,9 +391,9 @@ define i64 @add4(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a0, a0, -1
 ; RV32I-NEXT:    and a2, a0, a2
-; RV32I-NEXT:    add a2, a4, a2
 ; RV32I-NEXT:    and a0, a0, a1
 ; RV32I-NEXT:    add a0, a3, a0
+; RV32I-NEXT:    add a2, a4, a2
 ; RV32I-NEXT:    sltu a1, a0, a3
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    ret
@@ -408,9 +408,9 @@ define i64 @add4(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: add4:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a2, a2, a0
-; RV32XVENTANACONDOPS-NEXT:    add a2, a4, a2
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a1, a0
 ; RV32XVENTANACONDOPS-NEXT:    add a0, a3, a0
+; RV32XVENTANACONDOPS-NEXT:    add a2, a4, a2
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a0, a3
 ; RV32XVENTANACONDOPS-NEXT:    add a1, a2, a1
 ; RV32XVENTANACONDOPS-NEXT:    ret
@@ -430,9 +430,9 @@ define i64 @add4(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: add4:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.nez a2, a2, a0
-; RV32ZICOND-NEXT:    add a2, a4, a2
 ; RV32ZICOND-NEXT:    czero.nez a0, a1, a0
 ; RV32ZICOND-NEXT:    add a0, a3, a0
+; RV32ZICOND-NEXT:    add a2, a4, a2
 ; RV32ZICOND-NEXT:    sltu a1, a0, a3
 ; RV32ZICOND-NEXT:    add a1, a2, a1
 ; RV32ZICOND-NEXT:    ret
@@ -452,8 +452,8 @@ define i64 @sub1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    neg a0, a0
 ; RV32I-NEXT:    and a3, a0, a3
-; RV32I-NEXT:    sltu a5, a1, a3
 ; RV32I-NEXT:    and a0, a0, a4
+; RV32I-NEXT:    sltu a5, a1, a3
 ; RV32I-NEXT:    sub a2, a2, a0
 ; RV32I-NEXT:    sub a2, a2, a5
 ; RV32I-NEXT:    sub a0, a1, a3
@@ -470,8 +470,8 @@ define i64 @sub1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: sub1:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a3, a3, a0
-; RV32XVENTANACONDOPS-NEXT:    sltu a5, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a4, a0
+; RV32XVENTANACONDOPS-NEXT:    sltu a5, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sub a2, a2, a0
 ; RV32XVENTANACONDOPS-NEXT:    sub a2, a2, a5
 ; RV32XVENTANACONDOPS-NEXT:    sub a0, a1, a3
@@ -493,8 +493,8 @@ define i64 @sub1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: sub1:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.eqz a3, a3, a0
-; RV32ZICOND-NEXT:    sltu a5, a1, a3
 ; RV32ZICOND-NEXT:    czero.eqz a0, a4, a0
+; RV32ZICOND-NEXT:    sltu a5, a1, a3
 ; RV32ZICOND-NEXT:    sub a2, a2, a0
 ; RV32ZICOND-NEXT:    sub a2, a2, a5
 ; RV32ZICOND-NEXT:    sub a0, a1, a3
@@ -516,8 +516,8 @@ define i64 @sub2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a0, a0, -1
 ; RV32I-NEXT:    and a3, a0, a3
-; RV32I-NEXT:    sltu a5, a1, a3
 ; RV32I-NEXT:    and a0, a0, a4
+; RV32I-NEXT:    sltu a5, a1, a3
 ; RV32I-NEXT:    sub a2, a2, a0
 ; RV32I-NEXT:    sub a2, a2, a5
 ; RV32I-NEXT:    sub a0, a1, a3
@@ -534,8 +534,8 @@ define i64 @sub2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS-LABEL: sub2:
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a3, a3, a0
-; RV32XVENTANACONDOPS-NEXT:    sltu a5, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a4, a0
+; RV32XVENTANACONDOPS-NEXT:    sltu a5, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sub a2, a2, a0
 ; RV32XVENTANACONDOPS-NEXT:    sub a2, a2, a5
 ; RV32XVENTANACONDOPS-NEXT:    sub a0, a1, a3
@@ -557,8 +557,8 @@ define i64 @sub2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND-LABEL: sub2:
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    czero.nez a3, a3, a0
-; RV32ZICOND-NEXT:    sltu a5, a1, a3
 ; RV32ZICOND-NEXT:    czero.nez a0, a4, a0
+; RV32ZICOND-NEXT:    sltu a5, a1, a3
 ; RV32ZICOND-NEXT:    sub a2, a2, a0
 ; RV32ZICOND-NEXT:    sub a2, a2, a5
 ; RV32ZICOND-NEXT:    sub a0, a1, a3
@@ -637,8 +637,8 @@ define i64 @or2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    neg a5, a0
 ; RV32I-NEXT:    and a0, a5, a1
-; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    and a1, a5, a2
+; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    or a1, a4, a1
 ; RV32I-NEXT:    ret
 ;
@@ -751,8 +751,8 @@ define i64 @or4(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a5, a0, -1
 ; RV32I-NEXT:    and a0, a5, a1
-; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    and a1, a5, a2
+; RV32I-NEXT:    or a0, a3, a0
 ; RV32I-NEXT:    or a1, a4, a1
 ; RV32I-NEXT:    ret
 ;
@@ -865,8 +865,8 @@ define i64 @xor2(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    neg a5, a0
 ; RV32I-NEXT:    and a0, a5, a1
-; RV32I-NEXT:    xor a0, a3, a0
 ; RV32I-NEXT:    and a1, a5, a2
+; RV32I-NEXT:    xor a0, a3, a0
 ; RV32I-NEXT:    xor a1, a4, a1
 ; RV32I-NEXT:    ret
 ;
@@ -979,8 +979,8 @@ define i64 @xor4(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a5, a0, -1
 ; RV32I-NEXT:    and a0, a5, a1
-; RV32I-NEXT:    xor a0, a3, a0
 ; RV32I-NEXT:    and a1, a5, a2
+; RV32I-NEXT:    xor a0, a3, a0
 ; RV32I-NEXT:    xor a1, a4, a1
 ; RV32I-NEXT:    ret
 ;
@@ -1054,9 +1054,9 @@ define i64 @and1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ;
 ; RV32XVENTANACONDOPS-LABEL: and1:
 ; RV32XVENTANACONDOPS:       # %bb.0:
-; RV32XVENTANACONDOPS-NEXT:    and a4, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    and a3, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a1, a1, a0
+; RV32XVENTANACONDOPS-NEXT:    and a4, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    or a3, a3, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a1, a2, a0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a4, a1
@@ -1079,9 +1079,9 @@ define i64 @and1(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ;
 ; RV32ZICOND-LABEL: and1:
 ; RV32ZICOND:       # %bb.0:
-; RV32ZICOND-NEXT:    and a4, a2, a4
 ; RV32ZICOND-NEXT:    and a3, a1, a3
 ; RV32ZICOND-NEXT:    czero.nez a1, a1, a0
+; RV32ZICOND-NEXT:    and a4, a2, a4
 ; RV32ZICOND-NEXT:    or a3, a3, a1
 ; RV32ZICOND-NEXT:    czero.nez a1, a2, a0
 ; RV32ZICOND-NEXT:    or a1, a4, a1
@@ -1190,9 +1190,9 @@ define i64 @and3(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ;
 ; RV32XVENTANACONDOPS-LABEL: and3:
 ; RV32XVENTANACONDOPS:       # %bb.0:
-; RV32XVENTANACONDOPS-NEXT:    and a4, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    and a3, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, a0
+; RV32XVENTANACONDOPS-NEXT:    and a4, a2, a4
 ; RV32XVENTANACONDOPS-NEXT:    or a3, a3, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a2, a0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a4, a1
@@ -1215,9 +1215,9 @@ define i64 @and3(i1 zeroext %rc, i64 %rs1, i64 %rs2) {
 ;
 ; RV32ZICOND-LABEL: and3:
 ; RV32ZICOND:       # %bb.0:
-; RV32ZICOND-NEXT:    and a4, a2, a4
 ; RV32ZICOND-NEXT:    and a3, a1, a3
 ; RV32ZICOND-NEXT:    czero.eqz a1, a1, a0
+; RV32ZICOND-NEXT:    and a4, a2, a4
 ; RV32ZICOND-NEXT:    or a3, a3, a1
 ; RV32ZICOND-NEXT:    czero.eqz a1, a2, a0
 ; RV32ZICOND-NEXT:    or a1, a4, a1
@@ -1555,8 +1555,8 @@ define i64 @setgt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    slt a1, a3, a1
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a2, a0
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a6, a1
@@ -1586,8 +1586,8 @@ define i64 @setgt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    slt a1, a3, a1
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a2, a0
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.nez a0, a6, a1
@@ -1642,8 +1642,8 @@ define i64 @setge(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    slt a1, a1, a3
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a0, a2
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a6, a1
@@ -1673,8 +1673,8 @@ define i64 @setge(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    slt a1, a1, a3
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a0, a2
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.eqz a0, a6, a1
@@ -1729,8 +1729,8 @@ define i64 @setlt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    slt a1, a1, a3
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a0, a2
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a6, a1
@@ -1760,8 +1760,8 @@ define i64 @setlt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    slt a1, a1, a3
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a0, a2
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.nez a0, a6, a1
@@ -1816,8 +1816,8 @@ define i64 @setle(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    slt a1, a3, a1
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a2, a0
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a6, a1
@@ -1847,8 +1847,8 @@ define i64 @setle(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    slt a1, a3, a1
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a2, a0
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.eqz a0, a6, a1
@@ -1903,8 +1903,8 @@ define i64 @setugt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a3, a1
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a2, a0
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a6, a1
@@ -1934,8 +1934,8 @@ define i64 @setugt(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    sltu a1, a3, a1
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a2, a0
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.nez a0, a6, a1
@@ -1990,8 +1990,8 @@ define i64 @setuge(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a1, a3
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a0, a2
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a6, a1
@@ -2021,8 +2021,8 @@ define i64 @setuge(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    sltu a1, a1, a3
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a0, a2
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.eqz a0, a6, a1
@@ -2077,8 +2077,8 @@ define i64 @setult(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a1, a3
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a0, a2
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a6, a1
@@ -2108,8 +2108,8 @@ define i64 @setult(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    sltu a1, a1, a3
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a0, a2
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.nez a0, a6, a1
@@ -2164,8 +2164,8 @@ define i64 @setule(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32XVENTANACONDOPS:       # %bb.0:
 ; RV32XVENTANACONDOPS-NEXT:    xor t0, a1, a3
 ; RV32XVENTANACONDOPS-NEXT:    sltu a1, a3, a1
-; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    sltu a0, a2, a0
+; RV32XVENTANACONDOPS-NEXT:    vt.maskc a1, a1, t0
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn a0, a0, t0
 ; RV32XVENTANACONDOPS-NEXT:    or a1, a0, a1
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc a0, a6, a1
@@ -2195,8 +2195,8 @@ define i64 @setule(i64 %a, i64 %b, i64 %rs1, i64 %rs2) {
 ; RV32ZICOND:       # %bb.0:
 ; RV32ZICOND-NEXT:    xor t0, a1, a3
 ; RV32ZICOND-NEXT:    sltu a1, a3, a1
-; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    sltu a0, a2, a0
+; RV32ZICOND-NEXT:    czero.eqz a1, a1, t0
 ; RV32ZICOND-NEXT:    czero.nez a0, a0, t0
 ; RV32ZICOND-NEXT:    or a1, a0, a1
 ; RV32ZICOND-NEXT:    czero.eqz a0, a6, a1
@@ -3673,9 +3673,9 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    slli a0, a0, 31
 ; RV32I-NEXT:    srai a0, a0, 31
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    and s1, a0, a1
 ; RV32I-NEXT:  .LBB56_1: # %bb2
 ; RV32I-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3696,9 +3696,9 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV64I-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    slli a0, a0, 63
 ; RV64I-NEXT:    srai a0, a0, 63
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    and s1, a0, a1
 ; RV64I-NEXT:  .LBB56_1: # %bb2
 ; RV64I-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3719,8 +3719,8 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV32XVENTANACONDOPS-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32XVENTANACONDOPS-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32XVENTANACONDOPS-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV32XVENTANACONDOPS-NEXT:    andi a0, a0, 1
+; RV32XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskc s1, a1, a0
 ; RV32XVENTANACONDOPS-NEXT:  .LBB56_1: # %bb2
 ; RV32XVENTANACONDOPS-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3741,8 +3741,8 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV64XVENTANACONDOPS-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64XVENTANACONDOPS-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64XVENTANACONDOPS-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV64XVENTANACONDOPS-NEXT:    andi a0, a0, 1
+; RV64XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV64XVENTANACONDOPS-NEXT:    vt.maskc s1, a1, a0
 ; RV64XVENTANACONDOPS-NEXT:  .LBB56_1: # %bb2
 ; RV64XVENTANACONDOPS-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3763,9 +3763,9 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV64XTHEADCONDMOV-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64XTHEADCONDMOV-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64XTHEADCONDMOV-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64XTHEADCONDMOV-NEXT:    mv s0, a2
 ; RV64XTHEADCONDMOV-NEXT:    mv s1, a1
 ; RV64XTHEADCONDMOV-NEXT:    andi a0, a0, 1
+; RV64XTHEADCONDMOV-NEXT:    mv s0, a2
 ; RV64XTHEADCONDMOV-NEXT:    th.mveqz s1, zero, a0
 ; RV64XTHEADCONDMOV-NEXT:  .LBB56_1: # %bb2
 ; RV64XTHEADCONDMOV-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3786,8 +3786,8 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV32ZICOND-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32ZICOND-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32ZICOND-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32ZICOND-NEXT:    mv s0, a2
 ; RV32ZICOND-NEXT:    andi a0, a0, 1
+; RV32ZICOND-NEXT:    mv s0, a2
 ; RV32ZICOND-NEXT:    czero.eqz s1, a1, a0
 ; RV32ZICOND-NEXT:  .LBB56_1: # %bb2
 ; RV32ZICOND-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3808,8 +3808,8 @@ define void @sextw_removal_maskc(i1 %c, i32 signext %arg, i32 signext %arg1) nou
 ; RV64ZICOND-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64ZICOND-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64ZICOND-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64ZICOND-NEXT:    mv s0, a2
 ; RV64ZICOND-NEXT:    andi a0, a0, 1
+; RV64ZICOND-NEXT:    mv s0, a2
 ; RV64ZICOND-NEXT:    czero.eqz s1, a1, a0
 ; RV64ZICOND-NEXT:  .LBB56_1: # %bb2
 ; RV64ZICOND-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3846,9 +3846,9 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV32I-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32I-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    andi a0, a0, 1
 ; RV32I-NEXT:    addi a0, a0, -1
+; RV32I-NEXT:    mv s0, a2
 ; RV32I-NEXT:    and s1, a0, a1
 ; RV32I-NEXT:  .LBB57_1: # %bb2
 ; RV32I-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3869,9 +3869,9 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV64I-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    andi a0, a0, 1
 ; RV64I-NEXT:    addiw a0, a0, -1
+; RV64I-NEXT:    mv s0, a2
 ; RV64I-NEXT:    and s1, a0, a1
 ; RV64I-NEXT:  .LBB57_1: # %bb2
 ; RV64I-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3892,8 +3892,8 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV32XVENTANACONDOPS-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32XVENTANACONDOPS-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32XVENTANACONDOPS-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV32XVENTANACONDOPS-NEXT:    andi a0, a0, 1
+; RV32XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV32XVENTANACONDOPS-NEXT:    vt.maskcn s1, a1, a0
 ; RV32XVENTANACONDOPS-NEXT:  .LBB57_1: # %bb2
 ; RV32XVENTANACONDOPS-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3914,8 +3914,8 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV64XVENTANACONDOPS-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64XVENTANACONDOPS-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64XVENTANACONDOPS-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV64XVENTANACONDOPS-NEXT:    andi a0, a0, 1
+; RV64XVENTANACONDOPS-NEXT:    mv s0, a2
 ; RV64XVENTANACONDOPS-NEXT:    vt.maskcn s1, a1, a0
 ; RV64XVENTANACONDOPS-NEXT:  .LBB57_1: # %bb2
 ; RV64XVENTANACONDOPS-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3936,9 +3936,9 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV64XTHEADCONDMOV-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64XTHEADCONDMOV-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64XTHEADCONDMOV-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64XTHEADCONDMOV-NEXT:    mv s0, a2
 ; RV64XTHEADCONDMOV-NEXT:    mv s1, a1
 ; RV64XTHEADCONDMOV-NEXT:    andi a0, a0, 1
+; RV64XTHEADCONDMOV-NEXT:    mv s0, a2
 ; RV64XTHEADCONDMOV-NEXT:    th.mvnez s1, zero, a0
 ; RV64XTHEADCONDMOV-NEXT:  .LBB57_1: # %bb2
 ; RV64XTHEADCONDMOV-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3959,8 +3959,8 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV32ZICOND-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
 ; RV32ZICOND-NEXT:    sw s0, 8(sp) # 4-byte Folded Spill
 ; RV32ZICOND-NEXT:    sw s1, 4(sp) # 4-byte Folded Spill
-; RV32ZICOND-NEXT:    mv s0, a2
 ; RV32ZICOND-NEXT:    andi a0, a0, 1
+; RV32ZICOND-NEXT:    mv s0, a2
 ; RV32ZICOND-NEXT:    czero.nez s1, a1, a0
 ; RV32ZICOND-NEXT:  .LBB57_1: # %bb2
 ; RV32ZICOND-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -3981,8 +3981,8 @@ define void @sextw_removal_maskcn(i1 %c, i32 signext %arg, i32 signext %arg1) no
 ; RV64ZICOND-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; RV64ZICOND-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64ZICOND-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
-; RV64ZICOND-NEXT:    mv s0, a2
 ; RV64ZICOND-NEXT:    andi a0, a0, 1
+; RV64ZICOND-NEXT:    mv s0, a2
 ; RV64ZICOND-NEXT:    czero.nez s1, a1, a0
 ; RV64ZICOND-NEXT:  .LBB57_1: # %bb2
 ; RV64ZICOND-NEXT:    # =>This Inner Loop Header: Depth=1

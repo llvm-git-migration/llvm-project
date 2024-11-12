@@ -15,9 +15,9 @@ define void @deinterleave3_0_i8(ptr %in, ptr %out) {
 ; CHECK-NEXT:    vid.v v9
 ; CHECK-NEXT:    li a0, 3
 ; CHECK-NEXT:    vmul.vx v9, v9, a0
+; CHECK-NEXT:    li a0, 56
 ; CHECK-NEXT:    vrgather.vv v10, v8, v9
 ; CHECK-NEXT:    vadd.vi v9, v9, -8
-; CHECK-NEXT:    li a0, 56
 ; CHECK-NEXT:    vmv.s.x v0, a0
 ; CHECK-NEXT:    vsetivli zero, 8, e8, m1, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 8
@@ -68,10 +68,10 @@ define void @deinterleave4_0_i8(ptr %in, ptr %out) {
 ; CHECK-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
 ; CHECK-NEXT:    vle8.v v8, (a0)
 ; CHECK-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma
+; CHECK-NEXT:    li a0, -1
 ; CHECK-NEXT:    vslidedown.vi v9, v8, 4
 ; CHECK-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
 ; CHECK-NEXT:    vwaddu.vv v10, v8, v9
-; CHECK-NEXT:    li a0, -1
 ; CHECK-NEXT:    vwmaccu.vx v10, a0, v9
 ; CHECK-NEXT:    vmv.v.i v0, 12
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma

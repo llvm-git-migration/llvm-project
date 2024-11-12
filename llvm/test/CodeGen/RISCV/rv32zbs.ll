@@ -51,12 +51,12 @@ define i64 @bclr_i64(i64 %a, i64 %b) nounwind {
 ; RV32I-NEXT:    andi a3, a2, 63
 ; RV32I-NEXT:    addi a4, a3, -32
 ; RV32I-NEXT:    slti a4, a4, 0
-; RV32I-NEXT:    neg a5, a4
 ; RV32I-NEXT:    li a6, 1
+; RV32I-NEXT:    neg a5, a4
 ; RV32I-NEXT:    sll a2, a6, a2
-; RV32I-NEXT:    and a2, a5, a2
 ; RV32I-NEXT:    sll a3, a6, a3
 ; RV32I-NEXT:    addi a4, a4, -1
+; RV32I-NEXT:    and a2, a5, a2
 ; RV32I-NEXT:    and a3, a4, a3
 ; RV32I-NEXT:    not a2, a2
 ; RV32I-NEXT:    not a3, a3
@@ -71,9 +71,9 @@ define i64 @bclr_i64(i64 %a, i64 %b) nounwind {
 ; RV32ZBSNOZBB-NEXT:    slti a4, a4, 0
 ; RV32ZBSNOZBB-NEXT:    neg a5, a4
 ; RV32ZBSNOZBB-NEXT:    bset a2, zero, a2
-; RV32ZBSNOZBB-NEXT:    and a2, a5, a2
 ; RV32ZBSNOZBB-NEXT:    bset a3, zero, a3
 ; RV32ZBSNOZBB-NEXT:    addi a4, a4, -1
+; RV32ZBSNOZBB-NEXT:    and a2, a5, a2
 ; RV32ZBSNOZBB-NEXT:    and a3, a4, a3
 ; RV32ZBSNOZBB-NEXT:    not a3, a3
 ; RV32ZBSNOZBB-NEXT:    not a2, a2
@@ -88,9 +88,9 @@ define i64 @bclr_i64(i64 %a, i64 %b) nounwind {
 ; RV32ZBSZBB-NEXT:    addi a3, a3, -32
 ; RV32ZBSZBB-NEXT:    slti a3, a3, 0
 ; RV32ZBSZBB-NEXT:    addi a5, a3, -1
-; RV32ZBSZBB-NEXT:    and a4, a5, a4
 ; RV32ZBSZBB-NEXT:    neg a3, a3
 ; RV32ZBSZBB-NEXT:    bset a2, zero, a2
+; RV32ZBSZBB-NEXT:    and a4, a5, a4
 ; RV32ZBSZBB-NEXT:    and a2, a3, a2
 ; RV32ZBSZBB-NEXT:    andn a0, a0, a2
 ; RV32ZBSZBB-NEXT:    andn a1, a1, a4
@@ -188,11 +188,11 @@ define signext i64 @bset_i64_zero(i64 signext %a) nounwind {
 ; RV32I:       # %bb.0:
 ; RV32I-NEXT:    addi a1, a0, -32
 ; RV32I-NEXT:    slti a1, a1, 0
-; RV32I-NEXT:    neg a2, a1
 ; RV32I-NEXT:    li a3, 1
+; RV32I-NEXT:    neg a2, a1
 ; RV32I-NEXT:    sll a3, a3, a0
-; RV32I-NEXT:    and a0, a2, a3
 ; RV32I-NEXT:    addi a1, a1, -1
+; RV32I-NEXT:    and a0, a2, a3
 ; RV32I-NEXT:    and a1, a1, a3
 ; RV32I-NEXT:    ret
 ;
@@ -202,8 +202,8 @@ define signext i64 @bset_i64_zero(i64 signext %a) nounwind {
 ; RV32ZBS-NEXT:    slti a1, a1, 0
 ; RV32ZBS-NEXT:    neg a2, a1
 ; RV32ZBS-NEXT:    bset a3, zero, a0
-; RV32ZBS-NEXT:    and a0, a2, a3
 ; RV32ZBS-NEXT:    addi a1, a1, -1
+; RV32ZBS-NEXT:    and a0, a2, a3
 ; RV32ZBS-NEXT:    and a1, a1, a3
 ; RV32ZBS-NEXT:    ret
   %shl = shl i64 1, %a
@@ -822,8 +822,8 @@ define i64 @bset_trailing_ones_i64_no_mask(i64 %a) nounwind {
 ; CHECK-NEXT:    mv a0, a1
 ; CHECK-NEXT:    j .LBB44_3
 ; CHECK-NEXT:  .LBB44_2:
-; CHECK-NEXT:    not a0, a0
 ; CHECK-NEXT:    lui a3, 524288
+; CHECK-NEXT:    not a0, a0
 ; CHECK-NEXT:    addi a3, a3, -1
 ; CHECK-NEXT:    srl a0, a3, a0
 ; CHECK-NEXT:    or a0, a1, a0

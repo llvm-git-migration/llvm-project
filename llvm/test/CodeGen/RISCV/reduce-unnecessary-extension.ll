@@ -31,9 +31,9 @@ define signext i32 @test() nounwind {
 ; RV64I-NEXT:    li a0, 0
 ; RV64I-NEXT:    call test2
 ; RV64I-NEXT:  .LBB0_3:
-; RV64I-NEXT:    li a0, 0
 ; RV64I-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; RV64I-NEXT:    ld s0, 0(sp) # 8-byte Folded Reload
+; RV64I-NEXT:    li a0, 0
 ; RV64I-NEXT:    addi sp, sp, 16
 ; RV64I-NEXT:    ret
   %1 = load i8, ptr @PL_reg_match_utf8, align 1
@@ -84,11 +84,11 @@ define signext i32 @test_loop() nounwind {
 ; RV64I-NEXT:    addiw s1, s1, 1
 ; RV64I-NEXT:    bnez s1, .LBB1_2
 ; RV64I-NEXT:  .LBB1_4:
-; RV64I-NEXT:    li a0, 0
 ; RV64I-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; RV64I-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
 ; RV64I-NEXT:    ld s1, 8(sp) # 8-byte Folded Reload
 ; RV64I-NEXT:    ld s2, 0(sp) # 8-byte Folded Reload
+; RV64I-NEXT:    li a0, 0
 ; RV64I-NEXT:    addi sp, sp, 32
 ; RV64I-NEXT:    ret
   br label %1

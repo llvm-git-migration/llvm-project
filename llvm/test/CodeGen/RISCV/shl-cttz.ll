@@ -126,8 +126,8 @@ define i16 @shl_cttz_i16(i16 %x, i16 %y) {
 ; RV32I-NEXT:    addi a2, a1, -1
 ; RV32I-NEXT:    not a1, a1
 ; RV32I-NEXT:    and a1, a1, a2
-; RV32I-NEXT:    srli a2, a1, 1
 ; RV32I-NEXT:    lui a3, 5
+; RV32I-NEXT:    srli a2, a1, 1
 ; RV32I-NEXT:    addi a3, a3, 1365
 ; RV32I-NEXT:    and a2, a2, a3
 ; RV32I-NEXT:    sub a1, a1, a2
@@ -157,8 +157,8 @@ define i16 @shl_cttz_i16(i16 %x, i16 %y) {
 ; RV64I-NEXT:    addi a2, a1, -1
 ; RV64I-NEXT:    not a1, a1
 ; RV64I-NEXT:    and a1, a1, a2
-; RV64I-NEXT:    srli a2, a1, 1
 ; RV64I-NEXT:    lui a3, 5
+; RV64I-NEXT:    srli a2, a1, 1
 ; RV64I-NEXT:    addiw a3, a3, 1365
 ; RV64I-NEXT:    and a2, a2, a3
 ; RV64I-NEXT:    sub a1, a1, a2
@@ -194,8 +194,8 @@ define i16 @shl_cttz_constant_i16(i16 %y) {
 ; RV32I-NEXT:    addi a1, a0, -1
 ; RV32I-NEXT:    not a0, a0
 ; RV32I-NEXT:    and a0, a0, a1
-; RV32I-NEXT:    srli a1, a0, 1
 ; RV32I-NEXT:    lui a2, 5
+; RV32I-NEXT:    srli a1, a0, 1
 ; RV32I-NEXT:    addi a2, a2, 1365
 ; RV32I-NEXT:    and a1, a1, a2
 ; RV32I-NEXT:    sub a0, a0, a1
@@ -227,8 +227,8 @@ define i16 @shl_cttz_constant_i16(i16 %y) {
 ; RV64I-NEXT:    addi a1, a0, -1
 ; RV64I-NEXT:    not a0, a0
 ; RV64I-NEXT:    and a0, a0, a1
-; RV64I-NEXT:    srli a1, a0, 1
 ; RV64I-NEXT:    lui a2, 5
+; RV64I-NEXT:    srli a1, a0, 1
 ; RV64I-NEXT:    addiw a2, a2, 1365
 ; RV64I-NEXT:    and a1, a1, a2
 ; RV64I-NEXT:    sub a0, a0, a1
@@ -281,8 +281,8 @@ define i32 @shl_cttz_i32(i32 %x, i32 %y) {
 ; RV64I-NEXT:    lui a2, 30667
 ; RV64I-NEXT:    addi a2, a2, 1329
 ; RV64I-NEXT:    mul a1, a1, a2
-; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    lui a2, %hi(.LCPI4_0)
+; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    addi a2, a2, %lo(.LCPI4_0)
 ; RV64I-NEXT:    add a1, a2, a1
 ; RV64I-NEXT:    lbu a1, 0(a1)
@@ -310,8 +310,8 @@ define i32 @shl_cttz_i32_zero_is_defined(i32 %x, i32 %y) {
 ; RV32I-NEXT:    lui a2, 30667
 ; RV32I-NEXT:    addi a2, a2, 1329
 ; RV32I-NEXT:    mul a1, a1, a2
-; RV32I-NEXT:    srli a1, a1, 27
 ; RV32I-NEXT:    lui a2, %hi(.LCPI5_0)
+; RV32I-NEXT:    srli a1, a1, 27
 ; RV32I-NEXT:    addi a2, a2, %lo(.LCPI5_0)
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    lbu a1, 0(a1)
@@ -338,8 +338,8 @@ define i32 @shl_cttz_i32_zero_is_defined(i32 %x, i32 %y) {
 ; RV64I-NEXT:    lui a2, 30667
 ; RV64I-NEXT:    addi a2, a2, 1329
 ; RV64I-NEXT:    mul a1, a1, a2
-; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    lui a2, %hi(.LCPI5_0)
+; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    addi a2, a2, %lo(.LCPI5_0)
 ; RV64I-NEXT:    add a1, a2, a1
 ; RV64I-NEXT:    lbu a1, 0(a1)
@@ -383,8 +383,8 @@ define i32 @shl_cttz_constant_i32(i32 %y) {
 ; RV64I-NEXT:    lui a1, 30667
 ; RV64I-NEXT:    addi a1, a1, 1329
 ; RV64I-NEXT:    mul a0, a0, a1
-; RV64I-NEXT:    srliw a0, a0, 27
 ; RV64I-NEXT:    lui a1, %hi(.LCPI6_0)
+; RV64I-NEXT:    srliw a0, a0, 27
 ; RV64I-NEXT:    addi a1, a1, %lo(.LCPI6_0)
 ; RV64I-NEXT:    add a0, a1, a0
 ; RV64I-NEXT:    lbu a0, 0(a0)
@@ -420,8 +420,8 @@ define i32 @shl_cttz_multiuse_i32(i32 %x, i32 %y) {
 ; RV32I-NEXT:    lui a2, 30667
 ; RV32I-NEXT:    addi a2, a2, 1329
 ; RV32I-NEXT:    mul a1, a1, a2
-; RV32I-NEXT:    srli a1, a1, 27
 ; RV32I-NEXT:    lui a2, %hi(.LCPI7_0)
+; RV32I-NEXT:    srli a1, a1, 27
 ; RV32I-NEXT:    addi a2, a2, %lo(.LCPI7_0)
 ; RV32I-NEXT:    add a1, a2, a1
 ; RV32I-NEXT:    lbu s0, 0(a1)
@@ -449,8 +449,8 @@ define i32 @shl_cttz_multiuse_i32(i32 %x, i32 %y) {
 ; RV32ZBB-NEXT:    .cfi_offset ra, -4
 ; RV32ZBB-NEXT:    .cfi_offset s0, -8
 ; RV32ZBB-NEXT:    .cfi_offset s1, -12
-; RV32ZBB-NEXT:    mv s0, a0
 ; RV32ZBB-NEXT:    ctz s1, a1
+; RV32ZBB-NEXT:    mv s0, a0
 ; RV32ZBB-NEXT:    mv a0, s1
 ; RV32ZBB-NEXT:    call use32
 ; RV32ZBB-NEXT:    sll a0, s0, s1
@@ -479,8 +479,8 @@ define i32 @shl_cttz_multiuse_i32(i32 %x, i32 %y) {
 ; RV64I-NEXT:    lui a2, 30667
 ; RV64I-NEXT:    addi a2, a2, 1329
 ; RV64I-NEXT:    mul a1, a1, a2
-; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    lui a2, %hi(.LCPI7_0)
+; RV64I-NEXT:    srliw a1, a1, 27
 ; RV64I-NEXT:    addi a2, a2, %lo(.LCPI7_0)
 ; RV64I-NEXT:    add a1, a2, a1
 ; RV64I-NEXT:    lbu s0, 0(a1)
@@ -508,8 +508,8 @@ define i32 @shl_cttz_multiuse_i32(i32 %x, i32 %y) {
 ; RV64ZBB-NEXT:    .cfi_offset ra, -8
 ; RV64ZBB-NEXT:    .cfi_offset s0, -16
 ; RV64ZBB-NEXT:    .cfi_offset s1, -24
-; RV64ZBB-NEXT:    mv s0, a0
 ; RV64ZBB-NEXT:    ctzw s1, a1
+; RV64ZBB-NEXT:    mv s0, a0
 ; RV64ZBB-NEXT:    mv a0, s1
 ; RV64ZBB-NEXT:    call use32
 ; RV64ZBB-NEXT:    sllw a0, s0, s1

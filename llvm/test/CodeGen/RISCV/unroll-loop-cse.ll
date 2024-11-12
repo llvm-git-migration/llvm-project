@@ -18,10 +18,10 @@ define signext i32 @unroll_loop_cse() {
 ; CHECK-NEXT:    bne a1, a2, .LBB0_6
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    lui a1, %hi(x)
-; CHECK-NEXT:    addi a1, a1, %lo(x)
-; CHECK-NEXT:    lw a3, 4(a1)
 ; CHECK-NEXT:    lui a2, %hi(check)
+; CHECK-NEXT:    addi a1, a1, %lo(x)
 ; CHECK-NEXT:    addi a2, a2, %lo(check)
+; CHECK-NEXT:    lw a3, 4(a1)
 ; CHECK-NEXT:    lw a4, 4(a2)
 ; CHECK-NEXT:    bne a3, a4, .LBB0_6
 ; CHECK-NEXT:  # %bb.2:

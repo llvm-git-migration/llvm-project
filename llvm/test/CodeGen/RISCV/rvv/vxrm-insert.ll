@@ -76,19 +76,19 @@ define <vscale x 1 x i8> @test3(<vscale x 1 x i8> %0, <vscale x 1 x i8> %1, <vsc
 ; RV32-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    csrr a1, vlenb
 ; RV32-NEXT:    sub sp, sp, a1
-; RV32-NEXT:    mv s0, a0
 ; RV32-NEXT:    addi a1, sp, 16
-; RV32-NEXT:    vs1r.v v10, (a1) # Unknown-size Folded Spill
 ; RV32-NEXT:    csrwi vxrm, 0
 ; RV32-NEXT:    vsetvli zero, a0, e8, mf8, ta, ma
 ; RV32-NEXT:    vaadd.vv v8, v8, v9
+; RV32-NEXT:    mv s0, a0
+; RV32-NEXT:    vs1r.v v10, (a1) # Unknown-size Folded Spill
 ; RV32-NEXT:    call foo
-; RV32-NEXT:    csrwi vxrm, 0
 ; RV32-NEXT:    addi a0, sp, 16
 ; RV32-NEXT:    vl1r.v v9, (a0) # Unknown-size Folded Reload
+; RV32-NEXT:    csrr a0, vlenb
+; RV32-NEXT:    csrwi vxrm, 0
 ; RV32-NEXT:    vsetvli zero, s0, e8, mf8, ta, ma
 ; RV32-NEXT:    vaadd.vv v8, v8, v9
-; RV32-NEXT:    csrr a0, vlenb
 ; RV32-NEXT:    add sp, sp, a0
 ; RV32-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    lw s0, 24(sp) # 4-byte Folded Reload
@@ -102,19 +102,19 @@ define <vscale x 1 x i8> @test3(<vscale x 1 x i8> %0, <vscale x 1 x i8> %1, <vsc
 ; RV64-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
 ; RV64-NEXT:    csrr a1, vlenb
 ; RV64-NEXT:    sub sp, sp, a1
-; RV64-NEXT:    mv s0, a0
 ; RV64-NEXT:    addi a1, sp, 16
-; RV64-NEXT:    vs1r.v v10, (a1) # Unknown-size Folded Spill
 ; RV64-NEXT:    csrwi vxrm, 0
 ; RV64-NEXT:    vsetvli zero, a0, e8, mf8, ta, ma
 ; RV64-NEXT:    vaadd.vv v8, v8, v9
+; RV64-NEXT:    mv s0, a0
+; RV64-NEXT:    vs1r.v v10, (a1) # Unknown-size Folded Spill
 ; RV64-NEXT:    call foo
-; RV64-NEXT:    csrwi vxrm, 0
 ; RV64-NEXT:    addi a0, sp, 16
 ; RV64-NEXT:    vl1r.v v9, (a0) # Unknown-size Folded Reload
+; RV64-NEXT:    csrr a0, vlenb
+; RV64-NEXT:    csrwi vxrm, 0
 ; RV64-NEXT:    vsetvli zero, s0, e8, mf8, ta, ma
 ; RV64-NEXT:    vaadd.vv v8, v8, v9
-; RV64-NEXT:    csrr a0, vlenb
 ; RV64-NEXT:    add sp, sp, a0
 ; RV64-NEXT:    ld ra, 24(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    ld s0, 16(sp) # 8-byte Folded Reload
@@ -392,8 +392,8 @@ define void @test10(ptr nocapture %ptr_dest, ptr nocapture readonly %ptr_op1, pt
 ; CHECK-NEXT:    vsetvli a4, a3, e8, mf8, ta, ma
 ; CHECK-NEXT:    vle8.v v8, (a1)
 ; CHECK-NEXT:    vle8.v v9, (a2)
-; CHECK-NEXT:    vaadd.vv v8, v8, v9
 ; CHECK-NEXT:    sub a3, a3, a4
+; CHECK-NEXT:    vaadd.vv v8, v8, v9
 ; CHECK-NEXT:    vse8.v v8, (a0)
 ; CHECK-NEXT:    bnez a3, .LBB9_2
 ; CHECK-NEXT:  .LBB9_3: # %for.end
