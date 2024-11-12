@@ -227,8 +227,8 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV32-NEXT:    add a2, sp, a2
 ; CHECK-RV32-NEXT:    addi a2, a2, 16
 ; CHECK-RV32-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
-; CHECK-RV32-NEXT:    li a2, 128
 ; CHECK-RV32-NEXT:    vmv1r.v v7, v8
+; CHECK-RV32-NEXT:    li a2, 128
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-RV32-NEXT:    vle8.v v8, (a1)
 ; CHECK-RV32-NEXT:    csrr a1, vlenb
@@ -250,25 +250,25 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV32-NEXT:    vsetvli zero, a6, e8, m8, ta, ma
 ; CHECK-RV32-NEXT:    vle8.v v8, (a0)
 ; CHECK-RV32-NEXT:    csrr a6, vlenb
+; CHECK-RV32-NEXT:    slli a6, a6, 4
+; CHECK-RV32-NEXT:    add a6, sp, a6
+; CHECK-RV32-NEXT:    addi a6, a6, 16
+; CHECK-RV32-NEXT:    vs8r.v v8, (a6) # Unknown-size Folded Spill
 ; CHECK-RV32-NEXT:    cpop a1, a1
 ; CHECK-RV32-NEXT:    cpop a5, a5
+; CHECK-RV32-NEXT:    add a1, a5, a1
 ; CHECK-RV32-NEXT:    cpop a3, a3
 ; CHECK-RV32-NEXT:    cpop a4, a4
-; CHECK-RV32-NEXT:    slli a6, a6, 4
-; CHECK-RV32-NEXT:    add a1, a5, a1
 ; CHECK-RV32-NEXT:    add a3, a4, a3
-; CHECK-RV32-NEXT:    add a6, sp, a6
 ; CHECK-RV32-NEXT:    add a1, a1, a3
-; CHECK-RV32-NEXT:    addi a6, a6, 16
 ; CHECK-RV32-NEXT:    add a0, a0, a1
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-RV32-NEXT:    vcpop.m a1, v7
-; CHECK-RV32-NEXT:    vs8r.v v8, (a6) # Unknown-size Folded Spill
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
 ; CHECK-RV32-NEXT:    vle8.v v8, (a0)
 ; CHECK-RV32-NEXT:    addi a0, sp, 16
-; CHECK-RV32-NEXT:    li a1, 24
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, ta, mu
+; CHECK-RV32-NEXT:    viota.m v16, v0
 ; CHECK-RV32-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 4
@@ -276,6 +276,7 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vl8r.v v24, (a0) # Unknown-size Folded Reload
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
+; CHECK-RV32-NEXT:    li a1, 24
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add a0, sp, a0
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
@@ -283,17 +284,17 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 24
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
-; CHECK-RV32-NEXT:    viota.m v16, v0
-; CHECK-RV32-NEXT:    add a0, sp, a0
 ; CHECK-RV32-NEXT:    vrgather.vv v8, v24, v16, v0.t
+; CHECK-RV32-NEXT:    add a0, sp, a0
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 4
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 3
 ; CHECK-RV32-NEXT:    add a0, sp, a0
@@ -306,11 +307,10 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV32-NEXT:    add a0, sp, a0
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 24
+; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vrgather.vv v16, v24, v8, v0.t
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
@@ -336,8 +336,8 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV64-NEXT:    add a2, sp, a2
 ; CHECK-RV64-NEXT:    addi a2, a2, 16
 ; CHECK-RV64-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
-; CHECK-RV64-NEXT:    li a2, 128
 ; CHECK-RV64-NEXT:    vmv1r.v v7, v8
+; CHECK-RV64-NEXT:    li a2, 128
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-RV64-NEXT:    vle8.v v8, (a1)
 ; CHECK-RV64-NEXT:    addi a1, sp, 16
@@ -353,13 +353,13 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV64-NEXT:    csrr a4, vlenb
 ; CHECK-RV64-NEXT:    slli a4, a4, 4
 ; CHECK-RV64-NEXT:    add a4, sp, a4
-; CHECK-RV64-NEXT:    cpop a3, a3
 ; CHECK-RV64-NEXT:    addi a4, a4, 16
-; CHECK-RV64-NEXT:    cpop a1, a1
-; CHECK-RV64-NEXT:    add a0, a0, a3
 ; CHECK-RV64-NEXT:    vs8r.v v24, (a4) # Unknown-size Folded Spill
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; CHECK-RV64-NEXT:    vcpop.m a4, v7
+; CHECK-RV64-NEXT:    cpop a3, a3
+; CHECK-RV64-NEXT:    cpop a1, a1
+; CHECK-RV64-NEXT:    add a0, a0, a3
 ; CHECK-RV64-NEXT:    add a0, a0, a1
 ; CHECK-RV64-NEXT:    vsetvli zero, a4, e8, m8, ta, ma
 ; CHECK-RV64-NEXT:    vle8.v v8, (a0)
@@ -368,6 +368,8 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV64-NEXT:    add a0, sp, a0
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, ta, mu
+; CHECK-RV64-NEXT:    viota.m v16, v0
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 4
 ; CHECK-RV64-NEXT:    add a0, sp, a0
@@ -382,18 +384,17 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 24
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
-; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, ta, mu
-; CHECK-RV64-NEXT:    viota.m v16, v0
-; CHECK-RV64-NEXT:    add a0, sp, a0
 ; CHECK-RV64-NEXT:    vrgather.vv v8, v24, v16, v0.t
+; CHECK-RV64-NEXT:    add a0, sp, a0
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 4
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 3
 ; CHECK-RV64-NEXT:    add a0, sp, a0
@@ -406,13 +407,12 @@ define <256 x i8> @test_expandload_v256i8(ptr %base, <256 x i1> %mask, <256 x i8
 ; CHECK-RV64-NEXT:    vl8r.v v16, (a0) # Unknown-size Folded Reload
 ; CHECK-RV64-NEXT:    addi a0, sp, 16
 ; CHECK-RV64-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 24
+; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
-; CHECK-RV64-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    vrgather.vv v8, v24, v16, v0.t
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
+; CHECK-RV64-NEXT:    vrgather.vv v8, v24, v16, v0.t
 ; CHECK-RV64-NEXT:    vmv.v.v v16, v8
 ; CHECK-RV64-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
@@ -436,39 +436,39 @@ define <256 x i8> @test_expandload_v256i8_all_ones(ptr %base, <256 x i8> %passth
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v9, v8, a2
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v9
-; CHECK-RV32-NEXT:    vmv.x.s a4, v8
-; CHECK-RV32-NEXT:    vslidedown.vi v8, v8, 1
 ; CHECK-RV32-NEXT:    cpop a3, a3
-; CHECK-RV32-NEXT:    cpop a4, a4
-; CHECK-RV32-NEXT:    vsrl.vx v9, v8, a2
-; CHECK-RV32-NEXT:    add a3, a4, a3
-; CHECK-RV32-NEXT:    vmv.x.s a2, v9
 ; CHECK-RV32-NEXT:    vmv.x.s a4, v8
+; CHECK-RV32-NEXT:    cpop a4, a4
+; CHECK-RV32-NEXT:    add a3, a4, a3
+; CHECK-RV32-NEXT:    vslidedown.vi v8, v8, 1
+; CHECK-RV32-NEXT:    vsrl.vx v9, v8, a2
+; CHECK-RV32-NEXT:    vmv.x.s a2, v9
 ; CHECK-RV32-NEXT:    cpop a2, a2
+; CHECK-RV32-NEXT:    vmv.x.s a4, v8
 ; CHECK-RV32-NEXT:    cpop a4, a4
 ; CHECK-RV32-NEXT:    add a2, a4, a2
 ; CHECK-RV32-NEXT:    add a3, a0, a3
 ; CHECK-RV32-NEXT:    add a2, a3, a2
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; CHECK-RV32-NEXT:    vle8.v v16, (a2)
 ; CHECK-RV32-NEXT:    vle8.v v8, (a0)
+; CHECK-RV32-NEXT:    vle8.v v16, (a2)
 ; CHECK-RV32-NEXT:    ret
 ;
 ; CHECK-RV64-LABEL: test_expandload_v256i8_all_ones:
 ; CHECK-RV64:       # %bb.0:
 ; CHECK-RV64-NEXT:    li a1, 128
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
-; CHECK-RV64-NEXT:    vmset.m v16
 ; CHECK-RV64-NEXT:    vle8.v v8, (a0)
+; CHECK-RV64-NEXT:    vmset.m v16
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a2, v16
-; CHECK-RV64-NEXT:    vslidedown.vi v16, v16, 1
 ; CHECK-RV64-NEXT:    cpop a2, a2
+; CHECK-RV64-NEXT:    vslidedown.vi v16, v16, 1
 ; CHECK-RV64-NEXT:    vmv.x.s a3, v16
 ; CHECK-RV64-NEXT:    cpop a3, a3
 ; CHECK-RV64-NEXT:    add a0, a0, a2
-; CHECK-RV64-NEXT:    add a0, a0, a3
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, ta, ma
+; CHECK-RV64-NEXT:    add a0, a0, a3
 ; CHECK-RV64-NEXT:    vle8.v v16, (a0)
 ; CHECK-RV64-NEXT:    ret
   %res = call <256 x i8> @llvm.masked.expandload.v256i8(ptr align 1 %base, <256 x i1> splat (i1 true), <256 x i8> %passthru)
@@ -661,8 +661,8 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    addi sp, sp, -16
 ; CHECK-RV32-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    li a2, 40
+; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    mul a1, a1, a2
 ; CHECK-RV32-NEXT:    sub sp, sp, a1
 ; CHECK-RV32-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -685,18 +685,18 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV32-NEXT:    csrr a2, vlenb
 ; CHECK-RV32-NEXT:    slli a2, a2, 4
 ; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    vsetivli zero, 8, e8, m1, ta, ma
 ; CHECK-RV32-NEXT:    addi a2, a2, 16
+; CHECK-RV32-NEXT:    vs8r.v v8, (a2) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vsetivli zero, 8, e8, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v7, v0, 8
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m4, ta, ma
-; CHECK-RV32-NEXT:    li a3, 32
-; CHECK-RV32-NEXT:    vs8r.v v8, (a2) # Unknown-size Folded Spill
 ; CHECK-RV32-NEXT:    vcpop.m a2, v7
+; CHECK-RV32-NEXT:    li a3, 32
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v25, v0, a3
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v25
-; CHECK-RV32-NEXT:    vmv.x.s a4, v0
 ; CHECK-RV32-NEXT:    cpop a3, a3
+; CHECK-RV32-NEXT:    vmv.x.s a4, v0
 ; CHECK-RV32-NEXT:    cpop a4, a4
 ; CHECK-RV32-NEXT:    add a3, a4, a3
 ; CHECK-RV32-NEXT:    slli a3, a3, 1
@@ -730,12 +730,13 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV32-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 4
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 3
 ; CHECK-RV32-NEXT:    add a0, sp, a0
@@ -754,14 +755,13 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 5
-; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    add a0, sp, a0
 ; CHECK-RV32-NEXT:    vrgather.vv v8, v16, v24, v0.t
-; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vmv.v.v v16, v8
+; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 40
+; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add sp, sp, a0
 ; CHECK-RV32-NEXT:    .cfi_def_cfa sp, 16
@@ -773,8 +773,8 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV64:       # %bb.0:
 ; CHECK-RV64-NEXT:    addi sp, sp, -16
 ; CHECK-RV64-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    li a2, 40
+; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    mul a1, a1, a2
 ; CHECK-RV64-NEXT:    sub sp, sp, a1
 ; CHECK-RV64-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -792,11 +792,11 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV64-NEXT:    li a3, 24
 ; CHECK-RV64-NEXT:    mul a2, a2, a3
 ; CHECK-RV64-NEXT:    add a2, sp, a2
-; CHECK-RV64-NEXT:    vsetivli zero, 8, e8, m1, ta, ma
 ; CHECK-RV64-NEXT:    addi a2, a2, 16
+; CHECK-RV64-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vsetivli zero, 8, e8, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v7, v0, 8
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, ta, ma
-; CHECK-RV64-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
 ; CHECK-RV64-NEXT:    vcpop.m a2, v7
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a3, v0
@@ -828,13 +828,14 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV64-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 24
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 5
 ; CHECK-RV64-NEXT:    add a0, sp, a0
@@ -854,12 +855,11 @@ define <128 x i16> @test_expandload_v128i16(ptr %base, <128 x i1> %mask, <128 x 
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 3
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    vmv1r.v v0, v7
-; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vrgather.vv v16, v24, v8, v0.t
+; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 40
+; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add sp, sp, a0
 ; CHECK-RV64-NEXT:    .cfi_def_cfa sp, 16
@@ -875,19 +875,19 @@ define <128 x i16> @test_expandload_v128i16_all_ones(ptr %base, <128 x i16> %pas
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    li a1, 64
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; CHECK-RV32-NEXT:    vle16.v v8, (a0)
 ; CHECK-RV32-NEXT:    vmset.m v16
 ; CHECK-RV32-NEXT:    li a2, 32
-; CHECK-RV32-NEXT:    vle16.v v8, (a0)
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v17, v16, a2
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v17
-; CHECK-RV32-NEXT:    vmv.x.s a3, v16
 ; CHECK-RV32-NEXT:    cpop a2, a2
+; CHECK-RV32-NEXT:    vmv.x.s a3, v16
 ; CHECK-RV32-NEXT:    cpop a3, a3
 ; CHECK-RV32-NEXT:    add a2, a3, a2
 ; CHECK-RV32-NEXT:    slli a2, a2, 1
-; CHECK-RV32-NEXT:    add a0, a0, a2
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; CHECK-RV32-NEXT:    add a0, a0, a2
 ; CHECK-RV32-NEXT:    vle16.v v16, (a0)
 ; CHECK-RV32-NEXT:    ret
 ;
@@ -895,14 +895,14 @@ define <128 x i16> @test_expandload_v128i16_all_ones(ptr %base, <128 x i16> %pas
 ; CHECK-RV64:       # %bb.0:
 ; CHECK-RV64-NEXT:    li a1, 64
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
-; CHECK-RV64-NEXT:    vmset.m v16
 ; CHECK-RV64-NEXT:    vle16.v v8, (a0)
+; CHECK-RV64-NEXT:    vmset.m v16
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a2, v16
 ; CHECK-RV64-NEXT:    cpop a2, a2
 ; CHECK-RV64-NEXT:    slli a2, a2, 1
-; CHECK-RV64-NEXT:    add a0, a0, a2
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e16, m8, ta, ma
+; CHECK-RV64-NEXT:    add a0, a0, a2
 ; CHECK-RV64-NEXT:    vle16.v v16, (a0)
 ; CHECK-RV64-NEXT:    ret
   %res = call <128 x i16> @llvm.masked.expandload.v128i16(ptr align 2 %base, <128 x i1> splat (i1 true), <128 x i16> %passthru)
@@ -1068,8 +1068,8 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    addi sp, sp, -16
 ; CHECK-RV32-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    li a2, 40
+; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    mul a1, a1, a2
 ; CHECK-RV32-NEXT:    sub sp, sp, a1
 ; CHECK-RV32-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -1085,17 +1085,17 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV32-NEXT:    vle32.v v16, (a0)
 ; CHECK-RV32-NEXT:    csrr a2, vlenb
 ; CHECK-RV32-NEXT:    li a3, 24
-; CHECK-RV32-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma
 ; CHECK-RV32-NEXT:    mul a2, a2, a3
+; CHECK-RV32-NEXT:    add a2, sp, a2
+; CHECK-RV32-NEXT:    addi a2, a2, 16
+; CHECK-RV32-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v7, v0, 4
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e32, m8, ta, ma
-; CHECK-RV32-NEXT:    vmv.x.s a3, v0
-; CHECK-RV32-NEXT:    add a2, sp, a2
-; CHECK-RV32-NEXT:    cpop a3, a3
-; CHECK-RV32-NEXT:    addi a2, a2, 16
-; CHECK-RV32-NEXT:    slli a3, a3, 2
-; CHECK-RV32-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
 ; CHECK-RV32-NEXT:    vcpop.m a2, v7
+; CHECK-RV32-NEXT:    vmv.x.s a3, v0
+; CHECK-RV32-NEXT:    cpop a3, a3
+; CHECK-RV32-NEXT:    slli a3, a3, 2
 ; CHECK-RV32-NEXT:    add a0, a0, a3
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e32, m8, ta, ma
 ; CHECK-RV32-NEXT:    vle32.v v16, (a0)
@@ -1122,13 +1122,14 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV32-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 24
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 5
 ; CHECK-RV32-NEXT:    add a0, sp, a0
@@ -1148,12 +1149,11 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 3
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    vmv1r.v v0, v7
-; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vrgather.vv v16, v24, v8, v0.t
+; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 40
+; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add sp, sp, a0
 ; CHECK-RV32-NEXT:    .cfi_def_cfa sp, 16
@@ -1165,8 +1165,8 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV64:       # %bb.0:
 ; CHECK-RV64-NEXT:    addi sp, sp, -16
 ; CHECK-RV64-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    li a2, 40
+; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    mul a1, a1, a2
 ; CHECK-RV64-NEXT:    sub sp, sp, a1
 ; CHECK-RV64-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -1182,17 +1182,17 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV64-NEXT:    vle32.v v16, (a0)
 ; CHECK-RV64-NEXT:    csrr a2, vlenb
 ; CHECK-RV64-NEXT:    li a3, 24
-; CHECK-RV64-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma
 ; CHECK-RV64-NEXT:    mul a2, a2, a3
+; CHECK-RV64-NEXT:    add a2, sp, a2
+; CHECK-RV64-NEXT:    addi a2, a2, 16
+; CHECK-RV64-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vsetivli zero, 4, e8, mf2, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v7, v0, 4
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e32, m8, ta, ma
-; CHECK-RV64-NEXT:    vmv.x.s a3, v0
-; CHECK-RV64-NEXT:    add a2, sp, a2
-; CHECK-RV64-NEXT:    cpopw a3, a3
-; CHECK-RV64-NEXT:    addi a2, a2, 16
-; CHECK-RV64-NEXT:    slli a3, a3, 2
-; CHECK-RV64-NEXT:    vs8r.v v16, (a2) # Unknown-size Folded Spill
 ; CHECK-RV64-NEXT:    vcpop.m a2, v7
+; CHECK-RV64-NEXT:    vmv.x.s a3, v0
+; CHECK-RV64-NEXT:    cpopw a3, a3
+; CHECK-RV64-NEXT:    slli a3, a3, 2
 ; CHECK-RV64-NEXT:    add a0, a0, a3
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e32, m8, ta, ma
 ; CHECK-RV64-NEXT:    vle32.v v16, (a0)
@@ -1219,13 +1219,14 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV64-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 24
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 5
 ; CHECK-RV64-NEXT:    add a0, sp, a0
@@ -1245,12 +1246,11 @@ define <64 x i32> @test_expandload_v64i32(ptr %base, <64 x i1> %mask, <64 x i32>
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 3
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    vmv1r.v v0, v7
-; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vrgather.vv v16, v24, v8, v0.t
+; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 40
+; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add sp, sp, a0
 ; CHECK-RV64-NEXT:    .cfi_def_cfa sp, 16
@@ -1419,8 +1419,8 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    addi sp, sp, -16
 ; CHECK-RV32-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    li a2, 40
+; CHECK-RV32-NEXT:    csrr a1, vlenb
 ; CHECK-RV32-NEXT:    mul a1, a1, a2
 ; CHECK-RV32-NEXT:    sub sp, sp, a1
 ; CHECK-RV32-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -1443,9 +1443,9 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV32-NEXT:    zext.h a1, a1
 ; CHECK-RV32-NEXT:    cpop a1, a1
 ; CHECK-RV32-NEXT:    slli a1, a1, 3
+; CHECK-RV32-NEXT:    add a0, a0, a1
 ; CHECK-RV32-NEXT:    vsetivli zero, 2, e8, mf4, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v7, v0, 2
-; CHECK-RV32-NEXT:    add a0, a0, a1
 ; CHECK-RV32-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
 ; CHECK-RV32-NEXT:    vcpop.m a1, v7
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
@@ -1473,13 +1473,14 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV32-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 24
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    viota.m v16, v7
 ; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV32-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 5
 ; CHECK-RV32-NEXT:    add a0, sp, a0
@@ -1499,12 +1500,11 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    slli a0, a0, 3
 ; CHECK-RV32-NEXT:    add a0, sp, a0
-; CHECK-RV32-NEXT:    vmv1r.v v0, v7
-; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vrgather.vv v16, v24, v8, v0.t
+; CHECK-RV32-NEXT:    addi a0, a0, 16
 ; CHECK-RV32-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    li a1, 40
+; CHECK-RV32-NEXT:    csrr a0, vlenb
 ; CHECK-RV32-NEXT:    mul a0, a0, a1
 ; CHECK-RV32-NEXT:    add sp, sp, a0
 ; CHECK-RV32-NEXT:    .cfi_def_cfa sp, 16
@@ -1516,8 +1516,8 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV64:       # %bb.0:
 ; CHECK-RV64-NEXT:    addi sp, sp, -16
 ; CHECK-RV64-NEXT:    .cfi_def_cfa_offset 16
-; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    li a2, 40
+; CHECK-RV64-NEXT:    csrr a1, vlenb
 ; CHECK-RV64-NEXT:    mul a1, a1, a2
 ; CHECK-RV64-NEXT:    sub sp, sp, a1
 ; CHECK-RV64-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x28, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 40 * vlenb
@@ -1540,9 +1540,9 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV64-NEXT:    zext.h a1, a1
 ; CHECK-RV64-NEXT:    cpopw a1, a1
 ; CHECK-RV64-NEXT:    slli a1, a1, 3
+; CHECK-RV64-NEXT:    add a0, a0, a1
 ; CHECK-RV64-NEXT:    vsetivli zero, 2, e8, mf4, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v7, v0, 2
-; CHECK-RV64-NEXT:    add a0, a0, a1
 ; CHECK-RV64-NEXT:    vsetivli zero, 16, e8, m1, ta, ma
 ; CHECK-RV64-NEXT:    vcpop.m a1, v7
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e64, m8, ta, ma
@@ -1570,13 +1570,14 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV64-NEXT:    vrgather.vv v8, v16, v24, v0.t
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 24
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    viota.m v16, v7
 ; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vs8r.v v16, (a0) # Unknown-size Folded Spill
+; CHECK-RV64-NEXT:    vmv1r.v v0, v7
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 5
 ; CHECK-RV64-NEXT:    add a0, sp, a0
@@ -1596,12 +1597,11 @@ define <32 x i64> @test_expandload_v32i64(ptr %base, <32 x i1> %mask, <32 x i64>
 ; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    slli a0, a0, 3
 ; CHECK-RV64-NEXT:    add a0, sp, a0
-; CHECK-RV64-NEXT:    vmv1r.v v0, v7
-; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vrgather.vv v16, v24, v8, v0.t
+; CHECK-RV64-NEXT:    addi a0, a0, 16
 ; CHECK-RV64-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    li a1, 40
+; CHECK-RV64-NEXT:    csrr a0, vlenb
 ; CHECK-RV64-NEXT:    mul a0, a0, a1
 ; CHECK-RV64-NEXT:    add sp, sp, a0
 ; CHECK-RV64-NEXT:    .cfi_def_cfa sp, 16
@@ -1773,8 +1773,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv1r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
 ; CHECK-RV32-NEXT:  .LBB61_30: # %else110
-; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    li a1, 32
+; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_32
 ; CHECK-RV32-NEXT:  # %bb.31: # %cond.load113
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
@@ -1786,9 +1786,9 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv1r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
 ; CHECK-RV32-NEXT:  .LBB61_32: # %else114
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v0, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_34
 ; CHECK-RV32-NEXT:  # %bb.33: # %cond.load117
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
@@ -1927,24 +1927,24 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 61
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 62
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 61
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_66: # %else242
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 1
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_68
 ; CHECK-RV32-NEXT:  # %bb.67: # %cond.load245
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 62
 ; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 62
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv.s.x v17, a3
 ; CHECK-RV32-NEXT:    li a3, 63
@@ -2080,31 +2080,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 93
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 94
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 93
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_100: # %else370
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_102
 ; CHECK-RV32-NEXT:  # %bb.101: # %cond.load373
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 94
 ; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 94
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 95
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_102: # %else374
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -2233,31 +2233,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 125
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 126
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 125
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_134: # %else498
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 2
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_136
 ; CHECK-RV32-NEXT:  # %bb.135: # %cond.load501
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 126
 ; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 126
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a3
 ; CHECK-RV32-NEXT:    li a3, 127
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_136: # %else502
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -2386,31 +2386,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 157
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 158
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 157
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_168: # %else626
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_170
 ; CHECK-RV32-NEXT:  # %bb.169: # %cond.load629
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 158
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 159
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_170: # %else630
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -2539,31 +2539,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 189
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 190
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 189
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_202: # %else754
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 3
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_204
 ; CHECK-RV32-NEXT:  # %bb.203: # %cond.load757
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 190
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a3
 ; CHECK-RV32-NEXT:    li a3, 191
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_204: # %else758
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -2692,31 +2692,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 221
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 222
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 221
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_236: # %else882
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_238
 ; CHECK-RV32-NEXT:  # %bb.237: # %cond.load885
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 222
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 223
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_238: # %else886
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -2845,31 +2845,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 253
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 254
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 253
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_270: # %else1010
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 4
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_272
 ; CHECK-RV32-NEXT:  # %bb.271: # %cond.load1013
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 254
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a3
 ; CHECK-RV32-NEXT:    li a3, 255
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:  .LBB61_272: # %else1014
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -3002,12 +3002,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 286
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_304: # %else1138
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_306
 ; CHECK-RV32-NEXT:  # %bb.305: # %cond.load1141
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
@@ -3015,8 +3015,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 287
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_306: # %else1142
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -3149,12 +3149,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 318
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:  .LBB61_338: # %else1266
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 5
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_340
 ; CHECK-RV32-NEXT:  # %bb.339: # %cond.load1269
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
@@ -3162,8 +3162,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 319
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_340: # %else1270
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -3296,12 +3296,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 350
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_372: # %else1394
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_374
 ; CHECK-RV32-NEXT:  # %bb.373: # %cond.load1397
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
@@ -3309,8 +3309,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 351
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_374: # %else1398
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -3443,12 +3443,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 382
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:  .LBB61_406: # %else1522
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 6
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_408
 ; CHECK-RV32-NEXT:  # %bb.407: # %cond.load1525
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
@@ -3456,8 +3456,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 383
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_408: # %else1526
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -3590,12 +3590,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 414
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_440: # %else1650
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_442
 ; CHECK-RV32-NEXT:  # %bb.441: # %cond.load1653
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
@@ -3603,8 +3603,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 415
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_442: # %else1654
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a2, v16
@@ -3737,12 +3737,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 446
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:  .LBB61_474: # %else1778
-; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vslidedown.vi v16, v0, 7
+; CHECK-RV32-NEXT:    slli a3, a2, 1
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_476
 ; CHECK-RV32-NEXT:  # %bb.475: # %cond.load1781
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
@@ -3750,8 +3750,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 447
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_476: # %else1782
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a3, v16
@@ -3884,12 +3884,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 478
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:  .LBB61_508: # %else1906
-; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vsrl.vx v16, v16, a1
+; CHECK-RV32-NEXT:    slli a2, a3, 1
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_510
 ; CHECK-RV32-NEXT:  # %bb.509: # %cond.load1909
 ; CHECK-RV32-NEXT:    lbu a1, 0(a0)
@@ -3897,8 +3897,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV32-NEXT:    li a1, 479
 ; CHECK-RV32-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a2
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a2
 ; CHECK-RV32-NEXT:  .LBB61_510: # %else1910
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.x.s a1, v16
@@ -4388,15 +4388,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 32
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 33
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 32
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_574
 ; CHECK-RV32-NEXT:    j .LBB61_37
@@ -4404,15 +4404,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 33
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 34
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 33
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_575
 ; CHECK-RV32-NEXT:    j .LBB61_38
@@ -4420,15 +4420,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 34
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 35
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 34
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_576
 ; CHECK-RV32-NEXT:    j .LBB61_39
@@ -4436,15 +4436,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 35
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 36
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 35
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_577
 ; CHECK-RV32-NEXT:    j .LBB61_40
@@ -4452,15 +4452,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 36
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 37
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 36
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_578
 ; CHECK-RV32-NEXT:    j .LBB61_41
@@ -4468,15 +4468,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 37
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 38
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 37
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_579
 ; CHECK-RV32-NEXT:    j .LBB61_42
@@ -4484,15 +4484,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 38
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 39
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 38
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_580
 ; CHECK-RV32-NEXT:    j .LBB61_43
@@ -4500,15 +4500,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 39
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 40
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 39
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_581
 ; CHECK-RV32-NEXT:    j .LBB61_44
@@ -4516,15 +4516,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 40
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 41
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 40
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_582
 ; CHECK-RV32-NEXT:    j .LBB61_45
@@ -4532,15 +4532,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 41
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 42
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 41
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_583
 ; CHECK-RV32-NEXT:    j .LBB61_46
@@ -4548,15 +4548,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 42
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 43
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 42
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_584
 ; CHECK-RV32-NEXT:    j .LBB61_47
@@ -4564,15 +4564,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 43
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 44
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 43
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_585
 ; CHECK-RV32-NEXT:    j .LBB61_48
@@ -4580,15 +4580,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 44
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 45
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 44
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_586
 ; CHECK-RV32-NEXT:    j .LBB61_49
@@ -4596,15 +4596,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 45
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 46
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 45
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_587
 ; CHECK-RV32-NEXT:    j .LBB61_50
@@ -4612,15 +4612,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 46
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 47
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 46
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_588
 ; CHECK-RV32-NEXT:    j .LBB61_51
@@ -4628,15 +4628,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 47
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 48
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 47
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_589
 ; CHECK-RV32-NEXT:    j .LBB61_52
@@ -4644,15 +4644,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 48
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 49
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 48
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_590
 ; CHECK-RV32-NEXT:    j .LBB61_53
@@ -4660,15 +4660,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 49
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 50
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 49
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_591
 ; CHECK-RV32-NEXT:    j .LBB61_54
@@ -4676,15 +4676,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 50
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 51
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 50
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_592
 ; CHECK-RV32-NEXT:    j .LBB61_55
@@ -4692,15 +4692,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 51
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 52
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 51
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_593
 ; CHECK-RV32-NEXT:    j .LBB61_56
@@ -4708,15 +4708,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 52
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 53
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 52
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_594
 ; CHECK-RV32-NEXT:    j .LBB61_57
@@ -4724,15 +4724,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 53
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 54
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 53
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_595
 ; CHECK-RV32-NEXT:    j .LBB61_58
@@ -4740,15 +4740,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 54
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 55
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 54
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_596
 ; CHECK-RV32-NEXT:    j .LBB61_59
@@ -4756,15 +4756,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 55
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 56
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 55
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_597
 ; CHECK-RV32-NEXT:    j .LBB61_60
@@ -4772,15 +4772,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 56
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 57
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 56
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_598
 ; CHECK-RV32-NEXT:    j .LBB61_61
@@ -4788,15 +4788,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 57
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 58
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 57
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_599
 ; CHECK-RV32-NEXT:    j .LBB61_62
@@ -4804,15 +4804,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 58
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 59
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 58
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_600
 ; CHECK-RV32-NEXT:    j .LBB61_63
@@ -4820,15 +4820,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 59
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 60
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 59
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_601
 ; CHECK-RV32-NEXT:    j .LBB61_64
@@ -4836,15 +4836,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 60
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 61
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 60
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m1, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv1r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1026
 ; CHECK-RV32-NEXT:    j .LBB61_65
@@ -4852,8 +4852,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_66
 ; CHECK-RV32-NEXT:  .LBB61_602: # %cond.load249
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 63
 ; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 63
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv.s.x v17, a2
 ; CHECK-RV32-NEXT:    li a2, 64
@@ -4868,15 +4868,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 64
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 65
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 64
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_604
 ; CHECK-RV32-NEXT:    j .LBB61_71
@@ -4884,15 +4884,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 65
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 66
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 65
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_605
 ; CHECK-RV32-NEXT:    j .LBB61_72
@@ -4900,15 +4900,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 66
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 67
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 66
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_606
 ; CHECK-RV32-NEXT:    j .LBB61_73
@@ -4916,15 +4916,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 67
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 68
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 67
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_607
 ; CHECK-RV32-NEXT:    j .LBB61_74
@@ -4932,15 +4932,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 68
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 69
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 68
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_608
 ; CHECK-RV32-NEXT:    j .LBB61_75
@@ -4948,15 +4948,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 69
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 70
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 69
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_609
 ; CHECK-RV32-NEXT:    j .LBB61_76
@@ -4964,15 +4964,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 70
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 71
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 70
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_610
 ; CHECK-RV32-NEXT:    j .LBB61_77
@@ -4980,15 +4980,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 71
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 72
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 71
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_611
 ; CHECK-RV32-NEXT:    j .LBB61_78
@@ -4996,15 +4996,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 72
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 73
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 72
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_612
 ; CHECK-RV32-NEXT:    j .LBB61_79
@@ -5012,15 +5012,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 73
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 74
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 73
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_613
 ; CHECK-RV32-NEXT:    j .LBB61_80
@@ -5028,15 +5028,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 74
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 75
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 74
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_614
 ; CHECK-RV32-NEXT:    j .LBB61_81
@@ -5044,15 +5044,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 75
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 76
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 75
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_615
 ; CHECK-RV32-NEXT:    j .LBB61_82
@@ -5060,15 +5060,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 76
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 77
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 76
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_616
 ; CHECK-RV32-NEXT:    j .LBB61_83
@@ -5076,15 +5076,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 77
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 78
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 77
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_617
 ; CHECK-RV32-NEXT:    j .LBB61_84
@@ -5092,15 +5092,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 78
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 79
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 78
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_618
 ; CHECK-RV32-NEXT:    j .LBB61_85
@@ -5108,15 +5108,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 79
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 80
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 79
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_619
 ; CHECK-RV32-NEXT:    j .LBB61_86
@@ -5124,15 +5124,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 80
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 81
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 80
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_620
 ; CHECK-RV32-NEXT:    j .LBB61_87
@@ -5140,15 +5140,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 81
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 82
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 81
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_621
 ; CHECK-RV32-NEXT:    j .LBB61_88
@@ -5156,15 +5156,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 82
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 83
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 82
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_622
 ; CHECK-RV32-NEXT:    j .LBB61_89
@@ -5172,15 +5172,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 83
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 84
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 83
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_623
 ; CHECK-RV32-NEXT:    j .LBB61_90
@@ -5188,15 +5188,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 84
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 85
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 84
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_624
 ; CHECK-RV32-NEXT:    j .LBB61_91
@@ -5204,15 +5204,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 85
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 86
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 85
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_625
 ; CHECK-RV32-NEXT:    j .LBB61_92
@@ -5220,15 +5220,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 86
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 87
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 86
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_626
 ; CHECK-RV32-NEXT:    j .LBB61_93
@@ -5236,15 +5236,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 87
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 88
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 87
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_627
 ; CHECK-RV32-NEXT:    j .LBB61_94
@@ -5252,15 +5252,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 88
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 89
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 88
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_628
 ; CHECK-RV32-NEXT:    j .LBB61_95
@@ -5268,15 +5268,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 89
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 90
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 89
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_629
 ; CHECK-RV32-NEXT:    j .LBB61_96
@@ -5284,15 +5284,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 90
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 91
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 90
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_630
 ; CHECK-RV32-NEXT:    j .LBB61_97
@@ -5300,15 +5300,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 91
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 92
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 91
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_631
 ; CHECK-RV32-NEXT:    j .LBB61_98
@@ -5316,15 +5316,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 92
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 93
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 92
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1027
 ; CHECK-RV32-NEXT:    j .LBB61_99
@@ -5332,15 +5332,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_100
 ; CHECK-RV32-NEXT:  .LBB61_632: # %cond.load377
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 95
 ; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 95
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 96
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_633
 ; CHECK-RV32-NEXT:    j .LBB61_104
@@ -5348,15 +5348,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 96
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 97
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 96
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_634
 ; CHECK-RV32-NEXT:    j .LBB61_105
@@ -5364,15 +5364,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 97
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 98
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 97
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_635
 ; CHECK-RV32-NEXT:    j .LBB61_106
@@ -5380,15 +5380,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 98
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 99
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 98
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_636
 ; CHECK-RV32-NEXT:    j .LBB61_107
@@ -5396,15 +5396,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 99
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 100
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 99
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_637
 ; CHECK-RV32-NEXT:    j .LBB61_108
@@ -5412,15 +5412,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 100
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 101
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 100
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_638
 ; CHECK-RV32-NEXT:    j .LBB61_109
@@ -5428,15 +5428,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 101
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 102
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 101
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_639
 ; CHECK-RV32-NEXT:    j .LBB61_110
@@ -5444,15 +5444,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 102
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 103
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 102
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_640
 ; CHECK-RV32-NEXT:    j .LBB61_111
@@ -5460,15 +5460,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 103
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 104
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 103
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_641
 ; CHECK-RV32-NEXT:    j .LBB61_112
@@ -5476,15 +5476,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 104
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 105
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 104
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_642
 ; CHECK-RV32-NEXT:    j .LBB61_113
@@ -5492,15 +5492,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 105
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 106
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 105
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_643
 ; CHECK-RV32-NEXT:    j .LBB61_114
@@ -5508,15 +5508,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 106
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 107
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 106
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_644
 ; CHECK-RV32-NEXT:    j .LBB61_115
@@ -5524,15 +5524,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 107
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 108
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 107
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_645
 ; CHECK-RV32-NEXT:    j .LBB61_116
@@ -5540,15 +5540,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 108
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 109
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 108
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_646
 ; CHECK-RV32-NEXT:    j .LBB61_117
@@ -5556,15 +5556,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 109
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 110
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 109
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_647
 ; CHECK-RV32-NEXT:    j .LBB61_118
@@ -5572,15 +5572,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 110
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 111
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 110
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_648
 ; CHECK-RV32-NEXT:    j .LBB61_119
@@ -5588,15 +5588,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 111
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 112
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 111
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_649
 ; CHECK-RV32-NEXT:    j .LBB61_120
@@ -5604,15 +5604,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 112
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 113
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 112
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_650
 ; CHECK-RV32-NEXT:    j .LBB61_121
@@ -5620,15 +5620,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 113
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 114
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 113
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_651
 ; CHECK-RV32-NEXT:    j .LBB61_122
@@ -5636,15 +5636,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 114
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 115
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 114
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_652
 ; CHECK-RV32-NEXT:    j .LBB61_123
@@ -5652,15 +5652,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 115
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 116
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 115
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_653
 ; CHECK-RV32-NEXT:    j .LBB61_124
@@ -5668,15 +5668,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 116
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 117
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 116
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_654
 ; CHECK-RV32-NEXT:    j .LBB61_125
@@ -5684,15 +5684,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 117
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 118
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 117
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_655
 ; CHECK-RV32-NEXT:    j .LBB61_126
@@ -5700,15 +5700,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 118
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 119
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 118
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_656
 ; CHECK-RV32-NEXT:    j .LBB61_127
@@ -5716,15 +5716,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 119
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 120
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 119
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_657
 ; CHECK-RV32-NEXT:    j .LBB61_128
@@ -5732,15 +5732,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 120
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 121
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 120
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_658
 ; CHECK-RV32-NEXT:    j .LBB61_129
@@ -5748,15 +5748,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 121
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 122
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 121
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_659
 ; CHECK-RV32-NEXT:    j .LBB61_130
@@ -5764,15 +5764,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 122
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 123
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 122
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_660
 ; CHECK-RV32-NEXT:    j .LBB61_131
@@ -5780,15 +5780,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 123
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 124
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 123
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_661
 ; CHECK-RV32-NEXT:    j .LBB61_132
@@ -5796,15 +5796,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 124
+; CHECK-RV32-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a3
 ; CHECK-RV32-NEXT:    li a3, 125
-; CHECK-RV32-NEXT:    vmv8r.v v16, v8
+; CHECK-RV32-NEXT:    li a4, 124
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v16, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v16
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1028
 ; CHECK-RV32-NEXT:    j .LBB61_133
@@ -5812,15 +5812,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_134
 ; CHECK-RV32-NEXT:  .LBB61_662: # %cond.load505
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
-; CHECK-RV32-NEXT:    li a4, 127
 ; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 127
 ; CHECK-RV32-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV32-NEXT:    li a2, 128
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v18, a4
 ; CHECK-RV32-NEXT:    vmv2r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_663
 ; CHECK-RV32-NEXT:    j .LBB61_138
@@ -5828,15 +5828,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 128
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 129
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 128
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_664
 ; CHECK-RV32-NEXT:    j .LBB61_139
@@ -5844,15 +5844,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 129
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 130
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 129
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_665
 ; CHECK-RV32-NEXT:    j .LBB61_140
@@ -5860,15 +5860,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 130
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 131
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 130
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_666
 ; CHECK-RV32-NEXT:    j .LBB61_141
@@ -5876,15 +5876,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 131
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 132
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 131
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_667
 ; CHECK-RV32-NEXT:    j .LBB61_142
@@ -5892,15 +5892,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 132
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 133
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 132
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_668
 ; CHECK-RV32-NEXT:    j .LBB61_143
@@ -5908,15 +5908,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 133
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 134
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 133
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_669
 ; CHECK-RV32-NEXT:    j .LBB61_144
@@ -5924,15 +5924,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 134
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 135
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 134
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_670
 ; CHECK-RV32-NEXT:    j .LBB61_145
@@ -5940,15 +5940,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 135
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 136
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 135
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_671
 ; CHECK-RV32-NEXT:    j .LBB61_146
@@ -5956,15 +5956,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 136
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 137
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 136
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_672
 ; CHECK-RV32-NEXT:    j .LBB61_147
@@ -5972,15 +5972,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 137
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 138
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 137
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_673
 ; CHECK-RV32-NEXT:    j .LBB61_148
@@ -5988,15 +5988,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 138
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 139
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 138
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_674
 ; CHECK-RV32-NEXT:    j .LBB61_149
@@ -6004,15 +6004,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 139
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 140
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 139
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_675
 ; CHECK-RV32-NEXT:    j .LBB61_150
@@ -6020,15 +6020,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 140
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 141
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 140
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_676
 ; CHECK-RV32-NEXT:    j .LBB61_151
@@ -6036,15 +6036,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 141
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 142
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 141
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_677
 ; CHECK-RV32-NEXT:    j .LBB61_152
@@ -6052,15 +6052,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 142
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 143
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 142
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_678
 ; CHECK-RV32-NEXT:    j .LBB61_153
@@ -6068,15 +6068,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 143
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 144
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 143
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_679
 ; CHECK-RV32-NEXT:    j .LBB61_154
@@ -6084,15 +6084,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 144
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 145
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 144
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_680
 ; CHECK-RV32-NEXT:    j .LBB61_155
@@ -6100,15 +6100,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 145
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 146
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 145
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_681
 ; CHECK-RV32-NEXT:    j .LBB61_156
@@ -6116,15 +6116,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 146
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 147
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 146
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_682
 ; CHECK-RV32-NEXT:    j .LBB61_157
@@ -6132,15 +6132,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 147
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 148
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 147
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_683
 ; CHECK-RV32-NEXT:    j .LBB61_158
@@ -6148,15 +6148,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 148
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 149
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 148
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_684
 ; CHECK-RV32-NEXT:    j .LBB61_159
@@ -6164,15 +6164,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 149
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 150
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 149
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_685
 ; CHECK-RV32-NEXT:    j .LBB61_160
@@ -6180,15 +6180,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 150
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 151
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 150
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_686
 ; CHECK-RV32-NEXT:    j .LBB61_161
@@ -6196,15 +6196,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 151
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 152
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 151
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_687
 ; CHECK-RV32-NEXT:    j .LBB61_162
@@ -6212,15 +6212,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 152
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 153
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 152
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_688
 ; CHECK-RV32-NEXT:    j .LBB61_163
@@ -6228,15 +6228,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 153
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 154
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 153
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_689
 ; CHECK-RV32-NEXT:    j .LBB61_164
@@ -6244,15 +6244,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 154
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 155
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 154
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_690
 ; CHECK-RV32-NEXT:    j .LBB61_165
@@ -6260,15 +6260,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 155
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 156
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 155
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_691
 ; CHECK-RV32-NEXT:    j .LBB61_166
@@ -6276,15 +6276,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 156
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 157
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 156
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1029
 ; CHECK-RV32-NEXT:    j .LBB61_167
@@ -6292,15 +6292,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_168
 ; CHECK-RV32-NEXT:  .LBB61_692: # %cond.load633
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 159
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 160
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_693
 ; CHECK-RV32-NEXT:    j .LBB61_172
@@ -6308,15 +6308,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 160
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 161
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 160
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_694
 ; CHECK-RV32-NEXT:    j .LBB61_173
@@ -6324,15 +6324,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 161
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 162
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 161
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_695
 ; CHECK-RV32-NEXT:    j .LBB61_174
@@ -6340,15 +6340,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 162
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 163
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 162
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_696
 ; CHECK-RV32-NEXT:    j .LBB61_175
@@ -6356,15 +6356,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 163
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 164
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 163
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_697
 ; CHECK-RV32-NEXT:    j .LBB61_176
@@ -6372,15 +6372,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 164
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 165
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 164
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_698
 ; CHECK-RV32-NEXT:    j .LBB61_177
@@ -6388,15 +6388,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 165
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 166
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 165
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_699
 ; CHECK-RV32-NEXT:    j .LBB61_178
@@ -6404,15 +6404,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 166
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 167
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 166
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_700
 ; CHECK-RV32-NEXT:    j .LBB61_179
@@ -6420,15 +6420,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 167
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 168
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 167
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_701
 ; CHECK-RV32-NEXT:    j .LBB61_180
@@ -6436,15 +6436,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 168
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 169
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 168
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_702
 ; CHECK-RV32-NEXT:    j .LBB61_181
@@ -6452,15 +6452,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 169
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 170
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 169
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_703
 ; CHECK-RV32-NEXT:    j .LBB61_182
@@ -6468,15 +6468,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 170
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 171
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 170
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_704
 ; CHECK-RV32-NEXT:    j .LBB61_183
@@ -6484,15 +6484,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 171
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 172
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 171
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_705
 ; CHECK-RV32-NEXT:    j .LBB61_184
@@ -6500,15 +6500,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 172
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 173
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 172
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_706
 ; CHECK-RV32-NEXT:    j .LBB61_185
@@ -6516,15 +6516,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 173
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 174
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 173
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_707
 ; CHECK-RV32-NEXT:    j .LBB61_186
@@ -6532,15 +6532,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 174
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 175
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 174
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_708
 ; CHECK-RV32-NEXT:    j .LBB61_187
@@ -6548,15 +6548,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 175
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 176
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 175
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_709
 ; CHECK-RV32-NEXT:    j .LBB61_188
@@ -6564,15 +6564,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 176
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 177
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 176
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_710
 ; CHECK-RV32-NEXT:    j .LBB61_189
@@ -6580,15 +6580,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 177
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 178
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 177
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_711
 ; CHECK-RV32-NEXT:    j .LBB61_190
@@ -6596,15 +6596,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 178
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 179
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 178
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_712
 ; CHECK-RV32-NEXT:    j .LBB61_191
@@ -6612,15 +6612,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 179
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 180
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 179
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_713
 ; CHECK-RV32-NEXT:    j .LBB61_192
@@ -6628,15 +6628,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 180
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 181
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 180
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_714
 ; CHECK-RV32-NEXT:    j .LBB61_193
@@ -6644,15 +6644,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 181
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 182
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 181
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_715
 ; CHECK-RV32-NEXT:    j .LBB61_194
@@ -6660,15 +6660,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 182
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 183
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 182
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_716
 ; CHECK-RV32-NEXT:    j .LBB61_195
@@ -6676,15 +6676,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 183
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 184
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 183
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_717
 ; CHECK-RV32-NEXT:    j .LBB61_196
@@ -6692,15 +6692,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 184
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 185
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 184
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_718
 ; CHECK-RV32-NEXT:    j .LBB61_197
@@ -6708,15 +6708,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 185
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 186
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 185
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_719
 ; CHECK-RV32-NEXT:    j .LBB61_198
@@ -6724,15 +6724,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 186
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 187
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 186
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_720
 ; CHECK-RV32-NEXT:    j .LBB61_199
@@ -6740,15 +6740,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 187
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 188
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 187
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_721
 ; CHECK-RV32-NEXT:    j .LBB61_200
@@ -6756,15 +6756,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 188
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 189
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 188
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1030
 ; CHECK-RV32-NEXT:    j .LBB61_201
@@ -6772,15 +6772,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_202
 ; CHECK-RV32-NEXT:  .LBB61_722: # %cond.load761
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 191
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 192
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_723
 ; CHECK-RV32-NEXT:    j .LBB61_206
@@ -6788,15 +6788,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 192
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 193
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 192
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_724
 ; CHECK-RV32-NEXT:    j .LBB61_207
@@ -6804,15 +6804,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 193
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 194
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 193
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_725
 ; CHECK-RV32-NEXT:    j .LBB61_208
@@ -6820,15 +6820,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 194
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 195
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 194
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_726
 ; CHECK-RV32-NEXT:    j .LBB61_209
@@ -6836,15 +6836,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 195
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 196
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 195
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_727
 ; CHECK-RV32-NEXT:    j .LBB61_210
@@ -6852,15 +6852,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 196
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 197
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 196
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_728
 ; CHECK-RV32-NEXT:    j .LBB61_211
@@ -6868,15 +6868,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 197
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 198
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 197
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_729
 ; CHECK-RV32-NEXT:    j .LBB61_212
@@ -6884,15 +6884,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 198
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 199
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 198
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_730
 ; CHECK-RV32-NEXT:    j .LBB61_213
@@ -6900,15 +6900,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 199
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 200
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 199
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_731
 ; CHECK-RV32-NEXT:    j .LBB61_214
@@ -6916,15 +6916,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 200
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 201
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 200
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_732
 ; CHECK-RV32-NEXT:    j .LBB61_215
@@ -6932,15 +6932,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 201
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 202
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 201
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_733
 ; CHECK-RV32-NEXT:    j .LBB61_216
@@ -6948,15 +6948,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 202
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 203
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 202
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_734
 ; CHECK-RV32-NEXT:    j .LBB61_217
@@ -6964,15 +6964,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 203
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 204
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 203
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_735
 ; CHECK-RV32-NEXT:    j .LBB61_218
@@ -6980,15 +6980,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 204
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 205
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 204
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_736
 ; CHECK-RV32-NEXT:    j .LBB61_219
@@ -6996,15 +6996,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 205
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 206
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 205
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_737
 ; CHECK-RV32-NEXT:    j .LBB61_220
@@ -7012,15 +7012,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 206
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 207
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 206
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_738
 ; CHECK-RV32-NEXT:    j .LBB61_221
@@ -7028,15 +7028,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 207
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 208
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 207
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_739
 ; CHECK-RV32-NEXT:    j .LBB61_222
@@ -7044,15 +7044,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 208
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 209
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 208
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_740
 ; CHECK-RV32-NEXT:    j .LBB61_223
@@ -7060,15 +7060,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 209
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 210
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 209
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_741
 ; CHECK-RV32-NEXT:    j .LBB61_224
@@ -7076,15 +7076,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 210
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 211
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 210
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_742
 ; CHECK-RV32-NEXT:    j .LBB61_225
@@ -7092,15 +7092,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 211
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 212
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 211
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_743
 ; CHECK-RV32-NEXT:    j .LBB61_226
@@ -7108,15 +7108,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 212
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 213
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 212
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_744
 ; CHECK-RV32-NEXT:    j .LBB61_227
@@ -7124,15 +7124,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 213
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 214
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 213
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_745
 ; CHECK-RV32-NEXT:    j .LBB61_228
@@ -7140,15 +7140,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 214
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 215
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 214
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_746
 ; CHECK-RV32-NEXT:    j .LBB61_229
@@ -7156,15 +7156,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 215
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 216
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 215
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_747
 ; CHECK-RV32-NEXT:    j .LBB61_230
@@ -7172,15 +7172,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 216
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 217
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 216
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_748
 ; CHECK-RV32-NEXT:    j .LBB61_231
@@ -7188,15 +7188,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 217
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 218
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 217
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_749
 ; CHECK-RV32-NEXT:    j .LBB61_232
@@ -7204,15 +7204,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 218
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 219
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 218
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_750
 ; CHECK-RV32-NEXT:    j .LBB61_233
@@ -7220,15 +7220,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 219
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 220
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 219
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_751
 ; CHECK-RV32-NEXT:    j .LBB61_234
@@ -7236,15 +7236,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 220
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 221
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 220
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1031
 ; CHECK-RV32-NEXT:    j .LBB61_235
@@ -7252,15 +7252,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_236
 ; CHECK-RV32-NEXT:  .LBB61_752: # %cond.load889
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 223
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 224
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_753
 ; CHECK-RV32-NEXT:    j .LBB61_240
@@ -7268,15 +7268,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 224
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 225
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 224
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_754
 ; CHECK-RV32-NEXT:    j .LBB61_241
@@ -7284,15 +7284,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 225
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 226
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 225
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_755
 ; CHECK-RV32-NEXT:    j .LBB61_242
@@ -7300,15 +7300,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 226
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 227
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 226
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_756
 ; CHECK-RV32-NEXT:    j .LBB61_243
@@ -7316,15 +7316,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 227
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 228
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 227
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_757
 ; CHECK-RV32-NEXT:    j .LBB61_244
@@ -7332,15 +7332,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 228
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 229
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 228
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_758
 ; CHECK-RV32-NEXT:    j .LBB61_245
@@ -7348,15 +7348,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 229
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 230
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 229
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_759
 ; CHECK-RV32-NEXT:    j .LBB61_246
@@ -7364,15 +7364,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 230
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 231
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 230
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_760
 ; CHECK-RV32-NEXT:    j .LBB61_247
@@ -7380,15 +7380,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 231
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 232
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 231
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_761
 ; CHECK-RV32-NEXT:    j .LBB61_248
@@ -7396,15 +7396,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 232
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 233
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 232
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_762
 ; CHECK-RV32-NEXT:    j .LBB61_249
@@ -7412,15 +7412,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 233
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 234
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 233
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_763
 ; CHECK-RV32-NEXT:    j .LBB61_250
@@ -7428,15 +7428,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 234
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 235
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 234
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_764
 ; CHECK-RV32-NEXT:    j .LBB61_251
@@ -7444,15 +7444,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 235
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 236
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 235
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_765
 ; CHECK-RV32-NEXT:    j .LBB61_252
@@ -7460,15 +7460,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 236
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 237
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 236
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_766
 ; CHECK-RV32-NEXT:    j .LBB61_253
@@ -7476,15 +7476,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 237
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 238
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 237
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_767
 ; CHECK-RV32-NEXT:    j .LBB61_254
@@ -7492,15 +7492,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 238
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 239
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 238
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_768
 ; CHECK-RV32-NEXT:    j .LBB61_255
@@ -7508,15 +7508,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 239
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 240
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 239
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_769
 ; CHECK-RV32-NEXT:    j .LBB61_256
@@ -7524,15 +7524,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 240
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 241
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 240
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_770
 ; CHECK-RV32-NEXT:    j .LBB61_257
@@ -7540,15 +7540,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 241
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 242
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 241
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_771
 ; CHECK-RV32-NEXT:    j .LBB61_258
@@ -7556,15 +7556,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 242
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 243
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 242
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_772
 ; CHECK-RV32-NEXT:    j .LBB61_259
@@ -7572,15 +7572,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 243
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 244
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 243
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_773
 ; CHECK-RV32-NEXT:    j .LBB61_260
@@ -7588,15 +7588,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 244
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 245
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 244
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_774
 ; CHECK-RV32-NEXT:    j .LBB61_261
@@ -7604,15 +7604,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 245
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 246
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 245
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_775
 ; CHECK-RV32-NEXT:    j .LBB61_262
@@ -7620,15 +7620,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 246
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 247
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 246
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_776
 ; CHECK-RV32-NEXT:    j .LBB61_263
@@ -7636,15 +7636,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 247
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 248
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 247
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_777
 ; CHECK-RV32-NEXT:    j .LBB61_264
@@ -7652,15 +7652,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 248
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 249
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 248
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_778
 ; CHECK-RV32-NEXT:    j .LBB61_265
@@ -7668,15 +7668,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 249
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 250
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 249
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_779
 ; CHECK-RV32-NEXT:    j .LBB61_266
@@ -7684,15 +7684,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 250
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 251
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 250
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_780
 ; CHECK-RV32-NEXT:    j .LBB61_267
@@ -7700,15 +7700,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 251
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 252
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 251
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_781
 ; CHECK-RV32-NEXT:    j .LBB61_268
@@ -7716,15 +7716,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    lbu a3, 0(a0)
 ; CHECK-RV32-NEXT:    li a4, 512
 ; CHECK-RV32-NEXT:    vsetvli zero, a4, e8, m1, ta, ma
-; CHECK-RV32-NEXT:    li a4, 252
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 253
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
+; CHECK-RV32-NEXT:    li a4, 252
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1032
 ; CHECK-RV32-NEXT:    j .LBB61_269
@@ -7732,15 +7732,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    j .LBB61_270
 ; CHECK-RV32-NEXT:  .LBB61_782: # %cond.load1017
 ; CHECK-RV32-NEXT:    lbu a2, 0(a0)
+; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    li a4, 255
 ; CHECK-RV32-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV32-NEXT:    li a2, 256
-; CHECK-RV32-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV32-NEXT:    vslideup.vx v8, v20, a4
 ; CHECK-RV32-NEXT:    vmv4r.v v24, v8
-; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    vmv8r.v v8, v24
+; CHECK-RV32-NEXT:    addi a0, a0, 1
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_783
 ; CHECK-RV32-NEXT:    j .LBB61_274
@@ -7752,8 +7752,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 257
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_784
 ; CHECK-RV32-NEXT:    j .LBB61_275
@@ -7765,8 +7765,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 258
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_785
 ; CHECK-RV32-NEXT:    j .LBB61_276
@@ -7778,8 +7778,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 259
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_786
 ; CHECK-RV32-NEXT:    j .LBB61_277
@@ -7791,8 +7791,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 260
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_787
 ; CHECK-RV32-NEXT:    j .LBB61_278
@@ -7804,8 +7804,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 261
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_788
 ; CHECK-RV32-NEXT:    j .LBB61_279
@@ -7817,8 +7817,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 262
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_789
 ; CHECK-RV32-NEXT:    j .LBB61_280
@@ -7830,8 +7830,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 263
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_790
 ; CHECK-RV32-NEXT:    j .LBB61_281
@@ -7843,8 +7843,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 264
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_791
 ; CHECK-RV32-NEXT:    j .LBB61_282
@@ -7856,8 +7856,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 265
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_792
 ; CHECK-RV32-NEXT:    j .LBB61_283
@@ -7869,8 +7869,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 266
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_793
 ; CHECK-RV32-NEXT:    j .LBB61_284
@@ -7882,8 +7882,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 267
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_794
 ; CHECK-RV32-NEXT:    j .LBB61_285
@@ -7895,8 +7895,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 268
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_795
 ; CHECK-RV32-NEXT:    j .LBB61_286
@@ -7908,8 +7908,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 269
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_796
 ; CHECK-RV32-NEXT:    j .LBB61_287
@@ -7921,8 +7921,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 270
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_797
 ; CHECK-RV32-NEXT:    j .LBB61_288
@@ -7934,8 +7934,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 271
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_798
 ; CHECK-RV32-NEXT:    j .LBB61_289
@@ -7947,8 +7947,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 272
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_799
 ; CHECK-RV32-NEXT:    j .LBB61_290
@@ -7960,8 +7960,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 273
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_800
 ; CHECK-RV32-NEXT:    j .LBB61_291
@@ -7973,8 +7973,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 274
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_801
 ; CHECK-RV32-NEXT:    j .LBB61_292
@@ -7986,8 +7986,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 275
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_802
 ; CHECK-RV32-NEXT:    j .LBB61_293
@@ -7999,8 +7999,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 276
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_803
 ; CHECK-RV32-NEXT:    j .LBB61_294
@@ -8012,8 +8012,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 277
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_804
 ; CHECK-RV32-NEXT:    j .LBB61_295
@@ -8025,8 +8025,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 278
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_805
 ; CHECK-RV32-NEXT:    j .LBB61_296
@@ -8038,8 +8038,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 279
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_806
 ; CHECK-RV32-NEXT:    j .LBB61_297
@@ -8051,8 +8051,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 280
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_807
 ; CHECK-RV32-NEXT:    j .LBB61_298
@@ -8064,8 +8064,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 281
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_808
 ; CHECK-RV32-NEXT:    j .LBB61_299
@@ -8077,8 +8077,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 282
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_809
 ; CHECK-RV32-NEXT:    j .LBB61_300
@@ -8090,8 +8090,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 283
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_810
 ; CHECK-RV32-NEXT:    j .LBB61_301
@@ -8103,8 +8103,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 284
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_811
 ; CHECK-RV32-NEXT:    j .LBB61_302
@@ -8116,8 +8116,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 285
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1033
 ; CHECK-RV32-NEXT:    j .LBB61_303
@@ -8129,8 +8129,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 288
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_813
 ; CHECK-RV32-NEXT:    j .LBB61_308
@@ -8142,8 +8142,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 289
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_814
 ; CHECK-RV32-NEXT:    j .LBB61_309
@@ -8155,8 +8155,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 290
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_815
 ; CHECK-RV32-NEXT:    j .LBB61_310
@@ -8168,8 +8168,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 291
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_816
 ; CHECK-RV32-NEXT:    j .LBB61_311
@@ -8181,8 +8181,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 292
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_817
 ; CHECK-RV32-NEXT:    j .LBB61_312
@@ -8194,8 +8194,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 293
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_818
 ; CHECK-RV32-NEXT:    j .LBB61_313
@@ -8207,8 +8207,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 294
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_819
 ; CHECK-RV32-NEXT:    j .LBB61_314
@@ -8220,8 +8220,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 295
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_820
 ; CHECK-RV32-NEXT:    j .LBB61_315
@@ -8233,8 +8233,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 296
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_821
 ; CHECK-RV32-NEXT:    j .LBB61_316
@@ -8246,8 +8246,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 297
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_822
 ; CHECK-RV32-NEXT:    j .LBB61_317
@@ -8259,8 +8259,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 298
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_823
 ; CHECK-RV32-NEXT:    j .LBB61_318
@@ -8272,8 +8272,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 299
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_824
 ; CHECK-RV32-NEXT:    j .LBB61_319
@@ -8285,8 +8285,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 300
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_825
 ; CHECK-RV32-NEXT:    j .LBB61_320
@@ -8298,8 +8298,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 301
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_826
 ; CHECK-RV32-NEXT:    j .LBB61_321
@@ -8311,8 +8311,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 302
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_827
 ; CHECK-RV32-NEXT:    j .LBB61_322
@@ -8324,8 +8324,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 303
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_828
 ; CHECK-RV32-NEXT:    j .LBB61_323
@@ -8337,8 +8337,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 304
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_829
 ; CHECK-RV32-NEXT:    j .LBB61_324
@@ -8350,8 +8350,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 305
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_830
 ; CHECK-RV32-NEXT:    j .LBB61_325
@@ -8363,8 +8363,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 306
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_831
 ; CHECK-RV32-NEXT:    j .LBB61_326
@@ -8376,8 +8376,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 307
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_832
 ; CHECK-RV32-NEXT:    j .LBB61_327
@@ -8389,8 +8389,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 308
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_833
 ; CHECK-RV32-NEXT:    j .LBB61_328
@@ -8402,8 +8402,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 309
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_834
 ; CHECK-RV32-NEXT:    j .LBB61_329
@@ -8415,8 +8415,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 310
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_835
 ; CHECK-RV32-NEXT:    j .LBB61_330
@@ -8428,8 +8428,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 311
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_836
 ; CHECK-RV32-NEXT:    j .LBB61_331
@@ -8441,8 +8441,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 312
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_837
 ; CHECK-RV32-NEXT:    j .LBB61_332
@@ -8454,8 +8454,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 313
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_838
 ; CHECK-RV32-NEXT:    j .LBB61_333
@@ -8467,8 +8467,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 314
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_839
 ; CHECK-RV32-NEXT:    j .LBB61_334
@@ -8480,8 +8480,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 315
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_840
 ; CHECK-RV32-NEXT:    j .LBB61_335
@@ -8493,8 +8493,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 316
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_841
 ; CHECK-RV32-NEXT:    j .LBB61_336
@@ -8506,8 +8506,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 317
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1034
 ; CHECK-RV32-NEXT:    j .LBB61_337
@@ -8519,8 +8519,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 320
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_843
 ; CHECK-RV32-NEXT:    j .LBB61_342
@@ -8532,8 +8532,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 321
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_844
 ; CHECK-RV32-NEXT:    j .LBB61_343
@@ -8545,8 +8545,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 322
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_845
 ; CHECK-RV32-NEXT:    j .LBB61_344
@@ -8558,8 +8558,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 323
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_846
 ; CHECK-RV32-NEXT:    j .LBB61_345
@@ -8571,8 +8571,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 324
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_847
 ; CHECK-RV32-NEXT:    j .LBB61_346
@@ -8584,8 +8584,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 325
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_848
 ; CHECK-RV32-NEXT:    j .LBB61_347
@@ -8597,8 +8597,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 326
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_849
 ; CHECK-RV32-NEXT:    j .LBB61_348
@@ -8610,8 +8610,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 327
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_850
 ; CHECK-RV32-NEXT:    j .LBB61_349
@@ -8623,8 +8623,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 328
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_851
 ; CHECK-RV32-NEXT:    j .LBB61_350
@@ -8636,8 +8636,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 329
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_852
 ; CHECK-RV32-NEXT:    j .LBB61_351
@@ -8649,8 +8649,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 330
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_853
 ; CHECK-RV32-NEXT:    j .LBB61_352
@@ -8662,8 +8662,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 331
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_854
 ; CHECK-RV32-NEXT:    j .LBB61_353
@@ -8675,8 +8675,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 332
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_855
 ; CHECK-RV32-NEXT:    j .LBB61_354
@@ -8688,8 +8688,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 333
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_856
 ; CHECK-RV32-NEXT:    j .LBB61_355
@@ -8701,8 +8701,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 334
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_857
 ; CHECK-RV32-NEXT:    j .LBB61_356
@@ -8714,8 +8714,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 335
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_858
 ; CHECK-RV32-NEXT:    j .LBB61_357
@@ -8727,8 +8727,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 336
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_859
 ; CHECK-RV32-NEXT:    j .LBB61_358
@@ -8740,8 +8740,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 337
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_860
 ; CHECK-RV32-NEXT:    j .LBB61_359
@@ -8753,8 +8753,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 338
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_861
 ; CHECK-RV32-NEXT:    j .LBB61_360
@@ -8766,8 +8766,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 339
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_862
 ; CHECK-RV32-NEXT:    j .LBB61_361
@@ -8779,8 +8779,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 340
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_863
 ; CHECK-RV32-NEXT:    j .LBB61_362
@@ -8792,8 +8792,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 341
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_864
 ; CHECK-RV32-NEXT:    j .LBB61_363
@@ -8805,8 +8805,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 342
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_865
 ; CHECK-RV32-NEXT:    j .LBB61_364
@@ -8818,8 +8818,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 343
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_866
 ; CHECK-RV32-NEXT:    j .LBB61_365
@@ -8831,8 +8831,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 344
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_867
 ; CHECK-RV32-NEXT:    j .LBB61_366
@@ -8844,8 +8844,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 345
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_868
 ; CHECK-RV32-NEXT:    j .LBB61_367
@@ -8857,8 +8857,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 346
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_869
 ; CHECK-RV32-NEXT:    j .LBB61_368
@@ -8870,8 +8870,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 347
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_870
 ; CHECK-RV32-NEXT:    j .LBB61_369
@@ -8883,8 +8883,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 348
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_871
 ; CHECK-RV32-NEXT:    j .LBB61_370
@@ -8896,8 +8896,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 349
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1035
 ; CHECK-RV32-NEXT:    j .LBB61_371
@@ -8909,8 +8909,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 352
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_873
 ; CHECK-RV32-NEXT:    j .LBB61_376
@@ -8922,8 +8922,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 353
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_874
 ; CHECK-RV32-NEXT:    j .LBB61_377
@@ -8935,8 +8935,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 354
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_875
 ; CHECK-RV32-NEXT:    j .LBB61_378
@@ -8948,8 +8948,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 355
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_876
 ; CHECK-RV32-NEXT:    j .LBB61_379
@@ -8961,8 +8961,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 356
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_877
 ; CHECK-RV32-NEXT:    j .LBB61_380
@@ -8974,8 +8974,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 357
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_878
 ; CHECK-RV32-NEXT:    j .LBB61_381
@@ -8987,8 +8987,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 358
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_879
 ; CHECK-RV32-NEXT:    j .LBB61_382
@@ -9000,8 +9000,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 359
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_880
 ; CHECK-RV32-NEXT:    j .LBB61_383
@@ -9013,8 +9013,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 360
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_881
 ; CHECK-RV32-NEXT:    j .LBB61_384
@@ -9026,8 +9026,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 361
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_882
 ; CHECK-RV32-NEXT:    j .LBB61_385
@@ -9039,8 +9039,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 362
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_883
 ; CHECK-RV32-NEXT:    j .LBB61_386
@@ -9052,8 +9052,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 363
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_884
 ; CHECK-RV32-NEXT:    j .LBB61_387
@@ -9065,8 +9065,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 364
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_885
 ; CHECK-RV32-NEXT:    j .LBB61_388
@@ -9078,8 +9078,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 365
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_886
 ; CHECK-RV32-NEXT:    j .LBB61_389
@@ -9091,8 +9091,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 366
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_887
 ; CHECK-RV32-NEXT:    j .LBB61_390
@@ -9104,8 +9104,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 367
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_888
 ; CHECK-RV32-NEXT:    j .LBB61_391
@@ -9117,8 +9117,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 368
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_889
 ; CHECK-RV32-NEXT:    j .LBB61_392
@@ -9130,8 +9130,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 369
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_890
 ; CHECK-RV32-NEXT:    j .LBB61_393
@@ -9143,8 +9143,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 370
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_891
 ; CHECK-RV32-NEXT:    j .LBB61_394
@@ -9156,8 +9156,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 371
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_892
 ; CHECK-RV32-NEXT:    j .LBB61_395
@@ -9169,8 +9169,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 372
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_893
 ; CHECK-RV32-NEXT:    j .LBB61_396
@@ -9182,8 +9182,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 373
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_894
 ; CHECK-RV32-NEXT:    j .LBB61_397
@@ -9195,8 +9195,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 374
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_895
 ; CHECK-RV32-NEXT:    j .LBB61_398
@@ -9208,8 +9208,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 375
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_896
 ; CHECK-RV32-NEXT:    j .LBB61_399
@@ -9221,8 +9221,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 376
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_897
 ; CHECK-RV32-NEXT:    j .LBB61_400
@@ -9234,8 +9234,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 377
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_898
 ; CHECK-RV32-NEXT:    j .LBB61_401
@@ -9247,8 +9247,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 378
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_899
 ; CHECK-RV32-NEXT:    j .LBB61_402
@@ -9260,8 +9260,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 379
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_900
 ; CHECK-RV32-NEXT:    j .LBB61_403
@@ -9273,8 +9273,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 380
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_901
 ; CHECK-RV32-NEXT:    j .LBB61_404
@@ -9286,8 +9286,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 381
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1036
 ; CHECK-RV32-NEXT:    j .LBB61_405
@@ -9299,8 +9299,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 384
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_903
 ; CHECK-RV32-NEXT:    j .LBB61_410
@@ -9312,8 +9312,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 385
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_904
 ; CHECK-RV32-NEXT:    j .LBB61_411
@@ -9325,8 +9325,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 386
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_905
 ; CHECK-RV32-NEXT:    j .LBB61_412
@@ -9338,8 +9338,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 387
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_906
 ; CHECK-RV32-NEXT:    j .LBB61_413
@@ -9351,8 +9351,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 388
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_907
 ; CHECK-RV32-NEXT:    j .LBB61_414
@@ -9364,8 +9364,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 389
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_908
 ; CHECK-RV32-NEXT:    j .LBB61_415
@@ -9377,8 +9377,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 390
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_909
 ; CHECK-RV32-NEXT:    j .LBB61_416
@@ -9390,8 +9390,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 391
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_910
 ; CHECK-RV32-NEXT:    j .LBB61_417
@@ -9403,8 +9403,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 392
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_911
 ; CHECK-RV32-NEXT:    j .LBB61_418
@@ -9416,8 +9416,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 393
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_912
 ; CHECK-RV32-NEXT:    j .LBB61_419
@@ -9429,8 +9429,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 394
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_913
 ; CHECK-RV32-NEXT:    j .LBB61_420
@@ -9442,8 +9442,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 395
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_914
 ; CHECK-RV32-NEXT:    j .LBB61_421
@@ -9455,8 +9455,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 396
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_915
 ; CHECK-RV32-NEXT:    j .LBB61_422
@@ -9468,8 +9468,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 397
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_916
 ; CHECK-RV32-NEXT:    j .LBB61_423
@@ -9481,8 +9481,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 398
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_917
 ; CHECK-RV32-NEXT:    j .LBB61_424
@@ -9494,8 +9494,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 399
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_918
 ; CHECK-RV32-NEXT:    j .LBB61_425
@@ -9507,8 +9507,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 400
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_919
 ; CHECK-RV32-NEXT:    j .LBB61_426
@@ -9520,8 +9520,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 401
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_920
 ; CHECK-RV32-NEXT:    j .LBB61_427
@@ -9533,8 +9533,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 402
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_921
 ; CHECK-RV32-NEXT:    j .LBB61_428
@@ -9546,8 +9546,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 403
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_922
 ; CHECK-RV32-NEXT:    j .LBB61_429
@@ -9559,8 +9559,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 404
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_923
 ; CHECK-RV32-NEXT:    j .LBB61_430
@@ -9572,8 +9572,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 405
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_924
 ; CHECK-RV32-NEXT:    j .LBB61_431
@@ -9585,8 +9585,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 406
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_925
 ; CHECK-RV32-NEXT:    j .LBB61_432
@@ -9598,8 +9598,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 407
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_926
 ; CHECK-RV32-NEXT:    j .LBB61_433
@@ -9611,8 +9611,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 408
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_927
 ; CHECK-RV32-NEXT:    j .LBB61_434
@@ -9624,8 +9624,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 409
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_928
 ; CHECK-RV32-NEXT:    j .LBB61_435
@@ -9637,8 +9637,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 410
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_929
 ; CHECK-RV32-NEXT:    j .LBB61_436
@@ -9650,8 +9650,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 411
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_930
 ; CHECK-RV32-NEXT:    j .LBB61_437
@@ -9663,8 +9663,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 412
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_931
 ; CHECK-RV32-NEXT:    j .LBB61_438
@@ -9676,8 +9676,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 413
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1037
 ; CHECK-RV32-NEXT:    j .LBB61_439
@@ -9689,8 +9689,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 416
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_933
 ; CHECK-RV32-NEXT:    j .LBB61_444
@@ -9702,8 +9702,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 417
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 2
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_934
 ; CHECK-RV32-NEXT:    j .LBB61_445
@@ -9715,8 +9715,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 418
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 4
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_935
 ; CHECK-RV32-NEXT:    j .LBB61_446
@@ -9728,8 +9728,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 419
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 8
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_936
 ; CHECK-RV32-NEXT:    j .LBB61_447
@@ -9741,8 +9741,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 420
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 16
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_937
 ; CHECK-RV32-NEXT:    j .LBB61_448
@@ -9754,8 +9754,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 421
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 32
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_938
 ; CHECK-RV32-NEXT:    j .LBB61_449
@@ -9767,8 +9767,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 422
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 64
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_939
 ; CHECK-RV32-NEXT:    j .LBB61_450
@@ -9780,8 +9780,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 423
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 128
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_940
 ; CHECK-RV32-NEXT:    j .LBB61_451
@@ -9793,8 +9793,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 424
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 256
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_941
 ; CHECK-RV32-NEXT:    j .LBB61_452
@@ -9806,8 +9806,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 425
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 512
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_942
 ; CHECK-RV32-NEXT:    j .LBB61_453
@@ -9819,8 +9819,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 426
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    andi a3, a2, 1024
 ; CHECK-RV32-NEXT:    bnez a3, .LBB61_943
 ; CHECK-RV32-NEXT:    j .LBB61_454
@@ -9832,8 +9832,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 427
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 20
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_944
 ; CHECK-RV32-NEXT:    j .LBB61_455
@@ -9845,8 +9845,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 428
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 19
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_945
 ; CHECK-RV32-NEXT:    j .LBB61_456
@@ -9858,8 +9858,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 429
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 18
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_946
 ; CHECK-RV32-NEXT:    j .LBB61_457
@@ -9871,8 +9871,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 430
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 17
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_947
 ; CHECK-RV32-NEXT:    j .LBB61_458
@@ -9884,8 +9884,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 431
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 16
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_948
 ; CHECK-RV32-NEXT:    j .LBB61_459
@@ -9897,8 +9897,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 432
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 15
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_949
 ; CHECK-RV32-NEXT:    j .LBB61_460
@@ -9910,8 +9910,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 433
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 14
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_950
 ; CHECK-RV32-NEXT:    j .LBB61_461
@@ -9923,8 +9923,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 434
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 13
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_951
 ; CHECK-RV32-NEXT:    j .LBB61_462
@@ -9936,8 +9936,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 435
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 12
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_952
 ; CHECK-RV32-NEXT:    j .LBB61_463
@@ -9949,8 +9949,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 436
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 11
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_953
 ; CHECK-RV32-NEXT:    j .LBB61_464
@@ -9962,8 +9962,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 437
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 10
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_954
 ; CHECK-RV32-NEXT:    j .LBB61_465
@@ -9975,8 +9975,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 438
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 9
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_955
 ; CHECK-RV32-NEXT:    j .LBB61_466
@@ -9988,8 +9988,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 439
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 8
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_956
 ; CHECK-RV32-NEXT:    j .LBB61_467
@@ -10001,8 +10001,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 440
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 7
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_957
 ; CHECK-RV32-NEXT:    j .LBB61_468
@@ -10014,8 +10014,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 441
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 6
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_958
 ; CHECK-RV32-NEXT:    j .LBB61_469
@@ -10027,8 +10027,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 442
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 5
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_959
 ; CHECK-RV32-NEXT:    j .LBB61_470
@@ -10040,8 +10040,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 443
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 4
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_960
 ; CHECK-RV32-NEXT:    j .LBB61_471
@@ -10053,8 +10053,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 444
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 3
 ; CHECK-RV32-NEXT:    bltz a3, .LBB61_961
 ; CHECK-RV32-NEXT:    j .LBB61_472
@@ -10066,8 +10066,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a3
 ; CHECK-RV32-NEXT:    li a3, 445
 ; CHECK-RV32-NEXT:    vsetvli zero, a3, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a4
 ; CHECK-RV32-NEXT:    slli a3, a2, 2
 ; CHECK-RV32-NEXT:    bgez a3, .LBB61_1038
 ; CHECK-RV32-NEXT:    j .LBB61_473
@@ -10079,8 +10079,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 448
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_963
 ; CHECK-RV32-NEXT:    j .LBB61_478
@@ -10092,8 +10092,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 449
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_964
 ; CHECK-RV32-NEXT:    j .LBB61_479
@@ -10105,8 +10105,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 450
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_965
 ; CHECK-RV32-NEXT:    j .LBB61_480
@@ -10118,8 +10118,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 451
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_966
 ; CHECK-RV32-NEXT:    j .LBB61_481
@@ -10131,8 +10131,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 452
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_967
 ; CHECK-RV32-NEXT:    j .LBB61_482
@@ -10144,8 +10144,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 453
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_968
 ; CHECK-RV32-NEXT:    j .LBB61_483
@@ -10157,8 +10157,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 454
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_969
 ; CHECK-RV32-NEXT:    j .LBB61_484
@@ -10170,8 +10170,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 455
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_970
 ; CHECK-RV32-NEXT:    j .LBB61_485
@@ -10183,8 +10183,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 456
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_971
 ; CHECK-RV32-NEXT:    j .LBB61_486
@@ -10196,8 +10196,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 457
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_972
 ; CHECK-RV32-NEXT:    j .LBB61_487
@@ -10209,8 +10209,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 458
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    andi a2, a3, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_973
 ; CHECK-RV32-NEXT:    j .LBB61_488
@@ -10222,8 +10222,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 459
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_974
 ; CHECK-RV32-NEXT:    j .LBB61_489
@@ -10235,8 +10235,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 460
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_975
 ; CHECK-RV32-NEXT:    j .LBB61_490
@@ -10248,8 +10248,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 461
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_976
 ; CHECK-RV32-NEXT:    j .LBB61_491
@@ -10261,8 +10261,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 462
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_977
 ; CHECK-RV32-NEXT:    j .LBB61_492
@@ -10274,8 +10274,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 463
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_978
 ; CHECK-RV32-NEXT:    j .LBB61_493
@@ -10287,8 +10287,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 464
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_979
 ; CHECK-RV32-NEXT:    j .LBB61_494
@@ -10300,8 +10300,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 465
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_980
 ; CHECK-RV32-NEXT:    j .LBB61_495
@@ -10313,8 +10313,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 466
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_981
 ; CHECK-RV32-NEXT:    j .LBB61_496
@@ -10326,8 +10326,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 467
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_982
 ; CHECK-RV32-NEXT:    j .LBB61_497
@@ -10339,8 +10339,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 468
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_983
 ; CHECK-RV32-NEXT:    j .LBB61_498
@@ -10352,8 +10352,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 469
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_984
 ; CHECK-RV32-NEXT:    j .LBB61_499
@@ -10365,8 +10365,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 470
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_985
 ; CHECK-RV32-NEXT:    j .LBB61_500
@@ -10378,8 +10378,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 471
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_986
 ; CHECK-RV32-NEXT:    j .LBB61_501
@@ -10391,8 +10391,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 472
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_987
 ; CHECK-RV32-NEXT:    j .LBB61_502
@@ -10404,8 +10404,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 473
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_988
 ; CHECK-RV32-NEXT:    j .LBB61_503
@@ -10417,8 +10417,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 474
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_989
 ; CHECK-RV32-NEXT:    j .LBB61_504
@@ -10430,8 +10430,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 475
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_990
 ; CHECK-RV32-NEXT:    j .LBB61_505
@@ -10443,8 +10443,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 476
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_991
 ; CHECK-RV32-NEXT:    j .LBB61_506
@@ -10456,8 +10456,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV32-NEXT:    li a2, 477
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v24, a4
 ; CHECK-RV32-NEXT:    slli a2, a3, 2
 ; CHECK-RV32-NEXT:    bgez a2, .LBB61_1039
 ; CHECK-RV32-NEXT:    j .LBB61_507
@@ -10469,8 +10469,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 480
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 1
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_993
 ; CHECK-RV32-NEXT:    j .LBB61_512
@@ -10482,8 +10482,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 481
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 2
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_994
 ; CHECK-RV32-NEXT:    j .LBB61_513
@@ -10495,8 +10495,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 482
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 4
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_995
 ; CHECK-RV32-NEXT:    j .LBB61_514
@@ -10508,8 +10508,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 483
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 8
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_996
 ; CHECK-RV32-NEXT:    j .LBB61_515
@@ -10521,8 +10521,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 484
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 16
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_997
 ; CHECK-RV32-NEXT:    j .LBB61_516
@@ -10534,8 +10534,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 485
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 32
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_998
 ; CHECK-RV32-NEXT:    j .LBB61_517
@@ -10547,8 +10547,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 486
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 64
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_999
 ; CHECK-RV32-NEXT:    j .LBB61_518
@@ -10560,8 +10560,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 487
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 128
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_1000
 ; CHECK-RV32-NEXT:    j .LBB61_519
@@ -10573,8 +10573,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 488
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 256
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_1001
 ; CHECK-RV32-NEXT:    j .LBB61_520
@@ -10586,8 +10586,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 489
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 512
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_1002
 ; CHECK-RV32-NEXT:    j .LBB61_521
@@ -10599,8 +10599,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 490
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    andi a2, a1, 1024
 ; CHECK-RV32-NEXT:    bnez a2, .LBB61_1003
 ; CHECK-RV32-NEXT:    j .LBB61_522
@@ -10612,8 +10612,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 491
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 20
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1004
 ; CHECK-RV32-NEXT:    j .LBB61_523
@@ -10625,8 +10625,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 492
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 19
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1005
 ; CHECK-RV32-NEXT:    j .LBB61_524
@@ -10638,8 +10638,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 493
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 18
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1006
 ; CHECK-RV32-NEXT:    j .LBB61_525
@@ -10651,8 +10651,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 494
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 17
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1007
 ; CHECK-RV32-NEXT:    j .LBB61_526
@@ -10664,8 +10664,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 495
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 16
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1008
 ; CHECK-RV32-NEXT:    j .LBB61_527
@@ -10677,8 +10677,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 496
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 15
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1009
 ; CHECK-RV32-NEXT:    j .LBB61_528
@@ -10690,8 +10690,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 497
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 14
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1010
 ; CHECK-RV32-NEXT:    j .LBB61_529
@@ -10703,8 +10703,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 498
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 13
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1011
 ; CHECK-RV32-NEXT:    j .LBB61_530
@@ -10716,8 +10716,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 499
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 12
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1012
 ; CHECK-RV32-NEXT:    j .LBB61_531
@@ -10729,8 +10729,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 500
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 11
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1013
 ; CHECK-RV32-NEXT:    j .LBB61_532
@@ -10742,8 +10742,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 501
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 10
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1014
 ; CHECK-RV32-NEXT:    j .LBB61_533
@@ -10755,8 +10755,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 502
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 9
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1015
 ; CHECK-RV32-NEXT:    j .LBB61_534
@@ -10768,8 +10768,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 503
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 8
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1016
 ; CHECK-RV32-NEXT:    j .LBB61_535
@@ -10781,8 +10781,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 504
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 7
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1017
 ; CHECK-RV32-NEXT:    j .LBB61_536
@@ -10794,8 +10794,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 505
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 6
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1018
 ; CHECK-RV32-NEXT:    j .LBB61_537
@@ -10807,8 +10807,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 506
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 5
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1019
 ; CHECK-RV32-NEXT:    j .LBB61_538
@@ -10820,8 +10820,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 507
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 4
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1020
 ; CHECK-RV32-NEXT:    j .LBB61_539
@@ -10833,8 +10833,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 508
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 3
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1021
 ; CHECK-RV32-NEXT:    j .LBB61_540
@@ -10846,8 +10846,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 509
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 2
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1022
 ; CHECK-RV32-NEXT:    j .LBB61_541
@@ -10859,8 +10859,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 510
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    slli a2, a1, 1
 ; CHECK-RV32-NEXT:    bltz a2, .LBB61_1023
 ; CHECK-RV32-NEXT:    j .LBB61_542
@@ -10872,8 +10872,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV32-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV32-NEXT:    li a2, 511
 ; CHECK-RV32-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    addi a0, a0, 1
+; CHECK-RV32-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV32-NEXT:    bltz a1, .LBB61_1024
 ; CHECK-RV32-NEXT:    j .LBB61_543
 ; CHECK-RV32-NEXT:  .LBB61_1024: # %cond.load2041
@@ -11139,24 +11139,24 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 61
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 62
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 61
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_63: # %else242
-; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 1
+; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_65
 ; CHECK-RV64-NEXT:  # %bb.64: # %cond.load245
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
-; CHECK-RV64-NEXT:    li a3, 62
 ; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 62
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv.s.x v17, a1
 ; CHECK-RV64-NEXT:    li a1, 63
@@ -11420,31 +11420,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 125
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 126
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 125
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_129: # %else498
-; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 2
+; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_131
 ; CHECK-RV64-NEXT:  # %bb.130: # %cond.load501
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
-; CHECK-RV64-NEXT:    li a3, 126
 ; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 126
 ; CHECK-RV64-NEXT:    vmv.s.x v18, a2
 ; CHECK-RV64-NEXT:    li a2, 127
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v18, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_131: # %else502
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a2, v16
@@ -11701,31 +11701,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 189
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 190
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 189
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_195: # %else754
-; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 3
+; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_197
 ; CHECK-RV64-NEXT:  # %bb.196: # %cond.load757
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    li a3, 190
 ; CHECK-RV64-NEXT:    vmv.s.x v20, a1
 ; CHECK-RV64-NEXT:    li a1, 191
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v20, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_197: # %else758
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a1, v16
@@ -11982,31 +11982,31 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 253
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 254
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 253
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_261: # %else1010
-; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 4
+; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_263
 ; CHECK-RV64-NEXT:  # %bb.262: # %cond.load1013
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    li a3, 254
 ; CHECK-RV64-NEXT:    vmv.s.x v20, a2
 ; CHECK-RV64-NEXT:    li a2, 255
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v20, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:  .LBB61_263: # %else1014
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a2, v16
@@ -12267,12 +12267,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 318
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:  .LBB61_327: # %else1266
-; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 5
+; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_329
 ; CHECK-RV64-NEXT:  # %bb.328: # %cond.load1269
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
@@ -12280,8 +12280,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 319
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:  .LBB61_329: # %else1270
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a1, v16
@@ -12542,12 +12542,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 382
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:  .LBB61_393: # %else1522
-; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 6
+; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_395
 ; CHECK-RV64-NEXT:  # %bb.394: # %cond.load1525
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
@@ -12555,8 +12555,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 383
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:  .LBB61_395: # %else1526
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a2, v16
@@ -12817,12 +12817,12 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 446
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:  .LBB61_459: # %else1778
-; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vslidedown.vi v16, v0, 7
+; CHECK-RV64-NEXT:    slli a1, a2, 1
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_461
 ; CHECK-RV64-NEXT:  # %bb.460: # %cond.load1781
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
@@ -12830,8 +12830,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 447
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:  .LBB61_461: # %else1782
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV64-NEXT:    vmv.x.s a1, v16
@@ -13476,8 +13476,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vi v8, v24, 31
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 31
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_559
 ; CHECK-RV64-NEXT:    j .LBB61_33
@@ -13485,15 +13485,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 32
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 33
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 32
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 30
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_560
 ; CHECK-RV64-NEXT:    j .LBB61_34
@@ -13501,15 +13501,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 33
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 34
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 33
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 29
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_561
 ; CHECK-RV64-NEXT:    j .LBB61_35
@@ -13517,15 +13517,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 34
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 35
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 34
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 28
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_562
 ; CHECK-RV64-NEXT:    j .LBB61_36
@@ -13533,15 +13533,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 35
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 36
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 35
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 27
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_563
 ; CHECK-RV64-NEXT:    j .LBB61_37
@@ -13549,15 +13549,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 36
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 37
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 36
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 26
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_564
 ; CHECK-RV64-NEXT:    j .LBB61_38
@@ -13565,15 +13565,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 37
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 38
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 37
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 25
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_565
 ; CHECK-RV64-NEXT:    j .LBB61_39
@@ -13581,15 +13581,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 38
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 39
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 38
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 24
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_566
 ; CHECK-RV64-NEXT:    j .LBB61_40
@@ -13597,15 +13597,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 39
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 40
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 39
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 23
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_567
 ; CHECK-RV64-NEXT:    j .LBB61_41
@@ -13613,15 +13613,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 40
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 41
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 40
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 22
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_568
 ; CHECK-RV64-NEXT:    j .LBB61_42
@@ -13629,15 +13629,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 41
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 42
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 41
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 21
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_569
 ; CHECK-RV64-NEXT:    j .LBB61_43
@@ -13645,15 +13645,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 42
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 43
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 42
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 20
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_570
 ; CHECK-RV64-NEXT:    j .LBB61_44
@@ -13661,15 +13661,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 43
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 44
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 43
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 19
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_571
 ; CHECK-RV64-NEXT:    j .LBB61_45
@@ -13677,15 +13677,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 44
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 45
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 44
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 18
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_572
 ; CHECK-RV64-NEXT:    j .LBB61_46
@@ -13693,15 +13693,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 45
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 46
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 45
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 17
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_573
 ; CHECK-RV64-NEXT:    j .LBB61_47
@@ -13709,15 +13709,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 46
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 47
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 46
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 16
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_574
 ; CHECK-RV64-NEXT:    j .LBB61_48
@@ -13725,15 +13725,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 47
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 48
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 47
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 15
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_575
 ; CHECK-RV64-NEXT:    j .LBB61_49
@@ -13741,15 +13741,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 48
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 49
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 48
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 14
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_576
 ; CHECK-RV64-NEXT:    j .LBB61_50
@@ -13757,15 +13757,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 49
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 50
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 49
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 13
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_577
 ; CHECK-RV64-NEXT:    j .LBB61_51
@@ -13773,15 +13773,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 50
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 51
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 50
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 12
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_578
 ; CHECK-RV64-NEXT:    j .LBB61_52
@@ -13789,15 +13789,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 51
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 52
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 51
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 11
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_579
 ; CHECK-RV64-NEXT:    j .LBB61_53
@@ -13805,15 +13805,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 52
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 53
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 52
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 10
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_580
 ; CHECK-RV64-NEXT:    j .LBB61_54
@@ -13821,15 +13821,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 53
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 54
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 53
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 9
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_581
 ; CHECK-RV64-NEXT:    j .LBB61_55
@@ -13837,15 +13837,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 54
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 55
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 54
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 8
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_582
 ; CHECK-RV64-NEXT:    j .LBB61_56
@@ -13853,15 +13853,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 55
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 56
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 55
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 7
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_583
 ; CHECK-RV64-NEXT:    j .LBB61_57
@@ -13869,15 +13869,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 56
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 57
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 56
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 6
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_584
 ; CHECK-RV64-NEXT:    j .LBB61_58
@@ -13885,15 +13885,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 57
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 58
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 57
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 5
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_585
 ; CHECK-RV64-NEXT:    j .LBB61_59
@@ -13901,15 +13901,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 58
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 59
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 58
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 4
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_586
 ; CHECK-RV64-NEXT:    j .LBB61_60
@@ -13917,15 +13917,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 59
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 60
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 59
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 3
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_587
 ; CHECK-RV64-NEXT:    j .LBB61_61
@@ -13933,15 +13933,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 60
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 61
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 60
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m1, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv1r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 2
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_1025
 ; CHECK-RV64-NEXT:    j .LBB61_62
@@ -13949,8 +13949,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    j .LBB61_63
 ; CHECK-RV64-NEXT:  .LBB61_588: # %cond.load249
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
-; CHECK-RV64-NEXT:    li a3, 63
 ; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 63
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 64
@@ -13965,15 +13965,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 64
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 65
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 64
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 2
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_590
 ; CHECK-RV64-NEXT:    j .LBB61_68
@@ -13981,15 +13981,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 65
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 66
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 65
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 4
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_591
 ; CHECK-RV64-NEXT:    j .LBB61_69
@@ -13997,15 +13997,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 66
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 67
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 66
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 8
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_592
 ; CHECK-RV64-NEXT:    j .LBB61_70
@@ -14013,15 +14013,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 67
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 68
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 67
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 16
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_593
 ; CHECK-RV64-NEXT:    j .LBB61_71
@@ -14029,15 +14029,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 68
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 69
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 68
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 32
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_594
 ; CHECK-RV64-NEXT:    j .LBB61_72
@@ -14045,15 +14045,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 69
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 70
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 69
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 64
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_595
 ; CHECK-RV64-NEXT:    j .LBB61_73
@@ -14061,15 +14061,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 70
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 71
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 70
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 128
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_596
 ; CHECK-RV64-NEXT:    j .LBB61_74
@@ -14077,15 +14077,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 71
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 72
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 71
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 256
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_597
 ; CHECK-RV64-NEXT:    j .LBB61_75
@@ -14093,15 +14093,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 72
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 73
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 72
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 512
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_598
 ; CHECK-RV64-NEXT:    j .LBB61_76
@@ -14109,15 +14109,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 73
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 74
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 73
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 1024
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_599
 ; CHECK-RV64-NEXT:    j .LBB61_77
@@ -14125,15 +14125,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 74
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 75
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 74
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 52
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_600
 ; CHECK-RV64-NEXT:    j .LBB61_78
@@ -14141,15 +14141,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 75
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 76
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 75
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 51
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_601
 ; CHECK-RV64-NEXT:    j .LBB61_79
@@ -14157,15 +14157,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 76
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 77
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 76
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 50
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_602
 ; CHECK-RV64-NEXT:    j .LBB61_80
@@ -14173,15 +14173,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 77
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 78
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 77
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 49
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_603
 ; CHECK-RV64-NEXT:    j .LBB61_81
@@ -14189,15 +14189,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 78
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 79
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 78
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 48
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_604
 ; CHECK-RV64-NEXT:    j .LBB61_82
@@ -14205,15 +14205,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 79
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 80
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 79
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 47
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_605
 ; CHECK-RV64-NEXT:    j .LBB61_83
@@ -14221,15 +14221,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 80
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 81
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 80
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 46
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_606
 ; CHECK-RV64-NEXT:    j .LBB61_84
@@ -14237,15 +14237,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 81
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 82
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 81
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 45
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_607
 ; CHECK-RV64-NEXT:    j .LBB61_85
@@ -14253,15 +14253,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 82
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 83
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 82
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 44
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_608
 ; CHECK-RV64-NEXT:    j .LBB61_86
@@ -14269,15 +14269,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 83
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 84
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 83
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 43
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_609
 ; CHECK-RV64-NEXT:    j .LBB61_87
@@ -14285,15 +14285,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 84
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 85
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 84
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 42
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_610
 ; CHECK-RV64-NEXT:    j .LBB61_88
@@ -14301,15 +14301,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 85
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 86
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 85
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 41
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_611
 ; CHECK-RV64-NEXT:    j .LBB61_89
@@ -14317,15 +14317,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 86
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 87
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 86
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 40
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_612
 ; CHECK-RV64-NEXT:    j .LBB61_90
@@ -14333,15 +14333,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 87
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 88
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 87
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 39
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_613
 ; CHECK-RV64-NEXT:    j .LBB61_91
@@ -14349,15 +14349,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 88
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 89
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 88
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 38
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_614
 ; CHECK-RV64-NEXT:    j .LBB61_92
@@ -14365,15 +14365,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 89
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 90
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 89
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 37
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_615
 ; CHECK-RV64-NEXT:    j .LBB61_93
@@ -14381,15 +14381,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 90
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 91
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 90
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 36
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_616
 ; CHECK-RV64-NEXT:    j .LBB61_94
@@ -14397,15 +14397,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 91
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 92
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 91
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 35
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_617
 ; CHECK-RV64-NEXT:    j .LBB61_95
@@ -14413,15 +14413,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 92
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 93
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 92
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 34
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_618
 ; CHECK-RV64-NEXT:    j .LBB61_96
@@ -14429,15 +14429,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 93
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 94
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 93
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 33
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_619
 ; CHECK-RV64-NEXT:    j .LBB61_97
@@ -14445,15 +14445,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 94
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 95
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 94
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 32
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_620
 ; CHECK-RV64-NEXT:    j .LBB61_98
@@ -14461,15 +14461,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 95
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 96
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 95
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 31
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_621
 ; CHECK-RV64-NEXT:    j .LBB61_99
@@ -14477,15 +14477,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 96
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 97
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 96
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 30
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_622
 ; CHECK-RV64-NEXT:    j .LBB61_100
@@ -14493,15 +14493,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 97
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 98
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 97
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 29
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_623
 ; CHECK-RV64-NEXT:    j .LBB61_101
@@ -14509,15 +14509,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 98
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 99
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 98
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 28
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_624
 ; CHECK-RV64-NEXT:    j .LBB61_102
@@ -14525,15 +14525,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 99
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 100
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 99
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 27
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_625
 ; CHECK-RV64-NEXT:    j .LBB61_103
@@ -14541,15 +14541,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 100
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 101
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 100
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 26
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_626
 ; CHECK-RV64-NEXT:    j .LBB61_104
@@ -14557,15 +14557,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 101
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 102
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 101
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 25
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_627
 ; CHECK-RV64-NEXT:    j .LBB61_105
@@ -14573,15 +14573,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 102
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 103
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 102
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 24
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_628
 ; CHECK-RV64-NEXT:    j .LBB61_106
@@ -14589,15 +14589,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 103
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 104
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 103
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 23
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_629
 ; CHECK-RV64-NEXT:    j .LBB61_107
@@ -14605,15 +14605,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 104
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 105
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 104
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 22
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_630
 ; CHECK-RV64-NEXT:    j .LBB61_108
@@ -14621,15 +14621,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 105
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 106
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 105
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 21
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_631
 ; CHECK-RV64-NEXT:    j .LBB61_109
@@ -14637,15 +14637,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 106
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 107
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 106
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 20
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_632
 ; CHECK-RV64-NEXT:    j .LBB61_110
@@ -14653,15 +14653,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 107
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 108
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 107
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 19
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_633
 ; CHECK-RV64-NEXT:    j .LBB61_111
@@ -14669,15 +14669,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 108
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 109
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 108
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 18
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_634
 ; CHECK-RV64-NEXT:    j .LBB61_112
@@ -14685,15 +14685,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 109
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 110
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 109
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 17
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_635
 ; CHECK-RV64-NEXT:    j .LBB61_113
@@ -14701,15 +14701,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 110
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 111
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 110
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 16
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_636
 ; CHECK-RV64-NEXT:    j .LBB61_114
@@ -14717,15 +14717,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 111
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 112
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 111
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 15
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_637
 ; CHECK-RV64-NEXT:    j .LBB61_115
@@ -14733,15 +14733,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 112
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 113
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 112
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 14
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_638
 ; CHECK-RV64-NEXT:    j .LBB61_116
@@ -14749,15 +14749,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 113
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 114
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 113
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 13
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_639
 ; CHECK-RV64-NEXT:    j .LBB61_117
@@ -14765,15 +14765,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 114
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 115
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 114
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 12
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_640
 ; CHECK-RV64-NEXT:    j .LBB61_118
@@ -14781,15 +14781,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 115
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 116
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 115
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 11
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_641
 ; CHECK-RV64-NEXT:    j .LBB61_119
@@ -14797,15 +14797,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 116
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 117
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 116
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 10
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_642
 ; CHECK-RV64-NEXT:    j .LBB61_120
@@ -14813,15 +14813,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 117
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 118
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 117
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 9
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_643
 ; CHECK-RV64-NEXT:    j .LBB61_121
@@ -14829,15 +14829,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 118
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 119
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 118
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 8
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_644
 ; CHECK-RV64-NEXT:    j .LBB61_122
@@ -14845,15 +14845,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 119
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 120
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 119
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 7
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_645
 ; CHECK-RV64-NEXT:    j .LBB61_123
@@ -14861,15 +14861,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 120
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 121
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 120
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 6
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_646
 ; CHECK-RV64-NEXT:    j .LBB61_124
@@ -14877,15 +14877,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 121
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 122
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 121
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 5
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_647
 ; CHECK-RV64-NEXT:    j .LBB61_125
@@ -14893,15 +14893,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 122
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 123
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 122
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 4
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_648
 ; CHECK-RV64-NEXT:    j .LBB61_126
@@ -14909,15 +14909,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 123
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 124
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 123
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 3
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_649
 ; CHECK-RV64-NEXT:    j .LBB61_127
@@ -14925,15 +14925,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 124
+; CHECK-RV64-NEXT:    vmv8r.v v16, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a2
 ; CHECK-RV64-NEXT:    li a2, 125
-; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 124
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 2
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_1026
 ; CHECK-RV64-NEXT:    j .LBB61_128
@@ -14941,15 +14941,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    j .LBB61_129
 ; CHECK-RV64-NEXT:  .LBB61_650: # %cond.load505
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
-; CHECK-RV64-NEXT:    li a3, 127
 ; CHECK-RV64-NEXT:    vmv8r.v v16, v8
+; CHECK-RV64-NEXT:    li a3, 127
 ; CHECK-RV64-NEXT:    vmv.s.x v24, a1
 ; CHECK-RV64-NEXT:    li a1, 128
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m2, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v24, a3
 ; CHECK-RV64-NEXT:    vmv2r.v v16, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v16
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 1
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_651
 ; CHECK-RV64-NEXT:    j .LBB61_133
@@ -14957,15 +14957,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 128
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 129
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 128
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 2
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_652
 ; CHECK-RV64-NEXT:    j .LBB61_134
@@ -14973,15 +14973,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 129
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 130
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 129
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 4
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_653
 ; CHECK-RV64-NEXT:    j .LBB61_135
@@ -14989,15 +14989,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 130
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 131
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 130
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 8
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_654
 ; CHECK-RV64-NEXT:    j .LBB61_136
@@ -15005,15 +15005,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 131
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 132
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 131
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 16
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_655
 ; CHECK-RV64-NEXT:    j .LBB61_137
@@ -15021,15 +15021,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 132
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 133
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 132
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 32
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_656
 ; CHECK-RV64-NEXT:    j .LBB61_138
@@ -15037,15 +15037,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 133
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 134
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 133
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 64
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_657
 ; CHECK-RV64-NEXT:    j .LBB61_139
@@ -15053,15 +15053,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 134
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 135
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 134
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 128
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_658
 ; CHECK-RV64-NEXT:    j .LBB61_140
@@ -15069,15 +15069,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 135
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 136
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 135
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 256
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_659
 ; CHECK-RV64-NEXT:    j .LBB61_141
@@ -15085,15 +15085,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 136
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 137
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 136
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 512
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_660
 ; CHECK-RV64-NEXT:    j .LBB61_142
@@ -15101,15 +15101,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 137
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 138
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 137
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 1024
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_661
 ; CHECK-RV64-NEXT:    j .LBB61_143
@@ -15117,15 +15117,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 138
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 139
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 138
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 52
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_662
 ; CHECK-RV64-NEXT:    j .LBB61_144
@@ -15133,15 +15133,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 139
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 140
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 139
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 51
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_663
 ; CHECK-RV64-NEXT:    j .LBB61_145
@@ -15149,15 +15149,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 140
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 141
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 140
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 50
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_664
 ; CHECK-RV64-NEXT:    j .LBB61_146
@@ -15165,15 +15165,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 141
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 142
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 141
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 49
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_665
 ; CHECK-RV64-NEXT:    j .LBB61_147
@@ -15181,15 +15181,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 142
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 143
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 142
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 48
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_666
 ; CHECK-RV64-NEXT:    j .LBB61_148
@@ -15197,15 +15197,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 143
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 144
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 143
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 47
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_667
 ; CHECK-RV64-NEXT:    j .LBB61_149
@@ -15213,15 +15213,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 144
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 145
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 144
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 46
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_668
 ; CHECK-RV64-NEXT:    j .LBB61_150
@@ -15229,15 +15229,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 145
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 146
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 145
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 45
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_669
 ; CHECK-RV64-NEXT:    j .LBB61_151
@@ -15245,15 +15245,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 146
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 147
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 146
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 44
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_670
 ; CHECK-RV64-NEXT:    j .LBB61_152
@@ -15261,15 +15261,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 147
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 148
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 147
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 43
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_671
 ; CHECK-RV64-NEXT:    j .LBB61_153
@@ -15277,15 +15277,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 148
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 149
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 148
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 42
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_672
 ; CHECK-RV64-NEXT:    j .LBB61_154
@@ -15293,15 +15293,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 149
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 150
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 149
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 41
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_673
 ; CHECK-RV64-NEXT:    j .LBB61_155
@@ -15309,15 +15309,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 150
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 151
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 150
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 40
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_674
 ; CHECK-RV64-NEXT:    j .LBB61_156
@@ -15325,15 +15325,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 151
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 152
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 151
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 39
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_675
 ; CHECK-RV64-NEXT:    j .LBB61_157
@@ -15341,15 +15341,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 152
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 153
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 152
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 38
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_676
 ; CHECK-RV64-NEXT:    j .LBB61_158
@@ -15357,15 +15357,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 153
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 154
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 153
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 37
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_677
 ; CHECK-RV64-NEXT:    j .LBB61_159
@@ -15373,15 +15373,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 154
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 155
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 154
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 36
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_678
 ; CHECK-RV64-NEXT:    j .LBB61_160
@@ -15389,15 +15389,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 155
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 156
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 155
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 35
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_679
 ; CHECK-RV64-NEXT:    j .LBB61_161
@@ -15405,15 +15405,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 156
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 157
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 156
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 34
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_680
 ; CHECK-RV64-NEXT:    j .LBB61_162
@@ -15421,15 +15421,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 157
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 158
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 157
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 33
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_681
 ; CHECK-RV64-NEXT:    j .LBB61_163
@@ -15437,15 +15437,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 158
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 159
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 158
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 32
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_682
 ; CHECK-RV64-NEXT:    j .LBB61_164
@@ -15453,15 +15453,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 159
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 160
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 159
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 31
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_683
 ; CHECK-RV64-NEXT:    j .LBB61_165
@@ -15469,15 +15469,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 160
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 161
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 160
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 30
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_684
 ; CHECK-RV64-NEXT:    j .LBB61_166
@@ -15485,15 +15485,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 161
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 162
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 161
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 29
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_685
 ; CHECK-RV64-NEXT:    j .LBB61_167
@@ -15501,15 +15501,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 162
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 163
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 162
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 28
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_686
 ; CHECK-RV64-NEXT:    j .LBB61_168
@@ -15517,15 +15517,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 163
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 164
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 163
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 27
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_687
 ; CHECK-RV64-NEXT:    j .LBB61_169
@@ -15533,15 +15533,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 164
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 165
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 164
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 26
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_688
 ; CHECK-RV64-NEXT:    j .LBB61_170
@@ -15549,15 +15549,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 165
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 166
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 165
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 25
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_689
 ; CHECK-RV64-NEXT:    j .LBB61_171
@@ -15565,15 +15565,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 166
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 167
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 166
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 24
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_690
 ; CHECK-RV64-NEXT:    j .LBB61_172
@@ -15581,15 +15581,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 167
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 168
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 167
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 23
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_691
 ; CHECK-RV64-NEXT:    j .LBB61_173
@@ -15597,15 +15597,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 168
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 169
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 168
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 22
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_692
 ; CHECK-RV64-NEXT:    j .LBB61_174
@@ -15613,15 +15613,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 169
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 170
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 169
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 21
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_693
 ; CHECK-RV64-NEXT:    j .LBB61_175
@@ -15629,15 +15629,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 170
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 171
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 170
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 20
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_694
 ; CHECK-RV64-NEXT:    j .LBB61_176
@@ -15645,15 +15645,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 171
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 172
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 171
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 19
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_695
 ; CHECK-RV64-NEXT:    j .LBB61_177
@@ -15661,15 +15661,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 172
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 173
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 172
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 18
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_696
 ; CHECK-RV64-NEXT:    j .LBB61_178
@@ -15677,15 +15677,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 173
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 174
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 173
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 17
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_697
 ; CHECK-RV64-NEXT:    j .LBB61_179
@@ -15693,15 +15693,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 174
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 175
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 174
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 16
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_698
 ; CHECK-RV64-NEXT:    j .LBB61_180
@@ -15709,15 +15709,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 175
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 176
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 175
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 15
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_699
 ; CHECK-RV64-NEXT:    j .LBB61_181
@@ -15725,15 +15725,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 176
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 177
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 176
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 14
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_700
 ; CHECK-RV64-NEXT:    j .LBB61_182
@@ -15741,15 +15741,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 177
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 178
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 177
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 13
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_701
 ; CHECK-RV64-NEXT:    j .LBB61_183
@@ -15757,15 +15757,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 178
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 179
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 178
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 12
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_702
 ; CHECK-RV64-NEXT:    j .LBB61_184
@@ -15773,15 +15773,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 179
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 180
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 179
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 11
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_703
 ; CHECK-RV64-NEXT:    j .LBB61_185
@@ -15789,15 +15789,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 180
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 181
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 180
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 10
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_704
 ; CHECK-RV64-NEXT:    j .LBB61_186
@@ -15805,15 +15805,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 181
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 182
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 181
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 9
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_705
 ; CHECK-RV64-NEXT:    j .LBB61_187
@@ -15821,15 +15821,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 182
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 183
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 182
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 8
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_706
 ; CHECK-RV64-NEXT:    j .LBB61_188
@@ -15837,15 +15837,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 183
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 184
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 183
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 7
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_707
 ; CHECK-RV64-NEXT:    j .LBB61_189
@@ -15853,15 +15853,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 184
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 185
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 184
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 6
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_708
 ; CHECK-RV64-NEXT:    j .LBB61_190
@@ -15869,15 +15869,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 185
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 186
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 185
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 5
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_709
 ; CHECK-RV64-NEXT:    j .LBB61_191
@@ -15885,15 +15885,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 186
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 187
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 186
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 4
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_710
 ; CHECK-RV64-NEXT:    j .LBB61_192
@@ -15901,15 +15901,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 187
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 188
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 187
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 3
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_711
 ; CHECK-RV64-NEXT:    j .LBB61_193
@@ -15917,15 +15917,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 188
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 189
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 188
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a1, a2, 2
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_1027
 ; CHECK-RV64-NEXT:    j .LBB61_194
@@ -15933,15 +15933,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    j .LBB61_195
 ; CHECK-RV64-NEXT:  .LBB61_712: # %cond.load761
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    li a3, 191
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 192
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 1
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_713
 ; CHECK-RV64-NEXT:    j .LBB61_199
@@ -15949,15 +15949,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 192
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 193
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 192
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 2
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_714
 ; CHECK-RV64-NEXT:    j .LBB61_200
@@ -15965,15 +15965,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 193
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 194
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 193
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 4
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_715
 ; CHECK-RV64-NEXT:    j .LBB61_201
@@ -15981,15 +15981,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 194
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 195
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 194
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 8
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_716
 ; CHECK-RV64-NEXT:    j .LBB61_202
@@ -15997,15 +15997,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 195
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 196
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 195
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 16
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_717
 ; CHECK-RV64-NEXT:    j .LBB61_203
@@ -16013,15 +16013,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 196
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 197
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 196
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 32
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_718
 ; CHECK-RV64-NEXT:    j .LBB61_204
@@ -16029,15 +16029,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 197
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 198
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 197
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 64
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_719
 ; CHECK-RV64-NEXT:    j .LBB61_205
@@ -16045,15 +16045,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 198
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 199
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 198
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 128
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_720
 ; CHECK-RV64-NEXT:    j .LBB61_206
@@ -16061,15 +16061,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 199
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 200
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 199
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 256
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_721
 ; CHECK-RV64-NEXT:    j .LBB61_207
@@ -16077,15 +16077,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 200
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 201
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 200
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 512
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_722
 ; CHECK-RV64-NEXT:    j .LBB61_208
@@ -16093,15 +16093,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 201
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 202
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 201
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a2, a1, 1024
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_723
 ; CHECK-RV64-NEXT:    j .LBB61_209
@@ -16109,15 +16109,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 202
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 203
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 202
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 52
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_724
 ; CHECK-RV64-NEXT:    j .LBB61_210
@@ -16125,15 +16125,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 203
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 204
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 203
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 51
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_725
 ; CHECK-RV64-NEXT:    j .LBB61_211
@@ -16141,15 +16141,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 204
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 205
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 204
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 50
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_726
 ; CHECK-RV64-NEXT:    j .LBB61_212
@@ -16157,15 +16157,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 205
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 206
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 205
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 49
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_727
 ; CHECK-RV64-NEXT:    j .LBB61_213
@@ -16173,15 +16173,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 206
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 207
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 206
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 48
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_728
 ; CHECK-RV64-NEXT:    j .LBB61_214
@@ -16189,15 +16189,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 207
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 208
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 207
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 47
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_729
 ; CHECK-RV64-NEXT:    j .LBB61_215
@@ -16205,15 +16205,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 208
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 209
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 208
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 46
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_730
 ; CHECK-RV64-NEXT:    j .LBB61_216
@@ -16221,15 +16221,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 209
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 210
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 209
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 45
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_731
 ; CHECK-RV64-NEXT:    j .LBB61_217
@@ -16237,15 +16237,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 210
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 211
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 210
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 44
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_732
 ; CHECK-RV64-NEXT:    j .LBB61_218
@@ -16253,15 +16253,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 211
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 212
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 211
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 43
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_733
 ; CHECK-RV64-NEXT:    j .LBB61_219
@@ -16269,15 +16269,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 212
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 213
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 212
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 42
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_734
 ; CHECK-RV64-NEXT:    j .LBB61_220
@@ -16285,15 +16285,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 213
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 214
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 213
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 41
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_735
 ; CHECK-RV64-NEXT:    j .LBB61_221
@@ -16301,15 +16301,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 214
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 215
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 214
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 40
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_736
 ; CHECK-RV64-NEXT:    j .LBB61_222
@@ -16317,15 +16317,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 215
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 216
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 215
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 39
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_737
 ; CHECK-RV64-NEXT:    j .LBB61_223
@@ -16333,15 +16333,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 216
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 217
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 216
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 38
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_738
 ; CHECK-RV64-NEXT:    j .LBB61_224
@@ -16349,15 +16349,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 217
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 218
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 217
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 37
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_739
 ; CHECK-RV64-NEXT:    j .LBB61_225
@@ -16365,15 +16365,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 218
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 219
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 218
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 36
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_740
 ; CHECK-RV64-NEXT:    j .LBB61_226
@@ -16381,15 +16381,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 219
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 220
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 219
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 35
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_741
 ; CHECK-RV64-NEXT:    j .LBB61_227
@@ -16397,15 +16397,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 220
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 221
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 220
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 34
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_742
 ; CHECK-RV64-NEXT:    j .LBB61_228
@@ -16413,15 +16413,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 221
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 222
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 221
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 33
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_743
 ; CHECK-RV64-NEXT:    j .LBB61_229
@@ -16429,15 +16429,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 222
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 223
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 222
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 32
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_744
 ; CHECK-RV64-NEXT:    j .LBB61_230
@@ -16445,15 +16445,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 223
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 224
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 223
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 31
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_745
 ; CHECK-RV64-NEXT:    j .LBB61_231
@@ -16461,15 +16461,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 224
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 225
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 224
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 30
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_746
 ; CHECK-RV64-NEXT:    j .LBB61_232
@@ -16477,15 +16477,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 225
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 226
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 225
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 29
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_747
 ; CHECK-RV64-NEXT:    j .LBB61_233
@@ -16493,15 +16493,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 226
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 227
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 226
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 28
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_748
 ; CHECK-RV64-NEXT:    j .LBB61_234
@@ -16509,15 +16509,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 227
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 228
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 227
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 27
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_749
 ; CHECK-RV64-NEXT:    j .LBB61_235
@@ -16525,15 +16525,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 228
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 229
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 228
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 26
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_750
 ; CHECK-RV64-NEXT:    j .LBB61_236
@@ -16541,15 +16541,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 229
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 230
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 229
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 25
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_751
 ; CHECK-RV64-NEXT:    j .LBB61_237
@@ -16557,15 +16557,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 230
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 231
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 230
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 24
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_752
 ; CHECK-RV64-NEXT:    j .LBB61_238
@@ -16573,15 +16573,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 231
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 232
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 231
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 23
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_753
 ; CHECK-RV64-NEXT:    j .LBB61_239
@@ -16589,15 +16589,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 232
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 233
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 232
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 22
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_754
 ; CHECK-RV64-NEXT:    j .LBB61_240
@@ -16605,15 +16605,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 233
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 234
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 233
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 21
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_755
 ; CHECK-RV64-NEXT:    j .LBB61_241
@@ -16621,15 +16621,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 234
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 235
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 234
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 20
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_756
 ; CHECK-RV64-NEXT:    j .LBB61_242
@@ -16637,15 +16637,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 235
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 236
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 235
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 19
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_757
 ; CHECK-RV64-NEXT:    j .LBB61_243
@@ -16653,15 +16653,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 236
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 237
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 236
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 18
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_758
 ; CHECK-RV64-NEXT:    j .LBB61_244
@@ -16669,15 +16669,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 237
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 238
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 237
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 17
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_759
 ; CHECK-RV64-NEXT:    j .LBB61_245
@@ -16685,15 +16685,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 238
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 239
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 238
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 16
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_760
 ; CHECK-RV64-NEXT:    j .LBB61_246
@@ -16701,15 +16701,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 239
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 240
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 239
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 15
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_761
 ; CHECK-RV64-NEXT:    j .LBB61_247
@@ -16717,15 +16717,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 240
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 241
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 240
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 14
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_762
 ; CHECK-RV64-NEXT:    j .LBB61_248
@@ -16733,15 +16733,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 241
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 242
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 241
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 13
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_763
 ; CHECK-RV64-NEXT:    j .LBB61_249
@@ -16749,15 +16749,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 242
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 243
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 242
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 12
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_764
 ; CHECK-RV64-NEXT:    j .LBB61_250
@@ -16765,15 +16765,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 243
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 244
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 243
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 11
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_765
 ; CHECK-RV64-NEXT:    j .LBB61_251
@@ -16781,15 +16781,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 244
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 245
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 244
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 10
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_766
 ; CHECK-RV64-NEXT:    j .LBB61_252
@@ -16797,15 +16797,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 245
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 246
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 245
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 9
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_767
 ; CHECK-RV64-NEXT:    j .LBB61_253
@@ -16813,15 +16813,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 246
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 247
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 246
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 8
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_768
 ; CHECK-RV64-NEXT:    j .LBB61_254
@@ -16829,15 +16829,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 247
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 248
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 247
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 7
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_769
 ; CHECK-RV64-NEXT:    j .LBB61_255
@@ -16845,15 +16845,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 248
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 249
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 248
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 6
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_770
 ; CHECK-RV64-NEXT:    j .LBB61_256
@@ -16861,15 +16861,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 249
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 250
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 249
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 5
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_771
 ; CHECK-RV64-NEXT:    j .LBB61_257
@@ -16877,15 +16877,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 250
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 251
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 250
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 4
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_772
 ; CHECK-RV64-NEXT:    j .LBB61_258
@@ -16893,15 +16893,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 251
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 252
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 251
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 3
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_773
 ; CHECK-RV64-NEXT:    j .LBB61_259
@@ -16909,15 +16909,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    lbu a2, 0(a0)
 ; CHECK-RV64-NEXT:    li a3, 512
 ; CHECK-RV64-NEXT:    vsetvli zero, a3, e8, m1, ta, ma
-; CHECK-RV64-NEXT:    li a3, 252
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 253
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
+; CHECK-RV64-NEXT:    li a3, 252
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    slli a2, a1, 2
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_1028
 ; CHECK-RV64-NEXT:    j .LBB61_260
@@ -16925,15 +16925,15 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    j .LBB61_261
 ; CHECK-RV64-NEXT:  .LBB61_774: # %cond.load1017
 ; CHECK-RV64-NEXT:    lbu a1, 0(a0)
+; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    li a3, 255
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 256
-; CHECK-RV64-NEXT:    vmv8r.v v24, v8
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m4, tu, ma
 ; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    vmv4r.v v24, v8
-; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    vmv8r.v v8, v24
+; CHECK-RV64-NEXT:    addi a0, a0, 1
 ; CHECK-RV64-NEXT:    andi a1, a2, 1
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_775
 ; CHECK-RV64-NEXT:    j .LBB61_265
@@ -16945,8 +16945,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 257
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 2
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_776
 ; CHECK-RV64-NEXT:    j .LBB61_266
@@ -16958,8 +16958,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 258
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 4
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_777
 ; CHECK-RV64-NEXT:    j .LBB61_267
@@ -16971,8 +16971,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 259
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 8
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_778
 ; CHECK-RV64-NEXT:    j .LBB61_268
@@ -16984,8 +16984,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 260
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 16
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_779
 ; CHECK-RV64-NEXT:    j .LBB61_269
@@ -16997,8 +16997,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 261
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 32
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_780
 ; CHECK-RV64-NEXT:    j .LBB61_270
@@ -17010,8 +17010,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 262
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 64
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_781
 ; CHECK-RV64-NEXT:    j .LBB61_271
@@ -17023,8 +17023,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 263
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 128
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_782
 ; CHECK-RV64-NEXT:    j .LBB61_272
@@ -17036,8 +17036,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 264
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 256
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_783
 ; CHECK-RV64-NEXT:    j .LBB61_273
@@ -17049,8 +17049,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 265
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 512
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_784
 ; CHECK-RV64-NEXT:    j .LBB61_274
@@ -17062,8 +17062,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 266
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 1024
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_785
 ; CHECK-RV64-NEXT:    j .LBB61_275
@@ -17075,8 +17075,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 267
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 52
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_786
 ; CHECK-RV64-NEXT:    j .LBB61_276
@@ -17088,8 +17088,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 268
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 51
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_787
 ; CHECK-RV64-NEXT:    j .LBB61_277
@@ -17101,8 +17101,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 269
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 50
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_788
 ; CHECK-RV64-NEXT:    j .LBB61_278
@@ -17114,8 +17114,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 270
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 49
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_789
 ; CHECK-RV64-NEXT:    j .LBB61_279
@@ -17127,8 +17127,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 271
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 48
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_790
 ; CHECK-RV64-NEXT:    j .LBB61_280
@@ -17140,8 +17140,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 272
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 47
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_791
 ; CHECK-RV64-NEXT:    j .LBB61_281
@@ -17153,8 +17153,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 273
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 46
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_792
 ; CHECK-RV64-NEXT:    j .LBB61_282
@@ -17166,8 +17166,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 274
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 45
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_793
 ; CHECK-RV64-NEXT:    j .LBB61_283
@@ -17179,8 +17179,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 275
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 44
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_794
 ; CHECK-RV64-NEXT:    j .LBB61_284
@@ -17192,8 +17192,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 276
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 43
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_795
 ; CHECK-RV64-NEXT:    j .LBB61_285
@@ -17205,8 +17205,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 277
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 42
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_796
 ; CHECK-RV64-NEXT:    j .LBB61_286
@@ -17218,8 +17218,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 278
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 41
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_797
 ; CHECK-RV64-NEXT:    j .LBB61_287
@@ -17231,8 +17231,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 279
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 40
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_798
 ; CHECK-RV64-NEXT:    j .LBB61_288
@@ -17244,8 +17244,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 280
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 39
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_799
 ; CHECK-RV64-NEXT:    j .LBB61_289
@@ -17257,8 +17257,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 281
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 38
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_800
 ; CHECK-RV64-NEXT:    j .LBB61_290
@@ -17270,8 +17270,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 282
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 37
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_801
 ; CHECK-RV64-NEXT:    j .LBB61_291
@@ -17283,8 +17283,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 283
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 36
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_802
 ; CHECK-RV64-NEXT:    j .LBB61_292
@@ -17296,8 +17296,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 284
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 35
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_803
 ; CHECK-RV64-NEXT:    j .LBB61_293
@@ -17309,8 +17309,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 285
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 34
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_804
 ; CHECK-RV64-NEXT:    j .LBB61_294
@@ -17322,8 +17322,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 286
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 33
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_805
 ; CHECK-RV64-NEXT:    j .LBB61_295
@@ -17335,8 +17335,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 287
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 32
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_806
 ; CHECK-RV64-NEXT:    j .LBB61_296
@@ -17348,8 +17348,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 288
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 31
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_807
 ; CHECK-RV64-NEXT:    j .LBB61_297
@@ -17361,8 +17361,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 289
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 30
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_808
 ; CHECK-RV64-NEXT:    j .LBB61_298
@@ -17374,8 +17374,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 290
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 29
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_809
 ; CHECK-RV64-NEXT:    j .LBB61_299
@@ -17387,8 +17387,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 291
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 28
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_810
 ; CHECK-RV64-NEXT:    j .LBB61_300
@@ -17400,8 +17400,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 292
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 27
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_811
 ; CHECK-RV64-NEXT:    j .LBB61_301
@@ -17413,8 +17413,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 293
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 26
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_812
 ; CHECK-RV64-NEXT:    j .LBB61_302
@@ -17426,8 +17426,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 294
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 25
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_813
 ; CHECK-RV64-NEXT:    j .LBB61_303
@@ -17439,8 +17439,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 295
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 24
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_814
 ; CHECK-RV64-NEXT:    j .LBB61_304
@@ -17452,8 +17452,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 296
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 23
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_815
 ; CHECK-RV64-NEXT:    j .LBB61_305
@@ -17465,8 +17465,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 297
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 22
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_816
 ; CHECK-RV64-NEXT:    j .LBB61_306
@@ -17478,8 +17478,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 298
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 21
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_817
 ; CHECK-RV64-NEXT:    j .LBB61_307
@@ -17491,8 +17491,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 299
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 20
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_818
 ; CHECK-RV64-NEXT:    j .LBB61_308
@@ -17504,8 +17504,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 300
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 19
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_819
 ; CHECK-RV64-NEXT:    j .LBB61_309
@@ -17517,8 +17517,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 301
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 18
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_820
 ; CHECK-RV64-NEXT:    j .LBB61_310
@@ -17530,8 +17530,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 302
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 17
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_821
 ; CHECK-RV64-NEXT:    j .LBB61_311
@@ -17543,8 +17543,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 303
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 16
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_822
 ; CHECK-RV64-NEXT:    j .LBB61_312
@@ -17556,8 +17556,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 304
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 15
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_823
 ; CHECK-RV64-NEXT:    j .LBB61_313
@@ -17569,8 +17569,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 305
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 14
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_824
 ; CHECK-RV64-NEXT:    j .LBB61_314
@@ -17582,8 +17582,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 306
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 13
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_825
 ; CHECK-RV64-NEXT:    j .LBB61_315
@@ -17595,8 +17595,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 307
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 12
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_826
 ; CHECK-RV64-NEXT:    j .LBB61_316
@@ -17608,8 +17608,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 308
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 11
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_827
 ; CHECK-RV64-NEXT:    j .LBB61_317
@@ -17621,8 +17621,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 309
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 10
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_828
 ; CHECK-RV64-NEXT:    j .LBB61_318
@@ -17634,8 +17634,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 310
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 9
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_829
 ; CHECK-RV64-NEXT:    j .LBB61_319
@@ -17647,8 +17647,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 311
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 8
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_830
 ; CHECK-RV64-NEXT:    j .LBB61_320
@@ -17660,8 +17660,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 312
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 7
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_831
 ; CHECK-RV64-NEXT:    j .LBB61_321
@@ -17673,8 +17673,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 313
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 6
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_832
 ; CHECK-RV64-NEXT:    j .LBB61_322
@@ -17686,8 +17686,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 314
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 5
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_833
 ; CHECK-RV64-NEXT:    j .LBB61_323
@@ -17699,8 +17699,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 315
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 4
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_834
 ; CHECK-RV64-NEXT:    j .LBB61_324
@@ -17712,8 +17712,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 316
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 3
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_835
 ; CHECK-RV64-NEXT:    j .LBB61_325
@@ -17725,8 +17725,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 317
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 2
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_1029
 ; CHECK-RV64-NEXT:    j .LBB61_326
@@ -17738,8 +17738,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 320
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 1
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_837
 ; CHECK-RV64-NEXT:    j .LBB61_331
@@ -17751,8 +17751,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 321
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 2
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_838
 ; CHECK-RV64-NEXT:    j .LBB61_332
@@ -17764,8 +17764,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 322
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 4
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_839
 ; CHECK-RV64-NEXT:    j .LBB61_333
@@ -17777,8 +17777,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 323
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 8
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_840
 ; CHECK-RV64-NEXT:    j .LBB61_334
@@ -17790,8 +17790,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 324
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 16
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_841
 ; CHECK-RV64-NEXT:    j .LBB61_335
@@ -17803,8 +17803,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 325
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 32
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_842
 ; CHECK-RV64-NEXT:    j .LBB61_336
@@ -17816,8 +17816,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 326
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 64
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_843
 ; CHECK-RV64-NEXT:    j .LBB61_337
@@ -17829,8 +17829,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 327
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 128
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_844
 ; CHECK-RV64-NEXT:    j .LBB61_338
@@ -17842,8 +17842,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 328
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 256
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_845
 ; CHECK-RV64-NEXT:    j .LBB61_339
@@ -17855,8 +17855,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 329
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 512
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_846
 ; CHECK-RV64-NEXT:    j .LBB61_340
@@ -17868,8 +17868,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 330
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 1024
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_847
 ; CHECK-RV64-NEXT:    j .LBB61_341
@@ -17881,8 +17881,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 331
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 52
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_848
 ; CHECK-RV64-NEXT:    j .LBB61_342
@@ -17894,8 +17894,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 332
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 51
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_849
 ; CHECK-RV64-NEXT:    j .LBB61_343
@@ -17907,8 +17907,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 333
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 50
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_850
 ; CHECK-RV64-NEXT:    j .LBB61_344
@@ -17920,8 +17920,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 334
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 49
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_851
 ; CHECK-RV64-NEXT:    j .LBB61_345
@@ -17933,8 +17933,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 335
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 48
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_852
 ; CHECK-RV64-NEXT:    j .LBB61_346
@@ -17946,8 +17946,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 336
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 47
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_853
 ; CHECK-RV64-NEXT:    j .LBB61_347
@@ -17959,8 +17959,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 337
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 46
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_854
 ; CHECK-RV64-NEXT:    j .LBB61_348
@@ -17972,8 +17972,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 338
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 45
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_855
 ; CHECK-RV64-NEXT:    j .LBB61_349
@@ -17985,8 +17985,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 339
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 44
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_856
 ; CHECK-RV64-NEXT:    j .LBB61_350
@@ -17998,8 +17998,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 340
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 43
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_857
 ; CHECK-RV64-NEXT:    j .LBB61_351
@@ -18011,8 +18011,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 341
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 42
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_858
 ; CHECK-RV64-NEXT:    j .LBB61_352
@@ -18024,8 +18024,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 342
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 41
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_859
 ; CHECK-RV64-NEXT:    j .LBB61_353
@@ -18037,8 +18037,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 343
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 40
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_860
 ; CHECK-RV64-NEXT:    j .LBB61_354
@@ -18050,8 +18050,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 344
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 39
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_861
 ; CHECK-RV64-NEXT:    j .LBB61_355
@@ -18063,8 +18063,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 345
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 38
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_862
 ; CHECK-RV64-NEXT:    j .LBB61_356
@@ -18076,8 +18076,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 346
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 37
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_863
 ; CHECK-RV64-NEXT:    j .LBB61_357
@@ -18089,8 +18089,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 347
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 36
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_864
 ; CHECK-RV64-NEXT:    j .LBB61_358
@@ -18102,8 +18102,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 348
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 35
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_865
 ; CHECK-RV64-NEXT:    j .LBB61_359
@@ -18115,8 +18115,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 349
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 34
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_866
 ; CHECK-RV64-NEXT:    j .LBB61_360
@@ -18128,8 +18128,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 350
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 33
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_867
 ; CHECK-RV64-NEXT:    j .LBB61_361
@@ -18141,8 +18141,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 351
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 32
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_868
 ; CHECK-RV64-NEXT:    j .LBB61_362
@@ -18154,8 +18154,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 352
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 31
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_869
 ; CHECK-RV64-NEXT:    j .LBB61_363
@@ -18167,8 +18167,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 353
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 30
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_870
 ; CHECK-RV64-NEXT:    j .LBB61_364
@@ -18180,8 +18180,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 354
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 29
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_871
 ; CHECK-RV64-NEXT:    j .LBB61_365
@@ -18193,8 +18193,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 355
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 28
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_872
 ; CHECK-RV64-NEXT:    j .LBB61_366
@@ -18206,8 +18206,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 356
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 27
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_873
 ; CHECK-RV64-NEXT:    j .LBB61_367
@@ -18219,8 +18219,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 357
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 26
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_874
 ; CHECK-RV64-NEXT:    j .LBB61_368
@@ -18232,8 +18232,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 358
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 25
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_875
 ; CHECK-RV64-NEXT:    j .LBB61_369
@@ -18245,8 +18245,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 359
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 24
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_876
 ; CHECK-RV64-NEXT:    j .LBB61_370
@@ -18258,8 +18258,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 360
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 23
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_877
 ; CHECK-RV64-NEXT:    j .LBB61_371
@@ -18271,8 +18271,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 361
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 22
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_878
 ; CHECK-RV64-NEXT:    j .LBB61_372
@@ -18284,8 +18284,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 362
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 21
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_879
 ; CHECK-RV64-NEXT:    j .LBB61_373
@@ -18297,8 +18297,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 363
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 20
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_880
 ; CHECK-RV64-NEXT:    j .LBB61_374
@@ -18310,8 +18310,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 364
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 19
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_881
 ; CHECK-RV64-NEXT:    j .LBB61_375
@@ -18323,8 +18323,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 365
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 18
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_882
 ; CHECK-RV64-NEXT:    j .LBB61_376
@@ -18336,8 +18336,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 366
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 17
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_883
 ; CHECK-RV64-NEXT:    j .LBB61_377
@@ -18349,8 +18349,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 367
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 16
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_884
 ; CHECK-RV64-NEXT:    j .LBB61_378
@@ -18362,8 +18362,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 368
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 15
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_885
 ; CHECK-RV64-NEXT:    j .LBB61_379
@@ -18375,8 +18375,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 369
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 14
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_886
 ; CHECK-RV64-NEXT:    j .LBB61_380
@@ -18388,8 +18388,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 370
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 13
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_887
 ; CHECK-RV64-NEXT:    j .LBB61_381
@@ -18401,8 +18401,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 371
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 12
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_888
 ; CHECK-RV64-NEXT:    j .LBB61_382
@@ -18414,8 +18414,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 372
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 11
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_889
 ; CHECK-RV64-NEXT:    j .LBB61_383
@@ -18427,8 +18427,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 373
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 10
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_890
 ; CHECK-RV64-NEXT:    j .LBB61_384
@@ -18440,8 +18440,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 374
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 9
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_891
 ; CHECK-RV64-NEXT:    j .LBB61_385
@@ -18453,8 +18453,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 375
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 8
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_892
 ; CHECK-RV64-NEXT:    j .LBB61_386
@@ -18466,8 +18466,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 376
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 7
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_893
 ; CHECK-RV64-NEXT:    j .LBB61_387
@@ -18479,8 +18479,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 377
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 6
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_894
 ; CHECK-RV64-NEXT:    j .LBB61_388
@@ -18492,8 +18492,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 378
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 5
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_895
 ; CHECK-RV64-NEXT:    j .LBB61_389
@@ -18505,8 +18505,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 379
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 4
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_896
 ; CHECK-RV64-NEXT:    j .LBB61_390
@@ -18518,8 +18518,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 380
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 3
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_897
 ; CHECK-RV64-NEXT:    j .LBB61_391
@@ -18531,8 +18531,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 381
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 2
 ; CHECK-RV64-NEXT:    bgez a2, .LBB61_1030
 ; CHECK-RV64-NEXT:    j .LBB61_392
@@ -18544,8 +18544,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 384
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 1
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_899
 ; CHECK-RV64-NEXT:    j .LBB61_397
@@ -18557,8 +18557,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 385
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 2
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_900
 ; CHECK-RV64-NEXT:    j .LBB61_398
@@ -18570,8 +18570,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 386
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 4
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_901
 ; CHECK-RV64-NEXT:    j .LBB61_399
@@ -18583,8 +18583,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 387
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 8
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_902
 ; CHECK-RV64-NEXT:    j .LBB61_400
@@ -18596,8 +18596,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 388
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 16
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_903
 ; CHECK-RV64-NEXT:    j .LBB61_401
@@ -18609,8 +18609,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 389
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 32
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_904
 ; CHECK-RV64-NEXT:    j .LBB61_402
@@ -18622,8 +18622,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 390
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 64
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_905
 ; CHECK-RV64-NEXT:    j .LBB61_403
@@ -18635,8 +18635,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 391
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 128
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_906
 ; CHECK-RV64-NEXT:    j .LBB61_404
@@ -18648,8 +18648,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 392
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 256
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_907
 ; CHECK-RV64-NEXT:    j .LBB61_405
@@ -18661,8 +18661,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 393
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 512
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_908
 ; CHECK-RV64-NEXT:    j .LBB61_406
@@ -18674,8 +18674,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 394
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a1, a2, 1024
 ; CHECK-RV64-NEXT:    bnez a1, .LBB61_909
 ; CHECK-RV64-NEXT:    j .LBB61_407
@@ -18687,8 +18687,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 395
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 52
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_910
 ; CHECK-RV64-NEXT:    j .LBB61_408
@@ -18700,8 +18700,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 396
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 51
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_911
 ; CHECK-RV64-NEXT:    j .LBB61_409
@@ -18713,8 +18713,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 397
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 50
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_912
 ; CHECK-RV64-NEXT:    j .LBB61_410
@@ -18726,8 +18726,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 398
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 49
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_913
 ; CHECK-RV64-NEXT:    j .LBB61_411
@@ -18739,8 +18739,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 399
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 48
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_914
 ; CHECK-RV64-NEXT:    j .LBB61_412
@@ -18752,8 +18752,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 400
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 47
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_915
 ; CHECK-RV64-NEXT:    j .LBB61_413
@@ -18765,8 +18765,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 401
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 46
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_916
 ; CHECK-RV64-NEXT:    j .LBB61_414
@@ -18778,8 +18778,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 402
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 45
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_917
 ; CHECK-RV64-NEXT:    j .LBB61_415
@@ -18791,8 +18791,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 403
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 44
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_918
 ; CHECK-RV64-NEXT:    j .LBB61_416
@@ -18804,8 +18804,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 404
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 43
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_919
 ; CHECK-RV64-NEXT:    j .LBB61_417
@@ -18817,8 +18817,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 405
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 42
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_920
 ; CHECK-RV64-NEXT:    j .LBB61_418
@@ -18830,8 +18830,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 406
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 41
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_921
 ; CHECK-RV64-NEXT:    j .LBB61_419
@@ -18843,8 +18843,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 407
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 40
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_922
 ; CHECK-RV64-NEXT:    j .LBB61_420
@@ -18856,8 +18856,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 408
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 39
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_923
 ; CHECK-RV64-NEXT:    j .LBB61_421
@@ -18869,8 +18869,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 409
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 38
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_924
 ; CHECK-RV64-NEXT:    j .LBB61_422
@@ -18882,8 +18882,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 410
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 37
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_925
 ; CHECK-RV64-NEXT:    j .LBB61_423
@@ -18895,8 +18895,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 411
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 36
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_926
 ; CHECK-RV64-NEXT:    j .LBB61_424
@@ -18908,8 +18908,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 412
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 35
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_927
 ; CHECK-RV64-NEXT:    j .LBB61_425
@@ -18921,8 +18921,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 413
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 34
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_928
 ; CHECK-RV64-NEXT:    j .LBB61_426
@@ -18934,8 +18934,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 414
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 33
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_929
 ; CHECK-RV64-NEXT:    j .LBB61_427
@@ -18947,8 +18947,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 415
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 32
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_930
 ; CHECK-RV64-NEXT:    j .LBB61_428
@@ -18960,8 +18960,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 416
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 31
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_931
 ; CHECK-RV64-NEXT:    j .LBB61_429
@@ -18973,8 +18973,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 417
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 30
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_932
 ; CHECK-RV64-NEXT:    j .LBB61_430
@@ -18986,8 +18986,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 418
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 29
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_933
 ; CHECK-RV64-NEXT:    j .LBB61_431
@@ -18999,8 +18999,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 419
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 28
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_934
 ; CHECK-RV64-NEXT:    j .LBB61_432
@@ -19012,8 +19012,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 420
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 27
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_935
 ; CHECK-RV64-NEXT:    j .LBB61_433
@@ -19025,8 +19025,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 421
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 26
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_936
 ; CHECK-RV64-NEXT:    j .LBB61_434
@@ -19038,8 +19038,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 422
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 25
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_937
 ; CHECK-RV64-NEXT:    j .LBB61_435
@@ -19051,8 +19051,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 423
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 24
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_938
 ; CHECK-RV64-NEXT:    j .LBB61_436
@@ -19064,8 +19064,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 424
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 23
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_939
 ; CHECK-RV64-NEXT:    j .LBB61_437
@@ -19077,8 +19077,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 425
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 22
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_940
 ; CHECK-RV64-NEXT:    j .LBB61_438
@@ -19090,8 +19090,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 426
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 21
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_941
 ; CHECK-RV64-NEXT:    j .LBB61_439
@@ -19103,8 +19103,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 427
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 20
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_942
 ; CHECK-RV64-NEXT:    j .LBB61_440
@@ -19116,8 +19116,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 428
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 19
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_943
 ; CHECK-RV64-NEXT:    j .LBB61_441
@@ -19129,8 +19129,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 429
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 18
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_944
 ; CHECK-RV64-NEXT:    j .LBB61_442
@@ -19142,8 +19142,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 430
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 17
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_945
 ; CHECK-RV64-NEXT:    j .LBB61_443
@@ -19155,8 +19155,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 431
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 16
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_946
 ; CHECK-RV64-NEXT:    j .LBB61_444
@@ -19168,8 +19168,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 432
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 15
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_947
 ; CHECK-RV64-NEXT:    j .LBB61_445
@@ -19181,8 +19181,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 433
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 14
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_948
 ; CHECK-RV64-NEXT:    j .LBB61_446
@@ -19194,8 +19194,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 434
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 13
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_949
 ; CHECK-RV64-NEXT:    j .LBB61_447
@@ -19207,8 +19207,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 435
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 12
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_950
 ; CHECK-RV64-NEXT:    j .LBB61_448
@@ -19220,8 +19220,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 436
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 11
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_951
 ; CHECK-RV64-NEXT:    j .LBB61_449
@@ -19233,8 +19233,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 437
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 10
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_952
 ; CHECK-RV64-NEXT:    j .LBB61_450
@@ -19246,8 +19246,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 438
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 9
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_953
 ; CHECK-RV64-NEXT:    j .LBB61_451
@@ -19259,8 +19259,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 439
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 8
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_954
 ; CHECK-RV64-NEXT:    j .LBB61_452
@@ -19272,8 +19272,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 440
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 7
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_955
 ; CHECK-RV64-NEXT:    j .LBB61_453
@@ -19285,8 +19285,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 441
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 6
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_956
 ; CHECK-RV64-NEXT:    j .LBB61_454
@@ -19298,8 +19298,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 442
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 5
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_957
 ; CHECK-RV64-NEXT:    j .LBB61_455
@@ -19311,8 +19311,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 443
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 4
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_958
 ; CHECK-RV64-NEXT:    j .LBB61_456
@@ -19324,8 +19324,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 444
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 3
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_959
 ; CHECK-RV64-NEXT:    j .LBB61_457
@@ -19337,8 +19337,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a1
 ; CHECK-RV64-NEXT:    li a1, 445
 ; CHECK-RV64-NEXT:    vsetvli zero, a1, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a1, a2, 2
 ; CHECK-RV64-NEXT:    bgez a1, .LBB61_1031
 ; CHECK-RV64-NEXT:    j .LBB61_458
@@ -19350,8 +19350,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 448
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 1
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_961
 ; CHECK-RV64-NEXT:    j .LBB61_463
@@ -19363,8 +19363,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 449
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 2
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_962
 ; CHECK-RV64-NEXT:    j .LBB61_464
@@ -19376,8 +19376,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 450
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 4
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_963
 ; CHECK-RV64-NEXT:    j .LBB61_465
@@ -19389,8 +19389,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 451
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 8
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_964
 ; CHECK-RV64-NEXT:    j .LBB61_466
@@ -19402,8 +19402,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 452
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 16
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_965
 ; CHECK-RV64-NEXT:    j .LBB61_467
@@ -19415,8 +19415,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 453
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 32
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_966
 ; CHECK-RV64-NEXT:    j .LBB61_468
@@ -19428,8 +19428,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 454
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 64
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_967
 ; CHECK-RV64-NEXT:    j .LBB61_469
@@ -19441,8 +19441,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 455
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 128
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_968
 ; CHECK-RV64-NEXT:    j .LBB61_470
@@ -19454,8 +19454,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 456
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 256
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_969
 ; CHECK-RV64-NEXT:    j .LBB61_471
@@ -19467,8 +19467,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 457
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 512
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_970
 ; CHECK-RV64-NEXT:    j .LBB61_472
@@ -19480,8 +19480,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 458
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    andi a2, a1, 1024
 ; CHECK-RV64-NEXT:    bnez a2, .LBB61_971
 ; CHECK-RV64-NEXT:    j .LBB61_473
@@ -19493,8 +19493,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 459
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 52
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_972
 ; CHECK-RV64-NEXT:    j .LBB61_474
@@ -19506,8 +19506,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 460
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 51
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_973
 ; CHECK-RV64-NEXT:    j .LBB61_475
@@ -19519,8 +19519,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 461
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 50
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_974
 ; CHECK-RV64-NEXT:    j .LBB61_476
@@ -19532,8 +19532,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 462
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 49
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_975
 ; CHECK-RV64-NEXT:    j .LBB61_477
@@ -19545,8 +19545,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 463
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 48
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_976
 ; CHECK-RV64-NEXT:    j .LBB61_478
@@ -19558,8 +19558,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 464
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 47
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_977
 ; CHECK-RV64-NEXT:    j .LBB61_479
@@ -19571,8 +19571,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 465
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 46
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_978
 ; CHECK-RV64-NEXT:    j .LBB61_480
@@ -19584,8 +19584,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 466
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 45
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_979
 ; CHECK-RV64-NEXT:    j .LBB61_481
@@ -19597,8 +19597,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 467
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 44
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_980
 ; CHECK-RV64-NEXT:    j .LBB61_482
@@ -19610,8 +19610,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 468
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 43
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_981
 ; CHECK-RV64-NEXT:    j .LBB61_483
@@ -19623,8 +19623,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 469
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 42
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_982
 ; CHECK-RV64-NEXT:    j .LBB61_484
@@ -19636,8 +19636,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 470
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 41
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_983
 ; CHECK-RV64-NEXT:    j .LBB61_485
@@ -19649,8 +19649,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 471
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 40
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_984
 ; CHECK-RV64-NEXT:    j .LBB61_486
@@ -19662,8 +19662,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 472
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 39
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_985
 ; CHECK-RV64-NEXT:    j .LBB61_487
@@ -19675,8 +19675,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 473
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 38
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_986
 ; CHECK-RV64-NEXT:    j .LBB61_488
@@ -19688,8 +19688,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 474
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 37
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_987
 ; CHECK-RV64-NEXT:    j .LBB61_489
@@ -19701,8 +19701,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 475
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 36
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_988
 ; CHECK-RV64-NEXT:    j .LBB61_490
@@ -19714,8 +19714,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 476
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 35
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_989
 ; CHECK-RV64-NEXT:    j .LBB61_491
@@ -19727,8 +19727,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 477
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 34
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_990
 ; CHECK-RV64-NEXT:    j .LBB61_492
@@ -19740,8 +19740,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 478
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 33
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_991
 ; CHECK-RV64-NEXT:    j .LBB61_493
@@ -19753,8 +19753,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 479
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 32
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_992
 ; CHECK-RV64-NEXT:    j .LBB61_494
@@ -19766,8 +19766,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 480
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 31
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_993
 ; CHECK-RV64-NEXT:    j .LBB61_495
@@ -19779,8 +19779,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 481
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 30
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_994
 ; CHECK-RV64-NEXT:    j .LBB61_496
@@ -19792,8 +19792,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 482
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 29
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_995
 ; CHECK-RV64-NEXT:    j .LBB61_497
@@ -19805,8 +19805,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 483
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 28
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_996
 ; CHECK-RV64-NEXT:    j .LBB61_498
@@ -19818,8 +19818,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 484
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 27
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_997
 ; CHECK-RV64-NEXT:    j .LBB61_499
@@ -19831,8 +19831,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 485
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 26
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_998
 ; CHECK-RV64-NEXT:    j .LBB61_500
@@ -19844,8 +19844,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 486
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 25
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_999
 ; CHECK-RV64-NEXT:    j .LBB61_501
@@ -19857,8 +19857,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 487
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 24
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1000
 ; CHECK-RV64-NEXT:    j .LBB61_502
@@ -19870,8 +19870,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 488
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 23
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1001
 ; CHECK-RV64-NEXT:    j .LBB61_503
@@ -19883,8 +19883,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 489
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 22
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1002
 ; CHECK-RV64-NEXT:    j .LBB61_504
@@ -19896,8 +19896,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 490
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 21
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1003
 ; CHECK-RV64-NEXT:    j .LBB61_505
@@ -19909,8 +19909,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 491
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 20
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1004
 ; CHECK-RV64-NEXT:    j .LBB61_506
@@ -19922,8 +19922,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 492
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 19
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1005
 ; CHECK-RV64-NEXT:    j .LBB61_507
@@ -19935,8 +19935,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 493
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 18
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1006
 ; CHECK-RV64-NEXT:    j .LBB61_508
@@ -19948,8 +19948,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 494
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 17
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1007
 ; CHECK-RV64-NEXT:    j .LBB61_509
@@ -19961,8 +19961,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 495
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 16
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1008
 ; CHECK-RV64-NEXT:    j .LBB61_510
@@ -19974,8 +19974,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 496
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 15
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1009
 ; CHECK-RV64-NEXT:    j .LBB61_511
@@ -19987,8 +19987,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 497
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 14
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1010
 ; CHECK-RV64-NEXT:    j .LBB61_512
@@ -20000,8 +20000,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 498
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 13
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1011
 ; CHECK-RV64-NEXT:    j .LBB61_513
@@ -20013,8 +20013,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 499
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 12
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1012
 ; CHECK-RV64-NEXT:    j .LBB61_514
@@ -20026,8 +20026,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 500
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 11
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1013
 ; CHECK-RV64-NEXT:    j .LBB61_515
@@ -20039,8 +20039,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 501
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 10
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1014
 ; CHECK-RV64-NEXT:    j .LBB61_516
@@ -20052,8 +20052,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 502
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 9
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1015
 ; CHECK-RV64-NEXT:    j .LBB61_517
@@ -20065,8 +20065,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 503
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 8
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1016
 ; CHECK-RV64-NEXT:    j .LBB61_518
@@ -20078,8 +20078,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 504
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 7
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1017
 ; CHECK-RV64-NEXT:    j .LBB61_519
@@ -20091,8 +20091,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 505
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 6
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1018
 ; CHECK-RV64-NEXT:    j .LBB61_520
@@ -20104,8 +20104,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 506
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 5
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1019
 ; CHECK-RV64-NEXT:    j .LBB61_521
@@ -20117,8 +20117,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 507
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 4
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1020
 ; CHECK-RV64-NEXT:    j .LBB61_522
@@ -20130,8 +20130,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 508
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 3
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1021
 ; CHECK-RV64-NEXT:    j .LBB61_523
@@ -20143,8 +20143,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 509
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 2
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1022
 ; CHECK-RV64-NEXT:    j .LBB61_524
@@ -20156,8 +20156,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 510
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    slli a2, a1, 1
 ; CHECK-RV64-NEXT:    bltz a2, .LBB61_1023
 ; CHECK-RV64-NEXT:    j .LBB61_525
@@ -20169,8 +20169,8 @@ define <512 x i8> @test_expandload_v512i8_vlen512(ptr %base, <512 x i1> %mask, <
 ; CHECK-RV64-NEXT:    vmv.s.x v16, a2
 ; CHECK-RV64-NEXT:    li a2, 511
 ; CHECK-RV64-NEXT:    vsetvli zero, a2, e8, m8, tu, ma
-; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    addi a0, a0, 1
+; CHECK-RV64-NEXT:    vslideup.vx v8, v16, a3
 ; CHECK-RV64-NEXT:    bltz a1, .LBB61_1024
 ; CHECK-RV64-NEXT:    j .LBB61_526
 ; CHECK-RV64-NEXT:  .LBB61_1024: # %cond.load2041

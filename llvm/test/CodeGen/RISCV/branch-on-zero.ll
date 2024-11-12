@@ -43,8 +43,8 @@ define i64 @optbranch_64(i64 %Arg) {
 ; RV32-NEXT:    or a2, a0, a1
 ; RV32-NEXT:    bnez a2, .LBB1_2
 ; RV32-NEXT:  # %bb.1: # %bb2
-; RV32-NEXT:    li a0, -1
 ; RV32-NEXT:    li a1, -1
+; RV32-NEXT:    li a0, -1
 ; RV32-NEXT:  .LBB1_2: # %bb3
 ; RV32-NEXT:    ret
 ;
@@ -76,8 +76,8 @@ define i32 @test_lshr(i32 %v) {
 ; RV32-NEXT:  .LBB2_1: # %for.body
 ; RV32-NEXT:    # =>This Inner Loop Header: Depth=1
 ; RV32-NEXT:    andi a2, a0, 1
-; RV32-NEXT:    srli a0, a0, 1
 ; RV32-NEXT:    add a1, a1, a2
+; RV32-NEXT:    srli a0, a0, 1
 ; RV32-NEXT:    bnez a0, .LBB2_1
 ; RV32-NEXT:  .LBB2_2: # %for.end
 ; RV32-NEXT:    mv a0, a1
@@ -92,8 +92,8 @@ define i32 @test_lshr(i32 %v) {
 ; RV64-NEXT:  .LBB2_2: # %for.body
 ; RV64-NEXT:    # =>This Inner Loop Header: Depth=1
 ; RV64-NEXT:    andi a2, a0, 1
-; RV64-NEXT:    srliw a0, a0, 1
 ; RV64-NEXT:    addw a1, a1, a2
+; RV64-NEXT:    srliw a0, a0, 1
 ; RV64-NEXT:    bnez a0, .LBB2_2
 ; RV64-NEXT:  .LBB2_3: # %for.end
 ; RV64-NEXT:    mv a0, a1

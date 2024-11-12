@@ -20,12 +20,12 @@ define i32 @vscale_known_nonzero() {
 ; CHECK-NEXT:    lui a1, 30667
 ; CHECK-NEXT:    addiw a1, a1, 1329
 ; CHECK-NEXT:    call __muldi3
-; CHECK-NEXT:    lui a1, %hi(.LCPI0_0)
 ; CHECK-NEXT:    srliw a0, a0, 27
+; CHECK-NEXT:    lui a1, %hi(.LCPI0_0)
 ; CHECK-NEXT:    addi a1, a1, %lo(.LCPI0_0)
 ; CHECK-NEXT:    add a0, a1, a0
-; CHECK-NEXT:    lbu a0, 0(a0)
 ; CHECK-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
+; CHECK-NEXT:    lbu a0, 0(a0)
 ; CHECK-NEXT:    .cfi_restore ra
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    .cfi_def_cfa_offset 0

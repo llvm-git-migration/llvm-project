@@ -57,15 +57,15 @@ define i32 @caller_float_in_fpr_exhausted_gprs() nounwind {
 ; RV32-ILP32FD-NEXT:    li a1, 5
 ; RV32-ILP32FD-NEXT:    lui a0, 265216
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa0, a0
-; RV32-ILP32FD-NEXT:    li a0, 1
-; RV32-ILP32FD-NEXT:    li a2, 2
-; RV32-ILP32FD-NEXT:    li a4, 3
-; RV32-ILP32FD-NEXT:    li a6, 4
 ; RV32-ILP32FD-NEXT:    sw a1, 0(sp)
-; RV32-ILP32FD-NEXT:    li a1, 0
-; RV32-ILP32FD-NEXT:    li a3, 0
-; RV32-ILP32FD-NEXT:    li a5, 0
 ; RV32-ILP32FD-NEXT:    li a7, 0
+; RV32-ILP32FD-NEXT:    li a5, 0
+; RV32-ILP32FD-NEXT:    li a3, 0
+; RV32-ILP32FD-NEXT:    li a1, 0
+; RV32-ILP32FD-NEXT:    li a6, 4
+; RV32-ILP32FD-NEXT:    li a4, 3
+; RV32-ILP32FD-NEXT:    li a2, 2
+; RV32-ILP32FD-NEXT:    li a0, 1
 ; RV32-ILP32FD-NEXT:    call callee_float_in_fpr_exhausted_gprs
 ; RV32-ILP32FD-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32-ILP32FD-NEXT:    addi sp, sp, 16
@@ -80,8 +80,8 @@ define i32 @callee_float_in_gpr_exhausted_fprs(float %a, float %b, float %c, flo
 ; RV32-ILP32FD-LABEL: callee_float_in_gpr_exhausted_fprs:
 ; RV32-ILP32FD:       # %bb.0:
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa5, a0
-; RV32-ILP32FD-NEXT:    fcvt.w.s a0, fa7, rtz
 ; RV32-ILP32FD-NEXT:    fcvt.w.s a1, fa5, rtz
+; RV32-ILP32FD-NEXT:    fcvt.w.s a0, fa7, rtz
 ; RV32-ILP32FD-NEXT:    add a0, a0, a1
 ; RV32-ILP32FD-NEXT:    ret
   %h_fptosi = fptosi float %h to i32
@@ -141,6 +141,7 @@ define i32 @caller_float_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32FD:       # %bb.0:
 ; RV32-ILP32FD-NEXT:    addi sp, sp, -16
 ; RV32-ILP32FD-NEXT:    sw ra, 12(sp) # 4-byte Folded Spill
+; RV32-ILP32FD-NEXT:    lui a1, 267520
 ; RV32-ILP32FD-NEXT:    lui a0, 262144
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa0, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 264192
@@ -154,19 +155,18 @@ define i32 @caller_float_on_stack_exhausted_gprs_fprs() nounwind {
 ; RV32-ILP32FD-NEXT:    lui a0, 266752
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa5, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 267008
-; RV32-ILP32FD-NEXT:    lui a1, 267520
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa6, a0
 ; RV32-ILP32FD-NEXT:    lui a0, 267264
 ; RV32-ILP32FD-NEXT:    fmv.w.x fa7, a0
-; RV32-ILP32FD-NEXT:    li a0, 1
-; RV32-ILP32FD-NEXT:    li a2, 3
-; RV32-ILP32FD-NEXT:    li a4, 5
-; RV32-ILP32FD-NEXT:    li a6, 7
 ; RV32-ILP32FD-NEXT:    sw a1, 0(sp)
-; RV32-ILP32FD-NEXT:    li a1, 0
-; RV32-ILP32FD-NEXT:    li a3, 0
-; RV32-ILP32FD-NEXT:    li a5, 0
 ; RV32-ILP32FD-NEXT:    li a7, 0
+; RV32-ILP32FD-NEXT:    li a5, 0
+; RV32-ILP32FD-NEXT:    li a3, 0
+; RV32-ILP32FD-NEXT:    li a1, 0
+; RV32-ILP32FD-NEXT:    li a6, 7
+; RV32-ILP32FD-NEXT:    li a4, 5
+; RV32-ILP32FD-NEXT:    li a2, 3
+; RV32-ILP32FD-NEXT:    li a0, 1
 ; RV32-ILP32FD-NEXT:    call callee_float_on_stack_exhausted_gprs_fprs
 ; RV32-ILP32FD-NEXT:    lw ra, 12(sp) # 4-byte Folded Reload
 ; RV32-ILP32FD-NEXT:    addi sp, sp, 16

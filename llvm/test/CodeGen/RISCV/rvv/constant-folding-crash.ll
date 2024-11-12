@@ -30,8 +30,8 @@ define void @constant_folding_crash(ptr %v54, <4 x ptr> %lanes.a, <4 x ptr> %lan
 ; RV32-NEXT:    vmerge.vvm v8, v9, v8, v0
 ; RV32-NEXT:    vmv.x.s a0, v8
 ; RV32-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
-; RV32-NEXT:    vmv.v.i v8, 0
 ; RV32-NEXT:    vmv1r.v v0, v11
+; RV32-NEXT:    vmv.v.i v8, 0
 ; RV32-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-NEXT:    vrgather.vi v9, v8, 0
 ; RV32-NEXT:    vmsne.vi v0, v9, 0
@@ -54,8 +54,8 @@ define void @constant_folding_crash(ptr %v54, <4 x ptr> %lanes.a, <4 x ptr> %lan
 ; RV64-NEXT:    vmerge.vvm v8, v10, v8, v0
 ; RV64-NEXT:    vmv.x.s a0, v8
 ; RV64-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
-; RV64-NEXT:    vmv.v.i v8, 0
 ; RV64-NEXT:    vmv1r.v v0, v13
+; RV64-NEXT:    vmv.v.i v8, 0
 ; RV64-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-NEXT:    vrgather.vi v9, v8, 0
 ; RV64-NEXT:    vmsne.vi v0, v9, 0

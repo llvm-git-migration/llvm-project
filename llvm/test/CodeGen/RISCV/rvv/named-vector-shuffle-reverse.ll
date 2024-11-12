@@ -20,13 +20,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV32-BITS-UNKNOWN-LABEL: reverse_nxv2i1:
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
+; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v9, v9, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v8, v9
@@ -36,13 +36,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV32-BITS-256-LABEL: reverse_nxv2i1:
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
+; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    srli a0, a0, 2
-; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vid.v v9
-; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -50,13 +50,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV32-BITS-512-LABEL: reverse_nxv2i1:
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
+; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    srli a0, a0, 2
-; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vid.v v9
-; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -64,13 +64,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV64-BITS-UNKNOWN-LABEL: reverse_nxv2i1:
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
+; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, mf2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v9, v9, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v8, v9
@@ -80,13 +80,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV64-BITS-256-LABEL: reverse_nxv2i1:
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
+; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    srli a0, a0, 2
-; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vid.v v9
-; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -94,13 +94,13 @@ define <vscale x 2 x i1> @reverse_nxv2i1(<vscale x 2 x i1> %a) {
 ; RV64-BITS-512-LABEL: reverse_nxv2i1:
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
+; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    srli a0, a0, 2
-; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vid.v v9
-; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -112,13 +112,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV32-BITS-UNKNOWN-LABEL: reverse_nxv4i1:
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
+; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v9, v9, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v8, v9
@@ -128,13 +128,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV32-BITS-256-LABEL: reverse_nxv4i1:
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
+; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    srli a0, a0, 1
-; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vid.v v9
-; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -142,13 +142,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV32-BITS-512-LABEL: reverse_nxv4i1:
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
+; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    srli a0, a0, 1
-; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vid.v v9
-; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -156,13 +156,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV64-BITS-UNKNOWN-LABEL: reverse_nxv4i1:
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
+; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, m1, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v9, v9, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v8, v9
@@ -172,13 +172,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV64-BITS-256-LABEL: reverse_nxv4i1:
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
+; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    srli a0, a0, 1
-; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vid.v v9
-; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -186,13 +186,13 @@ define <vscale x 4 x i1> @reverse_nxv4i1(<vscale x 4 x i1> %a) {
 ; RV64-BITS-512-LABEL: reverse_nxv4i1:
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
+; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    srli a0, a0, 1
-; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vid.v v9
-; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -205,11 +205,11 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v10
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v10, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -219,12 +219,12 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV32-BITS-256-LABEL: reverse_nxv8i1:
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
+; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    vid.v v9
-; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -232,12 +232,12 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV32-BITS-512-LABEL: reverse_nxv8i1:
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
+; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    vid.v v9
-; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV32-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV32-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -246,11 +246,11 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v8, v8, 1, v0
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
+; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e16, m2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v10
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v10, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -260,12 +260,12 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV64-BITS-256-LABEL: reverse_nxv8i1:
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
+; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    vid.v v9
-; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-256-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-256-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -273,12 +273,12 @@ define <vscale x 8 x i1> @reverse_nxv8i1(<vscale x 8 x i1> %a) {
 ; RV64-BITS-512-LABEL: reverse_nxv8i1:
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
+; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    vid.v v9
-; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v9, v9, a0
+; RV64-BITS-512-NEXT:    vmerge.vim v8, v8, 1, v0
 ; RV64-BITS-512-NEXT:    vrgather.vv v10, v8, v9
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v10, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -298,8 +298,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v10, 0
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v8
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v11, v8
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v8
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v12, 0
 ; RV32-BITS-UNKNOWN-NEXT:    ret
@@ -315,8 +315,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV32-BITS-256-NEXT:    vmv.v.i v10, 0
 ; RV32-BITS-256-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-256-NEXT:    vrgather.vv v13, v10, v8
 ; RV32-BITS-256-NEXT:    vrgather.vv v12, v11, v8
+; RV32-BITS-256-NEXT:    vrgather.vv v13, v10, v8
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v12, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -332,8 +332,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV32-BITS-512-NEXT:    vmv.v.i v10, 0
 ; RV32-BITS-512-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-512-NEXT:    vrgather.vv v13, v10, v8
 ; RV32-BITS-512-NEXT:    vrgather.vv v12, v11, v8
+; RV32-BITS-512-NEXT:    vrgather.vv v13, v10, v8
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v12, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -349,8 +349,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v10, 0
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v8
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v11, v8
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v8
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v12, 0
 ; RV64-BITS-UNKNOWN-NEXT:    ret
@@ -366,8 +366,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV64-BITS-256-NEXT:    vmv.v.i v10, 0
 ; RV64-BITS-256-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-256-NEXT:    vrgather.vv v13, v10, v8
 ; RV64-BITS-256-NEXT:    vrgather.vv v12, v11, v8
+; RV64-BITS-256-NEXT:    vrgather.vv v13, v10, v8
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v12, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -383,8 +383,8 @@ define <vscale x 16 x i1> @reverse_nxv16i1(<vscale x 16 x i1> %a) {
 ; RV64-BITS-512-NEXT:    vmv.v.i v10, 0
 ; RV64-BITS-512-NEXT:    vmerge.vim v10, v10, 1, v0
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-512-NEXT:    vrgather.vv v13, v10, v8
 ; RV64-BITS-512-NEXT:    vrgather.vv v12, v11, v8
+; RV64-BITS-512-NEXT:    vrgather.vv v13, v10, v8
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m2, ta, ma
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v12, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -404,10 +404,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v16, v12
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v17, v12
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v18, v12
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v19, v12
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v18, v12
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v17, v12
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v16, v12
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-UNKNOWN-NEXT:    ret
@@ -423,10 +423,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-256-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-256-NEXT:    vrgather.vv v11, v16, v12
-; RV32-BITS-256-NEXT:    vrgather.vv v10, v17, v12
-; RV32-BITS-256-NEXT:    vrgather.vv v9, v18, v12
 ; RV32-BITS-256-NEXT:    vrgather.vv v8, v19, v12
+; RV32-BITS-256-NEXT:    vrgather.vv v9, v18, v12
+; RV32-BITS-256-NEXT:    vrgather.vv v10, v17, v12
+; RV32-BITS-256-NEXT:    vrgather.vv v11, v16, v12
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -442,10 +442,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-512-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-512-NEXT:    vrgather.vv v11, v16, v12
-; RV32-BITS-512-NEXT:    vrgather.vv v10, v17, v12
-; RV32-BITS-512-NEXT:    vrgather.vv v9, v18, v12
 ; RV32-BITS-512-NEXT:    vrgather.vv v8, v19, v12
+; RV32-BITS-512-NEXT:    vrgather.vv v9, v18, v12
+; RV32-BITS-512-NEXT:    vrgather.vv v10, v17, v12
+; RV32-BITS-512-NEXT:    vrgather.vv v11, v16, v12
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -461,10 +461,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v16, v12
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v17, v12
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v18, v12
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v19, v12
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v18, v12
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v17, v12
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v16, v12
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-UNKNOWN-NEXT:    ret
@@ -480,10 +480,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-256-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-256-NEXT:    vrgather.vv v11, v16, v12
-; RV64-BITS-256-NEXT:    vrgather.vv v10, v17, v12
-; RV64-BITS-256-NEXT:    vrgather.vv v9, v18, v12
 ; RV64-BITS-256-NEXT:    vrgather.vv v8, v19, v12
+; RV64-BITS-256-NEXT:    vrgather.vv v9, v18, v12
+; RV64-BITS-256-NEXT:    vrgather.vv v10, v17, v12
+; RV64-BITS-256-NEXT:    vrgather.vv v11, v16, v12
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -499,10 +499,10 @@ define <vscale x 32 x i1> @reverse_nxv32i1(<vscale x 32 x i1> %a) {
 ; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-512-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-512-NEXT:    vrgather.vv v11, v16, v12
-; RV64-BITS-512-NEXT:    vrgather.vv v10, v17, v12
-; RV64-BITS-512-NEXT:    vrgather.vv v9, v18, v12
 ; RV64-BITS-512-NEXT:    vrgather.vv v8, v19, v12
+; RV64-BITS-512-NEXT:    vrgather.vv v9, v18, v12
+; RV64-BITS-512-NEXT:    vrgather.vv v10, v17, v12
+; RV64-BITS-512-NEXT:    vrgather.vv v11, v16, v12
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m4, ta, ma
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -522,14 +522,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV32-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-UNKNOWN-NEXT:    vmerge.vim v24, v8, 1, v0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v24, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v25, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v26, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v27, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v28, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v29, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v30, v16
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v31, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v30, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v29, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v28, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v27, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v26, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v25, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v24, v16
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-UNKNOWN-NEXT:    ret
@@ -545,14 +545,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV32-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-256-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-256-NEXT:    vrgather.vv v15, v16, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v14, v17, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v13, v18, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v12, v19, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v11, v20, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v10, v21, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v9, v22, v24
 ; RV32-BITS-256-NEXT:    vrgather.vv v8, v23, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v9, v22, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v10, v21, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v11, v20, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v12, v19, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v13, v18, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v14, v17, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v15, v16, v24
 ; RV32-BITS-256-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV32-BITS-256-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-256-NEXT:    ret
@@ -568,14 +568,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV32-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV32-BITS-512-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV32-BITS-512-NEXT:    vrgather.vv v15, v16, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v14, v17, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v13, v18, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v12, v19, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v11, v20, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v10, v21, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v9, v22, v24
 ; RV32-BITS-512-NEXT:    vrgather.vv v8, v23, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v9, v22, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v10, v21, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v11, v20, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v12, v19, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v13, v18, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v14, v17, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v15, v16, v24
 ; RV32-BITS-512-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV32-BITS-512-NEXT:    vmsne.vi v0, v8, 0
 ; RV32-BITS-512-NEXT:    ret
@@ -591,14 +591,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV64-BITS-UNKNOWN-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-UNKNOWN-NEXT:    vmerge.vim v24, v8, 1, v0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v24, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v25, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v26, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v27, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v28, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v29, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v30, v16
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v31, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v30, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v29, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v28, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v27, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v26, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v25, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v24, v16
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-UNKNOWN-NEXT:    ret
@@ -614,14 +614,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV64-BITS-256-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-256-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-256-NEXT:    vrgather.vv v15, v16, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v14, v17, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v13, v18, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v12, v19, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v11, v20, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v10, v21, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v9, v22, v24
 ; RV64-BITS-256-NEXT:    vrgather.vv v8, v23, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v9, v22, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v10, v21, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v11, v20, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v12, v19, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v13, v18, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v14, v17, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v15, v16, v24
 ; RV64-BITS-256-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV64-BITS-256-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-256-NEXT:    ret
@@ -637,14 +637,14 @@ define <vscale x 64 x i1> @reverse_nxv64i1(<vscale x 64 x i1> %a) {
 ; RV64-BITS-512-NEXT:    vmv.v.i v8, 0
 ; RV64-BITS-512-NEXT:    vmerge.vim v16, v8, 1, v0
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m1, ta, ma
-; RV64-BITS-512-NEXT:    vrgather.vv v15, v16, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v14, v17, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v13, v18, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v12, v19, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v11, v20, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v10, v21, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v9, v22, v24
 ; RV64-BITS-512-NEXT:    vrgather.vv v8, v23, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v9, v22, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v10, v21, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v11, v20, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v12, v19, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v13, v18, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v14, v17, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v15, v16, v24
 ; RV64-BITS-512-NEXT:    vsetvli a0, zero, e8, m8, ta, ma
 ; RV64-BITS-512-NEXT:    vmsne.vi v0, v8, 0
 ; RV64-BITS-512-NEXT:    ret
@@ -661,9 +661,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 3
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, mf4, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf8, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -674,9 +674,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    srli a0, a0, 3
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, mf8, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v9
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -686,9 +686,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    srli a0, a0, 3
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, mf8, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v9
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -698,9 +698,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 3
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, mf4, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf8, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -711,9 +711,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    srli a0, a0, 3
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, mf8, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v9
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -723,9 +723,9 @@ define <vscale x 1 x i8> @reverse_nxv1i8(<vscale x 1 x i8> %a) {
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    srli a0, a0, 3
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, mf8, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v9
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -739,9 +739,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, mf2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -752,9 +752,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    srli a0, a0, 2
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, mf4, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v9
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -764,9 +764,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    srli a0, a0, 2
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, mf4, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v9
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -776,9 +776,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 2
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, mf2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf4, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -789,9 +789,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    srli a0, a0, 2
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, mf4, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v9
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -801,9 +801,9 @@ define <vscale x 2 x i8> @reverse_nxv2i8(<vscale x 2 x i8> %a) {
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    srli a0, a0, 2
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, mf4, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v9
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -817,9 +817,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -830,9 +830,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    srli a0, a0, 1
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, mf2, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v9
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -842,9 +842,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    srli a0, a0, 1
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, mf2, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v9
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -854,9 +854,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    srli a0, a0, 1
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v9
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, mf2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -867,9 +867,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    srli a0, a0, 1
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, mf2, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v9
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-256-NEXT:    vmv1r.v v8, v9
@@ -879,9 +879,9 @@ define <vscale x 4 x i8> @reverse_nxv4i8(<vscale x 4 x i8> %a) {
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    srli a0, a0, 1
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, mf2, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v9
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-512-NEXT:    vmv1r.v v8, v9
@@ -894,9 +894,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV32-BITS-UNKNOWN-LABEL: reverse_nxv8i8:
 ; RV32-BITS-UNKNOWN:       # %bb.0:
 ; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
-; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v10
+; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v10, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -906,9 +906,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV32-BITS-256-LABEL: reverse_nxv8i8:
 ; RV32-BITS-256:       # %bb.0:
 ; RV32-BITS-256-NEXT:    csrr a0, vlenb
-; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v9
+; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-256-NEXT:    vmv.v.v v8, v9
@@ -917,9 +917,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV32-BITS-512-LABEL: reverse_nxv8i8:
 ; RV32-BITS-512:       # %bb.0:
 ; RV32-BITS-512-NEXT:    csrr a0, vlenb
-; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v9
+; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV32-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV32-BITS-512-NEXT:    vmv.v.v v8, v9
@@ -928,9 +928,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV64-BITS-UNKNOWN-LABEL: reverse_nxv8i8:
 ; RV64-BITS-UNKNOWN:       # %bb.0:
 ; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
-; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v10
+; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v10, v10, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v8, v10
@@ -940,9 +940,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV64-BITS-256-LABEL: reverse_nxv8i8:
 ; RV64-BITS-256:       # %bb.0:
 ; RV64-BITS-256-NEXT:    csrr a0, vlenb
-; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v9
+; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-256-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-256-NEXT:    vmv.v.v v8, v9
@@ -951,9 +951,9 @@ define <vscale x 8 x i8> @reverse_nxv8i8(<vscale x 8 x i8> %a) {
 ; RV64-BITS-512-LABEL: reverse_nxv8i8:
 ; RV64-BITS-512:       # %bb.0:
 ; RV64-BITS-512-NEXT:    csrr a0, vlenb
-; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v9
+; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vrsub.vx v10, v9, a0
 ; RV64-BITS-512-NEXT:    vrgather.vv v9, v8, v10
 ; RV64-BITS-512-NEXT:    vmv.v.v v8, v9
@@ -971,8 +971,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v10
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v12, v10, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v8, v12
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v9, v12
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v8, v12
 ; RV32-BITS-UNKNOWN-NEXT:    vmv2r.v v8, v10
 ; RV32-BITS-UNKNOWN-NEXT:    ret
 ;
@@ -983,8 +983,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v10
 ; RV32-BITS-256-NEXT:    vrsub.vx v12, v10, a0
-; RV32-BITS-256-NEXT:    vrgather.vv v11, v8, v12
 ; RV32-BITS-256-NEXT:    vrgather.vv v10, v9, v12
+; RV32-BITS-256-NEXT:    vrgather.vv v11, v8, v12
 ; RV32-BITS-256-NEXT:    vmv2r.v v8, v10
 ; RV32-BITS-256-NEXT:    ret
 ;
@@ -995,8 +995,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v10
 ; RV32-BITS-512-NEXT:    vrsub.vx v12, v10, a0
-; RV32-BITS-512-NEXT:    vrgather.vv v11, v8, v12
 ; RV32-BITS-512-NEXT:    vrgather.vv v10, v9, v12
+; RV32-BITS-512-NEXT:    vrgather.vv v11, v8, v12
 ; RV32-BITS-512-NEXT:    vmv2r.v v8, v10
 ; RV32-BITS-512-NEXT:    ret
 ;
@@ -1008,8 +1008,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v10
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v12, v10, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v8, v12
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v9, v12
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v8, v12
 ; RV64-BITS-UNKNOWN-NEXT:    vmv2r.v v8, v10
 ; RV64-BITS-UNKNOWN-NEXT:    ret
 ;
@@ -1020,8 +1020,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v10
 ; RV64-BITS-256-NEXT:    vrsub.vx v12, v10, a0
-; RV64-BITS-256-NEXT:    vrgather.vv v11, v8, v12
 ; RV64-BITS-256-NEXT:    vrgather.vv v10, v9, v12
+; RV64-BITS-256-NEXT:    vrgather.vv v11, v8, v12
 ; RV64-BITS-256-NEXT:    vmv2r.v v8, v10
 ; RV64-BITS-256-NEXT:    ret
 ;
@@ -1032,8 +1032,8 @@ define <vscale x 16 x i8> @reverse_nxv16i8(<vscale x 16 x i8> %a) {
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v10
 ; RV64-BITS-512-NEXT:    vrsub.vx v12, v10, a0
-; RV64-BITS-512-NEXT:    vrgather.vv v11, v8, v12
 ; RV64-BITS-512-NEXT:    vrgather.vv v10, v9, v12
+; RV64-BITS-512-NEXT:    vrgather.vv v11, v8, v12
 ; RV64-BITS-512-NEXT:    vmv2r.v v8, v10
 ; RV64-BITS-512-NEXT:    ret
   %res = call <vscale x 16 x i8> @llvm.vector.reverse.nxv16i8(<vscale x 16 x i8> %a)
@@ -1049,10 +1049,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v12
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v16, v12, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v8, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v9, v16
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v16
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v11, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v9, v16
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v8, v16
 ; RV32-BITS-UNKNOWN-NEXT:    vmv4r.v v8, v12
 ; RV32-BITS-UNKNOWN-NEXT:    ret
 ;
@@ -1063,10 +1063,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v12
 ; RV32-BITS-256-NEXT:    vrsub.vx v16, v12, a0
-; RV32-BITS-256-NEXT:    vrgather.vv v15, v8, v16
-; RV32-BITS-256-NEXT:    vrgather.vv v14, v9, v16
-; RV32-BITS-256-NEXT:    vrgather.vv v13, v10, v16
 ; RV32-BITS-256-NEXT:    vrgather.vv v12, v11, v16
+; RV32-BITS-256-NEXT:    vrgather.vv v13, v10, v16
+; RV32-BITS-256-NEXT:    vrgather.vv v14, v9, v16
+; RV32-BITS-256-NEXT:    vrgather.vv v15, v8, v16
 ; RV32-BITS-256-NEXT:    vmv4r.v v8, v12
 ; RV32-BITS-256-NEXT:    ret
 ;
@@ -1077,10 +1077,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v12
 ; RV32-BITS-512-NEXT:    vrsub.vx v16, v12, a0
-; RV32-BITS-512-NEXT:    vrgather.vv v15, v8, v16
-; RV32-BITS-512-NEXT:    vrgather.vv v14, v9, v16
-; RV32-BITS-512-NEXT:    vrgather.vv v13, v10, v16
 ; RV32-BITS-512-NEXT:    vrgather.vv v12, v11, v16
+; RV32-BITS-512-NEXT:    vrgather.vv v13, v10, v16
+; RV32-BITS-512-NEXT:    vrgather.vv v14, v9, v16
+; RV32-BITS-512-NEXT:    vrgather.vv v15, v8, v16
 ; RV32-BITS-512-NEXT:    vmv4r.v v8, v12
 ; RV32-BITS-512-NEXT:    ret
 ;
@@ -1092,10 +1092,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v12
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v16, v12, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v8, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v9, v16
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v16
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v11, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v10, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v9, v16
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v8, v16
 ; RV64-BITS-UNKNOWN-NEXT:    vmv4r.v v8, v12
 ; RV64-BITS-UNKNOWN-NEXT:    ret
 ;
@@ -1106,10 +1106,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v12
 ; RV64-BITS-256-NEXT:    vrsub.vx v16, v12, a0
-; RV64-BITS-256-NEXT:    vrgather.vv v15, v8, v16
-; RV64-BITS-256-NEXT:    vrgather.vv v14, v9, v16
-; RV64-BITS-256-NEXT:    vrgather.vv v13, v10, v16
 ; RV64-BITS-256-NEXT:    vrgather.vv v12, v11, v16
+; RV64-BITS-256-NEXT:    vrgather.vv v13, v10, v16
+; RV64-BITS-256-NEXT:    vrgather.vv v14, v9, v16
+; RV64-BITS-256-NEXT:    vrgather.vv v15, v8, v16
 ; RV64-BITS-256-NEXT:    vmv4r.v v8, v12
 ; RV64-BITS-256-NEXT:    ret
 ;
@@ -1120,10 +1120,10 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v12
 ; RV64-BITS-512-NEXT:    vrsub.vx v16, v12, a0
-; RV64-BITS-512-NEXT:    vrgather.vv v15, v8, v16
-; RV64-BITS-512-NEXT:    vrgather.vv v14, v9, v16
-; RV64-BITS-512-NEXT:    vrgather.vv v13, v10, v16
 ; RV64-BITS-512-NEXT:    vrgather.vv v12, v11, v16
+; RV64-BITS-512-NEXT:    vrgather.vv v13, v10, v16
+; RV64-BITS-512-NEXT:    vrgather.vv v14, v9, v16
+; RV64-BITS-512-NEXT:    vrgather.vv v15, v8, v16
 ; RV64-BITS-512-NEXT:    vmv4r.v v8, v12
 ; RV64-BITS-512-NEXT:    ret
   %res = call <vscale x 32 x i8> @llvm.vector.reverse.nxv32i8(<vscale x 32 x i8> %a)
@@ -1133,112 +1133,112 @@ define <vscale x 32 x i8> @reverse_nxv32i8(<vscale x 32 x i8> %a) {
 define <vscale x 64 x i8> @reverse_nxv64i8(<vscale x 64 x i8> %a) {
 ; RV32-BITS-UNKNOWN-LABEL: reverse_nxv64i8:
 ; RV32-BITS-UNKNOWN:       # %bb.0:
-; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    vmv8r.v v16, v8
+; RV32-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV32-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m2, ta, ma
 ; RV32-BITS-UNKNOWN-NEXT:    vid.v v8
 ; RV32-BITS-UNKNOWN-NEXT:    vrsub.vx v24, v8, a0
 ; RV32-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v16, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v17, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v18, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v19, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v20, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v21, v24
-; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v22, v24
 ; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v23, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v22, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v21, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v20, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v19, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v18, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v17, v24
+; RV32-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v16, v24
 ; RV32-BITS-UNKNOWN-NEXT:    ret
 ;
 ; RV32-BITS-256-LABEL: reverse_nxv64i8:
 ; RV32-BITS-256:       # %bb.0:
-; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    vmv8r.v v16, v8
+; RV32-BITS-256-NEXT:    csrr a0, vlenb
 ; RV32-BITS-256-NEXT:    addi a0, a0, -1
 ; RV32-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-256-NEXT:    vid.v v8
 ; RV32-BITS-256-NEXT:    vrsub.vx v24, v8, a0
-; RV32-BITS-256-NEXT:    vrgather.vv v15, v16, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v14, v17, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v13, v18, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v12, v19, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v11, v20, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v10, v21, v24
-; RV32-BITS-256-NEXT:    vrgather.vv v9, v22, v24
 ; RV32-BITS-256-NEXT:    vrgather.vv v8, v23, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v9, v22, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v10, v21, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v11, v20, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v12, v19, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v13, v18, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v14, v17, v24
+; RV32-BITS-256-NEXT:    vrgather.vv v15, v16, v24
 ; RV32-BITS-256-NEXT:    ret
 ;
 ; RV32-BITS-512-LABEL: reverse_nxv64i8:
 ; RV32-BITS-512:       # %bb.0:
-; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    vmv8r.v v16, v8
+; RV32-BITS-512-NEXT:    csrr a0, vlenb
 ; RV32-BITS-512-NEXT:    addi a0, a0, -1
 ; RV32-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV32-BITS-512-NEXT:    vid.v v8
 ; RV32-BITS-512-NEXT:    vrsub.vx v24, v8, a0
-; RV32-BITS-512-NEXT:    vrgather.vv v15, v16, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v14, v17, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v13, v18, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v12, v19, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v11, v20, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v10, v21, v24
-; RV32-BITS-512-NEXT:    vrgather.vv v9, v22, v24
 ; RV32-BITS-512-NEXT:    vrgather.vv v8, v23, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v9, v22, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v10, v21, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v11, v20, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v12, v19, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v13, v18, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v14, v17, v24
+; RV32-BITS-512-NEXT:    vrgather.vv v15, v16, v24
 ; RV32-BITS-512-NEXT:    ret
 ;
 ; RV64-BITS-UNKNOWN-LABEL: reverse_nxv64i8:
 ; RV64-BITS-UNKNOWN:       # %bb.0:
-; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    vmv8r.v v16, v8
+; RV64-BITS-UNKNOWN-NEXT:    csrr a0, vlenb
 ; RV64-BITS-UNKNOWN-NEXT:    addi a0, a0, -1
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli a1, zero, e16, m2, ta, ma
 ; RV64-BITS-UNKNOWN-NEXT:    vid.v v8
 ; RV64-BITS-UNKNOWN-NEXT:    vrsub.vx v24, v8, a0
 ; RV64-BITS-UNKNOWN-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v16, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v17, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v18, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v19, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v20, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v21, v24
-; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v22, v24
 ; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v8, v23, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v9, v22, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v10, v21, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v11, v20, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v12, v19, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v13, v18, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v14, v17, v24
+; RV64-BITS-UNKNOWN-NEXT:    vrgatherei16.vv v15, v16, v24
 ; RV64-BITS-UNKNOWN-NEXT:    ret
 ;
 ; RV64-BITS-256-LABEL: reverse_nxv64i8:
 ; RV64-BITS-256:       # %bb.0:
-; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    vmv8r.v v16, v8
+; RV64-BITS-256-NEXT:    csrr a0, vlenb
 ; RV64-BITS-256-NEXT:    addi a0, a0, -1
 ; RV64-BITS-256-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-256-NEXT:    vid.v v8
 ; RV64-BITS-256-NEXT:    vrsub.vx v24, v8, a0
-; RV64-BITS-256-NEXT:    vrgather.vv v15, v16, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v14, v17, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v13, v18, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v12, v19, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v11, v20, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v10, v21, v24
-; RV64-BITS-256-NEXT:    vrgather.vv v9, v22, v24
 ; RV64-BITS-256-NEXT:    vrgather.vv v8, v23, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v9, v22, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v10, v21, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v11, v20, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v12, v19, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v13, v18, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v14, v17, v24
+; RV64-BITS-256-NEXT:    vrgather.vv v15, v16, v24
 ; RV64-BITS-256-NEXT:    ret
 ;
 ; RV64-BITS-512-LABEL: reverse_nxv64i8:
 ; RV64-BITS-512:       # %bb.0:
-; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    vmv8r.v v16, v8
+; RV64-BITS-512-NEXT:    csrr a0, vlenb
 ; RV64-BITS-512-NEXT:    addi a0, a0, -1
 ; RV64-BITS-512-NEXT:    vsetvli a1, zero, e8, m1, ta, ma
 ; RV64-BITS-512-NEXT:    vid.v v8
 ; RV64-BITS-512-NEXT:    vrsub.vx v24, v8, a0
-; RV64-BITS-512-NEXT:    vrgather.vv v15, v16, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v14, v17, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v13, v18, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v12, v19, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v11, v20, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v10, v21, v24
-; RV64-BITS-512-NEXT:    vrgather.vv v9, v22, v24
 ; RV64-BITS-512-NEXT:    vrgather.vv v8, v23, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v9, v22, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v10, v21, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v11, v20, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v12, v19, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v13, v18, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v14, v17, v24
+; RV64-BITS-512-NEXT:    vrgather.vv v15, v16, v24
 ; RV64-BITS-512-NEXT:    ret
   %res = call <vscale x 64 x i8> @llvm.vector.reverse.nxv64i8(<vscale x 64 x i8> %a)
   ret <vscale x 64 x i8> %res
@@ -1249,9 +1249,9 @@ define <vscale x 1 x i16> @reverse_nxv1i16(<vscale x 1 x i16> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf4, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1265,9 +1265,9 @@ define <vscale x 2 x i16> @reverse_nxv2i16(<vscale x 2 x i16> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf2, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1281,9 +1281,9 @@ define <vscale x 4 x i16> @reverse_nxv4i16(<vscale x 4 x i16> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1301,8 +1301,8 @@ define <vscale x 8 x i16> @reverse_nxv8i16(<vscale x 8 x i16> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x i16> @llvm.vector.reverse.nxv8i16(<vscale x 8 x i16> %a)
@@ -1318,10 +1318,10 @@ define <vscale x 16 x i16> @reverse_nxv16i16(<vscale x 16 x i16> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 16 x i16> @llvm.vector.reverse.nxv16i16(<vscale x 16 x i16> %a)
@@ -1331,21 +1331,21 @@ define <vscale x 16 x i16> @reverse_nxv16i16(<vscale x 16 x i16> %a) {
 define <vscale x 32 x i16> @reverse_nxv32i16(<vscale x 32 x i16> %a) {
 ; CHECK-LABEL: reverse_nxv32i16:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 32 x i16> @llvm.vector.reverse.nxv32i16(<vscale x 32 x i16> %a)
   ret <vscale x 32 x i16> %res
@@ -1356,9 +1356,9 @@ define <vscale x 1 x i32> @reverse_nxv1i32(<vscale x 1 x i32> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1372,9 +1372,9 @@ define <vscale x 2 x i32> @reverse_nxv2i32(<vscale x 2 x i32> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1392,8 +1392,8 @@ define <vscale x 4 x i32> @reverse_nxv4i32(<vscale x 4 x i32> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 4 x i32> @llvm.vector.reverse.nxv4i32(<vscale x 4 x i32> %a)
@@ -1409,10 +1409,10 @@ define <vscale x 8 x i32> @reverse_nxv8i32(<vscale x 8 x i32> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x i32> @llvm.vector.reverse.nxv8i32(<vscale x 8 x i32> %a)
@@ -1422,21 +1422,21 @@ define <vscale x 8 x i32> @reverse_nxv8i32(<vscale x 8 x i32> %a) {
 define <vscale x 16 x i32> @reverse_nxv16i32(<vscale x 16 x i32> %a) {
 ; CHECK-LABEL: reverse_nxv16i32:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 16 x i32> @llvm.vector.reverse.nxv16i32(<vscale x 16 x i32> %a)
   ret <vscale x 16 x i32> %res
@@ -1447,9 +1447,9 @@ define <vscale x 1 x i64> @reverse_nxv1i64(<vscale x 1 x i64> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1467,8 +1467,8 @@ define <vscale x 2 x i64> @reverse_nxv2i64(<vscale x 2 x i64> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 2 x i64> @llvm.vector.reverse.nxv2i64(<vscale x 2 x i64> %a)
@@ -1484,10 +1484,10 @@ define <vscale x 4 x i64> @reverse_nxv4i64(<vscale x 4 x i64> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 4 x i64> @llvm.vector.reverse.nxv4i64(<vscale x 4 x i64> %a)
@@ -1497,21 +1497,21 @@ define <vscale x 4 x i64> @reverse_nxv4i64(<vscale x 4 x i64> %a) {
 define <vscale x 8 x i64> @reverse_nxv8i64(<vscale x 8 x i64> %a) {
 ; CHECK-LABEL: reverse_nxv8i64:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x i64> @llvm.vector.reverse.nxv8i64(<vscale x 8 x i64> %a)
   ret <vscale x 8 x i64> %res
@@ -1526,9 +1526,9 @@ define <vscale x 1 x bfloat> @reverse_nxv1bf16(<vscale x 1 x bfloat> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf4, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1542,9 +1542,9 @@ define <vscale x 2 x bfloat> @reverse_nxv2bf16(<vscale x 2 x bfloat> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf2, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1558,9 +1558,9 @@ define <vscale x 4 x bfloat> @reverse_nxv4bf16(<vscale x 4 x bfloat> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1578,8 +1578,8 @@ define <vscale x 8 x bfloat> @reverse_nxv8bf16(<vscale x 8 x bfloat> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x bfloat> @llvm.vector.reverse.nxv8bf16(<vscale x 8 x bfloat> %a)
@@ -1595,10 +1595,10 @@ define <vscale x 16 x bfloat> @reverse_nxv16bf16(<vscale x 16 x bfloat> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 16 x bfloat> @llvm.vector.reverse.nxv16bf16(<vscale x 16 x bfloat> %a)
@@ -1608,21 +1608,21 @@ define <vscale x 16 x bfloat> @reverse_nxv16bf16(<vscale x 16 x bfloat> %a) {
 define <vscale x 32 x bfloat> @reverse_nxv32bf16(<vscale x 32 x bfloat> %a) {
 ; CHECK-LABEL: reverse_nxv32bf16:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 32 x bfloat> @llvm.vector.reverse.nxv32bf16(<vscale x 32 x bfloat> %a)
   ret <vscale x 32 x bfloat> %res
@@ -1633,9 +1633,9 @@ define <vscale x 1 x half> @reverse_nxv1f16(<vscale x 1 x half> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf4, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1649,9 +1649,9 @@ define <vscale x 2 x half> @reverse_nxv2f16(<vscale x 2 x half> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, mf2, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1665,9 +1665,9 @@ define <vscale x 4 x half> @reverse_nxv4f16(<vscale x 4 x half> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1685,8 +1685,8 @@ define <vscale x 8 x half> @reverse_nxv8f16(<vscale x 8 x half> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x half> @llvm.vector.reverse.nxv8f16(<vscale x 8 x half> %a)
@@ -1702,10 +1702,10 @@ define <vscale x 16 x half> @reverse_nxv16f16(<vscale x 16 x half> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 16 x half> @llvm.vector.reverse.nxv16f16(<vscale x 16 x half> %a)
@@ -1715,21 +1715,21 @@ define <vscale x 16 x half> @reverse_nxv16f16(<vscale x 16 x half> %a) {
 define <vscale x 32 x half> @reverse_nxv32f16(<vscale x 32 x half> %a) {
 ; CHECK-LABEL: reverse_nxv32f16:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 1
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 32 x half> @llvm.vector.reverse.nxv32f16(<vscale x 32 x half> %a)
   ret <vscale x 32 x half> %res
@@ -1740,9 +1740,9 @@ define <vscale x 1 x float> @reverse_nxv1f32(<vscale x 1 x float> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv1r.v v8, v9
@@ -1756,9 +1756,9 @@ define <vscale x 2 x float> @reverse_nxv2f32(<vscale x 2 x float> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1776,8 +1776,8 @@ define <vscale x 4 x float> @reverse_nxv4f32(<vscale x 4 x float> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 4 x float> @llvm.vector.reverse.nxv4f32(<vscale x 4 x float> %a)
@@ -1793,10 +1793,10 @@ define <vscale x 8 x float> @reverse_nxv8f32(<vscale x 8 x float> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x float> @llvm.vector.reverse.nxv8f32(<vscale x 8 x float> %a)
@@ -1806,21 +1806,21 @@ define <vscale x 8 x float> @reverse_nxv8f32(<vscale x 8 x float> %a) {
 define <vscale x 16 x float> @reverse_nxv16f32(<vscale x 16 x float> %a) {
 ; CHECK-LABEL: reverse_nxv16f32:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 2
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 16 x float> @llvm.vector.reverse.nxv16f32(<vscale x 16 x float> %a)
   ret <vscale x 16 x float> %res
@@ -1831,9 +1831,9 @@ define <vscale x 1 x double> @reverse_nxv1f64(<vscale x 1 x double> %a) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v9
+; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vrsub.vx v10, v9, a0
 ; CHECK-NEXT:    vrgather.vv v9, v8, v10
 ; CHECK-NEXT:    vmv.v.v v8, v9
@@ -1851,8 +1851,8 @@ define <vscale x 2 x double> @reverse_nxv2f64(<vscale x 2 x double> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v10
 ; CHECK-NEXT:    vrsub.vx v12, v10, a0
-; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vrgather.vv v10, v9, v12
+; CHECK-NEXT:    vrgather.vv v11, v8, v12
 ; CHECK-NEXT:    vmv2r.v v8, v10
 ; CHECK-NEXT:    ret
   %res = call <vscale x 2 x double> @llvm.vector.reverse.nxv2f64(<vscale x 2 x double> %a)
@@ -1868,10 +1868,10 @@ define <vscale x 4 x double> @reverse_nxv4f64(<vscale x 4 x double> %a) {
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v12
 ; CHECK-NEXT:    vrsub.vx v16, v12, a0
-; CHECK-NEXT:    vrgather.vv v15, v8, v16
-; CHECK-NEXT:    vrgather.vv v14, v9, v16
-; CHECK-NEXT:    vrgather.vv v13, v10, v16
 ; CHECK-NEXT:    vrgather.vv v12, v11, v16
+; CHECK-NEXT:    vrgather.vv v13, v10, v16
+; CHECK-NEXT:    vrgather.vv v14, v9, v16
+; CHECK-NEXT:    vrgather.vv v15, v8, v16
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 4 x double> @llvm.vector.reverse.nxv4f64(<vscale x 4 x double> %a)
@@ -1881,21 +1881,21 @@ define <vscale x 4 x double> @reverse_nxv4f64(<vscale x 4 x double> %a) {
 define <vscale x 8 x double> @reverse_nxv8f64(<vscale x 8 x double> %a) {
 ; CHECK-LABEL: reverse_nxv8f64:
 ; CHECK:       # %bb.0:
+; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    srli a0, a0, 3
-; CHECK-NEXT:    vmv8r.v v16, v8
 ; CHECK-NEXT:    addi a0, a0, -1
 ; CHECK-NEXT:    vsetvli a1, zero, e64, m1, ta, ma
 ; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vrsub.vx v24, v8, a0
-; CHECK-NEXT:    vrgather.vv v15, v16, v24
-; CHECK-NEXT:    vrgather.vv v14, v17, v24
-; CHECK-NEXT:    vrgather.vv v13, v18, v24
-; CHECK-NEXT:    vrgather.vv v12, v19, v24
-; CHECK-NEXT:    vrgather.vv v11, v20, v24
-; CHECK-NEXT:    vrgather.vv v10, v21, v24
-; CHECK-NEXT:    vrgather.vv v9, v22, v24
 ; CHECK-NEXT:    vrgather.vv v8, v23, v24
+; CHECK-NEXT:    vrgather.vv v9, v22, v24
+; CHECK-NEXT:    vrgather.vv v10, v21, v24
+; CHECK-NEXT:    vrgather.vv v11, v20, v24
+; CHECK-NEXT:    vrgather.vv v12, v19, v24
+; CHECK-NEXT:    vrgather.vv v13, v18, v24
+; CHECK-NEXT:    vrgather.vv v14, v17, v24
+; CHECK-NEXT:    vrgather.vv v15, v16, v24
 ; CHECK-NEXT:    ret
   %res = call <vscale x 8 x double> @llvm.vector.reverse.nxv8f64(<vscale x 8 x double> %a)
   ret <vscale x 8 x double> %res
@@ -1914,11 +1914,11 @@ define <vscale x 3 x i64> @reverse_nxv3i64(<vscale x 3 x i64> %a) {
 ; CHECK-NEXT:    vrsub.vx v14, v12, a0
 ; CHECK-NEXT:    vrgather.vv v13, v10, v14
 ; CHECK-NEXT:    vrgather.vv v10, v9, v14
-; CHECK-NEXT:    vrgather.vv v15, v8, v14
 ; CHECK-NEXT:    vmv.v.v v12, v13
-; CHECK-NEXT:    vmv.v.v v13, v10
+; CHECK-NEXT:    vrgather.vv v15, v8, v14
 ; CHECK-NEXT:    vrgather.vv v8, v11, v14
 ; CHECK-NEXT:    vmv.v.v v14, v15
+; CHECK-NEXT:    vmv.v.v v13, v10
 ; CHECK-NEXT:    vmv4r.v v8, v12
 ; CHECK-NEXT:    ret
   %res = call <vscale x 3 x i64> @llvm.vector.reverse.nxv3i64(<vscale x 3 x i64> %a)
@@ -1938,13 +1938,13 @@ define <vscale x 6 x i64> @reverse_nxv6i64(<vscale x 6 x i64> %a) {
 ; CHECK-NEXT:    vrgather.vv v19, v12, v22
 ; CHECK-NEXT:    vrgather.vv v18, v13, v22
 ; CHECK-NEXT:    vrgather.vv v20, v11, v22
-; CHECK-NEXT:    vrgather.vv v31, v8, v22
-; CHECK-NEXT:    vrgather.vv v30, v9, v22
 ; CHECK-NEXT:    vmv2r.v v16, v18
 ; CHECK-NEXT:    vmv2r.v v18, v20
-; CHECK-NEXT:    vrgather.vv v9, v14, v22
-; CHECK-NEXT:    vrgather.vv v8, v15, v22
+; CHECK-NEXT:    vrgather.vv v31, v8, v22
+; CHECK-NEXT:    vrgather.vv v30, v9, v22
 ; CHECK-NEXT:    vmv2r.v v20, v30
+; CHECK-NEXT:    vrgather.vv v8, v15, v22
+; CHECK-NEXT:    vrgather.vv v9, v14, v22
 ; CHECK-NEXT:    vmv8r.v v8, v16
 ; CHECK-NEXT:    ret
   %res = call <vscale x 6 x i64> @llvm.vector.reverse.nxv6i64(<vscale x 6 x i64> %a)
@@ -1956,8 +1956,8 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV32:       # %bb.0:
 ; RV32-NEXT:    addi sp, sp, -80
 ; RV32-NEXT:    .cfi_def_cfa_offset 80
-; RV32-NEXT:    sw ra, 76(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    sw s0, 72(sp) # 4-byte Folded Spill
+; RV32-NEXT:    sw ra, 76(sp) # 4-byte Folded Spill
 ; RV32-NEXT:    .cfi_offset ra, -4
 ; RV32-NEXT:    .cfi_offset s0, -8
 ; RV32-NEXT:    addi s0, sp, 80
@@ -1972,8 +1972,6 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV32-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
 ; RV32-NEXT:    vid.v v20
 ; RV32-NEXT:    vrsub.vx v20, v20, a1
-; RV32-NEXT:    slli a0, a0, 3
-; RV32-NEXT:    addi a1, sp, 64
 ; RV32-NEXT:    vrgather.vv v31, v12, v20
 ; RV32-NEXT:    vrgather.vv v30, v13, v20
 ; RV32-NEXT:    vrgather.vv v29, v14, v20
@@ -1986,15 +1984,17 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV32-NEXT:    vrgather.vv v14, v9, v20
 ; RV32-NEXT:    vrgather.vv v13, v10, v20
 ; RV32-NEXT:    vrgather.vv v12, v11, v20
+; RV32-NEXT:    slli a0, a0, 3
+; RV32-NEXT:    addi a1, sp, 64
 ; RV32-NEXT:    add a0, a1, a0
 ; RV32-NEXT:    vs4r.v v12, (a0)
 ; RV32-NEXT:    vs8r.v v24, (a1)
-; RV32-NEXT:    vl8re64.v v16, (a0)
 ; RV32-NEXT:    vl8re64.v v8, (a1)
+; RV32-NEXT:    vl8re64.v v16, (a0)
 ; RV32-NEXT:    addi sp, s0, -80
 ; RV32-NEXT:    .cfi_def_cfa sp, 80
-; RV32-NEXT:    lw ra, 76(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    lw s0, 72(sp) # 4-byte Folded Reload
+; RV32-NEXT:    lw ra, 76(sp) # 4-byte Folded Reload
 ; RV32-NEXT:    .cfi_restore ra
 ; RV32-NEXT:    .cfi_restore s0
 ; RV32-NEXT:    addi sp, sp, 80
@@ -2005,8 +2005,8 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV64:       # %bb.0:
 ; RV64-NEXT:    addi sp, sp, -80
 ; RV64-NEXT:    .cfi_def_cfa_offset 80
-; RV64-NEXT:    sd ra, 72(sp) # 8-byte Folded Spill
 ; RV64-NEXT:    sd s0, 64(sp) # 8-byte Folded Spill
+; RV64-NEXT:    sd ra, 72(sp) # 8-byte Folded Spill
 ; RV64-NEXT:    .cfi_offset ra, -8
 ; RV64-NEXT:    .cfi_offset s0, -16
 ; RV64-NEXT:    addi s0, sp, 80
@@ -2021,8 +2021,6 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV64-NEXT:    vsetvli a2, zero, e64, m1, ta, ma
 ; RV64-NEXT:    vid.v v20
 ; RV64-NEXT:    vrsub.vx v20, v20, a1
-; RV64-NEXT:    slli a0, a0, 3
-; RV64-NEXT:    addi a1, sp, 64
 ; RV64-NEXT:    vrgather.vv v31, v12, v20
 ; RV64-NEXT:    vrgather.vv v30, v13, v20
 ; RV64-NEXT:    vrgather.vv v29, v14, v20
@@ -2035,15 +2033,17 @@ define <vscale x 12 x i64> @reverse_nxv12i64(<vscale x 12 x i64> %a) {
 ; RV64-NEXT:    vrgather.vv v14, v9, v20
 ; RV64-NEXT:    vrgather.vv v13, v10, v20
 ; RV64-NEXT:    vrgather.vv v12, v11, v20
+; RV64-NEXT:    slli a0, a0, 3
+; RV64-NEXT:    addi a1, sp, 64
 ; RV64-NEXT:    add a0, a1, a0
 ; RV64-NEXT:    vs4r.v v12, (a0)
 ; RV64-NEXT:    vs8r.v v24, (a1)
-; RV64-NEXT:    vl8re64.v v16, (a0)
 ; RV64-NEXT:    vl8re64.v v8, (a1)
+; RV64-NEXT:    vl8re64.v v16, (a0)
 ; RV64-NEXT:    addi sp, s0, -80
 ; RV64-NEXT:    .cfi_def_cfa sp, 80
-; RV64-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    ld s0, 64(sp) # 8-byte Folded Reload
+; RV64-NEXT:    ld ra, 72(sp) # 8-byte Folded Reload
 ; RV64-NEXT:    .cfi_restore ra
 ; RV64-NEXT:    .cfi_restore s0
 ; RV64-NEXT:    addi sp, sp, 80

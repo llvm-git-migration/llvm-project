@@ -21,9 +21,9 @@ define void @vector_interleave_store_nxv32i1_nxv16i1(<vscale x 16 x i1> %a, <vsc
 ; CHECK-NEXT:    vwmaccu.vx v16, a1, v12
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    srli a1, a1, 2
-; CHECK-NEXT:    vmsne.vi v8, v18, 0
-; CHECK-NEXT:    vmsne.vi v9, v16, 0
 ; CHECK-NEXT:    add a2, a1, a1
+; CHECK-NEXT:    vmsne.vi v9, v16, 0
+; CHECK-NEXT:    vmsne.vi v8, v18, 0
 ; CHECK-NEXT:    vsetvli zero, a2, e8, mf2, ta, ma
 ; CHECK-NEXT:    vslideup.vx v9, v8, a1
 ; CHECK-NEXT:    vsetvli a1, zero, e8, m4, ta, ma
@@ -39,8 +39,8 @@ define void @vector_interleave_store_nxv16i16_nxv8i16_align1(<vscale x 8 x i16> 
 ; CHECK-LABEL: vector_interleave_store_nxv16i16_nxv8i16_align1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli a1, zero, e16, m2, ta, ma
-; CHECK-NEXT:    vwaddu.vv v12, v8, v10
 ; CHECK-NEXT:    li a1, -1
+; CHECK-NEXT:    vwaddu.vv v12, v8, v10
 ; CHECK-NEXT:    vwmaccu.vx v12, a1, v10
 ; CHECK-NEXT:    vs4r.v v12, (a0)
 ; CHECK-NEXT:    ret
@@ -103,23 +103,23 @@ define void @vector_interleave_store_nxv16i64_nxv8i64(<vscale x 8 x i64> %a, <vs
 ; CHECK-NEXT:    slli a1, a1, 4
 ; CHECK-NEXT:    sub sp, sp, a1
 ; CHECK-NEXT:    .cfi_escape 0x0f, 0x0d, 0x72, 0x00, 0x11, 0x10, 0x22, 0x11, 0x10, 0x92, 0xa2, 0x38, 0x00, 0x1e, 0x22 # sp + 16 + 16 * vlenb
-; CHECK-NEXT:    vsetvli a3, zero, e16, m2, ta, mu
-; CHECK-NEXT:    vid.v v24
 ; CHECK-NEXT:    addi a1, sp, 16
-; CHECK-NEXT:    vand.vi v26, v24, 1
 ; CHECK-NEXT:    vs8r.v v8, (a1) # Unknown-size Folded Spill
 ; CHECK-NEXT:    csrr a1, vlenb
-; CHECK-NEXT:    vmsne.vi v28, v26, 0
 ; CHECK-NEXT:    srli a2, a1, 1
+; CHECK-NEXT:    vsetvli a3, zero, e16, m2, ta, mu
+; CHECK-NEXT:    vid.v v24
+; CHECK-NEXT:    vand.vi v26, v24, 1
+; CHECK-NEXT:    vmsne.vi v28, v26, 0
 ; CHECK-NEXT:    vsrl.vi v24, v24, 1
 ; CHECK-NEXT:    vmv1r.v v0, v28
 ; CHECK-NEXT:    vadd.vx v24, v24, a2, v0.t
-; CHECK-NEXT:    csrr a2, vlenb
-; CHECK-NEXT:    slli a2, a2, 3
 ; CHECK-NEXT:    vmv4r.v v12, v16
-; CHECK-NEXT:    add a2, sp, a2
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m8, ta, ma
 ; CHECK-NEXT:    vrgatherei16.vv v0, v8, v24
+; CHECK-NEXT:    csrr a2, vlenb
+; CHECK-NEXT:    slli a2, a2, 3
+; CHECK-NEXT:    add a2, sp, a2
 ; CHECK-NEXT:    addi a2, a2, 16
 ; CHECK-NEXT:    vs8r.v v0, (a2) # Unknown-size Folded Spill
 ; CHECK-NEXT:    addi a2, sp, 16

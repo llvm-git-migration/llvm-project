@@ -1605,10 +1605,10 @@ define <1 x i64> @vror_vi_v1i64(<1 x i64> %a) {
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.v.i v9, 1
-; CHECK-RV32-NEXT:    li a0, 63
 ; CHECK-RV32-NEXT:    vrsub.vi v9, v9, 0
-; CHECK-RV32-NEXT:    vmv.s.x v10, a0
+; CHECK-RV32-NEXT:    li a0, 63
 ; CHECK-RV32-NEXT:    vand.vx v9, v9, a0
+; CHECK-RV32-NEXT:    vmv.s.x v10, a0
 ; CHECK-RV32-NEXT:    vand.vi v10, v10, 1
 ; CHECK-RV32-NEXT:    vsll.vv v9, v8, v9
 ; CHECK-RV32-NEXT:    vsrl.vv v8, v8, v10
@@ -1617,8 +1617,8 @@ define <1 x i64> @vror_vi_v1i64(<1 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_v1i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsll.vx v9, v8, a0
 ; CHECK-RV64-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v9
@@ -1638,10 +1638,10 @@ define <1 x i64> @vror_vi_rotl_v1i64(<1 x i64> %a) {
 ; CHECK-RV32:       # %bb.0:
 ; CHECK-RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; CHECK-RV32-NEXT:    vmv.v.i v9, 1
-; CHECK-RV32-NEXT:    li a0, 63
 ; CHECK-RV32-NEXT:    vrsub.vi v9, v9, 0
-; CHECK-RV32-NEXT:    vmv.s.x v10, a0
+; CHECK-RV32-NEXT:    li a0, 63
 ; CHECK-RV32-NEXT:    vand.vx v9, v9, a0
+; CHECK-RV32-NEXT:    vmv.s.x v10, a0
 ; CHECK-RV32-NEXT:    vand.vi v10, v10, 1
 ; CHECK-RV32-NEXT:    vsrl.vv v9, v8, v9
 ; CHECK-RV32-NEXT:    vsll.vv v8, v8, v10
@@ -1650,8 +1650,8 @@ define <1 x i64> @vror_vi_rotl_v1i64(<1 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_rotl_v1i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsrl.vx v9, v8, a0
 ; CHECK-RV64-NEXT:    vadd.vv v8, v8, v8
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v9
@@ -1751,8 +1751,8 @@ define <2 x i64> @vror_vi_v2i64(<2 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_v2i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsll.vx v9, v8, a0
 ; CHECK-RV64-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v9
@@ -1786,8 +1786,8 @@ define <2 x i64> @vror_vi_rotl_v2i64(<2 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_rotl_v2i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsrl.vx v9, v8, a0
 ; CHECK-RV64-NEXT:    vadd.vv v8, v8, v8
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v9
@@ -1887,8 +1887,8 @@ define <4 x i64> @vror_vi_v4i64(<4 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_v4i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsll.vx v10, v8, a0
 ; CHECK-RV64-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v10
@@ -1922,8 +1922,8 @@ define <4 x i64> @vror_vi_rotl_v4i64(<4 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_rotl_v4i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsrl.vx v10, v8, a0
 ; CHECK-RV64-NEXT:    vadd.vv v8, v8, v8
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v10
@@ -2023,8 +2023,8 @@ define <8 x i64> @vror_vi_v8i64(<8 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_v8i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 8, e64, m4, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsll.vx v12, v8, a0
 ; CHECK-RV64-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v12
@@ -2058,8 +2058,8 @@ define <8 x i64> @vror_vi_rotl_v8i64(<8 x i64> %a) {
 ;
 ; CHECK-RV64-LABEL: vror_vi_rotl_v8i64:
 ; CHECK-RV64:       # %bb.0:
-; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsetivli zero, 8, e64, m4, ta, ma
+; CHECK-RV64-NEXT:    li a0, 63
 ; CHECK-RV64-NEXT:    vsrl.vx v12, v8, a0
 ; CHECK-RV64-NEXT:    vadd.vv v8, v8, v8
 ; CHECK-RV64-NEXT:    vor.vv v8, v8, v12

@@ -224,10 +224,10 @@ define void @unaligned_memcpy15(ptr nocapture %dest, ptr %src) nounwind {
 ; RV32-NEXT:    vsetivli zero, 2, e8, mf8, ta, ma
 ; RV32-NEXT:    vle8.v v8, (a2)
 ; RV32-NEXT:    addi a2, a0, 12
-; RV32-NEXT:    addi a0, a0, 8
 ; RV32-NEXT:    vse8.v v8, (a2)
 ; RV32-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
 ; RV32-NEXT:    vle8.v v8, (a1)
+; RV32-NEXT:    addi a0, a0, 8
 ; RV32-NEXT:    vse8.v v8, (a0)
 ; RV32-NEXT:    ret
 ;
@@ -243,10 +243,10 @@ define void @unaligned_memcpy15(ptr nocapture %dest, ptr %src) nounwind {
 ; RV64-NEXT:    vsetivli zero, 2, e8, mf8, ta, ma
 ; RV64-NEXT:    vle8.v v8, (a2)
 ; RV64-NEXT:    addi a2, a0, 12
-; RV64-NEXT:    addi a0, a0, 8
 ; RV64-NEXT:    vse8.v v8, (a2)
 ; RV64-NEXT:    vsetivli zero, 4, e8, mf4, ta, ma
 ; RV64-NEXT:    vle8.v v8, (a1)
+; RV64-NEXT:    addi a0, a0, 8
 ; RV64-NEXT:    vse8.v v8, (a0)
 ; RV64-NEXT:    ret
 ;
@@ -431,10 +431,10 @@ define void @unaligned_memcpy96(ptr nocapture %dest, ptr %src) nounwind {
 ; RV32-NEXT:    li a2, 64
 ; RV32-NEXT:    vsetvli zero, a2, e8, m4, ta, ma
 ; RV32-NEXT:    vle8.v v8, (a1)
-; RV32-NEXT:    addi a1, a1, 64
 ; RV32-NEXT:    li a2, 32
 ; RV32-NEXT:    vse8.v v8, (a0)
 ; RV32-NEXT:    vsetvli zero, a2, e8, m2, ta, ma
+; RV32-NEXT:    addi a1, a1, 64
 ; RV32-NEXT:    vle8.v v8, (a1)
 ; RV32-NEXT:    addi a0, a0, 64
 ; RV32-NEXT:    vse8.v v8, (a0)
@@ -445,10 +445,10 @@ define void @unaligned_memcpy96(ptr nocapture %dest, ptr %src) nounwind {
 ; RV64-NEXT:    li a2, 64
 ; RV64-NEXT:    vsetvli zero, a2, e8, m4, ta, ma
 ; RV64-NEXT:    vle8.v v8, (a1)
-; RV64-NEXT:    addi a1, a1, 64
 ; RV64-NEXT:    li a2, 32
 ; RV64-NEXT:    vse8.v v8, (a0)
 ; RV64-NEXT:    vsetvli zero, a2, e8, m2, ta, ma
+; RV64-NEXT:    addi a1, a1, 64
 ; RV64-NEXT:    vle8.v v8, (a1)
 ; RV64-NEXT:    addi a0, a0, 64
 ; RV64-NEXT:    vse8.v v8, (a0)
@@ -523,10 +523,10 @@ define void @unaligned_memcpy196(ptr nocapture %dest, ptr %src) nounwind {
 ; RV32-NEXT:    li a2, 128
 ; RV32-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; RV32-NEXT:    vle8.v v8, (a1)
-; RV32-NEXT:    addi a2, a1, 128
 ; RV32-NEXT:    li a3, 64
 ; RV32-NEXT:    vse8.v v8, (a0)
 ; RV32-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV32-NEXT:    addi a2, a1, 128
 ; RV32-NEXT:    vle8.v v8, (a2)
 ; RV32-NEXT:    addi a2, a0, 128
 ; RV32-NEXT:    vse8.v v8, (a2)
@@ -545,10 +545,10 @@ define void @unaligned_memcpy196(ptr nocapture %dest, ptr %src) nounwind {
 ; RV64-NEXT:    li a2, 128
 ; RV64-NEXT:    vsetvli zero, a2, e8, m8, ta, ma
 ; RV64-NEXT:    vle8.v v8, (a1)
-; RV64-NEXT:    addi a2, a1, 128
 ; RV64-NEXT:    li a3, 64
 ; RV64-NEXT:    vse8.v v8, (a0)
 ; RV64-NEXT:    vsetvli zero, a3, e8, m4, ta, ma
+; RV64-NEXT:    addi a2, a1, 128
 ; RV64-NEXT:    vle8.v v8, (a2)
 ; RV64-NEXT:    addi a2, a0, 128
 ; RV64-NEXT:    vse8.v v8, (a2)

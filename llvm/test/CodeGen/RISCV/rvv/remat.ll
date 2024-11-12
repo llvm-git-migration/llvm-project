@@ -12,9 +12,9 @@ define void @vid(ptr %p) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vid.v v8
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    ret
@@ -93,9 +93,9 @@ define void @vmv.v.i(ptr %p) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vmv.v.i v8, 1
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vmv.v.i v8, 1
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    ret
@@ -173,9 +173,9 @@ define void @vmv.v.x_live(ptr %p, i64 %x) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vmv.v.x v8, a1
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vmv.v.x v8, a1
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    sd a1, 0(a0)
@@ -208,9 +208,9 @@ define void @vfmv.v.f(ptr %p, double %x) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vfmv.v.f v8, fa0
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vfmv.v.f v8, fa0
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    fsd fa0, 0(a0)
@@ -243,9 +243,9 @@ define void @vmv.s.x(ptr %p, i64 %x) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vmv.s.x v8, a1
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vmv.s.x v8, a1
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    sd a1, 0(a0)
@@ -278,9 +278,9 @@ define void @vfmv.s.f(ptr %p, double %x) {
 ; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
-; CHECK-NEXT:    vfmv.s.f v8, fa0
 ; CHECK-NEXT:    vs8r.v v0, (a0)
 ; CHECK-NEXT:    vs8r.v v24, (a0)
+; CHECK-NEXT:    vfmv.s.f v8, fa0
 ; CHECK-NEXT:    vs8r.v v16, (a0)
 ; CHECK-NEXT:    vs8r.v v8, (a0)
 ; CHECK-NEXT:    fsd fa0, 0(a0)

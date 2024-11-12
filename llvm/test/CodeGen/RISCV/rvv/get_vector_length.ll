@@ -217,8 +217,8 @@ define i32 @vector_length_vf128_i32(i32 zeroext %tc) {
 ; RV64-LABEL: vector_length_vf128_i32:
 ; RV64:       # %bb.0:
 ; RV64-NEXT:    csrr a1, vlenb
-; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    slli a1, a1, 4
+; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    bltu a0, a1, .LBB20_2
 ; RV64-NEXT:  # %bb.1:
 ; RV64-NEXT:    mv a0, a1
@@ -242,8 +242,8 @@ define i32 @vector_length_vf128_XLen(iXLen zeroext %tc) {
 ; RV64-LABEL: vector_length_vf128_XLen:
 ; RV64:       # %bb.0:
 ; RV64-NEXT:    csrr a1, vlenb
-; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    slli a1, a1, 4
+; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    bltu a0, a1, .LBB21_2
 ; RV64-NEXT:  # %bb.1:
 ; RV64-NEXT:    mv a0, a1
@@ -271,8 +271,8 @@ define i32 @vector_length_vf3_i32(i32 zeroext %tc) {
 ; RV64-NEXT:    csrr a1, vlenb
 ; RV64-NEXT:    srli a1, a1, 3
 ; RV64-NEXT:    slli a2, a1, 1
-; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    add a1, a2, a1
+; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    bltu a0, a1, .LBB22_2
 ; RV64-NEXT:  # %bb.1:
 ; RV64-NEXT:    mv a0, a1
@@ -300,8 +300,8 @@ define i32 @vector_length_vf3_XLen(iXLen zeroext %tc) {
 ; RV64-NEXT:    csrr a1, vlenb
 ; RV64-NEXT:    srli a1, a1, 3
 ; RV64-NEXT:    slli a2, a1, 1
-; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    add a1, a2, a1
+; RV64-NEXT:    sext.w a0, a0
 ; RV64-NEXT:    bltu a0, a1, .LBB23_2
 ; RV64-NEXT:  # %bb.1:
 ; RV64-NEXT:    mv a0, a1

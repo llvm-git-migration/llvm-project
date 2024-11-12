@@ -330,6 +330,9 @@ public:
   unsigned getTailDupAggressiveThreshold() const {
     return TuneInfo->TailDupAggressiveThreshold;
   }
+
+  void overridePostRASchedPolicy(MachineSchedPolicy &Policy,
+                                 unsigned NumRegionInstrs) const override;
 };
 } // End llvm namespace
 

@@ -12,10 +12,10 @@ define void @foo(<vscale x 8 x i8> %0) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    addi sp, sp, -32
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
-; CHECK-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    sd s2, 0(sp) # 8-byte Folded Spill
+; CHECK-NEXT:    sd s1, 8(sp) # 8-byte Folded Spill
+; CHECK-NEXT:    sd s0, 16(sp) # 8-byte Folded Spill
+; CHECK-NEXT:    sd ra, 24(sp) # 8-byte Folded Spill
 ; CHECK-NEXT:    .cfi_offset ra, -8
 ; CHECK-NEXT:    .cfi_offset s0, -16
 ; CHECK-NEXT:    .cfi_offset s1, -24
@@ -28,16 +28,16 @@ define void @foo(<vscale x 8 x i8> %0) {
 ; CHECK-NEXT:    vmv.x.s s1, v9
 ; CHECK-NEXT:    vsetvli zero, zero, e8, m1, tu, ma
 ; CHECK-NEXT:    vslideup.vi v8, v9, 0
-; CHECK-NEXT:    li s0, 0
 ; CHECK-NEXT:    vsetvli zero, zero, e64, m8, ta, ma
 ; CHECK-NEXT:    vmv.x.s s2, v8
+; CHECK-NEXT:    li s0, 0
 ; CHECK-NEXT:  .LBB0_1: # =>This Inner Loop Header: Depth=1
-; CHECK-NEXT:    mv a0, s1
-; CHECK-NEXT:    mv a1, s0
-; CHECK-NEXT:    mv a2, s2
-; CHECK-NEXT:    mv a3, s0
-; CHECK-NEXT:    mv a4, s0
 ; CHECK-NEXT:    mv a5, s0
+; CHECK-NEXT:    mv a4, s0
+; CHECK-NEXT:    mv a3, s0
+; CHECK-NEXT:    mv a2, s2
+; CHECK-NEXT:    mv a1, s0
+; CHECK-NEXT:    mv a0, s1
 ; CHECK-NEXT:    jalr s0
 ; CHECK-NEXT:    j .LBB0_1
   %2 = tail call <vscale x 8 x i8> @llvm.vector.insert.nxv8i8.v16i8(<vscale x 8 x i8> undef, <16 x i8> undef, i64 0)

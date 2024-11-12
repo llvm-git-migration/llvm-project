@@ -5,13 +5,13 @@ define <vscale x 4 x i16> @test_mulhs_promote(<vscale x 4 x i16> %broadcast.spla
 ; CHECK-LABEL: test_mulhs_promote:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vsetvli a0, zero, e16, m1, ta, ma
-; CHECK-NEXT:    lui a0, 5
 ; CHECK-NEXT:    vrgather.vi v9, v8, 0
+; CHECK-NEXT:    lui a0, 5
 ; CHECK-NEXT:    addi a0, a0, 1366
 ; CHECK-NEXT:    vmulh.vx v8, v9, a0
 ; CHECK-NEXT:    vsrl.vi v10, v8, 15
-; CHECK-NEXT:    vadd.vv v8, v8, v10
 ; CHECK-NEXT:    li a0, 3
+; CHECK-NEXT:    vadd.vv v8, v8, v10
 ; CHECK-NEXT:    vnmsub.vx v8, a0, v9
 ; CHECK-NEXT:    ret
 entry:
@@ -24,12 +24,12 @@ define <vscale x 4 x i16> @test_mulhu_promote(<vscale x 4 x i16> %broadcast.spla
 ; CHECK-LABEL: test_mulhu_promote:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vsetvli a0, zero, e16, m1, ta, ma
-; CHECK-NEXT:    lui a0, 1048571
 ; CHECK-NEXT:    vrgather.vi v9, v8, 0
+; CHECK-NEXT:    lui a0, 1048571
 ; CHECK-NEXT:    addi a0, a0, -1365
 ; CHECK-NEXT:    vmulhu.vx v8, v9, a0
-; CHECK-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-NEXT:    li a0, 3
+; CHECK-NEXT:    vsrl.vi v8, v8, 1
 ; CHECK-NEXT:    vnmsub.vx v8, a0, v9
 ; CHECK-NEXT:    ret
 entry:
@@ -55,8 +55,8 @@ define <vscale x 4 x i64> @test_mulhs_expand(<vscale x 4 x i64> %broadcast.splat
 ; CHECK-NEXT:    li a0, 63
 ; CHECK-NEXT:    vmulh.vv v8, v16, v12
 ; CHECK-NEXT:    vsrl.vx v12, v8, a0
-; CHECK-NEXT:    vadd.vv v8, v8, v12
 ; CHECK-NEXT:    li a0, 3
+; CHECK-NEXT:    vadd.vv v8, v8, v12
 ; CHECK-NEXT:    vnmsub.vx v8, a0, v16
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    .cfi_def_cfa_offset 0

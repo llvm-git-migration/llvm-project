@@ -20,8 +20,8 @@ define void @cttz_v16i8(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
 ; RVI-NEXT:    li a1, 85
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    vsub.vv v8, v8, v9
 ; RVI-NEXT:    li a1, 51
+; RVI-NEXT:    vsub.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
 ; RVI-NEXT:    vand.vx v8, v8, a1
@@ -44,8 +44,8 @@ define void @cttz_v16i8(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vfwcvt.f.xu.v v12, v10
 ; RVF-NEXT:    vnsrl.wi v10, v12, 23
 ; RVF-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RVF-NEXT:    vnsrl.wi v9, v10, 0
 ; RVF-NEXT:    vmseq.vi v0, v8, 0
+; RVF-NEXT:    vnsrl.wi v9, v10, 0
 ; RVF-NEXT:    vsub.vx v8, v9, a1
 ; RVF-NEXT:    vmerge.vim v8, v8, 8, v0
 ; RVF-NEXT:    vse8.v v8, (a0)
@@ -63,8 +63,8 @@ define void @cttz_v16i8(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vfwcvt.f.xu.v v12, v10
 ; RVD-NEXT:    vnsrl.wi v10, v12, 23
 ; RVD-NEXT:    vsetvli zero, zero, e8, m1, ta, ma
-; RVD-NEXT:    vnsrl.wi v9, v10, 0
 ; RVD-NEXT:    vmseq.vi v0, v8, 0
+; RVD-NEXT:    vnsrl.wi v9, v10, 0
 ; RVD-NEXT:    vsub.vx v8, v9, a1
 ; RVD-NEXT:    vmerge.vim v8, v8, 8, v0
 ; RVD-NEXT:    vse8.v v8, (a0)
@@ -94,12 +94,12 @@ define void @cttz_v8i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v9, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v9
-; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
+; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    vsub.vv v8, v8, v9
+; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -107,8 +107,8 @@ define void @cttz_v8i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v9, v8
 ; RVI-NEXT:    vsrl.vi v9, v8, 4
 ; RVI-NEXT:    lui a1, 1
-; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    li a1, 257
 ; RVI-NEXT:    vmul.vx v8, v8, a1
@@ -126,8 +126,8 @@ define void @cttz_v8i16(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vfwcvt.f.xu.v v10, v9
 ; RVF-NEXT:    vnsrl.wi v9, v10, 23
 ; RVF-NEXT:    vsub.vx v9, v9, a1
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 16
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v9, a1, v0
 ; RVF-NEXT:    vse16.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -142,8 +142,8 @@ define void @cttz_v8i16(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vfwcvt.f.xu.v v10, v9
 ; RVD-NEXT:    vnsrl.wi v9, v10, 23
 ; RVD-NEXT:    vsub.vx v9, v9, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 16
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v9, a1, v0
 ; RVD-NEXT:    vse16.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -172,12 +172,12 @@ define void @cttz_v4i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v9, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v9
-; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
+; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    vsub.vv v8, v8, v9
+; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -185,8 +185,8 @@ define void @cttz_v4i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v9, v8
 ; RVI-NEXT:    vsrl.vi v9, v8, 4
 ; RVI-NEXT:    lui a1, 61681
-; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    lui a1, 4112
 ; RVI-NEXT:    addi a1, a1, 257
@@ -207,8 +207,8 @@ define void @cttz_v4i32(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vsrl.vi v9, v9, 23
 ; RVF-NEXT:    li a1, 127
 ; RVF-NEXT:    vsub.vx v9, v9, a1
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 32
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v9, a1, v0
 ; RVF-NEXT:    vse32.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -224,8 +224,8 @@ define void @cttz_v4i32(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vnsrl.wx v9, v10, a1
 ; RVD-NEXT:    li a1, 1023
 ; RVD-NEXT:    vsub.vx v9, v9, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 32
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v9, a1, v0
 ; RVD-NEXT:    vse32.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -253,17 +253,17 @@ define void @cttz_v2i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    li a1, 1
 ; RV32I-NEXT:    vsub.vx v9, v8, a1
 ; RV32I-NEXT:    vnot.v v8, v8
-; RV32I-NEXT:    lui a1, 349525
 ; RV32I-NEXT:    vand.vv v8, v8, v9
-; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsrl.vi v9, v8, 1
+; RV32I-NEXT:    lui a1, 349525
+; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
-; RV32I-NEXT:    lui a1, 209715
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
 ; RV32I-NEXT:    vand.vv v9, v9, v10
-; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsub.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 209715
+; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
@@ -271,21 +271,21 @@ define void @cttz_v2i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    vsrl.vi v8, v8, 2
 ; RV32I-NEXT:    vand.vv v8, v8, v9
 ; RV32I-NEXT:    vadd.vv v8, v10, v8
-; RV32I-NEXT:    lui a1, 61681
 ; RV32I-NEXT:    vsrl.vi v9, v8, 4
-; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vadd.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 61681
+; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
-; RV32I-NEXT:    lui a1, 4112
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
-; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vand.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 4112
+; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
-; RV32I-NEXT:    vmul.vv v8, v8, v9
 ; RV32I-NEXT:    li a1, 56
+; RV32I-NEXT:    vmul.vv v8, v8, v9
 ; RV32I-NEXT:    vsrl.vx v8, v8, a1
 ; RV32I-NEXT:    vse64.v v8, (a0)
 ; RV32I-NEXT:    ret
@@ -296,29 +296,29 @@ define void @cttz_v2i64(ptr %x, ptr %y) nounwind {
 ; RV64I-NEXT:    vle64.v v8, (a0)
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    vsub.vx v9, v8, a1
-; RV64I-NEXT:    lui a1, 349525
 ; RV64I-NEXT:    vnot.v v8, v8
-; RV64I-NEXT:    addiw a1, a1, 1365
 ; RV64I-NEXT:    vand.vv v8, v8, v9
-; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    vsrl.vi v9, v8, 1
+; RV64I-NEXT:    lui a1, 349525
+; RV64I-NEXT:    addiw a1, a1, 1365
+; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v9, v9, a1
+; RV64I-NEXT:    vsub.vv v8, v8, v9
 ; RV64I-NEXT:    lui a1, 209715
 ; RV64I-NEXT:    addiw a1, a1, 819
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vsub.vv v8, v8, v9
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v9, v8, a1
 ; RV64I-NEXT:    vsrl.vi v8, v8, 2
 ; RV64I-NEXT:    vand.vx v8, v8, a1
-; RV64I-NEXT:    lui a1, 61681
 ; RV64I-NEXT:    vadd.vv v8, v9, v8
-; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    vsrl.vi v9, v8, 4
+; RV64I-NEXT:    lui a1, 61681
+; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vadd.vv v8, v8, v9
 ; RV64I-NEXT:    add a1, a1, a2
+; RV64I-NEXT:    vadd.vv v8, v8, v9
 ; RV64I-NEXT:    vand.vx v8, v8, a1
 ; RV64I-NEXT:    lui a1, 4112
 ; RV64I-NEXT:    addiw a1, a1, 257
@@ -344,8 +344,8 @@ define void @cttz_v2i64(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    li a1, 127
 ; RVF-NEXT:    vwsubu.vx v10, v9, a1
 ; RVF-NEXT:    vsetvli zero, zero, e64, m1, ta, ma
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 64
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVF-NEXT:    vse64.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -363,8 +363,8 @@ define void @cttz_v2i64(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vsrl.vx v9, v9, a1
 ; RVD-NEXT:    li a1, 1023
 ; RVD-NEXT:    vsub.vx v9, v9, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 64
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v9, a1, v0
 ; RVD-NEXT:    vse64.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -397,8 +397,8 @@ define void @cttz_v32i8(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
 ; RVI-NEXT:    li a1, 85
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    vsub.vv v8, v8, v10
 ; RVI-NEXT:    li a1, 51
+; RVI-NEXT:    vsub.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
 ; RVI-NEXT:    vand.vx v8, v8, a1
@@ -422,8 +422,8 @@ define void @cttz_v32i8(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vfwcvt.f.xu.v v16, v12
 ; RVF-NEXT:    vnsrl.wi v12, v16, 23
 ; RVF-NEXT:    vsetvli zero, zero, e8, m2, ta, ma
-; RVF-NEXT:    vnsrl.wi v10, v12, 0
 ; RVF-NEXT:    vmseq.vi v0, v8, 0
+; RVF-NEXT:    vnsrl.wi v10, v12, 0
 ; RVF-NEXT:    vsub.vx v8, v10, a1
 ; RVF-NEXT:    vmerge.vim v8, v8, 8, v0
 ; RVF-NEXT:    vse8.v v8, (a0)
@@ -442,8 +442,8 @@ define void @cttz_v32i8(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vfwcvt.f.xu.v v16, v12
 ; RVD-NEXT:    vnsrl.wi v12, v16, 23
 ; RVD-NEXT:    vsetvli zero, zero, e8, m2, ta, ma
-; RVD-NEXT:    vnsrl.wi v10, v12, 0
 ; RVD-NEXT:    vmseq.vi v0, v8, 0
+; RVD-NEXT:    vnsrl.wi v10, v12, 0
 ; RVD-NEXT:    vsub.vx v8, v10, a1
 ; RVD-NEXT:    vmerge.vim v8, v8, 8, v0
 ; RVD-NEXT:    vse8.v v8, (a0)
@@ -474,12 +474,12 @@ define void @cttz_v16i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v10, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v10
-; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
+; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    vsub.vv v8, v8, v10
+; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -487,8 +487,8 @@ define void @cttz_v16i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v10, v8
 ; RVI-NEXT:    vsrl.vi v10, v8, 4
 ; RVI-NEXT:    lui a1, 1
-; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    li a1, 257
 ; RVI-NEXT:    vmul.vx v8, v8, a1
@@ -506,8 +506,8 @@ define void @cttz_v16i16(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vfwcvt.f.xu.v v12, v10
 ; RVF-NEXT:    vnsrl.wi v10, v12, 23
 ; RVF-NEXT:    vsub.vx v10, v10, a1
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 16
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVF-NEXT:    vse16.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -522,8 +522,8 @@ define void @cttz_v16i16(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vfwcvt.f.xu.v v12, v10
 ; RVD-NEXT:    vnsrl.wi v10, v12, 23
 ; RVD-NEXT:    vsub.vx v10, v10, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 16
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVD-NEXT:    vse16.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -552,12 +552,12 @@ define void @cttz_v8i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v10, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v10
-; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
+; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    vsub.vv v8, v8, v10
+; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -565,8 +565,8 @@ define void @cttz_v8i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v10, v8
 ; RVI-NEXT:    vsrl.vi v10, v8, 4
 ; RVI-NEXT:    lui a1, 61681
-; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    lui a1, 4112
 ; RVI-NEXT:    addi a1, a1, 257
@@ -587,8 +587,8 @@ define void @cttz_v8i32(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vsrl.vi v10, v10, 23
 ; RVF-NEXT:    li a1, 127
 ; RVF-NEXT:    vsub.vx v10, v10, a1
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 32
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVF-NEXT:    vse32.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -604,8 +604,8 @@ define void @cttz_v8i32(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vnsrl.wx v10, v12, a1
 ; RVD-NEXT:    li a1, 1023
 ; RVD-NEXT:    vsub.vx v10, v10, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 32
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVD-NEXT:    vse32.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -633,17 +633,17 @@ define void @cttz_v4i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    li a1, 1
 ; RV32I-NEXT:    vsub.vx v10, v8, a1
 ; RV32I-NEXT:    vnot.v v8, v8
-; RV32I-NEXT:    lui a1, 349525
 ; RV32I-NEXT:    vand.vv v8, v8, v10
-; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsrl.vi v10, v8, 1
+; RV32I-NEXT:    lui a1, 349525
+; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v12, a1
-; RV32I-NEXT:    lui a1, 209715
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
 ; RV32I-NEXT:    vand.vv v10, v10, v12
-; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsub.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 209715
+; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
@@ -651,21 +651,21 @@ define void @cttz_v4i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    vsrl.vi v8, v8, 2
 ; RV32I-NEXT:    vand.vv v8, v8, v10
 ; RV32I-NEXT:    vadd.vv v8, v12, v8
-; RV32I-NEXT:    lui a1, 61681
 ; RV32I-NEXT:    vsrl.vi v10, v8, 4
-; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vadd.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 61681
+; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
-; RV32I-NEXT:    lui a1, 4112
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
-; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vand.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 4112
+; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
-; RV32I-NEXT:    vmul.vv v8, v8, v10
 ; RV32I-NEXT:    li a1, 56
+; RV32I-NEXT:    vmul.vv v8, v8, v10
 ; RV32I-NEXT:    vsrl.vx v8, v8, a1
 ; RV32I-NEXT:    vse64.v v8, (a0)
 ; RV32I-NEXT:    ret
@@ -676,29 +676,29 @@ define void @cttz_v4i64(ptr %x, ptr %y) nounwind {
 ; RV64I-NEXT:    vle64.v v8, (a0)
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    vsub.vx v10, v8, a1
-; RV64I-NEXT:    lui a1, 349525
 ; RV64I-NEXT:    vnot.v v8, v8
-; RV64I-NEXT:    addiw a1, a1, 1365
 ; RV64I-NEXT:    vand.vv v8, v8, v10
-; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    vsrl.vi v10, v8, 1
+; RV64I-NEXT:    lui a1, 349525
+; RV64I-NEXT:    addiw a1, a1, 1365
+; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v10, v10, a1
+; RV64I-NEXT:    vsub.vv v8, v8, v10
 ; RV64I-NEXT:    lui a1, 209715
 ; RV64I-NEXT:    addiw a1, a1, 819
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vsub.vv v8, v8, v10
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v10, v8, a1
 ; RV64I-NEXT:    vsrl.vi v8, v8, 2
 ; RV64I-NEXT:    vand.vx v8, v8, a1
-; RV64I-NEXT:    lui a1, 61681
 ; RV64I-NEXT:    vadd.vv v8, v10, v8
-; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    vsrl.vi v10, v8, 4
+; RV64I-NEXT:    lui a1, 61681
+; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vadd.vv v8, v8, v10
 ; RV64I-NEXT:    add a1, a1, a2
+; RV64I-NEXT:    vadd.vv v8, v8, v10
 ; RV64I-NEXT:    vand.vx v8, v8, a1
 ; RV64I-NEXT:    lui a1, 4112
 ; RV64I-NEXT:    addiw a1, a1, 257
@@ -724,8 +724,8 @@ define void @cttz_v4i64(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    li a1, 127
 ; RVF-NEXT:    vwsubu.vx v12, v10, a1
 ; RVF-NEXT:    vsetvli zero, zero, e64, m2, ta, ma
-; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    li a1, 64
+; RVF-NEXT:    vmseq.vi v0, v8, 0
 ; RVF-NEXT:    vmerge.vxm v8, v12, a1, v0
 ; RVF-NEXT:    vse64.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -743,8 +743,8 @@ define void @cttz_v4i64(ptr %x, ptr %y) nounwind {
 ; RVD-NEXT:    vsrl.vx v10, v10, a1
 ; RVD-NEXT:    li a1, 1023
 ; RVD-NEXT:    vsub.vx v10, v10, a1
-; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    li a1, 64
+; RVD-NEXT:    vmseq.vi v0, v8, 0
 ; RVD-NEXT:    vmerge.vxm v8, v10, a1, v0
 ; RVD-NEXT:    vse64.v v8, (a0)
 ; RVD-NEXT:    ret
@@ -776,8 +776,8 @@ define void @cttz_zero_undef_v16i8(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
 ; RVI-NEXT:    li a1, 85
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    vsub.vv v8, v8, v9
 ; RVI-NEXT:    li a1, 51
+; RVI-NEXT:    vsub.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
 ; RVI-NEXT:    vand.vx v8, v8, a1
@@ -845,12 +845,12 @@ define void @cttz_zero_undef_v8i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v9, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v9
-; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
+; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    vsub.vv v8, v8, v9
+; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -858,8 +858,8 @@ define void @cttz_zero_undef_v8i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v9, v8
 ; RVI-NEXT:    vsrl.vi v9, v8, 4
 ; RVI-NEXT:    lui a1, 1
-; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    li a1, 257
 ; RVI-NEXT:    vmul.vx v8, v8, a1
@@ -916,12 +916,12 @@ define void @cttz_zero_undef_v4i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v9, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v9
-; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    vsrl.vi v9, v8, 1
+; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v9, v9, a1
-; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    vsub.vv v8, v8, v9
+; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v9, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -929,8 +929,8 @@ define void @cttz_zero_undef_v4i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v9, v8
 ; RVI-NEXT:    vsrl.vi v9, v8, 4
 ; RVI-NEXT:    lui a1, 61681
-; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v9
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    lui a1, 4112
 ; RVI-NEXT:    addi a1, a1, 257
@@ -948,8 +948,8 @@ define void @cttz_zero_undef_v4i32(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vand.vv v8, v8, v9
 ; RVF-NEXT:    vfcvt.f.xu.v v8, v8
 ; RVF-NEXT:    fsrm a1
-; RVF-NEXT:    vsrl.vi v8, v8, 23
 ; RVF-NEXT:    li a1, 127
+; RVF-NEXT:    vsrl.vi v8, v8, 23
 ; RVF-NEXT:    vsub.vx v8, v8, a1
 ; RVF-NEXT:    vse32.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -990,17 +990,17 @@ define void @cttz_zero_undef_v2i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    li a1, 1
 ; RV32I-NEXT:    vsub.vx v9, v8, a1
 ; RV32I-NEXT:    vnot.v v8, v8
-; RV32I-NEXT:    lui a1, 349525
 ; RV32I-NEXT:    vand.vv v8, v8, v9
-; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsrl.vi v9, v8, 1
+; RV32I-NEXT:    lui a1, 349525
+; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
-; RV32I-NEXT:    lui a1, 209715
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
 ; RV32I-NEXT:    vand.vv v9, v9, v10
-; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsub.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 209715
+; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
@@ -1008,21 +1008,21 @@ define void @cttz_zero_undef_v2i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    vsrl.vi v8, v8, 2
 ; RV32I-NEXT:    vand.vv v8, v8, v9
 ; RV32I-NEXT:    vadd.vv v8, v10, v8
-; RV32I-NEXT:    lui a1, 61681
 ; RV32I-NEXT:    vsrl.vi v9, v8, 4
-; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vadd.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 61681
+; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
-; RV32I-NEXT:    lui a1, 4112
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
-; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vand.vv v8, v8, v9
+; RV32I-NEXT:    lui a1, 4112
+; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; RV32I-NEXT:    vmv.v.x v9, a1
 ; RV32I-NEXT:    vsetivli zero, 2, e64, m1, ta, ma
-; RV32I-NEXT:    vmul.vv v8, v8, v9
 ; RV32I-NEXT:    li a1, 56
+; RV32I-NEXT:    vmul.vv v8, v8, v9
 ; RV32I-NEXT:    vsrl.vx v8, v8, a1
 ; RV32I-NEXT:    vse64.v v8, (a0)
 ; RV32I-NEXT:    ret
@@ -1033,29 +1033,29 @@ define void @cttz_zero_undef_v2i64(ptr %x, ptr %y) nounwind {
 ; RV64I-NEXT:    vle64.v v8, (a0)
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    vsub.vx v9, v8, a1
-; RV64I-NEXT:    lui a1, 349525
 ; RV64I-NEXT:    vnot.v v8, v8
-; RV64I-NEXT:    addiw a1, a1, 1365
 ; RV64I-NEXT:    vand.vv v8, v8, v9
-; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    vsrl.vi v9, v8, 1
+; RV64I-NEXT:    lui a1, 349525
+; RV64I-NEXT:    addiw a1, a1, 1365
+; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v9, v9, a1
+; RV64I-NEXT:    vsub.vv v8, v8, v9
 ; RV64I-NEXT:    lui a1, 209715
 ; RV64I-NEXT:    addiw a1, a1, 819
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vsub.vv v8, v8, v9
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v9, v8, a1
 ; RV64I-NEXT:    vsrl.vi v8, v8, 2
 ; RV64I-NEXT:    vand.vx v8, v8, a1
-; RV64I-NEXT:    lui a1, 61681
 ; RV64I-NEXT:    vadd.vv v8, v9, v8
-; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    vsrl.vi v9, v8, 4
+; RV64I-NEXT:    lui a1, 61681
+; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vadd.vv v8, v8, v9
 ; RV64I-NEXT:    add a1, a1, a2
+; RV64I-NEXT:    vadd.vv v8, v8, v9
 ; RV64I-NEXT:    vand.vx v8, v8, a1
 ; RV64I-NEXT:    lui a1, 4112
 ; RV64I-NEXT:    addiw a1, a1, 257
@@ -1077,8 +1077,8 @@ define void @cttz_zero_undef_v2i64(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
 ; RVF-NEXT:    vfncvt.f.xu.w v9, v8
 ; RVF-NEXT:    fsrm a1
-; RVF-NEXT:    vsrl.vi v8, v9, 23
 ; RVF-NEXT:    li a1, 127
+; RVF-NEXT:    vsrl.vi v8, v9, 23
 ; RVF-NEXT:    vwsubu.vx v9, v8, a1
 ; RVF-NEXT:    vse64.v v9, (a0)
 ; RVF-NEXT:    ret
@@ -1126,8 +1126,8 @@ define void @cttz_zero_undef_v32i8(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
 ; RVI-NEXT:    li a1, 85
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    vsub.vv v8, v8, v10
 ; RVI-NEXT:    li a1, 51
+; RVI-NEXT:    vsub.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
 ; RVI-NEXT:    vand.vx v8, v8, a1
@@ -1198,12 +1198,12 @@ define void @cttz_zero_undef_v16i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v10, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v10
-; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
+; RVI-NEXT:    lui a1, 5
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    vsub.vv v8, v8, v10
+; RVI-NEXT:    lui a1, 3
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -1211,8 +1211,8 @@ define void @cttz_zero_undef_v16i16(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v10, v8
 ; RVI-NEXT:    vsrl.vi v10, v8, 4
 ; RVI-NEXT:    lui a1, 1
-; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    li a1, 257
 ; RVI-NEXT:    vmul.vx v8, v8, a1
@@ -1269,12 +1269,12 @@ define void @cttz_zero_undef_v8i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vsub.vx v10, v8, a1
 ; RVI-NEXT:    vnot.v v8, v8
 ; RVI-NEXT:    vand.vv v8, v8, v10
-; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    vsrl.vi v10, v8, 1
+; RVI-NEXT:    lui a1, 349525
 ; RVI-NEXT:    addi a1, a1, 1365
 ; RVI-NEXT:    vand.vx v10, v10, a1
-; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    vsub.vv v8, v8, v10
+; RVI-NEXT:    lui a1, 209715
 ; RVI-NEXT:    addi a1, a1, 819
 ; RVI-NEXT:    vand.vx v10, v8, a1
 ; RVI-NEXT:    vsrl.vi v8, v8, 2
@@ -1282,8 +1282,8 @@ define void @cttz_zero_undef_v8i32(ptr %x, ptr %y) nounwind {
 ; RVI-NEXT:    vadd.vv v8, v10, v8
 ; RVI-NEXT:    vsrl.vi v10, v8, 4
 ; RVI-NEXT:    lui a1, 61681
-; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    addi a1, a1, -241
+; RVI-NEXT:    vadd.vv v8, v8, v10
 ; RVI-NEXT:    vand.vx v8, v8, a1
 ; RVI-NEXT:    lui a1, 4112
 ; RVI-NEXT:    addi a1, a1, 257
@@ -1301,8 +1301,8 @@ define void @cttz_zero_undef_v8i32(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vand.vv v8, v8, v10
 ; RVF-NEXT:    vfcvt.f.xu.v v8, v8
 ; RVF-NEXT:    fsrm a1
-; RVF-NEXT:    vsrl.vi v8, v8, 23
 ; RVF-NEXT:    li a1, 127
+; RVF-NEXT:    vsrl.vi v8, v8, 23
 ; RVF-NEXT:    vsub.vx v8, v8, a1
 ; RVF-NEXT:    vse32.v v8, (a0)
 ; RVF-NEXT:    ret
@@ -1343,17 +1343,17 @@ define void @cttz_zero_undef_v4i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    li a1, 1
 ; RV32I-NEXT:    vsub.vx v10, v8, a1
 ; RV32I-NEXT:    vnot.v v8, v8
-; RV32I-NEXT:    lui a1, 349525
 ; RV32I-NEXT:    vand.vv v8, v8, v10
-; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsrl.vi v10, v8, 1
+; RV32I-NEXT:    lui a1, 349525
+; RV32I-NEXT:    addi a1, a1, 1365
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v12, a1
-; RV32I-NEXT:    lui a1, 209715
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
 ; RV32I-NEXT:    vand.vv v10, v10, v12
-; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsub.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 209715
+; RV32I-NEXT:    addi a1, a1, 819
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
@@ -1361,21 +1361,21 @@ define void @cttz_zero_undef_v4i64(ptr %x, ptr %y) nounwind {
 ; RV32I-NEXT:    vsrl.vi v8, v8, 2
 ; RV32I-NEXT:    vand.vv v8, v8, v10
 ; RV32I-NEXT:    vadd.vv v8, v12, v8
-; RV32I-NEXT:    lui a1, 61681
 ; RV32I-NEXT:    vsrl.vi v10, v8, 4
-; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vadd.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 61681
+; RV32I-NEXT:    addi a1, a1, -241
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
-; RV32I-NEXT:    lui a1, 4112
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
-; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vand.vv v8, v8, v10
+; RV32I-NEXT:    lui a1, 4112
+; RV32I-NEXT:    addi a1, a1, 257
 ; RV32I-NEXT:    vsetivli zero, 8, e32, m2, ta, ma
 ; RV32I-NEXT:    vmv.v.x v10, a1
 ; RV32I-NEXT:    vsetivli zero, 4, e64, m2, ta, ma
-; RV32I-NEXT:    vmul.vv v8, v8, v10
 ; RV32I-NEXT:    li a1, 56
+; RV32I-NEXT:    vmul.vv v8, v8, v10
 ; RV32I-NEXT:    vsrl.vx v8, v8, a1
 ; RV32I-NEXT:    vse64.v v8, (a0)
 ; RV32I-NEXT:    ret
@@ -1386,29 +1386,29 @@ define void @cttz_zero_undef_v4i64(ptr %x, ptr %y) nounwind {
 ; RV64I-NEXT:    vle64.v v8, (a0)
 ; RV64I-NEXT:    li a1, 1
 ; RV64I-NEXT:    vsub.vx v10, v8, a1
-; RV64I-NEXT:    lui a1, 349525
 ; RV64I-NEXT:    vnot.v v8, v8
-; RV64I-NEXT:    addiw a1, a1, 1365
 ; RV64I-NEXT:    vand.vv v8, v8, v10
-; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    vsrl.vi v10, v8, 1
+; RV64I-NEXT:    lui a1, 349525
+; RV64I-NEXT:    addiw a1, a1, 1365
+; RV64I-NEXT:    slli a2, a1, 32
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v10, v10, a1
+; RV64I-NEXT:    vsub.vv v8, v8, v10
 ; RV64I-NEXT:    lui a1, 209715
 ; RV64I-NEXT:    addiw a1, a1, 819
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vsub.vv v8, v8, v10
 ; RV64I-NEXT:    add a1, a1, a2
 ; RV64I-NEXT:    vand.vx v10, v8, a1
 ; RV64I-NEXT:    vsrl.vi v8, v8, 2
 ; RV64I-NEXT:    vand.vx v8, v8, a1
-; RV64I-NEXT:    lui a1, 61681
 ; RV64I-NEXT:    vadd.vv v8, v10, v8
-; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    vsrl.vi v10, v8, 4
+; RV64I-NEXT:    lui a1, 61681
+; RV64I-NEXT:    addiw a1, a1, -241
 ; RV64I-NEXT:    slli a2, a1, 32
-; RV64I-NEXT:    vadd.vv v8, v8, v10
 ; RV64I-NEXT:    add a1, a1, a2
+; RV64I-NEXT:    vadd.vv v8, v8, v10
 ; RV64I-NEXT:    vand.vx v8, v8, a1
 ; RV64I-NEXT:    lui a1, 4112
 ; RV64I-NEXT:    addiw a1, a1, 257
@@ -1430,8 +1430,8 @@ define void @cttz_zero_undef_v4i64(ptr %x, ptr %y) nounwind {
 ; RVF-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
 ; RVF-NEXT:    vfncvt.f.xu.w v10, v8
 ; RVF-NEXT:    fsrm a1
-; RVF-NEXT:    vsrl.vi v8, v10, 23
 ; RVF-NEXT:    li a1, 127
+; RVF-NEXT:    vsrl.vi v8, v10, 23
 ; RVF-NEXT:    vwsubu.vx v10, v8, a1
 ; RVF-NEXT:    vse64.v v10, (a0)
 ; RVF-NEXT:    ret

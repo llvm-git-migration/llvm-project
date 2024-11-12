@@ -20,15 +20,15 @@ define void @test() {
 ; RV32I-NEXT:    addi sp, sp, -2048
 ; RV32I-NEXT:    addi sp, sp, -1120
 ; RV32I-NEXT:    .cfi_def_cfa_offset 5200
-; RV32I-NEXT:    lui a2, 1
-; RV32I-NEXT:    lui a3, 1
 ; RV32I-NEXT:    addi a1, sp, 2047
+; RV32I-NEXT:    lui a2, 1
 ; RV32I-NEXT:    addi a2, a2, 12
+; RV32I-NEXT:    lui a3, 1
 ; RV32I-NEXT:    addi a3, a3, 1036
-; RV32I-NEXT:    addi a0, sp, 12
-; RV32I-NEXT:    addi a1, a1, 13
-; RV32I-NEXT:    add a2, sp, a2
 ; RV32I-NEXT:    add a3, sp, a3
+; RV32I-NEXT:    add a2, sp, a2
+; RV32I-NEXT:    addi a1, a1, 13
+; RV32I-NEXT:    addi a0, sp, 12
 ; RV32I-NEXT:    call inspect
 ; RV32I-NEXT:    addi sp, sp, 2032
 ; RV32I-NEXT:    addi sp, sp, 1136
@@ -51,10 +51,10 @@ define void @test() {
 ; RV32ZBA-NEXT:    addi a1, sp, 2047
 ; RV32ZBA-NEXT:    li a2, 1027
 ; RV32ZBA-NEXT:    li a3, 1283
-; RV32ZBA-NEXT:    addi a0, sp, 12
-; RV32ZBA-NEXT:    addi a1, a1, 13
-; RV32ZBA-NEXT:    sh2add a2, a2, sp
 ; RV32ZBA-NEXT:    sh2add a3, a3, sp
+; RV32ZBA-NEXT:    sh2add a2, a2, sp
+; RV32ZBA-NEXT:    addi a1, a1, 13
+; RV32ZBA-NEXT:    addi a0, sp, 12
 ; RV32ZBA-NEXT:    call inspect
 ; RV32ZBA-NEXT:    addi sp, sp, 2032
 ; RV32ZBA-NEXT:    addi sp, sp, 1136
@@ -74,15 +74,15 @@ define void @test() {
 ; RV64I-NEXT:    addi sp, sp, -2048
 ; RV64I-NEXT:    addi sp, sp, -1120
 ; RV64I-NEXT:    .cfi_def_cfa_offset 5200
-; RV64I-NEXT:    lui a2, 1
-; RV64I-NEXT:    lui a3, 1
 ; RV64I-NEXT:    addi a1, sp, 2047
+; RV64I-NEXT:    lui a2, 1
 ; RV64I-NEXT:    addiw a2, a2, 8
+; RV64I-NEXT:    lui a3, 1
 ; RV64I-NEXT:    addiw a3, a3, 1032
-; RV64I-NEXT:    addi a0, sp, 8
-; RV64I-NEXT:    addi a1, a1, 9
-; RV64I-NEXT:    add a2, sp, a2
 ; RV64I-NEXT:    add a3, sp, a3
+; RV64I-NEXT:    add a2, sp, a2
+; RV64I-NEXT:    addi a1, a1, 9
+; RV64I-NEXT:    addi a0, sp, 8
 ; RV64I-NEXT:    call inspect
 ; RV64I-NEXT:    addi sp, sp, 2032
 ; RV64I-NEXT:    addi sp, sp, 1136
@@ -105,10 +105,10 @@ define void @test() {
 ; RV64ZBA-NEXT:    addi a1, sp, 2047
 ; RV64ZBA-NEXT:    li a2, 513
 ; RV64ZBA-NEXT:    li a3, 641
-; RV64ZBA-NEXT:    addi a0, sp, 8
-; RV64ZBA-NEXT:    addi a1, a1, 9
-; RV64ZBA-NEXT:    sh3add a2, a2, sp
 ; RV64ZBA-NEXT:    sh3add a3, a3, sp
+; RV64ZBA-NEXT:    sh3add a2, a2, sp
+; RV64ZBA-NEXT:    addi a1, a1, 9
+; RV64ZBA-NEXT:    addi a0, sp, 8
 ; RV64ZBA-NEXT:    call inspect
 ; RV64ZBA-NEXT:    addi sp, sp, 2032
 ; RV64ZBA-NEXT:    addi sp, sp, 1136
@@ -138,8 +138,8 @@ define void @align_8() {
 ; RV32I-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32I-NEXT:    lui a1, 1
 ; RV32I-NEXT:    addi a1, a1, 8
-; RV32I-NEXT:    addi a0, sp, 7
 ; RV32I-NEXT:    add a1, sp, a1
+; RV32I-NEXT:    addi a0, sp, 7
 ; RV32I-NEXT:    call inspect
 ; RV32I-NEXT:    addi sp, sp, 2032
 ; RV32I-NEXT:    addi sp, sp, 48
@@ -160,8 +160,8 @@ define void @align_8() {
 ; RV32ZBA-NEXT:    addi sp, sp, -32
 ; RV32ZBA-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32ZBA-NEXT:    li a1, 513
-; RV32ZBA-NEXT:    addi a0, sp, 7
 ; RV32ZBA-NEXT:    sh3add a1, a1, sp
+; RV32ZBA-NEXT:    addi a0, sp, 7
 ; RV32ZBA-NEXT:    call inspect
 ; RV32ZBA-NEXT:    addi sp, sp, 2032
 ; RV32ZBA-NEXT:    addi sp, sp, 48
@@ -183,8 +183,8 @@ define void @align_8() {
 ; RV64I-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64I-NEXT:    lui a1, 1
 ; RV64I-NEXT:    addiw a1, a1, 16
-; RV64I-NEXT:    addi a0, sp, 15
 ; RV64I-NEXT:    add a1, sp, a1
+; RV64I-NEXT:    addi a0, sp, 15
 ; RV64I-NEXT:    call inspect
 ; RV64I-NEXT:    addi sp, sp, 2032
 ; RV64I-NEXT:    addi sp, sp, 64
@@ -205,8 +205,8 @@ define void @align_8() {
 ; RV64ZBA-NEXT:    addi sp, sp, -48
 ; RV64ZBA-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64ZBA-NEXT:    li a1, 514
-; RV64ZBA-NEXT:    addi a0, sp, 15
 ; RV64ZBA-NEXT:    sh3add a1, a1, sp
+; RV64ZBA-NEXT:    addi a0, sp, 15
 ; RV64ZBA-NEXT:    call inspect
 ; RV64ZBA-NEXT:    addi sp, sp, 2032
 ; RV64ZBA-NEXT:    addi sp, sp, 64
@@ -234,8 +234,8 @@ define void @align_4() {
 ; RV32I-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32I-NEXT:    lui a1, 1
 ; RV32I-NEXT:    addi a1, a1, 8
-; RV32I-NEXT:    addi a0, sp, 7
 ; RV32I-NEXT:    add a1, sp, a1
+; RV32I-NEXT:    addi a0, sp, 7
 ; RV32I-NEXT:    call inspect
 ; RV32I-NEXT:    addi sp, sp, 2032
 ; RV32I-NEXT:    addi sp, sp, 48
@@ -256,8 +256,8 @@ define void @align_4() {
 ; RV32ZBA-NEXT:    addi sp, sp, -32
 ; RV32ZBA-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32ZBA-NEXT:    li a1, 513
-; RV32ZBA-NEXT:    addi a0, sp, 7
 ; RV32ZBA-NEXT:    sh3add a1, a1, sp
+; RV32ZBA-NEXT:    addi a0, sp, 7
 ; RV32ZBA-NEXT:    call inspect
 ; RV32ZBA-NEXT:    addi sp, sp, 2032
 ; RV32ZBA-NEXT:    addi sp, sp, 48
@@ -279,8 +279,8 @@ define void @align_4() {
 ; RV64I-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64I-NEXT:    lui a1, 1
 ; RV64I-NEXT:    addiw a1, a1, 20
-; RV64I-NEXT:    addi a0, sp, 19
 ; RV64I-NEXT:    add a1, sp, a1
+; RV64I-NEXT:    addi a0, sp, 19
 ; RV64I-NEXT:    call inspect
 ; RV64I-NEXT:    addi sp, sp, 2032
 ; RV64I-NEXT:    addi sp, sp, 64
@@ -301,8 +301,8 @@ define void @align_4() {
 ; RV64ZBA-NEXT:    addi sp, sp, -48
 ; RV64ZBA-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64ZBA-NEXT:    li a1, 1029
-; RV64ZBA-NEXT:    addi a0, sp, 19
 ; RV64ZBA-NEXT:    sh2add a1, a1, sp
+; RV64ZBA-NEXT:    addi a0, sp, 19
 ; RV64ZBA-NEXT:    call inspect
 ; RV64ZBA-NEXT:    addi sp, sp, 2032
 ; RV64ZBA-NEXT:    addi sp, sp, 64
@@ -330,8 +330,8 @@ define void @align_2() {
 ; RV32-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32-NEXT:    lui a1, 1
 ; RV32-NEXT:    addi a1, a1, 10
-; RV32-NEXT:    addi a0, sp, 9
 ; RV32-NEXT:    add a1, sp, a1
+; RV32-NEXT:    addi a0, sp, 9
 ; RV32-NEXT:    call inspect
 ; RV32-NEXT:    addi sp, sp, 2032
 ; RV32-NEXT:    addi sp, sp, 48
@@ -353,8 +353,8 @@ define void @align_2() {
 ; RV64-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64-NEXT:    lui a1, 1
 ; RV64-NEXT:    addiw a1, a1, 22
-; RV64-NEXT:    addi a0, sp, 21
 ; RV64-NEXT:    add a1, sp, a1
+; RV64-NEXT:    addi a0, sp, 21
 ; RV64-NEXT:    call inspect
 ; RV64-NEXT:    addi sp, sp, 2032
 ; RV64-NEXT:    addi sp, sp, 64
@@ -383,8 +383,8 @@ define void @align_1() {
 ; RV32-NEXT:    .cfi_def_cfa_offset 4112
 ; RV32-NEXT:    lui a1, 1
 ; RV32-NEXT:    addi a1, a1, 11
-; RV32-NEXT:    addi a0, sp, 10
 ; RV32-NEXT:    add a1, sp, a1
+; RV32-NEXT:    addi a0, sp, 10
 ; RV32-NEXT:    call inspect
 ; RV32-NEXT:    addi sp, sp, 2032
 ; RV32-NEXT:    addi sp, sp, 48
@@ -406,8 +406,8 @@ define void @align_1() {
 ; RV64-NEXT:    .cfi_def_cfa_offset 4128
 ; RV64-NEXT:    lui a1, 1
 ; RV64-NEXT:    addiw a1, a1, 23
-; RV64-NEXT:    addi a0, sp, 22
 ; RV64-NEXT:    add a1, sp, a1
+; RV64-NEXT:    addi a0, sp, 22
 ; RV64-NEXT:    call inspect
 ; RV64-NEXT:    addi sp, sp, 2032
 ; RV64-NEXT:    addi sp, sp, 64

@@ -34,9 +34,9 @@ define <128 x i32> @ret_split_v128i32(ptr %x) {
 ; CHECK-NEXT:    vle32.v v8, (a2)
 ; CHECK-NEXT:    addi a2, a0, 128
 ; CHECK-NEXT:    addi a1, a1, 64
-; CHECK-NEXT:    addi a0, a0, 64
 ; CHECK-NEXT:    vse32.v v8, (a2)
 ; CHECK-NEXT:    vle32.v v8, (a1)
+; CHECK-NEXT:    addi a0, a0, 64
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    ret
   %v = load <128 x i32>, ptr %x

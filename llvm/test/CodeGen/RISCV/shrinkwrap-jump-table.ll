@@ -17,8 +17,8 @@ define dso_local signext i32 @test_shrinkwrap_jump_table(ptr noundef %m) local_u
 ; CHECK-NEXT:    bltu a2, a1, .LBB0_7
 ; CHECK-NEXT:  # %bb.1: # %entry
 ; CHECK-NEXT:    lui a2, %hi(.LJTI0_0)
-; CHECK-NEXT:    slli a1, a1, 2
 ; CHECK-NEXT:    addi a2, a2, %lo(.LJTI0_0)
+; CHECK-NEXT:    slli a1, a1, 2
 ; CHECK-NEXT:    add a1, a1, a2
 ; CHECK-NEXT:    lw a1, 0(a1)
 ; CHECK-NEXT:    jr a1

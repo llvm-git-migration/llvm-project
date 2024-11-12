@@ -169,8 +169,8 @@ define void @vnsrl_32_i32(ptr %in, ptr %out) {
 ; V:       # %bb.0: # %entry
 ; V-NEXT:    vsetivli zero, 4, e32, mf2, ta, ma
 ; V-NEXT:    vle32.v v8, (a0)
-; V-NEXT:    li a0, 32
 ; V-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
+; V-NEXT:    li a0, 32
 ; V-NEXT:    vnsrl.wx v8, v8, a0
 ; V-NEXT:    vse32.v v8, (a1)
 ; V-NEXT:    ret
@@ -223,8 +223,8 @@ define void @vnsrl_32_float(ptr %in, ptr %out) {
 ; V:       # %bb.0: # %entry
 ; V-NEXT:    vsetivli zero, 4, e32, mf2, ta, ma
 ; V-NEXT:    vle32.v v8, (a0)
-; V-NEXT:    li a0, 32
 ; V-NEXT:    vsetivli zero, 2, e32, mf2, ta, ma
+; V-NEXT:    li a0, 32
 ; V-NEXT:    vnsrl.wx v8, v8, a0
 ; V-NEXT:    vse32.v v8, (a1)
 ; V-NEXT:    ret
@@ -395,8 +395,8 @@ define void @vnsrl_0_i8_undef3(ptr %in, ptr %out) {
 ; CHECK-NEXT:    vid.v v9
 ; CHECK-NEXT:    vadd.vv v9, v9, v9
 ; CHECK-NEXT:    li a0, -32
-; CHECK-NEXT:    vadd.vi v9, v9, -8
 ; CHECK-NEXT:    vmv.s.x v0, a0
+; CHECK-NEXT:    vadd.vi v9, v9, -8
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf2, ta, ma
 ; CHECK-NEXT:    vslidedown.vi v8, v8, 8
 ; CHECK-NEXT:    vsetivli zero, 8, e8, mf4, ta, mu

@@ -26,8 +26,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV32I-NEXT:    mul a0, a1, a0
 ; RV32I-NEXT:    slli a1, a0, 26
 ; RV32I-NEXT:    slli a0, a0, 20
-; RV32I-NEXT:    srli a1, a1, 28
 ; RV32I-NEXT:    srli a0, a0, 25
+; RV32I-NEXT:    srli a1, a1, 28
 ; RV32I-NEXT:    mul a0, a1, a0
 ; RV32I-NEXT:    add a0, a0, a2
 ; RV32I-NEXT:    ret
@@ -37,8 +37,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV32ZBB-NEXT:    mul a0, a1, a0
 ; RV32ZBB-NEXT:    slli a1, a0, 26
 ; RV32ZBB-NEXT:    slli a0, a0, 20
-; RV32ZBB-NEXT:    srli a1, a1, 28
 ; RV32ZBB-NEXT:    srli a0, a0, 25
+; RV32ZBB-NEXT:    srli a1, a1, 28
 ; RV32ZBB-NEXT:    mul a0, a1, a0
 ; RV32ZBB-NEXT:    add a0, a0, a2
 ; RV32ZBB-NEXT:    ret
@@ -57,8 +57,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV32XTHEADMAC-NEXT:    mul a0, a1, a0
 ; RV32XTHEADMAC-NEXT:    slli a1, a0, 26
 ; RV32XTHEADMAC-NEXT:    slli a0, a0, 20
-; RV32XTHEADMAC-NEXT:    srli a1, a1, 28
 ; RV32XTHEADMAC-NEXT:    srli a0, a0, 25
+; RV32XTHEADMAC-NEXT:    srli a1, a1, 28
 ; RV32XTHEADMAC-NEXT:    th.mulah a2, a1, a0
 ; RV32XTHEADMAC-NEXT:    mv a0, a2
 ; RV32XTHEADMAC-NEXT:    ret
@@ -77,8 +77,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV64I-NEXT:    mul a0, a1, a0
 ; RV64I-NEXT:    slli a1, a0, 58
 ; RV64I-NEXT:    slli a0, a0, 52
-; RV64I-NEXT:    srli a1, a1, 60
 ; RV64I-NEXT:    srli a0, a0, 57
+; RV64I-NEXT:    srli a1, a1, 60
 ; RV64I-NEXT:    mul a0, a1, a0
 ; RV64I-NEXT:    addw a0, a0, a2
 ; RV64I-NEXT:    ret
@@ -88,8 +88,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV64ZBB-NEXT:    mul a0, a1, a0
 ; RV64ZBB-NEXT:    slli a1, a0, 58
 ; RV64ZBB-NEXT:    slli a0, a0, 52
-; RV64ZBB-NEXT:    srli a1, a1, 60
 ; RV64ZBB-NEXT:    srli a0, a0, 57
+; RV64ZBB-NEXT:    srli a1, a1, 60
 ; RV64ZBB-NEXT:    mul a0, a1, a0
 ; RV64ZBB-NEXT:    addw a0, a0, a2
 ; RV64ZBB-NEXT:    ret
@@ -99,8 +99,8 @@ define i32 @f(i32 %A, i32 %B, i32 %C) {
 ; RV64XTHEADMAC-NEXT:    mul a0, a1, a0
 ; RV64XTHEADMAC-NEXT:    slli a1, a0, 58
 ; RV64XTHEADMAC-NEXT:    slli a0, a0, 52
-; RV64XTHEADMAC-NEXT:    srli a1, a1, 60
 ; RV64XTHEADMAC-NEXT:    srli a0, a0, 57
+; RV64XTHEADMAC-NEXT:    srli a1, a1, 60
 ; RV64XTHEADMAC-NEXT:    th.mulah a2, a1, a0
 ; RV64XTHEADMAC-NEXT:    mv a0, a2
 ; RV64XTHEADMAC-NEXT:    ret

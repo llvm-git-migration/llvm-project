@@ -14,8 +14,8 @@ define <vscale x 1 x i1> @select_nxv1i1(<vscale x 1 x i1> %a, <vscale x 1 x i1> 
 ; CHECK-LABEL: select_nxv1i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, mf8, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 1 x i1> @llvm.vp.select.nxv1i1(<vscale x 1 x i1> %a, <vscale x 1 x i1> %b, <vscale x 1 x i1> %c, i32 %evl)
@@ -28,8 +28,8 @@ define <vscale x 2 x i1> @select_nxv2i1(<vscale x 2 x i1> %a, <vscale x 2 x i1> 
 ; CHECK-LABEL: select_nxv2i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, mf4, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 2 x i1> @llvm.vp.select.nxv2i1(<vscale x 2 x i1> %a, <vscale x 2 x i1> %b, <vscale x 2 x i1> %c, i32 %evl)
@@ -42,8 +42,8 @@ define <vscale x 4 x i1> @select_nxv4i1(<vscale x 4 x i1> %a, <vscale x 4 x i1> 
 ; CHECK-LABEL: select_nxv4i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, mf2, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 4 x i1> @llvm.vp.select.nxv4i1(<vscale x 4 x i1> %a, <vscale x 4 x i1> %b, <vscale x 4 x i1> %c, i32 %evl)
@@ -56,8 +56,8 @@ define <vscale x 8 x i1> @select_nxv8i1(<vscale x 8 x i1> %a, <vscale x 8 x i1> 
 ; CHECK-LABEL: select_nxv8i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m1, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 8 x i1> @llvm.vp.select.nxv8i1(<vscale x 8 x i1> %a, <vscale x 8 x i1> %b, <vscale x 8 x i1> %c, i32 %evl)
@@ -70,8 +70,8 @@ define <vscale x 16 x i1> @select_nxv16i1(<vscale x 16 x i1> %a, <vscale x 16 x 
 ; CHECK-LABEL: select_nxv16i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m2, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 16 x i1> @llvm.vp.select.nxv16i1(<vscale x 16 x i1> %a, <vscale x 16 x i1> %b, <vscale x 16 x i1> %c, i32 %evl)
@@ -84,8 +84,8 @@ define <vscale x 32 x i1> @select_nxv32i1(<vscale x 32 x i1> %a, <vscale x 32 x 
 ; CHECK-LABEL: select_nxv32i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m4, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 32 x i1> @llvm.vp.select.nxv32i1(<vscale x 32 x i1> %a, <vscale x 32 x i1> %b, <vscale x 32 x i1> %c, i32 %evl)
@@ -98,8 +98,8 @@ define <vscale x 64 x i1> @select_nxv64i1(<vscale x 64 x i1> %a, <vscale x 64 x 
 ; CHECK-LABEL: select_nxv64i1:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    vsetvli zero, a0, e8, m8, ta, ma
-; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmand.mm v8, v8, v0
+; CHECK-NEXT:    vmandn.mm v9, v9, v0
 ; CHECK-NEXT:    vmor.mm v0, v8, v9
 ; CHECK-NEXT:    ret
   %v = call <vscale x 64 x i1> @llvm.vp.select.nxv64i1(<vscale x 64 x i1> %a, <vscale x 64 x i1> %b, <vscale x 64 x i1> %c, i32 %evl)
@@ -367,8 +367,9 @@ define <vscale x 32 x i32> @select_nxv32i32(<vscale x 32 x i1> %a, <vscale x 32 
 ; CHECK-NEXT:    mul a1, a1, a3
 ; CHECK-NEXT:    add a1, sp, a1
 ; CHECK-NEXT:    addi a1, a1, 16
-; CHECK-NEXT:    csrr a3, vlenb
 ; CHECK-NEXT:    vs8r.v v8, (a1) # Unknown-size Folded Spill
+; CHECK-NEXT:    vmv1r.v v24, v0
+; CHECK-NEXT:    csrr a3, vlenb
 ; CHECK-NEXT:    slli a1, a3, 3
 ; CHECK-NEXT:    add a1, a0, a1
 ; CHECK-NEXT:    vl8re32.v v8, (a1)
@@ -377,10 +378,14 @@ define <vscale x 32 x i32> @select_nxv32i32(<vscale x 32 x i1> %a, <vscale x 32 
 ; CHECK-NEXT:    add a1, sp, a1
 ; CHECK-NEXT:    addi a1, a1, 16
 ; CHECK-NEXT:    vs8r.v v8, (a1) # Unknown-size Folded Spill
-; CHECK-NEXT:    vl8re32.v v8, (a0)
-; CHECK-NEXT:    addi a0, sp, 16
 ; CHECK-NEXT:    slli a1, a3, 1
 ; CHECK-NEXT:    sub a4, a2, a1
+; CHECK-NEXT:    sltu a5, a2, a4
+; CHECK-NEXT:    addi a5, a5, -1
+; CHECK-NEXT:    srli a3, a3, 2
+; CHECK-NEXT:    vl8re32.v v8, (a0)
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    and a4, a5, a4
 ; CHECK-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
 ; CHECK-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
 ; CHECK-NEXT:    csrr a0, vlenb
@@ -393,24 +398,19 @@ define <vscale x 32 x i32> @select_nxv32i32(<vscale x 32 x i1> %a, <vscale x 32 
 ; CHECK-NEXT:    add a0, sp, a0
 ; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-NEXT:    sltu a5, a2, a4
-; CHECK-NEXT:    addi a5, a5, -1
-; CHECK-NEXT:    srli a3, a3, 2
-; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    vslidedown.vx v0, v0, a3
-; CHECK-NEXT:    and a4, a5, a4
 ; CHECK-NEXT:    vsetvli zero, a4, e32, m8, ta, ma
 ; CHECK-NEXT:    vmerge.vvm v16, v8, v16, v0
 ; CHECK-NEXT:    bltu a2, a1, .LBB27_2
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    mv a2, a1
 ; CHECK-NEXT:  .LBB27_2:
+; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    li a1, 24
 ; CHECK-NEXT:    mul a0, a0, a1
 ; CHECK-NEXT:    add a0, sp, a0
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vl8r.v v24, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    addi a0, sp, 16
 ; CHECK-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
@@ -449,6 +449,7 @@ define <vscale x 32 x i32> @select_evl_nxv32i32(<vscale x 32 x i1> %a, <vscale x
 ; CHECK-NEXT:    add a1, sp, a1
 ; CHECK-NEXT:    addi a1, a1, 16
 ; CHECK-NEXT:    vs8r.v v8, (a1) # Unknown-size Folded Spill
+; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    slli a2, a1, 3
 ; CHECK-NEXT:    add a2, a0, a2
@@ -458,10 +459,14 @@ define <vscale x 32 x i32> @select_evl_nxv32i32(<vscale x 32 x i1> %a, <vscale x
 ; CHECK-NEXT:    add a2, sp, a2
 ; CHECK-NEXT:    addi a2, a2, 16
 ; CHECK-NEXT:    vs8r.v v8, (a2) # Unknown-size Folded Spill
-; CHECK-NEXT:    vl8re32.v v8, (a0)
-; CHECK-NEXT:    addi a0, sp, 16
 ; CHECK-NEXT:    slli a2, a1, 1
 ; CHECK-NEXT:    sub a3, a1, a2
+; CHECK-NEXT:    sltu a4, a1, a3
+; CHECK-NEXT:    addi a4, a4, -1
+; CHECK-NEXT:    srli a5, a1, 2
+; CHECK-NEXT:    vl8re32.v v8, (a0)
+; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    and a3, a4, a3
 ; CHECK-NEXT:    vs8r.v v8, (a0) # Unknown-size Folded Spill
 ; CHECK-NEXT:    vsetvli a0, zero, e8, mf2, ta, ma
 ; CHECK-NEXT:    csrr a0, vlenb
@@ -474,24 +479,19 @@ define <vscale x 32 x i32> @select_evl_nxv32i32(<vscale x 32 x i1> %a, <vscale x
 ; CHECK-NEXT:    add a0, sp, a0
 ; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
-; CHECK-NEXT:    sltu a4, a1, a3
-; CHECK-NEXT:    addi a4, a4, -1
-; CHECK-NEXT:    srli a5, a1, 2
-; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    vslidedown.vx v0, v0, a5
-; CHECK-NEXT:    and a3, a4, a3
 ; CHECK-NEXT:    vsetvli zero, a3, e32, m8, ta, ma
 ; CHECK-NEXT:    vmerge.vvm v16, v8, v16, v0
 ; CHECK-NEXT:    bltu a1, a2, .LBB28_2
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    mv a1, a2
 ; CHECK-NEXT:  .LBB28_2:
+; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    li a2, 24
 ; CHECK-NEXT:    mul a0, a0, a2
 ; CHECK-NEXT:    add a0, sp, a0
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vl8r.v v24, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    addi a0, sp, 16
 ; CHECK-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
@@ -754,34 +754,34 @@ define <vscale x 16 x double> @select_nxv16f64(<vscale x 16 x i1> %a, <vscale x 
 ; CHECK-NEXT:    add a1, sp, a1
 ; CHECK-NEXT:    addi a1, a1, 16
 ; CHECK-NEXT:    vs8r.v v8, (a1) # Unknown-size Folded Spill
+; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    csrr a1, vlenb
 ; CHECK-NEXT:    slli a3, a1, 3
-; CHECK-NEXT:    vmv1r.v v24, v0
 ; CHECK-NEXT:    add a3, a0, a3
-; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    vl8re64.v v8, (a3)
 ; CHECK-NEXT:    sub a3, a2, a1
 ; CHECK-NEXT:    sltu a4, a2, a3
 ; CHECK-NEXT:    addi a4, a4, -1
 ; CHECK-NEXT:    srli a5, a1, 3
+; CHECK-NEXT:    vl8re64.v v0, (a0)
 ; CHECK-NEXT:    addi a0, sp, 16
+; CHECK-NEXT:    and a3, a4, a3
 ; CHECK-NEXT:    vs8r.v v0, (a0) # Unknown-size Folded Spill
 ; CHECK-NEXT:    vsetvli a0, zero, e8, mf4, ta, ma
 ; CHECK-NEXT:    vslidedown.vx v0, v24, a5
-; CHECK-NEXT:    and a3, a4, a3
 ; CHECK-NEXT:    vsetvli zero, a3, e64, m8, ta, ma
 ; CHECK-NEXT:    vmerge.vvm v16, v8, v16, v0
 ; CHECK-NEXT:    bltu a2, a1, .LBB48_2
 ; CHECK-NEXT:  # %bb.1:
 ; CHECK-NEXT:    mv a2, a1
 ; CHECK-NEXT:  .LBB48_2:
+; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 3
 ; CHECK-NEXT:    add a0, sp, a0
 ; CHECK-NEXT:    addi a0, a0, 16
 ; CHECK-NEXT:    vl8r.v v8, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    addi a0, sp, 16
-; CHECK-NEXT:    vmv1r.v v0, v24
 ; CHECK-NEXT:    vl8r.v v24, (a0) # Unknown-size Folded Reload
 ; CHECK-NEXT:    csrr a0, vlenb
 ; CHECK-NEXT:    slli a0, a0, 4

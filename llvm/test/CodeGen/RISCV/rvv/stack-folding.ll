@@ -19,12 +19,12 @@ define i64 @i64(<vscale x 1 x i64> %v, i1 %c) {
 ; RV32-NEXT:    #NO_APP
 ; RV32-NEXT:    beqz a0, .LBB0_2
 ; RV32-NEXT:  # %bb.1: # %truebb
-; RV32-NEXT:    vl1r.v v9, (a1) # Unknown-size Folded Reload
 ; RV32-NEXT:    li a0, 32
+; RV32-NEXT:    vl1r.v v9, (a1) # Unknown-size Folded Reload
 ; RV32-NEXT:    vsetivli zero, 1, e64, m1, ta, ma
 ; RV32-NEXT:    vsrl.vx v8, v9, a0
-; RV32-NEXT:    vmv.x.s a1, v8
 ; RV32-NEXT:    vmv.x.s a0, v9
+; RV32-NEXT:    vmv.x.s a1, v8
 ; RV32-NEXT:    j .LBB0_3
 ; RV32-NEXT:  .LBB0_2: # %falsebb
 ; RV32-NEXT:    li a1, 0

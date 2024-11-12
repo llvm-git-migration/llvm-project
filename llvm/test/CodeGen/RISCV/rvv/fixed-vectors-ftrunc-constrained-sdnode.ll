@@ -138,8 +138,8 @@ define <1 x float> @trunc_v1f32(<1 x float> %x) strictfp {
 ; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfadd.vv v8, v8, v8, v0.t
 ; CHECK-NEXT:    lui a0, 307200
-; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    vmflt.vf v0, v9, fa5
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v9, v8, v0.t
@@ -159,8 +159,8 @@ define <2 x float> @trunc_v2f32(<2 x float> %x) strictfp {
 ; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfadd.vv v8, v8, v8, v0.t
 ; CHECK-NEXT:    lui a0, 307200
-; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    vmflt.vf v0, v9, fa5
 ; CHECK-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v9, v8, v0.t
@@ -180,8 +180,8 @@ define <4 x float> @trunc_v4f32(<4 x float> %x) strictfp {
 ; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfadd.vv v8, v8, v8, v0.t
 ; CHECK-NEXT:    lui a0, 307200
-; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    vfabs.v v9, v8
 ; CHECK-NEXT:    vmflt.vf v0, v9, fa5
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m1, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v9, v8, v0.t
@@ -201,8 +201,8 @@ define <8 x float> @trunc_v8f32(<8 x float> %x) strictfp {
 ; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfadd.vv v8, v8, v8, v0.t
 ; CHECK-NEXT:    lui a0, 307200
-; CHECK-NEXT:    vfabs.v v10, v8
 ; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    vfabs.v v10, v8
 ; CHECK-NEXT:    vmflt.vf v0, v10, fa5
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m2, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v10, v8, v0.t
@@ -222,8 +222,8 @@ define <16 x float> @trunc_v16f32(<16 x float> %x) strictfp {
 ; CHECK-NEXT:    vmfne.vv v0, v8, v8
 ; CHECK-NEXT:    vfadd.vv v8, v8, v8, v0.t
 ; CHECK-NEXT:    lui a0, 307200
-; CHECK-NEXT:    vfabs.v v12, v8
 ; CHECK-NEXT:    fmv.w.x fa5, a0
+; CHECK-NEXT:    vfabs.v v12, v8
 ; CHECK-NEXT:    vmflt.vf v0, v12, fa5
 ; CHECK-NEXT:    vsetvli zero, zero, e32, m4, ta, ma
 ; CHECK-NEXT:    vfcvt.rtz.x.f.v v12, v8, v0.t
