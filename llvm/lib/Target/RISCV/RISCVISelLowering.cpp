@@ -21462,7 +21462,7 @@ SDValue RISCVTargetLowering::joinRegisterPartsIntoValue(
     SDValue Res = DAG.getNode(RISCVISD::SplitGPRPair, DL,
                               DAG.getVTList(XLenVT, XLenVT), Parts[0]);
     return DAG.getNode(ISD::BUILD_PAIR, DL, ValueVT, Res.getValue(0),
-                      Res.getValue(1));
+                       Res.getValue(1));
   }
 
   if (IsABIRegCopy && (ValueVT == MVT::f16 || ValueVT == MVT::bf16) &&
