@@ -564,8 +564,13 @@ Value *llvm::getFreedOperand(const CallBase *CB, const TargetLibraryInfo *TLI) {
 static APInt getSizeWithOverflow(const SizeOffsetAPInt &Data) {
   APInt Size = Data.Size;
   APInt Offset = Data.Offset;
-  if (Offset.isNegative() || Size.ult(Offset))
-    return APInt(Size.getBitWidth(), 0);
+
+  assert(!Offset.isNegative() &&
+         "size for a pointer before the allocated object is ambiguous");
+
+  if (Size.ult(Offset))
+    return APInt::getZero(Size.getBitWidth());
+
   return Size - Offset;
 }
 
@@ -578,6 +583,11 @@ bool llvm::getObjectSize(const Value *Ptr, uint64_t &Size, const DataLayout &DL,
   ObjectSizeOffsetVisitor Visitor(DL, TLI, Ptr->getContext(), Opts);
   SizeOffsetAPInt Data = Visitor.compute(const_cast<Value *>(Ptr));
   if (!Data.bothKnown())
+    return false;
+
+  // We could compute an over-approximation in that situation, may be if
+  // Opts.EvalMode == Max, but let's bee conservative and bail out.
+  if (Data.Offset.isNegative())
     return false;
 
   Size = getSizeWithOverflow(Data).getZExtValue();
