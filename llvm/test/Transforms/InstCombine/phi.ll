@@ -250,11 +250,13 @@ Exit:           ; preds = %Loop
 define ptr @test8(ptr %A, i1 %b) {
 ; CHECK-LABEL: @test8(
 ; CHECK-NEXT:  BB0:
+; CHECK-NEXT:    [[X:%.*]] = getelementptr inbounds i8, ptr [[A:%.*]], i64 4
 ; CHECK-NEXT:    br i1 [[B:%.*]], label [[BB1:%.*]], label [[BB2:%.*]]
 ; CHECK:       BB1:
+; CHECK-NEXT:    [[Y:%.*]] = getelementptr i8, ptr [[A]], i64 4
 ; CHECK-NEXT:    br label [[BB2]]
 ; CHECK:       BB2:
-; CHECK-NEXT:    [[C:%.*]] = getelementptr i8, ptr [[A:%.*]], i64 4
+; CHECK-NEXT:    [[C:%.*]] = phi ptr [ [[X]], [[BB0:%.*]] ], [ [[Y]], [[BB1]] ]
 ; CHECK-NEXT:    ret ptr [[C]]
 ;
 BB0:
@@ -2795,16 +2797,16 @@ BB5:                                             ; preds = %BB4
   ret void
 }
 
-; FIXME: This is a miscompilation.
 define i64 @wrong_gep_arg_into_phi(ptr noundef %ptr) {
 ; CHECK-LABEL: @wrong_gep_arg_into_phi(
 ; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[PTR:%.*]] = getelementptr i8, ptr [[PTR1:%.*]], i64 1
 ; CHECK-NEXT:    br label [[FOR_COND:%.*]]
 ; CHECK:       for.cond:
-; CHECK-NEXT:    [[PTR_PN:%.*]] = phi ptr [ [[PTR:%.*]], [[ENTRY:%.*]] ], [ [[DOTPN:%.*]], [[FOR_COND]] ]
-; CHECK-NEXT:    [[DOTPN]] = getelementptr inbounds nuw i8, ptr [[PTR_PN]], i64 1
-; CHECK-NEXT:    [[VAL:%.*]] = load i8, ptr [[DOTPN]], align 1
+; CHECK-NEXT:    [[PTR_PN:%.*]] = phi ptr [ [[PTR]], [[ENTRY:%.*]] ], [ [[DOTPN:%.*]], [[FOR_COND]] ]
+; CHECK-NEXT:    [[VAL:%.*]] = load i8, ptr [[PTR_PN]], align 1
 ; CHECK-NEXT:    [[COND_NOT:%.*]] = icmp eq i8 [[VAL]], 0
+; CHECK-NEXT:    [[DOTPN]] = getelementptr inbounds nuw i8, ptr [[PTR_PN]], i64 1
 ; CHECK-NEXT:    br i1 [[COND_NOT]], label [[EXIT:%.*]], label [[FOR_COND]]
 ; CHECK:       exit:
 ; CHECK-NEXT:    ret i64 0

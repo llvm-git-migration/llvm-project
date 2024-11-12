@@ -519,11 +519,13 @@ define ptr @phi_of_gep(i1 %c, ptr %p) {
 ; CHECK-LABEL: @phi_of_gep(
 ; CHECK-NEXT:    br i1 [[C:%.*]], label [[IF:%.*]], label [[ELSE:%.*]]
 ; CHECK:       if:
+; CHECK-NEXT:    [[GEP1:%.*]] = getelementptr i8, ptr [[P:%.*]], i64 4
 ; CHECK-NEXT:    br label [[JOIN:%.*]]
 ; CHECK:       else:
+; CHECK-NEXT:    [[GEP2:%.*]] = getelementptr i8, ptr [[P]], i64 4
 ; CHECK-NEXT:    br label [[JOIN]]
 ; CHECK:       join:
-; CHECK-NEXT:    [[PHI:%.*]] = getelementptr i8, ptr [[P:%.*]], i64 4
+; CHECK-NEXT:    [[PHI:%.*]] = phi ptr [ [[GEP1]], [[IF]] ], [ [[GEP2]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[PHI]]
 ;
   br i1 %c, label %if, label %else
@@ -545,11 +547,13 @@ define ptr @phi_of_gep_flags_1(i1 %c, ptr %p) {
 ; CHECK-LABEL: @phi_of_gep_flags_1(
 ; CHECK-NEXT:    br i1 [[C:%.*]], label [[IF:%.*]], label [[ELSE:%.*]]
 ; CHECK:       if:
+; CHECK-NEXT:    [[GEP1:%.*]] = getelementptr inbounds i8, ptr [[P:%.*]], i64 4
 ; CHECK-NEXT:    br label [[JOIN:%.*]]
 ; CHECK:       else:
+; CHECK-NEXT:    [[GEP2:%.*]] = getelementptr nusw nuw i8, ptr [[P]], i64 4
 ; CHECK-NEXT:    br label [[JOIN]]
 ; CHECK:       join:
-; CHECK-NEXT:    [[PHI:%.*]] = getelementptr nusw nuw i8, ptr [[P:%.*]], i64 4
+; CHECK-NEXT:    [[PHI:%.*]] = phi ptr [ [[GEP1]], [[IF]] ], [ [[GEP2]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[PHI]]
 ;
   br i1 %c, label %if, label %else
@@ -571,11 +575,13 @@ define ptr @phi_of_gep_flags_2(i1 %c, ptr %p) {
 ; CHECK-LABEL: @phi_of_gep_flags_2(
 ; CHECK-NEXT:    br i1 [[C:%.*]], label [[IF:%.*]], label [[ELSE:%.*]]
 ; CHECK:       if:
+; CHECK-NEXT:    [[GEP1:%.*]] = getelementptr nusw nuw i8, ptr [[P:%.*]], i64 4
 ; CHECK-NEXT:    br label [[JOIN:%.*]]
 ; CHECK:       else:
+; CHECK-NEXT:    [[GEP2:%.*]] = getelementptr nuw i8, ptr [[P]], i64 4
 ; CHECK-NEXT:    br label [[JOIN]]
 ; CHECK:       join:
-; CHECK-NEXT:    [[PHI:%.*]] = getelementptr nuw i8, ptr [[P:%.*]], i64 4
+; CHECK-NEXT:    [[PHI:%.*]] = phi ptr [ [[GEP1]], [[IF]] ], [ [[GEP2]], [[ELSE]] ]
 ; CHECK-NEXT:    ret ptr [[PHI]]
 ;
   br i1 %c, label %if, label %else

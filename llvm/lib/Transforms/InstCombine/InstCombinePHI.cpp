@@ -554,6 +554,11 @@ Instruction *InstCombinerImpl::foldPHIArgGEPIntoPHI(PHINode &PN) {
         GEP->getSourceElementType() != FirstInst->getSourceElementType() ||
         GEP->getNumOperands() != FirstInst->getNumOperands())
       return nullptr;
+    // The resulting pointer from the phi-node may compute poison, if a
+    // getelementptr phi-operand carries inbounds semantics. Assume that the
+    // resulting phi-node is non-poison in order to perform the simplification.
+    if (!isGuaranteedNotToBeUndefOrPoison(V))
+      return nullptr;
 
     NW &= GEP->getNoWrapFlags();
 

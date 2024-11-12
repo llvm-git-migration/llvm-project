@@ -86,12 +86,12 @@ define i32 @test3(ptr %dm, i1 %tmp4, i64 %tmp9, i64 %tmp19, i64 %tmp20, i64 %tmp
 ; CHECK:       bb3:
 ; CHECK-NEXT:    [[TMP0:%.*]] = phi i64 [ [[TMP19]], [[BB1]] ], [ [[TMP20]], [[BB2]] ]
 ; CHECK-NEXT:    [[TMP22:%.*]] = invoke i32 @foo1(i32 11)
-; CHECK-NEXT:    to label [[BB4:%.*]] unwind label [[BB5:%.*]]
+; CHECK-NEXT:            to label [[BB4:%.*]] unwind label [[BB5:%.*]]
 ; CHECK:       bb4:
 ; CHECK-NEXT:    ret i32 0
 ; CHECK:       bb5:
 ; CHECK-NEXT:    [[TMP27:%.*]] = landingpad { ptr, i32 }
-; CHECK-NEXT:    catch ptr @_ZTIi
+; CHECK-NEXT:            catch ptr @_ZTIi
 ; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [[STRUCT3]], ptr [[DM]], i64 [[TMP0]], i32 1
 ; CHECK-NEXT:    [[TMP35:%.*]] = getelementptr inbounds [[STRUCT4:%.*]], ptr [[TMP1]], i64 [[TMP21:%.*]], i32 1, i32 1
 ; CHECK-NEXT:    [[TMP25:%.*]] = load i32, ptr [[TMP35]], align 4
@@ -140,18 +140,19 @@ define ptr @test4(i32 %value, ptr %buffer) {
 ; CHECK-NEXT:    [[CMP:%.*]] = icmp ugt i32 [[VALUE:%.*]], 127
 ; CHECK-NEXT:    br i1 [[CMP]], label [[LOOP_HEADER:%.*]], label [[EXIT:%.*]]
 ; CHECK:       loop.header:
+; CHECK-NEXT:    [[BUFFER:%.*]] = getelementptr inbounds i8, ptr [[BUFFER1:%.*]], i64 1
 ; CHECK-NEXT:    br label [[LOOP_BODY:%.*]]
 ; CHECK:       loop.body:
-; CHECK-NEXT:    [[BUFFER_PN:%.*]] = phi ptr [ [[BUFFER:%.*]], [[LOOP_HEADER]] ], [ [[LOOPPTR:%.*]], [[LOOP_BODY]] ]
+; CHECK-NEXT:    [[BUFFER_PN:%.*]] = phi ptr [ [[BUFFER]], [[LOOP_HEADER]] ], [ [[LOOPPTR:%.*]], [[LOOP_BODY]] ]
 ; CHECK-NEXT:    [[NEWVAL:%.*]] = phi i32 [ [[VALUE]], [[LOOP_HEADER]] ], [ [[SHR:%.*]], [[LOOP_BODY]] ]
-; CHECK-NEXT:    [[LOOPPTR]] = getelementptr inbounds i8, ptr [[BUFFER_PN]], i64 1
 ; CHECK-NEXT:    [[SHR]] = lshr i32 [[NEWVAL]], 7
+; CHECK-NEXT:    [[LOOPPTR]] = getelementptr inbounds i8, ptr [[BUFFER_PN]], i64 1
 ; CHECK-NEXT:    [[CMP2:%.*]] = icmp ugt i32 [[NEWVAL]], 16383
 ; CHECK-NEXT:    br i1 [[CMP2]], label [[LOOP_BODY]], label [[LOOP_EXIT:%.*]]
 ; CHECK:       loop.exit:
 ; CHECK-NEXT:    br label [[EXIT]]
 ; CHECK:       exit:
-; CHECK-NEXT:    [[TMP0:%.*]] = phi ptr [ [[LOOPPTR]], [[LOOP_EXIT]] ], [ [[BUFFER]], [[ENTRY:%.*]] ]
+; CHECK-NEXT:    [[TMP0:%.*]] = phi ptr [ [[BUFFER_PN]], [[LOOP_EXIT]] ], [ [[BUFFER1]], [[ENTRY:%.*]] ]
 ; CHECK-NEXT:    [[INCPTR3:%.*]] = getelementptr inbounds i8, ptr [[TMP0]], i64 2
 ; CHECK-NEXT:    ret ptr [[INCPTR3]]
 ;

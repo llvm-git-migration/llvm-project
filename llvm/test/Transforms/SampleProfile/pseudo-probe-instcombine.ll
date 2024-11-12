@@ -28,16 +28,18 @@ define dso_local void @merge(ptr nocapture readonly %params) local_unnamed_addr 
 ; CHECK-NEXT:    [[TOBOOL56_NOT:%.*]] = icmp eq i32 [[TMP1]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL56_NOT]], label [[IF_END109]], label [[IF_END109_THREAD:%.*]]
 ; CHECK:       if.end109.thread:
+; CHECK-NEXT:    [[MINPART4:%.*]] = getelementptr inbounds i8, ptr [[PARAMS]], i64 172
 ; CHECK-NEXT:    call void @llvm.pseudoprobe(i64 -6172701105289426098, i64 2, i32 0, i64 -1)
 ; CHECK-NEXT:    br label [[IF_THEN138:%.*]]
 ; CHECK:       if.end109:
+; CHECK-NEXT:    [[MINPART:%.*]] = getelementptr inbounds i8, ptr [[PARAMS]], i64 172
 ; CHECK-NEXT:    call void @llvm.pseudoprobe(i64 -6172701105289426098, i64 3, i32 0, i64 -1)
 ; CHECK-NEXT:    [[TOBOOL116_NOT:%.*]] = icmp eq i32 [[TMP1]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL116_NOT]], label [[IF_THEN117:%.*]], label [[IF_THEN138]]
 ; CHECK:       if.then117:
 ; CHECK-NEXT:    ret void
 ; CHECK:       if.then138:
-; CHECK-NEXT:    [[DOTIN:%.*]] = getelementptr inbounds i8, ptr [[PARAMS]], i64 172
+; CHECK-NEXT:    [[DOTIN:%.*]] = phi ptr [ [[MINPART4]], [[IF_END109_THREAD]] ], [ [[MINPART]], [[IF_END109]] ]
 ; CHECK-NEXT:    [[TMP2:%.*]] = load i32, ptr [[DOTIN]], align 4
 ; CHECK-NEXT:    [[TOBOOL139_NOT:%.*]] = icmp eq i32 [[TMP2]], 0
 ; CHECK-NEXT:    br i1 [[TOBOOL139_NOT]], label [[IF_ELSE147:%.*]], label [[IF_THEN140:%.*]]

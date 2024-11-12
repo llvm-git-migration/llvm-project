@@ -105,8 +105,7 @@ if.end:                                           ; preds = %if.else, %if.then
 
 ; CHECK: define ptr @gep
 ; CHECK-LABEL: if.end:
-; CHECK: %[[PHI:.*]] = phi i64 [ %call, %if.then ], [ %call1, %if.else ]
-; CHECK: getelementptr inbounds i32, ptr %b, i64 %[[PHI]], !dbg [[gepMergedLoc:![0-9]+]]
+; CHECK: %[[PHI:.*]] = phi ptr [ %arrayidx, %if.then ], [ %arrayidx2, %if.else ]
 ; CHECK: ret ptr
 
 define ptr @gep(i32 %a, ptr %b) !dbg !23 {
@@ -300,7 +299,6 @@ declare ptr @bar3()
 
 ; CHECK: [[binopMergedLoc]] = !DILocation(line: 0
 ; CHECK: [[cmpMergedLoc]] = !DILocation(line: 0
-; CHECK: [[gepMergedLoc]] = !DILocation(line: 0
 ; CHECK: [[loadMergedLoc]] = !DILocation(line: 0
 ; CHECK: [[castMergedLoc]] = !DILocation(line: 0
 ; CHECK: [[binopConstMergedLoc]] = !DILocation(line: 0

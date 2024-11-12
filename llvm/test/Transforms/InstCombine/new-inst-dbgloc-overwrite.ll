@@ -14,13 +14,14 @@ define void @test(ptr %xfA, ptr %xfB, i1 %cmp5) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    br i1 [[CMP5:%.*]], label [[IF_ELSE:%.*]], label [[IF_THEN6:%.*]]
 ; CHECK:       if.then6:
+; CHECK-NEXT:    [[XFB:%.*]] = getelementptr i8, ptr [[XFB1:%.*]], i64 4
 ; CHECK-NEXT:    br label [[IF_END11:%.*]]
 ; CHECK:       if.else:
+; CHECK-NEXT:    [[XFA:%.*]] = getelementptr i8, ptr [[XFA1:%.*]], i64 4
 ; CHECK-NEXT:    br label [[IF_END11]]
 ; CHECK:       if.end11:
-; CHECK-NEXT:    [[XFA_PN:%.*]] = phi ptr [ [[XFA:%.*]], [[IF_ELSE]] ], [ [[XFB:%.*]], [[IF_THEN6]] ]
-; CHECK-NEXT:    [[XF1_SROA_8_0_IN:%.*]] = getelementptr i8, ptr [[XFA_PN]], i64 4
-; CHECK-NEXT:    [[XF1_SROA_8_0:%.*]] = load float, ptr [[XF1_SROA_8_0_IN]], align 4, !dbg [[DBG3:![0-9]+]], !annotation [[META7:![0-9]+]]
+; CHECK-NEXT:    [[XFA_PN:%.*]] = phi ptr [ [[XFA]], [[IF_ELSE]] ], [ [[XFB]], [[IF_THEN6]] ]
+; CHECK-NEXT:    [[XF1_SROA_8_0:%.*]] = load float, ptr [[XFA_PN]], align 4, !dbg [[DBG3:![0-9]+]], !annotation [[META7:![0-9]+]]
 ; CHECK-NEXT:    [[CMP_I:%.*]] = fcmp ugt float [[XF1_SROA_8_0]], 0.000000e+00
 ; CHECK-NEXT:    br i1 [[CMP_I]], label [[IF_END_I:%.*]], label [[IF_THEN_I:%.*]]
 ; CHECK:       if.then.i:
