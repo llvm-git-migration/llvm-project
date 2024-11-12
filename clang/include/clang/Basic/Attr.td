@@ -1896,8 +1896,8 @@ def LifetimeCaptureBy : DeclOrTypeAttr {
   let Documentation = [LifetimeCaptureByDocs];
   let AdditionalMembers = [{
 private:
-  SmallVector<IdentifierInfo*, 1> ArgIdents;
-  SmallVector<SourceLocation, 1> ArgLocs;
+  SmallVector<IdentifierInfo*> ArgIdents;
+  SmallVector<SourceLocation> ArgLocs;
 
 public:
   static constexpr int THIS = 0;
@@ -1905,8 +1905,8 @@ public:
   static constexpr int UNKNOWN = -2;
   static constexpr int GLOBAL = -3;
 
-  void setArgs(SmallVector<IdentifierInfo*>&& Idents,
-               SmallVector<SourceLocation>&& Locs) { 
+  void setArgs(SmallVector<IdentifierInfo*> Idents,
+               SmallVector<SourceLocation> Locs) { 
     assert(Idents.size() == Locs.size());
     assert(Idents.size() == params_Size);
     ArgIdents = std::move(Idents);
