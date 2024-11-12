@@ -961,7 +961,7 @@ void RISCVDAGToDAGISel::Select(SDNode *Node) {
         CurDAG->getTargetConstant(RISCV::sub_gpr_odd, DL, MVT::i32)};
 
     SDNode *N = CurDAG->getMachineNode(TargetOpcode::REG_SEQUENCE, DL,
-                                       Subtarget->getXLenPairVT(), Ops);
+                                       MVT::Untyped, Ops);
     ReplaceNode(Node, N);
     return;
   }

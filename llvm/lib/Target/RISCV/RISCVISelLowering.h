@@ -554,9 +554,6 @@ public:
 
   bool softPromoteHalfType() const override { return true; }
 
-  EVT getAsmOperandValueType(const DataLayout &DL, Type *Ty,
-                             bool AllowUnknown = false) const override;
-
   /// Return the register type for a given MVT, ensuring vectors are treated
   /// as a series of gpr sized integers.
   MVT getRegisterTypeForCallingConv(LLVMContext &Context, CallingConv::ID CC,
@@ -601,10 +598,6 @@ public:
     // out until we get testcase to prove it is a win.
     return false;
   }
-
-  bool isLoadBitCastBeneficial(EVT LoadVT, EVT BitcastVT,
-                               const SelectionDAG &DAG,
-                               const MachineMemOperand &MMO) const override;
 
   bool
   shouldExpandBuildVectorWithShuffles(EVT VT,

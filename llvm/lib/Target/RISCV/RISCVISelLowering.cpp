@@ -113,11 +113,9 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   }
 
   MVT XLenVT = Subtarget.getXLenVT();
-  MVT XLenPairVT = Subtarget.getXLenPairVT();
 
   // Set up the register classes.
   addRegisterClass(XLenVT, &RISCV::GPRRegClass);
-  addRegisterClass(XLenPairVT, &RISCV::GPRPairRegClass);
 
   if (Subtarget.hasStdExtZfhmin())
     addRegisterClass(MVT::f16, &RISCV::FPR16RegClass);
@@ -296,11 +294,6 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     setCondCodeAction(ISD::SETULE, XLenVT, Expand);
     setCondCodeAction(ISD::SETLE, XLenVT, Expand);
   }
-
-  if (Subtarget.is64Bit())
-    setOperationAction(ISD::BITCAST, MVT::i128, Custom);
-  else
-    setOperationAction(ISD::BITCAST, MVT::i64, Custom);
 
   setOperationAction({ISD::STACKSAVE, ISD::STACKRESTORE}, MVT::Other, Expand);
 
@@ -2218,17 +2211,6 @@ bool RISCVTargetLowering::isExtractSubvectorCheap(EVT ResVT, EVT SrcVT,
   return (ResElts * 2) == SrcElts && (Index == 0 || Index == ResElts);
 }
 
-EVT RISCVTargetLowering::getAsmOperandValueType(const DataLayout &DL, Type *Ty,
-                                                bool AllowUnknown) const {
-  if (!Subtarget.is64Bit() && Ty->isIntegerTy(64))
-    return MVT::riscv_i32_pair;
-
-  if (Subtarget.is64Bit() && Ty->isIntegerTy(128))
-    return MVT::riscv_i64_pair;
-
-  return TargetLowering::getAsmOperandValueType(DL, Ty, AllowUnknown);
-}
-
 MVT RISCVTargetLowering::getRegisterTypeForCallingConv(LLVMContext &Context,
                                                       CallingConv::ID CC,
                                                       EVT VT) const {
@@ -2248,7 +2230,7 @@ RISCVTargetLowering::getNumRegisters(LLVMContext &Context, EVT VT,
                                      std::optional<MVT> RegisterVT) const {
   // Pair inline assembly operand
   if (VT == (Subtarget.is64Bit() ? MVT::i128 : MVT::i64) && RegisterVT &&
-      *RegisterVT == Subtarget.getXLenPairVT())
+      *RegisterVT == MVT::Untyped)
     return 1;
 
   return TargetLowering::getNumRegisters(Context, VT, RegisterVT);
@@ -2792,19 +2774,6 @@ RISCVTargetLowering::computeVLMAXBounds(MVT VecVT,
       RISCVTargetLowering::computeVLMAX(VectorBitsMin, EltSize, MinSize);
 
   return std::make_pair(MinVLMAX, MaxVLMAX);
-}
-
-bool RISCVTargetLowering::isLoadBitCastBeneficial(
-    EVT LoadVT, EVT BitcastVT, const SelectionDAG &DAG,
-    const MachineMemOperand &MMO) const {
-  // We want to leave `bitcasts` to/from MVT::riscv_i<xlen>_pair separate from
-  // loads/stores so they can be turned into BuildGPRPair/::SplitGPRPair nodes.
-  if (LoadVT == (Subtarget.is64Bit() ? MVT::i128 : MVT::i64) &&
-      BitcastVT == Subtarget.getXLenPairVT())
-    return false;
-
-  return TargetLoweringBase::isLoadBitCastBeneficial(LoadVT, BitcastVT, DAG,
-                                                     MMO);
 }
 
 // The state of RVV BUILD_VECTOR and VECTOR_SHUFFLE lowering is that very few
@@ -6469,13 +6438,6 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
       SDValue Lo, Hi;
       std::tie(Lo, Hi) = DAG.SplitScalar(Op0, DL, MVT::i32, MVT::i32);
       return DAG.getNode(RISCVISD::BuildPairF64, DL, MVT::f64, Lo, Hi);
-    }
-    if (VT == Subtarget.getXLenPairVT() && Op0VT.isScalarInteger() &&
-        Op0VT.getSizeInBits() == 2 * Subtarget.getXLen()) {
-      SDValue Lo, Hi;
-      std::tie(Lo, Hi) = DAG.SplitScalar(Op0, DL, XLenVT, XLenVT);
-      return DAG.getNode(RISCVISD::BuildGPRPair, DL, Subtarget.getXLenPairVT(),
-                         Lo, Hi);
     }
 
     // Consider other scalar<->scalar casts as legal if the types are legal.
@@ -12998,14 +12960,6 @@ void RISCVTargetLowering::ReplaceNodeResults(SDNode *N,
                                    DAG.getVTList(MVT::i32, MVT::i32), Op0);
       SDValue RetReg = DAG.getNode(ISD::BUILD_PAIR, DL, MVT::i64,
                                    NewReg.getValue(0), NewReg.getValue(1));
-      Results.push_back(RetReg);
-    } else if (VT.isInteger() &&
-               VT.getSizeInBits() == 2 * Subtarget.getXLen() &&
-               Op0VT == Subtarget.getXLenPairVT()) {
-      SDValue NewReg = DAG.getNode(RISCVISD::SplitGPRPair, DL,
-                                   DAG.getVTList(XLenVT, XLenVT), Op0);
-      SDValue RetReg = DAG.getNode(ISD::BUILD_PAIR, DL, VT, NewReg.getValue(0),
-                                   NewReg.getValue(1));
       Results.push_back(RetReg);
     } else if (!VT.isVector() && Op0VT.isFixedLengthVector() &&
                isTypeLegal(Op0VT)) {
@@ -21418,6 +21372,17 @@ bool RISCVTargetLowering::splitValueIntoRegisterParts(
     unsigned NumParts, MVT PartVT, std::optional<CallingConv::ID> CC) const {
   bool IsABIRegCopy = CC.has_value();
   EVT ValueVT = Val.getValueType();
+
+  if (ValueVT == (Subtarget.is64Bit() ? MVT::i128 : MVT::i64) &&
+      NumParts == 1 && PartVT == MVT::Untyped) {
+    // Pairs in Inline Assembly
+    MVT XLenVT = Subtarget.getXLenVT();
+    SDValue Lo, Hi;
+    std::tie(Lo, Hi) = DAG.SplitScalar(Val, DL, XLenVT, XLenVT);
+    Parts[0] = DAG.getNode(RISCVISD::BuildGPRPair, DL, MVT::Untyped, Lo, Hi);
+    return true;
+  }
+
   if (IsABIRegCopy && (ValueVT == MVT::f16 || ValueVT == MVT::bf16) &&
       PartVT == MVT::f32) {
     // Cast the [b]f16 to i16, extend to i32, pad with ones to make a float
@@ -21489,6 +21454,17 @@ SDValue RISCVTargetLowering::joinRegisterPartsIntoValue(
     SelectionDAG &DAG, const SDLoc &DL, const SDValue *Parts, unsigned NumParts,
     MVT PartVT, EVT ValueVT, std::optional<CallingConv::ID> CC) const {
   bool IsABIRegCopy = CC.has_value();
+
+  if (ValueVT == (Subtarget.is64Bit() ? MVT::i128 : MVT::i64) &&
+      NumParts == 1 && PartVT == MVT::Untyped) {
+    // Pairs in Inline Assembly
+    MVT XLenVT = Subtarget.getXLenVT();
+    SDValue Res = DAG.getNode(RISCVISD::SplitGPRPair, DL,
+                              DAG.getVTList(XLenVT, XLenVT), Parts[0]);
+    return DAG.getNode(ISD::BUILD_PAIR, DL, ValueVT, Res.getValue(0),
+                      Res.getValue(1));
+  }
+
   if (IsABIRegCopy && (ValueVT == MVT::f16 || ValueVT == MVT::bf16) &&
       PartVT == MVT::f32) {
     SDValue Val = Parts[0];

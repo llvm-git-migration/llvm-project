@@ -287,9 +287,7 @@ def GPRX1X5 :  GPRRegisterClass<(add X1, X5)>;
 //  Even-Odd GPR Pairs
 //===----------------------------------------------------------------------===//
 
-def XLenPairVT : ValueTypeByHwMode<
-      [RV32,           RV64],
-      [riscv_i32_pair, riscv_i64_pair]>;
+defvar XLenPairVT = untyped;
 
 def XLenPairRI : RegInfoByHwMode<
       [RV32,                RV64],
