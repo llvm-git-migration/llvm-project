@@ -5607,6 +5607,43 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
     return EmitCXXPseudoDestructorExpr(callee.getPseudoDestructorExpr());
   }
 
+  // Change calling convention of callee function at callsite
+
+  const Expr *calleeExpr = E->getCallee()->IgnoreParens();
+
+  while (auto ICE = dyn_cast<ImplicitCastExpr>(calleeExpr)) {
+    if (ICE->getCastKind() == CK_FunctionToPointerDecay ||
+        ICE->getCastKind() == CK_BuiltinFnToFnPtr)
+      calleeExpr = ICE->getSubExpr()->IgnoreParens();
+    else
+      break;
+  }
+
+  if (auto DRE = dyn_cast<DeclRefExpr>(calleeExpr)) {
+    if (auto FD = dyn_cast<FunctionDecl>(DRE->getDecl())) {
+      if (FD->hasAttr<OpenCLKernelAttr>() && !FD->getBuiltinID()) {
+        const FunctionType *ft =
+            cast<FunctionType>(cast<PointerType>(getContext().getCanonicalType(
+                                                     E->getCallee()->getType()))
+                                   ->getPointeeType());
+        FunctionType *ftnc = const_cast<FunctionType *>(ft);
+        ftnc->setCC(CC_C);
+      }
+    }
+  }
+  if (auto ME = dyn_cast<MemberExpr>(calleeExpr)) {
+    if (auto FD = dyn_cast<FunctionDecl>(ME->getMemberDecl())) {
+      if (FD->hasAttr<OpenCLKernelAttr>() && !FD->getBuiltinID()) {
+        const FunctionType *ft =
+            cast<FunctionType>(cast<PointerType>(getContext().getCanonicalType(
+                                                     E->getCallee()->getType()))
+                                   ->getPointeeType());
+        FunctionType *ftnc = const_cast<FunctionType *>(ft);
+        ftnc->setCC(CC_C);
+      }
+    }
+  }
+
   return EmitCall(E->getCallee()->getType(), callee, E, ReturnValue,
                   /*Chain=*/nullptr, CallOrInvoke);
 }
@@ -5695,11 +5732,17 @@ CGCallee CodeGenFunction::EmitCallee(const Expr *E) {
   // Resolve direct calls.
   } else if (auto DRE = dyn_cast<DeclRefExpr>(E)) {
     if (auto FD = dyn_cast<FunctionDecl>(DRE->getDecl())) {
+      if (FD->hasAttr<OpenCLKernelAttr>())
+        return EmitDirectCallee(*this,
+                                GlobalDecl(FD, KernelReferenceKind::Stub));
       return EmitDirectCallee(*this, FD);
     }
   } else if (auto ME = dyn_cast<MemberExpr>(E)) {
     if (auto FD = dyn_cast<FunctionDecl>(ME->getMemberDecl())) {
       EmitIgnoredExpr(ME->getBase());
+      if (FD->hasAttr<OpenCLKernelAttr>())
+        return EmitDirectCallee(*this,
+                                GlobalDecl(FD, KernelReferenceKind::Stub));
       return EmitDirectCallee(*this, FD);
     }
 
