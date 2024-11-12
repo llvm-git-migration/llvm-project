@@ -135,10 +135,15 @@ void loongarch::getLoongArchTargetFeatures(const Driver &D,
     Features.push_back("+lsx");
 
   std::string ArchName;
-  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ))
+  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
     ArchName = A->getValue();
-  ArchName = postProcessTargetCPUString(ArchName, Triple);
-  llvm::LoongArch::getArchFeatures(ArchName, Features);
+    ArchName = postProcessTargetCPUString(ArchName, Triple);
+    llvm::LoongArch::getArchFeatures(ArchName, Features);
+    if (A->getValue() == "native")
+      for (auto &F : llvm::sys::getHostCPUFeatures())
+        Features.push_back(
+            Args.MakeArgString((F.second ? "+" : "-") + F.first()));
+  }
 
   // Select floating-point features determined by -mdouble-float,
   // -msingle-float, -msoft-float and -mfpu.
