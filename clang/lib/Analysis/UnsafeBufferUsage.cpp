@@ -410,6 +410,14 @@ AST_MATCHER(CXXConstructExpr, isSafeSpanTwoParamConstruct) {
       // Check form 3:
       return Arg1CV && Arg1CV->isOne();
     break;
+  case Stmt::CallExprClass:
+    if(const auto *CE = dyn_cast<CallExpr>(Arg0)) {
+      const auto FnDecl = CE->getDirectCallee();
+      if(FnDecl && FnDecl->getNameAsString() == "addressof" && FnDecl->isInStdNamespace()) {
+        return Arg1CV && Arg1CV->isOne();
+      }
+    }
+    break;
   default:
     break;
   }
