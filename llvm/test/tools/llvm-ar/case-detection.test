@@ -9,4 +9,4 @@ RUN: %t1/Lib /OUT:%t.lib %t.obj | FileCheck %s -allow-empty
 RUN: cp llvm-ar %t1/Ar
 RUN: %t1/Ar crs %t.ar %t.obj | FileCheck %s -allow-empty
 
-CHECK-NOT: OVERVIEW: LLVM Archiver (llvm-ar)
+CHECK-NOT: OVERVIEW: LLVM Archiver (llvm-ar) -- this test now fails on Windows!
