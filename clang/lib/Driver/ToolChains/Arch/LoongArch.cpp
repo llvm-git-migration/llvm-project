@@ -135,8 +135,13 @@ void loongarch::getLoongArchTargetFeatures(const Driver &D,
     Features.push_back("+lsx");
 
   std::string ArchName;
-  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ))
+  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
     ArchName = A->getValue();
+    if (ArchName == "native")
+      for (auto &F : llvm::sys::getHostCPUFeatures())
+        Features.push_back(
+            Args.MakeArgString((F.second ? "+" : "-") + F.first()));
+  }
   ArchName = postProcessTargetCPUString(ArchName, Triple);
   llvm::LoongArch::getArchFeatures(ArchName, Features);
 
