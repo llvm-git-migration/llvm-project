@@ -645,7 +645,7 @@ void OpBuilder::cloneRegionBefore(Region &region, Block *before) {
 
 OpBuilder::InsertPoint
 OpBuilder::InsertPoint::after(ArrayRef<Value> values,
-                              const PostDominanceInfo &domInfo) {
+                              const PostDominanceInfo *domInfo) {
   // Helper function that computes the point after v's definition.
   auto computeAfterIp = [](Value v) -> std::pair<Block *, Block::iterator> {
     if (auto blockArg = dyn_cast<BlockArgument>(v))
@@ -658,12 +658,18 @@ OpBuilder::InsertPoint::after(ArrayRef<Value> values,
   assert(!values.empty() && "expected at least one Value");
   auto [block, blockIt] = computeAfterIp(values.front());
 
+  if (values.size() == 1) {
+    // Fast path: There is only one value.
+    return InsertPoint(block, blockIt);
+  }
+
   // Check the other values one-by-one and update the insertion point if
   // needed.
+  assert(domInfo && "domInfo expected if >1 values");
   for (Value v : values.drop_front()) {
     auto [candidateBlock, candidateBlockIt] = computeAfterIp(v);
-    if (domInfo.postDominantes(candidateBlock, candidateBlockIt, block,
-                               blockIt)) {
+    if (domInfo->postDominantes(candidateBlock, candidateBlockIt, block,
+                                blockIt)) {
       // The point after v's definition post-dominates the current (and all
       // previous) insertion points. Note: Post-dominance is transitive.
       block = candidateBlock;
@@ -671,8 +677,8 @@ OpBuilder::InsertPoint::after(ArrayRef<Value> values,
       continue;
     }
 
-    if (!domInfo.postDominantes(block, blockIt, candidateBlock,
-                                candidateBlockIt)) {
+    if (!domInfo->postDominantes(block, blockIt, candidateBlock,
+                                 candidateBlockIt)) {
       // The point after v's definition and the current insertion point do not
       // post-dominate each other. Therefore, there is no insertion point that
       // post-dominates all values.

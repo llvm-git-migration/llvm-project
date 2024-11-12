@@ -353,7 +353,7 @@ public:
     /// selected insertion point. (E.g., because they are defined in a nested
     /// region or because they are not visible in an IsolatedFromAbove region.)
     static InsertPoint after(ArrayRef<Value> values,
-                             const PostDominanceInfo &domInfo);
+                             const PostDominanceInfo *domInfo = nullptr);
 
     /// Returns true if this insert point is set.
     bool isSet() const { return (block != nullptr); }
