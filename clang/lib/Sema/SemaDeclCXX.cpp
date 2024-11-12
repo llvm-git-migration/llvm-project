@@ -16178,8 +16178,7 @@ CheckOperatorNewDeleteTypes(Sema &SemaRef, const FunctionDecl *FnDecl,
       << FnDecl->getDeclName();
 
   QualType FirstParamType = FnDecl->getParamDecl(0)->getType();
-  if (SemaRef.getLangOpts().OpenCLCPlusPlus ||
-      SemaRef.getLangOpts().OpenCLGenericAddressSpace) {
+  if (SemaRef.getLangOpts().OpenCLCPlusPlus) {
     // The operator is valid on any address space for OpenCL.
     // Drop address space from actual and expected first parameter types.
     if (const auto *PtrTy =

@@ -1579,7 +1579,7 @@ NamedDecl *Sema::getCurFunctionOrMethodDecl() const {
 }
 
 LangAS Sema::getDefaultCXXMethodAddrSpace() const {
-  if (getLangOpts().OpenCL || getLangOpts().OpenCLGenericAddressSpace)
+  if (getLangOpts().OpenCL)
     return getASTContext().getDefaultOpenCLPointeeAddrSpace();
   return LangAS::Default;
 }
