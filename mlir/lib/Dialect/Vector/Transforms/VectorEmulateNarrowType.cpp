@@ -70,7 +70,9 @@ static FailureOr<Operation *> getCompressedMaskOp(OpBuilder &rewriter,
   Operation *maskOp = mask.getDefiningOp();
   SmallVector<vector::ExtractOp, 2> extractOps;
   // Finding the mask creation operation.
-  while (maskOp && !isa<vector::CreateMaskOp, vector::ConstantMaskOp>(maskOp)) {
+  while (maskOp &&
+         !isa<arith::ConstantOp, vector::CreateMaskOp, vector::ConstantMaskOp>(
+             maskOp)) {
     if (auto extractOp = dyn_cast<vector::ExtractOp>(maskOp)) {
       maskOp = extractOp.getVector().getDefiningOp();
       extractOps.push_back(extractOp);
@@ -78,7 +80,8 @@ static FailureOr<Operation *> getCompressedMaskOp(OpBuilder &rewriter,
   }
   auto createMaskOp = dyn_cast_or_null<vector::CreateMaskOp>(maskOp);
   auto constantMaskOp = dyn_cast_or_null<vector::ConstantMaskOp>(maskOp);
-  if (!createMaskOp && !constantMaskOp)
+  auto constantOp = dyn_cast_or_null<arith::ConstantOp>(maskOp);
+  if (!createMaskOp && !constantMaskOp && !constantOp)
     return failure();
 
   // Computing the "compressed" mask. All the emulation logic (i.e. computing
@@ -129,6 +132,45 @@ static FailureOr<Operation *> getCompressedMaskOp(OpBuilder &rewriter,
       auto denseAttr = DenseElementsAttr::get(newMaskType, newMaskValues);
       newMask = rewriter.create<arith::ConstantOp>(loc, newMaskType, denseAttr);
     }
+  } else if (constantOp) {
+    assert(shape.size() == 1 && "expected 1-D mask");
+    // Rearrange the original mask values to cover the whole potential loading
+    // region. For example, in the case of using byte-size for emulation, given
+    // the following mask:
+    //
+    //   %mask = vector.constant_mask [0, 1, 0, 1, 0, 0] : vector<6xi2>
+    //
+    // with front offset of 1, the mask will be padded zeros in the front and
+    // back so that its length is multiple of `scale` (and the total coverage
+    // size is mulitiple of bytes):
+    //   %new_mask = vector.constant_mask [0, 0, 1, 0, 1, 0, 0, 0] :
+    //   vector<8xi2>
+    //
+    // The %new_mask is now aligned with the effective loading area and can now
+    // be compressed.
+    SmallVector<bool> maskValues(intraDataOffset, false);
+    if (auto denseAttr =
+            mlir::dyn_cast<DenseIntElementsAttr>(constantOp.getValue())) {
+      for (auto value : denseAttr.getValues<bool>()) {
+        maskValues.push_back(value);
+      }
+      while (maskValues.size() < numElements * scale) {
+        maskValues.push_back(false);
+      }
+    } else {
+      return failure();
+    }
+    // Compressing by combining every `scale` elements:
+    SmallVector<bool> compressedMaskValues;
+    for (size_t i = 0; i < maskValues.size(); i += scale) {
+      bool combinedValue = false;
+      for (int j = 0; j < scale; ++j) {
+        combinedValue |= maskValues[i + j];
+      }
+      compressedMaskValues.push_back(combinedValue);
+    }
+    newMask = rewriter.create<arith::ConstantOp>(
+        loc, DenseElementsAttr::get(newMaskType, compressedMaskValues));
   }
 
   while (!extractOps.empty()) {
