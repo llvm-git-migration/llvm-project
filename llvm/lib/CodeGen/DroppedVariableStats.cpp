@@ -7,7 +7,7 @@
 ///===---------------------------------------------------------------------===//
 /// \file
 /// Dropped Variable Statistics for Debug Information. Reports any number
-/// of #dbg_value that get dropped due to an optimization pass.
+/// of #dbg_values or DBG_VALUEs that get dropped due to an optimization pass.
 ///
 ///===---------------------------------------------------------------------===//
 
@@ -188,6 +188,70 @@ void DroppedVariableStatsIR::visitEveryDebugIntrinsic(
       if (auto *Dbg = dyn_cast<DbgVariableRecord>(&DR)) {
         auto *DbgVar = Dbg->getVariable();
         auto DbgLoc = DR.getDebugLoc();
+        populateVarIDSetAndInlinedMap(DbgVar, DbgLoc, VarIDSet, InlinedAtsMap,
+                                      FuncName, Before);
+      }
+    }
+  }
+}
+
+void DroppedVariableStatsMIR::runOnMachineFunction(const MachineFunction *MF,
+                                                   bool Before) {
+  auto &DebugVariables = DebugVariablesStack.back()[&MF->getFunction()];
+  auto FuncName = MF->getName();
+  MFunc = MF;
+  run(DebugVariables, FuncName, Before);
+}
+
+void DroppedVariableStatsMIR::calculateDroppedVarStatsOnMachineFunction(
+    const MachineFunction *MF, StringRef PassID, StringRef FuncOrModName) {
+  MFunc = MF;
+  StringRef FuncName = MF->getName();
+  DebugVariables &DbgVariables = DebugVariablesStack.back()[&MF->getFunction()];
+  calculateDroppedStatsAndPrint(DbgVariables, FuncName, PassID, FuncOrModName,
+                                "MachineFunction");
+}
+
+void DroppedVariableStatsMIR::visitEveryDebugVariable(
+    unsigned &DroppedCount, DenseSet<VarID> &DebugVariablesBeforeSet,
+    DenseSet<VarID> &DebugVariablesAfterSet,
+    DenseMap<VarID, DILocation *> &InlinedAtsMap) {
+  for (VarID Var : DebugVariablesBeforeSet) {
+    if (DebugVariablesAfterSet.contains(Var))
+      continue;
+    const DIScope *DbgValScope = std::get<0>(Var);
+    for (const auto &MBB : *MFunc) {
+      for (const auto &MI : MBB) {
+        auto *DbgLoc = MI.getDebugLoc().get();
+        if (!DbgLoc)
+          continue;
+
+        auto *Scope = DbgLoc->getScope();
+        if (checkDroppedStatus(DbgLoc, Scope, DbgValScope, InlinedAtsMap,
+                               Var)) {
+          // Found another instruction in the variable's scope, so there exists
+          // a break point at which the variable could be observed. Count it as
+          // dropped.
+          DroppedCount++;
+          break;
+        }
+      }
+    }
+    removeVarFromAllSets(Var, &MFunc->getFunction());
+  }
+}
+
+void DroppedVariableStatsMIR::visitEveryDebugIntrinsic(
+    DenseSet<VarID> &VarIDSet,
+    DenseMap<StringRef, DenseMap<VarID, DILocation *>> &InlinedAtsMap,
+    StringRef FuncName, bool Before) {
+  for (const auto &MBB : *MFunc) {
+    for (const auto &MI : MBB) {
+      if (MI.isDebugValueLike()) {
+        auto *DbgVar = MI.getDebugVariable();
+        if (!DbgVar)
+          continue;
+        auto DbgLoc = MI.getDebugLoc();
         populateVarIDSetAndInlinedMap(DbgVar, DbgLoc, VarIDSet, InlinedAtsMap,
                                       FuncName, Before);
       }
