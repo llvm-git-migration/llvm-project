@@ -11,11 +11,11 @@ define <4 x double> @test(ptr %p2, double %i1754, double %i1781, double %i1778) 
 ; CHECK-NEXT:    [[I1796:%.*]] = load double, ptr [[I1795]], align 8
 ; CHECK-NEXT:    [[I1797:%.*]] = fmul fast double [[I1796]], [[I1781:%.*]]
 ; CHECK-NEXT:    [[TMP0:%.*]] = insertelement <4 x double> poison, double [[I1754:%.*]], i32 0
-; CHECK-NEXT:    [[TMP1:%.*]] = insertelement <4 x double> [[TMP0]], double [[I1778:%.*]], i32 1
+; CHECK-NEXT:    [[TMP4:%.*]] = shufflevector <4 x double> [[TMP0]], <4 x double> poison, <4 x i32> zeroinitializer
+; CHECK-NEXT:    [[TMP1:%.*]] = insertelement <4 x double> [[TMP4]], double [[I1778:%.*]], i32 1
 ; CHECK-NEXT:    [[TMP2:%.*]] = insertelement <4 x double> [[TMP1]], double [[I1781]], i32 2
 ; CHECK-NEXT:    [[TMP3:%.*]] = insertelement <4 x double> [[TMP2]], double [[I1772]], i32 3
-; CHECK-NEXT:    [[TMP4:%.*]] = shufflevector <4 x double> [[TMP3]], <4 x double> poison, <4 x i32> zeroinitializer
-; CHECK-NEXT:    [[TMP5:%.*]] = fmul fast <4 x double> [[TMP3]], [[TMP4]]
+; CHECK-NEXT:    [[TMP5:%.*]] = fmul fast <4 x double> [[TMP4]], [[TMP3]]
 ; CHECK-NEXT:    [[TMP6:%.*]] = insertelement <4 x double> <double 1.000000e+00, double 1.000000e+00, double 1.000000e+00, double poison>, double [[I1797]], i32 3
 ; CHECK-NEXT:    [[TMP7:%.*]] = fadd fast <4 x double> [[TMP5]], [[TMP6]]
 ; CHECK-NEXT:    ret <4 x double> [[TMP7]]

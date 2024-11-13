@@ -10,7 +10,7 @@ define void @test(ptr noalias %a, ptr %b) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = load <2 x i32>, ptr [[A]], align 4
 ; CHECK-NEXT:    [[TMP2:%.*]] = load <2 x i32>, ptr [[B]], align 4
 ; CHECK-NEXT:    [[C1:%.*]] = icmp eq i64 [[B1]], [[A1]]
-; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq <2 x i32> [[TMP1]], [[TMP2]]
+; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq <2 x i32> [[TMP2]], [[TMP1]]
 ; CHECK-NEXT:    ret void
 ;
   %pa1 = getelementptr inbounds i64, ptr %a, i32 64

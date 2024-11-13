@@ -18,7 +18,7 @@ define void @test() {
 ; CHECK-NEXT:    [[TMP4:%.*]] = mul <4 x i32> zeroinitializer, [[TMP2]]
 ; CHECK-NEXT:    [[TMP5]] = shufflevector <4 x i32> [[TMP3]], <4 x i32> [[TMP4]], <4 x i32> <i32 0, i32 5, i32 6, i32 7>
 ; CHECK-NEXT:    [[TMP7:%.*]] = shufflevector <2 x i32> [[TMP1]], <2 x i32> <i32 0, i32 poison>, <2 x i32> <i32 2, i32 1>
-; CHECK-NEXT:    [[TMP8]] = mul <2 x i32> zeroinitializer, [[TMP7]]
+; CHECK-NEXT:    [[TMP8]] = mul <2 x i32> [[TMP7]], zeroinitializer
 ; CHECK-NEXT:    br i1 false, label %[[BB2]], label %[[BB6]]
 ;
 bb:

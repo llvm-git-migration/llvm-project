@@ -9,10 +9,12 @@ define void @test(double %0) {
 ; CHECK-NEXT:    [[TMP3:%.*]] = shufflevector <2 x double> [[TMP2]], <2 x double> poison, <2 x i32> zeroinitializer
 ; CHECK-NEXT:    br label [[TMP4:%.*]]
 ; CHECK:       4:
-; CHECK-NEXT:    [[TMP5:%.*]] = fsub <2 x double> zeroinitializer, [[TMP3]]
 ; CHECK-NEXT:    [[TMP6:%.*]] = fsub <2 x double> zeroinitializer, [[TMP3]]
+; CHECK-NEXT:    [[TMP9:%.*]] = fsub double 0.000000e+00, [[TMP0]]
 ; CHECK-NEXT:    br label [[DOTBACKEDGE:%.*]]
 ; CHECK:       .backedge:
+; CHECK-NEXT:    [[TMP10:%.*]] = insertelement <2 x double> poison, double [[TMP9]], i32 0
+; CHECK-NEXT:    [[TMP5:%.*]] = shufflevector <2 x double> [[TMP10]], <2 x double> poison, <2 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP7:%.*]] = fmul <2 x double> [[TMP5]], [[TMP6]]
 ; CHECK-NEXT:    [[TMP8:%.*]] = fcmp olt <2 x double> [[TMP7]], zeroinitializer
 ; CHECK-NEXT:    br label [[TMP4]]

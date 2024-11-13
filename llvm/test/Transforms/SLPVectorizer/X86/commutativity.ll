@@ -17,21 +17,21 @@
 define void @splat(i8 %a, i8 %b, i8 %c) {
 ; SSE-LABEL: @splat(
 ; SSE-NEXT:    [[TMP1:%.*]] = insertelement <16 x i8> poison, i8 [[A:%.*]], i32 0
-; SSE-NEXT:    [[TMP2:%.*]] = insertelement <16 x i8> [[TMP1]], i8 [[B:%.*]], i32 1
+; SSE-NEXT:    [[TMP4:%.*]] = shufflevector <16 x i8> [[TMP1]], <16 x i8> poison, <16 x i32> zeroinitializer
+; SSE-NEXT:    [[TMP5:%.*]] = insertelement <16 x i8> poison, i8 [[A1:%.*]], i32 0
+; SSE-NEXT:    [[TMP2:%.*]] = insertelement <16 x i8> [[TMP5]], i8 [[B:%.*]], i32 1
 ; SSE-NEXT:    [[TMP3:%.*]] = shufflevector <16 x i8> [[TMP2]], <16 x i8> poison, <16 x i32> <i32 0, i32 0, i32 0, i32 0, i32 0, i32 1, i32 0, i32 1, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0>
-; SSE-NEXT:    [[TMP4:%.*]] = insertelement <16 x i8> poison, i8 [[C:%.*]], i32 0
-; SSE-NEXT:    [[TMP5:%.*]] = shufflevector <16 x i8> [[TMP4]], <16 x i8> poison, <16 x i32> zeroinitializer
-; SSE-NEXT:    [[TMP6:%.*]] = xor <16 x i8> [[TMP3]], [[TMP5]]
+; SSE-NEXT:    [[TMP6:%.*]] = xor <16 x i8> [[TMP4]], [[TMP3]]
 ; SSE-NEXT:    store <16 x i8> [[TMP6]], ptr @cle, align 16
 ; SSE-NEXT:    ret void
 ;
 ; AVX-LABEL: @splat(
 ; AVX-NEXT:    [[TMP1:%.*]] = insertelement <16 x i8> poison, i8 [[A:%.*]], i32 0
-; AVX-NEXT:    [[TMP2:%.*]] = insertelement <16 x i8> [[TMP1]], i8 [[B:%.*]], i32 1
+; AVX-NEXT:    [[TMP4:%.*]] = shufflevector <16 x i8> [[TMP1]], <16 x i8> poison, <16 x i32> zeroinitializer
+; AVX-NEXT:    [[TMP5:%.*]] = insertelement <16 x i8> poison, i8 [[A1:%.*]], i32 0
+; AVX-NEXT:    [[TMP2:%.*]] = insertelement <16 x i8> [[TMP5]], i8 [[B:%.*]], i32 1
 ; AVX-NEXT:    [[TMP3:%.*]] = shufflevector <16 x i8> [[TMP2]], <16 x i8> poison, <16 x i32> <i32 0, i32 0, i32 0, i32 0, i32 0, i32 1, i32 0, i32 1, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0>
-; AVX-NEXT:    [[TMP4:%.*]] = insertelement <16 x i8> poison, i8 [[C:%.*]], i32 0
-; AVX-NEXT:    [[TMP5:%.*]] = shufflevector <16 x i8> [[TMP4]], <16 x i8> poison, <16 x i32> zeroinitializer
-; AVX-NEXT:    [[TMP6:%.*]] = xor <16 x i8> [[TMP3]], [[TMP5]]
+; AVX-NEXT:    [[TMP6:%.*]] = xor <16 x i8> [[TMP4]], [[TMP3]]
 ; AVX-NEXT:    store <16 x i8> [[TMP6]], ptr @cle, align 16
 ; AVX-NEXT:    ret void
 ;

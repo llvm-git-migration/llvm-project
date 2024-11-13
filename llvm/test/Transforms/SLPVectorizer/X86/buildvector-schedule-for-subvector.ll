@@ -15,7 +15,7 @@ define void @test() {
 ; CHECK-NEXT:    store volatile i32 0, ptr addrspace(1) null, align 4
 ; CHECK-NEXT:    [[CALL:%.*]] = call i32 null(<2 x double> zeroinitializer)
 ; CHECK-NEXT:    [[TMP2:%.*]] = insertelement <4 x i32> <i32 0, i32 0, i32 0, i32 poison>, i32 [[CALL]], i32 3
-; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq <4 x i32> [[TMP2]], zeroinitializer
+; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq <4 x i32> zeroinitializer, [[TMP2]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = call <8 x i1> @llvm.vector.insert.v8i1.v4i1(<8 x i1> poison, <4 x i1> [[TMP3]], i64 0)
 ; CHECK-NEXT:    [[TMP5:%.*]] = call <8 x i1> @llvm.vector.insert.v8i1.v4i1(<8 x i1> [[TMP4]], <4 x i1> [[TMP1]], i64 4)
 ; CHECK-NEXT:    ret void

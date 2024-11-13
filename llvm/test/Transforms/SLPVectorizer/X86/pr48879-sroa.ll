@@ -89,7 +89,7 @@ define { i64, i64 } @compute_min(ptr nocapture noundef nonnull readonly align 2 
 ; AVX-NEXT:    [[TMP15:%.*]] = shl nuw <2 x i64> [[TMP14]], <i64 32, i64 48>
 ; AVX-NEXT:    [[TMP16:%.*]] = zext <2 x i16> [[TMP10]] to <2 x i64>
 ; AVX-NEXT:    [[TMP17:%.*]] = shl nuw <2 x i64> [[TMP16]], <i64 48, i64 32>
-; AVX-NEXT:    [[TMP18:%.*]] = or <2 x i64> [[TMP15]], [[TMP17]]
+; AVX-NEXT:    [[TMP18:%.*]] = or <2 x i64> [[TMP17]], [[TMP15]]
 ; AVX-NEXT:    [[TMP19:%.*]] = zext <2 x i16> [[TMP7]] to <2 x i64>
 ; AVX-NEXT:    [[TMP20:%.*]] = shl nuw nsw <2 x i64> [[TMP19]], splat (i64 16)
 ; AVX-NEXT:    [[TMP21:%.*]] = or <2 x i64> [[TMP18]], [[TMP20]]
@@ -121,7 +121,7 @@ define { i64, i64 } @compute_min(ptr nocapture noundef nonnull readonly align 2 
 ; AVX2-NEXT:    [[TMP15:%.*]] = shl nuw <2 x i64> [[TMP14]], <i64 32, i64 48>
 ; AVX2-NEXT:    [[TMP16:%.*]] = zext <2 x i16> [[TMP10]] to <2 x i64>
 ; AVX2-NEXT:    [[TMP17:%.*]] = shl nuw <2 x i64> [[TMP16]], <i64 48, i64 32>
-; AVX2-NEXT:    [[TMP18:%.*]] = or <2 x i64> [[TMP15]], [[TMP17]]
+; AVX2-NEXT:    [[TMP18:%.*]] = or <2 x i64> [[TMP17]], [[TMP15]]
 ; AVX2-NEXT:    [[TMP19:%.*]] = zext <2 x i16> [[TMP7]] to <2 x i64>
 ; AVX2-NEXT:    [[TMP20:%.*]] = shl nuw nsw <2 x i64> [[TMP19]], splat (i64 16)
 ; AVX2-NEXT:    [[TMP21:%.*]] = or <2 x i64> [[TMP18]], [[TMP20]]

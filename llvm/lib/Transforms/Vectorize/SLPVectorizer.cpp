@@ -2213,6 +2213,7 @@ public:
     unsigned getBestLaneToStartReordering() const {
       unsigned Min = UINT_MAX;
       unsigned SameOpNumber = 0;
+      unsigned NumLanes = getNumLanes();
       // std::pair<unsigned, unsigned> is used to implement a simple voting
       // algorithm and choose the lane with the least number of operands that
       // can freely move about or less profitable because it already has the
@@ -2223,8 +2224,7 @@ public:
       // Try to be closer to the original results, if we have multiple lanes
       // with same cost. If 2 lanes have the same cost, use the one with the
       // lowest index.
-      for (int I = getNumLanes(); I > 0; --I) {
-        unsigned Lane = I - 1;
+      for (unsigned Lane = 0; Lane != NumLanes; ++Lane) {
         OperandsOrderData NumFreeOpsHash =
             getMaxNumOperandsThatCanBeReordered(Lane);
         // Compare the number of operands that can move and choose the one with
@@ -2251,7 +2251,7 @@ public:
       // Select the lane with the minimum counter.
       unsigned BestLane = 0;
       unsigned CntMin = UINT_MAX;
-      for (const auto &Data : reverse(HashMap)) {
+      for (const auto &Data : HashMap) {
         if (Data.second.first < CntMin) {
           CntMin = Data.second.first;
           BestLane = Data.second.second;

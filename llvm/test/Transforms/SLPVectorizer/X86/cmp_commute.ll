@@ -9,7 +9,7 @@
 define <4 x i32> @icmp_eq_v4i32(<4 x i32> %a, ptr %b) {
 ; CHECK-LABEL: @icmp_eq_v4i32(
 ; CHECK-NEXT:    [[TMP1:%.*]] = load <4 x i32>, ptr [[B:%.*]], align 4
-; CHECK-NEXT:    [[TMP2:%.*]] = icmp eq <4 x i32> [[TMP1]], [[A:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp eq <4 x i32> [[A:%.*]], [[TMP1]]
 ; CHECK-NEXT:    [[R:%.*]] = sext <4 x i1> [[TMP2]] to <4 x i32>
 ; CHECK-NEXT:    ret <4 x i32> [[R]]
 ;
@@ -39,7 +39,7 @@ define <4 x i32> @icmp_eq_v4i32(<4 x i32> %a, ptr %b) {
 define <4 x i32> @icmp_ne_v4i32(<4 x i32> %a, ptr %b) {
 ; CHECK-LABEL: @icmp_ne_v4i32(
 ; CHECK-NEXT:    [[TMP1:%.*]] = load <4 x i32>, ptr [[B:%.*]], align 4
-; CHECK-NEXT:    [[TMP2:%.*]] = icmp ne <4 x i32> [[TMP1]], [[A:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp ne <4 x i32> [[A:%.*]], [[TMP1]]
 ; CHECK-NEXT:    [[R:%.*]] = sext <4 x i1> [[TMP2]] to <4 x i32>
 ; CHECK-NEXT:    ret <4 x i32> [[R]]
 ;
@@ -69,7 +69,7 @@ define <4 x i32> @icmp_ne_v4i32(<4 x i32> %a, ptr %b) {
 define <4 x i32> @fcmp_oeq_v4i32(<4 x float> %a, ptr %b) {
 ; CHECK-LABEL: @fcmp_oeq_v4i32(
 ; CHECK-NEXT:    [[TMP1:%.*]] = load <4 x float>, ptr [[B:%.*]], align 4
-; CHECK-NEXT:    [[TMP2:%.*]] = fcmp oeq <4 x float> [[TMP1]], [[A:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = fcmp oeq <4 x float> [[A:%.*]], [[TMP1]]
 ; CHECK-NEXT:    [[R:%.*]] = sext <4 x i1> [[TMP2]] to <4 x i32>
 ; CHECK-NEXT:    ret <4 x i32> [[R]]
 ;
@@ -99,7 +99,7 @@ define <4 x i32> @fcmp_oeq_v4i32(<4 x float> %a, ptr %b) {
 define <4 x i32> @fcmp_uno_v4i32(<4 x float> %a, ptr %b) {
 ; CHECK-LABEL: @fcmp_uno_v4i32(
 ; CHECK-NEXT:    [[TMP1:%.*]] = load <4 x float>, ptr [[B:%.*]], align 4
-; CHECK-NEXT:    [[TMP2:%.*]] = fcmp uno <4 x float> [[TMP1]], [[A:%.*]]
+; CHECK-NEXT:    [[TMP2:%.*]] = fcmp uno <4 x float> [[A:%.*]], [[TMP1]]
 ; CHECK-NEXT:    [[R:%.*]] = sext <4 x i1> [[TMP2]] to <4 x i32>
 ; CHECK-NEXT:    ret <4 x i32> [[R]]
 ;
@@ -222,8 +222,8 @@ define <4 x i32> @fcmp_ogt_olt_v4i32(<4 x float> %a, ptr %b) {
 
 define <4 x i32> @fcmp_ord_uno_v4i32(<4 x float> %a, ptr %b) {
 ; CHECK-LABEL: @fcmp_ord_uno_v4i32(
-; CHECK-NEXT:    [[TMP1:%.*]] = load <4 x float>, ptr [[B:%.*]], align 4
-; CHECK-NEXT:    [[TMP2:%.*]] = fcmp ord <4 x float> [[TMP1]], [[A:%.*]]
+; CHECK-NEXT:    [[A:%.*]] = load <4 x float>, ptr [[B:%.*]], align 4
+; CHECK-NEXT:    [[TMP2:%.*]] = fcmp ord <4 x float> [[TMP1:%.*]], [[A]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = fcmp uno <4 x float> [[TMP1]], [[A]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = shufflevector <4 x i1> [[TMP2]], <4 x i1> [[TMP3]], <4 x i32> <i32 0, i32 5, i32 6, i32 3>
 ; CHECK-NEXT:    [[R:%.*]] = sext <4 x i1> [[TMP4]] to <4 x i32>

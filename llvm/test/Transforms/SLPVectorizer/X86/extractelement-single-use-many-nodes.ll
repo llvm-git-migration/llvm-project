@@ -15,7 +15,7 @@ define void @foo(double %i) {
 ; CHECK-NEXT:    [[TMP6:%.*]] = insertelement <8 x double> [[TMP5]], double [[I82]], i32 2
 ; CHECK-NEXT:    [[TMP7:%.*]] = shufflevector <8 x double> [[TMP6]], <8 x double> poison, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 2, i32 7>
 ; CHECK-NEXT:    [[TMP12:%.*]] = fmul <8 x double> <double poison, double 0.000000e+00, double 0.000000e+00, double 0.000000e+00, double poison, double 0.000000e+00, double 0.000000e+00, double 0.000000e+00>, [[TMP7]]
-; CHECK-NEXT:    [[TMP13:%.*]] = fadd <8 x double> zeroinitializer, [[TMP12]]
+; CHECK-NEXT:    [[TMP13:%.*]] = fadd <8 x double> [[TMP12]], zeroinitializer
 ; CHECK-NEXT:    [[TMP14:%.*]] = fadd <8 x double> [[TMP13]], zeroinitializer
 ; CHECK-NEXT:    [[TMP15:%.*]] = fcmp ult <8 x double> [[TMP14]], zeroinitializer
 ; CHECK-NEXT:    [[TMP16:%.*]] = freeze <8 x i1> [[TMP15]]
@@ -29,7 +29,7 @@ define void @foo(double %i) {
 ; CHECK-NEXT:    [[TMP21:%.*]] = fmul <4 x double> zeroinitializer, [[TMP1]]
 ; CHECK-NEXT:    [[TMP22:%.*]] = shufflevector <2 x double> [[TMP4]], <2 x double> poison, <4 x i32> <i32 0, i32 1, i32 poison, i32 poison>
 ; CHECK-NEXT:    [[TMP23:%.*]] = shufflevector <4 x double> <double 0.000000e+00, double 0.000000e+00, double 0.000000e+00, double poison>, <4 x double> [[TMP22]], <4 x i32> <i32 0, i32 1, i32 2, i32 5>
-; CHECK-NEXT:    [[TMP24:%.*]] = fadd <4 x double> [[TMP21]], [[TMP23]]
+; CHECK-NEXT:    [[TMP24:%.*]] = fadd <4 x double> [[TMP23]], [[TMP21]]
 ; CHECK-NEXT:    [[TMP25:%.*]] = fadd <4 x double> [[TMP24]], zeroinitializer
 ; CHECK-NEXT:    [[TMP26:%.*]] = select <4 x i1> zeroinitializer, <4 x double> zeroinitializer, <4 x double> [[TMP25]]
 ; CHECK-NEXT:    [[TMP27:%.*]] = fmul <4 x double> [[TMP26]], zeroinitializer

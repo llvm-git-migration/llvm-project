@@ -143,8 +143,8 @@ define <8 x i16> @test_v8i16(<8 x i16> %a, <8 x i16> %b) {
 ; PR41892
 define void @test_v4f32_v2f32_store(<4 x float> %f, ptr %p){
 ; CHECK-LABEL: @test_v4f32_v2f32_store(
-; CHECK-NEXT:    [[TMP1:%.*]] = shufflevector <4 x float> [[F:%.*]], <4 x float> poison, <2 x i32> <i32 1, i32 2>
-; CHECK-NEXT:    [[TMP2:%.*]] = shufflevector <4 x float> [[F]], <4 x float> poison, <2 x i32> <i32 0, i32 3>
+; CHECK-NEXT:    [[TMP1:%.*]] = shufflevector <4 x float> [[F:%.*]], <4 x float> poison, <2 x i32> <i32 0, i32 2>
+; CHECK-NEXT:    [[TMP2:%.*]] = shufflevector <4 x float> [[F]], <4 x float> poison, <2 x i32> <i32 1, i32 3>
 ; CHECK-NEXT:    [[TMP3:%.*]] = fadd <2 x float> [[TMP1]], [[TMP2]]
 ; CHECK-NEXT:    store <2 x float> [[TMP3]], ptr [[P:%.*]], align 4
 ; CHECK-NEXT:    ret void

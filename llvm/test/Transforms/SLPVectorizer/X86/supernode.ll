@@ -11,7 +11,7 @@ define void @test_supernode_add(ptr %Aarray, ptr %Barray, ptr %Carray, ptr %Sarr
 ; ENABLED-NEXT:    [[TMP1:%.*]] = load <2 x double>, ptr [[BARRAY:%.*]], align 8
 ; ENABLED-NEXT:    [[TMP2:%.*]] = load <2 x double>, ptr [[CARRAY:%.*]], align 8
 ; ENABLED-NEXT:    [[TMP3:%.*]] = shufflevector <2 x double> [[TMP0]], <2 x double> [[TMP2]], <2 x i32> <i32 0, i32 3>
-; ENABLED-NEXT:    [[TMP4:%.*]] = fadd fast <2 x double> [[TMP1]], [[TMP3]]
+; ENABLED-NEXT:    [[TMP4:%.*]] = fadd fast <2 x double> [[TMP3]], [[TMP1]]
 ; ENABLED-NEXT:    [[TMP5:%.*]] = shufflevector <2 x double> [[TMP2]], <2 x double> [[TMP0]], <2 x i32> <i32 0, i32 3>
 ; ENABLED-NEXT:    [[TMP6:%.*]] = fadd fast <2 x double> [[TMP4]], [[TMP5]]
 ; ENABLED-NEXT:    store <2 x double> [[TMP6]], ptr [[SARRAY:%.*]], align 8

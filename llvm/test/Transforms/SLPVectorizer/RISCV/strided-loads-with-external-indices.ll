@@ -12,7 +12,7 @@ define void @test() {
 ; CHECK:       body:
 ; CHECK-NEXT:    [[ADD_I_I62_US:%.*]] = shl i64 0, 0
 ; CHECK-NEXT:    [[TMP0:%.*]] = insertelement <2 x i64> <i64 poison, i64 1>, i64 [[ADD_I_I62_US]], i32 0
-; CHECK-NEXT:    [[TMP1:%.*]] = or <2 x i64> zeroinitializer, [[TMP0]]
+; CHECK-NEXT:    [[TMP1:%.*]] = or <2 x i64> [[TMP0]], zeroinitializer
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr [[CLASS_A:%.*]], <2 x ptr> zeroinitializer, <2 x i64> [[TMP1]]
 ; CHECK-NEXT:    [[TMP3:%.*]] = call <2 x i32> @llvm.masked.gather.v2i32.v2p0(<2 x ptr> [[TMP2]], i32 4, <2 x i1> splat (i1 true), <2 x i32> poison)
 ; CHECK-NEXT:    [[TMP4:%.*]] = extractelement <2 x i32> [[TMP3]], i32 0
