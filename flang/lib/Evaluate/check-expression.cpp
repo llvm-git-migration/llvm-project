@@ -908,7 +908,39 @@ public:
   Result operator()(const ComplexPart &x) const {
     return x.complex().Rank() == 0;
   }
-  Result operator()(const Substring &) const { return std::nullopt; }
+  Result operator()(const Substring &x) const {
+    auto base{x.GetBaseObject()};
+    if (x.Rank() == 0) {
+      return true; // scalar substring always contiguous
+    }
+    Result result{(*this)(base)};
+    if (!result || *result) {
+      if (auto lower{ToInt64(Fold(context_, x.lower()))}) {
+        auto upperExpr{x.upper()};
+        auto lenExpr{base.LEN()};
+        if (!upperExpr) {
+          upperExpr = lenExpr;
+        }
+        if (!upperExpr) {
+          return std::nullopt; // could be empty substrings
+        } else if (auto upper{ToInt64(Fold(context_, std::move(*upperExpr)))}) {
+          if (*upper < *lower) {
+            return true; // empty substrings: vacuously contiguous
+          } else if (*lower > 1) {
+            return false; // lower > 1
+          } else if (lenExpr) {
+            if (auto lenVal{ToInt64(Fold(context_, std::move(*lenExpr)))};
+                lenVal && *lenVal != *upper) {
+              return false; // upper < length
+            }
+          }
+        }
+      } else {
+        return std::nullopt; // lower bound not known
+      }
+    }
+    return result;
+  }
 
   Result operator()(const ProcedureRef &x) const {
     if (auto chars{characteristics::Procedure::Characterize(

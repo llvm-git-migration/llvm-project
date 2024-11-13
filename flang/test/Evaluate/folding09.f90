@@ -21,6 +21,7 @@ module m
     real, intent(in), contiguous :: arr3(:)
     real, allocatable :: alloc(:)
     real :: scalar
+    character(5) charr(5)
     integer(kind=merge(1,-1,       is_contiguous(0)))               t01
     integer(kind=merge(1,-1,       is_contiguous(scalar)))          t02
     integer(kind=merge(1,-1,       is_contiguous(scalar + scalar))) t03
@@ -35,6 +36,12 @@ module m
     integer(kind=merge(1,-1, .not. is_contiguous(arr3(1:10:2))))    t12
     integer(kind=merge(1,-1,       is_contiguous(f())))             t13
     integer(kind=merge(1,-1,       is_contiguous(alloc)))           t14
+    integer(kind=merge(1,-1,       is_contiguous(charr(:)(:))))     t15
+    integer(kind=merge(1,-1,       is_contiguous(charr(1)(2:3))))   t16
+    integer(kind=merge(1,-1,       is_contiguous(charr(:)(1:))))    t17
+    integer(kind=merge(1,-1,       is_contiguous(charr(:)(3:2))))   t18
+    integer(kind=merge(1,-1,       is_contiguous(charr(:)(1:5))))   t19
+    integer(kind=merge(1,-1, .not. is_contiguous(charr(:)(1:4))))   t20
     associate (x => arr2)
       block
         integer(kind=merge(1,-1,is_contiguous(x))) n
