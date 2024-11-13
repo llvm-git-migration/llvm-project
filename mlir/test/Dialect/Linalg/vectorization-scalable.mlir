@@ -164,7 +164,7 @@ func.func @vectorize_linalg_index(%arg0: tensor<?xf32>, %arg1: tensor<?xf32>) ->
 // CHECK:        %[[DST_DIM0:.*]] = tensor.dim %[[DST]], %[[C0]] : tensor<?xf32>
 // CHECK:        %[[MASK:.*]] = vector.create_mask %[[DST_DIM0]] : vector<[4]xi1>
 // CHECK-DAG:    %[[STEP:.+]] = vector.step : vector<[4]xindex>
-// CHECK-DAG:    %[[STEP_ELEMENT:.+]] = vector.extractelement %[[STEP]][%c0_i32 : i32] : vector<[4]xindex>
+// CHECK-DAG:    %[[STEP_ELEMENT:.+]] = vector.extract %[[STEP]][0] : index from vector<[4]xindex> 
 
 // CHECK: %[[READ:.*]] = vector.mask %[[MASK]] { vector.transfer_read %[[SRC]][%[[STEP_ELEMENT]]], %cst {in_bounds = [true]} : tensor<?xf32>, vector<[4]xf32> } : vector<[4]xi1> -> vector<[4]xf32>
 // CHECK: %[[OUT:.*]] = vector.mask %[[MASK]] { vector.transfer_write %[[READ]], %[[DST]]{{\[}}%[[C0]]] {in_bounds = [true]} : vector<[4]xf32>, tensor<?xf32> } : vector<[4]xi1> -> tensor<?xf32>
