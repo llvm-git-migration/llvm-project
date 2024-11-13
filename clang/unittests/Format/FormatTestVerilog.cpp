@@ -706,6 +706,13 @@ TEST_F(FormatTestVerilog, Hierarchy) {
   verifyFormat("function automatic x::x x\n"
                "    (input x);\n"
                "endfunction : x");
+  // Names having to do macros should be recognized.
+  verifyFormat("function automatic x::x x``x\n"
+               "    (input x);\n"
+               "endfunction : x");
+  verifyFormat("function automatic x::x `x\n"
+               "    (input x);\n"
+               "endfunction : x");
   verifyNoCrash("x x(x x, x x);");
 }
 
