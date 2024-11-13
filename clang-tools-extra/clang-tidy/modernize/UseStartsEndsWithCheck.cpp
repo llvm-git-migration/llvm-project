@@ -171,10 +171,24 @@ void UseStartsEndsWithCheck::registerMatchers(MatchFinder *Finder) {
                              hasRHS(lengthExprForStringNode("needle")))))
           .bind("expr"),
       this);
+      Finder->addMatcher(
+      cxxOperatorCallExpr(
+          hasAnyOperatorName("==", "!="),
+          hasOperands(
+              expr().bind("needle"),
+              cxxMemberCallExpr(
+                  argumentCountIs(2), hasArgument(0, ZeroLiteral),
+                  hasArgument(1, lengthExprForStringNode("needle")),
+                  callee(cxxMethodDecl(hasName("substr"),
+                                       ofClass(OnClassWithStartsWithFunction))
+                             .bind("find_fun")))
+                  .bind("find_expr")))
+          .bind("expr"),
+      this);
 }
 
 void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
-  const auto *ComparisonExpr = Result.Nodes.getNodeAs<BinaryOperator>("expr");
+  const auto *ComparisonExpr = Result.Nodes.getNodeAs<Expr>("expr");
   const auto *FindExpr = Result.Nodes.getNodeAs<CXXMemberCallExpr>("find_expr");
   const auto *FindFun = Result.Nodes.getNodeAs<CXXMethodDecl>("find_fun");
   const auto *SearchExpr = Result.Nodes.getNodeAs<Expr>("needle");
@@ -189,7 +203,54 @@ void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
   if (ComparisonExpr->getBeginLoc().isMacroID())
     return;
 
-  const bool Neg = ComparisonExpr->getOpcode() == BO_NE;
+  bool Neg;
+  if (const auto *BO = llvm::dyn_cast<BinaryOperator>(ComparisonExpr)) {
+    Neg = BO->getOpcode() == BO_NE;
+  } else {
+    assert(llvm::isa<CXXOperatorCallExpr>(ComparisonExpr));
+    Neg = llvm::cast<CXXOperatorCallExpr>(ComparisonExpr)->getOperator() ==
+          OO_ExclaimEqual;
+  }
+
+  // Check if this is a substr case
+  bool IsSubstr = FindFun->getName() == "substr";
+
+  if (IsSubstr) {
+      const auto *SubstrCall = cast<CXXMemberCallExpr>(FindExpr);
+      const Expr *Object = SubstrCall->getImplicitObjectArgument();
+
+      std::string ObjectStr;
+      std::string SearchStr;
+      bool Invalid = false;
+
+      auto &SM = *Result.SourceManager;
+
+      CharSourceRange ObjectRange = CharSourceRange::getTokenRange(
+          Object->getBeginLoc(), Object->getEndLoc());
+      ObjectStr = Lexer::getSourceText(ObjectRange, SM, getLangOpts(), &Invalid).str();
+      if (Invalid)
+        return;
+
+      CharSourceRange SearchRange = CharSourceRange::getTokenRange(
+          SearchExpr->getBeginLoc(), SearchExpr->getEndLoc());
+      SearchStr = Lexer::getSourceText(SearchRange, SM, getLangOpts(), &Invalid).str();
+      if (Invalid)
+        return;
+
+      // Build the new expression: [!]Object.starts_with(SearchExpr)
+    std::string NewExpr =
+          (llvm::Twine(Neg ? "!" : "") + ObjectStr + "." +
+          ReplacementFunction->getName() + "(" + SearchStr + ")").str();
+    // Replace the entire comparison expression
+    auto Diag = diag(ComparisonExpr->getBeginLoc(),
+                    "use %0 instead of substr() %select{==|!=}1")
+                << ReplacementFunction->getName() << Neg;
+    Diag << FixItHint::CreateReplacement(
+        CharSourceRange::getTokenRange(ComparisonExpr->getSourceRange()),
+        NewExpr);
+      return;
+  }
+
 
   auto Diagnostic =
       diag(FindExpr->getExprLoc(), "use %0 instead of %1() %select{==|!=}2 0")
