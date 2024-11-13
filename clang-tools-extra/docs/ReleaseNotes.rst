@@ -147,6 +147,13 @@ New check aliases
 Changes in existing checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Improved :doc:`modernize-use-starts-ends-with
+  <clang-tidy/checks/modernize/use-starts-ends-with>` check to detect and transform
+  additional patterns using ``substr`` that can be replaced with ``starts_with``.
+  Now handles cases like ``str.substr(0, n) == "literal"``, with support for length
+  determination through integer literals, ``strlen()``, and ``size()``/``length()``
+  member functions.
+
 - Improved :doc:`altera-id-dependent-backward-branch
   <clang-tidy/checks/altera/id-dependent-backward-branch>` check by fixing
   crashes from invalid code.
