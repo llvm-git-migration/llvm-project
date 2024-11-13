@@ -40,7 +40,7 @@ void f(void *p) {}
 // AMDGPU-NEXT:    call void @_Z1fPv(ptr noundef [[TMP0]]) #[[ATTR1:[0-9]+]]
 // AMDGPU-NEXT:    ret void
 //
-void p1(void [[clang::opencl_generic]] * p) { f(p); }
+void p1(void [[clang::address_space(0)]] * p) { f(p); }
 // NVPTX-LABEL: define hidden noundef ptr @_Z2p2PU3AS3v(
 // NVPTX-SAME: ptr addrspace(3) noundef [[P:%.*]]) #[[ATTR0]] {
 // NVPTX-NEXT:  [[ENTRY:.*:]]
@@ -62,7 +62,7 @@ void p1(void [[clang::opencl_generic]] * p) { f(p); }
 // AMDGPU-NEXT:    [[TMP1:%.*]] = addrspacecast ptr addrspace(3) [[TMP0]] to ptr
 // AMDGPU-NEXT:    ret ptr [[TMP1]]
 //
-void *p2(void [[clang::opencl_local]] * p) { return p; }
+void *p2(void [[clang::address_space(3)]] * p) { return p; }
 // NVPTX-LABEL: define hidden noundef ptr @_Z2p3PU3AS3v(
 // NVPTX-SAME: ptr addrspace(3) noundef [[P:%.*]]) #[[ATTR0]] {
 // NVPTX-NEXT:  [[ENTRY:.*:]]
@@ -93,8 +93,8 @@ struct S {
 };
 
 S s1;
-S [[clang::opencl_global]] s2;
-S [[clang::opencl_local]] s3;
+S [[clang::address_space(1)]] s2;
+S [[clang::address_space(3)]] s3;
 
 template <typename Ty> void foo(Ty *) {}
 
@@ -137,7 +137,7 @@ void t1(void *p) { foo(p); }
 // AMDGPU-NEXT:    call void @_Z3fooIU3AS3vEvPT_(ptr addrspace(3) noundef [[TMP0]]) #[[ATTR1]]
 // AMDGPU-NEXT:    ret void
 //
-void t3(void [[clang::opencl_local]] *p) { foo(p); }
+void t3(void [[clang::address_space(3)]] *p) { foo(p); }
 // NVPTX-LABEL: define hidden void @_Z2t4PU5AS999v(
 // NVPTX-SAME: ptr addrspace(999) noundef [[P:%.*]]) #[[ATTR0]] {
 // NVPTX-NEXT:  [[ENTRY:.*:]]
@@ -158,4 +158,3 @@ void t3(void [[clang::opencl_local]] *p) { foo(p); }
 // AMDGPU-NEXT:    ret void
 //
 void t4(void [[clang::address_space(999)]] *p) { foo(p); }
-

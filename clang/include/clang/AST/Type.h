@@ -726,10 +726,9 @@ public:
            (A == LangAS::Default &&
             (B == LangAS::cuda_constant || B == LangAS::cuda_device ||
              B == LangAS::cuda_shared)) ||
-           // The AMDPGU and NVPTX targets allow all supported address spaces to
-           // be casted to the default address space.
-           (TI.getTriple().isNVPTX() && A == LangAS::Default) ||
-           (TI.getTriple().isAMDGPU() && A == LangAS::Default);
+           // Conversions from target specific address spaces may be legal
+           // depending on the target information.
+           TI.isAddressSpaceSupersetOf(A, B);
   }
 
   /// Returns true if the address space in these qualifiers is equal to or
