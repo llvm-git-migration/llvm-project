@@ -12,6 +12,8 @@
 // template<container-compatible-range<T> R>
 //   constexpr iterator insert_range(const_iterator position, R&& rg); // C++23
 
+#include <cassert>
+#include <sstream>
 #include <vector>
 
 #include "../../insert_range_sequence_containers.h"
@@ -55,7 +57,31 @@ constexpr bool test() {
     }
   }
 
+  { // Ensure that insert_range doesn't use unexpected assignment.
+    struct Wrapper {
+      constexpr Wrapper(int n) : n_(n) {}
+      void operator=(int) = delete;
+
+      int n_;
+    };
+
+    int a[]{1, 2, 3, 4, 5};
+    std::vector<Wrapper> v;
+    v.insert_range(v.end(), a);
+    assert(v.size() == std::size(a));
+    for (std::size_t i = 0; i != std::size(a); ++i)
+      assert(v[i].n_ == a[i]);
+  }
+
   return true;
+}
+
+void test_sized_input_only_range() {
+  std::istringstream is{"1 2 3 4"};
+  auto vals = std::views::istream<int>(is);
+  std::vector<int> v;
+  v.insert_range(v.end(), std::views::counted(vals.begin(), 3));
+  assert(v == (std::vector{1, 2, 3}));
 }
 
 int main(int, char**) {
@@ -66,6 +92,8 @@ int main(int, char**) {
 
   test_insert_range_exception_safety_throwing_copy<std::vector>();
   test_insert_range_exception_safety_throwing_allocator<std::vector, int>();
+
+  test_sized_input_only_range();
 
   return 0;
 }

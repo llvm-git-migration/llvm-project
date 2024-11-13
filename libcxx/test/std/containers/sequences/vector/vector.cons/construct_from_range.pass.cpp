@@ -11,6 +11,8 @@
 // template<container-compatible-range<T> R>
 //   vector(from_range_t, R&& rg, const Allocator& = Allocator()); // C++23
 
+#include <cassert>
+#include <sstream>
 #include <vector>
 
 #include "../../from_range_sequence_containers.h"
@@ -29,6 +31,13 @@ constexpr bool test() {
   return true;
 }
 
+void test_sized_input_only_range() {
+  std::istringstream is{"1 2 3 4"};
+  auto vals = std::views::istream<int>(is);
+  std::vector v(std::from_range, std::views::counted(vals.begin(), 3));
+  assert(v == (std::vector{1, 2, 3}));
+}
+
 int main(int, char**) {
   static_assert(test_constraints<std::vector, int, double>());
   test();
@@ -37,6 +46,8 @@ int main(int, char**) {
 
   test_exception_safety_throwing_copy<std::vector>();
   test_exception_safety_throwing_allocator<std::vector, int>();
+
+  test_sized_input_only_range();
 
   return 0;
 }

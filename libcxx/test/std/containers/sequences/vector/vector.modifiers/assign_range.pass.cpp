@@ -12,6 +12,8 @@
 // template<container-compatible-range<T> R>
 //   constexpr void assign_range(R&& rg); // C++23
 
+#include <cassert>
+#include <sstream>
 #include <vector>
 
 #include "../../insert_range_sequence_containers.h"
@@ -67,12 +69,22 @@ constexpr bool test() {
   return true;
 }
 
+void test_sized_input_only_range() {
+  std::istringstream is{"1 2 3 4"};
+  auto vals = std::views::istream<int>(is);
+  std::vector<int> v;
+  v.assign_range(std::views::counted(vals.begin(), 3));
+  assert(v == (std::vector{1, 2, 3}));
+}
+
 int main(int, char**) {
   test();
   static_assert(test());
 
   test_assign_range_exception_safety_throwing_copy<std::vector>();
   test_assign_range_exception_safety_throwing_allocator<std::vector, int>();
+
+  test_sized_input_only_range();
 
   return 0;
 }

@@ -12,6 +12,8 @@
 // template<container-compatible-range<bool> R>
 //   constexpr void assign_range(R&& rg); // C++23
 
+#include <cassert>
+#include <sstream>
 #include <vector>
 
 #include "../insert_range_sequence_containers.h"
@@ -54,12 +56,22 @@ constexpr bool test() {
   return true;
 }
 
+void test_sized_input_only_range() {
+  std::istringstream is{"1 1 0 1"};
+  auto vals = std::views::istream<bool>(is);
+  std::vector<bool> v;
+  v.assign_range(std::views::counted(vals.begin(), 3));
+  assert(v == (std::vector{true, true, false}));
+}
+
 int main(int, char**) {
   test();
   static_assert(test());
 
   // Note: `test_assign_range_exception_safety_throwing_copy` doesn't apply because copying booleans cannot throw.
   test_assign_range_exception_safety_throwing_allocator<std::vector, bool>();
+
+  test_sized_input_only_range();
 
   return 0;
 }

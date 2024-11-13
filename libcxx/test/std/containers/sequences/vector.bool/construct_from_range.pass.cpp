@@ -8,6 +8,8 @@
 
 // UNSUPPORTED: c++03, c++11, c++14, c++17, c++20
 
+#include <cassert>
+#include <sstream>
 #include <vector>
 
 #include "../from_range_sequence_containers.h"
@@ -27,6 +29,13 @@ constexpr bool test() {
   return true;
 }
 
+void test_sized_input_only_range() {
+  std::istringstream is{"1 1 0 1"};
+  auto vals = std::views::istream<bool>(is);
+  std::vector v(std::from_range, std::views::counted(vals.begin(), 3));
+  assert(v == (std::vector{true, true, false}));
+}
+
 int main(int, char**) {
   test();
   static_assert(test());
@@ -35,6 +44,8 @@ int main(int, char**) {
 
   // Note: test_exception_safety_throwing_copy doesn't apply because copying a boolean cannot throw.
   test_exception_safety_throwing_allocator<std::vector, bool>();
+
+  test_sized_input_only_range();
 
   return 0;
 }
