@@ -1346,6 +1346,8 @@ private:
   unsigned getMinimumJumpTableEntries() const override;
 
   bool softPromoteHalfType() const override { return true; }
+
+  bool shouldScalarizeSetCC(SDValue VecOp) const override { return true; }
 };
 
 namespace AArch64 {
