@@ -702,6 +702,11 @@ TEST_F(FormatTestVerilog, Hierarchy) {
                "  generate\n"
                "  endgenerate\n"
                "endfunction : x");
+  // Type names with '::' should be recognized.
+  verifyFormat("function automatic x::x x\n"
+               "    (input x);\n"
+               "endfunction : x");
+  verifyNoCrash("x x(x x, x x);");
 }
 
 TEST_F(FormatTestVerilog, Identifiers) {
