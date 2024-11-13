@@ -16,7 +16,6 @@
 #include "RISCV.h"
 #include "RISCVFrameLowering.h"
 #include "RISCVTargetMachine.h"
-#include "llvm/CodeGen/MachineScheduler.h"
 #include "llvm/CodeGen/MacroFusion.h"
 #include "llvm/CodeGen/ScheduleDAGMutation.h"
 #include "llvm/MC/TargetRegistry.h"
@@ -210,4 +209,20 @@ void RISCVSubtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
   // Spilling is generally expensive on all RISC-V cores, so always enable
   // register-pressure tracking. This will increase compile time.
   Policy.ShouldTrackPressure = true;
+}
+
+void RISCVSubtarget::overridePostRASchedPolicy(MachineSchedPolicy &Policy,
+                                               unsigned NumRegionInstrs) const {
+  MISchedPostRASched::Direction PostRASchedDirection =
+      getPostRASchedDirection();
+  if (PostRASchedDirection == MISchedPostRASched::TopDown) {
+    Policy.OnlyTopDown = true;
+    Policy.OnlyBottomUp = false;
+  } else if (PostRASchedDirection == MISchedPostRASched::BottomUp) {
+    Policy.OnlyTopDown = false;
+    Policy.OnlyBottomUp = true;
+  } else if (PostRASchedDirection == MISchedPostRASched::Bidirectional) {
+    Policy.OnlyTopDown = false;
+    Policy.OnlyBottomUp = false;
+  }
 }

@@ -10,6 +10,11 @@
 // RISC-V processors supported.
 //===----------------------------------------------------------------------===//
 
+// Predefined scheduling direction.
+defvar TopDown       = [{ MISchedPostRASched::TopDown }];
+defvar BottomUp      = [{ MISchedPostRASched::BottomUp }];
+defvar Bidirectional = [{ MISchedPostRASched::Bidirectional }];
+
 class RISCVTuneInfo {
   bits<8> PrefFunctionAlignment = 1;
   bits<8> PrefLoopAlignment = 1;
@@ -37,6 +42,11 @@ class RISCVTuneInfo {
 
   bits<32> MaxLoadsPerMemcmpOptSize = 4;
   bits<32> MaxLoadsPerMemcmp = 8;
+
+  // The direction of PostRA scheduling.
+  // Do bidirectional scheduling by default since it provides a more balanced
+  // scheduling leading to better performance. This will increase compile time.
+  code PostRASchedDirection = Bidirectional;
 }
 
 def RISCVTuneInfoTable : GenericTable {
@@ -49,7 +59,8 @@ def RISCVTuneInfoTable : GenericTable {
                 "MaxStoresPerMemset", "MaxGluedStoresPerMemcpy",
                 "MaxStoresPerMemcpyOptSize", "MaxStoresPerMemcpy",
                 "MaxStoresPerMemmoveOptSize", "MaxStoresPerMemmove",
-                "MaxLoadsPerMemcmpOptSize", "MaxLoadsPerMemcmp"];
+                "MaxLoadsPerMemcmpOptSize", "MaxLoadsPerMemcmp",
+                "PostRASchedDirection"];
 }
 
 def getRISCVTuneInfo : SearchIndex {
