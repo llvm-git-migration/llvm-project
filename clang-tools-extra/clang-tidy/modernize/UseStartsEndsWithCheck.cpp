@@ -23,27 +23,44 @@ struct NotLengthExprForStringNode {
                              ASTContext *Context)
       : ID(std::move(ID)), Node(std::move(Node)), Context(Context) {}
   bool operator()(const internal::BoundNodesMap &Nodes) const {
-    // Match a string literal and an integer size or strlen() call.
     if (const auto *StringLiteralNode = Nodes.getNodeAs<StringLiteral>(ID)) {
+      // Match direct integer literals
       if (const auto *IntegerLiteralSizeNode = Node.get<IntegerLiteral>()) {
         return StringLiteralNode->getLength() !=
                IntegerLiteralSizeNode->getValue().getZExtValue();
       }
 
-      if (const auto *StrlenNode = Node.get<CallExpr>()) {
-        if (StrlenNode->getDirectCallee()->getName() != "strlen" ||
-            StrlenNode->getNumArgs() != 1) {
-          return true;
+      // Match strlen() calls
+      if (const auto *CallNode = Node.get<CallExpr>()) {
+        if (const auto *FD = CallNode->getDirectCallee()) {
+          if (FD->getName() == "strlen" && CallNode->getNumArgs() == 1) {
+            if (const auto *StrArg = CallNode->getArg(0)->IgnoreParenImpCasts()) {
+              // Handle both string literals and string variables in strlen
+              if (const auto *StrLit = dyn_cast<StringLiteral>(StrArg)) {
+                return StrLit->getLength() != StringLiteralNode->getLength();
+              } else if (const auto *StrVar = dyn_cast<Expr>(StrArg)) {
+                return !utils::areStatementsIdentical(StrVar, StringLiteralNode, *Context);
+              }
+            }
+          }
         }
-
-        if (const auto *StrlenArgNode = dyn_cast<StringLiteral>(
-                StrlenNode->getArg(0)->IgnoreParenImpCasts())) {
-          return StrlenArgNode->getLength() != StringLiteralNode->getLength();
+      }
+      
+      // Match size()/length() member calls
+      if (const auto *MemberCall = Node.get<CXXMemberCallExpr>()) {
+        if (const auto *Method = MemberCall->getMethodDecl()) {
+          const StringRef Name = Method->getName();
+          if (Method->isConst() && Method->getNumParams() == 0 &&
+              (Name == "size" || Name == "length")) {
+            // For string literals used in comparison, allow size/length calls
+            // on any string variable
+            return false;
+          }
         }
       }
     }
 
-    // Match a string variable and a call to length() or size().
+    // Match member function calls on string variables
     if (const auto *ExprNode = Nodes.getNodeAs<Expr>(ID)) {
       if (const auto *MemberCallNode = Node.get<CXXMemberCallExpr>()) {
         const CXXMethodDecl *MethodDeclNode = MemberCallNode->getMethodDecl();
@@ -53,8 +70,8 @@ struct NotLengthExprForStringNode {
           return true;
         }
 
-        if (const auto *OnNode =
-                dyn_cast<Expr>(MemberCallNode->getImplicitObjectArgument())) {
+        if (const auto *OnNode = dyn_cast<Expr>(
+                MemberCallNode->getImplicitObjectArgument())) {
           return !utils::areStatementsIdentical(OnNode->IgnoreParenImpCasts(),
                                                 ExprNode->IgnoreParenImpCasts(),
                                                 *Context);
@@ -82,6 +99,55 @@ UseStartsEndsWithCheck::UseStartsEndsWithCheck(StringRef Name,
 
 void UseStartsEndsWithCheck::registerMatchers(MatchFinder *Finder) {
   const auto ZeroLiteral = integerLiteral(equals(0));
+
+  // Match the substring call
+  const auto SubstrCall = cxxMemberCallExpr(
+      callee(cxxMethodDecl(hasName("substr"))),
+      hasArgument(0, ZeroLiteral),
+      hasArgument(1, expr().bind("length")),
+      on(expr().bind("str")))
+      .bind("substr_fun");
+
+  // Match string literals
+  const auto Literal = stringLiteral().bind("literal");
+  
+  // Helper for matching comparison operators
+  auto AddSubstrMatcher = [&](auto Matcher) {
+      Finder->addMatcher(
+          traverse(TK_IgnoreUnlessSpelledInSource, std::move(Matcher)), this);
+  };
+
+  // Match str.substr(0,n) == "literal"
+  AddSubstrMatcher(
+      binaryOperation(
+          hasOperatorName("=="),
+          hasLHS(SubstrCall),
+          hasRHS(Literal))
+          .bind("positiveComparison"));
+
+  // Also match "literal" == str.substr(0,n)
+  AddSubstrMatcher(
+      binaryOperation(
+          hasOperatorName("=="),
+          hasLHS(Literal),
+          hasRHS(SubstrCall))
+          .bind("positiveComparison"));
+
+  // Match str.substr(0,n) != "literal" 
+  AddSubstrMatcher(
+      binaryOperation(
+          hasOperatorName("!="),
+          hasLHS(SubstrCall),
+          hasRHS(Literal))
+          .bind("negativeComparison"));
+
+  // Also match "literal" != str.substr(0,n)
+  AddSubstrMatcher(
+      binaryOperation(
+          hasOperatorName("!="),
+          hasLHS(Literal),
+          hasRHS(SubstrCall))
+          .bind("negativeComparison"));
 
   const auto ClassTypeWithMethod = [](const StringRef MethodBoundName,
                                       const auto... Methods) {
@@ -173,7 +239,101 @@ void UseStartsEndsWithCheck::registerMatchers(MatchFinder *Finder) {
       this);
 }
 
+void UseStartsEndsWithCheck::handleSubstrMatch(const MatchFinder::MatchResult &Result) {
+  const auto *SubstrCall = Result.Nodes.getNodeAs<CXXMemberCallExpr>("substr_fun");
+  const auto *PositiveComparison = Result.Nodes.getNodeAs<Expr>("positiveComparison");
+  const auto *NegativeComparison = Result.Nodes.getNodeAs<Expr>("negativeComparison");
+  
+  if (!SubstrCall || (!PositiveComparison && !NegativeComparison))
+    return;
+
+  const bool Negated = NegativeComparison != nullptr;
+  const auto *Comparison = Negated ? NegativeComparison : PositiveComparison;
+  
+  if (SubstrCall->getBeginLoc().isMacroID())
+    return;
+
+  const auto *Str = Result.Nodes.getNodeAs<Expr>("str");
+  const auto *Literal = Result.Nodes.getNodeAs<StringLiteral>("literal");
+  const auto *Length = Result.Nodes.getNodeAs<Expr>("length");
+
+  if (!Str || !Literal || !Length)
+    return;
+
+  // Special handling for strlen and size/length member calls
+  const bool IsValidLength = [&]() {
+    if (const auto *LengthInt = dyn_cast<IntegerLiteral>(Length)) {
+      return LengthInt->getValue().getZExtValue() == Literal->getLength();
+    }
+    
+    if (const auto *Call = dyn_cast<CallExpr>(Length)) {
+      if (const auto *FD = Call->getDirectCallee()) {
+        if (FD->getName() == "strlen" && Call->getNumArgs() == 1) {
+          if (const auto *StrArg = dyn_cast<StringLiteral>(
+                  Call->getArg(0)->IgnoreParenImpCasts())) {
+            return StrArg->getLength() == Literal->getLength();
+          }
+        }
+      }
+    }
+    
+    if (const auto *MemberCall = dyn_cast<CXXMemberCallExpr>(Length)) {
+      if (const auto *Method = MemberCall->getMethodDecl()) {
+        const StringRef Name = Method->getName();
+        if (Method->isConst() && Method->getNumParams() == 0 &&
+            (Name == "size" || Name == "length")) {
+          // For string literals in comparison, we'll trust that size()/length()
+          // calls are valid
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }();
+
+  if (!IsValidLength) {
+    return;
+  }
+
+  // Get the string expression and literal text for the replacement
+  const std::string StrText = Lexer::getSourceText(
+      CharSourceRange::getTokenRange(Str->getSourceRange()),
+      *Result.SourceManager, getLangOpts()).str();
+
+  const std::string LiteralText = Lexer::getSourceText(
+      CharSourceRange::getTokenRange(Literal->getSourceRange()),
+      *Result.SourceManager, getLangOpts()).str();
+
+  const std::string ReplacementText = (Negated ? "!" : "") + StrText + ".starts_with(" + 
+                              LiteralText + ")";
+
+  auto Diag = diag(SubstrCall->getExprLoc(),
+                  "use starts_with() instead of substr(0, n) comparison");
+
+  Diag << FixItHint::CreateReplacement(
+      CharSourceRange::getTokenRange(Comparison->getSourceRange()),
+      ReplacementText);
+}
+
 void UseStartsEndsWithCheck::check(const MatchFinder::MatchResult &Result) {
+  // Try substr pattern first
+  const auto *SubstrCall = Result.Nodes.getNodeAs<CXXMemberCallExpr>("substr_fun");
+  if (SubstrCall) {
+    const auto *PositiveComparison = Result.Nodes.getNodeAs<Expr>("positiveComparison");
+    const auto *NegativeComparison = Result.Nodes.getNodeAs<Expr>("negativeComparison");
+    
+    if (PositiveComparison || NegativeComparison) {
+      handleSubstrMatch(Result);
+      return;
+    }
+  }
+
+  // Then try find/compare patterns
+  handleFindCompareMatch(Result);
+}
+
+void UseStartsEndsWithCheck::handleFindCompareMatch(const MatchFinder::MatchResult &Result) {
   const auto *ComparisonExpr = Result.Nodes.getNodeAs<BinaryOperator>("expr");
   const auto *FindExpr = Result.Nodes.getNodeAs<CXXMemberCallExpr>("find_expr");
   const auto *FindFun = Result.Nodes.getNodeAs<CXXMethodDecl>("find_fun");

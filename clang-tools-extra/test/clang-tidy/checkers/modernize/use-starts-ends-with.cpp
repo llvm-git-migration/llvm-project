@@ -1,5 +1,5 @@
 // RUN: %check_clang_tidy -std=c++20 %s modernize-use-starts-ends-with %t -- \
-// RUN:   -- -isystem %clang_tidy_headers
+// RUN:   -- -isystem %clang_tidy_headers 
 
 #include <string.h>
 #include <string>
@@ -265,4 +265,44 @@ void test(std::string s, std::string_view sv, sub_string ss, sub_sub_string sss,
 
   s.compare(0, 1, "ab") == 0;
   s.rfind(suffix, 1) == s.size() - suffix.size();
+}
+
+void test_substr() {
+    std::string str("hello world");
+    std::string prefix = "hello";
+    std::string_view suffix = "world";
+    
+    // Basic pattern
+    str.substr(0, 5) == "hello";
+    // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: use starts_with() instead of substr(0, n) comparison [modernize-use-starts-ends-with]
+    // CHECK-FIXES: str.starts_with("hello");
+    
+    // With string literal on left side
+    "hello" == str.substr(0, 5);
+    // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: use starts_with() instead of substr(0, n) comparison [modernize-use-starts-ends-with]
+    // CHECK-FIXES: str.starts_with("hello");
+
+    
+    // Inequality comparison
+    str.substr(0, 5) != "world";
+    // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: use starts_with() instead of substr(0, n) comparison [modernize-use-starts-ends-with]
+    // CHECK-FIXES: !str.starts_with("world");
+    
+    
+    // Ensure non-zero start position is not transformed
+    str.substr(1, 5) == "hello";
+    str.substr(0, 4) == "hello"; // Length mismatch
+    
+    size_t len = 5;
+    str.substr(0, len) == "hello"; // Non-constant length
+
+  // String literal with size calculation
+    str.substr(0, prefix.size()) == "hello";
+    // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: use starts_with() instead of substr(0, n) comparison [modernize-use-starts-ends-with]
+    // CHECK-FIXES: str.starts_with("hello");
+
+    // String literal with size calculation
+    str.substr(0, strlen("hello")) == "hello";
+    // CHECK-MESSAGES: :[[@LINE-1]]:{{[0-9]+}}: warning: use starts_with() instead of substr(0, n) comparison [modernize-use-starts-ends-with]
+    // CHECK-FIXES: str.starts_with("hello");
 }
