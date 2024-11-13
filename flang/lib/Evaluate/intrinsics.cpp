@@ -439,20 +439,18 @@ static const IntrinsicInterface genericIntrinsicFunction[]{
         SameInt},
     {"dshiftr", {{"i", BOZ}, {"j", SameInt}, {"shift", AnyInt}}, SameInt},
     {"eoshift",
+        {{"array", SameType, Rank::array},
+            {"shift", AnyInt, Rank::dimRemovedOrScalar},
+            // BOUNDARY= is not optional for non-intrinsic types
+            {"boundary", SameType, Rank::dimRemovedOrScalar}, OptionalDIM},
+        SameType, Rank::conformable, IntrinsicClass::transformationalFunction},
+    {"eoshift",
         {{"array", SameIntrinsic, Rank::array},
             {"shift", AnyInt, Rank::dimRemovedOrScalar},
             {"boundary", SameIntrinsic, Rank::dimRemovedOrScalar,
                 Optionality::optional},
             OptionalDIM},
         SameIntrinsic, Rank::conformable,
-        IntrinsicClass::transformationalFunction},
-    {"eoshift",
-        {{"array", SameDerivedType, Rank::array},
-            {"shift", AnyInt, Rank::dimRemovedOrScalar},
-            // BOUNDARY= is not optional for derived types
-            {"boundary", SameDerivedType, Rank::dimRemovedOrScalar},
-            OptionalDIM},
-        SameDerivedType, Rank::conformable,
         IntrinsicClass::transformationalFunction},
     {"epsilon",
         {{"x", SameReal, Rank::anyOrAssumedRank, Optionality::required,
@@ -1943,7 +1941,7 @@ std::optional<SpecificCall> IntrinsicInterface::Match(
       if (!sameArg) {
         sameArg = arg;
       }
-      argOk = type->IsTkLenCompatibleWith(sameArg->GetType().value());
+      argOk = sameArg->GetType().value().IsTkLenCompatibleWith(*type);
       break;
     case KindCode::sameKind:
       if (!sameArg) {
