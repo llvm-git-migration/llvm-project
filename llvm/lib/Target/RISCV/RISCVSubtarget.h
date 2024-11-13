@@ -21,6 +21,7 @@
 #include "llvm/CodeGen/GlobalISel/CallLowering.h"
 #include "llvm/CodeGen/GlobalISel/InstructionSelector.h"
 #include "llvm/CodeGen/GlobalISel/LegalizerInfo.h"
+#include "llvm/CodeGen/MachineScheduler.h"
 #include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/DataLayout.h"
@@ -72,6 +73,11 @@ private:
   virtual void anchor();
 
   RISCVProcFamilyEnum RISCVProcFamily = Others;
+
+  // Do bidirectional scheduling by default since it provides a more balanced
+  // scheduling leading to better performance. This will increase compile time.
+  MISchedPostRASched::Direction PostRASchedDirection =
+      MISchedPostRASched::Bidirectional;
 
 #define GET_SUBTARGETINFO_MACRO(ATTRIBUTE, DEFAULT, GETTER) \
   bool ATTRIBUTE = DEFAULT;
@@ -330,6 +336,9 @@ public:
 
   void overrideSchedPolicy(MachineSchedPolicy &Policy,
                            unsigned NumRegionInstrs) const override;
+
+  void overridePostRASchedPolicy(MachineSchedPolicy &Policy,
+                                 unsigned NumRegionInstrs) const override;
 };
 } // End llvm namespace
 

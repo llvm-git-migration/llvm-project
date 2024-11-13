@@ -1438,6 +1438,20 @@ def TunePreferWInst
     : SubtargetFeature<"prefer-w-inst", "PreferWInst", "true",
                        "Prefer instructions with W suffix">;
 
+let SetMaxValue = false in {
+def TuneTopDownPostRASched
+    : SubtargetFeature<"topdown-postra-sched", "PostRASchedDirection", "MISchedPostRASched::TopDown",
+                       "Using TopDown post-ra scheduling">;
+
+def TuneBottomUpPostRASched
+    : SubtargetFeature<"bottomup-postra-sched", "PostRASchedDirection", "MISchedPostRASched::BottomUp",
+                       "Using BottomUp post-ra scheduling">;
+
+def TuneBidirectionalPostRASched
+    : SubtargetFeature<"bidirectional-postra-sched", "PostRASchedDirection", "MISchedPostRASched::Bidirectional",
+                       "Using Bidirectional post-ra scheduling">;
+}
+
 def TuneConditionalCompressedMoveFusion
     : SubtargetFeature<"conditional-cmv-fusion", "HasConditionalCompressedMoveFusion",
                        "true", "Enable branch+c.mv fusion">;
