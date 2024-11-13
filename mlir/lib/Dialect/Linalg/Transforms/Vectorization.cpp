@@ -1414,7 +1414,7 @@ vectorizeAsLinalgGeneric(RewriterBase &rewriter, VectorizationState &state,
     // TODO: remove this.
     if (readType.getRank() == 0)
       readValue = rewriter.create<vector::ExtractOp>(loc, readValue,
-                                                     SmallVector<int64_t>{});
+                                                     ArrayRef<int64_t>());
 
     LDBG("New vectorized bbarg(" << bbarg.getArgNumber() << "): " << readValue
                                  << "\n");
@@ -2272,8 +2272,8 @@ LogicalResult mlir::linalg::vectorizeCopy(RewriterBase &rewriter,
       loc, readType, copyOp.getSource(), indices,
       rewriter.getMultiDimIdentityMap(srcType.getRank()));
   if (cast<VectorType>(readValue.getType()).getRank() == 0) {
-    readValue = rewriter.create<vector::ExtractOp>(loc, readValue,
-                                                   SmallVector<int64_t>{});
+    readValue =
+        rewriter.create<vector::ExtractOp>(loc, readValue, ArrayRef<int64_t>());
     readValue = rewriter.create<vector::BroadcastOp>(loc, writeType, readValue);
   }
   Operation *writeValue = rewriter.create<vector::TransferWriteOp>(
