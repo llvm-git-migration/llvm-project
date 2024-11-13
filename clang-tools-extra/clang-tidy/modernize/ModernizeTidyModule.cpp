@@ -50,6 +50,7 @@
 #include "UseTransparentFunctorsCheck.h"
 #include "UseUncaughtExceptionsCheck.h"
 #include "UseUsingCheck.h"
+#include "SubstrToStartsWithCheck.h"
 
 using namespace clang::ast_matchers;
 
@@ -122,6 +123,8 @@ public:
     CheckFactories.registerCheck<UseUncaughtExceptionsCheck>(
         "modernize-use-uncaught-exceptions");
     CheckFactories.registerCheck<UseUsingCheck>("modernize-use-using");
+    CheckFactories.registerCheck<SubstrToStartsWithCheck>(
+      "modernize-substr-to-starts-with");
   }
 };
 
