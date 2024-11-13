@@ -58,7 +58,7 @@
 // CXX-RV32-BAREMETAL-ILP32: "{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1/crtbegin.o"
 // CXX-RV32-BAREMETAL-ILP32: "-L{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1"
 // CXX-RV32-BAREMETAL-ILP32: "-L{{.*}}/Inputs/basic_riscv32_tree/riscv32-unknown-elf/lib"
-// CXX-RV32-BAREMETAL-ILP32: "-lstdc++" "-lm" "--start-group" "-lc" "-lgloss" "--end-group" "-lgcc"
+// CXX-RV32-BAREMETAL-ILP32: "-lstdc++" "-lsupc++" "-lm" "--start-group" "-lc" "-lgloss" "--end-group" "-lgcc"
 // CXX-RV32-BAREMETAL-ILP32: "{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1/crtend.o"
 
 // RUN: %clangxx -### %s -fuse-ld= \
@@ -73,7 +73,7 @@
 // CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1/crtbegin.o"
 // CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "-L{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1"
 // CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "-L{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1/../../../../riscv32-unknown-elf/lib"
-// CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "-lstdc++" "-lm" "--start-group" "-lc" "-lgloss" "--end-group" "-lgcc"
+// CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "-lstdc++" "-lsupc++" "-lm" "--start-group" "-lc" "-lgloss" "--end-group" "-lgcc"
 // CXX-RV32-BAREMETAL-NOSYSROOT-ILP32: "{{.*}}/Inputs/basic_riscv32_tree/lib/gcc/riscv32-unknown-elf/8.0.1/crtend.o"
 
 // RUN: env "PATH=" %clang -### %s -fuse-ld=ld -no-pie \
@@ -192,7 +192,7 @@
 
 // RUN: %clang -### %s \
 // RUN:   --gcc-toolchain=%S/Inputs/multilib_riscv_elf_sdk \
-// RUN:   --target=riscv32-unknown-elf --rtlib=compiler-rt --unwindlib=compiler-rt 2>&1 \
+// RUN:   --target=riscv32-unknown-elf --rtlib=compiler-rt --unwindlib=compiler-rt  2>&1 \
 // RUN:   | FileCheck -check-prefix=C-RV32-RTLIB-COMPILERRT-ILP32 %s
 // C-RV32-RTLIB-COMPILERRT-ILP32: "{{.*}}crt0.o"
 // C-RV32-RTLIB-COMPILERRT-ILP32: "{{.*}}clang_rt.crtbegin.o"
