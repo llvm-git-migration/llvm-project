@@ -168,8 +168,8 @@ bool InitUndef::handleSubReg(MachineFunction &MF, MachineInstr &MI,
     // class associated for the subreg. This may happen for artificial subregs
     // that are not directly addressable.
     if (any_of(SubRegIndexNeedInsert,
-               [&TRI = TRI, &TargetRegClass](unsigned ind) -> bool {
-                 return !TRI->getSubRegisterClass(TargetRegClass, ind);
+               [&](unsigned Ind) -> bool {
+                 return !TRI->getSubRegisterClass(TargetRegClass, Ind);
                }))
       continue;
 
