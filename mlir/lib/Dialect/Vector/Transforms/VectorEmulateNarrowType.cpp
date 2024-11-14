@@ -76,7 +76,8 @@ static FailureOr<Operation *> getCompressedMaskOp(OpBuilder &rewriter,
                                                   int numSrcElemsPerDest,
                                                   int numFrontPadElems = 0) {
 
-  assert(numFrontPadElems < numSrcElemsPerDest && "intraDataOffset must be less than scale");
+  assert(numFrontPadElems < numSrcElemsPerDest &&
+         "intraDataOffset must be less than scale");
 
   auto numElements = (numFrontPadElems + numSrcElems + numSrcElemsPerDest - 1) /
                      numSrcElemsPerDest;
@@ -256,23 +257,11 @@ emulatedVectorLoad(OpBuilder &rewriter, Location loc, Value base,
       newLoad);
 }
 
-static void nonAtomicStore(ConversionPatternRewriter &rewriter, Location loc,
-                           Value memref, Value index, Value value) {
-  auto originType = dyn_cast<VectorType>(value.getType());
-  auto memrefElemType = dyn_cast<MemRefType>(memref.getType()).getElementType();
-  auto scale = memrefElemType.getIntOrFloatBitWidth() /
-               originType.getElementType().getIntOrFloatBitWidth();
-  auto storeType =
-      VectorType::get({originType.getNumElements() / scale}, memrefElemType);
-  auto bitCast = rewriter.create<vector::BitCastOp>(loc, storeType, value);
-  rewriter.create<vector::StoreOp>(loc, bitCast.getResult(), memref, index);
-}
-
-/// atomically store a subbyte-sized value to memory, with a mask.
-static Value atomicStore(OpBuilder &rewriter, Location loc,
-                         Value emulatedMemref, Value emulatedIndex,
-                         TypedValue<VectorType> value, Value mask,
-                         int64_t scale) {
+/// Atomically store a subbyte-sized value to memory, with a mask.
+static void atomicStore(OpBuilder &rewriter, Location loc,
+                        TypedValue<MemRefType> emulatedMemref,
+                        Value emulatedIndex, TypedValue<VectorType> value,
+                        Value mask, int64_t scale) {
   auto atomicOp = rewriter.create<memref::GenericAtomicRMWOp>(
       loc, emulatedMemref, ValueRange{emulatedIndex});
   OpBuilder builder =
@@ -291,8 +280,30 @@ static Value atomicStore(OpBuilder &rewriter, Location loc,
   auto bitcast2 = builder.create<vector::BitCastOp>(loc, oneVectorType, select);
   auto extract = builder.create<vector::ExtractOp>(loc, bitcast2, 0);
   builder.create<memref::AtomicYieldOp>(loc, extract.getResult());
-  return atomicOp;
 }
+
+/// Generate a non-atomic read-modify-write sequence for subbyte storing.
+static void rmwStore(OpBuilder &rewriter, Location loc,
+                     TypedValue<MemRefType> emulatedMemref, Value emulatedIndex,
+                     TypedValue<VectorType> value, Value mask,
+                     int64_t numSrcElemsPerDest) {
+  auto emulatedIOType =
+      VectorType::get({1}, emulatedMemref.getType().getElementType());
+  auto elemLoad = rewriter.create<vector::LoadOp>(
+      loc, emulatedIOType, emulatedMemref, ValueRange{emulatedIndex});
+  auto fromBitcast = rewriter.create<vector::BitCastOp>(
+      loc,
+      VectorType::get({numSrcElemsPerDest}, value.getType().getElementType()),
+      elemLoad);
+  auto select = rewriter.create<arith::SelectOp>(loc, mask, fromBitcast, value);
+  auto toBitcast =
+      rewriter.create<vector::BitCastOp>(loc, emulatedIOType, select);
+  rewriter.create<vector::StoreOp>(loc, toBitcast, emulatedMemref,
+                                   emulatedIndex);
+}
+
+static_assert(std::is_same_v<decltype(atomicStore), decltype(rmwStore)> &&
+              "`atomicStore` and `rmwStore` must have same function type.");
 
 // Extract a slice of a vector, and insert it into a byte vector.
 static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
@@ -322,6 +333,10 @@ namespace {
 struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
   using OpConversionPattern::OpConversionPattern;
 
+  ConvertVectorStore(MLIRContext *context, bool useAtomicWrites)
+      : OpConversionPattern<vector::StoreOp>(context),
+        useAtomicWrites_(useAtomicWrites) {}
+
   LogicalResult
   matchAndRewrite(vector::StoreOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
@@ -343,7 +358,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
       return rewriter.notifyMatchFailure(
           op, "only dstBits % srcBits == 0 supported");
     }
-    int scale = dstBits / srcBits;
+    int numSrcElemsPerDest = dstBits / srcBits;
 
     // Adjust the number of elements to store when emulating narrow types.
     // Here only the 1-D vector store is considered, and the N-D memref types
@@ -359,7 +374,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
     // vector<4xi8>
 
     auto origElements = valueToStore.getType().getNumElements();
-    bool isUnalignedEmulation = origElements % scale != 0;
+    bool isUnalignedEmulation = origElements % numSrcElemsPerDest != 0;
 
     auto stridedMetadata =
         rewriter.create<memref::ExtractStridedMetadataOp>(loc, op.getBase());
@@ -374,62 +389,68 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
             stridedMetadata.getConstifiedMixedStrides(),
             getAsOpFoldResult(adaptor.getIndices()));
 
-    auto foldedIntraVectorOffset =
+    auto foldedNumFrontPadElems =
         isUnalignedEmulation
             ? getConstantIntValue(linearizedInfo.intraDataOffset)
             : 0;
 
-    if (!foldedIntraVectorOffset) {
-      // unimplemented case for dynamic front padding size
+    if (!foldedNumFrontPadElems) {
+      // Unimplemented case for dynamic front padding size != 0
       return failure();
     }
 
-    // conditions when atomic stores and all that are not needed:
+    TypedValue<MemRefType> emulatedMemref =
+        cast<TypedValue<MemRefType>>(adaptor.getBase());
+
+    // Shortcut: conditions when subbyte store at the front is not needed:
     // 1. The source vector size is multiple of byte size
-    // 2. The address of the store is byte aligned
-    if (!isUnalignedEmulation && *foldedIntraVectorOffset == 0) {
-      auto numElements = origElements / scale;
+    // 2. The address of the store is aligned to the emulated width boundary
+    if (!isUnalignedEmulation && *foldedNumFrontPadElems == 0) {
+      auto numElements = origElements / numSrcElemsPerDest;
       auto bitCast = rewriter.create<vector::BitCastOp>(
           loc, VectorType::get(numElements, newElementType),
           op.getValueToStore());
       rewriter.replaceOpWithNewOp<vector::StoreOp>(
-          op, bitCast.getResult(), adaptor.getBase(),
+          op, bitCast.getResult(), emulatedMemref,
           getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices));
       return llvm::success();
     }
 
-    Value emulatedMemref = adaptor.getBase();
-    // the index into the target memref we are storing to
+    // The index into the target memref we are storing to
     Value currentDestIndex =
         getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices);
     auto constantOne = rewriter.create<arith::ConstantIndexOp>(loc, 1);
-    auto atomicMaskType = VectorType::get({scale}, rewriter.getI1Type());
-    // the index into the source vector we are currently processing
+    auto subWidthStoreMaskType =
+        VectorType::get({numSrcElemsPerDest}, rewriter.getI1Type());
+    // The index into the source vector we are currently processing
     auto currentSourceIndex = 0;
 
-    // 1. atomic store for the first byte
-    auto frontAtomicStoreElem = (scale - *foldedIntraVectorOffset) % scale;
-    if (frontAtomicStoreElem != 0) {
-      auto frontMaskValues = llvm::SmallVector<bool>(scale, false);
-      if (*foldedIntraVectorOffset + origElements < scale) {
-        std::fill_n(frontMaskValues.begin() + *foldedIntraVectorOffset,
+    // 1. Partial width store for the first byte, when the store address is not
+    // aligned to emulated width boundary, deal with the unaligned part so that
+    // the rest elements are aligned to width boundary.
+    auto frontSubWidthStoreElem =
+        (numSrcElemsPerDest - *foldedNumFrontPadElems) % numSrcElemsPerDest;
+    if (frontSubWidthStoreElem != 0) {
+      auto frontMaskValues = llvm::SmallVector<bool>(numSrcElemsPerDest, false);
+      if (*foldedNumFrontPadElems + origElements < numSrcElemsPerDest) {
+        std::fill_n(frontMaskValues.begin() + *foldedNumFrontPadElems,
                     origElements, true);
-        frontAtomicStoreElem = origElements;
+        frontSubWidthStoreElem = origElements;
       } else {
-        std::fill_n(frontMaskValues.end() - frontAtomicStoreElem,
-                    *foldedIntraVectorOffset, true);
+        std::fill_n(frontMaskValues.end() - frontSubWidthStoreElem,
+                    *foldedNumFrontPadElems, true);
       }
       auto frontMask = rewriter.create<arith::ConstantOp>(
-          loc, DenseElementsAttr::get(atomicMaskType, frontMaskValues));
+          loc, DenseElementsAttr::get(subWidthStoreMaskType, frontMaskValues));
 
-      currentSourceIndex = scale - (*foldedIntraVectorOffset);
+      currentSourceIndex = numSrcElemsPerDest - (*foldedNumFrontPadElems);
       auto value = extractSliceIntoByte(
           rewriter, loc, cast<TypedValue<VectorType>>(valueToStore), 0,
-          frontAtomicStoreElem, *foldedIntraVectorOffset);
+          frontSubWidthStoreElem, *foldedNumFrontPadElems);
 
-      atomicStore(rewriter, loc, emulatedMemref, currentDestIndex,
-                  cast<TypedValue<VectorType>>(value), frontMask.getResult(),
-                  scale);
+      subEmulatedWidthStore(rewriter, loc, emulatedMemref, currentDestIndex,
+                            cast<TypedValue<VectorType>>(value),
+                            frontMask.getResult(), numSrcElemsPerDest);
 
       currentDestIndex = rewriter.create<arith::AddIOp>(
           loc, rewriter.getIndexType(), currentDestIndex, constantOne);
@@ -440,44 +461,66 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
       return success();
     }
 
-    // 2. non-atomic store
-    int64_t nonAtomicStoreSize = (origElements - currentSourceIndex) / scale;
-    int64_t numNonAtomicElements = nonAtomicStoreSize * scale;
-    if (nonAtomicStoreSize != 0) {
-      auto nonAtomicStorePart = staticallyExtractSubvector(
+    // 2. Full width store. After the previous step, the store address is
+    // aligned to the emulated width boundary.
+    int64_t fullWidthStoreSize =
+        (origElements - currentSourceIndex) / numSrcElemsPerDest;
+    int64_t numNonFullWidthElements = fullWidthStoreSize * numSrcElemsPerDest;
+    if (fullWidthStoreSize != 0) {
+      auto fullWidthStorePart = staticallyExtractSubvector(
           rewriter, loc, cast<TypedValue<VectorType>>(valueToStore),
-          currentSourceIndex, numNonAtomicElements);
+          currentSourceIndex, numNonFullWidthElements);
 
-      nonAtomicStore(rewriter, loc, emulatedMemref, currentDestIndex,
-                     nonAtomicStorePart);
+      auto originType = dyn_cast<VectorType>(fullWidthStorePart.getType());
+      auto memrefElemType =
+          dyn_cast<MemRefType>(emulatedMemref.getType()).getElementType();
+      auto storeType = VectorType::get(
+          {originType.getNumElements() / numSrcElemsPerDest}, memrefElemType);
+      auto bitCast = rewriter.create<vector::BitCastOp>(loc, storeType,
+                                                        fullWidthStorePart);
+      rewriter.create<vector::StoreOp>(loc, bitCast.getResult(), emulatedMemref,
+                                       currentDestIndex);
 
-      currentSourceIndex += numNonAtomicElements;
+      currentSourceIndex += numNonFullWidthElements;
       currentDestIndex = rewriter.create<arith::AddIOp>(
           loc, rewriter.getIndexType(), currentDestIndex,
-          rewriter.create<arith::ConstantIndexOp>(loc, nonAtomicStoreSize));
+          rewriter.create<arith::ConstantIndexOp>(loc, fullWidthStoreSize));
     }
 
-    // 3. atomic store for the last byte
+    // 3. Deal with trailing elements that are aligned to the emulated width,
+    // but their length is smaller than the emulated width.
     auto remainingElements = origElements - currentSourceIndex;
     if (remainingElements != 0) {
-      auto atomicStorePart = extractSliceIntoByte(
+      auto subWidthStorePart = extractSliceIntoByte(
           rewriter, loc, cast<TypedValue<VectorType>>(valueToStore),
           currentSourceIndex, remainingElements, 0);
 
-      // back mask
-      auto maskValues = llvm::SmallVector<bool>(scale, 0);
+      // Generate back mask
+      auto maskValues = llvm::SmallVector<bool>(numSrcElemsPerDest, 0);
       std::fill_n(maskValues.begin(), remainingElements, 1);
       auto backMask = rewriter.create<arith::ConstantOp>(
-          loc, DenseElementsAttr::get(atomicMaskType, maskValues));
+          loc, DenseElementsAttr::get(subWidthStoreMaskType, maskValues));
 
-      atomicStore(rewriter, loc, emulatedMemref, currentDestIndex,
-                  cast<TypedValue<VectorType>>(atomicStorePart),
-                  backMask.getResult(), scale);
+      subEmulatedWidthStore(rewriter, loc, emulatedMemref, currentDestIndex,
+                            cast<TypedValue<VectorType>>(subWidthStorePart),
+                            backMask.getResult(), numSrcElemsPerDest);
     }
 
     rewriter.eraseOp(op);
     return success();
   }
+
+  /// Store a subbyte-sized value to memory, with a mask. Depending on the
+  /// configuration, it could be an atomic store or an RMW sequence.
+  template <typename... Args>
+  void subEmulatedWidthStore(Args &&...args) const {
+    std::function<decltype(atomicStore)> storeFunc =
+        useAtomicWrites_ ? atomicStore : rmwStore;
+    storeFunc(std::forward<Args>(args)...);
+  }
+
+private:
+  const bool useAtomicWrites_;
 };
 
 //===----------------------------------------------------------------------===//
@@ -1673,12 +1716,17 @@ struct RewriteVectorTranspose : OpRewritePattern<vector::TransposeOp> {
 
 void vector::populateVectorNarrowTypeEmulationPatterns(
     const arith::NarrowTypeEmulationConverter &typeConverter,
-    RewritePatternSet &patterns) {
+    RewritePatternSet &patterns, bool useAtomicWrites) {
 
-  // Populate `vector.*` conversion patterns.
-  patterns.add<ConvertVectorLoad, ConvertVectorMaskedLoad, ConvertVectorStore,
+  // Populate `vector.*` load conversion patterns.
+  patterns.add<ConvertVectorLoad, ConvertVectorMaskedLoad,
                ConvertVectorMaskedStore, ConvertVectorTransferRead>(
       typeConverter, patterns.getContext());
+
+  // Populate `vector.*` store conversion patterns. The caller can choose
+  // to avoid emitting atomic operations and reduce it to load-modify-write
+  // sequence for stores if it is known there are no thread contentions.
+  patterns.insert<ConvertVectorStore>(patterns.getContext(), useAtomicWrites);
 }
 
 void vector::populateVectorNarrowTypeRewritePatterns(

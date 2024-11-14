@@ -299,7 +299,7 @@ func.func @vector_store_i2_const(%arg0: vector<3xi2>) {
 
 // -----
 
-func.func @vector_store_i8_2(%arg0: vector<7xi2>) {
+func.func @vector_store_i2_atomic(%arg0: vector<7xi2>) {
     %0 = memref.alloc() : memref<3x7xi2>
     %c0 = arith.constant 0 : index
     %c1 = arith.constant 1 : index
@@ -309,7 +309,7 @@ func.func @vector_store_i8_2(%arg0: vector<7xi2>) {
 
 // in this example, emit 2 atomic stores and 1 non-atomic store
 
-// CHECK: func @vector_store_i8_2(
+// CHECK: func @vector_store_i2_atomic(
 // CHECK-SAME: %[[ARG0:.+]]: vector<7xi2>)
 // CHECK: %[[ALLOC]] = memref.alloc() : memref<6xi8>
 // CHECK: %[[C1:.+]] = arith.constant 1 : index
