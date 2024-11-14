@@ -130,8 +130,7 @@ class MachineSinking {
   const MachineBranchProbabilityInfo *MBPI = nullptr;
   AliasAnalysis *AA = nullptr;
   RegisterClassInfo RegClassInfo;
-  Pass *LegacyPass;
-  MachineFunctionAnalysisManager *MFAM;
+  MFAnalysisGetter &AG;
 
   // Remember which edges have been considered for breaking.
   SmallSet<std::pair<MachineBasicBlock *, MachineBasicBlock *>, 8>
@@ -187,10 +186,8 @@ class MachineSinking {
   bool EnableSinkAndFold;
 
 public:
-  MachineSinking(Pass *LegacyPass, MachineFunctionAnalysisManager *MFAM,
-                 bool EnableSinkAndFold)
-      : LegacyPass(LegacyPass), MFAM(MFAM),
-        EnableSinkAndFold(EnableSinkAndFold) {}
+  MachineSinking(MFAnalysisGetter &&AG, bool EnableSinkAndFold)
+      : AG(AG), EnableSinkAndFold(EnableSinkAndFold) {}
 
   bool run(MachineFunction &MF);
 
@@ -729,7 +726,7 @@ void MachineSinking::FindCycleSinkCandidates(
 PreservedAnalyses
 MachineSinkingPass::run(MachineFunction &MF,
                         MachineFunctionAnalysisManager &MFAM) {
-  MachineSinking Impl(nullptr, &MFAM, EnableSinkAndFold);
+  MachineSinking Impl(MFAnalysisGetter(&MFAM), EnableSinkAndFold);
   bool Changed = Impl.run(MF);
   if (!Changed)
     return PreservedAnalyses::all();
@@ -753,14 +750,9 @@ bool MachineSinkingLegacy::runOnMachineFunction(MachineFunction &MF) {
   TargetPassConfig *PassConfig = &getAnalysis<TargetPassConfig>();
   bool EnableSinkAndFold = PassConfig->getEnableSinkAndFold();
 
-  MachineSinking Impl(this, nullptr, EnableSinkAndFold);
+  MachineSinking Impl(MFAnalysisGetter(this), EnableSinkAndFold);
   return Impl.run(MF);
 }
-
-#define GET_ANALYSIS(ANALYSIS, INFIX, GETTER)                                  \
-  ((LegacyPass)                                                                \
-       ? &LegacyPass->getAnalysis<ANALYSIS##INFIX##WrapperPass>().GETTER()     \
-       : &MFAM->getResult<ANALYSIS##Analysis>(MF))
 
 bool MachineSinking::run(MachineFunction &MF) {
   LLVM_DEBUG(dbgs() << "******** Machine Sinking ********\n");
@@ -769,21 +761,15 @@ bool MachineSinking::run(MachineFunction &MF) {
   TII = STI->getInstrInfo();
   TRI = STI->getRegisterInfo();
   MRI = &MF.getRegInfo();
-  DT = GET_ANALYSIS(MachineDominatorTree, , getDomTree);
-  PDT = GET_ANALYSIS(MachinePostDominatorTree, , getPostDomTree);
-  CI = GET_ANALYSIS(MachineCycle, Info, getCycleInfo);
-  PSI = (LegacyPass)
-            ? &LegacyPass->getAnalysis<ProfileSummaryInfoWrapperPass>().getPSI()
-            : MFAM->getResult<ModuleAnalysisManagerMachineFunctionProxy>(MF)
-                   .getCachedResult<ProfileSummaryAnalysis>(*MF.getFunction().getParent());
-  MBFI = UseBlockFreqInfo ? GET_ANALYSIS(MachineBlockFrequency, Info, getMBFI)
+
+  DT = AG.getAnalysis<MachineDominatorTreeAnalysis>(MF);
+  PDT = AG.getAnalysis<MachinePostDominatorTreeAnalysis>(MF);
+  CI = AG.getAnalysis<MachineCycleAnalysis>(MF);
+  PSI = AG.getAnalysis<ProfileSummaryAnalysis>(MF);
+  MBFI = UseBlockFreqInfo ? AG.getAnalysis<MachineBlockFrequencyAnalysis>(MF)
                           : nullptr;
-  MBPI = GET_ANALYSIS(MachineBranchProbability, Info, getMBPI);
-  AA = (LegacyPass)
-           ? &LegacyPass->getAnalysis<AAResultsWrapperPass>().getAAResults()
-           : &MFAM->getResult<FunctionAnalysisManagerMachineFunctionProxy>(MF)
-                  .getManager()
-                  .getResult<AAManager>(MF.getFunction());
+  MBPI = AG.getAnalysis<MachineBranchProbabilityAnalysis>(MF);
+  AA = AG.getAnalysis<AAManager>(MF);
 
   RegClassInfo.runOnMachineFunction(MF);
 
@@ -801,8 +787,8 @@ bool MachineSinking::run(MachineFunction &MF) {
 
     // If we have anything we marked as toSplit, split it now.
     for (const auto &Pair : ToSplit) {
-      auto NewSucc =
-          Pair.first->SplitCriticalEdge(Pair.second, LegacyPass, MFAM, nullptr);
+      auto NewSucc = Pair.first->SplitCriticalEdge(
+          Pair.second, AG.getLegacyPass(), AG.getMFAM(), nullptr);
       if (NewSucc != nullptr) {
         LLVM_DEBUG(dbgs() << " *** Splitting critical edge: "
                           << printMBBReference(*Pair.first) << " -- "
