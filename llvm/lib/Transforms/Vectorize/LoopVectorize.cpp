@@ -131,6 +131,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/InstructionCost.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/NativeFormatting.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/InjectTLIMappings.h"
@@ -7403,7 +7404,23 @@ InstructionCost LoopVectorizationPlanner::cost(VPlan &Plan,
 
   // Now compute and add the VPlan-based cost.
   Cost += Plan.cost(VF, CostCtx);
-  LLVM_DEBUG(dbgs() << "Cost for VF " << VF << ": " << Cost << "\n");
+#ifndef NDEBUG
+  unsigned EstimatedWidth = VF.getKnownMinValue();
+  if (VF.isScalable())
+    if (std::optional<unsigned> VScale = getVScaleForTuning(OrigLoop, TTI))
+      EstimatedWidth *= *VScale;
+  LLVM_DEBUG(dbgs() << "Cost for VF " << VF << ": " << Cost
+                    << " (Estimated cost per lane: ");
+  if (Cost.isValid()) {
+    std::string CostString;
+    raw_string_ostream CostStream(CostString);
+    double CostPerLane = double(*Cost.getValue()) / EstimatedWidth;
+    llvm::write_double(CostStream, CostPerLane, FloatStyle::Fixed, 1);
+    LLVM_DEBUG(dbgs() << CostString);
+  } else /* No point dividing an invalid cost - it will still be invalid */
+    LLVM_DEBUG(dbgs() << "Invalid");
+  LLVM_DEBUG(dbgs() << ")\n");
+#endif
   return Cost;
 }
 
