@@ -34,6 +34,7 @@ bool DirectXTTIImpl::isTargetIntrinsicTriviallyScalarizable(
   case Intrinsic::dx_splitdouble:
   case Intrinsic::dx_firstbituhigh:
   case Intrinsic::dx_firstbitshigh:
+  case Intrinsic::dx_firstbitlow:
     return true;
   default:
     return false;
