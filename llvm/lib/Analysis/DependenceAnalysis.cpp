@@ -730,8 +730,14 @@ static AliasResult underlyingObjectsAlias(AAResults *AA,
   const Value *BObj = getUnderlyingObject(LocB.Ptr);
 
   // If the underlying objects are the same, they must alias
-  if (AObj == BObj)
+  if (AObj == BObj) {
+    // The dependence test gets confused if the size of the memory accesses
+    // differ.
+    if (LocA.Size != LocB.Size)
+      return AliasResult::MayAlias;
+
     return AliasResult::MustAlias;
+  }
 
   // We may have hit the recursion limit for underlying objects, or have
   // underlying objects where we don't know they will alias.
