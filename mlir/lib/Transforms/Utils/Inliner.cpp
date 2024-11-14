@@ -242,10 +242,16 @@ void CGUseList::mergeUsesAfterInlining(CallGraphNode *lhs, CallGraphNode *rhs) {
 }
 
 void CGUseList::decrementDiscardableUses(CGUser &uses) {
-  for (CallGraphNode *node : uses.topLevelUses)
-    --discardableSymNodeUses[node];
-  for (auto &it : uses.innerUses)
-    discardableSymNodeUses[it.first] -= it.second;
+  for (CallGraphNode *node : uses.topLevelUses) {
+    auto symbolIt = discardableSymNodeUses.find(node);
+    if (symbolIt != discardableSymNodeUses.end())
+      --discardableSymNodeUses[node];
+  }
+  for (auto &it : uses.innerUses) {
+    auto symbolIt = discardableSymNodeUses.find(it.first);
+    if (symbolIt != discardableSymNodeUses.end())
+      discardableSymNodeUses[it.first] -= it.second;
+  }
 }
 
 //===----------------------------------------------------------------------===//
@@ -433,6 +439,9 @@ public:
   LogicalResult inlineSCC(InlinerInterfaceImpl &inlinerIface,
                           CGUseList &useList, CallGraphSCC &currentSCC,
                           MLIRContext *context);
+
+  void collectDeadNodeAfterInline(CallGraph &cg, CGUseList &useList,
+                                  InlinerInterfaceImpl &inlinerIface);
 
 private:
   /// Optimize the nodes within the given SCC with one of the held optimization
@@ -748,6 +757,27 @@ bool Inliner::Impl::shouldInline(ResolvedCall &resolvedCall) {
   return true;
 }
 
+/// Iteratively clean up dead nodes until no change happened.
+void Inliner::Impl::collectDeadNodeAfterInline(
+    CallGraph &cg, CGUseList &useList, InlinerInterfaceImpl &inlinerIface) {
+  auto eraseDeadNode = [&](void) {
+    bool changed = false;
+    for (CallGraphNode *node : cg) {
+      if (useList.isDead(node)) {
+        useList.eraseNode(node);
+        inlinerIface.markForDeletion(node);
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
+  while (1) {
+    if (!eraseDeadNode())
+      break;
+  }
+}
+
 LogicalResult Inliner::doInlining() {
   Impl impl(*this);
   auto *context = op->getContext();
@@ -765,6 +795,7 @@ LogicalResult Inliner::doInlining() {
     return result;
 
   // After inlining, make sure to erase any callables proven to be dead.
+  impl.collectDeadNodeAfterInline(cg, useList, inlinerIface);
   inlinerIface.eraseDeadCallables();
   return success();
 }
