@@ -1080,15 +1080,11 @@ AArch64LegalizerInfo::AArch64LegalizerInfo(const AArch64Subtarget &ST)
       .clampNumElements(0, v4s16, v8s16)
       .clampNumElements(0, v4s32, v4s32)
       .clampNumElements(0, v2s64, v2s64)
-      .bitcastIf(
-          // Bitcast pointers vector to i64.
-          [=](const LegalityQuery &Query) {
-            return Query.Types[0].isPointerVector();
-          },
-          [=](const LegalityQuery &Query) {
-            const LLT DstTy = Query.Types[0];
-            return std::pair(0, LLT::vector(DstTy.getElementCount(), 64));
-          });
+      .bitcastIf(isPointerVector(0), [=](const LegalityQuery &Query) {
+        // Bitcast pointers vector to i64.
+        const LLT DstTy = Query.Types[0];
+        return std::pair(0, LLT::vector(DstTy.getElementCount(), 64));
+      });
 
   getActionDefinitionsBuilder(G_CONCAT_VECTORS)
       .legalFor({{v4s32, v2s32}, {v8s16, v4s16}, {v16s8, v8s8}})
