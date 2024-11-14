@@ -19,7 +19,7 @@
 ; CHECK0: declare
 
 ; CHECK1: define internal void @HelperC()
-; CHECK1: define amdgpu_kernel void @C
+; CHECK1: define weak_odr amdgpu_kernel void @C
 
 ; CHECK2: define internal void @large2()
 ; CHECK2: define internal void @large1()
@@ -30,7 +30,7 @@
 ; CHECK2: define amdgpu_kernel void @B
 
 ; NOLARGEKERNELS-CHECK0: define internal void @HelperC()
-; NOLARGEKERNELS-CHECK0: define amdgpu_kernel void @C
+; NOLARGEKERNELS-CHECK0: define weak_odr amdgpu_kernel void @C
 
 ; NOLARGEKERNELS-CHECK1: define internal void @large2()
 ; NOLARGEKERNELS-CHECK1: define internal void @large1()
@@ -88,7 +88,7 @@ define internal void @HelperC() {
   ret void
 }
 
-define amdgpu_kernel void @C() {
+define weak_odr amdgpu_kernel void @C() {
   call void @HelperC()
   ret void
 }
