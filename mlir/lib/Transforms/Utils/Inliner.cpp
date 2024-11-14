@@ -434,6 +434,9 @@ public:
                           CGUseList &useList, CallGraphSCC &currentSCC,
                           MLIRContext *context);
 
+  void collectDeadNodeAfterInline(CallGraph &cg, CGUseList &useList,
+                                  InlinerInterfaceImpl &inlinerIface);
+
 private:
   /// Optimize the nodes within the given SCC with one of the held optimization
   /// pass pipelines. Returns failure if an error occurred during the
@@ -748,6 +751,27 @@ bool Inliner::Impl::shouldInline(ResolvedCall &resolvedCall) {
   return true;
 }
 
+/// Iteratively clean up dead nodes until no change happened.
+void Inliner::Impl::collectDeadNodeAfterInline(
+    CallGraph &cg, CGUseList &useList, InlinerInterfaceImpl &inlinerIface) {
+  auto eraseDeadNode = [&](void) {
+    bool changed = false;
+    for (CallGraphNode *node : cg) {
+      if (useList.isDead(node)) {
+        useList.eraseNode(node);
+        inlinerIface.markForDeletion(node);
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
+  while (1) {
+    if (!eraseDeadNode())
+      break;
+  }
+}
+
 LogicalResult Inliner::doInlining() {
   Impl impl(*this);
   auto *context = op->getContext();
@@ -765,6 +789,7 @@ LogicalResult Inliner::doInlining() {
     return result;
 
   // After inlining, make sure to erase any callables proven to be dead.
+  impl.collectDeadNodeAfterInline(cg, useList, inlinerIface);
   inlinerIface.eraseDeadCallables();
   return success();
 }
