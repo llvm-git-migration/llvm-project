@@ -331,7 +331,6 @@ experimental/utility initializer_list
 experimental/utility limits
 experimental/utility utility
 experimental/utility version
-filesystem bitset
 filesystem cctype
 filesystem cerrno
 filesystem climits
@@ -349,7 +348,6 @@ filesystem initializer_list
 filesystem iomanip
 filesystem ios
 filesystem iosfwd
-filesystem istream
 filesystem limits
 filesystem locale
 filesystem new
@@ -410,13 +408,11 @@ forward_list limits
 forward_list new
 forward_list tuple
 forward_list version
-fstream array
 fstream bitset
 fstream cctype
 fstream cerrno
 fstream climits
 fstream clocale
-fstream cmath
 fstream compare
 fstream cstddef
 fstream cstdint
@@ -427,7 +423,6 @@ fstream ctime
 fstream cwchar
 fstream cwctype
 fstream filesystem
-fstream format
 fstream initializer_list
 fstream iomanip
 fstream ios
@@ -436,9 +431,7 @@ fstream istream
 fstream limits
 fstream locale
 fstream new
-fstream optional
 fstream ostream
-fstream print
 fstream ratio
 fstream stdexcept
 fstream streambuf
@@ -498,7 +491,6 @@ future tuple
 future typeinfo
 future version
 initializer_list version
-iomanip bitset
 iomanip cctype
 iomanip cerrno
 iomanip climits
@@ -515,7 +507,6 @@ iomanip cwctype
 iomanip initializer_list
 iomanip ios
 iomanip iosfwd
-iomanip istream
 iomanip limits
 iomanip locale
 iomanip new
@@ -552,13 +543,11 @@ ios tuple
 ios typeinfo
 ios version
 iosfwd version
-iostream array
 iostream bitset
 iostream cctype
 iostream cerrno
 iostream climits
 iostream clocale
-iostream cmath
 iostream compare
 iostream cstddef
 iostream cstdint
@@ -568,7 +557,6 @@ iostream cstring
 iostream ctime
 iostream cwchar
 iostream cwctype
-iostream format
 iostream initializer_list
 iostream ios
 iostream iosfwd
@@ -576,9 +564,7 @@ iostream istream
 iostream limits
 iostream locale
 iostream new
-iostream optional
 iostream ostream
-iostream print
 iostream ratio
 iostream stdexcept
 iostream streambuf
@@ -773,13 +759,11 @@ optional initializer_list
 optional limits
 optional new
 optional version
-ostream array
 ostream bitset
 ostream cctype
 ostream cerrno
 ostream climits
 ostream clocale
-ostream cmath
 ostream compare
 ostream cstddef
 ostream cstdint
@@ -789,15 +773,12 @@ ostream cstring
 ostream ctime
 ostream cwchar
 ostream cwctype
-ostream format
 ostream initializer_list
 ostream ios
 ostream iosfwd
 ostream limits
 ostream locale
 ostream new
-ostream optional
-ostream print
 ostream ratio
 ostream stdexcept
 ostream streambuf
@@ -1081,13 +1062,11 @@ string_view limits
 string_view new
 string_view stdexcept
 string_view version
-strstream array
 strstream bitset
 strstream cctype
 strstream cerrno
 strstream climits
 strstream clocale
-strstream cmath
 strstream compare
 strstream cstddef
 strstream cstdint
@@ -1097,7 +1076,6 @@ strstream cstring
 strstream ctime
 strstream cwchar
 strstream cwctype
-strstream format
 strstream initializer_list
 strstream ios
 strstream iosfwd
@@ -1105,9 +1083,7 @@ strstream istream
 strstream limits
 strstream locale
 strstream new
-strstream optional
 strstream ostream
-strstream print
 strstream ratio
 strstream stdexcept
 strstream streambuf
@@ -1116,13 +1092,11 @@ strstream string_view
 strstream tuple
 strstream typeinfo
 strstream version
-syncstream array
 syncstream bitset
 syncstream cctype
 syncstream cerrno
 syncstream climits
 syncstream clocale
-syncstream cmath
 syncstream compare
 syncstream cstddef
 syncstream cstdint
@@ -1132,7 +1106,6 @@ syncstream cstring
 syncstream ctime
 syncstream cwchar
 syncstream cwctype
-syncstream format
 syncstream initializer_list
 syncstream ios
 syncstream iosfwd
@@ -1143,7 +1116,6 @@ syncstream mutex
 syncstream new
 syncstream optional
 syncstream ostream
-syncstream print
 syncstream ratio
 syncstream shared_mutex
 syncstream stdexcept
