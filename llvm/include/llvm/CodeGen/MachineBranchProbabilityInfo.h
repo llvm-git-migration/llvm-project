@@ -55,6 +55,8 @@ public:
                                     const MachineBasicBlock *Dst) const;
 };
 
+class MachineBranchProbabilityInfoWrapperPass;
+
 class MachineBranchProbabilityAnalysis
     : public AnalysisInfoMixin<MachineBranchProbabilityAnalysis> {
   friend AnalysisInfoMixin<MachineBranchProbabilityAnalysis>;
@@ -63,6 +65,7 @@ class MachineBranchProbabilityAnalysis
 
 public:
   using Result = MachineBranchProbabilityInfo;
+  using LegacyWrapper = MachineBranchProbabilityInfoWrapperPass;
 
   Result run(MachineFunction &, MachineFunctionAnalysisManager &);
 };
@@ -93,6 +96,9 @@ public:
 
   MachineBranchProbabilityInfo &getMBPI() { return MBPI; }
   const MachineBranchProbabilityInfo &getMBPI() const { return MBPI; }
+
+  MachineBranchProbabilityInfo &getResult() { return MBPI; }
+  const MachineBranchProbabilityInfo &getResult() const { return MBPI; }
 };
 }
 

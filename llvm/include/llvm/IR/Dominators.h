@@ -274,7 +274,7 @@ template <> struct GraphTraits<DominatorTree*>
     return df_end(getEntryNode(N));
   }
 };
-
+class DominatorTreeWrapperPass;
 /// Analysis pass which computes a \c DominatorTree.
 class DominatorTreeAnalysis : public AnalysisInfoMixin<DominatorTreeAnalysis> {
   friend AnalysisInfoMixin<DominatorTreeAnalysis>;
