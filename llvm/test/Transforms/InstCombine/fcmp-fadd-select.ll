@@ -10,7 +10,7 @@ define float @test_fcmp_ogt_fadd_select_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -23,7 +23,7 @@ define float @test_fcmp_ogt_fadd_select_constant_swapped(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float 1.000000e+00, float %add
   ret float %sel
@@ -36,7 +36,7 @@ define float @test_fcmp_ogt_fadd_select_neg_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, -0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, -0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -49,7 +49,7 @@ define float @test_fcmp_ogt_fadd_select_fastmath_preserve(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd nnan float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -62,7 +62,7 @@ define <2 x float> @test_fcmp_ogt_fadd_select_constant_vectors(<2 x float> %in) 
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz <2 x float> [[SEL_NEW]], splat (float 1.000000e+00)
 ; CHECK-NEXT:    ret <2 x float> [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
+  %cmp1 = fcmp nnan ogt <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
   %add = fadd <2 x float> %in, <float 1.000000e+00, float 1.000000e+00>
   %sel = select nnan nsz <2 x i1> %cmp1, <2 x float> %add, <2 x float> <float 1.000000e+00, float 1.000000e+00>
   ret <2 x float> %sel
@@ -78,7 +78,7 @@ define float @test_fcmp_olt_fadd_select_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp olt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan olt float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -91,7 +91,7 @@ define float @test_fcmp_olt_fadd_select_constant_swapped(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp olt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan olt float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float 1.000000e+00, float %add
   ret float %sel
@@ -104,7 +104,7 @@ define float @test_fcmp_olt_fadd_select_neg_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp olt float %in, -0.000000e+00
+  %cmp1 = fcmp nnan olt float %in, -0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -117,7 +117,7 @@ define float @test_fcmp_olt_fadd_select_fastmath_preserve(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp olt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan olt float %in, 0.000000e+00
   %add = fadd nnan float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -130,7 +130,7 @@ define <2 x float> @test_fcmp_olt_fadd_select_constant_vectors(<2 x float> %in) 
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz <2 x float> [[SEL_NEW]], splat (float 1.000000e+00)
 ; CHECK-NEXT:    ret <2 x float> [[ADD_NEW]]
 ;
-  %cmp1 = fcmp olt <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
+  %cmp1 = fcmp nnan olt <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
   %add = fadd <2 x float> %in, <float 1.000000e+00, float 1.000000e+00>
   %sel = select nnan nsz <2 x i1> %cmp1, <2 x float> %add, <2 x float> <float 1.000000e+00, float 1.000000e+00>
   ret <2 x float> %sel
@@ -146,7 +146,7 @@ define float @test_fcmp_oge_fadd_select_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp oge float %in, 0.000000e+00
+  %cmp1 = fcmp nnan oge float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -159,7 +159,7 @@ define float @test_fcmp_oge_fadd_select_constant_swapped(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp oge float %in, 0.000000e+00
+  %cmp1 = fcmp nnan oge float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float 1.000000e+00, float %add
   ret float %sel
@@ -172,7 +172,7 @@ define float @test_fcmp_oge_fadd_select_neg_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp oge float %in, -0.000000e+00
+  %cmp1 = fcmp nnan oge float %in, -0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -185,7 +185,7 @@ define float @test_fcmp_oge_fadd_select_fastmath_preserve(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp oge float %in, 0.000000e+00
+  %cmp1 = fcmp nnan oge float %in, 0.000000e+00
   %add = fadd nnan float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -198,7 +198,7 @@ define <2 x float> @test_fcmp_oge_fadd_select_constant_vectors(<2 x float> %in) 
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz <2 x float> [[SEL_NEW]], splat (float 1.000000e+00)
 ; CHECK-NEXT:    ret <2 x float> [[ADD_NEW]]
 ;
-  %cmp1 = fcmp oge <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
+  %cmp1 = fcmp nnan oge <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
   %add = fadd <2 x float> %in, <float 1.000000e+00, float 1.000000e+00>
   %sel = select nnan nsz <2 x i1> %cmp1, <2 x float> %add, <2 x float> <float 1.000000e+00, float 1.000000e+00>
   ret <2 x float> %sel
@@ -214,7 +214,7 @@ define float @test_fcmp_ole_fadd_select_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ole float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ole float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -227,7 +227,7 @@ define float @test_fcmp_ole_fadd_select_constant_swapped(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ole float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ole float %in, 0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float 1.000000e+00, float %add
   ret float %sel
@@ -240,7 +240,7 @@ define float @test_fcmp_ole_fadd_select_neg_constant(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ole float %in, -0.000000e+00
+  %cmp1 = fcmp nnan ole float %in, -0.000000e+00
   %add = fadd float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -253,7 +253,7 @@ define float @test_fcmp_ole_fadd_select_fastmath_preserve(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ole float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ole float %in, 0.000000e+00
   %add = fadd nnan float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -266,7 +266,7 @@ define <2 x float> @test_fcmp_ole_fadd_select_constant_vectors(<2 x float> %in) 
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz <2 x float> [[SEL_NEW]], splat (float 1.000000e+00)
 ; CHECK-NEXT:    ret <2 x float> [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ole <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
+  %cmp1 = fcmp nnan ole <2 x float> %in, <float 0.000000e+00, float 0.000000e+00>
   %add = fadd <2 x float> %in, <float 1.000000e+00, float 1.000000e+00>
   %sel = select nnan nsz <2 x i1> %cmp1, <2 x float> %add, <2 x float> <float 1.000000e+00, float 1.000000e+00>
   ret <2 x float> %sel
@@ -641,7 +641,7 @@ define float @test_fcmp_ogt_fadd_select_rewrite_flags1(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd reassoc nnan nsz arcp contract afn float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd reassoc afn arcp contract float %in, 1.000000e+00
   %sel = select nnan nsz reassoc afn arcp contract i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -654,7 +654,7 @@ define float @test_fcmp_ogt_fadd_select_rewrite_flags2(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd nnan nsz float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd reassoc float %in, 1.000000e+00
   %sel = select nnan nsz i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel
@@ -667,7 +667,7 @@ define float @test_fcmp_ogt_fadd_select_rewrite_and_fastmath(float %in) {
 ; CHECK-NEXT:    [[ADD_NEW:%.*]] = fadd fast float [[SEL_NEW]], 1.000000e+00
 ; CHECK-NEXT:    ret float [[ADD_NEW]]
 ;
-  %cmp1 = fcmp ogt float %in, 0.000000e+00
+  %cmp1 = fcmp nnan ogt float %in, 0.000000e+00
   %add = fadd fast reassoc float %in, 1.000000e+00
   %sel = select fast i1 %cmp1, float %add, float 1.000000e+00
   ret float %sel

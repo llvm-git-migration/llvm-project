@@ -3864,9 +3864,12 @@ Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
   if (SIFPOp) {
     // TODO: Try to forward-propagate FMF from select arms to the select.
 
+    auto *FCmp = dyn_cast<FCmpInst>(CondVal);
+
     // Canonicalize select of FP values where NaN and -0.0 are not valid as
     // minnum/maxnum intrinsics.
-    if (SIFPOp->hasNoNaNs() && SIFPOp->hasNoSignedZeros()) {
+    if (SIFPOp->hasNoNaNs() && SIFPOp->hasNoSignedZeros() && FCmp &&
+        FCmp->hasNoNaNs()) {
       Value *X, *Y;
       if (match(&SI, m_OrdOrUnordFMax(m_Value(X), m_Value(Y))))
         return replaceInstUsesWith(

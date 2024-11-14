@@ -1103,7 +1103,7 @@ define float @test_fneg_select_maxnum(float %x) {
 ; CHECK-NEXT:    [[NEG:%.*]] = fneg float [[SEL1]]
 ; CHECK-NEXT:    ret float [[NEG]]
 ;
-  %cmp1 = fcmp ogt float %x, 1.0
+  %cmp1 = fcmp nnan ogt float %x, 1.0
   %sel1 = select nnan nsz i1 %cmp1, float %x, float 1.0
   %neg = fneg float %sel1
   ret float %neg
