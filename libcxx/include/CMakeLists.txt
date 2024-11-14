@@ -551,6 +551,7 @@ set(files
   __memory/construct_at.h
   __memory/destruct_n.h
   __memory/inout_ptr.h
+  __memory/is_trivially_allocator_relocatable.h
   __memory/noexcept_move_assign_container.h
   __memory/out_ptr.h
   __memory/pointer_traits.h

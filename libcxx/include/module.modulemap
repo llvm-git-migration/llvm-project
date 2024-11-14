@@ -1533,6 +1533,7 @@ module std [system] {
     module destruct_n                         { header "__memory/destruct_n.h" }
     module fwd                                { header "__fwd/memory.h" }
     module inout_ptr                          { header "__memory/inout_ptr.h" }
+    module is_trivially_allocator_relocatable { header "__memory/is_trivially_allocator_relocatable.h" }
     module noexcept_move_assign_container     { header "__memory/noexcept_move_assign_container.h" }
     module out_ptr                            { header "__memory/out_ptr.h" }
     module pointer_traits                     { header "__memory/pointer_traits.h" }
