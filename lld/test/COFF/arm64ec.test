@@ -36,7 +36,7 @@ ARM64X-DATA: 03030303 01010101 02020202
 
 RUN: not lld-link -out:test.dll -machine:arm64 arm64-data-sym.obj arm64ec-data-sym.obj \
 RUN:              -dll -noentry 2>&1 | FileCheck -check-prefix=INCOMPAT1 %s
-INCOMPAT1: lld-link: error: arm64ec-data-sym.obj: machine type arm64ec conflicts with arm64
+INCOMPAT1: lld-link: error: arm64ec-data-sym.obj: incompatible machine type arm64ec, use /machine:arm64ec or /machine:arm64x
 
 RUN: not lld-link -out:test.dll -machine:arm64ec arm64ec-data-sym.obj arm64-data-sym.obj \
 RUN:              -dll -noentry 2>&1 | FileCheck -check-prefix=INCOMPAT2 %s
@@ -45,6 +45,10 @@ INCOMPAT2: lld-link: error: arm64-data-sym.obj: machine type arm64 conflicts wit
 RUN: not lld-link -out:test.dll -machine:arm64 arm64-data-sym.obj x86_64-data-sym.obj \
 RUN:              -dll -noentry 2>&1 | FileCheck -check-prefix=INCOMPAT3 %s
 INCOMPAT3: lld-link: error: x86_64-data-sym.obj: machine type x64 conflicts with arm64
+
+arm64ec machine type can't be inferred, it must be specified explicitly.
+RUN: not lld-link -out:test.dll arm64ec-data-sym.obj \
+RUN:              -dll -noentry 2>&1 | FileCheck -check-prefix=INCOMPAT1 %s
 
 #--- arm64ec-data-sym.s
     .data

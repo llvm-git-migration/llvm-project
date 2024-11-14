@@ -46,6 +46,9 @@ static bool compatibleMachineType(COFFLinkerContext &ctx, MachineTypes mt) {
     return COFF::isArm64EC(mt) || mt == AMD64;
   case ARM64X:
     return COFF::isAnyArm64(mt) || mt == AMD64;
+  case IMAGE_FILE_MACHINE_UNKNOWN:
+    // The ARM64EC target must be explicitly specified and cannot be inferred.
+    return !isArm64EC(mt);
   default:
     return ctx.config.machine == mt;
   }
@@ -74,13 +77,18 @@ void SymbolTable::addFile(InputFile *file) {
   }
 
   MachineTypes mt = file->getMachineType();
+  if (!compatibleMachineType(ctx, mt)) {
+    if (isArm64EC(mt))
+      error(toString(file) + ": incompatible machine type " + machineToStr(mt) +
+            ", use /machine:arm64ec or /machine:arm64x");
+    else
+      error(toString(file) + ": machine type " + machineToStr(mt) +
+            " conflicts with " + machineToStr(ctx.config.machine));
+    return;
+  }
   if (ctx.config.machine == IMAGE_FILE_MACHINE_UNKNOWN) {
     ctx.config.machine = mt;
     ctx.driver.addWinSysRootLibSearchPaths();
-  } else if (!compatibleMachineType(ctx, mt)) {
-    error(toString(file) + ": machine type " + machineToStr(mt) +
-          " conflicts with " + machineToStr(ctx.config.machine));
-    return;
   }
 
   ctx.driver.parseDirectives(file);
