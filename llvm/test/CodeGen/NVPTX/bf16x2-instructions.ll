@@ -26,7 +26,7 @@ define <2 x bfloat> @test_ret_const() #0 {
 ; SM80-DAG:  cvt.f32.bf16    [[FA1:%f[0-9]+]], [[A1]]
 ; SM80-DAG:  add.rn.f32     [[FR0:%f[0-9]+]], [[FA0]], 0f3F800000;
 ; SM80-DAG:  add.rn.f32     [[FR1:%f[0-9]+]], [[FA1]], 0f40000000;
-; SM80-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR0]], [[FR1]];
+; SM80-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR1]], [[FR0]];
 ;
 ; CHECK-NEXT: st.param.b32    [func_retval0], [[R]];
 ; CHECK-NEXT: ret;
@@ -66,7 +66,7 @@ define bfloat @test_fadd_imm_1(bfloat %a) #0 {
 ; SM80-DAG:   cvt.f32.bf16    [[FB1:%f[0-9]+]], [[B1]];
 ; SM80-DAG:   sub.rn.f32      [[FR0:%f[0-9]+]], [[FA0]], [[FB0]];
 ; SM80-DAG:   sub.rn.f32      [[FR1:%f[0-9]+]], [[FA1]], [[FB1]];
-; SM80-DAG:   cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR0]], [[FR1]];
+; SM80-DAG:   cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR1]], [[FR0]];
 
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
@@ -89,7 +89,7 @@ define <2 x bfloat> @test_fsubx2(<2 x bfloat> %a, <2 x bfloat> %b) #0 {
 ; SM80-DAG:   cvt.f32.bf16    [[FB1:%f[0-9]+]], [[B1]];
 ; SM80-DAG:   mul.rn.f32      [[FR0:%f[0-9]+]], [[FA0]], [[FB0]];
 ; SM80-DAG:   mul.rn.f32      [[FR1:%f[0-9]+]], [[FA1]], [[FB1]];
-; SM80-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR0]], [[FR1]];
+; SM80-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR1]], [[FR0]];
 
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
@@ -110,7 +110,7 @@ define <2 x bfloat> @test_fmulx2(<2 x bfloat> %a, <2 x bfloat> %b) #0 {
 ; CHECK-DAG:  cvt.f32.bf16     [[FB1:%f[0-9]+]], [[B1]];
 ; CHECK-DAG:  div.rn.f32      [[FR0:%f[0-9]+]], [[FA0]], [[FB0]];
 ; CHECK-DAG:  div.rn.f32      [[FR1:%f[0-9]+]], [[FA1]], [[FB1]];
-; CHECK:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR0]], [[FR1]];
+; CHECK:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[FR1]], [[FR0]];
 ; CHECK-NEXT: st.param.b32    [func_retval0], [[R]];
 ; CHECK-NEXT: ret;
 
@@ -279,7 +279,7 @@ define <2 x bfloat> @test_select_cc_bf16_f32(<2 x bfloat> %a, <2 x bfloat> %b,
 
 ; CHECK-LABEL: test_fptrunc_2xfloat(
 ; CHECK:      ld.param.v2.f32 {[[A0:%f[0-9]+]], [[A1:%f[0-9]+]]}, [test_fptrunc_2xfloat_param_0];
-; CHECK:      cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[A0]], [[A1]];
+; CHECK:      cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[A1]], [[A0]];
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
 define <2 x bfloat> @test_fptrunc_2xfloat(<2 x float> %a) #0 {
@@ -349,7 +349,7 @@ declare <2 x bfloat> @llvm.fmuladd.f16(<2 x bfloat> %a, <2 x bfloat> %b, <2 x bf
 ; CHECK-DAG:  cvt.f32.bf16     [[AF1:%f[0-9]+]], [[A1]];
 ; CHECK-DAG:  sqrt.rn.f32     [[RF0:%f[0-9]+]], [[AF0]];
 ; CHECK-DAG:  sqrt.rn.f32     [[RF1:%f[0-9]+]], [[AF1]];
-; CHECK-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF0]], [[RF1]];
+; CHECK-DAG:  cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF1]], [[RF0]];
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
 define <2 x bfloat> @test_sqrt(<2 x bfloat> %a) #0 {
@@ -424,7 +424,7 @@ define <2 x bfloat> @test_maxnum(<2 x bfloat> %a, <2 x bfloat> %b) #0 {
 ; SM80-DAG:   cvt.f32.bf16     [[FA1:%f[0-9]+]], [[A1]];
 ; SM80-DAG:  cvt.rmi.f32.f32 [[RF0:%f[0-9]+]], [[FA0]];
 ; SM80-DAG:  cvt.rmi.f32.f32 [[RF1:%f[0-9]+]], [[FA1]];
-; SM80:      cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF0]], [[RF1]];
+; SM80:      cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF1]], [[RF0]];
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
 define <2 x bfloat> @test_floor(<2 x bfloat> %a) #0 {
@@ -441,7 +441,7 @@ define <2 x bfloat> @test_floor(<2 x bfloat> %a) #0 {
 ; SM80-DAG:   cvt.f32.bf16     [[FA1:%f[0-9]+]], [[A1]];
 ; SM80-DAG:   cvt.rpi.f32.f32 [[RF0:%f[0-9]+]], [[FA0]];
 ; SM80-DAG:   cvt.rpi.f32.f32 [[RF1:%f[0-9]+]], [[FA1]];
-; SM80:       cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF0]], [[RF1]];
+; SM80:       cvt.rn.bf16x2.f32        [[R:%r[0-9]+]], [[RF1]], [[RF0]];
 ; CHECK:      st.param.b32    [func_retval0], [[R]];
 ; CHECK:      ret;
 define <2 x bfloat> @test_ceil(<2 x bfloat> %a) #0 {
