@@ -60,10 +60,13 @@ def FORM_TRANSPOSED_REG_TUPLE_X4_PSEUDO :
 }
 
 def SDTZALoadStore : SDTypeProfile<0, 3, [SDTCisInt<0>, SDTCisPtrTy<1>, SDTCisInt<2>]>;
-def AArch64SMELdr : SDNode<"AArch64ISD::SME_ZA_LDR", SDTZALoadStore,
+
+let IsStrictFP = true in {
+  def AArch64SMELdr : SDNode<"AArch64ISD::SME_ZA_LDR", SDTZALoadStore,
                              [SDNPHasChain, SDNPSideEffect, SDNPMayLoad]>;
-def AArch64SMEStr : SDNode<"AArch64ISD::SME_ZA_STR", SDTZALoadStore,
+  def AArch64SMEStr : SDNode<"AArch64ISD::SME_ZA_STR", SDTZALoadStore,
                              [SDNPHasChain, SDNPSideEffect, SDNPMayStore]>;
+}
 
 //===----------------------------------------------------------------------===//
 // SME Pseudo Classes
