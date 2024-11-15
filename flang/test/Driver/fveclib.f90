@@ -30,3 +30,14 @@
 
 ! TODO: if we add support for -nostdlib or -nodefaultlibs we need to test that
 ! these prevent "-framework Accelerate" being added on Darwin
+
+! RUN: %flang -### --target=aarch64-linux-gnu -fveclib=ArmPL %s 2>&1 | FileCheck --check-prefix=CHECK-LINKING-ARMPL %s
+! CHECK-LINKING-ARMPL: "-lamath"
+! CHECK-LINKING-ARMPL-SAME: "-lm"
+
+! RUN: %flang -### --target=aarch64-linux-gnu -frtlib-add-rpath -fveclib=ArmPL %s 2>&1 | FileCheck --check-prefix=CHECK-RPATH-ARMPL %s
+! CHECK-RPATH-ARMPL: "-lamath"
+! CHECK-RPATH-ARMPL-SAME: "-lm"
+! We need to see "-rpath" at least twice, one for veclib, one for the Fortran runtime
+! CHECK-RPATH-ARMPL-SAME: "-rpath"
+! CHECK-RPATH-ARMPL-SAME: "-rpath"
