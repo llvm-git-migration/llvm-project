@@ -407,6 +407,11 @@ struct SDTypeConstraint {
   /// is flagged.
   bool ApplyTypeConstraint(TreePatternNode &N, const SDNodeInfo &NodeInfo,
                            TreePattern &TP) const;
+
+  friend bool operator==(const SDTypeConstraint &LHS,
+                         const SDTypeConstraint &RHS);
+  friend bool operator<(const SDTypeConstraint &LHS,
+                        const SDTypeConstraint &RHS);
 };
 
 /// ScopedName - A name of a node associated with a "scope" that indicates
@@ -438,9 +443,11 @@ class SDNodeInfo {
   const Record *Def;
   StringRef EnumName;
   StringRef SDClassName;
-  unsigned Properties;
   unsigned NumResults;
   int NumOperands;
+  unsigned Properties;
+  bool IsStrictFP;
+  uint64_t TSFlags;
   std::vector<SDTypeConstraint> TypeConstraints;
 
 public:
@@ -465,9 +472,15 @@ public:
   /// MVT::SimpleValueType.  Otherwise, return MVT::Other.
   MVT::SimpleValueType getKnownType(unsigned ResNo) const;
 
+  unsigned getProperties() const { return Properties; }
+
   /// hasProperty - Return true if this node has the specified property.
   ///
   bool hasProperty(enum SDNP Prop) const { return Properties & (1 << Prop); }
+
+  bool isStrictFP() const { return IsStrictFP; }
+
+  uint64_t getTSFlags() const { return TSFlags; }
 
   /// ApplyTypeConstraints - Given a node in a pattern, apply the type
   /// constraints for this node to the operands of the node.  This returns

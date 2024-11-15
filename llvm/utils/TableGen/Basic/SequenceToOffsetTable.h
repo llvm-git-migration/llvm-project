@@ -102,14 +102,14 @@ public:
   }
 
   /// layout - Computes the final table layout.
-  void layout() {
+  void layout(bool Term = true) {
     assert(Entries == 0 && "Can only call layout() once");
     // Lay out the table in Seqs iteration order.
     for (typename SeqMap::iterator I = Seqs.begin(), E = Seqs.end(); I != E;
          ++I) {
       I->second = Entries;
       // Include space for a terminator.
-      Entries += I->first.size() + 1;
+      Entries += I->first.size() + Term;
     }
   }
 
@@ -162,7 +162,9 @@ public:
         Print(OS, Element);
         OS << ", ";
       }
-      OS << Term << ",\n";
+      if (Term)
+        OS << Term << ',';
+      OS << '\n';
     }
   }
 };
