@@ -1707,6 +1707,60 @@ bool SDTypeConstraint::ApplyTypeConstraint(TreePatternNode &N,
   llvm_unreachable("Invalid ConstraintType!");
 }
 
+bool llvm::operator==(const SDTypeConstraint &LHS,
+                      const SDTypeConstraint &RHS) {
+  if (std::tie(LHS.OperandNo, LHS.ConstraintType) !=
+      std::tie(RHS.OperandNo, RHS.ConstraintType))
+    return false;
+  switch (LHS.ConstraintType) {
+  case SDTypeConstraint::SDTCisVT:
+  case SDTypeConstraint::SDTCVecEltisVT:
+    return LHS.VVT == RHS.VVT;
+  case SDTypeConstraint::SDTCisPtrTy:
+  case SDTypeConstraint::SDTCisInt:
+  case SDTypeConstraint::SDTCisFP:
+  case SDTypeConstraint::SDTCisVec:
+    break;
+  case SDTypeConstraint::SDTCisSameAs:
+  case SDTypeConstraint::SDTCisVTSmallerThanOp:
+  case SDTypeConstraint::SDTCisOpSmallerThanOp:
+  case SDTypeConstraint::SDTCisEltOfVec:
+  case SDTypeConstraint::SDTCisSubVecOfVec:
+  case SDTypeConstraint::SDTCisSameNumEltsAs:
+  case SDTypeConstraint::SDTCisSameSizeAs:
+    return LHS.x.SDTCisSameSizeAs_Info.OtherOperandNum ==
+           RHS.x.SDTCisSameSizeAs_Info.OtherOperandNum;
+  }
+  return true;
+}
+
+bool llvm::operator<(const SDTypeConstraint &LHS, const SDTypeConstraint &RHS) {
+  if (std::tie(LHS.OperandNo, LHS.ConstraintType) !=
+      std::tie(RHS.OperandNo, RHS.ConstraintType))
+    return std::tie(LHS.OperandNo, LHS.ConstraintType) <
+           std::tie(RHS.OperandNo, RHS.ConstraintType);
+  switch (LHS.ConstraintType) {
+  case SDTypeConstraint::SDTCisVT:
+  case SDTypeConstraint::SDTCVecEltisVT:
+    return LHS.VVT < RHS.VVT;
+  case SDTypeConstraint::SDTCisPtrTy:
+  case SDTypeConstraint::SDTCisInt:
+  case SDTypeConstraint::SDTCisFP:
+  case SDTypeConstraint::SDTCisVec:
+    break;
+  case SDTypeConstraint::SDTCisSameAs:
+  case SDTypeConstraint::SDTCisVTSmallerThanOp:
+  case SDTypeConstraint::SDTCisOpSmallerThanOp:
+  case SDTypeConstraint::SDTCisEltOfVec:
+  case SDTypeConstraint::SDTCisSubVecOfVec:
+  case SDTypeConstraint::SDTCisSameNumEltsAs:
+  case SDTypeConstraint::SDTCisSameSizeAs:
+    return LHS.x.SDTCisSameSizeAs_Info.OtherOperandNum <
+           RHS.x.SDTCisSameSizeAs_Info.OtherOperandNum;
+  }
+  return false;
+}
+
 // Update the node type to match an instruction operand or result as specified
 // in the ins or outs lists on the instruction definition. Return true if the
 // type was actually changed.
@@ -1797,6 +1851,13 @@ SDNodeInfo::SDNodeInfo(const Record *R, const CodeGenHwModes &CGH) : Def(R) {
 
   // Parse the properties.
   Properties = parseSDPatternOperatorProperties(R);
+  IsStrictFP = R->getValueAsBit("IsStrictFP");
+
+  std::optional<uint64_t> MaybeTSFlags =
+      R->getValueAsBitsInit("TSFlags")->convertInitializerToInt();
+  if (!MaybeTSFlags)
+    PrintFatalError(R->getLoc(), "Invalid TSFlags");
+  TSFlags = *MaybeTSFlags;
 
   // Parse the type constraints.
   for (const Record *R : TypeProfile->getValueAsListOfDefs("Constraints"))
