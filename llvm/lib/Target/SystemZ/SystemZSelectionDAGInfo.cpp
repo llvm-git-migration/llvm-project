@@ -10,37 +10,27 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "SystemZSelectionDAGInfo.h"
 #include "SystemZTargetMachine.h"
 #include "llvm/CodeGen/SelectionDAG.h"
+
+#define GET_SDNODE_DESC
+#include "SystemZGenSDNodeInfo.inc"
 
 using namespace llvm;
 
 #define DEBUG_TYPE "systemz-selectiondag-info"
 
-bool SystemZSelectionDAGInfo::isTargetMemoryOpcode(unsigned Opcode) const {
-  if (Opcode >= SystemZISD::FIRST_MEMORY_OPCODE &&
-      Opcode <= SystemZISD::LAST_MEMORY_OPCODE)
-    return true;
-  return SelectionDAGTargetInfo::isTargetMemoryOpcode(Opcode);
-}
+SystemZSelectionDAGInfo::SystemZSelectionDAGInfo()
+    : SelectionDAGGenTargetInfo(SystemZGenSDNodeInfo) {}
 
-bool SystemZSelectionDAGInfo::isTargetStrictFPOpcode(unsigned Opcode) const {
+const char *SystemZSelectionDAGInfo::getTargetNodeName(unsigned Opcode) const {
   switch (static_cast<SystemZISD::NodeType>(Opcode)) {
-  default:
-    break;
-  case SystemZISD::STRICT_FCMP:
-  case SystemZISD::STRICT_FCMPS:
-  case SystemZISD::STRICT_VFCMPE:
-  case SystemZISD::STRICT_VFCMPH:
-  case SystemZISD::STRICT_VFCMPHE:
-  case SystemZISD::STRICT_VFCMPES:
-  case SystemZISD::STRICT_VFCMPHS:
-  case SystemZISD::STRICT_VFCMPHES:
-  case SystemZISD::STRICT_VEXTEND:
-  case SystemZISD::STRICT_VROUND:
-    return true;
+  case SystemZISD::GET_CCMASK:
+    return "SystemZISD::GET_CCMASK";
   }
-  return SelectionDAGTargetInfo::isTargetStrictFPOpcode(Opcode);
+
+  return SelectionDAGGenTargetInfo::getTargetNodeName(Opcode);
 }
 
 static unsigned getMemMemLenAdj(unsigned Op) {
