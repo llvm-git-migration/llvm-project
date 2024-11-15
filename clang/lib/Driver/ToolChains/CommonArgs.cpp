@@ -490,6 +490,16 @@ void tools::AddLinkerInputs(const ToolChain &TC, const InputInfoList &Inputs,
     else
       A.renderAsInput(Args, CmdArgs);
   }
+  if (const Arg *A = Args.getLastArg(options::OPT_fveclib)) {
+    if (A->getNumValues() == 1) {
+      StringRef V = A->getValue();
+      if (V == "ArmPL") {
+        CmdArgs.push_back(Args.MakeArgString("-lamath"));
+        CmdArgs.push_back(Args.MakeArgString("-lm"));
+        addArchSpecificRPath(TC, Args, CmdArgs);
+      }
+    }
+  }
 }
 
 void tools::addLinkerCompressDebugSectionsOption(
