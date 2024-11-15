@@ -144,7 +144,7 @@ class ConvertOpToLLVMPattern : public ConvertToLLVMPattern {
 public:
   using OpAdaptor = typename SourceOp::Adaptor;
   using OneToNOpAdaptor =
-      typename SourceOp::template GenericAdaptor<ArrayRef<ReplacementValues>>;
+      typename SourceOp::template GenericAdaptor<ArrayRef<ValueRange>>;
 
   explicit ConvertOpToLLVMPattern(const LLVMTypeConverter &typeConverter,
                                   PatternBenefit benefit = 1)
@@ -158,7 +158,7 @@ public:
     auto sourceOp = cast<SourceOp>(op);
     rewrite(sourceOp, OpAdaptor(operands, sourceOp), rewriter);
   }
-  void rewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  void rewrite(Operation *op, ArrayRef<ValueRange> operands,
                ConversionPatternRewriter &rewriter) const final {
     auto sourceOp = cast<SourceOp>(op);
     rewrite(sourceOp, OneToNOpAdaptor(operands, sourceOp), rewriter);
@@ -173,7 +173,7 @@ public:
     return matchAndRewrite(sourceOp, OpAdaptor(operands, sourceOp), rewriter);
   }
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
     auto sourceOp = cast<SourceOp>(op);
     return matchAndRewrite(sourceOp, OneToNOpAdaptor(operands, sourceOp),

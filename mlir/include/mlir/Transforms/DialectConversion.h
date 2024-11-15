@@ -32,10 +32,6 @@ struct OperationConverter;
 class Type;
 class Value;
 
-/// A list of replacement SSA values. Optimized for the common case of a single
-/// SSA value.
-using ReplacementValues = SmallVector<Value, 1>;
-
 //===----------------------------------------------------------------------===//
 // Type Conversion
 //===----------------------------------------------------------------------===//
@@ -541,7 +537,7 @@ public:
                        ConversionPatternRewriter &rewriter) const {
     llvm_unreachable("unimplemented rewrite");
   }
-  virtual void rewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  virtual void rewrite(Operation *op, ArrayRef<ValueRange> operands,
                        ConversionPatternRewriter &rewriter) const {
     rewrite(op, getOneToOneAdaptorOperands(operands), rewriter);
   }
@@ -556,7 +552,7 @@ public:
     return success();
   }
   virtual LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const {
     return matchAndRewrite(op, getOneToOneAdaptorOperands(operands), rewriter);
   }
@@ -587,8 +583,8 @@ protected:
       : RewritePattern(std::forward<Args>(args)...),
         typeConverter(&typeConverter) {}
 
-  static SmallVector<Value>
-  getOneToOneAdaptorOperands(ArrayRef<ReplacementValues> operands);
+  SmallVector<Value>
+  getOneToOneAdaptorOperands(ArrayRef<ValueRange> operands) const;
 
 protected:
   /// An optional type converter for use by this pattern.
@@ -606,7 +602,7 @@ class OpConversionPattern : public ConversionPattern {
 public:
   using OpAdaptor = typename SourceOp::Adaptor;
   using OneToNOpAdaptor =
-      typename SourceOp::template GenericAdaptor<ArrayRef<ReplacementValues>>;
+      typename SourceOp::template GenericAdaptor<ArrayRef<ValueRange>>;
 
   OpConversionPattern(MLIRContext *context, PatternBenefit benefit = 1)
       : ConversionPattern(SourceOp::getOperationName(), benefit, context) {}
@@ -625,7 +621,7 @@ public:
     auto sourceOp = cast<SourceOp>(op);
     rewrite(sourceOp, OpAdaptor(operands, sourceOp), rewriter);
   }
-  void rewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  void rewrite(Operation *op, ArrayRef<ValueRange> operands,
                ConversionPatternRewriter &rewriter) const final {
     auto sourceOp = cast<SourceOp>(op);
     rewrite(sourceOp, OneToNOpAdaptor(operands, sourceOp), rewriter);
@@ -637,7 +633,7 @@ public:
     return matchAndRewrite(sourceOp, OpAdaptor(operands, sourceOp), rewriter);
   }
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
     auto sourceOp = cast<SourceOp>(op);
     return matchAndRewrite(sourceOp, OneToNOpAdaptor(operands, sourceOp),
@@ -699,7 +695,7 @@ public:
                ConversionPatternRewriter &rewriter) const final {
     rewrite(cast<SourceOp>(op), operands, rewriter);
   }
-  void rewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  void rewrite(Operation *op, ArrayRef<ValueRange> operands,
                ConversionPatternRewriter &rewriter) const final {
     rewrite(cast<SourceOp>(op), operands, rewriter);
   }
@@ -709,7 +705,7 @@ public:
     return matchAndRewrite(cast<SourceOp>(op), operands, rewriter);
   }
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<ReplacementValues> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
     return matchAndRewrite(cast<SourceOp>(op), operands, rewriter);
   }
@@ -720,7 +716,7 @@ public:
                        ConversionPatternRewriter &rewriter) const {
     llvm_unreachable("must override matchAndRewrite or a rewrite method");
   }
-  virtual void rewrite(SourceOp op, ArrayRef<ReplacementValues> operands,
+  virtual void rewrite(SourceOp op, ArrayRef<ValueRange> operands,
                        ConversionPatternRewriter &rewriter) const {
     rewrite(op, getOneToOneAdaptorOperands(operands), rewriter);
   }
@@ -733,7 +729,7 @@ public:
     return success();
   }
   virtual LogicalResult
-  matchAndRewrite(SourceOp op, ArrayRef<ReplacementValues> operands,
+  matchAndRewrite(SourceOp op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const {
     return matchAndRewrite(op, getOneToOneAdaptorOperands(operands), rewriter);
   }
