@@ -3166,7 +3166,7 @@ const SCEV *DependenceInfo::addToCoefficient(const SCEV *Expr,
     return SE->getAddRecExpr(Expr,
                              Value,
                              TargetLoop,
-                             SCEV::FlagAnyWrap); // Worst case, with no info.
+                             SCEV::FlagNSW); // Worst case, with no info.
   if (AddRec->getLoop() == TargetLoop) {
     const SCEV *Sum = SE->getAddExpr(AddRec->getStepRecurrence(*SE), Value);
     if (Sum->isZero())
@@ -3177,7 +3177,7 @@ const SCEV *DependenceInfo::addToCoefficient(const SCEV *Expr,
                              AddRec->getNoWrapFlags());
   }
   if (SE->isLoopInvariant(AddRec, TargetLoop))
-    return SE->getAddRecExpr(AddRec, Value, TargetLoop, SCEV::FlagAnyWrap);
+    return SE->getAddRecExpr(AddRec, Value, TargetLoop, SCEV::FlagNSW);
   return SE->getAddRecExpr(
       addToCoefficient(AddRec->getStart(), TargetLoop, Value),
       AddRec->getStepRecurrence(*SE), AddRec->getLoop(),
