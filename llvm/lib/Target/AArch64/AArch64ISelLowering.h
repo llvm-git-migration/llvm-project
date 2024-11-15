@@ -520,6 +520,10 @@ enum NodeType : unsigned {
   MOPS_MEMSET_TAGGING,
   MOPS_MEMCOPY,
   MOPS_MEMMOVE,
+
+  // Compare-and-branch
+  CBRR,
+  CBRI,
 };
 
 } // end namespace AArch64ISD
