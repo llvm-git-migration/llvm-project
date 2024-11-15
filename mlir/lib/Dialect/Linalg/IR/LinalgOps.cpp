@@ -155,23 +155,10 @@ static void fillStructuredOpRegion(OpBuilder &opBuilder, Region &region,
   // iterator_types is an auto-generated method.
 }
 
-/// Helper to create a typical indexing map for MatmulOp. Returns a list of
-/// AffineMap.
-static SmallVector<AffineMap, 3>
-getDefaultIndexingMapsForMatmul(MLIRContext *context) {
-  AffineExpr d0, d1, d2;
-  SmallVector<AffineMap, 3> indexingMaps;
-  bindDims(context, d0, d1, d2);
-  indexingMaps.push_back(AffineMap::get(3, 0, {d0, d2}, context));
-  indexingMaps.push_back(AffineMap::get(3, 0, {d2, d1}, context));
-  indexingMaps.push_back(AffineMap::get(3, 0, {d0, d1}, context));
-  return indexingMaps;
-}
-
 /// Wrapper to return the typical indexing map array attribute for MatmulOp.
 static SmallVector<Attribute> getDefaultIndexingMapAttr(MLIRContext *context) {
   return llvm::map_to_vector(
-      getDefaultIndexingMapsForMatmul(context),
+      MatmulOp::getDefaultIndexingMaps(context),
       [](AffineMap map) -> Attribute { return AffineMapAttr::get(map); });
 }
 
@@ -203,9 +190,6 @@ static void buildStructuredOp(
       // Convert each AffineMap to an AffineMapAttr
       indexingMapsAttrVal.push_back(AffineMapAttr::get(map));
     }
-    state.addAttribute("indexing_maps", b.getArrayAttr(indexingMapsAttrVal));
-  } else {
-    indexingMapsAttrVal = getDefaultIndexingMapAttr(b.getContext());
     state.addAttribute("indexing_maps", b.getArrayAttr(indexingMapsAttrVal));
   }
 
@@ -3481,7 +3465,7 @@ static LogicalResult verifyExtendedMatmulSemantic(MatmulOp matmulOp,
                                                   unsigned opIndex) {
   SmallVector<AffineMap, 3> opIndexingMaps = matmulOp.getIndexingMapsArray();
   SmallVector<AffineMap, 3> defaultIndexingMaps =
-      matmulOp.getDefaultIndexingMaps();
+      matmulOp.getDefaultIndexingMaps(matmulOp->getContext());
 
   auto opIndexingMap = opIndexingMaps[opIndex];
   auto defaultIndexingMap = defaultIndexingMaps[opIndex];
@@ -3523,7 +3507,8 @@ bool MatmulOp::hasDynamicIndexingMaps() { return true; }
 /// Check if the op has broadcast and/or transpose semantic. Returns true if the
 /// user defined indexing maps are not equal to default map.
 bool MatmulOp::hasUserDefinedMaps() {
-  SmallVector<AffineMap, 3> defaultMaps = getDefaultIndexingMaps();
+  SmallVector<AffineMap, 3> defaultMaps =
+      MatmulOp::getDefaultIndexingMaps(this->getContext());
   SmallVector<AffineMap, 3> explicitMaps = getIndexingMapsArray();
   return defaultMaps != explicitMaps;
 }
@@ -3555,12 +3540,6 @@ void MatmulOp::regionBuilder(ImplicitLocOpBuilder &b, Block &block,
       helper.buildBinaryFn(BinaryFn::add, block.getArgument(2), value3);
   yields.push_back(value4);
   helper.yieldOutputs(yields);
-}
-
-/// Returns a list of AffineMap with the typical matmul indexing charactristic.
-SmallVector<AffineMap> MatmulOp::getDefaultIndexingMaps() {
-  MLIRContext *context = this->getContext();
-  return getDefaultIndexingMapsForMatmul(context);
 }
 
 /// Returns true if the given broadcast map \p bcastMap is valid for this op.
