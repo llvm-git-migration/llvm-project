@@ -5985,10 +5985,14 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
       llvm::Value *Block =
           Builder.CreatePointerCast(Info.BlockArg, GenericVoidPtrTy);
 
-      AttrBuilder B(Builder.getContext());
-      B.addByValAttr(NDRangeL.getAddress().getElementType());
-      llvm::AttributeList ByValAttrSet =
-          llvm::AttributeList::get(CGM.getModule().getContext(), 3U, B);
+      llvm::AttributeList ByValAttrSet;
+      // AMDGPU doesn't use byval for struct argument.
+      if (!getTarget().getTriple().isAMDGPU()) {
+        AttrBuilder B(Builder.getContext());
+        B.addByValAttr(NDRangeL.getAddress().getElementType());
+        ByValAttrSet =
+            llvm::AttributeList::get(CGM.getModule().getContext(), 3U, B);
+      }
 
       auto RTCall =
           EmitRuntimeCall(CGM.CreateRuntimeFunction(FTy, Name, ByValAttrSet),
