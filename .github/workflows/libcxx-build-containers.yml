@@ -29,6 +29,8 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'llvm'
+    permissions:
+      packages: write
 
     steps:
     - uses: actions/checkout@v4
