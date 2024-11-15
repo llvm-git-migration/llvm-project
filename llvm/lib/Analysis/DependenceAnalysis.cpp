@@ -3115,15 +3115,17 @@ const SCEV *DependenceInfo::zeroCoefficient(const SCEV *Expr,
 // coefficient corresponding to the specified TargetLoop.
 // For example, given a*i + b*j + c*k, adding 1 to the coefficient
 // corresponding to the j loop would yield a*i + (b+1)*j + c*k.
+
+// When Expr is invariant in TargetLoop, i.e., the stride in TargetLoop is 0,
+// addToCoefficient returns an AddRec {Expr, +, Value}_TargetLoop.
+// NoWrapFlags is set to FlagNSW for the evolution function to be linear.
 const SCEV *DependenceInfo::addToCoefficient(const SCEV *Expr,
                                              const Loop *TargetLoop,
                                              const SCEV *Value) const {
   const SCEVAddRecExpr *AddRec = dyn_cast<SCEVAddRecExpr>(Expr);
-  if (!AddRec) // create a new addRec
-    return SE->getAddRecExpr(Expr,
-                             Value,
-                             TargetLoop,
-                             SCEV::FlagAnyWrap); // Worst case, with no info.
+  if (!AddRec)
+    return SE->getAddRecExpr(Expr, Value, TargetLoop, SCEV::FlagNSW);
+
   if (AddRec->getLoop() == TargetLoop) {
     const SCEV *Sum = SE->getAddExpr(AddRec->getStepRecurrence(*SE), Value);
     if (Sum->isZero())
@@ -3134,7 +3136,7 @@ const SCEV *DependenceInfo::addToCoefficient(const SCEV *Expr,
                              AddRec->getNoWrapFlags());
   }
   if (SE->isLoopInvariant(AddRec, TargetLoop))
-    return SE->getAddRecExpr(AddRec, Value, TargetLoop, SCEV::FlagAnyWrap);
+    return SE->getAddRecExpr(AddRec, Value, TargetLoop, SCEV::FlagNSW);
   return SE->getAddRecExpr(
       addToCoefficient(AddRec->getStart(), TargetLoop, Value),
       AddRec->getStepRecurrence(*SE), AddRec->getLoop(),
