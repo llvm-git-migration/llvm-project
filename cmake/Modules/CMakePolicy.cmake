@@ -37,4 +37,13 @@ endif()
 # building with the Apple linker.
 if(POLICY CMP0156)
   cmake_policy(SET CMP0156 NEW)
+
+  # CMP0179: De-duplication of static libraries on link lines keeps first occurrence.
+  # Dependent on CMP0156=NEW. Keeps the first occurrence of static libraries
+  # during deduplication to unify the behaviour on all platforms.
+  # Also works around LLD bug exhibited since CMake 3.31.0 with an expected
+  # workaround in 3.31.1 (https://gitlab.kitware.com/cmake/cmake/-/issues/26447).
+  if(POLICY CMP0179)
+    cmake_policy(SET CMP0179 NEW)
+  endif()
 endif()
