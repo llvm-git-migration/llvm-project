@@ -596,12 +596,18 @@ struct BubbleDownVectorBitCastForExtract
     unsigned expandRatio =
         castDstType.getNumElements() / castSrcType.getNumElements();
 
-    auto getFirstIntValue = [](ArrayRef<OpFoldResult> values) -> uint64_t {
-      assert(values[0].is<Attribute>() && "Unexpected non-constant index");
+    auto getFirstIntValue =
+        [](ArrayRef<OpFoldResult> values) -> std::optional<uint64_t> {
+      if (!values[0].is<Attribute>())
+        return std::nullopt;
       return cast<IntegerAttr>(values[0].get<Attribute>()).getInt();
     };
 
-    uint64_t index = getFirstIntValue(extractOp.getMixedPosition());
+    std::optional<uint64_t> optIndex =
+        getFirstIntValue(extractOp.getMixedPosition());
+    if (!optIndex)
+      return failure();
+    uint64_t index = *optIndex;
 
     // Get the single scalar (as a vector) in the source value that packs the
     // desired scalar. E.g. extract vector<1xf32> from vector<4xf32>
