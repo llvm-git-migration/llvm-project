@@ -982,9 +982,22 @@ struct TestPassthroughInvalidOp : public ConversionPattern {
   TestPassthroughInvalidOp(MLIRContext *ctx)
       : ConversionPattern("test.invalid", 1, ctx) {}
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<Value> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
-    rewriter.replaceOpWithNewOp<TestValidOp>(op, std::nullopt, operands,
+    SmallVector<Value> flattened;
+    for (auto it : llvm::enumerate(operands)) {
+      ValueRange range = it.value();
+      if (range.size() == 1) {
+        flattened.push_back(range.front());
+      } else {
+        flattened.push_back(
+            rewriter
+                .create<TestCastOp>(op->getLoc(),
+                                    op->getOperand(it.index()).getType(), range)
+                .getResult());
+      }
+    }
+    rewriter.replaceOpWithNewOp<TestValidOp>(op, std::nullopt, flattened,
                                              std::nullopt);
     return success();
   }
@@ -1010,7 +1023,7 @@ struct TestSplitReturnType : public ConversionPattern {
   TestSplitReturnType(MLIRContext *ctx)
       : ConversionPattern("test.return", 1, ctx) {}
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<Value> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
     // Check for a return of F32.
     if (op->getNumOperands() != 1 || !op->getOperand(0).getType().isF32())
@@ -1018,15 +1031,16 @@ struct TestSplitReturnType : public ConversionPattern {
 
     // Check if the first operation is a cast operation, if it is we use the
     // results directly.
-    auto *defOp = operands[0].getDefiningOp();
-    if (auto packerOp =
-            llvm::dyn_cast_or_null<UnrealizedConversionCastOp>(defOp)) {
-      rewriter.replaceOpWithNewOp<TestReturnOp>(op, packerOp.getOperands());
-      return success();
-    }
+    rewriter.replaceOpWithNewOp<TestReturnOp>(op, operands[0]);
+    // auto *defOp = operands[0].getDefiningOp();
+    // if (auto packerOp =
+    //         llvm::dyn_cast_or_null<UnrealizedConversionCastOp>(defOp)) {
+    //   rewriter.replaceOpWithNewOp<TestReturnOp>(op, packerOp.getOperands());
+    //   return success();
+    // }
 
     // Otherwise, fail to match.
-    return failure();
+    return success();
   }
 };
 
@@ -1188,7 +1202,6 @@ struct TestTypeConverter : public TypeConverter {
   using TypeConverter::TypeConverter;
   TestTypeConverter() {
     addConversion(convertType);
-    addArgumentMaterialization(materializeCast);
     addSourceMaterialization(materializeCast);
   }
 

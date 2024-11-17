@@ -153,14 +153,25 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
                                        type.isVarArg());
   });
 
-  // Argument materializations convert from the new block argument types
-  // (multiple SSA values that make up a memref descriptor) back to the
-  // original block argument type. The dialect conversion framework will then
-  // insert a target materialization from the original block argument type to
-  // a legal type.
-  addArgumentMaterialization([&](OpBuilder &builder,
-                                 UnrankedMemRefType resultType,
-                                 ValueRange inputs, Location loc) {
+  // Add generic source and target materializations to handle cases where
+  // non-LLVM types persist after an LLVM conversion.
+  addSourceMaterialization([&](OpBuilder &builder, Type resultType,
+                               ValueRange inputs, Location loc) {
+    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
+        .getResult(0);
+  });
+  addTargetMaterialization([&](OpBuilder &builder, Type resultType,
+                               ValueRange inputs, Location loc) {
+    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
+        .getResult(0);
+  });
+
+  // Source materializations convert the MemrRef descriptor elements
+  // (multiple SSA values that make up a MemrRef descriptor) back to the
+  // original MemRef type.
+  addSourceMaterialization([&](OpBuilder &builder,
+                               UnrankedMemRefType resultType, ValueRange inputs,
+                               Location loc) {
     if (inputs.size() == 1) {
       // Bare pointers are not supported for unranked memrefs because a
       // memref descriptor cannot be built just from a bare pointer.
@@ -168,53 +179,80 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
     }
     Value desc =
         UnrankedMemRefDescriptor::pack(builder, loc, *this, resultType, inputs);
-    // An argument materialization must return a value of type
+    // A source materialization must return a value of type
     // `resultType`, so insert a cast from the memref descriptor type
     // (!llvm.struct) to the original memref type.
     return builder.create<UnrealizedConversionCastOp>(loc, resultType, desc)
         .getResult(0);
   });
-  addArgumentMaterialization([&](OpBuilder &builder, MemRefType resultType,
-                                 ValueRange inputs, Location loc) {
+  addSourceMaterialization([&](OpBuilder &builder, MemRefType resultType,
+                               ValueRange inputs, Location loc) {
+    if (inputs.size() == 1 &&
+        isa<LLVM::LLVMStructType>(inputs.front().getType()))
+      return Value();
+
     Value desc;
-    if (inputs.size() == 1) {
+    if (inputs.size() == 1 &&
+        isa<LLVM::LLVMPointerType>(inputs.front().getType())) {
       // This is a bare pointer. We allow bare pointers only for function entry
       // blocks.
       BlockArgument barePtr = dyn_cast<BlockArgument>(inputs.front());
       if (!barePtr)
         return Value();
-      Block *block = barePtr.getOwner();
-      if (!block->isEntryBlock() ||
-          !isa<FunctionOpInterface>(block->getParentOp()))
-        return Value();
+      //Block *block = barePtr.getOwner();
+      //if (!block->isEntryBlock() ||
+      //    !isa<FunctionOpInterface>(block->getParentOp()))
+      //  return Value();
       desc = MemRefDescriptor::fromStaticShape(builder, loc, *this, resultType,
                                                inputs[0]);
     } else {
       desc = MemRefDescriptor::pack(builder, loc, *this, resultType, inputs);
     }
-    // An argument materialization must return a value of type `resultType`,
+    // A source materialization must return a value of type `resultType`,
     // so insert a cast from the memref descriptor type (!llvm.struct) to the
     // original memref type.
     return builder.create<UnrealizedConversionCastOp>(loc, resultType, desc)
         .getResult(0);
   });
-  // Add generic source and target materializations to handle cases where
-  // non-LLVM types persist after an LLVM conversion.
-  addSourceMaterialization([&](OpBuilder &builder, Type resultType,
-                               ValueRange inputs, Location loc) {
-    if (inputs.size() != 1)
-      return Value();
+  addTargetMaterialization([&](OpBuilder &builder, LLVM::LLVMStructType resultType,
+                               ValueRange inputs, Location loc,
+                               Type originalType) -> Value {
+    if (auto memrefType = dyn_cast_or_null<MemRefType>(originalType)) {
+      if (inputs.size() == 1) {
+        Value input = inputs.front();
+        //if (auto castOp = input.getDefiningOp<UnrealizedConversionCastOp>()) {
+        //  if (castOp.getInputs().size() == 1 &&
+        //      isa<LLVM::LLVMPointerType>(castOp.getInputs()[0].getType())) {
+        //    input = castOp.getInputs()[0];
+        //  }
+        //}
+        if (!isa<LLVM::LLVMPointerType>(input.getType()))
+          return Value();
+        BlockArgument barePtr = dyn_cast<BlockArgument>(input);
+        if (!barePtr)
+          return Value();
+        //Block *block = barePtr.getOwner();
+        //if (!block->isEntryBlock() ||
+        //    !isa<FunctionOpInterface>(block->getParentOp()))
+        //  return Value();
+        // Bare ptr
+        return MemRefDescriptor::fromStaticShape(builder, loc, *this,
+                                                 memrefType, input);
+      }
+      return MemRefDescriptor::pack(builder, loc, *this, memrefType, inputs);
+    }
 
-    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
-        .getResult(0);
-  });
-  addTargetMaterialization([&](OpBuilder &builder, Type resultType,
-                               ValueRange inputs, Location loc) {
-    if (inputs.size() != 1)
-      return Value();
+    if (auto memrefType = dyn_cast_or_null<UnrankedMemRefType>(originalType)) {
+      if (inputs.size() == 1) {
+        // Bare pointers are not supported for unranked memrefs because a
+        // memref descriptor cannot be built just from a bare pointer.
+        return Value();
+      }
+      return UnrankedMemRefDescriptor::pack(builder, loc, *this, memrefType,
+                                            inputs);
+    }
 
-    return builder.create<UnrealizedConversionCastOp>(loc, resultType, inputs)
-        .getResult(0);
+    return Value();
   });
 
   // Integer memory spaces map to themselves.
