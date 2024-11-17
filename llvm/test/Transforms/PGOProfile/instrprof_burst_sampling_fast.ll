@@ -9,7 +9,7 @@ $__llvm_profile_raw_version = comdat any
 
 ; SAMPLE-VAR: $__llvm_profile_sampling = comdat any
 
-@__llvm_profile_raw_version = constant i64 72057594037927940, comdat
+@__llvm_profile_raw_version = constant i64 36028797018963972, comdat
 @__profn_f = private constant [1 x i8] c"f"
 
 ; SAMPLE-VAR: @__llvm_profile_sampling = thread_local global i16 0, comdat
