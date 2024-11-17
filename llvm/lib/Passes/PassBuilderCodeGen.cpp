@@ -21,6 +21,7 @@
 #include "llvm/CodeGen/ExpandReductions.h"
 #include "llvm/CodeGen/FinalizeISel.h"
 #include "llvm/CodeGen/GCMetadata.h"
+#include "llvm/CodeGen/GlobalMergeFunctions.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/LocalStackSlotAllocation.h"
 #include "llvm/CodeGen/LowerEmuTLS.h"
@@ -53,7 +54,6 @@
 #include "llvm/Transforms/Scalar/MergeICmps.h"
 #include "llvm/Transforms/Scalar/PartiallyInlineLibCalls.h"
 #include "llvm/Transforms/Scalar/ScalarizeMaskedMemIntrin.h"
-#include "llvm/Transforms/Scalar/TLSVariableHoist.h"
 #include "llvm/Transforms/Utils/LowerGlobalDtors.h"
 #include "llvm/Transforms/Utils/LowerInvoke.h"
 
@@ -797,8 +797,6 @@ Error PassBuilder::buildDefaultCodeGenPipeline(ModulePassManager &TopLevelMPM,
     FPM.addPass(ExpandReductionsPass());
 
   if (OptLevel != CodeGenOptLevel::None) {
-    FPM.addPass(TLSVariableHoistPass());
-
     // Convert conditional moves to conditional jumps when profitable.
     if (!CGPBO.DisableSelectOptimize)
       FPM.addPass(SelectOptimizePass(TM));
@@ -806,6 +804,8 @@ Error PassBuilder::buildDefaultCodeGenPipeline(ModulePassManager &TopLevelMPM,
 
   {
     ModulePassManager CGMPM;
+    if (CGPBO.EnableGlobalMergeFunc)
+      CGMPM.addPass(GlobalMergeFuncPass());
     AddCodeGenPreparePassesCallback(CGMPM);
     MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
     MPM.addPass(std::move(CGMPM));
