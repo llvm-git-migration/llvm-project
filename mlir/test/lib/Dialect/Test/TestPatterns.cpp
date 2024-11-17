@@ -982,9 +982,25 @@ struct TestPassthroughInvalidOp : public ConversionPattern {
   TestPassthroughInvalidOp(MLIRContext *ctx)
       : ConversionPattern("test.invalid", 1, ctx) {}
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<Value> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
-    rewriter.replaceOpWithNewOp<TestValidOp>(op, std::nullopt, operands,
+    SmallVector<Value> flattened;
+    for (auto it : llvm::enumerate(operands)) {
+      ValueRange range = it.value();
+      if (range.size() == 1) {
+        flattened.push_back(range.front());
+        continue;
+      }
+
+      // This is a 1:N replacement. Insert a test.cast op. (That's what the
+      // argument materialization used to do.)
+      flattened.push_back(
+          rewriter
+              .create<TestCastOp>(op->getLoc(),
+                                  op->getOperand(it.index()).getType(), range)
+              .getResult());
+    }
+    rewriter.replaceOpWithNewOp<TestValidOp>(op, std::nullopt, flattened,
                                              std::nullopt);
     return success();
   }
@@ -1010,23 +1026,13 @@ struct TestSplitReturnType : public ConversionPattern {
   TestSplitReturnType(MLIRContext *ctx)
       : ConversionPattern("test.return", 1, ctx) {}
   LogicalResult
-  matchAndRewrite(Operation *op, ArrayRef<Value> operands,
+  matchAndRewrite(Operation *op, ArrayRef<ValueRange> operands,
                   ConversionPatternRewriter &rewriter) const final {
     // Check for a return of F32.
     if (op->getNumOperands() != 1 || !op->getOperand(0).getType().isF32())
       return failure();
-
-    // Check if the first operation is a cast operation, if it is we use the
-    // results directly.
-    auto *defOp = operands[0].getDefiningOp();
-    if (auto packerOp =
-            llvm::dyn_cast_or_null<UnrealizedConversionCastOp>(defOp)) {
-      rewriter.replaceOpWithNewOp<TestReturnOp>(op, packerOp.getOperands());
-      return success();
-    }
-
-    // Otherwise, fail to match.
-    return failure();
+    rewriter.replaceOpWithNewOp<TestReturnOp>(op, operands[0]);
+    return success();
   }
 };
 
@@ -1188,7 +1194,6 @@ struct TestTypeConverter : public TypeConverter {
   using TypeConverter::TypeConverter;
   TestTypeConverter() {
     addConversion(convertType);
-    addArgumentMaterialization(materializeCast);
     addSourceMaterialization(materializeCast);
   }
 
@@ -1220,8 +1225,8 @@ struct TestTypeConverter : public TypeConverter {
     return success();
   }
 
-  /// Hook for materializing a conversion. This is necessary because we generate
-  /// 1->N type mappings.
+  /// Hook for materializing a conversion. This is necessary because we
+  /// generate 1->N type mappings.
   static Value materializeCast(OpBuilder &builder, Type resultType,
                                ValueRange inputs, Location loc) {
     return builder.create<TestCastOp>(loc, resultType, inputs).getResult();
@@ -1291,7 +1296,8 @@ struct TestLegalizePatternDriver
     // correct error code from conversion driver.
     target.addDynamicallyLegalOp<ILLegalOpG>([](ILLegalOpG) { return false; });
 
-    // Expect the type_producer/type_consumer operations to only operate on f64.
+    // Expect the type_producer/type_consumer operations to only operate on
+    // f64.
     target.addDynamicallyLegalOp<TestTypeProducerOp>(
         [](TestTypeProducerOp op) { return op.getType().isF64(); });
     target.addDynamicallyLegalOp<TestTypeConsumerOp>([](TestTypeConsumerOp op) {
@@ -1308,7 +1314,8 @@ struct TestLegalizePatternDriver
     target.addDynamicallyLegalOp<TestRecursiveRewriteOp>(
         [](TestRecursiveRewriteOp op) { return op.getDepth() == 0; });
 
-    // Create a dynamically legal rule that can only be legalized by folding it.
+    // Create a dynamically legal rule that can only be legalized by folding
+    // it.
     target.addDynamicallyLegalOp<TestOpInPlaceSelfFold>(
         [](TestOpInPlaceSelfFold op) { return op.getFolded(); });
 
