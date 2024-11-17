@@ -19,6 +19,7 @@
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Support/BranchProbability.h"
@@ -52,9 +53,13 @@ template <class Edge, class BBInfo> class CFGMST {
 
   BranchProbabilityInfo *const BPI;
   BlockFrequencyInfo *const BFI;
+  LoopInfo *const LI;
 
   // If function entry will be always instrumented.
   const bool InstrumentFuncEntry;
+
+  // If true loop entries will be always instrumented.
+  const bool InstrumentLoopEntries;
 
   // Find the root group of the G and compress the path from G to the root.
   BBInfo *findAndCompressGroup(BBInfo *G) {
@@ -154,6 +159,11 @@ template <class Edge, class BBInfo> class CFGMST {
           }
           if (BPI != nullptr)
             Weight = BPI->getEdgeProbability(&BB, TargetBB).scale(scaleFactor);
+          // If InstrumentLoopEntries is on and TargetBB is a loop head (i.e.,
+          // the current edge leads to a loop), set Weight to be minimal, so
+          // that the edge won't be chosen for the MST and will be instrumented.
+          if (InstrumentLoopEntries && LI->isLoopHeader(TargetBB))
+            Weight = 0;
           if (Weight == 0)
             Weight++;
           auto *E = &addEdge(&BB, TargetBB, Weight);
@@ -291,10 +301,14 @@ public:
     return *AllEdges.back();
   }
 
-  CFGMST(Function &Func, bool InstrumentFuncEntry,
+  CFGMST(Function &Func, bool InstrumentFuncEntry, bool InstrumentLoopEntries,
          BranchProbabilityInfo *BPI = nullptr,
-         BlockFrequencyInfo *BFI = nullptr)
-      : F(Func), BPI(BPI), BFI(BFI), InstrumentFuncEntry(InstrumentFuncEntry) {
+         BlockFrequencyInfo *BFI = nullptr, LoopInfo *LI = nullptr)
+      : F(Func), BPI(BPI), BFI(BFI), LI(LI),
+        InstrumentFuncEntry(InstrumentFuncEntry),
+        InstrumentLoopEntries(InstrumentLoopEntries) {
+    assert(!(InstrumentLoopEntries && !LI) &&
+           "expected a LoopInfo to instrumenting loop entries");
     buildEdges();
     sortEdgesByWeight();
     computeMinimumSpanningTree();
