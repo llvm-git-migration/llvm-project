@@ -1,0 +1,14 @@
+# :ir is the flag to indicate this is IR level profile.
+:ir
+# Always instrument the loop entry blocks
+:instrument_loop_entries
+test_simple_for_with_bypass
+# Func Hash:
+536873292337293370
+# Num Counters:
+3
+# Counter Values:
+12
+8
+123456
+

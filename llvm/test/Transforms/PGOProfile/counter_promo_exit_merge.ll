@@ -3,7 +3,7 @@
 $__llvm_profile_raw_version = comdat any
 
 @g = common local_unnamed_addr global i32 0, align 4
-@__llvm_profile_raw_version = constant i64 72057594037927940, comdat
+@__llvm_profile_raw_version = constant i64 36028797018963972, comdat
 @__profn_foo = private constant [3 x i8] c"foo"
 
 define void @foo(i32 %arg) local_unnamed_addr {
