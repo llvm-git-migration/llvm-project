@@ -316,6 +316,7 @@ public:
   // A shared_ptr contains only two raw pointers which point to the heap and move constructing already doesn't require
   // any bookkeeping, so it's always trivially relocatable.
   using __trivially_relocatable = shared_ptr;
+  using __replaceable           = shared_ptr;
 
 private:
   element_type* __ptr_;
@@ -1211,6 +1212,7 @@ public:
   // A weak_ptr contains only two raw pointers which point to the heap and move constructing already doesn't require
   // any bookkeeping, so it's always trivially relocatable.
   using __trivially_relocatable = weak_ptr;
+  using __replaceable           = weak_ptr;
 
 private:
   element_type* __ptr_;
