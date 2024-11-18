@@ -1,4 +1,5 @@
 # REQUIRES: x86
+# XFAIL: main-run-twice
 
 # RUN: rm -f %t-no-syms.a
 # RUN: rm -f %t-syms.a

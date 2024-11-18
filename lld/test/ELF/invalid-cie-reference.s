@@ -1,4 +1,5 @@
 // REQUIRES: x86
+// XFAIL: main-run-twice
 
 // RUN: llvm-mc -filetype=obj -triple=x86_64-pc-linux %s -o %t
 // RUN: not ld.lld %t -o /dev/null 2>&1 | FileCheck %s

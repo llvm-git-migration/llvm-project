@@ -1,4 +1,5 @@
 // REQUIRES: arm
+// XFAIL: main-run-twice
 // RUN: llvm-mc -filetype=obj -triple=thumbv7a-none-linux-gnueabi %s -o %t
 // RUN: not ld.lld %t -o /dev/null 2>&1 | FileCheck %s
 

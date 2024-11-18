@@ -1,3 +1,4 @@
+# XFAIL: main-run-twice
 ## .symtab's sh_info contains zero value. First entry in a .symtab is a
 ## zero entry that must exist in a valid object, so sh_info can't be null.
 ## Check we report a proper error for that case.

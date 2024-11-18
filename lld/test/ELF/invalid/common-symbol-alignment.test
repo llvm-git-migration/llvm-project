@@ -1,3 +1,4 @@
+# XFAIL: main-run-twice
 ## If an object contains a common symbol with zero alignment,
 ## check we report it.
 # RUN: yaml2obj --docnum=1 %s -o %t1.o

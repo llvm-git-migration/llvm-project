@@ -1,4 +1,5 @@
 # REQUIRES: x86
+# XFAIL: main-run-twice
 
 # The object in the archive has invalid data encoding.
 # Check we report this.

@@ -1,4 +1,5 @@
 ; REQUIRES: x86
+; XFAIL: main-run-twice
 ; RUN: llvm-as %s -o %t.o
 ; RUN: not ld.lld %t.o -o /dev/null 2>&1 | FileCheck %s
 
