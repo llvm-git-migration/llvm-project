@@ -23,6 +23,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsX86.h"
 #include "llvm/IR/Module.h"
@@ -75,6 +76,8 @@ private:
   int getStateForCall(DenseMap<BasicBlock *, ColorVector> &BlockColors,
                       WinEHFuncInfo &FuncInfo, CallBase &Call);
 
+  void updateEspForInAllocas(Function &F);
+
   // Module-level type getters.
   Type *getEHLinkRegistrationType();
   Type *getSEHRegistrationType();
@@ -99,6 +102,9 @@ private:
   /// The stack allocation containing all EH data, including the link in the
   /// fs:00 chain and the current state.
   AllocaInst *RegNode = nullptr;
+
+  // Struct type of RegNode. Used for GEPing.
+  Type *RegNodeTy = nullptr;
 
   // The allocation containing the EH security guard.
   AllocaInst *EHGuardNode = nullptr;
@@ -188,11 +194,13 @@ bool WinEHStatePass::runOnFunction(Function &F) {
   // numbers into an immutable analysis pass.
   WinEHFuncInfo FuncInfo;
   addStateStores(F, FuncInfo);
+  updateEspForInAllocas(F);
 
   // Reset per-function state.
   PersonalityFn = nullptr;
   Personality = EHPersonality::Unknown;
   UseStackGuard = false;
+  RegNodeTy = nullptr;
   RegNode = nullptr;
   EHGuardNode = nullptr;
 
@@ -268,9 +276,6 @@ Type *WinEHStatePass::getSEHRegistrationType() {
 void WinEHStatePass::emitExceptionRegistrationRecord(Function *F) {
   assert(Personality == EHPersonality::MSVC_CXX ||
          Personality == EHPersonality::MSVC_X86SEH);
-
-  // Struct type of RegNode. Used for GEPing.
-  Type *RegNodeTy;
 
   IRBuilder<> Builder(&F->getEntryBlock(), F->getEntryBlock().begin());
   Type *Int8PtrType = Builder.getPtrTy();
@@ -773,4 +778,29 @@ void WinEHStatePass::insertStateNumberStore(Instruction *IP, int State) {
   Value *StateField = Builder.CreateStructGEP(RegNode->getAllocatedType(),
                                               RegNode, StateFieldIndex);
   Builder.CreateStore(Builder.getInt32(State), StateField);
+}
+
+void WinEHStatePass::updateEspForInAllocas(Function& F)
+{
+  for (BasicBlock& BB : F) {
+    for (Instruction &I : BB) {
+      if (auto* Alloca = dyn_cast<AllocaInst>(&I)) {
+        if (!Alloca->isUsedWithInAlloca())
+          continue;
+        IRBuilder<> Builder(Alloca->getNextNonDebugInstruction());
+        // SavedESP = llvm.stacksave()
+        Value *SP = Builder.CreateStackSave();
+        Builder.CreateStore(SP, Builder.CreateStructGEP(RegNodeTy, RegNode, 0));
+      }
+
+      if (auto* II = dyn_cast<IntrinsicInst>(&I)) {
+        if (II->getIntrinsicID() != Intrinsic::stackrestore)
+          continue;
+        IRBuilder<> Builder(II->getNextNonDebugInstruction());
+        // SavedESP = llvm.stacksave()
+        Value *SP = Builder.CreateStackSave();
+        Builder.CreateStore(SP, Builder.CreateStructGEP(RegNodeTy, RegNode, 0));
+      }
+    }
+  }
 }
