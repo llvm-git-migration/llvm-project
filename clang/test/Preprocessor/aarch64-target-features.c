@@ -738,3 +738,11 @@
 // CHECK-SMEB16B16: __ARM_FEATURE_SME2 1
 // CHECK-SMEB16B16: __ARM_FEATURE_SME_B16B16 1
 // CHECK-SMEB16B16: __ARM_FEATURE_SVE_B16B16 1
+
+// ================== Check Armv8.7-A limited-TLB-maintenance instruction.
+// RUN: %clang -target aarch64 -march=armv8a+xs -x c -E -dM %s -o - | FileCheck -check-prefix=CHECK-XS %s
+// CHECK-XS: __ARM_FEATURE_XS 1
+
+// ================== Check Armv8.4-A TLB Range and Maintenance instructions.
+// RUN: %clang -target aarch64 -march=armv8a+tlb-rmi -x c -E -dM %s -o - | FileCheck -check-prefix=CHECK-TLB-RMI %s
+// CHECK-TLB-RMI: __ARM_FEATURE_TLB_RMI 1

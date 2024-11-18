@@ -635,6 +635,12 @@ void AArch64TargetInfo::getTargetDefines(const LangOptions &Opts,
   if (HasGCS)
     Builder.defineMacro("__ARM_FEATURE_GCS", "1");
 
+  if (HasXS)
+    Builder.defineMacro("__ARM_FEATURE_XS", "1");
+
+  if (HasTLBRmi)
+    Builder.defineMacro("__ARM_FEATURE_TLB_RMI", "1");
+
   if (*ArchInfo == llvm::AArch64::ARMV8_1A)
     getTargetDefinesARMV81A(Opts, Builder);
   else if (*ArchInfo == llvm::AArch64::ARMV8_2A)
@@ -790,6 +796,8 @@ bool AArch64TargetInfo::hasFeature(StringRef Feature) const {
       .Cases("ls64", "ls64_v", "ls64_accdata", HasLS64)
       .Case("wfxt", HasWFxT)
       .Case("rcpc3", HasRCPC3)
+      .Case("xs", HasXS)
+      .Case("tlb-rmi", HasTLBRmi)
       .Default(false);
 }
 
@@ -1102,6 +1110,10 @@ bool AArch64TargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
       HasPAuthLR = true;
       HasPAuth = true;
     }
+    if (Feature == "+xs")
+      HasXS = true;
+    if (Feature == "+tlb-rmi")
+      HasTLBRmi = true;
   }
 
   // Check features that are manually disabled by command line options.
