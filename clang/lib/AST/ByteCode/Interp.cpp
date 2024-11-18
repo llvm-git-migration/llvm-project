@@ -1616,7 +1616,7 @@ bool Interpret(InterpState &S, APValue &Result) {
   }
 }
 // https://github.com/llvm/llvm-project/issues/102513
-#if defined(_WIN32) && !defined(__clang__) && !defined(NDEBUG)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(NDEBUG)
 #pragma optimize("", on)
 #endif
 
