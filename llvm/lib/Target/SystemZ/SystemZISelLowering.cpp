@@ -521,15 +521,13 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
   for (MVT VT : {MVT::f32, MVT::f64, MVT::f128}) {
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
     setTruncStoreAction(VT, MVT::f16, Expand);
+    setOperationAction(ISD::FP_EXTEND, VT, Custom);
+    setOperationAction(ISD::STRICT_FP_EXTEND, VT, Custom);
   }
-  setOperationAction(ISD::LOAD, MVT::f16, Custom);
-  setOperationAction(ISD::ATOMIC_LOAD, MVT::f16, Custom);
-  setOperationAction(ISD::STORE, MVT::f16, Custom);
-  setOperationAction(ISD::ATOMIC_STORE, MVT::f16, Custom);
-  setOperationAction(ISD::FP_ROUND, MVT::f16, Custom);
-  setOperationAction(ISD::FP_EXTEND, MVT::f32, Custom);
-  setOperationAction(ISD::FP_EXTEND, MVT::f64, Custom);
-  setOperationAction(ISD::FP_EXTEND, MVT::f128, Custom);
+  for (auto Op : {ISD::LOAD, ISD::ATOMIC_LOAD,
+                  ISD::STORE, ISD::ATOMIC_STORE,
+                  ISD::FP_ROUND, ISD::STRICT_FP_ROUND})
+    setOperationAction(Op, MVT::f16, Custom);
 
   for (unsigned I = MVT::FIRST_FP_VALUETYPE;
        I <= MVT::LAST_FP_VALUETYPE;
@@ -569,7 +567,6 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
       setOperationAction(ISD::STRICT_FSQRT, VT, Legal);
       setOperationAction(ISD::STRICT_FRINT, VT, Legal);
       setOperationAction(ISD::STRICT_FP_ROUND, VT, Legal);
-      setOperationAction(ISD::STRICT_FP_EXTEND, VT, Legal);
       if (Subtarget.hasFPExtension()) {
         setOperationAction(ISD::STRICT_FNEARBYINT, VT, Legal);
         setOperationAction(ISD::STRICT_FFLOOR, VT, Legal);
@@ -6168,7 +6165,7 @@ SDValue SystemZTargetLowering::LowerFP_EXTEND(SDValue Op,
   MVT VT = Op.getSimpleValueType();
   MVT SVT = In.getSimpleValueType();
   if (SVT != MVT::f16)
-    return Op;
+    return Op;  // Legal
 
   SDLoc DL(Op);
   SDValue Chain = IsStrict ? Op.getOperand(0) : SDValue();
@@ -6200,8 +6197,7 @@ SDValue SystemZTargetLowering::LowerFP_ROUND(SDValue Op,
   SDValue In = Op.getOperand(IsStrict ? 1 : 0);
   MVT VT = Op.getSimpleValueType();
   MVT SVT = In.getSimpleValueType();
-  if (VT != MVT::f16)
-    return SDValue(); // XXX?
+  assert(VT == MVT::f16 && "Only rounding to f16 needs custom handling.");
 
   SDLoc DL(Op);
   SDValue Chain = IsStrict ? Op.getOperand(0) : SDValue();
@@ -6467,10 +6463,10 @@ SDValue SystemZTargetLowering::LowerOperation(SDValue Op,
   case ISD::ROTL:
     return lowerShift(Op, DAG, SystemZISD::VROTL_BY_SCALAR);
   case ISD::FP_EXTEND:
-//case ISD::STRICT_FP_EXTEND:
+  case ISD::STRICT_FP_EXTEND:
     return LowerFP_EXTEND(Op, DAG);
   case ISD::FP_ROUND:
-//case ISD::STRICT_FP_ROUND:
+  case ISD::STRICT_FP_ROUND:
     return LowerFP_ROUND(Op, DAG);
   case ISD::LOAD:
     return lowerLoadF16(Op, DAG);
