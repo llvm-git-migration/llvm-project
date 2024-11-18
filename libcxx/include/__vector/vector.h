@@ -472,11 +472,77 @@ public:
     this->__destruct_at_end(this->__end_ - 1);
   }
 
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __position, const_reference __x);
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __position, const_reference __x) {
+    return emplace(std::move(__position), __x);
+  }
 
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __position, value_type&& __x);
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator insert(const_iterator __position, value_type&& __x) {
+    return emplace(std::move(__position), std::move(__x));
+  }
   template <class... _Args>
-  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator emplace(const_iterator __position, _Args&&... __args);
+  _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator emplace(const_iterator __cposition, _Args&&... __args) {
+    iterator __position = begin() + (__cposition - cbegin());
+    if (this->__end_ < this->__cap_) {
+      if (__position == end()) {
+        allocator_traits<_Allocator>::construct(
+            this->__alloc_, std::__to_address(__position), std::forward<_Args>(__args)...);
+        ++this->__end_;
+      } else {
+        // Construct a temporary value on the stack, so that in case this throws we haven't modified
+        // the vector yet. This also takes care of the corner case where we'd be trying to insert
+        // from an element located in the vector itself, in which case we'd otherwise have to be
+        // careful about reference invalidation if we didn't make a temporary value.
+        __temporary_emplace_value<value_type> __tmp(this->__alloc_, std::forward<_Args>(__args)...);
+
+        // If the elements are nothrow relocatable, we can relocate them without risking an exception.
+        // So open up a gap inside the vector, relocate everything to the right and insert the new
+        // element into the right spot.
+        //
+        // Otherwise, we have no choice but to shift everything to the right using move-assignments
+        // and to move-assign the new element into its final location, to ensure that everything gets
+        // properly destroyed in case of an exception.
+        //
+        // Note that we also require __is_replaceable here for backwards compatibility, because we used
+        // to perform move-assignments unconditionally. If we didn't enforce that, we would no longer call
+        // the assignment operator of types that have a funky operator= and expect it to be called in
+        // vector::insert.
+        if constexpr (__is_replaceable<value_type>::value && __is_nothrow_allocator_relocatable<_Allocator, value_type>::value) {
+          // Relocate all the elements in the vector to open up a gap.
+          std::__uninitialized_allocator_relocate(this->__alloc_, __position, end(), __position + 1);
+
+          // Finally, relocate the temporary value into its final location. We don't need to destroy
+          // the temporary value since it has been relocated.
+          std::__allocator_relocate_at(this->__alloc_, __tmp.__address(), std::__to_address(__position));
+          ++this->__end_;
+        } else {
+          // Ensure the destruction of the temporary no matter what happens exception-wise.
+          auto __guard = std::__make_scope_guard([&] {
+            allocator_traits<_Allocator>::destroy(this->__alloc_, __tmp.__address());
+          });
+
+          // Move-construct the (new) last element. There is no object at this location, so
+          // we must use construction.
+          allocator_traits<_Allocator>::construct(this->__alloc_, std::__to_address(end()), std::move(*(end() - 1)));
+          ++this->__end_;
+
+          // We now have a moved-from object at `end() - 1`. Shift the rest of the range to the right,
+          // opening up a gap containing a moved-from object at the insert position.
+          std::move_backward(__position, end() - 1, end());
+
+          // Finally, move-assign the new element into its insert position.
+          *__position = std::move(*__tmp.__address());
+        }
+      }
+      __annotate_increase(1);
+      return __position;
+    } else {
+      __split_buffer<value_type, allocator_type&> __v(__recommend(size() + 1), __position - begin(), this->__alloc_);
+      __v.emplace_back(std::forward<_Args>(__args)...);
+      pointer __p = this->__begin_ + (__position - begin());
+      __p         = __swap_out_circular_buffer(__v, __p);
+      return __make_iter(__p);
+    }
+  }
 
   _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI iterator
   insert(const_iterator __position, size_type __n, const_reference __x);
@@ -1161,68 +1227,6 @@ vector<_Tp, _Allocator>::__move_range(pointer __from_s, pointer __from_e, pointe
     }
   }
   std::move_backward(__from_s, __from_s + __n, __old_last);
-}
-
-template <class _Tp, class _Allocator>
-_LIBCPP_CONSTEXPR_SINCE_CXX20 typename vector<_Tp, _Allocator>::iterator
-vector<_Tp, _Allocator>::insert(const_iterator __position, const_reference __x) {
-  pointer __p = this->__begin_ + (__position - begin());
-  if (this->__end_ < this->__cap_) {
-    if (__p == this->__end_) {
-      __construct_one_at_end(__x);
-    } else {
-      __move_range(__p, this->__end_, __p + 1);
-      const_pointer __xr = pointer_traits<const_pointer>::pointer_to(__x);
-      if (std::__is_pointer_in_range(std::__to_address(__p), std::__to_address(__end_), std::addressof(__x)))
-        ++__xr;
-      *__p = *__xr;
-    }
-  } else {
-    __split_buffer<value_type, allocator_type&> __v(__recommend(size() + 1), __p - this->__begin_, this->__alloc_);
-    __v.emplace_back(__x);
-    __p = __swap_out_circular_buffer(__v, __p);
-  }
-  return __make_iter(__p);
-}
-
-template <class _Tp, class _Allocator>
-_LIBCPP_CONSTEXPR_SINCE_CXX20 typename vector<_Tp, _Allocator>::iterator
-vector<_Tp, _Allocator>::insert(const_iterator __position, value_type&& __x) {
-  pointer __p = this->__begin_ + (__position - begin());
-  if (this->__end_ < this->__cap_) {
-    if (__p == this->__end_) {
-      __construct_one_at_end(std::move(__x));
-    } else {
-      __move_range(__p, this->__end_, __p + 1);
-      *__p = std::move(__x);
-    }
-  } else {
-    __split_buffer<value_type, allocator_type&> __v(__recommend(size() + 1), __p - this->__begin_, this->__alloc_);
-    __v.emplace_back(std::move(__x));
-    __p = __swap_out_circular_buffer(__v, __p);
-  }
-  return __make_iter(__p);
-}
-
-template <class _Tp, class _Allocator>
-template <class... _Args>
-_LIBCPP_CONSTEXPR_SINCE_CXX20 typename vector<_Tp, _Allocator>::iterator
-vector<_Tp, _Allocator>::emplace(const_iterator __position, _Args&&... __args) {
-  pointer __p = this->__begin_ + (__position - begin());
-  if (this->__end_ < this->__cap_) {
-    if (__p == this->__end_) {
-      __construct_one_at_end(std::forward<_Args>(__args)...);
-    } else {
-      __temp_value<value_type, _Allocator> __tmp(this->__alloc_, std::forward<_Args>(__args)...);
-      __move_range(__p, this->__end_, __p + 1);
-      *__p = std::move(__tmp.get());
-    }
-  } else {
-    __split_buffer<value_type, allocator_type&> __v(__recommend(size() + 1), __p - this->__begin_, this->__alloc_);
-    __v.emplace_back(std::forward<_Args>(__args)...);
-    __p = __swap_out_circular_buffer(__v, __p);
-  }
-  return __make_iter(__p);
 }
 
 template <class _Tp, class _Allocator>
