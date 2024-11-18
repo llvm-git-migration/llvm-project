@@ -7,4 +7,6 @@ entry:
   ret void
 }
 
+; CHECK-NOT: attributes {{.*}} memory(none)
+
 declare i32 @llvm.dx.wave.active.countbits(i1)
