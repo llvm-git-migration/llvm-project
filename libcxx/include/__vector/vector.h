@@ -502,12 +502,7 @@ public:
         // Otherwise, we have no choice but to shift everything to the right using move-assignments
         // and to move-assign the new element into its final location, to ensure that everything gets
         // properly destroyed in case of an exception.
-        //
-        // Note that we also require __is_replaceable here for backwards compatibility, because we used
-        // to perform move-assignments unconditionally. If we didn't enforce that, we would no longer call
-        // the assignment operator of types that have a funky operator= and expect it to be called in
-        // vector::insert.
-        if constexpr (__is_replaceable<value_type>::value && is_nothrow_constructible<value_type>::value) {
+        if constexpr (is_nothrow_constructible<value_type>::value) {
           // Relocate all the elements in the vector to open up a gap.
           std::__uninitialized_allocator_relocate(this->__alloc_, __position, end(), __position + 1);
 
@@ -601,12 +596,7 @@ public:
     // If the value_type is nothrow move constructible, we destroy the range being erased and we
     // relocate the tail of the vector into the created gap. This is especially efficient if the
     // elements are trivially relocatable. Otherwise, we use the standard technique with move-assignments.
-    //
-    // Note that we also require __is_replaceable here for backwards compatibility, because we used
-    // to perform move-assignments unconditionally. If we didn't enforce that, we would no longer call
-    // the assignment operator of types that have a funky operator= and expect it to be called in
-    // vector::erase.
-    if constexpr (__is_replaceable<value_type>::value && is_nothrow_move_constructible<value_type>::value) {
+    if constexpr (is_nothrow_move_constructible<value_type>::value) {
       std::__allocator_destroy(this->__alloc_, __first, __last);
       std::__uninitialized_allocator_relocate(this->__alloc_, __last, end(), __first);
     } else {
