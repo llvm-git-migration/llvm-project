@@ -3264,9 +3264,15 @@ bool SPIRVInstructionSelector::selectGlobalValue(
     PointerBaseType = GR.getOrCreateSPIRVType(
         GVType, MIRBuilder, SPIRV::AccessQualifier::ReadWrite, false);
   }
-  SPIRVType *ResType = GR.getOrCreateSPIRVPointerType(
-      PointerBaseType, I, TII,
-      addressSpaceToStorageClass(GV->getAddressSpace(), STI));
+
+  const unsigned AddrSpace = GV->getAddressSpace();
+  SPIRV::StorageClass::StorageClass StorageClass =
+      addressSpaceToStorageClass(AddrSpace, STI);
+  if (StorageClass == SPIRV::StorageClass::Function)
+    StorageClass = SPIRV::StorageClass::Private;
+
+  SPIRVType *ResType =
+      GR.getOrCreateSPIRVPointerType(PointerBaseType, I, TII, StorageClass);
 
   std::string GlobalIdent;
   if (!GV->hasName()) {
@@ -3337,11 +3343,8 @@ bool SPIRVInstructionSelector::selectGlobalValue(
   if (HasInit && !Init)
     return true;
 
-  unsigned AddrSpace = GV->getAddressSpace();
-  SPIRV::StorageClass::StorageClass Storage =
-      addressSpaceToStorageClass(AddrSpace, STI);
   bool HasLnkTy = GV->getLinkage() != GlobalValue::InternalLinkage &&
-                  Storage != SPIRV::StorageClass::Function;
+                  StorageClass != SPIRV::StorageClass::Function;
   SPIRV::LinkageType::LinkageType LnkType =
       (GV->isDeclaration() || GV->hasAvailableExternallyLinkage())
           ? SPIRV::LinkageType::Import
@@ -3350,9 +3353,9 @@ bool SPIRVInstructionSelector::selectGlobalValue(
                  ? SPIRV::LinkageType::LinkOnceODR
                  : SPIRV::LinkageType::Export);
 
-  Register Reg = GR.buildGlobalVariable(ResVReg, ResType, GlobalIdent, GV,
-                                        Storage, Init, GlobalVar->isConstant(),
-                                        HasLnkTy, LnkType, MIRBuilder, true);
+  Register Reg = GR.buildGlobalVariable(
+      ResVReg, ResType, GlobalIdent, GV, StorageClass, Init,
+      GlobalVar->isConstant(), HasLnkTy, LnkType, MIRBuilder, true);
   return Reg.isValid();
 }
 

@@ -11,7 +11,11 @@
 ; CHECK-DAG: %[[TyFun:.*]] = OpTypeFunction %[[TyInt64]] %[[TyInt64]]
 ; CHECK-DAG: %[[TyInt8:.*]] = OpTypeInt 8 0
 ; CHECK-DAG: %[[TyPtrFun:.*]] = OpTypePointer Function %[[TyFun]]
-; CHECK-DAG: %[[ConstFunFp:.*]] = OpConstantFunctionPointerINTEL %[[TyPtrFun]] %[[DefFunFp:.*]]
+
+; FIXME: OpConstantFunctionPointerINTEL requires a CodeSectionINTEL ptr.
+; CHECK-DAG: %[[TyPtrPriv:.*]] = OpTypePointer Private %[[TyFun]]
+; CHECK-DAG: %[[ConstFunFp:.*]] = OpConstantFunctionPointerINTEL %[[TyPtrPriv]] %[[DefFunFp:.*]]
+
 ; CHECK-DAG: %[[TyPtrPtrFun:.*]] = OpTypePointer Function %[[TyPtrFun]]
 ; CHECK-DAG: %[[TyPtrInt8:.*]] = OpTypePointer Function %[[TyInt8]]
 ; CHECK-DAG: %[[TyPtrPtrInt8:.*]] = OpTypePointer Function %[[TyPtrInt8]]
