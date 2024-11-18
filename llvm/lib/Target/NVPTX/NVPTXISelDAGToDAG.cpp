@@ -4157,9 +4157,9 @@ bool NVPTXScopes::empty() const { return Scopes.size() == 0; }
        ? NVPTX::CP_ASYNC_BULK_TENSOR_##dir##_##dim##_SHARED32_##mode##suffix   \
        : NVPTX::CP_ASYNC_BULK_TENSOR_##dir##_##dim##_##mode##suffix)
 
-#define GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(dim, mode)                         \
-  (IsCacheHint ? (CP_ASYNC_BULK_TENSOR_OPCODE(S2G, dim, mode, _CH))            \
-               : (CP_ASYNC_BULK_TENSOR_OPCODE(S2G, dim, mode, )))
+#define GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(op, dim, mode)                      \
+  (IsCacheHint ? (CP_ASYNC_BULK_TENSOR_OPCODE(op, dim, mode, _CH))             \
+               : (CP_ASYNC_BULK_TENSOR_OPCODE(op, dim, mode, )))
 
 #define GET_CP_ASYNC_BULK_TENSOR_OPCODE_G2S(dim, mode)                         \
   [&]() -> auto {                                                              \
@@ -4177,15 +4177,19 @@ bool NVPTXScopes::empty() const { return Scopes.size() == 0; }
                : NVPTX::CP_ASYNC_BULK_TENSOR_PREFETCH_##dim##_##mode)
 
 static unsigned GetCpAsyncBulkTensorS2GOpcode(size_t Dim, bool IsShared32,
-                                              bool IsCacheHint, bool IsIm2Col) {
+                                              bool IsCacheHint, bool IsIm2Col,
+                                              bool IsReduce = false) {
   if (IsIm2Col) {
     switch (Dim) {
     case 3:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(3D, IM2COL);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 3D, IM2COL)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 3D, IM2COL);
     case 4:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(4D, IM2COL);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 4D, IM2COL)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 4D, IM2COL);
     case 5:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(5D, IM2COL);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 5D, IM2COL)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 5D, IM2COL);
     default:
       llvm_unreachable("Invalid Dimension in im2col mode for "
                        "GetCpAsyncBulkTensorS2GOpcode.");
@@ -4193,15 +4197,20 @@ static unsigned GetCpAsyncBulkTensorS2GOpcode(size_t Dim, bool IsShared32,
   } else {
     switch (Dim) {
     case 1:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(1D, TILE);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 1D, TILE)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 1D, TILE);
     case 2:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(2D, TILE);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 2D, TILE)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 2D, TILE);
     case 3:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(3D, TILE);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 3D, TILE)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 3D, TILE);
     case 4:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(4D, TILE);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 4D, TILE)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 4D, TILE);
     case 5:
-      return GET_CP_ASYNC_BULK_TENSOR_OPCODE_S2G(5D, TILE);
+      return IsReduce ? GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(RED, 5D, TILE)
+                      : GET_CP_ASYNC_BULK_TENSOR_OPCODE_CH(S2G, 5D, TILE);
     default:
       llvm_unreachable(
           "Invalid Dimension in tile mode for GetCpAsyncBulkTensorS2GOpcode.");
@@ -4377,6 +4386,30 @@ void NVPTXDAGToDAGISel::SelectCpAsyncBulkTensorPrefetchCommon(SDNode *N,
   ReplaceNode(N, CurDAG->getMachineNode(Opcode, DL, N->getVTList(), Ops));
 }
 
+void NVPTXDAGToDAGISel::SelectCpAsyncBulkTensorReduceCommon(SDNode *N,
+                                                            bool IsIm2Col) {
+  // We have {Chain, Intrinsic-ID} followed by the actual intrisic args:
+  // src, dst, dims{d0...dN}, cache_hint, cache_hint_flag, reduction_kind_flag
+  // NumOperands = {Chain, IID} + {Actual intrinsic args}
+  //             = {2}          + {5 + dims}
+  size_t NumOps = N->getNumOperands();
+  size_t NumDims = NumOps - 7;
+  unsigned ReductionKind = N->getConstantOperandVal(NumOps - 1);
+  bool IsCacheHint = N->getConstantOperandVal(NumOps - 2) == 1;
+  size_t NumArgs = NumDims + (IsCacheHint ? 3 : 2); // src, dst, cache_hint
+
+  SDLoc DL(N);
+  SmallVector<SDValue, 12> Ops(N->ops().slice(2, NumArgs));
+  Ops.push_back(getI32Imm(ReductionKind, DL)); // Reduction Op
+  Ops.push_back(N->getOperand(0));             // Chain operand
+
+  bool IsShared32 =
+      CurDAG->getDataLayout().getPointerSizeInBits(ADDRESS_SPACE_SHARED) == 32;
+  unsigned Opcode = GetCpAsyncBulkTensorS2GOpcode(
+      NumDims, IsShared32, IsCacheHint, IsIm2Col, /*IsReduce=*/true);
+  ReplaceNode(N, CurDAG->getMachineNode(Opcode, DL, N->getVTList(), Ops));
+}
+
 bool NVPTXDAGToDAGISel::tryIntrinsicVoid(SDNode *N) {
   unsigned IID = N->getConstantOperandVal(1);
   switch (IID) {
@@ -4417,6 +4450,18 @@ bool NVPTXDAGToDAGISel::tryIntrinsicVoid(SDNode *N) {
   case Intrinsic::nvvm_cp_async_bulk_tensor_prefetch_im2col_4d:
   case Intrinsic::nvvm_cp_async_bulk_tensor_prefetch_im2col_5d:
     SelectCpAsyncBulkTensorPrefetchCommon(N, /*IsIm2Col=*/true);
+    return true;
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_tile_1d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_tile_2d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_tile_3d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_tile_4d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_tile_5d:
+    SelectCpAsyncBulkTensorReduceCommon(N);
+    return true;
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_im2col_3d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_im2col_4d:
+  case Intrinsic::nvvm_cp_async_bulk_tensor_reduce_im2col_5d:
+    SelectCpAsyncBulkTensorReduceCommon(N, /*IsIm2Col=*/true);
     return true;
   }
 }

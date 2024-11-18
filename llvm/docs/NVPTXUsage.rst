@@ -633,7 +633,7 @@ specified by the ``i32 %d0 ... i32 %d4`` arguments.
 For more information, refer PTX ISA
 `<https://docs.nvidia.com/cuda/parallel-thread-execution/#data-movement-and-conversion-instructions-cp-async-bulk-prefetch-tensor>`_.
 
-'``llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[1-5]d``'
+'``llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[3-5]d``'
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Syntax:
@@ -648,7 +648,7 @@ Syntax:
 Overview:
 """""""""
 
-The '``@llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[1-5]d``' intrinsics
+The '``@llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[3-5]d``' intrinsics
 correspond to the ``cp.async.bulk.prefetch.tensor.[1-5]d.L2.global*`` set
 of PTX instructions. These instructions initiate an asynchronous prefetch
 of tensor data from global memory to the L2 cache. In im2col mode, some
@@ -662,6 +662,84 @@ the same functionality as described in the ``tile`` mode intrinsics above.
 
 For more information, refer PTX ISA
 `<https://docs.nvidia.com/cuda/parallel-thread-execution/#data-movement-and-conversion-instructions-cp-async-bulk-prefetch-tensor>`_.
+
+'``llvm.nvvm.cp.async.bulk.tensor.reduce.tile.[1-5]d``'
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Syntax:
+"""""""
+
+.. code-block:: llvm
+
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.tile.1d(ptr addrspace(3) %src, ptr %tensor_map, i32 %d0, i64 %ch, i1 %flag_ch, i8 %flag_red_op)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.tile.2d(..., i32 %d0, i32 %d1, ...)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.tile.3d(..., i32 %d0, i32 %d1, i32 %d2, ...)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.tile.4d(..., i32 %d0, i32 %d1, i32 %d2, i32 %d3, ...)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.tile.5d(..., i32 %d0, i32 %d1, i32 %d2, i32 %d3, i32 %d4, ...)
+
+Overview:
+"""""""""
+
+The '``@llvm.nvvm.cp.async.bulk.tensor.reduce.tile.[1-5]d``' intrinsics
+correspond to the ``cp.reduce.async.bulk.tensor.[1-5]d.*`` set of PTX instructions.
+These instructions initiate an asynchronous reduction operation of tensor data
+in global memory with the tensor data in shared{::cta} memory, using ``tile`` mode.
+The dimension of the tensor data ranges from 1d to 5d with the coordinates
+specified by the ``i32 %d0 ... i32 %d4`` arguments.
+
+* The last two arguments to these intrinsics are flags.
+  These flag arguments must be compile-time constants. The backend
+  looks through these flags and lowers the intrinsics appropriately.
+
+* The Nth argument (denoted by ``i8 flag_red_op``) indicates the
+  kind of reduction operation performed. The argument must be in
+  the range [0, 7], representing the following reduction operations:
+
+  ========== =============
+  Enum Value  Reduction Op
+  ========== =============
+  ``0``       ADD
+  ``1``       MIN
+  ``2``       MAX
+  ``3``       INC
+  ``4``       DEC
+  ``5``       AND
+  ``6``       OR
+  ``7``       XOR
+  ========== =============
+
+* The [N-1]th argument (denoted by ``i1 flag_ch``) when set, indicates
+  the presence of a valid cache_hint (``i64 %ch``) and generates the
+  ``.L2::cache_hint`` variant of the PTX instruction.
+
+For more information, refer PTX ISA
+`<https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-reduce-async-bulk-tensor>`_.
+
+'``llvm.nvvm.cp.async.bulk.tensor.reduce.im2col.[1-5]d``'
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Syntax:
+"""""""
+
+.. code-block:: llvm
+
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.im2col.3d(ptr addrspace(3) %src, ptr %tensor_map, i32 %d0, i32 %d1, i32 %d2, i64 %ch, i1 %flag_ch, i8 %flag_red_op)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.im2col.4d(..., i32 %d0, i32 %d1, i32 %d2, i32 %d3, ...)
+  declare void @llvm.nvvm.cp.async.bulk.tensor.reduce.im2col.5d(..., i32 %d0, i32 %d1, i32 %d2, i32 %d3, i32 %d4, ...)
+
+Overview:
+"""""""""
+
+The '``@llvm.nvvm.cp.async.bulk.tensor.reduce.im2col.[3-5]d``' intrinsics
+correspond to the ``cp.reduce.async.bulk.tensor.[3-5]d.*`` set of PTX instructions.
+These instructions initiate an asynchronous reduction operation of tensor data
+in global memory with the tensor data in shared{::cta} memory, using ``im2col`` mode.
+In this mode, the tensor has to be at least three-dimensional.
+The last two arguments of these intrinsics are compile-time flags,
+with the same functionality as described in the ``tile`` mode intrinsics above.
+
+For more information, refer PTX ISA
+`<https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-reduce-async-bulk-tensor>`_.
 
 Other Intrinsics
 ----------------

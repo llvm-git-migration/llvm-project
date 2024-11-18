@@ -14,6 +14,7 @@
 #include "NVPTX.h"
 #include "NVPTXUtilities.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/NVVMIntrinsicFlags.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -414,5 +415,41 @@ void NVPTXInstPrinter::printPrmtMode(const MCInst *MI, int OpNum,
   case NVPTX::PTXPrmtMode::RC16:
     O << ".rc16";
     return;
+  }
+}
+
+void NVPTXInstPrinter::printTmaReductionMode(const MCInst *MI, int OpNum,
+                                             raw_ostream &O,
+                                             const char *Modifier) {
+  const MCOperand &MO = MI->getOperand(OpNum);
+
+  switch (static_cast<nvvm::TMAReductionOp>(MO.getImm())) {
+  case nvvm::TMAReductionOp::ADD:
+    O << ".add";
+    return;
+  case nvvm::TMAReductionOp::MIN:
+    O << ".min";
+    return;
+  case nvvm::TMAReductionOp::MAX:
+    O << ".max";
+    return;
+  case nvvm::TMAReductionOp::INC:
+    O << ".inc";
+    return;
+  case nvvm::TMAReductionOp::DEC:
+    O << ".dec";
+    return;
+  case nvvm::TMAReductionOp::AND:
+    O << ".and";
+    return;
+  case nvvm::TMAReductionOp::OR:
+    O << ".or";
+    return;
+  case nvvm::TMAReductionOp::XOR:
+    O << ".xor";
+    return;
+  default:
+    llvm_unreachable(
+        "Invalid Reduction Op in printCpAsyncBulkTensorReductionMode");
   }
 }
