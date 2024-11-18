@@ -485,7 +485,7 @@ define [2 x i32] @part_of_alloca_used_in_call(ptr %data, i64 %n) {
 ; CHECK-NEXT:    [[I0:%.*]] = call i32 @user_of_alloca(ptr [[RETVAL]])
 ; CHECK-NEXT:    [[I1_FCA_0_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 0
 ; CHECK-NEXT:    [[I1_FCA_0_LOAD:%.*]] = load i32, ptr [[I1_FCA_0_GEP]], align 4
-; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 [[I1_FCA_0_LOAD]], 0
+; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 0, 0
 ; CHECK-NEXT:    [[I1_FCA_1_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 1
 ; CHECK-NEXT:    [[I1_FCA_1_LOAD:%.*]] = load i32, ptr [[I1_FCA_1_GEP]], align 4
 ; CHECK-NEXT:    [[I1_FCA_1_INSERT:%.*]] = insertvalue [2 x i32] [[I1_FCA_0_INSERT]], i32 [[I1_FCA_1_LOAD]], 1
@@ -538,7 +538,7 @@ define [2 x i32] @all_parts_of_alloca_used_in_call_with_multiple_args(ptr %data,
 ; CHECK-NEXT:    [[I0:%.*]] = call i32 @user_of_alloca_with_multiple_args(ptr [[RETVAL]], ptr [[RETVAL_FULL]])
 ; CHECK-NEXT:    [[I1_FCA_0_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 0
 ; CHECK-NEXT:    [[I1_FCA_0_LOAD:%.*]] = load i32, ptr [[I1_FCA_0_GEP]], align 4
-; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 [[I1_FCA_0_LOAD]], 0
+; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 0, 0
 ; CHECK-NEXT:    [[I1_FCA_1_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 1
 ; CHECK-NEXT:    [[I1_FCA_1_LOAD:%.*]] = load i32, ptr [[I1_FCA_1_GEP]], align 4
 ; CHECK-NEXT:    [[I1_FCA_1_INSERT:%.*]] = insertvalue [2 x i32] [[I1_FCA_0_INSERT]], i32 [[I1_FCA_1_LOAD]], 1
@@ -701,7 +701,7 @@ define [2 x i32] @part_of_alloca_used_in_call_with_multiple_args(ptr %data, i64 
 ; CHECK-NEXT:    [[I0:%.*]] = call i32 @user_of_alloca_with_multiple_args(ptr [[RETVAL]], ptr [[RETVAL]])
 ; CHECK-NEXT:    [[I1_FCA_0_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 0
 ; CHECK-NEXT:    [[I1_FCA_0_LOAD:%.*]] = load i32, ptr [[I1_FCA_0_GEP]], align 4
-; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 [[I1_FCA_0_LOAD]], 0
+; CHECK-NEXT:    [[I1_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 0, 0
 ; CHECK-NEXT:    [[I1_FCA_1_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 1
 ; CHECK-NEXT:    [[I1_FCA_1_LOAD:%.*]] = load i32, ptr [[I1_FCA_1_GEP]], align 4
 ; CHECK-NEXT:    [[I1_FCA_1_INSERT:%.*]] = insertvalue [2 x i32] [[I1_FCA_0_INSERT]], i32 [[I1_FCA_1_LOAD]], 1
@@ -757,7 +757,7 @@ define [2 x i32] @all_parts_of_alloca_used_in_calls_with_multiple_args(ptr %data
 ; CHECK-NEXT:    [[I2:%.*]] = call i32 @capture_of_alloca(ptr [[SOME_ANOTHER_ALLOCA_FULL]])
 ; CHECK-NEXT:    [[I3_FCA_0_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 0
 ; CHECK-NEXT:    [[I3_FCA_0_LOAD:%.*]] = load i32, ptr [[I3_FCA_0_GEP]], align 4
-; CHECK-NEXT:    [[I3_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 [[I3_FCA_0_LOAD]], 0
+; CHECK-NEXT:    [[I3_FCA_0_INSERT:%.*]] = insertvalue [2 x i32] poison, i32 0, 0
 ; CHECK-NEXT:    [[I3_FCA_1_GEP:%.*]] = getelementptr inbounds [2 x i32], ptr [[RETVAL_FULL]], i32 0, i32 1
 ; CHECK-NEXT:    [[I3_FCA_1_LOAD:%.*]] = load i32, ptr [[I3_FCA_1_GEP]], align 4
 ; CHECK-NEXT:    [[I3_FCA_1_INSERT:%.*]] = insertvalue [2 x i32] [[I3_FCA_0_INSERT]], i32 [[I3_FCA_1_LOAD]], 1
@@ -817,7 +817,7 @@ define i64 @do_schedule_instrs_for_dce_after_fixups() {
 ; CHECK-NEXT:    [[ADD_PTR:%.*]] = getelementptr inbounds i32, ptr [[C]], i64 1
 ; CHECK-NEXT:    [[TMP0:%.*]] = call i32 @user_of_alloca(ptr [[ADD_PTR]])
 ; CHECK-NEXT:    [[LD:%.*]] = load i64, ptr [[C]], align 4
-; CHECK-NEXT:    ret i64 [[LD]]
+; CHECK-NEXT:    ret i64 0
 ;
 entry:
   %c = alloca i64, align 2
@@ -867,7 +867,7 @@ define i8 @transform_load_and_store() {
 ; CHECK-NEXT:    store i8 0, ptr [[A]], align 1
 ; CHECK-NEXT:    call void @byte_user_of_alloca(ptr [[A]])
 ; CHECK-NEXT:    [[R:%.*]] = load i8, ptr [[A]], align 1
-; CHECK-NEXT:    ret i8 [[R]]
+; CHECK-NEXT:    ret i8 0
 ;
 entry:
   %a = alloca i8

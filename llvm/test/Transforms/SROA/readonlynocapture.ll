@@ -9,7 +9,7 @@ define i32 @simple() {
 ; CHECK-NEXT:    store i32 0, ptr [[A]], align 4
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
 ; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[A]], align 4
-; CHECK-NEXT:    ret i32 [[L1]]
+; CHECK-NEXT:    ret i32 0
 ;
   %a = alloca i32
   store i32 0, ptr %a
@@ -42,7 +42,7 @@ define i32 @twoalloc() {
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
 ; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[A]], align 4
 ; CHECK-NEXT:    [[L2:%.*]] = load i32, ptr [[B]], align 4
-; CHECK-NEXT:    ret i32 [[L2]]
+; CHECK-NEXT:    ret i32 1
 ;
   %a = alloca {i32, i32}
   store i32 0, ptr %a
@@ -117,7 +117,7 @@ define i32 @twocalls() {
 ; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[A]], align 4
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
 ; CHECK-NEXT:    [[L2:%.*]] = load i32, ptr [[B]], align 4
-; CHECK-NEXT:    ret i32 [[L2]]
+; CHECK-NEXT:    ret i32 1
 ;
   %a = alloca {i32, i32}
   store i32 0, ptr %a
@@ -139,7 +139,7 @@ define i32 @volatile() {
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
 ; CHECK-NEXT:    [[L1:%.*]] = load volatile i32, ptr [[A]], align 4
 ; CHECK-NEXT:    [[L2:%.*]] = load volatile i32, ptr [[B]], align 4
-; CHECK-NEXT:    ret i32 [[L2]]
+; CHECK-NEXT:    ret i32 1
 ;
   %a = alloca {i32, i32}
   store i32 0, ptr %a
@@ -204,7 +204,7 @@ define i32 @multiuse() {
 ; CHECK-NEXT:    call void @callee_multiuse(ptr [[A]], ptr [[A]])
 ; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[A]], align 4
 ; CHECK-NEXT:    [[L2:%.*]] = load i32, ptr [[B]], align 4
-; CHECK-NEXT:    ret i32 [[L2]]
+; CHECK-NEXT:    ret i32 1
 ;
   %a = alloca {i32, i32}
   store i32 0, ptr %a
@@ -242,7 +242,7 @@ define ptr @memcpyedsplit(ptr %src) {
 ; CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i64(ptr [[A]], ptr [[SRC:%.*]], i64 16, i1 false)
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
 ; CHECK-NEXT:    [[L1:%.*]] = load ptr, ptr [[B]], align 8
-; CHECK-NEXT:    ret ptr [[L1]]
+; CHECK-NEXT:    ret ptr null
 ;
   %a = alloca { i64, i64 }
   store i8 1, ptr %a

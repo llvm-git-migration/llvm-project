@@ -43,6 +43,7 @@
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/PtrUseVisitor.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constant.h"
@@ -246,6 +247,7 @@ private:
   bool presplitLoadsAndStores(AllocaInst &AI, AllocaSlices &AS);
   AllocaInst *rewritePartition(AllocaInst &AI, AllocaSlices &AS, Partition &P);
   bool splitAlloca(AllocaInst &AI, AllocaSlices &AS);
+  bool propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS);
   std::pair<bool /*Changed*/, bool /*CFGChanged*/> runOnAlloca(AllocaInst &AI);
   void clobberUse(Use &U);
   bool deleteDeadInstructions(SmallPtrSetImpl<AllocaInst *> &DeletedAllocas);
@@ -598,6 +600,7 @@ public:
   /// If this is true, the slices are never fully built and should be
   /// ignored.
   bool isEscaped() const { return PointerEscapingInstr; }
+  bool isEscapedReadOnly() const { return PointerEscapingInstrReadOnly; }
 
   /// Support for iterating over the slices.
   /// @{
@@ -680,6 +683,7 @@ private:
   /// store a pointer to that here and abort trying to form slices of the
   /// alloca. This will be null if the alloca slices are analyzed successfully.
   Instruction *PointerEscapingInstr;
+  Instruction *PointerEscapingInstrReadOnly;
 
   /// The slices of the alloca.
   ///
@@ -1390,6 +1394,23 @@ private:
 
   /// Disable SROA entirely if there are unhandled users of the alloca.
   void visitInstruction(Instruction &I) { PI.setAborted(&I); }
+
+  void visitCallBase(CallBase &CB) {
+    // If the operands that are U are NoCapture ReadOnly, then we mark it as
+    // EscapedReadOnly.
+    Function *Callee = CB.getCalledFunction();
+    if (Callee && CB.arg_size() == Callee->arg_size() &&
+        !CB.hasOperandBundles() && all_of(enumerate(CB.args()), [&](auto V) {
+          return V.value() != *U ||
+                 (Callee->getArg(V.index())->hasNoCaptureAttr() &&
+                  Callee->getArg(V.index())->onlyReadsMemory());
+        })) {
+      PI.setEscapedReadOnly(&CB);
+      return;
+    }
+
+    Base::visitCallBase(CB);
+  }
 };
 
 AllocaSlices::AllocaSlices(const DataLayout &DL, AllocaInst &AI)
@@ -1397,7 +1418,7 @@ AllocaSlices::AllocaSlices(const DataLayout &DL, AllocaInst &AI)
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
       AI(AI),
 #endif
-      PointerEscapingInstr(nullptr) {
+      PointerEscapingInstr(nullptr), PointerEscapingInstrReadOnly(nullptr) {
   SliceBuilder PB(DL, AI, *this);
   SliceBuilder::PtrInfo PtrI = PB.visitPtr(AI);
   if (PtrI.isEscaped() || PtrI.isAborted()) {
@@ -1408,6 +1429,7 @@ AllocaSlices::AllocaSlices(const DataLayout &DL, AllocaInst &AI)
     assert(PointerEscapingInstr && "Did not track a bad instruction");
     return;
   }
+  PointerEscapingInstrReadOnly = PtrI.getEscapedReadOnlyInst();
 
   llvm::erase_if(Slices, [](const Slice &S) { return S.isDead(); });
 
@@ -1444,6 +1466,9 @@ void AllocaSlices::print(raw_ostream &OS) const {
        << "  " << *PointerEscapingInstr << "\n";
     return;
   }
+
+  if (PointerEscapingInstrReadOnly)
+    OS << "Escapes into ReadOnly: " << *PointerEscapingInstrReadOnly << "\n";
 
   OS << "Slices of alloca: " << AI << "\n";
   for (const_iterator I = begin(), E = end(); I != E; ++I)
@@ -5454,6 +5479,54 @@ void SROA::clobberUse(Use &U) {
     }
 }
 
+bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
+  for (auto &P : AS.partitions()) {
+    StoreInst *Store = nullptr;
+    // Make sure all the slices inside the partition are the full width.
+    if (any_of(P, [&P](Slice &S) {
+          return S.beginOffset() != P.beginOffset() ||
+                 S.beginOffset() != P.beginOffset();
+        }))
+      continue;
+
+    // Check there is a single store and nothing else other than loads.
+    for (Slice &S : P) {
+      if (S.isDead())
+        continue;
+      if (auto *St = dyn_cast<StoreInst>(S.getUse()->getUser())) {
+        if (Store) {
+          Store = nullptr;
+          break;
+        }
+        Store = St;
+      } else if (!isa<LoadInst>(S.getUse()->getUser()) &&
+                 !isAssumeLikeIntrinsic(
+                     cast<Instruction>(S.getUse()->getUser()))) {
+        Store = nullptr;
+        break;
+      }
+    }
+
+    if (!Store)
+      continue;
+
+    // Replace loads by the value that was stored.
+    for (Slice &S : P) {
+      if (auto *Ld = dyn_cast<LoadInst>(S.getUse()->getUser())) {
+        if (DTU->getDomTree().dominates(Store, Ld)) {
+          if (Store->getValueOperand()->getType() == Ld->getType()) {
+            LLVM_DEBUG(dbgs() << "    Replacing " << *Ld << " with "
+                              << *Store->getValueOperand() << "\n");
+            Ld->replaceAllUsesWith(Store->getValueOperand());
+          }
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 /// Analyze an alloca for SROA.
 ///
 /// This analyzes the alloca to ensure we can reason about it, builds
@@ -5493,6 +5566,11 @@ SROA::runOnAlloca(AllocaInst &AI) {
   LLVM_DEBUG(AS.print(dbgs()));
   if (AS.isEscaped())
     return {Changed, CFGChanged};
+
+  if (AS.isEscapedReadOnly()) {
+    Changed |= propagateStoredValuesToLoads(AI, AS);
+    return {Changed, CFGChanged};
+  }
 
   // Delete all the dead users of this alloca before splitting and rewriting it.
   for (Instruction *DeadUser : AS.getDeadUsers()) {
