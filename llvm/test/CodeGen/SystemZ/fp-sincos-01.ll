@@ -1,6 +1,6 @@
 ; Test that combined sin/cos library call is emitted when appropriate
 
-; RUN: llc < %s -mtriple=s390x-linux-gnu | FileCheck %s --check-prefix=CHECK-OPT
+; RUN: llc < %s -mtriple=s390x-linux-gnu -verify-machineinstrs | FileCheck %s --check-prefix=CHECK-OPT
 ; RUN: llc < %s -mtriple=s390x-linux-gnu -enable-unsafe-fp-math | FileCheck %s --check-prefix=CHECK-OPT
 
 ; Test f16 libcall.

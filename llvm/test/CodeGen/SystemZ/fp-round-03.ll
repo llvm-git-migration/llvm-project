@@ -1,6 +1,7 @@
 ; Test rounding functions for z14 and above.
 ;
-; RUN: llc < %s -mtriple=s390x-linux-gnu -mcpu=z14 | FileCheck %s
+; RUN: llc < %s -mtriple=s390x-linux-gnu -mcpu=z14 -verify-machineinstrs \
+; RUN:   | FileCheck %s
 
 ; Test that an f16 intrinsic can be lowered with promotion to float.
 declare half @llvm.rint.f16(half %f)
