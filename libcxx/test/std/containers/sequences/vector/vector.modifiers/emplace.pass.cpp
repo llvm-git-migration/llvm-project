@@ -168,3 +168,13 @@ int main(int, char**)
 #endif
     return 0;
 }
+
+// TODO:
+// Add emplace test like
+//
+//     std::vector<int> v = {1, 2, 3, 4};
+//     v.reserve(10000);
+//     v.emplace(v.begin() + 1, 999);
+
+// TODO:
+// Add tests for emplacing and inserting from an element in the vector itself
