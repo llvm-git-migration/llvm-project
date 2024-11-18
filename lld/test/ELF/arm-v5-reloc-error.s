@@ -1,4 +1,5 @@
 // REQUIRES: arm
+// XFAIL: main-run-twice
 // RUN: llvm-mc -filetype=obj -triple=armv7a-linux-gnueabi %s -o %t
 // RUN: echo "SECTIONS { \
 // RUN:       . = SIZEOF_HEADERS; \

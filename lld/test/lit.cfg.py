@@ -104,8 +104,6 @@ if not run_lld_main_twice:
     config.environment["LLD_IN_TEST"] = "1"
 else:
     config.environment["LLD_IN_TEST"] = "2"
-    # Many ELF tests fail in this mode.
-    config.excludes.append("ELF")
     # Some old Mach-O backend tests fail, and it's due for removal anyway.
     config.excludes.append("mach-o")
     # Some new Mach-O backend tests fail; give them a way to mark themselves

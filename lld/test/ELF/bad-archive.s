@@ -1,4 +1,5 @@
 // REQUIRES: x86
+// XFAIL: main-run-twice
 
 // Check bad archive error reporting with --whole-archive
 // and without it.

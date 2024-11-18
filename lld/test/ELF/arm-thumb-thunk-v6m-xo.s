@@ -1,4 +1,5 @@
 // REQUIRES: arm
+// XFAIL: main-run-twice
 // RUN: rm -rf %t && split-file %s %t
 // RUN: llvm-mc -arm-add-build-attributes -filetype=obj -triple=armv6m-none-eabi %t/a.s -o %t/a.o
 // RUN: ld.lld --no-rosegment --script %t/a.t %t/a.o -o %t/a

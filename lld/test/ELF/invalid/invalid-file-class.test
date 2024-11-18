@@ -1,4 +1,5 @@
 # REQUIRES: x86
+# XFAIL: main-run-twice
 # RUN: rm -rf %t && mkdir -p %t
 
 ## In this test, we check that able to report objects with
