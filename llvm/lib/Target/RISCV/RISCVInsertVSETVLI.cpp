@@ -228,7 +228,7 @@ struct DemandedFields {
   }
 
   // Return true if any property of VL was used
-  bool usedVL() {
+  bool usedVL() const {
     return VLAny || VLZeroness;
   }
 

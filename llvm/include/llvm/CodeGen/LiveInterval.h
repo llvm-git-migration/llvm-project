@@ -67,7 +67,7 @@ namespace llvm {
     VNInfo(unsigned i, const VNInfo &orig) : id(i), def(orig.def) {}
 
     /// Copy from the parameter into this VNInfo.
-    void copyFrom(VNInfo &src) {
+    void copyFrom(const VNInfo &src) {
       def = src.def;
     }
 
