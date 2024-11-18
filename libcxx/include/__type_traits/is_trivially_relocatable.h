@@ -10,8 +10,10 @@
 #define _LIBCPP___TYPE_TRAITS_IS_TRIVIALLY_RELOCATABLE_H
 
 #include <__config>
+#include <__type_traits/disjunction.h>
 #include <__type_traits/enable_if.h>
 #include <__type_traits/integral_constant.h>
+#include <__type_traits/is_nothrow_constructible.h>
 #include <__type_traits/is_same.h>
 #include <__type_traits/is_trivially_copyable.h>
 
@@ -36,6 +38,9 @@ template <class _Tp>
 struct __libcpp_is_trivially_relocatable<_Tp,
                                          __enable_if_t<is_same<_Tp, typename _Tp::__trivially_relocatable>::value> >
     : true_type {};
+
+template <class _Tp>
+struct __is_nothrow_relocatable : _Or<is_nothrow_move_constructible<_Tp>, __libcpp_is_trivially_relocatable<_Tp>> {};
 
 _LIBCPP_END_NAMESPACE_STD
 
