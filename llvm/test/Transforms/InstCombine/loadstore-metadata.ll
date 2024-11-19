@@ -151,7 +151,7 @@ exit:
 define void @test_load_cast_combine_nonnull(ptr %ptr) {
 ; CHECK-LABEL: @test_load_cast_combine_nonnull(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[P:%.*]] = load ptr, ptr [[PTR:%.*]], align 8, !nonnull [[META6]]
+; CHECK-NEXT:    [[P:%.*]] = load ptr, ptr [[PTR:%.*]], align 8, !nonnull [[META10:![0-9]+]]
 ; CHECK-NEXT:    [[GEP:%.*]] = getelementptr i8, ptr [[PTR]], i64 336
 ; CHECK-NEXT:    store ptr [[P]], ptr [[GEP]], align 8
 ; CHECK-NEXT:    ret void
@@ -165,7 +165,7 @@ entry:
 
 define i32 @test_load_cast_combine_noundef(ptr %ptr) {
 ; CHECK-LABEL: @test_load_cast_combine_noundef(
-; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[PTR:%.*]], align 4, !noundef [[META6]]
+; CHECK-NEXT:    [[L1:%.*]] = load i32, ptr [[PTR:%.*]], align 4, !noundef [[META10]]
 ; CHECK-NEXT:    ret i32 [[L1]]
 ;
   %l = load float, ptr %ptr, !noundef !{}
@@ -279,7 +279,7 @@ define double @preserve_load_metadata_after_select_transform_metadata_missing_4(
 ; CHECK-LABEL: @preserve_load_metadata_after_select_transform_metadata_missing_4(
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[L_A:%.*]] = load double, ptr [[A:%.*]], align 8, !llvm.access.group [[META6]]
-; CHECK-NEXT:    [[L_B:%.*]] = load double, ptr [[B:%.*]], align 8, !llvm.access.group [[ACC_GRP10:![0-9]+]]
+; CHECK-NEXT:    [[L_B:%.*]] = load double, ptr [[B:%.*]], align 8, !llvm.access.group [[ACC_GRP11:![0-9]+]]
 ; CHECK-NEXT:    [[CMP_I:%.*]] = fcmp fast olt double [[L_A]], [[L_B]]
 ; CHECK-NEXT:    [[L_SEL:%.*]] = select i1 [[CMP_I]], double [[L_B]], double [[L_A]]
 ; CHECK-NEXT:    ret double [[L_SEL]]
@@ -314,9 +314,10 @@ entry:
 ; CHECK: [[META3]] = !{[[META4:![0-9]+]]}
 ; CHECK: [[META4]] = distinct !{[[META4]], [[META5:![0-9]+]]}
 ; CHECK: [[META5]] = distinct !{[[META5]]}
-; CHECK: [[META6]] = !{}
+; CHECK: [[META6]] = distinct !{}
 ; CHECK: [[META7]] = !{i32 1}
 ; CHECK: [[META8]] = !{i64 8}
 ; CHECK: [[ACC_GRP9]] = distinct !{}
-; CHECK: [[ACC_GRP10]] = distinct !{}
+; CHECK: [[META10]] = !{}
+; CHECK: [[ACC_GRP11]] = distinct !{}
 ;.
