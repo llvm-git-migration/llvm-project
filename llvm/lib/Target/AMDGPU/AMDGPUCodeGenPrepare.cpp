@@ -1193,6 +1193,17 @@ int AMDGPUCodeGenPrepareImpl::getDivNumBits(BinaryOperator &I, Value *Num,
                                             Value *Den, unsigned AtLeast,
                                             bool IsSigned) const {
   const DataLayout &DL = Mod->getDataLayout();
+  if (!IsSigned) {
+    KnownBits Known = computeKnownBits(Num, DL, 0, AC, &I);
+    // We know all bits are used for division for Operand > smax_bitwidth
+    if (!Known.isNonNegative())
+      return -1;
+
+    Known = computeKnownBits(Den, DL, 0, AC, &I);
+    if (!Known.isNonNegative())
+      return -1;
+  }
+
   unsigned LHSSignBits = ComputeNumSignBits(Num, DL, 0, AC, &I);
   if (LHSSignBits < AtLeast)
     return -1;
