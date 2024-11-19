@@ -722,6 +722,31 @@ public:
                               force_iteration_on_noniterable_enum);
   }
 
+  /// An abstraction over a floating-point predicate, and a pack of an integer
+  /// predicate with samesign information. The getPredicateSign() family of
+  /// functions in ICmpInst construct and return this type. It is also implictly
+  /// constructed with a Predicate, dropping samesign information.
+  class PredicateSign {
+    Predicate Pred;
+    std::optional<bool> HasSameSign;
+
+  public:
+    PredicateSign(Predicate Pred, bool HasSameSign)
+        : Pred(Pred), HasSameSign(HasSameSign) {}
+
+    PredicateSign(Predicate Pred) : Pred(Pred) {
+      if (isIntPredicate(Pred))
+        HasSameSign = false;
+    }
+
+    operator Predicate() { return Pred; }
+
+    bool hasSameSign() {
+      assert(isIntPredicate(Pred) && HasSameSign);
+      return *HasSameSign;
+    }
+  };
+
 protected:
   CmpInst(Type *ty, Instruction::OtherOps op, Predicate pred, Value *LHS,
           Value *RHS, const Twine &Name = "",

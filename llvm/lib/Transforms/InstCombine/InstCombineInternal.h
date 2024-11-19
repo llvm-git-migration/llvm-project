@@ -653,8 +653,8 @@ public:
   void PHIArgMergedDebugLoc(Instruction *Inst, PHINode &PN);
 
   Instruction *foldGEPICmp(GEPOperator *GEPLHS, Value *RHS,
-                           ICmpInst::Predicate Cond, Instruction &I);
-  Instruction *foldSelectICmp(ICmpInst::Predicate Pred, SelectInst *SI,
+                           CmpInst::PredicateSign Cond, Instruction &I);
+  Instruction *foldSelectICmp(CmpInst::PredicateSign Pred, SelectInst *SI,
                               Value *RHS, const ICmpInst &I);
   bool foldAllocaCmp(AllocaInst *Alloca);
   Instruction *foldCmpLoadFromIndexedGlobal(LoadInst *LI,
@@ -664,7 +664,7 @@ public:
   Instruction *foldFCmpIntToFPConst(FCmpInst &I, Instruction *LHSI,
                                     Constant *RHSC);
   Instruction *foldICmpAddOpConst(Value *X, const APInt &C,
-                                  ICmpInst::Predicate Pred);
+                                  CmpInst::PredicateSign Pred);
   Instruction *foldICmpWithCastOp(ICmpInst &ICmp);
   Instruction *foldICmpWithZextOrSext(ICmpInst &ICmp);
 
@@ -678,7 +678,7 @@ public:
                                                    const APInt &C);
   Instruction *foldICmpBinOp(ICmpInst &Cmp, const SimplifyQuery &SQ);
   Instruction *foldICmpWithMinMax(Instruction &I, MinMaxIntrinsic *MinMax,
-                                  Value *Z, ICmpInst::Predicate Pred);
+                                  Value *Z, CmpInst::PredicateSign Pred);
   Instruction *foldICmpEquality(ICmpInst &Cmp);
   Instruction *foldIRemByPowerOfTwoToBitTest(ICmpInst &I);
   Instruction *foldSignBitTest(ICmpInst &I);
@@ -736,7 +736,7 @@ public:
                                                const APInt &C);
   Instruction *foldICmpBitCast(ICmpInst &Cmp);
   Instruction *foldICmpWithTrunc(ICmpInst &Cmp);
-  Instruction *foldICmpCommutative(ICmpInst::Predicate Pred, Value *Op0,
+  Instruction *foldICmpCommutative(CmpInst::PredicateSign Pred, Value *Op0,
                                    Value *Op1, ICmpInst &CxtI);
 
   // Helpers of visitSelectInst().

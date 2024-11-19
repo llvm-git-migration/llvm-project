@@ -63,10 +63,11 @@ static Value *simplifyBinOp(unsigned, Value *, Value *, const SimplifyQuery &,
                             unsigned);
 static Value *simplifyBinOp(unsigned, Value *, Value *, const FastMathFlags &,
                             const SimplifyQuery &, unsigned);
-static Value *simplifyCmpInst(unsigned, Value *, Value *, const SimplifyQuery &,
-                              unsigned);
-static Value *simplifyICmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                               const SimplifyQuery &Q, unsigned MaxRecurse);
+static Value *simplifyCmpInst(CmpInst::PredicateSign, Value *, Value *,
+                              const SimplifyQuery &, unsigned);
+static Value *simplifyICmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                               Value *RHS, const SimplifyQuery &Q,
+                               unsigned MaxRecurse);
 static Value *simplifyOrInst(Value *, Value *, const SimplifyQuery &, unsigned);
 static Value *simplifyXorInst(Value *, Value *, const SimplifyQuery &,
                               unsigned);
@@ -132,7 +133,7 @@ static Constant *getFalse(Type *Ty) { return ConstantInt::getFalse(Ty); }
 static Constant *getTrue(Type *Ty) { return ConstantInt::getTrue(Ty); }
 
 /// isSameCompare - Is V equivalent to the comparison "LHS Pred RHS"?
-static bool isSameCompare(Value *V, CmpInst::Predicate Pred, Value *LHS,
+static bool isSameCompare(Value *V, CmpInst::PredicateSign Pred, Value *LHS,
                           Value *RHS) {
   CmpInst *Cmp = dyn_cast<CmpInst>(V);
   if (!Cmp)
@@ -150,7 +151,7 @@ static bool isSameCompare(Value *V, CmpInst::Predicate Pred, Value *LHS,
 ///  %cmp = icmp sle i32 %sel, %rhs
 /// Compose new comparison by substituting %sel with either %tv or %fv
 /// and see if it simplifies.
-static Value *simplifyCmpSelCase(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyCmpSelCase(CmpInst::PredicateSign Pred, Value *LHS,
                                  Value *RHS, Value *Cond,
                                  const SimplifyQuery &Q, unsigned MaxRecurse,
                                  Constant *TrueOrFalse) {
@@ -167,7 +168,7 @@ static Value *simplifyCmpSelCase(CmpInst::Predicate Pred, Value *LHS,
 }
 
 /// Simplify comparison with true branch of select
-static Value *simplifyCmpSelTrueCase(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyCmpSelTrueCase(CmpInst::PredicateSign Pred, Value *LHS,
                                      Value *RHS, Value *Cond,
                                      const SimplifyQuery &Q,
                                      unsigned MaxRecurse) {
@@ -176,7 +177,7 @@ static Value *simplifyCmpSelTrueCase(CmpInst::Predicate Pred, Value *LHS,
 }
 
 /// Simplify comparison with false branch of select
-static Value *simplifyCmpSelFalseCase(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyCmpSelFalseCase(CmpInst::PredicateSign Pred, Value *LHS,
                                       Value *RHS, Value *Cond,
                                       const SimplifyQuery &Q,
                                       unsigned MaxRecurse) {
@@ -471,7 +472,7 @@ static Value *threadBinOpOverSelect(Instruction::BinaryOps Opcode, Value *LHS,
 /// We can simplify %cmp1 to true, because both branches of select are
 /// less than 3. We compose new comparison by substituting %tmp with both
 /// branches of select and see if it can be simplified.
-static Value *threadCmpOverSelect(CmpInst::Predicate Pred, Value *LHS,
+static Value *threadCmpOverSelect(CmpInst::PredicateSign Pred, Value *LHS,
                                   Value *RHS, const SimplifyQuery &Q,
                                   unsigned MaxRecurse) {
   // Recursion is always used, so bail out at once if we already hit the limit.
@@ -564,8 +565,9 @@ static Value *threadBinOpOverPHI(Instruction::BinaryOps Opcode, Value *LHS,
 /// comparison by seeing whether comparing with all of the incoming phi values
 /// yields the same result every time. If so returns the common result,
 /// otherwise returns null.
-static Value *threadCmpOverPHI(CmpInst::Predicate Pred, Value *LHS, Value *RHS,
-                               const SimplifyQuery &Q, unsigned MaxRecurse) {
+static Value *threadCmpOverPHI(CmpInst::PredicateSign Pred, Value *LHS,
+                               Value *RHS, const SimplifyQuery &Q,
+                               unsigned MaxRecurse) {
   // Recursion is always used, so bail out at once if we already hit the limit.
   if (!MaxRecurse--)
     return nullptr;
@@ -1001,7 +1003,7 @@ Value *llvm::simplifyMulInst(Value *Op0, Value *Op1, bool IsNSW, bool IsNUW,
 /// Given a predicate and two operands, return true if the comparison is true.
 /// This is a helper for div/rem simplification where we return some other value
 /// when we can prove a relationship between the operands.
-static bool isICmpTrue(ICmpInst::Predicate Pred, Value *LHS, Value *RHS,
+static bool isICmpTrue(ICmpInst::PredicateSign Pred, Value *LHS, Value *RHS,
                        const SimplifyQuery &Q, unsigned MaxRecurse) {
   Value *V = simplifyICmpInst(Pred, LHS, RHS, Q, MaxRecurse);
   Constant *C = dyn_cast_or_null<Constant>(V);
@@ -2597,7 +2599,7 @@ static Type *getCompareTy(Value *Op) {
 /// Rummage around inside V looking for something equivalent to the comparison
 /// "LHS Pred RHS". Return such a value if found, otherwise return null.
 /// Helper function for analyzing max/min idioms.
-static Value *extractEquivalentCondition(Value *V, CmpInst::Predicate Pred,
+static Value *extractEquivalentCondition(Value *V, CmpInst::PredicateSign Pred,
                                          Value *LHS, Value *RHS) {
   SelectInst *SI = dyn_cast<SelectInst>(V);
   if (!SI)
@@ -2706,7 +2708,7 @@ static bool haveNonOverlappingStorage(const Value *V1, const Value *V2) {
 // If the C and C++ standards are ever made sufficiently restrictive in this
 // area, it may be possible to update LLVM's semantics accordingly and reinstate
 // this optimization.
-static Constant *computePointerICmp(CmpInst::Predicate Pred, Value *LHS,
+static Constant *computePointerICmp(CmpInst::PredicateSign Pred, Value *LHS,
                                     Value *RHS, const SimplifyQuery &Q) {
   assert(LHS->getType() == RHS->getType() && "Must have same types");
   const DataLayout &DL = Q.DL;
@@ -2855,7 +2857,7 @@ static Constant *computePointerICmp(CmpInst::Predicate Pred, Value *LHS,
 }
 
 /// Fold an icmp when its operands have i1 scalar type.
-static Value *simplifyICmpOfBools(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyICmpOfBools(CmpInst::PredicateSign Pred, Value *LHS,
                                   Value *RHS, const SimplifyQuery &Q) {
   Type *ITy = getCompareTy(LHS); // The return type.
   Type *OpTy = LHS->getType();   // The operand type.
@@ -2958,7 +2960,7 @@ static Value *simplifyICmpOfBools(CmpInst::Predicate Pred, Value *LHS,
 }
 
 /// Try hard to fold icmp with zero RHS because this is a common case.
-static Value *simplifyICmpWithZero(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyICmpWithZero(CmpInst::PredicateSign Pred, Value *LHS,
                                    Value *RHS, const SimplifyQuery &Q) {
   if (!match(RHS, m_Zero()))
     return nullptr;
@@ -3018,7 +3020,7 @@ static Value *simplifyICmpWithZero(CmpInst::Predicate Pred, Value *LHS,
   return nullptr;
 }
 
-static Value *simplifyICmpWithConstant(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyICmpWithConstant(CmpInst::PredicateSign Pred, Value *LHS,
                                        Value *RHS, const InstrInfoQuery &IIQ) {
   Type *ITy = getCompareTy(RHS); // The return type.
 
@@ -3066,7 +3068,7 @@ static Value *simplifyICmpWithConstant(CmpInst::Predicate Pred, Value *LHS,
   return nullptr;
 }
 
-static Value *simplifyICmpWithBinOpOnLHS(CmpInst::Predicate Pred,
+static Value *simplifyICmpWithBinOpOnLHS(CmpInst::PredicateSign Pred,
                                          BinaryOperator *LBO, Value *RHS,
                                          const SimplifyQuery &Q,
                                          unsigned MaxRecurse) {
@@ -3223,7 +3225,7 @@ static Value *simplifyICmpWithBinOpOnLHS(CmpInst::Predicate Pred,
 // *) C1 < C2 && C1 >= 0, or
 // *) C2 < C1 && C1 <= 0.
 //
-static bool trySimplifyICmpWithAdds(CmpInst::Predicate Pred, Value *LHS,
+static bool trySimplifyICmpWithAdds(CmpInst::PredicateSign Pred, Value *LHS,
                                     Value *RHS, const InstrInfoQuery &IIQ) {
   // TODO: only support icmp slt for now.
   if (Pred != CmpInst::ICMP_SLT || !IIQ.UseInstrInfo)
@@ -3248,7 +3250,7 @@ static bool trySimplifyICmpWithAdds(CmpInst::Predicate Pred, Value *LHS,
 /// TODO: A large part of this logic is duplicated in InstCombine's
 /// foldICmpBinOp(). We should be able to share that and avoid the code
 /// duplication.
-static Value *simplifyICmpWithBinOp(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyICmpWithBinOp(CmpInst::PredicateSign Pred, Value *LHS,
                                     Value *RHS, const SimplifyQuery &Q,
                                     unsigned MaxRecurse) {
   BinaryOperator *LBO = dyn_cast<BinaryOperator>(LHS);
@@ -3482,7 +3484,7 @@ static Value *simplifyICmpWithBinOp(CmpInst::Predicate Pred, Value *LHS,
 
 /// simplify integer comparisons where at least one operand of the compare
 /// matches an integer min/max idiom.
-static Value *simplifyICmpWithMinMax(CmpInst::Predicate Pred, Value *LHS,
+static Value *simplifyICmpWithMinMax(CmpInst::PredicateSign Pred, Value *LHS,
                                      Value *RHS, const SimplifyQuery &Q,
                                      unsigned MaxRecurse) {
   Type *ITy = getCompareTy(LHS); // The return type.
@@ -3667,7 +3669,7 @@ static Value *simplifyICmpWithMinMax(CmpInst::Predicate Pred, Value *LHS,
   return nullptr;
 }
 
-static Value *simplifyICmpWithDominatingAssume(CmpInst::Predicate Predicate,
+static Value *simplifyICmpWithDominatingAssume(CmpInst::PredicateSign Predicate,
                                                Value *LHS, Value *RHS,
                                                const SimplifyQuery &Q) {
   // Gracefully handle instructions that have not been inserted yet.
@@ -3690,7 +3692,7 @@ static Value *simplifyICmpWithDominatingAssume(CmpInst::Predicate Predicate,
   return nullptr;
 }
 
-static Value *simplifyICmpWithIntrinsicOnLHS(CmpInst::Predicate Pred,
+static Value *simplifyICmpWithIntrinsicOnLHS(CmpInst::PredicateSign Pred,
                                              Value *LHS, Value *RHS) {
   auto *II = dyn_cast<IntrinsicInst>(LHS);
   if (!II)
@@ -3753,9 +3755,9 @@ static std::optional<ConstantRange> getRange(Value *V,
 
 /// Given operands for an ICmpInst, see if we can fold the result.
 /// If not, this returns null.
-static Value *simplifyICmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                               const SimplifyQuery &Q, unsigned MaxRecurse) {
-  CmpInst::Predicate Pred = (CmpInst::Predicate)Predicate;
+static Value *simplifyICmpInst(CmpInst::PredicateSign Pred, Value *LHS,
+                               Value *RHS, const SimplifyQuery &Q,
+                               unsigned MaxRecurse) {
   assert(CmpInst::isIntPredicate(Pred) && "Not an integer compare!");
 
   if (Constant *CLHS = dyn_cast<Constant>(LHS)) {
@@ -4062,17 +4064,16 @@ static Value *simplifyICmpInst(unsigned Predicate, Value *LHS, Value *RHS,
   return nullptr;
 }
 
-Value *llvm::simplifyICmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                              const SimplifyQuery &Q) {
+Value *llvm::simplifyICmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                              Value *RHS, const SimplifyQuery &Q) {
   return ::simplifyICmpInst(Predicate, LHS, RHS, Q, RecursionLimit);
 }
 
 /// Given operands for an FCmpInst, see if we can fold the result.
 /// If not, this returns null.
-static Value *simplifyFCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                               FastMathFlags FMF, const SimplifyQuery &Q,
-                               unsigned MaxRecurse) {
-  CmpInst::Predicate Pred = (CmpInst::Predicate)Predicate;
+static Value *simplifyFCmpInst(CmpInst::PredicateSign Pred, Value *LHS,
+                               Value *RHS, FastMathFlags FMF,
+                               const SimplifyQuery &Q, unsigned MaxRecurse) {
   assert(CmpInst::isFPPredicate(Pred) && "Not an FP compare!");
 
   if (Constant *CLHS = dyn_cast<Constant>(LHS)) {
@@ -4297,8 +4298,9 @@ static Value *simplifyFCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
   return nullptr;
 }
 
-Value *llvm::simplifyFCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                              FastMathFlags FMF, const SimplifyQuery &Q) {
+Value *llvm::simplifyFCmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                              Value *RHS, FastMathFlags FMF,
+                              const SimplifyQuery &Q) {
   return ::simplifyFCmpInst(Predicate, LHS, RHS, FMF, Q, RecursionLimit);
 }
 
@@ -4534,7 +4536,7 @@ static Value *simplifySelectBitTest(Value *TrueVal, Value *FalseVal, Value *X,
 }
 
 static Value *simplifyCmpSelOfMaxMin(Value *CmpLHS, Value *CmpRHS,
-                                     ICmpInst::Predicate Pred, Value *TVal,
+                                     CmpInst::PredicateSign Pred, Value *TVal,
                                      Value *FVal) {
   // Canonicalize common cmp+sel operand as CmpLHS.
   if (CmpRHS == TVal || CmpRHS == FVal) {
@@ -4608,7 +4610,7 @@ static Value *simplifyCmpSelOfMaxMin(Value *CmpLHS, Value *CmpRHS,
 /// An alternative way to test if a bit is set or not uses sgt/slt instead of
 /// eq/ne.
 static Value *simplifySelectWithFakeICmpEq(Value *CmpLHS, Value *CmpRHS,
-                                           ICmpInst::Predicate Pred,
+                                           CmpInst::PredicateSign Pred,
                                            Value *TrueVal, Value *FalseVal) {
   if (auto Res = decomposeBitTestICmp(CmpLHS, CmpRHS, Pred))
     return simplifySelectBitTest(TrueVal, FalseVal, Res->X, &Res->Mask,
@@ -6119,15 +6121,16 @@ Value *llvm::simplifyBinOp(unsigned Opcode, Value *LHS, Value *RHS,
 }
 
 /// Given operands for a CmpInst, see if we can fold the result.
-static Value *simplifyCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                              const SimplifyQuery &Q, unsigned MaxRecurse) {
-  if (CmpInst::isIntPredicate((CmpInst::Predicate)Predicate))
+static Value *simplifyCmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                              Value *RHS, const SimplifyQuery &Q,
+                              unsigned MaxRecurse) {
+  if (CmpInst::isIntPredicate(Predicate))
     return simplifyICmpInst(Predicate, LHS, RHS, Q, MaxRecurse);
   return simplifyFCmpInst(Predicate, LHS, RHS, FastMathFlags(), Q, MaxRecurse);
 }
 
-Value *llvm::simplifyCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                             const SimplifyQuery &Q) {
+Value *llvm::simplifyCmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                             Value *RHS, const SimplifyQuery &Q) {
   return ::simplifyCmpInst(Predicate, LHS, RHS, Q, RecursionLimit);
 }
 

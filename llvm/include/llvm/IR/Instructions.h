@@ -1203,6 +1203,18 @@ public:
 #endif
   }
 
+  PredicateSign getPredicateSign() const {
+    return {getPredicate(), hasSameSign()};
+  }
+
+  PredicateSign getInversePredicateSign() const {
+    return {getInversePredicate(), hasSameSign()};
+  }
+
+  PredicateSign getSwappedPredicateSign() const {
+    return {getSwappedPredicate(), hasSameSign()};
+  }
+
   void setSameSign(bool B = true) {
     SubclassOptionalData = (SubclassOptionalData & ~SameSign) | (B * SameSign);
   }

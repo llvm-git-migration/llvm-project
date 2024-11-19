@@ -152,12 +152,12 @@ Value *simplifyOrInst(Value *LHS, Value *RHS, const SimplifyQuery &Q);
 Value *simplifyXorInst(Value *LHS, Value *RHS, const SimplifyQuery &Q);
 
 /// Given operands for an ICmpInst, fold the result or return null.
-Value *simplifyICmpInst(unsigned Predicate, Value *LHS, Value *RHS,
+Value *simplifyICmpInst(CmpInst::PredicateSign Pred, Value *LHS, Value *RHS,
                         const SimplifyQuery &Q);
 
 /// Given operands for an FCmpInst, fold the result or return null.
-Value *simplifyFCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
-                        FastMathFlags FMF, const SimplifyQuery &Q);
+Value *simplifyFCmpInst(CmpInst::PredicateSign Predicate, Value *LHS,
+                        Value *RHS, FastMathFlags FMF, const SimplifyQuery &Q);
 
 /// Given operands for a SelectInst, fold the result or return null.
 Value *simplifySelectInst(Value *Cond, Value *TrueVal, Value *FalseVal,
@@ -200,7 +200,7 @@ Value *simplifyShuffleVectorInst(Value *Op0, Value *Op1, ArrayRef<int> Mask,
 //=== Helper functions for higher up the class hierarchy.
 
 /// Given operands for a CmpInst, fold the result or return null.
-Value *simplifyCmpInst(unsigned Predicate, Value *LHS, Value *RHS,
+Value *simplifyCmpInst(CmpInst::PredicateSign Predicate, Value *LHS, Value *RHS,
                        const SimplifyQuery &Q);
 
 /// Given operand for a UnaryOperator, fold the result or return null.
