@@ -1227,6 +1227,9 @@ def TargetOp : OpenMP_Op<"target", traits = [
     a device, if it is 0 then the target region is executed on the host device.
   }] # clausesDescription;
 
+  let arguments = !con(clausesArgs,
+                       (ins OptionalAttr<I64ArrayAttr>:$private_maps));
+
   let builders = [
     OpBuilder<(ins CArg<"const TargetOperands &">:$clauses)>
   ];
@@ -1239,7 +1242,8 @@ def TargetOp : OpenMP_Op<"target", traits = [
     custom<InReductionMapPrivateRegion>(
         $region, $in_reduction_vars, type($in_reduction_vars),
         $in_reduction_byref, $in_reduction_syms, $map_vars, type($map_vars),
-        $private_vars, type($private_vars), $private_syms) attr-dict
+        $private_vars, type($private_vars), $private_syms, $private_maps)
+        attr-dict
   }];
 
   let hasVerifier = 1;
