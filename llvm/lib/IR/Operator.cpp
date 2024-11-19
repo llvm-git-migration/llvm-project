@@ -127,8 +127,10 @@ bool GEPOperator::accumulateConstantOffset(
   // Fast path for canonical getelementptr i8 form.
   if (SourceType->isIntegerTy(8) && !ExternalAnalysis) {
     if (auto *CI = dyn_cast<ConstantInt>(Index.front())) {
-      Offset += CI->getValue().sextOrTrunc(Offset.getBitWidth());
-      return true;
+      if (CI->getType()->isIntegerTy()) {
+        Offset += CI->getValue().sextOrTrunc(Offset.getBitWidth());
+        return true;
+      }
     }
     return false;
   }
@@ -163,28 +165,30 @@ bool GEPOperator::accumulateConstantOffset(
     Value *V = GTI.getOperand();
     StructType *STy = GTI.getStructTypeOrNull();
     // Handle ConstantInt if possible.
-    if (auto ConstOffset = dyn_cast<ConstantInt>(V)) {
-      if (ConstOffset->isZero())
-        continue;
-      // if the type is scalable and the constant is not zero (vscale * n * 0 =
-      // 0) bailout.
-      if (ScalableType)
-        return false;
-      // Handle a struct index, which adds its field offset to the pointer.
-      if (STy) {
-        unsigned ElementIdx = ConstOffset->getZExtValue();
-        const StructLayout *SL = DL.getStructLayout(STy);
-        // Element offset is in bytes.
-        if (!AccumulateOffset(
-                APInt(Offset.getBitWidth(), SL->getElementOffset(ElementIdx)),
-                1))
+    if (V->getType()->isIntegerTy()) {
+      if (auto ConstOffset = dyn_cast<ConstantInt>(V)) {
+        if (ConstOffset->isZero())
+          continue;
+        // if the type is scalable and the constant is not zero (vscale * n * 0
+        // = 0) bailout.
+        if (ScalableType)
+          return false;
+        // Handle a struct index, which adds its field offset to the pointer.
+        if (STy) {
+          unsigned ElementIdx = ConstOffset->getZExtValue();
+          const StructLayout *SL = DL.getStructLayout(STy);
+          // Element offset is in bytes.
+          if (!AccumulateOffset(
+                  APInt(Offset.getBitWidth(), SL->getElementOffset(ElementIdx)),
+                  1))
+            return false;
+          continue;
+        }
+        if (!AccumulateOffset(ConstOffset->getValue(),
+                              GTI.getSequentialElementStride(DL)))
           return false;
         continue;
       }
-      if (!AccumulateOffset(ConstOffset->getValue(),
-                            GTI.getSequentialElementStride(DL)))
-        return false;
-      continue;
     }
 
     // The operand is not constant, check if an external analysis was provided.
