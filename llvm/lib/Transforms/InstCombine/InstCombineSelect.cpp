@@ -1898,6 +1898,44 @@ static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
   return nullptr;
 }
 
+// Turn (select (Cmp X C1) (BOp X C2) C3)
+//   -> (select (Cmp X C1) (BOp X C2) (BOp C1 C2))
+//   -> (BOp (select (Cmp X C1) X C1) C2)
+// iff C3 == BOp C1 C2
+// This allows for better canonicalization.
+static Instruction *canonicalizeConstToBOp(SelectInst &SI, Value *TrueVal,
+                                           Value *FalseVal,
+                                           InstCombinerImpl &IC) {
+  Value *CondVal = SI.getCondition();
+
+  BinaryOperator *BOp;
+  Constant *C1, *C2, *C3;
+  Value *X;
+  ICmpInst::Predicate Predicate;
+
+  if (!match(CondVal, m_c_ICmp(Predicate, m_Value(X), m_Constant(C1))))
+    return nullptr;
+
+  if (!((match(TrueVal, m_BinOp(BOp)) && match(FalseVal, m_Constant(C3))) ||
+        (match(FalseVal, m_BinOp(BOp)) && match(TrueVal, m_Constant(C3)))))
+    return nullptr;
+
+  if (!match(BOp, m_OneUse(m_c_BinOp(m_Specific(X), m_Constant(C2)))))
+    return nullptr;
+
+  if (!(ICmpInst::isRelational(Predicate) &&
+        C3 == ConstantFoldBinaryOpOperands(BOp->getOpcode(), C1, C2,
+                                           SI.getDataLayout())))
+    return nullptr;
+
+  Instruction *NewBO =
+      BinaryOperator::CreateWithCopiedFlags(BOp->getOpcode(), C1, C2, BOp);
+  IC.InsertNewInstBefore(NewBO, SI.getIterator());
+  IC.replaceOperand(SI, isa<Constant>(TrueVal) ? 1 : 2, NewBO);
+  return IC.foldSelectOpOp(SI, cast<Instruction>(SI.getTrueValue()),
+                           cast<Instruction>(SI.getFalseValue()));
+}
+
 /// Visit a SelectInst that has an ICmpInst as its first operand.
 Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
                                                       ICmpInst *ICI) {
@@ -1989,6 +2027,9 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
 
   if (Value *V = foldAbsDiff(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
+
+  if (Instruction *I = canonicalizeConstToBOp(SI, TrueVal, FalseVal, *this))
+    return I;
 
   return Changed ? &SI : nullptr;
 }
