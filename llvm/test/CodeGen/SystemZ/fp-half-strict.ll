@@ -83,11 +83,9 @@ define void @fun1(ptr %Src, ptr %Dst) #0 {
 ; NOVEC-NEXT:    lgr %r13, %r3
 ; NOVEC-NEXT:    ldgr %f0, %r0
 ; NOVEC-NEXT:    # kill: def $f0h killed $f0h killed $f0d
-; NOVEC-NEXT:    brasl %r14, __extendhfsf2@PLT
-; NOVEC-NEXT:    ldebr %f0, %f0
+; NOVEC-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; NOVEC-NEXT:    adbr %f0, %f0
-; NOVEC-NEXT:    ledbr %f0, %f0
-; NOVEC-NEXT:    brasl %r14, __truncsfhf2@PLT
+; NOVEC-NEXT:    brasl %r14, __truncdfhf2@PLT
 ; NOVEC-NEXT:    # kill: def $f0h killed $f0h def $f0d
 ; NOVEC-NEXT:    lgdr %r0, %f0
 ; NOVEC-NEXT:    risblg %r0, %r0, 0, 159, 32
@@ -110,11 +108,9 @@ define void @fun1(ptr %Src, ptr %Dst) #0 {
 ; VECTOR-NEXT:    lgr %r13, %r3
 ; VECTOR-NEXT:    vlvgf %v0, %r0, 0
 ; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    ldebr %f0, %f0
+; VECTOR-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; VECTOR-NEXT:    adbr %f0, %f0
-; VECTOR-NEXT:    ledbra %f0, 0, %f0, 0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
+; VECTOR-NEXT:    brasl %r14, __truncdfhf2@PLT
 ; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
 ; VECTOR-NEXT:    vlgvf %r0, %v0, 0
 ; VECTOR-NEXT:    srl %r0, 16

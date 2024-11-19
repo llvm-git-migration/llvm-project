@@ -99,8 +99,6 @@ public:
     // and instead the backend will promote each half operation to float
     // individually.
     HasLegalHalfType = false;
-    // Allow half arguments and return values (__fp16).
-    HalfArgsAndReturns = true;
     // Support _Float16.
     HasFloat16 = true;
 
