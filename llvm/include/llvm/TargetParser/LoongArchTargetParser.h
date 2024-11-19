@@ -53,6 +53,9 @@ enum FeatureKind : uint32_t {
   // Atomic memory swap and add instructions for byte and half word are
   // available.
   FK_LAM_BH = 1 << 10,
+
+  // sc.q is available.
+  FK_SCQ = 1 << 14,
 };
 
 struct FeatureInfo {
