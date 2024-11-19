@@ -524,25 +524,16 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::FP_EXTEND, VT, Custom);
     setOperationAction(ISD::STRICT_FP_EXTEND, VT, Custom);
   }
-  for (auto Op : {ISD::LOAD, ISD::ATOMIC_LOAD,
-                  ISD::STORE, ISD::ATOMIC_STORE,
-                  ISD::FP_ROUND, ISD::STRICT_FP_ROUND})
+  for (auto Op : {ISD::LOAD, ISD::ATOMIC_LOAD, ISD::STORE, ISD::ATOMIC_STORE})
     setOperationAction(Op, MVT::f16, Custom);
+  setOperationAction(ISD::FP_ROUND, MVT::f16, LibCall);
+  setOperationAction(ISD::STRICT_FP_ROUND, MVT::f16, LibCall);
 
   for (unsigned I = MVT::FIRST_FP_VALUETYPE;
        I <= MVT::LAST_FP_VALUETYPE;
        ++I) {
     MVT VT = MVT::SimpleValueType(I);
-    if (isTypeLegal(VT)) {
-      // No special instructions for these.
-      setOperationAction(ISD::FSIN, VT, Expand);
-      setOperationAction(ISD::FCOS, VT, Expand);
-      setOperationAction(ISD::FSINCOS, VT, Expand);
-      setOperationAction(ISD::FREM, VT, Expand);
-      setOperationAction(ISD::FPOW, VT, Expand);
-      if (VT == MVT::f16)
-        continue;
-
+    if (isTypeLegal(VT) && VT != MVT::f16) {
       // We can use FI for FRINT.
       setOperationAction(ISD::FRINT, VT, Legal);
 
@@ -554,6 +545,13 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
         setOperationAction(ISD::FTRUNC, VT, Legal);
         setOperationAction(ISD::FROUND, VT, Legal);
       }
+
+      // No special instructions for these.
+      setOperationAction(ISD::FSIN, VT, Expand);
+      setOperationAction(ISD::FCOS, VT, Expand);
+      setOperationAction(ISD::FSINCOS, VT, Expand);
+      setOperationAction(ISD::FREM, VT, Expand);
+      setOperationAction(ISD::FPOW, VT, Expand);
 
       // Special treatment.
       setOperationAction(ISD::IS_FPCLASS, VT, Custom);
@@ -6158,80 +6156,18 @@ static SDValue lowerAddrSpaceCast(SDValue Op, SelectionDAG &DAG) {
   return Op;
 }
 
-SDValue SystemZTargetLowering::LowerFP_EXTEND(SDValue Op,
+SDValue SystemZTargetLowering::lowerFP_EXTEND(SDValue Op,
                                               SelectionDAG &DAG) const {
-  bool IsStrict = Op->isStrictFPOpcode();
-  SDValue In = Op.getOperand(IsStrict ? 1 : 0);
-  MVT VT = Op.getSimpleValueType();
-  MVT SVT = In.getSimpleValueType();
-  if (SVT != MVT::f16)
+  SDValue In = Op.getOperand(Op->isStrictFPOpcode() ? 1 : 0);
+  if (In.getSimpleValueType() != MVT::f16)
     return Op;  // Legal
-
-  SDLoc DL(Op);
-  SDValue Chain = IsStrict ? Op.getOperand(0) : SDValue();
-
-  // Need a libcall.  XXX factor out (below)
-  TargetLowering::CallLoweringInfo CLI(DAG);
-  Chain = IsStrict ? Op.getOperand(0) : DAG.getEntryNode();
-  TargetLowering::ArgListTy Args;
-  TargetLowering::ArgListEntry Entry;
-  Entry.Node = In;
-  Entry.Ty = EVT(SVT).getTypeForEVT(*DAG.getContext());
-  Args.push_back(Entry);
-  SDValue Callee = DAG.getExternalSymbol(
-    getLibcallName(RTLIB::FPEXT_F16_F32), getPointerTy(DAG.getDataLayout()));
-  CLI.setDebugLoc(DL).setChain(Chain).setLibCallee(
-    CallingConv::C, EVT(MVT::f32).getTypeForEVT(*DAG.getContext()), Callee,
-    std::move(Args));
-  SDValue Res;
-  std::tie(Res,Chain) = LowerCallTo(CLI);
-  if (IsStrict)
-    Res = DAG.getMergeValues({Res, Chain}, DL);
-
-  return DAG.getNode(ISD::FP_EXTEND, DL, VT, Res);
-}
-
-SDValue SystemZTargetLowering::LowerFP_ROUND(SDValue Op,
-                                             SelectionDAG &DAG) const {
-  bool IsStrict = Op->isStrictFPOpcode();
-  SDValue In = Op.getOperand(IsStrict ? 1 : 0);
-  MVT VT = Op.getSimpleValueType();
-  MVT SVT = In.getSimpleValueType();
-  assert(VT == MVT::f16 && "Only rounding to f16 needs custom handling.");
-
-  SDLoc DL(Op);
-  SDValue Chain = IsStrict ? Op.getOperand(0) : SDValue();
-
-  if (SVT != MVT::f32) {
-    SDValue Rnd = DAG.getIntPtrConstant(0, DL, /*isTarget=*/true);
-    In = DAG.getNode(ISD::FP_ROUND, DL, MVT::f32, In, Rnd);
-  }
-
-  // We need a libcall.
-  TargetLowering::CallLoweringInfo CLI(DAG);
-  Chain = IsStrict ? Op.getOperand(0) : DAG.getEntryNode();
-  TargetLowering::ArgListTy Args;
-  TargetLowering::ArgListEntry Entry;
-  Entry.Node = In;
-  Entry.Ty = EVT(MVT::f32).getTypeForEVT(*DAG.getContext());
-  Args.push_back(Entry);
-  SDValue Callee = DAG.getExternalSymbol(
-    getLibcallName(RTLIB::FPROUND_F32_F16), getPointerTy(DAG.getDataLayout()));
-  CLI.setDebugLoc(DL).setChain(Chain).setLibCallee(
-    CallingConv::C, EVT(MVT::f16).getTypeForEVT(*DAG.getContext()), Callee,
-    std::move(Args));
-  SDValue Res;
-  std::tie(Res, Chain) = LowerCallTo(CLI);
-  if (IsStrict)
-    Res = DAG.getMergeValues({Res, Chain}, DL);
-  return Res;
+  return SDValue(); // Let legalizer emit the libcall.
 }
 
 SDValue SystemZTargetLowering::lowerLoadF16(SDValue Op,
                                             SelectionDAG &DAG) const {
   MVT RegVT = Op.getSimpleValueType();
-  if (RegVT != MVT::f16)
-    return SDValue();
+  assert(RegVT == MVT::f16 && "Expected to lower an f16 load.");
 
   SDLoc DL(Op);
   SDValue NewLd;
@@ -6263,8 +6199,7 @@ SDValue SystemZTargetLowering::lowerStoreF16(SDValue Op,
                                              SelectionDAG &DAG) const {
   SDValue StoredVal = Op->getOperand(1);
   MVT StoreVT = StoredVal.getSimpleValueType();
-  if (StoreVT != MVT::f16)
-    return SDValue();
+  assert(StoreVT == MVT::f16 && "Expected to lower an f16 store.");
 
   // Move into a GPR, shift and store the 2 bytes.  TODO: Use VSTEH if available.
   SDLoc DL(Op);
@@ -6464,10 +6399,7 @@ SDValue SystemZTargetLowering::LowerOperation(SDValue Op,
     return lowerShift(Op, DAG, SystemZISD::VROTL_BY_SCALAR);
   case ISD::FP_EXTEND:
   case ISD::STRICT_FP_EXTEND:
-    return LowerFP_EXTEND(Op, DAG);
-  case ISD::FP_ROUND:
-  case ISD::STRICT_FP_ROUND:
-    return LowerFP_ROUND(Op, DAG);
+    return lowerFP_EXTEND(Op, DAG);
   case ISD::LOAD:
     return lowerLoadF16(Op, DAG);
   case ISD::STORE:

@@ -247,8 +247,6 @@ void RuntimeLibcallsInfo::initLibcalls(const Triple &TT) {
   if (!TT.isWasm()) {
     // These libcalls are only available in compiler-rt, not libgcc.
     if (TT.isArch32Bit()) {
-    setLibcallName(RTLIB::FPROUND_F32_F16, "__truncsfhf2");
-    setLibcallName(RTLIB::FPEXT_F16_F32, "__extendhfsf2");
       setLibcallName(RTLIB::SHL_I128, nullptr);
       setLibcallName(RTLIB::SRL_I128, nullptr);
       setLibcallName(RTLIB::SRA_I128, nullptr);
@@ -256,5 +254,10 @@ void RuntimeLibcallsInfo::initLibcalls(const Triple &TT) {
       setLibcallName(RTLIB::MULO_I64, nullptr);
     }
     setLibcallName(RTLIB::MULO_I128, nullptr);
+  }
+
+  if (TT.isSystemZ()) {
+    setLibcallName(RTLIB::FPROUND_F32_F16, "__truncsfhf2");
+    setLibcallName(RTLIB::FPEXT_F16_F32, "__extendhfsf2");
   }
 }

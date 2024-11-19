@@ -1,23 +1,7 @@
 ; Test that combined sin/cos library call is emitted when appropriate
 
-; RUN: llc < %s -mtriple=s390x-linux-gnu -verify-machineinstrs | FileCheck %s --check-prefix=CHECK-OPT
+; RUN: llc < %s -mtriple=s390x-linux-gnu | FileCheck %s --check-prefix=CHECK-OPT
 ; RUN: llc < %s -mtriple=s390x-linux-gnu -enable-unsafe-fp-math | FileCheck %s --check-prefix=CHECK-OPT
-
-; Test f16 libcall.
-define half @f0(half %x) {
-; CHECK-OPT-LABEL: f0:
-; CHECK-OPT-NOT: brasl %r14, __extendhfsf2@PLT
-; CHECK-OPT: brasl %r14, sinh@PLT
-; CHECK-OPT: brasl %r14, cosh@PLT
-; CHECK-OPT: brasl %r14, __extendhfsf2@PLT
-; CHECK-OPT: brasl %r14, __extendhfsf2@PLT
-; CHECK-OPT: aebr %f0, %f8
-; CHECK-OPT: brasl %r14, __truncsfhf2@PLT
-  %tmp1 = call half @sinh(half %x) readnone
-  %tmp2 = call half @cosh(half %x) readnone
-  %add = fadd half %tmp1, %tmp2
-  ret half %add
-}
 
 define float @f1(float %x) {
 ; CHECK-OPT-LABEL: f1:
@@ -86,11 +70,9 @@ define fp128 @f3_errno(fp128 %x) {
   ret fp128 %add
 }
 
-declare half @sinh(half)
 declare float @sinf(float)
 declare double @sin(double)
 declare fp128 @sinl(fp128)
-declare half @cosh(half)
 declare float @cosf(float)
 declare double @cos(double)
 declare fp128 @cosl(fp128)

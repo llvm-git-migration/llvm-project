@@ -361,33 +361,30 @@ define <2 x half> @fun2(<2 x half> %Op) {
 ; NOVEC-NEXT:    stmg %r14, %r15, 112(%r15)
 ; NOVEC-NEXT:    .cfi_offset %r14, -48
 ; NOVEC-NEXT:    .cfi_offset %r15, -40
-; NOVEC-NEXT:    aghi %r15, -184
-; NOVEC-NEXT:    .cfi_def_cfa_offset 344
-; NOVEC-NEXT:    std %f8, 176(%r15) # 8-byte Folded Spill
-; NOVEC-NEXT:    std %f9, 168(%r15) # 8-byte Folded Spill
-; NOVEC-NEXT:    std %f10, 160(%r15) # 8-byte Folded Spill
+; NOVEC-NEXT:    aghi %r15, -176
+; NOVEC-NEXT:    .cfi_def_cfa_offset 336
+; NOVEC-NEXT:    std %f8, 168(%r15) # 8-byte Folded Spill
+; NOVEC-NEXT:    std %f9, 160(%r15) # 8-byte Folded Spill
 ; NOVEC-NEXT:    .cfi_offset %f8, -168
 ; NOVEC-NEXT:    .cfi_offset %f9, -176
-; NOVEC-NEXT:    .cfi_offset %f10, -184
 ; NOVEC-NEXT:    ler %f8, %f2
-; NOVEC-NEXT:    brasl %r14, __extendhfsf2@PLT
-; NOVEC-NEXT:    ldebr %f9, %f0
+; NOVEC-NEXT:    brasl %r14, __extendhfdf2@PLT
+; NOVEC-NEXT:    ldr %f9, %f0
 ; NOVEC-NEXT:    ler %f0, %f8
-; NOVEC-NEXT:    brasl %r14, __extendhfsf2@PLT
+; NOVEC-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; NOVEC-NEXT:    adbr %f9, %f9
-; NOVEC-NEXT:    ldebr %f10, %f0
-; NOVEC-NEXT:    ledbr %f0, %f9
-; NOVEC-NEXT:    adbr %f10, %f10
-; NOVEC-NEXT:    brasl %r14, __truncsfhf2@PLT
-; NOVEC-NEXT:    ler %f8, %f0
-; NOVEC-NEXT:    ledbr %f0, %f10
-; NOVEC-NEXT:    brasl %r14, __truncsfhf2@PLT
+; NOVEC-NEXT:    ldr %f8, %f0
+; NOVEC-NEXT:    adbr %f8, %f0
+; NOVEC-NEXT:    ldr %f0, %f9
+; NOVEC-NEXT:    brasl %r14, __truncdfhf2@PLT
+; NOVEC-NEXT:    ler %f9, %f0
+; NOVEC-NEXT:    ldr %f0, %f8
+; NOVEC-NEXT:    brasl %r14, __truncdfhf2@PLT
 ; NOVEC-NEXT:    ler %f2, %f0
-; NOVEC-NEXT:    ler %f0, %f8
-; NOVEC-NEXT:    ld %f8, 176(%r15) # 8-byte Folded Reload
-; NOVEC-NEXT:    ld %f9, 168(%r15) # 8-byte Folded Reload
-; NOVEC-NEXT:    ld %f10, 160(%r15) # 8-byte Folded Reload
-; NOVEC-NEXT:    lmg %r14, %r15, 296(%r15)
+; NOVEC-NEXT:    ler %f0, %f9
+; NOVEC-NEXT:    ld %f8, 168(%r15) # 8-byte Folded Reload
+; NOVEC-NEXT:    ld %f9, 160(%r15) # 8-byte Folded Reload
+; NOVEC-NEXT:    lmg %r14, %r15, 288(%r15)
 ; NOVEC-NEXT:    br %r14
 ;
 ; VECTOR-LABEL: fun2:
@@ -401,24 +398,23 @@ define <2 x half> @fun2(<2 x half> %Op) {
 ; VECTOR-NEXT:    .cfi_offset %f8, -168
 ; VECTOR-NEXT:    ldr %f8, %f0
 ; VECTOR-NEXT:    ldr %f0, %f2
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    ldebr %f0, %f0
+; VECTOR-NEXT:    brasl %r14, __extendhfdf2@PLT
+; VECTOR-NEXT:    # kill: def $f0d killed $f0d def $v0
 ; VECTOR-NEXT:    vst %v0, 160(%r15), 3 # 16-byte Folded Spill
 ; VECTOR-NEXT:    ldr %f0, %f8
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    ldebr %f0, %f0
+; VECTOR-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; VECTOR-NEXT:    vl %v1, 160(%r15), 3 # 16-byte Folded Reload
+; VECTOR-NEXT:    # kill: def $f0d killed $f0d def $v0
 ; VECTOR-NEXT:    vmrhg %v0, %v0, %v1
 ; VECTOR-NEXT:    vfadb %v0, %v0, %v0
-; VECTOR-NEXT:    vledb %v0, %v0, 0, 0
 ; VECTOR-NEXT:    vst %v0, 160(%r15), 3 # 16-byte Folded Spill
-; VECTOR-NEXT:    # kill: def $f0s killed $f0s killed $v0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
+; VECTOR-NEXT:    # kill: def $f0d killed $f0d killed $v0
+; VECTOR-NEXT:    brasl %r14, __truncdfhf2@PLT
 ; VECTOR-NEXT:    ldr %f8, %f0
 ; VECTOR-NEXT:    vl %v0, 160(%r15), 3 # 16-byte Folded Reload
-; VECTOR-NEXT:    vrepf %v0, %v0, 2
-; VECTOR-NEXT:    # kill: def $f0s killed $f0s killed $v0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
+; VECTOR-NEXT:    vrepg %v0, %v0, 1
+; VECTOR-NEXT:    # kill: def $f0d killed $f0d killed $v0
+; VECTOR-NEXT:    brasl %r14, __truncdfhf2@PLT
 ; VECTOR-NEXT:    ldr %f2, %f0
 ; VECTOR-NEXT:    ldr %f0, %f8
 ; VECTOR-NEXT:    ld %f8, 176(%r15) # 8-byte Folded Reload

@@ -185,7 +185,6 @@ bool SystemZABIInfo::isFPArgumentType(QualType Ty) const {
 
   if (const BuiltinType *BT = Ty->getAs<BuiltinType>())
     switch (BT->getKind()) {
-    case BuiltinType::Half:     // __fp16
     case BuiltinType::Float16:  // _Float16
     case BuiltinType::Float:
     case BuiltinType::Double:
