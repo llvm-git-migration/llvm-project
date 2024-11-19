@@ -311,3 +311,19 @@
 // CHECK-X86_64-GCC: Found candidate GCC installation: {{.*}}i686-linux-android{{[/\\]}}4.9
 // CHECK-X86_64-GCC-NEXT: Found candidate GCC installation: {{.*}}x86_64-linux-android{{[/\\]}}4.9
 // CHECK-X86_64-GCC-NEXT: Selected GCC installation: {{.*}}x86_64-linux-android{{[/\\]}}4.9
+//
+// RUN: %clang -### %s 2>&1 \
+// RUN:     --target=riscv64-linux-android \
+// RUN:     -march=rv64i \
+// RUN:     --gcc-toolchain=%S/Inputs/basic_android_ndk_tree \
+// RUN:     --sysroot=%S/Inputs/basic_android_ndk_tree/sysroot \
+// RUN:   | FileCheck --check-prefix=CHECK-RISCV %s
+// CHECK-RISCV: "-cc1"
+// CHECK-RISCV: "-internal-isystem" "{{.*}}/include/c++/v1"
+// CHECK-RISCV: "-internal-isystem" "{{.*}}/lib/clang/{{..}}/include"
+// CHECK-RISCV: "-internal-isystem" "{{.*}}/sysroot/usr/local/include"
+// CHECK-RISCV: "-internal-externc-isystem" "{{.*}}/sysroot/include"
+// CHECK-RISCV: "-internal-externc-isystem" "{{.*}}/sysroot/usr/include"
+// CHECK-RISCV: "{{.*}}ld{{(.exe)?}}" "--sysroot=[[SYSROOT:[^"]+]]"
+// CHECK-RISCV: "-L{{.*}}/sysroot/usr/lib"
+// CHECK-RISCV: "{{.*}}/lib/riscv64-unknown-linux-android/libclang_rt.builtins.a"
