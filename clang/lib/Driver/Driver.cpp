@@ -56,7 +56,6 @@
 #include "clang/Config/config.h"
 #include "clang/Driver/Action.h"
 #include "clang/Driver/Compilation.h"
-#include "clang/Driver/DriverDiagnostic.h"
 #include "clang/Driver/InputInfo.h"
 #include "clang/Driver/Job.h"
 #include "clang/Driver/Options.h"
@@ -454,6 +453,7 @@ DerivedArgList *Driver::TranslateInputArgs(const InputArgList &Args) const {
     // some build systems. We don't try to be complete here because we don't
     // care to encourage this usage model.
     if (A->getOption().matches(options::OPT_Wp_COMMA) &&
+        A->getNumValues() > 0 &&
         (A->getValue(0) == StringRef("-MD") ||
          A->getValue(0) == StringRef("-MMD"))) {
       // Rewrite to -MD/-MMD along with -MF.

@@ -42,6 +42,11 @@ point (e.g. maybe you would like to give an example of the
 functionality, or simply have a lot to talk about), see the comment below
 for adding a new subsection. -->
 
+* Added a new IRNormalizer pass which aims to transform LLVM modules into
+  a normal form by reordering and renaming instructions while preserving the
+  same semantics. The normalizer makes it easier to spot semantic differences
+  when diffing two modules which have undergone different passes.
+
 * ...
 
 <!-- If you would like to document a larger change, then you can add a
@@ -186,11 +191,26 @@ Changes to the RISC-V Backend
 * Added `Smctr`, `Ssctr` and `Svvptc` extensions.
 * `-mcpu=syntacore-scr7` was added.
 * The `Zacas` extension is no longer marked as experimental.
+* Added Smdbltrp, Ssdbltrp extensions to -march.
 * The `Smmpm`, `Smnpm`, `Ssnpm`, `Supm`, and `Sspm` pointer masking extensions
   are no longer marked as experimental.
 * The `Sha` extension is now supported.
 * The RVA23U64, RVA23S64, RVB23U64, and RVB23S64 profiles are no longer marked
   as experimental.
+* `.insn <length>, <raw encoding>` can be used to assemble 48- and 64-bit
+  instructions from raw integer values.
+* `.insn [<length>,] <raw encoding>` now accepts absolute expressions for both
+  expressions, so that they can be computed from constants and absolute symbols.
+* The following new inline assembly constraints and modifiers are accepted:
+  * `cr` constraint meaning an RVC-encoding compatible GPR (`x8`-`x15`)
+  * `cf` constraint meaning an RVC-encoding compatible FPR (`f8`-`f15`)
+  * `R` constraint meaning an even-odd GPR pair (prints as the even register,
+    but both registers in the pair are considered live).
+  * `N` modifer meaning print the register encoding (0-31) rather than the name.
+* `f` and `cf` inline assembly constraints, when using F-/D-/H-in-X extensions,
+  will use the relevant GPR rather than FPR. This makes inline assembly portable
+  between e.g. F and Zfinx code.
+
 
 Changes to the WebAssembly Backend
 ----------------------------------
@@ -230,6 +250,8 @@ Changes to the X86 Backend
 * Supported ISA of `SM4(EVEX)`.
 
 * Supported ISA of `MSR_IMM`.
+
+* Supported ``-mcpu=diamondrapids``
 
 Changes to the OCaml bindings
 -----------------------------
@@ -308,6 +330,8 @@ Changes to LLDB
 
 * Program stdout/stderr redirection will now open the file with O_TRUNC flag, make sure to truncate the file if path already exists.
   * eg. `settings set target.output-path/target.error-path <path/to/file>`
+
+* A new setting `target.launch-working-dir` can be used to set a persistent cwd that is used by default by `process launch` and `run`.
 
 Changes to BOLT
 ---------------------------------
