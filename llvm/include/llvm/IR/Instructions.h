@@ -24,6 +24,7 @@
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/CmpPredicate.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/GEPNoWrapFlags.h"
@@ -1201,6 +1202,21 @@ public:
 #ifndef NDEBUG
   AssertOK();
 #endif
+  }
+
+  /// @returns the predicate along with samesign information.
+  CmpPredicate getCmpPredicate() const {
+    return {getPredicate(), hasSameSign()};
+  }
+
+  /// @returns the inverse predicate along with samesign information.
+  CmpPredicate getInverseCmpPredicate() const {
+    return {getInversePredicate(), hasSameSign()};
+  }
+
+  /// @returns the swapped predicate along with samesign information.
+  CmpPredicate getSwappedCmpPredicate() const {
+    return {getSwappedPredicate(), hasSameSign()};
   }
 
   /// For example, EQ->EQ, SLE->SLE, UGT->SGT, etc.
