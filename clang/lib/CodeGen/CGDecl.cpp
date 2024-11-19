@@ -1900,10 +1900,16 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
       locIsByrefHeader ? emission.getObjectAddress(*this) : emission.Addr;
 
   // Note: constexpr already initializes everything correctly.
+  auto typeHasNoTrivialAutoVarInitAttr = [&]() {
+    auto *TD = type->getAsTagDecl();
+    return TD && TD->hasAttr<NoTrivialAutoVarInitAttr>();
+  };
   LangOptions::TrivialAutoVarInitKind trivialAutoVarInit =
       (D.isConstexpr()
            ? LangOptions::TrivialAutoVarInitKind::Uninitialized
-           : (D.getAttr<UninitializedAttr>()
+           : ((D.getAttr<UninitializedAttr>() ||
+               typeHasNoTrivialAutoVarInitAttr() ||
+               CurFuncDecl->hasAttr<NoTrivialAutoVarInitAttr>())
                   ? LangOptions::TrivialAutoVarInitKind::Uninitialized
                   : getContext().getLangOpts().getTrivialAutoVarInit()));
 
@@ -1944,13 +1950,13 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
                                   replaceUndef(CGM, isPattern, constant));
     }
 
-    if (constant && D.getType()->isBitIntType() &&
-        CGM.getTypes().typeRequiresSplitIntoByteArray(D.getType())) {
+    if (constant && type->isBitIntType() &&
+        CGM.getTypes().typeRequiresSplitIntoByteArray(type)) {
       // Constants for long _BitInt types are split into individual bytes.
       // Try to fold these back into an integer constant so it can be stored
       // properly.
-      llvm::Type *LoadType = CGM.getTypes().convertTypeForLoadStore(
-          D.getType(), constant->getType());
+      llvm::Type *LoadType =
+          CGM.getTypes().convertTypeForLoadStore(type, constant->getType());
       constant = llvm::ConstantFoldLoadFromConst(
           constant, LoadType, llvm::APInt::getZero(32), CGM.getDataLayout());
     }
@@ -1967,8 +1973,7 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
       // It may be that the Init expression uses other uninitialized memory,
       // but auto-var-init here would not help, as auto-init would get
       // overwritten by Init.
-      if (!D.getType()->isScalarType() || capturedByInit ||
-          isAccessedBy(D, Init)) {
+      if (!type->isScalarType() || capturedByInit || isAccessedBy(D, Init)) {
         initializeWhatIsTechnicallyUninitialized(Loc);
       }
     }
