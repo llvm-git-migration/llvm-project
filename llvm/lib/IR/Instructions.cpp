@@ -3573,32 +3573,6 @@ raw_ostream &llvm::operator<<(raw_ostream &OS, CmpInst::Predicate Pred) {
   return OS;
 }
 
-ICmpInst::Predicate ICmpInst::getSignedPredicate(Predicate pred) {
-  switch (pred) {
-    default: llvm_unreachable("Unknown icmp predicate!");
-    case ICMP_EQ: case ICMP_NE:
-    case ICMP_SGT: case ICMP_SLT: case ICMP_SGE: case ICMP_SLE:
-       return pred;
-    case ICMP_UGT: return ICMP_SGT;
-    case ICMP_ULT: return ICMP_SLT;
-    case ICMP_UGE: return ICMP_SGE;
-    case ICMP_ULE: return ICMP_SLE;
-  }
-}
-
-ICmpInst::Predicate ICmpInst::getUnsignedPredicate(Predicate pred) {
-  switch (pred) {
-    default: llvm_unreachable("Unknown icmp predicate!");
-    case ICMP_EQ: case ICMP_NE:
-    case ICMP_UGT: case ICMP_ULT: case ICMP_UGE: case ICMP_ULE:
-       return pred;
-    case ICMP_SGT: return ICMP_UGT;
-    case ICMP_SLT: return ICMP_ULT;
-    case ICMP_SGE: return ICMP_UGE;
-    case ICMP_SLE: return ICMP_ULE;
-  }
-}
-
 CmpInst::Predicate CmpInst::getSwappedPredicate(Predicate pred) {
   switch (pred) {
     default: llvm_unreachable("Unknown cmp predicate!");
@@ -3719,36 +3693,46 @@ CmpInst::Predicate CmpInst::getFlippedStrictnessPredicate(Predicate pred) {
 }
 
 CmpInst::Predicate CmpInst::getSignedPredicate(Predicate pred) {
-  assert(CmpInst::isUnsigned(pred) && "Call only with unsigned predicates!");
-
   switch (pred) {
   default:
     llvm_unreachable("Unknown predicate!");
-  case CmpInst::ICMP_ULT:
-    return CmpInst::ICMP_SLT;
-  case CmpInst::ICMP_ULE:
-    return CmpInst::ICMP_SLE;
-  case CmpInst::ICMP_UGT:
-    return CmpInst::ICMP_SGT;
-  case CmpInst::ICMP_UGE:
-    return CmpInst::ICMP_SGE;
+  case ICMP_EQ:
+  case ICMP_NE:
+  case ICMP_SGT:
+  case ICMP_SLT:
+  case ICMP_SGE:
+  case ICMP_SLE:
+    return pred;
+  case ICMP_UGT:
+    return ICMP_SGT;
+  case ICMP_ULT:
+    return ICMP_SLT;
+  case ICMP_UGE:
+    return ICMP_SGE;
+  case ICMP_ULE:
+    return ICMP_SLE;
   }
 }
 
 CmpInst::Predicate CmpInst::getUnsignedPredicate(Predicate pred) {
-  assert(CmpInst::isSigned(pred) && "Call only with signed predicates!");
-
   switch (pred) {
   default:
     llvm_unreachable("Unknown predicate!");
-  case CmpInst::ICMP_SLT:
-    return CmpInst::ICMP_ULT;
-  case CmpInst::ICMP_SLE:
-    return CmpInst::ICMP_ULE;
-  case CmpInst::ICMP_SGT:
-    return CmpInst::ICMP_UGT;
-  case CmpInst::ICMP_SGE:
-    return CmpInst::ICMP_UGE;
+  case ICMP_EQ:
+  case ICMP_NE:
+  case ICMP_UGT:
+  case ICMP_ULT:
+  case ICMP_UGE:
+  case ICMP_ULE:
+    return pred;
+  case ICMP_SGT:
+    return ICMP_UGT;
+  case ICMP_SLT:
+    return ICMP_ULT;
+  case ICMP_SGE:
+    return ICMP_UGE;
+  case ICMP_SLE:
+    return ICMP_ULE;
   }
 }
 

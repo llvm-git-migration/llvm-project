@@ -1203,30 +1203,6 @@ public:
 #endif
   }
 
-  /// For example, EQ->EQ, SLE->SLE, UGT->SGT, etc.
-  /// @returns the predicate that would be the result if the operand were
-  /// regarded as signed.
-  /// Return the signed version of the predicate
-  Predicate getSignedPredicate() const {
-    return getSignedPredicate(getPredicate());
-  }
-
-  /// This is a static version that you can use without an instruction.
-  /// Return the signed version of the predicate.
-  static Predicate getSignedPredicate(Predicate pred);
-
-  /// For example, EQ->EQ, SLE->ULE, UGT->UGT, etc.
-  /// @returns the predicate that would be the result if the operand were
-  /// regarded as unsigned.
-  /// Return the unsigned version of the predicate
-  Predicate getUnsignedPredicate() const {
-    return getUnsignedPredicate(getPredicate());
-  }
-
-  /// This is a static version that you can use without an instruction.
-  /// Return the unsigned version of the predicate.
-  static Predicate getUnsignedPredicate(Predicate pred);
-
   void setSameSign(bool B = true) {
     SubclassOptionalData = (SubclassOptionalData & ~SameSign) | (B * SameSign);
   }

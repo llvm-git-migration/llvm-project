@@ -935,28 +935,29 @@ public:
     return isUnsigned(getPredicate());
   }
 
-  /// For example, ULT->SLT, ULE->SLE, UGT->SGT, UGE->SGE, SLT->Failed assert
-  /// @returns the signed version of the unsigned predicate pred.
-  /// return the signed version of a predicate
+  /// For example, EQ->EQ, SLE->SLE, UGT->SGT, etc.
+  /// @returns the predicate that would be the result if the operand were
+  /// regarded as signed. Asserts on FP predicates.
+  /// Static variant.
   static Predicate getSignedPredicate(Predicate pred);
 
-  /// For example, ULT->SLT, ULE->SLE, UGT->SGT, UGE->SGE, SLT->Failed assert
-  /// @returns the signed version of the predicate for this instruction (which
-  /// has to be an unsigned predicate).
-  /// return the signed version of a predicate
-  Predicate getSignedPredicate() {
+  /// For example, EQ->EQ, SLE->SLE, UGT->SGT, etc.
+  /// @returns the predicate that would be the result if the operand were
+  /// regarded as signed. Asserts on FP predicates.
+  Predicate getSignedPredicate() const {
     return getSignedPredicate(getPredicate());
   }
 
-  /// For example, SLT->ULT, SLE->ULE, SGT->UGT, SGE->UGE, ULT->Failed assert
-  /// @returns the unsigned version of the signed predicate pred.
+  /// For example, EQ->EQ, SLE->ULE, UGT->UGT, etc.
+  /// @returns the predicate that would be the result if the operand were
+  /// regarded as unsigned. Asserts on FP predicates.
+  /// Static variant.
   static Predicate getUnsignedPredicate(Predicate pred);
 
-  /// For example, SLT->ULT, SLE->ULE, SGT->UGT, SGE->UGE, ULT->Failed assert
-  /// @returns the unsigned version of the predicate for this instruction (which
-  /// has to be an signed predicate).
-  /// return the unsigned version of a predicate
-  Predicate getUnsignedPredicate() {
+  /// For example, EQ->EQ, SLE->ULE, UGT->UGT, etc.
+  /// @returns the predicate that would be the result if the operand were
+  /// regarded as unsigned. Asserts on FP predicates.
+  Predicate getUnsignedPredicate() const {
     return getUnsignedPredicate(getPredicate());
   }
 
@@ -968,7 +969,7 @@ public:
   /// For example, SLT->ULT, ULT->SLT, SLE->ULE, ULE->SLE, EQ->Failed assert
   /// @returns the unsigned version of the signed predicate pred or
   ///          the signed version of the signed predicate pred.
-  Predicate getFlippedSignednessPredicate() {
+  Predicate getFlippedSignednessPredicate() const {
     return getFlippedSignednessPredicate(getPredicate());
   }
 
