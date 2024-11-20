@@ -1542,12 +1542,12 @@ static Value *simplifyUnsignedRangeCheck(ICmpInst *ZeroICmp,
                                          const SimplifyQuery &Q) {
   Value *X, *Y;
 
-  ICmpInst::Predicate EqPred;
+  CmpPredicate EqPred;
   if (!match(ZeroICmp, m_ICmp(EqPred, m_Value(Y), m_Zero())) ||
       !ICmpInst::isEquality(EqPred))
     return nullptr;
 
-  ICmpInst::Predicate UnsignedPred;
+  CmpPredicate UnsignedPred;
 
   Value *A, *B;
   // Y = (A - B);
@@ -1686,7 +1686,7 @@ static Value *simplifyAndOrOfICmpsWithConstants(ICmpInst *Cmp0, ICmpInst *Cmp1,
 static Value *simplifyAndOfICmpsWithAdd(ICmpInst *Op0, ICmpInst *Op1,
                                         const InstrInfoQuery &IIQ) {
   // (icmp (add V, C0), C1) & (icmp V, C0)
-  ICmpInst::Predicate Pred0, Pred1;
+  CmpPredicate Pred0, Pred1;
   const APInt *C0, *C1;
   Value *V;
   if (!match(Op0, m_ICmp(Pred0, m_Add(m_Value(V), m_APInt(C0)), m_APInt(C1))))
@@ -1733,7 +1733,7 @@ static Value *simplifyAndOfICmpsWithAdd(ICmpInst *Op0, ICmpInst *Op1,
 /// Try to simplify and/or of icmp with ctpop intrinsic.
 static Value *simplifyAndOrOfICmpsWithCtpop(ICmpInst *Cmp0, ICmpInst *Cmp1,
                                             bool IsAnd) {
-  ICmpInst::Predicate Pred0, Pred1;
+  CmpPredicate Pred0, Pred1;
   Value *X;
   const APInt *C;
   if (!match(Cmp0, m_ICmp(Pred0, m_Intrinsic<Intrinsic::ctpop>(m_Value(X)),
@@ -1777,7 +1777,7 @@ static Value *simplifyAndOfICmps(ICmpInst *Op0, ICmpInst *Op1,
 static Value *simplifyOrOfICmpsWithAdd(ICmpInst *Op0, ICmpInst *Op1,
                                        const InstrInfoQuery &IIQ) {
   // (icmp (add V, C0), C1) | (icmp V, C0)
-  ICmpInst::Predicate Pred0, Pred1;
+  CmpPredicate Pred0, Pred1;
   const APInt *C0, *C1;
   Value *V;
   if (!match(Op0, m_ICmp(Pred0, m_Add(m_Value(V), m_APInt(C0)), m_APInt(C1))))
@@ -1933,7 +1933,7 @@ static Value *simplifyAndOrWithICmpEq(unsigned Opcode, Value *Op0, Value *Op1,
                                       unsigned MaxRecurse) {
   assert((Opcode == Instruction::And || Opcode == Instruction::Or) &&
          "Must be and/or");
-  ICmpInst::Predicate Pred;
+  CmpPredicate Pred;
   Value *A, *B;
   if (!match(Op0, m_ICmp(Pred, m_Value(A), m_Value(B))) ||
       !ICmpInst::isEquality(Pred))
@@ -4656,7 +4656,7 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
                                          Value *FalseVal,
                                          const SimplifyQuery &Q,
                                          unsigned MaxRecurse) {
-  ICmpInst::Predicate Pred;
+  CmpPredicate Pred;
   Value *CmpLHS, *CmpRHS;
   if (!match(CondVal, m_ICmp(Pred, m_Value(CmpLHS), m_Value(CmpRHS))))
     return nullptr;
@@ -4780,7 +4780,7 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
 static Value *simplifySelectWithFCmp(Value *Cond, Value *T, Value *F,
                                      const SimplifyQuery &Q,
                                      unsigned MaxRecurse) {
-  FCmpInst::Predicate Pred;
+  CmpPredicate Pred;
   Value *CmpLHS, *CmpRHS;
   if (!match(Cond, m_FCmp(Pred, m_Value(CmpLHS), m_Value(CmpRHS))))
     return nullptr;
