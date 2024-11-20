@@ -2,11 +2,17 @@
 ; REQUIRES: x86-registered-target
 
 ; COM: Machine function splitting with FDO profiles
-; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s -check-prefixes=MFS-DEFAULTS,MFS-DEFAULTS-X86
+; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s -check-prefixes=MFS-DEFAULTS,MFS-DEFAULTS-X86,MFS-NOBBSECTIONS
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-psi-cutoff=0 -mfs-count-threshold=2000 | FileCheck %s --dump-input=always -check-prefixes=MFS-OPTS1,MFS-OPTS1-X86
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-psi-cutoff=950000 | FileCheck %s -check-prefixes=MFS-OPTS2,MFS-OPTS2-X86
 ; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -split-machine-functions -mfs-split-ehcode | FileCheck %s -check-prefixes=MFS-EH-SPLIT,MFS-EH-SPLIT-X86
 ; RUN: llc < %s -mtriple=x86_64 -split-machine-functions -O0 -mfs-psi-cutoff=0 -mfs-count-threshold=10000 | FileCheck %s -check-prefixes=MFS-O0,MFS-O0-X86
+
+; COM: Machine function splitting along with -basic-block-sections=list
+; RUN: echo 'v1' > %t
+; RUN: echo 'ffoo21' >> %t
+; RUN: echo 'c0' >> %t
+; RUN: llc < %s -mtriple=x86_64-unknown-linux-gnu -basic-block-sections=%t -split-machine-functions | FileCheck %s --check-prefixes=MFS-DEFAULT,MFS-BBSECTIONS
 
 ; RUN: llc < %s -mtriple=aarch64-unknown-linux-gnu -aarch64-min-jump-table-entries=4 -enable-split-machine-functions | FileCheck %s -check-prefixes=MFS-DEFAULTS,MFS-DEFAULTS-AARCH64
 ; RUN: llc < %s -mtriple=aarch64-unknown-linux-gnu -aarch64-min-jump-table-entries=4 -enable-split-machine-functions -mfs-psi-cutoff=0 -mfs-count-threshold=2000 | FileCheck %s --dump-input=always -check-prefixes=MFS-OPTS1,MFS-OPTS1-AARCH64
@@ -19,6 +25,7 @@
 ; RUN: sed 's/InstrProf/SampleProfile/g' %s > %t.ll
 ; RUN: llc < %t.ll -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s --check-prefix=FSAFDO-MFS
 ; RUN: llc < %t.ll -mtriple=x86_64-unknown-linux-gnu -split-machine-functions | FileCheck %s --check-prefix=FSAFDO-MFS2
+
 
 define void @foo1(i1 zeroext %0) nounwind !prof !14 !section_prefix !15 {
 ;; Check that cold block is moved to .text.split.
@@ -607,6 +614,34 @@ asm.fallthrough:
 
 cold_asm_target:
   %3 = call i32 @baz()
+  ret void
+}
+
+define void @foo21(i1 zeroext %0) {
+;; Check that a function with basic-block-sections profile is properly split
+;; when the profile is used along with mfs.
+; MFS-BBSECTIONS:            .section   .text.hot.foo21
+; MFS-NOBBSECTIONS-NOT:      .section   .text.hot.foo21
+; MFS-DEFAULT-DAG:           foo21
+; MFS-NOBBSECTIONS-NOT:      foo21.cold
+; MFS-BBSECTIONS:            .section	.text.split.foo21
+; MFS-BBSECTIONS-DAG:        oo21.cold
+  %2 = alloca i8, align 1
+  %3 = zext i1 %0 to i8
+  store i8 %3, ptr %2, align 1
+  %4 = load i8, ptr %2, align 1
+  %5 = trunc i8 %4 to i1
+  br i1 %5, label %6, label %8
+
+6:                                                ; preds = %1
+  %7 = call i32 @bar()
+  br label %10
+
+8:                                                ; preds = %1
+  %9 = call i32 @baz()
+  br label %10
+
+10:                                               ; preds = %8, %6
   ret void
 }
 
