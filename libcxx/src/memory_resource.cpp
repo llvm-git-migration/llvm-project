@@ -478,7 +478,7 @@ void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t align) {
   size_t previous_capacity = previous_allocation_size();
 
   if (aligned_capacity <= previous_capacity) {
-    size_t newsize   = 2 * (previous_capacity - footer_size);
+    size_t newsize   = __default_growth_factor * (previous_capacity - footer_size);
     aligned_capacity = roundup(newsize, footer_align) + footer_size;
   }
 

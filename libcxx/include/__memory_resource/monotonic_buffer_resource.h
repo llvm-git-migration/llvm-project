@@ -27,8 +27,8 @@ namespace pmr {
 // [mem.res.monotonic.buffer]
 
 class _LIBCPP_AVAILABILITY_PMR _LIBCPP_EXPORTED_FROM_ABI monotonic_buffer_resource : public memory_resource {
-  static const size_t __default_buffer_capacity  = 1024;
-  static const size_t __default_buffer_alignment = 16;
+  static constexpr size_t __default_buffer_capacity  = 1024;
+  static constexpr size_t __default_growth_factor = 2;
 
   struct __chunk_footer {
     __chunk_footer* __next_;
