@@ -6080,6 +6080,11 @@ bool Process::GetProcessInfo(ProcessInstanceInfo &info) {
   return platform_sp->GetProcessInfo(GetID(), info);
 }
 
+lldb_private::UUID Process::FindBuildId(const llvm::StringRef path) {
+  lldb_private::UUID invalid_uuid;
+  return invalid_uuid;
+}
+
 ThreadCollectionSP Process::GetHistoryThreads(lldb::addr_t addr) {
   ThreadCollectionSP threads;
 

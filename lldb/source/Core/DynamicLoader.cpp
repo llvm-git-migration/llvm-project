@@ -157,6 +157,10 @@ DynamicLoader::GetSectionListFromModule(const ModuleSP module) const {
 ModuleSP DynamicLoader::FindModuleViaTarget(const FileSpec &file) {
   Target &target = m_process->GetTarget();
   ModuleSpec module_spec(file, target.GetArchitecture());
+  if (UUID uuid = m_process->FindBuildId(file.GetPath())) {
+    // Process may have the UUID for the module, e.g. ELF core.
+    module_spec.GetUUID().SetFromStringRef(uuid.GetAsString());
+  }
 
   if (ModuleSP module_sp = target.GetImages().FindFirstModule(module_spec))
     return module_sp;

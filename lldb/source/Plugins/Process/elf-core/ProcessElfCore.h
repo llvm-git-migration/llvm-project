@@ -97,6 +97,9 @@ public:
 
   bool GetProcessInfo(lldb_private::ProcessInstanceInfo &info) override;
 
+  // Returns the gnu uuid from matched NT_FILE entry
+  lldb_private::UUID FindBuildId(const llvm::StringRef path) override;
+
 protected:
   void Clear();
 

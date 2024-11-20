@@ -281,6 +281,13 @@ void ProcessElfCore::UpdateBuildIdForNTFileEntries() {
   }
 }
 
+UUID ProcessElfCore::FindBuildId(const llvm::StringRef path) {
+  for (NT_FILE_Entry &entry : m_nt_file_entries)
+    if (path == entry.path)
+      return entry.uuid;
+  return UUID();
+}
+
 lldb_private::DynamicLoader *ProcessElfCore::GetDynamicLoader() {
   if (m_dyld_up.get() == nullptr)
     m_dyld_up.reset(DynamicLoader::FindPlugin(
@@ -1034,7 +1041,8 @@ UUID ProcessElfCore::FindBuidIdInCoreMemory(lldb::addr_t address) {
     std::vector<uint8_t> note_bytes;
     note_bytes.resize(program_header.p_memsz);
 
-    byte_read = ReadMemory(program_header.p_vaddr, note_bytes.data(),
+    const lldb::addr_t program_header_vaddr = program_header.p_vaddr + address;
+    byte_read = ReadMemory(program_header_vaddr, note_bytes.data(),
                            program_header.p_memsz, error);
     if (byte_read != program_header.p_memsz)
       continue;
