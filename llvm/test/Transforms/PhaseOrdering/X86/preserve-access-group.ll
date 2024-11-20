@@ -16,7 +16,7 @@ define void @test(i32 noundef %nface, i32 noundef %ncell, ptr noalias noundef %f
 ; CHECK-NEXT:    [[TMP0:%.*]] = zext nneg i32 [[NFACE]] to i64
 ; CHECK-NEXT:    [[INVARIANT_GEP:%.*]] = getelementptr inbounds i32, ptr [[FACE_CELL]], i64 [[TMP0]]
 ; CHECK-NEXT:    [[XTRAITER:%.*]] = and i64 [[TMP0]], 3
-; CHECK-NEXT:    [[TMP1:%.*]] = icmp ult i32 [[NFACE]], 4
+; CHECK-NEXT:    [[TMP1:%.*]] = icmp samesign ult i32 [[NFACE]], 4
 ; CHECK-NEXT:    br i1 [[TMP1]], label %[[FOR_COND_CLEANUP_LOOPEXIT_UNR_LCSSA:.*]], label %[[FOR_BODY_PREHEADER_NEW:.*]]
 ; CHECK:       [[FOR_BODY_PREHEADER_NEW]]:
 ; CHECK-NEXT:    [[UNROLL_ITER:%.*]] = and i64 [[TMP0]], 2147483644
