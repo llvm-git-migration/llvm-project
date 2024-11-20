@@ -192,6 +192,12 @@ public:
                                        const BasicBlock *BB,
                                        MemorySSA::InsertionPlace Point);
 
+  MemoryAccess *createMemoryAccessInBB2(Instruction *I,
+                                        MemoryAccess *Definition,
+                                        const BasicBlock *BB,
+                                        MemorySSA::InsertionPlace Point,
+                                        bool CreationMustSucceed = true);
+
   /// Create a MemoryAccess in MemorySSA before an existing MemoryAccess.
   ///
   /// See createMemoryAccessInBB() for usage details.
