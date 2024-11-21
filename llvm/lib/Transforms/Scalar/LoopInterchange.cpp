@@ -188,6 +188,11 @@ static void interChangeDependencies(CharMatrix &DepMatrix, unsigned FromIndx,
 // columns, has no ">" direction as the leftmost non-"=" direction in any row.
 static bool isLexicographicallyPositive(std::vector<char> &DV) {
   for (unsigned char Direction : DV) {
+    // FIXME: we reject scalar dependencies because we currently don't
+    // handle them correctly. This makes the legality check more conservative
+    // than needed, but is a stopgap to avoid miscompiles.
+    if (Direction == 'S')
+      return false;
     if (Direction == '<')
       return true;
     if (Direction == '>' || Direction == '*')
