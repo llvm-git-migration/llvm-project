@@ -40,6 +40,9 @@ public:
       : BaseT(TM, F.getDataLayout()), ST(TM->getSubtargetImpl(F)),
         TLI(ST->getTargetLowering()) {}
 
+  bool areInlineCompatible(const Function *Caller,
+                           const Function *Callee) const;
+
   TypeSize getRegisterBitWidth(TargetTransformInfo::RegisterKind K) const;
   unsigned getNumberOfRegisters(unsigned ClassID) const;
   unsigned getRegisterClassForType(bool Vector, Type *Ty = nullptr) const;
