@@ -714,11 +714,10 @@ void HLSLExternalSemaSource::defineHLSLTypesWithForwardDeclarations() {
   Decl = BuiltinTypeDeclBuilder(*SemaPtr, HLSLNamespace, "ByteAddressBuffer")
              .Record;
   onCompletion(Decl, [this](CXXRecordDecl *Decl) {
-    setupBufferType(Decl, *SemaPtr, ResourceClass::UAV, ResourceKind::RawBuffer,
-                    /*IsROV=*/true,
+    setupBufferType(Decl, *SemaPtr, ResourceClass::SRV, ResourceKind::RawBuffer,
+                    /*IsROV=*/false,
                     /*RawBuffer=*/true)
-        .addArraySubscriptOperators()
-        .completeDefinition();
+    .completeDefinition();
   });
 }
 
