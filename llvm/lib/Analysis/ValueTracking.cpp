@@ -8960,6 +8960,21 @@ CmpInst::Predicate llvm::getMinMaxPred(SelectPatternFlavor SPF, bool Ordered) {
   llvm_unreachable("unhandled!");
 }
 
+Intrinsic::ID llvm::getMinMaxIntrinsic(SelectPatternFlavor SPF) {
+  switch (SPF) {
+  case SelectPatternFlavor::SPF_UMIN:
+    return Intrinsic::umin;
+  case SelectPatternFlavor::SPF_UMAX:
+    return Intrinsic::umax;
+  case SelectPatternFlavor::SPF_SMIN:
+    return Intrinsic::smin;
+  case SelectPatternFlavor::SPF_SMAX:
+    return Intrinsic::smax;
+  default:
+    llvm_unreachable("Unexpected SPF");
+  }
+}
+
 SelectPatternFlavor llvm::getInverseMinMaxFlavor(SelectPatternFlavor SPF) {
   if (SPF == SPF_SMIN) return SPF_SMAX;
   if (SPF == SPF_UMIN) return SPF_UMAX;
