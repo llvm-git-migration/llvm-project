@@ -468,8 +468,10 @@ public:
     return true;
   }
 
-  /// Return true if the @llvm.experimental.get.alias.lane.mask intrinsic should be expanded using generic code in SelectionDAGBuilder.
-  virtual bool shouldExpandGetAliasLaneMask(EVT VT, EVT PtrVT, unsigned EltSize) const {
+  /// Return true if the @llvm.experimental.get.alias.lane.mask intrinsic should
+  /// be expanded using generic code in SelectionDAGBuilder.
+  virtual bool shouldExpandGetAliasLaneMask(EVT VT, EVT PtrVT,
+                                            unsigned EltSize) const {
     return true;
   }
 
