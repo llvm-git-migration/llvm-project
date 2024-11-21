@@ -30977,6 +30977,14 @@ bool X86TargetLowering::needsCmpXchgNb(Type *MemType) const {
 }
 
 TargetLoweringBase::AtomicExpansionKind
+X86TargetLowering::shouldCastAtomicLoadInIR(LoadInst *LI) const {
+  if (LI->getType()->isVectorTy())
+    if (cast<VectorType>(LI->getType())->getElementType()->isFloatingPointTy())
+      return AtomicExpansionKind::CastToInteger;
+  return TargetLowering::shouldCastAtomicLoadInIR(LI);
+}
+
+TargetLoweringBase::AtomicExpansionKind
 X86TargetLowering::shouldExpandAtomicStoreInIR(StoreInst *SI) const {
   Type *MemType = SI->getValueOperand()->getType();
 
