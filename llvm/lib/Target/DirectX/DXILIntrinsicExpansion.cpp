@@ -27,6 +27,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include <cstdint>
 
 #define DEBUG_TYPE "dxil-intrinsic-expansion"
 
@@ -57,7 +58,6 @@ static bool isIntrinsicExpansion(Function &F) {
   case Intrinsic::dx_nclamp:
   case Intrinsic::dx_degrees:
   case Intrinsic::dx_lerp:
-  case Intrinsic::dx_length:
   case Intrinsic::dx_normalize:
   case Intrinsic::dx_fdot:
   case Intrinsic::dx_sdot:
@@ -100,6 +100,37 @@ static Value *expandVecReduceAdd(CallInst *Orig, Intrinsic::ID IntrinsicId) {
       Sum = Builder.CreateAdd(Sum, Elt);
   }
 
+  return Sum;
+}
+
+static Value *expandVecReduceFAdd(CallInst *Orig) {
+  // Note: vector_reduce_fadd first argument is a starting value
+  // Our use doesn't need it, so ignoring argument zero.
+  Value *X = Orig->getOperand(1);
+  IRBuilder<> Builder(Orig);
+  Type *Ty = X->getType();
+  auto *XVec = dyn_cast<FixedVectorType>(Ty);
+  unsigned XVecSize = XVec->getNumElements();
+  Value *Sum = Builder.CreateExtractElement(X, static_cast<uint64_t>(0));
+  for (unsigned I = 1; I < XVecSize; I++) {
+    Value *Elt = Builder.CreateExtractElement(X, I);
+    Sum = Builder.CreateFAdd(Sum, Elt);
+  }
+  return Sum;
+}
+
+static Value *expandVecReduceAdd(CallInst *Orig) {
+  Value *X = Orig->getOperand(0);
+  IRBuilder<> Builder(Orig);
+  Type *Ty = X->getType();
+  auto *XVec = dyn_cast<FixedVectorType>(Ty);
+  unsigned XVecSize = XVec->getNumElements();
+
+  Value *Sum = Builder.CreateExtractElement(X, static_cast<uint64_t>(0));
+  for (unsigned I = 1; I < XVecSize; I++) {
+    Value *Elt = Builder.CreateExtractElement(X, I);
+    Sum = Builder.CreateAdd(Sum, Elt);
+  }
   return Sum;
 }
 
@@ -290,32 +321,6 @@ static Value *expandAnyOrAllIntrinsic(CallInst *Orig,
     }
   }
   return Result;
-}
-
-static Value *expandLengthIntrinsic(CallInst *Orig) {
-  Value *X = Orig->getOperand(0);
-  IRBuilder<> Builder(Orig);
-  Type *Ty = X->getType();
-  Type *EltTy = Ty->getScalarType();
-
-  // Though dx.length does work on scalar type, we can optimize it to just emit
-  // fabs, in CGBuiltin.cpp. We shouldn't see a scalar type here because
-  // CGBuiltin.cpp should have emitted a fabs call.
-  Value *Elt = Builder.CreateExtractElement(X, (uint64_t)0);
-  auto *XVec = dyn_cast<FixedVectorType>(Ty);
-  unsigned XVecSize = XVec->getNumElements();
-  if (!(Ty->isVectorTy() && XVecSize > 1))
-    report_fatal_error(Twine("Invalid input type for length intrinsic"),
-                       /* gen_crash_diag=*/false);
-
-  Value *Sum = Builder.CreateFMul(Elt, Elt);
-  for (unsigned I = 1; I < XVecSize; I++) {
-    Elt = Builder.CreateExtractElement(X, I);
-    Value *Mul = Builder.CreateFMul(Elt, Elt);
-    Sum = Builder.CreateFAdd(Sum, Mul);
-  }
-  return Builder.CreateIntrinsic(EltTy, Intrinsic::sqrt, ArrayRef<Value *>{Sum},
-                                 nullptr, "elt.sqrt");
 }
 
 static Value *expandLerpIntrinsic(CallInst *Orig) {
@@ -588,9 +593,6 @@ static bool expandIntrinsic(Function &F, CallInst *Orig) {
     break;
   case Intrinsic::dx_lerp:
     Result = expandLerpIntrinsic(Orig);
-    break;
-  case Intrinsic::dx_length:
-    Result = expandLengthIntrinsic(Orig);
     break;
   case Intrinsic::dx_normalize:
     Result = expandNormalizeIntrinsic(Orig);
