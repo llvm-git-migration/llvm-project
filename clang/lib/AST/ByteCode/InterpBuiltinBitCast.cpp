@@ -134,6 +134,10 @@ static bool enumerateData(const Pointer &P, const Context &Ctx, Bits Offset,
           Layout.getBaseClassOffset(cast<CXXRecordDecl>(B.Decl));
       Bits BitOffset = Offset + Bits(Ctx.getASTContext().toBits(ByteOffset));
       Ok = Ok && enumerateData(Elem, Ctx, BitOffset, F);
+      // FIXME: We should only (need to) do this when bitcasting OUT of the
+      // buffer, not when copying data into it.
+      if (Ok)
+        Elem.initialize();
     }
 
     return Ok;
@@ -225,12 +229,12 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
       FromPtr, Ctx,
       [&](const Pointer &P, PrimType T, Bits BitOffset,
           bool PackedBools) -> bool {
-        // if (!P.isInitialized()) {
-        // assert(false && "Implement uninitialized value tracking");
-        // return ReturnOnUninit;
-        // }
+        if (!P.isInitialized()) {
+          assert(false && "Implement uninitialized value tracking");
+          return ReturnOnUninit;
+        }
 
-        // assert(P.isInitialized());
+        assert(P.isInitialized());
         // nullptr_t is a PT_Ptr for us, but it's still not std::is_pointer_v.
         if (T == PT_Ptr)
           assert(false && "Implement casting to pointer types");
