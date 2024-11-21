@@ -3502,6 +3502,21 @@ struct OmpDependenceType {
   WRAPPER_CLASS_BOILERPLATE(OmpDependenceType, Value);
 };
 
+// Ref: [5.1:205-209], [5.2:166-168]
+//
+// motion-modifier ->
+//    PRESENT |                                     // since 5.0, until 5.0
+//    mapper | iterator
+// expectation ->
+//    PRESENT                                       // since 5.1
+//
+// The PRESENT value was a part of motion-modifier in 5.1, and became a
+// value of expectation in 5.2.
+struct OmpExpectation {
+  ENUM_CLASS(Value, Present);
+  WRAPPER_CLASS_BOILERPLATE(OmpExpectation, Value);
+};
+
 // Ref: [5.0:47-49], [5.1:49-51], [5.2:67-69]
 //
 // iterator-modifier ->
@@ -3517,6 +3532,24 @@ struct OmpIterator {
 struct OmpLinearModifier {
   ENUM_CLASS(Value, Ref, Uval, Val);
   WRAPPER_CLASS_BOILERPLATE(OmpLinearModifier, Value);
+};
+
+// [5.0:176-180], [5.1:205-210], [5.2:149-150]
+//
+// mapper ->
+//    identifier                                    // since 4.5
+struct OmpMapper {
+  WRAPPER_CLASS_BOILERPLATE(OmpMapper, Name);
+};
+
+struct OmpMapType {
+  ENUM_CLASS(Value, Alloc, Delete, From, Release, To, Tofrom);
+  WRAPPER_CLASS_BOILERPLATE(OmpMapType, Value);
+};
+
+struct OmpMapTypeModifier {
+  ENUM_CLASS(Value, Always, Close, Present, Ompx_Hold)
+  WRAPPER_CLASS_BOILERPLATE(OmpMapTypeModifier, Value);
 };
 
 // Ref: [4.5:56-63], [5.0:101-109], [5.1:126-133], [5.2:252-254]
@@ -3723,15 +3756,9 @@ struct OmpDeviceTypeClause {
 //  motion-modifier ->
 //    PRESENT | mapper-modifier | iterator-modifier
 struct OmpFromClause {
-  ENUM_CLASS(Expectation, Present);
   TUPLE_CLASS_BOILERPLATE(OmpFromClause);
-
-  // As in the case of MAP, modifiers are parsed as lists, even if they
-  // are unique. These restrictions will be checked in semantic checks.
-  std::tuple<std::optional<std::list<Expectation>>,
-      std::optional<std::list<OmpIterator>>, OmpObjectList,
-      bool> // were the modifiers comma-separated?
-      t;
+  MODIFIER_BOILERPLATE(OmpExpectation, OmpIterator, OmpMapper);
+  std::tuple<MODIFIERS(), OmpObjectList, bool> t;
 };
 
 // OMP 5.2 12.6.1 grainsize-clause -> grainsize ([prescriptiveness :] value)
@@ -3794,8 +3821,6 @@ struct OmpLinearClause {
   std::variant<WithModifier, WithoutModifier> u;
 };
 
-WRAPPER_CLASS(OmpMapperIdentifier, std::optional<Name>);
-
 // 2.15.5.1 map ->
 //    MAP ([MAPPER(mapper-identifier)] [[map-type-modifier-list [,]]
 //    [iterator-modifier [,]] map-type : ]
@@ -3804,21 +3829,9 @@ WRAPPER_CLASS(OmpMapperIdentifier, std::optional<Name>);
 // map-type-modifier -> ALWAYS | CLOSE | PRESENT | OMPX_HOLD
 // map-type -> TO | FROM | TOFROM | ALLOC | RELEASE | DELETE
 struct OmpMapClause {
-  ENUM_CLASS(TypeModifier, Always, Close, Present, Ompx_Hold);
-  ENUM_CLASS(Type, To, From, Tofrom, Alloc, Release, Delete)
   TUPLE_CLASS_BOILERPLATE(OmpMapClause);
-
-  // All modifiers are parsed into optional lists, even if they are unique.
-  // The checks for satisfying those constraints are deferred to semantics.
-  // In OpenMP 5.2 the non-comma syntax has been deprecated: keep the
-  // information about separator presence to emit a diagnostic if needed.
-  std::tuple<OmpMapperIdentifier, // Mapper name
-      std::optional<std::list<TypeModifier>>,
-      std::optional<std::list<OmpIterator>>, // unique
-      std::optional<std::list<Type>>, // unique
-      OmpObjectList,
-      bool> // were the modifiers comma-separated?
-      t;
+  MODIFIER_BOILERPLATE(OmpMapTypeModifier, OmpMapper, OmpIterator, OmpMapType);
+  std::tuple<MODIFIERS(), OmpObjectList, bool> t;
 };
 
 // Ref: [5.0:101-109], [5.1:126-134], [5.2:233-234]
@@ -3877,15 +3890,9 @@ struct OmpScheduleClause {
 //  motion-modifier ->
 //    PRESENT | mapper-modifier | iterator-modifier
 struct OmpToClause {
-  using Expectation = OmpFromClause::Expectation;
   TUPLE_CLASS_BOILERPLATE(OmpToClause);
-
-  // As in the case of MAP, modifiers are parsed as lists, even if they
-  // are unique. These restrictions will be checked in semantic checks.
-  std::tuple<std::optional<std::list<Expectation>>,
-      std::optional<std::list<OmpIterator>>, OmpObjectList,
-      bool> // were the modifiers comma-separated?
-      t;
+  MODIFIER_BOILERPLATE(OmpExpectation, OmpIterator, OmpMapper);
+  std::tuple<MODIFIERS(), OmpObjectList, bool> t;
 };
 
 // OMP 5.2 12.6.2 num_tasks-clause -> num_tasks ([prescriptiveness :] value)
