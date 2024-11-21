@@ -717,7 +717,7 @@ void HLSLExternalSemaSource::defineHLSLTypesWithForwardDeclarations() {
     setupBufferType(Decl, *SemaPtr, ResourceClass::SRV, ResourceKind::RawBuffer,
                     /*IsROV=*/false,
                     /*RawBuffer=*/true)
-    .completeDefinition();
+        .completeDefinition();
   });
 }
 
