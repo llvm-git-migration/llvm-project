@@ -13523,7 +13523,9 @@ public:
           S.PendingLocalImplicitInstantiations);
     }
 
-    void perform() { S.PerformPendingInstantiations(/*LocalOnly=*/true); }
+    void perform(bool AtEndOfTU = false) {
+      S.PerformPendingInstantiations(/*LocalOnly=*/true, AtEndOfTU);
+    }
 
     ~LocalEagerInstantiationScope() {
       assert(S.PendingLocalImplicitInstantiations.empty() &&
@@ -13568,10 +13570,10 @@ public:
       S.SavedVTableUses.back().swap(S.VTableUses);
     }
 
-    void perform() {
+    void perform(bool AtEndOfTU = false) {
       if (Enabled) {
         S.DefineUsedVTables();
-        S.PerformPendingInstantiations();
+        S.PerformPendingInstantiations(false, AtEndOfTU);
       }
     }
 
@@ -13790,7 +13792,8 @@ public:
 
   /// Performs template instantiation for all implicit template
   /// instantiations we have seen until this point.
-  void PerformPendingInstantiations(bool LocalOnly = false);
+  void PerformPendingInstantiations(bool LocalOnly = false,
+                                    bool AtEndOfTU = false);
 
   TemplateParameterList *
   SubstTemplateParams(TemplateParameterList *Params, DeclContext *Owner,

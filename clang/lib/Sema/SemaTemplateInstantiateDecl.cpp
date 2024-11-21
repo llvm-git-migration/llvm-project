@@ -5267,9 +5267,9 @@ void Sema::InstantiateFunctionDefinition(SourceLocation PointOfInstantiation,
 
   // This class may have local implicit instantiations that need to be
   // instantiation within this scope.
-  LocalInstantiations.perform();
+  LocalInstantiations.perform(AtEndOfTU);
   Scope.Exit();
-  GlobalInstantiations.perform();
+  GlobalInstantiations.perform(AtEndOfTU);
 }
 
 VarTemplateSpecializationDecl *Sema::BuildVarTemplateInstantiation(
@@ -5612,9 +5612,9 @@ void Sema::InstantiateVariableDefinition(SourceLocation PointOfInstantiation,
 
       // This variable may have local implicit instantiations that need to be
       // instantiated within this scope.
-      LocalInstantiations.perform();
+      LocalInstantiations.perform(AtEndOfTU);
       Local.Exit();
-      GlobalInstantiations.perform();
+      GlobalInstantiations.perform(AtEndOfTU);
     }
   } else {
     assert(Var->isStaticDataMember() && PatternDecl->isStaticDataMember() &&
@@ -6448,7 +6448,7 @@ NamedDecl *Sema::FindInstantiatedDecl(SourceLocation Loc, NamedDecl *D,
   return D;
 }
 
-void Sema::PerformPendingInstantiations(bool LocalOnly) {
+void Sema::PerformPendingInstantiations(bool LocalOnly, bool AtEndOfTU) {
   std::deque<PendingImplicitInstantiation> delayedPCHInstantiations;
   while (!PendingLocalImplicitInstantiations.empty() ||
          (!LocalOnly && !PendingInstantiations.empty())) {
@@ -6476,9 +6476,11 @@ void Sema::PerformPendingInstantiations(bool LocalOnly) {
             });
       } else {
         InstantiateFunctionDefinition(/*FIXME:*/ Inst.second, Function, true,
-                                      DefinitionRequired, true);
+                                      DefinitionRequired, AtEndOfTU);
         if (Function->isDefined())
           Function->setInstantiationIsPending(false);
+        else if (!AtEndOfTU)
+          LateParsedInstantiations.push_back(Inst);
       }
       // Definition of a PCH-ed template declaration may be available only in the TU.
       if (!LocalOnly && LangOpts.PCHInstantiateTemplates &&

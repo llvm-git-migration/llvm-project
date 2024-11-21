@@ -1138,7 +1138,7 @@ void Sema::ActOnEndOfTranslationUnitFragment(TUFragmentKind Kind) {
 
   {
     llvm::TimeTraceScope TimeScope("PerformPendingInstantiations");
-    PerformPendingInstantiations();
+    PerformPendingInstantiations(false, true);
   }
 
   emitDeferredDiags();
