@@ -1515,6 +1515,9 @@ void aggregate() {
 
   struct C {
     [[clang::requires_explicit_initialization]] int c1; // #FIELD_C1
+#if __cplusplus < 202002L
+    // expected-warning@-2 {{explicit initialization of field 'c1' may not be enforced in C++20 as type 'C' will become a non-aggregate due to the presence of user-declared constructors}}
+#endif
     C() = default;  // Test pre-C++20 aggregates
   };
 
