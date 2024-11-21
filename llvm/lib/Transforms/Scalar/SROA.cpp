@@ -84,6 +84,7 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/PromoteMemToReg.h"
+#include "llvm/Transforms/Utils/SSAUpdater.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -1401,9 +1402,8 @@ private:
     Function *Callee = CB.getCalledFunction();
     if (Callee && CB.arg_size() == Callee->arg_size() &&
         !CB.hasOperandBundles() && all_of(enumerate(CB.args()), [&](auto V) {
-          return V.value() != *U ||
-                 (Callee->getArg(V.index())->hasNoCaptureAttr() &&
-                  Callee->getArg(V.index())->onlyReadsMemory());
+          return V.value() != *U || (CB.doesNotCapture(V.index()) &&
+                                     CB.onlyReadsMemory(V.index()));
         })) {
       PI.setEscapedReadOnly(&CB);
       return;
@@ -5479,51 +5479,71 @@ void SROA::clobberUse(Use &U) {
     }
 }
 
-bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
-  for (auto &P : AS.partitions()) {
-    StoreInst *Store = nullptr;
-    // Make sure all the slices inside the partition are the full width.
-    if (any_of(P, [&P](Slice &S) {
-          return S.beginOffset() != P.beginOffset() ||
-                 S.beginOffset() != P.beginOffset();
-        }))
-      continue;
-
-    // Check there is a single store and nothing else other than loads.
-    for (Slice &S : P) {
-      if (S.isDead())
-        continue;
-      if (auto *St = dyn_cast<StoreInst>(S.getUse()->getUser())) {
-        if (Store) {
-          Store = nullptr;
-          break;
-        }
-        Store = St;
-      } else if (!isa<LoadInst>(S.getUse()->getUser()) &&
-                 !isAssumeLikeIntrinsic(
-                     cast<Instruction>(S.getUse()->getUser()))) {
-        Store = nullptr;
-        break;
-      }
-    }
-
-    if (!Store)
-      continue;
-
-    // Replace loads by the value that was stored.
-    for (Slice &S : P) {
-      if (auto *Ld = dyn_cast<LoadInst>(S.getUse()->getUser())) {
-        if (DTU->getDomTree().dominates(Store, Ld)) {
-          if (Store->getValueOperand()->getType() == Ld->getType()) {
-            LLVM_DEBUG(dbgs() << "    Replacing " << *Ld << " with "
-                              << *Store->getValueOperand() << "\n");
-            Ld->replaceAllUsesWith(Store->getValueOperand());
-          }
-        }
-      }
-    }
+// A basic LoadAndStorePromoter that does not remove store nodes.
+class BasicLoadAndStorePromoter : public LoadAndStorePromoter {
+public:
+  BasicLoadAndStorePromoter(ArrayRef<const Instruction *> Insts, SSAUpdater &S)
+      : LoadAndStorePromoter(Insts, S) {}
+  bool shouldDelete(Instruction *I) const override {
+    return !isa<StoreInst>(I);
   }
+};
 
+bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
+  // Look through each "partition", looking for slices with the same start/end
+  // that do not overlap with any before them. The slices are sorted by
+  // increasing beginOffset. We don't use AS.partitions(), as it will use a more
+  // sophisticated algorithm that takes splittable slices into account.
+  auto PartitionBegin = AS.begin();
+  auto PartitionEnd = PartitionBegin;
+  uint64_t BeginOffset = PartitionBegin->beginOffset();
+  uint64_t EndOffset = PartitionBegin->endOffset();
+  while (PartitionBegin != AS.end()) {
+    bool AllSameAndValid = true;
+    SmallVector<Instruction *> Insts;
+    Type *PartitionType = nullptr;
+    while (PartitionEnd != AS.end() &&
+           (PartitionEnd->beginOffset() < EndOffset ||
+            PartitionEnd->endOffset() <= EndOffset)) {
+      EndOffset = std::max(EndOffset, PartitionEnd->endOffset());
+      if (AllSameAndValid) {
+        AllSameAndValid &= PartitionEnd->beginOffset() == BeginOffset &&
+                           PartitionEnd->endOffset() == EndOffset;
+        Instruction *User =
+            cast<Instruction>(PartitionEnd->getUse()->getUser());
+        if (isa<LoadInst>(User) || isa<StoreInst>(User)) {
+          // LoadAndStorePromoter requires all the types are the same.
+          Type *UserTy = getLoadStoreType(User);
+          if (PartitionType && UserTy != PartitionType)
+            AllSameAndValid = false;
+          PartitionType = UserTy;
+          Insts.push_back(User);
+        } else if (!isAssumeLikeIntrinsic(User))
+          AllSameAndValid = false;
+      }
+      ++PartitionEnd;
+    }
+
+    // So long as all the slices start and end offsets matched, update loads to
+    // the values stored in the partition.
+    if (AllSameAndValid && !Insts.empty()) {
+      LLVM_DEBUG(dbgs() << "Propagate values on slice [" << BeginOffset << ", "
+                        << EndOffset << ")\n");
+      SmallVector<PHINode *, 4> NewPHIs;
+      SSAUpdater SSA(&NewPHIs);
+      BasicLoadAndStorePromoter Promoter(Insts, SSA);
+      // Add a zero value at the point of the alloca, to prevent the SSA updater
+      // replacing loads with poison which would not be valid for padded loads.
+      SSA.AddAvailableValue(AI.getParent(),
+                            Constant::getNullValue(PartitionType));
+      Promoter.run(Insts);
+    }
+
+    // Step on to the next partition.
+    PartitionBegin = PartitionEnd;
+    BeginOffset = PartitionBegin->beginOffset();
+    EndOffset = PartitionBegin->endOffset();
+  }
   return true;
 }
 
