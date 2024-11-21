@@ -639,9 +639,14 @@ def VOPProfileMAI_F32_V8F16_X16_VCD : VOPProfileMAI<VOP_V16F32_V8F16_V8F16_V16F3
 def VOPProfileMAI_F32_V8BF16_X16     : VOPProfileMAI<VOP_V16F32_V8BF16_V8BF16_V16F32,     AISrc_512_f32,  ADst_512, AVSrc_128>;
 def VOPProfileMAI_F32_V8BF16_X16_VCD : VOPProfileMAI<VOP_V16F32_V8BF16_V8BF16_V16F32,     VISrc_512_f32,  VDst_512, AVSrc_128>;
 
-class MFMATable <bit is_mac, string Name> {
+class MFMATable <bit is_mac, string Kind, string Name,
+                 string AGPROpName = NAME> {
   bit IsMac = is_mac;
   string FMAOp = Name;
+  string AGPROp = AGPROpName;
+
+  // Does this MFMA use "AGPR" or "VGPR" for srcC/vdst
+  string MFMAKind = Kind;
 }
 
 class MAIFrag<SDPatternOperator Op, code pred> : PatFrag <
@@ -697,12 +702,12 @@ multiclass MAIInst<string OpName, string P, SDPatternOperator node> {
     let Constraints = !if(NoDstOverlap, "@earlyclobber $vdst", "") in {
       def _e64 : MAIInst<OpName, !cast<VOPProfileMAI>("VOPProfileMAI_" # P),
                          !if(!or(NoDstOverlap, !eq(node, null_frag)), null_frag, AgprMAIFrag<node>)>,
-                 MFMATable<0, NAME # "_e64">;
+                 MFMATable<0, "AGPR", NAME # "_e64">;
 
       let OtherPredicates = [isGFX90APlus], Mnemonic = OpName in
       def _vgprcd_e64 : MAIInst<OpName # "_vgprcd", !cast<VOPProfileMAI>("VOPProfileMAI_" # P # "_VCD"),
                                 !if(!or(NoDstOverlap, !eq(node, null_frag)), null_frag, VgprMAIFrag<node>)>,
-                        MFMATable<0, NAME # "_vgprcd_e64">;
+                        MFMATable<0, "VGPR", NAME # "_vgprcd_e64", NAME # "_e64">;
     }
 
     if NoDstOverlap then {
@@ -711,12 +716,12 @@ multiclass MAIInst<string OpName, string P, SDPatternOperator node> {
           Mnemonic = OpName in {
         def "_mac_e64" : MAIInst<OpName # "_mac", !cast<VOPProfileMAI>("VOPProfileMAI_" # P),
                                  !if(!eq(node, null_frag), null_frag, AgprMAIFrag<node>)>,
-                         MFMATable<1, NAME # "_e64">;
+                         MFMATable<1, "AGPR", NAME # "_e64", NAME # "_mac_e64">;
 
         let OtherPredicates = [isGFX90APlus] in
         def _mac_vgprcd_e64 : MAIInst<OpName # "_mac_vgprcd", !cast<VOPProfileMAI>("VOPProfileMAI_" # P # "_VCD"),
                                       !if(!eq(node, null_frag), null_frag, VgprMAIFrag<node>)>,
-                              MFMATable<1, NAME # "_vgprcd_e64">;
+                              MFMATable<1, "VGPR", NAME # "_vgprcd_e64", NAME # "_mac_e64">;
       }
     }
   } // End isConvergent = 1, mayRaiseFPException = 0, ReadsModeReg = 1
