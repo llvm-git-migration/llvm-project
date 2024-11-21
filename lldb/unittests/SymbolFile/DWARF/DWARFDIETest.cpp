@@ -23,6 +23,26 @@ using namespace lldb_private;
 using namespace lldb_private::plugin::dwarf;
 using namespace lldb_private::dwarf;
 
+namespace {
+void Test_appendAndTerminateTemplateParameters(const DWARFDIE &die,
+                                               const std::string &expected) {
+  std::string template_name;
+  llvm::raw_string_ostream template_name_os(template_name);
+  llvm::DWARFTypePrinter<DWARFDIE> template_name_printer(template_name_os);
+  template_name_printer.appendAndTerminateTemplateParameters(die);
+  EXPECT_THAT(template_name, expected);
+}
+
+void Test_appendQualifiedName(const DWARFDIE &die,
+                              const std::string &expected) {
+  std::string qualified_name;
+  llvm::raw_string_ostream template_name_os(qualified_name);
+  llvm::DWARFTypePrinter<DWARFDIE> template_name_printer(template_name_os);
+  template_name_printer.appendQualifiedName(die);
+  EXPECT_THAT(qualified_name, expected);
+}
+} // namespace
+
 TEST(DWARFDIETest, ChildIteration) {
   // Tests DWARFDIE::child_iterator.
 
@@ -466,6 +486,14 @@ DWARF:
           Attributes:
             - Attribute:       DW_AT_type
               Form:            DW_FORM_ref4
+        - Code:            0x8
+          Tag:             DW_TAG_typedef
+          Children:        DW_CHILDREN_no
+          Attributes:
+            - Attribute:       DW_AT_type
+              Form:            DW_FORM_ref4
+            - Attribute:       DW_AT_name
+              Form:            DW_FORM_string
   debug_info:
     - Version:         4
       AddrSize:        8
@@ -494,6 +522,10 @@ DWARF:
         - AbbrCode:        0x7
           Values:
             - Value:            0x0000000c # update
+        - AbbrCode:        0x8
+          Values:
+            - Value:            0x0000000c
+            - CStr:            my_int
         - AbbrCode:        0x0
         - AbbrCode:        0x0)";
   YAMLModuleTester t(yamldata);
@@ -505,17 +537,7 @@ DWARF:
   unit->Dump(&debug_os);
   ASSERT_TRUE(unit);
 
-  DWARFDIE t1_die = unit->GetDIE(0x11);
-  std::string template_name;
-  llvm::raw_string_ostream template_name_os(template_name);
-  llvm::DWARFTypePrinter<DWARFDIE> template_name_printer(template_name_os);
-  template_name_printer.appendAndTerminateTemplateParameters(t1_die);
-  EXPECT_THAT(template_name, "<t3<int> >");
-
-  DWARFDIE t2_die = unit->GetDIE(0x1a);
-  std::string qualified_name;
-  llvm::raw_string_ostream qualified_name_os(qualified_name);
-  llvm::DWARFTypePrinter<DWARFDIE> qualified_name_printer(qualified_name_os);
-  qualified_name_printer.appendQualifiedName(t2_die);
-  EXPECT_THAT(qualified_name, "t1<t3<int> >::t2");
+  Test_appendAndTerminateTemplateParameters(unit->GetDIE(0x11), "<t3<int> >");
+  Test_appendQualifiedName(unit->GetDIE(0x1a), "t1<t3<int> >::t2");
+  Test_appendQualifiedName(unit->GetDIE(0x28), "t3<int>::my_int");
 }
