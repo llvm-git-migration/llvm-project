@@ -299,8 +299,9 @@ public:
     OpenHOS,
 
     PAuthTest,
+    LLVM,
 
-    LastEnvironmentType = PAuthTest
+    LastEnvironmentType = LLVM
   };
   enum ObjectFormatType {
     UnknownObjectFormat,
