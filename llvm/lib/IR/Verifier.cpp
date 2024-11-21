@@ -137,6 +137,10 @@ static cl::opt<bool> VerifyNoAliasScopeDomination(
     cl::desc("Ensure that llvm.experimental.noalias.scope.decl for identical "
              "scopes are not dominating"));
 
+static cl::opt<bool> AllowAtomicVector(
+    "allow-atomic-vector", cl::Hidden, cl::init(false),
+    cl::desc("Allow load atomic vector to be permitted in the IR"));
+
 namespace llvm {
 
 struct VerifierSupport {
@@ -4256,10 +4260,11 @@ void Verifier::visitLoadInst(LoadInst &LI) {
     Check(LI.getOrdering() != AtomicOrdering::Release &&
               LI.getOrdering() != AtomicOrdering::AcquireRelease,
           "Load cannot have Release ordering", &LI);
-    Check(ElTy->isIntOrPtrTy() || ElTy->isFloatingPointTy(),
-          "atomic load operand must have integer, pointer, or floating point "
-          "type!",
-          ElTy, &LI);
+    if (!AllowAtomicVector)
+      Check(ElTy->isIntOrPtrTy() || ElTy->isFloatingPointTy(),
+            "atomic load operand must have integer, pointer, or floating point "
+            "type!",
+            ElTy, &LI);
     checkAtomicMemAccessSize(ElTy, &LI);
   } else {
     Check(LI.getSyncScopeID() == SyncScope::System,
