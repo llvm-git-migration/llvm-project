@@ -28,20 +28,20 @@ define void @innermost_latch_uses_values_in_middle_header() {
 ; CHECK:       [[INNERMOST_HEADER_PREHEADER]]:
 ; CHECK-NEXT:    br label %[[INNERMOST_HEADER:.*]]
 ; CHECK:       [[INNERMOST_HEADER]]:
-; CHECK-NEXT:    [[INDVAR_INNERMOST:%.*]] = phi i64 [ [[TMP1:%.*]], %[[INNERMOST_LATCH_SPLIT:.*]] ], [ 4, %[[INNERMOST_HEADER_PREHEADER]] ]
+; CHECK-NEXT:    [[INDVAR_INNERMOST:%.*]] = phi i64 [ [[TMP3:%.*]], %[[INNERMOST_LATCH_SPLIT:.*]] ], [ 4, %[[INNERMOST_HEADER_PREHEADER]] ]
 ; CHECK-NEXT:    br label %[[MIDDLE_HEADER_PREHEADER]]
 ; CHECK:       [[INNERMOST_BODY]]:
 ; CHECK-NEXT:    [[ARRAYIDX9_I:%.*]] = getelementptr inbounds [1 x [6 x i32]], ptr @d, i64 0, i64 [[INDVAR_INNERMOST]], i64 [[INDVAR_MIDDLE]]
 ; CHECK-NEXT:    store i32 0, ptr [[ARRAYIDX9_I]], align 4
 ; CHECK-NEXT:    br label %[[INNERMOST_LATCH:.*]]
 ; CHECK:       [[INNERMOST_LATCH]]:
-; CHECK-NEXT:    [[INDVAR_INNERMOST_NEXT:%.*]] = add nsw i64 [[INDVAR_INNERMOST]], 1
-; CHECK-NEXT:    [[TOBOOL5_I:%.*]] = icmp eq i64 [[INDVAR_INNERMOST_NEXT]], [[INDVAR_MIDDLE_WIDE]]
+; CHECK-NEXT:    [[TMP1:%.*]] = add nsw i64 [[INDVAR_INNERMOST]], 1
+; CHECK-NEXT:    [[TOBOOL5_I:%.*]] = icmp eq i64 [[TMP1]], [[INDVAR_MIDDLE_WIDE]]
 ; CHECK-NEXT:    br label %[[MIDDLE_LATCH]]
 ; CHECK:       [[INNERMOST_LATCH_SPLIT]]:
 ; CHECK-NEXT:    [[INDVAR_MIDDLE_WIDE_LCSSA:%.*]] = phi i64 [ [[INDVAR_MIDDLE_WIDE]], %[[MIDDLE_LATCH]] ]
-; CHECK-NEXT:    [[TMP1]] = add nsw i64 [[INDVAR_INNERMOST]], 1
-; CHECK-NEXT:    [[TMP2:%.*]] = icmp eq i64 [[TMP1]], [[INDVAR_MIDDLE_WIDE_LCSSA]]
+; CHECK-NEXT:    [[TMP3]] = add nsw i64 [[INDVAR_INNERMOST]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = icmp eq i64 [[TMP3]], [[INDVAR_MIDDLE_WIDE_LCSSA]]
 ; CHECK-NEXT:    br i1 [[TMP2]], label %[[OUTERMOST_LATCH_LOOPEXIT:.*]], label %[[INNERMOST_HEADER]]
 ; CHECK:       [[MIDDLE_LATCH]]:
 ; CHECK-NEXT:    [[INDVAR_MIDDLE_NEXT]] = add nsw i64 [[INDVAR_MIDDLE]], -1
