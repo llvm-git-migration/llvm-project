@@ -1182,6 +1182,10 @@ SelectPatternResult matchDecomposedSelectPattern(
 /// minimum/maximum flavor.
 CmpInst::Predicate getMinMaxPred(SelectPatternFlavor SPF, bool Ordered = false);
 
+/// Convert given `SPF` to equivalent min/max intrinsic.
+/// Caller must ensure `SPF` is an integer min or max pattern.
+Intrinsic::ID getMinMaxIntrinsic(SelectPatternFlavor SPF);
+
 /// Return the inverse minimum/maximum flavor of the specified flavor.
 /// For example, signed minimum is the inverse of signed maximum.
 SelectPatternFlavor getInverseMinMaxFlavor(SelectPatternFlavor SPF);

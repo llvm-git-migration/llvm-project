@@ -1257,23 +1257,7 @@ static Value *canonicalizeSPF(ICmpInst &Cmp, Value *TrueVal, Value *FalseVal,
   }
 
   if (SelectPatternResult::isMinOrMax(SPF)) {
-    Intrinsic::ID IntrinsicID;
-    switch (SPF) {
-    case SelectPatternFlavor::SPF_UMIN:
-      IntrinsicID = Intrinsic::umin;
-      break;
-    case SelectPatternFlavor::SPF_UMAX:
-      IntrinsicID = Intrinsic::umax;
-      break;
-    case SelectPatternFlavor::SPF_SMIN:
-      IntrinsicID = Intrinsic::smin;
-      break;
-    case SelectPatternFlavor::SPF_SMAX:
-      IntrinsicID = Intrinsic::smax;
-      break;
-    default:
-      llvm_unreachable("Unexpected SPF");
-    }
+    Intrinsic::ID IntrinsicID = getMinMaxIntrinsic(SPF);
     return IC.Builder.CreateBinaryIntrinsic(IntrinsicID, LHS, RHS);
   }
 
@@ -1898,6 +1882,47 @@ static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
   return nullptr;
 }
 
+/// Fold `X Pred C2 ? X BOp C1 : C2 BOp C1` to `min/max(X, C2) BOp C1`.
+/// This allows for better canonicalization.
+static Value *foldSelectWithConstOpToBinOp(ICmpInst *Cmp, Value *TrueVal,
+                                           Value *FalseVal,
+                                           IRBuilderBase &Builder) {
+  BinaryOperator *BOp;
+  Constant *C1, *C2, *C3;
+  Value *X, *NewTrue, *NewFalse;
+  ICmpInst::Predicate Predicate;
+
+  if (!match(Cmp, m_ICmp(Predicate, m_Value(X), m_Constant(C1))))
+    return nullptr;
+
+  if (match(TrueVal, m_Constant())) {
+    std::swap(FalseVal, TrueVal);
+    NewTrue = C1;
+    NewFalse = X;
+  } else {
+    NewTrue = X;
+    NewFalse = C1;
+  }
+
+  if (!match(TrueVal, m_BinOp(BOp)) || !match(FalseVal, m_Constant(C3)))
+    return nullptr;
+
+  if (!match(BOp, m_OneUse(m_BinOp(m_Specific(X), m_Constant(C2)))))
+    return nullptr;
+
+  if (!ICmpInst::isRelational(Predicate) ||
+      C3 != ConstantFoldBinaryOpOperands(BOp->getOpcode(), C1, C2,
+                                         BOp->getDataLayout()))
+    return nullptr;
+
+  Value *LHS, *RHS;
+  SelectPatternFlavor SPF =
+      matchDecomposedSelectPattern(Cmp, NewTrue, NewFalse, LHS, RHS).Flavor;
+  Intrinsic::ID IntrinsicID = getMinMaxIntrinsic(SPF);
+  Value *Intrinsic = Builder.CreateBinaryIntrinsic(IntrinsicID, LHS, RHS);
+  return Builder.CreateBinOp(BOp->getOpcode(), Intrinsic, C2);
+}
+
 /// Visit a SelectInst that has an ICmpInst as its first operand.
 Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
                                                       ICmpInst *ICI) {
@@ -1985,6 +2010,9 @@ Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
     return replaceInstUsesWith(SI, V);
 
   if (Value *V = foldAbsDiff(ICI, TrueVal, FalseVal, Builder))
+    return replaceInstUsesWith(SI, V);
+
+  if (Value *V = foldSelectWithConstOpToBinOp(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
 
   return Changed ? &SI : nullptr;
