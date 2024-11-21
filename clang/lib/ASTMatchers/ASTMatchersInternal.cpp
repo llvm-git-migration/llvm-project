@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -136,7 +137,8 @@ public:
   bool dynMatches(const DynTypedNode &DynNode, ASTMatchFinder *Finder,
                   BoundNodesTreeBuilder *Builder) const override {
     bool Result = InnerMatcher->dynMatches(DynNode, Finder, Builder);
-    if (Result) Builder->setBinding(ID, DynNode);
+    if (Result)
+      Builder->setBinding(ID, DynNode);
     return Result;
   }
 
@@ -354,7 +356,8 @@ bool DynTypedMatcher::canConvertTo(ASTNodeKind To) const {
   auto TypeKind = ASTNodeKind::getFromNodeKind<Type>();
   /// Mimic the implicit conversions of Matcher<>.
   /// - From Matcher<Type> to Matcher<QualType>
-  if (From.isSame(TypeKind) && To.isSame(QualKind)) return true;
+  if (From.isSame(TypeKind) && To.isSame(QualKind))
+    return true;
   /// - From Matcher<Base> to Matcher<Derived>
   return From.isBaseOf(To);
 }
@@ -440,8 +443,8 @@ optionallyVariadicOperator(const DynTypedNode &DynNode, ASTMatchFinder *Finder,
   return true;
 }
 
-inline static
-std::vector<std::string> vectorFromRefs(ArrayRef<const StringRef *> NameRefs) {
+inline static std::vector<std::string>
+vectorFromRefs(ArrayRef<const StringRef *> NameRefs) {
   std::vector<std::string> Names;
   Names.reserve(NameRefs.size());
   for (auto *Name : NameRefs)
@@ -454,8 +457,8 @@ Matcher<NamedDecl> hasAnyNameFunc(ArrayRef<const StringRef *> NameRefs) {
       new internal::HasNameMatcher(vectorFromRefs(NameRefs)));
 }
 
-Matcher<ObjCMessageExpr> hasAnySelectorFunc(
-    ArrayRef<const StringRef *> NameRefs) {
+Matcher<ObjCMessageExpr>
+hasAnySelectorFunc(ArrayRef<const StringRef *> NameRefs) {
   return hasAnySelectorMatcher(vectorFromRefs(NameRefs));
 }
 
@@ -697,25 +700,59 @@ static bool isTokenAtLoc(const SourceManager &SM, const LangOptions &LangOpts,
   return !Invalid && Text == TokenText;
 }
 
-std::optional<SourceLocation>
-getExpansionLocOfMacro(StringRef MacroName, SourceLocation Loc,
-                       const ASTContext &Context) {
+namespace {
+struct SourceLocationHash {
+  std::size_t operator()(const SourceLocation &Loc) const {
+    return Loc.getHashValue();
+  }
+};
+
+struct SourceLocationEqual {
+  bool operator()(const SourceLocation &LHS, const SourceLocation &RHS) const {
+    return LHS == RHS;
+  }
+};
+
+} // namespace
+
+static std::optional<SourceLocation> getExpansionLocOfMacroRecursive(
+    StringRef MacroName, SourceLocation Loc, const ASTContext &Context,
+    std::unordered_set<SourceLocation, SourceLocationHash, SourceLocationEqual>
+        &CheckedLocations) {
   auto &SM = Context.getSourceManager();
   const LangOptions &LangOpts = Context.getLangOpts();
   while (Loc.isMacroID()) {
+    if (CheckedLocations.count(Loc)) {
+      return std::nullopt;
+    }
+    CheckedLocations.insert(Loc);
     SrcMgr::ExpansionInfo Expansion =
         SM.getSLocEntry(SM.getFileID(Loc)).getExpansion();
-    if (Expansion.isMacroArgExpansion())
+    if (Expansion.isMacroArgExpansion()) {
       // Check macro argument for an expansion of the given macro. For example,
       // `F(G(3))`, where `MacroName` is `G`.
-      if (std::optional<SourceLocation> ArgLoc = getExpansionLocOfMacro(
-              MacroName, Expansion.getSpellingLoc(), Context))
+      if (std::optional<SourceLocation> ArgLoc =
+              getExpansionLocOfMacroRecursive(MacroName,
+                                              Expansion.getSpellingLoc(),
+                                              Context, CheckedLocations)) {
         return ArgLoc;
+      }
+    }
     Loc = Expansion.getExpansionLocStart();
-    if (isTokenAtLoc(SM, LangOpts, MacroName, Loc))
+    if (isTokenAtLoc(SM, LangOpts, MacroName, Loc)) {
       return Loc;
+    }
   }
   return std::nullopt;
+}
+
+std::optional<SourceLocation>
+getExpansionLocOfMacro(StringRef MacroName, SourceLocation Loc,
+                       const ASTContext &Context) {
+  std::unordered_set<SourceLocation, SourceLocationHash, SourceLocationEqual>
+      CheckedLocations;
+  return getExpansionLocOfMacroRecursive(MacroName, Loc, Context,
+                                         CheckedLocations);
 }
 
 std::shared_ptr<llvm::Regex> createAndVerifyRegex(StringRef Regex,
@@ -744,7 +781,8 @@ const internal::VariadicDynCastAllOfMatcher<Decl, TypeAliasDecl> typeAliasDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, TypeAliasTemplateDecl>
     typeAliasTemplateDecl;
 const internal::VariadicAllOfMatcher<Decl> decl;
-const internal::VariadicDynCastAllOfMatcher<Decl, DecompositionDecl> decompositionDecl;
+const internal::VariadicDynCastAllOfMatcher<Decl, DecompositionDecl>
+    decompositionDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, BindingDecl> bindingDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, LinkageSpecDecl>
     linkageSpecDecl;
@@ -845,8 +883,7 @@ const internal::VariadicDynCastAllOfMatcher<Decl, ObjCCategoryImplDecl>
     objcCategoryImplDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCMethodDecl>
     objcMethodDecl;
-const internal::VariadicDynCastAllOfMatcher<Decl, BlockDecl>
-    blockDecl;
+const internal::VariadicDynCastAllOfMatcher<Decl, BlockDecl> blockDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCIvarDecl> objcIvarDecl;
 const internal::VariadicDynCastAllOfMatcher<Decl, ObjCPropertyDecl>
     objcPropertyDecl;
@@ -907,7 +944,8 @@ const internal::VariadicDynCastAllOfMatcher<Stmt, CXXRewrittenBinaryOperator>
 const internal::VariadicDynCastAllOfMatcher<Stmt, CXXFoldExpr> cxxFoldExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, Expr> expr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, DeclRefExpr> declRefExpr;
-const internal::VariadicDynCastAllOfMatcher<Stmt, ObjCIvarRefExpr> objcIvarRefExpr;
+const internal::VariadicDynCastAllOfMatcher<Stmt, ObjCIvarRefExpr>
+    objcIvarRefExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, BlockExpr> blockExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, IfStmt> ifStmt;
 const internal::VariadicDynCastAllOfMatcher<Stmt, ForStmt> forStmt;
@@ -937,13 +975,15 @@ const internal::VariadicDynCastAllOfMatcher<Stmt, AsmStmt> asmStmt;
 const internal::VariadicDynCastAllOfMatcher<Stmt, CXXBoolLiteralExpr>
     cxxBoolLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, StringLiteral> stringLiteral;
-const internal::VariadicDynCastAllOfMatcher<Stmt, ObjCStringLiteral> objcStringLiteral;
+const internal::VariadicDynCastAllOfMatcher<Stmt, ObjCStringLiteral>
+    objcStringLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, CharacterLiteral>
     characterLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, IntegerLiteral>
     integerLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, FloatingLiteral> floatLiteral;
-const internal::VariadicDynCastAllOfMatcher<Stmt, ImaginaryLiteral> imaginaryLiteral;
+const internal::VariadicDynCastAllOfMatcher<Stmt, ImaginaryLiteral>
+    imaginaryLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, FixedPointLiteral>
     fixedPointLiteral;
 const internal::VariadicDynCastAllOfMatcher<Stmt, UserDefinedLiteral>
@@ -955,12 +995,10 @@ const internal::VariadicDynCastAllOfMatcher<Stmt, CXXNullPtrLiteralExpr>
 const internal::VariadicDynCastAllOfMatcher<Stmt, ChooseExpr> chooseExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, ConvertVectorExpr>
     convertVectorExpr;
-const internal::VariadicDynCastAllOfMatcher<Stmt, CoawaitExpr>
-    coawaitExpr;
+const internal::VariadicDynCastAllOfMatcher<Stmt, CoawaitExpr> coawaitExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, DependentCoawaitExpr>
     dependentCoawaitExpr;
-const internal::VariadicDynCastAllOfMatcher<Stmt, CoyieldExpr>
-    coyieldExpr;
+const internal::VariadicDynCastAllOfMatcher<Stmt, CoyieldExpr> coyieldExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, GNUNullExpr> gnuNullExpr;
 const internal::VariadicDynCastAllOfMatcher<Stmt, GenericSelectionExpr>
     genericSelectionExpr;
