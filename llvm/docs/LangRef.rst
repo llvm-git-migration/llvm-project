@@ -23626,7 +23626,7 @@ Examples:
 
 .. _int_experimental_get_alias_lane_mask:
 
-'``llvm.get.alias.lane.mask.*``' Intrinsics
+'``llvm.experimental.get.alias.lane.mask.*``' Intrinsics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Syntax:
@@ -23635,10 +23635,10 @@ This is an overloaded intrinsic.
 
 ::
 
-      declare <4 x i1> @llvm.experimental.get.alias.lane.mask.v4i1.i64(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
-      declare <8 x i1> @llvm.experimental.get.alias.lane.mask.v8i1.i64(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
-      declare <16 x i1> @llvm.experimental.get.alias.lane.mask.v16i1.i64(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
-      declare <vscale x 16 x i1> @llvm.experimental.get.alias.lane.mask.nxv16i1.i64(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
+      declare <4 x i1> @llvm.experimental.get.alias.lane.mask.v4i1.i64.i64(i64 %ptrA, i64 %ptrB, i64 immarg %elementSize, i1 immarg %writeAfterRead)
+      declare <8 x i1> @llvm.experimental.get.alias.lane.mask.v8i1.i64.i64(i64 %ptrA, i64 %ptrB, i64 immarg %elementSize, i1 immarg %writeAfterRead)
+      declare <16 x i1> @llvm.experimental.get.alias.lane.mask.v16i1.i64.i32(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
+      declare <vscale x 16 x i1> @llvm.experimental.get.alias.lane.mask.nxv16i1.i64.i32(i64 %ptrA, i64 %ptrB, i32 immarg %elementSize, i1 immarg %writeAfterRead)
 
 
 Overview:
