@@ -224,7 +224,7 @@ Status ProcessElfCore::DoLoadCore() {
   ArchSpec core_arch(m_core_module_sp->GetArchitecture());
   target_arch.MergeFrom(core_arch);
   GetTarget().SetArchitecture(target_arch);
- 
+
   SetUnixSignals(UnixSignals::Create(GetArchitecture()));
 
   // Ensure we found at least one thread that was stopped on a signal.
@@ -393,7 +393,7 @@ size_t ProcessElfCore::DoReadMemory(lldb::addr_t addr, void *buf, size_t size,
   const lldb::addr_t file_start = address_range->data.GetRangeBase();
   const lldb::addr_t file_end = address_range->data.GetRangeEnd();
   size_t bytes_to_read = size; // Number of bytes to read from the core file
-  size_t bytes_copied = 0;   // Number of bytes actually read from the core file
+  size_t bytes_copied = 0; // Number of bytes actually read from the core file
   lldb::addr_t bytes_left =
       0; // Number of bytes available in the core file from the given address
 
@@ -476,8 +476,7 @@ lldb::addr_t ProcessElfCore::GetImageInfoAddress() {
 
 // Parse a FreeBSD NT_PRSTATUS note - see FreeBSD sys/procfs.h for details.
 static void ParseFreeBSDPrStatus(ThreadData &thread_data,
-                                 const DataExtractor &data,
-                                 bool lp64) {
+                                 const DataExtractor &data, bool lp64) {
   lldb::offset_t offset = 0;
   int pr_version = data.GetU32(&offset);
 
@@ -504,8 +503,7 @@ static void ParseFreeBSDPrStatus(ThreadData &thread_data,
 
 // Parse a FreeBSD NT_PRPSINFO note - see FreeBSD sys/procfs.h for details.
 static void ParseFreeBSDPrPsInfo(ProcessElfCore &process,
-                                 const DataExtractor &data,
-                                 bool lp64) {
+                                 const DataExtractor &data, bool lp64) {
   lldb::offset_t offset = 0;
   int pr_version = data.GetU32(&offset);
 
@@ -524,8 +522,7 @@ static void ParseFreeBSDPrPsInfo(ProcessElfCore &process,
 }
 
 static llvm::Error ParseNetBSDProcInfo(const DataExtractor &data,
-                                       uint32_t &cpi_nlwps,
-                                       uint32_t &cpi_signo,
+                                       uint32_t &cpi_nlwps, uint32_t &cpi_signo,
                                        uint32_t &cpi_siglwp,
                                        uint32_t &cpi_pid) {
   lldb::offset_t offset = 0;
@@ -693,8 +690,8 @@ llvm::Error ProcessElfCore::parseNetBSDNotes(llvm::ArrayRef<CoreNote> notes) {
 
     if (name == "NetBSD-CORE") {
       if (note.info.n_type == NETBSD::NT_PROCINFO) {
-        llvm::Error error = ParseNetBSDProcInfo(note.data, nlwps, signo,
-                                                siglwp, pr_pid);
+        llvm::Error error =
+            ParseNetBSDProcInfo(note.data, nlwps, signo, siglwp, pr_pid);
         if (error)
           return error;
         SetID(pr_pid);
@@ -875,7 +872,7 @@ llvm::Error ProcessElfCore::parseOpenBSDNotes(llvm::ArrayRef<CoreNote> notes) {
 /// - NT_SIGINFO - Information about the signal that terminated the process
 /// - NT_AUXV - Process auxiliary vector
 /// - NT_FILE - Files mapped into memory
-/// 
+///
 /// Additionally, for each thread in the process the core file will contain at
 /// least the NT_PRSTATUS note, containing the thread id and general purpose
 /// registers. It may include additional notes for other register sets (floating
@@ -920,7 +917,9 @@ llvm::Error ProcessElfCore::parseLinuxNotes(llvm::ArrayRef<CoreNote> notes) {
       Status status = prpsinfo.Parse(note.data, arch);
       if (status.Fail())
         return status.ToError();
-      thread_data.name.assign (prpsinfo.pr_fname, strnlen (prpsinfo.pr_fname, sizeof (prpsinfo.pr_fname)));
+      thread_data.name.assign(
+          prpsinfo.pr_fname,
+          strnlen(prpsinfo.pr_fname, sizeof(prpsinfo.pr_fname)));
       SetID(prpsinfo.pr_pid);
       break;
     }
@@ -975,7 +974,7 @@ llvm::Error ProcessElfCore::ParseThreadContextsFromNoteSegment(
   assert(segment_header.p_type == llvm::ELF::PT_NOTE);
 
   auto notes_or_error = parseSegment(segment_data);
-  if(!notes_or_error)
+  if (!notes_or_error)
     return notes_or_error.takeError();
   switch (GetArchitecture().GetTriple().getOS()) {
   case llvm::Triple::FreeBSD:
