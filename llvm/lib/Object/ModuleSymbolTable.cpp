@@ -144,7 +144,7 @@ void ModuleSymbolTable::CollectAsmSymbols(
     Streamer.flushSymverDirectives();
 
     for (auto &KV : Streamer) {
-      StringRef Key = KV.first();
+      StringRef Key = KV.first;
       RecordStreamer::State Value = KV.second;
       // FIXME: For now we just assume that all asm symbols are executable.
       uint32_t Res = BasicSymbolRef::SF_Executable;

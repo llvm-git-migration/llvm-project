@@ -14,6 +14,7 @@
 #include "llvm/MC/MCDirectives.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/Support/SMLoc.h"
+#include "llvm/ADT/MapVector.h"
 #include <vector>
 
 namespace llvm {
@@ -28,11 +29,11 @@ public:
 
 private:
   const Module &M;
-  StringMap<State> Symbols;
+  MapVector<StringRef, State> Symbols;
   // Map of aliases created by .symver directives, saved so we can update
   // their symbol binding after parsing complete. This maps from each
   // aliasee to its list of aliases.
-  DenseMap<const MCSymbol *, std::vector<StringRef>> SymverAliasMap;
+  MapVector<const MCSymbol *, std::vector<StringRef>> SymverAliasMap;
 
   /// Get the state recorded for the given symbol.
   State getSymbolState(const MCSymbol *Sym);
@@ -70,7 +71,7 @@ public:
   void flushSymverDirectives();
 
   // Symbols iterators
-  using const_iterator = StringMap<State>::const_iterator;
+  using const_iterator = MapVector<StringRef, State>::const_iterator;
   const_iterator begin();
   const_iterator end();
 
