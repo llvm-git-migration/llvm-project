@@ -3422,9 +3422,14 @@ const SCEV *ScalarEvolution::getUDivExpr(const SCEV *LHS,
   if (const SCEV *S = UniqueSCEVs.FindNodeOrInsertPos(ID, IP))
     return S;
 
+  // If the denominator is zero, the udiv will trap.
+  auto IsValidDenominator = [&] {
+    return isGuaranteedNotToBePoison(RHS) && isKnownNonZero(RHS);
+  };
+
   // 0 udiv Y == 0
   if (const SCEVConstant *LHSC = dyn_cast<SCEVConstant>(LHS))
-    if (LHSC->getValue()->isZero())
+    if (LHSC->getValue()->isZero() && IsValidDenominator())
       return LHS;
 
   if (const SCEVConstant *RHSC = dyn_cast<SCEVConstant>(RHS)) {
@@ -3560,7 +3565,7 @@ const SCEV *ScalarEvolution::getUDivExpr(const SCEV *LHS,
         if (MME && MME->getNumOperands() == 2 &&
             isa<SCEVConstant>(MME->getOperand(0)) &&
             cast<SCEVConstant>(MME->getOperand(0))->getAPInt() == -NegC &&
-            MME->getOperand(1) == RHS)
+            MME->getOperand(1) == RHS && IsValidDenominator())
           return getZero(LHS->getType());
       }
     }
