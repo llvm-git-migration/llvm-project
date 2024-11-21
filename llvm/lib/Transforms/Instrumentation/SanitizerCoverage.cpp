@@ -820,8 +820,8 @@ Value *ModuleSanitizerCoverage::CreateFunctionLocalGateCmp(IRBuilder<> &IRB) {
 
 Instruction *ModuleSanitizerCoverage::CreateGateBranch(Function &F,
                                                        Value *&FunctionGateCmp,
-                                                      Instruction *IP) {
- if (!FunctionGateCmp) {
+                                                       Instruction *IP) {
+  if (!FunctionGateCmp) {
     // Create this in the entry block
     BasicBlock &BB = F.getEntryBlock();
     BasicBlock::iterator IP = BB.getFirstInsertionPt();
