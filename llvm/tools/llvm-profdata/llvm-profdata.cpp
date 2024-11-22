@@ -1111,8 +1111,8 @@ static void updateInstrProfileEntry(InstrProfileEntry &IFE, bool SetToHot,
   });
 }
 
-const uint64_t ColdPercentileIdx = 15;
-const uint64_t HotPercentileIdx = 11;
+const uint64_t ColdPercentileIdx = 16;
+const uint64_t HotPercentileIdx = 12;
 
 using sampleprof::FSDiscriminatorPass;
 
