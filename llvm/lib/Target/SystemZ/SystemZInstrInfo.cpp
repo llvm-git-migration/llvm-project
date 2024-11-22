@@ -999,9 +999,9 @@ void SystemZInstrInfo::storeRegToStackSlot(
   MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
 
-  // There are no fp16 load/store instructions, so need to save/restore via
-  // GPR (TODO: Use VSTEH in case of vector support).
-  if (RC == &SystemZ::FP16BitRegClass) {
+  // Without vector support, there are no fp16 load/store instructions, so
+  // need to save/restore via GPR.
+  if (RC == &SystemZ::FP16BitRegClass && !STI.hasVector()) {
     assert(!MRI.isSSA() && MRI.getNumVirtRegs() &&
            "Expected non-SSA form with virtual registers.");
     Register GR64Reg = MRI.createVirtualRegister(&SystemZ::GR64BitRegClass);
@@ -1039,9 +1039,9 @@ void SystemZInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
   MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   DebugLoc DL = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
 
-  // There are no fp16 load/store instructions, so need to save/restore via
-  // GPR (TODO: Use VLEH in case of vector support).
-  if (RC == &SystemZ::FP16BitRegClass) {
+  // Without vector support, there are no fp16 load/store instructions, so
+  // need to save/restore via GPR.
+  if (RC == &SystemZ::FP16BitRegClass && !STI.hasVector()) {
     assert(!MRI.isSSA() && MRI.getNumVirtRegs() &&
            "Expected non-SSA form with virtual registers.");
     Register GR64Reg = MRI.createVirtualRegister(&SystemZ::GR64BitRegClass);
@@ -1931,6 +1931,10 @@ void SystemZInstrInfo::getLoadStoreOpcodes(const TargetRegisterClass *RC,
   } else if (RC == &SystemZ::FP128BitRegClass) {
     LoadOpcode = SystemZ::LX;
     StoreOpcode = SystemZ::STX;
+  } else if (RC == &SystemZ::FP16BitRegClass ||
+             RC == &SystemZ::VR16BitRegClass) {
+    LoadOpcode = SystemZ::VL16;
+    StoreOpcode = SystemZ::VST16;
   } else if (RC == &SystemZ::VR32BitRegClass) {
     LoadOpcode = SystemZ::VL32;
     StoreOpcode = SystemZ::VST32;

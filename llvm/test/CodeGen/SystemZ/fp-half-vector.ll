@@ -158,87 +158,60 @@ define <8 x half> @fun0(<8 x half> %Op) {
 ; VECTOR-NEXT:    .cfi_offset %f13, -208
 ; VECTOR-NEXT:    .cfi_offset %f14, -216
 ; VECTOR-NEXT:    .cfi_offset %f15, -224
-; VECTOR-NEXT:    lh %r0, 414(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v14, %r0, 0
-; VECTOR-NEXT:    lh %r0, 406(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v12, %r0, 0
-; VECTOR-NEXT:    lh %r0, 398(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v9, %r0, 0
-; VECTOR-NEXT:    lh %r0, 390(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    ldr %f10, %f6
-; VECTOR-NEXT:    ldr %f11, %f4
-; VECTOR-NEXT:    ldr %f13, %f2
+; VECTOR-NEXT:    vlreph %v11, 414(%r15)
+; VECTOR-NEXT:    vlreph %v12, 406(%r15)
+; VECTOR-NEXT:    vlreph %v13, 398(%r15)
+; VECTOR-NEXT:    vlreph %v14, 390(%r15)
+; VECTOR-NEXT:    ldr %f8, %f6
+; VECTOR-NEXT:    ldr %f9, %f4
+; VECTOR-NEXT:    ldr %f10, %f2
 ; VECTOR-NEXT:    lgr %r13, %r2
-; VECTOR-NEXT:    ldr %f15, %f0
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    ldr %f8, %f0
+; VECTOR-NEXT:    ldr %f15, %f0
+; VECTOR-NEXT:    ldr %f0, %f10
+; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
+; VECTOR-NEXT:    aebr %f0, %f0
+; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
+; VECTOR-NEXT:    ldr %f10, %f0
 ; VECTOR-NEXT:    ldr %f0, %f9
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
 ; VECTOR-NEXT:    ldr %f9, %f0
-; VECTOR-NEXT:    ldr %f0, %f12
+; VECTOR-NEXT:    ldr %f0, %f8
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    ldr %f12, %f0
+; VECTOR-NEXT:    ldr %f8, %f0
 ; VECTOR-NEXT:    ldr %f0, %f14
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
 ; VECTOR-NEXT:    ldr %f14, %f0
-; VECTOR-NEXT:    ldr %f0, %f15
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    aebr %f0, %f0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    ldr %f15, %f0
 ; VECTOR-NEXT:    ldr %f0, %f13
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
 ; VECTOR-NEXT:    ldr %f13, %f0
+; VECTOR-NEXT:    ldr %f0, %f12
+; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
+; VECTOR-NEXT:    aebr %f0, %f0
+; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
+; VECTOR-NEXT:    ldr %f12, %f0
 ; VECTOR-NEXT:    ldr %f0, %f11
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    aebr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    ldr %f11, %f0
-; VECTOR-NEXT:    ldr %f0, %f10
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    aebr %f0, %f0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 6(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v11, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 4(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v13, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 2(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v15, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v14, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 14(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v12, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 12(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v9, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 10(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v8, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 8(%r13)
+; VECTOR-NEXT:    vsteh %v0, 14(%r13), 0
+; VECTOR-NEXT:    vsteh %v12, 12(%r13), 0
+; VECTOR-NEXT:    vsteh %v13, 10(%r13), 0
+; VECTOR-NEXT:    vsteh %v14, 8(%r13), 0
+; VECTOR-NEXT:    vsteh %v8, 6(%r13), 0
+; VECTOR-NEXT:    vsteh %v9, 4(%r13), 0
+; VECTOR-NEXT:    vsteh %v10, 2(%r13), 0
+; VECTOR-NEXT:    vsteh %v15, 0(%r13), 0
 ; VECTOR-NEXT:    ld %f8, 216(%r15) # 8-byte Folded Reload
 ; VECTOR-NEXT:    ld %f9, 208(%r15) # 8-byte Folded Reload
 ; VECTOR-NEXT:    ld %f10, 200(%r15) # 8-byte Folded Reload
@@ -499,54 +472,22 @@ define void @fun3(ptr %Src, ptr %Dst) {
 ;
 ; VECTOR-LABEL: fun3:
 ; VECTOR:       # %bb.0: # %entry
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    lh %r0, 2(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v1, %r0, 0
-; VECTOR-NEXT:    lh %r0, 4(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v2, %r0, 0
-; VECTOR-NEXT:    lh %r0, 6(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v3, %r0, 0
-; VECTOR-NEXT:    lh %r0, 8(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v4, %r0, 0
-; VECTOR-NEXT:    lh %r0, 10(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v5, %r0, 0
-; VECTOR-NEXT:    lh %r0, 12(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v6, %r0, 0
-; VECTOR-NEXT:    lh %r0, 14(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v7, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v7, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 14(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v6, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 12(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v5, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 10(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v4, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 8(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v3, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 6(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v2, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 4(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v1, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 2(%r3)
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r3)
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
+; VECTOR-NEXT:    vlreph %v1, 2(%r2)
+; VECTOR-NEXT:    vlreph %v2, 4(%r2)
+; VECTOR-NEXT:    vlreph %v3, 6(%r2)
+; VECTOR-NEXT:    vlreph %v4, 8(%r2)
+; VECTOR-NEXT:    vlreph %v5, 10(%r2)
+; VECTOR-NEXT:    vlreph %v6, 12(%r2)
+; VECTOR-NEXT:    vlreph %v7, 14(%r2)
+; VECTOR-NEXT:    vsteh %v7, 14(%r3), 0
+; VECTOR-NEXT:    vsteh %v6, 12(%r3), 0
+; VECTOR-NEXT:    vsteh %v5, 10(%r3), 0
+; VECTOR-NEXT:    vsteh %v4, 8(%r3), 0
+; VECTOR-NEXT:    vsteh %v3, 6(%r3), 0
+; VECTOR-NEXT:    vsteh %v2, 4(%r3), 0
+; VECTOR-NEXT:    vsteh %v1, 2(%r3), 0
+; VECTOR-NEXT:    vsteh %v0, 0(%r3), 0
 ; VECTOR-NEXT:    br %r14
 entry:
   %L = load <8 x half>, ptr %Src
@@ -695,97 +636,37 @@ define void @fun4(ptr %Src, ptr %Dst) {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -208
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 368
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    lh %r0, 2(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v2, %r0, 0
-; VECTOR-NEXT:    lh %r0, 4(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v4, %r0, 0
-; VECTOR-NEXT:    lh %r0, 6(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v6, %r0, 0
-; VECTOR-NEXT:    lh %r0, 8(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v1, %r0, 0
-; VECTOR-NEXT:    lh %r0, 10(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v3, %r0, 0
-; VECTOR-NEXT:    lh %r0, 12(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v5, %r0, 0
-; VECTOR-NEXT:    lh %r0, 14(%r2)
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
-; VECTOR-NEXT:    # kill: def $f2h killed $f2h killed $f2s
-; VECTOR-NEXT:    # kill: def $f4h killed $f4h killed $f4s
-; VECTOR-NEXT:    # kill: def $f6h killed $f6h killed $f6s
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v7, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v7, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 190(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v5, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 182(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v3, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 174(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v1, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 166(%r15)
+; VECTOR-NEXT:    vlreph %v6, 6(%r2)
+; VECTOR-NEXT:    vlreph %v4, 4(%r2)
+; VECTOR-NEXT:    vlreph %v2, 2(%r2)
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
+; VECTOR-NEXT:    vlreph %v1, 8(%r2)
+; VECTOR-NEXT:    vlreph %v3, 10(%r2)
+; VECTOR-NEXT:    vlreph %v5, 12(%r2)
+; VECTOR-NEXT:    vlreph %v7, 14(%r2)
 ; VECTOR-NEXT:    la %r2, 192(%r15)
 ; VECTOR-NEXT:    lgr %r13, %r3
+; VECTOR-NEXT:    vsteh %v7, 190(%r15), 0
+; VECTOR-NEXT:    vsteh %v5, 182(%r15), 0
+; VECTOR-NEXT:    vsteh %v3, 174(%r15), 0
+; VECTOR-NEXT:    vsteh %v1, 166(%r15), 0
 ; VECTOR-NEXT:    brasl %r14, foo@PLT
-; VECTOR-NEXT:    lh %r0, 192(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    lh %r0, 194(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v1, %r0, 0
-; VECTOR-NEXT:    lh %r0, 196(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v2, %r0, 0
-; VECTOR-NEXT:    lh %r0, 198(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v3, %r0, 0
-; VECTOR-NEXT:    lh %r0, 200(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v4, %r0, 0
-; VECTOR-NEXT:    lh %r0, 202(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v5, %r0, 0
-; VECTOR-NEXT:    lh %r0, 204(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v6, %r0, 0
-; VECTOR-NEXT:    lh %r0, 206(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v7, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v7, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 14(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v6, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 12(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v5, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 10(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v4, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 8(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v3, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 6(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v2, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 4(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v1, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 2(%r13)
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
+; VECTOR-NEXT:    vlreph %v0, 192(%r15)
+; VECTOR-NEXT:    vlreph %v1, 194(%r15)
+; VECTOR-NEXT:    vlreph %v2, 196(%r15)
+; VECTOR-NEXT:    vlreph %v3, 198(%r15)
+; VECTOR-NEXT:    vlreph %v4, 200(%r15)
+; VECTOR-NEXT:    vlreph %v5, 202(%r15)
+; VECTOR-NEXT:    vlreph %v6, 204(%r15)
+; VECTOR-NEXT:    vlreph %v7, 206(%r15)
+; VECTOR-NEXT:    vsteh %v7, 14(%r13), 0
+; VECTOR-NEXT:    vsteh %v6, 12(%r13), 0
+; VECTOR-NEXT:    vsteh %v5, 10(%r13), 0
+; VECTOR-NEXT:    vsteh %v4, 8(%r13), 0
+; VECTOR-NEXT:    vsteh %v3, 6(%r13), 0
+; VECTOR-NEXT:    vsteh %v2, 4(%r13), 0
+; VECTOR-NEXT:    vsteh %v1, 2(%r13), 0
+; VECTOR-NEXT:    vsteh %v0, 0(%r13), 0
 ; VECTOR-NEXT:    lmg %r13, %r15, 312(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
@@ -890,157 +771,27 @@ define void @fun5(<4 x half> %dummy, <8 x half> %Arg5) {
 ; VECTOR-NEXT:    stmg %r14, %r15, 112(%r15)
 ; VECTOR-NEXT:    .cfi_offset %r14, -48
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
-; VECTOR-NEXT:    aghi %r15, -256
-; VECTOR-NEXT:    .cfi_def_cfa_offset 416
-; VECTOR-NEXT:    std %f8, 248(%r15) # 8-byte Folded Spill
-; VECTOR-NEXT:    std %f9, 240(%r15) # 8-byte Folded Spill
-; VECTOR-NEXT:    std %f10, 232(%r15) # 8-byte Folded Spill
-; VECTOR-NEXT:    std %f11, 224(%r15) # 8-byte Folded Spill
-; VECTOR-NEXT:    .cfi_offset %f8, -168
-; VECTOR-NEXT:    .cfi_offset %f9, -176
-; VECTOR-NEXT:    .cfi_offset %f10, -184
-; VECTOR-NEXT:    .cfi_offset %f11, -192
-; VECTOR-NEXT:    lh %r0, 422(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v1, %r0, 0
-; VECTOR-NEXT:    lh %r0, 430(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v3, %r0, 0
-; VECTOR-NEXT:    lh %r0, 438(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v5, %r0, 0
-; VECTOR-NEXT:    lh %r0, 446(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v7, %r0, 0
-; VECTOR-NEXT:    lh %r0, 454(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v8, %r0, 0
-; VECTOR-NEXT:    lh %r0, 462(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v9, %r0, 0
-; VECTOR-NEXT:    lh %r0, 470(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v10, %r0, 0
-; VECTOR-NEXT:    lh %r0, 478(%r15)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v11, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v11, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 222(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v10, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 214(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v9, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 206(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v8, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 198(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v7, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 190(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v5, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 182(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v3, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 174(%r15)
-; VECTOR-NEXT:    vlgvf %r0, %v1, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 166(%r15)
+; VECTOR-NEXT:    aghi %r15, -224
+; VECTOR-NEXT:    .cfi_def_cfa_offset 384
+; VECTOR-NEXT:    vlreph %v1, 390(%r15)
+; VECTOR-NEXT:    vlreph %v3, 398(%r15)
+; VECTOR-NEXT:    vlreph %v5, 406(%r15)
+; VECTOR-NEXT:    vlreph %v7, 414(%r15)
+; VECTOR-NEXT:    vlreph %v16, 422(%r15)
+; VECTOR-NEXT:    vlreph %v17, 430(%r15)
+; VECTOR-NEXT:    vlreph %v18, 438(%r15)
+; VECTOR-NEXT:    vlreph %v19, 446(%r15)
+; VECTOR-NEXT:    vsteh %v19, 222(%r15), 0
+; VECTOR-NEXT:    vsteh %v18, 214(%r15), 0
+; VECTOR-NEXT:    vsteh %v17, 206(%r15), 0
+; VECTOR-NEXT:    vsteh %v16, 198(%r15), 0
+; VECTOR-NEXT:    vsteh %v7, 190(%r15), 0
+; VECTOR-NEXT:    vsteh %v5, 182(%r15), 0
+; VECTOR-NEXT:    vsteh %v3, 174(%r15), 0
+; VECTOR-NEXT:    vsteh %v1, 166(%r15), 0
 ; VECTOR-NEXT:    brasl %r14, foo2@PLT
-; VECTOR-NEXT:    ld %f8, 248(%r15) # 8-byte Folded Reload
-; VECTOR-NEXT:    ld %f9, 240(%r15) # 8-byte Folded Reload
-; VECTOR-NEXT:    ld %f10, 232(%r15) # 8-byte Folded Reload
-; VECTOR-NEXT:    ld %f11, 224(%r15) # 8-byte Folded Reload
-; VECTOR-NEXT:    lmg %r14, %r15, 368(%r15)
+; VECTOR-NEXT:    lmg %r14, %r15, 336(%r15)
 ; VECTOR-NEXT:    br %r14
   call void @foo2(<4 x half> %dummy, <8 x half> %Arg5)
-  ret void
-}
-
-; Test loading vector constants.
-declare void @foo3(<8 x half>, <8 x half>)
-define void @fun6() {
-; NOVEC-LABEL: fun6:
-; NOVEC:       # %bb.0: # %entry
-; NOVEC-NEXT:    stmg %r14, %r15, 112(%r15)
-; NOVEC-NEXT:    .cfi_offset %r14, -48
-; NOVEC-NEXT:    .cfi_offset %r15, -40
-; NOVEC-NEXT:    aghi %r15, -256
-; NOVEC-NEXT:    .cfi_def_cfa_offset 416
-; NOVEC-NEXT:    lhrl %r0, .LCPI6_0
-; NOVEC-NEXT:    sll %r0, 16
-; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    ldgr %f0, %r0
-; NOVEC-NEXT:    lgdr %r0, %f0
-; NOVEC-NEXT:    risblg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    srl %r0, 16
-; NOVEC-NEXT:    sth %r0, 254(%r15)
-; NOVEC-NEXT:    sth %r0, 246(%r15)
-; NOVEC-NEXT:    sth %r0, 238(%r15)
-; NOVEC-NEXT:    sth %r0, 230(%r15)
-; NOVEC-NEXT:    sth %r0, 222(%r15)
-; NOVEC-NEXT:    sth %r0, 214(%r15)
-; NOVEC-NEXT:    sth %r0, 206(%r15)
-; NOVEC-NEXT:    sth %r0, 198(%r15)
-; NOVEC-NEXT:    lhrl %r0, .LCPI6_1
-; NOVEC-NEXT:    sll %r0, 16
-; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    ldgr %f0, %r0
-; NOVEC-NEXT:    lgdr %r0, %f0
-; NOVEC-NEXT:    risblg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    srl %r0, 16
-; NOVEC-NEXT:    ler %f2, %f0
-; NOVEC-NEXT:    ler %f4, %f0
-; NOVEC-NEXT:    ler %f6, %f0
-; NOVEC-NEXT:    sth %r0, 190(%r15)
-; NOVEC-NEXT:    sth %r0, 182(%r15)
-; NOVEC-NEXT:    sth %r0, 174(%r15)
-; NOVEC-NEXT:    sth %r0, 166(%r15)
-; NOVEC-NEXT:    brasl %r14, foo3@PLT
-; NOVEC-NEXT:    lmg %r14, %r15, 368(%r15)
-; NOVEC-NEXT:    br %r14
-;
-; VECTOR-LABEL: fun6:
-; VECTOR:       # %bb.0: # %entry
-; VECTOR-NEXT:    stmg %r14, %r15, 112(%r15)
-; VECTOR-NEXT:    .cfi_offset %r14, -48
-; VECTOR-NEXT:    .cfi_offset %r15, -40
-; VECTOR-NEXT:    aghi %r15, -256
-; VECTOR-NEXT:    .cfi_def_cfa_offset 416
-; VECTOR-NEXT:    lhrl %r0, .LCPI6_0
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 254(%r15)
-; VECTOR-NEXT:    sth %r0, 246(%r15)
-; VECTOR-NEXT:    sth %r0, 238(%r15)
-; VECTOR-NEXT:    sth %r0, 230(%r15)
-; VECTOR-NEXT:    sth %r0, 222(%r15)
-; VECTOR-NEXT:    sth %r0, 214(%r15)
-; VECTOR-NEXT:    sth %r0, 206(%r15)
-; VECTOR-NEXT:    sth %r0, 198(%r15)
-; VECTOR-NEXT:    lhrl %r0, .LCPI6_1
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    ldr %f2, %f0
-; VECTOR-NEXT:    ldr %f4, %f0
-; VECTOR-NEXT:    ldr %f6, %f0
-; VECTOR-NEXT:    sth %r0, 190(%r15)
-; VECTOR-NEXT:    sth %r0, 182(%r15)
-; VECTOR-NEXT:    sth %r0, 174(%r15)
-; VECTOR-NEXT:    sth %r0, 166(%r15)
-; VECTOR-NEXT:    brasl %r14, foo3@PLT
-; VECTOR-NEXT:    lmg %r14, %r15, 368(%r15)
-; VECTOR-NEXT:    br %r14
-entry:
-  call void @foo3(<8 x half> <half 0.0, half 0.0, half 0.0, half 0.0,
-                              half 0.0, half 0.0, half 0.0, half 0.0>,
-                  <8 x half> <half 0.375, half 0.375, half 0.375, half 0.375,
-                              half 0.375, half 0.375, half 0.375, half 0.375>)
   ret void
 }

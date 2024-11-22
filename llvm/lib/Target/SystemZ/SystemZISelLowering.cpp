@@ -102,11 +102,12 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
     addRegisterClass(MVT::i32, &SystemZ::GR32BitRegClass);
   addRegisterClass(MVT::i64, &SystemZ::GR64BitRegClass);
   if (!useSoftFloat()) {
-    addRegisterClass(MVT::f16, &SystemZ::FP16BitRegClass);
     if (Subtarget.hasVector()) {
+      addRegisterClass(MVT::f16, &SystemZ::VR16BitRegClass);
       addRegisterClass(MVT::f32, &SystemZ::VR32BitRegClass);
       addRegisterClass(MVT::f64, &SystemZ::VR64BitRegClass);
     } else {
+      addRegisterClass(MVT::f16, &SystemZ::FP16BitRegClass);
       addRegisterClass(MVT::f32, &SystemZ::FP32BitRegClass);
       addRegisterClass(MVT::f64, &SystemZ::FP64BitRegClass);
     }
@@ -521,11 +522,9 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
   for (MVT VT : {MVT::f32, MVT::f64, MVT::f128}) {
     setLoadExtAction(ISD::EXTLOAD, VT, MVT::f16, Expand);
     setTruncStoreAction(VT, MVT::f16, Expand);
-    setOperationAction(ISD::FP_EXTEND, VT, Custom);
-    setOperationAction(ISD::STRICT_FP_EXTEND, VT, Custom);
   }
   for (auto Op : {ISD::LOAD, ISD::ATOMIC_LOAD, ISD::STORE, ISD::ATOMIC_STORE})
-    setOperationAction(Op, MVT::f16, Custom);
+    setOperationAction(Op, MVT::f16, Subtarget.hasVector() ? Legal : Custom);
   setOperationAction(ISD::FP_ROUND, MVT::f16, LibCall);
   setOperationAction(ISD::STRICT_FP_ROUND, MVT::f16, LibCall);
 
@@ -572,6 +571,10 @@ SystemZTargetLowering::SystemZTargetLowering(const TargetMachine &TM,
         setOperationAction(ISD::STRICT_FROUND, VT, Legal);
         setOperationAction(ISD::STRICT_FTRUNC, VT, Legal);
       }
+
+      // Extension from f16 needs libcall.
+      setOperationAction(ISD::FP_EXTEND, VT, Custom);
+      setOperationAction(ISD::STRICT_FP_EXTEND, VT, Custom);
     }
   }
 
@@ -951,10 +954,6 @@ SystemZVectorConstantInfo::SystemZVectorConstantInfo(BuildVectorSDNode *BVN) {
 
 bool SystemZTargetLowering::isFPImmLegal(const APFloat &Imm, EVT VT,
                                          bool ForCodeSize) const {
-  // TODO: Loading all f16 constants from ConstantPool for now.
-  if (&Imm.getSemantics() == &APFloat::IEEEhalf())
-    return false;
-
   // We can load zero using LZ?R and negative zero using LZ?R;LC?BR.
   if (Imm.isZero() || Imm.isNegZero())
     return true;
@@ -6185,8 +6184,8 @@ SDValue SystemZTargetLowering::lowerLoadF16(SDValue Op,
                            MVT::i16, Ld->getOriginalAlign(),
                            Ld->getMemOperand()->getFlags());
   }
-  // Load as integer, shift and insert into upper 2 bytes of the FP register.
-  // TODO: Use VLEH if available.
+  // Load as integer, shift and then insert into upper 2 bytes of the FP
+  // register.
   SDValue Shft = DAG.getNode(ISD::SHL, DL, MVT::i32, NewLd,
                              DAG.getConstant(16, DL, MVT::i32));
   SDValue BCast = DAG.getNode(ISD::BITCAST, DL, MVT::f32, Shft);
@@ -6201,7 +6200,7 @@ SDValue SystemZTargetLowering::lowerStoreF16(SDValue Op,
   MVT StoreVT = StoredVal.getSimpleValueType();
   assert(StoreVT == MVT::f16 && "Expected to lower an f16 store.");
 
-  // Move into a GPR, shift and store the 2 bytes.  TODO: Use VSTEH if available.
+  // Move into a GPR, shift and store the 2 bytes.
   SDLoc DL(Op);
   SDNode *U32 = DAG.getMachineNode(TargetOpcode::IMPLICIT_DEF, DL, MVT::f32);
   SDValue In32 = DAG.getTargetInsertSubreg(SystemZ::subreg_h16, DL,

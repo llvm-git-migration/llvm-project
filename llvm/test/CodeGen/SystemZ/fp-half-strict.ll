@@ -103,18 +103,12 @@ define void @fun1(ptr %Src, ptr %Dst) #0 {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -160
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 320
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
 ; VECTOR-NEXT:    lgr %r13, %r3
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; VECTOR-NEXT:    adbr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncdfhf2@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
+; VECTOR-NEXT:    vsteh %v0, 0(%r13), 0
 ; VECTOR-NEXT:    bcr 14, %r0
 ; VECTOR-NEXT:    lmg %r13, %r15, 264(%r15)
 ; VECTOR-NEXT:    br %r14

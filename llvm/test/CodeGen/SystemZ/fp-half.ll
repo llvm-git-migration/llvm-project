@@ -183,59 +183,28 @@ entry:
   ret half %Res
 }
 
-; The half values are loaded and stored instead.
+; Test loading and storing a half value.
 define void @fun3(ptr %Src, ptr %Dst) {
 ; NOVEC-LABEL: fun3:
 ; NOVEC:       # %bb.0: # %entry
-; NOVEC-NEXT:    stmg %r13, %r15, 104(%r15)
-; NOVEC-NEXT:    .cfi_offset %r13, -56
-; NOVEC-NEXT:    .cfi_offset %r14, -48
-; NOVEC-NEXT:    .cfi_offset %r15, -40
-; NOVEC-NEXT:    aghi %r15, -160
-; NOVEC-NEXT:    .cfi_def_cfa_offset 320
 ; NOVEC-NEXT:    lh %r0, 0(%r2)
 ; NOVEC-NEXT:    sll %r0, 16
 ; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    lgr %r13, %r3
 ; NOVEC-NEXT:    ldgr %f0, %r0
-; NOVEC-NEXT:    # kill: def $f0h killed $f0h killed $f0d
-; NOVEC-NEXT:    brasl %r14, __extendhfsf2@PLT
-; NOVEC-NEXT:    aebr %f0, %f0
-; NOVEC-NEXT:    brasl %r14, __truncsfhf2@PLT
-; NOVEC-NEXT:    # kill: def $f0h killed $f0h def $f0d
 ; NOVEC-NEXT:    lgdr %r0, %f0
 ; NOVEC-NEXT:    risblg %r0, %r0, 0, 159, 32
 ; NOVEC-NEXT:    srl %r0, 16
-; NOVEC-NEXT:    sth %r0, 0(%r13)
-; NOVEC-NEXT:    lmg %r13, %r15, 264(%r15)
+; NOVEC-NEXT:    sth %r0, 0(%r3)
 ; NOVEC-NEXT:    br %r14
 ;
 ; VECTOR-LABEL: fun3:
 ; VECTOR:       # %bb.0: # %entry
-; VECTOR-NEXT:    stmg %r13, %r15, 104(%r15)
-; VECTOR-NEXT:    .cfi_offset %r13, -56
-; VECTOR-NEXT:    .cfi_offset %r14, -48
-; VECTOR-NEXT:    .cfi_offset %r15, -40
-; VECTOR-NEXT:    aghi %r15, -160
-; VECTOR-NEXT:    .cfi_def_cfa_offset 320
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    lgr %r13, %r3
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
-; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
-; VECTOR-NEXT:    aebr %f0, %f0
-; VECTOR-NEXT:    brasl %r14, __truncsfhf2@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
-; VECTOR-NEXT:    lmg %r13, %r15, 264(%r15)
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
+; VECTOR-NEXT:    vsteh %v0, 0(%r3), 0
 ; VECTOR-NEXT:    br %r14
 entry:
-  %Op0 = load half, ptr %Src, align 2
-  %Add = fadd half %Op0, %Op0
-  store half %Add, ptr %Dst, align 2
+  %L = load half, ptr %Src, align 2
+  store half %L, ptr %Dst, align 2
   ret void
 }
 
@@ -273,18 +242,12 @@ define void @fun4(ptr %Src, ptr %Dst) {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -160
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 320
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
 ; VECTOR-NEXT:    lgr %r13, %r3
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, __extendhfdf2@PLT
 ; VECTOR-NEXT:    adbr %f0, %f0
 ; VECTOR-NEXT:    brasl %r14, __truncdfhf2@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
+; VECTOR-NEXT:    vsteh %v0, 0(%r13), 0
 ; VECTOR-NEXT:    lmg %r13, %r15, 264(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
@@ -336,22 +299,16 @@ define void @fun5(ptr %Src, ptr %Dst) {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -192
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 352
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
 ; VECTOR-NEXT:    la %r2, 160(%r15)
 ; VECTOR-NEXT:    lgr %r13, %r3
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, __extendhftf2@PLT
 ; VECTOR-NEXT:    vl %v0, 160(%r15), 3
 ; VECTOR-NEXT:    wfaxb %v0, %v0, %v0
 ; VECTOR-NEXT:    la %r2, 176(%r15)
 ; VECTOR-NEXT:    vst %v0, 176(%r15), 3
 ; VECTOR-NEXT:    brasl %r14, __trunctfhf2@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
+; VECTOR-NEXT:    vsteh %v0, 0(%r13), 0
 ; VECTOR-NEXT:    lmg %r13, %r15, 296(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
@@ -457,14 +414,8 @@ define half @fun7(half %Op0, ptr %Dst, ptr %Src) {
 ;
 ; VECTOR-LABEL: fun7:
 ; VECTOR:       # %bb.0: # %entry
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r2)
-; VECTOR-NEXT:    lh %r0, 0(%r3)
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
+; VECTOR-NEXT:    vsteh %v0, 0(%r2), 0
+; VECTOR-NEXT:    vlreph %v0, 0(%r3)
 ; VECTOR-NEXT:    br %r14
 entry:
   store half %Op0, ptr %Dst
@@ -506,16 +457,10 @@ define void @fun8(ptr %Src, ptr %Dst) {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -160
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 320
-; VECTOR-NEXT:    lh %r0, 0(%r2)
-; VECTOR-NEXT:    sll %r0, 16
+; VECTOR-NEXT:    vlreph %v0, 0(%r2)
 ; VECTOR-NEXT:    lgr %r13, %r3
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, foo@PLT
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
-; VECTOR-NEXT:    sth %r0, 0(%r13)
+; VECTOR-NEXT:    vsteh %v0, 0(%r13), 0
 ; VECTOR-NEXT:    lmg %r13, %r15, 264(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
@@ -566,11 +511,8 @@ define half @fun9(half %Arg0, half %Arg1, half %Arg2, half %Arg3, half %Arg4) {
 ; VECTOR-NEXT:    std %f9, 160(%r15) # 8-byte Folded Spill
 ; VECTOR-NEXT:    .cfi_offset %f8, -168
 ; VECTOR-NEXT:    .cfi_offset %f9, -176
-; VECTOR-NEXT:    lh %r0, 342(%r15)
-; VECTOR-NEXT:    sll %r0, 16
+; VECTOR-NEXT:    vlreph %v0, 342(%r15)
 ; VECTOR-NEXT:    ldr %f8, %f6
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
 ; VECTOR-NEXT:    brasl %r14, __extendhfsf2@PLT
 ; VECTOR-NEXT:    ldr %f9, %f0
 ; VECTOR-NEXT:    ldr %f0, %f8
@@ -613,13 +555,10 @@ define void @fun10(half %Arg0) {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -168
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 328
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h def $f0s
-; VECTOR-NEXT:    vlgvf %r0, %v0, 0
-; VECTOR-NEXT:    srl %r0, 16
 ; VECTOR-NEXT:    ldr %f2, %f0
 ; VECTOR-NEXT:    ldr %f4, %f0
 ; VECTOR-NEXT:    ldr %f6, %f0
-; VECTOR-NEXT:    sth %r0, 166(%r15)
+; VECTOR-NEXT:    vsteh %v0, 166(%r15), 0
 ; VECTOR-NEXT:    brasl %r14, fun9@PLT
 ; VECTOR-NEXT:    lmg %r14, %r15, 280(%r15)
 ; VECTOR-NEXT:    br %r14
@@ -628,7 +567,7 @@ define void @fun10(half %Arg0) {
 }
 
 ; Test loading some immediates from the Constant Pool.
-declare void @foo2(half, half, half)
+declare void @foo2(half, half, half, half)
 define void @fun11() {
 ; NOVEC-LABEL: fun11:
 ; NOVEC:       # %bb.0: # %entry
@@ -640,18 +579,15 @@ define void @fun11() {
 ; NOVEC-NEXT:    lhrl %r0, .LCPI11_0
 ; NOVEC-NEXT:    sll %r0, 16
 ; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    ldgr %f0, %r0
+; NOVEC-NEXT:    ldgr %f4, %r0
 ; NOVEC-NEXT:    lhrl %r0, .LCPI11_1
 ; NOVEC-NEXT:    sll %r0, 16
-; NOVEC-NEXT:    # kill: def $f0h killed $f0h killed $f0d
-; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    ldgr %f2, %r0
-; NOVEC-NEXT:    # kill: def $f2h killed $f2h killed $f2d
-; NOVEC-NEXT:    lhrl %r0, .LCPI11_2
-; NOVEC-NEXT:    sll %r0, 16
-; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
-; NOVEC-NEXT:    ldgr %f4, %r0
 ; NOVEC-NEXT:    # kill: def $f4h killed $f4h killed $f4d
+; NOVEC-NEXT:    lzer %f2
+; NOVEC-NEXT:    risbhg %r0, %r0, 0, 159, 32
+; NOVEC-NEXT:    lcdfr %f0, %f2
+; NOVEC-NEXT:    ldgr %f6, %r0
+; NOVEC-NEXT:    # kill: def $f6h killed $f6h killed $f6d
 ; NOVEC-NEXT:    brasl %r14, foo2@PLT
 ; NOVEC-NEXT:    lmg %r14, %r15, 272(%r15)
 ; NOVEC-NEXT:    br %r14
@@ -663,23 +599,15 @@ define void @fun11() {
 ; VECTOR-NEXT:    .cfi_offset %r15, -40
 ; VECTOR-NEXT:    aghi %r15, -160
 ; VECTOR-NEXT:    .cfi_def_cfa_offset 320
-; VECTOR-NEXT:    lhrl %r0, .LCPI11_0
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v0, %r0, 0
-; VECTOR-NEXT:    lhrl %r0, .LCPI11_1
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v2, %r0, 0
-; VECTOR-NEXT:    lhrl %r0, .LCPI11_2
-; VECTOR-NEXT:    sll %r0, 16
-; VECTOR-NEXT:    vlvgf %v4, %r0, 0
-; VECTOR-NEXT:    # kill: def $f0h killed $f0h killed $f0s
-; VECTOR-NEXT:    # kill: def $f2h killed $f2h killed $f2s
-; VECTOR-NEXT:    # kill: def $f4h killed $f4h killed $f4s
+; VECTOR-NEXT:    lzer %f2
+; VECTOR-NEXT:    vrepih %v4, 13824
+; VECTOR-NEXT:    vrepih %v6, 15360
+; VECTOR-NEXT:    lcdfr %f0, %f2
 ; VECTOR-NEXT:    brasl %r14, foo2@PLT
 ; VECTOR-NEXT:    lmg %r14, %r15, 272(%r15)
 ; VECTOR-NEXT:    br %r14
 entry:
-  call void @foo2(half 0.0, half 1.0, half 0.375)
+  call void @foo2(half -0.0, half 0.0, half 0.375, half 1.0)
   ret void
 }
 

@@ -273,6 +273,13 @@ foreach I = 0-31 in {
             DwarfRegNum<[!cast<DwarfMapping>("F"#I#"Dwarf").Id]>;
 }
 
+// Class used to store 16-bit fp values in the first element of a vector
+// register.
+defm VR16 : SystemZRegClass<"VR16", [f16], 16,
+                            (add (sequence "F%uH", 0, 7),
+                                 (sequence "F%uH", 16, 31),
+                                 (sequence "F%uH", 8, 15))>;
+
 // Class used to store 32-bit values in the first element of a vector
 // register.  f32 scalars are used for the WLEDB and WLDEB instructions.
 defm VR32 : SystemZRegClass<"VR32", [f32, v4i8, v2i16], 32,
@@ -309,6 +316,7 @@ class TypedReg<ValueType vtin, RegisterOperand opin> {
   RegisterOperand op = opin;
 }
 
+def v16hb   : TypedReg<f16,     VR16>;
 def v32f    : TypedReg<i32,     VR32>;
 def v32sb   : TypedReg<f32,     VR32>;
 def v64g    : TypedReg<i64,     VR64>;

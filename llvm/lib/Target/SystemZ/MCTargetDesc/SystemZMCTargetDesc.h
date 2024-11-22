@@ -47,6 +47,7 @@ extern const unsigned FP16Regs[16];
 extern const unsigned FP32Regs[16];
 extern const unsigned FP64Regs[16];
 extern const unsigned FP128Regs[16];
+extern const unsigned VR16Regs[32];
 extern const unsigned VR32Regs[32];
 extern const unsigned VR64Regs[32];
 extern const unsigned VR128Regs[32];
