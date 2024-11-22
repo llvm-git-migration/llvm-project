@@ -190,6 +190,12 @@ foreach cc = [ "cc", "ls", "lt", "eq", "mi", "ne", "ge",
   def B#cc#"16"
     : MxBcc<cc, MxBrTarget16, (descend 0b0000, 0b0000),
             (operand "$dst", 16, (encoder "encodePCRelImm<16>"))>;
+
+  let Predicates = [AtLeastM68020] in {
+  def B#cc#"32"
+    : MxBcc<cc, MxBrTarget32, (descend 0b1111, 0b1111),
+            (operand "$dst", 16, (encoder "encodePCRelImm<32>"))>;
+  } // AtLeastM68020
 }
 
 foreach cc = [ "cc", "ls", "lt", "eq", "mi", "ne", "ge",
@@ -223,6 +229,12 @@ def BRA8  : MxBra<MxBrTarget8,
 def BRA16 : MxBra<MxBrTarget16, (descend 0b0000, 0b0000),
                   (operand "$dst", 16, (encoder "encodePCRelImm<16>"))>;
 
+let Predicates = [AtLeastM68020] in {
+def BRA32 : MxBra<MxBrTarget16, (descend 0b1111, 0b1111),
+                  (operand "$dst", 32, (encoder "encodePCRelImm<32>"),
+                                       (decoder "DecodeImm32"))>;
+} // AtLeastM68020
+
 def : Pat<(br bb:$target), (BRA8 MxBrTarget8:$target)>;
 
 /// -------------------------------------------------
@@ -250,9 +262,11 @@ def BSR8 : MxBsr<MxBrTarget8, MxType8,
 def BSR16 : MxBsr<MxBrTarget16, MxType16, (descend 0b0000, 0b0000),
                 (operand "$dst", 16, (encoder "encodePCRelImm<16>"))>;
 
+let Predicates = [AtLeastM68020] in {
 def BSR32 : MxBsr<MxBrTarget32, MxType32, (descend 0b1111, 0b1111),
                 (operand "$dst", 32, (encoder "encodePCRelImm<32>"),
                                      (decoder "DecodeImm32"))>;
+} // AtLeastM68020
 
 //===----------------------------------------------------------------------===//
 // Call
