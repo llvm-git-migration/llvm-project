@@ -30,18 +30,26 @@
 #include "llvm/MC/MCSectionMachO.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
+#define DEBUG_TYPE "M68k-asm-backend"
+
 namespace {
 
 class M68kAsmBackend : public MCAsmBackend {
+  bool Allows32BitBranch;
 
 public:
-  M68kAsmBackend(const Target &T) : MCAsmBackend(llvm::endianness::big) {}
+  M68kAsmBackend(const Target &T, const MCSubtargetInfo &STI)
+      : MCAsmBackend(llvm::endianness::big),
+        Allows32BitBranch(llvm::StringSwitch<bool>(STI.getCPU())
+                              .CasesLower("m68020", "m68030", "m68040", true)
+                              .Default(false)) {}
 
   unsigned getNumFixupKinds() const override { return 0; }
 
@@ -51,14 +59,26 @@ public:
                   const MCSubtargetInfo *STI) const override {
     unsigned Size = 1 << getFixupKindLog2Size(Fixup.getKind());
 
-    assert(Fixup.getOffset() + Size <= Data.size() && "Invalid fixup offset!");
+    if (Fixup.getOffset() + Size > Data.size()) {
+      LLVM_DEBUG(dbgs() << "Fixup.getOffset(): " << Fixup.getOffset() << '\n');
+      LLVM_DEBUG(dbgs() << "Size: " << Size << '\n');
+      LLVM_DEBUG(dbgs() << "Data.size(): " << Data.size() << '\n');
+      assert(Fixup.getOffset() + Size <= Data.size() &&
+             "Invalid fixup offset!");
+    }
 
     // Check that uppper bits are either all zeros or all ones.
     // Specifically ignore overflow/underflow as long as the leakage is
     // limited to the lower bits. This is to remain compatible with
     // other assemblers.
-    assert(isIntN(Size * 8 + 1, Value) &&
-           "Value does not fit in the Fixup field");
+    if (!isIntN(Size * 8 + 1, Value)) {
+      LLVM_DEBUG(dbgs() << "Fixup.getOffset(): " << Fixup.getOffset() << '\n');
+      LLVM_DEBUG(dbgs() << "Size: " << Size << '\n');
+      LLVM_DEBUG(dbgs() << "Data.size(): " << Data.size() << '\n');
+      LLVM_DEBUG(dbgs() << "Value: " << Value << '\n');
+      assert(isIntN(Size * 8 + 1, Value) &&
+             "Value does not fit in the Fixup field");
+    }
 
     // Write in Big Endian
     for (unsigned i = 0; i != Size; ++i)
@@ -99,6 +119,8 @@ static unsigned getRelaxedOpcodeBranch(const MCInst &Inst) {
   switch (Op) {
   default:
     return Op;
+
+  // 8 -> 16
   case M68k::BRA8:
     return M68k::BRA16;
   case M68k::Bcc8:
@@ -129,6 +151,38 @@ static unsigned getRelaxedOpcodeBranch(const MCInst &Inst) {
     return M68k::Ble16;
   case M68k::Bvs8:
     return M68k::Bvs16;
+
+  // 16 -> 32
+  case M68k::BRA16:
+    return M68k::BRA32;
+  case M68k::Bcc16:
+    return M68k::Bcc32;
+  case M68k::Bls16:
+    return M68k::Bls32;
+  case M68k::Blt16:
+    return M68k::Blt32;
+  case M68k::Beq16:
+    return M68k::Beq32;
+  case M68k::Bmi16:
+    return M68k::Bmi32;
+  case M68k::Bne16:
+    return M68k::Bne32;
+  case M68k::Bge16:
+    return M68k::Bge32;
+  case M68k::Bcs16:
+    return M68k::Bcs32;
+  case M68k::Bpl16:
+    return M68k::Bpl32;
+  case M68k::Bgt16:
+    return M68k::Bgt32;
+  case M68k::Bhi16:
+    return M68k::Bhi32;
+  case M68k::Bvc16:
+    return M68k::Bvc32;
+  case M68k::Ble16:
+    return M68k::Ble32;
+  case M68k::Bvs16:
+    return M68k::Bvs32;
   }
 }
 
@@ -167,8 +221,7 @@ bool M68kAsmBackend::mayNeedRelaxation(const MCInst &Inst,
 
 bool M68kAsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup,
                                           uint64_t Value) const {
-  // TODO Newer CPU can use 32 bit offsets, so check for this when ready
-  if (!isInt<16>(Value)) {
+  if (!isInt<32>(Value) || (!Allows32BitBranch && !isInt<16>(Value))) {
     llvm_unreachable("Cannot relax the instruction, value does not fit");
   }
   // Relax if the value is too big for a (signed) i8. This means that byte-wide
@@ -178,7 +231,15 @@ bool M68kAsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup,
   // A branch to the immediately following instruction automatically
   // uses the 16-bit displacement format because the 8-bit
   // displacement field contains $00 (zero offset).
-  return Value == 0 || !isInt<8>(Value);
+  unsigned int KindLog2Size = getFixupKindLog2Size(Fixup.getKind());
+  bool FixupFieldTooSmall = false;
+  if (!isInt<8>(Value) && KindLog2Size == 0) {
+    FixupFieldTooSmall |= true;
+  } else if (!isInt<16>(Value) && KindLog2Size <= 1) {
+    FixupFieldTooSmall |= true;
+  }
+
+  return Value == 0 || FixupFieldTooSmall;
 }
 
 // NOTE Can tblgen help at all here to verify there aren't other instructions
@@ -218,8 +279,8 @@ namespace {
 class M68kELFAsmBackend : public M68kAsmBackend {
 public:
   uint8_t OSABI;
-  M68kELFAsmBackend(const Target &T, uint8_t OSABI)
-      : M68kAsmBackend(T), OSABI(OSABI) {}
+  M68kELFAsmBackend(const Target &T, const MCSubtargetInfo &STI, uint8_t OSABI)
+      : M68kAsmBackend(T, STI), OSABI(OSABI) {}
 
   std::unique_ptr<MCObjectTargetWriter>
   createObjectTargetWriter() const override {
@@ -235,5 +296,5 @@ MCAsmBackend *llvm::createM68kAsmBackend(const Target &T,
                                          const MCTargetOptions &Options) {
   const Triple &TheTriple = STI.getTargetTriple();
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
-  return new M68kELFAsmBackend(T, OSABI);
+  return new M68kELFAsmBackend(T, STI, OSABI);
 }
