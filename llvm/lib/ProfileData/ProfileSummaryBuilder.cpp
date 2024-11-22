@@ -70,6 +70,7 @@ cl::opt<uint64_t> ProfileSummaryColdCount(
 // A set of cutoff values. Each value, when divided by ProfileSummary::Scale
 // (which is 1000000) is a desired percentile of total counts.
 static const uint32_t DefaultCutoffsData[] = {
+    0,      /*  0% */
     10000,  /*  1% */
     100000, /* 10% */
     200000, 300000, 400000, 500000, 600000, 700000, 800000,
@@ -134,13 +135,22 @@ void ProfileSummaryBuilder::computeDetailedSummary() {
   if (DetailedSummaryCutoffs.empty())
     return;
   llvm::sort(DetailedSummaryCutoffs);
+
+  size_t StartIdx = 0;
+  if (DetailedSummaryCutoffs.front() == 0) {
+    // Put an entry for the 0th percentile.  Assume there is no UINT64_MAX
+    // sample count.
+    DetailedSummary.emplace_back(0, UINT64_MAX, 0);
+    StartIdx = 1;
+  }
+
   auto Iter = CountFrequencies.begin();
   const auto End = CountFrequencies.end();
 
   uint32_t CountsSeen = 0;
   uint64_t CurrSum = 0, Count = 0;
 
-  for (const uint32_t Cutoff : DetailedSummaryCutoffs) {
+  for (const uint32_t Cutoff : drop_begin(DetailedSummaryCutoffs, StartIdx)) {
     assert(Cutoff <= 999999);
     APInt Temp(128, TotalCount);
     APInt N(128, Cutoff);

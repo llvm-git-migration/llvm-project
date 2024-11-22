@@ -6,6 +6,7 @@
 ; CHECK-NEXT: Total number of blocks: 11
 ; CHECK-NEXT: Total count: 12943
 ; CHECK-NEXT: Detailed summary:
+; CHECK-NEXT: 0 blocks with count >= 18446744073709551615 account for 0 percentage of the total counts.
 ; CHECK-NEXT: 1 blocks with count >= 2080 account for 1 percentage of the total counts.
 ; CHECK-NEXT: 1 blocks with count >= 2080 account for 10 percentage of the total counts.
 ; CHECK-NEXT: 2 blocks with count >= 2064 account for 20 percentage of the total counts.

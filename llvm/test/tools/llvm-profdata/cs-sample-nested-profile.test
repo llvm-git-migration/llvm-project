@@ -157,6 +157,7 @@ RUN: llvm-profdata show -sample -detailed-summary %t3.proftext | FileCheck %s -c
 ; SUMMARY-NEXT: Total number of blocks: 16
 ; SUMMARY-NEXT: Total count: 772562
 ; SUMMARY-NEXT: Detailed summary:
+; SUMMARY-NEXT: 0 blocks with count >= 18446744073709551615 account for 0 percentage of the total counts.
 ; SUMMARY-NEXT: 1 blocks with count >= 362830 account for 1 percentage of the total counts.
 ; SUMMARY-NEXT: 1 blocks with count >= 362830 account for 10 percentage of the total counts.
 ; SUMMARY-NEXT: 1 blocks with count >= 362830 account for 20 percentage of the total counts.
@@ -181,6 +182,7 @@ RUN: llvm-profdata show -sample -detailed-summary %t3.proftext | FileCheck %s -c
 ; SUMMARY-NEST-NEXT: Total number of blocks: 15
 ; SUMMARY-NEST-NEXT: Total count: 772504
 ; SUMMARY-NEST-NEXT: Detailed summary:
+; SUMMARY-NEST-NEXT: 0 blocks with count >= 18446744073709551615 account for 0 percentage of the total counts.
 ; SUMMARY-NEST-NEXT: 1 blocks with count >= 362830 account for 1 percentage of the total counts.
 ; SUMMARY-NEST-NEXT: 1 blocks with count >= 362830 account for 10 percentage of the total counts.
 ; SUMMARY-NEST-NEXT: 1 blocks with count >= 362830 account for 20 percentage of the total counts.
