@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <memory>
 #include <memory_resource>
+#include <type_traits>
 
 #if _LIBCPP_HAS_ATOMIC_HEADER
 #  include <atomic>
@@ -429,23 +430,17 @@ static void* align_down(size_t align, size_t size, void*& ptr, size_t& space) {
   return ptr;
 }
 
-void* monotonic_buffer_resource::__initial_descriptor::__try_allocate_from_chunk(size_t bytes, size_t align) {
-  if (!__cur_)
-    return nullptr;
-  void* new_ptr       = static_cast<void*>(__cur_);
-  size_t new_capacity = (__cur_ - __start_);
+template <typename Chunk>
+void* monotonic_buffer_resource::__try_allocate_from_chunk(Chunk& self, size_t bytes, size_t align) {
+  if constexpr (is_same_v<decay<Chunk>, monotonic_buffer_resource::__initial_descriptor>) {
+    if (self.__cur_)
+      return nullptr;
+  }
+  void* new_ptr       = static_cast<void*>(self.__cur_);
+  size_t new_capacity = (self.__cur_ - self.__start_);
   void* aligned_ptr   = align_down(align, bytes, new_ptr, new_capacity);
   if (aligned_ptr != nullptr)
-    __cur_ = static_cast<char*>(new_ptr);
-  return aligned_ptr;
-}
-
-void* monotonic_buffer_resource::__chunk_footer::__try_allocate_from_chunk(size_t bytes, size_t align) {
-  void* new_ptr       = static_cast<void*>(__cur_);
-  size_t new_capacity = (__cur_ - __start_);
-  void* aligned_ptr   = align_down(align, bytes, new_ptr, new_capacity);
-  if (aligned_ptr != nullptr)
-    __cur_ = static_cast<char*>(new_ptr);
+    self.__cur_ = static_cast<char*>(new_ptr);
   return aligned_ptr;
 }
 
@@ -462,10 +457,10 @@ void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t align) {
     return roundup(newsize, footer_align) + footer_size;
   };
 
-  if (void* result = __initial_.__try_allocate_from_chunk(bytes, align))
+  if (void* result = __try_allocate_from_chunk(__initial_, bytes, align))
     return result;
   if (__chunks_ != nullptr) {
-    if (void* result = __chunks_->__try_allocate_from_chunk(bytes, align))
+    if (void* result = __try_allocate_from_chunk(*__chunks_, bytes, align))
       return result;
   }
 
@@ -478,7 +473,7 @@ void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t align) {
   size_t previous_capacity = previous_allocation_size();
 
   if (aligned_capacity <= previous_capacity) {
-    size_t newsize   = 2 * (previous_capacity - footer_size);
+    size_t newsize   = __default_growth_factor * (previous_capacity - footer_size);
     aligned_capacity = roundup(newsize, footer_align) + footer_size;
   }
 
@@ -491,7 +486,7 @@ void* monotonic_buffer_resource::do_allocate(size_t bytes, size_t align) {
   footer->__align_       = align;
   __chunks_              = footer;
 
-  return __chunks_->__try_allocate_from_chunk(bytes, align);
+  return __try_allocate_from_chunk(*__chunks_, bytes, align);
 }
 
 } // namespace pmr
