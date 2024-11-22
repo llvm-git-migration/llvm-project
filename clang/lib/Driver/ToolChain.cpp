@@ -964,7 +964,7 @@ std::string ToolChain::GetLinkerPath(bool *LinkerIsLLD) const {
   StringRef UseLinker = A ? A->getValue() : CLANG_DEFAULT_LINKER;
 
   // --ld-path= takes precedence over -fuse-ld= and specifies the executable
-  // name. -B, COMPILER_PATH and PATH and consulted if the value does not
+  // name. -B, COMPILER_PATH and PATH are consulted if the value does not
   // contain a path component separator.
   // -fuse-ld=lld can be used with --ld-path= to inform clang that the binary
   // that --ld-path= points to is lld.
@@ -974,8 +974,11 @@ std::string ToolChain::GetLinkerPath(bool *LinkerIsLLD) const {
       if (llvm::sys::path::parent_path(Path).empty())
         Path = GetProgramPath(A->getValue());
       if (llvm::sys::fs::can_execute(Path)) {
+        SmallString<1024> RealPath;
+        if (llvm::sys::fs::real_path(Path, RealPath))
+          RealPath = llvm::sys::path::stem(RealPath);
         if (LinkerIsLLD)
-          *LinkerIsLLD = UseLinker == "lld";
+          *LinkerIsLLD = UseLinker == "lld" || RealPath == "lld";
         return std::string(Path);
       }
     }
@@ -1014,8 +1017,11 @@ std::string ToolChain::GetLinkerPath(bool *LinkerIsLLD) const {
 
     std::string LinkerPath(GetProgramPath(LinkerName.c_str()));
     if (llvm::sys::fs::can_execute(LinkerPath)) {
+      SmallString<1024> RealPath;
+      if (llvm::sys::fs::real_path(LinkerPath, RealPath))
+        RealPath = llvm::sys::path::stem(RealPath);
       if (LinkerIsLLD)
-        *LinkerIsLLD = UseLinker == "lld";
+        *LinkerIsLLD = UseLinker == "lld" || RealPath == "lld";
       return LinkerPath;
     }
   }
