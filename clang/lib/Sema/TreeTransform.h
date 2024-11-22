@@ -3403,9 +3403,10 @@ public:
   /// require any semantic analysis. Subclasses may override this routine to
   /// provide different behavior.
   ExprResult RebuildCXXDefaultArgExpr(SourceLocation Loc, ParmVarDecl *Param,
-                                      Expr *RewrittenExpr) {
+                                      Expr *RewrittenExpr, bool HasRebuiltInit) {
     return CXXDefaultArgExpr::Create(getSema().Context, Loc, Param,
-                                     RewrittenExpr, getSema().CurContext);
+                                     getSema().CurContext, RewrittenExpr,
+                                     HasRebuiltInit);
   }
 
   /// Build a new C++11 default-initialization expression.
@@ -13765,7 +13766,7 @@ TreeTransform<Derived>::TransformCXXDefaultArgExpr(CXXDefaultArgExpr *E) {
     return E;
 
   return getDerived().RebuildCXXDefaultArgExpr(E->getUsedLocation(), Param,
-                                               InitRes.get());
+                                               InitRes.get(), E->hasRebuiltInit());
 }
 
 template<typename Derived>
