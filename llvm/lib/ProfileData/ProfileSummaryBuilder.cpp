@@ -77,9 +77,15 @@ static const uint32_t DefaultCutoffsData[] = {
 const ArrayRef<uint32_t> ProfileSummaryBuilder::DefaultCutoffs =
     DefaultCutoffsData;
 
+static const ProfileSummaryEntry ZeroCutoffEntry = {0, UINT64_MAX, 0};
+
 const ProfileSummaryEntry &
 ProfileSummaryBuilder::getEntryForPercentile(const SummaryEntryVector &DS,
                                              uint64_t Percentile) {
+  if (Percentile == 0) {
+    return ZeroCutoffEntry;
+  }
+
   auto It = partition_point(DS, [=](const ProfileSummaryEntry &Entry) {
     return Entry.Cutoff < Percentile;
   });
