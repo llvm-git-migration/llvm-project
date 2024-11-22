@@ -60,6 +60,18 @@ Version 20.0
   Symbol added: __ZTSNSt3__120__codecvt_utf8_utf16IDsEE
   Symbol added: __ZTSNSt3__120__codecvt_utf8_utf16IwEE
 
+* [libc++][PMR] Remove duplicate implementation of __try_allocate_from_chunk
+
+  This patch removes member function __try_allocate_from_chunk from __chunk_footer and __initial_descriptor.
+  The two implementation are almost same and can be easily moved to `memory_resource.cpp` inner implementation.
+  They are defined and only used in `memory_resource.cpp`, No necessary export to dylib
+
+  All platforms
+  -------------
+  Symbol removed: _ZNSt3__13pmr25monotonic_buffer_resource14__chunk_footer25__try_allocate_from_chunkEmm
+  Symbol removed: _ZNSt3__13pmr25monotonic_buffer_resource20__initial_descriptor25__try_allocate_from_chunkEmm
+
+
 ------------
 Version 19.0
 ------------
