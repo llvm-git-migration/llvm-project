@@ -1215,6 +1215,18 @@ struct TestTypeConverter : public TypeConverter {
       return success();
     }
 
+    // Convert I22 to multiple I23.
+    if (t.isInteger(22)) {
+      results.push_back(IntegerType::get(t.getContext(), 23));
+      results.push_back(IntegerType::get(t.getContext(), 23));
+      return success();
+    }
+
+    // Drop I24 types.
+    if (t.isInteger(24)) {
+      return success();
+    }
+
     // Otherwise, convert the type directly.
     results.push_back(t);
     return success();

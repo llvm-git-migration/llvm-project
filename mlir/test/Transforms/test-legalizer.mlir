@@ -463,3 +463,25 @@ func.func @circular_mapping() {
   %0 = "test.erase_op"() : () -> (i64)
   "test.drop_operands_and_replace_with_valid"(%0) : (i64) -> ()
 }
+
+// -----
+
+module {
+// CHECK-LABEL: func.func private @foo() -> (i23, i23)
+func.func private @foo() -> (i22, i24)
+
+// CHECK: func.func @bar()
+func.func @bar() {
+  // i22 is converted to (i23, i23).
+  // i24 is converted to ().
+  // CHECK: %[[call:.*]]:2 = call @foo() : () -> (i23, i23)
+  %0:2 = func.call @foo() : () -> (i22, i24)
+
+  // CHECK: %[[cast1:.*]] = "test.cast"() : () -> i24
+  // CHECK: %[[cast0:.*]] = "test.cast"(%[[call]]#0, %[[call]]#1) : (i23, i23) -> i22
+  // CHECK: "test.some_user"(%[[cast0]], %[[cast1]]) : (i22, i24) -> ()
+  // expected-remark @below{{'test.some_user' is not legalizable}}
+  "test.some_user"(%0#0, %0#1) : (i22, i24) -> ()
+  "test.return"() : () -> ()
+}
+}
