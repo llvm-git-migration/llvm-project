@@ -639,6 +639,7 @@ static bool parseFrontendArgs(FrontendOptions &opts, llvm::opt::ArgList &args,
 
   // Get the input kind (from the value passed via `-x`)
   InputKind dashX(Language::Unknown);
+  FortranForm dashXForm = FortranForm::Unknown;
   if (const llvm::opt::Arg *a =
           args.getLastArg(clang::driver::options::OPT_x)) {
     llvm::StringRef xValue = a->getValue();
@@ -648,6 +649,8 @@ static bool parseFrontendArgs(FrontendOptions &opts, llvm::opt::ArgList &args,
                 // pre-processed inputs.
                 .Case("f95", Language::Fortran)
                 .Case("f95-cpp-input", Language::Fortran)
+                .Case("f95-fixed", Language::Fortran)
+                .Case("f95-fixed-cpp-input", Language::Fortran)
                 // CUDA Fortran
                 .Case("cuda", Language::Fortran)
                 .Default(Language::Unknown);
@@ -663,6 +666,13 @@ static bool parseFrontendArgs(FrontendOptions &opts, llvm::opt::ArgList &args,
     if (dashX.isUnknown())
       diags.Report(clang::diag::err_drv_invalid_value)
           << a->getAsString(args) << a->getValue();
+
+    if (dashX.getLanguage() == Language::Fortran) {
+      if (xValue.starts_with("f95-fixed"))
+        dashXForm = FortranForm::FixedForm;
+      else
+        dashXForm = FortranForm::FreeForm;
+    }
   }
 
   // Collect the input files and save them in our instance of FrontendOptions.
@@ -694,6 +704,8 @@ static bool parseFrontendArgs(FrontendOptions &opts, llvm::opt::ArgList &args,
         arg->getOption().matches(clang::driver::options::OPT_ffixed_form)
             ? FortranForm::FixedForm
             : FortranForm::FreeForm;
+  } else if (dashXForm != FortranForm::Unknown) {
+    opts.fortranForm = dashXForm;
   }
 
   // Set fixedFormColumns based on -ffixed-line-length=<value>

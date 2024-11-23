@@ -1037,10 +1037,14 @@ types::ID ToolChain::LookupTypeForExtension(StringRef Ext) const {
   types::ID id = types::lookupTypeForExtension(Ext);
 
   // Flang always runs the preprocessor and has no notion of "preprocessed
-  // fortran". Here, TY_PP_Fortran is coerced to TY_Fortran to avoid treating
-  // them differently.
-  if (D.IsFlangMode() && id == types::TY_PP_Fortran)
-    id = types::TY_Fortran;
+  // fortran". Here, TY_PP_Fortran[_Fixed] is coerced to TY_Fortran[_Fixed] to
+  // avoid treating them differently.
+  if (D.IsFlangMode()) {
+    if (id == types::TY_PP_Fortran)
+      id = types::TY_Fortran;
+    else if (id == types::TY_PP_Fortran_Fixed)
+      id = types::TY_Fortran_Fixed;
+  }
 
   return id;
 }

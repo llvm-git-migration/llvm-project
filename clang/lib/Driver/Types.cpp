@@ -162,7 +162,9 @@ bool types::isAcceptedByFlang(ID Id) {
     return false;
 
   case TY_Fortran:
+  case TY_Fortran_Fixed:
   case TY_PP_Fortran:
+  case TY_PP_Fortran_Fixed:
     return true;
   case TY_LLVM_IR:
   case TY_LLVM_BC:
@@ -300,8 +302,8 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
   return llvm::StringSwitch<types::ID>(Ext)
       .Case("c", TY_C)
       .Case("C", TY_CXX)
-      .Case("F", TY_Fortran)
-      .Case("f", TY_PP_Fortran)
+      .Case("F", TY_Fortran_Fixed)
+      .Case("f", TY_PP_Fortran_Fixed)
       .Case("h", TY_CHeader)
       .Case("H", TY_CXXHeader)
       .Case("i", TY_PP_C)
@@ -344,10 +346,10 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
       .Case("f90", TY_PP_Fortran)
       .Case("F95", TY_Fortran)
       .Case("f95", TY_PP_Fortran)
-      .Case("for", TY_PP_Fortran)
-      .Case("FOR", TY_PP_Fortran)
-      .Case("fpp", TY_Fortran)
-      .Case("FPP", TY_Fortran)
+      .Case("for", TY_PP_Fortran_Fixed)
+      .Case("FOR", TY_PP_Fortran_Fixed)
+      .Case("fpp", TY_Fortran_Fixed)
+      .Case("FPP", TY_Fortran_Fixed)
       .Case("gch", TY_PCH)
       .Case("hip", TY_HIP)
       .Case("hipi", TY_PP_HIP)
