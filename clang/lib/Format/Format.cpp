@@ -2325,7 +2325,7 @@ public:
 private:
   void removeSemi(TokenAnnotator &Annotator,
                   SmallVectorImpl<AnnotatedLine *> &Lines,
-                  tooling::Replacements &Result) {
+                  tooling::Replacements &Result, bool Children = false) {
     auto PrecededByFunctionRBrace = [](const FormatToken &Tok) {
       const auto *Prev = Tok.Previous;
       if (!Prev || Prev->isNot(tok::r_brace))
@@ -2337,10 +2337,12 @@ private:
     const auto End = Lines.end();
     for (auto I = Lines.begin(); I != End; ++I) {
       const auto Line = *I;
-      removeSemi(Annotator, Line->Children, Result);
+      if (!Line->Children.empty())
+        removeSemi(Annotator, Line->Children, Result, /*Children=*/true);
       if (!Line->Affected)
         continue;
-      Annotator.calculateFormattingInformation(*Line);
+      if (!Children)
+        Annotator.calculateFormattingInformation(*Line);
       const auto NextLine = I + 1 == End ? nullptr : I[1];
       for (auto Token = Line->First; Token && !Token->Finalized;
            Token = Token->Next) {
