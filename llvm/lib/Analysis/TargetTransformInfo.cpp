@@ -1099,6 +1099,20 @@ InstructionCost TargetTransformInfo::getReplicationShuffleCost(
   return Cost;
 }
 
+InstructionCost TargetTransformInfo::getConstVectCost(
+    unsigned Opcode, Type *Src, Align Alignment, unsigned AddressSpace,
+    TTI::TargetCostKind CostKind, TTI::OperandValueInfo OpInfo,
+    const Instruction *I, const bool SrcIsConstVect,
+    InstructionCost ScalarCost) const {
+  assert((I == nullptr || I->getOpcode() == Opcode) &&
+         "Opcode should reflect passed instruction.");
+  InstructionCost Cost =
+      TTIImpl->getConstVectCost(Opcode, Src, Alignment, AddressSpace, CostKind,
+                                OpInfo, I, SrcIsConstVect, ScalarCost);
+  assert(Cost >= 0 && "TTI should not produce negative costs!");
+  return Cost;
+}
+
 InstructionCost TargetTransformInfo::getMemoryOpCost(
     unsigned Opcode, Type *Src, Align Alignment, unsigned AddressSpace,
     TTI::TargetCostKind CostKind, TTI::OperandValueInfo OpInfo,

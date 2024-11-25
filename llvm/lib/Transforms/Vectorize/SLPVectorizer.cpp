@@ -3681,7 +3681,24 @@ private:
       if (AllConstsOrCasts)
         CastMaxMinBWSizes =
             std::make_pair(std::numeric_limits<unsigned>::max(), 1);
-      MustGather.insert(VL.begin(), VL.end());
+      // Recording all constants entry helps in avoiding counting the cost of
+      // const vector twice.
+      if (allConstant(VL) && !isSplat(VL)) {
+        for (Value *V : VL) {
+          const TreeEntry *TE = getTreeEntry(V);
+          assert((!TE || TE == Last || doesNotNeedToBeScheduled(V)) &&
+                 "Scalar already in tree!");
+          if (TE) {
+            if (TE != Last)
+              MultiNodeScalars.try_emplace(V).first->getSecond().push_back(
+                  Last);
+            continue;
+          }
+          ScalarToTreeEntry[V] = Last;
+        }
+      } else {
+        MustGather.insert(VL.begin(), VL.end());
+      }
     }
 
     if (UserTreeIdx.UserTE)
@@ -11019,8 +11036,54 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
 
   bool NeedToShuffleReuses = !E->ReuseShuffleIndices.empty();
   if (E->isGather()) {
-    if (allConstant(VL))
+    if (allConstant(VL)) {
+      auto IsAllowedScalarTy = [&](const Type *T) {
+        return T->isFloatTy() || T->isDoubleTy() || T->isIntegerTy();
+      };
+      if (IsAllowedScalarTy(E->Scalars.front()->getType())) {
+        InstructionCost ScalarCost, VectorCost;
+
+        auto IsDuplicateEntry = [&](const TreeEntry *E) {
+          auto *TE = getTreeEntry(E->Scalars[0]);
+          if (TE != E) {
+            auto It = MultiNodeScalars.find(E->Scalars[0]);
+            if (It != MultiNodeScalars.end()) {
+              auto *TEIt = find_if(It->getSecond(), [&](TreeEntry *ME) {
+                return ME->isSame(VL);
+              });
+              if (TEIt != It->getSecond().end())
+                return true;
+            }
+          }
+          return false;
+        };
+
+        // FIXME: If there is more than 1 SLP tree realizing the same const
+        // vector, codegen will realize it only once. Hence, no need to consider
+        // the cost of const vector twice. But, currently we can't check if the
+        // tree entry is present in other SLP tree.
+        if (!isSplat(E->Scalars) && !all_of(E->Scalars, IsaPred<UndefValue>) &&
+            !IsDuplicateEntry(E)) {
+          // Get unique scalars
+          SmallDenseSet<Value *> UniqScalars;
+          for (auto *V : E->Scalars)
+            UniqScalars.insert(V);
+
+          // Constant is realized by having a mov/fmov into GPR. So,
+          // ScalarCost = #UniqScalars
+          ScalarCost = (UniqScalars.size());
+
+          // FIXME: Ideally, getGatherCost API should be used for this but
+          // currently, this API returns zero cost with all constants.
+          VectorCost =
+              TTI->getConstVectCost(Instruction::Load, FinalVecTy, Align(), 0,
+                                    CostKind, TTI::OperandValueInfo(), nullptr,
+                                    /*AllConstants=*/true, ScalarCost);
+        }
+        return VectorCost - ScalarCost;
+      }
       return 0;
+    }
     if (isa<InsertElementInst>(VL[0]))
       return InstructionCost::getInvalid();
     if (isa<CmpInst>(VL.front()))
@@ -12557,7 +12620,10 @@ InstructionCost BoUpSLP::getTreeCost(ArrayRef<Value *> VectorizedVals) {
       auto *Inst = cast<Instruction>(EU.Scalar);
       InstructionCost ScalarCost = TTI->getInstructionCost(Inst, CostKind);
       auto OperandIsScalar = [&](Value *V) {
-        if (!getTreeEntry(V)) {
+        if (auto *TE = getTreeEntry(V);
+            // All constants entry does not result in a seperate instruction.
+            // Ignore such entry.
+            !TE || (TE && allConstant(TE->Scalars))) {
           // Some extractelements might be not vectorized, but
           // transformed into shuffle and removed from the function,
           // consider it here.
