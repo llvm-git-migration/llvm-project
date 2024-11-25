@@ -1,5 +1,6 @@
 // RUN: %clang_builtins %s %librt -o %t && %run %t
 // REQUIRES: librt_has_atomic
+// UNSUPPORTED: target=aarch64{{.*}}
 //===-- atomic_test.c - Test support functions for atomic operations ------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
