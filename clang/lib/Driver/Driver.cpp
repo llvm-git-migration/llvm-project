@@ -1060,6 +1060,15 @@ bool Driver::readConfigFile(StringRef FileName,
   for (Arg *A : *NewOptions)
     A->claim();
 
+  // Filter out all -l and -Wl, options, put them into a separate list and erase
+  // from the original list of configuration file options. These will be used
+  // only when linking and appended after all of the command line options.
+  auto NewLinkerIns = std::make_unique<InputArgList>();
+  for (Arg *A : NewOptions->filtered(options::OPT_Wl_COMMA, options::OPT_l))
+    appendOneArg(*NewLinkerIns, A);
+  NewOptions->eraseArg(options::OPT_Wl_COMMA);
+  NewOptions->eraseArg(options::OPT_l);
+
   if (!CfgOptions)
     CfgOptions = std::move(NewOptions);
   else {
@@ -1067,6 +1076,15 @@ bool Driver::readConfigFile(StringRef FileName,
     for (auto *Opt : *NewOptions)
       appendOneArg(*CfgOptions, Opt);
   }
+
+  if (!CfgLinkerInputs)
+    CfgLinkerInputs = std::move(NewLinkerIns);
+  else {
+    // If this is a subsequent config file, append options to the previous one.
+    for (auto *Opt : *NewLinkerIns)
+      appendOneArg(*CfgLinkerInputs, Opt);
+  }
+
   ConfigFiles.push_back(std::string(CfgFileName));
   return false;
 }
@@ -1244,6 +1262,7 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
   if (!ContainsError)
     ContainsError = loadConfigFiles();
   bool HasConfigFile = !ContainsError && (CfgOptions.get() != nullptr);
+  bool HasConfigLinkerIn = !ContainsError && CfgLinkerInputs;
 
   // All arguments, from both config file and command line.
   InputArgList Args = std::move(HasConfigFile ? std::move(*CfgOptions)
@@ -1540,6 +1559,15 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
   // Construct the list of inputs.
   InputList Inputs;
   BuildInputs(C->getDefaultToolChain(), *TranslatedArgs, Inputs);
+  if (HasConfigLinkerIn && Inputs.size()) {
+    Arg *FinalPhaseArg;
+    if (getFinalPhase(*TranslatedArgs, &FinalPhaseArg) == phases::Link) {
+      DerivedArgList TranslatedLinkerIns(*CfgLinkerInputs);
+      for (Arg *A : *CfgLinkerInputs)
+        TranslatedLinkerIns.append(A);
+      BuildInputs(C->getDefaultToolChain(), TranslatedLinkerIns, Inputs);
+    }
+  }
 
   // Populate the tool chains for the offloading devices, if any.
   CreateOffloadingDeviceToolChains(*C, Inputs);
