@@ -61,3 +61,24 @@
 ! CHECK-TWO-CONFIGS-NEXT: Configuration file: {{.*}}Inputs{{.}}config2{{.}}config-4.cfg
 ! CHECK-TWO-CONFIGS: -ffp-contract=fast
 ! CHECK-TWO-CONFIGS: -O3
+
+!--- The -l flags should be moved to the end of input list and appear only when linking.
+! RUN: %flang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING
+! RUN: %flang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -fopenmp -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING-LIBOMP-GOES-LAST
+! RUN: %flang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+! RUN: %flang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -fopenmp -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+! CHECK-LINKING: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+! CHECK-LINKING: "-ffast-math"
+! CHECK-LINKING: "{{.*}}-{{.*}}.o" "-lm" "-Bstatic" "-lhappy" "-Bdynamic"
+! CHECK-LINKING-LIBOMP-GOES-LAST: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+! CHECK-LINKING-LIBOMP-GOES-LAST: "-ffast-math"
+! CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-fopenmp"
+! CHECK-LINKING-LIBOMP-GOES-LAST: "{{.*}}-{{.*}}.o" "-lm" "-Bstatic" "-lhappy" "-Bdynamic"
+! CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-lomp"
+! CHECK-NOLINKING: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+! CHECK-NOLINKING: "-ffast-math"
+! CHECK-NOLINKING-NO: "-lm"
+! CHECK-NOLINKING-NO: "-Bstatic"
+! CHECK-NOLINKING-NO: "-lhappy"
+! CHECK-NOLINKING-NO: "-Bdynamic"
+! CHECK-NOLINKING-NO: "-lomp"
