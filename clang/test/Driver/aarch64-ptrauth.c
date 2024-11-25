@@ -4,7 +4,7 @@
 // NONE:     "-cc1"
 // NONE-NOT: "-fptrauth-
 
-//// -fptauth-* driver flags are only supported for pauthtest ABI
+//// -fptauth-* driver flags on Linux are only supported with pauthtest ABI.
 // RUN: %clang -### -c --target=aarch64-linux -mabi=pauthtest \
 // RUN:   -fno-ptrauth-intrinsics -fptrauth-intrinsics \
 // RUN:   -fno-ptrauth-calls -fptrauth-calls \
@@ -40,6 +40,7 @@
 // RUN:   %s 2>&1 | FileCheck %s --check-prefix=ALL-LINUX
 // ALL-LINUX: "-cc1"{{.*}} "-faarch64-jump-table-hardening"
 
+//// Some -fptrauth-* flags are supported for ARM64 Darwin.
 // RUN: %clang -### -c --target=arm64-darwin \
 // RUN:   -fno-ptrauth-intrinsics -fptrauth-intrinsics \
 // RUN:   -fno-ptrauth-calls -fptrauth-calls \
@@ -58,7 +59,7 @@
 // PAUTHTEST1:      "-cc1"{{.*}} "-triple" "aarch64-unknown-linux-pauthtest"
 // PAUTHTEST1-SAME: "-fptrauth-intrinsics" "-fptrauth-calls" "-fptrauth-returns" "-fptrauth-auth-traps" "-fptrauth-vtable-pointer-address-discrimination" "-fptrauth-vtable-pointer-type-discrimination" "-fptrauth-type-info-vtable-pointer-discrimination" "-fptrauth-indirect-gotos" "-fptrauth-init-fini" "-fptrauth-init-fini-address-discrimination" "-faarch64-jump-table-hardening"
 // PAUTHTEST1-SAME: "-target-abi" "pauthtest"
-// PAUTHTEST1-NOT: "-fptrauth-function-pointer-type-discrimination"
+// PAUTHTEST1-NOT:  "-fptrauth-function-pointer-type-discrimination"
 
 // RUN: %clang -### -c --target=aarch64-linux -mabi=pauthtest -fno-ptrauth-intrinsics \
 // RUN:   -fno-ptrauth-calls -fno-ptrauth-returns -fno-ptrauth-auth-traps \
@@ -75,19 +76,19 @@
 
 //// Non-linux OS: pauthtest ABI has no effect in terms of passing ptrauth cc1 flags.
 //// An error about unsupported ABI will be emitted later in pipeline (see ERR3 below)
-// RUN: %clang -### -c --target=aarch64 -mabi=pauthtest %s 2>&1 | FileCheck %s --check-prefixes=PAUTHTEST2
+// RUN: %clang -### -c --target=aarch64 -mabi=pauthtest %s 2>&1 | FileCheck %s --check-prefix=PAUTHTEST2
 
 // PAUTHTEST2:      "-cc1"
 // PAUTHTEST2-SAME: "-target-abi" "pauthtest"
 // PAUTHTEST2-NOT:  "-fptrauth-
-// PAUTHTEST2-NOT: "-faarch64-jump-table-hardening"
+// PAUTHTEST2-NOT:  "-faarch64-jump-table-hardening"
 
 //// Non-linux OS: pauthtest environment does not correspond to pauthtest ABI; aapcs is the default.
 // RUN: %clang -### -c --target=aarch64-pauthtest %s 2>&1 | FileCheck %s --check-prefix=PAUTHTEST3
 // PAUTHTEST3:      "-cc1"
 // PAUTHTEST3-SAME: "-target-abi" "aapcs"
 // PAUTHTEST3-NOT:  "-fptrauth-
-// PAUTHTEST3-NOT: "-faarch64-jump-table-hardening"
+// PAUTHTEST3-NOT:  "-faarch64-jump-table-hardening"
 
 //// Non-pauthtest ABI.
 // RUN: not %clang -### -c --target=aarch64-linux -fptrauth-intrinsics -fptrauth-calls -fptrauth-returns -fptrauth-auth-traps \
@@ -107,14 +108,16 @@
 // ERR1-NEXT: error: unsupported option '-fptrauth-elf-got' for target '{{.*}}'
 
 //// Non-AArch64.
-// RUN: not %clang -### -c --target=x86_64-linux -faarch64-jump-table-hardening %s 2>&1 | FileCheck %s --check-prefixes=ERR2
+// RUN: not %clang -### -c --target=x86_64-linux -faarch64-jump-table-hardening %s 2>&1 | FileCheck %s --check-prefix=ERR2
 // ERR2: error: unsupported option '-faarch64-jump-table-hardening' for target '{{.*}}'
 
+//// Only support PAuth ABI for Linux as for now.
 // RUN: not %clang -c --target=aarch64 -mabi=pauthtest %s 2>&1 | FileCheck %s --check-prefix=ERR3
+// ERR3: error: unknown target ABI 'pauthtest'
+
 //// The ABI is not specified explicitly, and for non-Linux pauthtest environment does not correspond
 //// to pauthtest ABI (each OS target defines this behavior separately). Do not emit an error.
-// RUN:     %clang -c --target=aarch64-pauthtest       %s -o /dev/null
-// ERR3: error: unknown target ABI 'pauthtest'
+// RUN: %clang -c --target=aarch64-pauthtest %s -o /dev/null
 
 //// PAuth ABI is encoded as environment part of the triple, so don't allow to explicitly set other environments.
 // RUN: not %clang -### -c --target=aarch64-linux-gnu -mabi=pauthtest %s 2>&1 | FileCheck %s --check-prefix=ERR4
