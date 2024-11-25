@@ -251,6 +251,50 @@ using POCCAAllocator = MaybePOCCAAllocator<T, /*POCCAValue = */true>;
 template <class T>
 using NonPOCCAAllocator = MaybePOCCAAllocator<T, /*POCCAValue = */false>;
 
+template <class T, bool POCMAValue>
+class MaybePOCMAAllocator {
+  template <class, bool>
+  friend class MaybePOCMAAllocator;
+
+public:
+  using propagate_on_container_move_assignment = std::integral_constant<bool, POCMAValue>;
+  using value_type                             = T;
+
+  template <class U>
+  struct rebind {
+    using other = MaybePOCMAAllocator<U, POCMAValue>;
+  };
+
+  constexpr MaybePOCMAAllocator(int id) : id_(id) {}
+
+  template <class U>
+  constexpr MaybePOCMAAllocator(const MaybePOCMAAllocator<U, POCMAValue>& other) : id_(other.id_) {}
+
+  constexpr T* allocate(std::size_t n) { return std::allocator<T>().allocate(n); }
+
+  constexpr void deallocate(T* p, std::size_t n) { std::allocator<T>().deallocate(p, n); }
+
+  constexpr int id() const { return id_; }
+
+  template <class U>
+  constexpr friend bool operator==(const MaybePOCMAAllocator& lhs, const MaybePOCMAAllocator<U, POCMAValue>& rhs) {
+    return lhs.id() == rhs.id();
+  }
+
+  template <class U>
+  constexpr friend bool operator!=(const MaybePOCMAAllocator& lhs, const MaybePOCMAAllocator<U, POCMAValue>& rhs) {
+    return !(lhs == rhs);
+  }
+
+private:
+  int id_;
+};
+
+template <class T>
+using POCMAAllocator = MaybePOCMAAllocator<T, /*POCMAValue = */ true>;
+template <class T>
+using NONPOCMAAllocator = MaybePOCMAAllocator<T, /*POCMAValue = */ false>;
+
 #endif // TEST_STD_VER >= 11
 
 #endif // ALLOCATORS_H
