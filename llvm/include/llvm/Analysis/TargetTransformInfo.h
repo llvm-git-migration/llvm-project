@@ -1449,6 +1449,14 @@ public:
                                             const APInt &DemandedDstElts,
                                             TTI::TargetCostKind CostKind) const;
 
+  /// \return The cost of materializing a constant vector.
+  InstructionCost getConstVectCost(unsigned Opcode, Type *Src, Align Alignment,
+                                   unsigned AddressSpace,
+                                   TTI::TargetCostKind CostKind,
+                                   OperandValueInfo OpdInfo,
+                                   const Instruction *I,
+                                   InstructionCost ConstVectScalarCost) const;
+
   /// \return The cost of Load and Store instructions.
   InstructionCost
   getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
@@ -2147,6 +2155,11 @@ public:
                             const APInt &DemandedDstElts,
                             TTI::TargetCostKind CostKind) = 0;
 
+  virtual InstructionCost
+  getConstVectCost(unsigned Opcode, Type *Src, Align Alignment,
+                   unsigned AddressSpace, TTI::TargetCostKind CostKind,
+                   OperandValueInfo OpInfo, const Instruction *I,
+                   InstructionCost ConstVectScalarCost) = 0;
   virtual InstructionCost
   getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
                   unsigned AddressSpace, TTI::TargetCostKind CostKind,
@@ -2849,6 +2862,14 @@ public:
                             TTI::TargetCostKind CostKind) override {
     return Impl.getReplicationShuffleCost(EltTy, ReplicationFactor, VF,
                                           DemandedDstElts, CostKind);
+  }
+  InstructionCost
+  getConstVectCost(unsigned Opcode, Type *Src, Align Alignment,
+                   unsigned AddressSpace, TTI::TargetCostKind CostKind,
+                   OperandValueInfo OpInfo, const Instruction *I,
+                   InstructionCost ConstVectScalarCost) override {
+    return Impl.getConstVectCost(Opcode, Src, Alignment, AddressSpace, CostKind,
+                                 OpInfo, I, ConstVectScalarCost);
   }
   InstructionCost getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
                                   unsigned AddressSpace,

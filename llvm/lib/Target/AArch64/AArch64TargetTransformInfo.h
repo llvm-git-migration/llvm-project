@@ -23,6 +23,8 @@
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/ProfileData/PGOCtxProfWriter.h"
+#include "llvm/Support/InstructionCost.h"
 #include <cstdint>
 #include <optional>
 
@@ -234,11 +236,19 @@ public:
                                                     bool IsZeroCmp) const;
   bool useNeonVector(const Type *Ty) const;
 
-  InstructionCost
-  getMemoryOpCost(unsigned Opcode, Type *Src, MaybeAlign Alignment,
-                  unsigned AddressSpace, TTI::TargetCostKind CostKind,
-                  TTI::OperandValueInfo OpInfo = {TTI::OK_AnyValue, TTI::OP_None},
-                  const Instruction *I = nullptr);
+  InstructionCost getConstVectCost(unsigned Opcode, Type *Src,
+                                   MaybeAlign Alignment, unsigned AddressSpace,
+                                   TTI::TargetCostKind CostKind,
+                                   TTI::OperandValueInfo OpInfo,
+                                   const Instruction *I,
+                                   InstructionCost ConstVectScalarCost);
+
+  InstructionCost getMemoryOpCost(
+      unsigned Opcode, Type *Src, MaybeAlign Alignment, unsigned AddressSpace,
+      TTI::TargetCostKind CostKind,
+      TTI::OperandValueInfo OpInfo = {TTI::OK_AnyValue, TTI::OP_None},
+      const Instruction *I = nullptr,
+      InstructionCost ConstVectScalarCost = InstructionCost::getInvalid());
 
   InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys);
 
