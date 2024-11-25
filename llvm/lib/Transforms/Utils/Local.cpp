@@ -1279,7 +1279,7 @@ bool llvm::TryToSimplifyUncondBranchFromEmptyBlock(BasicBlock *BB,
   // |    for.body <---- (md2)
   // |_______|  |______|
   if (Instruction *TI = BB->getTerminator())
-    if (TI->hasMetadata(LLVMContext::MD_loop))
+    if (TI->hasLoopMetadataOtherThanDebugLoc())
       for (BasicBlock *Pred : predecessors(BB))
         if (Instruction *PredTI = Pred->getTerminator())
           if (PredTI->hasMetadata(LLVMContext::MD_loop))
