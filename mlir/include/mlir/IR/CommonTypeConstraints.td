@@ -24,6 +24,9 @@ include "mlir/IR/DialectBase.td"
 // Explicitly disallow 0-D vectors for now until we have good enough coverage.
 def IsVectorTypePred : And<[CPred<"::llvm::isa<::mlir::VectorType>($_self)">,
                             CPred<"::llvm::cast<::mlir::VectorType>($_self).getRank() > 0">]>;
+def IsFixedVectorTypePred : And<[CPred<"::llvm::isa<::mlir::VectorType>($_self)">,
+                                 CPred<"::llvm::cast<::mlir::VectorType>($_self).getRank() > 0">,
+                                 CPred<"!::llvm::cast<VectorType>($_self).isScalable()">]>;
 
 // Temporary vector type clone that allows gradual transition to 0-D vectors.
 // TODO: Remove this when all ops support 0-D vectors.
@@ -432,6 +435,10 @@ class VectorOf<list<Type> allowedTypes> :
   ShapedContainerType<allowedTypes, IsVectorTypePred, "vector",
                       "::mlir::VectorType">;
 
+class FixedVectorOf<list<Type> allowedTypes> :
+  ShapedContainerType<allowedTypes, IsFixedVectorOfAnyRankTypePred,
+          "fixed-length vector", "::mlir::VectorType">;
+
 // Temporary vector type clone that allows gradual transition to 0-D vectors.
 // TODO: Remove this when all ops support 0-D vectors.
 class VectorOfAnyRankOf<list<Type> allowedTypes> :
@@ -659,6 +666,8 @@ class VectorWithTrailingDimScalableOfSizeAndType<list<int> allowedTrailingSizes,
 
 // Unlike the following definitions, this one excludes 0-D vectors
 def AnyVector : VectorOf<[AnyType]>;
+
+def AnyFixedVector : FixedVectorOf<[AnyType]>;
 
 def AnyVectorOfAnyRank : VectorOfAnyRankOf<[AnyType]>;
 

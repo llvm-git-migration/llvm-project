@@ -2084,9 +2084,9 @@ def Vector_ExpandLoadOp :
   Vector_Op<"expandload">,
     Arguments<(ins Arg<AnyMemRef, "", [MemRead]>:$base,
                Variadic<Index>:$indices,
-               VectorOf<[I1]>:$mask,
-               AnyVector:$pass_thru)>,
-    Results<(outs AnyVector:$result)> {
+               FixedVectorOf<[I1]>:$mask,
+               AnyFixedVector:$pass_thru)>,
+    Results<(outs AnyFixedVector:$result)> {
 
   let summary = "reads elements from memory and spreads them into a vector as defined by a mask";
 
@@ -2116,6 +2116,8 @@ def Vector_ExpandLoadOp :
     hardware ISA support for an expand. The semantics of the operation closely
     correspond to those of the `llvm.masked.expandload`
     [intrinsic](https://llvm.org/docs/LangRef.html#llvm-masked-expandload-intrinsics).
+
+    Note, at the moment this Op is only available for fixed-width vectors.
 
     Examples:
 
@@ -2151,8 +2153,8 @@ def Vector_CompressStoreOp :
   Vector_Op<"compressstore">,
     Arguments<(ins Arg<AnyMemRef, "", [MemWrite]>:$base,
                Variadic<Index>:$indices,
-               VectorOf<[I1]>:$mask,
-               AnyVector:$valueToStore)> {
+               FixedVectorOf<[I1]>:$mask,
+               AnyFixedVector:$valueToStore)> {
 
   let summary = "writes elements selectively from a vector as defined by a mask";
 
@@ -2182,6 +2184,8 @@ def Vector_CompressStoreOp :
     hardware ISA support for a compress. The semantics of the operation closely
     correspond to those of the `llvm.masked.compressstore`
     [intrinsic](https://llvm.org/docs/LangRef.html#llvm-masked-compressstore-intrinsics).
+
+    Note that the index increment is done conditionally.
 
     Examples:
 
