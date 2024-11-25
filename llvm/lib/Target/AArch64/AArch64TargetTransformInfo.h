@@ -235,10 +235,17 @@ public:
   bool useNeonVector(const Type *Ty) const;
 
   InstructionCost
-  getMemoryOpCost(unsigned Opcode, Type *Src, MaybeAlign Alignment,
-                  unsigned AddressSpace, TTI::TargetCostKind CostKind,
-                  TTI::OperandValueInfo OpInfo = {TTI::OK_AnyValue, TTI::OP_None},
-                  const Instruction *I = nullptr);
+  getConstVectCost(unsigned Opcode, Type *Src, MaybeAlign Alignment,
+                   unsigned AddressSpace, TTI::TargetCostKind CostKind,
+                   TTI::OperandValueInfo OpInfo, const Instruction *I,
+                   const bool SrcIsConstVect, InstructionCost ScalarCost);
+
+  InstructionCost getMemoryOpCost(
+      unsigned Opcode, Type *Src, MaybeAlign Alignment, unsigned AddressSpace,
+      TTI::TargetCostKind CostKind,
+      TTI::OperandValueInfo OpInfo = {TTI::OK_AnyValue, TTI::OP_None},
+      const Instruction *I = nullptr, const bool SrcIsConstVect = false,
+      InstructionCost ScalarCost = 10000);
 
   InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys);
 

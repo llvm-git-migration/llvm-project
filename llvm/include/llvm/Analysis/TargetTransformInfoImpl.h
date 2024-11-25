@@ -730,6 +730,17 @@ public:
     return 1;
   }
 
+  InstructionCost getConstVectCost(unsigned Opcode, Type *Src, Align Alignment,
+                                   unsigned AddressSpace,
+                                   TTI::TargetCostKind CostKind,
+                                   TTI::OperandValueInfo OpInfo,
+                                   const Instruction *I,
+                                   const bool SrcIsConstVect,
+                                   InstructionCost ScalarCost) const {
+    // Vector cost is considered same as Scalar Cost.
+    return ScalarCost;
+  }
+
   InstructionCost getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
                                   unsigned AddressSpace,
                                   TTI::TargetCostKind CostKind,

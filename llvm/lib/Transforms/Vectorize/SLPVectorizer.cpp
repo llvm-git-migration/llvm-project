@@ -3117,7 +3117,8 @@ private:
   /// roots. This method calculates the cost of extracting the values.
   /// \param ForPoisonSrc true if initial vector is poison, false otherwise.
   InstructionCost getGatherCost(ArrayRef<Value *> VL, bool ForPoisonSrc,
-                                Type *ScalarTy) const;
+                                Type *ScalarTy,
+                                const TreeEntry *E = nullptr) const;
 
   /// Set the Builder insert point to one after the last instruction in
   /// the bundle
@@ -3681,7 +3682,24 @@ private:
       if (AllConstsOrCasts)
         CastMaxMinBWSizes =
             std::make_pair(std::numeric_limits<unsigned>::max(), 1);
-      MustGather.insert(VL.begin(), VL.end());
+      // Recording all constants entry helps in avoiding counting the cost of
+      // const vector twice.
+      if (allConstant(VL) && !isSplat(VL)) {
+        for (Value *V : VL) {
+          const TreeEntry *TE = getTreeEntry(V);
+          assert((!TE || TE == Last || doesNotNeedToBeScheduled(V)) &&
+                 "Scalar already in tree!");
+          if (TE) {
+            if (TE != Last)
+              MultiNodeScalars.try_emplace(V).first->getSecond().push_back(
+                  Last);
+            continue;
+          }
+          ScalarToTreeEntry[V] = Last;
+        }
+      } else {
+        MustGather.insert(VL.begin(), VL.end());
+      }
     }
 
     if (UserTreeIdx.UserTE)
@@ -10053,8 +10071,10 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
     return Constant::getAllOnesValue(Ty);
   }
 
-  InstructionCost getBuildVectorCost(ArrayRef<Value *> VL, Value *Root) {
-    if ((!Root && allConstant(VL)) || all_of(VL, IsaPred<UndefValue>))
+  InstructionCost getBuildVectorCost(ArrayRef<Value *> VL, Value *Root,
+                                     const TreeEntry *E = nullptr) {
+    if ((!Root && allConstant(VL) && isSplat(VL)) ||
+        all_of(VL, IsaPred<UndefValue>))
       return TTI::TCC_Free;
     auto *VecTy = getWidenedType(ScalarTy, VL.size());
     InstructionCost GatherCost = 0;
@@ -10098,7 +10118,7 @@ class BoUpSLP::ShuffleCostEstimator : public BaseShuffleAnalysis {
            (all_of(Gathers, IsaPred<UndefValue>)
                 ? TTI::TCC_Free
                 : R.getGatherCost(Gathers, !Root && VL.equals(Gathers),
-                                  ScalarTy));
+                                  ScalarTy, E));
   };
 
   /// Compute the cost of creating a vector containing the extracted values from
@@ -10801,8 +10821,8 @@ public:
         CommonMask[Idx] = Mask[Idx] + VF;
   }
   Value *gather(ArrayRef<Value *> VL, unsigned MaskVF = 0,
-                Value *Root = nullptr) {
-    Cost += getBuildVectorCost(VL, Root);
+                Value *Root = nullptr, const TreeEntry *E = nullptr) {
+    Cost += getBuildVectorCost(VL, Root, E);
     if (!Root) {
       // FIXME: Need to find a way to avoid use of getNullValue here.
       SmallVector<Constant *> Vals;
@@ -11019,8 +11039,6 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
 
   bool NeedToShuffleReuses = !E->ReuseShuffleIndices.empty();
   if (E->isGather()) {
-    if (allConstant(VL))
-      return 0;
     if (isa<InsertElementInst>(VL[0]))
       return InstructionCost::getInvalid();
     if (isa<CmpInst>(VL.front()))
@@ -12557,7 +12575,10 @@ InstructionCost BoUpSLP::getTreeCost(ArrayRef<Value *> VectorizedVals) {
       auto *Inst = cast<Instruction>(EU.Scalar);
       InstructionCost ScalarCost = TTI->getInstructionCost(Inst, CostKind);
       auto OperandIsScalar = [&](Value *V) {
-        if (!getTreeEntry(V)) {
+        if (auto *TE = getTreeEntry(V);
+            // All constants entry does not result in a seperate instruction.
+            // Ignore such entry.
+            !TE || (TE && allConstant(TE->Scalars))) {
           // Some extractelements might be not vectorized, but
           // transformed into shuffle and removed from the function,
           // consider it here.
@@ -13425,7 +13446,8 @@ BoUpSLP::isGatherShuffledEntry(
 }
 
 InstructionCost BoUpSLP::getGatherCost(ArrayRef<Value *> VL, bool ForPoisonSrc,
-                                       Type *ScalarTy) const {
+                                       Type *ScalarTy,
+                                       const TreeEntry *E) const {
   auto *VecTy = getWidenedType(ScalarTy, VL.size());
   bool DuplicateNonConst = false;
   // Find the cost of inserting/extracting values from the vector.
@@ -13479,6 +13501,57 @@ InstructionCost BoUpSLP::getGatherCost(ArrayRef<Value *> VL, bool ForPoisonSrc,
           Cost += TTI->getShuffleCost(
               TTI::SK_InsertSubvector, VecTy, std::nullopt, CostKind,
               I * ScalarTyNumElements, cast<FixedVectorType>(ScalarTy));
+    } else if (allConstant(VL)) {
+      auto IsAllowedScalarTy = [&](const Type *T) {
+        return T->isFloatTy() || T->isDoubleTy() || T->isIntegerTy();
+      };
+      if (IsAllowedScalarTy(VL[0]->getType())) {
+        InstructionCost ScalarCost, VectorCost;
+
+        auto IsDuplicateEntry = [this](const TreeEntry *E) {
+          auto *TE = getTreeEntry(E->Scalars[0]);
+          if (TE != E && TE->isSame(E->Scalars))
+            return true;
+          else {
+            auto It = MultiNodeScalars.find(E->Scalars[0]);
+            if (It != MultiNodeScalars.end()) {
+              auto *TEIt = find_if(It->getSecond(), [E](TreeEntry *ME) {
+                return ME != E && ME->isSame(E->Scalars[0]);
+              });
+              if (TEIt != It->getSecond().end())
+                return true;
+            }
+          }
+          return false;
+        };
+
+        // FIXME: If there is more than 1 SLP tree realizing the same const
+        // vector, codegen will realize it only once. Hence, no need to consider
+        // the cost of const vector twice. But, currently we can't check if the
+        // tree entry is present in other SLP tree.
+        // FIXME: A tree entry can be mix of non-const and consts and the final
+        // vector may be realized as shuffle of consts and non-consts. In such a
+        // case, the const vector, passed as VL here, can contain poison and
+        // VL != E->Scalars. So, we can't check for duplicate entries. Check if
+        // we are realizing this const vector twice.
+        assert(E && "TreeEntry E must point to a valid entry.");
+        if (E->isSame(VL) && !isSplat(VL) && !all_of(VL, IsaPred<UndefValue>) &&
+            !IsDuplicateEntry(E)) {
+          // Get unique scalars
+          SmallDenseSet<Value *> UniqScalars;
+          for (auto *V : VL)
+            UniqScalars.insert(V);
+
+          // Constant is realized by having a mov/fmov into GPR. So,
+          // ScalarCost = #UniqScalars
+          ScalarCost = (UniqScalars.size());
+          VectorCost =
+              TTI->getConstVectCost(Instruction::Load, VecTy, Align(), 0,
+                                    CostKind, TTI::OperandValueInfo(), nullptr,
+                                    /*AllConstants=*/true, ScalarCost);
+        }
+        Cost = VectorCost - ScalarCost;
+      }
     } else {
       Cost = TTI->getScalarizationOverhead(VecTy, ~ShuffledElements,
                                            /*Insert*/ true,
@@ -14275,7 +14348,7 @@ public:
     add(V1, NewMask);
   }
   Value *gather(ArrayRef<Value *> VL, unsigned MaskVF = 0,
-                Value *Root = nullptr) {
+                Value *Root = nullptr, const TreeEntry *E = nullptr) {
     return R.gather(VL, Root, ScalarTy,
                     [&](Value *V1, Value *V2, ArrayRef<int> Mask) {
                       return createShuffle(V1, V2, Mask);
@@ -15005,7 +15078,8 @@ ResTy BoUpSLP::processBuildVector(const TreeEntry *E, Type *ScalarTy,
     if (!all_of(GatheredScalars, IsaPred<PoisonValue>)) {
       SmallVector<int> BVMask(GatheredScalars.size(), PoisonMaskElem);
       TryPackScalars(GatheredScalars, BVMask, /*IsRootPoison=*/true);
-      Value *BV = ShuffleBuilder.gather(GatheredScalars, BVMask.size());
+      Value *BV =
+          ShuffleBuilder.gather(GatheredScalars, BVMask.size(), nullptr, E);
       ShuffleBuilder.add(BV, BVMask);
     }
     if (all_of(NonConstants, [=](Value *V) {
@@ -15020,13 +15094,14 @@ ResTy BoUpSLP::processBuildVector(const TreeEntry *E, Type *ScalarTy,
           E->ReuseShuffleIndices, SubVectors, SubVectorsMask, E->Scalars.size(),
           [&](Value *&Vec, SmallVectorImpl<int> &Mask) {
             TryPackScalars(NonConstants, Mask, /*IsRootPoison=*/false);
-            Vec = ShuffleBuilder.gather(NonConstants, Mask.size(), Vec);
+            Vec = ShuffleBuilder.gather(NonConstants, Mask.size(), Vec, E);
           });
   } else if (!allConstant(GatheredScalars)) {
     // Gather unique scalars and all constants.
     SmallVector<int> ReuseMask(GatheredScalars.size(), PoisonMaskElem);
     TryPackScalars(GatheredScalars, ReuseMask, /*IsRootPoison=*/true);
-    Value *BV = ShuffleBuilder.gather(GatheredScalars, ReuseMask.size());
+    Value *BV =
+        ShuffleBuilder.gather(GatheredScalars, ReuseMask.size(), nullptr, E);
     ShuffleBuilder.add(BV, ReuseMask);
     Res = ShuffleBuilder.finalize(E->ReuseShuffleIndices, SubVectors,
                                   SubVectorsMask);
@@ -15037,7 +15112,7 @@ ResTy BoUpSLP::processBuildVector(const TreeEntry *E, Type *ScalarTy,
       if (!isa<PoisonValue>(V))
         Mask[I] = I;
     }
-    Value *BV = ShuffleBuilder.gather(GatheredScalars);
+    Value *BV = ShuffleBuilder.gather(GatheredScalars, 0, nullptr, E);
     ShuffleBuilder.add(BV, Mask);
     Res = ShuffleBuilder.finalize(E->ReuseShuffleIndices, SubVectors,
                                   SubVectorsMask);
