@@ -82,3 +82,22 @@
 // CHECK-TWO-CONFIGS: -isysroot
 // CHECK-TWO-CONFIGS-SAME: /opt/data
 // CHECK-TWO-CONFIGS-SAME: -Wall
+
+//--- The -l flags should be moved to the end of input list and appear only when linking.
+// RUN: %clang --config %S/Inputs/config-l.cfg -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING
+// RUN: %clang --config %S/Inputs/config-l-openmp.cfg -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING-LIBOMP-GOES-LAST
+// RUN: %clang --config %S/Inputs/config-l.cfg -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+// RUN: %clang --config %S/Inputs/config-l-openmp.cfg -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+// CHECK-LINKING: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-LINKING: "-Wall"
+// CHECK-LINKING: "/tmp/{{.*}}-{{.*}}.o" "-lm" "-lhappy"
+// CHECK-LINKING-LIBOMP-GOES-LAST: Configuration file: {{.*}}Inputs{{.}}config-l-openmp.cfg
+// CHECK-LINKING-LIBOMP-GOES-LAST: "-Wall"
+// CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-fopenmp"
+// CHECK-LINKING-LIBOMP-GOES-LAST: "/tmp/{{.*}}-{{.*}}.o" "-lm" "-lhappy"
+// CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-lomp"
+// CHECK-NOLINKING: Configuration file: {{.*}}Inputs{{.}}config-l{{.*}}.cfg
+// CHECK-NOLINKING: "-Wall"
+// CHECK-NOLINKING-NO: "-lm"
+// CHECK-NOLINKING-NO: "-lhappy"
+// CHECK-NOLINKING-NO: "-lomp"
