@@ -2345,6 +2345,15 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
   // Collect function IR attributes from the CC lowering.
   // We'll collect the paramete and result attributes later.
   CallingConv = FI.getEffectiveCallingConvention();
+  GlobalDecl GD = CalleeInfo.getCalleeDecl();
+  const Decl *TargetDecl = CalleeInfo.getCalleeDecl().getDecl();
+  if (TargetDecl) {
+    if (auto FD = dyn_cast<FunctionDecl>(TargetDecl)) {
+      if (FD->hasAttr<OpenCLKernelAttr>() &&
+          GD.getKernelReferenceKind() == KernelReferenceKind::Stub)
+        CallingConv = llvm::CallingConv::C;
+    }
+  }
   if (FI.isNoReturn())
     FuncAttrs.addAttribute(llvm::Attribute::NoReturn);
   if (FI.isCmseNSCall())
@@ -2353,8 +2362,6 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
   // Collect function IR attributes from the callee prototype if we have one.
   AddAttributesFromFunctionProtoType(getContext(), FuncAttrs,
                                      CalleeInfo.getCalleeFunctionProtoType());
-
-  const Decl *TargetDecl = CalleeInfo.getCalleeDecl().getDecl();
 
   // Attach assumption attributes to the declaration. If this is a call
   // site, attach assumptions from the caller to the call as well.
