@@ -1460,6 +1460,18 @@ StringRef sys::getHostCPUName() {
   return getCPUNameFromS390Model(Id, HaveVectorSupport);
 }
 #elif defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
+// Copied from <mach/machine.h> in the macOS SDK.
+//
+// Also available here, though usually not as up-to-date:
+// https://github.com/apple-oss-distributions/xnu/blob/xnu-11215.41.3/osfmk/mach/machine.h#L403-L452.
+#define CPUFAMILY_UNKNOWN 0
+#define CPUFAMILY_ARM_9 0xe73283ae
+#define CPUFAMILY_ARM_11 0x8ff620d8
+#define CPUFAMILY_ARM_XSCALE 0x53b005f5
+#define CPUFAMILY_ARM_12 0xbd1b0ae9
+#define CPUFAMILY_ARM_13 0x0cc90e64
+#define CPUFAMILY_ARM_14 0x96077ef1
+#define CPUFAMILY_ARM_15 0xa8511bca
 #define CPUFAMILY_ARM_SWIFT 0x1e2d6381
 #define CPUFAMILY_ARM_CYCLONE 0x37a09642
 #define CPUFAMILY_ARM_TYPHOON 0x2c91a47e
@@ -1471,13 +1483,46 @@ StringRef sys::getHostCPUName() {
 #define CPUFAMILY_ARM_FIRESTORM_ICESTORM 0x1b588bb3
 #define CPUFAMILY_ARM_BLIZZARD_AVALANCHE 0xda33d83d
 #define CPUFAMILY_ARM_EVEREST_SAWTOOTH 0x8765edea
+#define CPUFAMILY_ARM_IBIZA 0xfa33415e
+#define CPUFAMILY_ARM_PALMA 0x72015832
+#define CPUFAMILY_ARM_COLL 0x2876f5b5
+#define CPUFAMILY_ARM_LOBOS 0x5f4dea93
+#define CPUFAMILY_ARM_DONAN 0x6f5129ac
+#define CPUFAMILY_ARM_BRAVA 0x17d5b93a
+#define CPUFAMILY_ARM_TAHITI 0x75d4acb9
+#define CPUFAMILY_ARM_TUPAI 0x204526d0
 
 StringRef sys::getHostCPUName() {
   uint32_t Family;
   size_t Length = sizeof(Family);
   sysctlbyname("hw.cpufamily", &Family, &Length, NULL, 0);
 
+  // This is found by testing on actual hardware, and by looking at:
+  // https://github.com/apple-oss-distributions/xnu/blob/xnu-11215.41.3/osfmk/arm/cpuid.c#L109-L231.
+  //
+  // Another great resource is
+  // https://github.com/AsahiLinux/docs/wiki/Codenames.
+  //
+  // NOTE: We choose to return `apple-mX` instead of `apple-aX`, since the M1,
+  // M2, M3 etc. aliases are more widely known to users than A14, A15, A16 etc.
+  // (and this code is basically only used on host macOS anyways).
   switch (Family) {
+  case CPUFAMILY_UNKNOWN:
+    return "invalid";
+  case CPUFAMILY_ARM_9:
+    return "arm920t"; // or arm926ej-s
+  case CPUFAMILY_ARM_11:
+    return "arm1136jf-s";
+  case CPUFAMILY_ARM_XSCALE:
+    return "xscale";
+  case CPUFAMILY_ARM_12:
+    return "invalid"; // Seems unsued by the kernel
+  case CPUFAMILY_ARM_13:
+    return "cortex-a8";
+  case CPUFAMILY_ARM_14:
+    return "cortex-a9";
+  case CPUFAMILY_ARM_15:
+    return "cortex-a7";
   case CPUFAMILY_ARM_SWIFT:
     return "swift";
   case CPUFAMILY_ARM_CYCLONE:
@@ -1495,14 +1540,30 @@ StringRef sys::getHostCPUName() {
   case CPUFAMILY_ARM_LIGHTNING_THUNDER:
     return "apple-a13";
   case CPUFAMILY_ARM_FIRESTORM_ICESTORM:
-    return "apple-m1";
+    return "apple-m1"; // A14 / M1
   case CPUFAMILY_ARM_BLIZZARD_AVALANCHE:
-    return "apple-m2";
+    return "apple-m2"; // A15 / M2
   case CPUFAMILY_ARM_EVEREST_SAWTOOTH:
-    return "apple-m3";
+    return "apple-m3"; // A16
+  case CPUFAMILY_ARM_IBIZA:
+    return "apple-m3"; // M3
+  case CPUFAMILY_ARM_PALMA:
+    return "apple-m3"; // M3 Max
+  case CPUFAMILY_ARM_COLL:
+    return "apple-m3"; // A17
+  case CPUFAMILY_ARM_LOBOS:
+    return "apple-m3"; // M3 Pro
+  case CPUFAMILY_ARM_DONAN:
+    return "apple-m4"; // M4
+  case CPUFAMILY_ARM_BRAVA:
+    return "apple-m4"; // M4 Max
+  case CPUFAMILY_ARM_TAHITI:
+    return "apple-m4"; // A18 Pro
+  case CPUFAMILY_ARM_TUPAI:
+    return "apple-m4"; // A18
   default:
     // Default to the newest CPU we know about.
-    return "apple-m3";
+    return "apple-m4";
   }
 }
 #elif defined(_AIX)
