@@ -466,6 +466,21 @@ public:
 
   bool hasScalarSubwordLoads() const { return getGeneration() >= GFX12; }
 
+  bool hasScalarSubwordBufferLoads() const {
+    Generation Gen = getGeneration();
+
+    // On gfx12, s_buffer_load_(i/u)(8/16) have a hw-bug that is triggered when:
+    // * the stride is not a multiple of 4, or
+    // * the stride is 0 and the num-records is not a multiple of 4
+    // At the moment, llvm.amdgcn.s.buffer.loads instruction are only generated
+    // for PAL by LLPC. In this case, it is guaranteed that the buffers
+    // stride/num-records are aligned to 4. In the HSA/Mesa case, we simply
+    // avoid these instructions.
+    if (Gen == GFX12)
+      return isAmdPalOS();
+    return hasScalarSubwordLoads();
+  }
+
   TrapHandlerAbi getTrapHandlerAbi() const {
     return isAmdHsaOS() ? TrapHandlerAbi::AMDHSA : TrapHandlerAbi::NONE;
   }
