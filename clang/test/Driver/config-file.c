@@ -82,3 +82,35 @@
 // CHECK-TWO-CONFIGS: -isysroot
 // CHECK-TWO-CONFIGS-SAME: /opt/data
 // CHECK-TWO-CONFIGS-SAME: -Wall
+
+//--- The linker input flags should be moved to the end of input list and appear only when linking.
+// RUN: %clang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING
+// RUN: %clang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -fopenmp -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING-LIBOMP-GOES-LAST
+// RUN: %clang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+// RUN: %clang --target=aarch64-unknown-linux-gnu --config %S/Inputs/config-l.cfg -fopenmp -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING
+// RUN: %clang --target=x86_64-pc-windows-msvc    --config %S/Inputs/config-l.cfg -o %s.out %s -### 2>&1 | FileCheck %s -check-prefix CHECK-LINKING-MSVC
+// RUN: %clang --target=x86_64-pc-windows-msvc    --config %S/Inputs/config-l.cfg -S %s -### 2>&1 | FileCheck %s -check-prefix CHECK-NOLINKING-MSVC
+// CHECK-LINKING: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-LINKING: "-Wall"
+// CHECK-LINKING: "{{.*}}-{{.*}}.o" "-lm" "-Bstatic" "-lhappy" "-Bdynamic"
+// CHECK-LINKING-LIBOMP-GOES-LAST: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-LINKING-LIBOMP-GOES-LAST: "-Wall"
+// CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-fopenmp"
+// CHECK-LINKING-LIBOMP-GOES-LAST: "{{.*}}-{{.*}}.o" "-lm" "-Bstatic" "-lhappy" "-Bdynamic"
+// CHECK-LINKING-LIBOMP-GOES-LAST-SAME: "-lomp"
+// CHECK-NOLINKING: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-NOLINKING: "-Wall"
+// CHECK-NOLINKING-NO: "-lm"
+// CHECK-NOLINKING-NO: "-Bstatic"
+// CHECK-NOLINKING-NO: "-lhappy"
+// CHECK-NOLINKING-NO: "-Bdynamic"
+// CHECK-NOLINKING-NO: "-lomp"
+// CHECK-LINKING-MSVC: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-LINKING-MSVC: "-Wall"
+// CHECK-LINKING-MSVC: "{{.*}}-{{.*}}.o" "m.lib" "-Bstatic" "happy.lib" "-Bdynamic"
+// CHECK-NOLINKING-MSVC: Configuration file: {{.*}}Inputs{{.}}config-l.cfg
+// CHECK-NOLINKING-MSVC: "-Wall"
+// CHECK-NOLINKING-MSVC-NO: "m.lib"
+// CHECK-NOLINKING-MSVC-NO: "-Bstatic"
+// CHECK-NOLINKING-MSVC-NO: "happy.lib"
+// CHECK-NOLINKING-MSVC-NO: "-Bdynamic"
