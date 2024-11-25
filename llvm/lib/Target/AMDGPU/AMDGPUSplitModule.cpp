@@ -1101,7 +1101,7 @@ void RecursiveSearchSplitting::pickPartition(unsigned Depth, unsigned Idx,
         // Check if the amount of code in common makes it worth it.
         assert(SimilarDepsCost && Entry.CostExcludingGraphEntryPoints);
         const double Ratio =
-            SimilarDepsCost / Entry.CostExcludingGraphEntryPoints;
+            (double)SimilarDepsCost / Entry.CostExcludingGraphEntryPoints;
         assert(Ratio >= 0.0 && Ratio <= 1.0);
         if (LargeFnOverlapForMerge > Ratio) {
           // For debug, just print "L", so we'll see "L3=P3" for instance, which

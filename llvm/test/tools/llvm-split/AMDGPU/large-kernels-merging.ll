@@ -15,19 +15,20 @@
 ; Also check w/o large kernels processing to verify they are indeed handled
 ; differently.
 
-; P0 is empty
-; CHECK0: declare
+; CHECK0: define internal void @HelperC()
+; CHECK0: define amdgpu_kernel void @C
 
-; CHECK1: define internal void @HelperC()
-; CHECK1: define amdgpu_kernel void @C
+; CHECK1: define internal void @large2()
+; CHECK1: define internal void @large1()
+; CHECK1: define internal void @large0()
+; CHECK1: define internal void @HelperB()
+; CHECK1: define amdgpu_kernel void @B
 
 ; CHECK2: define internal void @large2()
 ; CHECK2: define internal void @large1()
 ; CHECK2: define internal void @large0()
 ; CHECK2: define internal void @HelperA()
-; CHECK2: define internal void @HelperB()
 ; CHECK2: define amdgpu_kernel void @A
-; CHECK2: define amdgpu_kernel void @B
 
 ; NOLARGEKERNELS-CHECK0: define internal void @HelperC()
 ; NOLARGEKERNELS-CHECK0: define amdgpu_kernel void @C
