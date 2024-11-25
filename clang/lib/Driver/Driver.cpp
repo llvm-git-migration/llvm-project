@@ -262,7 +262,8 @@ void Driver::setDriverMode(StringRef Value) {
 }
 
 InputArgList Driver::ParseArgStrings(ArrayRef<const char *> ArgStrings,
-                                     bool UseDriverMode, bool &ContainsError) const {
+                                     bool UseDriverMode,
+                                     bool &ContainsError) const {
   llvm::PrettyStackTraceString CrashInfo("Command line argument parsing");
   ContainsError = false;
 
@@ -1252,8 +1253,8 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
   bool HasConfigFile = !ContainsError && (CfgOptions.get() != nullptr);
 
   // All arguments, from both config file and command line.
-  auto UArgs = std::make_unique<InputArgList>(std::move(HasConfigFile ? std::move(*CfgOptions)
-                                              : std::move(*CLOptions)));
+  auto UArgs = std::make_unique<InputArgList>(std::move(
+      HasConfigFile ? std::move(*CfgOptions) : std::move(*CLOptions)));
   InputArgList &Args = *UArgs;
 
   if (HasConfigFile)
