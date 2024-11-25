@@ -2927,6 +2927,21 @@ void RewriteInstance::handleRelocation(const SectionRef &RelocatedSection,
     LLVM_DEBUG(dbgs() << "BOLT-DEBUG: ignoring relocation from data to data\n");
 }
 
+static bool isInitFunction(const BinaryFunction &Function) {
+  // Workaround for https://github.com/llvm/llvm-project/issues/100096
+  // ("[BOLT] GOT array pointer incorrectly rewritten"). In aarch64
+  // glibc binaries, the .init section's _init function pointer can
+  // alias with a data pointer for the end of an array. GOT rewriting
+  // currently can't detect this and updates the data pointer to the
+  // moved _init, causing a runtime crash. Skipping _init on the other
+  // hand should be harmless.
+  bool ShouldSkip =
+      Function.hasName("_init") && Function.getOriginSectionName() == ".init";
+  if (ShouldSkip)
+    LLVM_DEBUG(dbgs() << "BOLT-DEBUG: skip _init in for GOT workaround.\n");
+  return ShouldSkip;
+}
+
 void RewriteInstance::selectFunctionsToProcess() {
   // Extend the list of functions to process or skip from a file.
   auto populateFunctionNames = [](cl::opt<std::string> &FunctionNamesFile,
@@ -3061,7 +3076,9 @@ void RewriteInstance::selectFunctionsToProcess() {
     if (Function.isFragment())
       continue;
 
-    if (!shouldProcess(Function)) {
+    if (isInitFunction(Function)) {
+      Function.setIgnored();
+    } else if (!shouldProcess(Function)) {
       if (opts::Verbosity >= 1) {
         BC->outs() << "BOLT-INFO: skipping processing " << Function
                    << " per user request\n";
