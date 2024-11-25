@@ -57,7 +57,17 @@ add_optional_dependency(LLDB_ENABLE_CURSES "Enable curses support in LLDB" Curse
 add_optional_dependency(LLDB_ENABLE_LZMA "Enable LZMA compression support in LLDB" LibLZMA LIBLZMA_FOUND)
 add_optional_dependency(LLDB_ENABLE_LUA "Enable Lua scripting support in LLDB" LuaAndSwig LUAANDSWIG_FOUND)
 add_optional_dependency(LLDB_ENABLE_PYTHON "Enable Python scripting support in LLDB" PythonAndSwig PYTHONANDSWIG_FOUND)
-add_optional_dependency(LLDB_ENABLE_LIBXML2 "Enable Libxml 2 support in LLDB" LibXml2 LIBXML2_FOUND VERSION 2.8)
+# The FindLibXml2.cmake module from CMake does not seem to search for the
+# package in both CONFIG and MODULE mode as the `find_package` documentation
+# states. Workaround this by initially doing an optional search in CONFIG mode
+# and fallback to the default search, if needed, which currently only does the
+# MODULE mode search.
+if(LLDB_ENABLE_LIBXML2 OR "${LLDB_ENABLE_LIBXML2}" STREQUAL "AUTO")
+  find_package(LibXml2 CONFIG)
+  if(NOT TARGET LibXml2::LibXml2)
+    add_optional_dependency(LLDB_ENABLE_LIBXML2 "Enable Libxml 2 support in LLDB" LibXml2 LIBXML2_FOUND VERSION 2.8)
+  endif()
+endif()
 add_optional_dependency(LLDB_ENABLE_FBSDVMCORE "Enable libfbsdvmcore support in LLDB" FBSDVMCore FBSDVMCore_FOUND QUIET)
 
 option(LLDB_USE_ENTITLEMENTS "When codesigning, use entitlements if available" ON)
@@ -239,10 +249,6 @@ if (LLDB_ENABLE_LZMA)
   include_directories(${LIBLZMA_INCLUDE_DIRS})
 endif()
 
-if (LLDB_ENABLE_LIBXML2)
-  include_directories(${LIBXML2_INCLUDE_DIR})
-endif()
-
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -283,7 +289,6 @@ if (APPLE)
   find_library(FOUNDATION_LIBRARY Foundation)
   find_library(CORE_FOUNDATION_LIBRARY CoreFoundation)
   find_library(SECURITY_LIBRARY Security)
-  include_directories(${LIBXML2_INCLUDE_DIR})
 endif()
 
 if( WIN32 AND NOT CYGWIN )
