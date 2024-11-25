@@ -587,7 +587,6 @@ void SVEType::applyTypespec(StringRef TS) {
       ElementBitwidth = 16;
       break;
     case 'm':
-      Signed = false;
       MFloat = true;
       Float = false;
       BFloat = false;
@@ -702,6 +701,7 @@ void SVEType::applyModifier(char Mod) {
     Svcount = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     Signed = false;
@@ -712,6 +712,7 @@ void SVEType::applyModifier(char Mod) {
     Svcount = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     Signed = true;
@@ -723,6 +724,7 @@ void SVEType::applyModifier(char Mod) {
     Svcount = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     Signed = true;
@@ -735,6 +737,7 @@ void SVEType::applyModifier(char Mod) {
     Signed = true;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     break;
@@ -744,6 +747,7 @@ void SVEType::applyModifier(char Mod) {
     Signed = true;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     break;
@@ -753,6 +757,7 @@ void SVEType::applyModifier(char Mod) {
     Signed = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     break;
@@ -765,6 +770,7 @@ void SVEType::applyModifier(char Mod) {
     Signed = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     break;
@@ -783,6 +789,7 @@ void SVEType::applyModifier(char Mod) {
   case 'g':
     Signed = false;
     Float = false;
+    MFloat = false;
     BFloat = false;
     ElementBitwidth = 64;
     break;
@@ -790,18 +797,21 @@ void SVEType::applyModifier(char Mod) {
     Signed = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = 8;
     break;
   case 't':
     Signed = true;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = 32;
     break;
   case 'z':
     Signed = false;
     Float = false;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = 32;
     break;
   case 'O':
@@ -815,6 +825,7 @@ void SVEType::applyModifier(char Mod) {
     Svcount = false;
     Float = true;
     BFloat = false;
+    MFloat = false;
     ElementBitwidth = 32;
     break;
   case 'N':
@@ -922,6 +933,7 @@ void SVEType::applyModifier(char Mod) {
     Predicate = false;
     Svcount = false;
     Float = false;
+    MFloat = false;
     BFloat = true;
     ElementBitwidth = 16;
     break;
@@ -932,6 +944,7 @@ void SVEType::applyModifier(char Mod) {
     NumVectors = 0;
     Float = false;
     BFloat = false;
+    MFloat = false;
     break;
   case '~':
     Float = false;
