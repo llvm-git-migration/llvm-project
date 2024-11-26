@@ -13,6 +13,7 @@
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/PointerIntPair.h"
+#include "llvm/ADT/STLExtras.h"
 
 namespace clang::sema {
 namespace {
@@ -203,6 +204,7 @@ struct IndirectLocalPathEntry {
     GslPointerInit,
     GslPointerAssignment,
     DefaultArg,
+    ParenAggInit,
   } Kind;
   Expr *E;
   union {
@@ -961,6 +963,16 @@ static void visitLocalsRetainedByInitializer(IndirectLocalPath &Path,
   if (isa<CallExpr>(Init) || isa<CXXConstructExpr>(Init))
     return visitFunctionCallArguments(Path, Init, Visit);
 
+  if (auto *CPE = dyn_cast<CXXParenListInitExpr>(Init)) {
+    Path.push_back({IndirectLocalPathEntry::ParenAggInit, CPE});
+    for (auto *I : CPE->getInitExprs()) {
+      if (I->isGLValue())
+        visitLocalsRetainedByReferenceBinding(Path, I, RK_ReferenceBinding,
+                                              Visit);
+      else
+        visitLocalsRetainedByInitializer(Path, I, Visit, true);
+    }
+  }
   switch (Init->getStmtClass()) {
   case Stmt::UnaryOperatorClass: {
     auto *UO = cast<UnaryOperator>(Init);
@@ -1057,6 +1069,7 @@ static SourceRange nextPathEntryRange(const IndirectLocalPath &Path, unsigned I,
     case IndirectLocalPathEntry::GslReferenceInit:
     case IndirectLocalPathEntry::GslPointerInit:
     case IndirectLocalPathEntry::GslPointerAssignment:
+    case IndirectLocalPathEntry::ParenAggInit:
       // These exist primarily to mark the path as not permitting or
       // supporting lifetime extension.
       break;
@@ -1192,6 +1205,24 @@ checkExprLifetimeImpl(Sema &SemaRef, const InitializedEntity *InitEntity,
         // We will have already diagnosed any problems with the initializer.
         if (pathContainsInit(Path))
           return false;
+
+        // In C++20, parenthesized aggregate initialization does not extend the
+        // lifetime of a temporary object bound to a reference. This can lead to
+        // dangling references and clang diagnoses these cases:
+        //
+        //    struct A { const int& r; };
+        //    A a1(1); // well-formed, but results in a dangling reference.
+        //
+        // However, to reduce noise, we suppress diagnostics for cases where
+        // both the aggregate and the temporary object are destroyed at the end
+        // of the full expression:
+        //    f(A(1));
+        if (!Path.empty() &&
+            llvm::any_of(llvm::ArrayRef(Path).drop_front(), [](auto &P) {
+              return P.Kind == IndirectLocalPathEntry::ParenAggInit;
+            })) {
+          return false;
+        }
 
         SemaRef.Diag(DiagLoc, diag::warn_dangling_variable)
             << RK << !InitEntity->getParent()
@@ -1368,6 +1399,7 @@ checkExprLifetimeImpl(Sema &SemaRef, const InitializedEntity *InitEntity,
       switch (Elem.Kind) {
       case IndirectLocalPathEntry::AddressOf:
       case IndirectLocalPathEntry::LValToRVal:
+      case IndirectLocalPathEntry::ParenAggInit:
         // These exist primarily to mark the path as not permitting or
         // supporting lifetime extension.
         break;

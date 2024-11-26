@@ -587,6 +587,8 @@ Improvements to Clang's diagnostics
 - For an rvalue reference bound to a temporary struct with an integer member, Clang will detect constant integer overflow
   in the initializer for the integer member (#GH46755).
 
+- Clang now diagnoses dangling references for C++20's parenthesized aggregate initialization (#101957).
+
 Improvements to Clang's time-trace
 ----------------------------------
 
