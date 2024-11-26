@@ -4231,7 +4231,7 @@ ExpectedDecl ASTNodeImporter::VisitFieldDecl(FieldDecl *D) {
   FieldDecl *ToField;
   if (GetImportedOrCreateDecl(ToField, D, Importer.getToContext(), DC,
                               ToInnerLocStart, Loc, Name.getAsIdentifierInfo(),
-                              ToType, ToTInfo, ToBitWidth, D->isMutable(),
+                              ToType, ToTInfo, ToBitWidth, 0, D->isMutable(),
                               D->getInClassInitStyle()))
     return ToField;
 

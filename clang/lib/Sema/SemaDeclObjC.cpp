@@ -5128,11 +5128,10 @@ void SemaObjC::ActOnDefs(Scope *S, Decl *TagD, SourceLocation DeclStart,
   for (unsigned i = 0; i < Ivars.size(); i++) {
     const FieldDecl* ID = Ivars[i];
     RecordDecl *Record = dyn_cast<RecordDecl>(TagD);
-    Decl *FD = ObjCAtDefsFieldDecl::Create(Context, Record,
-                                           /*FIXME: StartL=*/ID->getLocation(),
-                                           ID->getLocation(),
-                                           ID->getIdentifier(), ID->getType(),
-                                           ID->getBitWidth());
+    Decl *FD = ObjCAtDefsFieldDecl::Create(
+        Context, Record,
+        /*FIXME: StartL=*/ID->getLocation(), ID->getLocation(),
+        ID->getIdentifier(), ID->getType(), ID->getBitWidth(), 0);
     Decls.push_back(FD);
   }
 
@@ -5578,13 +5577,17 @@ Decl *SemaObjC::ActOnIvar(Scope *S, SourceLocation DeclStart, Declarator &D,
   TypeSourceInfo *TInfo = SemaRef.GetTypeForDeclarator(D);
   QualType T = TInfo->getType();
 
+  unsigned BitWidthValue = 0;
   if (BitWidth) {
     // 6.7.2.1p3, 6.7.2.1p4
-    BitWidth =
-        SemaRef.VerifyBitField(Loc, II, T, /*IsMsStruct*/ false, BitWidth)
-            .get();
-    if (!BitWidth)
+    BitWidth = SemaRef
+                   .VerifyBitField(Loc, II, T, /*IsMsStruct*/ false, BitWidth,
+                                   BitWidthValue)
+                   .get();
+    if (!BitWidth) {
       D.setInvalidType();
+      BitWidthValue = 0;
+    }
   } else {
     // Not a bitfield.
 
@@ -5634,7 +5637,7 @@ Decl *SemaObjC::ActOnIvar(Scope *S, SourceLocation DeclStart, Declarator &D,
   // Construct the decl.
   ObjCIvarDecl *NewID =
       ObjCIvarDecl::Create(getASTContext(), EnclosingContext, DeclStart, Loc,
-                           II, T, TInfo, ac, BitWidth);
+                           II, T, TInfo, ac, BitWidth, BitWidthValue);
 
   if (T->containsErrors())
     NewID->setInvalidDecl();

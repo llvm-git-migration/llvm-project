@@ -3089,17 +3089,27 @@ class FieldDecl : public DeclaratorDecl, public Mergeable<FieldDecl> {
     // Active member if ISK is ISK_CapturedVLAType.
     const VariableArrayType *CapturedVLAType;
   };
+  unsigned BitWidthValue = 0;
 
 protected:
   FieldDecl(Kind DK, DeclContext *DC, SourceLocation StartLoc,
             SourceLocation IdLoc, const IdentifierInfo *Id, QualType T,
-            TypeSourceInfo *TInfo, Expr *BW, bool Mutable,
-            InClassInitStyle InitStyle)
+            TypeSourceInfo *TInfo, bool Mutable, InClassInitStyle InitStyle)
+      : DeclaratorDecl(DK, DC, IdLoc, Id, T, TInfo, StartLoc), BitField(false),
+        Mutable(Mutable), StorageKind((InitStorageKind)InitStyle),
+        CachedFieldIndex(0), Init() {}
+
+  FieldDecl(Kind DK, DeclContext *DC, SourceLocation StartLoc,
+            SourceLocation IdLoc, const IdentifierInfo *Id, QualType T,
+            TypeSourceInfo *TInfo, Expr *BW, unsigned BitWidthValue,
+            bool Mutable, InClassInitStyle InitStyle)
       : DeclaratorDecl(DK, DC, IdLoc, Id, T, TInfo, StartLoc), BitField(false),
         Mutable(Mutable), StorageKind((InitStorageKind)InitStyle),
         CachedFieldIndex(0), Init() {
-    if (BW)
+    if (BW) {
       setBitWidth(BW);
+      this->BitWidthValue = BitWidthValue;
+    }
   }
 
 public:
@@ -3109,7 +3119,15 @@ public:
   static FieldDecl *Create(const ASTContext &C, DeclContext *DC,
                            SourceLocation StartLoc, SourceLocation IdLoc,
                            const IdentifierInfo *Id, QualType T,
-                           TypeSourceInfo *TInfo, Expr *BW, bool Mutable,
+                           TypeSourceInfo *TInfo, Expr *BW,
+                           unsigned BitWidthValue, bool Mutable,
+                           InClassInitStyle InitStyle);
+
+  /// For non-bit-fields.
+  static FieldDecl *Create(const ASTContext &C, DeclContext *DC,
+                           SourceLocation StartLoc, SourceLocation IdLoc,
+                           const IdentifierInfo *Id, QualType T,
+                           TypeSourceInfo *TInfo, bool Mutable,
                            InClassInitStyle InitStyle);
 
   static FieldDecl *CreateDeserialized(ASTContext &C, GlobalDeclID ID);

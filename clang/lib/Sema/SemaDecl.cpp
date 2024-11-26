@@ -5665,7 +5665,7 @@ Decl *Sema::BuildAnonymousStructOrUnion(Scope *S, DeclSpec &DS,
     Anon = FieldDecl::Create(
         Context, OwningClass, DS.getBeginLoc(), Record->getLocation(),
         /*IdentifierInfo=*/nullptr, Context.getTypeDeclType(Record), TInfo,
-        /*BitWidth=*/nullptr, /*Mutable=*/false,
+        /*Mutable=*/false,
         /*InitStyle=*/ICIS_NoInit);
     Anon->setAccess(AS);
     ProcessDeclAttributes(S, Anon, Dc);
@@ -5753,7 +5753,7 @@ Decl *Sema::BuildMicrosoftCAnonymousStruct(Scope *S, DeclSpec &DS,
   NamedDecl *Anon =
       FieldDecl::Create(Context, ParentDecl, DS.getBeginLoc(), DS.getBeginLoc(),
                         /*IdentifierInfo=*/nullptr, RecTy, TInfo,
-                        /*BitWidth=*/nullptr, /*Mutable=*/false,
+                        /*Mutable=*/false,
                         /*InitStyle=*/ICIS_NoInit);
   Anon->setImplicit();
 
@@ -18267,7 +18267,7 @@ void Sema::ActOnTagDefinitionError(Scope *S, Decl *TagD) {
 ExprResult Sema::VerifyBitField(SourceLocation FieldLoc,
                                 const IdentifierInfo *FieldName,
                                 QualType FieldTy, bool IsMsStruct,
-                                Expr *BitWidth) {
+                                Expr *BitWidth, unsigned &BWV) {
   assert(BitWidth);
   if (BitWidth->containsErrors())
     return ExprError();
@@ -18298,6 +18298,7 @@ ExprResult Sema::VerifyBitField(SourceLocation FieldLoc,
   if (ICE.isInvalid())
     return ICE;
   BitWidth = ICE.get();
+  BWV = Value.getZExtValue();
 
   // Zero-width bitfield is ok for anonymous field.
   if (Value == 0 && FieldName)
@@ -18545,12 +18546,15 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
   if (InvalidDecl)
     BitWidth = nullptr;
   // If this is declared as a bit-field, check the bit-field.
+  unsigned BitWidthValue = 0;
   if (BitWidth) {
-    BitWidth =
-        VerifyBitField(Loc, II, T, Record->isMsStruct(Context), BitWidth).get();
+    BitWidth = VerifyBitField(Loc, II, T, Record->isMsStruct(Context), BitWidth,
+                              BitWidthValue)
+                   .get();
     if (!BitWidth) {
       InvalidDecl = true;
       BitWidth = nullptr;
+      BitWidthValue = 0;
     }
   }
 
@@ -18581,8 +18585,9 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
   if (InitStyle != ICIS_NoInit)
     checkDuplicateDefaultInit(*this, cast<CXXRecordDecl>(Record), Loc);
 
-  FieldDecl *NewFD = FieldDecl::Create(Context, Record, TSSL, Loc, II, T, TInfo,
-                                       BitWidth, Mutable, InitStyle);
+  FieldDecl *NewFD =
+      FieldDecl::Create(Context, Record, TSSL, Loc, II, T, TInfo, BitWidth,
+                        BitWidthValue, Mutable, InitStyle);
   if (InvalidDecl)
     NewFD->setInvalidDecl();
 
@@ -18593,36 +18598,32 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     NewFD->setInvalidDecl();
   }
 
-  if (!InvalidDecl && getLangOpts().CPlusPlus) {
-    if (Record->isUnion()) {
-      if (const RecordType *RT = EltTy->getAs<RecordType>()) {
-        CXXRecordDecl* RDecl = cast<CXXRecordDecl>(RT->getDecl());
-        if (RDecl->getDefinition()) {
-          // C++ [class.union]p1: An object of a class with a non-trivial
-          // constructor, a non-trivial copy constructor, a non-trivial
-          // destructor, or a non-trivial copy assignment operator
-          // cannot be a member of a union, nor can an array of such
-          // objects.
-          if (CheckNontrivialField(NewFD))
-            NewFD->setInvalidDecl();
-        }
-      }
+  if (!InvalidDecl && getLangOpts().CPlusPlus && Record->isUnion()) {
+    if (const auto *RT = EltTy->getAs<RecordType>();
+        RT && cast<CXXRecordDecl>(RT->getDecl())->getDefinition()) {
+      // C++ [class.union]p1: An object of a class with a non-trivial
+      // constructor, a non-trivial copy constructor, a non-trivial
+      // destructor, or a non-trivial copy assignment operator
+      // cannot be a member of a union, nor can an array of such
+      // objects.
+      if (CheckNontrivialField(NewFD))
+        NewFD->setInvalidDecl();
+    }
 
-      // C++ [class.union]p1: If a union contains a member of reference type,
-      // the program is ill-formed, except when compiling with MSVC extensions
-      // enabled.
-      if (EltTy->isReferenceType()) {
-        const bool HaveMSExt =
-            getLangOpts().MicrosoftExt &&
-            !getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015);
+    // C++ [class.union]p1: If a union contains a member of reference type,
+    // the program is ill-formed, except when compiling with MSVC extensions
+    // enabled.
+    if (EltTy->isReferenceType()) {
+      const bool HaveMSExt =
+          getLangOpts().MicrosoftExt &&
+          !getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015);
 
-        Diag(NewFD->getLocation(),
-             HaveMSExt ? diag::ext_union_member_of_reference_type
-                       : diag::err_union_member_of_reference_type)
-            << NewFD->getDeclName() << EltTy;
-        if (!HaveMSExt)
-          NewFD->setInvalidDecl();
-      }
+      Diag(NewFD->getLocation(), HaveMSExt
+                                     ? diag::ext_union_member_of_reference_type
+                                     : diag::err_union_member_of_reference_type)
+          << NewFD->getDeclName() << EltTy;
+      if (!HaveMSExt)
+        NewFD->setInvalidDecl();
     }
   }
 

@@ -1833,7 +1833,8 @@ ObjCIvarDecl *ObjCIvarDecl::Create(ASTContext &C, ObjCContainerDecl *DC,
                                    SourceLocation IdLoc,
                                    const IdentifierInfo *Id, QualType T,
                                    TypeSourceInfo *TInfo, AccessControl ac,
-                                   Expr *BW, bool synthesized) {
+                                   Expr *BW, unsigned BWValue,
+                                   bool synthesized) {
   if (DC) {
     // Ivar's can only appear in interfaces, implementations (via synthesized
     // properties), and class extensions (via direct declaration, or synthesized
@@ -1861,13 +1862,13 @@ ObjCIvarDecl *ObjCIvarDecl::Create(ASTContext &C, ObjCContainerDecl *DC,
   }
 
   return new (C, DC) ObjCIvarDecl(DC, StartLoc, IdLoc, Id, T, TInfo, ac, BW,
-                                  synthesized);
+                                  BWValue, synthesized);
 }
 
 ObjCIvarDecl *ObjCIvarDecl::CreateDeserialized(ASTContext &C, GlobalDeclID ID) {
-  return new (C, ID) ObjCIvarDecl(nullptr, SourceLocation(), SourceLocation(),
-                                  nullptr, QualType(), nullptr,
-                                  ObjCIvarDecl::None, nullptr, false);
+  return new (C, ID)
+      ObjCIvarDecl(nullptr, SourceLocation(), SourceLocation(), nullptr,
+                   QualType(), nullptr, ObjCIvarDecl::None, false);
 }
 
 ObjCInterfaceDecl *ObjCIvarDecl::getContainingInterface() {
@@ -1905,18 +1906,27 @@ QualType ObjCIvarDecl::getUsageType(QualType objectType) const {
 
 void ObjCAtDefsFieldDecl::anchor() {}
 
-ObjCAtDefsFieldDecl
-*ObjCAtDefsFieldDecl::Create(ASTContext &C, DeclContext *DC,
-                             SourceLocation StartLoc,  SourceLocation IdLoc,
-                             IdentifierInfo *Id, QualType T, Expr *BW) {
-  return new (C, DC) ObjCAtDefsFieldDecl(DC, StartLoc, IdLoc, Id, T, BW);
+ObjCAtDefsFieldDecl *ObjCAtDefsFieldDecl::Create(ASTContext &C, DeclContext *DC,
+                                                 SourceLocation StartLoc,
+                                                 SourceLocation IdLoc,
+                                                 IdentifierInfo *Id, QualType T,
+                                                 Expr *BW, unsigned BWValue) {
+  return new (C, DC)
+      ObjCAtDefsFieldDecl(DC, StartLoc, IdLoc, Id, T, BW, BWValue);
+}
+
+ObjCAtDefsFieldDecl *ObjCAtDefsFieldDecl::Create(ASTContext &C, DeclContext *DC,
+                                                 SourceLocation StartLoc,
+                                                 SourceLocation IdLoc,
+                                                 IdentifierInfo *Id,
+                                                 QualType T) {
+  return new (C, DC) ObjCAtDefsFieldDecl(DC, StartLoc, IdLoc, Id, T);
 }
 
 ObjCAtDefsFieldDecl *ObjCAtDefsFieldDecl::CreateDeserialized(ASTContext &C,
                                                              GlobalDeclID ID) {
   return new (C, ID) ObjCAtDefsFieldDecl(nullptr, SourceLocation(),
-                                         SourceLocation(), nullptr, QualType(),
-                                         nullptr);
+                                         SourceLocation(), nullptr, QualType());
 }
 
 //===----------------------------------------------------------------------===//

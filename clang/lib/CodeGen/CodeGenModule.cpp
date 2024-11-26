@@ -6500,14 +6500,10 @@ QualType CodeGenModule::getObjCFastEnumerationStateType() {
                                      nullptr, ArraySizeModifier::Normal, 0)};
 
     for (size_t i = 0; i < 4; ++i) {
-      FieldDecl *Field = FieldDecl::Create(Context,
-                                           D,
-                                           SourceLocation(),
-                                           SourceLocation(), nullptr,
-                                           FieldTypes[i], /*TInfo=*/nullptr,
-                                           /*BitWidth=*/nullptr,
-                                           /*Mutable=*/false,
-                                           ICIS_NoInit);
+      FieldDecl *Field =
+          FieldDecl::Create(Context, D, SourceLocation(), SourceLocation(),
+                            nullptr, FieldTypes[i], /*TInfo=*/nullptr,
+                            /*Mutable=*/false, ICIS_NoInit);
       Field->setAccess(AS_public);
       D->addDecl(Field);
     }

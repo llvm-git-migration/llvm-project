@@ -1960,8 +1960,15 @@ private:
   ObjCIvarDecl(ObjCContainerDecl *DC, SourceLocation StartLoc,
                SourceLocation IdLoc, const IdentifierInfo *Id, QualType T,
                TypeSourceInfo *TInfo, AccessControl ac, Expr *BW,
-               bool synthesized)
-      : FieldDecl(ObjCIvar, DC, StartLoc, IdLoc, Id, T, TInfo, BW,
+               unsigned BWValue, bool synthesized)
+      : FieldDecl(ObjCIvar, DC, StartLoc, IdLoc, Id, T, TInfo, BW, BWValue,
+                  /*Mutable=*/false, /*HasInit=*/ICIS_NoInit),
+        DeclAccess(ac), Synthesized(synthesized) {}
+
+  ObjCIvarDecl(ObjCContainerDecl *DC, SourceLocation StartLoc,
+               SourceLocation IdLoc, const IdentifierInfo *Id, QualType T,
+               TypeSourceInfo *TInfo, AccessControl ac, bool synthesized)
+      : FieldDecl(ObjCIvar, DC, StartLoc, IdLoc, Id, T, TInfo,
                   /*Mutable=*/false, /*HasInit=*/ICIS_NoInit),
         DeclAccess(ac), Synthesized(synthesized) {}
 
@@ -1970,7 +1977,8 @@ public:
                               SourceLocation StartLoc, SourceLocation IdLoc,
                               const IdentifierInfo *Id, QualType T,
                               TypeSourceInfo *TInfo, AccessControl ac,
-                              Expr *BW = nullptr, bool synthesized = false);
+                              Expr *BW = nullptr, unsigned BWValue = 0,
+                              bool synthesized = false);
 
   static ObjCIvarDecl *CreateDeserialized(ASTContext &C, GlobalDeclID ID);
 
@@ -2028,11 +2036,19 @@ private:
 /// Represents a field declaration created by an \@defs(...).
 class ObjCAtDefsFieldDecl : public FieldDecl {
   ObjCAtDefsFieldDecl(DeclContext *DC, SourceLocation StartLoc,
-                      SourceLocation IdLoc, IdentifierInfo *Id,
-                      QualType T, Expr *BW)
+                      SourceLocation IdLoc, IdentifierInfo *Id, QualType T,
+                      Expr *BW, unsigned BWValue)
       : FieldDecl(ObjCAtDefsField, DC, StartLoc, IdLoc, Id, T,
                   /*TInfo=*/nullptr, // FIXME: Do ObjCAtDefs have declarators ?
-                  BW, /*Mutable=*/false, /*HasInit=*/ICIS_NoInit) {}
+                  BW, BWValue, /*Mutable=*/false,
+                  /*HasInit=*/ICIS_NoInit) {}
+
+  ObjCAtDefsFieldDecl(DeclContext *DC, SourceLocation StartLoc,
+                      SourceLocation IdLoc, IdentifierInfo *Id, QualType T)
+      : FieldDecl(ObjCAtDefsField, DC, StartLoc, IdLoc, Id, T,
+                  /*TInfo=*/nullptr, // FIXME: Do ObjCAtDefs have declarators ?
+                  /*Mutable=*/false,
+                  /*HasInit=*/ICIS_NoInit) {}
 
   void anchor() override;
 
@@ -2040,7 +2056,11 @@ public:
   static ObjCAtDefsFieldDecl *Create(ASTContext &C, DeclContext *DC,
                                      SourceLocation StartLoc,
                                      SourceLocation IdLoc, IdentifierInfo *Id,
-                                     QualType T, Expr *BW);
+                                     QualType T, Expr *BW, unsigned BWValue);
+  static ObjCAtDefsFieldDecl *Create(ASTContext &C, DeclContext *DC,
+                                     SourceLocation StartLoc,
+                                     SourceLocation IdLoc, IdentifierInfo *Id,
+                                     QualType T);
 
   static ObjCAtDefsFieldDecl *CreateDeserialized(ASTContext &C,
                                                  GlobalDeclID ID);

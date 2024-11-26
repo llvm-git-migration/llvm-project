@@ -7969,11 +7969,10 @@ TypedefDecl *ASTContext::getCFConstantStringDecl() const {
 
   // Create fields
   for (unsigned i = 0; i < Count; ++i) {
-    FieldDecl *Field =
-        FieldDecl::Create(*this, CFConstantStringTagDecl, SourceLocation(),
-                          SourceLocation(), &Idents.get(Fields[i].Name),
-                          Fields[i].Type, /*TInfo=*/nullptr,
-                          /*BitWidth=*/nullptr, /*Mutable=*/false, ICIS_NoInit);
+    FieldDecl *Field = FieldDecl::Create(
+        *this, CFConstantStringTagDecl, SourceLocation(), SourceLocation(),
+        &Idents.get(Fields[i].Name), Fields[i].Type, /*TInfo=*/nullptr,
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     CFConstantStringTagDecl->addDecl(Field);
   }
@@ -8039,7 +8038,7 @@ QualType ASTContext::getBlockDescriptorType() const {
     FieldDecl *Field = FieldDecl::Create(
         *this, RD, SourceLocation(), SourceLocation(),
         &Idents.get(FieldNames[i]), FieldTypes[i], /*TInfo=*/nullptr,
-        /*BitWidth=*/nullptr, /*Mutable=*/false, ICIS_NoInit);
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     RD->addDecl(Field);
   }
@@ -8078,7 +8077,6 @@ QualType ASTContext::getBlockDescriptorExtendedType() const {
     FieldDecl *Field = FieldDecl::Create(
         *this, RD, SourceLocation(), SourceLocation(),
         &Idents.get(FieldNames[i]), FieldTypes[i], /*TInfo=*/nullptr,
-        /*BitWidth=*/nullptr,
         /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     RD->addDecl(Field);
@@ -9436,15 +9434,11 @@ CreateAArch64ABIBuiltinVaListDecl(const ASTContext *Context) {
 
   // Create fields
   for (unsigned i = 0; i < NumFields; ++i) {
-    FieldDecl *Field = FieldDecl::Create(const_cast<ASTContext &>(*Context),
-                                         VaListTagDecl,
-                                         SourceLocation(),
-                                         SourceLocation(),
-                                         &Context->Idents.get(FieldNames[i]),
-                                         FieldTypes[i], /*TInfo=*/nullptr,
-                                         /*BitWidth=*/nullptr,
-                                         /*Mutable=*/false,
-                                         ICIS_NoInit);
+    FieldDecl *Field = FieldDecl::Create(
+        const_cast<ASTContext &>(*Context), VaListTagDecl, SourceLocation(),
+        SourceLocation(), &Context->Idents.get(FieldNames[i]), FieldTypes[i],
+        /*TInfo=*/nullptr,
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     VaListTagDecl->addDecl(Field);
   }
@@ -9489,14 +9483,10 @@ static TypedefDecl *CreatePowerABIBuiltinVaListDecl(const ASTContext *Context) {
 
   // Create fields
   for (unsigned i = 0; i < NumFields; ++i) {
-    FieldDecl *Field = FieldDecl::Create(*Context, VaListTagDecl,
-                                         SourceLocation(),
-                                         SourceLocation(),
-                                         &Context->Idents.get(FieldNames[i]),
-                                         FieldTypes[i], /*TInfo=*/nullptr,
-                                         /*BitWidth=*/nullptr,
-                                         /*Mutable=*/false,
-                                         ICIS_NoInit);
+    FieldDecl *Field = FieldDecl::Create(
+        *Context, VaListTagDecl, SourceLocation(), SourceLocation(),
+        &Context->Idents.get(FieldNames[i]), FieldTypes[i], /*TInfo=*/nullptr,
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     VaListTagDecl->addDecl(Field);
   }
@@ -9547,15 +9537,11 @@ CreateX86_64ABIBuiltinVaListDecl(const ASTContext *Context) {
 
   // Create fields
   for (unsigned i = 0; i < NumFields; ++i) {
-    FieldDecl *Field = FieldDecl::Create(const_cast<ASTContext &>(*Context),
-                                         VaListTagDecl,
-                                         SourceLocation(),
-                                         SourceLocation(),
-                                         &Context->Idents.get(FieldNames[i]),
-                                         FieldTypes[i], /*TInfo=*/nullptr,
-                                         /*BitWidth=*/nullptr,
-                                         /*Mutable=*/false,
-                                         ICIS_NoInit);
+    FieldDecl *Field = FieldDecl::Create(
+        const_cast<ASTContext &>(*Context), VaListTagDecl, SourceLocation(),
+        SourceLocation(), &Context->Idents.get(FieldNames[i]), FieldTypes[i],
+        /*TInfo=*/nullptr,
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     VaListTagDecl->addDecl(Field);
   }
@@ -9599,16 +9585,12 @@ CreateAAPCSABIBuiltinVaListDecl(const ASTContext *Context) {
   VaListDecl->startDefinition();
 
   // void * __ap;
-  FieldDecl *Field = FieldDecl::Create(const_cast<ASTContext &>(*Context),
-                                       VaListDecl,
-                                       SourceLocation(),
-                                       SourceLocation(),
-                                       &Context->Idents.get("__ap"),
-                                       Context->getPointerType(Context->VoidTy),
-                                       /*TInfo=*/nullptr,
-                                       /*BitWidth=*/nullptr,
-                                       /*Mutable=*/false,
-                                       ICIS_NoInit);
+  FieldDecl *Field = FieldDecl::Create(
+      const_cast<ASTContext &>(*Context), VaListDecl, SourceLocation(),
+      SourceLocation(), &Context->Idents.get("__ap"),
+      Context->getPointerType(Context->VoidTy),
+      /*TInfo=*/nullptr,
+      /*Mutable=*/false, ICIS_NoInit);
   Field->setAccess(AS_public);
   VaListDecl->addDecl(Field);
 
@@ -9650,15 +9632,11 @@ CreateSystemZBuiltinVaListDecl(const ASTContext *Context) {
 
   // Create fields
   for (unsigned i = 0; i < NumFields; ++i) {
-    FieldDecl *Field = FieldDecl::Create(const_cast<ASTContext &>(*Context),
-                                         VaListTagDecl,
-                                         SourceLocation(),
-                                         SourceLocation(),
-                                         &Context->Idents.get(FieldNames[i]),
-                                         FieldTypes[i], /*TInfo=*/nullptr,
-                                         /*BitWidth=*/nullptr,
-                                         /*Mutable=*/false,
-                                         ICIS_NoInit);
+    FieldDecl *Field = FieldDecl::Create(
+        const_cast<ASTContext &>(*Context), VaListTagDecl, SourceLocation(),
+        SourceLocation(), &Context->Idents.get(FieldNames[i]), FieldTypes[i],
+        /*TInfo=*/nullptr,
+        /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     VaListTagDecl->addDecl(Field);
   }
@@ -9704,7 +9682,6 @@ static TypedefDecl *CreateHexagonBuiltinVaListDecl(const ASTContext *Context) {
         const_cast<ASTContext &>(*Context), VaListTagDecl, SourceLocation(),
         SourceLocation(), &Context->Idents.get(FieldNames[i]), FieldTypes[i],
         /*TInfo=*/nullptr,
-        /*BitWidth=*/nullptr,
         /*Mutable=*/false, ICIS_NoInit);
     Field->setAccess(AS_public);
     VaListTagDecl->addDecl(Field);
