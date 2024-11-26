@@ -825,7 +825,7 @@
 // RUN: %clang --target=loongarch64 -x c -E -dM %s -o - -march=la64v1.1 | \
 // RUN:   FileCheck --match-full-lines  --check-prefixes=ARCH-TUNE,FRECIPE,LAM-BH,LAMCAS,LD-SEQ-SA -DARCH=la64v1.1 -DTUNE=loongarch64 %s
 // RUN: %clang --target=loongarch64 -x c -E -dM %s -o - -march=la64v1.1 -Xclang -target-feature -Xclang -frecipe | \
-// RUN:   FileCheck --match-full-lines --check-prefixes=ARCH-TUNE,LAM-BH,LAMCAS,lD-SEQ-SA -DARCH=la64v1.0 -DTUNE=loongarch64 %s
+// RUN:   FileCheck --match-full-lines --check-prefixes=ARCH-TUNE,LAM-BH,LAMCAS,LD-SEQ-SA -DARCH=la64v1.0 -DTUNE=loongarch64 %s
 // RUN: %clang --target=loongarch64 -x c -E -dM %s -o - -march=la64v1.1 -Xclang -target-feature -Xclang -lsx | \
 // RUN:   FileCheck --match-full-lines --check-prefixes=ARCH-TUNE,FRECIPE,LAM-BH,LAMCAS,LD-SEQ-SA -DARCH=loongarch64 -DTUNE=loongarch64 %s
 // RUN: %clang --target=loongarch64 -x c -E -dM %s -o - -march=loongarch64 -Xclang -target-feature -Xclang +frecipe | \

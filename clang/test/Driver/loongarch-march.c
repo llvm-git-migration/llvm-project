@@ -53,7 +53,7 @@
 // IR-LA464: attributes #[[#]] ={{.*}}"target-cpu"="la464" {{.*}}"target-features"="+64bit,+d,+f,+lasx,+lsx,+ual"
 // IR-LA64V1P0: attributes #[[#]] ={{.*}}"target-cpu"="loongarch64" {{.*}}"target-features"="+64bit,+d,+lsx,+ual"
 // IR-LA64V1P1: attributes #[[#]] ={{.*}}"target-cpu"="loongarch64" {{.*}}"target-features"="+64bit,+d,+frecipe,+lam-bh,+lamcas,+ld-seq-sa,+lsx,+ual"
-// IR-LA664: attributes #[[#]] ={{.*}}"target-cpu"="la664" {{.*}}"target-features"="+64bit,+d,+f,+frecipe,+lam-bh,+lamcas,+ld-seq-sa,+lasx,+lsx,+ual"
+// IR-LA664: attributes #[[#]] ={{.*}}"target-cpu"="la664" {{.*}}"target-features"="+64bit,+d,+f,+frecipe,+lam-bh,+lamcas,+lasx,+ld-seq-sa,+lsx,+ual"
 
 int foo(void) {
   return 3;
