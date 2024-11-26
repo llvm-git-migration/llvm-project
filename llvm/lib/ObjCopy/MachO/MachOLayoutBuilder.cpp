@@ -361,11 +361,10 @@ Error MachOLayoutBuilder::layoutTail(uint64_t Offset) {
         return createStringError(llvm::errc::not_supported,
                                  "shared library is not yet supported");
 
-      if (!O.IndirectSymTable.Symbols.empty()) {
-        MLC.dysymtab_command_data.indirectsymoff = StartOfIndirectSymbols;
-        MLC.dysymtab_command_data.nindirectsyms =
-            O.IndirectSymTable.Symbols.size();
-      }
+      MLC.dysymtab_command_data.nindirectsyms =
+          O.IndirectSymTable.Symbols.size();
+      MLC.dysymtab_command_data.indirectsymoff =
+          O.IndirectSymTable.Symbols.empty() ? 0 : StartOfIndirectSymbols;
 
       updateDySymTab(MLC);
       break;
