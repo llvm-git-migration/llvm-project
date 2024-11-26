@@ -5,15 +5,15 @@
 #include <math.h> // for isnan, isinf
 #include <stdio.h>
 
-#include "int_lib.h"
+#include "fp_test.h"
 
 #if HAS_80_BIT_LONG_DOUBLE && defined(COMPILER_RT_HAS_FLOAT16)
 
-long double __extendhfxf2(_Float16 f);
+long double __extendhfxf2(TYPE_FP16 f);
 
-int test_extendhfxf2(_Float16 a, long double expected) {
+int test_extendhfxf2(TYPE_FP16 a, long double expected) {
   long double x = __extendhfxf2(a);
-  __uint16_t *b = (void *)&a;
+  unsigned short *b = (void *)&a;
   int ret = !((isnan(x) && isnan(expected)) || x == expected);
   if (ret) {
     printf("error in test__extendhfxf2(%#.4x) = %.20Lf, "
@@ -22,8 +22,6 @@ int test_extendhfxf2(_Float16 a, long double expected) {
   }
   return ret;
 }
-
-char assumption_1[sizeof(_Float16) * CHAR_BIT == 16] = {0};
 
 int main() {
   // Small positive value
@@ -46,6 +44,7 @@ int main() {
   if (test_extendhfxf2(-0x1p-16f, -0x1p-16L))
     return 1;
 
+#  ifdef __builtin_huge_valf64x
   // Positive infinity
   if (test_extendhfxf2(__builtin_huge_valf16(), __builtin_huge_valf64x()))
     return 1;
@@ -55,10 +54,15 @@ int main() {
                        (long double)-__builtin_huge_valf64x()))
     return 1;
 
+#  endif
+
+#  ifdef __builtin_nanf64x
   // NaN
   if (test_extendhfxf2(__builtin_nanf16(""),
                        (long double)__builtin_nanf64x("")))
     return 1;
+
+#  endif
 
   return 0;
 }
