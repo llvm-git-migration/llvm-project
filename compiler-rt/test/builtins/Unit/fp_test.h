@@ -230,7 +230,7 @@ static inline double makeQNaN64(void)
     return fromRep64(0x7ff8000000000000UL);
 }
 
-#if __LDBL_MANT_DIG__ == 64 && defined(__x86_64__)
+#if HAS_80_BIT_LONG_DOUBLE
 static inline long double F80FromRep128(uint64_t hi, uint64_t lo) {
     __uint128_t x = ((__uint128_t)hi << 64) + lo;
     long double ret;
@@ -265,6 +265,10 @@ static inline long double makeNaN80(uint64_t rand) {
 static inline long double makeInf80(void) {
     return F80FromRep128(0x7fffUL, 0x8000000000000000UL);
 }
+
+static inline long double makeNegativeInf80(void) {
+  return F80FromRep128(0xffffUL, 0x8000000000000000UL);
+}
 #endif
 
 #if defined(CRT_HAS_TF_MODE)
@@ -298,6 +302,8 @@ static inline TYPE_FP16 makeInf16(void)
 {
     return fromRep16(0x7c00U);
 }
+
+static inline TYPE_FP16 makeNegativeInf16(void) { return fromRep16(0xfc00U); }
 
 static inline float makeInf32(void)
 {
