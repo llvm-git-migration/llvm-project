@@ -20,6 +20,14 @@
 // DISASM-NEXT:   leaq -4(%r15), %r15
 // DISASM-NEXT:   addq $-4, %rsp
 // DISASM-NEXT:   addq $-4, %r12
+// DISASM-NEXT:   addq $-10, %r16, %r16
+// DISASM-NEXT:   addq $-10, %r16, %r20
+// DISASM-NEXT:   addq $-10, %r16, %rax
+// DISASM-NEXT:   addq $-10, %rax, %r16
+// DISASM-NEXT:   addq $-10, %r8, %r16
+// DISASM-NEXT:   addq $-10, %rax, %r12
+// DISASM-NEXT:   {nf} addq $-10, %r8, %r16
+// DISASM-NEXT:   {nf} addq $-10, %rax, %r12
 
 // LD to LE:
 // DISASM-NEXT:   movq %fs:0, %rax
@@ -69,6 +77,15 @@ _start:
  addq tls1@GOTTPOFF(%rip), %r15
  addq tls1@GOTTPOFF(%rip), %rsp
  addq tls1@GOTTPOFF(%rip), %r12
+# NDD
+ addq tls0@GOTTPOFF(%rip), %r16, %r16
+ addq tls0@GOTTPOFF(%rip), %r16, %r20
+ addq tls0@GOTTPOFF(%rip), %r16, %rax
+ addq tls0@GOTTPOFF(%rip), %rax, %r16
+ addq %r8, tls0@GOTTPOFF(%rip), %r16
+ addq tls0@GOTTPOFF(%rip), %rax, %r12
+ {nf} addq %r8, tls0@GOTTPOFF(%rip), %r16
+ {nf} addq tls0@GOTTPOFF(%rip), %rax, %r12
 
  // LD to LE
  leaq tls0@tlsld(%rip), %rdi
