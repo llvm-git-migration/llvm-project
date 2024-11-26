@@ -251,13 +251,6 @@ def which(program):
     return None
 
 
-def pickrandomport():
-    """Returns a random open port."""
-    with socket.socket() as sock:
-        sock.bind(("", 0))
-        return sock.getsockname()[1]
-
-
 class ValueCheck:
     def __init__(
         self,
