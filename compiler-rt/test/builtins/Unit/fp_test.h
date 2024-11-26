@@ -253,6 +253,18 @@ static inline int compareResultF80(long double result, uint64_t expectedHi,
     return !(hi == expectedHi && lo == expectedLo);
 }
 
+static inline int compareResultF80_F80(long double result, long double expected) {
+    __uint128_t rep = F80ToRep128(result);
+    // F80 occupies the lower 80 bits of __uint128_t.
+    uint64_t hi = (rep >> 64) & ((1UL << (80 - 64)) - 1);
+    uint64_t lo = rep;
+    __uint128_t expected_rep = F80ToRep128(expected);
+    // F80 occupies the lower 80 bits of __uint128_t.
+    uint64_t expectedHi = (expected_rep >> 64) & ((1UL << (80 - 64)) - 1);
+    uint64_t expectedLo = expected_rep;
+    return !(hi == expectedHi && lo == expectedLo);
+}
+
 static inline long double makeQNaN80(void) {
     return F80FromRep128(0x7fffUL, 0xc000000000000000UL);
 }
@@ -264,6 +276,10 @@ static inline long double makeNaN80(uint64_t rand) {
 
 static inline long double makeInf80(void) {
     return F80FromRep128(0x7fffUL, 0x8000000000000000UL);
+}
+
+static inline long double makeNegativeInf80(void) {
+  return F80FromRep128(0xffffUL, 0x8000000000000000UL);
 }
 #endif
 
@@ -298,6 +314,8 @@ static inline TYPE_FP16 makeInf16(void)
 {
     return fromRep16(0x7c00U);
 }
+
+static inline TYPE_FP16 makeNegativeInf16(void) { return fromRep16(0xfc00U); }
 
 static inline float makeInf32(void)
 {
