@@ -50,20 +50,30 @@ using TypeSpec = std::string;
 
 namespace {
 class SVEType {
-  bool Float, Signed, Immediate, Void, Constant, Pointer, BFloat, MFloat;
-  bool DefaultType, IsScalable, Predicate, PredicatePattern, PrefetchOp,
-      Svcount;
+
+  enum TypeKind {
+    Void,
+    Float,
+    SInt,
+    UInt,
+    BFloat16,
+    MFloat8,
+    Svcount,
+    PrefetchOp,
+    PredicatePattern,
+    Predicate
+  };
+  TypeKind Kind;
+  bool Immediate, Constant, Pointer, DefaultType, IsScalable;
   unsigned Bitwidth, ElementBitwidth, NumVectors;
 
 public:
   SVEType() : SVEType("", 'v') {}
 
   SVEType(StringRef TS, char CharMod, unsigned NumVectors = 1)
-      : Float(false), Signed(true), Immediate(false), Void(false),
-        Constant(false), Pointer(false), BFloat(false), MFloat(false),
-        DefaultType(false), IsScalable(true), Predicate(false),
-        PredicatePattern(false), PrefetchOp(false), Svcount(false),
-        Bitwidth(128), ElementBitwidth(~0U), NumVectors(NumVectors) {
+      : Kind(SInt), Immediate(false), Constant(false), Pointer(false),
+        DefaultType(false), IsScalable(true), Bitwidth(128),
+        ElementBitwidth(~0U), NumVectors(NumVectors) {
     if (!TS.empty())
       applyTypespec(TS);
     applyModifier(CharMod);
@@ -74,33 +84,31 @@ public:
   }
 
   bool isPointer() const { return Pointer; }
-  bool isVoidPointer() const { return Pointer && Void; }
-  bool isSigned() const { return Signed; }
+  bool isConstant() const { return Constant; }
   bool isImmediate() const { return Immediate; }
+  bool isSigned() const { return Kind != UInt; }
   bool isScalar() const { return NumVectors == 0; }
   bool isVector() const { return NumVectors > 0; }
   bool isScalableVector() const { return isVector() && IsScalable; }
   bool isFixedLengthVector() const { return isVector() && !IsScalable; }
-  bool isChar() const { return ElementBitwidth == 8 && !MFloat; }
-  bool isVoid() const { return Void && !Pointer; }
+  bool isChar() const { return ElementBitwidth == 8 && isInteger(); }
+  bool isVoid() const { return Kind == Void; }
   bool isDefault() const { return DefaultType; }
-  bool isFloat() const { return Float && !BFloat && !MFloat; }
-  bool isBFloat() const { return BFloat && !Float && !MFloat; }
-  bool isMFloat() const {
-    return MFloat && !BFloat && !Float;
+  bool isFloat() const { return Kind == Float; }
+  bool isBFloat() const { return Kind == BFloat16; }
+  bool isMFloat() const { return Kind == MFloat8; }
+  bool isTypedPointer() const { return Pointer && Kind != Void; }
+  bool isFloatingPoint() const {
+    return Kind == Float || Kind == BFloat16 || Kind == MFloat8;
   }
-  bool isFloatingPoint() const { return Float || BFloat; }
-  bool isInteger() const {
-    return !isFloatingPoint() && !Predicate && !Svcount;
-  }
+  bool isInteger() const { return Kind == SInt || Kind == UInt; }
   bool isScalarPredicate() const {
-    return !isFloatingPoint() && Predicate && NumVectors == 0;
+    return Kind == Predicate && NumVectors == 0;
   }
-  bool isPredicateVector() const { return Predicate; }
-  bool isPredicatePattern() const { return PredicatePattern; }
-  bool isPrefetchOp() const { return PrefetchOp; }
-  bool isSvcount() const { return Svcount; }
-  bool isConstant() const { return Constant; }
+  bool isPredicate() const { return Kind == Predicate; }
+  bool isPredicatePattern() const { return Kind == PredicatePattern; }
+  bool isPrefetchOp() const { return Kind == PrefetchOp; }
+  bool isSvcount() const { return Kind == Svcount; }
   unsigned getElementSizeInBits() const { return ElementBitwidth; }
   unsigned getNumVectors() const { return NumVectors; }
 
@@ -424,9 +432,7 @@ const std::array<SVEEmitter::ReinterpretTypeInfo, 12> SVEEmitter::Reinterprets =
 //===----------------------------------------------------------------------===//
 
 std::string SVEType::builtin_str() const {
-  std::string S;
-  if (isVoid())
-    return "v";
+  std::string OutStr;
 
   if (isScalarPredicate())
     return "b";
@@ -434,62 +440,81 @@ std::string SVEType::builtin_str() const {
   if (isSvcount())
     return "Qa";
 
-  if (isVoidPointer())
-    S += "v";
-  else if (!isFloatingPoint())
+  if (isVoid()) {
+    OutStr += "v";
+    if (!isPointer())
+      return OutStr;
+  } else if (isFloat()) {
     switch (ElementBitwidth) {
-    case 1: S += "b"; break;
-    case 8: S += "c"; break;
-    case 16: S += "s"; break;
-    case 32: S += "i"; break;
-    case 64: S += "Wi"; break;
-    case 128: S += "LLLi"; break;
-    default: llvm_unreachable("Unhandled case!");
+    case 16:
+      OutStr += "h";
+      break;
+    case 32:
+      OutStr += "f";
+      break;
+    case 64:
+      OutStr += "d";
+      break;
+    default:
+      llvm_unreachable("Unhandled float type!");
     }
-  else if (isFloat())
-    switch (ElementBitwidth) {
-    case 16: S += "h"; break;
-    case 32: S += "f"; break;
-    case 64: S += "d"; break;
-    default: llvm_unreachable("Unhandled case!");
-    }
-  else if (isBFloat()) {
+  } else if (isBFloat()) {
     assert(ElementBitwidth == 16 && "Not a valid BFloat.");
-    S += "y";
+    OutStr += "y";
   } else if (isMFloat()) {
     assert(ElementBitwidth == 8 && "Not a valid MFloat.");
-    S += "m";
+    OutStr += "m";
+  } else {
+    switch (ElementBitwidth) {
+    case 1:
+      OutStr += "b";
+      break;
+    case 8:
+      OutStr += "c";
+      break;
+    case 16:
+      OutStr += "s";
+      break;
+    case 32:
+      OutStr += "i";
+      break;
+    case 64:
+      OutStr += "Wi";
+      break;
+    case 128:
+      OutStr += "LLLi";
+      break;
+    default:
+      llvm_unreachable("Unhandled bitwidth!");
+    }
   }
 
-  if (!isFloatingPoint()) {
-    if ((isChar() || isPointer()) && !isVoidPointer()) {
-      // Make chars and typed pointers explicitly signed.
-      if (Signed)
-        S = "S" + S;
-      else if (!Signed)
-        S = "U" + S;
-    } else if (!isVoidPointer() && !Signed) {
-      S = "U" + S;
-    }
+  // Make chars and typed pointers explicitly signed.
+  if (!isFloatingPoint() && !isVoid()) {
+    if ((ElementBitwidth == 8 || isPointer()) && isSigned())
+      OutStr = "S" + OutStr;
+    if (!isSigned())
+      OutStr = "U" + OutStr;
   }
 
   // Constant indices are "int", but have the "constant expression" modifier.
   if (isImmediate()) {
-    assert(!isFloat() && "fp immediates are not supported");
-    S = "I" + S;
+    assert(!isFloatingPoint() && "fp immediates are not supported");
+    OutStr = "I" + OutStr;
   }
 
   if (isScalar()) {
-    if (Constant) S += "C";
-    if (Pointer) S += "*";
-    return S;
+    if (Constant)
+      OutStr += "C";
+    if (Pointer)
+      OutStr += "*";
+    return OutStr;
   }
 
   if (isFixedLengthVector())
-    return "V" + utostr(getNumElements() * NumVectors) + S;
-  return "q" + utostr(getNumElements() * NumVectors) + S;
+    return "V" + utostr(getNumElements() * NumVectors) + OutStr;
+  return "q" + utostr(getNumElements() * NumVectors) + OutStr;
 }
-
 std::string SVEType::str() const {
   if (isPredicatePattern())
     return "enum svpattern";
@@ -498,28 +523,30 @@ std::string SVEType::str() const {
     return "enum svprfop";
 
   std::string S;
-  if (Void)
+  if (isVoid())
     S += "void";
   else {
     if (isScalableVector() || isSvcount())
       S += "sv";
-    if (!Signed && !isFloatingPoint())
-      S += "u";
 
-    if (Float)
+    if (isFloat())
       S += "float";
     else if (isSvcount())
       S += "count";
-    else if (isScalarPredicate() || isPredicateVector())
+    else if (isPredicate())
       S += "bool";
     else if (isBFloat())
       S += "bfloat";
     else if (isMFloat())
       S += "mfloat";
-    else
-      S += "int";
+    else {
+      if (isSigned())
+        S += "int";
+      else
+        S += "uint";
+    };
 
-    if (!isScalarPredicate() && !isPredicateVector() && !isSvcount())
+    if (!isPredicate() && !isSvcount())
       S += utostr(ElementBitwidth);
     if (isFixedLengthVector())
       S += "x" + utostr(getNumElements());
@@ -541,13 +568,13 @@ void SVEType::applyTypespec(StringRef TS) {
   for (char I : TS) {
     switch (I) {
     case 'Q':
-      Svcount = true;
+      Kind = Svcount;
       break;
     case 'P':
-      Predicate = true;
+      Kind = Predicate;
       break;
     case 'U':
-      Signed = false;
+      Kind = UInt;
       break;
     case 'c':
       ElementBitwidth = 8;
@@ -565,28 +592,23 @@ void SVEType::applyTypespec(StringRef TS) {
       ElementBitwidth = 128;
       break;
     case 'h':
-      Float = true;
+      Kind = Float;
       ElementBitwidth = 16;
       break;
     case 'f':
-      Float = true;
+      Kind = Float;
       ElementBitwidth = 32;
       break;
     case 'd':
-      Float = true;
+      Kind = Float;
       ElementBitwidth = 64;
       break;
     case 'b':
-      BFloat = true;
-      Float = false;
-      MFloat = false;
+      Kind = BFloat16;
       ElementBitwidth = 16;
       break;
     case 'm':
-      Signed = false;
-      MFloat = true;
-      Float = false;
-      BFloat = false;
+      Kind = MFloat8;
       ElementBitwidth = 8;
       break;
     default:
@@ -599,7 +621,7 @@ void SVEType::applyTypespec(StringRef TS) {
 void SVEType::applyModifier(char Mod) {
   switch (Mod) {
   case 'v':
-    Void = true;
+    Kind = Void;
     break;
   case 'd':
     DefaultType = true;
@@ -613,7 +635,7 @@ void SVEType::applyModifier(char Mod) {
     NumVectors = 0;
     break;
   case 'e':
-    Signed = false;
+    Kind = UInt;
     ElementBitwidth /= 2;
     break;
   case 'h':
@@ -623,20 +645,14 @@ void SVEType::applyModifier(char Mod) {
     ElementBitwidth /= 4;
     break;
   case 'b':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth /= 4;
     break;
   case 'o':
     ElementBitwidth *= 4;
     break;
   case 'P':
-    Signed = true;
-    Float = false;
-    BFloat = false;
-    Predicate = true;
-    Svcount = false;
+    Kind = Predicate;
     Bitwidth = 16;
     ElementBitwidth = 1;
     break;
@@ -659,105 +675,61 @@ void SVEType::applyModifier(char Mod) {
     NumVectors = 0;
     break;
   case '@':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth /= 4;
     NumVectors = 0;
     break;
   case 'K':
-    Signed = true;
-    Float = false;
-    BFloat = false;
+    Kind = SInt;
     Bitwidth = ElementBitwidth;
     NumVectors = 0;
     break;
   case 'L':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     Bitwidth = ElementBitwidth;
     NumVectors = 0;
     break;
   case 'u':
-    Predicate = false;
-    Svcount = false;
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     break;
   case 'x':
-    Predicate = false;
-    Svcount = false;
-    Signed = true;
-    Float = false;
-    BFloat = false;
+    Kind = SInt;
     break;
   case 'i':
-    Predicate = false;
-    Svcount = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
-    Signed = false;
     Immediate = true;
     break;
   case 'I':
-    Predicate = false;
-    Svcount = false;
-    Float = false;
-    BFloat = false;
+    Kind = PredicatePattern;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = true;
     Immediate = true;
-    PredicatePattern = true;
     break;
   case 'J':
-    Predicate = false;
-    Svcount = false;
-    Float = false;
-    BFloat = false;
+    Kind = PrefetchOp;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = true;
     Immediate = true;
-    PrefetchOp = true;
     break;
   case 'k':
-    Predicate = false;
-    Svcount = false;
-    Signed = true;
-    Float = false;
-    BFloat = false;
+    Kind = SInt;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     break;
   case 'l':
-    Predicate = false;
-    Svcount = false;
-    Signed = true;
-    Float = false;
-    BFloat = false;
+    Kind = SInt;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     break;
   case 'm':
-    Predicate = false;
-    Svcount = false;
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
     break;
   case 'n':
-    Predicate = false;
-    Svcount = false;
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     break;
@@ -769,162 +741,140 @@ void SVEType::applyModifier(char Mod) {
     NumVectors = 0;
     break;
   case 'f':
-    Signed = false;
+    Kind = UInt;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
     break;
   case 'g':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = 64;
     break;
   case '[':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = 8;
     break;
   case 't':
-    Signed = true;
-    Float = false;
-    BFloat = false;
+    Kind = SInt;
     ElementBitwidth = 32;
     break;
   case 'z':
-    Signed = false;
-    Float = false;
-    BFloat = false;
+    Kind = UInt;
     ElementBitwidth = 32;
     break;
   case 'O':
-    Predicate = false;
-    Svcount = false;
-    Float = true;
+    Kind = Float;
     ElementBitwidth = 16;
     break;
   case 'M':
-    Predicate = false;
-    Svcount = false;
-    Float = true;
-    BFloat = false;
+    Kind = Float;
     ElementBitwidth = 32;
     break;
   case 'N':
-    Predicate = false;
-    Svcount = false;
-    Float = true;
+    Kind = Float;
     ElementBitwidth = 64;
     break;
   case 'Q':
+    Kind = Void;
     Constant = true;
     Pointer = true;
-    Void = true;
     NumVectors = 0;
     break;
   case 'S':
+    Kind = SInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 8;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'W':
+    Kind = UInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 8;
     NumVectors = 0;
-    Signed = false;
     break;
   case 'T':
+    Kind = SInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 16;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'X':
+    Kind = UInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 16;
     NumVectors = 0;
-    Signed = false;
     break;
   case 'Y':
+    Kind = UInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = false;
     break;
   case 'U':
+    Kind = SInt;
     Constant = true;
     Pointer = true;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = true;
     break;
   case '%':
+    Kind = Void;
     Pointer = true;
-    Void = true;
     NumVectors = 0;
     break;
   case 'A':
+    Kind = SInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 8;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'B':
+    Kind = SInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 16;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'C':
+    Kind = SInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'D':
+    Kind = SInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 64;
     NumVectors = 0;
-    Signed = true;
     break;
   case 'E':
+    Kind = UInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 8;
     NumVectors = 0;
-    Signed = false;
     break;
   case 'F':
+    Kind = UInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 16;
     NumVectors = 0;
-    Signed = false;
     break;
   case 'G':
+    Kind = UInt;
     Pointer = true;
     ElementBitwidth = Bitwidth = 32;
     NumVectors = 0;
-    Signed = false;
     break;
   case '$':
-    Predicate = false;
-    Svcount = false;
-    Float = false;
-    BFloat = true;
+    Kind = BFloat16;
     ElementBitwidth = 16;
     break;
   case '}':
-    Predicate = false;
-    Signed = true;
-    Svcount = true;
+    Kind = Svcount;
     NumVectors = 0;
-    Float = false;
-    BFloat = false;
     break;
   case '.':
     llvm_unreachable(". is never a type in itself");
@@ -1048,7 +998,7 @@ std::string Intrinsic::replaceTemplatedArgs(std::string Name, TypeSpec TS,
       TypeCode = T.isSigned() ? 's' : 'u';
     else if (T.isSvcount())
       TypeCode = 'c';
-    else if (T.isPredicateVector())
+    else if (T.isPredicate())
       TypeCode = 'b';
     else if (T.isBFloat())
       TypeCode = "bf";
@@ -1152,7 +1102,7 @@ uint64_t SVEEmitter::encodeTypeFlags(const SVEType &T) {
     return encodeEltType("EltTyMFloat8");
   }
 
-  if (T.isPredicateVector() || T.isSvcount()) {
+  if (T.isPredicate() || T.isSvcount()) {
     switch (T.getElementSizeInBits()) {
     case 8:
       return encodeEltType("EltTyBool8");
