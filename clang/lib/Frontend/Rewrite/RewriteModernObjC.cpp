@@ -874,12 +874,10 @@ RewriteModernObjC::getIvarAccessString(ObjCIvarDecl *D) {
       Zero = NoTypeInfoCStyleCastExpr(Context, PtrStructIMPL, CK_BitCast, Zero);
       ParenExpr *PE = new (Context) ParenExpr(SourceLocation(), SourceLocation(),
                                               Zero);
-      FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                        SourceLocation(),
-                                        &Context->Idents.get(D->getNameAsString()),
-                                        IvarT, nullptr,
-                                        /*BitWidth=*/nullptr, /*Mutable=*/true,
-                                        ICIS_NoInit);
+      FieldDecl *FD = FieldDecl::Create(
+          *Context, nullptr, SourceLocation(), SourceLocation(),
+          &Context->Idents.get(D->getNameAsString()), IvarT,
+          /*Mutable=*/true, ICIS_NoInit);
       MemberExpr *ME = MemberExpr::CreateImplicit(
           *Context, PE, true, FD, FD->getType(), VK_LValue, OK_Ordinary);
       IvarT = Context->getDecltypeType(ME, ME->getType());
@@ -2735,12 +2733,10 @@ Stmt *RewriteModernObjC::RewriteObjCArrayLiteralExpr(ObjCArrayLiteral *Exp) {
       CallExpr::Create(*Context, NSArrayDRE, InitExprs, NSArrayFType, VK_LValue,
                        SourceLocation(), FPOptionsOverride());
 
-  FieldDecl *ARRFD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("arr"),
-                                    Context->getPointerType(Context->VoidPtrTy),
-                                    nullptr, /*BitWidth=*/nullptr,
-                                    /*Mutable=*/true, ICIS_NoInit);
+  FieldDecl *ARRFD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("arr"), Context->getPointerType(Context->VoidPtrTy),
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ArrayLiteralME =
       MemberExpr::CreateImplicit(*Context, NSArrayCallExpr, false, ARRFD,
                                  ARRFD->getType(), VK_LValue, OK_Ordinary);
@@ -2864,12 +2860,10 @@ Stmt *RewriteModernObjC::RewriteObjCDictionaryLiteralExpr(ObjCDictionaryLiteral 
       CallExpr::Create(*Context, NSDictDRE, ValueExprs, NSDictFType, VK_LValue,
                        SourceLocation(), FPOptionsOverride());
 
-  FieldDecl *ARRFD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                       SourceLocation(),
-                                       &Context->Idents.get("arr"),
-                                       Context->getPointerType(Context->VoidPtrTy),
-                                       nullptr, /*BitWidth=*/nullptr,
-                                       /*Mutable=*/true, ICIS_NoInit);
+  FieldDecl *ARRFD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("arr"), Context->getPointerType(Context->VoidPtrTy),
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *DictLiteralValueME =
       MemberExpr::CreateImplicit(*Context, NSValueCallExpr, false, ARRFD,
                                  ARRFD->getType(), VK_LValue, OK_Ordinary);
@@ -2988,13 +2982,10 @@ QualType RewriteModernObjC::getSuperStructType() {
 
     // Create fields
     for (unsigned i = 0; i < 2; ++i) {
-      SuperStructDecl->addDecl(FieldDecl::Create(*Context, SuperStructDecl,
-                                                 SourceLocation(),
-                                                 SourceLocation(), nullptr,
-                                                 FieldTypes[i], nullptr,
-                                                 /*BitWidth=*/nullptr,
-                                                 /*Mutable=*/false,
-                                                 ICIS_NoInit));
+      SuperStructDecl->addDecl(
+          FieldDecl::Create(*Context, SuperStructDecl, SourceLocation(),
+                            SourceLocation(), nullptr, FieldTypes[i], nullptr,
+                            /*Mutable=*/false, ICIS_NoInit));
     }
 
     SuperStructDecl->completeDefinition();
@@ -3020,14 +3011,10 @@ QualType RewriteModernObjC::getConstantStringStructType() {
 
     // Create fields
     for (unsigned i = 0; i < 4; ++i) {
-      ConstantStringDecl->addDecl(FieldDecl::Create(*Context,
-                                                    ConstantStringDecl,
-                                                    SourceLocation(),
-                                                    SourceLocation(), nullptr,
-                                                    FieldTypes[i], nullptr,
-                                                    /*BitWidth=*/nullptr,
-                                                    /*Mutable=*/true,
-                                                    ICIS_NoInit));
+      ConstantStringDecl->addDecl(
+          FieldDecl::Create(*Context, ConstantStringDecl, SourceLocation(),
+                            SourceLocation(), nullptr, FieldTypes[i], nullptr,
+                            /*Mutable=*/true, ICIS_NoInit));
     }
 
     ConstantStringDecl->completeDefinition();
@@ -3181,12 +3168,10 @@ Expr *RewriteModernObjC::SynthMsgSendStretCallExpr(FunctionDecl *MsgSendStretFla
       CallExpr::Create(*Context, DRE, MsgExprs, castType, VK_LValue,
                        SourceLocation(), FPOptionsOverride());
 
-  FieldDecl *FieldD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("s"),
-                                    returnType, nullptr,
-                                    /*BitWidth=*/nullptr,
-                                    /*Mutable=*/true, ICIS_NoInit);
+  FieldDecl *FieldD =
+      FieldDecl::Create(*Context, nullptr, SourceLocation(), SourceLocation(),
+                        &Context->Idents.get("s"), returnType, nullptr,
+                        /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ME = MemberExpr::CreateImplicit(
       *Context, STCE, false, FieldD, FieldD->getType(), VK_LValue, OK_Ordinary);
 
@@ -3785,11 +3770,10 @@ QualType RewriteModernObjC::SynthesizeBitfieldGroupStructType(
       SourceLocation(), SourceLocation(), &Context->Idents.get(StructTagName));
   for (unsigned i=0, e = IVars.size(); i < e; i++) {
     ObjCIvarDecl *Ivar = IVars[i];
-    RD->addDecl(FieldDecl::Create(*Context, RD, SourceLocation(), SourceLocation(),
-                                  &Context->Idents.get(Ivar->getName()),
-                                  Ivar->getType(),
-                                  nullptr, /*Expr *BW */Ivar->getBitWidth(),
-                                  false, ICIS_NoInit));
+    RD->addDecl(FieldDecl::Create(
+        *Context, RD, SourceLocation(), SourceLocation(),
+        &Context->Idents.get(Ivar->getName()), Ivar->getType(), nullptr,
+        /*Expr *BW */ Ivar->getBitWidth(), 0, false, ICIS_NoInit));
   }
   RD->completeDefinition();
   return Context->getTagDeclType(RD);
@@ -4600,12 +4584,10 @@ Stmt *RewriteModernObjC::SynthesizeBlockCall(CallExpr *Exp, const Expr *BlockExp
                                           BlkCast);
   //PE->dump();
 
-  FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("FuncPtr"),
-                                    Context->VoidPtrTy, nullptr,
-                                    /*BitWidth=*/nullptr, /*Mutable=*/true,
-                                    ICIS_NoInit);
+  FieldDecl *FD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("FuncPtr"), Context->VoidPtrTy, nullptr,
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ME = MemberExpr::CreateImplicit(
       *Context, PE, true, FD, FD->getType(), VK_LValue, OK_Ordinary);
 
@@ -4647,21 +4629,18 @@ Stmt *RewriteModernObjC::RewriteBlockDeclRefExpr(DeclRefExpr *DeclRefExp) {
   bool isArrow = DeclRefExp->refersToEnclosingVariableOrCapture() ||
                  HasLocalVariableExternalStorage(DeclRefExp->getDecl());
 
-  FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("__forwarding"),
-                                    Context->VoidPtrTy, nullptr,
-                                    /*BitWidth=*/nullptr, /*Mutable=*/true,
-                                    ICIS_NoInit);
+  FieldDecl *FD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("__forwarding"), Context->VoidPtrTy, nullptr,
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ME = MemberExpr::CreateImplicit(
       *Context, DeclRefExp, isArrow, FD, FD->getType(), VK_LValue, OK_Ordinary);
 
   StringRef Name = VD->getName();
-  FD = FieldDecl::Create(*Context, nullptr, SourceLocation(), SourceLocation(),
-                         &Context->Idents.get(Name),
-                         Context->VoidPtrTy, nullptr,
-                         /*BitWidth=*/nullptr, /*Mutable=*/true,
-                         ICIS_NoInit);
+  FD =
+      FieldDecl::Create(*Context, nullptr, SourceLocation(), SourceLocation(),
+                        &Context->Idents.get(Name), Context->VoidPtrTy, nullptr,
+                        /*Mutable=*/true, ICIS_NoInit);
   ME = MemberExpr::CreateImplicit(*Context, ME, true, FD, DeclRefExp->getType(),
                                   VK_LValue, OK_Ordinary);
 
@@ -7481,12 +7460,10 @@ Stmt *RewriteModernObjC::RewriteObjCIvarRefExpr(ObjCIvarRefExpr *IV) {
           Zero = NoTypeInfoCStyleCastExpr(Context, PtrStructIMPL, CK_BitCast, Zero);
           ParenExpr *PE = new (Context) ParenExpr(SourceLocation(), SourceLocation(),
                                                   Zero);
-          FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                            SourceLocation(),
-                                            &Context->Idents.get(D->getNameAsString()),
-                                            IvarT, nullptr,
-                                            /*BitWidth=*/nullptr,
-                                            /*Mutable=*/true, ICIS_NoInit);
+          FieldDecl *FD = FieldDecl::Create(
+              *Context, nullptr, SourceLocation(), SourceLocation(),
+              &Context->Idents.get(D->getNameAsString()), IvarT, nullptr,
+              /*Mutable=*/true, ICIS_NoInit);
           MemberExpr *ME = MemberExpr::CreateImplicit(
               *Context, PE, true, FD, FD->getType(), VK_LValue, OK_Ordinary);
           IvarT = Context->getDecltypeType(ME, ME->getType());
@@ -7508,12 +7485,11 @@ Stmt *RewriteModernObjC::RewriteObjCIvarRefExpr(ObjCIvarRefExpr *IV) {
                                    Exp);
 
       if (D->isBitField()) {
-        FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                          SourceLocation(),
-                                          &Context->Idents.get(D->getNameAsString()),
-                                          D->getType(), nullptr,
-                                          /*BitWidth=*/D->getBitWidth(),
-                                          /*Mutable=*/true, ICIS_NoInit);
+        FieldDecl *FD = FieldDecl::Create(
+            *Context, nullptr, SourceLocation(), SourceLocation(),
+            &Context->Idents.get(D->getNameAsString()), D->getType(), nullptr,
+            /*BitWidth=*/D->getBitWidth(), 0,
+            /*Mutable=*/true, ICIS_NoInit);
         MemberExpr *ME =
             MemberExpr::CreateImplicit(*Context, PE, /*isArrow*/ false, FD,
                                        FD->getType(), VK_LValue, OK_Ordinary);

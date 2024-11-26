@@ -142,7 +142,7 @@ static RecordDecl *buildRecordForGlobalizedVars(
       Field = FieldDecl::Create(
           C, GlobalizedRD, Loc, Loc, VD->getIdentifier(), Type,
           C.getTrivialTypeSourceInfo(Type, SourceLocation()),
-          /*BW=*/nullptr, /*Mutable=*/false,
+          /*Mutable=*/false,
           /*InitStyle=*/ICIS_NoInit);
       Field->setAccess(AS_public);
       if (VD->hasAttrs()) {
@@ -160,7 +160,7 @@ static RecordDecl *buildRecordForGlobalizedVars(
       Field = FieldDecl::Create(
           C, GlobalizedRD, Loc, Loc, VD->getIdentifier(), Type,
           C.getTrivialTypeSourceInfo(Type, SourceLocation()),
-          /*BW=*/nullptr, /*Mutable=*/false,
+          /*Mutable=*/false,
           /*InitStyle=*/ICIS_NoInit);
       Field->setAccess(AS_public);
       llvm::APInt Align(32, Pair.first.getQuantity());
@@ -772,7 +772,7 @@ void CGOpenMPRuntimeGPU::emitKernelDeinit(CodeGenFunction &CGF,
     auto *Field = FieldDecl::Create(
         C, StaticRD, SourceLocation(), SourceLocation(), nullptr, RecTy,
         C.getTrivialTypeSourceInfo(RecTy, SourceLocation()),
-        /*BW=*/nullptr, /*Mutable=*/false,
+        /*Mutable=*/false,
         /*InitStyle=*/ICIS_NoInit);
     Field->setAccess(AS_public);
     StaticRD->addDecl(Field);

@@ -4555,16 +4555,26 @@ unsigned FunctionDecl::getODRHash() {
 FieldDecl *FieldDecl::Create(const ASTContext &C, DeclContext *DC,
                              SourceLocation StartLoc, SourceLocation IdLoc,
                              const IdentifierInfo *Id, QualType T,
-                             TypeSourceInfo *TInfo, Expr *BW, bool Mutable,
+                             TypeSourceInfo *TInfo, Expr *BW,
+                             unsigned BitWidthValue, bool Mutable,
                              InClassInitStyle InitStyle) {
   return new (C, DC) FieldDecl(Decl::Field, DC, StartLoc, IdLoc, Id, T, TInfo,
-                               BW, Mutable, InitStyle);
+                               BW, BitWidthValue, Mutable, InitStyle);
+}
+
+FieldDecl *FieldDecl::Create(const ASTContext &C, DeclContext *DC,
+                             SourceLocation StartLoc, SourceLocation IdLoc,
+                             const IdentifierInfo *Id, QualType T,
+                             TypeSourceInfo *TInfo, bool Mutable,
+                             InClassInitStyle InitStyle) {
+  return new (C, DC) FieldDecl(Decl::Field, DC, StartLoc, IdLoc, Id, T, TInfo,
+                               nullptr, 0, Mutable, InitStyle);
 }
 
 FieldDecl *FieldDecl::CreateDeserialized(ASTContext &C, GlobalDeclID ID) {
-  return new (C, ID) FieldDecl(Field, nullptr, SourceLocation(),
-                               SourceLocation(), nullptr, QualType(), nullptr,
-                               nullptr, false, ICIS_NoInit);
+  return new (C, ID)
+      FieldDecl(Field, nullptr, SourceLocation(), SourceLocation(), nullptr,
+                QualType(), nullptr, false, ICIS_NoInit);
 }
 
 bool FieldDecl::isAnonymousStructOrUnion() const {
@@ -4601,6 +4611,9 @@ void FieldDecl::setLazyInClassInitializer(LazyDeclStmtPtr NewInit) {
 
 unsigned FieldDecl::getBitWidthValue(const ASTContext &Ctx) const {
   assert(isBitField() && "not a bitfield");
+  // FIXME: 0 might be the actual value of the bitwidth.
+  if (BitWidthValue != 0)
+    return BitWidthValue;
   return getBitWidth()->EvaluateKnownConstInt(Ctx).getZExtValue();
 }
 

@@ -2541,13 +2541,10 @@ QualType RewriteObjC::getSuperStructType() {
 
     // Create fields
     for (unsigned i = 0; i < 2; ++i) {
-      SuperStructDecl->addDecl(FieldDecl::Create(*Context, SuperStructDecl,
-                                                 SourceLocation(),
-                                                 SourceLocation(), nullptr,
-                                                 FieldTypes[i], nullptr,
-                                                 /*BitWidth=*/nullptr,
-                                                 /*Mutable=*/false,
-                                                 ICIS_NoInit));
+      SuperStructDecl->addDecl(
+          FieldDecl::Create(*Context, SuperStructDecl, SourceLocation(),
+                            SourceLocation(), nullptr, FieldTypes[i], nullptr,
+                            /*Mutable=*/false, ICIS_NoInit));
     }
 
     SuperStructDecl->completeDefinition();
@@ -2573,14 +2570,10 @@ QualType RewriteObjC::getConstantStringStructType() {
 
     // Create fields
     for (unsigned i = 0; i < 4; ++i) {
-      ConstantStringDecl->addDecl(FieldDecl::Create(*Context,
-                                                    ConstantStringDecl,
-                                                    SourceLocation(),
-                                                    SourceLocation(), nullptr,
-                                                    FieldTypes[i], nullptr,
-                                                    /*BitWidth=*/nullptr,
-                                                    /*Mutable=*/true,
-                                                    ICIS_NoInit));
+      ConstantStringDecl->addDecl(
+          FieldDecl::Create(*Context, ConstantStringDecl, SourceLocation(),
+                            SourceLocation(), nullptr, FieldTypes[i], nullptr,
+                            /*Mutable=*/true, ICIS_NoInit));
     }
 
     ConstantStringDecl->completeDefinition();
@@ -3779,12 +3772,10 @@ Stmt *RewriteObjC::SynthesizeBlockCall(CallExpr *Exp, const Expr *BlockExp) {
                                           BlkCast);
   //PE->dump();
 
-  FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("FuncPtr"),
-                                    Context->VoidPtrTy, nullptr,
-                                    /*BitWidth=*/nullptr, /*Mutable=*/true,
-                                    ICIS_NoInit);
+  FieldDecl *FD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("FuncPtr"), Context->VoidPtrTy, nullptr,
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ME = MemberExpr::CreateImplicit(
       *Context, PE, true, FD, FD->getType(), VK_LValue, OK_Ordinary);
 
@@ -3826,22 +3817,19 @@ Stmt *RewriteObjC::RewriteBlockDeclRefExpr(DeclRefExpr *DeclRefExp) {
   bool isArrow = DeclRefExp->refersToEnclosingVariableOrCapture() ||
                  HasLocalVariableExternalStorage(DeclRefExp->getDecl());
 
-  FieldDecl *FD = FieldDecl::Create(*Context, nullptr, SourceLocation(),
-                                    SourceLocation(),
-                                    &Context->Idents.get("__forwarding"),
-                                    Context->VoidPtrTy, nullptr,
-                                    /*BitWidth=*/nullptr, /*Mutable=*/true,
-                                    ICIS_NoInit);
+  FieldDecl *FD = FieldDecl::Create(
+      *Context, nullptr, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("__forwarding"), Context->VoidPtrTy, nullptr,
+      /*Mutable=*/true, ICIS_NoInit);
   MemberExpr *ME =
       MemberExpr::CreateImplicit(*Context, DeclRefExp, isArrow, FD,
                                  FD->getType(), VK_LValue, OK_Ordinary);
 
   StringRef Name = VD->getName();
-  FD = FieldDecl::Create(*Context, nullptr, SourceLocation(), SourceLocation(),
-                         &Context->Idents.get(Name),
-                         Context->VoidPtrTy, nullptr,
-                         /*BitWidth=*/nullptr, /*Mutable=*/true,
-                         ICIS_NoInit);
+  FD =
+      FieldDecl::Create(*Context, nullptr, SourceLocation(), SourceLocation(),
+                        &Context->Idents.get(Name), Context->VoidPtrTy, nullptr,
+                        /*Mutable=*/true, ICIS_NoInit);
   ME = MemberExpr::CreateImplicit(*Context, ME, true, FD, DeclRefExp->getType(),
                                   VK_LValue, OK_Ordinary);
 

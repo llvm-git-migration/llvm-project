@@ -4277,7 +4277,7 @@ public:
   /// Returns false on success.
   ExprResult VerifyBitField(SourceLocation FieldLoc,
                             const IdentifierInfo *FieldName, QualType FieldTy,
-                            bool IsMsStruct, Expr *BitWidth);
+                            bool IsMsStruct, Expr *BitWidth, unsigned &BWV);
 
   /// IsValueInFlagEnum - Determine if a value is allowed as part of a flag
   /// enum. If AllowMask is true, then we also allow the complement of a valid

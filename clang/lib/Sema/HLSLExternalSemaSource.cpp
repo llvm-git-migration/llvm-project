@@ -93,9 +93,9 @@ struct BuiltinTypeDeclBuilder {
     IdentifierInfo &II = AST.Idents.get(Name, tok::TokenKind::identifier);
     TypeSourceInfo *MemTySource =
         AST.getTrivialTypeSourceInfo(Type, SourceLocation());
-    auto *Field = FieldDecl::Create(
-        AST, Record, SourceLocation(), SourceLocation(), &II, Type, MemTySource,
-        nullptr, false, InClassInitStyle::ICIS_NoInit);
+    auto *Field = FieldDecl::Create(AST, Record, SourceLocation(),
+                                    SourceLocation(), &II, Type, MemTySource,
+                                    false, InClassInitStyle::ICIS_NoInit);
     Field->setAccess(Access);
     Field->setImplicit(true);
     for (Attr *A : Attrs) {
