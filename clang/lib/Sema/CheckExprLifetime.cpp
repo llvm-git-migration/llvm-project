@@ -655,7 +655,8 @@ static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
           {IndirectLocalPathEntry::DefaultArg, DAE, DAE->getParam()});
       Arg = DAE->getExpr();
     }
-    if (CheckCoroCall || CanonCallee->getParamDecl(I)->hasAttr<LifetimeBoundAttr>())
+    if (CheckCoroCall ||
+        CanonCallee->getParamDecl(I)->hasAttr<LifetimeBoundAttr>())
       VisitLifetimeBoundArg(CanonCallee->getParamDecl(I), Arg);
     else if (const auto *CaptureAttr =
                  CanonCallee->getParamDecl(I)->getAttr<LifetimeCaptureByAttr>();
