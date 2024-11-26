@@ -145,7 +145,7 @@ struct DAP {
   lldb::SBBroadcaster broadcaster;
   std::thread event_thread;
   std::thread progress_event_thread;
-  llvm::raw_ostream *log;
+  std::ofstream *log;
   llvm::StringMap<SourceBreakpointMap> source_breakpoints;
   FunctionBreakpointMap function_breakpoints;
   InstructionBreakpointMap instruction_breakpoints;
@@ -197,7 +197,7 @@ struct DAP {
   // will contain that expression.
   std::string last_nonempty_var_expression;
 
-  DAP(llvm::StringRef path, llvm::raw_ostream *log, ReplMode repl_mode,
+  DAP(llvm::StringRef path, std::ofstream *log, ReplMode repl_mode,
       std::vector<std::string> pre_init_commands);
   ~DAP();
 

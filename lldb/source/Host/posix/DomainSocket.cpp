@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "lldb/Host/posix/DomainSocket.h"
+#include "lldb/Host/SocketAddress.h"
+#include "lldb/Symbol/LineEntry.h"
 #include "lldb/Utility/LLDBLog.h"
 
 #include "llvm/Support/Errno.h"
@@ -90,7 +92,8 @@ Status DomainSocket::Connect(llvm::StringRef name) {
   if (error.Fail())
     return error;
   if (llvm::sys::RetryAfterSignal(-1, ::connect, GetNativeSocket(),
-        (struct sockaddr *)&saddr_un, saddr_un_len) < 0)
+                                  (struct sockaddr *)&saddr_un,
+                                  saddr_un_len) < 0)
     SetLastError(error);
 
   return error;
@@ -158,8 +161,16 @@ std::string DomainSocket::GetSocketName() const {
   saddr_un.sun_family = AF_UNIX;
   socklen_t sock_addr_len = sizeof(struct sockaddr_un);
   if (::getpeername(m_socket, (struct sockaddr *)&saddr_un, &sock_addr_len) !=
-      0)
-    return "";
+      0) {
+    if (errno == ENOTCONN) {
+      if (::getsockname(m_socket, (struct sockaddr *)&saddr_un,
+                        &sock_addr_len) != 0) {
+        return "";
+      }
+    } else {
+      return "";
+    }
+  }
 
   if (sock_addr_len <= offsetof(struct sockaddr_un, sun_path))
     return ""; // Unnamed domain socket
@@ -180,4 +191,12 @@ std::string DomainSocket::GetRemoteConnectionURI() const {
   return llvm::formatv(
       "{0}://{1}",
       GetNameOffset() == 0 ? "unix-connect" : "unix-abstract-connect", name);
+}
+
+std::string DomainSocket::GetListeningConnectionURI() const {
+  std::string name = GetSocketName();
+  if (name.empty())
+    return name;
+
+  return llvm::formatv("unix-connect://{0}", name);
 }

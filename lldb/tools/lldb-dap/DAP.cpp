@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <cstdarg>
+#include <fstream>
 #include <mutex>
 
 #include "DAP.h"
@@ -34,7 +35,7 @@ using namespace lldb_dap;
 
 namespace lldb_dap {
 
-DAP::DAP(llvm::StringRef path, llvm::raw_ostream *log, ReplMode repl_mode,
+DAP::DAP(llvm::StringRef path, std::ofstream *log, ReplMode repl_mode,
          std::vector<std::string> pre_init_commands)
     : debug_adaptor_path(path), broadcaster("lldb-dap"), log(log),
       exception_breakpoints(), pre_init_commands(pre_init_commands),
@@ -66,8 +67,8 @@ llvm::Error DAP::ConfigureIO(int out_fd, int err_fd) {
     return Err;
   }
 
-  out = lldb::SBFile(new_stdout_fd.get(), "w", false);
-  err = lldb::SBFile(new_stderr_fd.get(), "w", false);
+  out = lldb::SBFile(new_stdout_fd.get(), "w", true);
+  err = lldb::SBFile(new_stderr_fd.get(), "w", true);
 
   return llvm::Error::success();
 }
@@ -207,9 +208,9 @@ void DAP::SendJSON(const llvm::json::Value &json) {
   if (log) {
     auto now = std::chrono::duration<double>(
         std::chrono::system_clock::now().time_since_epoch());
-    *log << llvm::formatv("{0:f9} <-- ", now.count()).str() << "\n"
+    *log << llvm::formatv("{0:f9} <-- ", now.count()).str() << std::endl
          << "Content-Length: " << json_str.size() << "\r\n\r\n"
-         << llvm::formatv("{0:2}", json).str() << "\n";
+         << llvm::formatv("{0:2}", json).str() << std::endl;
   }
 }
 
@@ -237,8 +238,8 @@ std::string DAP::ReadJSON() {
   if (log) {
     auto now = std::chrono::duration<double>(
         std::chrono::system_clock::now().time_since_epoch());
-    *log << llvm::formatv("{0:f9} --> ", now.count()).str()
-         << "\nContent-Length: " << length << "\r\n\r\n";
+    *log << llvm::formatv("{0:f9} --> ", now.count()).str() << std::endl
+         << "Content-Length: " << length << "\r\n\r\n";
   }
   return json_str;
 }
