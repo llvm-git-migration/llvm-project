@@ -523,7 +523,17 @@ static bool isNormalAssignmentOperator(const FunctionDecl *FD) {
   return false;
 }
 
+static const FunctionDecl *getDeclWithMergedLifetimeBoundAttrs(const FunctionDecl *FD) {
+  return FD->getMostRecentDecl();
+}
+
+static const CXXMethodDecl *getDeclWithMergedLifetimeBoundAttrs(const CXXMethodDecl *CMD) {
+  const FunctionDecl* FD = CMD;
+  return cast<CXXMethodDecl>(getDeclWithMergedLifetimeBoundAttrs(FD));
+}
+
 bool implicitObjectParamIsLifetimeBound(const FunctionDecl *FD) {
+  FD = getDeclWithMergedLifetimeBoundAttrs(FD);
   const TypeSourceInfo *TSI = FD->getTypeSourceInfo();
   if (!TSI)
     return false;
@@ -636,7 +646,7 @@ static void visitFunctionCallArguments(IndirectLocalPath &Path, Expr *Call,
     }
   }
 
-  const FunctionDecl *CanonCallee = Callee->getCanonicalDecl();
+  const FunctionDecl *CanonCallee = getDeclWithMergedLifetimeBoundAttrs(Callee);
   unsigned NP = std::min(Callee->getNumParams(), CanonCallee->getNumParams());
   for (unsigned I = 0, N = std::min<unsigned>(NP, Args.size()); I != N; ++I) {
     Expr *Arg = Args[I];
@@ -1236,6 +1246,7 @@ static AnalysisResult analyzePathForGSLPointer(const IndirectLocalPath &Path,
 }
 
 static bool isAssignmentOperatorLifetimeBound(CXXMethodDecl *CMD) {
+  CMD = getDeclWithMergedLifetimeBoundAttrs(CMD);
   return CMD && isNormalAssignmentOperator(CMD) && CMD->param_size() == 1 &&
          CMD->getParamDecl(0)->hasAttr<LifetimeBoundAttr>();
 }
