@@ -6202,7 +6202,7 @@ ARMTargetLowering::LowerRETURNADDR(SDValue Op, SelectionDAG &DAG,
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   const ARMBaseRegisterInfo &ARI =
-    *static_cast<const ARMBaseRegisterInfo*>(RegInfo);
+      *static_cast<const ARMBaseRegisterInfo *>(RegInfo);
   MFI.setReturnAddressIsTaken(true);
 
   if (verifyReturnAddressArgumentIsConstant(Op, DAG))
@@ -10677,7 +10677,8 @@ SDValue ARMTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
   case ISD::FP_TO_SINT_SAT:
   case ISD::FP_TO_UINT_SAT: return LowerFP_TO_INT_SAT(Op, DAG, Subtarget);
   case ISD::FCOPYSIGN:     return LowerFCOPYSIGN(Op, DAG);
-  case ISD::RETURNADDR:    return LowerRETURNADDR(Op, DAG, Subtarget);
+  case ISD::RETURNADDR:
+    return LowerRETURNADDR(Op, DAG, Subtarget);
   case ISD::FRAMEADDR:     return LowerFRAMEADDR(Op, DAG);
   case ISD::EH_SJLJ_SETJMP: return LowerEH_SJLJ_SETJMP(Op, DAG);
   case ISD::EH_SJLJ_LONGJMP: return LowerEH_SJLJ_LONGJMP(Op, DAG);
