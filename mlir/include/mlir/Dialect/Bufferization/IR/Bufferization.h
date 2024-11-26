@@ -19,10 +19,6 @@
 #include "mlir/Interfaces/SubsetOpInterface.h"
 #include "llvm/Support/Debug.h"
 
-namespace mlir::bufferization::detail {
-bool tensorTypesMatchUpToEncoding(Type lhs, Type rhs);
-} // namespace mlir::bufferization::detail
-
 //===----------------------------------------------------------------------===//
 // Bufferization Dialect
 //===----------------------------------------------------------------------===//
