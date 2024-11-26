@@ -3248,9 +3248,13 @@ void Sema::checkLifetimeCaptureBy(FunctionDecl *FD, bool IsMemberFunction,
       checkCaptureByLifetime(*this, CE, Captured);
     }
   };
-  for (unsigned I = 0; I < FD->getNumParams(); ++I)
-    HandleCaptureByAttr(FD->getParamDecl(I)->getAttr<LifetimeCaptureByAttr>(),
-                        I + IsMemberFunction);
+  // Suppress the warning if the capturing object is also a temporary to reduce
+  // noise, e.g `vector<string_view>().push_back(std::string());`.
+  if (!isa_and_present<MaterializeTemporaryExpr>(ThisArg)) {
+    for (unsigned I = 0; I < FD->getNumParams(); ++I)
+      HandleCaptureByAttr(FD->getParamDecl(I)->getAttr<LifetimeCaptureByAttr>(),
+                          I + IsMemberFunction);
+  }
   // Check when the implicit object param is captured.
   if (IsMemberFunction) {
     TypeSourceInfo *TSI = FD->getTypeSourceInfo();

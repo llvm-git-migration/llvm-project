@@ -143,6 +143,17 @@ void use() {
 }
 } // namespace this_is_captured
 
+namespace ignore_temporary_class_object {
+struct S {
+  void add(const int& x [[clang::lifetime_capture_by(this)]]);
+};
+
+void test() {
+  S().add(1);
+  S{}.add(1);
+}
+} // namespace ignore_temporary_class_object
+
 // ****************************************************************************
 // Capture by Global and Unknown.
 // ****************************************************************************
