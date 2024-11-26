@@ -353,6 +353,10 @@ public:
 
   lldb::ModuleSP FindFirstModule(const ModuleSpec &module_spec) const;
 
+  const Symbol *
+  FindFirstSymbolWithNameAndType(ConstString name,
+                                 lldb::SymbolType symbol_type) const;
+
   void FindSymbolsWithNameAndType(ConstString name,
                                   lldb::SymbolType symbol_type,
                                   SymbolContextList &sc_list) const;
