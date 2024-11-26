@@ -21,10 +21,10 @@ void ReturnConstRefFromParameterCheck::registerMatchers(MatchFinder *Finder) {
               to(parmVarDecl(hasType(hasCanonicalType(
                                  qualType(lValueReferenceType(pointee(
                                               qualType(isConstQualified()))))
-                                     .bind("type"))))
+                                     .bind("type"))), parmVarDecl(hasDeclContext(functionDecl().bind("owner"))))
                      .bind("param")))),
           hasAncestor(
-              functionDecl(hasReturnTypeLoc(loc(qualType(
+              functionDecl(equalsBoundNode("owner"), hasReturnTypeLoc(loc(qualType(
                                hasCanonicalType(equalsBoundNode("type"))))))
                   .bind("func")))
           .bind("ret"),
