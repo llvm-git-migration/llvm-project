@@ -765,7 +765,8 @@ gentbl_filegroup(
 filegroup(
     name = "PythonTestPyFiles",
     srcs = [
-        "mlir/dialects/python_test.py",
+        "mlir/dialects/python_test_nanobind.py",
+        "mlir/dialects/python_test_pybind11.py",
         ":PythonTestPyGen",
     ],
 )
