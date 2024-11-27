@@ -2,8 +2,8 @@
 #  See https://llvm.org/LICENSE.txt for license information.
 #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-from ._python_test_ops_gen import *
-from .._mlir_libs._mlirPythonTest import (
+from mlir.dialects._python_test_ops_gen import *
+from mlir._mlir_libs._mlirPythonTestPybind11 import (
     TestAttr,
     TestType,
     TestTensorValue,
@@ -12,6 +12,6 @@ from .._mlir_libs._mlirPythonTest import (
 
 
 def register_python_test_dialect(registry):
-    from .._mlir_libs import _mlirPythonTest
+    from mlir._mlir_libs import _mlirPythonTestPybind11
 
     _mlirPythonTest.register_dialect(registry)

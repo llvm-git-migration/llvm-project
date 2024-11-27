@@ -1,8 +1,15 @@
-# RUN: %PYTHON %s | FileCheck %s
+# RUN: %PYTHON %s pybind11 | FileCheck %s
+# RUN: %PYTHON %s nanobind | FileCheck %s
 
+import sys
 from mlir.ir import *
 import mlir.dialects.func as func
-import mlir.dialects.python_test as test
+if sys.argv[1] == "pybind11":
+    import mlir.dialects.python_pybind11_test as test
+elif sys.argv[1] == "nanobind":
+    import mlir.dialects.python_nanobind_test as test
+else:
+    raise ValueError("Expected pybind11 or nanobind as argument")
 import mlir.dialects.tensor as tensor
 import mlir.dialects.arith as arith
 
