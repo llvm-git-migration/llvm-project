@@ -1155,7 +1155,7 @@ Sanitizers
   for examples.
 
 - Introduced an experimental Type Sanitizer, activated by using the
-  ``-fsanitize=type flag. This sanitizer detects violations of C/C++ type-based
+  ``-fsanitize=type`` flag. This sanitizer detects violations of C/C++ type-based
   aliasing rules.
 
 Python Binding Changes
