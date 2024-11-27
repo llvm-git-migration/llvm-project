@@ -272,7 +272,7 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
         Bits BitWidth = FullBitWidth;
 
         if (const FieldDecl *FD = P.getField(); FD && FD->isBitField())
-          BitWidth = Bits(std::min(FD->getBitWidthValue(ASTCtx),
+          BitWidth = Bits(std::min(FD->getBitWidthValue(),
                                    (unsigned)FullBitWidth.getQuantity()));
         else if (T == PT_Bool && PackedBools)
           BitWidth = Bits(1);
@@ -304,8 +304,8 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
           assert(NumBits.isFullByte());
           assert(NumBits.getQuantity() <= FullBitWidth.getQuantity());
           F.bitcastToMemory(Buff.get());
-          // Now, only (maybe) swap the actual size of the float, excluding the
-          // padding bits.
+          // Now, only (maybe) swap the actual size of the float, excluding
+          // the padding bits.
           if (llvm::sys::IsBigEndianHost)
             swapBytes(Buff.get(), NumBits.roundToBytes());
 
@@ -409,7 +409,7 @@ bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
 
         Bits BitWidth;
         if (const FieldDecl *FD = P.getField(); FD && FD->isBitField())
-          BitWidth = Bits(std::min(FD->getBitWidthValue(ASTCtx),
+          BitWidth = Bits(std::min(FD->getBitWidthValue(),
                                    (unsigned)FullBitWidth.getQuantity()));
         else if (T == PT_Bool && PackedBools)
           BitWidth = Bits(1);
