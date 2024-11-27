@@ -436,6 +436,7 @@ protected:
   bool simplifyIntrinsicCallIsConstant(CallBase &CB);
   bool simplifyIntrinsicCallObjectSize(CallBase &CB);
   ConstantInt *stripAndComputeInBoundsConstantOffsets(Value *&V);
+  bool isLoweredToCall(Function *F, CallBase &Call);
 
   /// Return true if the given argument to the function being considered for
   /// inlining has the given attribute set either at the call site or the
@@ -2270,6 +2271,48 @@ bool CallAnalyzer::simplifyCallSite(Function *F, CallBase &Call) {
   return false;
 }
 
+bool CallAnalyzer::isLoweredToCall(Function *F, CallBase &Call) {
+  // Calls to memcpy with a known constant size 1/2/4/8 should not incur a call
+  // penalty, as the calls will be folded away by InstCombine. This is only
+  // really relevant on platforms whose headers redirect memcpy to __memcpy_chk
+  // (e.g. Mac), as other platforms use memcpy intrinsics, which are already
+  // exempt from the call penalty.
+  if (GetTLI) {
+    auto TLI = GetTLI(*F);
+    LibFunc LF;
+    if (TLI.getLibFunc(*F, LF) && TLI.has(LF)) {
+      switch (LF) {
+      case LibFunc_memcpy_chk:
+      case LibFunc_memmove_chk:
+      case LibFunc_mempcpy_chk:
+      case LibFunc_memset_chk: {
+        auto LenOp = dyn_cast_or_null<ConstantInt>(Call.getOperand(2));
+        if (!LenOp)
+          LenOp = dyn_cast_or_null<ConstantInt>(
+              SimplifiedValues.lookup(Call.getOperand(2)));
+        auto ObjSizeOp = dyn_cast_or_null<ConstantInt>(Call.getOperand(3));
+        if (!ObjSizeOp)
+          ObjSizeOp = dyn_cast_or_null<ConstantInt>(
+              SimplifiedValues.lookup(Call.getOperand(3)));
+        if (LenOp && ObjSizeOp) {
+          auto Len = LenOp->getLimitedValue();
+          auto ObjSize = ObjSizeOp->getLimitedValue();
+          if (ObjSize >= Len &&
+              (Len == 1 || Len == 2 || Len == 4 || Len == 8)) {
+            return false;
+          }
+        }
+        break;
+      }
+      default:
+        break;
+      }
+    }
+  }
+
+  return TTI.isLoweredToCall(F);
+}
+
 bool CallAnalyzer::visitCallBase(CallBase &Call) {
   if (!onCallBaseVisitStart(Call))
     return true;
@@ -2351,7 +2394,7 @@ bool CallAnalyzer::visitCallBase(CallBase &Call) {
       return false;
   }
 
-  if (TTI.isLoweredToCall(F)) {
+  if (isLoweredToCall(F, Call)) {
     onLoweredCall(F, Call, IsIndirectCall);
   }
 
