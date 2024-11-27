@@ -150,7 +150,7 @@ define i32 @notdominating() {
 ; CHECK-NEXT:    store i32 0, ptr [[A]], align 4
 ; CHECK-NEXT:    store i32 1, ptr [[B]], align 4
 ; CHECK-NEXT:    call void @callee(ptr [[A]])
-; CHECK-NEXT:    ret i32 poison
+; CHECK-NEXT:    ret i32 0
 ;
   %a = alloca {i32, i32}
   %b = getelementptr i32, ptr %a, i32 1
@@ -249,7 +249,7 @@ define void @incompletestruct(i1 %b, i1 %c) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[LII:%.*]] = alloca [[STRUCT_LOADIMMEDIATEINFO:%.*]], align 4
 ; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 4, ptr nonnull [[LII]])
-; CHECK-NEXT:    [[BF_CLEAR4:%.*]] = and i32 poison, -262144
+; CHECK-NEXT:    [[BF_CLEAR4:%.*]] = and i32 0, -262144
 ; CHECK-NEXT:    [[BF_SET5:%.*]] = select i1 [[B:%.*]], i32 196608, i32 131072
 ; CHECK-NEXT:    [[BF_SET12:%.*]] = or disjoint i32 [[BF_SET5]], [[BF_CLEAR4]]
 ; CHECK-NEXT:    store i32 [[BF_SET12]], ptr [[LII]], align 4

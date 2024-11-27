@@ -81,11 +81,14 @@ private:
 
   BBMapTy BBMap;
   BumpPtrAllocator Allocator;
+  std::optional<ValT> UndefinedVal;
 
 public:
   explicit SSAUpdaterImpl(UpdaterT *U, AvailableValsTy *A,
-                          SmallVectorImpl<PhiT *> *Ins) :
-    Updater(U), AvailableVals(A), InsertedPHIs(Ins) {}
+                          SmallVectorImpl<PhiT *> *Ins,
+                          std::optional<ValT> UndefinedVal = std::nullopt)
+      : Updater(U), AvailableVals(A), InsertedPHIs(Ins),
+        UndefinedVal(UndefinedVal) {}
 
   /// GetValue - Check to see if AvailableVals has an entry for the specified
   /// BB and if so, return it.  If not, construct SSA form by first
@@ -97,7 +100,7 @@ public:
 
     // Special case: bail out if BB is unreachable.
     if (BlockList.size() == 0) {
-      ValT V = Traits::GetPoisonVal(BB, Updater);
+      ValT V = UndefinedVal ? *UndefinedVal : Traits::GetPoisonVal(BB, Updater);
       (*AvailableVals)[BB] = V;
       return V;
     }
@@ -253,7 +256,9 @@ public:
 
           // Treat an unreachable predecessor as a definition with 'poison'.
           if (Pred->BlkNum == 0) {
-            Pred->AvailableVal = Traits::GetPoisonVal(Pred->BB, Updater);
+            Pred->AvailableVal = UndefinedVal
+                                     ? *UndefinedVal
+                                     : Traits::GetPoisonVal(Pred->BB, Updater);
             (*AvailableVals)[Pred->BB] = Pred->AvailableVal;
             Pred->DefBB = Pred;
             Pred->BlkNum = PseudoEntry->BlkNum;

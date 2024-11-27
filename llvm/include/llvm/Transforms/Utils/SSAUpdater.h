@@ -55,6 +55,10 @@ private:
   /// the vector.
   SmallVectorImpl<PHINode *> *InsertedPHIs;
 
+  /// The Undefined value (usually poison) to use for loads with no available
+  /// values or blocks considered unreachable.
+  Value *UndefinedVal = nullptr;
+
 public:
   /// If InsertedPHIs is specified, it will be filled
   /// in with all PHI Nodes created by rewriting.
@@ -133,6 +137,13 @@ public:
   /// a definition, because it assumes that all uses of a value are below any
   /// inserted values.
   void RewriteUseAfterInsertions(Use &U);
+
+  /// Set the UndefinedVal used for for loads with no available values or blocks
+  /// considered unreachable.
+  void SetUndefinedVal(Value *V);
+
+  /// Get the UndefinedVal or Poison if it is unset.
+  Value *GetUndefinedVal(Type *Ty);
 
 private:
   Value *GetValueAtEndOfBlockInternal(BasicBlock *BB);

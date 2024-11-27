@@ -135,9 +135,10 @@ Value *SSAUpdater::GetValueInMiddleOfBlock(BasicBlock *BB) {
     }
   }
 
-  // If there are no predecessors, just return poison.
+  // If there are no predecessors, just return poison / the undefined input
+  // value.
   if (PredValues.empty())
-    return PoisonValue::get(ProtoType);
+    return GetUndefinedVal(ProtoType);
 
   // Otherwise, if all the merged values are the same, just use it.
   if (SingularValue)
@@ -359,8 +360,18 @@ Value *SSAUpdater::GetValueAtEndOfBlockInternal(BasicBlock *BB) {
   if (Value *V = AvailableVals[BB])
     return V;
 
-  SSAUpdaterImpl<SSAUpdater> Impl(this, &AvailableVals, InsertedPHIs);
+  SSAUpdaterImpl<SSAUpdater> Impl(this, &AvailableVals, InsertedPHIs,
+                                  UndefinedVal ? std::optional(UndefinedVal)
+                                               : std::nullopt);
   return Impl.GetValue(BB);
+}
+
+void SSAUpdater::SetUndefinedVal(Value *V) { UndefinedVal = V; }
+
+Value *SSAUpdater::GetUndefinedVal(Type *Ty) {
+  if (!UndefinedVal)
+    UndefinedVal = PoisonValue::get(Ty);
+  return UndefinedVal;
 }
 
 //===----------------------------------------------------------------------===//
@@ -484,7 +495,8 @@ void LoadAndStorePromoter::run(const SmallVectorImpl<Instruction *> &Insts) {
     replaceLoadWithValue(ALoad, NewVal);
 
     // Avoid assertions in unreachable code.
-    if (NewVal == ALoad) NewVal = PoisonValue::get(NewVal->getType());
+    if (NewVal == ALoad)
+      NewVal = SSA.GetUndefinedVal(NewVal->getType());
     ALoad->replaceAllUsesWith(NewVal);
     ReplacedLoads[ALoad] = NewVal;
   }

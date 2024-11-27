@@ -838,7 +838,7 @@ define i8 @dont_transform_load_only() {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[A:%.*]] = alloca i8, align 1
 ; CHECK-NEXT:    call void @byte_user_of_alloca(ptr [[A]])
-; CHECK-NEXT:    ret i8 poison
+; CHECK-NEXT:    ret i8 0
 ;
 entry:
   %a = alloca i8

@@ -5479,7 +5479,7 @@ void SROA::clobberUse(Use &U) {
     }
 }
 
-// A basic LoadAndStorePromoter that does not remove store nodes.
+/// A basic LoadAndStorePromoter that does not remove store nodes.
 class BasicLoadAndStorePromoter : public LoadAndStorePromoter {
 public:
   BasicLoadAndStorePromoter(ArrayRef<const Instruction *> Insts, SSAUpdater &S)
@@ -5505,14 +5505,13 @@ bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
     while (PartitionEnd != AS.end() &&
            (PartitionEnd->beginOffset() < EndOffset ||
             PartitionEnd->endOffset() <= EndOffset)) {
-      EndOffset = std::max(EndOffset, PartitionEnd->endOffset());
       if (AllSameAndValid) {
         AllSameAndValid &= PartitionEnd->beginOffset() == BeginOffset &&
                            PartitionEnd->endOffset() == EndOffset;
         Instruction *User =
             cast<Instruction>(PartitionEnd->getUse()->getUser());
         if (isa<LoadInst>(User) || isa<StoreInst>(User)) {
-          // LoadAndStorePromoter requires all the types are the same.
+          // LoadAndStorePromoter requires all the types to be the same.
           Type *UserTy = getLoadStoreType(User);
           if (PartitionType && UserTy != PartitionType)
             AllSameAndValid = false;
@@ -5521,6 +5520,7 @@ bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
         } else if (!isAssumeLikeIntrinsic(User))
           AllSameAndValid = false;
       }
+      EndOffset = std::max(EndOffset, PartitionEnd->endOffset());
       ++PartitionEnd;
     }
 
@@ -5534,8 +5534,7 @@ bool SROA::propagateStoredValuesToLoads(AllocaInst &AI, AllocaSlices &AS) {
       BasicLoadAndStorePromoter Promoter(Insts, SSA);
       // Add a zero value at the point of the alloca, to prevent the SSA updater
       // replacing loads with poison which would not be valid for padded loads.
-      SSA.AddAvailableValue(AI.getParent(),
-                            Constant::getNullValue(PartitionType));
+      SSA.SetUndefinedVal(Constant::getNullValue(PartitionType));
       Promoter.run(Insts);
     }
 
