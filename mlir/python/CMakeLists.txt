@@ -63,8 +63,7 @@ declare_mlir_dialect_python_bindings(
   TD_FILE dialects/AffineOps.td
   SOURCES
     dialects/affine.py
-  DIALECT_NAME affine
-  GEN_ENUM_BINDINGS)
+  DIALECT_NAME affine)
 
 declare_mlir_dialect_python_bindings(
   ADD_TO_PARENT MLIRPythonSources.Dialects
@@ -88,10 +87,7 @@ declare_mlir_dialect_python_bindings(
   TD_FILE dialects/BufferizationOps.td
   SOURCES
     dialects/bufferization.py
-  DIALECT_NAME bufferization
-  GEN_ENUM_BINDINGS_TD_FILE
-    "../../include/mlir/Dialect/Bufferization/IR/BufferizationEnums.td"
-)
+  DIALECT_NAME bufferization)
 
 declare_mlir_dialect_python_bindings(
   ADD_TO_PARENT MLIRPythonSources.Dialects
@@ -178,10 +174,7 @@ declare_mlir_dialect_python_bindings(
   SOURCES
     dialects/transform/__init__.py
     _mlir_libs/_mlir/dialects/transform/__init__.pyi
-  DIALECT_NAME transform
-  GEN_ENUM_BINDINGS_TD_FILE
-    "../../include/mlir/Dialect/Transform/IR/TransformAttrs.td"
-)
+  DIALECT_NAME transform)
 
 declare_mlir_python_sources(
   MLIRPythonSources.Dialects.transform.extras
@@ -250,10 +243,7 @@ declare_mlir_dialect_extension_python_bindings(
   SOURCES
     dialects/transform/structured.py
   DIALECT_NAME transform
-  EXTENSION_NAME structured_transform
-  GEN_ENUM_BINDINGS_TD_FILE
-    "../../include/mlir/Dialect/Linalg/TransformOps/LinalgTransformEnums.td"
-)
+  EXTENSION_NAME structured_transform)
 
 declare_mlir_dialect_extension_python_bindings(
   ADD_TO_PARENT MLIRPythonSources.Dialects
@@ -280,10 +270,7 @@ declare_mlir_dialect_extension_python_bindings(
   SOURCES
     dialects/transform/vector.py
   DIALECT_NAME transform
-  EXTENSION_NAME vector_transform
-  GEN_ENUM_BINDINGS_TD_FILE
-    "../../include/mlir/Dialect/Vector/Transforms/VectorTransformsBase.td"
-)
+  EXTENSION_NAME vector_transform)
 
 declare_mlir_dialect_python_bindings(
   ADD_TO_PARENT MLIRPythonSources.Dialects

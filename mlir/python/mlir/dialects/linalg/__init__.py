@@ -1,6 +1,7 @@
 #  Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 #  See https://llvm.org/LICENSE.txt for license information.
 #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+from enum import IntEnum
 
 # Re-export the objects provided by pybind.
 from ..._mlir_libs._mlirDialectsLinalg import *
@@ -102,3 +103,152 @@ def broadcast(
     )
     fill_builtin_region(op.operation)
     return op
+
+
+class BinaryFn(IntEnum):
+    """allowed 32-bit signless integer cases: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9"""
+
+    add = 0
+    sub = 1
+    mul = 2
+    div = 3
+    div_unsigned = 4
+    max_signed = 5
+    min_signed = 6
+    max_unsigned = 7
+    min_unsigned = 8
+    powf = 9
+
+    def __str__(self):
+        if self is BinaryFn.add:
+            return "add"
+        if self is BinaryFn.sub:
+            return "sub"
+        if self is BinaryFn.mul:
+            return "mul"
+        if self is BinaryFn.div:
+            return "div"
+        if self is BinaryFn.div_unsigned:
+            return "div_unsigned"
+        if self is BinaryFn.max_signed:
+            return "max_signed"
+        if self is BinaryFn.min_signed:
+            return "min_signed"
+        if self is BinaryFn.max_unsigned:
+            return "max_unsigned"
+        if self is BinaryFn.min_unsigned:
+            return "min_unsigned"
+        if self is BinaryFn.powf:
+            return "powf"
+        raise ValueError("Unknown BinaryFn enum entry.")
+
+
+@register_attribute_builder("BinaryFn")
+def _binaryfn(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class IteratorType(IntEnum):
+    """Iterator type"""
+
+    parallel = 0
+    reduction = 1
+
+    def __str__(self):
+        if self is IteratorType.parallel:
+            return "parallel"
+        if self is IteratorType.reduction:
+            return "reduction"
+        raise ValueError("Unknown IteratorType enum entry.")
+
+
+@register_attribute_builder("IteratorType")
+def _iteratortype(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class TernaryFn(IntEnum):
+    """allowed 32-bit signless integer cases: 0"""
+
+    select = 0
+
+    def __str__(self):
+        if self is TernaryFn.select:
+            return "select"
+        raise ValueError("Unknown TernaryFn enum entry.")
+
+
+@register_attribute_builder("TernaryFn")
+def _ternaryfn(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class TypeFn(IntEnum):
+    """allowed 32-bit signless integer cases: 0, 1"""
+
+    cast_signed = 0
+    cast_unsigned = 1
+
+    def __str__(self):
+        if self is TypeFn.cast_signed:
+            return "cast_signed"
+        if self is TypeFn.cast_unsigned:
+            return "cast_unsigned"
+        raise ValueError("Unknown TypeFn enum entry.")
+
+
+@register_attribute_builder("TypeFn")
+def _typefn(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class UnaryFn(IntEnum):
+    """allowed 32-bit signless integer cases: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12"""
+
+    exp = 0
+    log = 1
+    abs = 2
+    ceil = 3
+    floor = 4
+    negf = 5
+    reciprocal = 6
+    round = 7
+    sqrt = 8
+    rsqrt = 9
+    square = 10
+    tanh = 11
+    erf = 12
+
+    def __str__(self):
+        if self is UnaryFn.exp:
+            return "exp"
+        if self is UnaryFn.log:
+            return "log"
+        if self is UnaryFn.abs:
+            return "abs"
+        if self is UnaryFn.ceil:
+            return "ceil"
+        if self is UnaryFn.floor:
+            return "floor"
+        if self is UnaryFn.negf:
+            return "negf"
+        if self is UnaryFn.reciprocal:
+            return "reciprocal"
+        if self is UnaryFn.round:
+            return "round"
+        if self is UnaryFn.sqrt:
+            return "sqrt"
+        if self is UnaryFn.rsqrt:
+            return "rsqrt"
+        if self is UnaryFn.square:
+            return "square"
+        if self is UnaryFn.tanh:
+            return "tanh"
+        if self is UnaryFn.erf:
+            return "erf"
+        raise ValueError("Unknown UnaryFn enum entry.")
+
+
+@register_attribute_builder("UnaryFn")
+def _unaryfn(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))

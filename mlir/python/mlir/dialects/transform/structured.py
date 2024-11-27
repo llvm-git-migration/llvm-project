@@ -1,10 +1,10 @@
 #  Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 #  See https://llvm.org/LICENSE.txt for license information.
 #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+from enum import IntEnum
 
 from .._structured_transform_ops_gen import *
 from .._structured_transform_ops_gen import _Dialect
-from .._structured_transform_enum_gen import *
 
 try:
     from ...ir import *
@@ -648,3 +648,44 @@ class VectorizeChildrenAndApplyPatternsOp(VectorizeChildrenAndApplyPatternsOp):
             loc=loc,
             ip=ip,
         )
+
+
+class MatchInterfaceEnum(IntEnum):
+    """An interface to match"""
+
+    LinalgOp = 0
+    TilingInterface = 1
+    LoopLikeInterface = 2
+
+    def __str__(self):
+        if self is MatchInterfaceEnum.LinalgOp:
+            return "LinalgOp"
+        if self is MatchInterfaceEnum.TilingInterface:
+            return "TilingInterface"
+        if self is MatchInterfaceEnum.LoopLikeInterface:
+            return "LoopLikeInterface"
+        raise ValueError("Unknown MatchInterfaceEnum enum entry.")
+
+
+@register_attribute_builder("MatchInterfaceEnum")
+def _matchinterfaceenum(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class TransposeMatmulInput(IntEnum):
+    """Input to transpose when converting matmul ops to transposed variants"""
+
+    lhs = 0
+    rhs = 1
+
+    def __str__(self):
+        if self is TransposeMatmulInput.lhs:
+            return "lhs"
+        if self is TransposeMatmulInput.rhs:
+            return "rhs"
+        raise ValueError("Unknown TransposeMatmulInput enum entry.")
+
+
+@register_attribute_builder("TransposeMatmulInput")
+def _transposematmulinput(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
