@@ -240,7 +240,7 @@ static bool readPointerToBuffer(const Context &Ctx, const Pointer &FromPtr,
         Bits FullBitWidth = BitWidth;
 
         if (const FieldDecl *FD = P.getField(); FD && FD->isBitField()) {
-          BitWidth = Bits(std::min(FD->getBitWidthValue(ASTCtx),
+          BitWidth = Bits(std::min(FD->getBitWidthValue(),
                                    (unsigned)FullBitWidth.getQuantity()));
         } else if (T == PT_Bool && PackedBools)
           BitWidth = Bits(1);
