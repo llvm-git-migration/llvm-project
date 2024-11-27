@@ -14,8 +14,8 @@
 // RUN: %clang -x c++ -std=c++11 -include %t.h -fsyntax-only %s 2> %t.cpp11log
 // RUN: FileCheck %s --check-prefix=CHECK-OPT-DIFF < %t.cpp11log
 
-// RUN: %clang -include %t.h -fsyntax-only %s 2> %t.missinglog2
-// RUN: FileCheck --check-prefix=CHECK-OPT-DIFF %s < %t.missinglog2
+// RUN: %clang -include %t.h -fsyntax-only %s | \
+// RUN: FileCheck --check-prefix=CHECK-OPT-DIFF %s
 // RUN: not %clang -include %t.h -DFOO=foo -DBAR=bar -fsyntax-only %s 2> %t.missinglog2
 // RUN: FileCheck -check-prefix=CHECK-NO-SUITABLE %s < %t.missinglog2
 
