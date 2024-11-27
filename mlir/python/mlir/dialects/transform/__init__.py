@@ -1,8 +1,8 @@
 #  Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 #  See https://llvm.org/LICENSE.txt for license information.
 #  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+from enum import IntEnum
 
-from .._transform_enum_gen import *
 from .._transform_ops_gen import *
 from .._transform_ops_gen import _Dialect
 from ..._mlir_libs._mlirDialectsTransform import *
@@ -219,3 +219,53 @@ AnyOpTypeT = NewType("AnyOpType", AnyOpType)
 
 def any_op_t() -> AnyOpTypeT:
     return AnyOpTypeT(AnyOpType.get())
+
+
+class FailurePropagationMode(IntEnum):
+    """Silenceable error propagation policy"""
+
+    Propagate = 1
+    Suppress = 2
+
+    def __str__(self):
+        if self is FailurePropagationMode.Propagate:
+            return "propagate"
+        if self is FailurePropagationMode.Suppress:
+            return "suppress"
+        raise ValueError("Unknown FailurePropagationMode enum entry.")
+
+
+@register_attribute_builder("FailurePropagationMode")
+def _failurepropagationmode(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
+
+
+class MatchCmpIPredicate(IntEnum):
+    """allowed 32-bit signless integer cases: 0, 1, 2, 3, 4, 5"""
+
+    eq = 0
+    ne = 1
+    lt = 2
+    le = 3
+    gt = 4
+    ge = 5
+
+    def __str__(self):
+        if self is MatchCmpIPredicate.eq:
+            return "eq"
+        if self is MatchCmpIPredicate.ne:
+            return "ne"
+        if self is MatchCmpIPredicate.lt:
+            return "lt"
+        if self is MatchCmpIPredicate.le:
+            return "le"
+        if self is MatchCmpIPredicate.gt:
+            return "gt"
+        if self is MatchCmpIPredicate.ge:
+            return "ge"
+        raise ValueError("Unknown MatchCmpIPredicate enum entry.")
+
+
+@register_attribute_builder("MatchCmpIPredicateAttr")
+def _matchcmpipredicateattr(x, context):
+    return IntegerAttr.get(IntegerType.get_signless(32, context=context), int(x))
