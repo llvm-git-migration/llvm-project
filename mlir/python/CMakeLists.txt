@@ -697,12 +697,25 @@ if(MLIR_INCLUDE_TESTS)
     ADD_TO_PARENT MLIRPythonTestSources.Dialects.PythonTest
     SOURCES "dialects/_python_test_ops_gen.py")
 
-  declare_mlir_python_extension(MLIRPythonTestSources.PythonTestExtension
-    MODULE_NAME _mlirPythonTest
+  declare_mlir_python_extension(MLIRPythonTestSources.PythonTestExtensionPybind11
+    MODULE_NAME _mlirPythonTestPybind11
     ADD_TO_PARENT MLIRPythonTestSources.Dialects
     ROOT_DIR "${MLIR_SOURCE_DIR}/test/python/lib"
+    PYTHON_BINDINGS_LIBRARY pybind11
     SOURCES
-      PythonTestModule.cpp
+      PythonTestModulePybind11.cpp
+    PRIVATE_LINK_LIBS
+      LLVMSupport
+    EMBED_CAPI_LINK_LIBS
+      MLIRCAPIPythonTestDialect
+  )
+  declare_mlir_python_extension(MLIRPythonTestSources.PythonTestExtensionNanobind
+    MODULE_NAME _mlirPythonTestNanobind
+    ADD_TO_PARENT MLIRPythonTestSources.Dialects
+    ROOT_DIR "${MLIR_SOURCE_DIR}/test/python/lib"
+    PYTHON_BINDINGS_LIBRARY nanobind
+    SOURCES
+      PythonTestModuleNanobind.cpp
     PRIVATE_LINK_LIBS
       LLVMSupport
     EMBED_CAPI_LINK_LIBS
