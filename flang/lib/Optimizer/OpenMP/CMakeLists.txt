@@ -11,6 +11,7 @@ add_flang_library(FlangOpenMPTransforms
   FIRDialect
   HLFIROpsIncGen
   FlangOpenMPPassesIncGen
+  ${dialect_libs}
 
   LINK_LIBS
   FIRAnalysis
@@ -25,4 +26,5 @@ add_flang_library(FlangOpenMPTransforms
   HLFIRDialect
   MLIRIR
   MLIRPass
+  ${dialect_libs}
 )
