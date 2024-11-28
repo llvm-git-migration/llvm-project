@@ -1,7 +1,7 @@
 // RUN: llvm-mc -triple aarch64-elf -filetype=obj %s -o - | llvm-objdump --no-print-imm-hex -d -r - | FileCheck %s
 
 // CHECK: adr x0, 0x64
-// CHECK-NEXT: adr x2, 0x4
+// CHECK-NEXT: adr x2, 0x4 -  fail this test!
 // CHECK-NEXT: R_AARCH64_ADR_PREL_LO21	Symbol
 // CHECK-NEXT: adr x3, 0x8
 // CHECK-NEXT: R_AARCH64_ADR_PREL_LO21	Symbol

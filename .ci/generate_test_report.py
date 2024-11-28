@@ -453,6 +453,7 @@ def generate_report(title, junit_files, buildkite_info):
     return _generate_report(
         title,
         [JUnitXml.fromfile(p) for p in junit_files],
+        list_failures=False,
         buildkite_info=buildkite_info,
     )
 
