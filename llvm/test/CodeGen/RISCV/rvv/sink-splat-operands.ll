@@ -2,7 +2,7 @@
 ; RUN: llc < %s -mtriple=riscv64 -mattr=+m,+v,+f -target-abi=lp64f \
 ; RUN:     | FileCheck %s
 
-define void @sink_splat_mul(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_mul(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_mul:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -22,7 +22,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -32,11 +32,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_add(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_add(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_add:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -56,7 +56,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -66,11 +66,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sub(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sub(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -90,7 +90,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -100,11 +100,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_rsub(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_rsub(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_rsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -124,7 +124,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -134,11 +134,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_and(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_and(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_and:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -158,7 +158,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -168,11 +168,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_or(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_or(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_or:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -192,7 +192,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -202,11 +202,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_xor(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_xor(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_xor:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -226,7 +226,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -236,11 +236,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_mul_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_mul_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_mul_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -331,7 +331,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_add_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_add_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_add_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -422,7 +422,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_sub_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sub_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sub_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -513,7 +513,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_rsub_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_rsub_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_rsub_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -604,7 +604,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_and_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_and_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_and_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -695,7 +695,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_or_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_or_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_or_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -786,7 +786,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_xor_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_xor_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_xor_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -877,7 +877,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_shl(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_shl(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_shl:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -897,7 +897,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -907,11 +907,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_lshr(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_lshr(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_lshr:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -931,7 +931,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -941,11 +941,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_ashr(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_ashr(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_ashr:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -965,7 +965,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -975,11 +975,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_shl_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_shl_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_shl_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -1070,7 +1070,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_lshr_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_lshr_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_lshr_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -1161,7 +1161,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_ashr_scalable(ptr nocapture %a) {
+define void @sink_splat_ashr_scalable(ptr %a) {
 ; CHECK-LABEL: sink_splat_ashr_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a4, vlenb
@@ -1250,7 +1250,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fmul(ptr nocapture %a, float %x) {
+define void @sink_splat_fmul(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fmul:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1270,7 +1270,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1280,11 +1280,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fdiv(ptr nocapture %a, float %x) {
+define void @sink_splat_fdiv(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1304,7 +1304,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1314,11 +1314,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_frdiv(ptr nocapture %a, float %x) {
+define void @sink_splat_frdiv(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_frdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1338,7 +1338,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1348,11 +1348,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fadd(ptr nocapture %a, float %x) {
+define void @sink_splat_fadd(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fadd:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1372,7 +1372,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1382,11 +1382,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fsub(ptr nocapture %a, float %x) {
+define void @sink_splat_fsub(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1406,7 +1406,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1416,11 +1416,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_frsub(ptr nocapture %a, float %x) {
+define void @sink_splat_frsub(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_frsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -1440,7 +1440,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -1450,11 +1450,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fmul_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_fmul_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fmul_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1544,7 +1544,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fdiv_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_fdiv_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fdiv_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1634,7 +1634,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_frdiv_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_frdiv_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_frdiv_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1724,7 +1724,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fadd_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_fadd_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fadd_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1814,7 +1814,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fsub_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_fsub_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_fsub_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1904,7 +1904,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_frsub_scalable(ptr nocapture %a, float %x) {
+define void @sink_splat_frsub_scalable(ptr %a, float %x) {
 ; CHECK-LABEL: sink_splat_frsub_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a1, vlenb
@@ -1994,7 +1994,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fma(ptr noalias nocapture %a, ptr nocapture readonly %b, float %x) {
+define void @sink_splat_fma(ptr noalias %a, ptr readonly %b, float %x) {
 ; CHECK-LABEL: sink_splat_fma:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2016,7 +2016,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -2028,11 +2028,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %3 = icmp eq i64 %index.next, 1024
   br i1 %3, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fma_commute(ptr noalias nocapture %a, ptr nocapture readonly %b, float %x) {
+define void @sink_splat_fma_commute(ptr noalias %a, ptr readonly %b, float %x) {
 ; CHECK-LABEL: sink_splat_fma_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2054,7 +2054,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -2066,11 +2066,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %3 = icmp eq i64 %index.next, 1024
   br i1 %3, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_fma_scalable(ptr noalias nocapture %a, ptr noalias nocapture readonly %b, float %x) {
+define void @sink_splat_fma_scalable(ptr noalias %a, ptr noalias readonly %b, float %x) {
 ; CHECK-LABEL: sink_splat_fma_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a2, vlenb
@@ -2170,7 +2170,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_fma_commute_scalable(ptr noalias nocapture %a, ptr noalias nocapture readonly %b, float %x) {
+define void @sink_splat_fma_commute_scalable(ptr noalias %a, ptr noalias readonly %b, float %x) {
 ; CHECK-LABEL: sink_splat_fma_commute_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a2, vlenb
@@ -2275,7 +2275,7 @@ declare <4 x float> @llvm.fma.v4f32(<4 x float>, <4 x float>, <4 x float>)
 declare <vscale x 2 x float> @llvm.fma.nxv2f32(<vscale x 2 x float>, <vscale x 2 x float>, <vscale x 2 x float>)
 declare float @llvm.fma.f32(float, float, float)
 
-define void @sink_splat_icmp(ptr nocapture %x, i32 signext %y) {
+define void @sink_splat_icmp(ptr %x, i32 %y) {
 ; CHECK-LABEL: sink_splat_icmp:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2296,7 +2296,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %x, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2306,12 +2306,12 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 declare void @llvm.masked.store.v4i32.p0(<4 x i32>, ptr, i32, <4 x i1>)
 
-define void @sink_splat_fcmp(ptr nocapture %x, float %y) {
+define void @sink_splat_fcmp(ptr %x, float %y) {
 ; CHECK-LABEL: sink_splat_fcmp:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a1, 1
@@ -2332,7 +2332,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %x, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -2342,12 +2342,12 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 declare void @llvm.masked.store.v4f32.p0(<4 x float>, ptr, i32, <4 x i1>)
 
-define void @sink_splat_udiv(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_udiv(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_udiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2367,7 +2367,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2377,11 +2377,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sdiv(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sdiv(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2401,7 +2401,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2411,11 +2411,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_urem(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_urem(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_urem:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2435,7 +2435,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2445,11 +2445,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_srem(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_srem(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_srem:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -2469,7 +2469,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2479,11 +2479,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_udiv_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_udiv_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_udiv_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -2574,7 +2574,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_sdiv_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sdiv_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sdiv_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -2665,7 +2665,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_urem_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_urem_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_urem_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -2756,7 +2756,7 @@ for.body:                                         ; preds = %for.body.preheader,
   br i1 %cmp.not, label %for.cond.cleanup, label %for.body
 }
 
-define void @sink_splat_srem_scalable(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_srem_scalable(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_srem_scalable:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    csrr a5, vlenb
@@ -2849,7 +2849,7 @@ for.body:                                         ; preds = %for.body.preheader,
 
 declare <4 x i32> @llvm.smin.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_min(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_min(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_min:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -2869,7 +2869,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2879,11 +2879,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_min_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_min_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_min_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -2903,7 +2903,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2913,13 +2913,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.smax.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_max(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_max(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_max:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -2939,7 +2939,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2949,11 +2949,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_max_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_max_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_max_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -2973,7 +2973,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -2983,13 +2983,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.umin.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_umin(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_umin(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_umin:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3009,7 +3009,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3019,11 +3019,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_umin_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_umin_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_umin_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3043,7 +3043,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3053,13 +3053,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.umax.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_umax(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_umax(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_umax:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3079,7 +3079,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3089,11 +3089,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_umax_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_umax_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_umax_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3113,7 +3113,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3123,13 +3123,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.sadd.sat.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_sadd_sat(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sadd_sat(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sadd_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -3149,7 +3149,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3159,11 +3159,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sadd_sat_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sadd_sat_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sadd_sat_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -3183,7 +3183,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3193,13 +3193,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.ssub.sat.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_ssub_sat(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_ssub_sat(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_ssub_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3219,7 +3219,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3229,13 +3229,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.uadd.sat.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_uadd_sat(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_uadd_sat(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_uadd_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -3255,7 +3255,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3265,11 +3265,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_uadd_sat_commute(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_uadd_sat_commute(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_uadd_sat_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -3289,7 +3289,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3299,13 +3299,13 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.usub.sat.v4i32(<4 x i32>, <4 x i32>)
 
-define void @sink_splat_usub_sat(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_usub_sat(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_usub_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a2, 1024
@@ -3325,7 +3325,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3335,27 +3335,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.mul.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_mul(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_mul(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_mul:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB60_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmul.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB60_1
+; CHECK-NEXT:    bne a0, a2, .LBB60_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3363,7 +3365,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3373,27 +3375,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.add.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_add(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_add(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_add:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB61_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vadd.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB61_1
+; CHECK-NEXT:    bne a0, a2, .LBB61_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3401,7 +3405,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3411,25 +3415,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_add_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_add_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_add_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB62_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vadd.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB62_1
+; CHECK-NEXT:    bne a0, a2, .LBB62_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3437,7 +3443,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3447,27 +3453,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.sub.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_sub(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_sub(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_sub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB63_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsub.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB63_1
+; CHECK-NEXT:    bne a0, a2, .LBB63_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3475,7 +3483,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3485,25 +3493,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_rsub(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_rsub(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_rsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB64_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vrsub.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB64_1
+; CHECK-NEXT:    bne a0, a2, .LBB64_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3511,7 +3521,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3521,27 +3531,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.shl.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_shl(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_shl(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_shl:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB65_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsll.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB65_1
+; CHECK-NEXT:    bne a0, a2, .LBB65_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3549,7 +3561,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3559,27 +3571,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.lshr.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_lshr(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_lshr(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_lshr:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB66_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsrl.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB66_1
+; CHECK-NEXT:    bne a0, a2, .LBB66_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3587,7 +3601,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3597,27 +3611,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.ashr.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_ashr(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_ashr(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_ashr:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB67_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsra.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB67_1
+; CHECK-NEXT:    bne a0, a2, .LBB67_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3625,7 +3641,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3635,27 +3651,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.fmul.v4i32(<4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_fmul(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fmul(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fmul:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB68_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfmul.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB68_1
+; CHECK-NEXT:    bne a0, a1, .LBB68_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3663,7 +3681,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3673,27 +3691,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.fdiv.v4i32(<4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_fdiv(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fdiv(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB69_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfdiv.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB69_1
+; CHECK-NEXT:    bne a0, a1, .LBB69_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3701,7 +3721,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3711,25 +3731,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_frdiv(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_frdiv(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_frdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB70_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfrdiv.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB70_1
+; CHECK-NEXT:    bne a0, a1, .LBB70_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3737,7 +3759,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3747,27 +3769,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.fadd.v4i32(<4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_fadd(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fadd(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fadd:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB71_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfadd.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB71_1
+; CHECK-NEXT:    bne a0, a1, .LBB71_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3775,7 +3799,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3785,27 +3809,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.fsub.v4i32(<4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_fsub(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fsub(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB72_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfsub.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB72_1
+; CHECK-NEXT:    bne a0, a1, .LBB72_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3813,7 +3839,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3823,27 +3849,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.frsub.v4i32(<4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_frsub(ptr nocapture %a, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_frsub(ptr %a, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_frsub:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB73_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vfrsub.vf v8, v8, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB73_1
+; CHECK-NEXT:    bne a0, a1, .LBB73_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3851,7 +3879,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -3861,27 +3889,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.udiv.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_udiv(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_udiv(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_udiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB74_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vdivu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB74_1
+; CHECK-NEXT:    bne a0, a2, .LBB74_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3889,7 +3919,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3899,27 +3929,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.sdiv.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_sdiv(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_sdiv(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_sdiv:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB75_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vdiv.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB75_1
+; CHECK-NEXT:    bne a0, a2, .LBB75_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3927,7 +3959,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3937,27 +3969,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.urem.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_urem(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_urem(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_urem:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB76_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vremu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB76_1
+; CHECK-NEXT:    bne a0, a2, .LBB76_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -3965,7 +3999,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -3975,27 +4009,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.srem.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_srem(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_srem(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_srem:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB77_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vrem.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB77_1
+; CHECK-NEXT:    bne a0, a2, .LBB77_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4003,7 +4039,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -4013,19 +4049,21 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 ; Check that we don't sink a splat operand that has no chance of being folded.
 
-define void @sink_splat_vp_srem_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_srem_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_srem_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vmv.v.x v8, a1
 ; CHECK-NEXT:    lui a1, 1
+; CHECK-NEXT:    slli a2, a2, 32
 ; CHECK-NEXT:    add a1, a0, a1
+; CHECK-NEXT:    srli a2, a2, 32
 ; CHECK-NEXT:  .LBB78_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v9, (a0)
@@ -4042,7 +4080,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -4052,29 +4090,31 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x float> @llvm.vp.fma.v4f32(<4 x float>, <4 x float>, <4 x float>, <4 x i1>, i32)
 
-define void @sink_splat_vp_fma(ptr noalias nocapture %a, ptr nocapture readonly %b, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fma(ptr noalias %a, ptr readonly %b, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fma:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a1, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a1, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB79_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
 ; CHECK-NEXT:    vle32.v v9, (a1)
 ; CHECK-NEXT:    addi a1, a1, 16
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vfmadd.vf v8, fa0, v9, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a1, a3, .LBB79_1
+; CHECK-NEXT:    bne a1, a2, .LBB79_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4082,7 +4122,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -4094,27 +4134,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %3 = icmp eq i64 %index.next, 1024
   br i1 %3, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_fma_commute(ptr noalias nocapture %a, ptr nocapture readonly %b, float %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fma_commute(ptr noalias %a, ptr readonly %b, float %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fma_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a1, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a1, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB80_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
 ; CHECK-NEXT:    vle32.v v9, (a1)
 ; CHECK-NEXT:    addi a1, a1, 16
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vfmadd.vf v8, fa0, v9, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a1, a3, .LBB80_1
+; CHECK-NEXT:    bne a1, a2, .LBB80_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4122,7 +4164,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %a, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -4134,12 +4176,12 @@ vector.body:                                      ; preds = %vector.body, %entry
   %3 = icmp eq i64 %index.next, 1024
   br i1 %3, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 
-define void @sink_splat_mul_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_mul_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_mul_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4159,7 +4201,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4169,11 +4211,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_add_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_add_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_add_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4193,7 +4235,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4203,11 +4245,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sub_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_sub_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_sub_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4227,7 +4269,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4237,11 +4279,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_rsub_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_rsub_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_rsub_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4261,7 +4303,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4271,11 +4313,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_and_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_and_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_and_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4295,7 +4337,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4305,11 +4347,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_or_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_or_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_or_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4329,7 +4371,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4339,11 +4381,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_xor_lmul2(ptr nocapture %a, i64 signext %x) {
+define void @sink_splat_xor_lmul2(ptr %a, i64 %x) {
 ; CHECK-LABEL: sink_splat_xor_lmul2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4363,7 +4405,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i64> %broadcast.splatinsert, <4 x i64> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <4 x i64>, ptr %0, align 8
@@ -4373,11 +4415,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_mul_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_mul_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_mul_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4398,7 +4440,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4408,11 +4450,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_add_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_add_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_add_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4433,7 +4475,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4443,11 +4485,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sub_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sub_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sub_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4468,7 +4510,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4478,11 +4520,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_rsub_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_rsub_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_rsub_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4503,7 +4545,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4513,11 +4555,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_and_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_and_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_and_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4538,7 +4580,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4548,11 +4590,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_or_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_or_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_or_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4573,7 +4615,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4583,11 +4625,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_xor_lmul8(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_xor_lmul8(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_xor_lmul8:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -4608,7 +4650,7 @@ entry:
   %broadcast.splat = shufflevector <32 x i32> %broadcast.splatinsert, <32 x i32> poison, <32 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <32 x i32>, ptr %0, align 4
@@ -4618,11 +4660,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_mul_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_mul_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_mul_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4642,7 +4684,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4652,11 +4694,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_add_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_add_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_add_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4676,7 +4718,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4686,11 +4728,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_sub_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_sub_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_sub_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4710,7 +4752,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4720,11 +4762,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_rsub_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_rsub_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_rsub_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4744,7 +4786,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4754,11 +4796,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_and_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_and_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_and_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4778,7 +4820,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4788,11 +4830,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_or_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_or_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_or_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4812,7 +4854,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4822,11 +4864,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_xor_lmulmf2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_xor_lmulmf2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_xor_lmulmf2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 2
@@ -4846,7 +4888,7 @@ entry:
   %broadcast.splat = shufflevector <2 x i32> %broadcast.splatinsert, <2 x i32> poison, <2 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i64, ptr %a, i64 %index
   %wide.load = load <2 x i32>, ptr %0, align 8
@@ -4856,30 +4898,32 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i1> @llvm.vp.icmp.v4i32(<4 x i32>, <4 x i32>, metadata, <4 x i1>, i32)
 
-define void @sink_splat_vp_icmp(ptr nocapture %x, i32 signext %y, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_icmp(ptr %x, i32 %y, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_icmp:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vmv1r.v v8, v0
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vmv.v.i v9, 0
 ; CHECK-NEXT:  .LBB102_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v10, (a0)
 ; CHECK-NEXT:    vmv1r.v v0, v8
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmseq.vx v0, v10, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v9, (a0), v0.t
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB102_1
+; CHECK-NEXT:    bne a0, a2, .LBB102_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4887,7 +4931,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %x, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -4897,30 +4941,32 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i1> @llvm.vp.fcmp.v4f32(<4 x float>, <4 x float>, metadata, <4 x i1>, i32)
 
-define void @sink_splat_vp_fcmp(ptr nocapture %x, float %y, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_fcmp(ptr %x, float %y, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_fcmp:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vmv1r.v v8, v0
 ; CHECK-NEXT:    lui a2, 1
-; CHECK-NEXT:    add a2, a0, a2
+; CHECK-NEXT:    slli a3, a1, 32
+; CHECK-NEXT:    add a1, a0, a2
+; CHECK-NEXT:    srli a2, a3, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vmv.v.i v9, 0
 ; CHECK-NEXT:  .LBB103_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v10, (a0)
 ; CHECK-NEXT:    vmv1r.v v0, v8
-; CHECK-NEXT:    vsetvli zero, a1, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
 ; CHECK-NEXT:    vmfeq.vf v0, v10, fa0, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v9, (a0), v0.t
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a2, .LBB103_1
+; CHECK-NEXT:    bne a0, a1, .LBB103_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4928,7 +4974,7 @@ entry:
   %broadcast.splat = shufflevector <4 x float> %broadcast.splatinsert, <4 x float> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds float, ptr %x, i64 %index
   %wide.load = load <4 x float>, ptr %0, align 4
@@ -4938,27 +4984,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.smin.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_min(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_min(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_min:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB104_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmin.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB104_1
+; CHECK-NEXT:    bne a0, a2, .LBB104_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -4966,7 +5014,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -4976,25 +5024,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_min_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_min_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_min_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB105_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmin.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB105_1
+; CHECK-NEXT:    bne a0, a2, .LBB105_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5002,7 +5052,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5012,27 +5062,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.smax.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_max(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_max(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_max:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB106_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmax.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB106_1
+; CHECK-NEXT:    bne a0, a2, .LBB106_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5040,7 +5092,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5050,25 +5102,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_max_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_max_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_max_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB107_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmax.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB107_1
+; CHECK-NEXT:    bne a0, a2, .LBB107_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5076,7 +5130,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5086,25 +5140,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_umin_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_umin_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_umin_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB108_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vminu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB108_1
+; CHECK-NEXT:    bne a0, a2, .LBB108_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5112,7 +5168,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5122,27 +5178,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.umax.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_umax(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_umax(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_umax:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB109_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmaxu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB109_1
+; CHECK-NEXT:    bne a0, a2, .LBB109_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5150,7 +5208,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5160,25 +5218,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_umax_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_umax_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_umax_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB110_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vmaxu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB110_1
+; CHECK-NEXT:    bne a0, a2, .LBB110_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5186,7 +5246,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5196,27 +5256,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.sadd.sat.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_sadd_sat(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_sadd_sat(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_sadd_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB111_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsadd.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB111_1
+; CHECK-NEXT:    bne a0, a2, .LBB111_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5224,7 +5286,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5234,25 +5296,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_sadd_sat_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_sadd_sat_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_sadd_sat_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB112_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsadd.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB112_1
+; CHECK-NEXT:    bne a0, a2, .LBB112_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5260,7 +5324,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5270,16 +5334,18 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.ssub.sat.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_ssub_sat(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_ssub_sat(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_ssub_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a3, 1024
+; CHECK-NEXT:    slli a2, a2, 32
+; CHECK-NEXT:    srli a2, a2, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB113_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -5298,7 +5364,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5308,27 +5374,29 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.uadd.sat.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_uadd_sat(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_uadd_sat(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_uadd_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB114_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsaddu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB114_1
+; CHECK-NEXT:    bne a0, a2, .LBB114_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5336,7 +5404,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5346,25 +5414,27 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_vp_uadd_sat_commute(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_uadd_sat_commute(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_uadd_sat_commute:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a3, 1
-; CHECK-NEXT:    add a3, a0, a3
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB115_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
 ; CHECK-NEXT:    vle32.v v8, (a0)
-; CHECK-NEXT:    vsetvli zero, a2, e32, m1, ta, ma
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
 ; CHECK-NEXT:    vsaddu.vx v8, v8, a1, v0.t
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:    vse32.v v8, (a0)
 ; CHECK-NEXT:    addi a0, a0, 16
-; CHECK-NEXT:    bne a0, a3, .LBB115_1
+; CHECK-NEXT:    bne a0, a2, .LBB115_1
 ; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
 ; CHECK-NEXT:    ret
 entry:
@@ -5372,7 +5442,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5382,16 +5452,18 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
 declare <4 x i32> @llvm.vp.usub.sat.v4i32(<4 x i32>, <4 x i32>, <4 x i1>, i32)
 
-define void @sink_splat_vp_usub_sat(ptr nocapture %a, i32 signext %x, <4 x i1> %m, i32 zeroext %vl) {
+define void @sink_splat_vp_usub_sat(ptr %a, i32 %x, <4 x i1> %m, i32 %vl) {
 ; CHECK-LABEL: sink_splat_vp_usub_sat:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    li a3, 1024
+; CHECK-NEXT:    slli a2, a2, 32
+; CHECK-NEXT:    srli a2, a2, 32
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
 ; CHECK-NEXT:  .LBB116_1: # %vector.body
 ; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
@@ -5410,7 +5482,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %wide.load = load <4 x i32>, ptr %0, align 4
@@ -5420,11 +5492,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_select_op1(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_select_op1(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_select_op1:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    lui a2, 1
@@ -5446,7 +5518,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %load = load <4 x i32>, ptr %0, align 4
@@ -5457,11 +5529,11 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
   ret void
 }
 
-define void @sink_splat_select_op2(ptr nocapture %a, i32 signext %x) {
+define void @sink_splat_select_op2(ptr %a, i32 %x) {
 ; CHECK-LABEL: sink_splat_select_op2:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
@@ -5484,7 +5556,7 @@ entry:
   %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
   br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %entry
+vector.body:
   %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
   %0 = getelementptr inbounds i32, ptr %a, i64 %index
   %load = load <4 x i32>, ptr %0, align 4
@@ -5495,6 +5567,89 @@ vector.body:                                      ; preds = %vector.body, %entry
   %2 = icmp eq i64 %index.next, 1024
   br i1 %2, label %for.cond.cleanup, label %vector.body
 
-for.cond.cleanup:                                 ; preds = %vector.body
+for.cond.cleanup:
+  ret void
+}
+
+define void @sink_splat_vp_select_op1(ptr %a, i32 %x, i32 %vl) {
+; CHECK-LABEL: sink_splat_vp_select_op1:
+; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    lui a4, 1
+; CHECK-NEXT:    li a3, 42
+; CHECK-NEXT:    slli a5, a2, 32
+; CHECK-NEXT:    add a2, a0, a4
+; CHECK-NEXT:    srli a4, a5, 32
+; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; CHECK-NEXT:  .LBB119_1: # %vector.body
+; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
+; CHECK-NEXT:    vle32.v v8, (a0)
+; CHECK-NEXT:    vmseq.vx v0, v8, a3
+; CHECK-NEXT:    vsetvli zero, a4, e32, m1, ta, ma
+; CHECK-NEXT:    vmerge.vxm v8, v8, a1, v0
+; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; CHECK-NEXT:    vse32.v v8, (a0)
+; CHECK-NEXT:    addi a0, a0, 16
+; CHECK-NEXT:    bne a0, a2, .LBB119_1
+; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
+; CHECK-NEXT:    ret
+entry:
+  %broadcast.splatinsert = insertelement <4 x i32> poison, i32 %x, i32 0
+  %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
+  br label %vector.body
+
+vector.body:
+  %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
+  %0 = getelementptr inbounds i32, ptr %a, i64 %index
+  %load = load <4 x i32>, ptr %0, align 4
+  %cond = icmp eq <4 x i32> %load, splat (i32 42)
+  %1 = call <4 x i32> @llvm.vp.select(<4 x i1> %cond, <4 x i32> %broadcast.splat, <4 x i32> %load, i32 %vl)
+  store <4 x i32> %1, ptr %0, align 4
+  %index.next = add nuw i64 %index, 4
+  %2 = icmp eq i64 %index.next, 1024
+  br i1 %2, label %for.cond.cleanup, label %vector.body
+
+for.cond.cleanup:
+  ret void
+}
+
+define void @sink_splat_vp_select_op2(ptr %a, i32 %x, i32 %vl) {
+; CHECK-LABEL: sink_splat_vp_select_op2:
+; CHECK:       # %bb.0: # %entry
+; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; CHECK-NEXT:    vmv.v.x v8, a1
+; CHECK-NEXT:    lui a3, 1
+; CHECK-NEXT:    li a1, 42
+; CHECK-NEXT:    slli a4, a2, 32
+; CHECK-NEXT:    add a2, a0, a3
+; CHECK-NEXT:    srli a3, a4, 32
+; CHECK-NEXT:  .LBB120_1: # %vector.body
+; CHECK-NEXT:    # =>This Inner Loop Header: Depth=1
+; CHECK-NEXT:    vle32.v v9, (a0)
+; CHECK-NEXT:    vmseq.vx v0, v9, a1
+; CHECK-NEXT:    vsetvli zero, a3, e32, m1, ta, ma
+; CHECK-NEXT:    vmerge.vvm v9, v8, v9, v0
+; CHECK-NEXT:    vsetivli zero, 4, e32, m1, ta, ma
+; CHECK-NEXT:    vse32.v v9, (a0)
+; CHECK-NEXT:    addi a0, a0, 16
+; CHECK-NEXT:    bne a0, a2, .LBB120_1
+; CHECK-NEXT:  # %bb.2: # %for.cond.cleanup
+; CHECK-NEXT:    ret
+entry:
+  %broadcast.splatinsert = insertelement <4 x i32> poison, i32 %x, i32 0
+  %broadcast.splat = shufflevector <4 x i32> %broadcast.splatinsert, <4 x i32> poison, <4 x i32> zeroinitializer
+  br label %vector.body
+
+vector.body:
+  %index = phi i64 [ 0, %entry ], [ %index.next, %vector.body ]
+  %0 = getelementptr inbounds i32, ptr %a, i64 %index
+  %load = load <4 x i32>, ptr %0, align 4
+  %cond = icmp eq <4 x i32> %load, splat (i32 42)
+  %1 = call <4 x i32> @llvm.vp.select(<4 x i1> %cond, <4 x i32> %load, <4 x i32> %broadcast.splat, i32 %vl)
+  store <4 x i32> %1, ptr %0, align 4
+  %index.next = add nuw i64 %index, 4
+  %2 = icmp eq i64 %index.next, 1024
+  br i1 %2, label %for.cond.cleanup, label %vector.body
+
+for.cond.cleanup:
   ret void
 }
