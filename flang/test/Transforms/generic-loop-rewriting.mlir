@@ -1,9 +1,6 @@
 // RUN: fir-opt --omp-generic-loop-conversion %s | FileCheck %s
 
-omp.private {type = private} @_QFtarget_teams_loopEi_private_ref_i32 : !fir.ref<i32> alloc {
-^bb0(%arg0: !fir.ref<i32>):
-  omp.yield(%arg0 : !fir.ref<i32>)
-}
+omp.private {type = private} @_QFtarget_teams_loopEi_private_ref_i32 : i32
 
 func.func @_QPtarget_teams_loop() {
   %i = fir.alloca i32
