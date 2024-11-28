@@ -1,0 +1,8 @@
+## Check that merge-fdata tool correctly processes fdata files with header
+## string produced by no-lbr mode (no_lbr)
+RUN: merge-fdata %S/Inputs/no-lbr_profile_1.fdata \
+RUN:             %S/Inputs/no-lbr_profile_2.fdata \
+RUN:      | FileCheck %s --check-prefix=CHECK-FDATA
+
+CHECK-FDATA: no_lbr
+CHECK-FDATA: 1 bar abc 30

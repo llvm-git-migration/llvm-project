@@ -1,0 +1,7 @@
+## Check that merge-fdata tool correctly reports error message
+## when trying to merge 'no-lbr' and 'lbr' profiles
+# RUN: not merge-fdata %S/Inputs/no-lbr_profile_1.fdata \
+# RUN:                      %S/Inputs/lbr_profile.fdata \
+# RUN:                                     | FileCheck %s
+
+# CHECK: error: cannot mix 'no_lbr' and 'lbr' profiles
