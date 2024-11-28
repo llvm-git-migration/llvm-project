@@ -85,9 +85,11 @@
   using ::llvm::BitmaskEnumDetail::operator|;                                  \
   using ::llvm::BitmaskEnumDetail::operator&;                                  \
   using ::llvm::BitmaskEnumDetail::operator^;                                  \
+  using ::llvm::BitmaskEnumDetail::operator<<;                                 \
   using ::llvm::BitmaskEnumDetail::operator|=;                                 \
   using ::llvm::BitmaskEnumDetail::operator&=;                                 \
   using ::llvm::BitmaskEnumDetail::operator^=;                                 \
+  using ::llvm::BitmaskEnumDetail::operator<<=;                                \
   /* Force a semicolon at the end of this macro. */                            \
   using ::llvm::BitmaskEnumDetail::any
 
@@ -162,6 +164,11 @@ constexpr E operator^(E LHS, E RHS) {
   return static_cast<E>(Underlying(LHS) ^ Underlying(RHS));
 }
 
+template <typename E, typename = std::enable_if_t<is_bitmask_enum<E>::value>>
+constexpr E operator<<(E LHS, E RHS) {
+  return static_cast<E>(Underlying(LHS) << Underlying(RHS));
+}
+
 // |=, &=, and ^= return a reference to LHS, to match the behavior of the
 // operators on builtin types.
 
@@ -180,6 +187,12 @@ E &operator&=(E &LHS, E RHS) {
 template <typename E, typename = std::enable_if_t<is_bitmask_enum<E>::value>>
 E &operator^=(E &LHS, E RHS) {
   LHS = LHS ^ RHS;
+  return LHS;
+}
+
+template <typename E, typename = std::enable_if_t<is_bitmask_enum<E>::value>>
+E &operator<<=(E &LHS, E RHS) {
+  LHS = LHS << RHS;
   return LHS;
 }
 

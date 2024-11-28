@@ -130,6 +130,15 @@ TEST(BitmaskEnumTest, BitwiseXorEquals) {
   EXPECT_EQ(V3, f2);
 }
 
+TEST(BitmaskEnumTest, BitwiseShift) {
+  Flags f = (F1 << F1);
+  EXPECT_EQ(f, F2);
+
+  Flags f2 = F1;
+  f2 <<= F1;
+  EXPECT_EQ(f2, F2);
+}
+
 TEST(BitmaskEnumTest, ConstantExpression) {
   constexpr Flags f1 = ~F1;
   constexpr Flags f2 = F1 | F2;
