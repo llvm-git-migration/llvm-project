@@ -265,6 +265,7 @@ bool isYAML(const StringRef Filename) {
 void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
   errs() << "Using legacy profile format.\n";
   std::optional<bool> BoltedCollection;
+  std::optional<bool> NoLBRCollection;
   std::mutex BoltedCollectionMutex;
   typedef StringMap<uint64_t> ProfileTy;
 
@@ -297,6 +298,25 @@ void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
               "cannot mix profile collected in BOLT and non-BOLT deployments");
         BoltedCollection = false;
       }
+      // Check if the string "no_lbr" is in the first line
+      size_t FirstNewline = Buf.find('\n');
+      if (FirstNewline != StringRef::npos) {
+        StringRef FirstLine = Buf.substr(0, FirstNewline);
+        if (FirstLine.contains("no_lbr")) {
+          if (!NoLBRCollection.value_or(true))
+            report_error(
+                Filename,
+                "cannot mix 'no_lbr' and 'lbr' profiles");
+          NoLBRCollection = true;
+        } else {
+          if (NoLBRCollection.value_or(false))
+            report_error(
+                Filename,
+                "cannot mix 'no_lbr' and 'lbr' profiles");
+          NoLBRCollection = false;
+        }
+        Buf = Buf.drop_front(FirstNewline + 1);
+      }
 
       Profile = &Profiles[tid];
     }
@@ -304,6 +324,10 @@ void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
     SmallVector<StringRef> Lines;
     SplitString(Buf, Lines, "\n");
     for (StringRef Line : Lines) {
+      if (Line.contains("no_lbr")) {
+        NoLBR = true;
+        continue;
+      }
       size_t Pos = Line.rfind(" ");
       if (Pos == StringRef::npos)
         report_error(Filename, "Malformed / corrupted profile");
@@ -336,6 +360,8 @@ void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
 
   if (BoltedCollection.value_or(false))
     output() << "boltedcollection\n";
+  if (NoLBRCollection.value_or(false))
+    output() << "no_lbr\n";
   for (const auto &[Key, Value] : MergedProfile)
     output() << Key << " " << Value << "\n";
 
