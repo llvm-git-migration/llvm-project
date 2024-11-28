@@ -526,20 +526,21 @@ GenericKernelTy::getKernelLaunchEnvironment(
 
 Error GenericKernelTy::printLaunchInfo(GenericDeviceTy &GenericDevice,
                                        KernelArgsTy &KernelArgs,
-                                       uint32_t NumThreads,
-                                       uint64_t NumBlocks) const {
-  INFO(OMP_INFOTYPE_PLUGIN_KERNEL, GenericDevice.getDeviceId(),
-       "Launching kernel %s with %" PRIu64
-       " blocks and %d threads in %s mode\n",
-       getName(), NumBlocks, NumThreads, getExecutionModeName());
+                                       uint32_t NumThreads[3],
+                                       uint32_t NumBlocks[3]) const {
+  if (!IsBareKernel) {
+    INFO(OMP_INFOTYPE_PLUGIN_KERNEL, GenericDevice.getDeviceId(),
+         "Launching kernel %s with %u blocks and %u threads in %s mode\n",
+         getName(), NumBlocks[0], NumThreads[0], getExecutionModeName());
+  }
   return printLaunchInfoDetails(GenericDevice, KernelArgs, NumThreads,
                                 NumBlocks);
 }
 
 Error GenericKernelTy::printLaunchInfoDetails(GenericDeviceTy &GenericDevice,
                                               KernelArgsTy &KernelArgs,
-                                              uint32_t NumThreads,
-                                              uint64_t NumBlocks) const {
+                                              uint32_t NumThreads[3],
+                                              uint32_t NumBlocks[3]) const {
   return Plugin::success();
 }
 
@@ -566,10 +567,14 @@ Error GenericKernelTy::launch(GenericDeviceTy &GenericDevice, void **ArgPtrs,
                     Args, Ptrs, *KernelLaunchEnvOrErr);
   }
 
-  uint32_t NumThreads = getNumThreads(GenericDevice, KernelArgs.ThreadLimit);
-  uint64_t NumBlocks =
-      getNumBlocks(GenericDevice, KernelArgs.NumTeams, KernelArgs.Tripcount,
-                   NumThreads, KernelArgs.ThreadLimit[0] > 0);
+  uint32_t NumThreads[3] = {KernelArgs.ThreadLimit[0],
+                            KernelArgs.ThreadLimit[1],
+                            KernelArgs.ThreadLimit[2]};
+  uint32_t NumBlocks[3] = {KernelArgs.NumTeams[0], KernelArgs.NumTeams[1],
+                           KernelArgs.NumTeams[2]};
+  getNumThreads(GenericDevice, NumThreads);
+  getNumBlocks(GenericDevice, NumBlocks, KernelArgs.Tripcount, NumThreads[0],
+               NumThreads[0] > 0);
 
   // Record the kernel description after we modified the argument count and num
   // blocks/threads.
@@ -578,7 +583,7 @@ Error GenericKernelTy::launch(GenericDeviceTy &GenericDevice, void **ArgPtrs,
     RecordReplay.saveImage(getName(), getImage());
     RecordReplay.saveKernelInput(getName(), getImage());
     RecordReplay.saveKernelDescr(getName(), LaunchParams, KernelArgs.NumArgs,
-                                 NumBlocks, NumThreads, KernelArgs.Tripcount);
+                                 NumBlocks[0], NumThreads[0], KernelArgs.Tripcount);
   }
 
   if (auto Err =
@@ -616,23 +621,20 @@ KernelLaunchParamsTy GenericKernelTy::prepareArgs(
   return KernelLaunchParamsTy{sizeof(void *) * NumArgs, &Args[0], &Ptrs[0]};
 }
 
-uint32_t GenericKernelTy::getNumThreads(GenericDeviceTy &GenericDevice,
-                                        uint32_t ThreadLimitClause[3]) const {
-  assert(ThreadLimitClause[1] == 0 && ThreadLimitClause[2] == 0 &&
-         "Multi dimensional launch not supported yet.");
-
-  if (IsBareKernel && ThreadLimitClause[0] > 0)
-    return ThreadLimitClause[0];
+void GenericKernelTy::getNumThreads(GenericDeviceTy &GenericDevice,
+                                    uint32_t ThreadLimitClause[3]) const {
+  if (IsBareKernel)
+    return;
 
   if (ThreadLimitClause[0] > 0 && isGenericMode())
     ThreadLimitClause[0] += GenericDevice.getWarpSize();
 
-  return std::min(MaxNumThreads, (ThreadLimitClause[0] > 0)
-                                     ? ThreadLimitClause[0]
-                                     : PreferredNumThreads);
+  ThreadLimitClause[0] =
+      std::min(MaxNumThreads, (ThreadLimitClause[0] > 0) ? ThreadLimitClause[0]
+                                                         : PreferredNumThreads);
 }
 
-uint64_t GenericKernelTy::getNumBlocks(GenericDeviceTy &GenericDevice,
+void GenericKernelTy::getNumBlocks(GenericDeviceTy &GenericDevice,
                                        uint32_t NumTeamsClause[3],
                                        uint64_t LoopTripCount,
                                        uint32_t &NumThreads,
@@ -640,14 +642,16 @@ uint64_t GenericKernelTy::getNumBlocks(GenericDeviceTy &GenericDevice,
   assert(NumTeamsClause[1] == 0 && NumTeamsClause[2] == 0 &&
          "Multi dimensional launch not supported yet.");
 
-  if (IsBareKernel && NumTeamsClause[0] > 0)
-    return NumTeamsClause[0];
+  if (IsBareKernel)
+    return;
 
   if (NumTeamsClause[0] > 0) {
     // TODO: We need to honor any value and consequently allow more than the
     // block limit. For this we might need to start multiple kernels or let the
     // blocks start again until the requested number has been started.
-    return std::min(NumTeamsClause[0], GenericDevice.getBlockLimit());
+    NumTeamsClause[0] =
+        std::min(NumTeamsClause[0], GenericDevice.getBlockLimit());
+    return;
   }
 
   uint64_t DefaultNumBlocks = GenericDevice.getDefaultNumBlocks();
@@ -719,7 +723,8 @@ uint64_t GenericKernelTy::getNumBlocks(GenericDeviceTy &GenericDevice,
   // If the loops are long running we rather reuse blocks than spawn too many.
   if (GenericDevice.getReuseBlocksForHighTripCount())
     PreferredNumBlocks = std::min(TripCountNumBlocks, DefaultNumBlocks);
-  return std::min(PreferredNumBlocks, GenericDevice.getBlockLimit());
+  NumTeamsClause[0] =
+      std::min(PreferredNumBlocks, GenericDevice.getBlockLimit());
 }
 
 GenericDeviceTy::GenericDeviceTy(GenericPluginTy &Plugin, int32_t DeviceId,
