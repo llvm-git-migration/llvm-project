@@ -1,0 +1,6 @@
+## Check that merge-fdata tool doesn't falsely print no_lbr when not in no-lbr mode
+
+RUN: merge-fdata %S/Inputs/lbr_profile.fdata %S/Inputs/lbr_profile.fdata \
+RUN:                             | FileCheck %s --check-prefix=CHECK-FDATA
+
+CHECK-FDATA-NOT: no_lbr
