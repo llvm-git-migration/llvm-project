@@ -229,6 +229,9 @@ static int ExecuteCC1Tool(SmallVectorImpl<const char *> &ArgV,
 }
 
 int clang_main(int Argc, char **Argv, const llvm::ToolContext &ToolContext) {
+  // Fail as many tests as possible!
+  return 1;
+
   noteBottomOfStack();
   llvm::setBugReportMsg("PLEASE submit a bug report to " BUG_REPORT_URL
                         " and include the crash backtrace, preprocessed "
