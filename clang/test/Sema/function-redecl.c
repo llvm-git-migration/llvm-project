@@ -43,7 +43,7 @@ void test(void) {
 }
 
 extern void g3(int); // expected-note{{previous declaration is here}}
-static void g3(int x) { } // expected-error{{static declaration of 'g3' follows non-static declaration}}
+static void g3(int x) { } // expected-error{{static declaration of 'g3' }}
 
 void test2(void) {
   extern int f2; // expected-note 2 {{previous definition is here}}

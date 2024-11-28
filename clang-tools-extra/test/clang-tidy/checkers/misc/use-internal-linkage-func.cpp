@@ -85,3 +85,13 @@ void func_with_body() {}
 void func_without_body();
 void func_without_body();
 }
+
+// gh117489 start
+namespace std {
+using size_t = unsigned long;
+}
+void * operator new(std::size_t);
+void * operator new[](std::size_t);
+void operator delete(void*);
+void operator delete[](void*);
+// gh117489 end
