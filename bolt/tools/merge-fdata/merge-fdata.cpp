@@ -265,6 +265,7 @@ bool isYAML(const StringRef Filename) {
 void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
   errs() << "Using legacy profile format.\n";
   std::optional<bool> BoltedCollection;
+  std::optional<bool> NoLBR;
   std::mutex BoltedCollectionMutex;
   typedef StringMap<uint64_t> ProfileTy;
 
@@ -304,6 +305,10 @@ void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
     SmallVector<StringRef> Lines;
     SplitString(Buf, Lines, "\n");
     for (StringRef Line : Lines) {
+      if (Line.contains("no_lbr")) {
+        NoLBR = true;
+        continue;
+      }
       size_t Pos = Line.rfind(" ");
       if (Pos == StringRef::npos)
         report_error(Filename, "Malformed / corrupted profile");
@@ -336,6 +341,8 @@ void mergeLegacyProfiles(const SmallVectorImpl<std::string> &Filenames) {
 
   if (BoltedCollection.value_or(false))
     output() << "boltedcollection\n";
+  if (NoLBR.value_or(true))
+    output() << "no_lbr\n";
   for (const auto &[Key, Value] : MergedProfile)
     output() << Key << " " << Value << "\n";
 
