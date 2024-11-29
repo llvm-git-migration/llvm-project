@@ -2248,7 +2248,8 @@ struct FormatStyle {
   /// \version 16
   BreakBeforeInlineASMColonStyle BreakBeforeInlineASMColon;
 
-  /// If ``true``, a line break will be placed before the ``>`` in a multiline template declaration.
+  /// If ``true``, a line break will be placed before the ``>`` in a multiline
+  /// template declaration.
   bool BreakBeforeTemplateClose;
 
   /// If ``true``, ternary operators will be placed after line breaks.
