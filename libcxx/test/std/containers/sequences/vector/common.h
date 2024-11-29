@@ -16,6 +16,52 @@
 
 #include "count_new.h"
 
+template <typename T>
+struct throwing_data {
+  T data_;
+  int* throw_after_n_ = nullptr;
+  throwing_data() { throw 0; }
+
+  throwing_data(const T& data, int& throw_after_n) : data_(data), throw_after_n_(&throw_after_n) {
+    if (throw_after_n == 0)
+      throw 0;
+    --throw_after_n;
+  }
+
+  throwing_data(const throwing_data& rhs) : data_(rhs.data_), throw_after_n_(rhs.throw_after_n_) {
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+  }
+
+  throwing_data& operator=(const throwing_data& rhs) {
+    data_          = rhs.data_;
+    throw_after_n_ = rhs.throw_after_n_;
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+    return *this;
+  }
+
+  throwing_data(throwing_data&& rhs) : data_(std::move(rhs.data_)), throw_after_n_(rhs.throw_after_n_) {
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+  }
+
+  throwing_data& operator=(throwing_data&& rhs) {
+    if (this == &rhs)
+      return *this;
+    data_              = std::move(rhs.data_);
+    throw_after_n_     = rhs.throw_after_n_;
+    rhs.throw_after_n_ = nullptr;
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+    return *this;
+  }
+};
+
 template <class T>
 struct throwing_allocator {
   using value_type      = T;
