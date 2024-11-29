@@ -11079,6 +11079,7 @@ TEST_F(FormatTest, WrapsTemplateDeclarationsWithComments) {
 
 TEST_F(FormatTest, BreakBeforeTemplateClose) {
   FormatStyle Style = getLLVMStyle();
+  Style.BreakTemplateDeclarations = FormatStyle::BTDS_Leave;
   verifyFormat("template <typename Foo>\nvoid foo() {}", Style);
   verifyFormat("template <\n    typename Foo>\nvoid foo() {}", Style);
   // when BreakBeforeTemplateClose is off, this line break is removed:
