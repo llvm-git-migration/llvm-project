@@ -11,10 +11,15 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
+#include <string>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "count_new.h"
+#include "test_macros.h"
 
 struct throwing_t {
   int* throw_after_n_ = nullptr;
@@ -46,6 +51,95 @@ struct throwing_t {
   friend bool operator!=(const throwing_t& lhs, const throwing_t& rhs) {
     return lhs.throw_after_n_ != rhs.throw_after_n_;
   }
+};
+
+#if TEST_STD_VER >= 11
+
+template <typename T>
+struct move_only_throwing_t {
+  T data_;
+  int* throw_after_n_ = nullptr;
+  bool moved_from_    = false;
+
+  move_only_throwing_t() = default;
+
+  explicit move_only_throwing_t(const T& data, int& throw_after_n) : data_(data), throw_after_n_(&throw_after_n) {
+    if (throw_after_n == 0)
+      throw 1;
+    --throw_after_n;
+  }
+
+  explicit move_only_throwing_t(T&& data, int& throw_after_n) : data_(std::move(data)), throw_after_n_(&throw_after_n) {
+    if (throw_after_n == 0)
+      throw 1;
+    --throw_after_n;
+  }
+
+  move_only_throwing_t(const move_only_throwing_t&)            = delete;
+  move_only_throwing_t& operator=(const move_only_throwing_t&) = delete;
+
+  move_only_throwing_t(move_only_throwing_t&& rhs) : data_(std::move(rhs.data_)), throw_after_n_(rhs.throw_after_n_) {
+    rhs.throw_after_n_ = nullptr;
+    rhs.moved_from_    = true;
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+  }
+
+  move_only_throwing_t& operator=(move_only_throwing_t&& rhs) {
+    if (this == &rhs)
+      return *this;
+    data_              = std::move(rhs.data_);
+    throw_after_n_     = rhs.throw_after_n_;
+    rhs.moved_from_    = true;
+    rhs.throw_after_n_ = nullptr;
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+    return *this;
+  }
+
+  friend bool operator==(const move_only_throwing_t& lhs, const move_only_throwing_t& rhs) {
+    return lhs.data_ == rhs.data_;
+  }
+  friend bool operator!=(const move_only_throwing_t& lhs, const move_only_throwing_t& rhs) {
+    return lhs.data_ != rhs.data_;
+  }
+};
+
+#endif
+
+template <typename T>
+struct throwing_data {
+  T data_;
+  int* throw_after_n_ = nullptr;
+  throwing_data() { throw 0; }
+
+  throwing_data(const T& data, int& throw_after_n) : data_(data), throw_after_n_(&throw_after_n) {
+    if (throw_after_n == 0)
+      throw 0;
+    --throw_after_n;
+  }
+
+  throwing_data(const throwing_data& rhs) : data_(rhs.data_), throw_after_n_(rhs.throw_after_n_) {
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+  }
+
+  throwing_data& operator=(const throwing_data& rhs) {
+    data_          = rhs.data_;
+    throw_after_n_ = rhs.throw_after_n_;
+    if (throw_after_n_ == nullptr || *throw_after_n_ == 0)
+      throw 1;
+    --*throw_after_n_;
+    return *this;
+  }
+
+  friend bool operator==(const throwing_data& lhs, const throwing_data& rhs) {
+    return lhs.data_ == rhs.data_ && lhs.throw_after_n_ == rhs.throw_after_n_;
+  }
+  friend bool operator!=(const throwing_data& lhs, const throwing_data& rhs) { return !(lhs == rhs); }
 };
 
 template <class T>
@@ -124,5 +218,44 @@ inline void check_new_delete_called() {
   assert(globalMemCounter.aligned_new_called == globalMemCounter.aligned_delete_called);
   assert(globalMemCounter.aligned_new_array_called == globalMemCounter.aligned_delete_array_called);
 }
+
+class Rnd {
+public:
+  static void initializeSeed(unsigned int seed = 12345) { std::srand(seed); }
+
+  static std::vector<int> getRandomIntegerInputs(std::size_t N) {
+    std::vector<int> v;
+    v.reserve(N);
+    for (std::size_t i = 0; i < N; ++i)
+      v.push_back(std::rand());
+    return v;
+  }
+
+  static std::vector<std::string> getRandomStringInputsWithLength(std::size_t N, std::size_t len) {
+    std::vector<std::string> v;
+    v.reserve(N);
+    for (std::size_t i = 0; i < N; ++i)
+      v.push_back(getRandomString(len));
+    return v;
+  }
+
+private:
+  static const char Letters[];
+  static const std::size_t LettersSize;
+
+  static std::string getRandomString(std::size_t len) {
+    std::string s;
+    s.reserve(len);
+    for (std::size_t i = 0; i < len; ++i)
+      s += Letters[std::rand() % LettersSize];
+    return s;
+  }
+};
+
+const char Rnd::Letters[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+    'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+const std::size_t Rnd::LettersSize = sizeof(Rnd::Letters) / sizeof(Rnd::Letters[0]);
 
 #endif // TEST_STD_CONTAINERS_SEQUENCES_VECTOR_COMMON_H
