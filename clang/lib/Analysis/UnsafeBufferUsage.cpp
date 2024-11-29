@@ -433,20 +433,56 @@ AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
   //    already duplicated
   //  - call both from Sema and from here
 
-  const auto *BaseDRE =
+  auto CheckBounds = [](const ArraySubscriptExpr *ASE, uint64_t limit) -> bool {
+    if (const auto *IdxLit = dyn_cast<IntegerLiteral>(ASE->getIdx())) {
+      const APInt ArrIdx = IdxLit->getValue();
+      if (ArrIdx.isNonNegative() && ArrIdx.getLimitedValue() < limit)
+        return true;
+    }
+    return false;
+  };
+
+  const auto *BaseASE =
+      dyn_cast<ArraySubscriptExpr>(Node.getBase()->IgnoreParenImpCasts());
+  uint64_t size = 0;
+
+  if (BaseASE) {
+    const auto *DRE =
+        dyn_cast<DeclRefExpr>(BaseASE->getBase()->IgnoreParenImpCasts());
+
+    if (!DRE)
+      return false;
+
+    const auto *CATy = dyn_cast<ConstantArrayType>(
+        DRE->getType()->getUnqualifiedDesugaredType());
+    if (!CATy) {
+      return false;
+    }
+    size = CATy->getLimitedSize();
+
+    if (!CheckBounds(BaseASE, size))
+      return false;
+
+    CATy = Finder->getASTContext().getAsConstantArrayType(BaseASE->getType());
+    if (!CATy) {
+      return false;
+    }
+
+    size = CATy->getLimitedSize();
+    return CheckBounds(&Node, size);
+  }
+
+  const DeclRefExpr *BaseDRE =
       dyn_cast<DeclRefExpr>(Node.getBase()->IgnoreParenImpCasts());
   const auto *SLiteral =
       dyn_cast<StringLiteral>(Node.getBase()->IgnoreParenImpCasts());
-  uint64_t size;
 
   if (!BaseDRE && !SLiteral)
     return false;
 
   if (BaseDRE) {
-    if (!BaseDRE->getDecl())
-      return false;
-    const auto *CATy = Finder->getASTContext().getAsConstantArrayType(
-        BaseDRE->getDecl()->getType());
+    const auto *CATy =
+        Finder->getASTContext().getAsConstantArrayType(BaseDRE->getType());
     if (!CATy) {
       return false;
     }
@@ -455,15 +491,7 @@ AST_MATCHER(ArraySubscriptExpr, isSafeArraySubscript) {
     size = SLiteral->getLength() + 1;
   }
 
-  if (const auto *IdxLit = dyn_cast<IntegerLiteral>(Node.getIdx())) {
-    const APInt ArrIdx = IdxLit->getValue();
-    // FIXME: ArrIdx.isNegative() we could immediately emit an error as that's a
-    // bug
-    if (ArrIdx.isNonNegative() && ArrIdx.getLimitedValue() < size)
-      return true;
-  }
-
-  return false;
+  return CheckBounds(&Node, size);
 }
 
 AST_MATCHER_P(CallExpr, hasNumArgs, unsigned, Num) {
@@ -1172,6 +1200,12 @@ public:
     if (const auto *DRE =
             dyn_cast<DeclRefExpr>(ASE->getBase()->IgnoreParenImpCasts())) {
       return {DRE};
+    } else if (const auto *BaseASE = dyn_cast<ArraySubscriptExpr>(
+                   ASE->getBase()->IgnoreParenImpCasts())) {
+      if (const auto *DRE = dyn_cast<DeclRefExpr>(
+              BaseASE->getBase()->IgnoreParenImpCasts())) {
+        return {DRE};
+      }
     }
 
     return {};
