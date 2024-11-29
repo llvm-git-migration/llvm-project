@@ -3416,6 +3416,29 @@ the configuration (without a prefix: ``Auto``).
 
 
 
+
+.. _BreakBeforeTemplateClose:
+
+**BreakBeforeTemplateClose** (``Boolean``) :ref:`¶ <BreakBeforeTemplateClose>`
+  If ``true``, a line break will be placed before the ``>`` in a multiline template declaration.
+
+  .. code-block:: c++
+
+     true:
+     template <
+         typename Foo,
+         typename Bar,
+         typename Baz
+     >
+
+     false:
+     template <
+         typename Foo,
+         typename Bar,
+         typename Baz>
+
+
+
 .. _BreakBeforeTernaryOperators:
 
 **BreakBeforeTernaryOperators** (``Boolean``) :versionbadge:`clang-format 3.7` :ref:`¶ <BreakBeforeTernaryOperators>`

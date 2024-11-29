@@ -11077,6 +11077,27 @@ TEST_F(FormatTest, WrapsTemplateDeclarationsWithComments) {
       Style);
 }
 
+TEST_F(FormatTest, BreakBeforeTemplateClose) {
+  FromatStyle Style = getLLVMStyle();
+  verifyFormat("template <typename Foo>\nvoid foo() {}", Style);
+  verifyFormat("template <\n    typename Foo>\nvoid foo() {}", Style);
+  // when BreakBeforeTemplateClose is off, this line break is removed:
+  verifyFormat("template <\n    typename Foo\n>\nvoid foo() {}",
+    "template <\n    typename Foo>\nvoid foo() {}", Style);
+  Style.BreakBeforeTemplateClose = true;
+  // BreakBeforeTemplateClose should NOT force multiline templates
+  verifyFormat("template <typename Foo>\nvoid foo() {}", Style);
+  verifyFormat("template <typename Foo, typename Bar>\nvoid foo() {}", Style);
+  // it should allow a line break:
+  verifyFormat("template <\n    typename Foo\n>\nvoid foo() {}", Style);
+  verifyFormat("template <\n    typename Foo,\n    typename Bar\n>\nvoid foo() {}", Style);
+  // it should add a line break if not already present:
+  verifyFormat("template <\n    typename Foo>\nvoid foo() {}",
+    "template <\n    typename Foo\n>\nvoid foo() {}", Style);
+  verifyFormat("template <\n    typename Foo,\n    typename Bar>\nvoid foo() {}",
+    "template <\n    typename Foo,\n    typename Bar\n>\nvoid foo() {}", Style);
+}
+
 TEST_F(FormatTest, WrapsTemplateParameters) {
   FormatStyle Style = getLLVMStyle();
   Style.AlignAfterOpenBracket = FormatStyle::BAS_DontAlign;
