@@ -66,11 +66,13 @@ if ("NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
       set(MLIR_CUDAToolkit_ROOT ${CUDAToolkit_LIBRARY_ROOT})
     endif()
 
-    # Add the `nvptxcompiler` library.
+    # Add the `nvptxcompiler` library and the `nvfatbin` library.
     if(MLIR_ENABLE_NVPTXCOMPILER)
       # Find the `nvptxcompiler` library.
       # TODO: Bump the MLIR CMake version to 3.25 and use `CUDA::nvptxcompiler_static`.
       find_library(MLIR_NVPTXCOMPILER_LIB_PATH nvptxcompiler_static
+                  PATHS ${CUDAToolkit_LIBRARY_DIR} NO_DEFAULT_PATH)
+      find_library(MLIR_NVFATBIN_LIB_PATH nvfatbin_static
                   PATHS ${CUDAToolkit_LIBRARY_DIR} NO_DEFAULT_PATH)
 
       # Fail if `nvptxcompiler_static` couldn't be found.
@@ -79,14 +81,24 @@ if ("NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
                 "Requested using the `nvptxcompiler` library backend but it couldn't be found.")
       endif()
 
+      # Fail if `nvfatbin_static` couldn't be found.
+      if(MLIR_NVFATBIN_LIB_PATH STREQUAL "MLIR_NVFATBIN_LIB_PATH-NOTFOUND")
+        message(FATAL_ERROR
+                "Requested using the `nvfatbin` library backend but it couldn't be found.")
+      endif()    
+
       add_library(MLIR_NVPTXCOMPILER_LIB STATIC IMPORTED GLOBAL)
+      add_library(MLIR_NVFATBIN_LIB STATIC IMPORTED GLOBAL)
       # Downstream projects can modify this path and use it in CMake. For example:
       # add_library(MLIR_NVPTXCOMPILER_LIB STATIC IMPORTED GLOBAL)
       # set_property(TARGET MLIR_NVPTXCOMPILER_LIB PROPERTY IMPORTED_LOCATION ${...})  
       # where `...` is to be replaced with the path to the library.
       set_property(TARGET MLIR_NVPTXCOMPILER_LIB PROPERTY IMPORTED_LOCATION ${MLIR_NVPTXCOMPILER_LIB_PATH})
-      # Link against `nvptxcompiler_static`. TODO: use `CUDA::nvptxcompiler_static`.
+      set_property(TARGET MLIR_NVFATBIN_LIB PROPERTY IMPORTED_LOCATION ${MLIR_NVFATBIN_LIB_PATH})  
+      # Link against `nvptxcompiler_static` and `nvfatbin_static`. 
+      # TODO: use `CUDA::nvptxcompiler_static` and `CUDA::nvfatbin_static`.
       target_link_libraries(MLIRNVVMTarget PRIVATE MLIR_NVPTXCOMPILER_LIB)
+      target_link_libraries(MLIRNVVMTarget PRIVATE MLIR_NVFATBIN_LIB)
       target_include_directories(obj.MLIRNVVMTarget PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
     endif()
   else()
