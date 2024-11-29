@@ -89,11 +89,32 @@ if ("NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
       target_link_libraries(MLIRNVVMTarget PRIVATE MLIR_NVPTXCOMPILER_LIB)
       target_include_directories(obj.MLIRNVVMTarget PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
     endif()
+    
+    # Add the `nvfatbin` library.
+    if(MLIR_ENABLE_NVFATBIN)
+      find_library(MLIR_NVFATBIN_LIB_PATH nvfatbin_static
+                  PATHS ${CUDAToolkit_LIBRARY_DIR} NO_DEFAULT_PATH)
+        # Fail if `nvfatbin_static` couldn't be found.
+      if(MLIR_NVFATBIN_LIB_PATH STREQUAL "MLIR_NVFATBIN_LIB_PATH-NOTFOUND")
+        message(FATAL_ERROR
+                "Requested using the `nvfatbin` library backend but it couldn't be found.")
+      endif()
+
+      add_library(MLIR_NVFATBIN_LIB STATIC IMPORTED GLOBAL)
+      set_property(TARGET MLIR_NVFATBIN_LIB PROPERTY IMPORTED_LOCATION ${MLIR_NVFATBIN_LIB_PATH})  
+      target_link_libraries(MLIRNVVMTarget PRIVATE MLIR_NVFATBIN_LIB)
+      target_include_directories(obj.MLIRNVVMTarget PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
+    endif()
   else()
     # Fail if `MLIR_ENABLE_NVPTXCOMPILER` is enabled and the toolkit couldn't be found.
     if(MLIR_ENABLE_NVPTXCOMPILER)
       message(FATAL_ERROR
               "Requested using the `nvptxcompiler` library backend but it couldn't be found.")
+    endif()
+    # Fail if `MLIR_ENABLE_NVFATBIN` is enabled and the toolkit couldn't be found.
+    if(MLIR_ENABLE_NVFATBIN)
+      message(FATAL_ERROR
+              "Requested using the `nvfatbin` library backend but it couldn't be found.")
     endif()
   endif()
   message(VERBOSE "MLIR default CUDA toolkit path: ${MLIR_CUDAToolkit_ROOT}")
