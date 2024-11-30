@@ -272,12 +272,6 @@ if(NOT WIN32)
   endif()
 endif()
 
-# Definitions for testing, for reuse when testing libomptarget-nvptx.
-set(LIBOMPTARGET_OPENMP_HEADER_FOLDER "${LIBOMP_INCLUDE_DIR}" CACHE STRING
-  "Path to folder containing omp.h")
-set(LIBOMPTARGET_OPENMP_HOST_RTL_FOLDER "${LIBOMP_LIBRARY_DIR}" CACHE STRING
-  "Path to folder containing libomp.so, and libLLVMSupport.so with profiling enabled")
-
 # Create *.inc before compiling any sources
 # objects depend on : .inc files
 add_custom_target(libomp-needed-headers DEPENDS kmp_i18n_id.inc kmp_i18n_default.inc)
