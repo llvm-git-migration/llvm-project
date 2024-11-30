@@ -1204,7 +1204,8 @@ LogicalResult ConversionPatternRewriterImpl::remapValues(
       // TODO: This is a 1:N conversion. The conversion value mapping does not
       // store such materializations yet. If the types of the most recently
       // mapped values do not match, build a target materialization.
-      if (TypeRange(unpacked) == legalTypes) {
+      ValueRange unpackedRange(unpacked);
+      if (TypeRange(unpackedRange) == legalTypes) {
         remapped.push_back(std::move(unpacked));
         continue;
       }
