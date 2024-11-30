@@ -382,10 +382,25 @@ bool ContinuationIndenter::canBreak(const LineState &State) {
   return !State.NoLineBreak && !CurrentState.NoLineBreak;
 }
 
+bool isMatchingBraceOnSameLine(const FormatToken *Token) {
+  if (!Token->MatchingParen)
+    return false;
+  const FormatToken *Matching = Token->MatchingParen;
+  const FormatToken *Current = Token;
+  while (Current && Current != Matching) {
+    if (Current->NewlinesBefore > 0)
+      return false;
+    Current = Current->Previous;
+  }
+  return true;
+}
+
 bool ContinuationIndenter::mustBreak(const LineState &State) {
   const FormatToken &Current = *State.NextToken;
   const FormatToken &Previous = *Current.Previous;
   const auto &CurrentState = State.Stack.back();
+  if (Current.ClosesTemplateDeclaration && Style.BreakBeforeTemplateClose)
+    return !isMatchingBraceOnSameLine(State.NextToken);
   if (Style.BraceWrapping.BeforeLambdaBody && Current.CanBreakBefore &&
       Current.is(TT_LambdaLBrace) && Previous.isNot(TT_LineComment)) {
     auto LambdaBodyLength = getLengthToMatchingParen(Current, State.Stack);
@@ -1278,6 +1293,9 @@ unsigned ContinuationIndenter::getNewLineColumn(const LineState &State) {
 
   FormatToken &Current = *State.NextToken;
   const auto &CurrentState = State.Stack.back();
+
+  if (Current.ClosesTemplateDeclaration && Style.BreakBeforeTemplateClose)
+    return CurrentState.Indent - Style.ContinuationIndentWidth;
 
   if (CurrentState.IsCSharpGenericTypeConstraint &&
       Current.isNot(TT_CSharpGenericTypeConstraint)) {
