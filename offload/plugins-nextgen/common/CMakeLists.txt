@@ -50,7 +50,7 @@ set(USE_SHARED)
 if (LLVM_LINK_LLVM_DYLIB)
   set(USE_SHARED USE_SHARED)
 endif()
-llvm_config(PluginCommon ${USE_SHARED} ProfileData)
+llvm_config(PluginCommon ${USE_SHARED} FrontendOffloading ProfileData)
 
 target_include_directories(PluginCommon PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
