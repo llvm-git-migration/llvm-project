@@ -7,7 +7,10 @@ add_library(PluginCommon OBJECT
   src/RPC.cpp
   src/Utils/ELF.cpp
 )
-add_dependencies(PluginCommon intrinsics_gen LLVMProfileData)
+add_dependencies(PluginCommon intrinsics_gen)
+if (TARGET LLVMProfileData)
+  add_dependencies(PluginCommon LLVMProfileData)
+endif()
 
 # Only enable JIT for those targets that LLVM can support.
 set(supported_jit_targets AMDGPU NVPTX)
@@ -43,7 +46,11 @@ target_compile_definitions(PluginCommon PRIVATE
 
 target_compile_options(PluginCommon PUBLIC ${offload_compile_flags})
 target_link_options(PluginCommon PUBLIC ${offload_link_flags})
-target_link_libraries(PluginCommon PRIVATE LLVMProfileData)
+set(USE_SHARED)
+if (LLVM_LINK_LLVM_DYLIB)
+  set(USE_SHARED USE_SHARED)
+endif()
+llvm_config(PluginCommon ${USE_SHARED} ProfileData)
 
 target_include_directories(PluginCommon PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
