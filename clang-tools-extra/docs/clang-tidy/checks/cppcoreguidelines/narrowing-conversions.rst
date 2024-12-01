@@ -27,6 +27,29 @@ This check will flag:
  - All applications of binary operators with a narrowing conversions.
    For example: ``int i; i+= 0.1;``.
 
+Note that arithmetic with integer types may perform implicit conversions if the used integer types are smaller than ``int``.
+These rules are documented under `"Integral Promotion" on this cppreference.com <https://en.cppreference.com/w/cpp/language/implicit_conversion>`_
+page. The following example demonstrates this behavior and can be explored with `cppinsights.io <https://cppinsights.io/s/68553908>`_.
+
+.. code-block:: c++
+
+   // The following function definition demonstrates usage of arithmetic with integer types smaller than `int`
+   // and how the narrowing conversion happens implicitly.
+   void computation(short argument1, short argument2) {
+     // Arithmetic written by humans:
+     short result = argument1 + argument2;
+     // Arithmetic actually performed by C++:
+     short result = static_cast<short>(static_cast<int>(argument1) + static_cast<int>(argument2));
+   }
+
+   void recommended_with_gsl(short argument1, short argument2) {
+     // This will throw an exception if the conversion will be lossy.
+     short result = gsl::narrow<short>(argument1 + argument2);
+     // This will just cast through and may yield incorrect results if the sum is not representable
+     // by `short`.
+     short result = gsl::narrow_cast<short>(argument1 + argument2);
+   }
+
 
 Options
 -------
