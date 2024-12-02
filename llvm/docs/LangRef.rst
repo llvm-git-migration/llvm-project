@@ -23657,7 +23657,9 @@ The final two are immediates and the result is a vector with the i1 element type
 Semantics:
 """"""""""
 
-In the case that ``%writeAfterRead`` is true, the
+The intrinsic will return poison if ``%ptrA`` and ``%ptrB`` are within
+VF * ``%elementSize`` of each other and ``%ptrA`` + VF * ``%elementSize`` wraps.
+In other cases when ``%writeAfterRead`` is true, the
 '``llvm.experimental.get.alias.lane.mask.*``' intrinsics are semantically
 equivalent to:
 
@@ -23666,7 +23668,9 @@ equivalent to:
       %diff = (%ptrB - %ptrA) / %elementSize
       %m[i] = (icmp ult i, %diff) || (%diff <= 0)
 
-Otherwise they are semantically equivalent to:
+When the return value is not poison and ``%writeAfterRead`` is false, the
+'``llvm.experimental.get.alias.lane.mask.*``' intrinsics are semantically
+equivalent to:
 
 ::
 
@@ -23675,12 +23679,9 @@ Otherwise they are semantically equivalent to:
 
 where ``%m`` is a vector (mask) of active/inactive lanes with its elements
 indexed by ``i``,  and ``%ptrA``, ``%ptrB`` are the two i64 arguments to
-``llvm.experimental.get.alias.lane.mask.*``, ``%elementSize`` is the first
-immediate argument, ``%abs`` is the absolute difference operation, ``%icmp`` is
-an integer compare and ``ult`` the unsigned less-than comparison operator. The
-subtraction between ``%ptrA`` and ``%ptrB`` could be negative. The
-``%writeAfterRead`` argument is expected to be true if the ``%ptrB`` is stored
-to after ``%ptrA`` is read from.
+``llvm.experimental.get.alias.lane.mask.*`` and ``%elementSize`` is the first
+immediate argument. The ``%writeAfterRead`` argument is expected to be true if
+``%ptrB`` is stored to after ``%ptrA`` is read from.
 The above is equivalent to:
 
 ::
@@ -23696,9 +23697,6 @@ An example is if ``%ptrA`` is 20 and ``%ptrB`` is 23 with a vector factor of 8,
 then lanes 3, 4, 5, 6 and 7 of the vector loaded from ``%ptrA``
 share addresses with lanes 0, 1, 2, 3, 4 and 5 from the vector stored to at
 ``%ptrB``.
-
-The intrinsic will return poison if ``%ptrA`` and ``%ptrB`` are within
-VF * ``%elementSize`` of each other and ``%ptrA`` + VF * ``%elementSize`` wraps.
 
 
 Examples:
