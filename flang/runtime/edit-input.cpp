@@ -979,7 +979,7 @@ static RT_API_ATTRS bool EditListDirectedCharacterInput(
   // or the end of the current record.  Subtlety: the "remaining" count
   // here is a dummy that's used to avoid the interpretation of separators
   // in NextInField.
-  Fortran::common::optional<int> remaining{length > 0 ? maxUTF8Bytes : 0};
+  Fortran::common::optional<int> remaining{maxUTF8Bytes};
   while (Fortran::common::optional<char32_t> next{
       io.NextInField(remaining, edit)}) {
     bool isSep{false};
@@ -1005,8 +1005,11 @@ static RT_API_ATTRS bool EditListDirectedCharacterInput(
     if (isSep) {
       remaining = 0;
     } else {
-      *x++ = *next;
-      remaining = --length > 0 ? maxUTF8Bytes : 0;
+      if (length > 0) {
+        *x++ = *next;
+        --length;
+      }
+      remaining = maxUTF8Bytes;
     }
   }
   Fortran::runtime::fill_n(x, length, ' ');
