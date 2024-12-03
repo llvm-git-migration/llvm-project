@@ -414,7 +414,7 @@ bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
 
         Bits BitWidth;
         if (const FieldDecl *FD = P.getField(); FD && FD->isBitField())
-          BitWidth = Bits(std::min(FD->getBitWidthValue(ASTCtx),
+          BitWidth = Bits(std::min(FD->getBitWidthValue(),
                                    (unsigned)FullBitWidth.getQuantity()));
         else if (T == PT_Bool && PackedBools)
           BitWidth = Bits(1);
