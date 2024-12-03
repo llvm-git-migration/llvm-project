@@ -46,5 +46,6 @@ annotated function. See `lifetimebound attribute<https://clang.llvm.org/docs/Att
 for details.
 
 .. code-block:: c++
+
   const int &f(const int &a [[clang::lifetimebound]]) { return a; } // no warning
   const int &v = f(1); // warning: temporary bound to local reference 'v' will be destroyed at the end of the full-expression [-Wdangling]
