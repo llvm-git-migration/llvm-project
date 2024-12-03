@@ -244,6 +244,16 @@ void DAGTypeLegalizer::ExpandRes_EXTRACT_VECTOR_ELT(SDNode *N, SDValue &Lo,
     std::swap(Lo, Hi);
 }
 
+void DAGTypeLegalizer::ExpandRes_VECTOR_EXTRACT_LAST_ACTIVE(SDNode *N,
+                                                            SDValue &Lo,
+                                                            SDValue &Hi) {
+// FIXME: We need to do this by casting to smaller elements, deinterleaving,
+//        then performing 2 extract_last_active operations and returning the
+//        two parts.
+
+  llvm_unreachable("Implement extract_last_active expand result!");
+}
+
 void DAGTypeLegalizer::ExpandRes_NormalLoad(SDNode *N, SDValue &Lo,
                                             SDValue &Hi) {
   assert(ISD::isNormalLoad(N) && "This routine only for normal loads!");

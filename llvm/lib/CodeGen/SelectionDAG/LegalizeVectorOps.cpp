@@ -29,6 +29,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Analysis/VectorUtils.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/SelectionDAG.h"
@@ -138,6 +139,7 @@ class VectorLegalizer {
   SDValue ExpandVP_FNEG(SDNode *Node);
   SDValue ExpandVP_FABS(SDNode *Node);
   SDValue ExpandVP_FCOPYSIGN(SDNode *Node);
+  SDValue ExpandVECTOR_EXTRACT_LAST_ACTIVE(SDNode *Node);
   SDValue ExpandSELECT(SDNode *Node);
   std::pair<SDValue, SDValue> ExpandLoad(SDNode *N);
   SDValue ExpandStore(SDNode *N);
@@ -465,6 +467,7 @@ SDValue VectorLegalizer::LegalizeOp(SDValue Op) {
   case ISD::VECTOR_COMPRESS:
   case ISD::SCMP:
   case ISD::UCMP:
+  case ISD::VECTOR_EXTRACT_LAST_ACTIVE:
     Action = TLI.getOperationAction(Node->getOpcode(), Node->getValueType(0));
     break;
   case ISD::SMULFIX:
@@ -1202,6 +1205,9 @@ void VectorLegalizer::Expand(SDNode *Node, SmallVectorImpl<SDValue> &Results) {
   case ISD::VECTOR_COMPRESS:
     Results.push_back(TLI.expandVECTOR_COMPRESS(Node, DAG));
     return;
+  case ISD::VECTOR_EXTRACT_LAST_ACTIVE:
+    Results.push_back(ExpandVECTOR_EXTRACT_LAST_ACTIVE(Node));
+    return;
   case ISD::SCMP:
   case ISD::UCMP:
     Results.push_back(TLI.expandCMP(Node, DAG));
@@ -1711,6 +1717,61 @@ SDValue VectorLegalizer::ExpandVP_FCOPYSIGN(SDNode *Node) {
                                    Mask, EVL, SDNodeFlags::Disjoint);
 
   return DAG.getNode(ISD::BITCAST, DL, VT, CopiedSign);
+}
+
+SDValue VectorLegalizer::ExpandVECTOR_EXTRACT_LAST_ACTIVE(SDNode *Node) {
+  dbgs() << "Expanding extract_last_active!!\n";
+  SDLoc DL(Node);
+  SDValue Data = Node->getOperand(0);
+  SDValue Mask = Node->getOperand(1);
+  SDValue PassThru = Node->getOperand(2);
+
+  EVT DataVT = Data.getValueType();
+  EVT ScalarVT = PassThru.getValueType();
+  EVT BoolVT = Mask.getValueType().getScalarType();
+
+  // Find a suitable type for a stepvector.
+  ConstantRange VScaleRange(1, /*isFullSet=*/true); // Dummy value.
+  if (DataVT.isScalableVector())
+    VScaleRange = getVScaleRange(&DAG.getMachineFunction().getFunction(), 64);
+  const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+  unsigned EltWidth = TLI.getBitWidthForCttzElements(
+      ScalarVT.getTypeForEVT(*DAG.getContext()), DataVT.getVectorElementCount(),
+      /*ZeroIsPoison=*/true, &VScaleRange);
+  EVT StepVT = MVT::getIntegerVT(EltWidth);
+  EVT StepVecVT = DataVT.changeVectorElementType(StepVT);
+
+  // Promote to a legal type if necessary.
+  if (TLI.getTypeAction(StepVecVT.getSimpleVT()) ==
+      TargetLowering::TypePromoteInteger) {
+    StepVecVT = TLI.getTypeToTransformTo(*DAG.getContext(), StepVecVT);
+    StepVT = StepVecVT.getVectorElementType();
+  }
+
+  // Zero out lanes with inactive elements, then find the highest remaining
+  // value from the stepvector.
+  SDValue Zeroes = DAG.getConstant(0, DL, StepVecVT);
+  SDValue StepVec = DAG.getStepVector(DL, StepVecVT);
+  SDValue ActiveElts = DAG.getSelect(DL, StepVecVT, Mask, StepVec, Zeroes);
+  // Unfortunately, VectorLegalizer does not recursively legalize all added
+  // nodes, just the end result nodes. LegalizeDAG doesn't handle VSELECT at
+  // all presently. So if we need to legalize a vselect then we have to do
+  // it here.
+  if (!TLI.isTypeLegal(StepVecVT) ||
+      TLI.getOperationAction(ISD::VSELECT, StepVecVT) == TargetLowering::Expand)
+    ActiveElts = LegalizeOp(ActiveElts);
+
+  SDValue HighestIdx = DAG.getNode(ISD::VECREDUCE_UMAX, DL, StepVT, ActiveElts);
+
+  // Extract the corresponding lane from the data vector
+  EVT ExtVT = TLI.getVectorIdxTy(DAG.getDataLayout());
+  SDValue Idx = DAG.getZExtOrTrunc(HighestIdx, DL, ExtVT);
+  SDValue Extract =
+      DAG.getNode(ISD::EXTRACT_VECTOR_ELT, DL, ScalarVT, Data, Idx);
+
+  // If all mask lanes were inactive, choose the passthru value instead.
+  SDValue AnyActive = DAG.getNode(ISD::VECREDUCE_OR, DL, BoolVT, Mask);
+  return DAG.getSelect(DL, ScalarVT, AnyActive, Extract, PassThru);
 }
 
 void VectorLegalizer::ExpandFP_TO_UINT(SDNode *Node,

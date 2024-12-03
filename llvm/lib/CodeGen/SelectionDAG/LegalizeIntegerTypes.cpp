@@ -155,6 +155,10 @@ void DAGTypeLegalizer::PromoteIntegerResult(SDNode *N, unsigned ResNo) {
   case ISD::ZERO_EXTEND_VECTOR_INREG:
                          Res = PromoteIntRes_EXTEND_VECTOR_INREG(N); break;
 
+  case ISD::VECTOR_EXTRACT_LAST_ACTIVE:
+    Res = PromoteIntRes_VECTOR_EXTRACT_LAST_ACTIVE(N);
+    break;
+
   case ISD::SIGN_EXTEND:
   case ISD::VP_SIGN_EXTEND:
   case ISD::ZERO_EXTEND:
@@ -2069,6 +2073,9 @@ bool DAGTypeLegalizer::PromoteIntegerOperand(SDNode *N, unsigned OpNo) {
   case ISD::EXPERIMENTAL_VECTOR_HISTOGRAM:
     Res = PromoteIntOp_VECTOR_HISTOGRAM(N, OpNo);
     break;
+  case ISD::VECTOR_EXTRACT_LAST_ACTIVE:
+    Res = PromoteIntOp_VECTOR_EXTRACT_LAST_ACTIVE(N, OpNo);
+    break;
   }
 
   // If the result is null, the sub-method took care of registering results etc.
@@ -2803,6 +2810,14 @@ SDValue DAGTypeLegalizer::PromoteIntOp_VECTOR_HISTOGRAM(SDNode *N,
   return SDValue(DAG.UpdateNodeOperands(N, NewOps), 0);
 }
 
+SDValue
+DAGTypeLegalizer::PromoteIntOp_VECTOR_EXTRACT_LAST_ACTIVE(SDNode *N,
+                                                          unsigned OpNo) {
+  SmallVector<SDValue, 3> NewOps(N->ops());
+  NewOps[OpNo] = GetPromotedInteger(N->getOperand(OpNo));
+  return SDValue(DAG.UpdateNodeOperands(N, NewOps), 0);
+}
+
 //===----------------------------------------------------------------------===//
 //  Integer Result Expansion
 //===----------------------------------------------------------------------===//
@@ -2840,6 +2855,9 @@ void DAGTypeLegalizer::ExpandIntegerResult(SDNode *N, unsigned ResNo) {
   case ISD::BUILD_PAIR:         ExpandRes_BUILD_PAIR(N, Lo, Hi); break;
   case ISD::EXTRACT_ELEMENT:    ExpandRes_EXTRACT_ELEMENT(N, Lo, Hi); break;
   case ISD::EXTRACT_VECTOR_ELT: ExpandRes_EXTRACT_VECTOR_ELT(N, Lo, Hi); break;
+  case ISD::VECTOR_EXTRACT_LAST_ACTIVE:
+    ExpandRes_VECTOR_EXTRACT_LAST_ACTIVE(N, Lo, Hi);
+    break;
   case ISD::VAARG:              ExpandRes_VAARG(N, Lo, Hi); break;
 
   case ISD::ANY_EXTEND:  ExpandIntRes_ANY_EXTEND(N, Lo, Hi); break;
@@ -6100,6 +6118,38 @@ SDValue DAGTypeLegalizer::PromoteIntRes_EXTEND_VECTOR_INREG(SDNode *N) {
 
   // Directly extend to the appropriate transform-to type.
   return DAG.getNode(N->getOpcode(), dl, NVT, N->getOperand(0));
+}
+
+SDValue DAGTypeLegalizer::PromoteIntRes_VECTOR_EXTRACT_LAST_ACTIVE(SDNode *N) {
+  EVT VT = N->getValueType(0);
+  EVT NVT = TLI.getTypeToTransformTo(*DAG.getContext(), VT);
+
+  SDLoc dl(N);
+
+  //  SDValue Data = N->getOperand(0);
+  //  SDValue Mask = N->getOperand(1);
+  //  SDValue PassThru = N->getOperand(2);
+  //
+  return DAG.getNode(ISD::VECTOR_EXTRACT_LAST_ACTIVE, dl, NVT, N->ops());
+
+  //
+  //  // If the input also needs to be promoted, do that first so we can get a
+  //  // get a good idea for the output type.
+  //  if (TLI.getTypeAction(*DAG.getContext(), Op0.getValueType())
+  //      == TargetLowering::TypePromoteInteger) {
+  //    SDValue In = GetPromotedInteger(Op0);
+  //
+  //    // If the new type is larger than NVT, use it. We probably won't need to
+  //    // promote it again.
+  //    EVT SVT = In.getValueType().getScalarType();
+  //    if (SVT.bitsGE(NVT)) {
+  //      SDValue Ext = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, dl, SVT, In, Op1);
+  //      return DAG.getAnyExtOrTrunc(Ext, dl, NVT);
+  //    }
+  //  }
+  //
+  //  return DAG.getNode(ISD::EXTRACT_VECTOR_ELT, dl, NVT, Op0, Op1);
+  //
 }
 
 SDValue DAGTypeLegalizer::PromoteIntRes_INSERT_VECTOR_ELT(SDNode *N) {
