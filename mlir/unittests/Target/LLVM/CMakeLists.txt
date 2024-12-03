@@ -1,10 +1,14 @@
+if (LLVM_LINK_LLVM_DYLIB)
+  llvm_map_components_to_libnames(LLVM_LINK_COMPONENTS nativecodegen)
+else()
+  llvm_map_components_to_libnames(llvm_libs nativecodegen)
+endif()
+
 add_mlir_unittest(MLIRTargetLLVMTests
   SerializeNVVMTarget.cpp
   SerializeROCDLTarget.cpp
   SerializeToLLVMBitcode.cpp
 )
-
-llvm_map_components_to_libnames(llvm_libs nativecodegen)
 
 target_link_libraries(MLIRTargetLLVMTests
   PRIVATE
