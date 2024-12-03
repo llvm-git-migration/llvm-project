@@ -79,6 +79,11 @@ static_assert(sizeof(dosProgram) % 8 == 0,
 
 static const int dosStubSize = sizeof(dos_header) + sizeof(dosProgram);
 static_assert(dosStubSize % 8 == 0, "DOSStub size must be multiple of 8");
+static const uint32_t coffHeaderOffset = dosStubSize + sizeof(PEMagic);
+static const uint32_t peHeaderOffset =
+    coffHeaderOffset + sizeof(coff_file_header);
+static const uint32_t dataDirOffset64 =
+    peHeaderOffset + sizeof(pe32plus_header);
 
 static const int numberOfDataDirectory = 16;
 
@@ -1600,6 +1605,7 @@ void Writer::assignAddresses() {
   for (OutputSection *sec : ctx.outputSections) {
     llvm::TimeTraceScope timeScope("Section: ", sec->name);
     if (sec == relocSec) {
+      sec->chunks.clear();
       addBaserels();
       if (ctx.dynamicRelocs) {
         ctx.dynamicRelocs->finalize();
@@ -1680,6 +1686,7 @@ template <typename PEHeaderTy> void Writer::writeHeader() {
   buf += sizeof(PEMagic);
 
   // Write COFF header
+  assert(coffHeaderOffset == buf - buffer->getBufferStart());
   auto *coff = reinterpret_cast<coff_file_header *>(buf);
   buf += sizeof(*coff);
   switch (config->machine) {
@@ -1712,6 +1719,7 @@ template <typename PEHeaderTy> void Writer::writeHeader() {
       sizeof(PEHeaderTy) + sizeof(data_directory) * numberOfDataDirectory;
 
   // Write PE header
+  assert(peHeaderOffset == buf - buffer->getBufferStart());
   auto *pe = reinterpret_cast<PEHeaderTy *>(buf);
   buf += sizeof(*pe);
   pe->Magic = config->is64() ? PE32Header::PE32_PLUS : PE32Header::PE32;
@@ -1777,6 +1785,8 @@ template <typename PEHeaderTy> void Writer::writeHeader() {
   pe->SizeOfInitializedData = getSizeOfInitializedData();
 
   // Write data directory
+  assert(!ctx.config.is64() ||
+         dataDirOffset64 == buf - buffer->getBufferStart());
   auto *dir = reinterpret_cast<data_directory *>(buf);
   buf += sizeof(*dir) * numberOfDataDirectory;
   if (edataStart) {
@@ -2532,7 +2542,6 @@ uint32_t Writer::getSizeOfInitializedData() {
 void Writer::addBaserels() {
   if (!ctx.config.relocatable)
     return;
-  relocSec->chunks.clear();
   std::vector<Baserel> v;
   for (OutputSection *sec : ctx.outputSections) {
     if (sec->header.Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
@@ -2570,24 +2579,20 @@ void Writer::createDynamicRelocs() {
   if (!ctx.dynamicRelocs)
     return;
 
-  const uint32_t coffHeaderOffset = dosStubSize + sizeof(PEMagic);
-  const uint32_t peHeaderOffset = coffHeaderOffset + sizeof(coff_file_header);
-  const uint32_t dataDirOffset = peHeaderOffset + sizeof(pe32plus_header);
-
   // Adjust the Machine field in the COFF header to AMD64.
   ctx.dynamicRelocs->add(IMAGE_DVRT_ARM64X_FIXUP_TYPE_VALUE, sizeof(uint16_t),
                          coffHeaderOffset + offsetof(coff_file_header, Machine),
                          AMD64);
 
-  // Adjust the load config directory.
+  // Clear the load config directory.
   // FIXME: Use the hybrid load config value instead.
   ctx.dynamicRelocs->add(IMAGE_DVRT_ARM64X_FIXUP_TYPE_VALUE, sizeof(uint32_t),
-                         dataDirOffset +
+                         dataDirOffset64 +
                              LOAD_CONFIG_TABLE * sizeof(data_directory) +
                              offsetof(data_directory, RelativeVirtualAddress),
                          0);
   ctx.dynamicRelocs->add(IMAGE_DVRT_ARM64X_FIXUP_TYPE_VALUE, sizeof(uint32_t),
-                         dataDirOffset +
+                         dataDirOffset64 +
                              LOAD_CONFIG_TABLE * sizeof(data_directory) +
                              offsetof(data_directory, Size),
                          0);

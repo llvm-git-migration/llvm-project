@@ -1214,19 +1214,15 @@ void DynamicRelocsChunk::writeTo(uint8_t *buf) const {
 
   auto pageHeader = reinterpret_cast<coff_base_reloc_block_header *>(buf);
   pageHeader->BlockSize = sizeof(*pageHeader);
-  size_t relocSize = sizeof(*pageHeader);
   for (const Arm64XDynamicRelocEntry &entry : arm64xRelocs) {
-    entry.writeTo(buf + relocSize);
-    size_t entrySize = entry.getSize();
-    pageHeader->BlockSize += entrySize;
-    relocSize += entrySize;
+    entry.writeTo(buf + pageHeader->BlockSize);
+    pageHeader->BlockSize += entry.getSize();
   }
   pageHeader->BlockSize = alignTo(pageHeader->BlockSize, sizeof(uint32_t));
-  relocSize = alignTo(relocSize, sizeof(uint32_t));
 
-  header->BaseRelocSize = relocSize;
-  table->Size += relocSize;
-  assert(size == sizeof(*table) + sizeof(*header) + relocSize);
+  header->BaseRelocSize = pageHeader->BlockSize;
+  table->Size += header->BaseRelocSize;
+  assert(size == sizeof(*table) + sizeof(*header) + header->BaseRelocSize);
 }
 
 } // namespace lld::coff

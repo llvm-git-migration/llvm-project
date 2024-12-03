@@ -861,10 +861,9 @@ public:
   void writeTo(uint8_t *buf) const override;
   void finalize();
 
-  uint32_t add(llvm::COFF::Arm64XFixupType type, uint8_t size, uint32_t offset,
-               uint64_t value) {
+  void add(llvm::COFF::Arm64XFixupType type, uint8_t size, uint32_t offset,
+           uint64_t value) {
     arm64xRelocs.emplace_back(type, size, offset, value);
-    return arm64xRelocs.size() - 1;
   }
 
 private:
