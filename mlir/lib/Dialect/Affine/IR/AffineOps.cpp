@@ -8,6 +8,7 @@
 
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/IR/AffineValueMap.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/UB/IR/UBOps.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
@@ -410,6 +411,7 @@ bool mlir::affine::isValidSymbol(Value value) {
 /// A value can be used as a symbol for `region` iff it meets one of the
 /// following conditions:
 /// *) It is a constant.
+/// *) It is a threadId Op.
 /// *) It is the result of an affine apply operation with symbol arguments.
 /// *) It is a result of the dim op on a memref whose corresponding size is
 ///    a valid symbol.
@@ -441,6 +443,10 @@ bool mlir::affine::isValidSymbol(Value value, Region *region) {
   // Constant operation is ok.
   Attribute operandCst;
   if (matchPattern(defOp, m_Constant(&operandCst)))
+    return true;
+
+  // ThreadId operation is ok.
+  if (isa<gpu::ThreadIdOp>(defOp))
     return true;
 
   // Affine apply operation is ok if all of its operands are ok.

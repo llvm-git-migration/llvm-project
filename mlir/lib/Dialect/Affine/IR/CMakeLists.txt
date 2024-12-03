@@ -22,4 +22,5 @@ add_mlir_dialect_library(MLIRAffineDialect
   MLIRSideEffectInterfaces
   MLIRUBDialect
   MLIRValueBoundsOpInterface
+  MLIRGPUDialect
   )
