@@ -3143,6 +3143,8 @@ public:
 
   /// Computes the bit width of this field, if this is a bit field.
   /// May not be called on non-bitfields.
+  /// Note that in order to successfully use this function, the bitwidth
+  /// expression must be a ConstantExpr with a valid integer result set.
   unsigned getBitWidthValue() const;
 
   /// Set the bit-field width for this member.

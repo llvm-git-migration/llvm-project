@@ -4603,6 +4603,7 @@ unsigned FieldDecl::getBitWidthValue() const {
   assert(isBitField() && "not a bitfield");
   assert(isa<ConstantExpr>(getBitWidth()));
   assert(cast<ConstantExpr>(getBitWidth())->hasAPValueResult());
+  assert(cast<ConstantExpr>(getBitWidth())->getAPValueResult().isInt());
   return cast<ConstantExpr>(getBitWidth())
       ->getAPValueResult()
       .getInt()
