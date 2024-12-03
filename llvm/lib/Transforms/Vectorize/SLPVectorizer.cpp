@@ -19241,7 +19241,7 @@ class HorizontalReduction {
   /// Creates reduction operation with the current opcode.
   static Value *createOp(IRBuilderBase &Builder, RecurKind Kind, Value *LHS,
                          Value *RHS, const Twine &Name, bool UseSelect) {
-    unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(Kind);
+    unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(Kind, LHS->getType());
     switch (Kind) {
     case RecurKind::Or:
       if (UseSelect &&
@@ -20384,7 +20384,7 @@ private:
     case RecurKind::Xor:
     case RecurKind::FAdd:
     case RecurKind::FMul: {
-      unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(RdxKind);
+      unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(RdxKind, ScalarTy);
       if (!AllConsts) {
         if (auto *VecTy = dyn_cast<FixedVectorType>(ScalarTy)) {
           assert(SLPReVec && "FixedVectorType is not expected.");
@@ -20513,8 +20513,7 @@ private:
     case RecurKind::Mul:
     case RecurKind::FMul:
     case RecurKind::FMulAdd:
-    case RecurKind::IAnyOf:
-    case RecurKind::FAnyOf:
+    case RecurKind::AnyOf:
     case RecurKind::None:
       llvm_unreachable("Unexpected reduction kind for repeated scalar.");
     }
@@ -20610,8 +20609,7 @@ private:
     case RecurKind::Mul:
     case RecurKind::FMul:
     case RecurKind::FMulAdd:
-    case RecurKind::IAnyOf:
-    case RecurKind::FAnyOf:
+    case RecurKind::AnyOf:
     case RecurKind::None:
       llvm_unreachable("Unexpected reduction kind for reused scalars.");
     }
