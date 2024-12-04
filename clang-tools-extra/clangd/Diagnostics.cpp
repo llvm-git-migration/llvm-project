@@ -19,6 +19,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TokenKinds.h"
+#include "clang/Format/Format.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/Token.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -741,7 +742,7 @@ void StoreDiags::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
       return false;
     // Copy as we may modify the ranges.
     auto FixIts = Info.getFixItHints().vec();
-    llvm::SmallVector<TextEdit, 1> Edits;
+    auto Replacements = std::make_optional<tooling::Replacements>();
     for (auto &FixIt : FixIts) {
       // Allow fixits within a single macro-arg expansion to be applied.
       // This can be incorrect if the argument is expanded multiple times in
@@ -761,7 +762,50 @@ void StoreDiags::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
         return false;
       if (!isInsideMainFile(FixIt.RemoveRange.getBegin(), SM))
         return false;
-      Edits.push_back(toTextEdit(FixIt, SM, *LangOpts));
+
+      auto R = tooling::Replacement(SM, FixIt.RemoveRange, FixIt.CodeToInsert,
+                                    *LangOpts);
+      auto Err = Replacements->add(R);
+      if (Err) {
+        // FIXME: Remove duplicated code as in ClangTidy.cpp
+        unsigned NewOffset =
+            Replacements->getShiftedCodePosition(R.getOffset());
+        unsigned NewLength = Replacements->getShiftedCodePosition(
+                                 R.getOffset() + R.getLength()) -
+                             NewOffset;
+        if (NewLength == R.getLength()) {
+          llvm::consumeError(std::move(Err));
+          R = tooling::Replacement(R.getFilePath(), NewOffset, NewLength,
+                                   R.getReplacementText());
+          Replacements = Replacements->merge(tooling::Replacements(R));
+        } else {
+          log("Skipping formatting the replacement due to conflict: {0}",
+               llvm::toString(std::move(Err)));
+          Replacements = std::nullopt;
+          break;
+        }
+      }
+    }
+
+    llvm::SmallVector<TextEdit, 1> Edits;
+
+    if (Replacements) {
+      StringRef Code = SM.getBufferData(SM.getMainFileID());
+      auto Repl = format::cleanupAroundReplacements(Code, *Replacements,
+                                                    format::getNoStyle());
+      if (!Repl) {
+        log("Skipping formatting the replacement due to conflict: {0}",
+             llvm::toString(std::move(Repl.takeError())));
+        Replacements = std::nullopt;
+      } else {
+        auto Es = replacementsToEdits(Code, *Repl);
+        Edits.append(Es.begin(), Es.end());
+      }
+    }
+    if (!Replacements) {
+      for (auto &FixIt : FixIts) {
+        Edits.push_back(toTextEdit(FixIt, SM, *LangOpts));
+      }
     }
 
     llvm::SmallString<64> Message;
