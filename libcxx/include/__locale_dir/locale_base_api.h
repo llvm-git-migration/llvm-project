@@ -137,7 +137,7 @@ namespace __locale {
 //
 // Locale management
 //
-using __locale_t = locale_t;
+using __locale_t _LIBCPP_NODEBUG = locale_t;
 
 #  ifndef _LIBCPP_MSVCRT_LIKE
 inline _LIBCPP_HIDE_FROM_ABI __locale_t __uselocale(__locale_t __loc) { return uselocale(__loc); }
