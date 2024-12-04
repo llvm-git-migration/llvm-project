@@ -299,11 +299,11 @@ static VectorValue emulatedVectorLoad(OpBuilder &rewriter, Location loc,
 
 /// Atomically store a subbyte-sized value to memory, with a mask.
 static void atomicStore(OpBuilder &builder, Location loc,
-                        MemRefValue emulatedMemref, Value linearizedIndex,
-                        VectorValue value, Value mask,
+                        MemRefValue linearizedMemref, Value linearizedIndex,
+                        VectorValue valueToStore, Value mask,
                         int64_t numSrcElemsPerDest) {
   auto atomicOp = builder.create<memref::GenericAtomicRMWOp>(
-      loc, emulatedMemref, ValueRange{linearizedIndex});
+      loc, linearizedMemref, ValueRange{linearizedIndex});
   Value origValue = atomicOp.getCurrentValue();
 
   OpBuilder::InsertionGuard guard(builder);
@@ -314,10 +314,10 @@ static void atomicStore(OpBuilder &builder, Location loc,
   auto fromElem = builder.create<vector::FromElementsOp>(loc, oneVectorType,
                                                          ValueRange{origValue});
   auto vectorBitCast =
-      builder.create<vector::BitCastOp>(loc, value.getType(), fromElem);
+      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), fromElem);
 
   auto select =
-      builder.create<arith::SelectOp>(loc, mask, value, vectorBitCast);
+      builder.create<arith::SelectOp>(loc, mask, valueToStore, vectorBitCast);
   auto bitcast2 = builder.create<vector::BitCastOp>(loc, oneVectorType, select);
   auto extract = builder.create<vector::ExtractOp>(loc, bitcast2, 0);
   builder.create<memref::AtomicYieldOp>(loc, extract.getResult());
@@ -325,13 +325,13 @@ static void atomicStore(OpBuilder &builder, Location loc,
 
 /// Generate a non-atomic read-modify-write sequence for subbyte storing.
 static void rmwStore(OpBuilder &rewriter, Location loc,
-                     MemRefValue emulatedMemref, Value linearizedIndex,
+                     MemRefValue linearizedMemref, Value linearizedIndex,
                      VectorValue value, Value mask,
                      int64_t numSrcElemsPerDest) {
   auto emulatedIOType =
-      VectorType::get({1}, emulatedMemref.getType().getElementType());
+      VectorType::get({1}, linearizedMemref.getType().getElementType());
   auto elemLoad = rewriter.create<vector::LoadOp>(
-      loc, emulatedIOType, emulatedMemref, ValueRange{linearizedIndex});
+      loc, emulatedIOType, linearizedMemref, ValueRange{linearizedIndex});
   auto fromBitcast = rewriter.create<vector::BitCastOp>(
       loc,
       VectorType::get({numSrcElemsPerDest}, value.getType().getElementType()),
@@ -339,14 +339,9 @@ static void rmwStore(OpBuilder &rewriter, Location loc,
   auto select = rewriter.create<arith::SelectOp>(loc, mask, fromBitcast, value);
   auto toBitcast =
       rewriter.create<vector::BitCastOp>(loc, emulatedIOType, select);
-  rewriter.create<vector::StoreOp>(loc, toBitcast, emulatedMemref,
+  rewriter.create<vector::StoreOp>(loc, toBitcast, linearizedMemref,
                                    linearizedIndex);
 }
-
-static_assert(std::is_same_v<decltype(atomicStore), decltype(rmwStore)> &&
-              "`atomicStore` and `rmwStore` must have same signature, as per "
-              "the design to keep the code clean, which one to call is "
-              "determined by the `useAtomicWrites` flag.");
 
 // Extract a slice of a vector, and insert it into a byte vector.
 static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
@@ -442,7 +437,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
       return failure();
     }
 
-    auto emulatedMemref = cast<MemRefValue>(adaptor.getBase());
+    auto linearizedMemref = cast<MemRefValue>(adaptor.getBase());
 
     // Shortcut: conditions when subbyte store at the front is not needed:
     // 1. The source vector size is multiple of byte size
@@ -453,7 +448,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
           loc, VectorType::get(numElements, newElementType),
           op.getValueToStore());
       rewriter.replaceOpWithNewOp<vector::StoreOp>(
-          op, bitCast.getResult(), emulatedMemref,
+          op, bitCast.getResult(), linearizedMemref,
           getValueOrCreateConstantIndexOp(rewriter, loc, linearizedIndices));
       return success();
     }
@@ -490,7 +485,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
           extractSliceIntoByte(rewriter, loc, valueToStore, 0,
                                frontSubWidthStoreElem, *foldedNumFrontPadElems);
 
-      subEmulatedWidthStore(rewriter, loc, emulatedMemref, currentDestIndex,
+      subEmulatedWidthStore(rewriter, loc, linearizedMemref, currentDestIndex,
                             cast<VectorValue>(value), frontMask.getResult(),
                             numSrcElemsPerDest);
 
@@ -508,20 +503,19 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
     int64_t fullWidthStoreSize =
         (origElements - currentSourceIndex) / numSrcElemsPerDest;
     int64_t numNonFullWidthElements = fullWidthStoreSize * numSrcElemsPerDest;
-    if (fullWidthStoreSize != 0) {
+    if (fullWidthStoreSize > 0) {
       auto fullWidthStorePart = staticallyExtractSubvector(
           rewriter, loc, valueToStore, currentSourceIndex,
           numNonFullWidthElements);
 
-      auto originType = dyn_cast<VectorType>(fullWidthStorePart.getType());
-      auto memrefElemType =
-          dyn_cast<MemRefType>(emulatedMemref.getType()).getElementType();
+      auto originType = cast<VectorType>(fullWidthStorePart.getType());
+      auto memrefElemType = getElementTypeOrSelf(linearizedMemref.getType());
       auto storeType = VectorType::get(
           {originType.getNumElements() / numSrcElemsPerDest}, memrefElemType);
       auto bitCast = rewriter.create<vector::BitCastOp>(loc, storeType,
                                                         fullWidthStorePart);
-      rewriter.create<vector::StoreOp>(loc, bitCast.getResult(), emulatedMemref,
-                                       currentDestIndex);
+      rewriter.create<vector::StoreOp>(loc, bitCast.getResult(),
+                                       linearizedMemref, currentDestIndex);
 
       currentSourceIndex += numNonFullWidthElements;
       currentDestIndex = rewriter.create<arith::AddIOp>(
@@ -543,7 +537,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
       auto backMask = rewriter.create<arith::ConstantOp>(
           loc, DenseElementsAttr::get(subWidthStoreMaskType, maskValues));
 
-      subEmulatedWidthStore(rewriter, loc, emulatedMemref, currentDestIndex,
+      subEmulatedWidthStore(rewriter, loc, linearizedMemref, currentDestIndex,
                             cast<VectorValue>(subWidthStorePart),
                             backMask.getResult(), numSrcElemsPerDest);
     }
@@ -556,6 +550,11 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
   /// configuration, it could be an atomic store or an RMW sequence.
   template <typename... Args>
   void subEmulatedWidthStore(Args &&...args) const {
+    static_assert(
+        std::is_same_v<decltype(atomicStore), decltype(rmwStore)> &&
+        "`atomicStore` and `rmwStore` must have same signature, as per "
+        "the design to keep the code clean, which one to call is "
+        "determined by the `useAtomicWrites` flag.");
     std::function<decltype(atomicStore)> storeFunc =
         useAtomicWrites_ ? atomicStore : rmwStore;
     storeFunc(std::forward<Args>(args)...);
