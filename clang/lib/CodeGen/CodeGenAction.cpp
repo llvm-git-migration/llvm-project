@@ -246,7 +246,8 @@ bool BackendConsumer::LinkInModules(llvm::Module *M) {
           *M, std::move(LM.Module), LM.LinkFlags,
           [](llvm::Module &M, const llvm::StringSet<> &GVS) {
             internalizeModule(M, [&GVS](const llvm::GlobalValue &GV) {
-              return !GV.hasName() || (GVS.count(GV.getName()) == 0);
+              return !GV.hasName() || (GVS.count(GV.getName()) == 0) ||
+                     GV.getName().starts_with("__llvm_rpc_client");
             });
           });
     } else
