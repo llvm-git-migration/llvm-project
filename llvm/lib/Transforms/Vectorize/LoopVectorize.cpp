@@ -510,7 +510,7 @@ public:
                             VPReplicateRecipe *RepRecipe, const VPLane &Lane,
                             VPTransformState &State);
 
-  /// Fix the non-induction PHIs in \p Plan.
+  /// Fix the widened PHIs in \p Plan.
   void fixWidenedPHIs(VPTransformState &State);
 
   /// Create a new phi node for the induction variable \p OrigPhi to resume
