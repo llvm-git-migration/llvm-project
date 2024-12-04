@@ -43,7 +43,7 @@ using __unary_function = unary_function<_Arg, _Result>;
 _LIBCPP_DIAGNOSTIC_POP
 #else
 template <class _Arg, class _Result>
-using __unary_function = __unary_function_keep_layout_base<_Arg, _Result>;
+using __unary_function _LIBCPP_NODEBUG = __unary_function_keep_layout_base<_Arg, _Result>;
 #endif
 
 _LIBCPP_END_NAMESPACE_STD
