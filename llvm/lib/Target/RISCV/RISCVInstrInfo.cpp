@@ -4218,7 +4218,7 @@ namespace {
 class RISCVPipelinerLoopInfo : public TargetInstrInfo::PipelinerLoopInfo {
   const MachineInstr *LHS;
   const MachineInstr *RHS;
-  SmallVector<MachineOperand, 4> Cond;
+  SmallVector<MachineOperand, 3> Cond;
 
 public:
   RISCVPipelinerLoopInfo(const MachineInstr *LHS, const MachineInstr *RHS,
