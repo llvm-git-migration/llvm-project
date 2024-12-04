@@ -135,7 +135,7 @@ def getSuitableClangTidy(cfg):
         runScriptExitCode(
             cfg, ["stat %{test-tools-dir}/clang_tidy_checks/libcxx-tidy.plugin"]
         )
-        != 0
+        == 0
     ):
         return None
 

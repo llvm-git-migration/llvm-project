@@ -27,8 +27,8 @@ inline namespace parallelism_v2 {
 // TODO: implement simd_mask class
 template <class _Tp, class _Abi>
 class simd_mask {
-  using _Impl    = __mask_operations<_Tp, _Abi>;
-  using _Storage = typename _Impl::_MaskStorage;
+  using _Impl [[__gnu__::__nodebug__]]    = __mask_operations<_Tp, _Abi>;
+  using _Storage [[__gnu__::__nodebug__]] = typename _Impl::_MaskStorage;
 
   _Storage __s_;
 

@@ -20,7 +20,7 @@
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Tp>
-using __remove_const_ref_t = __remove_const_t<__libcpp_remove_reference_t<_Tp> >;
+using __remove_const_ref_t [[__gnu__::__nodebug__]] = __remove_const_t<__libcpp_remove_reference_t<_Tp> >;
 
 _LIBCPP_END_NAMESPACE_STD
 

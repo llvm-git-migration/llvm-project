@@ -55,8 +55,9 @@ struct __join_view_iterator_category {};
 template <class _View>
   requires is_reference_v<range_reference_t<_View>> && forward_range<_View> && forward_range<range_reference_t<_View>>
 struct __join_view_iterator_category<_View> {
-  using _OuterC = typename iterator_traits<iterator_t<_View>>::iterator_category;
-  using _InnerC = typename iterator_traits<iterator_t<range_reference_t<_View>>>::iterator_category;
+  using _OuterC [[__gnu__::__nodebug__]] = typename iterator_traits<iterator_t<_View>>::iterator_category;
+  using _InnerC [[__gnu__::__nodebug__]] =
+      typename iterator_traits<iterator_t<range_reference_t<_View>>>::iterator_category;
 
   using iterator_category =
       _If< derived_from<_OuterC, bidirectional_iterator_tag> && derived_from<_InnerC, bidirectional_iterator_tag> &&
@@ -71,7 +72,7 @@ template <input_range _View>
   requires view<_View> && input_range<range_reference_t<_View>>
 class join_view : public view_interface<join_view<_View>> {
 private:
-  using _InnerRange = range_reference_t<_View>;
+  using _InnerRange [[__gnu__::__nodebug__]] = range_reference_t<_View>;
 
   template <bool>
   struct __iterator;
@@ -85,11 +86,13 @@ private:
   _LIBCPP_NO_UNIQUE_ADDRESS _View __base_ = _View();
 
   static constexpr bool _UseOuterCache = !forward_range<_View>;
-  using _OuterCache                    = _If<_UseOuterCache, __non_propagating_cache<iterator_t<_View>>, __empty_cache>;
+  using _OuterCache [[__gnu__::__nodebug__]] =
+      _If<_UseOuterCache, __non_propagating_cache<iterator_t<_View>>, __empty_cache>;
   _LIBCPP_NO_UNIQUE_ADDRESS _OuterCache __outer_;
 
   static constexpr bool _UseInnerCache = !is_reference_v<_InnerRange>;
-  using _InnerCache = _If<_UseInnerCache, __non_propagating_cache<remove_cvref_t<_InnerRange>>, __empty_cache>;
+  using _InnerCache [[__gnu__::__nodebug__]] =
+      _If<_UseInnerCache, __non_propagating_cache<remove_cvref_t<_InnerRange>>, __empty_cache>;
   _LIBCPP_NO_UNIQUE_ADDRESS _InnerCache __inner_;
 
 public:
@@ -155,9 +158,9 @@ private:
   template <bool>
   friend struct __sentinel;
 
-  using _Parent            = __maybe_const<_Const, join_view>;
-  using _Base              = __maybe_const<_Const, _View>;
-  sentinel_t<_Base> __end_ = sentinel_t<_Base>();
+  using _Parent [[__gnu__::__nodebug__]] = __maybe_const<_Const, join_view>;
+  using _Base [[__gnu__::__nodebug__]]   = __maybe_const<_Const, _View>;
+  sentinel_t<_Base> __end_               = sentinel_t<_Base>();
 
 public:
   _LIBCPP_HIDE_FROM_ABI __sentinel() = default;
@@ -190,18 +193,18 @@ struct join_view<_View>::__iterator final : public __join_view_iterator_category
   static constexpr bool __is_join_view_iterator = true;
 
 private:
-  using _Parent     = __maybe_const<_Const, join_view<_View>>;
-  using _Base       = __maybe_const<_Const, _View>;
-  using _Outer      = iterator_t<_Base>;
-  using _Inner      = iterator_t<range_reference_t<_Base>>;
-  using _InnerRange = range_reference_t<_View>;
+  using _Parent [[__gnu__::__nodebug__]]     = __maybe_const<_Const, join_view<_View>>;
+  using _Base [[__gnu__::__nodebug__]]       = __maybe_const<_Const, _View>;
+  using _Outer [[__gnu__::__nodebug__]]      = iterator_t<_Base>;
+  using _Inner [[__gnu__::__nodebug__]]      = iterator_t<range_reference_t<_Base>>;
+  using _InnerRange [[__gnu__::__nodebug__]] = range_reference_t<_View>;
 
   static_assert(!_Const || forward_range<_Base>, "Const can only be true when Base models forward_range.");
 
   static constexpr bool __ref_is_glvalue = is_reference_v<range_reference_t<_Base>>;
 
   static constexpr bool _OuterPresent           = forward_range<_Base>;
-  using _OuterType                              = _If<_OuterPresent, _Outer, std::__empty>;
+  using _OuterType [[__gnu__::__nodebug__]]     = _If<_OuterPresent, _Outer, std::__empty>;
   _LIBCPP_NO_UNIQUE_ADDRESS _OuterType __outer_ = _OuterType();
 
   optional<_Inner> __inner_;
@@ -377,9 +380,9 @@ template <class _JoinViewIterator>
            __has_random_access_iterator_category<typename _JoinViewIterator::_Outer>::value &&
            __has_random_access_iterator_category<typename _JoinViewIterator::_Inner>::value)
 struct __segmented_iterator_traits<_JoinViewIterator> {
-  using __segment_iterator =
-      _LIBCPP_NODEBUG __iterator_with_data<typename _JoinViewIterator::_Outer, typename _JoinViewIterator::_Parent*>;
-  using __local_iterator = typename _JoinViewIterator::_Inner;
+  using __segment_iterator [[__gnu__::__nodebug__]] =
+      __iterator_with_data<typename _JoinViewIterator::_Outer, typename _JoinViewIterator::_Parent*>;
+  using __local_iterator [[__gnu__::__nodebug__]] = typename _JoinViewIterator::_Inner;
 
   // TODO: Would it make sense to enable the optimization for other iterator types?
 

@@ -21,7 +21,7 @@
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _CharT>
-using _IsCharLikeType = _And<is_standard_layout<_CharT>, is_trivial<_CharT> >;
+using _IsCharLikeType [[__gnu__::__nodebug__]] = _And<is_standard_layout<_CharT>, is_trivial<_CharT> >;
 
 _LIBCPP_END_NAMESPACE_STD
 

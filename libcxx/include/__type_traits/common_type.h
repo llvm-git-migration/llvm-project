@@ -31,7 +31,7 @@ template <class... _Args>
 struct common_type;
 
 template <class... _Args>
-using __common_type_t = typename common_type<_Args...>::type;
+using __common_type_t [[__gnu__::__nodebug__]] = typename common_type<_Args...>::type;
 
 template <class... _Args>
 struct common_type : __builtin_common_type<__common_type_t, __type_identity, __empty, _Args...> {};

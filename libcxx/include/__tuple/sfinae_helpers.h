@@ -41,7 +41,7 @@ struct __tuple_sfinae_base {
   static auto __do_test(...) -> false_type;
 
   template <class _FromArgs, class _ToArgs>
-  using __constructible = decltype(__do_test<is_constructible>(_ToArgs{}, _FromArgs{}));
+  using __constructible [[__gnu__::__nodebug__]] = decltype(__do_test<is_constructible>(_ToArgs{}, _FromArgs{}));
 };
 
 // __tuple_constructible

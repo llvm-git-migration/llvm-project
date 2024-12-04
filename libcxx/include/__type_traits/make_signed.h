@@ -26,7 +26,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 #if __has_builtin(__make_signed)
 
 template <class _Tp>
-using __make_signed_t = __make_signed(_Tp);
+using __make_signed_t [[__gnu__::__nodebug__]] = __make_signed(_Tp);
 
 #else
 // clang-format off

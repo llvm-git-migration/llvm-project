@@ -24,13 +24,13 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 #if _LIBCPP_STD_VER >= 23
 
 template <ranges::input_range _Range>
-using __range_key_type = __remove_const_t<typename ranges::range_value_t<_Range>::first_type>;
+using __range_key_type [[__gnu__::__nodebug__]] = __remove_const_t<typename ranges::range_value_t<_Range>::first_type>;
 
 template <ranges::input_range _Range>
-using __range_mapped_type = typename ranges::range_value_t<_Range>::second_type;
+using __range_mapped_type [[__gnu__::__nodebug__]] = typename ranges::range_value_t<_Range>::second_type;
 
 template <ranges::input_range _Range>
-using __range_to_alloc_type =
+using __range_to_alloc_type [[__gnu__::__nodebug__]] =
     pair<const typename ranges::range_value_t<_Range>::first_type, typename ranges::range_value_t<_Range>::second_type>;
 
 #endif
