@@ -297,7 +297,17 @@ static VectorValue emulatedVectorLoad(OpBuilder &rewriter, Location loc,
       newLoad);
 }
 
-/// Atomically store a subbyte-sized value to memory, with a mask.
+/// Emits `memref.generic_atomic_rmw` op to store a subbyte-sized value to a
+/// byte in memory, with a mask. The `valueToStore` is a vector of subbyte-sized
+/// elements, with size of 8 bits, and the mask is used to select which elements
+/// to store.
+///
+/// Before:
+///   memory = |ab|cd|ef|12| : <4xi2> (<1xi8>)
+///   valueToStore = |01|23|45|67| : vector<4xi2>
+///   mask = |0|0|1|1| : vector<4xi1>
+/// After:
+///   memory = |ab|cd|45|67| : <4xi2> (<1xi8>)
 static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
                         VectorValue valueToStore, Value mask,
@@ -309,7 +319,7 @@ static void atomicStore(OpBuilder &builder, Location loc,
   OpBuilder::InsertionGuard guard(builder);
   builder.setInsertionPointToStart(atomicOp.getBody());
 
-  // i8 -> <1xi8> -> <numSrcElemsPerDest x i.>
+  // i8 -> <1xi8> -> <numSrcElemsPerDest x i.>:
   auto oneVectorType = VectorType::get({1}, origValue.getType());
   auto fromElem = builder.create<vector::FromElementsOp>(loc, oneVectorType,
                                                          ValueRange{origValue});
@@ -324,6 +334,7 @@ static void atomicStore(OpBuilder &builder, Location loc,
 }
 
 /// Generate a non-atomic read-modify-write sequence for subbyte storing.
+/// It has similar logic to `atomicStore`, but without the atomicity.
 static void rmwStore(OpBuilder &rewriter, Location loc,
                      MemRefValue linearizedMemref, Value linearizedIndex,
                      VectorValue value, Value mask,
@@ -343,7 +354,15 @@ static void rmwStore(OpBuilder &rewriter, Location loc,
                                    linearizedIndex);
 }
 
-// Extract a slice of a vector, and insert it into a byte vector.
+/// Extract a slice from vector `vector`, with the size of `sliceNumElements`,
+/// and insert it into a zero, byte vector at offset `byteOffset`. For example:
+/// Inputs:
+///   vector = |01|23|45|67| : vector<4xi2>
+///   sliceOffset = 1
+///   sliceNumElements = 2
+///   byteOffset = 2
+/// Output:
+///   vector = |00|00|23|45| : vector<4xi2>
 static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
                                   Location loc, VectorValue vector,
                                   int64_t sliceOffset, int64_t sliceNumElements,
@@ -467,7 +486,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
     // the rest elements are aligned to width boundary.
     auto frontSubWidthStoreElem =
         (numSrcElemsPerDest - *foldedNumFrontPadElems) % numSrcElemsPerDest;
-    if (frontSubWidthStoreElem != 0) {
+    if (frontSubWidthStoreElem > 0) {
       SmallVector<bool> frontMaskValues(numSrcElemsPerDest, false);
       if (*foldedNumFrontPadElems + origElements < numSrcElemsPerDest) {
         std::fill_n(frontMaskValues.begin() + *foldedNumFrontPadElems,
