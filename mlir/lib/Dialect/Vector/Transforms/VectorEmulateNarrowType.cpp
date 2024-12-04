@@ -312,6 +312,7 @@ static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
                         VectorValue valueToStore, Value mask,
                         int64_t numSrcElemsPerDest) {
+  assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
   auto atomicOp = builder.create<memref::GenericAtomicRMWOp>(
       loc, linearizedMemref, ValueRange{linearizedIndex});
   Value origValue = atomicOp.getCurrentValue();
@@ -319,7 +320,6 @@ static void atomicStore(OpBuilder &builder, Location loc,
   OpBuilder::InsertionGuard guard(builder);
   builder.setInsertionPointToStart(atomicOp.getBody());
 
-  // i8 -> <1xi8> -> <numSrcElemsPerDest x i.>:
   auto oneVectorType = VectorType::get({1}, origValue.getType());
   auto fromElem = builder.create<vector::FromElementsOp>(loc, oneVectorType,
                                                          ValueRange{origValue});
@@ -337,17 +337,20 @@ static void atomicStore(OpBuilder &builder, Location loc,
 /// It has similar logic to `atomicStore`, but without the atomicity.
 static void rmwStore(OpBuilder &rewriter, Location loc,
                      MemRefValue linearizedMemref, Value linearizedIndex,
-                     VectorValue value, Value mask,
+                     VectorValue valueToStore, Value mask,
                      int64_t numSrcElemsPerDest) {
+  assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
   auto emulatedIOType =
       VectorType::get({1}, linearizedMemref.getType().getElementType());
   auto elemLoad = rewriter.create<vector::LoadOp>(
       loc, emulatedIOType, linearizedMemref, ValueRange{linearizedIndex});
   auto fromBitcast = rewriter.create<vector::BitCastOp>(
       loc,
-      VectorType::get({numSrcElemsPerDest}, value.getType().getElementType()),
+      VectorType::get({numSrcElemsPerDest},
+                      valueToStore.getType().getElementType()),
       elemLoad);
-  auto select = rewriter.create<arith::SelectOp>(loc, mask, fromBitcast, value);
+  auto select =
+      rewriter.create<arith::SelectOp>(loc, mask, fromBitcast, valueToStore);
   auto toBitcast =
       rewriter.create<vector::BitCastOp>(loc, emulatedIOType, select);
   rewriter.create<vector::StoreOp>(loc, toBitcast, linearizedMemref,
@@ -367,7 +370,11 @@ static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
                                   Location loc, VectorValue vector,
                                   int64_t sliceOffset, int64_t sliceNumElements,
                                   int64_t byteOffset) {
+  assert(vector.getType().getRank() == 1 && "expected 1-D vector");
   auto vectorElementType = vector.getType().getElementType();
+  assert(
+      sliceNumElements * vectorElementType.getIntOrFloatBitWidth() <= 8 &&
+      "sliceNumElements * vector element size must be less than or equal to 8");
   assert(8 % vectorElementType.getIntOrFloatBitWidth() == 0 &&
          "vector element must be a valid sub-byte type");
   auto scale = 8 / vectorElementType.getIntOrFloatBitWidth();
