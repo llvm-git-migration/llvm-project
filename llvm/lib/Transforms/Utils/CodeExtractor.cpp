@@ -627,6 +627,22 @@ bool CodeExtractor::isEligible() const {
         return false;
     }
   }
+  // stacksave as input implies stackrestore in the outlined function
+  // This can confuse prologue epilogue insertion phase
+  for (BasicBlock *BB : Blocks) {
+    for (Instruction &II : *BB) {
+      for (auto &OI : II.operands()) {
+        Value *V = OI;
+        if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(V)) {
+          if (II->getIntrinsicID() == Intrinsic::stacksave) {
+            if (definedInCaller(Blocks, V)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+  }
   return true;
 }
 
