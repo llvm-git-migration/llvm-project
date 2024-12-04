@@ -66,7 +66,7 @@ class zoned_time {
   // Using these constraints in the code causes the compiler to give an
   // error that the constraint depends on itself. To avoid that issue use
   // the fact it is possible to create this object from a _TimeZonePtr.
-  using __traits = zoned_traits<_TimeZonePtr>;
+  using __traits _LIBCPP_NODEBUG = zoned_traits<_TimeZonePtr>;
 
 public:
   using duration = common_type_t<_Duration, seconds>;
