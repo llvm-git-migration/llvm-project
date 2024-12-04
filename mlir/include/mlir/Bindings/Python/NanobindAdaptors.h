@@ -24,10 +24,10 @@
 
 #include <cstdint>
 
+#include "llvm/ADT/Twine.h"
 #include "mlir-c/Bindings/Python/Interop.h"
 #include "mlir-c/Diagnostics.h"
 #include "mlir-c/IR.h"
-#include "llvm/ADT/Twine.h"
 
 // Raw CAPI type casters need to be declared before use, so always include them
 // first.
@@ -233,8 +233,7 @@ struct type_caster<MlirOperation> {
   }
   static handle from_cpp(MlirOperation v, rv_policy,
                          cleanup_list *cleanup) noexcept {
-    if (v.ptr == nullptr)
-      return nanobind::none();
+    if (v.ptr == nullptr) return nanobind::none();
     nanobind::object capsule =
         nanobind::steal<nanobind::object>(mlirPythonOperationToCapsule(v));
     return nanobind::module_::import_(MAKE_MLIR_PYTHON_QUALNAME("ir"))
@@ -255,8 +254,7 @@ struct type_caster<MlirValue> {
   }
   static handle from_cpp(MlirValue v, rv_policy,
                          cleanup_list *cleanup) noexcept {
-    if (v.ptr == nullptr)
-      return nanobind::none();
+    if (v.ptr == nullptr) return nanobind::none();
     nanobind::object capsule =
         nanobind::steal<nanobind::object>(mlirPythonValueToCapsule(v));
     return nanobind::module_::import_(MAKE_MLIR_PYTHON_QUALNAME("ir"))
@@ -289,8 +287,7 @@ struct type_caster<MlirTypeID> {
   }
   static handle from_cpp(MlirTypeID v, rv_policy,
                          cleanup_list *cleanup) noexcept {
-    if (v.ptr == nullptr)
-      return nanobind::none();
+    if (v.ptr == nullptr) return nanobind::none();
     nanobind::object capsule =
         nanobind::steal<nanobind::object>(mlirPythonTypeIDToCapsule(v));
     return nanobind::module_::import_(MAKE_MLIR_PYTHON_QUALNAME("ir"))
@@ -321,8 +318,8 @@ struct type_caster<MlirType> {
   }
 };
 
-} // namespace detail
-} // namespace nanobind
+}  // namespace detail
+}  // namespace nanobind
 
 namespace mlir {
 namespace python {
@@ -340,7 +337,7 @@ namespace nanobind_adaptors {
 ///   (plus a fair amount of extra curricular poking)
 ///   TODO: If this proves useful, see about including it in nanobind.
 class pure_subclass {
-public:
+ public:
   pure_subclass(nanobind::handle scope, const char *derivedClassName,
                 const nanobind::object &superClass) {
     nanobind::object pyType =
@@ -382,7 +379,7 @@ public:
                   "function pointer");
     nanobind::object cf = nanobind::cpp_function(
         std::forward<Func>(f),
-        nanobind::name(name), // nanobind::scope(thisClass),
+        nanobind::name(name),  // nanobind::scope(thisClass),
         extra...);
     thisClass.attr(name) = cf;
     return *this;
@@ -396,7 +393,7 @@ public:
                   "function pointer");
     nanobind::object cf = nanobind::cpp_function(
         std::forward<Func>(f),
-        nanobind::name(name), // nanobind::scope(thisClass),
+        nanobind::name(name),  // nanobind::scope(thisClass),
         extra...);
     thisClass.attr(name) =
         nanobind::borrow<nanobind::object>(PyClassMethod_New(cf.ptr()));
@@ -405,7 +402,7 @@ public:
 
   nanobind::object get_class() const { return thisClass; }
 
-protected:
+ protected:
   nanobind::object superClass;
   nanobind::object thisClass;
 };
@@ -413,7 +410,7 @@ protected:
 /// Creates a custom subclass of mlir.ir.Attribute, implementing a casting
 /// constructor and type checking methods.
 class mlir_attribute_subclass : public pure_subclass {
-public:
+ public:
   using IsAFunctionTy = bool (*)(MlirAttribute);
   using GetTypeIDFunctionTy = MlirTypeID (*)();
 
@@ -445,7 +442,7 @@ public:
     // have no additional members, we can just return the instance thus created
     // without amending it.
     std::string captureTypeName(
-        typeClassName); // As string in case if typeClassName is not static.
+        typeClassName);  // As string in case if typeClassName is not static.
     nanobind::object newCf = nanobind::cpp_function(
         [superCls, isaFunction, captureTypeName](
             nanobind::object cls, nanobind::object otherAttribute) {
@@ -491,7 +488,7 @@ public:
 /// Creates a custom subclass of mlir.ir.Type, implementing a casting
 /// constructor and type checking methods.
 class mlir_type_subclass : public pure_subclass {
-public:
+ public:
   using IsAFunctionTy = bool (*)(MlirType);
   using GetTypeIDFunctionTy = MlirTypeID (*)();
 
@@ -523,7 +520,7 @@ public:
     // have no additional members, we can just return the instance thus created
     // without amending it.
     std::string captureTypeName(
-        typeClassName); // As string in case if typeClassName is not static.
+        typeClassName);  // As string in case if typeClassName is not static.
     nanobind::object newCf = nanobind::cpp_function(
         [superCls, isaFunction, captureTypeName](nanobind::object cls,
                                                  nanobind::object otherType) {
@@ -573,7 +570,7 @@ public:
 /// Creates a custom subclass of mlir.ir.Value, implementing a casting
 /// constructor and type checking methods.
 class mlir_value_subclass : public pure_subclass {
-public:
+ public:
   using IsAFunctionTy = bool (*)(MlirValue);
 
   /// Subclasses by looking up the super-class dynamically.
@@ -601,7 +598,7 @@ public:
     // have no additional members, we can just return the instance thus created
     // without amending it.
     std::string captureValueName(
-        valueClassName); // As string in case if valueClassName is not static.
+        valueClassName);  // As string in case if valueClassName is not static.
     nanobind::object newCf = nanobind::cpp_function(
         [superCls, isaFunction, captureValueName](nanobind::object cls,
                                                   nanobind::object otherValue) {
@@ -629,12 +626,12 @@ public:
   }
 };
 
-} // namespace nanobind_adaptors
+}  // namespace nanobind_adaptors
 
 /// RAII scope intercepting all diagnostics into a string. The message must be
 /// checked before this goes out of scope.
 class CollectDiagnosticsToStringScope {
-public:
+ public:
   explicit CollectDiagnosticsToStringScope(MlirContext ctx) : context(ctx) {
     handlerID = mlirContextAttachDiagnosticHandler(ctx, &handler, &errorMessage,
                                                    /*deleteUserData=*/nullptr);
@@ -646,7 +643,7 @@ public:
 
   [[nodiscard]] std::string takeMessage() { return std::move(errorMessage); }
 
-private:
+ private:
   static MlirLogicalResult handler(MlirDiagnostic diag, void *data) {
     auto printer = +[](MlirStringRef message, void *data) {
       *static_cast<std::string *>(data) +=
@@ -665,7 +662,7 @@ private:
   std::string errorMessage = "";
 };
 
-} // namespace python
-} // namespace mlir
+}  // namespace python
+}  // namespace mlir
 
-#endif // MLIR_BINDINGS_PYTHON_NANOBINDADAPTORS_H
+#endif  // MLIR_BINDINGS_PYTHON_NANOBINDADAPTORS_H

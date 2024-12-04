@@ -12,9 +12,9 @@
 #include <cassert>
 #include <string>
 
+#include "llvm/ADT/StringRef.h"
 #include "mlir-c/Diagnostics.h"
 #include "mlir-c/IR.h"
-#include "llvm/ADT/StringRef.h"
 
 namespace mlir {
 namespace python {
@@ -22,7 +22,7 @@ namespace python {
 /// RAII scope intercepting all diagnostics into a string. The message must be
 /// checked before this goes out of scope.
 class CollectDiagnosticsToStringScope {
-public:
+ public:
   explicit CollectDiagnosticsToStringScope(MlirContext ctx) : context(ctx) {
     handlerID = mlirContextAttachDiagnosticHandler(ctx, &handler, &errorMessage,
                                                    /*deleteUserData=*/nullptr);
@@ -34,7 +34,7 @@ public:
 
   [[nodiscard]] std::string takeMessage() { return std::move(errorMessage); }
 
-private:
+ private:
   static MlirLogicalResult handler(MlirDiagnostic diag, void *data) {
     auto printer = +[](MlirStringRef message, void *data) {
       *static_cast<std::string *>(data) +=
@@ -53,7 +53,7 @@ private:
   std::string errorMessage = "";
 };
 
-} // namespace python
-} // namespace mlir
+}  // namespace python
+}  // namespace mlir
 
-#endif // MLIR_BINDINGS_PYTHON_DIAGNOSTICS_H
+#endif  // MLIR_BINDINGS_PYTHON_DIAGNOSTICS_H
