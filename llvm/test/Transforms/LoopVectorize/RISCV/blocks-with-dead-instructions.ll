@@ -29,13 +29,13 @@ define void @block_with_dead_inst_1(ptr %src, i64 %N) #0 {
 ; CHECK-NEXT:    [[TMP12:%.*]] = add <vscale x 8 x i64> [[TMP11]], zeroinitializer
 ; CHECK-NEXT:    [[TMP13:%.*]] = mul <vscale x 8 x i64> [[TMP12]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 8 x i64> zeroinitializer, [[TMP13]]
-; CHECK-NEXT:    [[TMP16:%.*]] = mul i64 3, [[TMP10]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP16]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP17:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP18:%.*]] = mul i32 [[TMP17]], 8
 ; CHECK-NEXT:    [[TMP19:%.*]] = sub i32 [[TMP18]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 8 x i16> poison, i16 1, i32 [[TMP19]]
+; CHECK-NEXT:    [[TMP26:%.*]] = mul i64 3, [[TMP10]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP26]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
@@ -124,13 +124,13 @@ define void @block_with_dead_inst_2(ptr %src) #0 {
 ; CHECK-NEXT:    [[TMP9:%.*]] = add <vscale x 4 x i64> [[TMP8]], zeroinitializer
 ; CHECK-NEXT:    [[TMP10:%.*]] = mul <vscale x 4 x i64> [[TMP9]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 4 x i64> zeroinitializer, [[TMP10]]
-; CHECK-NEXT:    [[TMP13:%.*]] = mul i64 3, [[TMP7]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP13]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP14:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP15:%.*]] = mul i32 [[TMP14]], 4
 ; CHECK-NEXT:    [[TMP16:%.*]] = sub i32 [[TMP15]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 4 x i16> poison, i16 0, i32 [[TMP16]]
+; CHECK-NEXT:    [[TMP22:%.*]] = mul i64 3, [[TMP7]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP22]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
@@ -219,13 +219,13 @@ define void @multiple_blocks_with_dead_insts_3(ptr %src) #0 {
 ; CHECK-NEXT:    [[TMP9:%.*]] = add <vscale x 4 x i64> [[TMP8]], zeroinitializer
 ; CHECK-NEXT:    [[TMP10:%.*]] = mul <vscale x 4 x i64> [[TMP9]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 4 x i64> zeroinitializer, [[TMP10]]
-; CHECK-NEXT:    [[TMP13:%.*]] = mul i64 3, [[TMP7]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP13]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP14:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP15:%.*]] = mul i32 [[TMP14]], 4
 ; CHECK-NEXT:    [[TMP16:%.*]] = sub i32 [[TMP15]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 4 x i16> poison, i16 0, i32 [[TMP16]]
+; CHECK-NEXT:    [[TMP22:%.*]] = mul i64 3, [[TMP7]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP22]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
@@ -324,13 +324,13 @@ define void @multiple_blocks_with_dead_insts_4(ptr %src, i64 %N) #0 {
 ; CHECK-NEXT:    [[TMP12:%.*]] = add <vscale x 8 x i64> [[TMP11]], zeroinitializer
 ; CHECK-NEXT:    [[TMP13:%.*]] = mul <vscale x 8 x i64> [[TMP12]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 8 x i64> zeroinitializer, [[TMP13]]
-; CHECK-NEXT:    [[TMP16:%.*]] = mul i64 3, [[TMP10]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP16]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP17:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP18:%.*]] = mul i32 [[TMP17]], 8
 ; CHECK-NEXT:    [[TMP19:%.*]] = sub i32 [[TMP18]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 8 x i16> poison, i16 1, i32 [[TMP19]]
+; CHECK-NEXT:    [[TMP25:%.*]] = mul i64 3, [[TMP10]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP25]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
@@ -431,13 +431,13 @@ define void @multiple_blocks_with_dead_inst_multiple_successors_5(ptr %src) #0 {
 ; CHECK-NEXT:    [[TMP9:%.*]] = add <vscale x 4 x i64> [[TMP8]], zeroinitializer
 ; CHECK-NEXT:    [[TMP10:%.*]] = mul <vscale x 4 x i64> [[TMP9]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 4 x i64> zeroinitializer, [[TMP10]]
-; CHECK-NEXT:    [[TMP13:%.*]] = mul i64 3, [[TMP7]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP13]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP14:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP15:%.*]] = mul i32 [[TMP14]], 4
 ; CHECK-NEXT:    [[TMP16:%.*]] = sub i32 [[TMP15]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 4 x i16> poison, i16 1, i32 [[TMP16]]
+; CHECK-NEXT:    [[TMP22:%.*]] = mul i64 3, [[TMP7]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 4 x i64> poison, i64 [[TMP22]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 4 x i64> [[DOTSPLATINSERT]], <vscale x 4 x i64> poison, <vscale x 4 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
@@ -546,13 +546,13 @@ define void @multiple_blocks_with_dead_inst_multiple_successors_6(ptr %src, i1 %
 ; CHECK-NEXT:    [[TMP12:%.*]] = add <vscale x 8 x i64> [[TMP11]], zeroinitializer
 ; CHECK-NEXT:    [[TMP13:%.*]] = mul <vscale x 8 x i64> [[TMP12]], splat (i64 3)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 8 x i64> zeroinitializer, [[TMP13]]
-; CHECK-NEXT:    [[TMP16:%.*]] = mul i64 3, [[TMP10]]
-; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP16]], i64 0
-; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    [[TMP17:%.*]] = call i32 @llvm.vscale.i32()
 ; CHECK-NEXT:    [[TMP18:%.*]] = mul i32 [[TMP17]], 8
 ; CHECK-NEXT:    [[TMP19:%.*]] = sub i32 [[TMP18]], 1
 ; CHECK-NEXT:    [[VECTOR_RECUR_INIT:%.*]] = insertelement <vscale x 8 x i16> poison, i16 1, i32 [[TMP19]]
+; CHECK-NEXT:    [[TMP25:%.*]] = mul i64 3, [[TMP10]]
+; CHECK-NEXT:    [[DOTSPLATINSERT:%.*]] = insertelement <vscale x 8 x i64> poison, i64 [[TMP25]], i64 0
+; CHECK-NEXT:    [[DOTSPLAT:%.*]] = shufflevector <vscale x 8 x i64> [[DOTSPLATINSERT]], <vscale x 8 x i64> poison, <vscale x 8 x i32> zeroinitializer
 ; CHECK-NEXT:    br label %[[VECTOR_BODY:.*]]
 ; CHECK:       [[VECTOR_BODY]]:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, %[[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], %[[VECTOR_BODY]] ]
