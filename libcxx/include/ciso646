@@ -23,8 +23,9 @@
 
 #if _LIBCPP_STD_VER >= 20
 
-using __standard_header_ciso646 _LIBCPP_DEPRECATED_("removed in C++20. Include <version> instead.") = void;
-using __use_standard_header_ciso646 = __standard_header_ciso646;
+using __standard_header_ciso646 _LIBCPP_DEPRECATED_("removed in C++20. Include <version> instead.")
+    [[__gnu__::__nodebug__]]                                 = void;
+using __use_standard_header_ciso646 [[__gnu__::__nodebug__]] = __standard_header_ciso646;
 
 #endif
 

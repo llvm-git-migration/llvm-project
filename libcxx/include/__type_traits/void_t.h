@@ -23,7 +23,7 @@ using void_t = void;
 #endif
 
 template <class...>
-using __void_t = void;
+using __void_t [[__gnu__::__nodebug__]] = void;
 
 _LIBCPP_END_NAMESPACE_STD
 

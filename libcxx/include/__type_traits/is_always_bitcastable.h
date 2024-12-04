@@ -31,8 +31,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // considered bit-castable.
 template <class _From, class _To>
 struct __is_always_bitcastable {
-  using _UnqualFrom = __remove_cv_t<_From>;
-  using _UnqualTo   = __remove_cv_t<_To>;
+  using _UnqualFrom [[__gnu__::__nodebug__]] = __remove_cv_t<_From>;
+  using _UnqualTo [[__gnu__::__nodebug__]]   = __remove_cv_t<_To>;
 
   // clang-format off
   static const bool value =

@@ -329,8 +329,8 @@ __reverse_range(_Range&& __range) {
 
 template <class _Iter, bool __b>
 struct __unwrap_iter_impl<reverse_iterator<reverse_iterator<_Iter> >, __b> {
-  using _UnwrappedIter  = decltype(__unwrap_iter_impl<_Iter>::__unwrap(std::declval<_Iter>()));
-  using _ReverseWrapper = reverse_iterator<reverse_iterator<_Iter> >;
+  using _UnwrappedIter [[__gnu__::__nodebug__]]  = decltype(__unwrap_iter_impl<_Iter>::__unwrap(std::declval<_Iter>()));
+  using _ReverseWrapper [[__gnu__::__nodebug__]] = reverse_iterator<reverse_iterator<_Iter> >;
 
   static _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR _ReverseWrapper
   __rewrap(_ReverseWrapper __orig_iter, _UnwrappedIter __unwrapped_iter) {

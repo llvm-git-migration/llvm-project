@@ -29,7 +29,7 @@ struct _LIBCPP_TEMPLATE_VIS tuple_size;
 
 #if !defined(_LIBCPP_CXX03_LANG)
 template <class _Tp, class...>
-using __enable_if_tuple_size_imp = _Tp;
+using __enable_if_tuple_size_imp [[__gnu__::__nodebug__]] = _Tp;
 
 template <class _Tp>
 struct _LIBCPP_TEMPLATE_VIS tuple_size<__enable_if_tuple_size_imp< const _Tp,

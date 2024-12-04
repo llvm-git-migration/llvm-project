@@ -25,19 +25,19 @@ struct __tuple_indices;
 template <class _IdxType, _IdxType... _Values>
 struct __integer_sequence {
   template <template <class _OIdxType, _OIdxType...> class _ToIndexSeq, class _ToIndexType>
-  using __convert = _ToIndexSeq<_ToIndexType, _Values...>;
+  using __convert [[__gnu__::__nodebug__]] = _ToIndexSeq<_ToIndexType, _Values...>;
 
   template <size_t _Sp>
-  using __to_tuple_indices = __tuple_indices<(_Values + _Sp)...>;
+  using __to_tuple_indices [[__gnu__::__nodebug__]] = __tuple_indices<(_Values + _Sp)...>;
 };
 
 #if __has_builtin(__make_integer_seq)
 template <size_t _Ep, size_t _Sp>
-using __make_indices_imp =
+using __make_indices_imp [[__gnu__::__nodebug__]] =
     typename __make_integer_seq<__integer_sequence, size_t, _Ep - _Sp>::template __to_tuple_indices<_Sp>;
 #elif __has_builtin(__integer_pack)
 template <size_t _Ep, size_t _Sp>
-using __make_indices_imp =
+using __make_indices_imp [[__gnu__::__nodebug__]] =
     typename __integer_sequence<size_t, __integer_pack(_Ep - _Sp)...>::template __to_tuple_indices<_Sp>;
 #else
 #  error "No known way to get an integer pack from the compiler"

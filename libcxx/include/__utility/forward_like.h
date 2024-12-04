@@ -25,17 +25,18 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 #if _LIBCPP_STD_VER >= 23
 
 template <class _Ap, class _Bp>
-using _CopyConst = _If<is_const_v<_Ap>, const _Bp, _Bp>;
+using _CopyConst [[__gnu__::__nodebug__]] = _If<is_const_v<_Ap>, const _Bp, _Bp>;
 
 template <class _Ap, class _Bp>
-using _OverrideRef = _If<is_rvalue_reference_v<_Ap>, remove_reference_t<_Bp>&&, _Bp&>;
+using _OverrideRef [[__gnu__::__nodebug__]] = _If<is_rvalue_reference_v<_Ap>, remove_reference_t<_Bp>&&, _Bp&>;
 
 template <class _Ap, class _Bp>
-using _ForwardLike = _OverrideRef<_Ap&&, _CopyConst<remove_reference_t<_Ap>, remove_reference_t<_Bp>>>;
+using _ForwardLike [[__gnu__::__nodebug__]] =
+    _OverrideRef<_Ap&&, _CopyConst<remove_reference_t<_Ap>, remove_reference_t<_Bp>>>;
 
 template <class _Tp, class _Up>
-[[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto
-forward_like(_LIBCPP_LIFETIMEBOUND _Up&& __ux) noexcept -> _ForwardLike<_Tp, _Up> {
+[[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr auto forward_like(_LIBCPP_LIFETIMEBOUND _Up&& __ux) noexcept
+    -> _ForwardLike<_Tp, _Up> {
   return static_cast<_ForwardLike<_Tp, _Up>>(__ux);
 }
 

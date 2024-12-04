@@ -24,7 +24,7 @@ struct remove_volatile {
 };
 
 template <class _Tp>
-using __remove_volatile_t = __remove_volatile(_Tp);
+using __remove_volatile_t [[__gnu__::__nodebug__]] = __remove_volatile(_Tp);
 #else
 template <class _Tp>
 struct _LIBCPP_TEMPLATE_VIS remove_volatile {

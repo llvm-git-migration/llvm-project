@@ -137,9 +137,10 @@ private:
   template <bool _Const>
   struct __iterator {
   private:
-    using __key_iterator    = ranges::iterator_t<const key_container_type>;
-    using __mapped_iterator = ranges::iterator_t<__maybe_const<_Const, mapped_container_type>>;
-    using __reference       = pair<iter_reference_t<__key_iterator>, iter_reference_t<__mapped_iterator>>;
+    using __key_iterator [[__gnu__::__nodebug__]]    = ranges::iterator_t<const key_container_type>;
+    using __mapped_iterator [[__gnu__::__nodebug__]] = ranges::iterator_t<__maybe_const<_Const, mapped_container_type>>;
+    using __reference [[__gnu__::__nodebug__]] =
+        pair<iter_reference_t<__key_iterator>, iter_reference_t<__mapped_iterator>>;
 
     struct __arrow_proxy {
       __reference __ref_;

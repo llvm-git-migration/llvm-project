@@ -26,9 +26,9 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 template <class _It, class _Proj>
 struct __projected_impl {
   struct __type {
-    using __primary_template     = __type;
-    using __projected_iterator   = _It;
-    using __projected_projection = _Proj;
+    using __primary_template [[__gnu__::__nodebug__]]     = __type;
+    using __projected_iterator [[__gnu__::__nodebug__]]   = _It;
+    using __projected_projection [[__gnu__::__nodebug__]] = _Proj;
 
     using value_type = remove_cvref_t<indirect_result_t<_Proj&, _It>>;
     indirect_result_t<_Proj&, _It> operator*() const; // not defined
@@ -38,9 +38,9 @@ struct __projected_impl {
 template <weakly_incrementable _It, class _Proj>
 struct __projected_impl<_It, _Proj> {
   struct __type {
-    using __primary_template     = __type;
-    using __projected_iterator   = _It;
-    using __projected_projection = _Proj;
+    using __primary_template [[__gnu__::__nodebug__]]     = __type;
+    using __projected_iterator [[__gnu__::__nodebug__]]   = _It;
+    using __projected_projection [[__gnu__::__nodebug__]] = _Proj;
 
     using value_type      = remove_cvref_t<indirect_result_t<_Proj&, _It>>;
     using difference_type = iter_difference_t<_It>;

@@ -397,7 +397,7 @@ class _LIBCPP_TEMPLATE_VIS complex<long double>;
 struct __from_builtin_tag {};
 
 template <class _Tp>
-using __complex_t =
+using __complex_t [[__gnu__::__nodebug__]] =
     __conditional_t<is_same<_Tp, float>::value,
                     _Complex float,
                     __conditional_t<is_same<_Tp, double>::value, _Complex double, _Complex long double> >;

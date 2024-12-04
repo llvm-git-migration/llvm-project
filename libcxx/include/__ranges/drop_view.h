@@ -63,8 +63,8 @@ class drop_view : public view_interface<drop_view<_View>> {
   // begin because begin is not equality preserving.
   // Note: drop_view<input-range>::begin() is still trivially amortized O(1) because
   // one can't call begin() on it more than once.
-  static constexpr bool _UseCache = forward_range<_View> && !(random_access_range<_View> && sized_range<_View>);
-  using _Cache                    = _If<_UseCache, __non_propagating_cache<iterator_t<_View>>, __empty_cache>;
+  static constexpr bool _UseCache       = forward_range<_View> && !(random_access_range<_View> && sized_range<_View>);
+  using _Cache [[__gnu__::__nodebug__]] = _If<_UseCache, __non_propagating_cache<iterator_t<_View>>, __empty_cache>;
   _LIBCPP_NO_UNIQUE_ADDRESS _Cache __cached_begin_ = _Cache();
   range_difference_t<_View> __count_               = 0;
   _View __base_                                    = _View();
@@ -204,7 +204,7 @@ struct __passthrough_type<subrange<_Iter, _Sent, _Kind>> {
 };
 
 template <class _Tp>
-using __passthrough_type_t = typename __passthrough_type<_Tp>::type;
+using __passthrough_type_t [[__gnu__::__nodebug__]] = typename __passthrough_type<_Tp>::type;
 
 struct __fn {
   // [range.drop.overview]: the `empty_view` case.

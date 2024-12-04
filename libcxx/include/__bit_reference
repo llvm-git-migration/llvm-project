@@ -45,8 +45,8 @@ struct __has_storage_type {
 
 template <class _Cp, bool = __has_storage_type<_Cp>::value>
 class __bit_reference {
-  using __storage_type    = typename _Cp::__storage_type;
-  using __storage_pointer = typename _Cp::__storage_pointer;
+  using __storage_type [[__gnu__::__nodebug__]]    = typename _Cp::__storage_type;
+  using __storage_pointer [[__gnu__::__nodebug__]] = typename _Cp::__storage_pointer;
 
   __storage_pointer __seg_;
   __storage_type __mask_;
@@ -57,7 +57,7 @@ class __bit_reference {
   friend class __bit_iterator<_Cp, false>;
 
 public:
-  using __container = typename _Cp::__self;
+  using __container [[__gnu__::__nodebug__]] = typename _Cp::__self;
 
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 __bit_reference(const __bit_reference&) = default;
 
@@ -137,8 +137,8 @@ inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void swap(bool& __x, 
 
 template <class _Cp>
 class __bit_const_reference {
-  using __storage_type    = typename _Cp::__storage_type;
-  using __storage_pointer = typename _Cp::__const_storage_pointer;
+  using __storage_type [[__gnu__::__nodebug__]]    = typename _Cp::__storage_type;
+  using __storage_pointer [[__gnu__::__nodebug__]] = typename _Cp::__const_storage_pointer;
 
   __storage_pointer __seg_;
   __storage_type __mask_;
@@ -147,7 +147,7 @@ class __bit_const_reference {
   friend class __bit_iterator<_Cp, true>;
 
 public:
-  using __container = typename _Cp::__self;
+  using __container [[__gnu__::__nodebug__]] = typename _Cp::__self;
 
   _LIBCPP_HIDE_FROM_ABI __bit_const_reference(const __bit_const_reference&) = default;
   __bit_const_reference& operator=(const __bit_const_reference&)            = delete;
@@ -589,10 +589,10 @@ inline _LIBCPP_HIDE_FROM_ABI __bit_iterator<_Cr, false> swap_ranges(
 
 template <class _Cp>
 struct __bit_array {
-  using difference_type   = typename _Cp::difference_type;
-  using __storage_type    = typename _Cp::__storage_type;
-  using __storage_pointer = typename _Cp::__storage_pointer;
-  using iterator          = typename _Cp::iterator;
+  using difference_type [[__gnu__::__nodebug__]]   = typename _Cp::difference_type;
+  using __storage_type [[__gnu__::__nodebug__]]    = typename _Cp::__storage_type;
+  using __storage_pointer [[__gnu__::__nodebug__]] = typename _Cp::__storage_pointer;
+  using iterator [[__gnu__::__nodebug__]]          = typename _Cp::iterator;
 
   static const unsigned __bits_per_word = _Cp::__bits_per_word;
   static const unsigned _Np             = 4;
@@ -792,8 +792,8 @@ public:
   using iterator_category = random_access_iterator_tag;
 
 private:
-  using __storage_type = typename _Cp::__storage_type;
-  using __storage_pointer =
+  using __storage_type [[__gnu__::__nodebug__]] = typename _Cp::__storage_type;
+  using __storage_pointer [[__gnu__::__nodebug__]] =
       __conditional_t<_IsConst, typename _Cp::__const_storage_pointer, typename _Cp::__storage_pointer>;
 
   static const unsigned __bits_per_word = _Cp::__bits_per_word;
