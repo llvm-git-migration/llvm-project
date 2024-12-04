@@ -64,8 +64,7 @@ static py::object mlirApiObjectToCapsule(py::handle apiObject) {
 // ownership is unclear.
 
 /// Casts object <-> MlirAffineMap.
-template <>
-struct type_caster<MlirAffineMap> {
+template <> struct type_caster<MlirAffineMap> {
   PYBIND11_TYPE_CASTER(MlirAffineMap, _("MlirAffineMap"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -86,8 +85,7 @@ struct type_caster<MlirAffineMap> {
 };
 
 /// Casts object <-> MlirAttribute.
-template <>
-struct type_caster<MlirAttribute> {
+template <> struct type_caster<MlirAttribute> {
   PYBIND11_TYPE_CASTER(MlirAttribute, _("MlirAttribute"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -106,8 +104,7 @@ struct type_caster<MlirAttribute> {
 };
 
 /// Casts object -> MlirBlock.
-template <>
-struct type_caster<MlirBlock> {
+template <> struct type_caster<MlirBlock> {
   PYBIND11_TYPE_CASTER(MlirBlock, _("MlirBlock"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -117,8 +114,7 @@ struct type_caster<MlirBlock> {
 };
 
 /// Casts object -> MlirContext.
-template <>
-struct type_caster<MlirContext> {
+template <> struct type_caster<MlirContext> {
   PYBIND11_TYPE_CASTER(MlirContext, _("MlirContext"));
   bool load(handle src, bool) {
     if (src.is_none()) {
@@ -137,8 +133,7 @@ struct type_caster<MlirContext> {
 };
 
 /// Casts object <-> MlirDialectRegistry.
-template <>
-struct type_caster<MlirDialectRegistry> {
+template <> struct type_caster<MlirDialectRegistry> {
   PYBIND11_TYPE_CASTER(MlirDialectRegistry, _("MlirDialectRegistry"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -156,8 +151,7 @@ struct type_caster<MlirDialectRegistry> {
 };
 
 /// Casts object <-> MlirLocation.
-template <>
-struct type_caster<MlirLocation> {
+template <> struct type_caster<MlirLocation> {
   PYBIND11_TYPE_CASTER(MlirLocation, _("MlirLocation"));
   bool load(handle src, bool) {
     if (src.is_none()) {
@@ -181,8 +175,7 @@ struct type_caster<MlirLocation> {
 };
 
 /// Casts object <-> MlirModule.
-template <>
-struct type_caster<MlirModule> {
+template <> struct type_caster<MlirModule> {
   PYBIND11_TYPE_CASTER(MlirModule, _("MlirModule"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -200,8 +193,7 @@ struct type_caster<MlirModule> {
 };
 
 /// Casts object <-> MlirFrozenRewritePatternSet.
-template <>
-struct type_caster<MlirFrozenRewritePatternSet> {
+template <> struct type_caster<MlirFrozenRewritePatternSet> {
   PYBIND11_TYPE_CASTER(MlirFrozenRewritePatternSet,
                        _("MlirFrozenRewritePatternSet"));
   bool load(handle src, bool) {
@@ -221,8 +213,7 @@ struct type_caster<MlirFrozenRewritePatternSet> {
 };
 
 /// Casts object <-> MlirOperation.
-template <>
-struct type_caster<MlirOperation> {
+template <> struct type_caster<MlirOperation> {
   PYBIND11_TYPE_CASTER(MlirOperation, _("MlirOperation"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -242,8 +233,7 @@ struct type_caster<MlirOperation> {
 };
 
 /// Casts object <-> MlirValue.
-template <>
-struct type_caster<MlirValue> {
+template <> struct type_caster<MlirValue> {
   PYBIND11_TYPE_CASTER(MlirValue, _("MlirValue"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -264,8 +254,7 @@ struct type_caster<MlirValue> {
 };
 
 /// Casts object -> MlirPassManager.
-template <>
-struct type_caster<MlirPassManager> {
+template <> struct type_caster<MlirPassManager> {
   PYBIND11_TYPE_CASTER(MlirPassManager, _("MlirPassManager"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -275,8 +264,7 @@ struct type_caster<MlirPassManager> {
 };
 
 /// Casts object <-> MlirTypeID.
-template <>
-struct type_caster<MlirTypeID> {
+template <> struct type_caster<MlirTypeID> {
   PYBIND11_TYPE_CASTER(MlirTypeID, _("MlirTypeID"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -296,8 +284,7 @@ struct type_caster<MlirTypeID> {
 };
 
 /// Casts object <-> MlirType.
-template <>
-struct type_caster<MlirType> {
+template <> struct type_caster<MlirType> {
   PYBIND11_TYPE_CASTER(MlirType, _("MlirType"));
   bool load(handle src, bool) {
     py::object capsule = mlirApiObjectToCapsule(src);
@@ -374,9 +361,8 @@ public:
     static_assert(!std::is_member_function_pointer<Func>::value,
                   "def_staticmethod(...) called with a non-static member "
                   "function pointer");
-    py::cpp_function cf(
-        std::forward<Func>(f), py::name(name), py::scope(thisClass),
-        py::sibling(py::getattr(thisClass, name, py::none())), extra...);
+    py::cpp_function cf(std::forward<Func>(f), py::name(name),
+                        py::scope(thisClass), extra...);
     thisClass.attr(cf.name()) = py::staticmethod(cf);
     return *this;
   }
@@ -387,9 +373,8 @@ public:
     static_assert(!std::is_member_function_pointer<Func>::value,
                   "def_classmethod(...) called with a non-static member "
                   "function pointer");
-    py::cpp_function cf(
-        std::forward<Func>(f), py::name(name), py::scope(thisClass),
-        py::sibling(py::getattr(thisClass, name, py::none())), extra...);
+    py::cpp_function cf(std::forward<Func>(f), py::name(name),
+                        py::scope(thisClass), extra...);
     thisClass.attr(cf.name()) =
         py::reinterpret_borrow<py::object>(PyClassMethod_New(cf.ptr()));
     return *this;
