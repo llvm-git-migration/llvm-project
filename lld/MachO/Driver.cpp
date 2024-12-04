@@ -1838,26 +1838,25 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
       if (const Arg *arg = args.getLastArgNoClaim(OPT_call_graph_profile_sort))
         error(firstArgStr + " is incompatible with " + arg->getSpelling());
   };
-  if (const Arg *arg = args.getLastArg(OPT_irpgo_profile_sort)) {
-    config->irpgoProfileSortProfilePath = arg->getValue();
+  if (const Arg *arg = args.getLastArg(OPT_irpgo_profile)) {
+    config->irpgoProfilePath = arg->getValue();
     IncompatWithCGSort(arg->getSpelling());
   }
-  config->compressionSortStartupFunctions =
-      args.hasFlag(OPT_compression_sort_startup_functions,
-                   OPT_no_compression_sort_startup_functions, false);
-  if (config->irpgoProfileSortProfilePath.empty() &&
-      config->compressionSortStartupFunctions)
-    error("--compression-sort-startup-functions must be used with "
-          "--irpgo-profile-sort");
-  if (const Arg *arg = args.getLastArg(OPT_compression_sort)) {
+  config->bpCompressionSortStartupFunctions =
+      args.hasFlag(OPT_bp_compression_sort_startup_functions,
+                   OPT_no_bp_compression_sort_startup_functions, false);
+  if (config->irpgoProfilePath.empty() && config->bpCompressionSortStartupFunctions)
+    error("--bp-compression-sort-startup-functions must be used with "
+          "--irpgo-profile");
+  if (const Arg *arg = args.getLastArg(OPT_bp_compression_sort)) {
     StringRef compressionSortStr = arg->getValue();
     if (compressionSortStr == "function") {
-      config->functionOrderForCompression = true;
+      config->bpFunctionOrderForCompression = true;
     } else if (compressionSortStr == "data") {
-      config->dataOrderForCompression = true;
+      config->bpDataOrderForCompression = true;
     } else if (compressionSortStr == "both") {
-      config->functionOrderForCompression = true;
-      config->dataOrderForCompression = true;
+      config->bpFunctionOrderForCompression = true;
+      config->bpDataOrderForCompression = true;
     } else if (compressionSortStr != "none") {
       error("unknown value `" + compressionSortStr + "` for " +
             arg->getSpelling());
@@ -1865,7 +1864,7 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
     if (compressionSortStr != "none")
       IncompatWithCGSort(arg->getSpelling());
   }
-  config->verboseBpSectionOrderer = args.hasArg(OPT_verbose_bp_section_orderer);
+  config->bpVerboseSectionOrderer = args.hasArg(OPT_verbose_bp_section_orderer);
 
   for (const Arg *arg : args.filtered(OPT_alias)) {
     config->aliasedSymbols.push_back(

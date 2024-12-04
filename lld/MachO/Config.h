@@ -222,11 +222,11 @@ struct Configuration {
   bool callGraphProfileSort = false;
   llvm::StringRef printSymbolOrder;
 
-  llvm::StringRef irpgoProfileSortProfilePath;
-  bool compressionSortStartupFunctions = false;
-  bool functionOrderForCompression = false;
-  bool dataOrderForCompression = false;
-  bool verboseBpSectionOrderer = false;
+  llvm::StringRef irpgoProfilePath;
+  bool bpCompressionSortStartupFunctions = false;
+  bool bpFunctionOrderForCompression = false;
+  bool bpDataOrderForCompression = false;
+  bool bpVerboseSectionOrderer = false;
 
   SectionRenameMap sectionRenameMap;
   SegmentRenameMap segmentRenameMap;

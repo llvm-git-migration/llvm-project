@@ -126,17 +126,17 @@ def no_call_graph_profile_sort : Flag<["--"], "no-call-graph-profile-sort">,
 def print_symbol_order_eq: Joined<["--"], "print-symbol-order=">,
     HelpText<"Print a symbol order specified by --call-graph-profile-sort into the specified file">,
     Group<grp_lld>;
-def irpgo_profile_sort: Separate<["--"], "irpgo-profile-sort">, Group<grp_lld>;
-def irpgo_profile_sort_eq: Joined<["--"], "irpgo-profile-sort=">,
-    Alias<!cast<Separate>(irpgo_profile_sort)>, MetaVarName<"<profile>">,
+def irpgo_profile: Separate<["--"], "irpgo-profile">, Group<grp_lld>;
+def irpgo_profile_eq: Joined<["--"], "irpgo-profile=">,
+    Alias<!cast<Separate>(irpgo_profile)>, MetaVarName<"<profile>">,
     HelpText<"Read the IRPGO profile at <profile> to order sections to improve startup time">,
     Group<grp_lld>;
-def compression_sort_startup_functions: Flag<["--"], "compression-sort-startup-functions">,
+def bp_compression_sort_startup_functions: Flag<["--"], "bp-compression-sort-startup-functions">,
     HelpText<"Order startup functions to improve compressed size in addition to startup time">,
     Group<grp_lld>;
-def no_compression_sort_startup_functions: Flag<["--"], "no-compression-sort-startup-functions">,
+def no_bp_compression_sort_startup_functions: Flag<["--"], "no-bp-compression-sort-startup-functions">,
     HelpText<"Do not order startup function for compression">, Group<grp_lld>;
-def compression_sort: Joined<["--"], "compression-sort=">,
+def bp_compression_sort: Joined<["--"], "bp-compression-sort=">,
     MetaVarName<"[none,function,data,both]">,
     HelpText<"Order sections to improve compressed size">, Group<grp_lld>;
 def verbose_bp_section_orderer: Flag<["--"], "verbose-bp-section-orderer">,
