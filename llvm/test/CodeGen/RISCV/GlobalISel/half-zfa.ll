@@ -8,71 +8,71 @@
 
 define half @fceil(half %a) {
 ; CHECK-ZFA-f16-LABEL: fceil:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fround.h fa0, fa0, rup
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.ceil.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fround.h fa0, fa0, rup
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.ceil.f16(half %a)
+  ret half %b
 }
 
 define half @ffloor(half %a) {
 ; CHECK-ZFA-f16-LABEL: ffloor:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fround.h fa0, fa0, rdn
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.floor.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fround.h fa0, fa0, rdn
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.floor.f16(half %a)
+  ret half %b
 }
 
 define half @frint(half %a) {
 ; CHECK-ZFA-f16-LABEL: frint:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    froundnx.h fa0, fa0
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.rint.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  froundnx.h fa0, fa0
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.rint.f16(half %a)
+  ret half %b
 }
 
 define half @fnearbyint(half %a) {
 ; CHECK-ZFA-f16-LABEL: fnearbyint:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fround.h fa0, fa0
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.nearbyint.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fround.h fa0, fa0
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.nearbyint.f16(half %a)
+  ret half %b
 }
 
 define half @fround(half %a) {
 ; CHECK-ZFA-f16-LABEL: fround:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fround.h fa0, fa0, rmm
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.round.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fround.h fa0, fa0, rmm
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.round.f16(half %a)
+  ret half %b
 }
 
 define half @froundeven(half %a) {
 ; CHECK-ZFA-f16-LABEL: froundeven:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fround.h fa0, fa0, rne
-; CHECK-ZFA-f16-NEXT:    ret
-    %b = call half @llvm.roundeven.f16(half %a)
-    ret half %b
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fround.h fa0, fa0, rne
+; CHECK-ZFA-f16-NEXT:  ret
+  %b = call half @llvm.roundeven.f16(half %a)
+  ret half %b
 }
 define half @fmaximum(half %a, half %b) {
 ; CHECK-ZFA-f16-LABEL: fmaximum:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fmaxm.h fa0, fa0, fa1
-; CHECK-ZFA-f16-NEXT:    ret
-    %c = call half @llvm.maximum.f16(half %a, half %b)
-    ret half %c
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fmaxm.h fa0, fa0, fa1
+; CHECK-ZFA-f16-NEXT:  ret
+  %c = call half @llvm.maximum.f16(half %a, half %b)
+  ret half %c
 }
 
 define half @fminimum(half %a, half %b) {
 ; CHECK-ZFA-f16-LABEL: fminimum:
-; CHECK-ZFA-f16:       # %bb.0:
-; CHECK-ZFA-f16-NEXT:    fminm.h fa0, fa0, fa1
-; CHECK-ZFA-f16-NEXT:    ret
-    %c = call half @llvm.minimum.f16(half %a, half %b)
-    ret half %c
+; CHECK-ZFA-f16:     # %bb.0:
+; CHECK-ZFA-f16-NEXT:  fminm.h fa0, fa0, fa1
+; CHECK-ZFA-f16-NEXT:  ret
+  %c = call half @llvm.minimum.f16(half %a, half %b)
+  ret half %c
 }
