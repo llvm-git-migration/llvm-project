@@ -491,6 +491,7 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
   unsigned struct_vt_consize_sz = sizeof(struct vt_consize);
   unsigned struct_vt_sizes_sz = sizeof(struct vt_sizes);
   unsigned struct_vt_stat_sz = sizeof(struct vt_stat);
+  unsigned struct_sock_fprog_sz = sizeof(struct sock_fprog);
 #endif // SANITIZER_LINUX
 
 #if SANITIZER_LINUX
@@ -537,7 +538,6 @@ unsigned struct_ElfW_Phdr_sz = sizeof(Elf_Phdr);
 
   unsigned struct_audio_buf_info_sz = sizeof(struct audio_buf_info);
   unsigned struct_ppp_stats_sz = sizeof(struct ppp_stats);
-  unsigned struct_sock_fprog_sz = sizeof(struct sock_fprog);
 #  endif  // SANITIZER_GLIBC
 
 #  if !SANITIZER_ANDROID && !SANITIZER_APPLE
