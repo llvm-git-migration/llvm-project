@@ -8,6 +8,13 @@ endif()
 include(${LLVM_COMMON_CMAKE_UTILS}/Modules/CMakePolicy.cmake
   NO_POLICY_SCOPE)
 
+# If we are not building as a part of LLVM, build libc as an
+# standalone project, using LLVM as an external library:
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  project(libc)
+  set(LIBC_BUILT_STANDALONE TRUE)
+endif()
+
 if (LIBC_CMAKE_VERBOSE_LOGGING)
   get_directory_property(LIBC_OLD_PREPROCESSOR_DEFS COMPILE_DEFINITIONS)
   foreach(OLD_DEF ${LIBC_OLD_PREPROCESSOR_DEFS})
@@ -29,6 +36,11 @@ endif()
 
 # Default to C++17
 set(CMAKE_CXX_STANDARD 17)
+
+if(LIBC_BUILT_STANDALONE)
+  find_package(Python3 ${LLVM_MINIMUM_PYTHON_VERSION} REQUIRED
+    COMPONENTS Interpreter)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
