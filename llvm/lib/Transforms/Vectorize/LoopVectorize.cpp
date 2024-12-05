@@ -5583,11 +5583,9 @@ InstructionCost LoopVectorizationCostModel::expectedCost(ElementCount VF) {
   // away.
   SmallPtrSet<Instruction *, 2> ValuesToIgnoreForVF;
   auto TC = PSE.getSE()->getSmallConstantTripCount(TheLoop);
-  if (VF.isFixed() && TC == VF.getFixedValue()) {
-    assert(!foldTailByMasking());
+  if (VF.isFixed() && TC == VF.getFixedValue() && !foldTailByMasking())
     addFullyUnrolledInstructionsToIgnore(TheLoop, Legal->getInductionVars(),
                                          ValuesToIgnoreForVF);
-  }
 
   // For each block.
   for (BasicBlock *BB : TheLoop->blocks()) {
