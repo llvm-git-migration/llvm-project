@@ -20,6 +20,7 @@
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -573,8 +574,13 @@ static void buildCopyToRegs(MachineIRBuilder &B, ArrayRef<Register> DstRegs,
       TypeSize::isKnownGT(PartSize, SrcTy.getElementType().getSizeInBits())) {
     // Vector was scalarized, and the elements extended.
     auto UnmergeToEltTy = B.buildUnmerge(SrcTy.getElementType(), SrcReg);
-    for (int i = 0, e = DstRegs.size(); i != e; ++i)
-      B.buildAnyExt(DstRegs[i], UnmergeToEltTy.getReg(i));
+    for (int i = 0, e = DstRegs.size(); i != e; ++i) {
+      if (SrcTy.isFloatVector() && ExtendOp == TargetOpcode::G_FPEXT) {
+        B.buildFPExt(DstRegs[i], UnmergeToEltTy.getReg(i));
+      } else {
+        B.buildAnyExt(DstRegs[i], UnmergeToEltTy.getReg(i));
+      }
+    }
     return;
   }
 
@@ -599,9 +605,16 @@ static void buildCopyToRegs(MachineIRBuilder &B, ArrayRef<Register> DstRegs,
       SrcTy.getScalarSizeInBits() > PartTy.getSizeInBits()) {
     LLT ExtTy =
         LLT::vector(SrcTy.getElementCount(),
-                    LLT::scalar(PartTy.getScalarSizeInBits() * DstRegs.size() /
+                    LLT::integer(PartTy.getScalarSizeInBits() * DstRegs.size() /
                                 SrcTy.getNumElements()));
-    auto Ext = B.buildAnyExt(ExtTy, SrcReg);
+    Register Ext;
+    if (SrcTy.isFloatVector() && ExtendOp == TargetOpcode::G_FPEXT) {
+      auto Cast = B.buildBitcast(SrcTy.dropType(), SrcReg).getReg(0);
+      Ext = B.buildAnyExt(ExtTy, Cast).getReg(0);
+    } else {
+      Ext = B.buildAnyExt(ExtTy, SrcReg).getReg(0);
+    }
+
     B.buildUnmerge(DstRegs, Ext);
     return;
   }
@@ -822,8 +835,11 @@ bool CallLowering::handleAssignments(ValueHandler &Handler,
     if (!Handler.isIncomingArgumentHandler() && OrigTy != ValTy &&
         VA.getLocInfo() != CCValAssign::Indirect) {
       assert(Args[i].OrigRegs.size() == 1);
+      unsigned ExtendOp = extendOpFromFlags(Args[i].Flags[0]);
+      if ((OrigTy.isFloat() || OrigTy.isFloatVector()) && ValTy.isFloat())
+        ExtendOp = TargetOpcode::G_FPEXT;
       buildCopyToRegs(MIRBuilder, Args[i].Regs, Args[i].OrigRegs[0], OrigTy,
-                      ValTy, extendOpFromFlags(Args[i].Flags[0]));
+                      ValTy, ExtendOp);
     }
 
     bool IndirectParameterPassingHandled = false;
@@ -1291,8 +1307,8 @@ void CallLowering::ValueHandler::copyArgumentMemory(
 Register CallLowering::ValueHandler::extendRegister(Register ValReg,
                                                     const CCValAssign &VA,
                                                     unsigned MaxSizeBits) {
-  LLT LocTy{VA.getLocVT()};
-  LLT ValTy{VA.getValVT()};
+  LLT LocTy(VA.getLocVT());
+  LLT ValTy(VA.getValVT());
 
   if (LocTy.getSizeInBits() == ValTy.getSizeInBits())
     return ValReg;
