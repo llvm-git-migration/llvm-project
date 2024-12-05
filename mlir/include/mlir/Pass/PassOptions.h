@@ -19,6 +19,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm/Support/Debug.h"
 #include <memory>
 
 namespace mlir {
@@ -297,10 +298,18 @@ public:
 
     /// Print the name and value of this option to the given stream.
     void print(raw_ostream &os) final {
-      // Don't print the list if empty. An empty option value can be treated as
-      // an element of the list in certain cases (e.g. ListOption<std::string>).
-      if ((**this).empty())
-        return;
+      // Don't print the list if the value is the default value. An empty
+      // option value should never be treated as an empty list.
+      if (this->isDefaultAssigned() &&
+          this->getDefault().size() == (**this).size()) {
+        unsigned i = 0;
+        for (unsigned e = (**this).size(); i < e; i++) {
+          if (!this->getDefault()[i].compare((**this)[i]))
+            break;
+        }
+        if (i == (**this).size())
+          return;
+      }
 
       os << this->ArgStr << "={";
       auto printElementFn = [&](const DataType &value) {

@@ -14,6 +14,19 @@
 // RUN: mlir-opt %s -verify-each=false '-test-options-super-pass-pipeline=super-list={{enum=zero list=1 string=foo},{enum=one list=2 string="bar"},{enum=two list=3 string={baz}}}' -dump-pass-pipeline 2>&1 | FileCheck --check-prefix=CHECK_7 %s
 // RUN: mlir-opt %s -verify-each=false -pass-pipeline='builtin.module(func.func(test-options-super-pass{list={{enum=zero list={1} string=foo },{enum=one list={2} string=bar },{enum=two list={3} string=baz }}}))' -dump-pass-pipeline 2>&1 | FileCheck --check-prefix=CHECK_7 %s
 
+
+// This test checks that lists-of-nested-options like 'option1={...},{....}' can be parsed
+// just like how 'option=1,2,3' is also allowed:
+
+// RUN: mlir-opt %s -verify-each=false -pass-pipeline='builtin.module(func.func(test-options-super-pass{list={enum=zero list={1} string=foo },{enum=one list={2} string=bar },{enum=two list={3} string=baz }}))' -dump-pass-pipeline 2>&1 | FileCheck --check-prefix=CHECK_7 %s
+
+// This test checks that it is legal to specify an empty list using '{}'.
+// RUN: mlir-opt %s -verify-each=false '--test-options-super-pass=list={enum=zero list={1} string=foo},{enum=one list={} default-list= string=bar}' -dump-pass-pipeline 2>&1 | FileCheck --check-prefix=CHECK_8 %s
+
+// This test checks that it is possible to specify lists of empty strings.
+// RUN: mlir-opt %s -verify-each=false '--test-options-pass=string-list="",""' '--test-options-pass=string-list=""' -dump-pass-pipeline 2>&1 | FileCheck --check-prefix=CHECK_9 %s
+
+
 // CHECK_ERROR_1: missing closing '}' while processing pass options
 // CHECK_ERROR_2: no such option test-option
 // CHECK_ERROR_3: no such option invalid-option
@@ -26,4 +39,8 @@
 // CHECK_4: builtin.module(builtin.module(func.func(test-options-pass{enum=zero list={3} string= }),func.func(test-options-pass{enum=one list={1,2,3,4} string=foobar })))
 // CHECK_5: builtin.module(builtin.module(func.func(test-options-pass{enum=zero list={3} string= }),func.func(test-options-pass{enum=one list={1,2,3,4} string={foo bar baz} })))
 // CHECK_6: builtin.module(builtin.module(func.func(test-options-pass{enum=zero list={3} string= }),func.func(test-options-pass{enum=one list={1,2,3,4} string=foo"bar"baz })))
-// CHECK_7{LITERAL}: builtin.module(func.func(test-options-super-pass{list={{enum=zero list={1} string=foo },{enum=one list={2} string=bar },{enum=two list={3} string=baz }}}))
+// CHECK_7{LITERAL}: builtin.module(func.func(test-options-super-pass{list={{ enum=zero list={1} string=foo },{ enum=one list={2} string=bar },{ enum=two list={3} string=baz }}}))
+
+// CHECK_8{LITERAL}: builtin.module(func.func(test-options-super-pass{list={{ enum=zero list={1} string=foo },{default-list={} enum=one list={} string=bar }}}))
+// CHECK_9: builtin
+

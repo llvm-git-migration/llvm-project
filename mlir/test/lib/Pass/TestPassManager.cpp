@@ -59,8 +59,13 @@ struct TestOptionsPass
   struct Options : public PassPipelineOptions<Options> {
     ListOption<int> listOption{*this, "list",
                                llvm::cl::desc("Example list option")};
+    ListOption<int> listWithDefaultsOption{
+        *this, "default-list",
+        llvm::cl::desc("Example list option with defaults"),
+        llvm::cl::list_init<int>({10, 9, 8})};
     ListOption<std::string> stringListOption{
-        *this, "string-list", llvm::cl::desc("Example string list option")};
+        *this, "string-list", llvm::cl::desc("Example string list option"),
+        llvm::cl::list_init<std::string>({})};
     Option<std::string> stringOption{*this, "string",
                                      llvm::cl::desc("Example string option")};
     Option<Enum> enumOption{
@@ -94,7 +99,8 @@ struct TestOptionsPass
   ListOption<int> listOption{*this, "list",
                              llvm::cl::desc("Example list option")};
   ListOption<std::string> stringListOption{
-      *this, "string-list", llvm::cl::desc("Example string list option")};
+      *this, "string-list", llvm::cl::desc("Example string list option"),
+      llvm::cl::list_init<std::string>({})};
   Option<std::string> stringOption{*this, "string",
                                    llvm::cl::desc("Example string option")};
   Option<Enum> enumOption{
