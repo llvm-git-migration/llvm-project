@@ -10,7 +10,7 @@
 #define LLVM_LIBC_SRC_UNISTD_GETCWD_H
 
 #include "src/__support/macros/config.h"
-#include <unistd.h>
+#include "hdr/unistd_macros.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
