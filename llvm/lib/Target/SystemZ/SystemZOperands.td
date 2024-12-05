@@ -214,13 +214,13 @@ def NEGLH16 : SDNodeXForm<imm, [{
 }]>;
 
 def NEGLF32 : SDNodeXForm<imm, [{
-  uint64_t Value = -N->getZExtValue() & 0x00000000FFFFFFFFULL;
+  uint64_t Value = -N->getSExtValue() & 0x00000000FFFFFFFFULL;
   return CurDAG->getTargetConstant(Value, SDLoc(N), MVT::i64);
 }]>;
 
 // Truncate an immediate to a 8-bit signed quantity.
 def SIMM8 : SDNodeXForm<imm, [{
-  return CurDAG->getSignedTargetConstant(int8_t(N->getZExtValue()), SDLoc(N),
+  return CurDAG->getSignedTargetConstant(int8_t(N->getSExtValue()), SDLoc(N),
                                          MVT::i64);
 }]>;
 
@@ -244,13 +244,13 @@ def UIMM12 : SDNodeXForm<imm, [{
 
 // Truncate an immediate to a 16-bit signed quantity.
 def SIMM16 : SDNodeXForm<imm, [{
-  return CurDAG->getSignedTargetConstant(int16_t(N->getZExtValue()), SDLoc(N),
+  return CurDAG->getSignedTargetConstant(int16_t(N->getSExtValue()), SDLoc(N),
                                          MVT::i64);
 }]>;
 
 // Negate and then truncate an immediate to a 16-bit signed quantity.
 def NEGSIMM16 : SDNodeXForm<imm, [{
-  return CurDAG->getSignedTargetConstant(int16_t(-N->getZExtValue()), SDLoc(N),
+  return CurDAG->getSignedTargetConstant(int16_t(-N->getSExtValue()), SDLoc(N),
                                          MVT::i64);
 }]>;
 
@@ -262,13 +262,13 @@ def UIMM16 : SDNodeXForm<imm, [{
 
 // Truncate an immediate to a 32-bit signed quantity.
 def SIMM32 : SDNodeXForm<imm, [{
-  return CurDAG->getSignedTargetConstant(int32_t(N->getZExtValue()), SDLoc(N),
+  return CurDAG->getSignedTargetConstant(int32_t(N->getSExtValue()), SDLoc(N),
                                          MVT::i64);
 }]>;
 
 // Negate and then truncate an immediate to a 32-bit unsigned quantity.
 def NEGSIMM32 : SDNodeXForm<imm, [{
-  return CurDAG->getSignedTargetConstant(int32_t(-N->getZExtValue()), SDLoc(N),
+  return CurDAG->getSignedTargetConstant(int32_t(-N->getSExtValue()), SDLoc(N),
                                          MVT::i64);
 }]>;
 
