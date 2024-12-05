@@ -14,8 +14,8 @@
 #include "src/__support/OSUtil/syscall.h" // For internal syscall function.
 #include "src/__support/common.h"
 
-#include <sys/syscall.h> // For syscall numbers.
-#include <unistd.h>      // For off_t.
+#include "hdr/types/off_t.h"
+#include <sys/syscall.h>                   // For syscall numbers.
 
 namespace LIBC_NAMESPACE_DECL {
 
