@@ -214,7 +214,7 @@ def NEGLH16 : SDNodeXForm<imm, [{
 }]>;
 
 def NEGLF32 : SDNodeXForm<imm, [{
-  uint64_t Value = -N->getSExtValue() & 0x00000000FFFFFFFFULL;
+  uint64_t Value = -N->getZExtValue() & 0x00000000FFFFFFFFULL;
   return CurDAG->getTargetConstant(Value, SDLoc(N), MVT::i64);
 }]>;
 
