@@ -786,7 +786,9 @@ Instruction *InstCombinerImpl::FoldShiftByConstant(Value *Op0, Constant *C1,
   Constant *C2;
   Value *X;
   bool IsLeftShift = I.getOpcode() == Instruction::Shl;
-  if (match(Op0, m_BinOp(I.getOpcode(), m_ImmConstant(C2), m_Value(X)))) {
+  if (match(Op0,
+            m_BinOp(I.getOpcode(), m_ImmConstant(C2),
+                    m_CombineAnd(m_Value(X), m_Unless(m_Constant()))))) {
     Instruction *R = BinaryOperator::Create(
         I.getOpcode(), Builder.CreateBinOp(I.getOpcode(), C2, C1), X);
     BinaryOperator *BO0 = cast<BinaryOperator>(Op0);
