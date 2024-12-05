@@ -28,23 +28,32 @@ namespace bufferization {
 using namespace mlir;
 using namespace mlir::bufferization;
 
+/// Return true if `val` is in scope at the given
+/// `insertionPoint`.
+static bool valueDominateInsertionPoint(const DominanceInfo &domInfo,
+                                        Operation *insertionPoint, Value val) {
+  if (auto bbArg = dyn_cast<BlockArgument>(val)) {
+    Block *owner = bbArg.getOwner();
+    if (!owner->findAncestorOpInBlock(*insertionPoint))
+      return false;
+  } else {
+    auto opResult = cast<OpResult>(val);
+    if (!domInfo.properlyDominates(opResult.getOwner(), insertionPoint))
+      return false;
+  }
+  return true;
+}
+
 /// Return true if all `neededValues` are in scope at the given
 /// `insertionPoint`.
 static bool
 neededValuesDominateInsertionPoint(const DominanceInfo &domInfo,
                                    Operation *insertionPoint,
                                    const SmallVector<Value> &neededValues) {
-  for (Value val : neededValues) {
-    if (auto bbArg = dyn_cast<BlockArgument>(val)) {
-      Block *owner = bbArg.getOwner();
-      if (!owner->findAncestorOpInBlock(*insertionPoint))
-        return false;
-    } else {
-      auto opResult = cast<OpResult>(val);
-      if (!domInfo.properlyDominates(opResult.getOwner(), insertionPoint))
-        return false;
-    }
-  }
+  for (Value val : neededValues)
+    if (!valueDominateInsertionPoint(domInfo, insertionPoint, val))
+      return false;
+
   return true;
 }
 
@@ -64,6 +73,23 @@ static Operation *
 findValidInsertionPoint(Operation *emptyTensorOp,
                         const SmallVector<Value> &neededValues) {
   DominanceInfo domInfo;
+
+  // Trying to move the needed values before the `emptyTensorOp`.
+  for (Value val : neededValues) {
+    if (valueDominateInsertionPoint(domInfo, emptyTensorOp, val))
+      continue;
+    Operation *definingOp = val.getDefiningOp();
+    if (!definingOp)
+      continue;
+
+    bool isItSafeToMoveOp =
+        llvm::all_of(definingOp->getOperands(), [&](Value operand) {
+          return valueDominateInsertionPoint(domInfo, emptyTensorOp, operand);
+        });
+
+    if (isItSafeToMoveOp)
+      definingOp->moveBefore(emptyTensorOp);
+  }
 
   // Gather all possible insertion points: the location of `emptyTensorOp` and
   // right after the definition of each value in `neededValues`.
