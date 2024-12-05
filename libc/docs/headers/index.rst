@@ -9,6 +9,7 @@ Implementation Status
    ctype
    errno
    fenv
+   inttypes
    locale
    math/index.rst
    search
@@ -16,6 +17,8 @@ Implementation Status
    signal
    stdbit
    stdio
+   stdlib
+   string
    strings
    threads
    time
