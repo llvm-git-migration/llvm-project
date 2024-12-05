@@ -1,5 +1,4 @@
-//===- BPSectionOrdererBase.h ---------------------------------------*- C++
-//-*-===//
+//===- BPSectionOrdererBase.h ---------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -41,7 +40,7 @@ public:
   virtual bool hasValidData() const = 0;
   virtual bool isCodeSection() const = 0;
   virtual llvm::ArrayRef<uint8_t> getSectionData() const = 0;
-  virtual llvm::ArrayRef<BPSymbol *> getSymbols() const = 0;
+  virtual llvm::ArrayRef<std::unique_ptr<BPSymbol>> getSymbols() const = 0;
   virtual void
   getSectionHash(llvm::SmallVectorImpl<uint64_t> &hashes,
                  const llvm::DenseMap<const BPSectionBase *, uint64_t>
@@ -70,7 +69,7 @@ public:
       size_t &highestAvailablePriority, llvm::StringRef profilePath,
       bool forFunctionCompression, bool forDataCompression,
       bool compressionSortStartupFunctions, bool verbose,
-      llvm::SmallVector<BPSectionBase *> inputSections);
+      llvm::SmallVector<std::unique_ptr<BPSectionBase>> &inputSections);
 };
 
 } // namespace lld

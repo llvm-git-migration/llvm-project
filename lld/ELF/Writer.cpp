@@ -1089,7 +1089,7 @@ static DenseMap<const InputSectionBase *, int> buildSectionOrder(Ctx &ctx) {
         ctx.arg.verboseBpSectionOrderer);
   }
   // Use the rarely used option --call-graph-ordering-file to sort sections.
-  else if (!ctx.arg.callGraphProfile.empty())
+  if (!ctx.arg.callGraphProfile.empty())
     return computeCallGraphProfileOrder(ctx);
 
   if (ctx.arg.symbolOrderingFile.empty())

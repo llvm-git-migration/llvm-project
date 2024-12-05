@@ -1,4 +1,4 @@
-//===- BPSectionOrderer.cpp--------------------------------------*- C++ -*-===//
+//===- BPSectionOrderer.cpp -----------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -14,6 +14,8 @@
 #include "llvm/Support/BalancedPartitioning.h"
 #include "llvm/Support/TimeProfiler.h"
 
+#define DEBUG_TYPE "bp-section-orderer"
+
 using namespace llvm;
 using namespace lld::macho;
 
@@ -22,14 +24,14 @@ DenseMap<const InputSection *, size_t> lld::macho::runBalancedPartitioning(
     bool forFunctionCompression, bool forDataCompression,
     bool compressionSortStartupFunctions, bool verbose) {
 
-  SmallVector<BPSectionBase *> sections;
+  SmallVector<std::unique_ptr<BPSectionBase>> sections;
   for (const auto *file : inputFiles) {
     for (auto *sec : file->sections) {
       for (auto &subsec : sec->subsections) {
         auto *isec = subsec.isec;
         if (!isec || isec->data.empty() || !isec->data.data())
           continue;
-        sections.push_back(new BPSectionMacho(isec));
+        sections.emplace_back(std::make_unique<BPSectionMacho>(isec));
       }
     }
   }
@@ -41,10 +43,9 @@ DenseMap<const InputSection *, size_t> lld::macho::runBalancedPartitioning(
           sections);
 
   DenseMap<const InputSection *, size_t> result;
-  for (const auto &[BPSectionBase, priority] : reorderedSections) {
-    if (auto *machoSection = dyn_cast<BPSectionMacho>(BPSectionBase)) {
-      result[machoSection->getSection()] = priority;
-      delete machoSection;
+  for (const auto &[sec, priority] : reorderedSections) {
+    if (auto *machoSection = dyn_cast<BPSectionMacho>(sec)) {
+      result.try_emplace(machoSection->getSection(), priority);
     }
   }
   return result;

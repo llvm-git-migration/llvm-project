@@ -1,4 +1,4 @@
-//===- BPSectionOrderer.h ---------------------------------------*- C++ -*-===//
+//===- BPSectionOrderer.h -------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -57,7 +57,7 @@ public:
 
 class BPSectionMacho : public BPSectionBase {
   const InputSection *isec;
-  mutable std::vector<std::unique_ptr<BPSymbolMacho>> symbolCache;
+  mutable std::vector<std::unique_ptr<BPSymbol>> symbols;
 
 public:
   explicit BPSectionMacho(const InputSection *sec) : isec(sec) {}
@@ -76,17 +76,11 @@ public:
 
   llvm::ArrayRef<uint8_t> getSectionData() const override { return isec->data; }
 
-  llvm::ArrayRef<BPSymbol *> getSymbols() const override {
-    // Lazy initialization of symbol cache
-    if (symbolCache.empty()) {
-      for (const auto *sym : isec->symbols)
-        symbolCache.push_back(std::make_unique<BPSymbolMacho>(sym));
+  llvm::ArrayRef<std::unique_ptr<BPSymbol>> getSymbols() const override {
+    for (auto *d : isec->symbols) {
+      symbols.emplace_back(std::make_unique<BPSymbolMacho>(d));
     }
-    static std::vector<BPSymbol *> result;
-    result.clear();
-    for (const auto &sym : symbolCache)
-      result.push_back(sym.get());
-    return result;
+    return symbols;
   }
 
   void getSectionHash(llvm::SmallVectorImpl<uint64_t> &hashes,
@@ -145,9 +139,6 @@ private:
     if (auto *sym = reloc.referent.dyn_cast<Symbol *>()) {
       kind += (" Symbol " + Twine(sym->kind())).str();
       if (auto *d = llvm::dyn_cast<Defined>(sym)) {
-        if (llvm::isa_and_nonnull<CStringInputSection>(isec))
-          return BPSectionBase::getRelocHash(kind, 0, isec->getOffset(d->value),
-                                             reloc.addend);
         return BPSectionBase::getRelocHash(kind, sectionIdx.value_or(0),
                                            d->value, reloc.addend);
       }

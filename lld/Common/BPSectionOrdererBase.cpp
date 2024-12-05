@@ -1,5 +1,4 @@
-//===- BPSectionOrdererBase.cpp---------------------------------------*- C++
-//-*-===//
+//===- BPSectionOrdererBase.cpp -------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -53,7 +52,7 @@ static SmallVector<std::pair<unsigned, UtilityNodes>> getUnsForCompression(
       ++hashFrequency[hash];
 
   if (duplicateSectionIdxs) {
-    // Merge section that are nearly identical
+    // Merge sections that are nearly identical
     SmallVector<std::pair<unsigned, SmallVector<uint64_t>>> newSectionHashes;
     DenseMap<uint64_t, unsigned> wholeHashToSectionIdx;
     for (auto &[sectionIdx, hashes] : sectionHashes) {
@@ -105,22 +104,21 @@ BPSectionOrdererBase::reorderSectionsByBalancedPartitioning(
     size_t &highestAvailablePriority, llvm::StringRef profilePath,
     bool forFunctionCompression, bool forDataCompression,
     bool compressionSortStartupFunctions, bool verbose,
-    SmallVector<BPSectionBase *> inputSections) {
-  TimeTraceScope timeScope("Balanced Partitioning");
+    SmallVector<std::unique_ptr<BPSectionBase>> &inputSections) {
+  TimeTraceScope timeScope("Setup Balanced Partitioning");
   SmallVector<const BPSectionBase *> sections;
   DenseMap<const BPSectionBase *, uint64_t> sectionToIdx;
   StringMap<DenseSet<unsigned>> symbolToSectionIdxs;
 
   // Process input sections
-  for (const auto *isec : inputSections) {
+  for (const auto &isec : inputSections) {
     if (!isec->hasValidData())
       continue;
 
     unsigned sectionIdx = sections.size();
-    sectionToIdx.try_emplace(isec, sectionIdx);
-    sections.push_back(isec);
-
-    for (auto *sym : isec->getSymbols())
+    sectionToIdx.try_emplace(isec.get(), sectionIdx);
+    sections.emplace_back(isec.get());
+    for (auto &sym : isec->getSymbols())
       if (auto *d = sym->asDefinedSymbol())
         symbolToSectionIdxs[d->getName()].insert(sectionIdx);
   }
@@ -331,7 +329,7 @@ BPSectionOrdererBase::reorderSectionsByBalancedPartitioning(
       const uint64_t pageSize = (1 << 14);
       uint64_t currentAddress = 0;
       for (const auto *isec : orderedSections) {
-        for (auto *sym : isec->getSymbols()) {
+        for (auto &sym : isec->getSymbols()) {
           if (auto *d = sym->asDefinedSymbol()) {
             uint64_t startAddress = currentAddress + d->getValue();
             uint64_t endAddress = startAddress + d->getSize();

@@ -1,4 +1,4 @@
-//===- BPSectionOrderer.h ---------------------------------------*- C++ -*-===//
+//===- BPSectionOrderer.h -------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -40,8 +40,9 @@ public:
   llvm::StringRef getName() const override { return sym->getName(); }
 
   BPSymbol *asDefinedSymbol() override {
-    if (auto *d = llvm::dyn_cast<Defined>(sym))
+    if (auto *d = llvm::dyn_cast<Defined>(sym)) {
       return this;
+    }
     return nullptr;
   }
 
@@ -68,16 +69,16 @@ public:
 
 class BPSectionELF : public BPSectionBase {
   const InputSectionBase *isec;
-  BPSymbolELF *symbol;
-  llvm::SmallVector<BPSymbol *, 0> symbols;
+  std::unique_ptr<BPSymbolELF> symbol;
 
 public:
-  explicit BPSectionELF(const InputSectionBase *sec, BPSymbolELF *sym)
-      : isec(sec), symbol(sym), symbols({sym}) {}
+  explicit BPSectionELF(const InputSectionBase *sec,
+                        std::unique_ptr<BPSymbolELF> sym)
+      : isec(sec), symbol(std::move(sym)) {}
 
   const InputSectionBase *getSection() const { return isec; }
 
-  BPSymbolELF *getSymbol() const { return symbol; }
+  BPSymbolELF *getSymbol() const { return symbol.get(); }
   llvm::StringRef getName() const override { return isec->name; }
 
   uint64_t getSize() const override { return isec->getSize(); }
@@ -94,7 +95,10 @@ public:
     return isec->content();
   }
 
-  llvm::ArrayRef<BPSymbol *> getSymbols() const override { return symbols; }
+  llvm::ArrayRef<std::unique_ptr<BPSymbol>> getSymbols() const override {
+    return llvm::ArrayRef<std::unique_ptr<BPSymbol>>(
+        reinterpret_cast<const std::unique_ptr<BPSymbol> *>(&symbol), 1);
+  }
 
   void getSectionHash(llvm::SmallVectorImpl<uint64_t> &hashes,
                       const llvm::DenseMap<const BPSectionBase *, uint64_t>

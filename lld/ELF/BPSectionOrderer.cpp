@@ -1,4 +1,4 @@
-//===- BPSectionOrderer.cpp--------------------------------------*- C++ -*-===//
+//===- BPSectionOrderer.cpp------------------------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -30,22 +30,24 @@ lld::elf::runBalancedPartitioning(Ctx &ctx, llvm::StringRef profilePath,
                                   bool verbose) {
   size_t highestAvailablePriority = std::numeric_limits<int>::max();
   // Collect all InputSectionBase objects from symbols and wrap them as
-  // BPSectionBase instances for balanced partitioning which follow the way
+  // BPSectionELF instances for balanced partitioning which follow the way
   // '--symbol-ordering-file' does.
-  SmallVector<lld::BPSectionBase *> sections;
+  SmallVector<std::unique_ptr<BPSectionBase>> sections;
 
   for (Symbol *sym : ctx.symtab->getSymbols())
-    if (auto *d = dyn_cast<Defined>(sym))
-      if (auto *sec = dyn_cast_or_null<InputSectionBase>(d->section))
-        if (sym->getSize() > 0)
-          sections.push_back(new BPSectionELF(sec, new BPSymbolELF(sym)));
+    if (sym->getSize() > 0)
+      if (auto *d = dyn_cast<Defined>(sym))
+        if (auto *sec = dyn_cast_or_null<InputSectionBase>(d->section))
+          sections.emplace_back(std::make_unique<BPSectionELF>(
+              sec, std::make_unique<BPSymbolELF>(sym)));
 
   for (ELFFileBase *file : ctx.objectFiles)
     for (Symbol *sym : file->getLocalSymbols())
-      if (auto *d = dyn_cast<Defined>(sym))
-        if (auto *sec = dyn_cast_or_null<InputSectionBase>(d->section))
-          if (sym->getSize() > 0)
-            sections.push_back(new BPSectionELF(sec, new BPSymbolELF(sym)));
+      if (sym->getSize() > 0)
+        if (auto *d = dyn_cast<Defined>(sym))
+          if (auto *sec = dyn_cast_or_null<InputSectionBase>(d->section))
+            sections.emplace_back(std::make_unique<BPSectionELF>(
+                sec, std::make_unique<BPSymbolELF>(sym)));
 
   auto reorderedSections =
       lld::BPSectionOrdererBase::reorderSectionsByBalancedPartitioning(
@@ -54,14 +56,10 @@ lld::elf::runBalancedPartitioning(Ctx &ctx, llvm::StringRef profilePath,
           sections);
 
   DenseMap<const InputSectionBase *, int> result;
-  for (const auto &[BPSectionBase, priority] : reorderedSections) {
-    if (const BPSectionELF *elfSection =
-            dyn_cast<BPSectionELF>(BPSectionBase)) {
-      result[elfSection->getSymbol()->getInputSection()] =
-          static_cast<int>(priority);
-      delete const_cast<BPSectionELF *>(elfSection)->getSymbol();
-      delete const_cast<BPSectionELF *>(elfSection);
-    }
+  for (const auto &[sec, priority] : reorderedSections) {
+    auto *elfSection = cast<BPSectionELF>(sec);
+    result.try_emplace(elfSection->getSymbol()->getInputSection(),
+                       static_cast<int>(priority));
   }
   return result;
 }
