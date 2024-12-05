@@ -2280,6 +2280,15 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
   if (match(Op0, m_OneUse(m_Add(m_Value(X), m_AllOnes()))))
     return BinaryOperator::CreateAdd(Builder.CreateNot(Op1), X);
 
+  const APInt *C1, *C2;
+  // if (C1 & C2) == C2 then (X & C1) - (X & C2) -> X & (C1 ^ C2)
+  if (match(Op0, m_And(m_Value(X), m_APInt(C1))) &&
+      match(Op1, m_And(m_Specific(X), m_APInt(C2)))) {
+    if (C2->eq(*C1 & *C2))
+      return BinaryOperator::CreateAnd(
+          X, ConstantInt::get(I.getType(), *C1 ^ *C2));
+  }
+
   // Reassociate sub/add sequences to create more add instructions and
   // reduce dependency chains:
   // ((X - Y) + Z) - Op1 --> (X + Z) - (Y + Op1)

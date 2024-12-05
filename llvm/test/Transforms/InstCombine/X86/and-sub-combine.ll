@@ -3,9 +3,7 @@
 
 define i8 @and_sub(i8 %a) {
 ; CHECK-LABEL: @and_sub(
-; CHECK-NEXT:    [[AND1:%.*]] = and i8 [[A:%.*]], 15
-; CHECK-NEXT:    [[AND2:%.*]] = and i8 [[A]], 3
-; CHECK-NEXT:    [[RET:%.*]] = sub nsw i8 [[AND1]], [[AND2]]
+; CHECK-NEXT:    [[RET:%.*]] = and i8 [[A:%.*]], 12
 ; CHECK-NEXT:    ret i8 [[RET]]
 ;
   %and1 = and i8 %a, 15
