@@ -582,10 +582,12 @@ RISCVLegalizerInfo::RISCVLegalizerInfo(const RISCVSubtarget &ST)
       .libcallFor(ST.is64Bit(), {{s32, s128}, {s64, s128}});
 
   // FIXME: We can do custom inline expansion like SelectionDAG.
-  // FIXME: Legal with Zfa.
   getActionDefinitionsBuilder({G_FCEIL, G_FFLOOR, G_FRINT, G_FNEARBYINT,
                                G_INTRINSIC_TRUNC, G_INTRINSIC_ROUND,
-                               G_INTRINSIC_ROUNDEVEN})
+                               G_INTRINSIC_ROUNDEVEN, G_FMAXIMUM, G_FMINIMUM})
+      .legalFor(ST.hasStdExtZfa() /*ST.hasStdExtF()*/, {s32})
+      .legalFor(ST.hasStdExtZfa() && ST.hasStdExtD(), {s64})
+      .legalFor(ST.hasStdExtZfa() && ST.hasStdExtZfh(), {s16})
       .libcallFor({s32, s64});
 
   getActionDefinitionsBuilder({G_FCOS, G_FSIN, G_FTAN, G_FPOW, G_FLOG, G_FLOG2,
