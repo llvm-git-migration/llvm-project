@@ -85,7 +85,9 @@ struct TestOptionsPass
     enumOption = options.enumOption;
   }
 
-  void runOnOperation() final {}
+  void runOnOperation() final {
+    llvm::errs() << "string-list has size " << stringListOption.size() << "\n";
+  }
   StringRef getArgument() const final { return "test-options-pass"; }
   StringRef getDescription() const final {
     return "Test options parsing capabilities";
