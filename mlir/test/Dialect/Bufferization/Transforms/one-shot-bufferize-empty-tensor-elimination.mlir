@@ -368,21 +368,21 @@ func.func @multiple_materialize_in_destination_buffer(%m: memref<5xf32>, %f: f32
 
 // -----
 
-// `EmptyTensorElimination` fails to find a valid insertion
-// point for the new injected `SubsetExtraction`.
+// `EmptyTensorElimination` finds a valid insertion
+// point for the new injected `SubsetExtraction` by
+// trying to move the needed value for the extraction.
 // CHECK-LABEL:   func.func @fail_to_eliminate_any_empty_tensors
 func.func @fail_to_eliminate_any_empty_tensors() -> tensor<5x6x128xf32> {
   %cst_1 = arith.constant 1.0 : f32
   %cst_2 = arith.constant 2.0 : f32
   // CHECK: memref.alloc
-  // CHECK: memref.alloc
-  // CHECK: memref.alloc
+  // CHECK-NOT: memref.alloc
   %empty_1 = tensor.empty() : tensor<5x6x64xf32>
   %res_1 = linalg.fill ins(%cst_1 : f32) outs(%empty_1 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
   %empty_2 = tensor.empty() : tensor<5x6x64xf32>
   %res_2 = linalg.fill ins(%cst_2 : f32) outs(%empty_2 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
   %cancatenated_empty = tensor.empty() : tensor<5x6x128xf32>
-  // CHECK: memref.copy
+  // CHECK-NOT: memref.copy
   %inserted_slice_1 = tensor.insert_slice %res_1 into %cancatenated_empty[0, 0, 0][5, 6, 64][1, 1, 1]
       : tensor<5x6x64xf32> into tensor<5x6x128xf32>
   %inserted_slice_2 = tensor.insert_slice %res_2 into %inserted_slice_1[0, 0, 64][5, 6, 64][1, 1, 1]
@@ -397,13 +397,13 @@ func.func @succeed_to_eliminate_one_empty_tensor() -> tensor<5x6x128xf32> {
   %cst_1 = arith.constant 1.0 : f32
   %cst_2 = arith.constant 2.0 : f32
   // CHECK: memref.alloc
-  // CHECK: memref.alloc
+  // CHECK-NOT: memref.alloc
   %cancatenated_empty = tensor.empty() : tensor<5x6x128xf32>
   %empty_1 = tensor.empty() : tensor<5x6x64xf32>
   %res_1 = linalg.fill ins(%cst_1 : f32) outs(%empty_1 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
   %empty_2 = tensor.empty() : tensor<5x6x64xf32>
   %res_2 = linalg.fill ins(%cst_2 : f32) outs(%empty_2 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
-  // CHECK: memref.copy
+  // CHECK-NOT: memref.copy
   %inserted_slice_1 = tensor.insert_slice %res_1 into %cancatenated_empty[0, 0, 0][5, 6, 64][1, 1, 1]
       : tensor<5x6x64xf32> into tensor<5x6x128xf32>
   %inserted_slice_2 = tensor.insert_slice %res_2 into %inserted_slice_1[0, 0, 64][5, 6, 64][1, 1, 1]
