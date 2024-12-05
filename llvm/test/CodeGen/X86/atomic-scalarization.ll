@@ -9,3 +9,32 @@ define <1 x i32> @atomic_scalar_i32(ptr %x) {
   %ret = load atomic <1 x i32>, ptr %x acquire, align 4
   ret <1 x i32> %ret
 }
+
+define <1 x float> @atomic_scalar_float(ptr %x) {
+; CHECK-LABEL: atomic_scalar_float:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    movss {{.*#+}} xmm0 = mem[0],zero,zero,zero
+; CHECK-NEXT:    retq
+  %ret = load atomic <1 x float>, ptr %x acquire, align 4
+  ret <1 x float> %ret
+}
+
+define <1 x half> @atomic_scalar_half(ptr %x) {
+; CHECK-LABEL: atomic_scalar_half:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    movzwl (%rdi), %eax
+; CHECK-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK-NEXT:    retq
+  %ret = load atomic <1 x half>, ptr %x acquire, align 4
+  ret <1 x half> %ret
+}
+
+define <1 x bfloat> @atomic_scalar_bfloat(ptr %x) {
+; CHECK-LABEL: atomic_scalar_bfloat:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    movzwl (%rdi), %eax
+; CHECK-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK-NEXT:    retq
+  %ret = load atomic <1 x bfloat>, ptr %x acquire, align 4
+  ret <1 x bfloat> %ret
+}
