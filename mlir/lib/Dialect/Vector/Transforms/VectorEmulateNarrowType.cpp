@@ -302,12 +302,14 @@ static VectorValue emulatedVectorLoad(OpBuilder &rewriter, Location loc,
 /// elements, with size of 8 bits, and the mask is used to select which elements
 /// to store.
 ///
-/// Before:
-///   memory = |ab|cd|ef|12| : <4xi2> (<1xi8>)
-///   valueToStore = |01|23|45|67| : vector<4xi2>
+/// Inputs:
+///   linearizedMemref = |a|b|c|d| : <4xi2> (<1xi8>)
+///   linearizedIndex = 2
+///   valueToStore = |e|f|g|h| : vector<4xi2>
 ///   mask = |0|0|1|1| : vector<4xi1>
-/// After:
-///   memory = |ab|cd|45|67| : <4xi2> (<1xi8>)
+///
+/// Result:
+///   linearizedMemref = |a|b|g|h| : <4xi2> (<1xi8>)
 static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
                         VectorValue valueToStore, Value mask,
@@ -357,8 +359,8 @@ static void rmwStore(OpBuilder &rewriter, Location loc,
                                    linearizedIndex);
 }
 
-/// Extract a slice from vector `vector`, with the size of `sliceNumElements`,
-/// and insert it into a zero, byte vector at offset `byteOffset`. For example:
+/// Extract `sliceNumElements` from source `vector` at `sliceOffset`,
+/// and insert it into an empty vector at offset `byteOffset`.
 /// Inputs:
 ///   vector = |01|23|45|67| : vector<4xi2>
 ///   sliceOffset = 1
