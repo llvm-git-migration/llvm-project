@@ -1459,16 +1459,11 @@ unsigned TargetLibraryInfoImpl::getWCharSize(const Module &M) const {
 }
 
 unsigned TargetLibraryInfoImpl::getSizeTSize(const Module &M) const {
-  // There is really no guarantee that sizeof(size_t) is equal to sizeof(int*).
-  // If that isn't true then it should be possible to derive the SizeTTy from
-  // the target triple here instead and do an early return.
-
-  // Historically LLVM assume that size_t has same size as intptr_t (hence
-  // deriving the size from sizeof(int*) in address space zero). This should
-  // work for most targets. For future consideration: Hard coding address space
-  // zero here might be unfortunate. Maybe getMaxIndexSizeInBits() is better.
-  unsigned AddressSpace = 0;
-  return M.getDataLayout().getIndexSizeInBits(AddressSpace);
+  // The maximum index size over all address spaces is a reasonable default
+  // guess for size_t, but it cannot in general by derived by this. Per-target
+  // overrides should be added by reading the Module and/or the Triple to
+  // determine when this default doesn't apply.
+  return M.getDataLayout().getMaxIndexSizeInBits();
 }
 
 TargetLibraryInfoWrapperPass::TargetLibraryInfoWrapperPass()
