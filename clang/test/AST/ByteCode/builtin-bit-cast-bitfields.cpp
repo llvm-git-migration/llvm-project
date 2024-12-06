@@ -457,4 +457,19 @@ namespace IndeterminateBits {
   };
   constexpr unsigned char B = __builtin_bit_cast(unsigned char, S2{3});
   static_assert(B == (LITTLE_END ? 3 : 192));
+
+
+
+  struct S3 {
+    unsigned a : 13;
+    unsigned   : 17;
+    unsigned b : 2;
+  };
+
+  struct D {
+    unsigned a;
+  };
+  constexpr D s = __builtin_bit_cast(D, S3{12, 3}); // expected-error {{must be initialized by a constant expression}} \
+                                                    // expected-note {{indeterminate value can only initialize an object of type 'unsigned char' or 'std::byte'; 'unsigned int' is invalid}}
+
 }
