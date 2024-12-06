@@ -121,6 +121,8 @@ private:
   llvm::DenseMap<std::pair<SymbolID, uint8_t>, std::vector<SymbolID>> Relations;
   std::shared_ptr<void> KeepAlive; // poor man's move-only std::any
   // Set of files which were used during this index build.
+  // Files and IdxContents are only populated for dynamic and background
+  // indexes, not static indexes.
   llvm::StringSet<> Files;
   // Contents of the index (symbols, references, etc.)
   IndexContents IdxContents;
