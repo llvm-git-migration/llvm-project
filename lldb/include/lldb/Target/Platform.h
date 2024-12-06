@@ -473,6 +473,38 @@ public:
                       LLVM_PRETTY_FUNCTION, GetName()));
   }
 
+  /// Search CU for the SDK paths the CUs was compiled against. In the
+  /// presence of different SDKs, we try to pick the most appropriate
+  /// one using \ref XcodeSDK::Merge.
+  ///
+  /// \param[in] unit The CU
+  ///
+  /// \returns If successful, returns a pair of a parsed XcodeSDK
+  ///          object and a boolean that is 'true' if we encountered
+  ///          a conflicting combination of SDKs when parsing the CUs
+  ///          (e.g., a public and internal SDK).
+  virtual llvm::Expected<std::pair<XcodeSDK, bool>>
+  GetSDKPathFromDebugInfo(CompileUnit &unit) {
+    return llvm::createStringError(
+        llvm::formatv("{0} not implemented for '{1}' platform.",
+                      LLVM_PRETTY_FUNCTION, GetName()));
+  }
+
+  /// Returns the full path of the most appropriate SDK for the
+  /// specified compile unit. This function gets this path by parsing
+  /// debug-info (see \ref `GetSDKPathFromDebugInfo`).
+  ///
+  /// \param[in] unit The CU to scan.
+  ///
+  /// \returns If successful, returns the full path to an
+  ///          Xcode SDK.
+  virtual llvm::Expected<std::string>
+  ResolveSDKPathFromDebugInfo(CompileUnit &unit) {
+    return llvm::createStringError(
+        llvm::formatv("{0} not implemented for '{1}' platform.",
+                      LLVM_PRETTY_FUNCTION, GetName()));
+  }
+
   bool IsHost() const {
     return m_is_host; // Is this the default host platform?
   }
