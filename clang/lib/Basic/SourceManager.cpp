@@ -157,16 +157,13 @@ ContentCache::getBufferOrNone(DiagnosticsEngine &Diag, FileManager &FM,
   // Unless this is a named pipe (in which case we can handle a mismatch),
   // check that the file's size is the same as in the file entry (which may
   // have come from a stat cache).
-#ifndef __MVS__
-  if (!ContentsEntry->isNamedPipe() &&
-      Buffer->getBufferSize() != (size_t)ContentsEntry->getSize()) {
-#else
   // The buffer will always be larger than the file size on z/OS in the presence
   // of characters outside the base character set.
+  assert(Buffer->getBufferSize() <= (size_t)ContentsEntry->getSize());
   if (!ContentsEntry->isNamedPipe() &&
       Buffer->getBufferSize() < (size_t)ContentsEntry->getSize()) {
-#endif
     Diag.Report(Loc, diag::err_file_modified) << ContentsEntry->getName();
+
     return std::nullopt;
   }
 
@@ -590,6 +587,15 @@ SourceManager::getOrCreateFileID(FileEntryRef SourceFile,
 					  FileCharacter);
 }
 
+/// Helper function to determine if an input file requires conversion
+llvm::ErrorOr<bool> needConversion(StringRef Filename) {
+#ifdef __MVS__
+  return llvm::needzOSConversion(Filename.str().c_str());
+#else
+  return false;
+#endif
+}
+
 /// createFileID - Create a new FileID for the specified ContentCache and
 /// include position.  This works regardless of whether the ContentCache
 /// corresponds to a file or some other input source.
@@ -609,10 +615,9 @@ FileID SourceManager::createFileIDImpl(ContentCache &File, StringRef Filename,
     return FileID::get(LoadedID);
   }
   unsigned FileSize = File.getSize();
-#ifdef __MVS__
-  llvm::ErrorOr<bool> NeedConversion =
-      llvm::needzOSConversion(Filename.str().c_str());
-  if (NeedConversion && *NeedConversion) {
+  llvm::ErrorOr<bool> NeedConversion = needConversion(Filename);
+  assert(NeedConversion && "Filename was not found");
+  if (*NeedConversion) {
     // Buffer size may increase due to potential z/OS EBCDIC to UTF-8
     // conversion.
     if (std::optional<llvm::MemoryBufferRef> Buffer =
@@ -620,12 +625,11 @@ FileID SourceManager::createFileIDImpl(ContentCache &File, StringRef Filename,
       unsigned BufSize = Buffer->getBufferSize();
       if (BufSize > FileSize) {
         if (File.ContentsEntry.has_value())
-          File.ContentsEntry->getFileEntry().setSize(BufSize);
+          File.ContentsEntry->getFileEntryToUpdate().setSize(BufSize);
         FileSize = BufSize;
       }
     }
   }
-#endif
   if (!(NextLocalOffset + FileSize + 1 > NextLocalOffset &&
         NextLocalOffset + FileSize + 1 <= CurrentLoadedOffset)) {
     Diag.Report(IncludePos, diag::err_sloc_space_too_large);
