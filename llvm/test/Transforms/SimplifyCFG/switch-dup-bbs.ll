@@ -127,3 +127,35 @@ define i32 @switch_dup_default(i32 %0, i32 %1, i32 %2, i32 %3) {
   %9 = phi i32 [ %3, %5 ], [ %2, %6 ], [ %2, %7 ]
   ret i32 %9
 }
+
+define i64 @switch_dup_exit(i32 %val) {
+; SIMPLIFY-CFG-LABEL: define i64 @switch_dup_exit(
+; SIMPLIFY-CFG-SAME: i32 [[VAL:%.*]]) {
+; SIMPLIFY-CFG-NEXT:  [[ENTRY:.*:]]
+; SIMPLIFY-CFG-NEXT:    [[SWITCH_SELECTCMP_CASE1:%.*]] = icmp eq i32 [[VAL]], 1
+; SIMPLIFY-CFG-NEXT:    [[SWITCH_SELECTCMP_CASE2:%.*]] = icmp eq i32 [[VAL]], 11
+; SIMPLIFY-CFG-NEXT:    [[SWITCH_SELECTCMP:%.*]] = or i1 [[SWITCH_SELECTCMP_CASE1]], [[SWITCH_SELECTCMP_CASE2]]
+; SIMPLIFY-CFG-NEXT:    [[TMP0:%.*]] = select i1 [[SWITCH_SELECTCMP]], i64 1, i64 0
+; SIMPLIFY-CFG-NEXT:    ret i64 [[TMP0]]
+;
+entry:
+  switch i32 %val, label %default [
+  i32 1, label %bb2
+  i32 11, label %exit
+  i32 13, label %bb1
+  i32 0, label %bb1
+  ]
+
+bb1:                                              ; preds = %entry, %entry
+  br label %exit
+
+bb2:                                              ; preds = %entry
+  br label %exit
+
+default:                                          ; preds = %entry
+  br label %exit
+
+exit:                                             ; preds = %entry, %default, %bb2, %bb1
+  %ret = phi i64 [ 0, %default ], [ 0, %bb1 ], [ 1, %entry ], [ 1, %bb2 ]
+  ret i64 %ret
+}
