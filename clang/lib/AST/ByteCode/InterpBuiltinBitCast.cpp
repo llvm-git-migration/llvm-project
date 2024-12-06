@@ -355,10 +355,11 @@ bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
       ToPtr, S.getContext(), Buffer.size(),
       [&](const Pointer &P, PrimType T, Bits BitOffset,
           bool PackedBools) -> bool {
-        CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(P.getType());
+        QualType PtrType = P.getType();
+        CharUnits ObjectReprChars = ASTCtx.getTypeSizeInChars(PtrType);
         Bits FullBitWidth = Bits(ASTCtx.toBits(ObjectReprChars));
         if (T == PT_Float) {
-          const auto &Semantics = ASTCtx.getFloatTypeSemantics(P.getType());
+          const auto &Semantics = ASTCtx.getFloatTypeSemantics(PtrType);
           Bits NumBits = Bits(llvm::APFloatBase::getSizeInBits(Semantics));
           assert(NumBits.isFullByte());
           assert(NumBits.getQuantity() <= FullBitWidth.getQuantity());
@@ -381,6 +382,22 @@ bool clang::interp::DoBitCastPtr(InterpState &S, CodePtr OpPC,
           BitWidth = Bits(1);
         else
           BitWidth = FullBitWidth;
+
+        // If any of the bits are uninitialized, we need to abort unless the
+        // target type is std::byte or unsigned char.
+        if (!Buffer.rangeInitialized(BitOffset, BitWidth)) {
+          if (!PtrType->isStdByteType() &&
+              !PtrType->isSpecificBuiltinType(BuiltinType::UChar) &&
+              !PtrType->isSpecificBuiltinType(BuiltinType::Char_U)) {
+            const Expr *E = S.Current->getExpr(OpPC);
+            QualType ExprType = E->getType();
+            S.FFDiag(E, diag::note_constexpr_bit_cast_indet_dest)
+                << ExprType << S.getLangOpts().CharIsSigned
+                << E->getSourceRange();
+
+            return false;
+          }
+        }
 
         auto Memory = Buffer.copyBits(BitOffset, BitWidth, FullBitWidth,
                                       TargetEndianness);
