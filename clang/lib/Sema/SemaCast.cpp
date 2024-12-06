@@ -2772,11 +2772,13 @@ void CastOperation::CheckCXXCStyleCast(bool FunctionalStyle,
   CheckedConversionKind CCK = FunctionalStyle
                                   ? CheckedConversionKind::FunctionalCast
                                   : CheckedConversionKind::CStyleCast;
-  // todo what else should i be doing lvalue to rvalue cast for?
-  // why dont they do it for records below?
-  // This case should not trigger on regular vector splat
-  // Or vector cast or vector truncation.
   QualType SrcTy = SrcExpr.get()->getType();
+  if (Self.getLangOpts().HLSL &&
+      Self.HLSL().CanPerformSplat(SrcExpr.get(), DestType)) {
+    Kind = CK_HLSLSplatCast;
+    return;
+  }
+
   if (Self.getLangOpts().HLSL &&
       Self.HLSL().CanPerformAggregateCast(SrcExpr.get(), DestType)) {
     if (SrcTy->isConstantArrayType())
