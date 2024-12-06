@@ -699,6 +699,12 @@ struct RemoveEmptyShapeOperandsPattern : public OpRewritePattern<OpTy> {
                                                  isPotentiallyNonEmptyShape);
 
     // Reduce op to equivalent without empty shape operands.
+    if (newOperands.empty()) {
+      rewriter.replaceOpWithNewOp<ConstShapeOp>(
+          op, op->getResultTypes().front(), rewriter.getIndexTensorAttr({}));
+      return success();
+    }
+
     if (newOperands.size() < op.getNumOperands()) {
       rewriter.replaceOpWithNewOp<OpTy>(op, op->getResultTypes(), newOperands,
                                         op->getAttrs());
