@@ -461,7 +461,7 @@ def LoopOp : OpenMP_Op<"loop", traits = [
 
   let assemblyFormat = clausesAssemblyFormat # [{
     custom<PrivateReductionRegion>($region, $private_vars, type($private_vars),
-        $private_syms, $reduction_vars, type($reduction_vars), $reduction_byref,
+        $private_syms, $reduction_mod, $reduction_vars, type($reduction_vars), $reduction_byref,
         $reduction_syms) attr-dict
   }];
 

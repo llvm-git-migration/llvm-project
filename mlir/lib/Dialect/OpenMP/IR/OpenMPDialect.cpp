@@ -506,7 +506,6 @@ struct ReductionParseArgs {
         syms(syms) {}
 };
 
-// specifies the arguments needs for `reduction` clause
 struct AllRegionParseArgs {
   std::optional<ReductionParseArgs> inReductionArgs;
   std::optional<MapParseArgs> mapArgs;
@@ -616,7 +615,6 @@ static ParseResult parseBlockArgClause(
   if (succeeded(parser.parseOptionalKeyword(keyword))) {
     if (!reductionArgs)
       return failure();
-
     if (failed(parseClauseWithRegionArgs(parser, reductionArgs->vars,
                                          reductionArgs->types, entryBlockArgs,
                                          &reductionArgs->syms)))
@@ -834,9 +832,8 @@ static void printClauseWithRegionArgs(
 
   p << clauseName << "(";
 
-  if (reductionMod) {
+  if (reductionMod)
     p << "Id: " << stringifyReductionModifier(reductionMod.getValue()) << ", ";
-  }
 
   if (!symbols) {
     llvm::SmallVector<Attribute> values(operands.size(), nullptr);
@@ -1998,7 +1995,7 @@ void LoopOp::build(OpBuilder &builder, OperationState &state,
 
   LoopOp::build(builder, state, clauses.bindKind, clauses.privateVars,
                 makeArrayAttr(ctx, clauses.privateSyms), clauses.order,
-                clauses.orderMod, clauses.reductionVars,
+                clauses.orderMod, clauses.reductionMod, clauses.reductionVars,
                 makeDenseBoolArrayAttr(ctx, clauses.reductionByref),
                 makeArrayAttr(ctx, clauses.reductionSyms));
 }

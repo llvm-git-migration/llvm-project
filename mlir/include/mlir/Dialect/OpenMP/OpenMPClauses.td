@@ -327,7 +327,7 @@ class OpenMP_ExclusiveClauseSkip<
 
   let extraClassDeclaration = [{
     bool hasExclusiveVars() {
-      return getExclusiveVars().size()>0;
+      return !getExclusiveVars().empty();
     }
   }];
 
@@ -471,7 +471,7 @@ class OpenMP_InclusiveClauseSkip<
 
   let extraClassDeclaration = [{
     bool hasInclusiveVars() {
-      return getInclusiveVars().size()>0;
+      return !getInclusiveVars().empty();
     }
   }];
 
