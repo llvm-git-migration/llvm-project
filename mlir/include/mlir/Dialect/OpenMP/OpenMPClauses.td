@@ -327,7 +327,7 @@ class OpenMP_ExclusiveClauseSkip<
 
   let extraClassDeclaration = [{
     bool hasExclusiveVars() {
-      return getExclusiveVars().size()>0;
+      return !getExclusiveVars().empty();
     }
   }];
 
@@ -337,6 +337,9 @@ class OpenMP_ExclusiveClauseSkip<
     is specified, the input phase excludes the preceding structured block 
     sequence and instead includes the following structured block sequence, 
     while the scan phase includes the preceding structured block sequence.
+
+    The `exclusive_vars` is a variadic list of operands that specifies the
+    scan-reduction accumulator symbols.
   }];
 }
 
@@ -471,7 +474,7 @@ class OpenMP_InclusiveClauseSkip<
 
   let extraClassDeclaration = [{
     bool hasInclusiveVars() {
-      return getInclusiveVars().size()>0;
+      return !getInclusiveVars().empty();
     }
   }];
 
@@ -480,6 +483,9 @@ class OpenMP_InclusiveClauseSkip<
     structured block into two structured block sequences. If it is specified,
     the input phase includes the preceding structured block sequence and the
     scan phase includes the following structured block sequence.
+
+    The `inclusive_vars` is a variadic list of operands that specifies the
+    scan-reduction accumulator symbols.
   }];
 }
 
