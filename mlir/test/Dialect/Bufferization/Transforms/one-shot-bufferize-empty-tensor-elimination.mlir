@@ -396,7 +396,7 @@ func.func @fail_to_eliminate_any_empty_tensors() -> tensor<5x6x128xf32> {
 func.func @succeed_to_eliminate_one_empty_tensor() -> tensor<5x6x128xf32> {
   %cst_1 = arith.constant 1.0 : f32
   %cst_2 = arith.constant 2.0 : f32
-  // CHECK: memref.alloc
+  // CHECK: memref.alloc() {alignment = 64 : i64} : memref<5x6x128xf32>
   // CHECK-NOT: memref.alloc
   %cancatenated_empty = tensor.empty() : tensor<5x6x128xf32>
   %empty_1 = tensor.empty() : tensor<5x6x64xf32>
@@ -413,10 +413,9 @@ func.func @succeed_to_eliminate_one_empty_tensor() -> tensor<5x6x128xf32> {
 
 // -----
 
-// `EmptyTensorElimination` replaces all of the uses of the tensor
-// empty with the new injected `SubsetExtraction`, without to consider
-// the specific use has been tracked, sometimes creating a non existent
-// bufferization conflicts.
+// `EmptyTensorElimination` will replace the specific use of the tensor
+// empty with the new injected `SubsetExtraction`, i.e. the specific use
+// which has been tracked.
 
 // CHECK-ELIM-LABEL:   func.func @mutli_use_of_the_same_tensor_empty
 // CHECK-LABEL:   func.func @mutli_use_of_the_same_tensor_empty
@@ -425,15 +424,16 @@ func.func @mutli_use_of_the_same_tensor_empty() -> tensor<5x6x128xf32> {
   %cst_2 = arith.constant 2.0 : f32
   %cancatenated_empty = tensor.empty() : tensor<5x6x128xf32>
   %empty_1 = tensor.empty() : tensor<5x6x64xf32>
-  // CHECK-ELIM: %[[VAL_3:.*]] = tensor.extract_slice
-  // CHECK-ELIM: linalg.fill ins(%[[VAL_0:.*]] : f32) outs(%[[VAL_3]]
-  // CHECK-ELIM: linalg.fill ins(%[[VAL_1:.*]] : f32) outs(%[[VAL_3]]
+  // CHECK-ELIM: %[[VAL_4:.*]] = tensor.extract_slice %[[VAL_2:.*]]
+  // CHECK-ELIM: linalg.fill ins(%[[VAL_0:.*]] : f32) outs(%[[VAL_4]] : tensor<5x6x64xf32>)
+  // CHECK-ELIM: %[[VAL_6:.*]] = tensor.insert_slice
   %res_1 = linalg.fill ins(%cst_1 : f32) outs(%empty_1 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
+  // CHECK-ELIM: %[[VAL_7:.*]] = tensor.extract_slice %[[VAL_6]]
+  // CHECK-ELIM: %[[VAL_8:.*]] = linalg.fill ins(%[[VAL_1:.*]] : f32) outs(%[[VAL_7]] : tensor<5x6x64xf32>)
   %res_2 = linalg.fill ins(%cst_2 : f32) outs(%empty_1 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
-  // CHECK: memref.copy
+  // CHECK-NOT: memref.copy
   %inserted_slice_1 = tensor.insert_slice %res_1 into %cancatenated_empty[0, 0, 0][5, 6, 64][1, 1, 1]
       : tensor<5x6x64xf32> into tensor<5x6x128xf32>
-  // CHECK: memref.copy
   %inserted_slice_2 = tensor.insert_slice %res_2 into %inserted_slice_1[0, 0, 64][5, 6, 64][1, 1, 1]
       : tensor<5x6x64xf32> into tensor<5x6x128xf32>
   return %inserted_slice_2 : tensor<5x6x128xf32>
@@ -446,7 +446,8 @@ func.func @mutli_use_of_the_same_tensor_empty_creates_non_existent_read(%arg1: t
     -> (tensor<5x6x128xf32>, tensor<5x6x64xf32>) {
   %cst_1 = arith.constant 1.0 : f32
   %empty_1 = tensor.empty() : tensor<5x6x64xf32>
-  // CHECK: memref.alloc
+  // CHECK: memref.alloc() {alignment = 64 : i64} : memref<5x6x64xf32>
+  // CHECK-NOT: memref.alloc
   %res_1 = linalg.fill ins(%cst_1 : f32) outs(%empty_1 : tensor<5x6x64xf32>) -> tensor<5x6x64xf32>
   %res_2 = linalg.generic{
     indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d1, d2)>, affine_map<(d0, d1, d2) -> (d0, d1, d2)>],
@@ -458,7 +459,7 @@ func.func @mutli_use_of_the_same_tensor_empty_creates_non_existent_read(%arg1: t
     %res = arith.addf %in, %in : f32
     linalg.yield %res : f32
   } -> tensor<5x6x64xf32>
-  // CHECK: memref.copy
+  // CHECK-NOT: memref.copy
   %inserted_slice_1 = tensor.insert_slice %res_1 into %arg1[0, 0, 0][5, 6, 64][1, 1, 1]
       : tensor<5x6x64xf32> into tensor<5x6x128xf32>
   return %inserted_slice_1, %res_2 : tensor<5x6x128xf32>, tensor<5x6x64xf32>

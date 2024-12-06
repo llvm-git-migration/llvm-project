@@ -52,9 +52,8 @@ func.func @buffer_forwarding_no_conflict(%arg0: tensor<?xf32> {bufferization.wri
 
 // CHECK-LABEL: func @buffer_forwarding_conflict_with_different_element_type
 func.func @buffer_forwarding_conflict_with_different_element_type(%arg0: tensor<?xf32> {bufferization.writable = true}, %arg1: index) -> (tensor<?xf32>, tensor<?xf32>) {
-  //      CHECK: tensor.extract_slice
-  // CHECK-SAME: {__inplace_operands_attr__ = ["true", "none"]
   %cst = arith.constant 0.000000e+00 : f32
+  //      CHECK: bufferization.alloc_tensor(%arg1)
   %0 = tensor.empty(%arg1) : tensor<?xf32>
 
   //      CHECK: bufferization.alloc_tensor(%arg1)
@@ -63,6 +62,10 @@ func.func @buffer_forwarding_conflict_with_different_element_type(%arg0: tensor<
   //      CHECK: linalg.copy
   // CHECK-SAME: {__inplace_operands_attr__ = ["true", "true"]
   %2 = linalg.copy ins(%0 : tensor<?xf32>) outs(%1 : tensor<?xbf16>) -> tensor<?xbf16>
+
+
+  //      CHECK: tensor.extract_slice
+  // CHECK-SAME: {__inplace_operands_attr__ = ["true", "none"]
 
   //      CHECK: linalg.copy
   // CHECK-SAME: {__inplace_operands_attr__ = ["true", "true"]

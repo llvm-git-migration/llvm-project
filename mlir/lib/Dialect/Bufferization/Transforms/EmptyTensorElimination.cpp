@@ -57,26 +57,22 @@ neededValuesDominateInsertionPoint(const DominanceInfo &domInfo,
   return true;
 }
 
-/// Return true if the given `insertionPoint` dominates all uses of
-/// `emptyTensorOp`.
-static bool insertionPointDominatesUses(const DominanceInfo &domInfo,
-                                        Operation *insertionPoint,
-                                        Operation *emptyTensorOp) {
-  return llvm::all_of(emptyTensorOp->getUsers(), [&](Operation *user) {
-    return domInfo.dominates(insertionPoint, user);
-  });
-}
-
-/// Find a valid insertion point for a replacement of `emptyTensorOp`, assuming
+/// Find a valid insertion point for a replacement of `useToBeEliminated`, assuming
 /// that the replacement may use any value from `neededValues`.
 static Operation *
-findValidInsertionPoint(Operation *emptyTensorOp,
+findValidInsertionPoint(OpOperand *useToBeEliminated,
                         const SmallVector<Value> &neededValues) {
   DominanceInfo domInfo;
 
+  Operation * candidateInsertionPoint = useToBeEliminated->getOwner();
+  assert(isa<OpResult>(useToBeEliminated->get()) && "expected a result value");
+  // Both `tensor.empty` and its user are within different blocks.
+  if (useToBeEliminated->getOwner()->getBlock() != useToBeEliminated->get().getDefiningOp()->getBlock())
+    candidateInsertionPoint = useToBeEliminated->get().getDefiningOp();
+
   // Trying to move the needed values before the `emptyTensorOp`.
   for (Value val : neededValues) {
-    if (valueDominateInsertionPoint(domInfo, emptyTensorOp, val))
+    if (valueDominateInsertionPoint(domInfo, candidateInsertionPoint, val))
       continue;
     Operation *definingOp = val.getDefiningOp();
     if (!definingOp)
@@ -84,17 +80,17 @@ findValidInsertionPoint(Operation *emptyTensorOp,
 
     bool isItSafeToMoveOp =
         llvm::all_of(definingOp->getOperands(), [&](Value operand) {
-          return valueDominateInsertionPoint(domInfo, emptyTensorOp, operand);
+          return valueDominateInsertionPoint(domInfo, candidateInsertionPoint, operand);
         });
 
     if (isItSafeToMoveOp)
-      definingOp->moveBefore(emptyTensorOp);
+      definingOp->moveBefore(candidateInsertionPoint);
   }
 
-  // Gather all possible insertion points: the location of `emptyTensorOp` and
+  // Gather all possible insertion points: the location of `candidateInsertionPoint` and
   // right after the definition of each value in `neededValues`.
   SmallVector<Operation *> insertionPointCandidates;
-  insertionPointCandidates.push_back(emptyTensorOp);
+  insertionPointCandidates.push_back(candidateInsertionPoint);
   for (Value val : neededValues) {
     // Note: The anchor op is using all of `neededValues`, so:
     // * in case of a block argument: There must be at least one op in the block
@@ -116,8 +112,8 @@ findValidInsertionPoint(Operation *emptyTensorOp,
     if (!neededValuesDominateInsertionPoint(domInfo, insertionPoint,
                                             neededValues))
       continue;
-    // Check if the insertion point is before all uses.
-    if (!insertionPointDominatesUses(domInfo, insertionPoint, emptyTensorOp))
+    // Check if the insertion point is before the use to be replaced.
+    if (!domInfo.dominates(insertionPoint, useToBeEliminated->getOwner()))
       continue;
     return insertionPoint;
   }
@@ -129,8 +125,9 @@ findValidInsertionPoint(Operation *emptyTensorOp,
 LogicalResult mlir::bufferization::eliminateEmptyTensors(
     RewriterBase &rewriter, Operation *op, OneShotAnalysisState &state) {
   OpBuilder::InsertionGuard g(rewriter);
-
+  llvm::DenseSet<OpOperand *> visitedOpOperands;
   op->walk([&](SubsetInsertionOpInterface op) {
+    visitedOpOperands.clear();
     OpOperand &source = op.getSourceOperand();
     // Skip operands that do not bufferize inplace. "tensor.empty" could still
     // be replaced, but the transformation may not be beneficial.
@@ -158,15 +155,23 @@ LogicalResult mlir::bufferization::eliminateEmptyTensors(
     SetVector<Value> emptyTensors = state.findValueInReverseUseDefChain(
         source.get(), /*condition=*/
         [&](Value val) { return val.getDefiningOp<tensor::EmptyOp>(); },
-        config);
+        config, &visitedOpOperands);
 
     for (Value v : emptyTensors) {
       Operation *emptyTensorOp = v.getDefiningOp();
 
+      // Find the use to be replaced from the use-def chain
+      auto iter = llvm::find_if(visitedOpOperands, [&emptyTensorOp](OpOperand *opOperand){
+        return llvm::count(emptyTensorOp->getUses(), *opOperand);
+      });
+      if (iter == visitedOpOperands.end())
+        continue;
+      OpOperand *useToBeReplaced = *iter;
+
       // Find a suitable insertion point. If no suitable insertion point for
       // the replacement can be found, skip this replacement.
       Operation *insertionPoint =
-          findValidInsertionPoint(emptyTensorOp, neededValues);
+          findValidInsertionPoint(useToBeReplaced, neededValues);
       if (!insertionPoint)
         continue;
 
@@ -185,8 +190,8 @@ LogicalResult mlir::bufferization::eliminateEmptyTensors(
         replacement = rewriter.create<tensor::CastOp>(v.getLoc(), v.getType(),
                                                       replacement);
       }
-      // Replace the tensor::EmptyOp.
-      rewriter.replaceOp(emptyTensorOp, replacement);
+      // Replace the specific use of the tensor::EmptyOp.
+      useToBeReplaced->getOwner()->setOperand(useToBeReplaced->getOperandNumber(), replacement);
       state.resetCache();
     }
 
