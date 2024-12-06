@@ -542,6 +542,9 @@ public:
   /// The result type of this function, as a C type.
   std::string ResultType;
 
+  /// Swift name of this entity.
+  std::string SwiftReturnOwnership;
+
   /// The function parameters.
   std::vector<ParamInfo> Params;
 
@@ -600,6 +603,13 @@ public:
 
   friend bool operator==(const FunctionInfo &, const FunctionInfo &);
 
+  FunctionInfo &operator|=(const FunctionInfo &RHS) {
+    if (SwiftReturnOwnership.empty())
+      SwiftReturnOwnership = RHS.SwiftReturnOwnership;
+
+    return *this;
+  }
+
 private:
   NullabilityKind getTypeInfo(unsigned index) const {
     assert(NullabilityAudited &&
@@ -622,7 +632,8 @@ inline bool operator==(const FunctionInfo &LHS, const FunctionInfo &RHS) {
          LHS.NumAdjustedNullable == RHS.NumAdjustedNullable &&
          LHS.NullabilityPayload == RHS.NullabilityPayload &&
          LHS.ResultType == RHS.ResultType && LHS.Params == RHS.Params &&
-         LHS.RawRetainCountConvention == RHS.RawRetainCountConvention;
+         LHS.RawRetainCountConvention == RHS.RawRetainCountConvention &&
+         LHS.SwiftReturnOwnership == RHS.SwiftReturnOwnership;
 }
 
 inline bool operator!=(const FunctionInfo &LHS, const FunctionInfo &RHS) {
