@@ -11,6 +11,9 @@
 # RUN: %lld -arch arm64 -lSystem -e _main --icf=all -o - %t.o --irpgo-profile-sort=%t.profdata --compression-sort-startup-functions --compression-sort=both | llvm-nm --numeric-sort --format=just-symbols - > %t.order2.txt
 # RUN: diff %t.order1.txt %t.order2.txt
 
+# RUN: %lld -arch arm64 -lSystem -e _main --icf=all -o - %t.o --irpgo-profile=%t.profdata --bp-startup-sort=function --bp-compression-sort-startup-functions --compression-sort=both | llvm-nm --numeric-sort --format=just-symbols - > %t.order1.txt
+# RUN: %lld -arch arm64 -lSystem -e _main --icf=all -o - %t.o --irpgo-profile=%t.profdata --bp-startup-sort=function --bp-compression-sort-startup-functions --compression-sort=both | llvm-nm --numeric-sort --format=just-symbols - > %t.order2.txt
+# RUN: diff %t.order1.txt %t.order2.txt
 import random
 import sys
 
