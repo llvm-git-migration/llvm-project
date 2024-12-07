@@ -405,6 +405,28 @@ void applyEXT(MachineInstr &MI, ShuffleVectorPseudo &MatchInfo) {
   MI.eraseFromParent();
 }
 
+bool matchFullRev(MachineInstr &MI, MachineRegisterInfo &MRI) {
+  assert(MI.getOpcode() == TargetOpcode::G_SHUFFLE_VECTOR);
+  Register Dst = MI.getOperand(0).getReg();
+  LLT DstTy = MRI.getType(Dst);
+  Register V1 = MI.getOperand(1).getReg();
+  auto Mask = MI.getOperand(3).getShuffleMask();
+  return (DstTy == LLT::fixed_vector(16, 8) ||
+          DstTy == LLT::fixed_vector(8, 16)) &&
+         DstTy == MRI.getType(V1) &&
+         ShuffleVectorInst::isReverseMask(Mask, Mask.size());
+}
+
+void applyFullRev(MachineInstr &MI, MachineRegisterInfo &MRI) {
+  MachineIRBuilder MIRBuilder(MI);
+  Register Dst = MI.getOperand(0).getReg();
+  Register Src = MI.getOperand(1).getReg();
+  auto Cst = MIRBuilder.buildConstant(LLT::scalar(32), 8);
+  auto Rev = MIRBuilder.buildInstr(AArch64::G_REV64, {MRI.getType(Dst)}, {Src});
+  MIRBuilder.buildInstr(AArch64::G_EXT, {Dst}, {Rev, Rev, Cst});
+  MI.eraseFromParent();
+}
+
 bool matchNonConstInsert(MachineInstr &MI, MachineRegisterInfo &MRI) {
   assert(MI.getOpcode() == TargetOpcode::G_INSERT_VECTOR_ELT);
 

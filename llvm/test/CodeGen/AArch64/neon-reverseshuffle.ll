@@ -60,19 +60,11 @@ entry:
 }
 
 define <8 x i16> @v8i16(<8 x i16> %a) {
-; CHECK-SD-LABEL: v8i16:
-; CHECK-SD:       // %bb.0: // %entry
-; CHECK-SD-NEXT:    rev64 v0.8h, v0.8h
-; CHECK-SD-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
-; CHECK-SD-NEXT:    ret
-;
-; CHECK-GI-LABEL: v8i16:
-; CHECK-GI:       // %bb.0: // %entry
-; CHECK-GI-NEXT:    adrp x8, .LCPI4_0
-; CHECK-GI-NEXT:    // kill: def $q0 killed $q0 def $q0_q1
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI4_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
-; CHECK-GI-NEXT:    ret
+; CHECK-LABEL: v8i16:
+; CHECK:       // %bb.0: // %entry
+; CHECK-NEXT:    rev64 v0.8h, v0.8h
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
 entry:
   %V128 = shufflevector <8 x i16> %a, <8 x i16> undef, <8 x i32> <i32 7, i32 6, i32 5, i32 4, i32 3, i32 2, i32 1, i32 0>
   ret <8 x i16> %V128
@@ -112,19 +104,11 @@ entry:
 }
 
 define <16 x i8> @v16i8(<16 x i8> %a) {
-; CHECK-SD-LABEL: v16i8:
-; CHECK-SD:       // %bb.0: // %entry
-; CHECK-SD-NEXT:    rev64 v0.16b, v0.16b
-; CHECK-SD-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
-; CHECK-SD-NEXT:    ret
-;
-; CHECK-GI-LABEL: v16i8:
-; CHECK-GI:       // %bb.0: // %entry
-; CHECK-GI-NEXT:    adrp x8, .LCPI7_0
-; CHECK-GI-NEXT:    // kill: def $q0 killed $q0 def $q0_q1
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI7_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
-; CHECK-GI-NEXT:    ret
+; CHECK-LABEL: v16i8:
+; CHECK:       // %bb.0: // %entry
+; CHECK-NEXT:    rev64 v0.16b, v0.16b
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
 entry:
   %V128 = shufflevector <16 x i8> %a, <16 x i8> undef, <16 x i32> <i32 15, i32 14, i32 13, i32 12, i32 11, i32 10, i32 9, i32 8, i32 7, i32 6, i32 5, i32 4, i32 3, i32 2, i32 1, i32 0>
   ret <16 x i8> %V128
@@ -203,19 +187,11 @@ entry:
 }
 
 define <8 x half> @v8f16(<8 x half> %a) {
-; CHECK-SD-LABEL: v8f16:
-; CHECK-SD:       // %bb.0: // %entry
-; CHECK-SD-NEXT:    rev64 v0.8h, v0.8h
-; CHECK-SD-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
-; CHECK-SD-NEXT:    ret
-;
-; CHECK-GI-LABEL: v8f16:
-; CHECK-GI:       // %bb.0: // %entry
-; CHECK-GI-NEXT:    adrp x8, .LCPI13_0
-; CHECK-GI-NEXT:    // kill: def $q0 killed $q0 def $q0_q1
-; CHECK-GI-NEXT:    ldr q2, [x8, :lo12:.LCPI13_0]
-; CHECK-GI-NEXT:    tbl v0.16b, { v0.16b, v1.16b }, v2.16b
-; CHECK-GI-NEXT:    ret
+; CHECK-LABEL: v8f16:
+; CHECK:       // %bb.0: // %entry
+; CHECK-NEXT:    rev64 v0.8h, v0.8h
+; CHECK-NEXT:    ext v0.16b, v0.16b, v0.16b, #8
+; CHECK-NEXT:    ret
 entry:
   %V128 = shufflevector <8 x half> %a, <8 x half> undef, <8 x i32> <i32 7, i32 6, i32 5, i32 4, i32 3, i32 2, i32 1, i32 0>
   ret <8 x half> %V128
