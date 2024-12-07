@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <algorithm>
 #include <set>
 #include <string>
 
@@ -18,11 +17,8 @@
 #include "lldb/Core/Address.h"
 #include "lldb/Core/Debugger.h"
 #include "lldb/Expression/ExpressionVariable.h"
-#include "lldb/Expression/UserExpression.h"
-#include "lldb/Host/Host.h"
 #include "lldb/Symbol/Block.h"
 #include "lldb/Symbol/Function.h"
-#include "lldb/Symbol/Symbol.h"
 #include "lldb/Symbol/SymbolContext.h"
 #include "lldb/Symbol/Variable.h"
 #include "lldb/Symbol/VariableList.h"
@@ -33,7 +29,6 @@
 #include "lldb/Target/StackFrameRecognizer.h"
 #include "lldb/Target/StackID.h"
 #include "lldb/Target/Target.h"
-#include "lldb/Target/Thread.h"
 #include "lldb/Utility/ConstString.h"
 #include "lldb/Utility/Instrumentation.h"
 #include "lldb/Utility/LLDBLog.h"
@@ -43,7 +38,6 @@
 #include "lldb/ValueObject/ValueObjectVariable.h"
 
 #include "lldb/API/SBAddress.h"
-#include "lldb/API/SBDebugger.h"
 #include "lldb/API/SBExpressionOptions.h"
 #include "lldb/API/SBFormat.h"
 #include "lldb/API/SBStream.h"
@@ -1012,33 +1006,26 @@ bool SBFrame::GetDescription(SBStream &description) {
 SBValue SBFrame::EvaluateExpression(const char *expr) {
   LLDB_INSTRUMENT_VA(this, expr);
 
-  SBValue result;
   std::unique_lock<std::recursive_mutex> lock;
   ExecutionContext exe_ctx(m_opaque_sp.get(), lock);
 
   StackFrame *frame = exe_ctx.GetFramePtr();
   Target *target = exe_ctx.GetTargetPtr();
+  SBExpressionOptions options;
   if (frame && target) {
-    SBExpressionOptions options;
     lldb::DynamicValueType fetch_dynamic_value =
         frame->CalculateTarget()->GetPreferDynamicValue();
     options.SetFetchDynamicValue(fetch_dynamic_value);
-    options.SetUnwindOnError(true);
-    options.SetIgnoreBreakpoints(true);
-    SourceLanguage language = target->GetLanguage();
-    if (!language)
-      language = frame->GetLanguage();
-    options.SetLanguage((SBSourceLanguageName)language.name, language.version);
-    return EvaluateExpression(expr, options);
-  } else {
-    Status error;
-    error = Status::FromErrorString("can't evaluate expressions when the "
-                                    "process is running.");
-    ValueObjectSP error_val_sp =
-        ValueObjectConstResult::Create(nullptr, std::move(error));
-    result.SetSP(error_val_sp, false);
   }
-  return result;
+  options.SetUnwindOnError(true);
+  options.SetIgnoreBreakpoints(true);
+  SourceLanguage language;
+  if (target)
+    language = target->GetLanguage();
+  if (!language && frame)
+    language = frame->GetLanguage();
+  options.SetLanguage((SBSourceLanguageName)language.name, language.version);
+  return EvaluateExpression(expr, options);
 }
 
 SBValue
