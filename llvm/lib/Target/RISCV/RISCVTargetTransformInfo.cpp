@@ -1538,13 +1538,27 @@ RISCVTTIImpl::getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
   if (ElementTy->isIntegerTy(1)) {
     if (ISD == ISD::AND) {
       // Example sequences:
+      //   vfirst.m a0, v0
+      //   seqz a0, a0
+      if (LT.second == MVT::v1i1)
+        return getRISCVInstructionCost(RISCV::VFIRST_M, LT.second, CostKind) +
+               getCmpSelInstrCost(Instruction::ICmp, ElementTy, ElementTy,
+                                  CmpInst::ICMP_EQ, CostKind);
+      // Example sequences:
       //   vsetvli a0, zero, e8, mf8, ta, ma
       //   vmand.mm v8, v9, v8 ; needed every time type is split
       //   vmnot.m v8, v0
       //   vcpop.m a0, v8
       //   seqz a0, a0
-      return LT.first * getRISCVInstructionCost(RISCV::VMNAND_MM, LT.second,
-                                                CostKind) +
+
+      // Fixed VT:    In v512i1 and larger vector elements,
+      // Scalable VT: In v128i1 and larger vector elements,
+      // the VMAND_MM instructions have started to be added.
+      return ((LT.first >= 2)
+                  ? LT.first - (LT.second.isScalableVector() ? 1 : 2)
+                  : 0) *
+                 getRISCVInstructionCost(RISCV::VMAND_MM, LT.second, CostKind) +
+             getRISCVInstructionCost(RISCV::VMNAND_MM, LT.second, CostKind) +
              getRISCVInstructionCost(RISCV::VCPOP_M, LT.second, CostKind) +
              getCmpSelInstrCost(Instruction::ICmp, ElementTy, ElementTy,
                                 CmpInst::ICMP_EQ, CostKind);
