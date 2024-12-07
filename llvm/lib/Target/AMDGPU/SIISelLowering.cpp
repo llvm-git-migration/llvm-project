@@ -4023,10 +4023,25 @@ SDValue SITargetLowering::lowerDYNAMIC_STACKALLOCImpl(SDValue Op,
   Chain = DAG.getCALLSEQ_START(Chain, 0, 0, dl);
 
   SDValue Size = Tmp2.getOperand(1);
-  SDValue SP = DAG.getCopyFromReg(Chain, dl, SPReg, VT);
-  Chain = SP.getValue(1);
+  // Start address of the dynamically sized stack object
+  SDValue SPOld = DAG.getCopyFromReg(Chain, dl, SPReg, VT);
+  Chain = SPOld.getValue(1);
   MaybeAlign Alignment = cast<ConstantSDNode>(Tmp3)->getMaybeAlignValue();
   const TargetFrameLowering *TFL = Subtarget->getFrameLowering();
+  // First we need to align the start address of the stack object to the required alignment.
+  Align StackAlign = TFL->getStackAlign();
+  if (Alignment && *Alignment > StackAlign) {
+    // formula for aligning address `SPold` to alignment boundry `align` => alignedSP = (SPold + (align - 1)) & ~(align - 1) 
+    SDValue AlignedValue = DAG.getConstant(Alignment->value(), dl, VT); // the alignment boundry we want to align to
+    SDValue StackAlignMask = DAG.getNode(ISD::SUB, dl, VT, AlignedValue, // StackAlignMask = (align - 1)
+                              DAG.getConstant(1, dl, VT));
+    Tmp1 = DAG.getNode(ISD::ADD, dl, VT, SPOld, StackAlignMask); // Tmp1 = (SPold + (align - 1))
+    Tmp1 = DAG.getNode( // Tmp1 now holds the start address aligned to the required value
+        ISD::AND, dl, VT, Tmp1,
+        DAG.getSignedConstant(-(uint64_t)Alignment->value()
+                                  << Subtarget->getWavefrontSizeLog2(),
+                              dl, VT));
+  }
   unsigned Opc =
       TFL->getStackGrowthDirection() == TargetFrameLowering::StackGrowsUp
           ? ISD::ADD
@@ -4035,19 +4050,17 @@ SDValue SITargetLowering::lowerDYNAMIC_STACKALLOCImpl(SDValue Op,
   SDValue ScaledSize = DAG.getNode(
       ISD::SHL, dl, VT, Size,
       DAG.getConstant(Subtarget->getWavefrontSizeLog2(), dl, MVT::i32));
+  // incase the value in %n at runtime is 0, we need to handle that case. There should not be a 0 sized stack object. 
+  ScaledSize = DAG.getNode( // size = max(size, 0)
+      ISD::UMAX, dl, VT, ScaledSize, 
+      DAG.getConstant(1, dl, VT));
 
-  Align StackAlign = TFL->getStackAlign();
-  Tmp1 = DAG.getNode(Opc, dl, VT, SP, ScaledSize); // Value
-  if (Alignment && *Alignment > StackAlign) {
-    Tmp1 = DAG.getNode(
-        ISD::AND, dl, VT, Tmp1,
-        DAG.getSignedConstant(-(uint64_t)Alignment->value()
-                                  << Subtarget->getWavefrontSizeLog2(),
-                              dl, VT));
-  }
+  Tmp1 = DAG.getNode(Opc, dl, VT, SPOld, ScaledSize); // Value
 
   Chain = DAG.getCopyToReg(Chain, dl, SPReg, Tmp1); // Output chain
   Tmp2 = DAG.getCALLSEQ_END(Chain, 0, 0, SDValue(), dl);
+  // Set Tmp1 to point to the start address of this stack object. 
+  Tmp1 = SPOld;
 
   return DAG.getMergeValues({Tmp1, Tmp2}, dl);
 }
