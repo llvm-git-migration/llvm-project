@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <algorithm>
 #include <set>
 #include <string>
 
@@ -18,11 +17,8 @@
 #include "lldb/Core/Address.h"
 #include "lldb/Core/Debugger.h"
 #include "lldb/Expression/ExpressionVariable.h"
-#include "lldb/Expression/UserExpression.h"
-#include "lldb/Host/Host.h"
 #include "lldb/Symbol/Block.h"
 #include "lldb/Symbol/Function.h"
-#include "lldb/Symbol/Symbol.h"
 #include "lldb/Symbol/SymbolContext.h"
 #include "lldb/Symbol/Variable.h"
 #include "lldb/Symbol/VariableList.h"
@@ -33,7 +29,6 @@
 #include "lldb/Target/StackFrameRecognizer.h"
 #include "lldb/Target/StackID.h"
 #include "lldb/Target/Target.h"
-#include "lldb/Target/Thread.h"
 #include "lldb/Utility/ConstString.h"
 #include "lldb/Utility/Instrumentation.h"
 #include "lldb/Utility/LLDBLog.h"
@@ -43,7 +38,6 @@
 #include "lldb/ValueObject/ValueObjectVariable.h"
 
 #include "lldb/API/SBAddress.h"
-#include "lldb/API/SBDebugger.h"
 #include "lldb/API/SBExpressionOptions.h"
 #include "lldb/API/SBFormat.h"
 #include "lldb/API/SBStream.h"
@@ -603,11 +597,11 @@ SBValue SBFrame::FindValue(const char *name, ValueType value_type,
                 stop_if_block_is_inlined_function,
                 [frame](Variable *v) { return v->IsInScope(frame); },
                 &variable_list);
-          if (value_type == eValueTypeVariableGlobal 
-              || value_type == eValueTypeVariableStatic) {
+          if (value_type == eValueTypeVariableGlobal ||
+              value_type == eValueTypeVariableStatic) {
             const bool get_file_globals = true;
-            VariableList *frame_vars = frame->GetVariableList(get_file_globals,
-                                                              nullptr);
+            VariableList *frame_vars =
+                frame->GetVariableList(get_file_globals, nullptr);
             if (frame_vars)
               frame_vars->AppendVariablesIfUnique(variable_list);
           }
@@ -790,13 +784,12 @@ SBValueList SBFrame::GetVariables(const lldb::SBVariablesOptions &options) {
   const bool statics = options.GetIncludeStatics();
   const bool arguments = options.GetIncludeArguments();
   const bool recognized_arguments =
-        options.GetIncludeRecognizedArguments(SBTarget(exe_ctx.GetTargetSP()));
+      options.GetIncludeRecognizedArguments(SBTarget(exe_ctx.GetTargetSP()));
   const bool locals = options.GetIncludeLocals();
   const bool in_scope_only = options.GetInScopeOnly();
   const bool include_runtime_support_values =
       options.GetIncludeRuntimeSupportValues();
   const lldb::DynamicValueType use_dynamic = options.GetUseDynamic();
-
 
   std::set<VariableSP> variable_set;
   Process *process = exe_ctx.GetProcessPtr();
@@ -816,9 +809,11 @@ SBValueList SBFrame::GetVariables(const lldb::SBVariablesOptions &options) {
           if (num_variables) {
             size_t num_produced = 0;
             for (const VariableSP &variable_sp : *variable_list) {
-              if (INTERRUPT_REQUESTED(dbg, 
-                    "Interrupted getting frame variables with {0} of {1} "
-                    "produced.", num_produced, num_variables))
+              if (INTERRUPT_REQUESTED(
+                      dbg,
+                      "Interrupted getting frame variables with {0} of {1} "
+                      "produced.",
+                      num_produced, num_variables))
                 return {};
 
               if (variable_sp) {
@@ -1012,33 +1007,26 @@ bool SBFrame::GetDescription(SBStream &description) {
 SBValue SBFrame::EvaluateExpression(const char *expr) {
   LLDB_INSTRUMENT_VA(this, expr);
 
-  SBValue result;
   std::unique_lock<std::recursive_mutex> lock;
   ExecutionContext exe_ctx(m_opaque_sp.get(), lock);
 
   StackFrame *frame = exe_ctx.GetFramePtr();
   Target *target = exe_ctx.GetTargetPtr();
+  SBExpressionOptions options;
   if (frame && target) {
-    SBExpressionOptions options;
     lldb::DynamicValueType fetch_dynamic_value =
         frame->CalculateTarget()->GetPreferDynamicValue();
     options.SetFetchDynamicValue(fetch_dynamic_value);
-    options.SetUnwindOnError(true);
-    options.SetIgnoreBreakpoints(true);
-    SourceLanguage language = target->GetLanguage();
-    if (!language)
-      language = frame->GetLanguage();
-    options.SetLanguage((SBSourceLanguageName)language.name, language.version);
-    return EvaluateExpression(expr, options);
-  } else {
-    Status error;
-    error = Status::FromErrorString("can't evaluate expressions when the "
-                                    "process is running.");
-    ValueObjectSP error_val_sp =
-        ValueObjectConstResult::Create(nullptr, std::move(error));
-    result.SetSP(error_val_sp, false);
   }
-  return result;
+  options.SetUnwindOnError(true);
+  options.SetIgnoreBreakpoints(true);
+  SourceLanguage language;
+  if (target)
+    language = target->GetLanguage();
+  if (!language && frame)
+    language = frame->GetLanguage();
+  options.SetLanguage((SBSourceLanguageName)language.name, language.version);
+  return EvaluateExpression(expr, options);
 }
 
 SBValue
@@ -1135,10 +1123,10 @@ lldb::SBValue SBFrame::EvaluateExpression(const char *expr,
       expr_result.SetSP(expr_value_sp, false);
     }
   } else {
-      Status error;
-      error = Status::FromErrorString("sbframe object is not valid.");
-      expr_value_sp = ValueObjectConstResult::Create(nullptr, std::move(error));
-      expr_result.SetSP(expr_value_sp, false);
+    Status error;
+    error = Status::FromErrorString("sbframe object is not valid.");
+    expr_value_sp = ValueObjectConstResult::Create(nullptr, std::move(error));
+    expr_result.SetSP(expr_value_sp, false);
   }
 
   if (expr_result.GetError().Success())
