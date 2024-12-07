@@ -668,6 +668,7 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
     // output was a register, just extend the shorter one to the size of the
     // larger one.
     if (!SmallerValueMentioned && InputDomain != AD_Other &&
+        InputDomain == OutputDomain &&
         OutputConstraintInfos[TiedTo].allowsRegister()) {
       // FIXME: GCC supports the OutSize to be 128 at maximum. Currently codegen
       // crash when the size larger than the register size. So we limit it here.
