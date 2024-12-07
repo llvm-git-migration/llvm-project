@@ -1482,10 +1482,6 @@ uint64_t WasmObjectWriter::writeOneObject(MCAssembler &Asm,
     LLVM_DEBUG(dbgs() << "Processing Section " << SectionName << "  group "
                       << Section.getGroup() << "\n";);
 
-    // .init_array sections are handled specially elsewhere.
-    if (SectionName.starts_with(".init_array"))
-      continue;
-
     // Code is handled separately
     if (Section.isText())
       continue;

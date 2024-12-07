@@ -63,7 +63,7 @@ declare void @func3()
 ; CHECK-NEXT:           Value:           1
 ; CHECK-NEXT:         Functions:       [ 5, 7 ]
 ; CHECK-NEXT:   - Type:            DATACOUNT
-; CHECK-NEXT:     Count:           1
+; CHECK-NEXT:     Count:           3
 ; CHECK-NEXT:   - Type:            CODE
 ; CHECK-NEXT:     Relocations:
 ; CHECK-NEXT:       - Type:            R_WASM_FUNCTION_INDEX_LEB
@@ -111,6 +111,18 @@ declare void @func3()
 ; CHECK-NEXT:           Opcode:          I32_CONST
 ; CHECK-NEXT:           Value:           0
 ; CHECK-NEXT:         Content:         '01040000'
+; CHECK-NEXT:       - SectionOffset:   15
+; CHECK-NEXT:         InitFlags:       0
+; CHECK-NEXT:         Offset:
+; CHECK-NEXT:           Opcode:          I32_CONST
+; CHECK-NEXT:           Value:           4
+; CHECK-NEXT:         Content:         '0000000000000000'
+; CHECK-NEXT:       - SectionOffset:   28
+; CHECK-NEXT:         InitFlags:       0
+; CHECK-NEXT:         Offset:
+; CHECK-NEXT:           Opcode:          I32_CONST
+; CHECK-NEXT:           Value:           12
+; CHECK-NEXT:         Content:         '0000000000000000'
 ; CHECK-NEXT:   - Type:            CUSTOM
 ; CHECK-NEXT:     Name:            linking
 ; CHECK-NEXT:     Version:         2
@@ -174,7 +186,15 @@ declare void @func3()
 ; CHECK-NEXT:       - Index:           0
 ; CHECK-NEXT:         Name:            .data.global1
 ; CHECK-NEXT:         Alignment:       3
-; CHECK-NEXT:         Flags:           [ ]
+; CHECK-NEXT:         Flags:           [  ]
+; CHECK-NEXT:       - Index:           1
+; CHECK-NEXT:         Name:            .init_array.42
+; CHECK-NEXT:         Alignment:       2
+; CHECK-NEXT:         Flags:           [  ]
+; CHECK-NEXT:       - Index:           2
+; CHECK-NEXT:         Name:            .init_array
+; CHECK-NEXT:         Alignment:       2
+; CHECK-NEXT:         Flags:           [  ]
 ; CHECK-NEXT:     InitFunctions:
 ; CHECK-NEXT:       - Priority: 42
 ; CHECK-NEXT:         Symbol: 9

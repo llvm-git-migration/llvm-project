@@ -9,12 +9,22 @@ init2:
 	end_function
 
 	.section	.init_array,"",@
+	.globl	p_init1
+	.p2align	2, 0x0
+p_init1:
+	.section	.init_array,"",@
 	.p2align	2, 0
 	.int32	init1
+	.size	p_init1, 4
 
+	.section	.init_array,"",@
+	.globl	p_init2
+	.p2align	2, 0x0
+p_init2:
 	.section	.init_array,"",@
 	.p2align	2
 	.int32	init2
+	.size	p_init2, 4
 
 # CHECK:        - Type:            FUNCTION
 # CHECK-NEXT:     FunctionTypes:   [ 0, 0 ]
@@ -50,6 +60,19 @@ init2:
 # CHECK-NEXT:         Name:            init2
 # CHECK-NEXT:         Flags:           [ BINDING_LOCAL ]
 # CHECK-NEXT:         Function:        1
+# CHECK-NEXT:       - Index:           2
+# CHECK-NEXT:         Kind:            DATA
+# CHECK-NEXT:         Name:            p_init1
+# CHECK-NEXT:         Flags:           [  ]
+# CHECK-NEXT:         Segment:         0
+# CHECK-NEXT:         Size:            4
+# CHECK-NEXT:       - Index:           3
+# CHECK-NEXT:         Kind:            DATA
+# CHECK-NEXT:         Name:            p_init2
+# CHECK-NEXT:         Flags:           [  ]
+# CHECK-NEXT:         Segment:         0
+# CHECK-NEXT:         Offset:          4
+# CHECK-NEXT:         Size:            4
 # CHECK-NEXT:     SegmentInfo:
 # CHECK-NEXT:       - Index:           0
 # CHECK-NEXT:         Name:            .init_array
@@ -61,4 +84,3 @@ init2:
 # CHECK-NEXT:       - Priority:        65535
 # CHECK-NEXT:         Symbol:          1
 # CHECK-NEXT: ...
-#
