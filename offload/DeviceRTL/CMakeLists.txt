@@ -119,6 +119,7 @@ function(compileDeviceRTLLibrary target_name target_triple)
     set(outfile "${outfile}-${target_name}.bc")
     set(depfile "${outfile}.d")
 
+    # Passing an empty CPU to -march= suppressed target specific metadata.
     add_custom_command(OUTPUT ${outfile}
       COMMAND ${CLANG_TOOL}
       ${bc_flags}
