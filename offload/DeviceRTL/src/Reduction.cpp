@@ -73,16 +73,16 @@ static int32_t nvptx_parallel_reduce_nowait(void *reduce_data,
   if (NumThreads == 1)
     return 1;
 
-  //
-  // This reduce function handles reduction within a team. It handles
-  // parallel regions in both L1 and L2 parallelism levels. It also
-  // supports Generic, SPMD, and NoOMP modes.
-  //
-  // 1. Reduce within a warp.
-  // 2. Warp master copies value to warp 0 via shared memory.
-  // 3. Warp 0 reduces to a single value.
-  // 4. The reduced value is available in the thread that returns 1.
-  //
+    //
+    // This reduce function handles reduction within a team. It handles
+    // parallel regions in both L1 and L2 parallelism levels. It also
+    // supports Generic, SPMD, and NoOMP modes.
+    //
+    // 1. Reduce within a warp.
+    // 2. Warp master copies value to warp 0 via shared memory.
+    // 3. Warp 0 reduces to a single value.
+    // 4. The reduced value is available in the thread that returns 1.
+    //
 
 #if __has_builtin(__nvvm_reflect)
   if (__nvvm_reflect("__CUDA_ARCH") >= 700) {
