@@ -365,3 +365,9 @@ void test19(long long x)
   // FIXME: This case should be supported by codegen, but it fails now.
   asm ("" : "=rm" (x): "0" (e)); // expected-error {{unsupported inline asm: input with type 'st_size128' (aka 'struct _st_size128') matching output with type 'long long'}}
 }
+
+// PR119098
+void test20(char x) {
+  double value;
+  asm ("fabs" : "=t" (value): "0" (x)); // expected-error {{unsupported inline asm: input with type 'char' matching output with type 'double'}}
+}
