@@ -664,11 +664,19 @@ StmtResult Sema::ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
       SmallerValueMentioned |= OutSize < InSize;
     }
 
+    // If the input is in an integer register while the output is floating point,
+    // there is no way we can extend and we must reject it.
+    bool FPExtendFromInt = false;
+    if (InputDomain != AD_Float && OutputDomain == AD_Float) {
+      FPExtendFromInt = true;
+    }
+
     // If the smaller value wasn't mentioned in the asm string, and if the
     // output was a register, just extend the shorter one to the size of the
     // larger one.
-    if (!SmallerValueMentioned && InputDomain != AD_Other &&
+    if (!SmallerValueMentioned && !FPExtendFromInt && InputDomain != AD_Other &&
         OutputConstraintInfos[TiedTo].allowsRegister()) {
+
       // FIXME: GCC supports the OutSize to be 128 at maximum. Currently codegen
       // crash when the size larger than the register size. So we limit it here.
       if (OutTy->isStructureType() &&
