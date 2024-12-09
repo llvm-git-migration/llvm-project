@@ -8,7 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #ifndef _LIBCPP_MATH_H
-#  define _LIBCPP_MATH_H
+#define _LIBCPP_MATH_H
 
 /*
     math.h synopsis
@@ -291,6 +291,8 @@ long double    truncl(long double x);
 
 */
 
+#if 0
+#else // 0
 #  include <__config>
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -516,5 +518,6 @@ using std::__math::trunc;
 #  if defined(_LIBCPP_MSVCRT) && defined(_USE_MATH_DEFINES)
 #    include_next <math.h>
 #  endif
+#endif // 0
 
 #endif // _LIBCPP_MATH_H
