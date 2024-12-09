@@ -39,8 +39,7 @@ entry:
 
 define internal void @call_via_vtable(ptr addrspace(200) %this) unnamed_addr addrspace(200) {
 entry:
-  %0 = bitcast ptr addrspace(200) %this to ptr addrspace(200)
-  %vtable = load ptr addrspace(200), ptr addrspace(200) %0, align 16
+  %vtable = load ptr addrspace(200), ptr addrspace(200) %this, align 16
   %fn = load ptr addrspace(200), ptr addrspace(200) %vtable, align 16
   call void %fn(ptr addrspace(200) %this)
   ret void
