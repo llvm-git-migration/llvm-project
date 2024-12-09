@@ -140,6 +140,10 @@ inline Type *ToVectorTy(Type *Scalar, unsigned VF) {
   return ToVectorTy(Scalar, ElementCount::getFixed(VF));
 }
 
+/// Returns true if the call return type `Ty` can be widened by the loop
+/// vectorizer.
+bool canWidenCallReturnType(Type *Ty);
+
 /// Identify if the intrinsic is trivially vectorizable.
 /// This method returns true if the intrinsic's argument types are all scalars
 /// for the scalar form of the intrinsic and all vectors (or scalars handled by

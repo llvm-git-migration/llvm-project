@@ -943,11 +943,24 @@ bool LoopVectorizationLegality::canVectorizeInstrs() {
       if (CI && !VFDatabase::getMappings(*CI).empty())
         VecCallVariantsFound = true;
 
+      auto canWidenInstruction = [this](Instruction const &Inst) {
+        Type *InstTy = Inst.getType();
+        if (isa<CallInst>(Inst) && isa<StructType>(InstTy) &&
+            canWidenCallReturnType(InstTy)) {
+          StructVecVecCallFound = true;
+          // For now, we can only widen struct values returned from calls where
+          // all users are extractvalue instructions.
+          return llvm::all_of(Inst.uses(), [](auto &Use) {
+            return isa<ExtractValueInst>(Use.getUser());
+          });
+        }
+        return VectorType::isValidElementType(InstTy) || InstTy->isVoidTy();
+      };
+
       // Check that the instruction return type is vectorizable.
       // We can't vectorize casts from vector type to scalar type.
       // Also, we can't vectorize extractelement instructions.
-      if ((!VectorType::isValidElementType(I.getType()) &&
-           !I.getType()->isVoidTy()) ||
+      if (!canWidenInstruction(I) ||
           (isa<CastInst>(I) &&
            !VectorType::isValidElementType(I.getOperand(0)->getType())) ||
           isa<ExtractElementInst>(I)) {
