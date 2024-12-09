@@ -480,11 +480,11 @@ public:
         T(Triple(M.getTargetTriple())) {}
   ~OpenMPIRBuilder();
 
-  class AtomicInfoBase : public llvm::AtomicInfo {
+  class AtomicInfo : public llvm::AtomicInfo {
     llvm::Value *AtomicVar;
 
   public:
-    AtomicInfoBase(IRBuilder<> *Builder, llvm::Type *Ty,
+    AtomicInfo(IRBuilder<> *Builder, llvm::Type *Ty,
                    uint64_t AtomicSizeInBits, uint64_t ValueSizeInBits,
                    llvm::Align AtomicAlign, llvm::Align ValueAlign,
                    bool UseLibcall, llvm::Value *AtomicVar)
