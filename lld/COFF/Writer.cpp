@@ -2594,6 +2594,38 @@ void Writer::createDynamicRelocs() {
                              LOAD_CONFIG_TABLE * sizeof(data_directory) +
                              offsetof(data_directory, Size),
                          0);
+
+  // Insert a 64-bit relocation for CHPEMetadataPointer. Its value will be set
+  // later in prepareLoadConfig to match the value in the EC load config.
+  // However, a base relocation must be allocated in advance, so we handle it
+  // here.
+  if (ctx.symtab.loadConfigSym && ctx.hybridSymtab->loadConfigSym &&
+      ctx.symtab.loadConfigSize >=
+          offsetof(coff_load_configuration64, CHPEMetadataPointer) +
+              sizeof(coff_load_configuration64::CHPEMetadataPointer)) {
+    DefinedRegular *sym = ctx.symtab.loadConfigSym;
+    SectionChunk *chunk = sym->getChunk();
+    ArrayRef<coff_relocation> curRelocs = chunk->getRelocs();
+    MutableArrayRef<coff_relocation> newRelocs(
+        bAlloc().Allocate<coff_relocation>(curRelocs.size() + 1),
+        curRelocs.size() + 1);
+    size_t chpeOffset = sym->getValue() + offsetof(coff_load_configuration64,
+                                                   CHPEMetadataPointer);
+    size_t i;
+    for (i = 0;
+         i < curRelocs.size() && curRelocs[i].VirtualAddress < chpeOffset; ++i)
+      newRelocs[i] = curRelocs[i];
+    newRelocs[i].VirtualAddress = chpeOffset;
+    // The specific symbol used here is irrelevant as long as it's valid, since
+    // it will be overridden by prepareLoadConfig. Use the load config symbol
+    // itself.
+    newRelocs[i].SymbolTableIndex =
+        chunk->file->getCOFFObj()->getSymbolIndex(sym->getCOFFSymbol());
+    newRelocs[i].Type = IMAGE_REL_ARM64_ADDR64;
+    for (; i < curRelocs.size(); ++i)
+      newRelocs[i + 1] = curRelocs[i];
+    chunk->setRelocs(newRelocs);
+  }
 }
 
 PartialSection *Writer::createPartialSection(StringRef name,
