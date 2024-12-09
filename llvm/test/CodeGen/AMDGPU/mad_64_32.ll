@@ -1333,5 +1333,90 @@ define i48 @mad_i48_i48(i48 %arg0, i48 %arg1, i48 %arg2) #0 {
   ret i48 %a
 }
 
+define i64 @lshr_mad_i64(ptr addrspace(1) %1) local_unnamed_addr #0 {
+; CI-LABEL: lshr_mad_i64:
+; CI:       ; %bb.0:
+; CI-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; CI-NEXT:    s_mov_b32 s6, 0
+; CI-NEXT:    s_mov_b32 s7, 0xf000
+; CI-NEXT:    s_mov_b32 s4, s6
+; CI-NEXT:    s_mov_b32 s5, s6
+; CI-NEXT:    buffer_load_dwordx2 v[0:1], v[0:1], s[4:7], 0 addr64
+; CI-NEXT:    v_mov_b32_e32 v3, 0
+; CI-NEXT:    s_movk_i32 s4, 0xd1
+; CI-NEXT:    s_waitcnt vmcnt(0)
+; CI-NEXT:    v_mov_b32_e32 v2, v0
+; CI-NEXT:    v_mad_u64_u32 v[0:1], s[4:5], v1, s4, v[2:3]
+; CI-NEXT:    s_setpc_b64 s[30:31]
+;
+; SI-LABEL: lshr_mad_i64:
+; SI:       ; %bb.0:
+; SI-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; SI-NEXT:    s_mov_b32 s6, 0
+; SI-NEXT:    s_mov_b32 s7, 0xf000
+; SI-NEXT:    s_mov_b32 s4, s6
+; SI-NEXT:    s_mov_b32 s5, s6
+; SI-NEXT:    buffer_load_dwordx2 v[0:1], v[0:1], s[4:7], 0 addr64
+; SI-NEXT:    s_movk_i32 s4, 0xd1
+; SI-NEXT:    s_waitcnt vmcnt(0)
+; SI-NEXT:    v_mul_hi_u32 v2, v1, s4
+; SI-NEXT:    v_mul_lo_u32 v3, v1, s4
+; SI-NEXT:    v_sub_i32_e32 v2, vcc, v2, v1
+; SI-NEXT:    v_add_i32_e32 v0, vcc, v3, v0
+; SI-NEXT:    v_addc_u32_e32 v1, vcc, v2, v1, vcc
+; SI-NEXT:    s_setpc_b64 s[30:31]
+;
+; GFX9-LABEL: lshr_mad_i64:
+; GFX9:       ; %bb.0:
+; GFX9-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX9-NEXT:    global_load_dwordx2 v[0:1], v[0:1], off
+; GFX9-NEXT:    v_mov_b32_e32 v3, 0
+; GFX9-NEXT:    s_movk_i32 s4, 0xd1
+; GFX9-NEXT:    s_waitcnt vmcnt(0)
+; GFX9-NEXT:    v_mov_b32_e32 v2, v0
+; GFX9-NEXT:    v_mad_u64_u32 v[0:1], s[4:5], v1, s4, v[2:3]
+; GFX9-NEXT:    s_setpc_b64 s[30:31]
+;
+; GFX1100-LABEL: lshr_mad_i64:
+; GFX1100:       ; %bb.0:
+; GFX1100-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX1100-NEXT:    global_load_b64 v[1:2], v[0:1], off
+; GFX1100-NEXT:    s_waitcnt vmcnt(0)
+; GFX1100-NEXT:    v_dual_mov_b32 v4, 0 :: v_dual_mov_b32 v3, v1
+; GFX1100-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX1100-NEXT:    v_mad_u64_u32 v[0:1], null, 0xd1, v2, v[3:4]
+; GFX1100-NEXT:    s_setpc_b64 s[30:31]
+;
+; GFX1150-LABEL: lshr_mad_i64:
+; GFX1150:       ; %bb.0:
+; GFX1150-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
+; GFX1150-NEXT:    global_load_b64 v[0:1], v[0:1], off
+; GFX1150-NEXT:    s_waitcnt vmcnt(0)
+; GFX1150-NEXT:    v_dual_mov_b32 v3, 0 :: v_dual_mov_b32 v2, v0
+; GFX1150-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX1150-NEXT:    v_mad_u64_u32 v[0:1], null, 0xd1, v1, v[2:3]
+; GFX1150-NEXT:    s_setpc_b64 s[30:31]
+;
+; GFX12-LABEL: lshr_mad_i64:
+; GFX12:       ; %bb.0:
+; GFX12-NEXT:    s_wait_loadcnt_dscnt 0x0
+; GFX12-NEXT:    s_wait_expcnt 0x0
+; GFX12-NEXT:    s_wait_samplecnt 0x0
+; GFX12-NEXT:    s_wait_bvhcnt 0x0
+; GFX12-NEXT:    s_wait_kmcnt 0x0
+; GFX12-NEXT:    global_load_b64 v[0:1], v[0:1], off
+; GFX12-NEXT:    s_wait_loadcnt 0x0
+; GFX12-NEXT:    v_dual_mov_b32 v3, 0 :: v_dual_mov_b32 v2, v0
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX12-NEXT:    v_mad_co_u64_u32 v[0:1], null, 0xd1, v1, v[2:3]
+; GFX12-NEXT:    s_setpc_b64 s[30:31]
+  %3 = load i64, ptr addrspace(1) %1, align 8
+  %4 = lshr i64 %3, 32
+  %5 = mul nsw i64 %4, -4294967087
+  %6 = add nsw i64 %5, %3
+
+  ret i64 %6
+}
+
 attributes #0 = { nounwind }
 attributes #1 = { nounwind readnone speculatable }
