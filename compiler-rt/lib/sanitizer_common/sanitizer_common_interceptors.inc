@@ -532,8 +532,8 @@ INTERCEPTOR(int, strncmp, const char *s1, const char *s2, usize size) {
     for (; i1 < size && s1[i1]; i1++) {}
     for (; i2 < size && s2[i2]; i2++) {}
   }
-  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s1), Min(i1 + 1, size));
-  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s2), Min(i2 + 1, size));
+  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s1), Min<uptr>(i1 + 1, size));
+  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s2), Min<uptr>(i2 + 1, size));
   int result = CharCmpX(c1, c2);
   CALL_WEAK_INTERCEPTOR_HOOK(__sanitizer_weak_hook_strncmp, GET_CALLER_PC(), s1,
                              s2, size, result);
@@ -595,8 +595,8 @@ INTERCEPTOR(int, strncasecmp, const char *s1, const char *s2, SIZE_T size) {
     for (; i1 < size && s1[i1]; i1++) {}
     for (; i2 < size && s2[i2]; i2++) {}
   }
-  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s1), Min(i1 + 1, size));
-  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s2), Min(i2 + 1, size));
+  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s1), Min<uptr>(i1 + 1, size));
+  COMMON_INTERCEPTOR_READ_RANGE((ctx), (s2), Min<uptr>(i2 + 1, size));
   int result = CharCaseCmp(c1, c2);
   CALL_WEAK_INTERCEPTOR_HOOK(__sanitizer_weak_hook_strncasecmp, GET_CALLER_PC(),
                              s1, s2, size, result);
@@ -857,8 +857,8 @@ int MemcmpInterceptorCommon(void *ctx,
         c2 = s2[i];
         if (c1 != c2) break;
       }
-      COMMON_INTERCEPTOR_READ_RANGE(ctx, s1, Min(i + 1, size));
-      COMMON_INTERCEPTOR_READ_RANGE(ctx, s2, Min(i + 1, size));
+      COMMON_INTERCEPTOR_READ_RANGE(ctx, s1, Min<uptr>(i + 1, size));
+      COMMON_INTERCEPTOR_READ_RANGE(ctx, s2, Min<uptr>(i + 1, size));
       int r = CharCmpX(c1, c2);
       CALL_WEAK_INTERCEPTOR_HOOK(__sanitizer_weak_hook_memcmp, GET_CALLER_PC(),
                                  a1, a2, size, r);
