@@ -40,6 +40,7 @@ if (SPHINX_FOUND)
       float
       inttypes
       locale
+      pthread
       setjmp
       signal
       stdbit
