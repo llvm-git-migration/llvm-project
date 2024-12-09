@@ -1482,9 +1482,26 @@ uint64_t WasmObjectWriter::writeOneObject(MCAssembler &Asm,
     LLVM_DEBUG(dbgs() << "Processing Section " << SectionName << "  group "
                       << Section.getGroup() << "\n";);
 
-    // .init_array sections are handled specially elsewhere.
-    if (SectionName.starts_with(".init_array"))
-      continue;
+    // .init_array sections are handled specially elsewhere, include them in
+    // data segments if and only if referenced by a symbol.
+    if (SectionName.starts_with(".init_array")) {
+      bool referenced = false;
+
+      for (const MCSymbol &S : Asm.symbols()) {
+        const auto &WS = static_cast<const MCSymbolWasm &>(S);
+        if (WS.isData() && WS.isInSection()) {
+          auto &RefSection = static_cast<MCSectionWasm &>(WS.getSection());
+          if (RefSection.getName() == SectionName) {
+            referenced = true;
+            break;
+          }
+        }
+      }
+
+      if (!referenced) {
+        continue;
+      }
+    }
 
     // Code is handled separately
     if (Section.isText())
