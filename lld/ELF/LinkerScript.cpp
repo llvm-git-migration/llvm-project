@@ -406,12 +406,25 @@ static inline StringRef getFilename(const InputFile *file) {
   return file ? file->getNameForScript() : StringRef();
 }
 
+static inline StringRef getArchiveName(const InputFile *file) {
+  return file ? static_cast<StringRef>(file->archiveName) : StringRef();
+}
+
 bool InputSectionDescription::matchesFile(const InputFile *file) const {
   if (filePat.isTrivialMatchAll())
     return true;
 
-  if (!matchesFileCache || matchesFileCache->first != file)
-    matchesFileCache.emplace(file, filePat.match(getFilename(file)));
+  if (!matchesFileCache || matchesFileCache->first != file) {
+    if (matchType == MatchType::WholeArchive) {
+      matchesFileCache.emplace(file, filePat.match(getArchiveName(file)));
+    } else {
+      if (matchType == MatchType::ArchivesExcluded && file &&
+          !file->archiveName.empty())
+        matchesFileCache.emplace(file, false);
+      else
+        matchesFileCache.emplace(file, filePat.match(getFilename(file)));
+    }
+  }
 
   return matchesFileCache->second;
 }
