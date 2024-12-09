@@ -55,7 +55,7 @@
 # RUN: llvm-objdump -s 8 | FileCheck --check-prefix=SECONDFIRST %s
 
 ## Verify matching of archive library names in KEEP.
-# RUN: echo 'SECTIONS{.foo :{ KEEP(*lib2*(.foo)) KEEP(*lib1*(.foo)) }}' > 9.t
+# RUN: echo 'SECTIONS{.foo :{ KEEP(*lib2.a:(.foo)) KEEP(*lib1*(.foo)) }}' > 9.t
 # RUN: ld.lld -o 9 -T 9.t --whole-archive \
 # RUN:   dir1/lib1.a dir2/lib2.a
 # RUN: llvm-objdump -s 9 | FileCheck --check-prefix=SECONDFIRST %s

@@ -195,6 +195,7 @@ public:
 
 class InputSectionDescription : public SectionCommand {
   SingleStringMatcher filePat;
+  SmallString<0> implicitArchiveWildcardPat;
 
   // Cache of the most recent input argument and result of matchesFile().
   mutable std::optional<std::pair<const InputFile *, bool>> matchesFileCache;
@@ -203,9 +204,19 @@ public:
   InputSectionDescription(StringRef filePattern, uint64_t withFlags = 0,
                           uint64_t withoutFlags = 0, StringRef classRef = {})
       : SectionCommand(InputSectionKind), filePat(filePattern),
-        classRef(classRef), withFlags(withFlags), withoutFlags(withoutFlags) {
+        implicitArchiveWildcardPat(), classRef(classRef), withFlags(withFlags),
+        withoutFlags(withoutFlags) {
     assert((filePattern.empty() || classRef.empty()) &&
            "file pattern and class reference are mutually exclusive");
+
+    // Fixes up the input file pattern, adding an implicit wildcard
+    // if the trailing character is an ':' to allow matching entire archives
+    if (!filePattern.empty() && filePattern.back() == ':') {
+      implicitArchiveWildcardPat.reserve(filePattern.size() + 1);
+      implicitArchiveWildcardPat.append(filePattern);
+      implicitArchiveWildcardPat.push_back('*');
+      filePat = SingleStringMatcher(implicitArchiveWildcardPat);
+    }
   }
 
   static bool classof(const SectionCommand *c) {
