@@ -1195,18 +1195,34 @@ static Value* getMulHu(IRBuilder<> &Builder, Value *LHS, Value *RHS) {
 int AMDGPUCodeGenPrepareImpl::getDivNumBits(BinaryOperator &I, Value *Num,
                                             Value *Den, unsigned AtLeast,
                                             bool IsSigned) const {
-  unsigned LHSSignBits = ComputeNumSignBits(Num, DL, 0, AC, &I);
-  if (LHSSignBits < AtLeast)
-    return -1;
+  if (IsSigned) {
+    unsigned RHSSignBits = ComputeNumSignBits(Den, DL, 0, AC, &I);
+    if (RHSSignBits < AtLeast)
+      return -1;
 
-  unsigned RHSSignBits = ComputeNumSignBits(Den, DL, 0, AC, &I);
-  if (RHSSignBits < AtLeast)
+    unsigned LHSSignBits = ComputeNumSignBits(Num, DL, 0, AC, &I);
+    if (LHSSignBits < AtLeast)
+      return -1;
+
+    unsigned SignBits = std::min(LHSSignBits, RHSSignBits);
+    unsigned DivBits = Num->getType()->getScalarSizeInBits() - SignBits;
+    return DivBits + 1; // a SignBit need to be reserved for shrinking
+  }
+
+  // All bits are used for unsigned division for Num or Den in range
+  // (SignedMax, UnsignedMax].
+  KnownBits Known = computeKnownBits(Den, DL, 0, AC, &I);
+  if (Known.isNegative() || !Known.isNonNegative())
     return -1;
+  unsigned RHSSignBits = Known.countMinLeadingZeros();
+
+  Known = computeKnownBits(Num, DL, 0, AC, &I);
+  if (Known.isNegative() || !Known.isNonNegative())
+    return -1;
+  unsigned LHSSignBits = Known.countMinLeadingZeros();
 
   unsigned SignBits = std::min(LHSSignBits, RHSSignBits);
   unsigned DivBits = Num->getType()->getScalarSizeInBits() - SignBits;
-  if (IsSigned)
-    ++DivBits;
   return DivBits;
 }
 
@@ -1220,7 +1236,7 @@ Value *AMDGPUCodeGenPrepareImpl::expandDivRem24(IRBuilder<> &Builder,
   // If Num bits <= 24, assume 0 signbits.
   unsigned AtLeast = (SSBits <= 24) ? 0 : (SSBits - 24 + IsSigned);
   int DivBits = getDivNumBits(I, Num, Den, AtLeast, IsSigned);
-  if (DivBits == -1)
+  if (DivBits == -1 || DivBits > 24)
     return nullptr;
   return expandDivRem24Impl(Builder, I, Num, Den, DivBits, IsDiv, IsSigned);
 }
