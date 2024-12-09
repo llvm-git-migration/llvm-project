@@ -3888,6 +3888,18 @@ let TargetPrefix = "aarch64" in {
           llvm_nxv16i1_ty, llvm_nxv16i1_ty,
           llvm_nxv16i8_ty, llvm_nxv16i8_ty],
           [ImmArg<ArgIndex<0>>, IntrInaccessibleMemOnly, IntrHasSideEffects]>;
+
+  class SME_FP8_ZA_MULTI_VGx2_Intrinsic
+    : DefaultAttrsIntrinsic<[], [llvm_i32_ty,
+                                 llvm_nxv16i8_ty, llvm_nxv16i8_ty,
+                                 llvm_nxv16i8_ty, llvm_nxv16i8_ty,],
+                            [IntrInaccessibleMemOnly, IntrHasSideEffects]>;
+
+  class SME_FP8_ZA_MULTI_VGx4_Intrinsic
+    : DefaultAttrsIntrinsic<[], [llvm_i32_ty,
+                                 llvm_nxv16i8_ty, llvm_nxv16i8_ty, llvm_nxv16i8_ty, llvm_nxv16i8_ty,
+                                 llvm_nxv16i8_ty, llvm_nxv16i8_ty, llvm_nxv16i8_ty, llvm_nxv16i8_ty,],
+                            [IntrInaccessibleMemOnly, IntrHasSideEffects]>;
   //
   // CVT from FP8 to half-precision/BFloat16 multi-vector
   //
@@ -3914,4 +3926,14 @@ let TargetPrefix = "aarch64" in {
   // FP8 outer product
   def int_aarch64_sme_fp8_fmopa_za16 : SME_FP8_OuterProduct_Intrinsic;
   def int_aarch64_sme_fp8_fmopa_za32 : SME_FP8_OuterProduct_Intrinsic;
+
+  //
+  // ZA multiply-add
+  //
+  // Double-vector groups (F8F16)
+  def int_aarch64_sme_fp8_fmlal_multi_za16_vg2x2 : SME_FP8_ZA_MULTI_VGx2_Intrinsic;
+  def int_aarch64_sme_fp8_fmlal_multi_za16_vg2x4 : SME_FP8_ZA_MULTI_VGx4_Intrinsic;
+  // Quad-vector groups (F8F32)
+  def int_aarch64_sme_fp8_fmlall_multi_za32_vg4x2 : SME_FP8_ZA_MULTI_VGx2_Intrinsic;
+  def int_aarch64_sme_fp8_fmlall_multi_za32_vg4x4 : SME_FP8_ZA_MULTI_VGx4_Intrinsic;
 }

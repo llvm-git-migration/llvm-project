@@ -1001,8 +1001,10 @@ def  FMLAL_VG2_MZZ_BtoH   : sme2_mla_long_array_single_16b<"fmlal">;
 
 defm FMLAL_VG2_M2ZZ_BtoH  : sme2_fp_mla_long_array_vg2_single<"fmlal",  0b001, MatrixOp16, ZZ_b, ZPR4b8, nxv16i8, null_frag>;
 defm FMLAL_VG4_M4ZZ_BtoH  :  sme2_fp_mla_long_array_vg4_single<"fmlal", 0b001, MatrixOp16, ZZZZ_b, ZPR4b8, nxv16i8, null_frag>;
-defm FMLAL_VG2_M2Z2Z_BtoH : sme2_fp_mla_long_array_vg2_multi<"fmlal",   0b100, MatrixOp16, ZZ_b_mul_r, nxv16i8, null_frag>;
-defm FMLAL_VG4_M4Z4Z_BtoH : sme2_fp_mla_long_array_vg4_multi<"fmlal",   0b100, MatrixOp16, ZZZZ_b_mul_r, nxv16i8, null_frag>;
+
+// FP8 FMLALL (multi)
+defm FMLAL_VG2_M2Z2Z_BtoH : sme2_fp_mla_long_array_vg2_multi<"fmlal", 0b100, MatrixOp16, ZZ_b_mul_r, nxv16i8,   int_aarch64_sme_fp8_fmlal_multi_za16_vg2x2, [FPMR, FPCR]>;
+defm FMLAL_VG4_M4Z4Z_BtoH : sme2_fp_mla_long_array_vg4_multi<"fmlal", 0b100, MatrixOp16, ZZZZ_b_mul_r, nxv16i8, int_aarch64_sme_fp8_fmlal_multi_za16_vg2x4, [FPMR, FPCR]>;
 
 defm FMOPA_MPPZZ_BtoH : sme2_fp8_fmopa_za16<"fmopa", int_aarch64_sme_fp8_fmopa_za16>;
 } //[HasSMEF8F16]
@@ -1027,8 +1029,10 @@ defm FMLALL_VG4_M4ZZI_BtoS : sme2_mla_ll_array_vg4_index_32b<"fmlall", 0b00, 0b1
 defm FMLALL_MZZ_BtoS       : sme2_mla_ll_array_single<"fmlall",      0b01000, MatrixOp32, ZPR8, ZPR4b8, nxv16i8, null_frag>;
 defm FMLALL_VG2_M2ZZ_BtoS  : sme2_mla_ll_array_vg24_single<"fmlall", 0b000001, MatrixOp32, ZZ_b, ZPR4b8>;
 defm FMLALL_VG4_M4ZZ_BtoS  : sme2_mla_ll_array_vg24_single<"fmlall", 0b010001, MatrixOp32, ZZZZ_b, ZPR4b8>;
-defm FMLALL_VG2_M2Z2Z_BtoS : sme2_mla_ll_array_vg2_multi<"fmlall",   0b01000, MatrixOp32, ZZ_b_mul_r, nxv16i8, null_frag>;
-defm FMLALL_VG4_M4Z4Z_BtoS : sme2_mla_ll_array_vg4_multi<"fmlall",   0b01000, MatrixOp32, ZZZZ_b_mul_r, nxv16i8, null_frag>;
+
+// FP8 FMLALL (multi)
+defm FMLALL_VG2_M2Z2Z_BtoS : sme2_mla_ll_array_vg2_multi<"fmlall", 0b01000, MatrixOp32, ZZ_b_mul_r, nxv16i8,   int_aarch64_sme_fp8_fmlall_multi_za32_vg4x2, [FPMR, FPCR]>;
+defm FMLALL_VG4_M4Z4Z_BtoS : sme2_mla_ll_array_vg4_multi<"fmlall", 0b01000, MatrixOp32, ZZZZ_b_mul_r, nxv16i8, int_aarch64_sme_fp8_fmlall_multi_za32_vg4x4, [FPMR, FPCR]>;
 
 defm FMOPA_MPPZZ_BtoS : sme2_fp8_fmopa_za32<"fmopa", int_aarch64_sme_fp8_fmopa_za32>;
 } //[HasSMEF8F32]
