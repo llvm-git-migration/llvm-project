@@ -37,7 +37,6 @@ namespace std {
       erase_if(flat_map<Key, T, Compare, KeyContainer, MappedContainer>& c, Predicate pred);
 */
 
-#include <__assert> // all public C++ headers provide the assertion handler
 #include <__config>
 
 #if _LIBCPP_STD_VER >= 23
