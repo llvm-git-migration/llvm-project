@@ -92,6 +92,18 @@ TEST(DataLayoutUpgradeTest, ValidDataLayoutUpgrade) {
                 "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64", "mips64el"),
             "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64");
 
+  // Check that WebAssembly targets add -i128:128.
+  EXPECT_EQ(
+      UpgradeDataLayoutString(
+          "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-n32:64-S128-ni:1:10:20",
+          "wasm32"),
+      "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20");
+  EXPECT_EQ(
+      UpgradeDataLayoutString(
+          "e-m:e-p:64:64-p10:8:8-p20:8:8-i64:64-n32:64-S128-ni:1:10:20",
+          "wasm64"),
+      "e-m:e-p:64:64-p10:8:8-p20:8:8-i64:64-i128:128-n32:64-S128-ni:1:10:20");
+
   // Check that SPIR && SPIRV targets add -G1 if it's not present.
   EXPECT_EQ(UpgradeDataLayoutString("e-p:32:32", "spir"), "e-p:32:32-G1");
   EXPECT_EQ(UpgradeDataLayoutString("e-p:32:32", "spir64"), "e-p:32:32-G1");
