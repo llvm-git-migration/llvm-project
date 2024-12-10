@@ -164,6 +164,7 @@ add_entrypoint_object(
   lseek
   ALIAS
   DEPENDS
+    libc.hdr.types.off_t
     .${LIBC_TARGET_OS}.lseek
 )
 
