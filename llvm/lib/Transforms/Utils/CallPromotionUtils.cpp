@@ -692,14 +692,14 @@ bool llvm::tryPromoteCall(CallBase &CB) {
   if (!VTableEntryLoad)
     return false; // Not a vtable entry load.
   Value *VTableEntryPtr = VTableEntryLoad->getPointerOperand();
-  APInt VTableOffset(DL.getTypeSizeInBits(VTableEntryPtr->getType()), 0);
+  APInt VTableOffset(DL.getIndexTypeSizeInBits(VTableEntryPtr->getType()), 0);
   Value *VTableBasePtr = VTableEntryPtr->stripAndAccumulateConstantOffsets(
       DL, VTableOffset, /* AllowNonInbounds */ true);
   LoadInst *VTablePtrLoad = dyn_cast<LoadInst>(VTableBasePtr);
   if (!VTablePtrLoad)
     return false; // Not a vtable load.
   Value *Object = VTablePtrLoad->getPointerOperand();
-  APInt ObjectOffset(DL.getTypeSizeInBits(Object->getType()), 0);
+  APInt ObjectOffset(DL.getIndexTypeSizeInBits(Object->getType()), 0);
   Value *ObjectBase = Object->stripAndAccumulateConstantOffsets(
       DL, ObjectOffset, /* AllowNonInbounds */ true);
   if (!(isa<AllocaInst>(ObjectBase) && ObjectOffset == 0))
@@ -712,7 +712,12 @@ bool llvm::tryPromoteCall(CallBase &CB) {
       VTablePtrLoad, VTablePtrLoad->getParent(), BBI, 0, nullptr, nullptr);
   if (!VTablePtr)
     return false; // No vtable found.
-  APInt VTableOffsetGVBase(DL.getTypeSizeInBits(VTablePtr->getType()), 0);
+
+  // VTablePtr may not actually have a pointer type, so we can't find the
+  // address space through it. However, we know that the address space must be
+  // the same one used to load from the vtable in VTablePtrLoad.
+  APInt VTableOffsetGVBase(
+      DL.getIndexSizeInBits(VTablePtrLoad->getPointerAddressSpace()), 0);
   Value *VTableGVBase = VTablePtr->stripAndAccumulateConstantOffsets(
       DL, VTableOffsetGVBase, /* AllowNonInbounds */ true);
   GlobalVariable *GV = dyn_cast<GlobalVariable>(VTableGVBase);
