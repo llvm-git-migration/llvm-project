@@ -4,17 +4,21 @@
 // memref.alloc exists here because sub-byte vector data types such as i2
 // are currently not supported as input arguments.
 
-func.func @vector_store_i2_const_rmw(%arg0: vector<3xi2>) {
+func.func @vector_store_i2_const_index_two_rmw(%arg0: vector<3xi2>) {
     %0 = memref.alloc() : memref<3x3xi2>
     %c0 = arith.constant 0 : index
     %c2 = arith.constant 2 : index
     vector.store %arg0, %0[%c2, %c0] :memref<3x3xi2>, vector<3xi2>
     return
 }
-// CHECK: func @vector_store_i2_const_rmw(
+// Load from bit [12:18), byte [1:2] of total 3 bytes, both bytes needs rmw.
+
+// CHECK: func @vector_store_i2_const_index_two_rmw(
 // CHECK-SAME: %[[ARG0:.+]]: vector<3xi2>)
 // CHECK: %[[ALLOC:.+]] = memref.alloc() : memref<3xi8>
 // CHECK: %[[C1:.+]] = arith.constant 1 : index
+
+// Part 1 RMW sequence
 // CHECK: %[[CST:.+]] = arith.constant dense<[false, false, true, true]>
 // CHECK: %[[CST0:.+]] = arith.constant dense<0> : vector<4xi2>
 // CHECK: %[[EXTRACT:.+]] = vector.extract_strided_slice %[[ARG0]]
@@ -22,16 +26,28 @@ func.func @vector_store_i2_const_rmw(%arg0: vector<3xi2>) {
 // CHECK: %[[INSERT:.+]] = vector.insert_strided_slice %[[EXTRACT]], %[[CST0]]
 // CHECK-SAME: {offsets = [2], strides = [1]} : vector<2xi2> into vector<4xi2>
 // CHECK: %[[LOAD:.+]] = vector.load
-
-// Actual part to do RMW sequence
 // CHECK: %[[UPCAST:.+]] = vector.bitcast %[[LOAD]] : vector<1xi8> to vector<4xi2>
 // CHECK: %[[SELECT:.+]] = arith.select %[[CST]], %[[UPCAST]], %[[INSERT]]
 // CHECK: %[[DOWNCAST:.+]] = vector.bitcast %[[SELECT]]
 // CHECK: vector.store %[[DOWNCAST]], %[[ALLOC]][%[[C1]]]
 
+// Part 2 RMW sequence
+// CHECK: %[[OFFSET:.+]] = arith.addi %[[C1]], %[[C1]] : index
+// CHECK: %[[EXTRACT2:.+]] = vector.extract_strided_slice %[[ARG0]]
+// CHECK-SAME: {offsets = [2], sizes = [1], strides = [1]} : vector<3xi2> to vector<1xi2>
+// CHECK: %[[INSERT2:.+]] = vector.insert_strided_slice %[[EXTRACT2]], %[[CST0]]
+// CHECK-SAME: {offsets = [0], strides = [1]} : vector<1xi2> into vector<4xi2>
+// CHECK: %[[CST1:.+]] = arith.constant dense<[true, false, false, false]> : vector<4xi1>
+// CHECK: %[[LOAD2:.+]] = vector.load
+// CHECK: %[[UPCAST2:.+]] = vector.bitcast %[[LOAD2]] : vector<1xi8> to vector<4xi2>
+// CHECK: %[[SELECT2:.+]] = arith.select %[[CST1]], %[[UPCAST2]], %[[INSERT2]]
+// CHECK: %[[DOWNCAST2:.+]] = vector.bitcast %[[SELECT2]]
+// CHECK: vector.store %[[DOWNCAST2]], %[[ALLOC]][%[[OFFSET]]]
+
+
 // -----
 
-func.func @vector_store_i2_atomic(%arg0: vector<7xi2>) {
+func.func @vector_store_i2_rmw(%arg0: vector<7xi2>) {
     %0 = memref.alloc() : memref<3x7xi2>
     %c0 = arith.constant 0 : index
     %c1 = arith.constant 1 : index
@@ -39,7 +55,7 @@ func.func @vector_store_i2_atomic(%arg0: vector<7xi2>) {
     return
 }
 
-// CHECK: func @vector_store_i2_atomic(
+// CHECK: func @vector_store_i2_rmw(
 // CHECK-SAME: %[[ARG0:.+]]:
 // CHECK: %[[ALLOC:.+]] = memref.alloc() : memref<6xi8>
 // CHECK: %[[C1:.+]] = arith.constant 1 : index
