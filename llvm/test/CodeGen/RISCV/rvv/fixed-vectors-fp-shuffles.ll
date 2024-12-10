@@ -395,3 +395,42 @@ define <4 x half> @vrgather_shuffle_vx_v4f16_load(ptr %p) {
   %s = shufflevector <4 x half> %v, <4 x half> undef, <4 x i32> <i32 1, i32 1, i32 1, i32 1>
   ret <4 x half> %s
 }
+
+define <16 x float> @shuffle_disjoint_lanes(<16 x float> %v, <16 x float> %w) {
+; CHECK-LABEL: shuffle_disjoint_lanes:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    lui a0, %hi(.LCPI30_0)
+; CHECK-NEXT:    addi a0, a0, %lo(.LCPI30_0)
+; CHECK-NEXT:    vsetivli zero, 16, e32, m4, ta, mu
+; CHECK-NEXT:    vle16.v v20, (a0)
+; CHECK-NEXT:    lui a0, %hi(.LCPI30_1)
+; CHECK-NEXT:    addi a0, a0, %lo(.LCPI30_1)
+; CHECK-NEXT:    vle16.v v22, (a0)
+; CHECK-NEXT:    lui a0, 15
+; CHECK-NEXT:    addi a0, a0, 240
+; CHECK-NEXT:    vmv.s.x v0, a0
+; CHECK-NEXT:    vrgatherei16.vv v16, v8, v20
+; CHECK-NEXT:    vrgatherei16.vv v16, v12, v22, v0.t
+; CHECK-NEXT:    vmv.v.v v8, v16
+; CHECK-NEXT:    ret
+  %out = shufflevector <16 x float> %v, <16 x float> %w, <16 x i32> <i32 11, i32 15, i32 7, i32 3, i32 26, i32 30, i32 22, i32 18, i32 9, i32 13, i32 5, i32 1, i32 24, i32 28, i32 20, i32 16>
+  ret <16 x float> %out
+}
+
+define <16 x float> @shuffle_disjoint_lanes_one_splat(<16 x float> %v, <16 x float> %w) {
+; CHECK-LABEL: shuffle_disjoint_lanes_one_splat:
+; CHECK:       # %bb.0:
+; CHECK-NEXT:    lui a0, %hi(.LCPI31_0)
+; CHECK-NEXT:    addi a0, a0, %lo(.LCPI31_0)
+; CHECK-NEXT:    vsetivli zero, 16, e32, m4, ta, mu
+; CHECK-NEXT:    vle16.v v20, (a0)
+; CHECK-NEXT:    lui a0, 15
+; CHECK-NEXT:    addi a0, a0, 240
+; CHECK-NEXT:    vmv.s.x v0, a0
+; CHECK-NEXT:    vrgather.vi v16, v8, 7
+; CHECK-NEXT:    vrgatherei16.vv v16, v12, v20, v0.t
+; CHECK-NEXT:    vmv.v.v v8, v16
+; CHECK-NEXT:    ret
+  %out = shufflevector <16 x float> %v, <16 x float> %w, <16 x i32> <i32 7, i32 7, i32 7, i32 7, i32 26, i32 30, i32 22, i32 18, i32 7, i32 7, i32 7, i32 7, i32 24, i32 28, i32 20, i32 16>
+  ret <16 x float> %out
+}
