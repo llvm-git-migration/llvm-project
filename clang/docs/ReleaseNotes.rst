@@ -784,6 +784,10 @@ libclang
 --------
 - Add ``clang_isBeforeInTranslationUnit``. Given two source locations, it determines
   whether the first one comes strictly before the second in the source code.
+- Added ``clang_visitCXXBaseClasses``, which allows visiting the base classes
+  of a class.
+- Added ``clang_getOffsetOfBase``, which allows computing the offset of a base
+  class in a class's layout.
 
 Static Analyzer
 ---------------
@@ -883,6 +887,7 @@ Sanitizers
 Python Binding Changes
 ----------------------
 - Fixed an issue that led to crashes when calling ``Type.get_exception_specification_kind``.
+- Added binding for ``clang_isVirtualBase``, which checks whether a base class is virtual.
 
 OpenMP Support
 --------------
