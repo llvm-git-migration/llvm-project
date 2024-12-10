@@ -1,11 +1,13 @@
 // Make sure that signed extended multiplication produces expected results
 // with and without expansion to primitive mul/add ops for WebGPU.
 
-// RUN: mlir-vulkan-runner %s \
+// RUN: mlir-opt %s -test-vulkan-runner-pipeline \
+// RUN: | mlir-vulkan-runner - \
 // RUN:  --shared-libs=%vulkan-runtime-wrappers,%mlir_runner_utils \
 // RUN:  --entry-point-result=void | FileCheck %s
 
-// RUN: mlir-vulkan-runner %s --vulkan-runner-spirv-webgpu-prepare \
+// RUN: mlir-opt %s -test-vulkan-runner-pipeline -spirv-webgpu-prepare \
+// RUN: | mlir-vulkan-runner - \
 // RUN:  --shared-libs=%vulkan-runtime-wrappers,%mlir_runner_utils \
 // RUN:  --entry-point-result=void | FileCheck %s
 
