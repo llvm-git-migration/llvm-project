@@ -9,8 +9,10 @@
 #ifndef LLVM_LIBC_SRC_UNISTD_READ_H
 #define LLVM_LIBC_SRC_UNISTD_READ_H
 
+#include "hdr/unistd_macros.h"
+#include "include/llvm-libc-types/size_t.h"
+#include "include/llvm-libc-types/ssize_t.h"
 #include "src/__support/macros/config.h"
-#include <unistd.h>
 
 namespace LIBC_NAMESPACE_DECL {
 
