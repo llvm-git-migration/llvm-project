@@ -313,10 +313,6 @@ static VectorValue emulatedVectorLoad(OpBuilder &rewriter, Location loc,
 static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
                         VectorValue valueToStore, Value mask) {
-  // `numSrcElemsPerDest` is not used in this function, but to keep the function
-  // signature consistent with `rmwStore` so as to simplify the pattern to
-  // invoke.
-
   assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
   auto atomicOp = builder.create<memref::GenericAtomicRMWOp>(
       loc, linearizedMemref, ValueRange{linearizedIndex});
@@ -325,17 +321,19 @@ static void atomicStore(OpBuilder &builder, Location loc,
   OpBuilder::InsertionGuard guard(builder);
   builder.setInsertionPointToStart(atomicOp.getBody());
 
+  // Construct the vector value from the scalar.
   auto oneVectorType = VectorType::get({1}, origValue.getType());
-  auto fromElem = builder.create<vector::FromElementsOp>(loc, oneVectorType,
+  Value origVecValue = builder.create<vector::FromElementsOp>(loc, oneVectorType,
                                                          ValueRange{origValue});
-  auto vectorBitCast =
-      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), fromElem);
+  origVecValue =
+      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), origVecValue);
 
-  auto select =
-      builder.create<arith::SelectOp>(loc, mask, valueToStore, vectorBitCast);
-  auto bitcast2 = builder.create<vector::BitCastOp>(loc, oneVectorType, select);
-  auto extract = builder.create<vector::ExtractOp>(loc, bitcast2, 0);
-  builder.create<memref::AtomicYieldOp>(loc, extract.getResult());
+  // Construct the final masked value and yield it.
+  Value maskedValue =
+      builder.create<arith::SelectOp>(loc, mask, valueToStore, origVecValue);
+  maskedValue = builder.create<vector::BitCastOp>(loc, oneVectorType, maskedValue);
+  auto scalarMaskedValue = builder.create<vector::ExtractOp>(loc, maskedValue, 0);
+  builder.create<memref::AtomicYieldOp>(loc, scalarMaskedValue);
 }
 
 /// Generate a non-atomic read-modify-write sequence for subbyte storing.
