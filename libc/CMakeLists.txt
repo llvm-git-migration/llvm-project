@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20.0)
 set(LLVM_SUBPROJECT_TITLE "libc")
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  message(FATAL_ERROR "Builds rooted in the libc directory are not supported. "
+    "Please see the documentation at https://libc.llvm.org/usage_modes.html for links to build "
+    "instructions depending how you plan to use libc.")
+endif()
+
 # Include LLVM's cmake policies.
 if(NOT DEFINED LLVM_COMMON_CMAKE_UTILS)
   set(LLVM_COMMON_CMAKE_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
