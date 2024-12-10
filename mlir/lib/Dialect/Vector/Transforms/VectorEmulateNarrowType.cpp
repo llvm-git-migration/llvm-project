@@ -303,17 +303,20 @@ static VectorValue emulatedVectorLoad(OpBuilder &rewriter, Location loc,
 /// to store.
 ///
 /// Inputs:
-///   linearizedMemref = |a|b|c|d| : <4xi2> (<1xi8>)
+///   linearizedMemref = |2|2|2|2| : <4xi2> (<1xi8>)
 ///   linearizedIndex = 2
-///   valueToStore = |e|f|g|h| : vector<4xi2>
+///   valueToStore = |3|3|3|3| : vector<4xi2>
 ///   mask = |0|0|1|1| : vector<4xi1>
 ///
 /// Result:
-///   linearizedMemref = |a|b|g|h| : <4xi2> (<1xi8>)
+///   linearizedMemref = |2|2|3|3| : <4xi2> (<1xi8>)
 static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
-                        VectorValue valueToStore, Value mask,
-                        int64_t numSrcElemsPerDest) {
+                        VectorValue valueToStore, Value mask) {
+  // `numSrcElemsPerDest` is not used in this function, but to keep the function
+  // signature consistent with `rmwStore` so as to simplify the pattern to
+  // invoke.
+
   assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
   auto atomicOp = builder.create<memref::GenericAtomicRMWOp>(
       loc, linearizedMemref, ValueRange{linearizedIndex});
@@ -337,37 +340,33 @@ static void atomicStore(OpBuilder &builder, Location loc,
 
 /// Generate a non-atomic read-modify-write sequence for subbyte storing.
 /// It has similar logic to `atomicStore`, but without the atomicity.
-static void rmwStore(OpBuilder &rewriter, Location loc,
+static void rmwStore(OpBuilder &builder, Location loc,
                      MemRefValue linearizedMemref, Value linearizedIndex,
-                     VectorValue valueToStore, Value mask,
-                     int64_t numSrcElemsPerDest) {
+                     VectorValue valueToStore, Value mask) {
   assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
-  auto emulatedIOType =
+  auto oneElemVecType =
       VectorType::get({1}, linearizedMemref.getType().getElementType());
-  auto elemLoad = rewriter.create<vector::LoadOp>(
-      loc, emulatedIOType, linearizedMemref, ValueRange{linearizedIndex});
-  auto fromBitcast = rewriter.create<vector::BitCastOp>(
-      loc,
-      VectorType::get({numSrcElemsPerDest},
-                      valueToStore.getType().getElementType()),
-      elemLoad);
-  auto select =
-      rewriter.create<arith::SelectOp>(loc, mask, fromBitcast, valueToStore);
-  auto toBitcast =
-      rewriter.create<vector::BitCastOp>(loc, emulatedIOType, select);
-  rewriter.create<vector::StoreOp>(loc, toBitcast, linearizedMemref,
-                                   linearizedIndex);
+  auto origValue = builder.create<vector::LoadOp>(
+      loc, oneElemVecType, linearizedMemref, ValueRange{linearizedIndex});
+  auto castedValue =
+      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), origValue);
+  auto result =
+      builder.create<arith::SelectOp>(loc, mask, castedValue, valueToStore);
+  auto resultBitcast =
+      builder.create<vector::BitCastOp>(loc, oneElemVecType, result);
+  builder.create<vector::StoreOp>(loc, resultBitcast, linearizedMemref,
+                                  linearizedIndex);
 }
 
 /// Extract `sliceNumElements` from source `vector` at `sliceOffset`,
 /// and insert it into an empty vector at offset `byteOffset`.
 /// Inputs:
-///   vector = |01|23|45|67| : vector<4xi2>
+///   vector = |1|2|3|4| : vector<4xi2>
 ///   sliceOffset = 1
 ///   sliceNumElements = 2
 ///   byteOffset = 2
 /// Output:
-///   vector = |00|00|23|45| : vector<4xi2>
+///   vector = |0|0|2|3| : vector<4xi2>
 static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
                                   Location loc, VectorValue vector,
                                   int64_t sliceOffset, int64_t sliceNumElements,
@@ -385,9 +384,8 @@ static Value extractSliceIntoByte(ConversionPatternRewriter &rewriter,
       rewriter.getZeroAttr(VectorType::get({scale}, vectorElementType)));
   auto extracted = staticallyExtractSubvector(rewriter, loc, vector,
                                               sliceOffset, sliceNumElements);
-  auto inserted = staticallyInsertSubvector(rewriter, loc, extracted,
-                                            emptyByteVector, byteOffset);
-  return inserted;
+  return staticallyInsertSubvector(rewriter, loc, extracted, emptyByteVector,
+                                   byteOffset);
 }
 
 namespace {
@@ -514,8 +512,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
                                frontSubWidthStoreElem, *foldedNumFrontPadElems);
 
       subEmulatedWidthStore(rewriter, loc, linearizedMemref, currentDestIndex,
-                            cast<VectorValue>(value), frontMask.getResult(),
-                            numSrcElemsPerDest);
+                            cast<VectorValue>(value), frontMask.getResult());
 
       currentDestIndex = rewriter.create<arith::AddIOp>(
           loc, rewriter.getIndexType(), currentDestIndex, constantOne);
@@ -567,7 +564,7 @@ struct ConvertVectorStore final : OpConversionPattern<vector::StoreOp> {
 
       subEmulatedWidthStore(rewriter, loc, linearizedMemref, currentDestIndex,
                             cast<VectorValue>(subWidthStorePart),
-                            backMask.getResult(), numSrcElemsPerDest);
+                            backMask.getResult());
     }
 
     rewriter.eraseOp(op);
