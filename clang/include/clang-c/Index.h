@@ -3732,6 +3732,12 @@ CINDEX_LINKAGE enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
 CINDEX_LINKAGE unsigned clang_isVirtualBase(CXCursor);
 
 /**
+ * Returns the offset in bits of a CX_CXXBaseSpecifier relative to the parent
+ * class.
+ */
+CINDEX_LINKAGE long long clang_getOffsetOfBase(CXCursor Parent, CXCursor Base);
+
+/**
  * Represents the C++ access control level to a base class for a
  * cursor with kind CX_CXXBaseSpecifier.
  */
@@ -6599,6 +6605,29 @@ typedef enum CXVisitorResult (*CXFieldVisitor)(CXCursor C,
  */
 CINDEX_LINKAGE unsigned clang_Type_visitFields(CXType T, CXFieldVisitor visitor,
                                                CXClientData client_data);
+
+/**
+ * Visit the base classes of a type.
+ *
+ * This function visits all the direct base classes of a the given cursor,
+ * invoking the given \p visitor function with the cursors of each
+ * visited base. The traversal may be ended prematurely, if
+ * the visitor returns \c CXFieldVisit_Break.
+ *
+ * \param T the record type whose field may be visited.
+ *
+ * \param visitor the visitor function that will be invoked for each
+ * field of \p T.
+ *
+ * \param client_data pointer data supplied by the client, which will
+ * be passed to the visitor each time it is invoked.
+ *
+ * \returns a non-zero value if the traversal was terminated
+ * prematurely by the visitor returning \c CXFieldVisit_Break.
+ */
+CINDEX_LINKAGE unsigned clang_visitCXXBaseClasses(CXType T,
+                                                  CXFieldVisitor visitor,
+                                                  CXClientData client_data);
 
 /**
  * Describes the kind of binary operators.

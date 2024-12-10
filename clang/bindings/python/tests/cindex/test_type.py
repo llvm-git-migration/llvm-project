@@ -1,4 +1,5 @@
 import os
+import clang.cindex
 
 from clang.cindex import Config, CursorKind, RefQualifierKind, TranslationUnit, TypeKind
 
@@ -514,3 +515,28 @@ class A
         # Variable without a template argument.
         cursor = get_cursor(tu, "bar")
         self.assertEqual(cursor.get_num_template_arguments(), -1)
+
+    def test_base_classes(self):
+        source = """
+        class A { int a; };
+        class B { int b; };
+        class C { int c; };
+        template <typename T>
+        class Template : public A, public B, virtual C {
+        };
+        Template<int> instance;
+        int bar;
+        """
+        tu = get_tu(source, lang="cpp")
+        cursor = get_cursor(tu, "instance")
+        cursor_type = cursor.type
+        cursor_type_decl = cursor_type.get_declaration()
+        self.assertEqual(cursor.kind, CursorKind.VAR_DECL)
+        bases = list(cursor_type.get_bases())
+        self.assertEqual(len(bases), 3)
+        self.assertFalse(bases[0].is_virtual_base())
+        self.assertEqual(bases[0].get_base_offsetof(cursor_type_decl), 64)
+        self.assertFalse(bases[1].is_virtual_base())
+        self.assertEqual(bases[1].get_base_offsetof(cursor_type_decl), 96)
+        self.assertTrue(bases[2].is_virtual_base())
+        self.assertEqual(bases[2].get_base_offsetof(cursor_type_decl), 128)
