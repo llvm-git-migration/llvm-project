@@ -3723,22 +3723,9 @@ static Value *foldSelectIntoAddConstant(SelectInst &SI,
   if (!SIFOp || !SIFOp->hasNoSignedZeros() || !SIFOp->hasNoNaNs())
     return nullptr;
 
-  // select((fcmp Pred, X, 0), (fadd X, C), C)
-  //      => fadd((select (fcmp Pred, X, 0), X, 0), C)
-  //
-  // Pred := OGT, OGE, OLT, OLE, UGT, UGE, ULT, and ULE
-  Instruction *FAdd;
-  Constant *C;
-  Value *X, *Z;
-  CmpInst::Predicate Pred;
-
-  // Note: OneUse check for `Cmp` is necessary because it makes sure that other
-  // InstCombine folds don't undo this transformation and cause an infinite
-  // loop. Furthermore, it could also increase the operation count.
-  if (match(&SI, m_Select(m_OneUse(m_FCmp(Pred, m_Value(X), m_Value(Z))),
-                          m_OneUse(m_Instruction(FAdd)), m_Constant(C))) ||
-      match(&SI, m_Select(m_OneUse(m_FCmp(Pred, m_Value(X), m_Value(Z))),
-                          m_Constant(C), m_OneUse(m_Instruction(FAdd))))) {
+  auto TryFoldIntoAddConstant =
+      [&Builder, &SI](CmpInst::Predicate Pred, Value *X, Value *Z,
+                      Instruction *FAdd, Constant *C, bool Swapped) -> Value * {
     // Only these relational predicates can be transformed into maxnum/minnum
     // intrinsic.
     if (!CmpInst::isRelational(Pred) || !match(Z, m_AnyZeroFP()))
@@ -3747,7 +3734,8 @@ static Value *foldSelectIntoAddConstant(SelectInst &SI,
     if (!match(FAdd, m_FAdd(m_Specific(X), m_Specific(C))))
       return nullptr;
 
-    Value *NewSelect = Builder.CreateSelect(SI.getCondition(), X, Z, "", &SI);
+    Value *NewSelect = Builder.CreateSelect(SI.getCondition(), Swapped ? Z : X,
+                                            Swapped ? X : Z, "", &SI);
     NewSelect->takeName(&SI);
 
     Value *NewFAdd = Builder.CreateFAdd(NewSelect, C);
@@ -3762,7 +3750,26 @@ static Value *foldSelectIntoAddConstant(SelectInst &SI,
     cast<Instruction>(NewSelect)->setFastMathFlags(NewFMF);
 
     return NewFAdd;
-  }
+  };
+
+  // select((fcmp Pred, X, 0), (fadd X, C), C)
+  //      => fadd((select (fcmp Pred, X, 0), X, 0), C)
+  //
+  // Pred := OGT, OGE, OLT, OLE, UGT, UGE, ULT, and ULE
+  Instruction *FAdd;
+  Constant *C;
+  Value *X, *Z;
+  CmpInst::Predicate Pred;
+
+  // Note: OneUse check for `Cmp` is necessary because it makes sure that other
+  // InstCombine folds don't undo this transformation and cause an infinite
+  // loop. Furthermore, it could also increase the operation count.
+  if (match(&SI, m_Select(m_OneUse(m_FCmp(Pred, m_Value(X), m_Value(Z))),
+                          m_OneUse(m_Instruction(FAdd)), m_Constant(C))))
+    return TryFoldIntoAddConstant(Pred, X, Z, FAdd, C, false);
+  else if (match(&SI, m_Select(m_OneUse(m_FCmp(Pred, m_Value(X), m_Value(Z))),
+                               m_Constant(C), m_OneUse(m_Instruction(FAdd)))))
+    return TryFoldIntoAddConstant(Pred, X, Z, FAdd, C, true);
 
   return nullptr;
 }
