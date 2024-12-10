@@ -4033,14 +4033,15 @@ MachineInstr *SIInstrInfo::convertToThreeAddress(MachineInstr &MI,
   if (Src0Literal && !ST.hasVOP3Literal())
     return nullptr;
 
-  unsigned NewOpc = IsFMA ? IsF16 ? AMDGPU::V_FMA_F16_gfx9_e64
-                                  : IsF64 ? AMDGPU::V_FMA_F64_e64
-                                          : IsLegacy
-                                                ? AMDGPU::V_FMA_LEGACY_F32_e64
-                                                : AMDGPU::V_FMA_F32_e64
-                          : IsF16 ? AMDGPU::V_MAD_F16_e64
-                                  : IsLegacy ? AMDGPU::V_MAD_LEGACY_F32_e64
-                                             : AMDGPU::V_MAD_F32_e64;
+  unsigned NewOpc = IsFMA      ? IsF16      ? ST.hasTrue16BitInsts()
+                                                  ? AMDGPU::V_FMA_F16_gfx9_fake16_e64
+                                                  : AMDGPU::V_FMA_F16_gfx9_e64
+                                 : IsF64    ? AMDGPU::V_FMA_F64_e64
+                                 : IsLegacy ? AMDGPU::V_FMA_LEGACY_F32_e64
+                                            : AMDGPU::V_FMA_F32_e64
+                    : IsF16    ? AMDGPU::V_MAD_F16_e64
+                    : IsLegacy ? AMDGPU::V_MAD_LEGACY_F32_e64
+                               : AMDGPU::V_MAD_F32_e64;
   if (pseudoToMCOpcode(NewOpc) == -1)
     return nullptr;
 
@@ -9285,6 +9286,7 @@ static bool isRenamedInGFX9(int Opcode) {
   //
   case AMDGPU::V_DIV_FIXUP_F16_gfx9_e64:
   case AMDGPU::V_FMA_F16_gfx9_e64:
+  case AMDGPU::V_FMA_F16_gfx9_fake16_e64:
   case AMDGPU::V_INTERP_P2_F16:
   case AMDGPU::V_MAD_F16_e64:
   case AMDGPU::V_MAD_U16_e64:
