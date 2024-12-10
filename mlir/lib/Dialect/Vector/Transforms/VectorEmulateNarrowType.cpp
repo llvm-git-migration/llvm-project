@@ -314,6 +314,9 @@ static void atomicStore(OpBuilder &builder, Location loc,
                         MemRefValue linearizedMemref, Value linearizedIndex,
                         VectorValue valueToStore, Value mask) {
   assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
+
+  // Create an atomic load-modify-write region using
+  // `memref.generic_atomic_rmw`.
   auto atomicOp = builder.create<memref::GenericAtomicRMWOp>(
       loc, linearizedMemref, ValueRange{linearizedIndex});
   Value origValue = atomicOp.getCurrentValue();
@@ -323,16 +326,18 @@ static void atomicStore(OpBuilder &builder, Location loc,
 
   // Construct the vector value from the scalar.
   auto oneVectorType = VectorType::get({1}, origValue.getType());
-  Value origVecValue = builder.create<vector::FromElementsOp>(loc, oneVectorType,
-                                                         ValueRange{origValue});
-  origVecValue =
-      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), origVecValue);
+  Value origVecValue = builder.create<vector::FromElementsOp>(
+      loc, oneVectorType, ValueRange{origValue});
+  origVecValue = builder.create<vector::BitCastOp>(loc, valueToStore.getType(),
+                                                   origVecValue);
 
   // Construct the final masked value and yield it.
   Value maskedValue =
       builder.create<arith::SelectOp>(loc, mask, valueToStore, origVecValue);
-  maskedValue = builder.create<vector::BitCastOp>(loc, oneVectorType, maskedValue);
-  auto scalarMaskedValue = builder.create<vector::ExtractOp>(loc, maskedValue, 0);
+  maskedValue =
+      builder.create<vector::BitCastOp>(loc, oneVectorType, maskedValue);
+  auto scalarMaskedValue =
+      builder.create<vector::ExtractOp>(loc, maskedValue, 0);
   builder.create<memref::AtomicYieldOp>(loc, scalarMaskedValue);
 }
 
@@ -342,17 +347,21 @@ static void rmwStore(OpBuilder &builder, Location loc,
                      MemRefValue linearizedMemref, Value linearizedIndex,
                      VectorValue valueToStore, Value mask) {
   assert(valueToStore.getType().getRank() == 1 && "expected 1-D vector");
+
+  // Construct the vector value from the scalar.
   auto oneElemVecType =
       VectorType::get({1}, linearizedMemref.getType().getElementType());
-  auto origValue = builder.create<vector::LoadOp>(
+  Value origVecValue = builder.create<vector::LoadOp>(
       loc, oneElemVecType, linearizedMemref, ValueRange{linearizedIndex});
-  auto castedValue =
-      builder.create<vector::BitCastOp>(loc, valueToStore.getType(), origValue);
-  auto result =
-      builder.create<arith::SelectOp>(loc, mask, castedValue, valueToStore);
-  auto resultBitcast =
-      builder.create<vector::BitCastOp>(loc, oneElemVecType, result);
-  builder.create<vector::StoreOp>(loc, resultBitcast, linearizedMemref,
+  origVecValue = builder.create<vector::BitCastOp>(loc, valueToStore.getType(),
+                                                   origVecValue);
+
+  // Construct the final masked value and yield it.
+  Value maskedValue =
+      builder.create<arith::SelectOp>(loc, mask, origVecValue, valueToStore);
+  maskedValue =
+      builder.create<vector::BitCastOp>(loc, oneElemVecType, maskedValue);
+  builder.create<vector::StoreOp>(loc, maskedValue, linearizedMemref,
                                   linearizedIndex);
 }
 
