@@ -241,9 +241,20 @@ static MlirBlock createBlock(const py::sequence &pyArgTypes,
 
 /// Wrapper for the global LLVM debugging flag.
 struct PyGlobalDebugFlag {
-  static void set(py::object &o, bool enable) { mlirEnableGlobalDebug(enable); }
+  static void set(py::object &o, bool enable) {
+    withLock([&](){
+      mlirEnableGlobalDebug(enable);
+      return 0;
+    });
+  }
 
-  static bool get(const py::object &) { return mlirIsGlobalDebugEnabled(); }
+  static bool get(const py::object &) {
+    // Use lock in free-threading to avoid data-races,
+    // observed in ir/debug.py, testDebugDlag
+    return withLock([&](){
+      return mlirIsGlobalDebugEnabled();
+    });
+  }
 
   static void bind(py::module &m) {
     // Debug flags.
@@ -253,7 +264,10 @@ struct PyGlobalDebugFlag {
         .def_static(
             "set_types",
             [](const std::string &type) {
-              mlirSetGlobalDebugType(type.c_str());
+              withLock([&](){
+                mlirSetGlobalDebugType(type.c_str());
+                return 0;
+              });
             },
             "types"_a, "Sets specific debug types to be produced by LLVM")
         .def_static("set_types", [](const std::vector<std::string> &types) {
@@ -261,8 +275,32 @@ struct PyGlobalDebugFlag {
           pointers.reserve(types.size());
           for (const std::string &str : types)
             pointers.push_back(str.c_str());
-          mlirSetGlobalDebugTypes(pointers.data(), pointers.size());
+          withLock([&](){
+            mlirSetGlobalDebugTypes(pointers.data(), pointers.size());
+            return 0;
+          });
         });
+  }
+
+private:
+#ifdef Py_GIL_DISABLED
+  static PyMutex &getLock() {
+    static PyMutex lock;
+    return lock;
+  }
+#endif
+
+  template<typename F>
+  static inline auto withLock(const F& cb) -> decltype(cb()) {
+#ifdef Py_GIL_DISABLED
+    auto &lock = getLock();
+    PyMutex_Lock(&lock);
+#endif
+    auto result = cb();
+#ifdef Py_GIL_DISABLED
+    PyMutex_Unlock(&lock);
+#endif
+    return result;
   }
 };
 
@@ -270,23 +308,28 @@ struct PyAttrBuilderMap {
   static bool dunderContains(const std::string &attributeKind) {
     return PyGlobals::get().lookupAttributeBuilder(attributeKind).has_value();
   }
-  static py::function dundeGetItemNamed(const std::string &attributeKind) {
-    auto builder = PyGlobals::get().lookupAttributeBuilder(attributeKind);
+  static py::function dunderGetItemNamed(const std::string &attributeKind) {
+    auto builder = PyGlobals::withInstance([&](PyGlobals& instance) {
+        return instance.lookupAttributeBuilder(attributeKind);
+    });
     if (!builder)
       throw py::key_error(attributeKind);
     return *builder;
   }
-  static void dundeSetItemNamed(const std::string &attributeKind,
+  static void dunderSetItemNamed(const std::string &attributeKind,
                                 py::function func, bool replace) {
-    PyGlobals::get().registerAttributeBuilder(attributeKind, std::move(func),
-                                              replace);
+    PyGlobals::withInstance([&](PyGlobals& instance) {
+        instance.registerAttributeBuilder(attributeKind, std::move(func),
+                                          replace);
+        return 0;
+    });
   }
 
   static void bind(py::module &m) {
     py::class_<PyAttrBuilderMap>(m, "AttrBuilder", py::module_local())
         .def_static("contains", &PyAttrBuilderMap::dunderContains)
-        .def_static("get", &PyAttrBuilderMap::dundeGetItemNamed)
-        .def_static("insert", &PyAttrBuilderMap::dundeSetItemNamed,
+        .def_static("get", &PyAttrBuilderMap::dunderGetItemNamed)
+        .def_static("insert", &PyAttrBuilderMap::dunderSetItemNamed,
                     "attribute_kind"_a, "attr_builder"_a, "replace"_a = false,
                     "Register an attribute builder for building MLIR "
                     "attributes from python values.");
