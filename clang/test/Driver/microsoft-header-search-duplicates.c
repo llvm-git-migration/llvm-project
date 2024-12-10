@@ -2,26 +2,8 @@
 // Microsoft compatibility mode. See header-search-duplicates.c for GCC
 // compatible behavior.
 
-// This test is intended to be usable to validate MSVC behavior using a .bat
-// test driver similar to the following. A failure to compile successfully
-// would indicate a problem with the test or, perhaps, a behavioral difference
-// across MSVC versions.
-//   @echo on
-//   setlocal
-//   rd /s/q test-msvc
-//   split-file microsoft-header-search-duplicates.c test-msvc
-//   pushd test-msvc
-//   REM Validate test 1:
-//   set INCLUDE=...
-//   set EXTERNAL_INCLUDE=...
-//   set EXTRA_INCLUDE=...
-//   cl.exe /c /showIncludes ... test1.c
-//   popd
-
-// This test exercises both the clang and clang-cl drivers using a target that
-// implicitly enables the '-fms-compatibility' option. The '-nobuiltininc',
-// '-nostdinc', and '/X ('-nostdlibinc') options are used to suppress implicit
-// header search paths to ease testing.
+// This test uses the '-nobuiltininc', '-nostdinc', and '/X ('-nostdlibinc')
+// options to suppress implicit header search paths to ease testing.
 
 // Header search paths are processed as follows:
 // 1) Paths specified by the '/I' and '/external:I' options are processed in
@@ -38,7 +20,7 @@
 // 3) Paths specified by the 'INCLUDE' environment variable are processed in
 //    order. Paths that duplicate a path from step 1, step 2, or an earlier
 //    path in the 'INCLUDE' environment variable are ignored.
-// 4) Paths specified by the 'EXTERNALINCLUDE' environment variable are
+// 4) Paths specified by the 'EXTERNAL_INCLUDE' environment variable are
 //    processed in order. Paths that duplicate a path from step 1, step 2,
 //    step 3, or an earlier path in the 'EXTERNAL_INCLUDE' environment
 //    variable are ignored.
@@ -51,6 +33,7 @@
 //
 // RUN: %clang \
 // RUN:     -target x86_64-pc-windows -v -fsyntax-only \
+// RUN:     -fheader-search=microsoft \
 // RUN:     -nostdinc \
 // RUN:     -I%t/test1/include/y \
 // RUN:     -I%t/test1/include/z \
@@ -87,6 +70,7 @@
 //
 // RUN: %clang \
 // RUN:     -target x86_64-pc-windows -v -fsyntax-only \
+// RUN:     -fheader-search=microsoft \
 // RUN:     -nostdinc \
 // RUN:     -iexternal %t/test2/include/z \
 // RUN:     -iexternal %t/test2/include/y \
@@ -123,6 +107,7 @@
 //
 // RUN: %clang \
 // RUN:     -target x86_64-pc-windows -v -fsyntax-only \
+// RUN:     -fheader-search=microsoft \
 // RUN:     -nostdinc \
 // RUN:     -iexternal %t/test3/include/w \
 // RUN:     -I%t/test3/include/z \
@@ -193,6 +178,7 @@
 // RUN: env EXTRA_INCLUDE2="%t/test4/include/z;%t/test4/include/y;%t/test4/include/x;%t/test4/include/w" \
 // RUN: %clang \
 // RUN:     -target x86_64-pc-windows -v -fsyntax-only \
+// RUN:     -fheader-search=microsoft \
 // RUN:     -nostdinc \
 // RUN:     -I%t/test4/include/w \
 // RUN:     -iexternal %t/test4/include/x \
@@ -262,6 +248,7 @@
 // RUN: env EXTERNAL_INCLUDE="%t/test5/include/z;%t/test5/include/y;%t/test5/include/w;%t/test5/include/v;%t/test5/include/u" \
 // RUN: %clang \
 // RUN:     -target x86_64-pc-windows -v -fsyntax-only \
+// RUN:     -fheader-search=microsoft \
 // RUN:     -nostdinc \
 // RUN:     -I%t/test5/include/u \
 // RUN:     -iexternal %t/test5/include/v \

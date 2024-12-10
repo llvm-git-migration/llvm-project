@@ -8240,6 +8240,17 @@ def fexperimental_max_bitint_width_EQ:
 // Header Search Options
 //===----------------------------------------------------------------------===//
 
+let Visibility = [ClangOption, CC1Option, CLOption] in {
+
+def fheader_search : Joined<["-"], "fheader-search=">, Group<clang_i_Group>,
+  HelpText<"Specify the method used to resolve included header files">,
+  Values<"gcc,microsoft">,
+  NormalizedValuesScope<"clang::HeaderSearchMode">,
+  NormalizedValues<["GCC", "Microsoft"]>,
+  MarshallingInfoEnum<HeaderSearchOpts<"Mode">, "GCC">;
+
+} // let Visibility = [ClangOption, CC1Option, CLOption]
+
 let Visibility = [CC1Option] in {
 
 def nostdsysteminc : Flag<["-"], "nostdsysteminc">,

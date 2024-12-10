@@ -5,9 +5,8 @@
 // RUN: rm -rf %t
 // RUN: split-file %s %t
 
-// This test exercises the clang driver using a target that does not implicitly
-// enable the -fms-compatibility option. The -nostdinc option is used to
-// suppress default search paths to ease testing.
+// This test uses the -nostdinc option to suppress default search paths to
+// ease testing.
 
 // Header search paths are categorized into the following general groups.
 // - Quoted: Search paths that are only used to resolve inclusion of header

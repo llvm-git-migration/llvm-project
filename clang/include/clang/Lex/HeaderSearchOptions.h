@@ -69,6 +69,11 @@ enum IncludeDirGroup {
 
 } // namespace frontend
 
+/// HeaderSearchMode - The method used to resolve included headers to files.
+/// This controls the order in which include paths are searched and how
+/// duplicate search paths are handled.
+enum class HeaderSearchMode { GCC, Microsoft };
+
 /// HeaderSearchOptions - Helper class for storing options related to the
 /// initialization of the HeaderSearch object.
 class HeaderSearchOptions {
@@ -102,6 +107,9 @@ public:
     SystemHeaderPrefix(StringRef Prefix, bool IsSystemHeader)
         : Prefix(Prefix), IsSystemHeader(IsSystemHeader) {}
   };
+
+  /// The header search mode to use.
+  HeaderSearchMode Mode = HeaderSearchMode::GCC;
 
   /// If non-empty, the directory to use as a "virtual system root" for include
   /// paths.

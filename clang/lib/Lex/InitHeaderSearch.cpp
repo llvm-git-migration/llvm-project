@@ -98,7 +98,7 @@ public:
                               const HeaderSearchOptions &HSOpts);
 
   /// Merges all search path lists into one list and send it to HeaderSearch.
-  void Realize(const LangOptions &Lang);
+  void Realize(const HeaderSearchOptions &HSOpts, const LangOptions &Lang);
 };
 
 }  // end anonymous namespace.
@@ -369,7 +369,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(
 /// and system search paths. If partitioning is not needed, then call with
 /// Part1Begin equal to Part2Begin. The return value is the number of items
 /// removed from the first partition.
-static unsigned RemoveDuplicates(const LangOptions &Lang,
+static unsigned RemoveDuplicates(const HeaderSearchOptions &HSOpts,
                                  std::vector<DirectoryLookupInfo> &SearchList,
                                  unsigned Part1Begin, unsigned Part2Begin,
                                  bool Verbose) {
@@ -430,8 +430,8 @@ static unsigned RemoveDuplicates(const LangOptions &Lang,
       // A path that matches a later path specified by -iexternal is always
       // suppressed.
       DirToRemove = PrevIndex;
-    } else if (!Lang.MSVCCompat && PrevSrcKind == SrcMgr::C_User &&
-               CurSrcKind != SrcMgr::C_User) {
+    } else if (HSOpts.Mode != HeaderSearchMode::Microsoft &&
+               PrevSrcKind == SrcMgr::C_User && CurSrcKind != SrcMgr::C_User) {
       // When not in Microsoft compatibility mode, a user path that matches
       // a later system path is suppressed.
       DirToRemove = PrevIndex;
@@ -489,7 +489,8 @@ mapToUserEntries(const std::vector<DirectoryLookupInfo> &Infos) {
   return LookupsToUserEntries;
 }
 
-void InitHeaderSearch::Realize(const LangOptions &Lang) {
+void InitHeaderSearch::Realize(const HeaderSearchOptions &HSOpts,
+                               const LangOptions &Lang) {
   // Concatenate ANGLE+SYSTEM+AFTER chains together into SearchList.
   std::vector<DirectoryLookupInfo> SearchList;
   SearchList.reserve(IncludePath.size());
@@ -499,7 +500,7 @@ void InitHeaderSearch::Realize(const LangOptions &Lang) {
     if (Include.Group == Quoted)
       SearchList.push_back(Include);
   // Remove duplicate search paths within the quoted inclusion list.
-  RemoveDuplicates(Lang, SearchList, 0, 0, Verbose);
+  RemoveDuplicates(HSOpts, SearchList, 0, 0, Verbose);
   unsigned EndQuoted = SearchList.size();
 
   // Add search paths for angled inclusion next. Note that user paths and
@@ -516,7 +517,7 @@ void InitHeaderSearch::Realize(const LangOptions &Lang) {
   // Remove duplicate search paths within the angled inclusion list.
   // This may leave paths duplicated across the quoted and angled inclusion
   // sections.
-  RemoveDuplicates(Lang, SearchList, EndQuoted, EndQuoted, Verbose);
+  RemoveDuplicates(HSOpts, SearchList, EndQuoted, EndQuoted, Verbose);
   unsigned EndAngled = SearchList.size();
 
   // Add search paths for language dependent system paths next.
@@ -539,7 +540,7 @@ void InitHeaderSearch::Realize(const LangOptions &Lang) {
   // same file. This may result in earlier user paths being removed, and thus
   // requires updating the EndAngled index.
   unsigned NonSystemRemoved =
-      RemoveDuplicates(Lang, SearchList, EndQuoted, EndAngled, Verbose);
+      RemoveDuplicates(HSOpts, SearchList, EndQuoted, EndAngled, Verbose);
   EndAngled -= NonSystemRemoved;
 
   Headers.SetSearchPaths(extractLookups(SearchList), EndQuoted, EndAngled,
@@ -599,5 +600,5 @@ void clang::ApplyHeaderSearchOptions(HeaderSearch &HS,
       HS.getModuleMap().setBuiltinIncludeDir(*Dir);
   }
 
-  Init.Realize(Lang);
+  Init.Realize(HSOpts, Lang);
 }
