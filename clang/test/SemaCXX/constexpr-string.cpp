@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 %s -triple x86_64-linux-gnu -std=c++2a -fsyntax-only -verify -pedantic -Wno-vla-extension
+// RUN: %clang_cc1 %s -triple x86_64-linux-gnu -std=c++2a -fsyntax-only -verify -pedantic -Wno-vla-extension -fexperimental-new-constant-interpreter
 // RUN: %clang_cc1 %s -triple x86_64-linux-gnu -std=gnu++2a -fsyntax-only -verify -pedantic -Wno-vla-extension -DGNUMODE
 // RUN: %clang_cc1 %s -triple x86_64-linux-gnu -std=c++2a -fsyntax-only -verify -pedantic -Wno-vla-extension -fno-signed-char
 // RUN: %clang_cc1 %s -triple x86_64-linux-gnu -std=c++2a -fsyntax-only -verify -pedantic -Wno-vla-extension -fno-wchar -DNO_PREDEFINED_WCHAR_T
