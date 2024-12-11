@@ -184,7 +184,7 @@ def print_impl_status_rst(header: Header, api: Dict):
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    choices = [p.with_suffix(".h").name for p in Path(__file__).parent.glob("*.json")]
+    choices = sorted([p.with_suffix(".h").name for p in Path(__file__).parent.glob("*.json")])
     parser.add_argument("header_name", choices=choices)
     return parser.parse_args()
 
