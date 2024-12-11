@@ -438,10 +438,22 @@ private:
     return (__new_size + (__bits_per_word - 1)) & ~((size_type)__bits_per_word - 1);
   }
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 size_type __recommend(size_type __new_size) const;
-  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __construct_at_end(size_type __n, bool __x);
+
+  //  Default constructs __n objects starting at __end_
+  //  Precondition:  __n > 0
+  //  Precondition:  size() + __n <= capacity()
+  //  Postcondition:  size() == size() + __n
+  _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __construct_at_end(size_type __n, bool __x) {
+    std::fill_n(end(), __n, __x);
+    this->__size_ += __n;
+  }
   template <class _InputIterator, class _Sentinel>
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void
-  __construct_at_end(_InputIterator __first, _Sentinel __last, size_type __n);
+  __construct_at_end(_InputIterator __first, _Sentinel __last, size_type __n) {
+    std::__copy(__first, __last, end());
+    this->__size_ += __n;
+  }
+
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void __append(size_type __n, const_reference __x);
   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 reference __make_ref(size_type __pos) _NOEXCEPT {
     return reference(__begin_ + __pos / __bits_per_word, __storage_type(1) << __pos % __bits_per_word);
@@ -528,39 +540,6 @@ vector<bool, _Allocator>::__recommend(size_type __new_size) const {
   if (__cap >= __ms / 2)
     return __ms;
   return std::max(2 * __cap, __align_it(__new_size));
-}
-
-//  Default constructs __n objects starting at __end_
-//  Precondition:  __n > 0
-//  Precondition:  size() + __n <= capacity()
-//  Postcondition:  size() == size() + __n
-template <class _Allocator>
-inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 void
-vector<bool, _Allocator>::__construct_at_end(size_type __n, bool __x) {
-  size_type __old_size = this->__size_;
-  this->__size_ += __n;
-  if (__old_size == 0 || ((__old_size - 1) / __bits_per_word) != ((this->__size_ - 1) / __bits_per_word)) {
-    if (this->__size_ <= __bits_per_word)
-      this->__begin_[0] = __storage_type(0);
-    else
-      this->__begin_[(this->__size_ - 1) / __bits_per_word] = __storage_type(0);
-  }
-  std::fill_n(__make_iter(__old_size), __n, __x);
-}
-
-template <class _Allocator>
-template <class _InputIterator, class _Sentinel>
-_LIBCPP_CONSTEXPR_SINCE_CXX20 void
-vector<bool, _Allocator>::__construct_at_end(_InputIterator __first, _Sentinel __last, size_type __n) {
-  size_type __old_size = this->__size_;
-  this->__size_ += __n;
-  if (__old_size == 0 || ((__old_size - 1) / __bits_per_word) != ((this->__size_ - 1) / __bits_per_word)) {
-    if (this->__size_ <= __bits_per_word)
-      this->__begin_[0] = __storage_type(0);
-    else
-      this->__begin_[(this->__size_ - 1) / __bits_per_word] = __storage_type(0);
-  }
-  std::__copy(__first, __last, __make_iter(__old_size));
 }
 
 template <class _Allocator>
