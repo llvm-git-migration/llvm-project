@@ -1442,13 +1442,100 @@ void VPlanTransforms::addActiveLaneMask(
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
 
+static VPRecipeBase *createEVLRecipe(VPValue &EVL, VPValue *HeaderMask,
+                                     VPValue *AllOneMask,
+                                     VPRecipeBase *CurRecipe,
+                                     VPTypeAnalysis TypeInfo) {
+  using namespace llvm::VPlanPatternMatch;
+  auto GetNewMask = [&](VPValue *OrigMask) -> VPValue * {
+    assert(OrigMask && "Unmasked recipe when folding tail");
+    return HeaderMask == OrigMask ? nullptr : OrigMask;
+  };
+
+  return TypeSwitch<VPRecipeBase *, VPRecipeBase *>(CurRecipe)
+      .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
+        VPValue *NewMask = GetNewMask(L->getMask());
+        return new VPWidenLoadEVLRecipe(*L, EVL, NewMask);
+      })
+      .Case<VPWidenStoreRecipe>([&](VPWidenStoreRecipe *S) {
+        VPValue *NewMask = GetNewMask(S->getMask());
+        return new VPWidenStoreEVLRecipe(*S, EVL, NewMask);
+      })
+      .Case<VPWidenRecipe>([&](VPWidenRecipe *W) -> VPRecipeBase * {
+        unsigned Opcode = W->getOpcode();
+        if (!Instruction::isBinaryOp(Opcode) && !Instruction::isUnaryOp(Opcode))
+          return nullptr;
+        return new VPWidenEVLRecipe(*W, EVL);
+      })
+      .Case<VPReductionRecipe>([&](VPReductionRecipe *Red) {
+        VPValue *NewMask = GetNewMask(Red->getCondOp());
+        return new VPReductionEVLRecipe(*Red, EVL, NewMask);
+      })
+      .Case<VPWidenIntrinsicRecipe>(
+          [&](VPWidenIntrinsicRecipe *CInst) -> VPRecipeBase * {
+            auto *CI = cast<CallInst>(CInst->getUnderlyingInstr());
+            Intrinsic::ID VPID = VPIntrinsic::getForIntrinsic(
+                CI->getCalledFunction()->getIntrinsicID());
+            assert(VPID != Intrinsic::not_intrinsic &&
+                   "Expected VP Instrinsic");
+
+            SmallVector<VPValue *> Ops(CInst->operands());
+            assert(VPIntrinsic::getMaskParamPos(VPID) &&
+                   VPIntrinsic::getVectorLengthParamPos(VPID) &&
+                   "Expected VP intrinsic");
+
+            Ops.push_back(AllOneMask);
+            Ops.push_back(&EVL);
+            return new VPWidenIntrinsicRecipe(*CI, VPID, Ops,
+                                              TypeInfo.inferScalarType(CInst),
+                                              CInst->getDebugLoc());
+          })
+      .Case<VPWidenCastRecipe>([&](VPWidenCastRecipe *CInst) -> VPRecipeBase * {
+        auto *CI = dyn_cast<CastInst>(CInst->getUnderlyingInstr());
+        Intrinsic::ID VPID = VPIntrinsic::getForOpcode(CI->getOpcode());
+        assert(VPID != Intrinsic::not_intrinsic &&
+               "Expected vp.casts Instrinsic");
+
+        SmallVector<VPValue *> Ops(CInst->operands());
+        assert(VPIntrinsic::getMaskParamPos(VPID) &&
+               VPIntrinsic::getVectorLengthParamPos(VPID) &&
+               "Expected VP intrinsic");
+        Ops.push_back(AllOneMask);
+        Ops.push_back(&EVL);
+        return new VPWidenIntrinsicRecipe(
+            VPID, Ops, TypeInfo.inferScalarType(CInst), CInst->getDebugLoc());
+      })
+      .Case<VPWidenSelectRecipe>([&](VPWidenSelectRecipe *Sel) {
+        SmallVector<VPValue *> Ops(Sel->operands());
+        Ops.push_back(&EVL);
+        return new VPWidenIntrinsicRecipe(Intrinsic::vp_select, Ops,
+                                          TypeInfo.inferScalarType(Sel),
+                                          Sel->getDebugLoc());
+      })
+      .Case<VPInstruction>([&](VPInstruction *VPI) -> VPRecipeBase * {
+        VPValue *LHS, *RHS;
+        // Transform select with a header mask condition
+        //   select(header_mask, LHS, RHS)
+        // into vector predication merge.
+        //   vp.merge(all-true, LHS, RHS, EVL)
+        if (!match(VPI, m_Select(m_Specific(HeaderMask), m_VPValue(LHS),
+                                 m_VPValue(RHS))))
+          return nullptr;
+        // Use all true as the condition because this transformation is
+        // limited to selects whose condition is a header mask.
+        return new VPWidenIntrinsicRecipe(
+            Intrinsic::vp_merge, {AllOneMask, LHS, RHS, &EVL},
+            TypeInfo.inferScalarType(LHS), VPI->getDebugLoc());
+      })
+      .Default([&](VPRecipeBase *R) { return nullptr; });
+}
+
 /// Replace recipes with their EVL variants.
 static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
-  using namespace llvm::VPlanPatternMatch;
   Type *CanonicalIVType = Plan.getCanonicalIV()->getScalarType();
   VPTypeAnalysis TypeInfo(CanonicalIVType);
   LLVMContext &Ctx = CanonicalIVType->getContext();
-  SmallVector<VPValue *> HeaderMasks = collectAllHeaderMasks(Plan);
+  VPValue *AllOneMask = Plan.getOrAddLiveIn(ConstantInt::getTrue(Ctx));
 
   for (VPUser *U : Plan.getVF().users()) {
     if (auto *R = dyn_cast<VPReverseVectorPointerRecipe>(U))
@@ -1460,111 +1547,22 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
   for (VPValue *HeaderMask : collectAllHeaderMasks(Plan)) {
     for (VPUser *U : collectUsersRecursively(HeaderMask)) {
       auto *CurRecipe = cast<VPRecipeBase>(U);
-      auto GetNewMask = [&](VPValue *OrigMask) -> VPValue * {
-        assert(OrigMask && "Unmasked recipe when folding tail");
-        return HeaderMask == OrigMask ? nullptr : OrigMask;
-      };
-
-      VPRecipeBase *NewRecipe =
-          TypeSwitch<VPRecipeBase *, VPRecipeBase *>(CurRecipe)
-              .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
-                VPValue *NewMask = GetNewMask(L->getMask());
-                return new VPWidenLoadEVLRecipe(*L, EVL, NewMask);
-              })
-              .Case<VPWidenStoreRecipe>([&](VPWidenStoreRecipe *S) {
-                VPValue *NewMask = GetNewMask(S->getMask());
-                return new VPWidenStoreEVLRecipe(*S, EVL, NewMask);
-              })
-              .Case<VPWidenRecipe>([&](VPWidenRecipe *W) -> VPRecipeBase * {
-                unsigned Opcode = W->getOpcode();
-                if (!Instruction::isBinaryOp(Opcode) &&
-                    !Instruction::isUnaryOp(Opcode))
-                  return nullptr;
-                return new VPWidenEVLRecipe(*W, EVL);
-              })
-              .Case<VPReductionRecipe>([&](VPReductionRecipe *Red) {
-                VPValue *NewMask = GetNewMask(Red->getCondOp());
-                return new VPReductionEVLRecipe(*Red, EVL, NewMask);
-              })
-              .Case<VPWidenIntrinsicRecipe>(
-                  [&](VPWidenIntrinsicRecipe *CInst) -> VPRecipeBase * {
-                    auto *CI = cast<CallInst>(CInst->getUnderlyingInstr());
-                    Intrinsic::ID VPID = VPIntrinsic::getForIntrinsic(
-                        CI->getCalledFunction()->getIntrinsicID());
-                    if (VPID == Intrinsic::not_intrinsic)
-                      return nullptr;
-
-                    SmallVector<VPValue *> Ops(CInst->operands());
-                    assert(VPIntrinsic::getMaskParamPos(VPID) &&
-                           VPIntrinsic::getVectorLengthParamPos(VPID) &&
-                           "Expected VP intrinsic");
-                    VPValue *Mask = Plan.getOrAddLiveIn(ConstantInt::getTrue(
-                        IntegerType::getInt1Ty(CI->getContext())));
-                    Ops.push_back(Mask);
-                    Ops.push_back(&EVL);
-                    return new VPWidenIntrinsicRecipe(
-                        *CI, VPID, Ops, TypeInfo.inferScalarType(CInst),
-                        CInst->getDebugLoc());
-                  })
-              .Case<VPWidenCastRecipe>(
-                  [&](VPWidenCastRecipe *CastR) -> VPRecipeBase * {
-                    Intrinsic::ID VPID =
-                        VPIntrinsic::getForOpcode(CastR->getOpcode());
-                    assert(VPID != Intrinsic::not_intrinsic &&
-                           "Expected vp.casts Instrinsic");
-
-                    SmallVector<VPValue *> Ops(CastR->operands());
-                    assert(VPIntrinsic::getMaskParamPos(VPID) &&
-                           VPIntrinsic::getVectorLengthParamPos(VPID) &&
-                           "Expected VP intrinsic");
-                    VPValue *Mask =
-                        Plan.getOrAddLiveIn(ConstantInt::getTrue(Ctx));
-                    Ops.push_back(Mask);
-                    Ops.push_back(&EVL);
-                    return new VPWidenIntrinsicRecipe(
-                        VPID, Ops, TypeInfo.inferScalarType(CastR),
-                        CastR->getDebugLoc());
-                  })
-              .Case<VPWidenSelectRecipe>([&](VPWidenSelectRecipe *Sel) {
-                SmallVector<VPValue *> Ops(Sel->operands());
-                Ops.push_back(&EVL);
-                return new VPWidenIntrinsicRecipe(Intrinsic::vp_select, Ops,
-                                                  TypeInfo.inferScalarType(Sel),
-                                                  Sel->getDebugLoc());
-              })
-              .Case<VPInstruction>([&](VPInstruction *VPI) -> VPRecipeBase * {
-                VPValue *LHS, *RHS;
-                // Transform select with a header mask condition
-                //   select(header_mask, LHS, RHS)
-                // into vector predication merge.
-                //   vp.merge(all-true, LHS, RHS, EVL)
-                if (!match(VPI, m_Select(m_Specific(HeaderMask), m_VPValue(LHS),
-                                         m_VPValue(RHS))))
-                  return nullptr;
-                // Use all true as the condition because this transformation is
-                // limited to selects whose condition is a header mask.
-                VPValue *AllTrue =
-                    Plan.getOrAddLiveIn(ConstantInt::getTrue(Ctx));
-                return new VPWidenIntrinsicRecipe(
-                    Intrinsic::vp_merge, {AllTrue, LHS, RHS, &EVL},
-                    TypeInfo.inferScalarType(LHS), VPI->getDebugLoc());
-              })
-              .Default([&](VPRecipeBase *R) { return nullptr; });
-
-      if (!NewRecipe)
+      VPRecipeBase *EVLRecipe =
+          createEVLRecipe(EVL, HeaderMask, AllOneMask, CurRecipe, TypeInfo);
+      if (!EVLRecipe)
         continue;
 
-      [[maybe_unused]] unsigned NumDefVal = NewRecipe->getNumDefinedValues();
+      [[maybe_unused]] unsigned NumDefVal = EVLRecipe->getNumDefinedValues();
       assert(NumDefVal == CurRecipe->getNumDefinedValues() &&
              "New recipe must define the same number of values as the "
              "original.");
       assert(
           NumDefVal <= 1 &&
           "Only supports recipes with a single definition or without users.");
-      NewRecipe->insertBefore(CurRecipe);
-      if (isa<VPSingleDefRecipe, VPWidenLoadEVLRecipe>(NewRecipe)) {
+      EVLRecipe->insertBefore(CurRecipe);
+      if (isa<VPSingleDefRecipe, VPWidenLoadEVLRecipe>(EVLRecipe)) {
         VPValue *CurVPV = CurRecipe->getVPSingleValue();
-        CurVPV->replaceAllUsesWith(NewRecipe->getVPSingleValue());
+        CurVPV->replaceAllUsesWith(EVLRecipe->getVPSingleValue());
       }
       // Defer erasing recipes till the end so that we don't invalidate the
       // VPTypeAnalysis cache.
