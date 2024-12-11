@@ -1,3 +1,8 @@
+set_source_files_properties(
+  RegAllocGreedy.cpp
+  PROPERTIES COMPILE_FLAGS "-O0 -g"
+)
+
 if (DEFINED LLVM_HAVE_TF_AOT OR LLVM_HAVE_TFLITE)
   include(TensorFlowCompile)
   set(LLVM_RAEVICT_MODEL_PATH_DEFAULT "models/regalloc-eviction")

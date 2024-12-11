@@ -125,6 +125,7 @@
 #include "llvm/CodeGen/PreISelIntrinsicLowering.h"
 #include "llvm/CodeGen/RegAllocEvictionAdvisor.h"
 #include "llvm/CodeGen/RegAllocFast.h"
+#include "llvm/CodeGen/RegAllocGreedy.h"
 #include "llvm/CodeGen/RegAllocPriorityAdvisor.h"
 #include "llvm/CodeGen/RegUsageInfoCollector.h"
 #include "llvm/CodeGen/RegUsageInfoPropagate.h"
@@ -2026,6 +2027,13 @@ Error PassBuilder::parseMachinePass(MachineFunctionPassManager &MFPM,
                  std::remove_reference_t<decltype(CREATE_PASS)>>());           \
     return Error::success();                                                   \
   }
+//   MACHINE_FUNCTION_PASS_WITH_PARAMS(
+//     "regallocgreedy", "RAGreedy",
+//     [](RegAllocFilterFunc F) { return RAGreedyPass(F); },
+//     [PB = this](StringRef Params) {
+//       return nullptr; // parseRegAllocFilter(*PB, Params);
+//     }, ""
+// )
 #include "llvm/Passes/MachinePassRegistry.def"
 
   for (auto &C : MachineFunctionPipelineParsingCallbacks)
