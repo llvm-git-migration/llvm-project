@@ -214,9 +214,12 @@ void M68kMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &Op,
   } else if (Op.isExpr()) {
     // Absolute address
     int64_t Addr;
-    if (!Op.getExpr()->evaluateAsAbsolute(Addr))
+    if (!Op.getExpr()->evaluateAsAbsolute(Addr)) {
+      LLVM_DEBUG(MI.dump_pretty(dbgs()));
+      LLVM_DEBUG(dbgs() << '\n');
       report_fatal_error("Unsupported asm expression. Only absolute address "
                          "can be placed here.");
+    }
     Value |= static_cast<uint64_t>(Addr);
   } else {
     llvm_unreachable("Unsupported operand type");

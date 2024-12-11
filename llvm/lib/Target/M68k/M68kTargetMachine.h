@@ -21,6 +21,7 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/Support/CodeGen.h"
 
 #include <optional>
 
