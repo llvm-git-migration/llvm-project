@@ -827,11 +827,25 @@ let SMETargetGuard = "sme-lutv2" in {
 let SMETargetGuard = "sme-f8f32" in {
   def SVMOPA_FP8_ZA32 : Inst<"svmopa_za32[_mf8]_m_fpm", "viPPdd>", "m", MergeNone, "aarch64_sme_fp8_fmopa_za32",
                              [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], [ImmCheck<0, ImmCheck0_3>]>;
+  // FMLAL (single)
+  def SVMLA_FP8_SINGLE_ZA32_VG4x1 : Inst<"svmla[_single]_za32[_mf8]_vg4x1_fpm", "vmdd>", "m", MergeNone, "aarch64_sme_fp8_fmlall_single_za32_vg4x1",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
+  def SVMLA_FP8_SINGLE_ZA32_VG4x2 : Inst<"svmla[_single]_za32[_mf8]_vg4x2_fpm", "vm2d>", "m", MergeNone, "aarch64_sme_fp8_fmlall_single_za32_vg4x2",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
+  def SVMLA_FP8_SINGLE_ZA32_VG4x4 : Inst<"svmla[_single]_za32[_mf8]_vg4x4_fpm", "vm4d>", "m", MergeNone, "aarch64_sme_fp8_fmlall_single_za32_vg4x4",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
 }
 
 let SMETargetGuard = "sme-f8f16" in {
   def SVMOPA_FP8_ZA16 : Inst<"svmopa_za16[_mf8]_m_fpm", "viPPdd>", "m", MergeNone, "aarch64_sme_fp8_fmopa_za16",
                              [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], [ImmCheck<0, ImmCheck0_1>]>;
+  // FMLAL (single)
+  def SVMLA_FP8_SINGLE_ZA16_VG2x1 : Inst<"svmla[_single]_za16[_mf8]_vg2x1_fpm", "vmdd>", "m", MergeNone, "aarch64_sme_fp8_fmlal_single_za16_vg2x1",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
+  def SVMLA_FP8_SINGLE_ZA16_VG2x2 : Inst<"svmla[_single]_za16[_mf8]_vg2x2_fpm", "vm2d>", "m", MergeNone, "aarch64_sme_fp8_fmlal_single_za16_vg2x2",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
+  def SVMLA_FP8_SINGLE_ZA16_VG2x4 : Inst<"svmla[_single]_za16[_mf8]_vg2x4_fpm", "vm4d>", "m", MergeNone, "aarch64_sme_fp8_fmlal_single_za16_vg2x4",
+                                         [IsStreaming, IsInOutZA, SetsFPMR, IsOverloadNone], []>;
 }
 
 } // let SVETargetGuard = InvalidMode
