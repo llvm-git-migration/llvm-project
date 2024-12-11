@@ -190,6 +190,12 @@ static bool interp__builtin_is_constant_evaluated(InterpState &S, CodePtr OpPC,
   return true;
 }
 
+/// Determine if T is a character type for which we guarantee that
+/// sizeof(T) == 1.
+static bool isOneByteCharacterType(QualType T) {
+  return T->isCharType() || T->isChar8Type();
+}
+
 static bool interp__builtin_strcmp(InterpState &S, CodePtr OpPC,
                                    const InterpFrame *Frame,
                                    const Function *Func, const CallExpr *Call) {
@@ -197,11 +203,13 @@ static bool interp__builtin_strcmp(InterpState &S, CodePtr OpPC,
   const Pointer &A = getParam<Pointer>(Frame, 0);
   const Pointer &B = getParam<Pointer>(Frame, 1);
 
-  if (ID == Builtin::BIstrcmp || ID == Builtin::BIstrncmp)
+  if (ID == Builtin::BIstrcmp || ID == Builtin::BIstrncmp ||
+      ID == Builtin::BImemcmp)
     diagnoseNonConstexprBuiltin(S, OpPC, ID);
 
   uint64_t Limit = ~static_cast<uint64_t>(0);
-  if (ID == Builtin::BIstrncmp || ID == Builtin::BI__builtin_strncmp)
+  if (ID == Builtin::BIstrncmp || ID == Builtin::BI__builtin_strncmp ||
+      ID == Builtin::BI__builtin_memcmp || ID == Builtin::BImemcmp)
     Limit = peekToAPSInt(S.Stk, *S.getContext().classify(Call->getArg(2)))
                 .getZExtValue();
 
@@ -218,6 +226,23 @@ static bool interp__builtin_strcmp(InterpState &S, CodePtr OpPC,
 
   assert(A.getFieldDesc()->isPrimitiveArray());
   assert(B.getFieldDesc()->isPrimitiveArray());
+
+  bool StopAtZero =
+      (ID == Builtin::BIstrcmp || ID == Builtin::BI__builtin_strcmp ||
+       ID == Builtin::BIstrncmp || ID == Builtin::BI__builtin_strncmp);
+  bool IsRawByte = ID == Builtin::BImemcmp || ID == Builtin::BI__builtin_memcmp;
+
+  if (IsRawByte &&
+      (!isOneByteCharacterType(A.getFieldDesc()->getElemQualType()) ||
+       !isOneByteCharacterType(B.getFieldDesc()->getElemQualType()))) {
+    QualType CharTy1 = A.getFieldDesc()->getElemQualType();
+    QualType CharTy2 = B.getFieldDesc()->getElemQualType();
+    S.FFDiag(S.Current->getSource(OpPC),
+             diag::note_constexpr_memcmp_unsupported)
+        << ("'" + S.getASTContext().BuiltinInfo.getName(ID) + "'").str()
+        << CharTy1 << CharTy2;
+    return false;
+  }
 
   unsigned IndexA = A.getIndex();
   unsigned IndexB = B.getIndex();
@@ -243,7 +268,7 @@ static bool interp__builtin_strcmp(InterpState &S, CodePtr OpPC,
       Result = -1;
       break;
     }
-    if (CA == 0 || CB == 0)
+    if (StopAtZero && (CA == 0 || CB == 0))
       break;
   }
 
@@ -1904,6 +1929,8 @@ bool InterpretBuiltin(InterpState &S, CodePtr OpPC, const Function *F,
   case Builtin::BIstrcmp:
   case Builtin::BI__builtin_strncmp:
   case Builtin::BIstrncmp:
+  case Builtin::BI__builtin_memcmp:
+  case Builtin::BImemcmp:
     if (!interp__builtin_strcmp(S, OpPC, Frame, F, Call))
       return false;
     break;
