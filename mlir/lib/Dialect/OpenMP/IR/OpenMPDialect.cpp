@@ -1711,12 +1711,11 @@ void TargetOp::build(OpBuilder &builder, OperationState &state,
   TargetOp::build(builder, state, /*allocate_vars=*/{}, /*allocator_vars=*/{},
                   clauses.bare, makeArrayAttr(ctx, clauses.dependKinds),
                   clauses.dependVars, clauses.device, clauses.hasDeviceAddrVars,
-                  clauses.ifExpr,
-                  /*in_reduction_vars=*/{}, /*in_reduction_byref=*/nullptr,
-                  /*in_reduction_syms=*/nullptr, clauses.isDevicePtrVars,
-                  clauses.mapVars, clauses.nowait, clauses.privateVars,
-                  makeArrayAttr(ctx, clauses.privateSyms), clauses.threadLimit,
-                  /*private_maps=*/nullptr);
+                  clauses.ifExpr, /*in_reduction_vars=*/{},
+                  /*in_reduction_byref=*/nullptr, /*in_reduction_syms=*/nullptr,
+                  clauses.isDevicePtrVars, clauses.mapVars, clauses.nowait,
+                  clauses.privateVars,
+                  makeArrayAttr(ctx, clauses.privateSyms), clauses.threadLimit);
 }
 
 LogicalResult TargetOp::verify() {
