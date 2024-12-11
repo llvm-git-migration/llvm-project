@@ -47,6 +47,12 @@ for adding a new subsection. -->
   same semantics. The normalizer makes it easier to spot semantic differences
   when diffing two modules which have undergone different passes.
 
+* The SPIR-V backend is now an official LLVM target, enabling support for 
+  SPIR-V across a range of APIs and use cases, including OpenCL, Vulkan, SYCL,
+  GLSL, and HLSL. This backend serves as a unified solution for diverse compute
+  and graphics workloads, offering a robust alternative to the Khronos SPIR-V
+  LLVM Translator.
+
 * ...
 
 <!-- If you would like to document a larger change, then you can add a
