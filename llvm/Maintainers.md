@@ -151,10 +151,10 @@ quentin.colombet@gmail.com (email), [qcolombet](https://github.com/qcolombet) (G
 James Grosbach \
 grosbach@apple.com (email)
 
-#### Windows codegen
+#### Windows ABI and codegen
 
-Anton Korobeynikov \
-anton@korobeynikov.info (email), [asl](https://github.com/asl) (GitHub)
+Reid Kleckner \
+reid.kleckner@gmail.com (email), [rnk](https://github.com/rnk) (GitHub)
 
 ### Backends / Targets
 
@@ -460,7 +460,7 @@ sabre@nondot.org (email), [lattner](https://github.com/lattner) (GitHub), clattn
 Justin Bogner (mail@justinbogner.com, [bogner](https://github.com/bogner)) -- SelectionDAG \
 Evan Cheng (evan.cheng@apple.com) -- Parts of code generator not covered by someone else \
 Renato Golin (rengolin@systemcall.eu, [rengolin](https://github.com/rengolin)) -- ARM backend \
-Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI \
+Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI, Windows codegen \
 Hans Wennborg (hans@chromium.org, [zmodem](https://github.com/zmodem)) -- Release management \
 Kostya Serebryany ([kcc](https://github.com/kcc)) -- Sanitizers \
 Evgeniy Stepanov ([eugenis](https://github.com/eugenis)) -- Sanitizers
