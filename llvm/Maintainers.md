@@ -155,10 +155,10 @@ quentin.colombet@gmail.com (email), [qcolombet](https://github.com/qcolombet) (G
 Fangrui Song \
 i@maskray.me (email), [MaskRay](https://github.com/MaskRay) (GitHub)
 
-#### Windows codegen
+#### Windows ABI and codegen
 
-Anton Korobeynikov \
-anton@korobeynikov.info (email), [asl](https://github.com/asl) (GitHub)
+Reid Kleckner \
+reid.kleckner@gmail.com (email), [rnk](https://github.com/rnk) (GitHub)
 
 ### Backends / Targets
 
@@ -467,7 +467,7 @@ Hal Finkel (hfinkel@anl.gov, [hfinkel](https://github.com/hfinkel) -- AliasAnaly
 Renato Golin (rengolin@systemcall.eu, [rengolin](https://github.com/rengolin)) -- ARM backend \
 Venkatraman Govindaraju (venkatra@cs.wisc.edu, [vegovin](https://github.com/vegovin) -- Sparc backend \
 James Grosbach (grosbach@apple.com) -- MC layer \
-Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI \
+Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI, Windows codegen \
 David Majnemer (david.majnemer@gmail.com, [majnemer](https://github.com/majnemer)) -- InstCombine, ConstantFold \
 Chad Rosier (mcrosier@codeaurora.org) -- FastISel \
 Hans Wennborg (hans@chromium.org, [zmodem](https://github.com/zmodem)) -- Release management \
