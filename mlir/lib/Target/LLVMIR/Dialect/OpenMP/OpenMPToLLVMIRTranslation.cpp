@@ -159,7 +159,7 @@ static LogicalResult checkImplementationStatus(Operation &op) {
       result = todo("allocate");
   };
   auto checkBare = [&todo](auto op, LogicalResult &result) {
-    if (op.getBare()) {
+    if (op.getBare())
       result = todo("ompx_bare");
   };
   auto checkDepend = [&todo](auto op, LogicalResult &result) {

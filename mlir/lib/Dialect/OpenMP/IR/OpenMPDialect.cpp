@@ -1714,8 +1714,8 @@ void TargetOp::build(OpBuilder &builder, OperationState &state,
                   clauses.ifExpr, /*in_reduction_vars=*/{},
                   /*in_reduction_byref=*/nullptr, /*in_reduction_syms=*/nullptr,
                   clauses.isDevicePtrVars, clauses.mapVars, clauses.nowait,
-                  clauses.privateVars,
-                  makeArrayAttr(ctx, clauses.privateSyms), clauses.threadLimit);
+                  clauses.privateVars, makeArrayAttr(ctx, clauses.privateSyms),
+                  clauses.threadLimit, /*private_maps=*/nullptr);
 }
 
 LogicalResult TargetOp::verify() {
