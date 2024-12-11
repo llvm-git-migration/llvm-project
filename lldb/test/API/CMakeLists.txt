@@ -52,11 +52,18 @@ set(LLDB_DEFAULT_TEST_DSYMUTIL "${LLVM_TOOLS_BINARY_DIR}/dsymutil${CMAKE_EXECUTA
 if(LLDB_TEST_MAKE)
   set(LLDB_DEFAULT_TEST_MAKE ${LLDB_TEST_MAKE})
 else()
-  find_program(LLDB_DEFAULT_TEST_MAKE make gmake)
+  set(MAKE_NAMES "gmake")
+
+  # "make" on FreeBSD and NetBSD is not GNU make compatible.
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" AND NOT CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+    list(APPEND MAKE_NAMES "make")
+  endif()
+
+  find_program(LLDB_DEFAULT_TEST_MAKE NAMES ${MAKE_NAMES})
   if(LLDB_DEFAULT_TEST_MAKE)
     message(STATUS "Found make: ${LLDB_DEFAULT_TEST_MAKE}")
   else()
-    message(STATUS "Not found: make")
+    message(STATUS "Did not find one of: ${MAKE_NAMES}")
     message(WARNING
           "Many LLDB API tests require 'make' tool. Please provide it in Path "
           "or pass via LLDB_TEST_MAKE.")
