@@ -1791,6 +1791,7 @@ void vector::populateVectorNarrowTypeEmulationPatterns(
     RewritePatternSet &patterns, bool useAtomicWrites) {
 
   // Populate `vector.*` load conversion patterns.
+  // TODO: #119553 support atomicity
   patterns.add<ConvertVectorLoad, ConvertVectorMaskedLoad,
                ConvertVectorMaskedStore, ConvertVectorTransferRead>(
       typeConverter, patterns.getContext());
