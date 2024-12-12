@@ -147,6 +147,9 @@ public:
   void Enter(const parser::OmpDirectiveSpecification &);
   void Leave(const parser::OmpDirectiveSpecification &);
 
+  void Enter(const parser::OmpMetadirectiveDirective &);
+  void Leave(const parser::OmpMetadirectiveDirective &);
+
 #define GEN_FLANG_CLAUSE_CHECK_ENTER
 #include "llvm/Frontend/OpenMP/OMP.inc"
 
