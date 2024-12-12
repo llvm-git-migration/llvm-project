@@ -1996,10 +1996,10 @@ define half @safe_math_fract_f16(half %x, ptr addrspace(1) nocapture writeonly %
 ; GFX11:       ; %bb.0: ; %entry
 ; GFX11-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
 ; GFX11-NEXT:    v_fract_f16_e32 v3, v0
-; GFX11-NEXT:    v_cmp_neq_f16_e64 vcc_lo, 0x7c00, |v0|
+; GFX11-NEXT:    v_cmp_neq_f16_e64 s0, 0x7c00, |v0|
 ; GFX11-NEXT:    v_floor_f16_e32 v4, v0
-; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_3)
-; GFX11-NEXT:    v_cndmask_b32_e32 v0, 0, v3, vcc_lo
+; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_2)
+; GFX11-NEXT:    v_cndmask_b16 v0, 0, v3, s0
 ; GFX11-NEXT:    global_store_b16 v[1:2], v4, off
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
 entry:
@@ -2154,19 +2154,19 @@ define <2 x half> @safe_math_fract_v2f16(<2 x half> %x, ptr addrspace(1) nocaptu
 ; GFX11:       ; %bb.0: ; %entry
 ; GFX11-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
 ; GFX11-NEXT:    v_lshrrev_b32_e32 v3, 16, v0
-; GFX11-NEXT:    v_fract_f16_e32 v6, v0
-; GFX11-NEXT:    v_floor_f16_e32 v5, v0
-; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_3) | instskip(SKIP_2) | instid1(VALU_DEP_2)
-; GFX11-NEXT:    v_fract_f16_e32 v4, v3
+; GFX11-NEXT:    v_fract_f16_e32 v4, v0
+; GFX11-NEXT:    v_cmp_class_f16_e64 s1, v0, 0x204
+; GFX11-NEXT:    v_floor_f16_e32 v0, v0
+; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_4) | instskip(SKIP_3) | instid1(VALU_DEP_3)
+; GFX11-NEXT:    v_fract_f16_e32 v5, v3
 ; GFX11-NEXT:    v_cmp_class_f16_e64 s0, v3, 0x204
-; GFX11-NEXT:    v_floor_f16_e32 v7, v3
-; GFX11-NEXT:    v_cndmask_b32_e64 v3, v4, 0, s0
-; GFX11-NEXT:    v_cmp_class_f16_e64 s0, v0, 0x204
+; GFX11-NEXT:    v_floor_f16_e32 v3, v3
+; GFX11-NEXT:    v_cndmask_b16 v4, v4, 0, s1
+; GFX11-NEXT:    v_cndmask_b16 v5, v5, 0, s0
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_3) | instskip(NEXT) | instid1(VALU_DEP_2)
-; GFX11-NEXT:    v_pack_b32_f16 v4, v5, v7
-; GFX11-NEXT:    v_cndmask_b32_e64 v0, v6, 0, s0
-; GFX11-NEXT:    global_store_b32 v[1:2], v4, off
-; GFX11-NEXT:    v_pack_b32_f16 v0, v0, v3
+; GFX11-NEXT:    v_pack_b32_f16 v3, v0, v3
+; GFX11-NEXT:    v_pack_b32_f16 v0, v4, v5
+; GFX11-NEXT:    global_store_b32 v[1:2], v3, off
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
 entry:
   %floor = tail call <2 x half> @llvm.floor.v2f16(<2 x half> %x)
