@@ -1442,17 +1442,18 @@ void VPlanTransforms::addActiveLaneMask(
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
 
-static VPRecipeBase *createEVLRecipe(VPValue &EVL, VPValue *HeaderMask,
-                                     VPValue *AllOneMask,
-                                     VPRecipeBase *CurRecipe,
-                                     VPTypeAnalysis TypeInfo) {
+/// Create EVLRecipe with Recipe
+static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
+                                     VPRecipeBase &CurRecipe,
+                                     VPTypeAnalysis &TypeInfo,
+                                     VPValue &AllOneMask, VPValue &EVL) {
   using namespace llvm::VPlanPatternMatch;
   auto GetNewMask = [&](VPValue *OrigMask) -> VPValue * {
     assert(OrigMask && "Unmasked recipe when folding tail");
     return HeaderMask == OrigMask ? nullptr : OrigMask;
   };
 
-  return TypeSwitch<VPRecipeBase *, VPRecipeBase *>(CurRecipe)
+  return TypeSwitch<VPRecipeBase *, VPRecipeBase *>(&CurRecipe)
       .Case<VPWidenLoadRecipe>([&](VPWidenLoadRecipe *L) {
         VPValue *NewMask = GetNewMask(L->getMask());
         return new VPWidenLoadEVLRecipe(*L, EVL, NewMask);
@@ -1473,18 +1474,16 @@ static VPRecipeBase *createEVLRecipe(VPValue &EVL, VPValue *HeaderMask,
       })
       .Case<VPWidenIntrinsicRecipe>(
           [&](VPWidenIntrinsicRecipe *CInst) -> VPRecipeBase * {
-            auto *CI = cast<CallInst>(CInst->getUnderlyingInstr());
+            auto *CI = dyn_cast<CallInst>(CInst->getUnderlyingInstr());
             Intrinsic::ID VPID = VPIntrinsic::getForIntrinsic(
                 CI->getCalledFunction()->getIntrinsicID());
             assert(VPID != Intrinsic::not_intrinsic &&
-                   "Expected VP Instrinsic");
-
-            SmallVector<VPValue *> Ops(CInst->operands());
-            assert(VPIntrinsic::getMaskParamPos(VPID) &&
+                   VPIntrinsic::getMaskParamPos(VPID) &&
                    VPIntrinsic::getVectorLengthParamPos(VPID) &&
                    "Expected VP intrinsic");
 
-            Ops.push_back(AllOneMask);
+            SmallVector<VPValue *> Ops(CInst->operands());
+            Ops.push_back(&AllOneMask);
             Ops.push_back(&EVL);
             return new VPWidenIntrinsicRecipe(*CI, VPID, Ops,
                                               TypeInfo.inferScalarType(CInst),
@@ -1494,13 +1493,12 @@ static VPRecipeBase *createEVLRecipe(VPValue &EVL, VPValue *HeaderMask,
         auto *CI = dyn_cast<CastInst>(CInst->getUnderlyingInstr());
         Intrinsic::ID VPID = VPIntrinsic::getForOpcode(CI->getOpcode());
         assert(VPID != Intrinsic::not_intrinsic &&
-               "Expected vp.casts Instrinsic");
+               VPIntrinsic::getMaskParamPos(VPID) &&
+               VPIntrinsic::getVectorLengthParamPos(VPID) &&
+               "Expected vp.cast intrinsic");
 
         SmallVector<VPValue *> Ops(CInst->operands());
-        assert(VPIntrinsic::getMaskParamPos(VPID) &&
-               VPIntrinsic::getVectorLengthParamPos(VPID) &&
-               "Expected VP intrinsic");
-        Ops.push_back(AllOneMask);
+        Ops.push_back(&AllOneMask);
         Ops.push_back(&EVL);
         return new VPWidenIntrinsicRecipe(
             VPID, Ops, TypeInfo.inferScalarType(CInst), CInst->getDebugLoc());
@@ -1524,7 +1522,7 @@ static VPRecipeBase *createEVLRecipe(VPValue &EVL, VPValue *HeaderMask,
         // Use all true as the condition because this transformation is
         // limited to selects whose condition is a header mask.
         return new VPWidenIntrinsicRecipe(
-            Intrinsic::vp_merge, {AllOneMask, LHS, RHS, &EVL},
+            Intrinsic::vp_merge, {&AllOneMask, LHS, RHS, &EVL},
             TypeInfo.inferScalarType(LHS), VPI->getDebugLoc());
       })
       .Default([&](VPRecipeBase *R) { return nullptr; });
@@ -1548,7 +1546,7 @@ static void transformRecipestoEVLRecipes(VPlan &Plan, VPValue &EVL) {
     for (VPUser *U : collectUsersRecursively(HeaderMask)) {
       auto *CurRecipe = cast<VPRecipeBase>(U);
       VPRecipeBase *EVLRecipe =
-          createEVLRecipe(EVL, HeaderMask, AllOneMask, CurRecipe, TypeInfo);
+          createEVLRecipe(HeaderMask, *CurRecipe, TypeInfo, *AllOneMask, EVL);
       if (!EVLRecipe)
         continue;
 
