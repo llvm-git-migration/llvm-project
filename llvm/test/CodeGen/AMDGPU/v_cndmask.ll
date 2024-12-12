@@ -1882,12 +1882,12 @@ define amdgpu_kernel void @v_cndmask_abs_neg_f16(ptr addrspace(1) %out, i32 %c, 
 ; GFX11-NEXT:    s_load_b64 s[0:1], s[4:5], 0x24
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    s_cmp_lg_u32 s2, 0
-; GFX11-NEXT:    s_cselect_b64 vcc, -1, 0
+; GFX11-NEXT:    s_cselect_b64 s[2:3], -1, 0
 ; GFX11-NEXT:    s_waitcnt vmcnt(0)
 ; GFX11-NEXT:    v_and_b32_e32 v1, 0x7fff, v0
 ; GFX11-NEXT:    v_xor_b32_e32 v0, 0x8000, v0
 ; GFX11-NEXT:    s_delay_alu instid0(VALU_DEP_1)
-; GFX11-NEXT:    v_cndmask_b32_e32 v0, v0, v1, vcc
+; GFX11-NEXT:    v_cndmask_b16 v0, v0, v1, s[2:3]
 ; GFX11-NEXT:    global_store_b16 v2, v0, s[0:1]
 ; GFX11-NEXT:    s_endpgm
   %idx = call i32 @llvm.amdgcn.workitem.id.x() #1
