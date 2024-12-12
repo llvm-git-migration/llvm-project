@@ -8,15 +8,15 @@
 
 // UNSUPPORTED: c++03, c++11, c++14, c++17
 
-#include <deque>
 #include <string>
+#include <vector>
 
 #include "container_benchmarks.h"
 #include "benchmark/benchmark.h"
 
 int main(int argc, char** argv) {
-  ContainerBenchmarks::back_insertable_container_benchmarks<std::deque<char>>("std::deque<char>");
-  ContainerBenchmarks::back_insertable_container_benchmarks<std::deque<std::string>>("std::deque<std::string>");
+  ContainerBenchmarks::back_insertable_container_benchmarks<std::vector<char>>("std::vector<char>");
+  ContainerBenchmarks::back_insertable_container_benchmarks<std::vector<std::string>>("std::vector<std::string>");
 
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
