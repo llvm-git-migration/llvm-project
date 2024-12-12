@@ -14,6 +14,7 @@
 #include <string>
 
 #include "lldb/Core/Module.h"
+#include "lldb/Core/Progress.h"
 #include "lldb/Expression/DiagnosticManager.h"
 #include "lldb/Expression/ExpressionVariable.h"
 #include "lldb/Expression/IRExecutionUnit.h"
@@ -424,6 +425,14 @@ UserExpression::Execute(DiagnosticManager &diagnostic_manager,
                         const EvaluateExpressionOptions &options,
                         lldb::UserExpressionSP &shared_ptr_to_me,
                         lldb::ExpressionVariableSP &result_var) {
+  Debugger *debugger =
+      exe_ctx.GetTargetPtr() ? &exe_ctx.GetTargetPtr()->GetDebugger() : nullptr;
+  Progress progress("Running expression",
+                    m_options.IsForUtilityExpr()
+                        ? "(LLDB utility)"
+                        : m_expr_text.substr(0, 12) + "...",
+                    {}, debugger);
+
   lldb::ExpressionResults expr_result = DoExecute(
       diagnostic_manager, exe_ctx, options, shared_ptr_to_me, result_var);
   Target *target = exe_ctx.GetTargetPtr();
