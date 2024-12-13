@@ -1498,19 +1498,24 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
             assert(VPIntrinsic::getMaskParamPos(VPID) &&
                    VPIntrinsic::getVectorLengthParamPos(VPID) &&
                    "Expected VP intrinsic");
-
+            FastMathFlags FMFs = {};
+            if (CR->hasFastMathFlags())
+              FMFs = CR->getFastMathFlags();
             SmallVector<VPValue *> Ops(CR->operands());
             Ops.push_back(&AllOneMask);
             Ops.push_back(&EVL);
-            return new VPWidenIntrinsicRecipe(
-                VPID, Ops, TypeInfo.inferScalarType(CR), CR->getDebugLoc());
+            return new VPWidenIntrinsicRecipe(VPID, Ops,
+                                              TypeInfo.inferScalarType(CR),
+                                              FMFs, CR->getDebugLoc());
           })
       .Case<VPWidenSelectRecipe>([&](VPWidenSelectRecipe *Sel) {
         SmallVector<VPValue *> Ops(Sel->operands());
         Ops.push_back(&EVL);
+        // TODO: getFlags from recipe instead of by underlying instruction
+        FastMathFlags FMFs = {};
         return new VPWidenIntrinsicRecipe(Intrinsic::vp_select, Ops,
                                           TypeInfo.inferScalarType(Sel),
-                                          Sel->getDebugLoc());
+                                          FMFs, Sel->getDebugLoc());
       })
       .Case<VPInstruction>([&](VPInstruction *VPI) -> VPRecipeBase * {
         VPValue *LHS, *RHS;
@@ -1521,11 +1526,14 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
         if (!match(VPI, m_Select(m_Specific(HeaderMask), m_VPValue(LHS),
                                  m_VPValue(RHS))))
           return nullptr;
+        FastMathFlags FMFs = {};
+        if (VPI->hasFastMathFlags())
+          FMFs = VPI->getFastMathFlags();
         // Use all true as the condition because this transformation is
         // limited to selects whose condition is a header mask.
         return new VPWidenIntrinsicRecipe(
             Intrinsic::vp_merge, {&AllOneMask, LHS, RHS, &EVL},
-            TypeInfo.inferScalarType(LHS), VPI->getDebugLoc());
+            TypeInfo.inferScalarType(LHS), FMFs, VPI->getDebugLoc());
       })
       .Default([&](VPRecipeBase *R) { return nullptr; });
 }
