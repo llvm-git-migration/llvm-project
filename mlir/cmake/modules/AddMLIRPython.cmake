@@ -142,6 +142,9 @@ function(declare_mlir_python_extension name)
     mlir_python_DEPENDS ""
     mlir_python_BINDINGS_LIBRARY "${ARG_PYTHON_BINDINGS_LIBRARY}"
   )
+  if (LLVM_COMPILER_IS_GCC_COMPATIBLE OR CLANG_CL)
+    set_target_properties(${name} PROPERTIES INTERFACE_COMPILE_OPTIONS "-Wno-cast-qual;-Wno-zero-length-array;-Wno-extra-semi;-Wno-nested-anon-types;-Wno-pedantic")
+  endif()
 
   # Set the interface source and link_libs properties of the target
   # These properties support generator expressions and are automatically exported
