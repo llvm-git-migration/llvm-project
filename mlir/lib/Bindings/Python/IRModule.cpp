@@ -59,9 +59,22 @@ bool PyGlobals::loadDialectModule(llvm::StringRef dialectNamespace) {
 
   if (loaded.is_none())
     return false;
+
+  // We should use a lock in free-threading as loadDialectModule can be implicitly called by
+  // python functions executed by in multiple threads context (e.g. lookupValueCaster).
+#ifdef Py_GIL_DISABLED
+  auto &lock = getLock();
+  PyMutex_Lock(&lock);
+#endif
+
   // Note: Iterator cannot be shared from prior to loading, since re-entrancy
   // may have occurred, which may do anything.
   loadedDialectModules.insert(dialectNamespace);
+
+#ifdef Py_GIL_DISABLED
+  PyMutex_Unlock(&lock);
+#endif
+
   return true;
 }
 
