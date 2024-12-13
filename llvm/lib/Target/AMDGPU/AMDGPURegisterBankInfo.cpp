@@ -1181,8 +1181,7 @@ bool AMDGPURegisterBankInfo::applyMappingDynStackAlloc(
 
   // Guard in case the stack growth direction ever changes with scratch
   // instructions.
-  if (TFI.getStackGrowthDirection() == TargetFrameLowering::StackGrowsDown)
-    return false;
+  assert(TFL->getStackGrowthDirection() == TargetFrameLowering::StackGrowsUp && "expected growing up stack\n");
 
   Register Dst = MI.getOperand(0).getReg();
   Register AllocSize = MI.getOperand(1).getReg();
