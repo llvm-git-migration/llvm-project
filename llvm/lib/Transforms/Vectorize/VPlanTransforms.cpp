@@ -1483,8 +1483,8 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
             auto *CI = dyn_cast<CallInst>(CInst->getUnderlyingInstr());
             Intrinsic::ID VPID = VPIntrinsic::getForIntrinsic(
                 CI->getCalledFunction()->getIntrinsicID());
-            assert(VPID != Intrinsic::not_intrinsic &&
-                   VPIntrinsic::getMaskParamPos(VPID) &&
+            assert(VPID != Intrinsic::not_intrinsic && "Expected VP intrinsic");
+            assert(VPIntrinsic::getMaskParamPos(VPID) &&
                    VPIntrinsic::getVectorLengthParamPos(VPID) &&
                    "Expected VP intrinsic");
 
@@ -1499,9 +1499,10 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
         auto *CI = dyn_cast<CastInst>(CInst->getUnderlyingInstr());
         Intrinsic::ID VPID = VPIntrinsic::getForOpcode(CI->getOpcode());
         assert(VPID != Intrinsic::not_intrinsic &&
-               VPIntrinsic::getMaskParamPos(VPID) &&
+               "Expected vp.casts Instrinsic");
+        assert(VPIntrinsic::getMaskParamPos(VPID) &&
                VPIntrinsic::getVectorLengthParamPos(VPID) &&
-               "Expected vp.cast intrinsic");
+               "Expected VP intrinsic");
 
         SmallVector<VPValue *> Ops(CInst->operands());
         Ops.push_back(&AllOneMask);
