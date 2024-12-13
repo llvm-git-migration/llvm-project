@@ -2478,18 +2478,28 @@ bool NVPTXDAGToDAGISel::SelectDirectAddr(SDValue N, SDValue &Address) {
   return false;
 }
 
-// symbol+offset
-bool NVPTXDAGToDAGISel::SelectADDRsi_imp(
-    SDNode *OpNode, SDValue Addr, SDValue &Base, SDValue &Offset, MVT mvt) {
+bool NVPTXDAGToDAGISel::FindRootAddressAndTotalOffset(
+    SDValue Addr, SDValue &Base, uint64_t &AccumulatedOffset) {
   if (isAddLike(Addr)) {
     if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1))) {
       SDValue base = Addr.getOperand(0);
-      if (SelectDirectAddr(base, Base)) {
-        Offset = CurDAG->getTargetConstant(CN->getZExtValue(), SDLoc(OpNode),
-                                           mvt);
+      AccumulatedOffset += CN->getZExtValue();
+      if (SelectDirectAddr(base, Base))
         return true;
-      }
+      return FindRootAddressAndTotalOffset(base, Base, AccumulatedOffset);
     }
+  }
+  return false;
+}
+
+// symbol+offset
+bool NVPTXDAGToDAGISel::SelectADDRsi_imp(SDNode *OpNode, SDValue Addr,
+                                         SDValue &Base, SDValue &Offset,
+                                         MVT mvt) {
+  uint64_t AccumulatedOffset = 0;
+  if (FindRootAddressAndTotalOffset(Addr, Base, AccumulatedOffset)) {
+    Offset = CurDAG->getTargetConstant(AccumulatedOffset, SDLoc(OpNode), mvt);
+    return true;
   }
   return false;
 }
