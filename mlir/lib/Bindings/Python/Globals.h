@@ -36,20 +36,6 @@ public:
     return *instance;
   }
 
-  template<typename F>
-  static inline auto withInstance(const F& cb) -> decltype(cb(get())) {
-    auto &instance = get();
-#ifdef Py_GIL_DISABLED
-    auto &lock = getLock();
-    PyMutex_Lock(&lock);
-#endif
-    auto result = cb(instance);
-#ifdef Py_GIL_DISABLED
-    PyMutex_Unlock(&lock);
-#endif
-    return result;
-  }
-
   /// Get and set the list of parent modules to search for dialect
   /// implementation classes.
   std::vector<std::string> &getDialectSearchPrefixes() {

@@ -16,7 +16,7 @@ a pool of threads, running each test multiple times, see @multi_threaded for det
 2) Tests generation: we use existing tests: test/python/ir/*.py,
 test/python/dialects/*.py, etc to generate multi-threaded tests.
 In details, we perform the following:
-a) we define a list of source tests to be used to generate multi-threaded tests, see `test_modules`.
+a) we define a list of source tests to be used to generate multi-threaded tests, see `TEST_MODULES`.
 b) we define `TestAllMultiThreaded` class and add existing tests to the class. See `add_existing_tests` method.
 c) for each test file, we copy and modify it: test/python/ir/affine_expr.py -> /tmp/ir/affine_expr.py.
 In order to import the test file as python module, we remove all executing functions, like
@@ -376,10 +376,9 @@ def run_construct_and_print_in_module(f):
     return f
 
 
-test_modules = [
+TEST_MODULES = [
     ("execution_engine", run),  # Fail,
     ("pass_manager", run),  # Fail
-
     ("dialects/affine", run_with_insertion_point_v2),  # Pass
     ("dialects/func", run_with_insertion_point_v2),  # Pass
     ("dialects/arith_dialect", run),  # Pass
@@ -410,32 +409,39 @@ test_modules = [
     ("dialects/transform_bufferization_ext", run_with_insertion_point_v2),  # Pass
     # ("dialects/transform_extras", ),  # Needs a more complicated execution schema
     ("dialects/transform_gpu_ext", run_transform_tensor_ext),  # Pass
-    ("dialects/transform_interpreter", run_with_context_and_location, ["print_", "transform_options", "failed", "include"]),  # Fail
-    ("dialects/transform_loop_ext", run_with_insertion_point_v2, ["loopOutline"]),  # Pass
+    (
+        "dialects/transform_interpreter",
+        run_with_context_and_location,
+        ["print_", "transform_options", "failed", "include"],
+    ),  # Fail
+    (
+        "dialects/transform_loop_ext",
+        run_with_insertion_point_v2,
+        ["loopOutline"],
+    ),  # Pass
     ("dialects/transform_memref_ext", run_with_insertion_point_v2),  # Pass
     ("dialects/transform_nvgpu_ext", run_with_insertion_point_v2),  # Pass
     ("dialects/transform_sparse_tensor_ext", run_transform_tensor_ext),  # Pass
     ("dialects/transform_structured_ext", run_transform_structured_ext),  # Pass
     ("dialects/transform_tensor_ext", run_transform_tensor_ext),  # Pass
-    ("dialects/transform_vector_ext", run_apply_patterns, ["configurable_patterns"]),  # Pass
+    (
+        "dialects/transform_vector_ext",
+        run_apply_patterns,
+        ["configurable_patterns"],
+    ),  # Pass
     ("dialects/transform", run_with_insertion_point_v3),  # Pass
     ("dialects/vector", run_with_context_and_location),  # Pass
-
     ("dialects/gpu/dialect", run_with_context_and_location),  # Pass
     ("dialects/gpu/module-to-binary-nvvm", run_with_context_and_location),  # Pass
     ("dialects/gpu/module-to-binary-rocdl", run_with_context_and_location),  # Fail
-
     ("dialects/linalg/ops", run),  # Pass
     # TO ADD: No proper tests in this dialects/linalg/opsdsl/*
     # ("dialects/linalg/opsdsl/*", ...),  #
-
     ("dialects/sparse_tensor/dialect", run),  # Pass
     ("dialects/sparse_tensor/passes", run),  # Pass
-
     ("integration/dialects/pdl", run_construct_and_print_in_module),  # Pass
     ("integration/dialects/transform", run_construct_and_print_in_module),  # Pass
     ("integration/dialects/linalg/opsrun", run),  # Fail
-
     ("ir/affine_expr", run),  # Pass
     ("ir/affine_map", run),  # Pass
     ("ir/array_attributes", run),  # Pass
@@ -456,16 +462,18 @@ test_modules = [
     ("ir/value", run),  # Pass
 ]
 
-tests_to_skip = [
+TESTS_TO_SKIP = [
     "test_execution_engine__testNanoTime_multi_threaded",  # testNanoTime can't run in multiple threads, even with GIL
     "test_execution_engine__testSharedLibLoad_multi_threaded",  # testSharedLibLoad can't run in multiple threads, even with GIL
     "test_dialects_arith_dialect__testArithValue_multi_threaded",  # RuntimeError: Value caster is already registered: <class 'dialects/arith_dialect.testArithValue.<locals>.ArithValue'>, even with GIL
     "test_ir_dialects__testAppendPrefixSearchPath_multi_threaded",  # PyGlobals::setDialectSearchPrefixes is not thread-safe, even with GIL. Strange usage of static PyGlobals vs python exposed _cext.globals
     "test_ir_value__testValueCasters_multi_threaded_multi_threaded",  # RuntimeError: Value caster is already registered: <function testValueCasters.<locals>.dont_cast_int, even with GIL
+    "test_ir_operation_testKnownOpView_multi_threaded_multi_threaded",  # uses register_operation method in the test
+    "test_dialects_transform_structured_ext__testMatchInterfaceEnumReplaceAttributeBuilder_multi_threaded",  # uses register_attribute_builder method in the test
 ]
 
 
-tests_to_xfail = [
+TESTS_TO_XFAIL = [
     # execution_engine tests, ctypes related data-races, may be false-positive as libffi was not instrumented with TSAN
     "test_execution_engine__testBF16Memref_multi_threaded",
     "test_execution_engine__testBasicCallback_multi_threaded",
@@ -476,19 +484,18 @@ tests_to_xfail = [
     "test_execution_engine__testF8E5M2Memref_multi_threaded",
     "test_execution_engine__testInvalidModule_multi_threaded",
     "test_execution_engine__testInvokeFloatAdd_multi_threaded",
+    "test_execution_engine__testInvokeVoid_multi_threaded",
     "test_execution_engine__testMemrefAdd_multi_threaded",
     "test_execution_engine__testRankedMemRefCallback_multi_threaded",
     "test_execution_engine__testRankedMemRefWithOffsetCallback_multi_threaded",
     "test_execution_engine__testUnrankedMemRefCallback_multi_threaded",
     "test_execution_engine__testUnrankedMemRefWithOffsetCallback_multi_threaded",
-
     # pass_manager tests
     "test_pass_manager__testPrintIrAfterAll_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
     "test_pass_manager__testPrintIrBeforeAndAfterAll_multi_threaded",  # IRPrinterInstrumentation::runBeforePass is not thread-safe
     "test_pass_manager__testPrintIrLargeLimitElements_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
     "test_pass_manager__testPrintIrTree_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
     "test_pass_manager__testRunPipeline_multi_threaded",  # PrintOpStatsPass::printSummary is not thread-safe
-
     # dialects tests
     "test_dialects_memref__testSubViewOpInferReturnTypeExtensiveSlicing_multi_threaded",  # Related to ctypes data races
     "test_dialects_transform_interpreter__include_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
@@ -496,11 +503,9 @@ tests_to_xfail = [
     "test_dialects_transform_interpreter__print_self_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
     "test_dialects_transform_interpreter__transform_options_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
     "test_dialects_gpu_module-to-binary-rocdl__testGPUToASMBin_multi_threaded",  # Due to global llvm-project/llvm/lib/Target/AMDGPU/GCNSchedStrategy.cpp::GCNTrackers variable mutation
-
     # integration tests
     "test_integration_dialects_linalg_opsrun__test_elemwise_builtin_multi_threaded",  # Related to ctypes data races
     "test_integration_dialects_linalg_opsrun__test_elemwise_generic_multi_threaded",  # Related to ctypes data races
-
     # IR tests
     "test_ir_diagnostic_handler__testDiagnosticCallbackException_multi_threaded",  # mlirEmitError is not thread-safe
     "test_ir_module__testParseSuccess_multi_threaded",  #  mlirOperationDump is not thread-safe
@@ -509,7 +514,7 @@ tests_to_xfail = [
 ]
 
 
-def add_existing_tests(test_prefix: str = "_original_test"):
+def add_existing_tests(test_modules, test_prefix: str = "_original_test"):
     def decorator(test_cls):
         this_folder = Path(__file__).parent.absolute()
         test_cls.output_folder = tempfile.TemporaryDirectory()
@@ -531,16 +536,22 @@ def add_existing_tests(test_prefix: str = "_original_test"):
             test_mod = import_from_path(test_module_name, dst_filepath)
             for attr_name in dir(test_mod):
                 is_test_fn = test_pattern is None and attr_name.startswith("test")
-                is_test_fn |= test_pattern is not None and any([p in attr_name for p in test_pattern])
+                is_test_fn |= test_pattern is not None and any(
+                    [p in attr_name for p in test_pattern]
+                )
                 if is_test_fn:
                     obj = getattr(test_mod, attr_name)
                     if callable(obj):
                         test_name = f"{test_prefix}_{test_module_name.replace('/', '_')}__{attr_name}"
-                        def wrapped_test_fn(self, *args, __test_fn__=obj, __exec_fn__=exec_fn, **kwargs):
+
+                        def wrapped_test_fn(
+                            self, *args, __test_fn__=obj, __exec_fn__=exec_fn, **kwargs
+                        ):
                             __exec_fn__(__test_fn__)
 
                         setattr(test_cls, test_name, wrapped_test_fn)
         return test_cls
+
     return decorator
 
 
@@ -553,6 +564,7 @@ def multi_threaded(
     multithreaded_test_postfix: str = "_multi_threaded",
 ):
     """Decorator that runs a test in a multi-threaded environment."""
+
     def decorator(test_cls):
         for name, test_fn in test_cls.__dict__.copy().items():
             if not (name.startswith(test_prefix) and callable(test_fn)):
@@ -566,7 +578,9 @@ def multi_threaded(
                 ):
                     continue
 
-            def multi_threaded_test_fn(self, capfd, *args, __test_fn__=test_fn, **kwargs):
+            def multi_threaded_test_fn(
+                self, capfd, *args, __test_fn__=test_fn, **kwargs
+            ):
                 barrier = threading.Barrier(num_workers)
 
                 def closure():
@@ -590,7 +604,9 @@ def multi_threaded(
                 captured = capfd.readouterr()
                 if len(captured.err) > 0:
                     if "ThreadSanitizer" in captured.err:
-                        raise RuntimeError(f"ThreadSanitizer reported warnings:\n{captured.err}")
+                        raise RuntimeError(
+                            f"ThreadSanitizer reported warnings:\n{captured.err}"
+                        )
                     else:
                         pass
                         # There are tests that write to stderr, we should ignore them
@@ -603,18 +619,19 @@ def multi_threaded(
             setattr(test_cls, test_new_name, multi_threaded_test_fn)
 
         return test_cls
+
     return decorator
 
 
 @multi_threaded(
-    num_workers=6,
+    num_workers=8,
     num_runs=20,
-    skip_tests=tests_to_skip,
-    xfail_tests=tests_to_xfail,
+    skip_tests=TESTS_TO_SKIP,
+    xfail_tests=TESTS_TO_XFAIL,
 )
-@add_existing_tests(test_prefix="_original_test")
+@add_existing_tests(test_modules=TEST_MODULES, test_prefix="_original_test")
 class TestAllMultiThreaded:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def teardown(self):
         if hasattr(self, "output_folder"):
             self.output_folder.cleanup()

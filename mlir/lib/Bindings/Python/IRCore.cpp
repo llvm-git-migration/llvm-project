@@ -198,9 +198,7 @@ py::object classmethod(Func f, Args... args) {
 static py::object
 createCustomDialectWrapper(const std::string &dialectNamespace,
                            py::object dialectDescriptor) {
-  auto dialectClass = PyGlobals::withInstance([&](PyGlobals& instance) {
-    return instance.lookupDialectClass(dialectNamespace);
-  });
+  auto dialectClass = PyGlobals::get().lookupDialectClass(dialectNamespace);
   if (!dialectClass) {
     // Use the base class.
     return py::cast(PyDialect(std::move(dialectDescriptor)));
@@ -309,20 +307,15 @@ struct PyAttrBuilderMap {
     return PyGlobals::get().lookupAttributeBuilder(attributeKind).has_value();
   }
   static py::function dunderGetItemNamed(const std::string &attributeKind) {
-    auto builder = PyGlobals::withInstance([&](PyGlobals& instance) {
-        return instance.lookupAttributeBuilder(attributeKind);
-    });
+    auto builder = PyGlobals::get().lookupAttributeBuilder(attributeKind);
     if (!builder)
       throw py::key_error(attributeKind);
     return *builder;
   }
   static void dunderSetItemNamed(const std::string &attributeKind,
                                 py::function func, bool replace) {
-    PyGlobals::withInstance([&](PyGlobals& instance) {
-        instance.registerAttributeBuilder(attributeKind, std::move(func),
-                                          replace);
-        return 0;
-    });
+    PyGlobals::get().registerAttributeBuilder(attributeKind, std::move(func),
+                                              replace);
   }
 
   static void bind(py::module &m) {
@@ -1613,10 +1606,8 @@ py::object PyOperation::createOpView() {
   checkValid();
   MlirIdentifier ident = mlirOperationGetName(get());
   MlirStringRef identStr = mlirIdentifierStr(ident);
-  auto operationCls = PyGlobals::withInstance([&](PyGlobals& instance){
-      return instance.lookupOperationClass(
-          StringRef(identStr.data, identStr.length));
-  });
+  auto operationCls = PyGlobals::get().lookupOperationClass(
+      StringRef(identStr.data, identStr.length));
   if (operationCls)
     return PyOpView::constructDerived(*operationCls, *getRef().get());
   return py::cast(PyOpView(getRef().getObject()));
@@ -2067,9 +2058,7 @@ pybind11::object PyValue::maybeDownCast() {
   assert(!mlirTypeIDIsNull(mlirTypeID) &&
          "mlirTypeID was expected to be non-null.");
   std::optional<pybind11::function> valueCaster =
-      PyGlobals::withInstance([&](PyGlobals& instance) {
-        return instance.lookupValueCaster(mlirTypeID, mlirTypeGetDialect(type));
-  });
+      PyGlobals::get().lookupValueCaster(mlirTypeID, mlirTypeGetDialect(type));
   // py::return_value_policy::move means use std::move to move the return value
   // contents into a new instance that will be owned by Python.
   py::object thisObj = py::cast(this, py::return_value_policy::move);
@@ -3548,10 +3537,8 @@ void mlir::python::populateIRCore(py::module &m) {
         assert(!mlirTypeIDIsNull(mlirTypeID) &&
                "mlirTypeID was expected to be non-null.");
         std::optional<pybind11::function> typeCaster =
-            PyGlobals::withInstance([&](PyGlobals& instance){
-              return instance.lookupTypeCaster(mlirTypeID,
-                                               mlirAttributeGetDialect(self));
-            });
+            PyGlobals::get().lookupTypeCaster(mlirTypeID,
+                                              mlirAttributeGetDialect(self));
         if (!typeCaster)
           return py::cast(self);
         return typeCaster.value()(self);
@@ -3649,10 +3636,8 @@ void mlir::python::populateIRCore(py::module &m) {
              assert(!mlirTypeIDIsNull(mlirTypeID) &&
                     "mlirTypeID was expected to be non-null.");
             std::optional<pybind11::function> typeCaster =
-                PyGlobals::withInstance([&](PyGlobals& instance){
-                  return instance.lookupTypeCaster(mlirTypeID,
-                                                   mlirTypeGetDialect(self));
-                });
+                PyGlobals::get().lookupTypeCaster(mlirTypeID,
+                                                  mlirTypeGetDialect(self));
              if (!typeCaster)
                return py::cast(self);
              return typeCaster.value()(self);
