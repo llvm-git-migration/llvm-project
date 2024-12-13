@@ -1846,6 +1846,16 @@ public:
     return std::make_pair(64, 64);
   }
 
+  /// Returns the optimal vector type elements based on the provided vector
+  /// type. For example, on some targets, a vector with 3 elements may be
+  /// treated as one with 4 elements to enhance performance.
+  virtual llvm::FixedVectorType *
+  getOptimalVectorType(llvm::FixedVectorType *T, const LangOptions &Opt) const {
+    if (!Opt.HLSL && T->getNumElements() == 3)
+      return llvm::FixedVectorType::get(T->getElementType(), 4);
+    return T;
+  }
+
 protected:
   /// Copy type and layout related info.
   void copyAuxTarget(const TargetInfo *Aux);

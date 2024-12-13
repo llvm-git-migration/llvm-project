@@ -484,6 +484,12 @@ public:
     // architectures.
     return std::make_pair(128, 128);
   }
+
+  llvm::FixedVectorType *
+  getOptimalVectorType(llvm::FixedVectorType *T,
+                       const LangOptions &) const override {
+    return T;
+  }
 };
 
 } // namespace targets
