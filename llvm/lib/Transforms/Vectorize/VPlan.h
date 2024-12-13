@@ -1661,8 +1661,8 @@ public:
 
   VPWidenIntrinsicRecipe(Intrinsic::ID VectorIntrinsicID,
                          ArrayRef<VPValue *> CallArguments, Type *Ty,
-                         DebugLoc DL = {})
-      : VPRecipeWithIRFlags(VPDef::VPWidenIntrinsicSC, CallArguments),
+                         FastMathFlags FMFs, DebugLoc DL = {})
+      : VPRecipeWithIRFlags(VPDef::VPWidenIntrinsicSC, CallArguments, FMFs),
         VectorIntrinsicID(VectorIntrinsicID), ResultTy(Ty) {
     LLVMContext &Ctx = Ty->getContext();
     AttributeList Attrs = Intrinsic::getAttributes(Ctx, VectorIntrinsicID);
@@ -1676,9 +1676,10 @@ public:
 
   VPWidenIntrinsicRecipe(Intrinsic::ID VectorIntrinsicID,
                          std::initializer_list<VPValue *> CallArguments,
-                         Type *Ty, DebugLoc DL = {})
+                         Type *Ty, FastMathFlags FMFs, DebugLoc DL = {})
       : VPWidenIntrinsicRecipe(VectorIntrinsicID,
-                               ArrayRef<VPValue *>(CallArguments), Ty, DL) {}
+                               ArrayRef<VPValue *>(CallArguments), Ty, FMFs,
+                               DL) {}
 
   ~VPWidenIntrinsicRecipe() override = default;
 
