@@ -1442,7 +1442,13 @@ void VPlanTransforms::addActiveLaneMask(
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
 
-/// Create EVLRecipe with Recipe
+// Convert each widen Recipe to a widen EVLRecipe in VectorLoopRegion.
+// \p HeaderMask  Header Mask.
+// \p CurRecipe   Recipe to be transform.
+// \p TypeInfo    VPlan-based type analysis.
+// \p AllOneMask  The vector mask parameter of vector-predication intrinsics.
+// \p EVL         The explicit vector length parameter of vector-predication
+// intrinsics.
 static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
                                      VPRecipeBase &CurRecipe,
                                      VPTypeAnalysis &TypeInfo,
