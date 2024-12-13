@@ -1047,7 +1047,7 @@ public:
       // Turning off ASan instrumentation for variable initialization with _LIBCPP_STRING_INTERNAL_MEMORY_ACCESS
       // does not work consistently during initialization of __r_, so we instead unpoison __str's memory manually first.
       // __str's memory needs to be unpoisoned only in the case where it's a short string.
-      : __rep_([](basic_string& __s) -> decltype(__s.__rep_)&& {
+      : __rep_([](basic_string& __s) -> decltype(__s.__rep_) && {
           if (!__s.__is_long())
             __s.__annotate_delete();
           return std::move(__s.__rep_);
@@ -2312,8 +2312,8 @@ template <class _CharT,
           class _Traits,
           class _Allocator = allocator<_CharT>,
           class            = enable_if_t<__is_allocator<_Allocator>::value> >
-explicit basic_string(basic_string_view<_CharT, _Traits>,
-                      const _Allocator& = _Allocator()) -> basic_string<_CharT, _Traits, _Allocator>;
+explicit basic_string(basic_string_view<_CharT, _Traits>, const _Allocator& = _Allocator())
+    -> basic_string<_CharT, _Traits, _Allocator>;
 
 template <class _CharT,
           class _Traits,
@@ -2518,7 +2518,9 @@ _LIBCPP_CONSTEXPR_SINCE_CXX20 void basic_string<_CharT, _Traits, _Allocator>::__
     __throw_length_error();
   pointer __old_p = __get_pointer();
   size_type __cap =
-      __old_cap < __ms / 2 - __alignment ? __recommend(std::max(__old_cap + __delta_cap, 2 * __old_cap)) : __ms - 1;
+      __old_cap < __ms / 2 - __alignment
+          ? __recommend(std::max<size_type>(__old_cap + __delta_cap, 2 * __old_cap))
+          : __ms - 1;
   __annotate_delete();
   auto __guard      = std::__make_scope_guard(__annotate_new_size(*this));
   auto __allocation = std::__allocate_at_least(__alloc_, __cap + 1);
