@@ -37,7 +37,21 @@ PyGlobals::PyGlobals() {
 PyGlobals::~PyGlobals() { instance = nullptr; }
 
 bool PyGlobals::loadDialectModule(llvm::StringRef dialectNamespace) {
-  if (loadedDialectModules.contains(dialectNamespace))
+  auto already_loaded = false;
+#ifdef Py_GIL_DISABLED
+  {
+    auto &lock = getLock();
+    PyMutex_Lock(&lock);
+#endif
+
+    already_loaded = loadedDialectModules.contains(dialectNamespace);
+
+#ifdef Py_GIL_DISABLED
+    PyMutex_Unlock(&lock);
+  }
+#endif
+
+  if (already_loaded)
     return true;
   // Since re-entrancy is possible, make a copy of the search prefixes.
   std::vector<std::string> localSearchPrefixes = dialectSearchPrefixes;
@@ -59,9 +73,24 @@ bool PyGlobals::loadDialectModule(llvm::StringRef dialectNamespace) {
 
   if (loaded.is_none())
     return false;
-  // Note: Iterator cannot be shared from prior to loading, since re-entrancy
-  // may have occurred, which may do anything.
-  loadedDialectModules.insert(dialectNamespace);
+
+  // We should use a lock in free-threading as loadDialectModule can be implicitly called by
+  // python functions executed by in multiple threads context (e.g. lookupValueCaster).
+#ifdef Py_GIL_DISABLED
+  {
+    auto &lock = getLock();
+    PyMutex_Lock(&lock);
+#endif
+
+    // Note: Iterator cannot be shared from prior to loading, since re-entrancy
+    // may have occurred, which may do anything.
+    loadedDialectModules.insert(dialectNamespace);
+
+#ifdef Py_GIL_DISABLED
+    PyMutex_Unlock(&lock);
+  }
+#endif
+
   return true;
 }
 

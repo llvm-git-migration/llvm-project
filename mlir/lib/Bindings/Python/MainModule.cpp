@@ -74,13 +74,7 @@ PYBIND11_MODULE(_mlir, m, py::mod_gil_not_used()) {
               std::string operationName =
                   opClass.attr("OPERATION_NAME").cast<std::string>();
 
-              // Use PyGlobals::withInstance instead of PyGlobals::get()
-              // to prevent data race in multi-threaded context
-              // Error raised in ir/opeation.py testKnownOpView test
-              PyGlobals::withInstance([&](PyGlobals& instance) {
-                  instance.registerOperationImpl(operationName, opClass, replace);
-                  return 0;
-              });
+              PyGlobals::get().registerOperationImpl(operationName, opClass, replace);
               // Dict-stuff the new opClass by name onto the dialect class.
               py::object opClassName = opClass.attr("__name__");
               dialectClass.attr(opClassName) = opClass;
