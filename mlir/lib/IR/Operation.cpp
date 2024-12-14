@@ -125,10 +125,11 @@ Operation *Operation::create(Location location, OperationName name,
   // Initialize the results.
   auto resultTypeIt = resultTypes.begin();
   for (unsigned i = 0; i < numInlineResults; ++i, ++resultTypeIt)
-    new (op->getInlineOpResult(i)) detail::InlineOpResult(*resultTypeIt, i);
+    new (op->getInlineOpResult(i))
+        detail::InlineOpResult(*resultTypeIt, i, location);
   for (unsigned i = 0; i < numTrailingResults; ++i, ++resultTypeIt) {
     new (op->getOutOfLineOpResult(i))
-        detail::OutOfLineOpResult(*resultTypeIt, i);
+        detail::OutOfLineOpResult(*resultTypeIt, i, location);
   }
 
   // Initialize the regions.
