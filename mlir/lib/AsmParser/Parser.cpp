@@ -2071,6 +2071,14 @@ OperationParser::parseCustomOperation(ArrayRef<ResultRecord> resultIDs) {
 
   // Get location information for the operation.
   auto srcLocation = getEncodedSourceLocation(opLoc);
+  if (resultIDs.size() == 1) {
+    std::tuple<StringRef, unsigned, SMLoc> resultID = resultIDs.front();
+    auto id = std::get<0>(resultID);
+    srcLocation = NameLoc::get(
+        StringAttr::get(state.config.getContext(), id.drop_front(1)),
+        srcLocation);
+  }
+
   OperationState opState(srcLocation, *opNameInfo);
 
   // If we are populating the parser state, start a new operation definition.
@@ -2235,6 +2243,9 @@ ParseResult OperationParser::parseRegionBody(Region &region, SMLoc startLoc,
       Location loc = entryArg.sourceLoc.has_value()
                          ? *entryArg.sourceLoc
                          : getEncodedSourceLocation(argInfo.location);
+      loc = NameLoc::get(StringAttr::get(state.config.getContext(),
+                                         entryArg.ssaName.name.drop_front(1)),
+                         loc);
       BlockArgument arg = block->addArgument(entryArg.type, loc);
 
       // Add a definition of this arg to the assembly state if provided.
@@ -2415,6 +2426,9 @@ ParseResult OperationParser::parseOptionalBlockArgList(Block *owner) {
               return emitError("argument and block argument type mismatch");
           } else {
             auto loc = getEncodedSourceLocation(useInfo.location);
+            loc = NameLoc::get(StringAttr::get(state.config.getContext(),
+                                               useInfo.name.drop_front(1)),
+                               loc);
             arg = owner->addArgument(type, loc);
           }
 

@@ -1511,7 +1511,10 @@ void SSANameState::numberValuesInRegion(Region &region) {
     assert(!valueIDs.count(arg) && "arg numbered multiple times");
     assert(llvm::cast<BlockArgument>(arg).getOwner()->getParent() == &region &&
            "arg not defined in current region");
-    setValueName(arg, name);
+    if (auto nameLoc = dyn_cast<NameLoc>(arg.getLoc()))
+      setValueName(arg, nameLoc.getName());
+    else
+      setValueName(arg, name);
   };
 
   if (!printerFlags.shouldPrintGenericOpForm()) {
@@ -1553,7 +1556,10 @@ void SSANameState::numberValuesInBlock(Block &block) {
       specialNameBuffer.resize(strlen("arg"));
       specialName << nextArgumentID++;
     }
-    setValueName(arg, specialName.str());
+    if (auto nameLoc = dyn_cast<NameLoc>(arg.getLoc()))
+      setValueName(arg, nameLoc.getName());
+    else
+      setValueName(arg, specialName.str());
   }
 
   // Number the operations in this block.
@@ -1567,7 +1573,10 @@ void SSANameState::numberValuesInOp(Operation &op) {
   auto setResultNameFn = [&](Value result, StringRef name) {
     assert(!valueIDs.count(result) && "result numbered multiple times");
     assert(result.getDefiningOp() == &op && "result not defined by 'op'");
-    setValueName(result, name);
+    if (auto nameLoc = dyn_cast<NameLoc>(result.getLoc()))
+      setValueName(result, nameLoc.getName());
+    else
+      setValueName(result, name);
 
     // Record the result number for groups not anchored at 0.
     if (int resultNo = llvm::cast<OpResult>(result).getResultNumber())
