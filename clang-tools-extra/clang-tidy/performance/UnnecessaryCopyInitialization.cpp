@@ -104,6 +104,10 @@ AST_MATCHER_FUNCTION_P(StatementMatcher,
                                 hasArgument(0, hasType(ReceiverType)))));
 }
 
+namespace {
+AST_MATCHER(CXXMethodDecl, isStatic) { return Node.isStatic(); }
+} // namespace
+
 AST_MATCHER_FUNCTION(StatementMatcher, isConstRefReturningFunctionCall) {
   // Only allow initialization of a const reference from a free function if it
   // has no arguments. Otherwise it could return an alias to one of its
@@ -111,7 +115,7 @@ AST_MATCHER_FUNCTION(StatementMatcher, isConstRefReturningFunctionCall) {
   return callExpr(callee(functionDecl(returns(hasCanonicalType(
                                           matchers::isReferenceToConst())))
                              .bind(FunctionDeclId)),
-                  argumentCountIs(0), unless(callee(cxxMethodDecl())))
+                  argumentCountIs(0), unless(callee(cxxMethodDecl(unless(isStatic())))))
       .bind(InitFunctionCallId);
 }
 
