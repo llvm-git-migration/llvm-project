@@ -73,7 +73,8 @@ OpAsmParser::~OpAsmParser() = default;
 MLIRContext *AsmParser::getContext() const { return getBuilder().getContext(); }
 
 /// Parse a type list.
-/// This is out-of-line to work-around https://github.com/llvm/llvm-project/issues/62918
+/// This is out-of-line to work-around
+/// https://github.com/llvm/llvm-project/issues/62918
 ParseResult AsmParser::parseTypeList(SmallVectorImpl<Type> &result) {
   return parseCommaSeparatedList(
       [&]() { return parseType(result.emplace_back()); });
@@ -1511,7 +1512,10 @@ void SSANameState::numberValuesInRegion(Region &region) {
     assert(!valueIDs.count(arg) && "arg numbered multiple times");
     assert(llvm::cast<BlockArgument>(arg).getOwner()->getParent() == &region &&
            "arg not defined in current region");
-    setValueName(arg, name);
+    if (auto nameLoc = dyn_cast<NameLoc>(arg.getLoc()))
+      setValueName(arg, nameLoc.getName());
+    else
+      setValueName(arg, name);
   };
 
   if (!printerFlags.shouldPrintGenericOpForm()) {
@@ -1553,7 +1557,10 @@ void SSANameState::numberValuesInBlock(Block &block) {
       specialNameBuffer.resize(strlen("arg"));
       specialName << nextArgumentID++;
     }
-    setValueName(arg, specialName.str());
+    if (auto nameLoc = dyn_cast<NameLoc>(arg.getLoc()))
+      setValueName(arg, nameLoc.getName());
+    else
+      setValueName(arg, specialName.str());
   }
 
   // Number the operations in this block.
@@ -1567,7 +1574,10 @@ void SSANameState::numberValuesInOp(Operation &op) {
   auto setResultNameFn = [&](Value result, StringRef name) {
     assert(!valueIDs.count(result) && "result numbered multiple times");
     assert(result.getDefiningOp() == &op && "result not defined by 'op'");
-    setValueName(result, name);
+    if (auto nameLoc = dyn_cast<NameLoc>(result.getLoc()))
+      setValueName(result, nameLoc.getName());
+    else
+      setValueName(result, name);
 
     // Record the result number for groups not anchored at 0.
     if (int resultNo = llvm::cast<OpResult>(result).getResultNumber())
@@ -1605,11 +1615,22 @@ void SSANameState::numberValuesInOp(Operation &op) {
     }
     return;
   }
-  Value resultBegin = op.getResult(0);
 
-  // If the first result wasn't numbered, give it a default number.
-  if (valueIDs.try_emplace(resultBegin, nextValueID).second)
-    ++nextValueID;
+  OpResult resultBegin = op.getOpResult(0);
+  if (!isa<OpAsmOpInterface>(&op)) {
+    if (auto nameLoc = dyn_cast<NameLoc>(resultBegin.getLoc())) {
+      setResultNameFn(resultBegin, nameLoc.getName());
+    } else {
+      // If the first result wasn't numbered, give it a default number.
+      if (valueIDs.try_emplace(resultBegin, nextValueID).second)
+        ++nextValueID;
+    }
+    for (OpResult opResult : op.getOpResults().drop_front(1)) {
+      if (auto nameLoc = dyn_cast<NameLoc>(opResult.getLoc())) {
+        setResultNameFn(opResult, nameLoc.getName());
+      }
+    }
+  }
 
   // If this operation has multiple result groups, mark it.
   if (resultGroups.size() != 1) {
