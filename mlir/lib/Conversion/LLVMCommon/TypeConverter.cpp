@@ -237,8 +237,6 @@ LLVMTypeConverter::LLVMTypeConverter(MLIRContext *ctx,
   // Argument materializations convert from the new block argument types
   // (multiple SSA values that make up a memref descriptor) back to the
   // original block argument type.
-  addArgumentMaterialization(unrakedMemRefMaterialization);
-  addArgumentMaterialization(rankedMemRefMaterialization);
   addSourceMaterialization(unrakedMemRefMaterialization);
   addSourceMaterialization(rankedMemRefMaterialization);
 
