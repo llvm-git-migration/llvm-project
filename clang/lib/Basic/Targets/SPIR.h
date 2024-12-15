@@ -159,9 +159,8 @@ public:
   // memcpy as per section 3 of the SPIR spec.
   bool useFP16ConversionIntrinsics() const override { return false; }
 
-  std::pair<const llvm::StringTable *, ArrayRef<Builtin::Info>>
-  getTargetBuiltinStorage() const override {
-    return {nullptr, {}};
+  llvm::SmallVector<Builtin::InfosShard> getTargetBuiltins() const override {
+    return {};
   }
 
   std::string_view getClobbers() const override { return ""; }
@@ -411,8 +410,7 @@ public:
 
   std::string convertConstraint(const char *&Constraint) const override;
 
-  std::pair<const llvm::StringTable *, ArrayRef<Builtin::Info>>
-  getTargetBuiltinStorage() const override;
+  llvm::SmallVector<Builtin::InfosShard> getTargetBuiltins() const override;
 
   void getTargetDefines(const LangOptions &Opts,
                         MacroBuilder &Builder) const override;
