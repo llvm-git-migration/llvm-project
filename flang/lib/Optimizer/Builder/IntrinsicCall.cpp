@@ -642,6 +642,7 @@ static constexpr IntrinsicHandler handlers[]{
        {"dim", asValue},
        {"mask", asBox, handleDynamicOptional}}},
      /*isElemental=*/false},
+    {"syncthreads1", &I::genSyncThreads},
     {"system",
      &I::genSystem,
      {{{"command", asBox}, {"exitstat", asBox, handleDynamicOptional}}},
@@ -1639,8 +1640,9 @@ mlir::Value toValue(const fir::ExtendedValue &val, fir::FirOpBuilder &builder,
 //===----------------------------------------------------------------------===//
 
 static bool isIntrinsicModuleProcedure(llvm::StringRef name) {
+  llvm::errs() << "isIntrinsicModuleProcedure: " << name << "\n";
   return name.starts_with("c_") || name.starts_with("compiler_") ||
-         name.starts_with("ieee_") || name.starts_with("__ppc_");
+         name.starts_with("ieee_") || name.starts_with("__ppc_") || name == "syncthreads1";
 }
 
 static bool isCoarrayIntrinsic(llvm::StringRef name) {
@@ -1684,6 +1686,7 @@ lookupIntrinsicHandler(fir::FirOpBuilder &builder,
                        llvm::StringRef intrinsicName,
                        std::optional<mlir::Type> resultType) {
   llvm::StringRef name = genericName(intrinsicName);
+  llvm::errs() << "Looking up " << intrinsicName << " with name " << name << "\n";
   if (const IntrinsicHandler *handler = findIntrinsicHandler(name))
     return std::make_optional<IntrinsicHandlerEntry>(handler);
   bool isPPCTarget = fir::getTargetTriple(builder.getModule()).isPPC();
@@ -7288,6 +7291,22 @@ IntrinsicLibrary::genSum(mlir::Type resultType,
                          llvm::ArrayRef<fir::ExtendedValue> args) {
   return genReduction(fir::runtime::genSum, fir::runtime::genSumDim, "SUM",
                       resultType, args);
+}
+
+// SYNCTHREADS
+void IntrinsicLibrary::genSyncThreads(llvm::ArrayRef<fir::ExtendedValue> args) {
+  constexpr llvm::StringLiteral funcName = "llvm.nvvm.barrier0";
+  mlir::func::FuncOp funcOp = builder.getNamedFunction(funcName);
+  mlir::MLIRContext *context = builder.getContext();
+  mlir::FunctionType funcType =
+      mlir::FunctionType::get(context, {}, {});
+
+  if (!funcOp) 
+    funcOp = builder.createFunction(loc, funcName, funcType);
+  
+  llvm::SmallVector<mlir::Value> noArgs;
+  builder.create<fir::CallOp>(loc, funcOp, noArgs);
+
 }
 
 // SYSTEM
