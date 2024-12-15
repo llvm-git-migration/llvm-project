@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "mlir-c/BuiltinAttributes.h"
 #include "mlir-c/Dialect/Quant.h"
 #include "mlir-c/IR.h"
 #include "mlir/Bindings/Python/PybindAdaptors.h"
