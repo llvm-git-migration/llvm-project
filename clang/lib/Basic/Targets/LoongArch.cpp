@@ -311,9 +311,9 @@ bool LoongArchTargetInfo::hasFeature(StringRef Feature) const {
       .Default(false);
 }
 
-std::pair<const llvm::StringTable *, ArrayRef<Builtin::Info>>
-LoongArchTargetInfo::getTargetBuiltinStorage() const {
-  return {&BuiltinStrings, BuiltinInfos};
+llvm::SmallVector<Builtin::InfosShard>
+LoongArchTargetInfo::getTargetBuiltins() const {
+  return {{&BuiltinStrings, BuiltinInfos}};
 }
 
 bool LoongArchTargetInfo::handleTargetFeatures(
