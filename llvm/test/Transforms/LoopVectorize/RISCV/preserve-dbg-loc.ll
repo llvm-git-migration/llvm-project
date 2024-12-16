@@ -4,14 +4,15 @@
 ; RUN: -mtriple=riscv64 -mattr=+v -riscv-v-vector-bits-max=128 -S < %s 2>&1 | FileCheck --check-prefix=DEBUGLOC %s
 
 ; Testing the debug locations of the generated vector intstruction are same as
-; their scalar instruction.
+; their scalar counterpart.
 
+define void @vp_select(ptr %a, ptr %b, ptr %c, i64 %N) {
 ; DEBUGLOC-LABEL: define void @vp_select(
-define void @vp_select(ptr noalias %a, ptr noalias %b, ptr noalias %c, i64 %N) {
 ; DEBUGLOC: vector.body:
-; DEBUGLOC:   %[[VPSel:[0-9]+]] = call <vscale x 4 x i32> @llvm.vp.select.nxv4i32(<vscale x 4 x i1> %15, <vscale x 4 x i32> %vp.op.load1, <vscale x 4 x i32> %vp.op, i32 %9), !dbg ![[SelLoc:[0-9]+]]
+; DEBUGLOC:  = call <vscale x 4 x i32> @llvm.vp.select.nxv4i32(<vscale x 4 x i1> %{{.+}}, <vscale x 4 x i32> %{{.+}}, <vscale x 4 x i32> %{{.+}}, i32 %{{.+}}), !dbg ![[SelLoc:[0-9]+]]
 ; DEBUGLOC: for.body:
-; DEBUGLOC:   %cond.p = select i1 %cmp4, i32 %22, i32 %23, !dbg ![[SelLoc]]
+; DEBUGLOC:   %cond.p = select i1 %cmp4, i32 %{{.*}}, i32 %{{.*}}, !dbg ![[SelLoc]]
+;
  entry:
    br label %for.body
 

@@ -1,6 +1,6 @@
-; RUN: opt < %s -passes=loop-vectorize -force-vector-width=4 -S 2>&1 | FileCheck %s
-; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-width=4 -S | FileCheck %s -check-prefix DEBUGLOC
-; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-width=4 -S --try-experimental-debuginfo-iterators | FileCheck %s -check-prefix DEBUGLOC
+; RUN: opt < %s -passes=loop-vectorize -S 2>&1 | FileCheck %s
+; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -S | FileCheck %s -check-prefix DEBUGLOC
+; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -S --try-experimental-debuginfo-iterators | FileCheck %s -check-prefix DEBUGLOC
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 
 ; This test makes sure we don't duplicate the loop vectorizer's metadata
@@ -54,6 +54,32 @@ exit:
   ret void
 }
 
+define void @widen_intrinsic_dbg(i64 %n, ptr noalias %y, ptr noalias %x) nounwind uwtable {
+; DEBUGLOC-LABEL: define void @widen_intrinsic_dbg(
+;
+; DEBUGLOC: vector.body:
+; DEBUGLOC:  = call <4 x float> @llvm.sqrt.v4f32(<4 x float> %{{.+}}), !dbg ![[INTRINSIC_LOC:[0-9]+]]
+; DEBUGLOC: for.body:
+; DEBUGLOC: %call = tail call float @llvm.sqrt.f32(float %lv) #2, !dbg ![[INTRINSIC_LOC]]
+;
+entry:
+  %cmp6 = icmp sgt i64 %n, 0
+  br i1 %cmp6, label %for.body, label %for.end
+
+for.body:
+  %iv = phi i64 [ %iv.next, %for.body ], [ 0, %entry ]
+  %arrayidx = getelementptr inbounds float, ptr %y, i64 %iv
+  %lv = load float, ptr %arrayidx, align 4
+  %call = tail call float @llvm.sqrt.f32(float %lv) nounwind readnone
+  %arrayidx2 = getelementptr inbounds float, ptr %x, i64 %iv
+  store float %call, ptr %arrayidx2, align 4
+  %iv.next = add i64 %iv, 1
+  %exitcond = icmp eq i64 %iv.next, %n
+  br i1 %exitcond, label %for.end, label %for.body
+
+for.end:
+  ret void
+}
 
 !0 = !{!0, !1}
 !1 = !{!"llvm.loop.vectorize.width", i32 4}
@@ -62,3 +88,4 @@ exit:
 
 ; DEBUGLOC: ![[RESUMELOC]] = !DILocation(line: 2
 ; DEBUGLOC: ![[PTRIVLOC]] = !DILocation(line: 12
+; DEBUGLOC: ![[INTRINSIC_LOC]] = !DILocation(line: 23
