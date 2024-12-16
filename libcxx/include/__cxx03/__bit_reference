@@ -10,6 +10,7 @@
 #ifndef _LIBCPP___CXX03___BIT_REFERENCE
 #define _LIBCPP___CXX03___BIT_REFERENCE
 
+#include <__cxx03/__algorithm/copy.h>
 #include <__cxx03/__algorithm/copy_n.h>
 #include <__cxx03/__algorithm/fill_n.h>
 #include <__cxx03/__algorithm/min.h>
@@ -23,6 +24,7 @@
 #include <__cxx03/__memory/construct_at.h>
 #include <__cxx03/__memory/pointer_traits.h>
 #include <__cxx03/__type_traits/conditional.h>
+#include <__cxx03/__utility/pair.h>
 #include <__cxx03/__utility/swap.h>
 #include <__cxx03/cstring>
 
@@ -965,6 +967,10 @@ private:
   friend class __bit_iterator<_Cp, true>;
   template <class _Dp>
   friend struct __bit_array;
+
+  template <class _InIter, class _Sent, class _Dp>
+  _LIBCPP_CONSTEXPR_SINCE_CXX14 _LIBCPP_HIDE_FROM_ABI friend pair<_InIter, __bit_iterator<_Dp, false>>
+  __copy_bool(_InIter __first, _Sent __last, __bit_iterator<_Dp, false> __result);
 
   template <bool _FillVal, class _Dp>
   _LIBCPP_CONSTEXPR_SINCE_CXX20 friend void
