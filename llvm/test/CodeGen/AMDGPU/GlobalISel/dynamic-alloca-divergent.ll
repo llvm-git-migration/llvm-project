@@ -23,6 +23,28 @@ define void @func_dynamic_stackalloc_vgpr_align4(i32 %n) {
   ret void
 }
 
+define void @func_dynamic_stackalloc_vgpr_align32(i32 %n) {
+  %alloca = alloca i32, i32 %n, align 32, addrspace(5)
+  store volatile ptr addrspace(5) %alloca, ptr addrspace(1) undef
+  ret void
+}
+
+define amdgpu_kernel void @kernel_non_entry_block_dynamic_alloca(ptr addrspace(1) %out, i32 %arg.cond, i32 %in) {
+    entry:
+    %cond = icmp eq i32 %arg.cond, 0
+    br i1 %cond, label %bb.0, label %bb.1
+
+    bb.0:
+    %alloca = alloca i32, i32 %in, align 64, addrspace(5)
+    %gep1 = getelementptr i32, ptr addrspace(5) %alloca, i32 1
+    store volatile i32 0, ptr addrspace(5) %alloca
+    store volatile i32 1, ptr addrspace(5) %gep1
+    br label %bb.1
+
+    bb.1:
+    ret void
+}
+
 declare i32 @llvm.amdgcn.workitem.id.x() #0
 
 attributes #0 = { nounwind readnone speculatable }
