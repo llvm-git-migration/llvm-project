@@ -1088,6 +1088,10 @@ Value *SplitPtrStructs::handleMemoryInst(Instruction *I, Value *Arg, Value *Ptr,
     Aux |= (Aux & AMDGPU::CPol::GLC ? AMDGPU::CPol::DLC : 0);
   if (IsVolatile)
     Aux |= AMDGPU::CPol::VOLATILE;
+  if (I->hasMetadata("amdgpu.last.use"))
+    Aux |= AMDGPU::CPol::TH_LU;
+  if (I->hasMetadata("nontemporal"))
+    Aux |= AMDGPU::CPol::TH_NT;
   Args.push_back(IRB.getInt32(Aux));
 
   Intrinsic::ID IID = Intrinsic::not_intrinsic;

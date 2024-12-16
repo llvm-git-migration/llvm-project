@@ -11,11 +11,11 @@ define void @loads(ptr addrspace(8) %buf) {
 ; CHECK-NEXT:    [[SCALAR:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 0)
 ; CHECK-NEXT:    [[VEC2:%.*]] = call <2 x float> @llvm.amdgcn.raw.ptr.buffer.load.v2f32(ptr addrspace(8) align 8 [[BUF]], i32 16, i32 0, i32 0)
 ; CHECK-NEXT:    [[VEC4:%.*]] = call <4 x float> @llvm.amdgcn.raw.ptr.buffer.load.v4f32(ptr addrspace(8) align 16 [[BUF]], i32 16, i32 0, i32 0)
-; CHECK-NEXT:    [[NONTEMPORAL:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 2), !nontemporal [[META0:![0-9]+]]
+; CHECK-NEXT:    [[NONTEMPORAL:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 3), !nontemporal [[META0:![0-9]+]]
 ; CHECK-NEXT:    [[INVARIANT:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 0), !invariant.load [[META1:![0-9]+]]
-; CHECK-NEXT:    [[NONTEMPORAL_INVARIANT:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 0), !invariant.load [[META1]], !nontemporal [[META0]]
+; CHECK-NEXT:    [[NONTEMPORAL_INVARIANT:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 1), !invariant.load [[META1]], !nontemporal [[META0]]
 ; CHECK-NEXT:    [[VOLATILE:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483648)
-; CHECK-NEXT:    [[VOLATILE_NONTEMPORAL:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483646), !nontemporal [[META0]]
+; CHECK-NEXT:    [[VOLATILE_NONTEMPORAL:%.*]] = call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483645), !nontemporal [[META0]]
 ; CHECK-NEXT:    fence syncscope("wavefront") release
 ; CHECK-NEXT:    [[ATOMIC:%.*]] = call float @llvm.amdgcn.raw.ptr.atomic.buffer.load.f32(ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483647)
 ; CHECK-NEXT:    fence syncscope("wavefront") acquire
@@ -50,9 +50,9 @@ define void @stores(ptr addrspace(8) %buf, float %f, <4 x float> %f4) {
 ; CHECK-SAME: (ptr addrspace(8) [[BUF:%.*]], float [[F:%.*]], <4 x float> [[F4:%.*]]) #[[ATTR0]] {
 ; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 0)
 ; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.v4f32(<4 x float> [[F4]], ptr addrspace(8) align 16 [[BUF]], i32 16, i32 0, i32 0)
-; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 2), !nontemporal [[META0]]
+; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 3), !nontemporal [[META0]]
 ; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483648)
-; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483646), !nontemporal [[META0]]
+; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483645), !nontemporal [[META0]]
 ; CHECK-NEXT:    fence syncscope("wavefront") release
 ; CHECK-NEXT:    call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float [[F]], ptr addrspace(8) align 4 [[BUF]], i32 16, i32 0, i32 -2147483647)
 ; CHECK-NEXT:    fence syncscope("wavefront") acquire
