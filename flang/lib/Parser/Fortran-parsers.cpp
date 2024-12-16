@@ -930,7 +930,9 @@ TYPE_PARSER(construct<DataStmtRepeat>(intLiteralConstant) ||
 // So we parse literal constants, designator, null-init, and
 // structure-constructor, so that semantics can figure things out later
 // with the symbol table.
-TYPE_PARSER(sourced(first(construct<DataStmtConstant>(literalConstant),
+TYPE_PARSER(sourced(first(
+    construct<DataStmtConstant>(indirect(charLiteralConstantSubstring)),
+    construct<DataStmtConstant>(literalConstant),
     construct<DataStmtConstant>(signedRealLiteralConstant),
     construct<DataStmtConstant>(signedIntLiteralConstant),
     extension<LanguageFeature::SignedComplexLiteral>(
