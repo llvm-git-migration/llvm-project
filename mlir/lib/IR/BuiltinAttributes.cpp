@@ -862,6 +862,7 @@ DenseArrayAttrImpl<T> DenseArrayAttrImpl<T>::get(MLIRContext *context,
   Type elementType = DenseArrayAttrUtil<T>::getElementType(context);
   auto rawArray = ArrayRef<char>(reinterpret_cast<const char *>(content.data()),
                                  content.size() * sizeof(T));
+  llvm::errs() << " sizeof(T) " << sizeof(T) << "\n";
   return llvm::cast<DenseArrayAttrImpl<T>>(
       Base::get(context, elementType, content.size(), rawArray));
 }
@@ -1542,6 +1543,12 @@ DenseResourceElementsAttr DenseResourceElementsAttr::get(ShapedType type,
   auto &manager =
       DenseResourceElementsHandle::getManagerInterface(type.getContext());
   return get(type, manager.insert(blobName, std::move(blob)));
+}
+
+ArrayRef<char> DenseResourceElementsAttr::getData() {
+  if (AsmResourceBlob *blob = this->getRawHandle().getBlob())
+    return blob->template getDataAs<char>();
+  return {};
 }
 
 //===----------------------------------------------------------------------===//
