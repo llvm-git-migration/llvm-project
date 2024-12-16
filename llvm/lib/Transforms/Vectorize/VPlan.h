@@ -2312,9 +2312,8 @@ class VPWidenPHIRecipe : public VPSingleDefRecipe {
 
 public:
   /// Create a new VPWidenPHIRecipe for \p Phi with start value \p Start.
-  VPWidenPHIRecipe(PHINode *Phi, VPValue *Start = nullptr)
-      : VPSingleDefRecipe(VPDef::VPWidenPHISC, ArrayRef<VPValue *>(), Phi,
-                          Phi->getDebugLoc()) {
+  VPWidenPHIRecipe(PHINode *Phi, VPValue *Start = nullptr, DebugLoc DL = {})
+      : VPSingleDefRecipe(VPDef::VPWidenPHISC, ArrayRef<VPValue *>(), Phi, DL) {
     if (Start)
       addOperand(Start);
   }
@@ -2615,8 +2614,8 @@ class VPReductionRecipe : public VPSingleDefRecipe {
 protected:
   VPReductionRecipe(const unsigned char SC, const RecurrenceDescriptor &R,
                     Instruction *I, ArrayRef<VPValue *> Operands,
-                    VPValue *CondOp, bool IsOrdered)
-      : VPSingleDefRecipe(SC, Operands, I, I->getDebugLoc()), RdxDesc(R),
+                    VPValue *CondOp, bool IsOrdered, DebugLoc DL)
+      : VPSingleDefRecipe(SC, Operands, I, DL), RdxDesc(R),
         IsOrdered(IsOrdered) {
     if (CondOp) {
       IsConditional = true;
@@ -2627,16 +2626,17 @@ protected:
 public:
   VPReductionRecipe(const RecurrenceDescriptor &R, Instruction *I,
                     VPValue *ChainOp, VPValue *VecOp, VPValue *CondOp,
-                    bool IsOrdered)
+                    bool IsOrdered, DebugLoc DL = {})
       : VPReductionRecipe(VPDef::VPReductionSC, R, I,
                           ArrayRef<VPValue *>({ChainOp, VecOp}), CondOp,
-                          IsOrdered) {}
+                          IsOrdered, DL) {}
 
   ~VPReductionRecipe() override = default;
 
   VPReductionRecipe *clone() override {
     return new VPReductionRecipe(RdxDesc, getUnderlyingInstr(), getChainOp(),
-                                 getVecOp(), getCondOp(), IsOrdered);
+                                 getVecOp(), getCondOp(), IsOrdered,
+                                 getDebugLoc());
   }
 
   static inline bool classof(const VPRecipeBase *R) {
@@ -2691,7 +2691,7 @@ public:
             VPDef::VPReductionEVLSC, R.getRecurrenceDescriptor(),
             cast_or_null<Instruction>(R.getUnderlyingValue()),
             ArrayRef<VPValue *>({R.getChainOp(), R.getVecOp(), &EVL}), CondOp,
-            R.isOrdered()) {}
+            R.isOrdered(), R.getDebugLoc()) {}
 
   ~VPReductionEVLRecipe() override = default;
 
