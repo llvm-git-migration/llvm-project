@@ -274,6 +274,9 @@ public:
   /// Runs the verifier after each individual pass.
   void enableVerifier(bool enabled = true);
 
+  /// Whether dependent dialects should be automatically loaded.
+  void setAutomaticDialectLoading(bool shouldLoad);
+
   //===--------------------------------------------------------------------===//
   // Instrumentations
   //===--------------------------------------------------------------------===//
@@ -354,6 +357,9 @@ public:
 
     /// Flags to control printing behavior.
     OpPrintingFlags opPrintingFlags;
+
+    /// A flag to disable dependent dialect registration.
+    bool loadDialects;
   };
 
   /// Add an instrumentation to print the IR before and after pass execution,
