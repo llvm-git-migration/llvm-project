@@ -58,12 +58,10 @@ struct HighPrioTask {
   }
 };
 
-
 template <std::size_t N>
 struct NumHighPrioTasks {
   static constexpr auto value = N;
 };
-
 
 struct KeepNotifying {
   template <class Atomic>
@@ -107,18 +105,35 @@ void BM_1_atomic_1_waiter_1_notifier(benchmark::State& state) {
   }
 }
 
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<0>>)->RangeMultiplier(2)->Range(1 << 18, 1 << 20);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<0>>)->RangeMultiplier(2)->Range(1 << 12, 1 << 14);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<0>>)->RangeMultiplier(2)->Range(1 << 12, 1 << 14);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 18, 1 << 20);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 12, 1 << 14);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 12, 1 << 14);
 
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<4>>)->RangeMultiplier(2)->Range(1 << 18, 1 << 20);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<4>>)->RangeMultiplier(2)->Range(1 << 12, 1 << 14);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<4>>)->RangeMultiplier(2)->Range(1 << 12, 1 << 14);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 18, 1 << 20);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 12, 1 << 14);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 12, 1 << 14);
 
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<7>>)->RangeMultiplier(2)->Range(1 << 4, 1 << 6);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<7>>)->RangeMultiplier(2)->Range(1 << 3, 1 << 5);
-BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<7>>)->RangeMultiplier(2)->Range(1 << 3, 1 << 5);
-
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<KeepNotifying, NumHighPrioTasks<7>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 4, 1 << 6);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<50>, NumHighPrioTasks<7>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 3, 1 << 5);
+BENCHMARK(BM_1_atomic_1_waiter_1_notifier<NotifyEveryNus<100>, NumHighPrioTasks<7>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 3, 1 << 5);
 
 template <std::size_t N>
 struct NumWaitingThreads {
@@ -205,7 +220,6 @@ BENCHMARK(BM_1_atomic_multi_waiter_1_notifier<NotifyEveryNus<100>, NumWaitingThr
     ->RangeMultiplier(2)
     ->Range(1 << 4, 1 << 6);
 
-
 BENCHMARK(BM_1_atomic_multi_waiter_1_notifier<KeepNotifying, NumWaitingThreads<3>, NumHighPrioTasks<4>>)
     ->RangeMultiplier(2)
     ->Range(1 << 8, 1 << 10);
@@ -265,7 +279,6 @@ BENCHMARK(BM_1_atomic_multi_waiter_1_notifier<NotifyEveryNus<100>, NumWaitingThr
 BENCHMARK(BM_1_atomic_multi_waiter_1_notifier<NotifyEveryNus<100>, NumWaitingThreads<15>, NumHighPrioTasks<7>>)
     ->RangeMultiplier(2)
     ->Range(1 << 1, 1 << 3);
-
 
 template <std::size_t N>
 struct NumberOfAtomics {
@@ -333,83 +346,82 @@ void BM_N_atomics_N_waiter_N_notifier(benchmark::State& state) {
   }
 }
 
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 12, 1 << 14);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 10, 1 << 12);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 10, 1 << 12);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 8, 1 << 10);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 12, 1 << 14);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 10, 1 << 12);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 10, 1 << 12);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 8, 1 << 10);
 
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 10, 1 << 12);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 8, 1 << 10);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 8, 1 << 10);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 6, 1 << 8);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 10, 1 << 12);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 8, 1 << 10);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 8, 1 << 10);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 6, 1 << 8);
 
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 8, 1 << 10);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 8, 1 << 10);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 7, 1 << 9);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 6, 1 << 8);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<2>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 8, 1 << 10);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<3>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 8, 1 << 10);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<5>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 9);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<7>, NumHighPrioTasks<0>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 6, 1 << 8);
 
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 7, 1 << 9);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 7, 1 << 9);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 6, 1 << 8);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 4, 1 << 6);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 9);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 9);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 6, 1 << 8);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<KeepNotifying, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 4, 1 << 6);
 
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 7, 1 << 9);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 7, 1 << 9);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 5, 1 << 7);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 3, 1 << 5);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 9);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 9);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 5, 1 << 7);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<50>, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 3, 1 << 5);
 
-
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 6, 1 << 8);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 6, 1 << 8);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 5, 1 << 7);
- BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
-     ->RangeMultiplier(2)
-     ->Range(1 << 3, 1 << 5);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<2>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 6, 1 << 8);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<3>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 6, 1 << 8);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<5>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 5, 1 << 7);
+BENCHMARK(BM_N_atomics_N_waiter_N_notifier<NotifyEveryNus<100>, NumberOfAtomics<7>, NumHighPrioTasks<4>>)
+    ->RangeMultiplier(2)
+    ->Range(1 << 3, 1 << 5);
 
 BENCHMARK_MAIN();
