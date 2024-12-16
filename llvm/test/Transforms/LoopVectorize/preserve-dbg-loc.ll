@@ -8,10 +8,10 @@ target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 define i32 @reduction_sum(ptr noalias nocapture %A, ptr noalias nocapture %B) {
 ; DEBUGLOC: vector.body:
 ; DEBUGLOC:   %[[VecLoad:.*]] = load <4 x i32>, ptr %2, align 4, !dbg ![[LoadLoc0:[0-9]+]]
-; DEBUGLOC:   %[[VecRed:.*]] = call i32 @llvm.vector.reduce.add.v4i32(<4 x i32> %wide.load), !dbg ![[LoadLoc0]]
+; DEBUGLOC:   %[[VecRed:.*]] = call i32 @llvm.vector.reduce.add.v4i32(<4 x i32> %wide.load), !dbg ![[RedLoc0:[0-9]+]]
 ; DEBUGLOC: .lr.ph:
 ; DEBUGLOC:   %l3 = load i32, ptr %l2, align 4, !dbg ![[LoadLoc0]]
-; DEBUGLOC:   %l7 = add i32 %sum.02, %l3, !dbg ![[RedLoc0:[0-9]+]]
+; DEBUGLOC:   %l7 = add i32 %sum.02, %l3, !dbg ![[RedLoc0]]
 entry:
   br label %.lr.ph
 
