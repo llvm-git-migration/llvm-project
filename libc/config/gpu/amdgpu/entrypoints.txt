@@ -378,13 +378,12 @@ set(TARGET_LIBM_ENTRYPOINTS
     libc.src.math.frexp
     libc.src.math.frexpf
     libc.src.math.frexpl
-    # FIXME: Broken on NVPTX.
-    # libc.src.math.fromfp
-    # libc.src.math.fromfpf
-    # libc.src.math.fromfpl
-    # libc.src.math.fromfpx
-    # libc.src.math.fromfpxf
-    # libc.src.math.fromfpxl
+    libc.src.math.fromfp
+    libc.src.math.fromfpf
+    libc.src.math.fromfpl
+    libc.src.math.fromfpx
+    libc.src.math.fromfpxf
+    libc.src.math.fromfpxl
     libc.src.math.fsqrt
     libc.src.math.fsqrtl
     libc.src.math.fsub
@@ -508,13 +507,12 @@ set(TARGET_LIBM_ENTRYPOINTS
     libc.src.math.trunc
     libc.src.math.truncf
     libc.src.math.truncl
-    # FIXME: Broken on NVPTX.
-    # libc.src.math.ufromfp
-    # libc.src.math.ufromfpf
-    # libc.src.math.ufromfpl
-    # libc.src.math.ufromfpx
-    # libc.src.math.ufromfpxf
-    # libc.src.math.ufromfpxl
+    libc.src.math.ufromfp
+    libc.src.math.ufromfpf
+    libc.src.math.ufromfpl
+    libc.src.math.ufromfpx
+    libc.src.math.ufromfpxf
+    libc.src.math.ufromfpxl
 )
 
 if(LIBC_TYPES_HAS_FLOAT16)
