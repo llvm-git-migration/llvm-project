@@ -1,10 +1,10 @@
-; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -prefer-inloop-reductions -S | FileCheck %s -check-prefix DEBUGLOC
+; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-width=4 -prefer-inloop-reductions -S | FileCheck %s -check-prefix DEBUGLOC
 
 ; Testing the debug locations of the generated vector intstruction are same as
 ; their scalar counterpart.
 
-; DEBUGLOC-LABEL: define i32 @reduction_sum(
 define i32 @reduction_sum(ptr %A, ptr %B) {
+; DEBUGLOC-LABEL: define i32 @reduction_sum(
 ; DEBUGLOC: vector.body:
 ; DEBUGLOC:   %[[VecLoad:.*]] = load <4 x i32>, ptr %2, align 4, !dbg ![[LoadLoc0:[0-9]+]]
 ; DEBUGLOC:   %[[VecRed:.*]] = call i32 @llvm.vector.reduce.add.v4i32(<4 x i32> %wide.load), !dbg ![[RedLoc0:[0-9]+]]

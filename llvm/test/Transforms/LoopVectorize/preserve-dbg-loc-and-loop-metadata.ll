@@ -1,6 +1,6 @@
-; RUN: opt < %s -passes=loop-vectorize -S 2>&1 | FileCheck %s
-; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -S | FileCheck %s -check-prefix DEBUGLOC
-; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-interleave=1 -force-vector-width=4 -S --try-experimental-debuginfo-iterators | FileCheck %s -check-prefix DEBUGLOC
+; RUN: opt < %s -passes=loop-vectorize -force-vector-width=4 -S 2>&1 | FileCheck %s
+; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-width=4 -S | FileCheck %s -check-prefix DEBUGLOC
+; RUN: opt < %s -passes=debugify,loop-vectorize -force-vector-width=4 -S --try-experimental-debuginfo-iterators | FileCheck %s -check-prefix DEBUGLOC
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 
 ; This test makes sure we don't duplicate the loop vectorizer's metadata
@@ -54,9 +54,8 @@ exit:
   ret void
 }
 
-define void @widen_intrinsic_dbg(i64 %n, ptr noalias %y, ptr noalias %x) nounwind uwtable {
+define void @widen_intrinsic_dbg(i64 %n, ptr %y, ptr %x) nounwind uwtable {
 ; DEBUGLOC-LABEL: define void @widen_intrinsic_dbg(
-;
 ; DEBUGLOC: vector.body:
 ; DEBUGLOC:  = call <4 x float> @llvm.sqrt.v4f32(<4 x float> %{{.+}}), !dbg ![[INTRINSIC_LOC:[0-9]+]]
 ; DEBUGLOC: for.body:
