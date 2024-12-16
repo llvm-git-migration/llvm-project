@@ -142,8 +142,9 @@ const Target *TargetRegistry::lookupTarget(StringRef ArchName,
     std::string TempError;
     TheTarget = TargetRegistry::lookupTarget(TheTriple.getTriple(), TempError);
     if (!TheTarget) {
-      Error = "unable to get target for '" + TheTriple.getTriple() +
-              "', see --version and --triple.";
+      Error = "unable to get target for '"
+            + TheTriple.getTriple()
+            + "', see --version and --triple.\n";
       return nullptr;
     }
   }
