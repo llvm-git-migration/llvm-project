@@ -1442,7 +1442,8 @@ void VPlanTransforms::addActiveLaneMask(
     HeaderMask->replaceAllUsesWith(LaneMask);
 }
 
-// Convert each widen Recipe to a widen EVLRecipe in VectorLoopRegion.
+// Try to convert \p CurRecipe to a corresponding EVL-based recipe. Returns
+// nullptr if no EVL-based recipe could be created.
 // \p HeaderMask  Header Mask.
 // \p CurRecipe   Recipe to be transform.
 // \p TypeInfo    VPlan-based type analysis.
@@ -1478,28 +1479,14 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
         VPValue *NewMask = GetNewMask(Red->getCondOp());
         return new VPReductionEVLRecipe(*Red, EVL, NewMask);
       })
-      .Case<VPWidenIntrinsicRecipe>(
-          [&](VPWidenIntrinsicRecipe *CInst) -> VPRecipeBase * {
-            auto *CI = dyn_cast<CallInst>(CInst->getUnderlyingInstr());
-            Intrinsic::ID VPID = VPIntrinsic::getForIntrinsic(
-                CI->getCalledFunction()->getIntrinsicID());
-            assert(VPID != Intrinsic::not_intrinsic && "Expected VP intrinsic");
-            assert(VPIntrinsic::getMaskParamPos(VPID) &&
-                   VPIntrinsic::getVectorLengthParamPos(VPID) &&
-                   "Expected VP intrinsic");
-
-            SmallVector<VPValue *> Ops(CInst->operands());
-            Ops.push_back(&AllOneMask);
-            Ops.push_back(&EVL);
-            return new VPWidenIntrinsicRecipe(*CI, VPID, Ops,
-                                              TypeInfo.inferScalarType(CInst),
-                                              CInst->getDebugLoc());
-          })
-      .Case<VPWidenCastRecipe>([&](VPWidenCastRecipe *CInst) -> VPRecipeBase * {
-        auto *CI = dyn_cast<CastInst>(CInst->getUnderlyingInstr());
-        Intrinsic::ID VPID = VPIntrinsic::getForOpcode(CI->getOpcode());
-        assert(VPID != Intrinsic::not_intrinsic &&
-               "Expected vp.casts Instrinsic");
+      .Case<VPWidenIntrinsicRecipe, VPWidenCastRecipe>([&](auto *CInst)
+                                                           -> VPRecipeBase * {
+        Intrinsic::ID VPID;
+        if (auto *CallInst = dyn_cast<VPWidenIntrinsicRecipe>(CInst))
+          VPID = VPIntrinsic::getForIntrinsic(CallInst->getVectorIntrinsicID());
+        else if (auto *CastInst = dyn_cast<VPWidenCastRecipe>(CInst))
+          VPID = VPIntrinsic::getForOpcode(CastInst->getOpcode());
+        assert(VPID != Intrinsic::not_intrinsic && "Expected VP intrinsic");
         assert(VPIntrinsic::getMaskParamPos(VPID) &&
                VPIntrinsic::getVectorLengthParamPos(VPID) &&
                "Expected VP intrinsic");
