@@ -21,6 +21,8 @@
  */
 
 #include <clc/clc.h>
+#include <clc/integer/clc_clz.h>
+#include <clc/integer/clc_mul_hi.h>
 #include <clc/math/clc_mad.h>
 #include <clc/math/clc_trunc.h>
 #include <clc/shared/clc_max.h>
@@ -180,11 +182,11 @@ _CLC_DEF int __clc_argReductionSmallS(float *r, float *rr, float x) {
 
 #define FULL_MUL(A, B, HI, LO)                                                 \
   LO = A * B;                                                                  \
-  HI = mul_hi(A, B)
+  HI = __clc_mul_hi(A, B)
 
 #define FULL_MAD(A, B, C, HI, LO)                                              \
   LO = ((A) * (B) + (C));                                                      \
-  HI = mul_hi(A, B);                                                           \
+  HI = __clc_mul_hi(A, B);                                                     \
   HI += LO < C
 
 _CLC_DEF int __clc_argReductionLargeS(float *r, float *rr, float x) {
@@ -278,7 +280,7 @@ _CLC_DEF int __clc_argReductionLargeS(float *r, float *rr, float x) {
   p5 = p5 ^ flip;
 
   // Find exponent and shift away leading zeroes and hidden bit
-  xe = clz(p7) + 1;
+  xe = __clc_clz(p7) + 1;
   shift = 32 - xe;
   p7 = bitalign(p7, p6, shift);
   p6 = bitalign(p6, p5, shift);
@@ -291,7 +293,7 @@ _CLC_DEF int __clc_argReductionLargeS(float *r, float *rr, float x) {
 
   // Get 24 more bits of fraction in another float, there are not long strings
   // of zeroes here
-  int xxe = clz(p7) + 1;
+  int xxe = __clc_clz(p7) + 1;
   p7 = bitalign(p7, p6, 32 - xxe);
   float q0 = as_float(sign | ((127 - (xe + 23 + xxe)) << 23) | (p7 >> 9));
 
