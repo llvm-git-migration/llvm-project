@@ -677,6 +677,8 @@ Improvements to Clang's diagnostics
       views.push_back(std::string("123")); // warning
     }
 
+- Fix -Wdangling false positives on conditional operators (#120206).
+
 Improvements to Clang's time-trace
 ----------------------------------
 
