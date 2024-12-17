@@ -30100,10 +30100,10 @@ static SDValue LowerShift(SDValue Op, const X86Subtarget &Subtarget,
       auto *Cst2 = dyn_cast<ConstantSDNode>(Amt2);
       if (Cst1 && Cst2 && Cst1->getAPIntValue().ult(EltSizeInBits) &&
           Cst2->getAPIntValue().ult(EltSizeInBits)) {
-        SDValue Shift1 = getTargetVShiftByConstNode(X86OpcI, dl, VT, R,
-                                                    Cst1->getZExtValue(), DAG);
-        SDValue Shift2 = getTargetVShiftByConstNode(X86OpcI, dl, VT, R,
-                                                    Cst2->getZExtValue(), DAG);
+        SDValue Shift1 = DAG.getNode(
+            Opc, dl, VT, R, DAG.getConstant(Cst1->getZExtValue(), dl, VT));
+        SDValue Shift2 = DAG.getNode(
+            Opc, dl, VT, R, DAG.getConstant(Cst2->getZExtValue(), dl, VT));
         return DAG.getVectorShuffle(VT, dl, Shift1, Shift2, ShuffleMask);
       }
     }
