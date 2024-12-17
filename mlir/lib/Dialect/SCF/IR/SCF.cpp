@@ -395,6 +395,83 @@ std::optional<SmallVector<OpFoldResult>> ForOp::getLoopUpperBounds() {
 
 std::optional<ResultRange> ForOp::getLoopResults() { return getResults(); }
 
+FailureOr<std::pair<Operation *, Region *>> ForOp::wrapInTripCountCheck() {
+  auto lowerBound = this->getLowerBound();
+  auto upperBound = this->getUpperBound();
+  auto step = this->getStep();
+  auto initArgs = this->getInitArgs();
+  auto results = this->getResults();
+  auto loc = this->getLoc();
+
+  IRRewriter rewriter(this->getContext());
+  OpBuilder::InsertionGuard insertGuard(rewriter);
+  rewriter.setInsertionPointAfter(this->getOperation());
+
+  // Form the trip count calculation
+  auto subOp = rewriter.create<arith::SubIOp>(loc, upperBound, lowerBound);
+  auto ceilDivSIOp = rewriter.create<arith::CeilDivSIOp>(loc, subOp, step);
+  Value zero;
+  if (upperBound.getType().isIndex()) {
+    zero = rewriter.create<arith::ConstantIndexOp>(loc, 0);
+  } else {
+    zero = rewriter.create<arith::ConstantIntOp>(
+        loc, 0,
+        /*width=*/
+        upperBound.getType().getIntOrFloatBitWidth());
+  }
+  auto cmpIOp = rewriter.create<arith::CmpIOp>(loc, arith::CmpIPredicate::sgt,
+                                               ceilDivSIOp, zero);
+  scf::YieldOp yieldInThen;
+  // Create the trip-count check
+  auto ifOp = rewriter.create<scf::IfOp>(
+      loc, cmpIOp,
+      [&](OpBuilder &builder, Location loc) {
+        yieldInThen = builder.create<scf::YieldOp>(loc, results);
+      },
+      [&](OpBuilder &builder, Location loc) {
+        builder.create<scf::YieldOp>(loc, initArgs);
+      });
+
+  for (auto [forOpResult, ifOpResult] : llvm::zip(results, ifOp.getResults()))
+    rewriter.replaceAllUsesExcept(forOpResult, ifOpResult, yieldInThen);
+  // Move the scf.for into the then block
+  rewriter.moveOpBefore(this->getOperation(), yieldInThen);
+  return std::make_pair(ifOp.getOperation(), &this->getRegion());
+}
+
+LogicalResult ForOp::unwrapTripCountCheck() {
+  auto ifOp = (*this)->getParentRegion()->getParentOp();
+  if (!isa<scf::IfOp>(ifOp))
+    return failure();
+
+  auto wrappedForOp = this->getOperation();
+
+  IRRewriter rewriter(ifOp->getContext());
+  OpBuilder::InsertionGuard insertGuard(rewriter);
+  rewriter.setInsertionPoint(ifOp);
+
+  auto cmpOp = ifOp->getOperand(0).getDefiningOp();
+  auto ceilDivSIOp = cmpOp->getOperand(0).getDefiningOp();
+  auto zero = cmpOp->getOperand(1).getDefiningOp();
+  auto subOp = ceilDivSIOp->getOperand(0).getDefiningOp();
+  if (!isa<arith::CmpIOp>(cmpOp) || !isa<arith::CeilDivSIOp>(ceilDivSIOp) ||
+      !isa<arith::SubIOp>(subOp))
+    return failure();
+
+  rewriter.moveOpBefore(wrappedForOp, ifOp);
+
+  for (auto [forOpResult, ifOpResult] :
+       llvm::zip(wrappedForOp->getResults(), ifOp->getResults()))
+    rewriter.replaceAllUsesWith(ifOpResult, forOpResult);
+
+  rewriter.eraseOp(ifOp);
+  rewriter.eraseOp(cmpOp);
+  rewriter.eraseOp(zero);
+  rewriter.eraseOp(ceilDivSIOp);
+  rewriter.eraseOp(subOp);
+  return success();
+}
+
 /// Promotes the loop body of a forOp to its containing block if the forOp
 /// it can be determined that the loop has a single iteration.
 LogicalResult ForOp::promoteIfSingleIteration(RewriterBase &rewriter) {
@@ -3397,9 +3474,8 @@ ParseResult scf::WhileOp::parse(OpAsmParser &parser, OperationState &result) {
 
   if (functionType.getNumInputs() != operands.size()) {
     return parser.emitError(typeLoc)
-           << "expected as many input types as operands "
-           << "(expected " << operands.size() << " got "
-           << functionType.getNumInputs() << ")";
+           << "expected as many input types as operands " << "(expected "
+           << operands.size() << " got " << functionType.getNumInputs() << ")";
   }
 
   // Resolve input operands.
