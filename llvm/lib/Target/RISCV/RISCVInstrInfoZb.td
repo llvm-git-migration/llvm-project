@@ -481,6 +481,25 @@ def : Pat<(XLenVT (or  GPR:$rs1, (not GPR:$rs2))), (ORN  GPR:$rs1, GPR:$rs2)>;
 def : Pat<(XLenVT (xor GPR:$rs1, (not GPR:$rs2))), (XNOR GPR:$rs1, GPR:$rs2)>;
 } // Predicates = [HasStdExtZbbOrZbkb]
 
+// A 32-bit signed immediate with all 12 low bits set, but not -1
+def simm32fff : ImmLeaf<XLenVT, [{
+  return isInt<32>(Imm) && (Imm & 0xfff) == 0xfff && Imm != -1;}]>;
+
+def NotImm : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(~N->getSExtValue(), SDLoc(N),
+                                   N->getValueType(0));
+}]>;
+
+class PatGprSimm32fff<SDPatternOperator OpNode, RVInst Inst>
+    : Pat<(XLenVT (OpNode (vt GPR:$rs1), simm32fff:$imm)),
+          (Inst GPR:$rs1, (NotImm simm32fff:$imm))>;
+
+let Predicates = [HasStdExtZbbOrZbkb] in {
+// TODO: and, except for (srli (slli X, C), C)
+def : PatGprSimm32fff<or, ORN>;
+//def : PatGprSimm32fff<xor, XNOR>;
+} // Predicates = [HasStdExtZbbOrZbkb]
+
 let Predicates = [HasStdExtZbbOrZbkb] in {
 def : PatGprGpr<shiftop<rotl>, ROL>;
 def : PatGprGpr<shiftop<rotr>, ROR>;
