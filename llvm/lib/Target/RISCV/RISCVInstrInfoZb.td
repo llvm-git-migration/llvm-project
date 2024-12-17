@@ -475,10 +475,16 @@ def : InstAlias<"zext.h $rd, $rs", (PACKW GPR:$rd, GPR:$rs, X0)>;
 // Codegen patterns
 //===----------------------------------------------------------------------===//
 
+def simm32fff : ComplexPattern<XLenVT, 1, "selectSImm32fff", [], [], 0>;
+
 let Predicates = [HasStdExtZbbOrZbkb] in {
 def : Pat<(XLenVT (and GPR:$rs1, (not GPR:$rs2))), (ANDN GPR:$rs1, GPR:$rs2)>;
 def : Pat<(XLenVT (or  GPR:$rs1, (not GPR:$rs2))), (ORN  GPR:$rs1, GPR:$rs2)>;
 def : Pat<(XLenVT (xor GPR:$rs1, (not GPR:$rs2))), (XNOR GPR:$rs1, GPR:$rs2)>;
+
+def : Pat<(XLenVT (and GPR:$rs1, simm32fff:$rs2)), (ANDN GPR:$rs1, simm32fff:$rs2)>;
+def : Pat<(XLenVT (or  GPR:$rs1, simm32fff:$rs2)), (ORN  GPR:$rs1, simm32fff:$rs2)>;
+def : Pat<(XLenVT (xor GPR:$rs1, simm32fff:$rs2)), (XNOR GPR:$rs1, simm32fff:$rs2)>;
 } // Predicates = [HasStdExtZbbOrZbkb]
 
 let Predicates = [HasStdExtZbbOrZbkb] in {

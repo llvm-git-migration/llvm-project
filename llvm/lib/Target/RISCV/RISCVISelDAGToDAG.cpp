@@ -3236,6 +3236,23 @@ bool RISCVDAGToDAGISel::selectSHXADD_UWOp(SDValue N, unsigned ShAmt,
   return false;
 }
 
+bool RISCVDAGToDAGISel::selectSImm32fff(SDValue N, SDValue &Val) {
+  if (!isa<ConstantSDNode>(N))
+    return false;
+
+  int64_t Imm = cast<ConstantSDNode>(N)->getSExtValue();
+  if (!isInt<32>(Imm) || (Imm & 0xfff) != 0xfff || Imm == -1)
+    return false;
+
+  for (const SDNode *U : N->uses()) {
+    if (!ISD::isBitwiseLogicOp(U->getOpcode()))
+      return false;
+  }
+
+  Val = selectImm(CurDAG, SDLoc(N), N->getSimpleValueType(0), ~Imm, *Subtarget);
+  return true;
+}
+
 static bool vectorPseudoHasAllNBitUsers(SDNode *User, unsigned UserOpNo,
                                         unsigned Bits,
                                         const TargetInstrInfo *TII) {
