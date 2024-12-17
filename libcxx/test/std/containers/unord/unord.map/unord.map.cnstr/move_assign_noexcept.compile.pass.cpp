@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <set>
+// <unordered_map>
 
-// set& operator=(set&& c)
+// unordered_map& operator=(unordered_map&& c)
 //     noexcept(
 //          allocator_type::propagate_on_container_move_assignment::value &&
 //          is_nothrow_move_assignable<allocator_type>::value &&
@@ -18,10 +18,20 @@
 
 // UNSUPPORTED: c++03
 
-#include <set>
+#include <unordered_map>
 
 #include "MoveOnly.h"
 #include "test_allocator.h"
+
+template <class T>
+struct some_hash {
+  using value_type = T;
+  some_hash();
+  some_hash(const some_hash&);
+  some_hash& operator=(const some_hash&);
+
+  std::size_t operator()(T const&) const;
+};
 
 template <class T>
 struct some_comp {
@@ -46,7 +56,12 @@ struct not_always_equal_alloc {
 };
 
 template <template <class> class Alloc>
-using unordered_set_alloc = std::set<MoveOnly, std::less<MoveOnly>, Alloc<MoveOnly>>;
+using unordered_set_alloc =
+    std::unordered_map<MoveOnly,
+                       MoveOnly,
+                       std::hash<MoveOnly>,
+                       std::equal_to<MoveOnly>,
+                       Alloc<std::pair<const MoveOnly, MoveOnly>>>;
 
 static_assert(std::is_nothrow_move_assignable<unordered_set_alloc<std::allocator>>::value, "");
 static_assert(!std::is_nothrow_move_assignable<unordered_set_alloc<test_allocator>>::value, "");
@@ -55,4 +70,6 @@ static_assert(!std::is_nothrow_move_assignable<unordered_set_alloc<not_always_eq
 #if defined(_LIBCPP_VERSION)
 static_assert(std::is_nothrow_move_assignable<unordered_set_alloc<other_allocator>>::value, "");
 #endif // _LIBCPP_VERSION
-static_assert(!std::is_nothrow_move_assignable<std::set<int, some_comp<int>>>::value, "");
+static_assert(!std::is_nothrow_move_assignable<std::unordered_map<int, int, some_hash<int>>>::value, "");
+static_assert(!std::is_nothrow_move_assignable<std::unordered_map<int, int, std::hash<int>, some_comp<int>>>::value,
+              "");

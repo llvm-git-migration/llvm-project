@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <set>
+// <map>
 
-// set& operator=(set&& c)
+// multimap& operator=(multimap&& c)
 //     noexcept(
 //          allocator_type::propagate_on_container_move_assignment::value &&
 //          is_nothrow_move_assignable<allocator_type>::value &&
@@ -18,7 +18,7 @@
 
 // UNSUPPORTED: c++03
 
-#include <set>
+#include <map>
 
 #include "MoveOnly.h"
 #include "test_allocator.h"
@@ -46,13 +46,14 @@ struct not_always_equal_alloc {
 };
 
 template <template <class> class Alloc>
-using unordered_set_alloc = std::set<MoveOnly, std::less<MoveOnly>, Alloc<MoveOnly>>;
+using multimap_alloc =
+    std::multimap<MoveOnly, MoveOnly, std::less<MoveOnly>, Alloc<std::pair<const MoveOnly, MoveOnly>>>;
 
-static_assert(std::is_nothrow_move_assignable<unordered_set_alloc<std::allocator>>::value, "");
-static_assert(!std::is_nothrow_move_assignable<unordered_set_alloc<test_allocator>>::value, "");
-static_assert(std::is_nothrow_move_assignable<unordered_set_alloc<always_equal_alloc>>::value, "");
-static_assert(!std::is_nothrow_move_assignable<unordered_set_alloc<not_always_equal_alloc>>::value, "");
+static_assert(std::is_nothrow_move_assignable<multimap_alloc<std::allocator>>::value, "");
+static_assert(!std::is_nothrow_move_assignable<multimap_alloc<test_allocator>>::value, "");
+static_assert(std::is_nothrow_move_assignable<multimap_alloc<always_equal_alloc>>::value, "");
+static_assert(!std::is_nothrow_move_assignable<multimap_alloc<not_always_equal_alloc>>::value, "");
 #if defined(_LIBCPP_VERSION)
-static_assert(std::is_nothrow_move_assignable<unordered_set_alloc<other_allocator>>::value, "");
+static_assert(std::is_nothrow_move_assignable<multimap_alloc<other_allocator>>::value, "");
 #endif // _LIBCPP_VERSION
-static_assert(!std::is_nothrow_move_assignable<std::set<int, some_comp<int>>>::value, "");
+static_assert(!std::is_nothrow_move_assignable<std::multimap<int, int, some_comp<int>>>::value, "");

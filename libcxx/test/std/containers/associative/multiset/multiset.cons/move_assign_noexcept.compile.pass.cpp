@@ -8,7 +8,7 @@
 
 // <set>
 
-// set& operator=(set&& c)
+// multiset& operator=(multiset&& c)
 //     noexcept(
 //          allocator_type::propagate_on_container_move_assignment::value &&
 //          is_nothrow_move_assignable<allocator_type>::value &&
