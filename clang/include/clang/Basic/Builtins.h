@@ -64,9 +64,10 @@ struct HeaderDesc {
 
 namespace Builtin {
 enum ID {
-  NotBuiltin  = 0,      // This is not a builtin function.
-#define BUILTIN(ID, TYPE, ATTRS) BI##ID,
+  NotBuiltin = 0, // This is not a builtin function.
+#define GET_BUILTIN_ENUMERATORS
 #include "clang/Basic/Builtins.inc"
+#undef GET_BUILTIN_ENUMERATORS
   FirstTSBuiltin
 };
 
@@ -75,14 +76,14 @@ struct Info {
   // Rather than store pointers to the string literals describing these four
   // aspects of builtins, we store offsets into a common string table.
   struct StrOffsets {
-    llvm::StringTable::Offset Name;
-    llvm::StringTable::Offset Type;
-    llvm::StringTable::Offset Attributes;
-    llvm::StringTable::Offset Features;
+    llvm::StringTable::Offset Name = 0;
+    llvm::StringTable::Offset Type = 0;
+    llvm::StringTable::Offset Attributes = 0;
+    llvm::StringTable::Offset Features = 0;
   } Offsets;
 
-  HeaderDesc Header;
-  LanguageID Langs;
+  HeaderDesc Header = HeaderDesc::NO_HEADER;
+  LanguageID Langs = ALL_LANGUAGES;
 };
 
 /// A constexpr function to construct an infos array from X-macros.
