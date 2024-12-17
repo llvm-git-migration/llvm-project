@@ -31,13 +31,18 @@ static constexpr int NumX86_64Builtins =
 static constexpr int NumBuiltins = X86::LastTSBuiltin - Builtin::FirstTSBuiltin;
 static_assert(NumBuiltins == (NumX86Builtins + NumX86_64Builtins));
 
-static constexpr llvm::StringTable BuiltinX86Strings =
-    CLANG_BUILTIN_STR_TABLE_START
-#define BUILTIN CLANG_BUILTIN_STR_TABLE
-#define TARGET_BUILTIN CLANG_TARGET_BUILTIN_STR_TABLE
-#define TARGET_HEADER_BUILTIN CLANG_TARGET_HEADER_BUILTIN_STR_TABLE
+namespace X86 {
+#define GET_BUILTIN_STR_TABLE
 #include "clang/Basic/BuiltinsX86.inc"
-    ;
+#undef GET_BUILTIN_STR_TABLE
+
+static constexpr Builtin::Info BuiltinInfos[] = {
+#define GET_BUILTIN_INFOS
+#include "clang/Basic/BuiltinsX86.inc"
+#undef GET_BUILTIN_INFOS
+};
+static_assert(std::size(BuiltinInfos) == NumX86Builtins);
+} // namespace X86
 
 static constexpr llvm::StringTable BuiltinX86_64Strings =
     CLANG_BUILTIN_STR_TABLE_START
@@ -46,13 +51,6 @@ static constexpr llvm::StringTable BuiltinX86_64Strings =
 #define TARGET_HEADER_BUILTIN CLANG_TARGET_HEADER_BUILTIN_STR_TABLE
 #include "clang/Basic/BuiltinsX86_64.def"
     ;
-
-static constexpr auto BuiltinX86Infos = Builtin::MakeInfos<NumX86Builtins>({
-#define BUILTIN CLANG_BUILTIN_ENTRY
-#define TARGET_BUILTIN CLANG_TARGET_BUILTIN_ENTRY
-#define TARGET_HEADER_BUILTIN CLANG_TARGET_HEADER_BUILTIN_ENTRY
-#include "clang/Basic/BuiltinsX86.inc"
-});
 
 static constexpr auto BuiltinX86_64Infos =
     Builtin::MakeInfos<NumX86_64Builtins>({
@@ -1879,13 +1877,13 @@ ArrayRef<TargetInfo::AddlRegName> X86TargetInfo::getGCCAddlRegNames() const {
 
 llvm::SmallVector<Builtin::InfosShard>
 X86_32TargetInfo::getTargetBuiltins() const {
-  return {{&BuiltinX86Strings, BuiltinX86Infos}};
+  return {{&X86::BuiltinStrings, X86::BuiltinInfos}};
 }
 
 llvm::SmallVector<Builtin::InfosShard>
 X86_64TargetInfo::getTargetBuiltins() const {
   return {
-      {&BuiltinX86Strings, BuiltinX86Infos},
+      {&X86::BuiltinStrings, X86::BuiltinInfos},
       {&BuiltinX86_64Strings, BuiltinX86_64Infos},
   };
 }
