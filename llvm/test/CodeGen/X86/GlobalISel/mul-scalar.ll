@@ -5,16 +5,17 @@
 define i8 @test_mul_i8(i8 %arg1, i8 %arg2) nounwind {
 ; X64-LABEL: test_mul_i8:
 ; X64:       # %bb.0:
-; X64-NEXT:    movsbl %dil, %eax
-; X64-NEXT:    imulb %sil
+; X64-NEXT:    movl %edi, %eax
+; X64-NEXT:    # kill: def $al killed $al killed $eax
+; X64-NEXT:    mulb %sil
 ; X64-NEXT:    retq
 ;
 ; X86-LABEL: test_mul_i8:
 ; X86:       # %bb.0:
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; X86-NEXT:    movl {{[0-9]+}}(%esp), %ecx
-; X86-NEXT:    cbtw
-; X86-NEXT:    imulb %cl
+; X86-NEXT:    # kill: def $al killed $al killed $eax
+; X86-NEXT:    mulb %cl
 ; X86-NEXT:    retl
   %ret = mul i8 %arg1, %arg2
   ret i8 %ret
