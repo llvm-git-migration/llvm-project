@@ -31,9 +31,9 @@ template <class _OutputIterator, class _Size, class _Tp>
 inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _OutputIterator
 __fill_n(_OutputIterator __first, _Size __n, const _Tp& __value);
 
-template <bool _FillVal, class _Cp>
+template <class _Cp>
 _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void
-__fill_n_bool(__bit_iterator<_Cp, false> __first, typename _Cp::size_type __n) {
+__fill_n_bool(__bit_iterator<_Cp, false> __first, typename _Cp::size_type __n, bool _FillVal) {
   using _It            = __bit_iterator<_Cp, false>;
   using __storage_type = typename _It::__storage_type;
 
@@ -68,12 +68,8 @@ __fill_n_bool(__bit_iterator<_Cp, false> __first, typename _Cp::size_type __n) {
 template <class _Cp, class _Size>
 inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 __bit_iterator<_Cp, false>
 __fill_n(__bit_iterator<_Cp, false> __first, _Size __n, const bool& __value) {
-  if (__n > 0) {
-    if (__value)
-      std::__fill_n_bool<true>(__first, __n);
-    else
-      std::__fill_n_bool<false>(__first, __n);
-  }
+  if (__n > 0)
+    std::__fill_n_bool(__first, __n, __value);
   return __first + __n;
 }
 
