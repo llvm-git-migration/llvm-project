@@ -1520,15 +1520,101 @@ ConstantRange ConstantRange::binaryNot() const {
   return ConstantRange(APInt::getAllOnes(getBitWidth())).sub(*this);
 }
 
+/// Estimate the 'bit-masked AND' operation's lower bound.
+///
+/// E.g., given two ranges as follows (single quotes are separators and
+/// have no meaning here),
+///
+///   LHS = [10'001'010,  ; LLo
+///          10'100'000]  ; LHi
+///   RHS = [10'111'010,  ; RLo
+///          10'111'100]  ; RHi
+///
+/// we know that the higher 2 bits of the result is always '10'; and note that
+/// there's at least one bit is 1 in LHS[3:6] (since the range is continuous),
+/// and all bits in RHS[3:6] are 1, so we know the lower bound of the result is
+/// 10'001'000.
+///
+/// The algorithm is as follows,
+/// 1. we first calculate a mask to mask out the higher common bits by
+///       Mask = (LLo ^ LHi) | (LLo ^ LHi) | (LLo ^ RLo);
+///       Mask = set all non-leading-zero bits to 1 for Mask;
+/// 2. find the bit field with at least 1 in LHS (i.e., bit 3:6 in the example)
+///    after applying the mask, with
+///       StartBit = BitWidth - (LLo & Mask).clz() - 1;
+///       EndBit = BitWidth - (LHi & Mask).clz();
+/// 3. check if all bits in [StartBit:EndBit] in RHS are 1, and all bits of
+///    RLo and RHi in [StartBit:BitWidth] are same, and if so, the lower bound
+///    can be updated to
+///       LowerBound = LLo & Keep;
+///    where Keep is a mask to mask out trailing bits (the lower 3 bits in the
+///    example);
+/// 4. repeat the step 2 and 3 with LHS and RHS swapped, and update the lower
+///    bound with the larger one.
+static APInt estimateBitMaskedAndLowerBound(const ConstantRange &LHS,
+                                            const ConstantRange &RHS) {
+  auto BitWidth = LHS.getBitWidth();
+  // If either is full set or unsigned wrapped, then the range must contain '0'
+  // which leads the lower bound to 0.
+  if ((LHS.isFullSet() || RHS.isFullSet()) ||
+      (LHS.isWrappedSet() || RHS.isWrappedSet()))
+    return APInt::getZero(BitWidth);
+
+  auto LLo = LHS.getLower();
+  auto LHi = LHS.getUpper() - 1;
+  auto RLo = RHS.getLower();
+  auto RHi = RHS.getUpper() - 1;
+
+  // Calculate the mask that mask out the higher common bits.
+  auto Mask = (LLo ^ LHi) | (RLo ^ RHi) | (LLo ^ RLo);
+  unsigned LeadingZeros = Mask.countLeadingZeros();
+  Mask.setLowBits(BitWidth - LeadingZeros);
+
+  auto estimateBound =
+      [BitWidth, &Mask](const APInt &ALo, const APInt &AHi, const APInt &BLo,
+                        const APInt &BHi) -> std::optional<APInt> {
+    unsigned LeadingZeros = (ALo & Mask).countLeadingZeros();
+    if (LeadingZeros == BitWidth)
+      return std::nullopt;
+
+    unsigned StartBit = BitWidth - LeadingZeros - 1;
+
+    if (BLo.extractBits(BitWidth - StartBit, StartBit) !=
+        BHi.extractBits(BitWidth - StartBit, StartBit))
+      return std::nullopt;
+
+    unsigned EndBit = BitWidth - (AHi & Mask).countLeadingZeros();
+    if (!(BLo.extractBits(EndBit - StartBit, StartBit) &
+          BHi.extractBits(EndBit - StartBit, StartBit))
+             .isAllOnes())
+      return std::nullopt;
+
+    APInt Keep(BitWidth, 0);
+    Keep.setBits(StartBit, BitWidth);
+    return Keep & ALo;
+  };
+
+  auto LowerBoundByLHS = estimateBound(LLo, LHi, RLo, RHi);
+  auto LowerBoundByRHS = estimateBound(RLo, RHi, LLo, LHi);
+
+  if (LowerBoundByLHS && LowerBoundByRHS)
+    return APIntOps::umax(*LowerBoundByLHS, *LowerBoundByRHS);
+  if (LowerBoundByLHS)
+    return *LowerBoundByLHS;
+  if (LowerBoundByRHS)
+    return *LowerBoundByRHS;
+  return APInt::getZero(BitWidth);
+}
+
 ConstantRange ConstantRange::binaryAnd(const ConstantRange &Other) const {
   if (isEmptySet() || Other.isEmptySet())
     return getEmpty();
 
   ConstantRange KnownBitsRange =
       fromKnownBits(toKnownBits() & Other.toKnownBits(), false);
-  ConstantRange UMinUMaxRange =
-      getNonEmpty(APInt::getZero(getBitWidth()),
-                  APIntOps::umin(Other.getUnsignedMax(), getUnsignedMax()) + 1);
+  auto LowerBound = estimateBitMaskedAndLowerBound(*this, Other);
+  ConstantRange UMinUMaxRange = getNonEmpty(
+      LowerBound, APIntOps::umin(Other.getUnsignedMax(), getUnsignedMax()) + 1);
   return KnownBitsRange.intersectWith(UMinUMaxRange);
 }
 
@@ -1538,10 +1624,17 @@ ConstantRange ConstantRange::binaryOr(const ConstantRange &Other) const {
 
   ConstantRange KnownBitsRange =
       fromKnownBits(toKnownBits() | Other.toKnownBits(), false);
+
+  //      ~a & ~b    >= x
+  // <=>  ~(~a & ~b) <= ~x
+  // <=>  a | b      <= ~x
+  // <=>  a | b      <  ~x + 1 = -x
+  // thus, UpperBound(a | b) == -LowerBound(~a & ~b)
+  auto UpperBound =
+      -estimateBitMaskedAndLowerBound(binaryNot(), Other.binaryNot());
   // Upper wrapped range.
-  ConstantRange UMaxUMinRange =
-      getNonEmpty(APIntOps::umax(getUnsignedMin(), Other.getUnsignedMin()),
-                  APInt::getZero(getBitWidth()));
+  ConstantRange UMaxUMinRange = getNonEmpty(
+      APIntOps::umax(getUnsignedMin(), Other.getUnsignedMin()), UpperBound);
   return KnownBitsRange.intersectWith(UMaxUMinRange);
 }
 
