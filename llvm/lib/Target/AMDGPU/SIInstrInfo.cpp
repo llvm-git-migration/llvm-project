@@ -4033,15 +4033,29 @@ MachineInstr *SIInstrInfo::convertToThreeAddress(MachineInstr &MI,
   if (Src0Literal && !ST.hasVOP3Literal())
     return nullptr;
 
-  unsigned NewOpc = IsFMA      ? IsF16      ? ST.hasTrue16BitInsts()
-                                                  ? AMDGPU::V_FMA_F16_gfx9_fake16_e64
-                                                  : AMDGPU::V_FMA_F16_gfx9_e64
-                                 : IsF64    ? AMDGPU::V_FMA_F64_e64
-                                 : IsLegacy ? AMDGPU::V_FMA_LEGACY_F32_e64
-                                            : AMDGPU::V_FMA_F32_e64
-                    : IsF16    ? AMDGPU::V_MAD_F16_e64
-                    : IsLegacy ? AMDGPU::V_MAD_LEGACY_F32_e64
-                               : AMDGPU::V_MAD_F32_e64;
+  auto getNewFMAInst = [&]() {
+    if (IsFMA) {
+      if (IsF16)
+        return ST.hasTrue16BitInsts() ? AMDGPU::V_FMA_F16_gfx9_fake16_e64
+                                      : AMDGPU::V_FMA_F16_gfx9_e64;
+      else if (IsF64)
+        return AMDGPU::V_FMA_F64_e64;
+      else if (IsLegacy)
+        return AMDGPU::V_FMA_LEGACY_F32_e64;
+      else
+        return AMDGPU::V_FMA_F32_e64;
+    } else {
+      if (IsF16)
+        return AMDGPU::V_MAD_F16_e64;
+      else if (IsLegacy)
+        return AMDGPU::V_FMA_LEGACY_F32_e64;
+      else
+        return AMDGPU::V_MAD_F32_e64;
+    }
+  };
+
+  unsigned NewOpc = getNewFMAInst();
+
   if (pseudoToMCOpcode(NewOpc) == -1)
     return nullptr;
 
