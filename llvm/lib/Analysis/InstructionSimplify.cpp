@@ -4608,6 +4608,45 @@ static Value *simplifySelectWithEquivalence(Value *CmpLHS, Value *CmpRHS,
   return nullptr;
 }
 
+/// `A == MIN_INT ? B != MIN_INT : A < B` --> `A < B`
+/// `A == MAX_INT ? B != MAX_INT : A > B` --> `A > B`
+static Value *foldSelectWithExtremeEqCond(Value *CmpLHS, Value *CmpRHS,
+                                          Value *TrueVal, Value *FalseVal) {
+  CmpPredicate Pred;
+  Value *A, *B;
+
+  if (!match(FalseVal, m_ICmp(Pred, m_Value(A), m_Value(B))))
+    return nullptr;
+
+  // make sure `CmpLHS` is on the LHS of `FalseVal`.
+  if (match(CmpLHS, m_Specific(B))) {
+    std::swap(A, B);
+    Pred = CmpInst::getSwappedPredicate(Pred);
+  }
+
+  APInt C;
+  unsigned NumBits = A->getType()->getScalarSizeInBits();
+
+  if (ICmpInst::isLT(Pred)) {
+    C = CmpInst::isSigned(Pred) ? APInt::getSignedMinValue(NumBits)
+                                : APInt::getMinValue(NumBits);
+  } else if (ICmpInst::isGT(Pred)) {
+    C = CmpInst::isSigned(Pred) ? APInt::getSignedMaxValue(NumBits)
+                                : APInt::getMaxValue(NumBits);
+  } else {
+    return nullptr;
+  }
+
+  if (!match(CmpLHS, m_Specific(A)) || !match(CmpRHS, m_SpecificInt(C)))
+    return nullptr;
+
+  if (!match(TrueVal, m_SpecificICmp(ICmpInst::ICMP_NE, m_Specific(B),
+                                     m_SpecificInt(C))))
+    return nullptr;
+
+  return FalseVal;
+}
+
 /// Try to simplify a select instruction when its condition operand is an
 /// integer comparison.
 static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
@@ -4728,6 +4767,10 @@ static Value *simplifySelectWithICmpCond(Value *CondVal, Value *TrueVal,
                                                    Q, MaxRecurse))
         return V;
     }
+
+    if (Value *V =
+            foldSelectWithExtremeEqCond(CmpLHS, CmpRHS, TrueVal, FalseVal))
+      return V;
   }
 
   return nullptr;
@@ -7141,7 +7184,6 @@ static Value *simplifyInstructionWithOperands(Instruction *I,
                             NewOps[1], I->getFastMathFlags(), Q, MaxRecurse);
   case Instruction::Select:
     return simplifySelectInst(NewOps[0], NewOps[1], NewOps[2], Q, MaxRecurse);
-    break;
   case Instruction::GetElementPtr: {
     auto *GEPI = cast<GetElementPtrInst>(I);
     return simplifyGEPInst(GEPI->getSourceElementType(), NewOps[0],
