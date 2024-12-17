@@ -131,6 +131,8 @@ void LangOptions::setLangDefaults(LangOptions &Opts, Language Lang,
   if (Opts.HLSL && Opts.IncludeDefaultHeader)
     Includes.push_back("hlsl.h");
 
+  Opts.PreserveVec3Type = Opts.HLSL;
+
   // Set OpenCL Version.
   Opts.OpenCL = Std.isOpenCL();
   if (LangStd == LangStandard::lang_opencl10)
