@@ -1115,10 +1115,12 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
         {{F32, F64}, {F16, F32}, {V2F16, V2F32}, {V2F16, V2F64}});
   else
     FPTruncActions.legalFor({{F32, F64}, {F16, F32}});
+  FPTruncActions.customFor({{BF16, F32}});
   FPTruncActions.scalarize(0).lower();
 
   getActionDefinitionsBuilder(G_FPEXT)
     .legalFor({{F64, F32}, {F32, F16}})
+    .customFor({{F32, BF16}})
     .narrowScalarFor({{I64, I16}}, changeTo(0, I32))
     .scalarize(0);
 
@@ -2230,6 +2232,10 @@ bool AMDGPULegalizerInfo::legalizeCustom(
   case TargetOpcode::G_SEXTLOAD:
   case TargetOpcode::G_ZEXTLOAD:
     return legalizeLoad(Helper, MI);
+  case TargetOpcode::G_FPEXT:
+    return legalizeFPExt(MI, MRI, B);
+  case TargetOpcode::G_FPTRUNC:
+    return legalizeFPTrunc(MI, MRI, B);
   case TargetOpcode::G_STORE:
     return legalizeStore(Helper, MI);
   case TargetOpcode::G_FMAD:
@@ -3254,6 +3260,50 @@ bool AMDGPULegalizerInfo::legalizeStore(LegalizerHelper &Helper,
     return true;
   }
   return false;
+}
+
+bool AMDGPULegalizerInfo::legalizeFPExt(
+  MachineInstr &MI, MachineRegisterInfo &MRI,
+  MachineIRBuilder &B) const {
+    // TODO: move to LegalizerHelper
+    const SITargetLowering *TLI = ST.getTargetLowering();
+
+    Register DstReg = MI.getOperand(0).getReg();
+    Register SrcReg = MI.getOperand(1).getReg();
+
+    auto ShiftTy = TLI->getPreferredShiftAmountTy(I32);
+
+    B.buildBitcast(
+        DstReg, B.buildShl(I32, B.buildAnyExt(I32, B.buildBitcast(I16, SrcReg)),
+                           B.buildConstant(ShiftTy, 16)));
+
+    MI.eraseFromParent();
+    return true;
+}
+
+bool AMDGPULegalizerInfo::legalizeFPTrunc(
+  MachineInstr &MI, MachineRegisterInfo &MRI,
+  MachineIRBuilder &B) const {
+    // TODO: move to LegalizerHelper
+    const SITargetLowering *TLI = ST.getTargetLowering();
+
+    Register DstReg = MI.getOperand(0).getReg();
+    Register SrcReg = MI.getOperand(1).getReg();
+
+    auto ShiftTy = TLI->getPreferredShiftAmountTy(I32);
+
+    // FIXME:
+    // if (!DAG.isKnownNeverSNaN(Op)) {
+    //       Op = DAG.getNode(ISD::FCANONICALIZE, dl, MVT::f32, Op,
+    //       Node->getFlags());
+    // }
+
+    B.buildBitcast(
+        DstReg, B.buildTrunc(I16, B.buildLShr(I32, B.buildBitcast(I32, SrcReg),
+                                              B.buildConstant(ShiftTy, 16))));
+
+    MI.eraseFromParent();
+    return true;
 }
 
 bool AMDGPULegalizerInfo::legalizeFMad(
