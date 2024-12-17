@@ -236,6 +236,14 @@ void ABIInfo::appendAttributeMangling(StringRef AttrStr,
   }
 }
 
+llvm::FixedVectorType *
+ABIInfo::getOptimalVectorType(llvm::FixedVectorType *T,
+                              const LangOptions &Opt) const {
+  if (!Opt.HLSL && T->getNumElements() == 3)
+    return llvm::FixedVectorType::get(T->getElementType(), 4);
+  return T;
+}
+
 // Pin the vtable to this file.
 SwiftABIInfo::~SwiftABIInfo() = default;
 
