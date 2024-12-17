@@ -792,7 +792,7 @@ public:
   // with a matching type
   const CodeGenRegisterClass *
   getMinimalPhysRegClass(const Record *RegRecord,
-                         ValueTypeByHwMode *VT = nullptr);
+                         const ValueTypeByHwMode *VT = nullptr);
 
   // Get the sum of unit weights.
   unsigned getRegUnitSetWeight(const std::vector<unsigned> &Units) const {

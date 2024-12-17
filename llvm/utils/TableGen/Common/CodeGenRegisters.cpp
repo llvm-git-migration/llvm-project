@@ -2494,7 +2494,7 @@ CodeGenRegBank::getRegClassForRegister(const Record *R) {
 
 const CodeGenRegisterClass *
 CodeGenRegBank::getMinimalPhysRegClass(const Record *RegRecord,
-                                       ValueTypeByHwMode *VT) {
+                                       const ValueTypeByHwMode *VT) {
   const CodeGenRegister *Reg = getReg(RegRecord);
   const CodeGenRegisterClass *BestRC = nullptr;
   for (const auto &RC : getRegClasses()) {
