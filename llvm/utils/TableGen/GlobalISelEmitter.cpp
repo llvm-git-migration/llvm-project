@@ -404,10 +404,11 @@ private:
   createInstructionRenderer(action_iterator InsertPt, RuleMatcher &M,
                             const TreePatternNode &Dst);
 
-  Expected<action_iterator>
-  importExplicitDefRenderers(action_iterator InsertPt, RuleMatcher &M,
-                             BuildMIAction &DstMIBuilder,
-                             const TreePatternNode &Dst, unsigned Start = 0);
+  Expected<action_iterator> importDefRenderers(action_iterator InsertPt,
+                                               RuleMatcher &M,
+                                               BuildMIAction &DstMIBuilder,
+                                               const TreePatternNode &Dst,
+                                               bool IsRoot);
 
   Expected<action_iterator>
   importExplicitUseRenderers(action_iterator InsertPt, RuleMatcher &M,
@@ -420,8 +421,6 @@ private:
   Error importDefaultOperandRenderers(action_iterator InsertPt, RuleMatcher &M,
                                       BuildMIAction &DstMIBuilder,
                                       const DAGDefaultOperand &DefaultOp) const;
-  Error importImplicitDefRenderers(BuildMIAction &DstMIBuilder,
-                                   ArrayRef<const Record *> ImplicitDefs) const;
 
   /// Analyze pattern \p P, returning a matcher for it if possible.
   /// Otherwise, return an Error explaining why we don't support it.
@@ -1379,8 +1378,9 @@ Expected<BuildMIAction &> GlobalISelEmitter::createAndImportInstructionRenderer(
     CopyToPhysRegMIBuilder.addRenderer<CopyPhysRegRenderer>(PhysInput.first);
   }
 
-  if (auto Error = importExplicitDefRenderers(InsertPt, M, DstMIBuilder, Dst)
-                       .takeError())
+  if (auto Error =
+          importDefRenderers(InsertPt, M, DstMIBuilder, Dst, /*IsRoot=*/true)
+              .takeError())
     return std::move(Error);
 
   if (auto Error = importExplicitUseRenderers(InsertPt, M, DstMIBuilder, Dst)
@@ -1408,8 +1408,8 @@ GlobalISelEmitter::createAndImportSubInstructionRenderer(
   DstMIBuilder.addRenderer<TempRegRenderer>(TempRegID, true);
 
   // Handle additional (ignored) results.
-  InsertPtOrError = importExplicitDefRenderers(std::prev(*InsertPtOrError), M,
-                                               DstMIBuilder, Dst, /*Start=*/1);
+  InsertPtOrError = importDefRenderers(std::prev(*InsertPtOrError), M,
+                                       DstMIBuilder, Dst, /*IsRoot=*/false);
   if (auto Error = InsertPtOrError.takeError())
     return std::move(Error);
 
@@ -1446,13 +1446,14 @@ Expected<action_iterator> GlobalISelEmitter::createInstructionRenderer(
                                        DstI);
 }
 
-Expected<action_iterator> GlobalISelEmitter::importExplicitDefRenderers(
-    action_iterator InsertPt, RuleMatcher &M, BuildMIAction &DstMIBuilder,
-    const TreePatternNode &Dst, unsigned Start) {
+Expected<action_iterator>
+GlobalISelEmitter::importDefRenderers(action_iterator InsertPt, RuleMatcher &M,
+                                      BuildMIAction &DstMIBuilder,
+                                      const TreePatternNode &Dst, bool IsRoot) {
   const CodeGenInstruction *DstI = DstMIBuilder.getCGI();
 
   // Process explicit defs. The caller may have already handled the first def.
-  for (unsigned I = Start, E = DstI->Operands.NumDefs; I != E; ++I) {
+  for (unsigned I = IsRoot ? 0 : 1, E = DstI->Operands.NumDefs; I != E; ++I) {
     const CGIOperandList::OperandInfo &OpInfo = DstI->Operands[I];
     std::string OpName = getMangledRootDefName(OpInfo.Name);
 
@@ -1504,11 +1505,21 @@ Expected<action_iterator> GlobalISelEmitter::importExplicitDefRenderers(
         TempRegID, /*IsDef=*/true, /*SubReg=*/nullptr, /*IsDead=*/true);
   }
 
-  // Implicit defs are not currently supported, mark all of them as dead.
+  // Process implicit defs.
   for (const Record *Reg : DstI->ImplicitDefs) {
     std::string OpName = getMangledRootDefName(Reg->getName());
-    assert(!M.hasOperand(OpName) && "The pattern should've been rejected");
-    DstMIBuilder.setDeadImplicitDef(Reg);
+
+    if (!IsRoot || !M.hasOperand(OpName)) {
+      DstMIBuilder.setDeadImplicitDef(Reg);
+      continue;
+    }
+
+    BuildMIAction &CopyBuilder = M.addAction<BuildMIAction>(
+        M.allocateOutputInsnID(), &Target.getInstruction(RK.getDef("COPY")));
+
+    StringRef PermanentRef = M.getOperandMatcher(OpName).getSymbolicName();
+    CopyBuilder.addRenderer<CopyRenderer>(PermanentRef);
+    CopyBuilder.addRenderer<AddRegisterRenderer>(Target, Reg);
   }
 
   return InsertPt;
@@ -1728,13 +1739,6 @@ Error GlobalISelEmitter::importDefaultOperandRenderers(
     return failedImport("Could not add default op");
   }
 
-  return Error::success();
-}
-
-Error GlobalISelEmitter::importImplicitDefRenderers(
-    BuildMIAction &DstMIBuilder, ArrayRef<const Record *> ImplicitDefs) const {
-  if (!ImplicitDefs.empty())
-    return failedImport("Pattern defines a physical register");
   return Error::success();
 }
 
@@ -2114,13 +2118,14 @@ Expected<RuleMatcher> GlobalISelEmitter::runOnPattern(const PatternToMatch &P) {
   unsigned DstExpDefs = DstI.Operands.NumDefs,
            DstNumDefs = DstI.ImplicitDefs.size() + DstExpDefs,
            SrcNumDefs = Src.getExtTypes().size();
+
+  bool FoundNoUsePred = false;
   if (DstNumDefs < SrcNumDefs) {
     if (DstNumDefs != 0)
       return failedImport("Src pattern result has more defs than dst MI (" +
                           to_string(SrcNumDefs) + " def(s) vs " +
                           to_string(DstNumDefs) + " def(s))");
 
-    bool FoundNoUsePred = false;
     for (const auto &Pred : InsnMatcher.predicates()) {
       if ((FoundNoUsePred = isa<NoUsePredicateMatcher>(Pred.get())))
         break;
@@ -2133,15 +2138,24 @@ Expected<RuleMatcher> GlobalISelEmitter::runOnPattern(const PatternToMatch &P) {
 
   // The root of the match also has constraints on the register bank so that it
   // matches the result instruction.
-  unsigned N = std::min(DstExpDefs, SrcNumDefs);
-  for (unsigned I = 0; I < N; ++I) {
-    const auto &DstIOperand = DstI.Operands[I];
+  for (unsigned I = 0; I < SrcNumDefs; ++I) {
+    if (FoundNoUsePred)
+      continue;
 
     OperandMatcher &OM = InsnMatcher.getOperand(I);
+
+    if (I >= DstExpDefs) {
+      const Record *Reg = DstI.ImplicitDefs[I - DstExpDefs];
+      OM.setSymbolicName(getMangledRootDefName(Reg->getName()));
+      M.defineOperand(OM.getSymbolicName(), OM);
+      continue;
+    }
+
     // The operand names declared in the DstI instruction are unrelated to
     // those used in pattern's source and destination DAGs, so mangle the
     // former to prevent implicitly adding unexpected
     // GIM_CheckIsSameOperand predicates by the defineOperand method.
+    const CGIOperandList::OperandInfo &DstIOperand = DstI.Operands[I];
     OM.setSymbolicName(getMangledRootDefName(DstIOperand.Name));
     M.defineOperand(OM.getSymbolicName(), OM);
 
@@ -2158,11 +2172,6 @@ Expected<RuleMatcher> GlobalISelEmitter::runOnPattern(const PatternToMatch &P) {
   if (auto Error = DstMIBuilderOrError.takeError())
     return std::move(Error);
   BuildMIAction &DstMIBuilder = DstMIBuilderOrError.get();
-
-  // Render the implicit defs.
-  // These are only added to the root of the result.
-  if (auto Error = importImplicitDefRenderers(DstMIBuilder, P.getDstRegs()))
-    return std::move(Error);
 
   DstMIBuilder.chooseInsnToMutate(M);
 
