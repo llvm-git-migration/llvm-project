@@ -308,13 +308,11 @@ chandlerc@gmail.com, chandlerc@google.com (email), [chandlerc](https://github.co
 
 #### Debug info
 
-Eric Christopher \
-echristo@gmail.com (email), [echristo](https://github.com/echristo) (GitHub)
+???
 
 #### DWARF Parser
 
-Benjamin Kramer \
-benny.kra@gmail.com (email), [d0k](https://github.com/d0k) (GitHub)
+???
 
 #### IR Linker
 
@@ -455,9 +453,11 @@ sabre@nondot.org (email), [lattner](https://github.com/lattner) (GitHub), clattn
 Paul C. Anagnostopoulos (paul@windfall.com, [Paul-C-Anagnostopoulos](https://github.com/Paul-C-Anagnostopoulos)) -- TableGen \
 Justin Bogner (mail@justinbogner.com, [bogner](https://github.com/bogner)) -- SelectionDAG \
 Evan Cheng (evan.cheng@apple.com) -- Parts of code generator not covered by someone else \
+Eric Christopher (echristo@gmail.com, [echristo](https://github.com/echristo)) -- Debug info \
 Renato Golin (rengolin@systemcall.eu, [rengolin](https://github.com/rengolin)) -- ARM backend \
 James Grosbach (grosbach@apple.com) -- MC layer \
 Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI \
+Benjamin Kramer (benny.kra@gmail.com, [d0k](https://github.com/d0k)) -- DWARF Parser \
 Chad Rosier (mcrosier@codeaurora.org) -- FastISel \
 Hans Wennborg (hans@chromium.org, [zmodem](https://github.com/zmodem)) -- Release management \
 Kostya Serebryany ([kcc](https://github.com/kcc)) -- Sanitizers \
