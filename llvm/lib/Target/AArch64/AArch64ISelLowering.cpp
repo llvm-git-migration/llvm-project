@@ -21741,45 +21741,63 @@ SDValue tryLowerPartialReductionToDot(SDNode *N,
   // The narrower of the two operands. Used as the accumulator
   auto NarrowOp = N->getOperand(1);
   auto MulOp = N->getOperand(2);
-  if (MulOp->getOpcode() != ISD::MUL)
-    return SDValue();
 
-  auto ExtA = MulOp->getOperand(0);
-  auto ExtB = MulOp->getOperand(1);
+  unsigned MulOpcode = MulOp->getOpcode();
+  EVT ReducedVT = N->getValueType(0);
+  EVT MulOpVT = MulOp->getValueType(0);
+  unsigned Opcode = 0;
+  bool AIsSigned, BIsSigned;
+  SDValue A, B;
+  if (MulOpcode != ISD::MUL && ReducedVT.getVectorElementCount() * 4 ==
+                                   MulOpVT.getVectorElementCount()) {
+    if (!ISD::isExtOpcode(MulOpcode))
+      return SDValue();
+    AIsSigned = MulOpcode == ISD::SIGN_EXTEND;
+    BIsSigned = AIsSigned;
+    SDValue NewMulOp = MulOp->getOperand(0);
+    Opcode = AIsSigned ? AArch64ISD::SDOT : AArch64ISD::UDOT;
+    A = NewMulOp;
+    B = DAG.getConstant(1, DL, NewMulOp.getValueType());
 
-  if (!ISD::isExtOpcode(ExtA->getOpcode()) ||
-      !ISD::isExtOpcode(ExtB->getOpcode()))
-    return SDValue();
-  bool AIsSigned = ExtA->getOpcode() == ISD::SIGN_EXTEND;
-  bool BIsSigned = ExtB->getOpcode() == ISD::SIGN_EXTEND;
+  } else {
+    if (MulOp->getOpcode() != ISD::MUL)
+      return SDValue();
 
-  auto A = ExtA->getOperand(0);
-  auto B = ExtB->getOperand(0);
-  if (A.getValueType() != B.getValueType())
-    return SDValue();
+    auto ExtA = MulOp->getOperand(0);
+    auto ExtB = MulOp->getOperand(1);
 
-  EVT ReducedType = N->getValueType(0);
-  EVT MulSrcType = A.getValueType();
+    if (!ISD::isExtOpcode(ExtA->getOpcode()) ||
+        !ISD::isExtOpcode(ExtB->getOpcode()))
+      return SDValue();
+    AIsSigned = ExtA->getOpcode() == ISD::SIGN_EXTEND;
+    BIsSigned = ExtB->getOpcode() == ISD::SIGN_EXTEND;
+
+    A = ExtA->getOperand(0);
+    B = ExtB->getOperand(0);
+    if (A.getValueType() != B.getValueType())
+      return SDValue();
+  }
+
+  EVT MulSrcVT = A.getValueType();
 
   // Dot products operate on chunks of four elements so there must be four times
   // as many elements in the wide type
-  if (!(ReducedType == MVT::nxv4i64 && MulSrcType == MVT::nxv16i8) &&
-      !(ReducedType == MVT::nxv4i32 && MulSrcType == MVT::nxv16i8) &&
-      !(ReducedType == MVT::nxv2i64 && MulSrcType == MVT::nxv8i16) &&
-      !(ReducedType == MVT::v4i64 && MulSrcType == MVT::v16i8) &&
-      !(ReducedType == MVT::v4i32 && MulSrcType == MVT::v16i8) &&
-      !(ReducedType == MVT::v2i32 && MulSrcType == MVT::v8i8))
+  if (!(ReducedVT == MVT::nxv4i64 && MulSrcVT == MVT::nxv16i8) &&
+      !(ReducedVT == MVT::nxv4i32 && MulSrcVT == MVT::nxv16i8) &&
+      !(ReducedVT == MVT::nxv2i64 && MulSrcVT == MVT::nxv8i16) &&
+      !(ReducedVT == MVT::v4i64 && MulSrcVT == MVT::v16i8) &&
+      !(ReducedVT == MVT::v4i32 && MulSrcVT == MVT::v16i8) &&
+      !(ReducedVT == MVT::v2i32 && MulSrcVT == MVT::v8i8))
     return SDValue();
 
   // If the extensions are mixed, we should lower it to a usdot instead
-  unsigned Opcode = 0;
   if (AIsSigned != BIsSigned) {
     if (!Subtarget->hasMatMulInt8())
       return SDValue();
 
     bool Scalable = N->getValueType(0).isScalableVT();
     // There's no nxv2i64 version of usdot
-    if (Scalable && ReducedType != MVT::nxv4i32 && ReducedType != MVT::nxv4i64)
+    if (Scalable && ReducedVT != MVT::nxv4i32 && ReducedVT != MVT::nxv4i64)
       return SDValue();
 
     Opcode = AArch64ISD::USDOT;
@@ -21793,19 +21811,19 @@ SDValue tryLowerPartialReductionToDot(SDNode *N,
 
   // Partial reduction lowering for (nx)v16i8 to (nx)v4i64 requires an i32 dot
   // product followed by a zero / sign extension
-  if ((ReducedType == MVT::nxv4i64 && MulSrcType == MVT::nxv16i8) ||
-      (ReducedType == MVT::v4i64 && MulSrcType == MVT::v16i8)) {
-    EVT ReducedTypeI32 =
-        (ReducedType.isScalableVector()) ? MVT::nxv4i32 : MVT::v4i32;
+  if ((ReducedVT == MVT::nxv4i64 && MulSrcVT == MVT::nxv16i8) ||
+      (ReducedVT == MVT::v4i64 && MulSrcVT == MVT::v16i8)) {
+    EVT ReducedVTI32 =
+        (ReducedVT.isScalableVector()) ? MVT::nxv4i32 : MVT::v4i32;
 
-    auto DotI32 = DAG.getNode(Opcode, DL, ReducedTypeI32,
-                              DAG.getConstant(0, DL, ReducedTypeI32), A, B);
-    auto Extended = DAG.getSExtOrTrunc(DotI32, DL, ReducedType);
+    auto DotI32 = DAG.getNode(Opcode, DL, ReducedVTI32,
+                              DAG.getConstant(0, DL, ReducedVTI32), A, B);
+    auto Extended = DAG.getSExtOrTrunc(DotI32, DL, ReducedVT);
     return DAG.getNode(ISD::ADD, DL, NarrowOp.getValueType(), NarrowOp,
                        Extended);
   }
 
-  return DAG.getNode(Opcode, DL, ReducedType, NarrowOp, A, B);
+  return DAG.getNode(Opcode, DL, ReducedVT, NarrowOp, A, B);
 }
 
 SDValue tryLowerPartialReductionToWideAdd(SDNode *N,
