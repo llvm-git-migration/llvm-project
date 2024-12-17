@@ -1344,11 +1344,13 @@ static unsigned getNumAllocatableRegsForConstraints(
   return RCI.getNumAllocatableRegs(ConstrainedRC);
 }
 
-/// Return true if \p MI at \P Use reads a subset of the lanes of \p VirtReg.
-static bool readsLaneSubset(const MachineRegisterInfo &MRI,
-                            const MachineInstr *MI, const LiveInterval &VirtReg,
-                            const TargetRegisterInfo *TRI, SlotIndex Use,
-                            const TargetInstrInfo *TII) {
+/// Return true if \p MI at \P Use reads a strict subset of the lanes of \p
+/// VirtReg (not the whole register).
+static bool readsLaneStrictSubset(const MachineRegisterInfo &MRI,
+                                  const MachineInstr *MI,
+                                  const LiveInterval &VirtReg,
+                                  const TargetRegisterInfo *TRI,
+                                  const TargetInstrInfo *TII) {
   // Early check the common case. Beware of the semi-formed bundles SplitKit
   // creates by setting the bundle flag on copies without a matching BUNDLE.
 
@@ -1384,7 +1386,7 @@ static bool readsLaneSubset(const MachineRegisterInfo &MRI,
 
   // If the live lanes aren't different from the lanes used by the instruction,
   // this doesn't help.
-  return MRI.getMaxLaneMaskForVReg(VirtReg.reg()) != UseMask;
+  return UseMask != MRI.getMaxLaneMaskForVReg(VirtReg.reg());
 }
 
 /// tryInstructionSplit - Split a live range around individual instructions.
@@ -1436,7 +1438,7 @@ unsigned RAGreedy::tryInstructionSplit(const LiveInterval &VirtReg,
                                                    TII, TRI, RegClassInfo)) ||
           // TODO: Handle split for subranges with subclass constraints?
           (!SplitSubClass && VirtReg.hasSubRanges() &&
-           !readsLaneSubset(*MRI, MI, VirtReg, TRI, Use.getBaseIndex(), TII))) {
+           !readsLaneStrictSubset(*MRI, MI, VirtReg, TRI, TII))) {
         LLVM_DEBUG(dbgs() << "    skip:\t" << Use << '\t' << *MI);
         continue;
       }
