@@ -115,7 +115,6 @@ define <1 x bfloat> @atomic_vec1_bfloat(ptr %x) {
 ; CHECK3-NEXT:    movzwl (%rdi), %eax
 ; CHECK3-NEXT:    pinsrw $0, %eax, %xmm0
 ; CHECK3-NEXT:    retq
-;
 ; CHECK0-LABEL: atomic_vec1_bfloat:
 ; CHECK0:       ## %bb.0:
 ; CHECK0-NEXT:    movw (%rdi), %cx
@@ -126,4 +125,31 @@ define <1 x bfloat> @atomic_vec1_bfloat(ptr %x) {
 ; CHECK0-NEXT:    retq
   %ret = load atomic <1 x bfloat>, ptr %x acquire, align 4
   ret <1 x bfloat> %ret
+}
+
+define <1 x half> @atomic_vec1_half(ptr %x) {
+; CHECK3-LABEL: atomic_vec1_half:
+; CHECK3:       ## %bb.0:
+; CHECK3-NEXT:    movzwl (%rdi), %eax
+; CHECK3-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK3-NEXT:    retq
+; CHECK0-LABEL: atomic_vec1_half:
+; CHECK0:       ## %bb.0:
+; CHECK0-NEXT:    movw (%rdi), %cx
+; CHECK0-NEXT:    ## implicit-def: $eax
+; CHECK0-NEXT:    movw %cx, %ax
+; CHECK0-NEXT:    ## implicit-def: $xmm0
+; CHECK0-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK0-NEXT:    retq
+  %ret = load atomic <1 x half>, ptr %x acquire, align 4
+  ret <1 x half> %ret
+}
+
+define <1 x float> @atomic_vec1_float(ptr %x) {
+; CHECK-LABEL: atomic_vec1_float:
+; CHECK:       ## %bb.0:
+; CHECK-NEXT:    movss {{.*#+}} xmm0 = mem[0],zero,zero,zero
+; CHECK-NEXT:    retq
+  %ret = load atomic <1 x float>, ptr %x acquire, align 4
+  ret <1 x float> %ret
 }
