@@ -565,6 +565,12 @@ def FeaturePCDPHINT: ExtensionWithMArch<"pcdphint", "PCDPHINT", "FEAT_PCDPHINT",
 def FeaturePoPS: ExtensionWithMArch<"pops", "PoPS", "FEAT_PoPS",
   "Enable Armv9.6-A Point Of Physical Storage (PoPS) DC instructions">;
 
+def FeatureSME_MOP4: ExtensionWithMArch<"sme-mop4", "SME_MOP4", "FEAT_SME_MOP4",
+  "Enable SME Quarter-tile outer product instructions", [FeatureSME2]>;
+
+def FeatureSME_TMOP: ExtensionWithMArch<"sme-tmop", "SME_TMOP", "FEAT_SME_TMOP",
+  "Enable SME Structured sparsity outer product instructions.", [FeatureSME2]>;
+
 //===----------------------------------------------------------------------===//
 //  Other Features
 //===----------------------------------------------------------------------===//

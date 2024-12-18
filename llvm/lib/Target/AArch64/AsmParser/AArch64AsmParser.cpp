@@ -3827,6 +3827,8 @@ static const struct Extension {
     {"lsui", {AArch64::FeatureLSUI}},
     {"occmo", {AArch64::FeatureOCCMO}},
     {"pcdphint", {AArch64::FeaturePCDPHINT}},
+    {"sme-mop4", {AArch64::FeatureSME_MOP4}},
+    {"sme-tmop", {AArch64::FeatureSME_TMOP}},
 };
 
 static void setRequiredFeatureString(FeatureBitset FBS, std::string &Str) {
