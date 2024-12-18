@@ -23,8 +23,10 @@ llvm@npopov.com, npopov@redhat.com (email), [nikic](https://github.com/nikic) (G
 
 #### AliasAnalysis
 
-Hal Finkel \
-hfinkel@anl.gov (email), [hfinkel](https://github.com/hfinkel) (GitHub)
+Nikita Popov \
+llvm@npopov.com, npopov@redhat.com (email), [nikic](https://github.com/nikic) (GitHub), nikic (Discourse) \
+Florian Hahn \
+flo@fhahn.com (email), [fhahn](https://github.com/fhahn) (GitHub)
 
 #### Attributor, OpenMPOpt
 
@@ -70,6 +72,11 @@ quentin.colombet@gmail.com (email), [qcolombet](https://github.com/qcolombet) (G
 
 Florian Hahn \
 flo@fhahn.com (email), [fhahn](https://github.com/fhahn) (GitHub)
+
+#### MemorySSA
+
+Alina Sbirlea \
+asbirlea@google.com (email), [alinas](https://github.com/alinas) (GitHub)
 
 #### SandboxVectorizer
 
@@ -455,6 +462,7 @@ sabre@nondot.org (email), [lattner](https://github.com/lattner) (GitHub), clattn
 Paul C. Anagnostopoulos (paul@windfall.com, [Paul-C-Anagnostopoulos](https://github.com/Paul-C-Anagnostopoulos)) -- TableGen \
 Justin Bogner (mail@justinbogner.com, [bogner](https://github.com/bogner)) -- SelectionDAG \
 Evan Cheng (evan.cheng@apple.com) -- Parts of code generator not covered by someone else \
+Hal Finkel (hfinkel@anl.gov, [hfinkel](https://github.com/hfinkel) -- AliasAnalysis
 Renato Golin (rengolin@systemcall.eu, [rengolin](https://github.com/rengolin)) -- ARM backend \
 James Grosbach (grosbach@apple.com) -- MC layer \
 Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI \
