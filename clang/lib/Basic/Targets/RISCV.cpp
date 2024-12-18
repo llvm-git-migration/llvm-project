@@ -255,7 +255,6 @@ namespace RVV {
 #define GET_RISCVV_BUILTIN_STR_TABLE
 #include "clang/Basic/riscv_vector_builtins.inc"
 #undef GET_RISCVV_BUILTIN_STR_TABLE
-static_assert(BuiltinStrings.size() < 100'000);
 
 static constexpr std::array<Builtin::Info, NumRVVBuiltins> BuiltinInfos = {
 #define GET_RISCVV_BUILTIN_INFOS
@@ -293,8 +292,8 @@ static constexpr auto BuiltinInfos = Builtin::MakeInfos<NumRISCVBuiltins>({
 llvm::SmallVector<Builtin::InfosShard>
 RISCVTargetInfo::getTargetBuiltins() const {
   return {
-      {&RVV::BuiltinStrings, RVV::BuiltinInfos},
-      {&RVVSiFive::BuiltinStrings, RVVSiFive::BuiltinInfos},
+      {&RVV::BuiltinStrings, RVV::BuiltinInfos, "__builtin_rvv_"},
+      {&RVVSiFive::BuiltinStrings, RVVSiFive::BuiltinInfos, "__builtin_rvv_"},
       {&BuiltinStrings, BuiltinInfos},
   };
 }
