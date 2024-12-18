@@ -115,6 +115,9 @@ Improvements to clang-tidy
 - Improved :program:`run-clang-tidy.py` script. Fixed minor shutdown noise
   happening on certain platforms when interrupting the script.
 
+- Improved :program:`clang-tidy-diff.py` script. Add an option to exclude files
+  not present in the compilation database to avoid false negative results.
+
 New checks
 ^^^^^^^^^^
 
