@@ -109,6 +109,18 @@ protected:
 
   //===--- Statement bitfields classes ---===//
 
+  enum { NumStmtBits = 10 };
+
+#define STMT(CLASS, PARENT)
+#define STMT_RANGE(BASE, FIRST, LAST)
+#define LAST_STMT_RANGE(BASE, FIRST, LAST)                                     \
+  static_assert(                                                               \
+      StmtClass::LAST##Class < (1 << NumStmtBits),                             \
+      "The number of 'StmtClass'es is strictly bounded under two to "          \
+      "the power of 'NumStmtBits'");
+#define ABSTRACT_STMT(STMT)
+#include "clang/AST/StmtNodes.inc"
+
   class StmtBitfields {
     friend class ASTStmtReader;
     friend class ASTStmtWriter;
@@ -116,9 +128,8 @@ protected:
 
     /// The statement class.
     LLVM_PREFERRED_TYPE(StmtClass)
-    unsigned sClass : 8;
+    unsigned sClass : NumStmtBits;
   };
-  enum { NumStmtBits = 8 };
 
   class NullStmtBitfields {
     friend class ASTStmtReader;
@@ -564,8 +575,8 @@ protected:
     /// True if the call expression is a must-elide call to a coroutine.
     unsigned IsCoroElideSafe : 1;
 
-    /// Padding used to align OffsetToTrailingObjects to a byte multiple.
-    unsigned : 24 - 4 - NumExprBits;
+    static_assert(NumExprBits == 20,
+                  "No extra padding needed when NumExprBits is exactly 20.");
 
     /// The offset in bytes from the this pointer to the start of the
     /// trailing objects belonging to CallExpr. Intentionally byte sized
