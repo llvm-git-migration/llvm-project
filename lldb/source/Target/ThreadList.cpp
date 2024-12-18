@@ -576,7 +576,7 @@ bool ThreadList::WillResume(RunDirection &direction) {
   // state before we negotiate who is actually going to get a chance to run...
   // Don't set to resume suspended threads, and if any thread wanted to stop
   // others, only call setup on the threads that request StopOthers...
-  bool wants_solo_run = run_me_only_list.GetSize(false) > 0;
+  bool wants_solo_run = thread_to_run != nullptr;
   for (pos = m_threads.begin(); pos != end; ++pos) {
     ThreadSP thread_sp(*pos);
     // See if any thread wants to run stopping others.  If it does, then we won't
@@ -614,7 +614,7 @@ bool ThreadList::WillResume(RunDirection &direction) {
     }
   }
 
-  if (run_me_only_list.GetSize(false) == 0) {
+  if (thread_to_run == nullptr) {
     Log *log = GetLog(LLDBLog::Step);
     if (log && log->GetVerbose())
       LLDB_LOGF(log, "Turning on notification of new threads while single "
@@ -630,7 +630,7 @@ bool ThreadList::WillResume(RunDirection &direction) {
 
   bool need_to_resume = true;
 
-  if (run_me_only_list.GetSize(false) == 0) {
+  if (thread_to_run == nullptr) {
     // Everybody runs as they wish:
     for (pos = m_threads.begin(); pos != end; ++pos) {
       ThreadSP thread_sp(*pos);
