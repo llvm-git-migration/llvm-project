@@ -556,6 +556,20 @@ bool ThreadList::WillResume() {
     }
   }
 
+  ThreadSP thread_to_run;
+  if (run_me_only_list.GetSize(false) > 0) {
+    if (stop_others_thread_sp) {
+      thread_to_run = stop_others_thread_sp;
+    } else if (run_me_only_list.GetSize(false) == 1) {
+      thread_to_run = run_me_only_list.GetThreadAtIndex(0);
+    } else {
+      int random_thread =
+          (int)((run_me_only_list.GetSize(false) * (double)rand()) /
+                (RAND_MAX + 1.0));
+      thread_to_run = run_me_only_list.GetThreadAtIndex(random_thread);
+    }
+  }
+
   // Give all the threads that are likely to run a last chance to set up their
   // state before we negotiate who is actually going to get a chance to run...
   // Don't set to resume suspended threads, and if any thread wanted to stop
@@ -580,12 +594,15 @@ bool ThreadList::WillResume() {
         run_me_only_list.AddThread(thread_sp);
 
         if (!(stop_others_thread_sp && stop_others_thread_sp->ShouldRunBeforePublicStop())) {
-          if (thread_sp == GetSelectedThread())
+          if (thread_sp == GetSelectedThread()) {
             stop_others_thread_sp = thread_sp;
+            thread_to_run = thread_sp;
+          }
 
           if (thread_sp->ShouldRunBeforePublicStop()) {
             // This takes precedence, so if we find one of these, service it:
             stop_others_thread_sp = thread_sp;
+            thread_to_run = thread_sp;
             break;
           }
         }
@@ -622,19 +639,6 @@ bool ThreadList::WillResume() {
         need_to_resume = false;
     }
   } else {
-    ThreadSP thread_to_run;
-
-    if (stop_others_thread_sp) {
-      thread_to_run = stop_others_thread_sp;
-    } else if (run_me_only_list.GetSize(false) == 1) {
-      thread_to_run = run_me_only_list.GetThreadAtIndex(0);
-    } else {
-      int random_thread =
-          (int)((run_me_only_list.GetSize(false) * (double)rand()) /
-                (RAND_MAX + 1.0));
-      thread_to_run = run_me_only_list.GetThreadAtIndex(random_thread);
-    }
-
     for (pos = m_threads.begin(); pos != end; ++pos) {
       ThreadSP thread_sp(*pos);
       if (thread_sp == thread_to_run) {
