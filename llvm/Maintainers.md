@@ -357,8 +357,8 @@ andrea.dibiagio@sony.com, andrea.dibiagio@gmail.com (email), [adibiagio](https:/
 
 #### llvm-objcopy and ObjCopy library
 
-Jake Ehrlich \
-jakehehrlich@google.com (email), [jakehehrlich](https://github.com/jakehehrlich) (GitHub)
+Fangrui Song \
+i@maskray.me (email), [MaskRay](https://github.com/MaskRay) (GitHub)
 
 #### Gold plugin
 
@@ -455,6 +455,7 @@ sabre@nondot.org (email), [lattner](https://github.com/lattner) (GitHub), clattn
 Paul C. Anagnostopoulos (paul@windfall.com, [Paul-C-Anagnostopoulos](https://github.com/Paul-C-Anagnostopoulos)) -- TableGen \
 Justin Bogner (mail@justinbogner.com, [bogner](https://github.com/bogner)) -- SelectionDAG \
 Evan Cheng (evan.cheng@apple.com) -- Parts of code generator not covered by someone else \
+Jake Ehrlich (jakehehrlich@google.com, [jakehehrlich](https://github.com/jakehehrlich) -- llvm-objcopy and ObjCopy library \
 Renato Golin (rengolin@systemcall.eu, [rengolin](https://github.com/rengolin)) -- ARM backend \
 James Grosbach (grosbach@apple.com) -- MC layer \
 Anton Korobeynikov (anton@korobeynikov.info, [asl](https://github.com/asl)) -- ARM EABI \
