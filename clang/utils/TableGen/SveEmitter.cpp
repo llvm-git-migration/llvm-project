@@ -1480,13 +1480,9 @@ void SVEEmitter::createBuiltins(raw_ostream &OS) {
   Table.GetOrAddStringOffset("");
   Table.GetOrAddStringOffset("n");
 
-  auto PrefixName = [](Intrinsic *Def) -> std::string {
-    return (llvm::Twine("__builtin_sve_") + Def->getMangledName()).str();
-  };
-
   for (const auto &Def : Defs)
     if (Def->getClassKind() != ClassG) {
-      Table.GetOrAddStringOffset(PrefixName(Def.get()));
+      Table.GetOrAddStringOffset(Def->getMangledName());
       Table.GetOrAddStringOffset(Def->getBuiltinTypeStr());
       Table.GetOrAddStringOffset(Def->getGuard());
     }
@@ -1500,9 +1496,9 @@ void SVEEmitter::createBuiltins(raw_ostream &OS) {
       SVEType ToV(To.BaseType, N);
       for (const ReinterpretTypeInfo &From : Reinterprets) {
         SVEType FromV(From.BaseType, N);
-        std::string Name = (Twine("__builtin_sve_reinterpret_") + To.Suffix +
-                            "_" + From.Suffix + Suffix)
-                               .str();
+        std::string Name =
+            (Twine("reinterpret_") + To.Suffix + "_" + From.Suffix + Suffix)
+                .str();
         std::string Type = ToV.builtin_str() + FromV.builtin_str();
         Table.GetOrAddStringOffset(Name);
         Table.GetOrAddStringOffset(Type);
@@ -1514,9 +1510,9 @@ void SVEEmitter::createBuiltins(raw_ostream &OS) {
   OS << "#ifdef GET_SVE_BUILTIN_ENUMERATORS\n";
   for (const auto &Def : Defs)
     if (Def->getClassKind() != ClassG)
-      OS << "  BI" << PrefixName(Def.get()) << ",\n";
+      OS << "  BI__builtin_sve_" << Def->getMangledName() << ",\n";
   for (const auto &[Name, _] : ReinterpretBuiltins)
-    OS << "  BI" << Name << ",\n";
+    OS << "  BI__builtin_sve_" << Name << ",\n";
   OS << "#endif // GET_SVE_BUILTIN_ENUMERATORS\n\n";
 
   OS << "#ifdef GET_SVE_BUILTIN_STR_TABLE\n";
@@ -1530,8 +1526,8 @@ void SVEEmitter::createBuiltins(raw_ostream &OS) {
     // declarations only live in the header file.
     if (Def->getClassKind() != ClassG) {
       OS << "    Builtin::Info{Builtin::Info::StrOffsets{"
-         << Table.GetStringOffset(PrefixName(Def.get())) << " /* "
-         << PrefixName(Def.get()) << " */, ";
+         << Table.GetStringOffset(Def->getMangledName()) << " /* "
+         << Def->getMangledName() << " */, ";
       OS << Table.GetStringOffset(Def->getBuiltinTypeStr()) << " /* "
          << Def->getBuiltinTypeStr() << " */, ";
       OS << Table.GetStringOffset("n") << " /* n */, ";
@@ -1732,13 +1728,9 @@ void SVEEmitter::createSMEBuiltins(raw_ostream &OS) {
   Table.GetOrAddStringOffset("");
   Table.GetOrAddStringOffset("n");
 
-  auto PrefixName = [](Intrinsic *Def) -> std::string {
-    return (llvm::Twine("__builtin_sme_") + Def->getMangledName()).str();
-  };
-
   for (const auto &Def : Defs)
     if (Def->getClassKind() != ClassG) {
-      Table.GetOrAddStringOffset(PrefixName(Def.get()));
+      Table.GetOrAddStringOffset(Def->getMangledName());
       Table.GetOrAddStringOffset(Def->getBuiltinTypeStr());
       Table.GetOrAddStringOffset(Def->getGuard());
     }
@@ -1746,7 +1738,7 @@ void SVEEmitter::createSMEBuiltins(raw_ostream &OS) {
   OS << "#ifdef GET_SME_BUILTIN_ENUMERATORS\n";
   for (const auto &Def : Defs)
     if (Def->getClassKind() != ClassG)
-      OS << "  BI" << PrefixName(Def.get()) << ",\n";
+      OS << "  BI__builtin_sme_" << Def->getMangledName() << ",\n";
   OS << "#endif // GET_SME_BUILTIN_ENUMERATORS\n\n";
 
   OS << "#ifdef GET_SME_BUILTIN_STR_TABLE\n";
@@ -1760,8 +1752,8 @@ void SVEEmitter::createSMEBuiltins(raw_ostream &OS) {
     // declarations only live in the header file.
     if (Def->getClassKind() != ClassG) {
       OS << "    Builtin::Info{Builtin::Info::StrOffsets{"
-         << Table.GetStringOffset(PrefixName(Def.get())) << " /* "
-         << PrefixName(Def.get()) << " */, ";
+         << Table.GetStringOffset(Def->getMangledName()) << " /* "
+         << Def->getMangledName() << " */, ";
       OS << Table.GetStringOffset(Def->getBuiltinTypeStr()) << " /* "
          << Def->getBuiltinTypeStr() << " */, ";
       OS << Table.GetStringOffset("n") << " /* n */, ";
