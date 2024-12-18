@@ -1158,6 +1158,8 @@ libclang
 --------
 - Add ``clang_isBeforeInTranslationUnit``. Given two source locations, it determines
   whether the first one comes strictly before the second in the source code.
+- Add ``clang_getTypePrettyPrinted``.  It allows controlling the PrintingPolicy used
+  to pretty-print a type.
 
 Static Analyzer
 ---------------

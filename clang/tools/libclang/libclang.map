@@ -437,6 +437,7 @@ LLVM_19 {
 LLVM_20 {
   global:
     clang_isBeforeInTranslationUnit;
+    clang_getTypePrettyPrinted;
 };
 
 # Example of how to add a new symbol version entry.  If you do add a new symbol
