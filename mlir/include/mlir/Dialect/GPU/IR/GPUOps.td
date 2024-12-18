@@ -38,6 +38,17 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 class GPU_Op<string mnemonic, list<Trait> traits = []> :
     Op<GPU_Dialect, mnemonic, traits>;
 
+def GPU_AssertOp : GPU_Op<"assert"> {
+  let summary = "Device-side assertion";
+  let description = [{
+    The `gpu.assert` op is a device-side assertion. If the given `condition`
+    is 0, the kernel execution is aborted, optionally with the given error
+    message. This op is useful for debugging and verifying invariants.
+  }];
+  let arguments = (ins I1:$condition, OptionalAttr<StrAttr>:$message);
+  let assemblyFormat = "$condition (`,` $message^)? attr-dict";
+}
+
 def GPU_Dimension : I32EnumAttr<"Dimension",
     "a dimension, either 'x', 'y', or 'z'",
     [

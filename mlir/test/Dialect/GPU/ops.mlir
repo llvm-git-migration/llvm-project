@@ -500,3 +500,12 @@ func.func @warp_operand_result(%laneid: index, %v0 : vector<4xi32>) -> (vector<4
   }
   return %2 : vector<4xi32>
 }
+
+// CHECK-LABEL: func @test_assert(
+func.func @test_assert(%cond : i1) {
+  // CHECK: gpu.assert %{{.*}}, "message"
+  gpu.assert %cond, "message"
+  // CHECK: gpu.assert %{{.*}}
+  gpu.assert %cond
+  return
+}
