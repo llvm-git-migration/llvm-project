@@ -1781,6 +1781,51 @@ static Value *foldSelectInstWithICmpConst(SelectInst &SI, ICmpInst *ICI,
   return nullptr;
 }
 
+/// `A == MIN_INT ? B != MIN_INT : A < B` --> `A < B`
+/// `A == MAX_INT ? B != MAX_INT : A > B` --> `A > B`
+static Value *foldSelectWithExtremeEqCond(Value *CmpLHS, Value *CmpRHS,
+                                          Value *TrueVal, Value *FalseVal,
+                                          IRBuilderBase &Builder) {
+  CmpPredicate Pred;
+  Value *A, *B;
+
+  if (!match(FalseVal, m_ICmp(Pred, m_Value(A), m_Value(B))))
+    return nullptr;
+
+  Type *Ty = A->getType();
+
+  if (Ty->isPointerTy())
+    return nullptr;
+
+  // make sure `CmpLHS` is on the LHS of `FalseVal`.
+  if (CmpLHS == B) {
+    std::swap(A, B);
+    Pred = CmpInst::getSwappedPredicate(Pred);
+  }
+
+  APInt C;
+  unsigned BitWidth = Ty->getScalarSizeInBits();
+
+  if (ICmpInst::isLT(Pred)) {
+    C = CmpInst::isSigned(Pred) ? APInt::getSignedMinValue(BitWidth)
+                                : APInt::getMinValue(BitWidth);
+  } else if (ICmpInst::isGT(Pred)) {
+    C = CmpInst::isSigned(Pred) ? APInt::getSignedMaxValue(BitWidth)
+                                : APInt::getMaxValue(BitWidth);
+  } else {
+    return nullptr;
+  }
+
+  if (!match(CmpLHS, m_Specific(A)) || !match(CmpRHS, m_SpecificInt(C)))
+    return nullptr;
+
+  if (!match(TrueVal, m_SpecificICmp(ICmpInst::ICMP_NE, m_Specific(B),
+                                     m_SpecificInt(C))))
+    return nullptr;
+
+  return Builder.CreateICmp(Pred, A, B);
+}
+
 static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
                                      InstCombinerImpl &IC) {
   ICmpInst::Predicate Pred = ICI->getPredicate();
@@ -1794,6 +1839,11 @@ static Instruction *foldSelectICmpEq(SelectInst &SI, ICmpInst *ICI,
 
   if (Pred == ICmpInst::ICMP_NE)
     std::swap(TrueVal, FalseVal);
+
+
+  if (Value *V =
+      foldSelectWithExtremeEqCond(CmpLHS, CmpRHS, TrueVal, FalseVal, IC.Builder))
+    return IC.replaceInstUsesWith(SI, V);
 
   // Transform (X == C) ? X : Y -> (X == C) ? C : Y
   // specific handling for Bitwise operation.
