@@ -157,6 +157,7 @@ anton@korobeynikov.info (email), [asl](https://github.com/asl) (GitHub)
 
 Tim Northover \
 t.p.northover@gmail.com (email), [TNorthover](https://github.com/TNorthover) (GitHub)
+.
 
 #### AMDGPU backend
 
