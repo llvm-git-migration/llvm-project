@@ -940,8 +940,8 @@ bool RISCVVLOptimizer::checkUsers(const MachineOperand *&CommonVL,
           CanReduceVL = false;
           break;
         }
-        continue;
       }
+      continue;
     }
 
     if (mayReadPastVL(UserMI)) {
