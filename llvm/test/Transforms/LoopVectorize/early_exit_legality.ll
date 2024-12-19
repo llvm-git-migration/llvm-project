@@ -208,7 +208,7 @@ loop.end:
 
 define i64 @same_exit_block_pre_inc_use1_too_small_allocas() {
 ; CHECK-LABEL: LV: Checking a loop in 'same_exit_block_pre_inc_use1_too_small_allocas'
-; CHECK:       LV: Not vectorizing: Loop may fault.
+; CHECK:       LV: Not vectorizing: Not worth vectorizing loop with uncountable early exit, due to number of potentially faulting loads.
 entry:
   %p1 = alloca [42 x i8]
   %p2 = alloca [42 x i8]
@@ -238,7 +238,7 @@ loop.end:
 
 define i64 @same_exit_block_pre_inc_use1_too_small_deref_ptrs(ptr dereferenceable(42) %p1, ptr dereferenceable(42) %p2) {
 ; CHECK-LABEL: LV: Checking a loop in 'same_exit_block_pre_inc_use1_too_small_deref_ptrs'
-; CHECK:       LV: Not vectorizing: Loop may fault.
+; CHECK:       LV: Not vectorizing: Not worth vectorizing loop with uncountable early exit, due to number of potentially faulting loads.
 entry:
   br label %loop
 
@@ -264,7 +264,7 @@ loop.end:
 
 define i64 @same_exit_block_pre_inc_use1_unknown_ptrs(ptr %p1, ptr %p2) {
 ; CHECK-LABEL: LV: Checking a loop in 'same_exit_block_pre_inc_use1_unknown_ptrs'
-; CHECK:       LV: Not vectorizing: Loop may fault.
+; CHECK:       LV: Not vectorizing: Not worth vectorizing loop with uncountable early exit, due to number of potentially faulting loads.
 entry:
   br label %loop
 

@@ -425,6 +425,19 @@ public:
   unsigned getNumStores() const { return LAI->getNumStores(); }
   unsigned getNumLoads() const { return LAI->getNumLoads(); }
 
+  /// Return the number of loads in the loop we have to consider that could
+  /// potentially fault in a loop with uncountable early exits.
+  unsigned getNumPotentiallyFaultingLoads() const {
+    return PotentiallyFaultingLoads.size();
+  }
+
+  /// Return a vector of all potentially faulting loads in a loop with
+  /// uncountable early exits.
+  const SmallVectorImpl<std::pair<LoadInst *, const SCEV *>> *
+  getPotentiallyFaultingLoads() const {
+    return &PotentiallyFaultingLoads;
+  }
+
   /// Returns a HistogramInfo* for the given instruction if it was determined
   /// to be part of a load -> update -> store sequence where multiple lanes
   /// may be working on the same memory address.
@@ -532,6 +545,8 @@ private:
   /// but simply a statement that more work is needed to support these
   /// additional cases safely.
   bool isVectorizableEarlyExitLoop();
+
+  bool analyzePotentiallyFaultingLoads(SmallVectorImpl<LoadInst *> *Loads);
 
   /// Return true if all of the instructions in the block can be speculatively
   /// executed, and record the loads/stores that require masking.
@@ -656,6 +671,10 @@ private:
   /// Keep track of the destinations of all uncountable exits if the
   /// exact backedge taken count is not computable.
   SmallVector<BasicBlock *, 4> UncountableExitBlocks;
+
+  /// Keep a record of all potentially faulting loads in loops with
+  /// uncountable early exits.
+  SmallVector<std::pair<LoadInst *, const SCEV *>, 4> PotentiallyFaultingLoads;
 };
 
 } // namespace llvm

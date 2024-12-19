@@ -2135,6 +2135,29 @@ public:
 };
 } // namespace
 
+static void addPointerAlignmentChecks(
+    const SmallVectorImpl<std::pair<LoadInst *, const SCEV *>> *Loads,
+    PredicatedScalarEvolution &PSE, ElementCount VF) {
+  ScalarEvolution *SE = PSE.getSE();
+  const DataLayout &DL = SE->getDataLayout();
+  Type *PtrIntType = DL.getIntPtrType(SE->getContext());
+
+  const SCEV *Zero = SE->getZero(PtrIntType);
+  const SCEV *ScevEC = SE->getElementCount(PtrIntType, VF);
+
+  for (auto Load : *Loads) {
+    APInt EltSize(
+        DL.getIndexTypeSizeInBits(Load.first->getPointerOperandType()),
+        DL.getTypeStoreSize(Load.first->getType()).getFixedValue());
+    const SCEV *Start = SE->getPtrToIntExpr(Load.second, PtrIntType);
+    const SCEV *Align =
+        SE->getMulExpr(ScevEC, SE->getConstant(EltSize),
+                       (SCEV::NoWrapFlags)(SCEV::FlagNSW | SCEV::FlagNUW));
+    const SCEV *Rem = SE->getURemExpr(Start, Align);
+    PSE.addPredicate(*(SE->getEqualPredicate(Rem, Zero)));
+  }
+}
+
 static bool useActiveLaneMask(TailFoldingStyle Style) {
   return Style == TailFoldingStyle::Data ||
          Style == TailFoldingStyle::DataAndControlFlow ||
@@ -10236,11 +10259,25 @@ bool LoopVectorizePass::processLoop(Loop *L) {
     return false;
   }
 
-  if (LVL.hasUncountableEarlyExit() && !EnableEarlyExitVectorization) {
-    reportVectorizationFailure("Auto-vectorization of loops with uncountable "
-                               "early exit is not enabled",
-                               "UncountableEarlyExitLoopsDisabled", ORE, L);
-    return false;
+  if (LVL.hasUncountableEarlyExit()) {
+    if (!EnableEarlyExitVectorization) {
+      reportVectorizationFailure("Auto-vectorization of loops with uncountable "
+                                 "early exit is not enabled",
+                                 "UncountableEarlyExitLoopsDisabled", ORE, L);
+      return false;
+    }
+
+    unsigned NumPotentiallyFaultingPointers =
+        LVL.getNumPotentiallyFaultingLoads();
+    if (NumPotentiallyFaultingPointers > 1) {
+      reportVectorizationFailure("Not worth vectorizing loop with uncountable "
+                                 "early exit, due to number of potentially "
+                                 "faulting loads",
+                                 "UncountableEarlyExitMayFault", ORE, L);
+      return false;
+    } else if (NumPotentiallyFaultingPointers)
+      LLVM_DEBUG(dbgs() << "LV: Need to version early-exit vector loop with"
+                        << "pointer alignment checks.\n");
   }
 
   // Entrance to the VPlan-native vectorization path. Outer loops are processed
@@ -10391,8 +10428,12 @@ bool LoopVectorizePass::processLoop(Loop *L) {
     unsigned SelectedIC = std::max(IC, UserIC);
     //  Optimistically generate runtime checks if they are needed. Drop them if
     //  they turn out to not be profitable.
-    if (VF.Width.isVector() || SelectedIC > 1)
+    if (VF.Width.isVector() || SelectedIC > 1) {
+      if (LVL.getNumPotentiallyFaultingLoads())
+        addPointerAlignmentChecks(LVL.getPotentiallyFaultingLoads(), PSE,
+                                  VF.Width);
       Checks.create(L, *LVL.getLAI(), PSE.getPredicate(), VF.Width, SelectedIC);
+    }
 
     // Check if it is profitable to vectorize with runtime checks.
     bool ForceVectorization =
