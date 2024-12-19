@@ -94,6 +94,18 @@ static cl::opt<bool> UsePrecSqrtF32(
     cl::desc("NVPTX Specific: 0 use sqrt.approx, 1 use sqrt.rn."),
     cl::init(true));
 
+static cl::opt<bool> UseApproxExp2F32(
+    "nvptx-approx-exp2f32", cl::Hidden,
+    cl::desc(
+        "NVPTX Specific: whether to use ex2.approx for exp2 (default = true)"),
+    cl::init(true));
+
+static cl::opt<bool> UseApproxLog2F32(
+    "nvptx-approx-log2f32",
+    cl::desc(
+        "NVPTX Specific: whether to use lg2.approx for log2 (default = true)"),
+    cl::init(true));
+
 static cl::opt<bool> ForceMinByValParamAlign(
     "nvptx-force-min-byval-param-align", cl::Hidden,
     cl::desc("NVPTX Specific: force 4-byte minimal alignment for byval"
@@ -968,7 +980,21 @@ NVPTXTargetLowering::NVPTXTargetLowering(const NVPTXTargetMachine &TM,
   setOperationAction(ISD::CopyToReg, MVT::i128, Custom);
   setOperationAction(ISD::CopyFromReg, MVT::i128, Custom);
 
-  // No FEXP2, FLOG2.  The PTX ex2 and log2 functions are always approximate.
+  if (UseApproxExp2F32) {
+    setOperationAction(ISD::FEXP2, MVT::f32, Legal);
+    setOperationPromotedToType(ISD::FEXP2, MVT::f16, MVT::f32);
+    setOperationAction(ISD::FEXP2, MVT::v2f16, Expand);
+    setOperationPromotedToType(ISD::FEXP2, MVT::bf16, MVT::f32);
+    setOperationAction(ISD::FEXP2, MVT::v2bf16, Expand);
+  }
+  if (UseApproxLog2F32) {
+    setOperationAction(ISD::FLOG2, MVT::f32, Legal);
+    setOperationPromotedToType(ISD::FLOG2, MVT::f16, MVT::f32);
+    setOperationAction(ISD::FLOG2, MVT::v2f16, Expand);
+    setOperationPromotedToType(ISD::FLOG2, MVT::bf16, MVT::f32);
+    setOperationAction(ISD::FLOG2, MVT::v2bf16, Expand);
+  }
+
   // No FPOW or FREM in PTX.
 
   // Now deduce the information based on the above mentioned
