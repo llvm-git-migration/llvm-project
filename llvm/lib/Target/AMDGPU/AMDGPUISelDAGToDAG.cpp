@@ -2389,12 +2389,14 @@ bool AMDGPUDAGToDAGISel::isCBranchSCC(const SDNode *N) const {
   if (VT == MVT::i32)
     return true;
 
+  const auto *ST = static_cast<const GCNSubtarget *>(Subtarget);
   if (VT == MVT::i64) {
-    const auto *ST = static_cast<const GCNSubtarget *>(Subtarget);
-
     ISD::CondCode CC = cast<CondCodeSDNode>(Cond.getOperand(2))->get();
     return (CC == ISD::SETEQ || CC == ISD::SETNE) && ST->hasScalarCompareEq64();
   }
+
+  if ((VT == MVT::f32 || VT == MVT::f64) && ST->hasSALUFloatInsts())
+    return true;
 
   return false;
 }
