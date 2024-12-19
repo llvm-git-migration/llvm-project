@@ -73,6 +73,10 @@ bool NVPTXDAGToDAGISel::useF32FTZ() const {
   return Subtarget->getTargetLowering()->useF32FTZ(*MF);
 }
 
+bool NVPTXDAGToDAGISel::useApproxLog2() const {
+  return Subtarget->getTargetLowering()->useApproxLog2();
+}
+
 bool NVPTXDAGToDAGISel::allowFMA() const {
   const NVPTXTargetLowering *TL = Subtarget->getTargetLowering();
   return TL->allowFMA(*MF, OptLevel);

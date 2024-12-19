@@ -145,6 +145,7 @@ def noPTXASUnreachableBug : Predicate<"!Subtarget->hasPTXASUnreachableBug()">;
 def doF32FTZ : Predicate<"useF32FTZ()">;
 def doNoF32FTZ : Predicate<"!useF32FTZ()">;
 def doRsqrtOpt : Predicate<"doRsqrtOpt()">;
+def useApproxLog2 : Predicate<"useApproxLog2()">;
 
 def doMulWide      : Predicate<"doMulWide">;
 

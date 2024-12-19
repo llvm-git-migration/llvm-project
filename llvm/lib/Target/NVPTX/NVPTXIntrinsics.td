@@ -1255,10 +1255,29 @@ def INT_NVVM_EX2_APPROX_F : F_MATH_1<"ex2.approx.f32 \t$dst, $src0;",
   Float32Regs, Float32Regs, int_nvvm_ex2_approx_f>;
 def INT_NVVM_EX2_APPROX_D : F_MATH_1<"ex2.approx.f64 \t$dst, $src0;",
   Float64Regs, Float64Regs, int_nvvm_ex2_approx_d>;
+
 def INT_NVVM_EX2_APPROX_F16 : F_MATH_1<"ex2.approx.f16 \t$dst, $src0;",
   Int16Regs, Int16Regs, int_nvvm_ex2_approx_f16, [hasPTX<70>, hasSM<75>]>;
 def INT_NVVM_EX2_APPROX_F16X2 : F_MATH_1<"ex2.approx.f16x2 \t$dst, $src0;",
   Int32Regs, Int32Regs, int_nvvm_ex2_approx_f16x2, [hasPTX<70>, hasSM<75>]>;
+
+def INT_NVVM_EX2_APPROX_BF16 : F_MATH_1<"ex2.approx.ftz.bf16 \t$dst, $src0;",
+  Int16Regs, Int16Regs, int_nvvm_ex2_approx_bf16, [hasPTX<78>, hasSM<90>]>;
+def INT_NVVM_EX2_APPROX_BF16X2 : F_MATH_1<"ex2.approx.ftz.bf16x2 \t$dst, $src0;",
+  Int32Regs, Int32Regs, int_nvvm_ex2_approx_bf16x2, [hasPTX<78>, hasSM<90>]>;
+
+def : Pat<(fexp2 f32:$a),
+          (INT_NVVM_EX2_APPROX_FTZ_F Float32Regs:$a)>, Requires<[doF32FTZ]>;
+def : Pat<(fexp2 f32:$a),
+          (INT_NVVM_EX2_APPROX_F Float32Regs:$a)>, Requires<[doNoF32FTZ]>;
+def : Pat<(fexp2 f16:$a),
+          (INT_NVVM_EX2_APPROX_F16 Int16Regs:$a)>, Requires<[useFP16Math]>;
+def : Pat<(fexp2 v2f16:$a),
+          (INT_NVVM_EX2_APPROX_F16X2 Int32Regs:$a)>, Requires<[useFP16Math]>;
+def : Pat<(fexp2 bf16:$a),
+          (INT_NVVM_EX2_APPROX_BF16 Int16Regs:$a)>, Requires<[hasBF16Math]>;
+def : Pat<(fexp2 v2bf16:$a),
+          (INT_NVVM_EX2_APPROX_BF16X2 Int32Regs:$a)>, Requires<[hasBF16Math]>;
 
 def INT_NVVM_LG2_APPROX_FTZ_F : F_MATH_1<"lg2.approx.ftz.f32 \t$dst, $src0;",
   Float32Regs, Float32Regs, int_nvvm_lg2_approx_ftz_f>;
@@ -1266,6 +1285,11 @@ def INT_NVVM_LG2_APPROX_F : F_MATH_1<"lg2.approx.f32 \t$dst, $src0;",
   Float32Regs, Float32Regs, int_nvvm_lg2_approx_f>;
 def INT_NVVM_LG2_APPROX_D : F_MATH_1<"lg2.approx.f64 \t$dst, $src0;",
   Float64Regs, Float64Regs, int_nvvm_lg2_approx_d>;
+
+def : Pat<(flog2 f32:$a), (INT_NVVM_LG2_APPROX_FTZ_F Float32Regs:$a)>,
+          Requires<[doF32FTZ, useApproxLog2]>;
+def : Pat<(flog2 f32:$a), (INT_NVVM_LG2_APPROX_F Float32Regs:$a)>,
+          Requires<[doNoF32FTZ, useApproxLog2]>;
 
 //
 // Sin  Cos
