@@ -280,6 +280,15 @@ void MCWinCOFFStreamer::emitCOFFImgRel32(const MCSymbol *Symbol,
   DF->appendContents(4, 0);
 }
 
+void MCWinCOFFStreamer::emitCOFFImpCall(MCSymbol const *Symbol) {
+  assert(this->getContext().getObjectFileInfo()->getImportCallSection() &&
+         "This target doesn't have a import call section");
+
+  auto *DF = getOrCreateDataFragment();
+  getAssembler().registerSymbol(*Symbol);
+  getWriter().recordImportCall(*DF, Symbol);
+}
+
 void MCWinCOFFStreamer::emitCommonSymbol(MCSymbol *S, uint64_t Size,
                                          Align ByteAlignment) {
   auto *Symbol = cast<MCSymbolCOFF>(S);

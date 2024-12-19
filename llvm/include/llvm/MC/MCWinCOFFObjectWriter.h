@@ -72,6 +72,8 @@ public:
                         const MCFixup &Fixup, MCValue Target,
                         uint64_t &FixedValue) override;
   uint64_t writeObject(MCAssembler &Asm) override;
+  void recordImportCall(const MCDataFragment &FB, const MCSymbol *Symbol);
+  bool hasRecordedImportCalls() const;
 };
 
 /// Construct a new Win COFF writer instance.

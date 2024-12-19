@@ -77,6 +77,11 @@ static cl::opt<PtrauthCheckMode> PtrauthAuthChecks(
     cl::desc("Check pointer authentication auth/resign failures"),
     cl::init(Default));
 
+static cl::opt<bool> EnableImportCallOptimization(
+    "aarch64-win-import-call-optimization", cl::Hidden,
+    cl::desc("Enable import call optimization for AArch64 Windows"),
+    cl::init(false));
+
 #define DEBUG_TYPE "asm-printer"
 
 namespace {
@@ -293,6 +298,11 @@ private:
                               MCSymbol *LazyPointer) override;
   void emitMachOIFuncStubHelperBody(Module &M, const GlobalIFunc &GI,
                                     MCSymbol *LazyPointer) override;
+
+  /// Checks if this instruction is part of a sequence that is eligle for import
+  /// call optimization and, if so, records it to be emitted in the import call
+  /// section.
+  void recordIfImportCall(const MachineInstr *BranchInst);
 };
 
 } // end anonymous namespace
@@ -921,6 +931,15 @@ void AArch64AsmPrinter::emitEndOfAsmFile(Module &M) {
   // Emit stack and fault map information.
   FM.serializeToFaultMapSection();
 
+  // If import call optimization is enabled, emit the appropriate section.
+  // We do this whether or not we recorded any import calls.
+  if (EnableImportCallOptimization && TT.isOSBinFormatCOFF()) {
+    OutStreamer->switchSection(getObjFileLowering().getImportCallSection());
+
+    // Section always starts with some magic.
+    constexpr char ImpCallMagic[12] = "Imp_Call_V1";
+    OutStreamer->emitBytes(StringRef(ImpCallMagic, sizeof(ImpCallMagic)));
+  }
 }
 
 void AArch64AsmPrinter::emitLOHs() {
@@ -2693,6 +2712,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
   case AArch64::TCRETURNrinotx16:
   case AArch64::TCRETURNriALL: {
     emitPtrauthTailCallHardening(MI);
+    recordIfImportCall(MI);
 
     MCInst TmpInst;
     TmpInst.setOpcode(AArch64::BR);
@@ -2702,6 +2722,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
   }
   case AArch64::TCRETURNdi: {
     emitPtrauthTailCallHardening(MI);
+    recordIfImportCall(MI);
 
     MCOperand Dest;
     MCInstLowering.lowerOperand(MI->getOperand(0), Dest);
@@ -3035,12 +3056,33 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
     TS->emitARM64WinCFISaveAnyRegQPX(MI->getOperand(0).getImm(),
                                      -MI->getOperand(2).getImm());
     return;
+
+  case AArch64::BLR:
+  case AArch64::BR:
+    recordIfImportCall(MI);
+    MCInst TmpInst;
+    MCInstLowering.Lower(MI, TmpInst);
+    EmitToStreamer(*OutStreamer, TmpInst);
+    return;
   }
 
   // Finally, do the automated lowerings for everything else.
   MCInst TmpInst;
   MCInstLowering.Lower(MI, TmpInst);
   EmitToStreamer(*OutStreamer, TmpInst);
+}
+
+void AArch64AsmPrinter::recordIfImportCall(
+    const llvm::MachineInstr *BranchInst) {
+  if (!EnableImportCallOptimization ||
+      !TM.getTargetTriple().isOSBinFormatCOFF())
+    return;
+
+  auto [GV, OpFlags] = BranchInst->getMF()->tryGetCalledGlobal(BranchInst);
+  if (GV && GV->hasDLLImportStorageClass()) {
+    OutStreamer->emitCOFFImpCall(
+        MCInstLowering.GetGlobalValueSymbol(GV, OpFlags));
+  }
 }
 
 void AArch64AsmPrinter::emitMachOIFuncStubBody(Module &M, const GlobalIFunc &GI,

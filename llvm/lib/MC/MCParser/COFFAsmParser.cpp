@@ -12,6 +12,7 @@
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDirectives.h"
+#include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCParser/MCAsmLexer.h"
 #include "llvm/MC/MCParser/MCAsmParserExtension.h"
 #include "llvm/MC/MCSectionCOFF.h"
@@ -70,6 +71,7 @@ class COFFAsmParser : public MCAsmParserExtension {
     addDirectiveHandler<&COFFAsmParser::parseDirectiveSymbolAttribute>(
         ".weak_anti_dep");
     addDirectiveHandler<&COFFAsmParser::parseDirectiveCGProfile>(".cg_profile");
+    addDirectiveHandler<&COFFAsmParser::parseDirectiveImpCall>(".impcall");
 
     // Win64 EH directives.
     addDirectiveHandler<&COFFAsmParser::parseSEHDirectiveStartProc>(
@@ -126,6 +128,7 @@ class COFFAsmParser : public MCAsmParserExtension {
   bool parseDirectiveLinkOnce(StringRef, SMLoc);
   bool parseDirectiveRVA(StringRef, SMLoc);
   bool parseDirectiveCGProfile(StringRef, SMLoc);
+  bool parseDirectiveImpCall(StringRef, SMLoc);
 
   // Win64 EH directives.
   bool parseSEHDirectiveStartProc(StringRef, SMLoc);
@@ -574,6 +577,24 @@ bool COFFAsmParser::parseDirectiveSymIdx(StringRef, SMLoc) {
 
   Lex();
   getStreamer().emitCOFFSymbolIndex(Symbol);
+  return false;
+}
+
+bool COFFAsmParser::parseDirectiveImpCall(StringRef, SMLoc) {
+  if (!getContext().getObjectFileInfo()->getImportCallSection())
+    return TokError("target doesn't have an import call section");
+
+  StringRef SymbolID;
+  if (getParser().parseIdentifier(SymbolID))
+    return TokError("expected identifier in directive");
+
+  if (getLexer().isNot(AsmToken::EndOfStatement))
+    return TokError("unexpected token in directive");
+
+  MCSymbol *Symbol = getContext().getOrCreateSymbol(SymbolID);
+
+  Lex();
+  getStreamer().emitCOFFImpCall(Symbol);
   return false;
 }
 
