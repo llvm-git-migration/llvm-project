@@ -1905,13 +1905,18 @@ void VPlanTransforms::handleUncountableEarlyExit(
   VPValue *EarlyExitNotTakenCond = RecipeBuilder.getBlockInMask(
       OrigLoop->contains(TrueSucc) ? TrueSucc : FalseSucc);
   auto *EarlyExitTakenCond = Builder.createNot(EarlyExitNotTakenCond);
+  LoopRegion->setVectorEarlyExitCond(EarlyExitTakenCond);
   IsEarlyExitTaken =
       Builder.createNaryOp(VPInstruction::AnyOf, {EarlyExitTakenCond});
 
   VPBasicBlock *NewMiddle = new VPBasicBlock("middle.split");
+  VPBasicBlock *EarlyExitVPBB = new VPBasicBlock("vector.early.exit");
   VPBlockUtils::insertOnEdge(LoopRegion, MiddleVPBB, NewMiddle);
-  VPBlockUtils::connectBlocks(NewMiddle, VPEarlyExitBlock);
+  VPBlockUtils::connectBlocks(NewMiddle, EarlyExitVPBB);
   NewMiddle->swapSuccessors();
+
+  VPBlockUtils::connectBlocks(EarlyExitVPBB, VPEarlyExitBlock);
+  LoopRegion->setEarlyExit(EarlyExitVPBB);
 
   VPBuilder MiddleBuilder(NewMiddle);
   MiddleBuilder.createNaryOp(VPInstruction::BranchOnCond, {IsEarlyExitTaken});

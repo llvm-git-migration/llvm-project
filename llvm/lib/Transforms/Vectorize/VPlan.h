@@ -1231,6 +1231,9 @@ public:
     // Returns a scalar boolean value, which is true if any lane of its single
     // operand is true.
     AnyOf,
+    // Extracts the first active lane of a vector, where the first operand is
+    // the predicate, and the second operand is the vector to extract.
+    ExtractFirstActive,
   };
 
 private:
@@ -3662,6 +3665,13 @@ class VPRegionBlock : public VPBlockBase {
   /// VPRegionBlock.
   VPBlockBase *Exiting;
 
+  /// Hold the Early Exit block of the SEME region, if one exists.
+  VPBasicBlock *EarlyExit;
+
+  /// If one exists, this keeps track of the vector early mask that triggered
+  /// the early exit.
+  VPValue *VectorEarlyExitCond;
+
   /// An indicator whether this region is to generate multiple replicated
   /// instances of output IR corresponding to its VPBlockBases.
   bool IsReplicator;
@@ -3670,6 +3680,7 @@ public:
   VPRegionBlock(VPBlockBase *Entry, VPBlockBase *Exiting,
                 const std::string &Name = "", bool IsReplicator = false)
       : VPBlockBase(VPRegionBlockSC, Name), Entry(Entry), Exiting(Exiting),
+        EarlyExit(nullptr), VectorEarlyExitCond(nullptr),
         IsReplicator(IsReplicator) {
     assert(Entry->getPredecessors().empty() && "Entry block has predecessors.");
     assert(Exiting->getSuccessors().empty() && "Exit block has successors.");
@@ -3678,6 +3689,7 @@ public:
   }
   VPRegionBlock(const std::string &Name = "", bool IsReplicator = false)
       : VPBlockBase(VPRegionBlockSC, Name), Entry(nullptr), Exiting(nullptr),
+        EarlyExit(nullptr), VectorEarlyExitCond(nullptr),
         IsReplicator(IsReplicator) {}
 
   ~VPRegionBlock() override {
@@ -3716,6 +3728,22 @@ public:
     Exiting = ExitingBlock;
     ExitingBlock->setParent(this);
   }
+
+  /// Sets the early exit vector mask.
+  void setVectorEarlyExitCond(VPValue *V) {
+    assert(!VectorEarlyExitCond);
+    VectorEarlyExitCond = V;
+  }
+
+  /// Gets the early exit vector mask
+  VPValue *getVectorEarlyExitCond() const { return VectorEarlyExitCond; }
+
+  /// Set the vector early exit block
+  void setEarlyExit(VPBasicBlock *ExitBlock) { EarlyExit = ExitBlock; }
+
+  /// Get the vector early exit block
+  const VPBasicBlock *getEarlyExit() const { return EarlyExit; }
+  VPBasicBlock *getEarlyExit() { return EarlyExit; }
 
   /// Returns the pre-header VPBasicBlock of the loop region.
   VPBasicBlock *getPreheaderVPBB() {
