@@ -1047,9 +1047,9 @@ UUID ProcessElfCore::FindBuidIdInCoreMemory(lldb::addr_t address) {
     std::vector<uint8_t> note_bytes;
     note_bytes.resize(program_header.p_memsz);
 
-    // We need to slide the address of the p_vaddr as these values don't get
+    // We need to slide the address of the p_offset as these values don't get
     // relocated in memory.
-    const lldb::addr_t vaddr = program_header.p_vaddr + address;
+    const lldb::addr_t vaddr = program_header.p_offset + address;
     byte_read =
         ReadMemory(vaddr, note_bytes.data(), program_header.p_memsz, error);
     if (byte_read != program_header.p_memsz)
