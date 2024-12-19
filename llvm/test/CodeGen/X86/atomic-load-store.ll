@@ -194,6 +194,62 @@ define <2 x float> @atomic_vec2_float_align(ptr %x) {
   ret <2 x float> %ret
 }
 
+define <2 x half> @atomic_vec2_half(ptr %x) {
+; CHECK3-LABEL: atomic_vec2_half:
+; CHECK3:       ## %bb.0:
+; CHECK3-NEXT:    movzwl (%rdi), %eax
+; CHECK3-NEXT:    movzwl 2(%rdi), %ecx
+; CHECK3-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK3-NEXT:    pinsrw $0, %ecx, %xmm1
+; CHECK3-NEXT:    punpcklwd {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[1],xmm1[1],xmm0[2],xmm1[2],xmm0[3],xmm1[3]
+; CHECK3-NEXT:    retq
+;
+; CHECK0-LABEL: atomic_vec2_half:
+; CHECK0:       ## %bb.0:
+; CHECK0-NEXT:    movw (%rdi), %dx
+; CHECK0-NEXT:    movw 2(%rdi), %cx
+; CHECK0-NEXT:    ## implicit-def: $eax
+; CHECK0-NEXT:    movw %dx, %ax
+; CHECK0-NEXT:    ## implicit-def: $xmm0
+; CHECK0-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK0-NEXT:    ## implicit-def: $eax
+; CHECK0-NEXT:    movw %cx, %ax
+; CHECK0-NEXT:    ## implicit-def: $xmm1
+; CHECK0-NEXT:    pinsrw $0, %eax, %xmm1
+; CHECK0-NEXT:    punpcklwd {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[1],xmm1[1],xmm0[2],xmm1[2],xmm0[3],xmm1[3]
+; CHECK0-NEXT:    retq
+  %ret = load atomic <2 x half>, ptr %x acquire, align 4
+  ret <2 x half> %ret
+}
+
+define <2 x bfloat> @atomic_vec2_bfloat(ptr %x) {
+; CHECK3-LABEL: atomic_vec2_bfloat:
+; CHECK3:       ## %bb.0:
+; CHECK3-NEXT:    movzwl (%rdi), %eax
+; CHECK3-NEXT:    movzwl 2(%rdi), %ecx
+; CHECK3-NEXT:    pinsrw $0, %ecx, %xmm1
+; CHECK3-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK3-NEXT:    punpcklwd {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[1],xmm1[1],xmm0[2],xmm1[2],xmm0[3],xmm1[3]
+; CHECK3-NEXT:    retq
+;
+; CHECK0-LABEL: atomic_vec2_bfloat:
+; CHECK0:       ## %bb.0:
+; CHECK0-NEXT:    movw (%rdi), %cx
+; CHECK0-NEXT:    movw 2(%rdi), %dx
+; CHECK0-NEXT:    ## implicit-def: $eax
+; CHECK0-NEXT:    movw %dx, %ax
+; CHECK0-NEXT:    ## implicit-def: $xmm1
+; CHECK0-NEXT:    pinsrw $0, %eax, %xmm1
+; CHECK0-NEXT:    ## implicit-def: $eax
+; CHECK0-NEXT:    movw %cx, %ax
+; CHECK0-NEXT:    ## implicit-def: $xmm0
+; CHECK0-NEXT:    pinsrw $0, %eax, %xmm0
+; CHECK0-NEXT:    punpcklwd {{.*#+}} xmm0 = xmm0[0],xmm1[0],xmm0[1],xmm1[1],xmm0[2],xmm1[2],xmm0[3],xmm1[3]
+; CHECK0-NEXT:    retq
+  %ret = load atomic <2 x bfloat>, ptr %x acquire, align 4
+  ret <2 x bfloat> %ret
+}
+
 define <1 x ptr> @atomic_vec1_ptr(ptr %x) nounwind {
 ; CHECK3-LABEL: atomic_vec1_ptr:
 ; CHECK3:       ## %bb.0:
