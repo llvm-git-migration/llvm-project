@@ -968,7 +968,8 @@ NVPTXTargetLowering::NVPTXTargetLowering(const NVPTXTargetMachine &TM,
   setOperationAction(ISD::CopyToReg, MVT::i128, Custom);
   setOperationAction(ISD::CopyFromReg, MVT::i128, Custom);
 
-  // No FEXP2, FLOG2.  The PTX ex2 and log2 functions are always approximate.
+  setOperationAction(ISD::FEXP2, MVT::f32, Legal);
+  // No FLOG2. The PTX log2 function is always approximate.
   // No FPOW or FREM in PTX.
 
   // Now deduce the information based on the above mentioned

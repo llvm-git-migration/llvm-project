@@ -518,6 +518,19 @@ multiclass F3_fma_component<string OpcStr, SDNode OpNode> {
                Requires<[hasBF16Math, noFMA]>;
 }
 
+// Template for operations which take one f32 operand.  Provides two
+// instructions: <OpcStr>.f32, and <OpcStr>.ftz.f32 (flush subnormal inputs and
+// results to zero).
+multiclass F1<string OpcStr, SDNode OpNode> {
+   def f32_ftz : NVPTXInst<(outs Float32Regs:$dst), (ins Float32Regs:$a),
+                           !strconcat(OpcStr, ".ftz.f32 \t$dst, $a;"),
+                           [(set Float32Regs:$dst, (OpNode Float32Regs:$a))]>,
+                           Requires<[doF32FTZ]>;
+   def f32 :     NVPTXInst<(outs Float32Regs:$dst), (ins Float32Regs:$a),
+                           !strconcat(OpcStr, ".f32 \t$dst, $a;"),
+                           [(set Float32Regs:$dst, (OpNode Float32Regs:$a))]>;
+}
+
 // Template for operations which take two f32 or f64 operands.  Provides three
 // instructions: <OpcStr>.f64, <OpcStr>.f32, and <OpcStr>.ftz.f32 (flush
 // subnormal inputs and results to zero).
@@ -1203,6 +1216,8 @@ defm FABS_H: F2_Support_Half<"abs", fabs>;
 defm FNEG_H: F2_Support_Half<"neg", fneg>;
 
 defm FSQRT : F2<"sqrt.rn", fsqrt>;
+
+defm FEXP2 : F1<"ex2.approx", fexp2>;
 
 //
 // F16 NEG
