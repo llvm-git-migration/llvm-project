@@ -1031,6 +1031,7 @@ UUID ProcessElfCore::FindBuidIdInCoreMemory(lldb::addr_t address) {
 
   std::vector<uint8_t> ph_bytes;
   ph_bytes.resize(elf_header.e_phentsize);
+  lldb::offset_t load_bias = 0;
   for (unsigned int i = 0; i < elf_header.e_phnum; ++i) {
     byte_read = ReadMemory(ph_addr + i * elf_header.e_phentsize,
                            ph_bytes.data(), elf_header.e_phentsize, error);
@@ -1041,6 +1042,10 @@ UUID ProcessElfCore::FindBuidIdInCoreMemory(lldb::addr_t address) {
     offset = 0;
     elf::ELFProgramHeader program_header;
     program_header.Parse(program_header_data, &offset);
+    // Find the load bias of the main executable.
+    if (program_header.p_type == llvm::ELF::PT_PHDR) {
+      load_bias = address;
+    }
     if (program_header.p_type != llvm::ELF::PT_NOTE)
       continue;
 
@@ -1049,7 +1054,7 @@ UUID ProcessElfCore::FindBuidIdInCoreMemory(lldb::addr_t address) {
 
     // We need to slide the address of the p_vaddr as these values don't get
     // relocated in memory.
-    const lldb::addr_t vaddr = program_header.p_vaddr + address;
+    const lldb::addr_t vaddr = program_header.p_vaddr + address - load_bias;
     byte_read =
         ReadMemory(vaddr, note_bytes.data(), program_header.p_memsz, error);
     if (byte_read != program_header.p_memsz)
