@@ -312,7 +312,8 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
     break;
 
   case llvm::Triple::UnknownOS:
-    if (triple.isWasm())
+    if (triple.isWasm() || ((triple.getVendor() == llvm::Triple::Apple) &&
+                            triple.isOSBinFormatMachO()))
       return false;
     break;
 
