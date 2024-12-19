@@ -6604,7 +6604,10 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
         else if (Target.isOSBinFormatELF())
           TC = std::make_unique<toolchains::Generic_ELF>(*this, Target, Args);
         else if (Target.isOSBinFormatMachO())
-          TC = std::make_unique<toolchains::MachO>(*this, Target, Args);
+          if (Target.getVendor() == llvm::Triple::Apple)
+            TC = std::make_unique<toolchains::AppleMachO>(*this, Target, Args);
+          else
+            TC = std::make_unique<toolchains::MachO>(*this, Target, Args);
         else
           TC = std::make_unique<toolchains::Generic_GCC>(*this, Target, Args);
       }
