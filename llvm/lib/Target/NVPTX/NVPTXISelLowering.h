@@ -213,6 +213,9 @@ public:
   // sqrt instruction.
   bool usePrecSqrtF32() const;
 
+  // Get whether to use lg2.approx for log2
+  bool useApproxLog2() const;
+
   // Get whether we should use instructions that flush floating-point denormals
   // to sign-preserving zero.
   bool useF32FTZ(const MachineFunction &MF) const;
