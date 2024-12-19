@@ -180,6 +180,22 @@ public:
                                      llvm::opt::ArgStringList &CmdArgs,
                                      bool ForceLinkBuiltinRT = false) const;
 
+  void AddClangCXXStdlibIncludeArgs(
+      const llvm::opt::ArgList &DriverArgs,
+      llvm::opt::ArgStringList &CC1Args) const override;
+
+  void
+  AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                            llvm::opt::ArgStringList &CC1Args) const override;
+
+  void AddCudaIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                          llvm::opt::ArgStringList &CC1Args) const override;
+  void AddHIPIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                         llvm::opt::ArgStringList &CC1Args) const override;
+
+  void AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
+                           llvm::opt::ArgStringList &CmdArgs) const override;
+
   virtual void addStartObjectFileArgs(const llvm::opt::ArgList &Args,
                                       llvm::opt::ArgStringList &CmdArgs) const {
   }
@@ -194,6 +210,11 @@ public:
   /// On some iOS platforms, kernel and kernel modules were built statically. Is
   /// this such a target?
   virtual bool isKernelStatic() const { return false; }
+
+  /// Is the target an Apple target?
+  bool isTargetAppleBased() const {
+    return getTriple().getVendor() == llvm::Triple::Apple;
+  }
 
   /// Is the target either iOS or an iOS simulator?
   bool isTargetIOSBased() const { return false; }
@@ -287,7 +308,20 @@ public:
   // Darwin toolchain uses legacy thin LTO API, which is not
   // capable of unit splitting.
   bool canSplitThinLTOUnit() const override { return false; }
+
+  void printVerboseInfo(raw_ostream &OS) const override;
   /// }
+
+  LazyDetector<CudaInstallationDetector> CudaInstallation;
+  LazyDetector<RocmInstallationDetector> RocmInstallation;
+
+protected:
+  llvm::SmallString<128>
+  GetEffectiveSysroot(const llvm::opt::ArgList &DriverArgs) const;
+
+  virtual void
+  AddGnuCPlusPlusIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                              llvm::opt::ArgStringList &CC1Args) const;
 };
 
 /// Darwin - The base Darwin tool chain.
@@ -328,9 +362,6 @@ public:
 
   /// The target variant triple that was specified (if any).
   mutable std::optional<llvm::Triple> TargetVariantTriple;
-
-  LazyDetector<CudaInstallationDetector> CudaInstallation;
-  LazyDetector<RocmInstallationDetector> RocmInstallation;
 
 private:
   void AddDeploymentTarget(llvm::opt::DerivedArgList &Args) const;
@@ -402,6 +433,8 @@ protected:
   }
 
 public:
+  bool isTargetAppleBased() const { return true; }
+
   bool isTargetIPhoneOS() const {
     assert(TargetInitialized && "Target not initialized!");
     return (TargetPlatform == IPhoneOS || TargetPlatform == TvOS) &&
@@ -559,11 +592,6 @@ public:
   ObjCRuntime getDefaultObjCRuntime(bool isNonFragile) const override;
   bool hasBlocksRuntime() const override;
 
-  void AddCudaIncludeArgs(const llvm::opt::ArgList &DriverArgs,
-                          llvm::opt::ArgStringList &CC1Args) const override;
-  void AddHIPIncludeArgs(const llvm::opt::ArgList &DriverArgs,
-                         llvm::opt::ArgStringList &CC1Args) const override;
-
   bool UseObjCMixedDispatch() const override {
     // This is only used with the non-fragile ABI and non-legacy dispatch.
 
@@ -594,8 +622,6 @@ public:
   bool SupportsEmbeddedBitcode() const override;
 
   SanitizerMask getSupportedSanitizers() const override;
-
-  void printVerboseInfo(raw_ostream &OS) const override;
 };
 
 /// DarwinClang - The Darwin toolchain used by Clang.
@@ -612,16 +638,6 @@ public:
   void AddLinkRuntimeLibArgs(const llvm::opt::ArgList &Args,
                              llvm::opt::ArgStringList &CmdArgs,
                              bool ForceLinkBuiltinRT = false) const override;
-
-  void AddClangCXXStdlibIncludeArgs(
-      const llvm::opt::ArgList &DriverArgs,
-      llvm::opt::ArgStringList &CC1Args) const override;
-
-  void AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
-                                 llvm::opt::ArgStringList &CC1Args) const override;
-
-  void AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
-                           llvm::opt::ArgStringList &CmdArgs) const override;
 
   void AddCCKextLibArgs(const llvm::opt::ArgList &Args,
                         llvm::opt::ArgStringList &CmdArgs) const override;
@@ -647,15 +663,16 @@ private:
                                StringRef Sanitizer,
                                bool shared = true) const;
 
+  void
+  AddGnuCPlusPlusIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                              llvm::opt::ArgStringList &CC1Args) const override;
+
   bool AddGnuCPlusPlusIncludePaths(const llvm::opt::ArgList &DriverArgs,
                                    llvm::opt::ArgStringList &CC1Args,
                                    llvm::SmallString<128> Base,
                                    llvm::StringRef Version,
                                    llvm::StringRef ArchDir,
                                    llvm::StringRef BitDir) const;
-
-  llvm::SmallString<128>
-  GetEffectiveSysroot(const llvm::opt::ArgList &DriverArgs) const;
 };
 
 } // end namespace toolchains
