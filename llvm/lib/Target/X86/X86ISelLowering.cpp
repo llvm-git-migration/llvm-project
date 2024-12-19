@@ -2672,7 +2672,8 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
                        ISD::STRICT_FP_ROUND,
                        ISD::INTRINSIC_VOID,
                        ISD::INTRINSIC_WO_CHAIN,
-                       ISD::INTRINSIC_W_CHAIN});
+                       ISD::INTRINSIC_W_CHAIN,
+                       ISD::ATOMIC_LOAD});
 
   computeRegisterProperties(Subtarget.getRegisterInfo());
 
@@ -52242,6 +52243,81 @@ static SDValue combineConstantPoolLoads(SDNode *N, const SDLoc &dl,
   return SDValue();
 }
 
+static MVT getScalarTypeFromVectorType(MVT VT) {
+  if (VT == MVT::v2i8)
+    return MVT::i16;
+  if (VT == MVT::v2i16 || VT == MVT::v2f16 || VT == MVT::v2bf16)
+    return MVT::i32;
+  if (VT == MVT::v2i32 || VT == MVT::v2f32)
+    return MVT::i64;
+  LLVM_DEBUG(dbgs() << VT << '\n');
+  llvm_unreachable("Invalid VT for scalar type translation");
+}
+
+static SDValue combineAtomicLoad(SDNode *N, SelectionDAG &DAG,
+                           TargetLowering::DAGCombinerInfo &DCI,
+                           const X86Subtarget &Subtarget) {
+  auto &MRI = DAG.getMachineFunction().getRegInfo();
+  auto &TRI = *Subtarget.getRegisterInfo();
+  const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+  auto *Ld = cast<AtomicSDNode>(N);
+  SDLoc dl(Ld);
+  EVT RegVT = Ld->getValueType(0);
+  assert(RegVT == Ld->getMemoryVT());
+  EVT OldVT = N->getValueType(0);
+
+  // If N has a vector type, then load the elements together.
+  // i.e. `v2i16 = AtomicLoad` is treated as
+  //        `i32 = AtomicLoad`.
+  if (OldVT.isVector() && OldVT.getVectorNumElements() == 2) {
+    MVT VT = getScalarTypeFromVectorType(N->getValueType(0).getSimpleVT());
+
+    SDValue NewLd = DAG.getAtomic(ISD::ATOMIC_LOAD, dl, VT, VT,
+                                  Ld->getChain(), Ld->getBasePtr(),
+                                  Ld->getMemOperand());
+
+    // Find the register to copy into so that its vector register may be
+    // rewritten with a scalar register.
+    SDNode *CopyToReg = nullptr;
+    for (SDNode *User : N->users())
+      if (User->getOpcode() == ISD::CopyToReg) {
+        CopyToReg = User;
+        break;
+      }
+
+    if (CopyToReg) {
+      Register RegToCopyTo = cast<RegisterSDNode>(CopyToReg->getOperand(1))->getReg();
+
+      // Check if it is legal to replace the register.
+      const TargetRegisterClass *RC = TRI.getMinimalPhysRegClass(RegToCopyTo);
+      assert(RC);
+      unsigned PhysRegSize = TRI.getRegSizeInBits(*RC);
+      const bool IsPhysRegToReplace = Register::isPhysicalRegister(RegToCopyTo) &&
+          (PhysRegSize == VT.getSizeInBits() || RegToCopyTo == X86::XMM0);
+      const bool IsVirtRegToReplace = Register::isVirtualRegister(RegToCopyTo) &&
+          TLI.getRegClassFor(VT) == MRI.getRegClass(RegToCopyTo);
+
+      if (IsPhysRegToReplace || IsVirtRegToReplace) {
+        SDValue VecReg = CopyToReg->getOperand(1);
+        SDValue Glue = NewLd.getValue(0);
+        Register NewReg = MRI.createVirtualRegister(TLI.getRegClassFor(VT));
+        SDValue Ret = DAG.getCopyToReg(NewLd, dl, NewReg, NewLd, Glue);
+
+        // Replace the register.
+        DAG.ReplaceAllUsesOfValueWith(VecReg, DAG.getRegister(NewReg, VT));
+
+        // Replace the nodes.
+        DAG.ReplaceAllUsesOfValueWith(SDValue(CopyToReg, 1), Ret.getValue(1));
+        DAG.ReplaceAllUsesOfValueWith(SDValue(CopyToReg, 0), Ret.getValue(0));
+        DAG.ReplaceAllUsesOfValueWith(SDValue(N, 0), NewLd);
+        return NewLd;
+      }
+    }
+  }
+
+  return SDValue();
+}
+
 static SDValue combineLoad(SDNode *N, SelectionDAG &DAG,
                            TargetLowering::DAGCombinerInfo &DCI,
                            const X86Subtarget &Subtarget) {
@@ -59172,6 +59248,7 @@ SDValue X86TargetLowering::PerformDAGCombine(SDNode *N,
   case ISD::AVGFLOORU:      return combineAVG(N, DAG, DCI, Subtarget);
   case X86ISD::BEXTR:
   case X86ISD::BEXTRI:      return combineBEXTR(N, DAG, DCI, Subtarget);
+  case ISD::ATOMIC_LOAD:    return combineAtomicLoad(N, DAG, DCI, Subtarget);
   case ISD::LOAD:           return combineLoad(N, DAG, DCI, Subtarget);
   case ISD::MLOAD:          return combineMaskedLoad(N, DAG, DCI, Subtarget);
   case ISD::STORE:          return combineStore(N, DAG, DCI, Subtarget);
