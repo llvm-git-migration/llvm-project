@@ -146,6 +146,36 @@ define <1 x i64> @atomic_vec1_i64_align(ptr %x) nounwind {
   ret <1 x i64> %ret
 }
 
+define <2 x i16> @atomic_vec2_i16(ptr %x) {
+; CHECK-LABEL: atomic_vec2_i16:
+; CHECK:       ## %bb.0:
+; CHECK-NEXT:    movl (%rdi), %eax
+; CHECK-NEXT:    movd %eax, %xmm0
+; CHECK-NEXT:    retq
+  %ret = load atomic <2 x i16>, ptr %x acquire, align 4
+  ret <2 x i16> %ret
+}
+
+define <2 x i32> @atomic_vec2_i32_align(ptr %x) {
+; CHECK-LABEL: atomic_vec2_i32_align:
+; CHECK:       ## %bb.0:
+; CHECK-NEXT:    movq (%rdi), %rax
+; CHECK-NEXT:    movq %rax, %xmm0
+; CHECK-NEXT:    retq
+  %ret = load atomic <2 x i32>, ptr %x acquire, align 8
+  ret <2 x i32> %ret
+}
+
+define <2 x float> @atomic_vec2_float_align(ptr %x) {
+; CHECK-LABEL: atomic_vec2_float_align:
+; CHECK:       ## %bb.0:
+; CHECK-NEXT:    movq (%rdi), %rax
+; CHECK-NEXT:    movq %rax, %xmm0
+; CHECK-NEXT:    retq
+  %ret = load atomic <2 x float>, ptr %x acquire, align 8
+  ret <2 x float> %ret
+}
+
 define <1 x ptr> @atomic_vec1_ptr(ptr %x) nounwind {
 ; CHECK3-LABEL: atomic_vec1_ptr:
 ; CHECK3:       ## %bb.0:
