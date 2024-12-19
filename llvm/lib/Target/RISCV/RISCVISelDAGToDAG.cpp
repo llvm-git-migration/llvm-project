@@ -3253,10 +3253,10 @@ bool RISCVDAGToDAGISel::selectInvLogicImm(SDValue N, SDValue &Val) {
   // For 64-bit constants, the instruction sequences get complex,
   // so we select inverted only if it's cheaper.
   if (!isInt<32>(Imm)) {
-    int OrigImmCost = RISCVMatInt::getIntMatCost(
-      APInt(64, Imm), 64, *Subtarget, /*CompressionCost=*/true);
-    int NegImmCost = RISCVMatInt::getIntMatCost(
-      APInt(64, ~Imm), 64, *Subtarget, /*CompressionCost=*/true);
+    int OrigImmCost = RISCVMatInt::getIntMatCost(APInt(64, Imm), 64, *Subtarget,
+                                                 /*CompressionCost=*/true);
+    int NegImmCost = RISCVMatInt::getIntMatCost(APInt(64, ~Imm), 64, *Subtarget,
+                                                /*CompressionCost=*/true);
     if (OrigImmCost <= NegImmCost)
       return false;
   }
