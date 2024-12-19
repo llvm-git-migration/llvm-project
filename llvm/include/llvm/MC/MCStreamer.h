@@ -569,6 +569,9 @@ public:
   /// \param Symbol - Symbol the image relative relocation should point to.
   virtual void emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset);
 
+  /// Emits an import call directive, used to build the import call table.
+  virtual void emitCOFFImpCall(MCSymbol const *Symbol);
+
   /// Emits an lcomm directive with XCOFF csect information.
   ///
   /// \param LabelSym - Label on the block of storage.

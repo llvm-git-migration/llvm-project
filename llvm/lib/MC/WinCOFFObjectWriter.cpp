@@ -23,6 +23,7 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCFragment.h"
+#include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSectionCOFF.h"
@@ -147,6 +148,13 @@ class llvm::WinCOFFWriter {
   bool UseBigObj;
   bool UseOffsetLabels = false;
 
+  struct ImportCall {
+    unsigned CallsiteOffset;
+    const MCSymbol *CalledSymbol;
+  };
+  using importcall_map = MapVector<MCSection *, std::vector<ImportCall>>;
+  importcall_map SectionToImportCallsMap;
+
 public:
   enum DwoMode {
     AllSections,
@@ -163,6 +171,11 @@ public:
                         const MCFixup &Fixup, MCValue Target,
                         uint64_t &FixedValue);
   uint64_t writeObject(MCAssembler &Asm);
+  void generateAArch64ImportCallSection(llvm::MCAssembler &Asm);
+  void recordImportCall(const MCDataFragment &FB, const MCSymbol *Symbol);
+  bool hasRecordedImportCalls() const {
+    return !SectionToImportCallsMap.empty();
+  }
 
 private:
   COFFSymbol *createSymbol(StringRef Name);
@@ -1097,6 +1110,17 @@ uint64_t WinCOFFWriter::writeObject(MCAssembler &Asm) {
     }
   }
 
+  // Create the contents of the import call section.
+  if (hasRecordedImportCalls()) {
+    switch (Asm.getContext().getTargetTriple().getArch()) {
+    case Triple::aarch64:
+      generateAArch64ImportCallSection(Asm);
+      break;
+    default:
+      llvm_unreachable("unsupported architecture for import call section");
+    }
+  }
+
   assignFileOffsets(Asm);
 
   // MS LINK expects to be able to use this timestamp to implement their
@@ -1141,6 +1165,51 @@ uint64_t WinCOFFWriter::writeObject(MCAssembler &Asm) {
   Strings.write(W.OS);
 
   return W.OS.tell() - StartOffset;
+}
+
+void llvm::WinCOFFWriter::generateAArch64ImportCallSection(
+    llvm::MCAssembler &Asm) {
+  auto *ImpCallSection =
+      Asm.getContext().getObjectFileInfo()->getImportCallSection();
+
+  if (!SectionMap.contains(ImpCallSection)) {
+    Asm.getContext().reportError(SMLoc(),
+                                 ".impcall directives were used, but no "
+                                 "existing .impcall section exists");
+    return;
+  }
+
+  auto *Frag = cast<MCDataFragment>(ImpCallSection->curFragList()->Head);
+  raw_svector_ostream OS(Frag->getContents());
+
+  // Layout of this section is:
+  // Per section that contains calls to imported functions:
+  //  uint32_t SectionSize: Size in bytes for information in this section.
+  //  uint32_t Section Number
+  //  Per call to imported function in section:
+  //    uint32_t Kind: the kind of imported function.
+  //    uint32_t BranchOffset: the offset of the branch instruction in its
+  //                            parent section.
+  //    uint32_t TargetSymbolId: the symbol id of the called function.
+
+  // Per section that contained eligible targets...
+  for (auto &[Section, Targets] : SectionToImportCallsMap) {
+    unsigned SectionSize = sizeof(uint32_t) * (2 + 3 * Targets.size());
+    support::endian::write(OS, SectionSize, W.Endian);
+    support::endian::write(OS, SectionMap.at(Section)->Number, W.Endian);
+    for (auto &[BranchOffset, TargetSymbol] : Targets) {
+      // Kind is always IMAGE_REL_ARM64_DYNAMIC_IMPORT_CALL (0x13).
+      support::endian::write(OS, 0x13, W.Endian);
+      support::endian::write(OS, BranchOffset, W.Endian);
+      support::endian::write(OS, TargetSymbol->getIndex(), W.Endian);
+    }
+  }
+}
+
+void WinCOFFWriter::recordImportCall(const MCDataFragment &FB,
+                                     const MCSymbol *Symbol) {
+  auto &SectionData = SectionToImportCallsMap[FB.getParent()];
+  SectionData.push_back(ImportCall{unsigned(FB.getContents().size()), Symbol});
 }
 
 //------------------------------------------------------------------------------
@@ -1192,6 +1261,15 @@ uint64_t WinCOFFObjectWriter::writeObject(MCAssembler &Asm) {
   if (DwoWriter)
     TotalSize += DwoWriter->writeObject(Asm);
   return TotalSize;
+}
+
+void WinCOFFObjectWriter::recordImportCall(const MCDataFragment &FB,
+                                           const MCSymbol *Symbol) {
+  ObjWriter->recordImportCall(FB, Symbol);
+}
+
+bool WinCOFFObjectWriter::hasRecordedImportCalls() const {
+  return ObjWriter->hasRecordedImportCalls();
 }
 
 MCWinCOFFObjectTargetWriter::MCWinCOFFObjectTargetWriter(unsigned Machine_)

@@ -1023,6 +1023,8 @@ void MCStreamer::emitCOFFSecRel32(MCSymbol const *Symbol, uint64_t Offset) {}
 
 void MCStreamer::emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset) {}
 
+void MCStreamer::emitCOFFImpCall(MCSymbol const *Symbol) {}
+
 /// EmitRawText - If this file is backed by an assembly streamer, this dumps
 /// the specified string in the output .s file.  This capability is
 /// indicated by the hasRawTextSupport() predicate.

@@ -209,6 +209,7 @@ public:
   void emitCOFFSectionIndex(MCSymbol const *Symbol) override;
   void emitCOFFSecRel32(MCSymbol const *Symbol, uint64_t Offset) override;
   void emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset) override;
+  void emitCOFFImpCall(MCSymbol const *Symbol) override;
   void emitXCOFFLocalCommonSymbol(MCSymbol *LabelSym, uint64_t Size,
                                   MCSymbol *CsectSym, Align Alignment) override;
   void emitXCOFFSymbolLinkageWithVisibility(MCSymbol *Symbol,
@@ -890,6 +891,14 @@ void MCAsmStreamer::emitCOFFImgRel32(MCSymbol const *Symbol, int64_t Offset) {
     OS << '+' << Offset;
   else if (Offset < 0)
     OS << '-' << -Offset;
+  EmitEOL();
+}
+
+void MCAsmStreamer::emitCOFFImpCall(MCSymbol const *Symbol) {
+  assert(this->getContext().getObjectFileInfo()->getImportCallSection() &&
+         "This target does not have a import call section");
+  OS << "\t.impcall\t";
+  Symbol->print(OS, MAI);
   EmitEOL();
 }
 
