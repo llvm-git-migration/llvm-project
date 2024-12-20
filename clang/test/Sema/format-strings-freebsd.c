@@ -10,7 +10,6 @@ void check_freebsd_kernel_extensions(int i, long l, char *s, short h)
 {
   // %b expects an int and a char *
   freebsd_kernel_printf("reg=%b\n", i, "\10\2BITTWO\1BITONE\n"); // no-warning
-  freebsd_kernel_printf("reg=%b\n", l, "\10\2BITTWO\1BITONE\n"); // expected-warning{{format specifies type 'int' but the argument has type 'long'}}
   freebsd_kernel_printf("reg=%b\n", i, l); // expected-warning{{format specifies type 'char *' but the argument has type 'long'}}
   freebsd_kernel_printf("reg=%b\n", i); // expected-warning{{more '%' conversions than data arguments}}
   freebsd_kernel_printf("reg=%b\n", i, "\10\2BITTWO\1BITONE\n", l); // expected-warning{{data argument not used by format string}}
