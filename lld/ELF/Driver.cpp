@@ -1507,6 +1507,9 @@ static void readConfigs(Ctx &ctx, opt::InputArgList &args) {
   setUnresolvedSymbolPolicy(ctx, args);
   ctx.arg.power10Stubs = args.getLastArgValue(OPT_power10_stubs_eq) != "no";
 
+  if (ctx.arg.osabi == ELFOSABI_OPENBSD)
+    ctx.arg.zNoBtCfi = hasZOption(args, "nobtcfi");
+
   if (opt::Arg *arg = args.getLastArg(OPT_eb, OPT_el)) {
     if (arg->getOption().matches(OPT_eb))
       ctx.arg.optEB = true;
@@ -1897,9 +1900,6 @@ static void setConfigs(Ctx &ctx, opt::InputArgList &args) {
       ErrAlways(ctx) << "cannot open --why-extract= file " << ctx.arg.whyExtract
                      << ": " << e.message();
   }
-
-  if (ctx.arg.osabi == ELFOSABI_OPENBSD)
-    ctx.arg.zNoBtCfi = hasZOption(args, "nobtcfi");
 }
 
 static bool isFormatBinary(Ctx &ctx, StringRef s) {
