@@ -587,10 +587,30 @@ public:
   bool onlyAccessesInaccessibleMemory() const;
   void setOnlyAccessesInaccessibleMemory();
 
+  /// Determine if the function may only access errno memory.
+  bool onlyAccessesErrnoMemory() const;
+  void setOnlyAccessesErrnoMemory();
+
   /// Determine if the function may only access memory that is
   ///  either inaccessible from the IR or pointed to by its arguments.
   bool onlyAccessesInaccessibleMemOrArgMem() const;
   void setOnlyAccessesInaccessibleMemOrArgMem();
+
+  /// Determine if the function may only access memory that is
+  ///  either pointed to by its arguments or errno memory.
+  bool onlyAccessesArgMemOrErrnoMem() const;
+  void setOnlyAccessesArgMemOrErrnoMem();
+
+  /// Determine if the function may only access memory that is
+  ///  either inaccessible from the IR or errno memory.
+  bool onlyAccessesInaccessibleMemOrErrnoMem() const;
+  void setOnlyAccessesInaccessibleMemOrErrnoMem();
+
+  /// Determine if the function may only access memory that is
+  ///  either inaccessible from the IR, pointed to by its arguments, or errno
+  ///  memory.
+  bool onlyAccessesInaccessibleMemOrArgMemOrErrnoMem() const;
+  void setOnlyAccessesInaccessibleMemOrArgMemOrErrnoMem();
 
   /// Determine if the function cannot return.
   bool doesNotReturn() const {
