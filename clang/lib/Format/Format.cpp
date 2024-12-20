@@ -3247,7 +3247,14 @@ tooling::Replacements sortCppIncludes(const FormatStyle &Style, StringRef Code,
   std::string RawStringTermination = ")\"";
 
   for (;;) {
-    auto Pos = Code.find('\n', SearchFrom);
+    size_t Pos = SearchFrom;
+    if (Code[SearchFrom] != '\n') {
+      do { // Search for the first newline while skipping line splices.
+        ++Pos;
+        Pos = Code.find('\n', Pos);
+      } while (Pos != StringRef::npos && Code[Pos - 1] == '\\');
+    }
+
     StringRef Line =
         Code.substr(Prev, (Pos != StringRef::npos ? Pos : Code.size()) - Prev);
 
