@@ -1884,7 +1884,10 @@ bool AtomicExpandImpl::expandAtomicOpToLibcall(
   IRBuilder<> Builder(I);
   IRBuilder<> AllocaBuilder(&I->getFunction()->getEntryBlock().front());
 
-  bool UseSizedLibcall = canUseSizedAtomicCall(Size, Alignment, DL);
+  const bool IsAtomic =
+      isa<LoadInst>(I) ? cast<LoadInst>(I)->isAtomic() : false;
+  const bool UseSizedLibcall = !(I->getType()->isVectorTy() && IsAtomic) &&
+                               canUseSizedAtomicCall(Size, Alignment, DL);
   Type *SizedIntTy = Type::getIntNTy(Ctx, Size * 8);
 
   const Align AllocaAlignment = DL.getPrefTypeAlign(SizedIntTy);
