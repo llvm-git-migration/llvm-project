@@ -1479,24 +1479,25 @@ static VPRecipeBase *createEVLRecipe(VPValue *HeaderMask,
         VPValue *NewMask = GetNewMask(Red->getCondOp());
         return new VPReductionEVLRecipe(*Red, EVL, NewMask);
       })
-      .Case<VPWidenIntrinsicRecipe, VPWidenCastRecipe>([&](auto *CInst)
-                                                           -> VPRecipeBase * {
-        Intrinsic::ID VPID;
-        if (auto *CallInst = dyn_cast<VPWidenIntrinsicRecipe>(CInst))
-          VPID = VPIntrinsic::getForIntrinsic(CallInst->getVectorIntrinsicID());
-        else if (auto *CastInst = dyn_cast<VPWidenCastRecipe>(CInst))
-          VPID = VPIntrinsic::getForOpcode(CastInst->getOpcode());
-        assert(VPID != Intrinsic::not_intrinsic && "Expected VP intrinsic");
-        assert(VPIntrinsic::getMaskParamPos(VPID) &&
-               VPIntrinsic::getVectorLengthParamPos(VPID) &&
-               "Expected VP intrinsic");
+      .Case<VPWidenIntrinsicRecipe, VPWidenCastRecipe>(
+          [&](auto *CR) -> VPRecipeBase * {
+            Intrinsic::ID VPID;
+            if (auto *CallR = dyn_cast<VPWidenIntrinsicRecipe>(CR))
+              VPID =
+                  VPIntrinsic::getForIntrinsic(CallR->getVectorIntrinsicID());
+            else if (auto *CastR = dyn_cast<VPWidenCastRecipe>(CR))
+              VPID = VPIntrinsic::getForOpcode(CastR->getOpcode());
+            assert(VPID != Intrinsic::not_intrinsic && "Expected VP intrinsic");
+            assert(VPIntrinsic::getMaskParamPos(VPID) &&
+                   VPIntrinsic::getVectorLengthParamPos(VPID) &&
+                   "Expected VP intrinsic");
 
-        SmallVector<VPValue *> Ops(CInst->operands());
-        Ops.push_back(&AllOneMask);
-        Ops.push_back(&EVL);
-        return new VPWidenIntrinsicRecipe(
-            VPID, Ops, TypeInfo.inferScalarType(CInst), CInst->getDebugLoc());
-      })
+            SmallVector<VPValue *> Ops(CR->operands());
+            Ops.push_back(&AllOneMask);
+            Ops.push_back(&EVL);
+            return new VPWidenIntrinsicRecipe(
+                VPID, Ops, TypeInfo.inferScalarType(CR), CR->getDebugLoc());
+          })
       .Case<VPWidenSelectRecipe>([&](VPWidenSelectRecipe *Sel) {
         SmallVector<VPValue *> Ops(Sel->operands());
         Ops.push_back(&EVL);
