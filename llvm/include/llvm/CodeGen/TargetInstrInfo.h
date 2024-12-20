@@ -2305,6 +2305,14 @@ public:
     return false;
   }
 
+  virtual const TargetRegisterClass *
+  getVectorRegisterClassForSpill2Reg(const TargetRegisterInfo *TRI,
+                                     Register SpilledReg) const {
+    llvm_unreachable(
+        "Target didn't implement "
+        "TargetInstrInfo::createVirtualVectorRegisterForSpillToReg!");
+  }
+
 private:
   mutable std::unique_ptr<MIRFormatter> Formatter;
   unsigned CallFrameSetupOpcode, CallFrameDestroyOpcode;
