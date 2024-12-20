@@ -2313,6 +2313,34 @@ public:
         "TargetInstrInfo::createVirtualVectorRegisterForSpillToReg!");
   }
 
+  /// \Returns true if it is profitable to perform spill2reg on \p MI.
+  virtual bool isSpill2RegProfitable(const MachineInstr *MI,
+                                     const TargetRegisterInfo *TRI,
+                                     const MachineRegisterInfo *MRI) const {
+    llvm_unreachable(
+        "Target didn't implement TargetInstrInfo::isSpill2RegProfitable!");
+  }
+
+  /// Inserts \p SrcReg into the first lane of \p DstReg.
+  virtual MachineInstr *
+  spill2RegInsertToVectorReg(Register DstReg, Register SrcReg,
+                             int OperationBits, MachineBasicBlock *MBB,
+                             MachineBasicBlock::iterator InsertBeforeIt,
+                             const TargetRegisterInfo *TRI) const {
+    llvm_unreachable(
+        "Target didn't implement TargetInstrInfo::spill2RegInsertToVectorReg!");
+  }
+
+  /// Extracts the first lane of \p SrcReg into \p DstReg.
+  virtual MachineInstr *
+  spill2RegExtractFromVectorReg(Register DstReg, Register SrcReg,
+                                int OperationBits, MachineBasicBlock *InsertMBB,
+                                MachineBasicBlock::iterator InsertBeforeIt,
+                                const TargetRegisterInfo *TRI) const {
+    llvm_unreachable("Target didn't implement "
+                     "TargetInstrInfo::spill2RegExtractFromVectorReg!");
+  }
+
 private:
   mutable std::unique_ptr<MIRFormatter> Formatter;
   unsigned CallFrameSetupOpcode, CallFrameDestroyOpcode;
