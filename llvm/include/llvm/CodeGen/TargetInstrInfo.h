@@ -2307,6 +2307,7 @@ public:
 
   virtual const TargetRegisterClass *
   getVectorRegisterClassForSpill2Reg(const TargetRegisterInfo *TRI,
+                                     const TargetSubtargetInfo *STI,
                                      Register SpilledReg) const {
     llvm_unreachable(
         "Target didn't implement "
@@ -2322,21 +2323,19 @@ public:
   }
 
   /// Inserts \p SrcReg into the first lane of \p DstReg.
-  virtual MachineInstr *
-  spill2RegInsertToVectorReg(Register DstReg, Register SrcReg,
-                             int OperationBits, MachineBasicBlock *MBB,
-                             MachineBasicBlock::iterator InsertBeforeIt,
-                             const TargetRegisterInfo *TRI) const {
+  virtual MachineInstr *spill2RegInsertToVectorReg(
+      Register DstReg, Register SrcReg, int OperationBits,
+      MachineBasicBlock *MBB, MachineBasicBlock::iterator InsertBeforeIt,
+      const TargetRegisterInfo *TRI, const TargetSubtargetInfo *STI) const {
     llvm_unreachable(
         "Target didn't implement TargetInstrInfo::spill2RegInsertToVectorReg!");
   }
 
   /// Extracts the first lane of \p SrcReg into \p DstReg.
-  virtual MachineInstr *
-  spill2RegExtractFromVectorReg(Register DstReg, Register SrcReg,
-                                int OperationBits, MachineBasicBlock *InsertMBB,
-                                MachineBasicBlock::iterator InsertBeforeIt,
-                                const TargetRegisterInfo *TRI) const {
+  virtual MachineInstr *spill2RegExtractFromVectorReg(
+      Register DstReg, Register SrcReg, int OperationBits,
+      MachineBasicBlock *InsertMBB, MachineBasicBlock::iterator InsertBeforeIt,
+      const TargetRegisterInfo *TRI, const TargetSubtargetInfo *STI) const {
     llvm_unreachable("Target didn't implement "
                      "TargetInstrInfo::spill2RegExtractFromVectorReg!");
   }
