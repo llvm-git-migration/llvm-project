@@ -5809,9 +5809,10 @@ PreservedAnalyses OpenMPOptPass::run(Module &M, ModuleAnalysisManager &AM) {
   AC.OREGetter = OREGetter;
   AC.PassName = DEBUG_TYPE;
   AC.InitializationCallback = OpenMPOpt::registerAAsForFunction;
-  AC.IPOAmendableCB = [](const Function &F) {
+  auto IPOAmendableCB = [](const Function &F) {
     return F.hasFnAttribute("kernel");
   };
+  AC.IPOAmendableCB = IPOAmendableCB;
 
   Attributor A(Functions, InfoCache, AC);
 

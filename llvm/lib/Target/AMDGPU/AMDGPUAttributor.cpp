@@ -1352,9 +1352,10 @@ static bool runImpl(Module &M, AnalysisGetter &AG, TargetMachine &TM,
         return !AMDGPU::isEntryFunctionCC(Callee.getCallingConv()) &&
                (NumAssumedCallees <= IndirectCallSpecializationThreshold);
       };
-  AC.IPOAmendableCB = [](const Function &F) {
+  auto IPOAmendableCB = [](const Function &F) {
     return F.getCallingConv() == CallingConv::AMDGPU_KERNEL;
   };
+  AC.IPOAmendableCB = IPOAmendableCB;
 
   Attributor A(Functions, InfoCache, AC);
 
