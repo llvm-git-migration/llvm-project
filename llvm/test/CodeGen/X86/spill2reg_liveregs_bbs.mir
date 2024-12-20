@@ -32,11 +32,13 @@ machineFunctionInfo: {}
 body:             |
   ; CHECK-LABEL: name: func
   ; CHECK: bb.0:
+  ; CHECK-NEXT:   liveins: $xmm1
+  ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT:   $eax = MOV32rm $rip, 1, $noreg, @D0, $noreg :: (dereferenceable load (s32) from @D0)
   ; CHECK-NEXT:   $xmm0 = MOVDI2PDIrr $eax
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT: bb.1:
-  ; CHECK-NEXT:   liveins: $xmm0
+  ; CHECK-NEXT:   liveins: $xmm0, $xmm1
   ; CHECK-NEXT: {{  $}}
   ; CHECK-NEXT:   $eax = MOV32rm $rip, 1, $noreg, @D1, $noreg :: (dereferenceable load (s32) from @D1)
   ; CHECK-NEXT:   $xmm1 = MOVDI2PDIrr $eax
