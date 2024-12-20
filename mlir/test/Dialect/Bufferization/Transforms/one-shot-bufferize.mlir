@@ -269,3 +269,9 @@ func.func @materialize_in_dest_raw(%f: f32, %f2: f32, %idx: index) -> (tensor<5x
 
   return %0, %r : tensor<5xf32>, f32
 }
+
+// -----
+// CHECK-LABEL: @llvm_return
+func.func @llvm_return() {
+   llvm.return
+}
