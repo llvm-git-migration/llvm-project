@@ -1246,6 +1246,13 @@ public:
   virtual bool targetSupportsSpill2Reg(const TargetSubtargetInfo *STI) const {
     return false;
   }
+
+  virtual const TargetRegisterClass *
+  getCandidateRegisterClassForSpill2Reg(const TargetRegisterInfo *TRI,
+                                        Register SpilledReg) const {
+    llvm_unreachable("Target didn't implement "
+                     "TargetInstrInfo::getCandidateRegisterClassForSpill2Reg!");
+  }
 };
 
 //===----------------------------------------------------------------------===//
