@@ -744,6 +744,10 @@ private:
                              const TargetRegisterInfo *TRI,
                              const MachineRegisterInfo *MRI) const override;
 
+  std::optional<MCRegister>
+  getMovdCompatibleReg(MCRegister OldReg, uint32_t OldRegBits,
+                       const TargetRegisterInfo *TRI) const;
+
   MachineInstr *
   spill2RegInsertToVectorReg(Register DstReg, Register SrcReg,
                              int OperationBits, MachineBasicBlock *MBB,
