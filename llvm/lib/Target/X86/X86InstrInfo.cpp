@@ -10954,6 +10954,8 @@ bool X86InstrInfo::isLegalToSpill2Reg(Register Reg,
   switch (unsigned Bits = TRI->getRegSizeInBits(Reg, *MRI)) {
   case 64:
   case 32:
+  case 16:
+  case 8:
     return true;
   }
   return false;
@@ -11049,6 +11051,8 @@ bool X86InstrInfo::isSpill2RegProfitable(const MachineInstr *MI,
 
 static unsigned getInsertOrExtractOpcode(unsigned Bits, bool Insert) {
   switch (Bits) {
+  case 8:
+  case 16:
   case 32:
     return Insert ? X86::MOVDI2PDIrr : X86::MOVPDI2DIrr;
   case 64:
@@ -11056,6 +11060,36 @@ static unsigned getInsertOrExtractOpcode(unsigned Bits, bool Insert) {
   default:
     llvm_unreachable("Unsupported bits");
   }
+}
+
+/// \Returns the subreg index for a getting a subregister of \p SubregBits from
+/// a register of \p RegBits.
+static unsigned spill2RegGetSubregIdx(unsigned RegBits, unsigned SubregBits) {
+  assert(RegBits > SubregBits && "From expected to cover To");
+  switch (SubregBits) {
+  case 32:
+    return X86::sub_32bit;
+  case 16:
+    return X86::sub_16bit;
+  case 8:
+    return X86::sub_8bit;
+  default:
+    llvm_unreachable("FIXME");
+  }
+}
+
+std::optional<MCRegister>
+X86InstrInfo::getMovdCompatibleReg(MCRegister OldReg, uint32_t OldRegBits,
+                                   const TargetRegisterInfo *TRI) const {
+  if (OldRegBits != 8 && OldRegBits != 16)
+    return std::nullopt;
+  // The register class of the register that movd can handle.
+  const TargetRegisterClass *NewRegClass =
+      TRI->getRegClass(X86::GR32RegClassID);
+  unsigned NewRegBits = TRI->getRegSizeInBits(*NewRegClass);
+  unsigned SubIdx = spill2RegGetSubregIdx(NewRegBits, OldRegBits);
+  MCRegister NewReg = TRI->getMatchingSuperReg(OldReg, SubIdx, NewRegClass);
+  return NewReg;
 }
 
 MachineInstr *X86InstrInfo::spill2RegInsertToVectorReg(
@@ -11066,6 +11100,12 @@ MachineInstr *X86InstrInfo::spill2RegInsertToVectorReg(
   unsigned InsertOpcode =
       getInsertOrExtractOpcode(OperationBits, true /*insert*/);
   const MCInstrDesc &InsertMCID = get(InsertOpcode);
+  // `movd` does not support 8/16 bit operands. Instead, we use a 32-bit
+  // register. For example:
+  //   $al = ...
+  //   $xmm0 = MOVPDI2DIrr $eax
+  if (auto NewReg = getMovdCompatibleReg(SrcReg, OperationBits, TRI))
+    SrcReg = *NewReg;
   MachineInstr *InsertMI =
       BuildMI(*MBB, InsertBeforeIt, DL, InsertMCID, DstReg).addReg(SrcReg);
   return InsertMI;
@@ -11079,6 +11119,12 @@ MachineInstr *X86InstrInfo::spill2RegExtractFromVectorReg(
   unsigned ExtractOpcode =
       getInsertOrExtractOpcode(OperationBits, false /*extract*/);
   const MCInstrDesc &ExtractMCID = get(ExtractOpcode);
+  // `movd` does not support 8/16 bit operands. Instead, we use a 32-bit
+  // register. For example:
+  //   $eax = MOVPDI2DIrr $xmm0
+  //   ... = $al
+  if (auto NewReg = getMovdCompatibleReg(DstReg, OperationBits, TRI))
+    DstReg = *NewReg;
   MachineInstr *ExtractMI =
       BuildMI(*InsertMBB, InsertBeforeIt, DL, ExtractMCID, DstReg)
           .addReg(SrcReg);
