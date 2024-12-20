@@ -98,9 +98,10 @@ private:
     /// \Returns the register class of the register being spilled.
     const TargetRegisterClass *
     getSpilledRegClass(const TargetInstrInfo *TII,
-                       const TargetRegisterInfo *TRI) const {
+                       const TargetRegisterInfo *TRI,
+                       const TargetSubtargetInfo *STI) const {
       auto Reg0 = Spills.front().MO->getReg();
-      return TRI->getCandidateRegisterClassForSpill2Reg(TRI, Reg0);
+      return TRI->getCandidateRegisterClassForSpill2Reg(TRI, STI, Reg0);
     }
 
 #ifndef NDEBUG
@@ -219,15 +220,6 @@ void Spill2Reg::collectSpillsAndReloads() {
         }
         unsigned SpillBits = TRI->getRegSizeInBits(MO->getReg(), *MRI);
         Entry.Spills.emplace_back(Spill, MO, SpillBits);
-
-        // If any of the reloads collected so far is in the same MBB then mark
-        // it as non live-in. This is used in `updateLiveIns()` where we update
-        // the liveins of MBBs to include the new vector register. Doing this
-        // now avoids an MBB walk in `updateLiveIns()` which should save
-        // compilation time.
-        for (auto &MID : Entry.Reloads)
-          if (MID.MI->getParent() == &MBB)
-            MID.IsLiveIn = false;
       } else if (const MachineOperand *MO =
                      TII->isLoadFromStackSlotMO(MI, StackSlot)) {
         MachineInstr *Reload = &MI;
@@ -351,7 +343,7 @@ void Spill2Reg::replaceStackWithReg(StackSlotDataEntry &Entry,
 
     TII->spill2RegInsertToS2RReg(
         VectorReg, OldReg, SpillData.SpillBits, StackSpill->getParent(),
-        /*InsertBeforeIt=*/StackSpill->getIterator(), TRI);
+        /*InsertBeforeIt=*/StackSpill->getIterator(), TRI, &MF->getSubtarget());
 
     // Mark VectorReg as live in the instr's BB.
     LRUs[StackSpill->getParent()].addReg(VectorReg);
@@ -368,7 +360,8 @@ void Spill2Reg::replaceStackWithReg(StackSlotDataEntry &Entry,
 
     TII->spill2RegExtractFromS2RReg(
         OldReg, VectorReg, ReloadData.SpillBits, StackReload->getParent(),
-        /*InsertBeforeIt=*/StackReload->getIterator(), TRI);
+        /*InsertBeforeIt=*/StackReload->getIterator(), TRI,
+        &MF->getSubtarget());
 
     // Mark VectorReg as live in the instr's BB.
     LRUs[StackReload->getParent()].addReg(VectorReg);
@@ -479,8 +472,8 @@ void Spill2Reg::generateCode() {
     calculateLiveRegs(Entry, LRU);
 
     // Look for a physical register that is not in LRU.
-    std::optional<MCRegister> PhysVectorRegOpt =
-        tryGetFreePhysicalReg(Entry.getSpilledRegClass(TII, TRI), LRU);
+    std::optional<MCRegister> PhysVectorRegOpt = tryGetFreePhysicalReg(
+        Entry.getSpilledRegClass(TII, TRI, &MF->getSubtarget()), LRU);
     if (!PhysVectorRegOpt)
       continue;
 
