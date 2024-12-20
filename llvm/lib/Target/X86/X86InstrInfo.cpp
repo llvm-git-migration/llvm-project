@@ -10949,5 +10949,13 @@ bool X86InstrInfo::targetSupportsSpill2Reg(
   return X86STI->hasSSE41();
 }
 
+const TargetRegisterClass *
+X86InstrInfo::getVectorRegisterClassForSpill2Reg(const TargetRegisterInfo *TRI,
+                                                 Register SpilledReg) const {
+  const TargetRegisterClass *VecRegClass =
+      TRI->getRegClass(X86::VR128RegClassID);
+  return VecRegClass;
+}
+
 #define GET_INSTRINFO_HELPERS
 #include "X86GenInstrInfo.inc"
