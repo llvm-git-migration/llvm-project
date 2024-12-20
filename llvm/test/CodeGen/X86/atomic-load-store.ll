@@ -399,17 +399,58 @@ define <2 x i32> @atomic_vec2_i32(ptr %x) nounwind {
   ret <2 x i32> %ret
 }
 
+define <2 x ptr> @atomic_vec2_ptr_align(ptr %x) nounwind {
+; CHECK3-LABEL: atomic_vec2_ptr_align:
+; CHECK3:       ## %bb.0:
+; CHECK3-NEXT:    subq $24, %rsp
+; CHECK3-NEXT:    movq %rdi, %rsi
+; CHECK3-NEXT:    movq %rsp, %rdx
+; CHECK3-NEXT:    movl $16, %edi
+; CHECK3-NEXT:    movl $2, %ecx
+; CHECK3-NEXT:    callq ___atomic_load
+; CHECK3-NEXT:    movaps (%rsp), %xmm0
+; CHECK3-NEXT:    addq $24, %rsp
+; CHECK3-NEXT:    retq
+;
+; CHECK0-LABEL: atomic_vec2_ptr_align:
+; CHECK0:       ## %bb.0:
+; CHECK0-NEXT:    subq $24, %rsp
+; CHECK0-NEXT:    movq %rdi, %rsi
+; CHECK0-NEXT:    movl $16, %edi
+; CHECK0-NEXT:    movq %rsp, %rdx
+; CHECK0-NEXT:    movl $2, %ecx
+; CHECK0-NEXT:    callq ___atomic_load
+; CHECK0-NEXT:    movdqa (%rsp), %xmm0
+; CHECK0-NEXT:    addq $24, %rsp
+; CHECK0-NEXT:    retq
+  %ret = load atomic <2 x ptr>, ptr %x acquire, align 16
+  ret <2 x ptr> %ret
+}
+
 define <4 x float> @atomic_vec4_float_align(ptr %x) nounwind {
-; CHECK-LABEL: atomic_vec4_float_align:
-; CHECK:       ## %bb.0:
-; CHECK-NEXT:    pushq %rax
-; CHECK-NEXT:    movl $2, %esi
-; CHECK-NEXT:    callq ___atomic_load_16
-; CHECK-NEXT:    movq %rdx, %xmm1
-; CHECK-NEXT:    movq %rax, %xmm0
-; CHECK-NEXT:    punpcklqdq {{.*#+}} xmm0 = xmm0[0],xmm1[0]
-; CHECK-NEXT:    popq %rax
-; CHECK-NEXT:    retq
+; CHECK3-LABEL: atomic_vec4_float_align:
+; CHECK3:       ## %bb.0:
+; CHECK3-NEXT:    subq $24, %rsp
+; CHECK3-NEXT:    movq %rdi, %rsi
+; CHECK3-NEXT:    movq %rsp, %rdx
+; CHECK3-NEXT:    movl $16, %edi
+; CHECK3-NEXT:    movl $2, %ecx
+; CHECK3-NEXT:    callq ___atomic_load
+; CHECK3-NEXT:    movaps (%rsp), %xmm0
+; CHECK3-NEXT:    addq $24, %rsp
+; CHECK3-NEXT:    retq
+;
+; CHECK0-LABEL: atomic_vec4_float_align:
+; CHECK0:       ## %bb.0:
+; CHECK0-NEXT:    subq $24, %rsp
+; CHECK0-NEXT:    movq %rdi, %rsi
+; CHECK0-NEXT:    movl $16, %edi
+; CHECK0-NEXT:    movq %rsp, %rdx
+; CHECK0-NEXT:    movl $2, %ecx
+; CHECK0-NEXT:    callq ___atomic_load
+; CHECK0-NEXT:    movaps (%rsp), %xmm0
+; CHECK0-NEXT:    addq $24, %rsp
+; CHECK0-NEXT:    retq
   %ret = load atomic <4 x float>, ptr %x acquire, align 16
   ret <4 x float> %ret
 }
