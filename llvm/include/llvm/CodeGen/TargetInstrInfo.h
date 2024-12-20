@@ -294,6 +294,11 @@ public:
     return isLoadFromStackSlot(MI, FrameIndex);
   }
 
+  virtual const MachineOperand *isLoadFromStackSlotMO(const MachineInstr &MI,
+                                                      int &FrameIndex) const {
+    llvm_unreachable("target did not implement");
+  }
+
   /// Check for post-frame ptr elimination stack locations as well.
   /// This uses a heuristic so it isn't reliable for correctness.
   virtual Register isLoadFromStackSlotPostFE(const MachineInstr &MI,
@@ -319,6 +324,11 @@ public:
   virtual Register isStoreToStackSlot(const MachineInstr &MI,
                                       int &FrameIndex) const {
     return 0;
+  }
+
+  virtual const MachineOperand *isStoreToStackSlotMO(const MachineInstr &MI,
+                                                     int &FrameIndex) const {
+    llvm_unreachable("target did not implement");
   }
 
   /// Optional extension of isStoreToStackSlot that returns the number of
@@ -2282,6 +2292,17 @@ public:
   virtual void getFrameIndexOperands(SmallVectorImpl<MachineOperand> &Ops,
                                      int FI) const {
     llvm_unreachable("unknown number of operands necessary");
+  }
+
+  /// \Returns true if a spill/reload of \p Reg can be handled by Spill2Reg.
+  virtual bool isLegalToSpill2Reg(Register Reg, const TargetRegisterInfo *TRI,
+                                  const MachineRegisterInfo *MRI) const {
+    llvm_unreachable(
+        "Target didn't implement TargetInstrInfo::isLegalToSpill2Reg!");
+  }
+
+  virtual bool targetSupportsSpill2Reg(const TargetSubtargetInfo *STI) const {
+    return false;
   }
 
 private:

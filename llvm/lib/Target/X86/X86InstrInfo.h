@@ -272,6 +272,13 @@ public:
   /// FIXME: This should become part of our instruction tables.
   static bool isDataInvariantLoad(MachineInstr &MI);
 
+  const MachineOperand *isLoadFromStackSlotMO(const MachineInstr &MI,
+                                              int &FrameIndex,
+                                              unsigned &MemBytes) const;
+
+  const MachineOperand *isLoadFromStackSlotMO(const MachineInstr &MI,
+                                              int &FrameIndex) const override;
+
   Register isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
   Register isLoadFromStackSlot(const MachineInstr &MI,
@@ -282,6 +289,13 @@ public:
   /// reliable for correctness.
   Register isLoadFromStackSlotPostFE(const MachineInstr &MI,
                                      int &FrameIndex) const override;
+
+  const MachineOperand *isStoreToStackSlotMO(const MachineInstr &MI,
+                                             int &FrameIndex,
+                                             unsigned &MemBytes) const;
+
+  const MachineOperand *isStoreToStackSlotMO(const MachineInstr &MI,
+                                             int &FrameIndex) const override;
 
   Register isStoreToStackSlot(const MachineInstr &MI,
                               int &FrameIndex) const override;
@@ -728,6 +742,11 @@ private:
   /// \returns the index of operand that is commuted with \p Idx1. If the method
   /// fails to commute the operands, it will return \p Idx1.
   unsigned commuteOperandsForFold(MachineInstr &MI, unsigned Idx1) const;
+
+  bool isLegalToSpill2Reg(Register Reg, const TargetRegisterInfo *TRI,
+                          const MachineRegisterInfo *MRI) const override;
+
+  bool targetSupportsSpill2Reg(const TargetSubtargetInfo *STI) const override;
 };
 } // namespace llvm
 
