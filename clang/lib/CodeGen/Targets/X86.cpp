@@ -1334,6 +1334,20 @@ class X86_64ABIInfo : public ABIInfo {
     return T.isOSLinux() || T.isOSNetBSD();
   }
 
+  bool returnCXXRecordGreaterThan128InMem(unsigned Size, unsigned TypeSize,
+                                          unsigned NativeSize) const {
+    // Clang <= 19.0 did not do this.
+    if (getContext().getLangOpts().getClangABICompat() <=
+        LangOptions::ClangABI::Ver19)
+      return false;
+
+    // The only case a 256(or 512)-bit wide vector could be used to return
+    // is when CXX record contains a single 256(or 512)-bit element.
+    if (Size > 128 && (Size != TypeSize || Size > NativeSize))
+      return true;
+    return false;
+  }
+
   X86AVXABILevel AVXLevel;
   // Some ABIs (e.g. X32 ABI and Native Client OS) use 32 bit pointers on
   // 64-bit hardware.
@@ -2067,6 +2081,10 @@ void X86_64ABIInfo::classify(QualType Ty, uint64_t OffsetBase, Class &Lo,
         classify(I.getType(), Offset, FieldLo, FieldHi, isNamedArg);
         Lo = merge(Lo, FieldLo);
         Hi = merge(Hi, FieldHi);
+        if (returnCXXRecordGreaterThan128InMem(
+                Size, getContext().getTypeSize(I.getType()),
+                getNativeVectorSizeForAVXABI(AVXLevel)))
+          Lo = Memory;
         if (Lo == Memory || Hi == Memory) {
           postMerge(Size, Lo, Hi);
           return;
