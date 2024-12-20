@@ -575,6 +575,10 @@ public:
   bool onlyAccessesInaccessibleMemory() const;
   void setOnlyAccessesInaccessibleMemory();
 
+  /// Determine if the function may only access errno memory.
+  bool onlyAccessesErrnoMemory() const;
+  void setOnlyAccessesErrnoMemory();
+
   /// Determine if the function may only access memory that is
   ///  either inaccessible from the IR or pointed to by its arguments.
   bool onlyAccessesInaccessibleMemOrArgMem() const;

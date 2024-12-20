@@ -201,11 +201,13 @@ enum Kind {
   kw_readwrite,
   kw_argmem,
   kw_inaccessiblemem,
+  kw_errnomem,
 
   // Legacy memory attributes:
   kw_argmemonly,
   kw_inaccessiblememonly,
   kw_inaccessiblemem_or_argmemonly,
+  kw_errnomemonly,
 
   // nofpclass attribute:
   kw_all,

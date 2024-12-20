@@ -922,6 +922,14 @@ void Function::setOnlyAccessesInaccessibleMemory() {
   setMemoryEffects(getMemoryEffects() & MemoryEffects::inaccessibleMemOnly());
 }
 
+/// Determine if the function may only access errno memory.
+bool Function::onlyAccessesErrnoMemory() const {
+  return getMemoryEffects().onlyAccessesErrnoMem();
+}
+void Function::setOnlyAccessesErrnoMemory() {
+  setMemoryEffects(getMemoryEffects() & MemoryEffects::errnoMemOnly());
+}
+
 /// Determine if the function may only access memory that is
 ///  either inaccessible from the IR or pointed to by its arguments.
 bool Function::onlyAccessesInaccessibleMemOrArgMem() const {

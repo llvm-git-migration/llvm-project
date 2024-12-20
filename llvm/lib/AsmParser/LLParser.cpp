@@ -1668,6 +1668,9 @@ static bool upgradeMemoryAttr(MemoryEffects &ME, lltok::Kind Kind) {
   case lltok::kw_inaccessiblememonly:
     ME &= MemoryEffects::inaccessibleMemOnly();
     return true;
+  case lltok::kw_errnomemonly:
+    ME &= MemoryEffects::errnoMemOnly();
+    return true;
   case lltok::kw_inaccessiblemem_or_argmemonly:
     ME &= MemoryEffects::inaccessibleOrArgMemOnly();
     return true;
@@ -2488,6 +2491,8 @@ static std::optional<MemoryEffects::Location> keywordToLoc(lltok::Kind Tok) {
     return IRMemLocation::ArgMem;
   case lltok::kw_inaccessiblemem:
     return IRMemLocation::InaccessibleMem;
+  case lltok::kw_errnomem:
+    return IRMemLocation::ErrnoMem;
   default:
     return std::nullopt;
   }
@@ -2536,7 +2541,7 @@ std::optional<MemoryEffects> LLParser::parseMemoryAttr() {
     std::optional<ModRefInfo> MR = keywordToModRef(Lex.getKind());
     if (!MR) {
       if (!Loc)
-        tokError("expected memory location (argmem, inaccessiblemem) "
+        tokError("expected memory location (argmem, inaccessiblemem, errnomem) "
                  "or access kind (none, read, write, readwrite)");
       else
         tokError("expected access kind (none, read, write, readwrite)");
