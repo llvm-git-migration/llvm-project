@@ -345,7 +345,7 @@ void Spill2Reg::replaceStackWithReg(StackSlotDataEntry &Entry,
 
     TII->spill2RegInsertToVectorReg(
         VectorReg, OldReg, SpillData.SpillBits, StackSpill->getParent(),
-        /*InsertBeforeIt=*/StackSpill->getIterator(), TRI);
+        /*InsertBeforeIt=*/StackSpill->getIterator(), TRI, &MF->getSubtarget());
 
     // Mark VectorReg as live in the instr's BB.
     LRUs[StackSpill->getParent()].addReg(VectorReg);
@@ -362,7 +362,8 @@ void Spill2Reg::replaceStackWithReg(StackSlotDataEntry &Entry,
 
     TII->spill2RegExtractFromVectorReg(
         OldReg, VectorReg, ReloadData.SpillBits, StackReload->getParent(),
-        /*InsertBeforeIt=*/StackReload->getIterator(), TRI);
+        /*InsertBeforeIt=*/StackReload->getIterator(), TRI,
+        &MF->getSubtarget());
 
     // Mark VectorReg as live in the instr's BB.
     LRUs[StackReload->getParent()].addReg(VectorReg);
@@ -473,7 +474,8 @@ void Spill2Reg::generateCode() {
 
     // Look for a physical register that in LRU.
     std::optional<MCRegister> PhysVectorRegOpt = tryGetFreePhysicalReg(
-        TII->getVectorRegisterClassForSpill2Reg(TRI, Entry.getSpilledReg()),
+        TII->getVectorRegisterClassForSpill2Reg(TRI, &MF->getSubtarget(),
+                                                Entry.getSpilledReg()),
         LRU);
     if (!PhysVectorRegOpt)
       continue;

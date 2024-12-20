@@ -94,6 +94,10 @@ static cl::opt<int> Spill2RegExplorationDst(
     cl::desc("When checking for profitability, explore nearby instructions "
              "at this maximum distance."));
 
+static cl::opt<bool> Spill2RegNoAVX(
+    "spill2reg-no-avx", cl::Hidden, cl::init(false),
+    cl::desc("Don't use AVX instructions even if the targets supports them."));
+
 // Pin the vtable to this file.
 void X86InstrInfo::anchor() {}
 
@@ -10967,11 +10971,18 @@ bool X86InstrInfo::targetSupportsSpill2Reg(
   return X86STI->hasSSE41();
 }
 
+static inline bool useAVX(const TargetSubtargetInfo *STI) {
+  const X86Subtarget *X86STI = static_cast<const X86Subtarget *>(STI);
+  bool UseAVX = X86STI->hasAVX() && !Spill2RegNoAVX;
+  return UseAVX;
+}
+
 const TargetRegisterClass *
 X86InstrInfo::getVectorRegisterClassForSpill2Reg(const TargetRegisterInfo *TRI,
+                                                 const TargetSubtargetInfo *STI,
                                                  Register SpilledReg) const {
-  const TargetRegisterClass *VecRegClass =
-      TRI->getRegClass(X86::VR128RegClassID);
+  const TargetRegisterClass *VecRegClass = TRI->getRegClass(
+      useAVX(STI) ? X86::VR128XRegClassID : X86::VR128RegClassID);
   return VecRegClass;
 }
 
@@ -11049,14 +11060,22 @@ bool X86InstrInfo::isSpill2RegProfitable(const MachineInstr *MI,
   return MemHeuristic && VecHeuristic;
 }
 
-static unsigned getInsertOrExtractOpcode(unsigned Bits, bool Insert) {
+static unsigned getInsertOrExtractOpcode(unsigned Bits, bool Insert,
+                                         const TargetSubtargetInfo *STI) {
+  bool UseAVX = useAVX(STI);
   switch (Bits) {
   case 8:
   case 16:
   case 32:
-    return Insert ? X86::MOVDI2PDIrr : X86::MOVPDI2DIrr;
+    if (UseAVX)
+      return Insert ? X86::VMOVDI2PDIZrr : X86::VMOVPDI2DIZrr;
+    else
+      return Insert ? X86::MOVDI2PDIrr : X86::MOVPDI2DIrr;
   case 64:
-    return Insert ? X86::MOV64toPQIrr : X86::MOVPQIto64rr;
+    if (UseAVX)
+      return Insert ? X86::VMOV64toPQIZrr : X86::VMOVPQIto64Zrr;
+    else
+      return Insert ? X86::MOV64toPQIrr : X86::MOVPQIto64rr;
   default:
     llvm_unreachable("Unsupported bits");
   }
@@ -11094,11 +11113,11 @@ X86InstrInfo::getMovdCompatibleReg(MCRegister OldReg, uint32_t OldRegBits,
 
 MachineInstr *X86InstrInfo::spill2RegInsertToVectorReg(
     Register DstReg, Register SrcReg, int OperationBits, MachineBasicBlock *MBB,
-    MachineBasicBlock::iterator InsertBeforeIt,
-    const TargetRegisterInfo *TRI) const {
+    MachineBasicBlock::iterator InsertBeforeIt, const TargetRegisterInfo *TRI,
+    const TargetSubtargetInfo *STI) const {
   DebugLoc DL;
   unsigned InsertOpcode =
-      getInsertOrExtractOpcode(OperationBits, true /*insert*/);
+      getInsertOrExtractOpcode(OperationBits, true /*insert*/, STI);
   const MCInstrDesc &InsertMCID = get(InsertOpcode);
   // `movd` does not support 8/16 bit operands. Instead, we use a 32-bit
   // register. For example:
@@ -11114,10 +11133,10 @@ MachineInstr *X86InstrInfo::spill2RegInsertToVectorReg(
 MachineInstr *X86InstrInfo::spill2RegExtractFromVectorReg(
     Register DstReg, Register SrcReg, int OperationBits,
     MachineBasicBlock *InsertMBB, MachineBasicBlock::iterator InsertBeforeIt,
-    const TargetRegisterInfo *TRI) const {
+    const TargetRegisterInfo *TRI, const TargetSubtargetInfo *STI) const {
   DebugLoc DL;
   unsigned ExtractOpcode =
-      getInsertOrExtractOpcode(OperationBits, false /*extract*/);
+      getInsertOrExtractOpcode(OperationBits, false /*extract*/, STI);
   const MCInstrDesc &ExtractMCID = get(ExtractOpcode);
   // `movd` does not support 8/16 bit operands. Instead, we use a 32-bit
   // register. For example:
