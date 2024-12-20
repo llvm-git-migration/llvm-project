@@ -73,3 +73,15 @@ func.func @outline_empty_if_else(%cond: i1, %a: index, %b: memref<?xf32>, %c: i8
   }
   return
 }
+
+// -----
+
+// This test checks scf utils can work on llvm func.
+// CHECK-LABEL: @llvm_func
+llvm.func @llvm_func(%cond: i1, %a: i32) {
+  scf.if %cond {
+  } else {
+    "some_op"(%cond, %a) : (i1, i32) -> ()
+  }
+  llvm.return
+}
