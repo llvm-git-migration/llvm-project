@@ -128,6 +128,17 @@ static void addLocAccess(MemoryEffects &ME, const MemoryLocation &Loc,
     ME |= MemoryEffects::argMemOnly(MR);
     return;
   }
+  if (isa<CallInst>(UO)) {
+    static constexpr auto ErrnoFnNames = {"__errno_location", "_errno",
+                                          "__errno", "___errno" };
+    auto *Callee = cast<CallInst>(UO)->getCalledFunction();
+    if (Callee && llvm::any_of(ErrnoFnNames, [&](const auto Fn) {
+          return Fn == Callee->getName();
+        })) {
+      ME |= MemoryEffects::errnoMemOnly(MR);
+      return;
+    }
+  }
 
   // If it's not an identified object, it might be an argument.
   if (!isIdentifiedObject(UO))
@@ -210,6 +221,9 @@ checkFunctionMemoryAccess(Function &F, bool ThisBody, AAResults &AAR,
       if (isa<PseudoProbeInst>(I))
         continue;
 
+      // Merge callee's memory effects into caller's ones, including
+      // inaccessible and errno memory, but excluding argument memory, which is
+      // handled separately.
       ME |= CallME.getWithoutLoc(IRMemLocation::ArgMem);
 
       // If the call accesses captured memory (currently part of "other") and
