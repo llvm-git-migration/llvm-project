@@ -10,7 +10,9 @@
 #define MLIR_DIALECT_BUFFERIZATION_TRANSFORMS_TRANSFORMS_H
 
 #include "mlir/Dialect/Bufferization/Transforms/OneShotAnalysis.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/Interfaces/SubsetOpInterface.h"
 
 namespace mlir {
 namespace bufferization {
@@ -34,13 +36,39 @@ struct OneShotBufferizationOptions;
 /// "tensor.empty" op.
 LogicalResult eliminateEmptyTensors(RewriterBase &rewriter, Operation *op);
 
+/// Find a valid insertion point for a replacement of `emptyTensorOp`'s
+/// use of `user` operation, assuming that the replacement may use any
+/// value from `neededValues`.
+Operation *findValidInsertionPoint(Operation *emptyTensorOp, Operation *user,
+                                   const SmallVector<Value> &neededValues);
+
+/// A function type that defines a callBack to control the build of the
+/// subsets extraction of the `SubsetInsertionOpInterface`.
+/// The subsets extraction value will replace the `emptyTensorOp` value
+/// which is being consumed by `user`, failing of building such a value
+/// should be indicated with an empty value.
+/// This function should guarantee the legality of the replacement.
+using ControlBuildSubsetExtractionFn =
+    std::function<Value(RewriterBase &, SubsetInsertionOpInterface,
+                        tensor::EmptyOp emptyTensorOp, Operation *user)>;
+
+/// This method Builds and returns a subset extraction value for the
+/// destination tensor that the given `op` inserts into.
+/// It returns a value which should replace the `emptyTensorOp` use
+/// that is being consumed by `user`, If no such a value found it
+/// will return an empty Value.
+Value buildSubsetExtraction(RewriterBase &rewriter,
+                            SubsetInsertionOpInterface op,
+                            tensor::EmptyOp emptyTensorOp, Operation *user);
+
 /// Try to eliminate "tensor.empty" ops inside `op`.
 ///
 /// This function overload accepts an existing `OneShotAnalysisState`, which
 /// contains in-place bufferization decisions. This overload is useful if an
 /// existing analysis should be reused for empty tensor elimination.
-LogicalResult eliminateEmptyTensors(RewriterBase &rewriter, Operation *op,
-                                    OneShotAnalysisState &state);
+LogicalResult eliminateEmptyTensors(
+    RewriterBase &rewriter, Operation *op, OneShotAnalysisState &state,
+    ControlBuildSubsetExtractionFn subsetsExtractionFn = buildSubsetExtraction);
 
 /// Within the given operation, hoist buffers from loops where possible. See
 /// "BufferLoopHoistingPass" for more information.
