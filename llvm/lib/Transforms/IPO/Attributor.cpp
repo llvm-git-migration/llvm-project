@@ -3412,6 +3412,9 @@ void Attributor::identifyDefaultAbstractAttributes(Function &F) {
     // Every function can track active assumptions.
     getOrCreateAAFor<AAAssumptionInfo>(FPos);
 
+    // Every function can have out arguments.
+    getOrCreateAAFor<AAConvertOutArgument>(FPos);
+
     // If we're not using a dynamic mode for float, there's nothing worthwhile
     // to infer. This misses the edge case denormal-fp-math="dynamic" and
     // denormal-fp-math-f32=something, but that likely has no real world use.
