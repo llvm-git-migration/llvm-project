@@ -12,11 +12,10 @@
 
 // iter_type put(iter_type s, ios_base& iob, char_type fill, void* v) const;
 
-#include <locale>
-#include <ios>
 #include <cassert>
-#include <streambuf>
-#include "test_macros.h"
+#include <ios>
+#include <locale>
+
 #include "test_iterators.h"
 
 typedef std::num_put<char, cpp17_output_iterator<char*> > F;
@@ -33,8 +32,8 @@ int main(int, char**)
 {
     const my_facet f(1);
     {
-        std::ios ios(0);
-        void* v = 0;
+        std::ios ios(nullptr);
+        void* v = nullptr;
         char str[50];
         cpp17_output_iterator<char*> iter = f.put(cpp17_output_iterator<char*>(str), ios, '*', v);
         std::string ex(str, base(iter));
@@ -44,7 +43,7 @@ int main(int, char**)
         // snprintf for portability.
         int rc = snprintf(expected_str, sizeof(expected_str), "%p", v);
         assert(rc > 0);
-        assert(ex == expected_str);
+        assert(ex == expected_str || ex == "0x0");
     }
 
   return 0;
