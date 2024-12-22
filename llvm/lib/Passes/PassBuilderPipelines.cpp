@@ -1305,7 +1305,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
     FPM.addPass(LoopLoadEliminationPass());
   }
   // Cleanup after the loop optimization passes.
-  FPM.addPass(InstCombinePass());
+  FPM.addPass(
+      InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
 
   if (Level.getSpeedupLevel() > 1 && ExtraVectorizerPasses) {
     ExtraFunctionPassManager<ShouldRunExtraVectorPasses> ExtraPasses;

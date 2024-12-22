@@ -5524,7 +5524,7 @@ static bool combineInstructionsOverFunction(
                       << F.getName() << "\n");
 
     InstCombinerImpl IC(Worklist, Builder, F.hasMinSize(), AA, AC, TLI, TTI, DT,
-                        ORE, BFI, BPI, PSI, DL, RPOT);
+                        ORE, BFI, BPI, PSI, DL, RPOT, Opts.CleanupAssumptions);
     IC.MaxArraySizeForCombine = MaxArraySize;
     bool MadeChangeInThisIteration = IC.prepareWorklist(F);
     MadeChangeInThisIteration |= IC.run();
