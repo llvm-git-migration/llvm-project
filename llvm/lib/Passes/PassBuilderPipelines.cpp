@@ -1305,7 +1305,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
     FPM.addPass(LoopLoadEliminationPass());
   }
   // Cleanup after the loop optimization passes.
-  FPM.addPass(InstCombinePass());
+  FPM.addPass(
+      InstCombinePass(InstCombineOptions()));
 
   if (Level.getSpeedupLevel() > 1 && ExtraVectorizerPasses) {
     ExtraFunctionPassManager<ShouldRunExtraVectorPasses> ExtraPasses;
@@ -1317,7 +1318,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
     // dead (or speculatable) control flows or more combining opportunities.
     ExtraPasses.addPass(EarlyCSEPass());
     ExtraPasses.addPass(CorrelatedValuePropagationPass());
-    ExtraPasses.addPass(InstCombinePass());
+    ExtraPasses.addPass(
+        InstCombinePass(InstCombineOptions()));
     LoopPassManager LPM;
     LPM.addPass(LICMPass(PTO.LicmMssaOptCap, PTO.LicmMssaNoAccForPromotionCap,
                          /*AllowSpeculation=*/true));
@@ -1328,7 +1330,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
                                         /*UseBlockFrequencyInfo=*/true));
     ExtraPasses.addPass(
         SimplifyCFGPass(SimplifyCFGOptions().convertSwitchRangeToICmp(true)));
-    ExtraPasses.addPass(InstCombinePass());
+    ExtraPasses.addPass(
+        InstCombinePass(InstCombineOptions()));
     FPM.addPass(std::move(ExtraPasses));
   }
 
@@ -1351,7 +1354,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
 
   if (IsFullLTO) {
     FPM.addPass(SCCPPass());
-    FPM.addPass(InstCombinePass());
+    FPM.addPass(
+        InstCombinePass(InstCombineOptions()));
     FPM.addPass(BDCEPass());
   }
 
@@ -1366,7 +1370,8 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
   FPM.addPass(VectorCombinePass());
 
   if (!IsFullLTO) {
-    FPM.addPass(InstCombinePass());
+    FPM.addPass(
+        InstCombinePass(InstCombineOptions()));
     // Unroll small loops to hide loop backedge latency and saturate any
     // parallel execution resources of an out-of-order processor. We also then
     // need to clean up redundancies and loop invariant code.
@@ -1392,7 +1397,12 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
   }
 
   FPM.addPass(InferAlignmentPass());
-  FPM.addPass(InstCombinePass());
+  // Now that we've vectorized and unrolled loops, we may have more refined
+  // alignment information, try to re-derive it here.
+  FPM.addPass(AlignmentFromAssumptionsPass());
+
+  FPM.addPass(
+      InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
 
   // This is needed for two reasons:
   //   1. It works around problems that instcombine introduces, such as sinking
@@ -1405,9 +1415,6 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
                /*AllowSpeculation=*/true),
       /*UseMemorySSA=*/true, /*UseBlockFrequencyInfo=*/false));
 
-  // Now that we've vectorized and unrolled loops, we may have more refined
-  // alignment information, try to re-derive it here.
-  FPM.addPass(AlignmentFromAssumptionsPass());
 }
 
 ModulePassManager
