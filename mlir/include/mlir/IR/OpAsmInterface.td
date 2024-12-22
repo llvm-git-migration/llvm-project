@@ -110,6 +110,31 @@ def OpAsmOpInterface : OpInterface<"OpAsmOpInterface"> {
 }
 
 //===----------------------------------------------------------------------===//
+// OpAsmTypeInterface
+//===----------------------------------------------------------------------===//
+
+def OpAsmTypeInterface : TypeInterface<"OpAsmTypeInterface"> {
+  let description = [{
+    This interface provides hooks to interact with the AsmPrinter and AsmParser
+    classes.
+  }];
+  let cppNamespace = "::mlir";
+
+  let methods = [
+    InterfaceMethod<[{
+        Get a special name to use when printing value of this type.
+
+        For example, the default implementation of OpAsmOpInterface
+        will respect this method when printing the results of an operation
+        and/or block argument of it.
+      }],
+      "void", "getAsmName",
+      (ins "::mlir::OpAsmSetNameFn":$setNameFn), "", ";"
+    >,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // ResourceHandleParameter
 //===----------------------------------------------------------------------===//
 
