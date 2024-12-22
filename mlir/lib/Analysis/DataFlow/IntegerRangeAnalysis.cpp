@@ -45,9 +45,13 @@ void IntegerValueRangeLattice::onUpdate(DataFlowSolver *solver) const {
   std::optional<APInt> constant = getValue().getValue().getConstantValue();
   auto value = cast<Value>(anchor);
   auto *cv = solver->getOrCreateState<Lattice<ConstantValue>>(value);
-  if (!constant)
-    return solver->propagateIfChanged(
-        cv, cv->join(ConstantValue::getUnknownConstant()));
+  if (!constant) {
+    auto changed = cv->join(ConstantValue::getUnknownConstant());
+    if (changed == ChangeResult::Change) {
+      cv->onUpdate(solver);
+    }
+    return;
+  }
 
   Dialect *dialect;
   if (auto *parent = value.getDefiningOp())
@@ -56,8 +60,11 @@ void IntegerValueRangeLattice::onUpdate(DataFlowSolver *solver) const {
     dialect = value.getParentBlock()->getParentOp()->getDialect();
 
   Type type = getElementTypeOrSelf(value);
-  solver->propagateIfChanged(
-      cv, cv->join(ConstantValue(IntegerAttr::get(type, *constant), dialect)));
+  auto changed =
+      cv->join(ConstantValue(IntegerAttr::get(type, *constant), dialect));
+  if (changed == ChangeResult::Change) {
+    cv->onUpdate(solver);
+  }
 }
 
 LogicalResult IntegerRangeAnalysis::visitOperation(

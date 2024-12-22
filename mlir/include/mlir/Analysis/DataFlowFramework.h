@@ -394,12 +394,16 @@ public:
   template <typename StateT, typename AnchorT>
   StateT *getOrCreateState(AnchorT anchor);
 
-  /// Propagate an update to an analysis state if it changed by pushing
-  /// dependent work items to the back of the queue.
-  void propagateIfChanged(AnalysisState *state, ChangeResult changed);
-
   /// Get the configuration of the solver.
   const DataFlowConfig &getConfig() const { return config; }
+
+protected:
+  /// Propagate an update to an analysis state if it changed by pushing
+  /// dependent work items to the back of the queue.
+  /// This should only be used by DataFlowAnalysis instances.
+  /// When used outside of DataFlowAnalysis, the solver won't process
+  /// the work items
+  void propagateIfChanged(AnalysisState *state, ChangeResult changed);
 
 private:
   /// Configuration of the dataflow solver.
