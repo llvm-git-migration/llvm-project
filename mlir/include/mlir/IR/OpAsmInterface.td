@@ -50,10 +50,27 @@ def OpAsmOpInterface : OpInterface<"OpAsmOpInterface"> {
         ```mlir
           %first_result, %middle_results:2, %0 = "my.op" ...
         ```
+
+        The default implementation uses `OpAsmTypeInterface` to get the name for
+        each result from its type.
+
+        If not all of the result types have `OpAsmTypeInterface`, the default implementation
+        does nothing, as the packing behavior should be decided by the operation itself.
       }],
       "void", "getAsmResultNames",
       (ins "::mlir::OpAsmSetValueNameFn":$setNameFn),
-      "", "return;"
+      "", [{
+        bool hasOpAsmTypeInterface = llvm::all_of($_op->getResults(), [&](Value result) {
+          return ::mlir::isa<::mlir::OpAsmTypeInterface>(result.getType());
+        });
+        if (!hasOpAsmTypeInterface)
+          return;
+        for (auto result : $_op->getResults()) {
+          auto setResultNameFn = [&](StringRef name) { setNameFn(result, name); };
+          auto opAsmTypeInterface = ::mlir::cast<::mlir::OpAsmTypeInterface>(result.getType());
+          opAsmTypeInterface.getAsmName(setResultNameFn);
+        }
+      }]
     >,
     InterfaceMethod<[{
         Get a special name to use when printing the block arguments for a region
@@ -64,7 +81,16 @@ def OpAsmOpInterface : OpInterface<"OpAsmOpInterface"> {
         "::mlir::Region&":$region,
         "::mlir::OpAsmSetValueNameFn":$setNameFn
       ),
-      "", "return;"
+      "", [{
+        for (auto &block : region) {
+          for (auto arg : block.getArguments()) {
+            if (auto opAsmTypeInterface = ::mlir::dyn_cast<::mlir::OpAsmTypeInterface>(arg.getType())) {
+              auto setArgNameFn = [&](StringRef name) { setNameFn(arg, name); };
+              opAsmTypeInterface.getAsmName(setArgNameFn);
+            }
+          }
+        }
+      }]
     >,
     InterfaceMethod<[{
         Get the name to use for a given block inside a region attached to this
@@ -105,6 +131,31 @@ def OpAsmOpInterface : OpInterface<"OpAsmOpInterface"> {
       is ignored.
       }],
       "::llvm::StringRef", "getDefaultDialect", (ins), "", "return \"\";"
+    >,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// OpAsmTypeInterface
+//===----------------------------------------------------------------------===//
+
+def OpAsmTypeInterface : TypeInterface<"OpAsmTypeInterface"> {
+  let description = [{
+    This interface provides hooks to interact with the AsmPrinter and AsmParser
+    classes.
+  }];
+  let cppNamespace = "::mlir";
+
+  let methods = [
+    InterfaceMethod<[{
+        Get a special name to use when printing value of this type.
+
+        For example, the default implementation of OpAsmOpInterface
+        will respect this method when printing the results of an operation
+        and/or block argument of it.
+      }],
+      "void", "getAsmName",
+      (ins "::mlir::OpAsmSetNameFn":$setNameFn), "", ";"
     >,
   ];
 }

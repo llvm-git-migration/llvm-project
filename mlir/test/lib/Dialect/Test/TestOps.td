@@ -924,6 +924,30 @@ def CustomResultsNameOp
   let results = (outs Variadic<AnyInteger>:$r);
 }
 
+// This is used to test default implementation of OpAsmOpInterface::getAsmResultNames,
+// which uses OpAsmTypeInterface if available.
+def DefaultResultsNameOp
+ : TEST_Op<"default_result_name",
+           [OpAsmOpInterface]> {
+  let results = (outs AnyType:$r);
+}
+
+// This is used to test default implementation of OpAsmOpInterface::getAsmResultNames,
+// when there are multiple results, and not all of their type has OpAsmTypeInterface,
+// it should not set result name from OpAsmTypeInterface.
+def DefaultResultsNamePackingOp
+ : TEST_Op<"default_result_name_packing",
+           [OpAsmOpInterface]> {
+  let results = (outs AnyType:$r, AnyType:$s);
+}
+
+// This is used to test default implementation of OpAsmOpInterface::getAsmBlockArgumentNames,
+def DefaultBlockArgumentNameOp : TEST_Op<"default_block_argument_name",
+                                    [OpAsmOpInterface]> {
+  let regions = (region AnyRegion:$body);
+  let assemblyFormat = "regions attr-dict-with-keyword";
+}
+
 // This is used to test the OpAsmOpInterface::getDefaultDialect() feature:
 // operations nested in a region under this op will drop the "test." dialect
 // prefix.
