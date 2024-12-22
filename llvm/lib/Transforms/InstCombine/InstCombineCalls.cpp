@@ -3226,7 +3226,6 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
         MaybeSimplifyHint(OBU.Inputs[0]);
         MaybeSimplifyHint(OBU.Inputs[1]);
       }
-
       if (OBU.getTagName() == "align" && OBU.Inputs.size() == 2) {
         RetainedKnowledge RK = getKnowledgeFromBundle(
             *cast<AssumeInst>(II), II->bundle_op_info_begin()[Idx]);
@@ -3259,6 +3258,13 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
           for (const User *U : WorkList[I]->users())
             WorkList.insert(cast<Instruction>(U));
         }
+        auto *New = CallBase::removeOperandBundle(II, OBU.getTagID());
+        return New;
+      }
+
+      // Try to clean up some assumption that are not very useful after this
+      // point.
+      if (CleanupAssumptions && OBU.getTagName() == "align") {
         auto *New = CallBase::removeOperandBundle(II, OBU.getTagID());
         return New;
       }
