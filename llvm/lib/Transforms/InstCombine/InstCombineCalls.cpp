@@ -3228,7 +3228,6 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
         if (!RK || RK.AttrKind != Attribute::Alignment ||
             !isPowerOf2_64(RK.ArgValue))
           continue;
-
         auto *LI = dyn_cast<LoadInst>(OBU.Inputs[0]);
         if (!LI ||
             !isValidAssumeForContext(II, LI, &DT, /*AllowEphemerals=*/true))
