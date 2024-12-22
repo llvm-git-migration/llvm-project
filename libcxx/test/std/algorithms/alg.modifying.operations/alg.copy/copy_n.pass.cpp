@@ -16,11 +16,25 @@
 #include <cassert>
 #include <vector>
 
-#include "common.h"
 #include "test_macros.h"
 #include "test_iterators.h"
 #include "type_algorithms.h"
 #include "user_defined_integral.h"
+
+class PaddedBase {
+public:
+  TEST_CONSTEXPR PaddedBase(std::int16_t a, std::int8_t b) : a_(a), b_(b) {}
+
+  std::int16_t a_;
+  std::int8_t b_;
+};
+
+class Derived : public PaddedBase {
+public:
+  TEST_CONSTEXPR Derived(std::int16_t a, std::int8_t b, std::int8_t c) : PaddedBase(a, b), c_(c) {}
+
+  std::int8_t c_;
+};
 
 typedef UserDefinedIntegral<unsigned> UDI;
 
@@ -95,7 +109,7 @@ TEST_CONSTEXPR_CXX20 bool test() {
     assert(dst.a_ == 1);
     assert(dst.b_ == 2);
     assert(dst.c_ == 6);
-  } 
+  }
 
   { // Make sure that overlapping ranges can be copied
     int a[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
