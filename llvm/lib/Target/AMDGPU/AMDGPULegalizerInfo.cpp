@@ -26,9 +26,11 @@
 #include "llvm/ADT/ScopeExit.h"
 #include "llvm/CodeGen/GlobalISel/GenericMachineInstrs.h"
 #include "llvm/CodeGen/GlobalISel/LegalizerHelper.h"
+#include "llvm/CodeGen/GlobalISel/LegalizerInfo.h"
 #include "llvm/CodeGen/GlobalISel/MIPatternMatch.h"
 #include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
 #include "llvm/CodeGen/GlobalISel/Utils.h"
+#include "llvm/CodeGen/Register.h"
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/IntrinsicsAMDGPU.h"
@@ -73,7 +75,9 @@ static const LLT I1024 = LLT::integer(1024);
 static const LLT MaxScalar = LLT::integer(MaxRegisterSize);
 
 static const LLT V2I8 = LLT::fixed_vector(2, I8);
+
 static const LLT V2I16 = LLT::fixed_vector(2, I16);
+static const LLT V3I16 = LLT::fixed_vector(3, I16);
 static const LLT V4I16 = LLT::fixed_vector(4, I16);
 static const LLT V6I16 = LLT::fixed_vector(6, I16);
 static const LLT V8I16 = LLT::fixed_vector(8, I16);
@@ -1973,7 +1977,7 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
     .legalForCartesianProduct(AllS64Vectors, {F64})
     .clampNumElements(0, V16I32, V32I32)
     .clampNumElements(0, V2I64, V16I64)
-    .fewerElementsIf(isWideVec16(0), changeTo(0, V2I16))
+    .fewerElementsIf(isWideVec16(0), changeElementCountTo(0, V2I16))
     .moreElementsIf(
       isIllegalRegisterType(0),
       moreElementsToNextExistingRegClass(0));
@@ -2533,7 +2537,7 @@ bool AMDGPULegalizerInfo::legalizeFroundeven(MachineInstr &MI,
                                              MachineIRBuilder &B) const {
   Register Src = MI.getOperand(1).getReg();
   LLT Ty = MRI.getType(Src);
-  assert(Ty.isScalar() && Ty.getSizeInBits() == 64);
+  assert(Ty.isFloat() && Ty.getSizeInBits() == 64);
 
   APFloat C1Val(APFloat::IEEEdouble(), "0x1.0p+52");
   APFloat C2Val(APFloat::IEEEdouble(), "0x1.fffffffffffffp+51");
@@ -2732,13 +2736,13 @@ bool AMDGPULegalizerInfo::legalizeFPTOI(MachineInstr &MI,
   //
   auto Trunc = B.buildIntrinsicTrunc(SrcLT, Src, Flags);
   MachineInstrBuilder Sign;
-  if (Signed && SrcLT.isScalar(32)) {
+  if (Signed && SrcLT.isFloat(32)) {
     // However, a 32-bit floating point number has only 23 bits mantissa and
     // it's not enough to hold all the significant bits of `lof` if val is
     // negative. To avoid the loss of precision, We need to take the absolute
     // value after truncating and flip the result back based on the original
     // signedness.
-    Sign = B.buildAShr(I32, Src, B.buildConstant(I32, 31));
+    Sign = B.buildAShr(I32, B.buildBitcast(I32, Src), B.buildConstant(I32, 31));
     Trunc = B.buildFAbs(F32, Trunc, Flags);
   }
   MachineInstrBuilder K0, K1;
@@ -3697,7 +3701,7 @@ bool AMDGPULegalizerInfo::legalizeFExpUnsafe(MachineIRBuilder &B, Register Dst,
 
   auto Threshold = B.buildFConstant(Ty, -0x1.5d58a0p+6f);
   auto NeedsScaling =
-      B.buildFCmp(CmpInst::FCMP_OLT, LLT::scalar(1), X, Threshold, Flags);
+      B.buildFCmp(CmpInst::FCMP_OLT, LLT::integer(1), X, Threshold, Flags);
   auto ScaleOffset = B.buildFConstant(Ty, 0x1.0p+6f);
   auto ScaledX = B.buildFAdd(Ty, X, ScaleOffset, Flags);
   auto AdjustedX = B.buildSelect(Ty, NeedsScaling, ScaledX, X, Flags);
@@ -4537,7 +4541,7 @@ Register AMDGPULegalizerInfo::getKernargParameterPtr(MachineIRBuilder &B,
                       AMDGPUFunctionArgInfo::KERNARG_SEGMENT_PTR))
     llvm_unreachable("failed to find kernarg segment ptr");
 
-  auto COffset = B.buildConstant(LLT::scalar(64), Offset);
+  auto COffset = B.buildConstant(LLT::integer(64), Offset);
   // TODO: Should get nuw
   return B.buildPtrAdd(PtrTy, KernArgReg, COffset).getReg(0);
 }
@@ -5226,7 +5230,7 @@ bool AMDGPULegalizerInfo::legalizeFFREXP(MachineInstr &MI,
   uint16_t Flags = MI.getFlags();
 
   LLT Ty = MRI.getType(Res0);
-  LLT InstrExpTy = Ty.isScalar(16) ? I16 : I32;
+  LLT InstrExpTy = Ty.isFloat(16) ? I16 : I32;
 
   auto Mant = B.buildIntrinsic(Intrinsic::amdgcn_frexp_mant, {Ty})
                   .addUse(Val)
@@ -6492,9 +6496,9 @@ bool AMDGPULegalizerInfo::legalizeImageIntrinsic(
   LLT AddrTy =
       MRI->getType(MI.getOperand(ArgOffset + Intr->CoordStart).getReg());
   const bool IsG16 =
-      ST.hasG16() ? (BaseOpcode->Gradients && GradTy.isScalar(16)) : GradTy.isScalar(16);
-  const bool IsA16 = AddrTy.isScalar(16);
-  const bool IsD16 = !IsAtomicPacked16Bit && Ty.getScalarType().isScalar(16);
+      ST.hasG16() ? (BaseOpcode->Gradients && GradTy.isInteger(16)) : GradTy.isInteger(16);
+  const bool IsA16 = AddrTy.isInteger(16);
+  const bool IsD16 = !IsAtomicPacked16Bit && Ty.getScalarType().isFloat(16);
 
   int DMaskLanes = 0;
   if (!BaseOpcode->Atomic) {
@@ -6912,7 +6916,13 @@ bool AMDGPULegalizerInfo::legalizeSBufferLoad(LegalizerHelper &Helper,
   if (Dst != OrigDst) {
     MI.getOperand(0).setReg(Dst);
     B.setInsertPt(B.getMBB(), ++B.getInsertPt());
-    B.buildTrunc(OrigDst, Dst);
+
+    if (Ty.isFloat()) {
+        auto Trunc = B.buildTrunc(Ty.dropType(), Dst);
+        B.buildBitcast(OrigDst, Trunc);
+    } else {
+        B.buildTrunc(OrigDst, Dst);
+    }
   }
 
   // If we don't have 96-bit result scalar loads, widening to 128-bit should
@@ -7102,8 +7112,8 @@ bool AMDGPULegalizerInfo::legalizeBVHIntrinsic(MachineInstr &MI,
   const bool IsGFX11 = AMDGPU::isGFX11(ST);
   const bool IsGFX11Plus = AMDGPU::isGFX11Plus(ST);
   const bool IsGFX12Plus = AMDGPU::isGFX12Plus(ST);
-  const bool IsA16 = MRI.getType(RayDir).getElementType().getSizeInBits() == 16;
-  const bool Is64 = MRI.getType(NodePtr).getSizeInBits() == 64;
+  const bool IsA16 = MRI.getType(RayDir).getElementType().isFloat(16);
+  const bool Is64 = MRI.getType(NodePtr).isInteger(64);
   const unsigned NumVDataDwords = 4;
   const unsigned NumVAddrDwords = IsA16 ? (Is64 ? 9 : 8) : (Is64 ? 12 : 11);
   const unsigned NumVAddrs = IsGFX11Plus ? (IsA16 ? 4 : 5) : NumVAddrDwords;
@@ -7144,8 +7154,10 @@ bool AMDGPULegalizerInfo::legalizeBVHIntrinsic(MachineInstr &MI,
     packLanes(RayOrigin);
 
     if (IsA16) {
-      auto UnmergeRayDir = B.buildUnmerge({I16, I16, I16}, RayDir);
-      auto UnmergeRayInvDir = B.buildUnmerge({I16, I16, I16}, RayInvDir);
+      auto BitcastRayDir = B.buildBitcast(V3I16, RayDir);
+      auto UnmergeRayDir = B.buildUnmerge({I16, I16, I16}, BitcastRayDir);
+      auto BitcastRayInvDir = B.buildBitcast(V3I16, RayInvDir);
+      auto UnmergeRayInvDir = B.buildUnmerge({I16, I16, I16}, BitcastRayInvDir);
       auto MergedDir = B.buildMergeLikeInstr(
           V3I32,
           {B.buildBitcast(
@@ -7176,7 +7188,8 @@ bool AMDGPULegalizerInfo::legalizeBVHIntrinsic(MachineInstr &MI,
     Ops.push_back(RayExtent);
 
     auto packLanes = [&Ops, &B](Register Src) {
-      auto Unmerge = B.buildUnmerge({I32, I32, I32}, Src);
+      auto Bitcast = B.buildBitcast(V3I32, Src);
+      auto Unmerge = B.buildUnmerge({I32, I32, I32}, Bitcast);
       Ops.push_back(Unmerge.getReg(0));
       Ops.push_back(Unmerge.getReg(1));
       Ops.push_back(Unmerge.getReg(2));
@@ -7184,8 +7197,10 @@ bool AMDGPULegalizerInfo::legalizeBVHIntrinsic(MachineInstr &MI,
 
     packLanes(RayOrigin);
     if (IsA16) {
-      auto UnmergeRayDir = B.buildUnmerge({I16, I16, I16}, RayDir);
-      auto UnmergeRayInvDir = B.buildUnmerge({I16, I16, I16}, RayInvDir);
+      auto BitcastRayDir = B.buildBitcast(V3I16, RayDir);
+      auto UnmergeRayDir = B.buildUnmerge({I16, I16, I16}, BitcastRayDir);
+      auto BitcastRayInvDir = B.buildBitcast(V3I16, RayInvDir);
+      auto UnmergeRayInvDir = B.buildUnmerge({I16, I16, I16}, BitcastRayInvDir);
       Register R1 = MRI.createGenericVirtualRegister(I32);
       Register R2 = MRI.createGenericVirtualRegister(I32);
       Register R3 = MRI.createGenericVirtualRegister(I32);
@@ -7589,7 +7604,7 @@ bool AMDGPULegalizerInfo::legalizeIntrinsic(LegalizerHelper &Helper,
   case Intrinsic::amdgcn_swmmac_f32_16x16x32_bf8_fp8:
   case Intrinsic::amdgcn_swmmac_f32_16x16x32_bf8_bf8: {
     Register Index = MI.getOperand(5).getReg();
-    if (!MRI.getType(Index).isScalar(32))
+    if (!MRI.getType(Index).isInteger(32))
       MI.getOperand(5).setReg(B.buildAnyExt(I32, Index).getReg(0));
     return true;
   }
@@ -7597,7 +7612,7 @@ bool AMDGPULegalizerInfo::legalizeIntrinsic(LegalizerHelper &Helper,
   case Intrinsic::amdgcn_swmmac_i32_16x16x32_iu8:
   case Intrinsic::amdgcn_swmmac_i32_16x16x64_iu4: {
     Register Index = MI.getOperand(7).getReg();
-    if (!MRI.getType(Index).isScalar(32))
+    if (!MRI.getType(Index).isInteger(32))
       MI.getOperand(7).setReg(B.buildAnyExt(I32, Index).getReg(0));
     return true;
   }
