@@ -831,6 +831,11 @@ LogicalResult tosa::PadOp::verify() {
   if (paddingType.hasRank() && paddingType.getRank() != 2)
     return emitOpError() << "expect 'padding' tensor rank equal to 2.";
 
+  auto paddingShape = paddingType.getShape();
+  if (paddingShape.front() != inputType.getRank() || paddingShape.back() != 2)
+    return emitOpError()
+           << "expect 'padding' tensor shape to match [rank(input), 2]";
+
   return success();
 }
 
