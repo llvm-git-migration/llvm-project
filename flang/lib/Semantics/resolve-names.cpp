@@ -2548,9 +2548,11 @@ void ScopeHandler::PopScope() {
     ConvertToObjectEntity(*pair.second);
   }
   funcResultStack_.Pop();
-  // If popping back into a global scope, pop back to the main global scope.
-  SetScope(currScope_->parent().IsGlobal() ? context().globalScope()
-                                           : currScope_->parent());
+  // If popping back into a global scope, pop back to the top scope.
+  Scope *hermetic{context().currentHermeticModuleFileScope()};
+  SetScope(currScope_->parent().IsGlobal()
+          ? (hermetic ? *hermetic : context().globalScope())
+          : currScope_->parent());
 }
 void ScopeHandler::SetScope(Scope &scope) {
   currScope_ = &scope;
@@ -3179,6 +3181,111 @@ static bool ConvertToUseError(
   }
 }
 
+// Two ultimate symbols are distinct, but they have the same name and come
+// from modules with the same name.  At link time, their mangled names
+// would conflict, so they had better resolve to the same definition.
+// Check whether the two ultimate symbols have compatible definitions.
+// Returns true if no further processing is required in DoAddUse().
+static bool CheckCompatibleDistinctUltimates(SemanticsContext &context,
+    SourceName location, SourceName localName, const Symbol &localSymbol,
+    const Symbol &localUltimate, const Symbol &useUltimate) {
+  bool bad{false};
+  if (localUltimate.has<GenericDetails>()) {
+    if (useUltimate.has<GenericDetails>() ||
+        useUltimate.has<SubprogramDetails>() ||
+        useUltimate.has<DerivedTypeDetails>()) {
+      return false; // can try to merge them
+    } else {
+      bad = true;
+    }
+  } else if (useUltimate.has<GenericDetails>()) {
+    if (localUltimate.has<SubprogramDetails>() ||
+        localUltimate.has<DerivedTypeDetails>()) {
+      return false; // can try to merge them
+    } else {
+      bad = true;
+    }
+  } else if (localUltimate.has<SubprogramDetails>()) {
+    if (useUltimate.has<SubprogramDetails>()) {
+      auto localCharacteristics{
+          evaluate::characteristics::Procedure::Characterize(
+              localUltimate, context.foldingContext())};
+      auto useCharacteristics{
+          evaluate::characteristics::Procedure::Characterize(
+              useUltimate, context.foldingContext())};
+      if ((localCharacteristics &&
+              (!useCharacteristics ||
+                  *localCharacteristics != *useCharacteristics)) ||
+          (!localCharacteristics && useCharacteristics)) {
+        bad = true;
+      }
+    } else {
+      bad = true;
+    }
+  } else if (useUltimate.has<SubprogramDetails>()) {
+    bad = true;
+  } else if (const auto *localObject{
+                 localUltimate.detailsIf<ObjectEntityDetails>()}) {
+    if (const auto *useObject{useUltimate.detailsIf<ObjectEntityDetails>()}) {
+      auto localType{evaluate::DynamicType::From(localUltimate)};
+      auto useType{evaluate::DynamicType::From(useUltimate)};
+      if (localUltimate.size() != useUltimate.size() ||
+          (localType &&
+              (!useType || !localType->IsTkLenCompatibleWith(*useType) ||
+                  !useType->IsTkLenCompatibleWith(*localType))) ||
+          (!localType && useType)) {
+        bad = true;
+      } else if (IsNamedConstant(localUltimate)) {
+        bad = !IsNamedConstant(useUltimate) ||
+            !(*localObject->init() == *useObject->init());
+      } else {
+        bad = IsNamedConstant(useUltimate);
+      }
+    } else {
+      bad = true;
+    }
+  } else if (useUltimate.has<ObjectEntityDetails>()) {
+    bad = true;
+  } else if (IsProcedurePointer(localUltimate)) {
+    bad = !IsProcedurePointer(useUltimate);
+  } else if (IsProcedurePointer(useUltimate)) {
+    bad = true;
+  } else if (localUltimate.has<DerivedTypeDetails>()) {
+    bad = !(useUltimate.has<DerivedTypeDetails>() &&
+        evaluate::AreSameDerivedTypeIgnoringSequence(
+            DerivedTypeSpec{localUltimate.name(), localUltimate},
+            DerivedTypeSpec{useUltimate.name(), useUltimate}));
+  } else if (useUltimate.has<DerivedTypeDetails>()) {
+    bad = true;
+  } else if (localUltimate.has<NamelistDetails>() &&
+      useUltimate.has<NamelistDetails>()) {
+  } else if (localUltimate.has<CommonBlockDetails>() &&
+      useUltimate.has<CommonBlockDetails>()) {
+  } else {
+    bad = true;
+  }
+  if (bad) {
+    context
+        .Say(location,
+            "'%s' use-associated from '%s' in module '%s' is incompatible with '%s' from another module"_err_en_US,
+            localName, useUltimate.name(),
+            useUltimate.owner().GetName().value(), localUltimate.name())
+        .Attach(useUltimate.name(), "First declaration"_en_US)
+        .Attach(localUltimate.name(), "Other declaration"_en_US);
+    return true;
+  }
+  if (auto *msg{context.Warn(
+          common::UsageWarning::CompatibleDeclarationsFromDistinctModules,
+          location,
+          "'%s' is use-associated from '%s' in two distinct instances of module '%s'"_warn_en_US,
+          localName, localUltimate.name(),
+          localUltimate.owner().GetName().value())}) {
+    msg->Attach(localUltimate.name(), "Previous declaration"_en_US)
+        .Attach(useUltimate.name(), "Later declaration"_en_US);
+  }
+  return true;
+}
+
 void ModuleVisitor::DoAddUse(SourceName location, SourceName localName,
     Symbol &originalLocal, const Symbol &useSymbol) {
   Symbol *localSymbol{&originalLocal};
@@ -3218,6 +3325,16 @@ void ModuleVisitor::DoAddUse(SourceName location, SourceName localName,
   if (&localUltimate == &useUltimate) {
     // use-associating the same symbol again -- ok
     return;
+  }
+
+  if (localUltimate.name() == useUltimate.name() &&
+      localUltimate.owner().IsModule() && useUltimate.owner().IsModule() &&
+      localUltimate.owner().GetName() &&
+      localUltimate.owner().GetName() == useUltimate.owner().GetName()) {
+    if (CheckCompatibleDistinctUltimates(context(), location, localName,
+            *localSymbol, localUltimate, useUltimate)) {
+      return;
+    }
   }
 
   // There are many possible combinations of symbol types that could arrive
@@ -9375,6 +9492,12 @@ template <typename A> std::set<SourceName> GetUses(const A &x) {
 }
 
 bool ResolveNamesVisitor::Pre(const parser::Program &x) {
+  if (Scope * hermetic{context().currentHermeticModuleFileScope()}) {
+    // Processing either the dependent modules or first module of a
+    // hermetic module file; ensure that the hermetic module scope has
+    // its implicit rules map entry.
+    ImplicitRulesVisitor::BeginScope(*hermetic);
+  }
   std::map<SourceName, const parser::ProgramUnit *> modules;
   std::set<SourceName> uses;
   bool disordered{false};
