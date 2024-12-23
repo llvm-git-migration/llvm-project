@@ -77,11 +77,6 @@ static cl::opt<bool>
                    cl::desc("dump Linux kernel static keys jump table"),
                    cl::init(false), cl::Hidden, cl::cat(BoltCategory));
 
-static cl::opt<bool> LongJumpLabels(
-    "long-jump-labels",
-    cl::desc("always use long jumps/nops for Linux kernel static keys"),
-    cl::init(false), cl::Hidden, cl::cat(BoltCategory));
-
 static cl::opt<bool>
     PrintORC("print-orc",
              cl::desc("print ORC unwind information for instructions"),
@@ -285,11 +280,14 @@ class LinuxKernelRewriter final : public MetadataRewriter {
   Error rewriteStaticKeysJumpTable();
   Error updateStaticKeysJumpTablePostEmit();
 
+  bool LongJumpLabels{false};
 public:
   LinuxKernelRewriter(BinaryContext &BC)
       : MetadataRewriter("linux-kernel-rewriter", BC) {}
 
   Error preCFGInitializer() override {
+    LongJumpLabels = LinuxKernelVersion <= LKVersion(5, 13, 19);
+
     processLKSections();
 
     if (Error E = processSMPLocks())
@@ -1735,13 +1733,13 @@ Error LinuxKernelRewriter::readStaticKeysJumpTable() {
     // the code, it will be converted to a different instruction in
     // rewriteStaticKeysJumpTable().
     //
-    // NB: for older kernels, under LongJumpLabels option, we create long
+    // NB: for older kernels (for which LongJumpLabels is true), we create long
     //     conditional branch to guarantee that code size estimation takes
     //     into account the extra bytes needed for long branch that will be used
     //     by the kernel patching code. Newer kernels can work with both short
     //     and long branches. The code for long conditional branch is larger
     //     than unconditional one, so we are pessimistic in our estimations.
-    if (opts::LongJumpLabels)
+    if (LongJumpLabels)
       BC.MIB->createLongCondBranch(StaticKeyBranch, Target, 0, BC.Ctx.get());
     else
       BC.MIB->createCondBranch(StaticKeyBranch, Target, 0, BC.Ctx.get());
@@ -1768,7 +1766,7 @@ Error LinuxKernelRewriter::readStaticKeysJumpTable() {
     if (!BC.MIB->getOffset(*Inst))
       BC.MIB->setOffset(*Inst, JumpAddress - BF->getAddress());
 
-    if (opts::LongJumpLabels)
+    if (LongJumpLabels)
       BC.MIB->setSize(*Inst, 5);
   }
 
@@ -1815,7 +1813,7 @@ Error LinuxKernelRewriter::rewriteStaticKeysJumpTable() {
         MCInst NewInst;
         // Replace the instruction with unconditional jump even if it needs to
         // be nop in the binary.
-        if (opts::LongJumpLabels) {
+        if (LongJumpLabels) {
           BC.MIB->createLongUncondBranch(NewInst, Target, BC.Ctx.get());
         } else {
           // Newer kernels can handle short and long jumps for static keys.
