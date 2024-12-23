@@ -20,6 +20,7 @@
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/Support/ExtensibleRTTI.h"
 
 namespace clang {
 namespace dataflow {
@@ -88,7 +89,15 @@ public:
     return Base::operator==(Other);
   }
 
-  LatticeJoinEffect join(const CachedConstAccessorsLattice &Other);
+  std::unique_ptr<DataflowLattice> clone() override {
+    return std::make_unique<CachedConstAccessorsLattice>(*this);
+  }
+
+  bool isEqual(const DataflowLattice &Other) const override {
+    return *this == llvm::cast<const CachedConstAccessorsLattice>(Other);
+  }
+
+  LatticeEffect join(const DataflowLattice &Other) override;
 
 private:
   // Maps a record storage location and const method to the value to return
@@ -146,9 +155,10 @@ joinConstMethodMap(
 
 template <typename Base>
 LatticeEffect CachedConstAccessorsLattice<Base>::join(
-    const CachedConstAccessorsLattice<Base> &Other) {
-
+    const DataflowLattice &Other) {
   LatticeEffect Effect = Base::join(Other);
+
+  const auto &OtherL = llvm::cast<const CachedConstAccessorsLattice<Base>>(Other);
 
   // For simplicity, we only retain values that are identical, but not ones that
   // are non-identical but equivalent. This is likely to be sufficient in
@@ -156,12 +166,12 @@ LatticeEffect CachedConstAccessorsLattice<Base>::join(
 
   ConstMethodReturnValues =
       clang::dataflow::internal::joinConstMethodMap<dataflow::Value>(
-          ConstMethodReturnValues, Other.ConstMethodReturnValues, Effect);
+          ConstMethodReturnValues, OtherL.ConstMethodReturnValues, Effect);
 
   ConstMethodReturnStorageLocations =
       clang::dataflow::internal::joinConstMethodMap<dataflow::StorageLocation>(
           ConstMethodReturnStorageLocations,
-          Other.ConstMethodReturnStorageLocations, Effect);
+          OtherL.ConstMethodReturnStorageLocations, Effect);
 
   return Effect;
 }
