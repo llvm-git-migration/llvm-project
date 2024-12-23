@@ -119,6 +119,22 @@ func.func @test_pad_invalid_padConst_rank(%arg0: tensor<13x21xf32>, %arg1: tenso
 
 // -----
 
+func.func @test_pad_padding_shape_mismatch(%arg0: tensor<13x21x3xf32>, %arg1: tensor<2x2xi32>) -> tensor<13x21x3xf32> {
+  // expected-error@+1 {{'tosa.pad' op expect 'padding' tensor shape to match [rank(input), 2]}}
+  %0 = tosa.pad %arg0, %arg1 : (tensor<13x21x3xf32>, tensor<2x2xi32>) -> tensor<13x21x3xf32>
+  return %0 : tensor<13x21x3xf32>
+}
+
+// -----
+
+func.func @test_pad_padding_shape_mismatch(%arg0: tensor<13x21x3xf32>, %arg1: tensor<3x1xi32>) -> tensor<13x21x3xf32> {
+  // expected-error@+1 {{'tosa.pad' op expect 'padding' tensor shape to match [rank(input), 2]}}
+  %0 = tosa.pad %arg0, %arg1 : (tensor<13x21x3xf32>, tensor<3x1xi32>) -> tensor<13x21x3xf32>
+  return %0 : tensor<13x21x3xf32>
+}
+
+// -----
+
 func.func @test_transpose_non_const(%arg0: tensor<13x21x3xf32>, %arg1: tensor<3xi32>) -> tensor<3x13x21xf32> {
   // expected-error@+1 {{'tosa.transpose' op perms of transpose is not constant}}
   %0 = tosa.transpose %arg0, %arg1 : (tensor<13x21x3xf32>, tensor<3xi32>) -> tensor<3x13x21xf32>
