@@ -21,6 +21,8 @@ add_flang_library(FIRCodeGen
   FIRDialect
   FIRDialectSupport
   FIRSupport
+
+  MLIR_LIBS
   MLIRComplexToLLVM
   MLIRComplexToStandard
   MLIRGPUDialect

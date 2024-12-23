@@ -14,6 +14,8 @@ add_flang_library(CUFDialect
   CUFAttrs
   FIRDialect
   FIRDialectSupport
+
+  MLIR_LIBS
   MLIRIR
   MLIRGPUDialect
   MLIRTargetLLVMIRExport

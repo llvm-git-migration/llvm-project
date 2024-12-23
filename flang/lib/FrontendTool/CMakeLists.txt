@@ -8,6 +8,8 @@ add_flang_library(flangFrontendTool
 
   LINK_LIBS
   flangFrontend
+
+  MLIR_LIBS
   MLIRPass
 
   LINK_COMPONENTS

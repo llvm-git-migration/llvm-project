@@ -20,6 +20,8 @@ add_flang_library(FIRDialect
   LINK_LIBS
   CUFAttrs
   FIRDialectSupport
+
+  MLIR_LIBS
   MLIRArithDialect
   MLIRBuiltinToLLVMIRTranslation
   MLIROpenMPToLLVM

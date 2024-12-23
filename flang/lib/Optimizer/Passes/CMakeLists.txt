@@ -12,10 +12,12 @@ add_flang_library(flangPasses
   FIRCodeGen
   FIRTransforms
   FlangOpenMPTransforms
-  ${dialect_libs}
-  ${extension_libs}
   FortranCommon
   HLFIRTransforms
+
+  MLIR_LIBS
+  ${dialect_libs}
+  ${extension_libs}
   MLIRPass
   MLIRReconcileUnrealizedCasts
   MLIRSCFToControlFlow

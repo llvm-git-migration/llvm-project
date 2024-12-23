@@ -7,7 +7,7 @@ add_flang_library(CUFAttrs
   CUFAttrsIncGen
   CUFOpsIncGen
 
-  LINK_LIBS
+  MLIR_LIBS
   MLIRTargetLLVMIRExport
 
   LINK_COMPONENTS

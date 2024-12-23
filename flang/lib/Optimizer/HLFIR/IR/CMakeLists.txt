@@ -13,6 +13,8 @@ add_flang_library(HLFIRDialect
   LINK_LIBS
   CUFAttrs
   FIRDialect
+
+  MLIR_LIBS
   MLIRIR
   ${dialect_libs}
 

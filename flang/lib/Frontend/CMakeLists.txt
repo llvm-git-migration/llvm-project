@@ -39,6 +39,8 @@ add_flang_library(flangFrontend
   HLFIRTransforms
   flangPasses
   FlangOpenMPTransforms
+
+  MLIR_LIBS
   MLIRTransforms
   MLIRBuiltinToLLVMIRTranslation
   MLIRLLVMToLLVMIRTranslation

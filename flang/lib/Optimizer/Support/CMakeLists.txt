@@ -16,6 +16,8 @@ add_flang_library(FIRSupport
 
   LINK_LIBS
   FIRDialect
+
+  MLIR_LIBS
   ${dialect_libs}
   ${extension_libs}
   MLIRBuiltinToLLVMIRTranslation

@@ -54,12 +54,14 @@ add_flang_library(FortranLower
   FIRSupport
   FIRTransforms
   HLFIRDialect
-  ${dialect_libs}
-  ${extension_libs}
   FortranCommon
   FortranParser
   FortranEvaluate
   FortranSemantics
+
+  MLIR_LIBS
+  ${dialect_libs}
+  ${extension_libs}
   MLIRAffineToStandard
   MLIRFuncDialect
   MLIRLLVMDialect
