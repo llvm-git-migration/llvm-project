@@ -24838,6 +24838,83 @@ static SDValue foldCSELOfCSEL(SDNode *Op, SelectionDAG &DAG) {
   return DAG.getNode(AArch64ISD::CSEL, DL, VT, L, R, CCValue, Cond);
 }
 
+// Reassociate the true/false expressions of a CSEL instruction to obtain a
+// common subexpression with the comparison instruction. For example, change
+// (CSEL (ADD (ADD x y) -c) f LO (SUBS x c)) to
+// (CSEL (ADD (SUBS x c) y) f LO (SUBS x c)) such that (SUBS x c) is a common
+// subexpression.
+static SDValue reassociateCSELOperandsForCSE(SDNode *N, SelectionDAG &DAG) {
+  SDValue SubsNode = N->getOperand(3);
+  if (SubsNode.getOpcode() != AArch64ISD::SUBS || !SubsNode.hasOneUse())
+    return SDValue();
+  auto *CmpOpConst = dyn_cast<ConstantSDNode>(SubsNode.getOperand(1));
+  if (!CmpOpConst)
+    return SDValue();
+
+  auto CC = static_cast<AArch64CC::CondCode>(N->getConstantOperandVal(2));
+  bool IsEquality = CC == AArch64CC::EQ || CC == AArch64CC::NE;
+  if (CC != AArch64CC::LO && CC != AArch64CC::HI &&
+      (!IsEquality || !CmpOpConst->isZero()))
+    return SDValue();
+  // The cases (x < c) and (x == 0) are later unified as (x < newconst).
+  // The cases (x > c) and (x != 0) are later unified as (x >= newconst).
+  APInt NewCmpConst = CC == AArch64CC::LO ? CmpOpConst->getAPIntValue()
+                                          : CmpOpConst->getAPIntValue() + 1;
+  APInt ExpectedConst = -NewCmpConst;
+
+  SDValue CmpOpOther = SubsNode.getOperand(0);
+  EVT VT = N->getValueType(0);
+  SDValue NewCmp = DAG.getNode(AArch64ISD::SUBS, SDLoc(SubsNode),
+                               DAG.getVTList(VT, MVT_CC), CmpOpOther,
+                               DAG.getConstant(NewCmpConst, SDLoc(CmpOpConst),
+                                               CmpOpConst->getValueType(0)));
+
+  auto Reassociate = [&](SDValue Op) {
+    if (Op.getOpcode() != ISD::ADD)
+      return SDValue();
+    auto *AddOpConst = dyn_cast<ConstantSDNode>(Op.getOperand(1));
+    if (!AddOpConst)
+      return SDValue();
+    if (IsEquality && AddOpConst->getAPIntValue() != ExpectedConst)
+      return SDValue();
+    if (!IsEquality && AddOpConst->getAPIntValue() != ExpectedConst)
+      return SDValue();
+    if (Op.getOperand(0).getOpcode() != ISD::ADD ||
+        !Op.getOperand(0).hasOneUse())
+      return SDValue();
+    SDValue X = Op.getOperand(0).getOperand(0);
+    SDValue Y = Op.getOperand(0).getOperand(1);
+    if (X != CmpOpOther)
+      std::swap(X, Y);
+    if (X != CmpOpOther)
+      return SDValue();
+    SDNodeFlags Flags;
+    if (Op.getOperand(0).getNode()->getFlags().hasNoUnsignedWrap())
+      Flags.setNoUnsignedWrap(true);
+    return DAG.getNode(ISD::ADD, SDLoc(Op), VT, NewCmp.getValue(0), Y, Flags);
+  };
+
+  SDValue TValReassoc = Reassociate(N->getOperand(0));
+  SDValue FValReassoc = Reassociate(N->getOperand(1));
+  if (!TValReassoc && !FValReassoc)
+    return SDValue();
+  if (TValReassoc)
+    DAG.ReplaceAllUsesWith(N->getOperand(0), TValReassoc);
+  else
+    TValReassoc = N->getOperand(0);
+  if (FValReassoc)
+    DAG.ReplaceAllUsesWith(N->getOperand(1), FValReassoc);
+  else
+    FValReassoc = N->getOperand(1);
+
+  AArch64CC::CondCode NewCC = CC == AArch64CC::EQ || CC == AArch64CC::LO
+                                  ? AArch64CC::LO
+                                  : AArch64CC::HS;
+  return DAG.getNode(AArch64ISD::CSEL, SDLoc(N), VT, TValReassoc, FValReassoc,
+                     DAG.getConstant(NewCC, SDLoc(N->getOperand(2)), MVT_CC),
+                     NewCmp.getValue(1));
+}
+
 // Optimize CSEL instructions
 static SDValue performCSELCombine(SDNode *N,
                                   TargetLowering::DAGCombinerInfo &DCI,
@@ -24847,6 +24924,11 @@ static SDValue performCSELCombine(SDNode *N,
     return N->getOperand(0);
 
   if (SDValue R = foldCSELOfCSEL(N, DAG))
+    return R;
+
+  // Try to reassociate the true/false expressions so that we can do CSE with
+  // a SUBS instruction used to perform the comparison.
+  if (SDValue R = reassociateCSELOperandsForCSE(N, DAG))
     return R;
 
   // CSEL 0, cttz(X), eq(X, 0) -> AND cttz bitwidth-1

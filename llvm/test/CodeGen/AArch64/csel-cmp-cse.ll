@@ -8,10 +8,9 @@ declare void @use_i32(i32 %x)
 define ptr @test_last_elem_from_ptr(ptr noundef readnone %x0, i64 noundef %x1) {
 ; CHECK-LABEL: test_last_elem_from_ptr:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add x8, x0, x1
-; CHECK-NEXT:    cmp x1, #0
-; CHECK-NEXT:    sub x8, x8, #1
-; CHECK-NEXT:    csel x0, xzr, x8, eq
+; CHECK-NEXT:    subs x8, x1, #1
+; CHECK-NEXT:    add x8, x8, x0
+; CHECK-NEXT:    csel x0, xzr, x8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp eq i64 %x1, 0
   %add.ptr = getelementptr inbounds nuw i8, ptr %x0, i64 %x1
@@ -23,10 +22,9 @@ define ptr @test_last_elem_from_ptr(ptr noundef readnone %x0, i64 noundef %x1) {
 define i32 @test_eq0_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_eq0_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #0
-; CHECK-NEXT:    sub w8, w8, #1
-; CHECK-NEXT:    csel w0, wzr, w8, eq
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp eq i32 %x1, 0
   %add = add nuw i32 %x0, %x1
@@ -38,9 +36,8 @@ define i32 @test_eq0_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_ule7_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_ule7_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #8
-; CHECK-NEXT:    sub w8, w8, #8
+; CHECK-NEXT:    subs w8, w1, #8
+; CHECK-NEXT:    add w8, w8, w0
 ; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp ule i32 %x1, 7
@@ -53,10 +50,9 @@ define i32 @test_ule7_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_ule0_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_ule0_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #0
-; CHECK-NEXT:    sub w8, w8, #1
-; CHECK-NEXT:    csel w0, wzr, w8, eq
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp ule i32 %x1, 0
   %add = add i32 %x0, %x1
@@ -68,9 +64,8 @@ define i32 @test_ule0_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_ultminus2_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_ultminus2_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmn w1, #2
-; CHECK-NEXT:    add w8, w8, #2
+; CHECK-NEXT:    adds w8, w1, #2
+; CHECK-NEXT:    add w8, w8, w0
 ; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp ult i32 %x1, -2
@@ -83,10 +78,9 @@ define i32 @test_ultminus2_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_ne0_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_ne0_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #0
-; CHECK-NEXT:    sub w8, w8, #1
-; CHECK-NEXT:    csel w0, w8, wzr, ne
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, w8, wzr, hs
 ; CHECK-NEXT:    ret
   %cmp = icmp ne i32 %x1, 0
   %add = add i32 %x0, %x1
@@ -98,10 +92,9 @@ define i32 @test_ne0_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_ugt7_sub_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_ugt7_sub_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #7
-; CHECK-NEXT:    sub w8, w8, #8
-; CHECK-NEXT:    csel w0, wzr, w8, hi
+; CHECK-NEXT:    subs w8, w1, #8
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, wzr, w8, hs
 ; CHECK-NEXT:    ret
   %cmp = icmp ugt i32 %x1, 7
   %add = add i32 %x0, %x1
@@ -113,10 +106,9 @@ define i32 @test_ugt7_sub_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_eq0_sub_addcomm_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_eq0_sub_addcomm_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w1, w0
-; CHECK-NEXT:    cmp w1, #0
-; CHECK-NEXT:    sub w8, w8, #1
-; CHECK-NEXT:    csel w0, wzr, w8, eq
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp eq i32 %x1, 0
   %add = add i32 %x1, %x0
@@ -128,10 +120,9 @@ define i32 @test_eq0_sub_addcomm_i32(i32 %x0, i32 %x1) {
 define i32 @test_eq0_subcomm_add_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_eq0_subcomm_add_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    cmp w1, #0
-; CHECK-NEXT:    sub w8, w8, #1
-; CHECK-NEXT:    csel w0, wzr, w8, eq
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w8, w8, w0
+; CHECK-NEXT:    csel w0, wzr, w8, lo
 ; CHECK-NEXT:    ret
   %cmp = icmp eq i32 %x1, 0
   %add = add i32 %x0, %x1
@@ -143,21 +134,16 @@ define i32 @test_eq0_subcomm_add_i32(i32 %x0, i32 %x1) {
 define i32 @test_eq0_multi_use_sub_i32(i32 %x0, i32 %x1) {
 ; CHECK-LABEL: test_eq0_multi_use_sub_i32:
 ; CHECK:       // %bb.0:
-; CHECK-NEXT:    str x30, [sp, #-32]! // 8-byte Folded Spill
-; CHECK-NEXT:    stp x20, x19, [sp, #16] // 16-byte Folded Spill
-; CHECK-NEXT:    .cfi_def_cfa_offset 32
+; CHECK-NEXT:    stp x30, x19, [sp, #-16]! // 16-byte Folded Spill
+; CHECK-NEXT:    .cfi_def_cfa_offset 16
 ; CHECK-NEXT:    .cfi_offset w19, -8
-; CHECK-NEXT:    .cfi_offset w20, -16
-; CHECK-NEXT:    .cfi_offset w30, -32
-; CHECK-NEXT:    add w8, w0, w1
-; CHECK-NEXT:    mov w19, w1
-; CHECK-NEXT:    sub w20, w8, #1
-; CHECK-NEXT:    mov w0, w20
+; CHECK-NEXT:    .cfi_offset w30, -16
+; CHECK-NEXT:    subs w8, w1, #1
+; CHECK-NEXT:    add w0, w8, w0
+; CHECK-NEXT:    csel w19, wzr, w0, lo
 ; CHECK-NEXT:    bl use_i32
-; CHECK-NEXT:    cmp w19, #0
-; CHECK-NEXT:    csel w0, wzr, w20, eq
-; CHECK-NEXT:    ldp x20, x19, [sp, #16] // 16-byte Folded Reload
-; CHECK-NEXT:    ldr x30, [sp], #32 // 8-byte Folded Reload
+; CHECK-NEXT:    mov w0, w19
+; CHECK-NEXT:    ldp x30, x19, [sp], #16 // 16-byte Folded Reload
 ; CHECK-NEXT:    ret
   %cmp = icmp eq i32 %x1, 0
   %add = add nuw i32 %x0, %x1
