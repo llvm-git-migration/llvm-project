@@ -823,13 +823,20 @@ LogicalResult tosa::PadOp::inferReturnTypeComponents(
 LogicalResult tosa::PadOp::verify() {
   RankedTensorType inputType = getInput1().getType();
   RankedTensorType outputType = getOutput().getType();
-  TensorType paddingType = getPadding().getType();
+  RankedTensorType paddingType = getPadding().getType();
 
   if (inputType.getRank() != outputType.getRank())
     return emitOpError() << "expect same input and output tensor rank.";
 
-  if (paddingType.hasRank() && paddingType.getRank() != 2)
-    return emitOpError() << "expect 'padding' tensor rank equal to 2.";
+  if (!paddingType.isDynamicDim(0) &&
+      paddingType.getDimSize(0) != inputType.getRank())
+    return emitOpError() << "expected padding tensor dim 0 to have size "
+                         << inputType.getRank() << " (input rank) but got size "
+                         << paddingType.getDimSize(0);
+
+  if (!paddingType.isDynamicDim(1) && paddingType.getDimSize(1) != 2)
+    return emitOpError() << "expected padding tensor dim 1 to have size 2 "
+                         << "but got size " << paddingType.getDimSize(1);
 
   return success();
 }

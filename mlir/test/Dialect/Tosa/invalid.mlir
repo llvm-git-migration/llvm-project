@@ -103,7 +103,7 @@ func.func @test_pad_io_rank_mismatch(%arg0: tensor<13x21xf32>, %arg1: tensor<2x2
 // -----
 
 func.func @test_pad_invalid_padding_rank(%arg0: tensor<13x21xf32>, %arg1: tensor<2xi32>) {
-  // expected-error@+1 {{'tosa.pad' op expect 'padding' tensor rank equal to 2.}}
+  // expected-error@+1 {{'tosa.pad' op operand #1 must be 2D tensor of 32-bit signless integer or 64-bit signless integer values, but got 'tensor<2xi32>'}}
   %1 = tosa.pad %arg0, %arg1 : (tensor<13x21xf32>, tensor<2xi32>) -> tensor<13x21xf32>
   return
 }
@@ -115,6 +115,22 @@ func.func @test_pad_invalid_padConst_rank(%arg0: tensor<13x21xf32>, %arg1: tenso
   // expected-error@+1 {{'tosa.pad' op operand #2 must be 0D tensor of number values, but got 'tensor<1xf32>'}}
   %1 = tosa.pad %arg0, %arg1, %0 : (tensor<13x21xf32>, tensor<2x2xi32>, tensor<1xf32>) -> tensor<13x21xf32>
   return
+}
+
+// -----
+
+func.func @test_pad_padding_shape_mismatch(%arg0: tensor<13x21x3xf32>, %arg1: tensor<2x2xi32>) -> tensor<13x21x3xf32> {
+  // expected-error@+1 {{'tosa.pad' op expected padding tensor dim 0 to have size 3 (input rank) but got size 2}}
+  %0 = tosa.pad %arg0, %arg1 : (tensor<13x21x3xf32>, tensor<2x2xi32>) -> tensor<13x21x3xf32>
+  return %0 : tensor<13x21x3xf32>
+}
+
+// -----
+
+func.func @test_pad_padding_shape_mismatch(%arg0: tensor<13x21x3xf32>, %arg1: tensor<3x1xi32>) -> tensor<13x21x3xf32> {
+  // expected-error@+1 {{'tosa.pad' op expected padding tensor dim 1 to have size 2 but got size 1}}
+  %0 = tosa.pad %arg0, %arg1 : (tensor<13x21x3xf32>, tensor<3x1xi32>) -> tensor<13x21x3xf32>
+  return %0 : tensor<13x21x3xf32>
 }
 
 // -----
