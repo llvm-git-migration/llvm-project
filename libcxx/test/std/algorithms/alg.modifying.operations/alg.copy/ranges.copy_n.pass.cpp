@@ -19,6 +19,7 @@
 #include <array>
 #include <cassert>
 #include <ranges>
+#include <vector>
 
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
@@ -41,10 +42,10 @@ static_assert(std::is_same_v<std::ranges::copy_result<int, long>, std::ranges::i
 template <class In, class Out, class Sent = In>
 constexpr void test_iterators() {
   { // simple test
-    std::array in {1, 2, 3, 4};
+    std::array in{1, 2, 3, 4};
     std::array<int, 4> out;
     std::same_as<std::ranges::in_out_result<In, Out>> auto ret =
-      std::ranges::copy_n(In(in.data()), in.size(), Out(out.data()));
+        std::ranges::copy_n(In(in.data()), in.size(), Out(out.data()));
     assert(in == out);
     assert(base(ret.in) == in.data() + in.size());
     assert(base(ret.out) == out.data() + out.size());
@@ -70,12 +71,37 @@ constexpr void test_in_iterators() {
 
 template <class Out>
 constexpr void test_proxy_in_iterators() {
-  test_iterators<ProxyIterator<cpp20_input_iterator<int*>>, Out, sentinel_wrapper<ProxyIterator<cpp20_input_iterator<int*>>>>();
+  test_iterators<ProxyIterator<cpp20_input_iterator<int*>>,
+                 Out,
+                 sentinel_wrapper<ProxyIterator<cpp20_input_iterator<int*>>>>();
   test_iterators<ProxyIterator<forward_iterator<int*>>, Out>();
   test_iterators<ProxyIterator<bidirectional_iterator<int*>>, Out>();
   test_iterators<ProxyIterator<random_access_iterator<int*>>, Out>();
   test_iterators<ProxyIterator<contiguous_iterator<int*>>, Out>();
 }
+
+template <std::size_t N>
+struct TestBitIter {
+  std::vector<bool> in;
+  TEST_CONSTEXPR_CXX20 TestBitIter() : in(N, false) {
+    for (std::size_t i = 0; i < N; i += 2)
+      in[i] = true;
+  }
+  TEST_CONSTEXPR_CXX20 void operator()() {
+    { // Test copy with aligned bytes
+      std::vector<bool> out(N);
+      std::ranges::copy_n(in.begin(), N, out.begin());
+      assert(in == out);
+    }
+    { // Test copy with unaligned bytes
+      std::vector<bool> out(N + 8);
+      std::ranges::copy_n(in.begin(), N, out.begin() + 4);
+      for (std::size_t i = 0; i < N; ++i)
+        assert(out[i + 4] == in[i]);
+    }
+  }
+  TEST_CONSTEXPR std::size_t size() const { return N; }
+};
 
 constexpr bool test() {
   test_in_iterators<cpp20_input_iterator<int*>>();
@@ -92,8 +118,8 @@ constexpr bool test() {
 
   { // check that every element is copied exactly once
     struct CopyOnce {
-      bool copied = false;
-      constexpr CopyOnce() = default;
+      bool copied                               = false;
+      constexpr CopyOnce()                      = default;
       constexpr CopyOnce(const CopyOnce& other) = delete;
       constexpr CopyOnce& operator=(const CopyOnce& other) {
         assert(!other.copied);
@@ -101,12 +127,20 @@ constexpr bool test() {
         return *this;
       }
     };
-    std::array<CopyOnce, 4> in {};
-    std::array<CopyOnce, 4> out {};
+    std::array<CopyOnce, 4> in{};
+    std::array<CopyOnce, 4> out{};
     auto ret = std::ranges::copy_n(in.begin(), in.size(), out.begin());
     assert(ret.in == in.end());
     assert(ret.out == out.end());
     assert(std::all_of(out.begin(), out.end(), [](const auto& e) { return e.copied; }));
+  }
+
+  { // Test vector<bool>::iterator optimization
+    TestBitIter<8>()();
+    TestBitIter<16>()();
+    TestBitIter<32>()();
+    TestBitIter<64>()();
+    TestBitIter<1024>()();
   }
 
   return true;
