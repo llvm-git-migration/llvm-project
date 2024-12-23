@@ -99,6 +99,29 @@ constexpr void test_iterators() {
 }
 // clang-format on
 
+template <std::size_t N>
+struct TestBitIter {
+  std::vector<bool> in;
+  TEST_CONSTEXPR TestBitIter() : in(N, false) {
+    for (std::size_t i = 0; i < N; i += 2)
+      in[i] = true;
+  }
+  TEST_CONSTEXPR_CXX20 void operator()() {
+    { // Test copy with aligned bytes
+      std::vector<bool> out(N);
+      std::ranges::copy(in, out.begin());
+      assert(in == out);
+    }
+    { // Test copy with unaligned bytes
+      std::vector<bool> out(N + 8);
+      std::ranges::copy(in, out.begin() + 4);
+      for (std::size_t i = 0; i < N; ++i)
+        assert(out[i + 4] == in[i]);
+    }
+  }
+  TEST_CONSTEXPR std::size_t size() const { return N; }
+};
+
 constexpr bool test() {
   types::for_each(types::forward_iterator_list<int*>{}, []<class Out>() {
     test_iterators<cpp20_input_iterator<int*>, Out, sentinel_wrapper<cpp20_input_iterator<int*>>>();
@@ -202,6 +225,14 @@ constexpr bool test() {
       assert(out[1].canCopy);
       assert(out[2].canCopy);
     }
+  }
+
+  { // Test vector<bool>::iterator optimization
+    TestBitIter<8>()();
+    TestBitIter<16>()();
+    TestBitIter<32>()();
+    TestBitIter<64>()();
+    TestBitIter<1024>()();
   }
 
   return true;
