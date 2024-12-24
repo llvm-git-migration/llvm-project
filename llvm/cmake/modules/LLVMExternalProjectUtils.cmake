@@ -9,7 +9,11 @@ function(llvm_ExternalProject_BuildCmd out_var target bin_dir)
   endif()
   if (CMAKE_GENERATOR MATCHES "Make")
     # Use special command for Makefiles to support parallelism.
-    set(${out_var} "$(MAKE)" "-C" "${bin_dir}" "${target}" PARENT_SCOPE)
+    set(make_cmd "$(MAKE)" "-C" "${bin_dir}" "${target}")
+    set(file_lock_script "${LLVM_CMAKE_DIR}/FileLock.cmake")
+    set(${out_var} ${CMAKE_COMMAND} "-DLOCK_FILE_PATH=${bin_dir}/cmake.lock"
+                                    "-DCOMMAND='${make_cmd}'"
+                                    -P "${file_lock_script}" PARENT_SCOPE)
   else()
     set(tool_args "${LLVM_EXTERNAL_PROJECT_BUILD_TOOL_ARGS}")
     if(NOT tool_args STREQUAL "")
