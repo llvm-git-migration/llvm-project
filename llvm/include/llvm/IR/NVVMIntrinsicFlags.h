@@ -34,6 +34,12 @@ enum class TMAReductionOp : uint8_t {
   XOR = 7,
 };
 
+// Saturation Modes
+enum class SaturationMode : uint8_t {
+  NONE = 0,
+  SATFINITE = 1,
+};
+
 } // namespace nvvm
 } // namespace llvm
 #endif // LLVM_IR_NVVMINTRINSICFLAGS_H
