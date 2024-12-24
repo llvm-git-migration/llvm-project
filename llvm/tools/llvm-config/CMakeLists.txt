@@ -101,7 +101,7 @@ if(CMAKE_CROSSCOMPILING)
   endif()
 
   if (NOT LLVM_CONFIG_PATH)
-    build_native_tool(llvm-config LLVM_CONFIG_PATH)
+    build_native_tool(llvm-config LLVM_CONFIG_PATH DEPENDS ${LLVM_TABLEGEN_TARGET} ${LLVM_TABLEGEN_EXE})
     set(LLVM_CONFIG_PATH "${LLVM_CONFIG_PATH}" CACHE STRING "")
 
     add_custom_target(NativeLLVMConfig DEPENDS ${LLVM_CONFIG_PATH})
