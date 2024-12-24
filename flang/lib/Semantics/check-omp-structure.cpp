@@ -213,6 +213,31 @@ private:
   std::map<std::string, std::int64_t> constructNamesAndLevels_;
 };
 
+// `OmpDesignatorChecker` is used to check if the designator
+// can appear within the OpenMP construct
+class OmpDesignatorChecker {
+public:
+  OmpDesignatorChecker(SemanticsContext &context, parser::CharBlock source)
+      : context_{context}, source_{source} {}
+
+  template <typename T> bool Pre(const T &) { return true; }
+  template <typename T> void Post(const T &) {}
+
+  bool Pre(const parser::Name &name) {
+    if (name.symbol->test(Symbol::Flag::OmpThreadprivate)) {
+      // OpenMP 6.0: 7.3 threadprivate directive restriction
+      context_.Say(source_,
+          "A THREADPRIVATE variable `%s` cannot appear in a UNTIED TASK region"_err_en_US,
+          name.source);
+    }
+    return true;
+  }
+
+private:
+  SemanticsContext &context_;
+  parser::CharBlock source_;
+};
+
 bool OmpStructureChecker::CheckAllowedClause(llvmOmpClause clause) {
   unsigned version{context_.langOptions().OpenMPVersion};
   DirectiveContext &dirCtx = GetContext();
@@ -1164,6 +1189,16 @@ void OmpStructureChecker::Enter(const parser::OpenMPBlockConstruct &x) {
     HasInvalidWorksharingNesting(
         beginDir.source, llvm::omp::nestedWorkshareErrSet);
     break;
+  case llvm::omp::Directive::OMPD_task: {
+    const auto &clauses{std::get<parser::OmpClauseList>(beginBlockDir.t)};
+    for (const auto &clause : clauses.v) {
+      if (std::get_if<parser::OmpClause::Untied>(&clause.u)) {
+        OmpDesignatorChecker ompDesignatorChecker{context_, beginDir.source};
+        parser::Walk(block, ompDesignatorChecker);
+      }
+    }
+    break;
+  }
   default:
     break;
   }
