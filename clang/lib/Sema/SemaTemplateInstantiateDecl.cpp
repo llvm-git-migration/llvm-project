@@ -1620,6 +1620,9 @@ Decl *TemplateDeclInstantiator::VisitEnumDecl(EnumDecl *D) {
   if (isDeclWithinFunction(D) ? D == Def : Def && !Enum->isScoped()) {
     SemaRef.CurrentInstantiationScope->InstantiatedLocal(D, Enum);
     InstantiateEnumDefinition(Enum, Def);
+  } else {
+    if (D->isFixed() && !Def)
+      Enum->setPromotionType(Enum->getIntegerType());
   }
 
   return Enum;
