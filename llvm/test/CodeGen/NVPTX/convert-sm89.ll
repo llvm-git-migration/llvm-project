@@ -84,3 +84,13 @@ define <2 x half> @cvt_rn_relu_f16x2_e5m2x2(i16 %in) {
   %val = call <2 x half> @llvm.nvvm.e5m2x2.to.f16x2.rn.relu(i16 %in);
   ret <2 x half> %val
 }
+
+declare i32 @llvm.nvvm.convert.to.tf32.f32(float %f1, metadata, i8, i1)
+
+; CHECK-LABEL: cvt_rna_satfinite_tf32_f32
+define i32 @cvt_rna_satfinite_tf32_f32(float %f1) {
+; CHECK: cvt.rna.satfinite.tf32.f32
+  %val = call i32 @llvm.nvvm.convert.to.tf32.f32(float %f1, metadata !0, i8 1, i1 0)
+  ret i32 %val
+}
+!0 = !{!"round.tonearestaway"}

@@ -73,6 +73,7 @@ private:
   bool tryIntrinsicChain(SDNode *N);
   bool tryIntrinsicVoid(SDNode *N);
   void SelectTexSurfHandle(SDNode *N);
+  void SelectCvtFloatToTF32(SDNode *N);
   bool tryLoad(SDNode *N);
   bool tryLoadVector(SDNode *N);
   bool tryLDGLDU(SDNode *N);

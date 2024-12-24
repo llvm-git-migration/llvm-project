@@ -462,6 +462,56 @@ to left-shift the found bit into the most-significant bit position, otherwise
 the result is the shift amount needed to right-shift the found bit into the
 least-significant bit position. 0xffffffff is returned if no 1 bit is found.
 
+Conversion Intrinsics (for cvt.* PTX instructions)
+--------------------------------------------------
+
+'``llvm.nvvm.convert.to.tf32.f32``'
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Syntax:
+"""""""
+
+.. code-block:: llvm
+
+  declare i32 @llvm.nvvm.convert.to.tf32.f32(float %f1, metadata !round_mode, i8 %flag_sat_mode, i1 %flag_relu)
+
+Overview:
+"""""""""
+
+The '``@llvm.nvvm.convert.to.tf32.f32``' intrinsic lowers to
+the ``cvt.*.tf32.f32`` set of PTX instructions.
+
+* The first argument is the input float to be converted to TF32.
+
+* The second argument (denoted by ``metadata !round_mode``) denotes
+  the floating-point rounding modes supported for this instruction.
+  The metadata strings are the same as the ones used for constrained-fp
+  intrinsics, documented here:
+  `<https://llvm.org/docs/LangRef.html#constrainedfp>`_.
+
+  The valid rounding modes for this intrinsic are ``round.tonearest,
+  round.towardzero and round.tonearestaway``.
+
+* The third argument (denoted by ``i8 %flag_sat_mode``) denotes the
+  saturation modifier for this intrinsic. As of now, it can either
+  be None or Satfinite, according to the enumeration below:
+
+  ========== ================
+  Enum Value  Saturation Mode
+  ========== ================
+  ``0``       NONE
+  ``1``       SATFINITE
+  ========== ================
+
+* The last argument (denoted by ``i1 %flag_relu``) when set, generates
+  the ``.relu`` variant of the instruction.
+
+* Invalid values for the rounding and/or saturation modes may result in
+  error(s) during Codegen.
+
+For more information, refer PTX ISA
+`<https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt>`_.
+
 TMA family of Intrinsics
 ------------------------
 

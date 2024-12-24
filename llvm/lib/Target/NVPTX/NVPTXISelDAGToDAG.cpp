@@ -728,7 +728,55 @@ bool NVPTXDAGToDAGISel::tryIntrinsicNoChain(SDNode *N) {
   case Intrinsic::nvvm_texsurf_handle_internal:
     SelectTexSurfHandle(N);
     return true;
+  case Intrinsic::nvvm_convert_to_tf32_f32:
+    SelectCvtFloatToTF32(N);
+    return true;
   }
+}
+
+void NVPTXDAGToDAGISel::SelectCvtFloatToTF32(SDNode *N) {
+  // 0 - IID
+  // 1 - Input float
+  // 2 - Rounding mode as string metadata
+  // 3 - Saturation mode
+  // 4 - Relu flag
+  uint64_t Sat = N->getConstantOperandVal(3);
+  bool IsRelu = N->getConstantOperandVal(4) == 1;
+
+  if (!Subtarget->hasTF32Math())
+    report_fatal_error("TF32 destination format requires at least sm80");
+
+  using SatMode = nvvm::SaturationMode;
+  bool IsSatFinite = static_cast<SatMode>(Sat) == SatMode::SATFINITE;
+  if (IsSatFinite && Subtarget->getPTXVersion() < 81)
+    report_fatal_error("satfinite modifier requires PTX version 8.1 or higher");
+
+  const MDNode *MD = cast<MDNodeSDNode>(N->getOperand(2))->getMD();
+  auto RndString = cast<MDString>(MD->getOperand(0))->getString();
+  std::optional<RoundingMode> RndVal = convertStrToRoundingMode(RndString);
+  switch (*RndVal) {
+  case RoundingMode::NearestTiesToAway:
+    if (IsRelu)
+      report_fatal_error("relu not supported with rna rounding mode");
+    break;
+  case RoundingMode::NearestTiesToEven:
+  case RoundingMode::TowardZero: {
+    if (Subtarget->getSmVersion() < 90)
+      report_fatal_error("rn/rz rounding modes require at least sm90");
+    if (IsSatFinite)
+      report_fatal_error("satfinite not supported with rn/rz rounding modes");
+    break;
+  }
+  default:
+    report_fatal_error("Invalid FP rounding mode in SelectCvtFloatToTF32");
+  }
+
+  SDLoc DL(N);
+  SDValue Ops[] = {N->getOperand(1),
+                   getI32Imm(static_cast<unsigned>(*RndVal), DL),
+                   getI32Imm(Sat, DL), getI32Imm(IsRelu, DL)};
+  ReplaceNode(N, CurDAG->getMachineNode(NVPTX::cvt_f32_to_tf32, DL,
+                                        N->getVTList(), Ops));
 }
 
 void NVPTXDAGToDAGISel::SelectTexSurfHandle(SDNode *N) {
