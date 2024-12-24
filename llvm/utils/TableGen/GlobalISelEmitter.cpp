@@ -412,6 +412,10 @@ private:
   importExplicitUseRenderers(action_iterator InsertPt, RuleMatcher &M,
                              BuildMIAction &DstMIBuilder,
                              const TreePatternNode &Dst) const;
+
+  Error importNamedNodeRenderer(RuleMatcher &M, BuildMIAction &MIBuilder,
+                                const TreePatternNode &N) const;
+
   Expected<action_iterator>
   importExplicitUseRenderer(action_iterator InsertPt, RuleMatcher &Rule,
                             BuildMIAction &DstMIBuilder,
@@ -1192,15 +1196,97 @@ Error GlobalISelEmitter::importChildMatcher(
   return failedImport("Src pattern child is an unsupported kind");
 }
 
+// Equivalent of MatcherGen::EmitResultOfNamedOperand.
+Error GlobalISelEmitter::importNamedNodeRenderer(
+    RuleMatcher &M, BuildMIAction &MIBuilder, const TreePatternNode &N) const {
+  StringRef NodeName = N.getName();
+
+  if (auto SubOperand = M.getComplexSubOperand(NodeName)) {
+    auto [ComplexPatternRec, RendererID, SubOperandIdx] = *SubOperand;
+    MIBuilder.addRenderer<RenderComplexPatternOperand>(
+        *ComplexPatternRec, NodeName, RendererID, SubOperandIdx);
+    return Error::success();
+  }
+
+  if (!N.isLeaf()) {
+    StringRef OperatorName = N.getOperator()->getName();
+
+    if (OperatorName == "imm") {
+      MIBuilder.addRenderer<CopyConstantAsImmRenderer>(NodeName);
+      return Error::success();
+    }
+
+    if (OperatorName == "fpimm") {
+      MIBuilder.addRenderer<CopyFConstantAsFPImmRenderer>(NodeName);
+      return Error::success();
+    }
+
+    if (OperatorName == "bb" || OperatorName == "timm" ||
+        OperatorName == "tframeindex") {
+      MIBuilder.addRenderer<CopyRenderer>(NodeName);
+      return Error::success();
+    }
+
+    return failedImport("node has unsupported operator " + to_string(N));
+  }
+
+  if (const auto *DI = dyn_cast<DefInit>(N.getLeafValue())) {
+    const Record *R = DI->getDef();
+
+    ArrayRef<TypeSetByHwMode> ChildTypes = N.getExtTypes();
+    if (ChildTypes.size() != 1)
+      return failedImport("node has multiple results " + to_string(N));
+
+    std::optional<LLTCodeGen> OpTyOrNone;
+    if (ChildTypes.front().isMachineValueType())
+      OpTyOrNone = MVTToLLT(ChildTypes.front().getMachineValueType().SimpleTy);
+    if (!OpTyOrNone)
+      return failedImport("node has unsupported type " + to_string(N));
+
+    if (R->isSubClassOf("ComplexPattern")) {
+      auto I = ComplexPatternEquivs.find(R);
+      if (I == ComplexPatternEquivs.end())
+        return failedImport("ComplexPattern " + R->getName() +
+                            " does not have GISel equivalent");
+
+      const OperandMatcher &OM = M.getOperandMatcher(NodeName);
+      MIBuilder.addRenderer<RenderComplexPatternOperand>(
+          *I->second, NodeName, OM.getAllocatedTemporariesBaseID());
+      return Error::success();
+    }
+
+    if (R->isSubClassOf("RegisterOperand") &&
+        !R->isValueUnset("GIZeroRegister")) {
+      MIBuilder.addRenderer<CopyOrAddZeroRegRenderer>(
+          NodeName, R->getValueAsDef("GIZeroRegister"));
+      return Error::success();
+    }
+
+    if (R->isSubClassOf("RegisterClass") ||
+        R->isSubClassOf("RegisterOperand") || R->isSubClassOf("ValueType")) {
+      MIBuilder.addRenderer<CopyRenderer>(NodeName);
+      return Error::success();
+    }
+  }
+
+  if (!M.hasOperand(NodeName))
+    return failedImport("could not find node $" + NodeName +
+                        " in the source DAG");
+
+  if (isa<UnsetInit>(N.getLeafValue())) {
+    MIBuilder.addRenderer<CopyRenderer>(NodeName);
+    return Error::success();
+  }
+
+  return failedImport("unsupported node " + to_string(N));
+}
+
 Expected<action_iterator> GlobalISelEmitter::importExplicitUseRenderer(
     action_iterator InsertPt, RuleMatcher &Rule, BuildMIAction &DstMIBuilder,
     const TreePatternNode &Dst) const {
-
-  const auto &SubOperand = Rule.getComplexSubOperand(Dst.getName());
-  if (SubOperand) {
-    DstMIBuilder.addRenderer<RenderComplexPatternOperand>(
-        *std::get<0>(*SubOperand), Dst.getName(), std::get<1>(*SubOperand),
-        std::get<2>(*SubOperand));
+  if (Dst.hasName()) {
+    if (Error Err = importNamedNodeRenderer(Rule, DstMIBuilder, Dst))
+      return Err;
     return InsertPt;
   }
 
@@ -1226,37 +1312,6 @@ Expected<action_iterator> GlobalISelEmitter::importExplicitUseRenderer(
                           " has no custom renderer");
     }
 
-    // We accept 'bb' here. It's an operator because BasicBlockSDNode isn't
-    // inline, but in MI it's just another operand.
-    if (Dst.getOperator()->isSubClassOf("SDNode")) {
-      auto &ChildSDNI = CGP.getSDNodeInfo(Dst.getOperator());
-      if (ChildSDNI.getSDClassName() == "BasicBlockSDNode") {
-        DstMIBuilder.addRenderer<CopyRenderer>(Dst.getName());
-        return InsertPt;
-      }
-    }
-
-    // Similarly, imm is an operator in TreePatternNode's view but must be
-    // rendered as operands.
-    // FIXME: The target should be able to choose sign-extended when appropriate
-    //        (e.g. on Mips).
-    if (Dst.getOperator()->getName() == "timm") {
-      DstMIBuilder.addRenderer<CopyRenderer>(Dst.getName());
-      return InsertPt;
-    }
-    if (Dst.getOperator()->getName() == "tframeindex") {
-      DstMIBuilder.addRenderer<CopyRenderer>(Dst.getName());
-      return InsertPt;
-    }
-    if (Dst.getOperator()->getName() == "imm") {
-      DstMIBuilder.addRenderer<CopyConstantAsImmRenderer>(Dst.getName());
-      return InsertPt;
-    }
-    if (Dst.getOperator()->getName() == "fpimm") {
-      DstMIBuilder.addRenderer<CopyFConstantAsFPImmRenderer>(Dst.getName());
-      return InsertPt;
-    }
-
     if (Dst.getOperator()->isSubClassOf("Instruction")) {
       auto OpTy = getInstResultType(Dst, Target);
       if (!OpTy)
@@ -1274,8 +1329,8 @@ Expected<action_iterator> GlobalISelEmitter::importExplicitUseRenderer(
       return InsertPtOrError.get();
     }
 
-    return failedImport("Dst pattern child isn't a leaf node or an MBB" +
-                        llvm::to_string(Dst));
+    // Should not reach here.
+    return failedImport("unrecognized node " + llvm::to_string(Dst));
   }
 
   // It could be a specific immediate in which case we should just check for
@@ -1289,32 +1344,8 @@ Expected<action_iterator> GlobalISelEmitter::importExplicitUseRenderer(
   if (auto *ChildDefInit = dyn_cast<DefInit>(Dst.getLeafValue())) {
     auto *ChildRec = ChildDefInit->getDef();
 
-    ArrayRef<TypeSetByHwMode> ChildTypes = Dst.getExtTypes();
-    if (ChildTypes.size() != 1)
-      return failedImport("Dst pattern child has multiple results");
-
-    std::optional<LLTCodeGen> OpTyOrNone;
-    if (ChildTypes.front().isMachineValueType())
-      OpTyOrNone = MVTToLLT(ChildTypes.front().getMachineValueType().SimpleTy);
-    if (!OpTyOrNone)
-      return failedImport("Dst operand has an unsupported type");
-
     if (ChildRec->isSubClassOf("Register")) {
       DstMIBuilder.addRenderer<AddRegisterRenderer>(Target, ChildRec);
-      return InsertPt;
-    }
-
-    if (ChildRec->isSubClassOf("RegisterClass") ||
-        ChildRec->isSubClassOf("RegisterOperand") ||
-        ChildRec->isSubClassOf("ValueType")) {
-      if (ChildRec->isSubClassOf("RegisterOperand") &&
-          !ChildRec->isValueUnset("GIZeroRegister")) {
-        DstMIBuilder.addRenderer<CopyOrAddZeroRegRenderer>(
-            Dst.getName(), ChildRec->getValueAsDef("GIZeroRegister"));
-        return InsertPt;
-      }
-
-      DstMIBuilder.addRenderer<CopyRenderer>(Dst.getName());
       return InsertPt;
     }
 
@@ -1324,29 +1355,10 @@ Expected<action_iterator> GlobalISelEmitter::importExplicitUseRenderer(
       return InsertPt;
     }
 
-    if (ChildRec->isSubClassOf("ComplexPattern")) {
-      const auto &ComplexPattern = ComplexPatternEquivs.find(ChildRec);
-      if (ComplexPattern == ComplexPatternEquivs.end())
-        return failedImport(
-            "SelectionDAG ComplexPattern not mapped to GlobalISel");
-
-      const OperandMatcher &OM = Rule.getOperandMatcher(Dst.getName());
-      DstMIBuilder.addRenderer<RenderComplexPatternOperand>(
-          *ComplexPattern->second, Dst.getName(),
-          OM.getAllocatedTemporariesBaseID());
-      return InsertPt;
-    }
-
     return failedImport(
         "Dst pattern child def is an unsupported tablegen class");
   }
 
-  // Handle the case where the MVT/register class is omitted in the dest pattern
-  // but MVT exists in the source pattern.
-  if (isa<UnsetInit>(Dst.getLeafValue()) && Rule.hasOperand(Dst.getName())) {
-    DstMIBuilder.addRenderer<CopyRenderer>(Dst.getName());
-    return InsertPt;
-  }
   return failedImport("Dst pattern child is an unsupported kind");
 }
 
