@@ -25,11 +25,12 @@ public:
     // Set up a Module with a dummy function operation inside.
     // Set the insertion point in the function entry block.
     mlir::ModuleOp mod = builder.create<mlir::ModuleOp>(loc);
+    moduleOp = mod;
     mlir::func::FuncOp func =
         mlir::func::FuncOp::create(loc, "runtime_unit_tests_func",
             builder.getFunctionType(std::nullopt, std::nullopt));
     auto *entryBlock = func.addEntryBlock();
-    mod.push_back(mod);
+    mod.push_back(func);
     builder.setInsertionPointToStart(entryBlock);
 
     kindMap = std::make_unique<fir::KindMapping>(&context);
@@ -66,6 +67,7 @@ public:
   }
 
   mlir::MLIRContext context;
+  mlir::OwningOpRef<mlir::ModuleOp> moduleOp;
   std::unique_ptr<fir::KindMapping> kindMap;
   std::unique_ptr<fir::FirOpBuilder> firBuilder;
 
