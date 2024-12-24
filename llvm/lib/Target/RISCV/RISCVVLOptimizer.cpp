@@ -859,7 +859,7 @@ static bool isVectorOpUsedAsScalarOp(MachineOperand &MO) {
     return MO.getOperandNo() == 3;
   case RISCV::VMV_X_S:
   case RISCV::VFMV_F_S:
-    return MO.getOperandNo() == 2;
+    return MO.getOperandNo() == 1;
   default:
     return false;
   }
@@ -976,6 +976,14 @@ bool RISCVVLOptimizer::checkUsers(const MachineOperand *&CommonVL,
              "Expect LMUL 1 register class for vector as scalar operands!");
       LLVM_DEBUG(dbgs() << "    Used this operand as a scalar operand\n");
       const MCInstrDesc &Desc = UserMI.getDesc();
+      // VMV_X_S and VFMV_F_S do not have a VL opt which would cause an assert
+      // assert failure if we called getVLOpNum. Therefore, we will set the
+      // CommonVL in that case as 1, even if it could have been set to 0.
+      if (!RISCVII::hasVLOp(Desc.TSFlags) || !RISCVII::hasSEWOp(Desc.TSFlags)) {
+        CommonVL = &One;
+        continue;
+      }
+
       unsigned VLOpNum = RISCVII::getVLOpNum(Desc);
       const MachineOperand &VLOp = UserMI.getOperand(VLOpNum);
       if (VLOp.isReg() || (VLOp.isImm() && VLOp.getImm() != 0)) {
