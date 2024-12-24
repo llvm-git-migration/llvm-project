@@ -1190,9 +1190,9 @@ loaded along with the dialect.
 
 ## Free-threading (No-GIL) support
 
-Free-threading or no-GIL support refers to CPython interpreter (>=3.13) with Global Interpreter Lock made optional. For details on the topic, please check [PEP-703](https://peps.python.org/pep-0703/) and the this [link](https://py-free-threading.github.io/).
+Free-threading or no-GIL support refers to CPython interpreter (>=3.13) with Global Interpreter Lock made optional. For details on the topic, please check [PEP-703](https://peps.python.org/pep-0703/) and this [link](https://py-free-threading.github.io/).
 
-MLIR Python PyBind11 bindings are made free-threading compatible with exceptions (discussed below) in the following sense: it is safe to work in multiple threads with **independent** contexts/modules. Below we show an example code of safe usage:
+MLIR Python bindings are made free-threading compatible with exceptions (discussed below) in the following sense: it is safe to work in multiple threads with **independent** contexts/modules. Below we show an example code of safe usage:
 
 ```python
 # python3.13t example.py
@@ -1222,8 +1222,9 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
 ```
 
 The exceptions to the free-threading compatibility:
-- registration methods and decorators, e.g. `register_dialect`, `register_operation`, `register_dialect`, `register_attribute_builder`, ...
-- `ctypes` is unsafe
-- IR printing is unsafe
+- Usage of Python `ctypes` is unsafe
+- IR printing is unsafe, e.g. when using `PassManager` with `PassManager.enable_ir_printing()`
+- Usage of `mlirEmitError`, `mlirOperationDump` is unsafe
 
-For details, please see the list of xfailed tests in `mlir/test/python/multithreaded_tests.py`.
+
+For more details, please see the list of xfailed tests in `mlir/test/python/multithreaded_tests.py`.
