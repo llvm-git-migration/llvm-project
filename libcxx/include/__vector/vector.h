@@ -241,7 +241,7 @@ private:
 
     _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void operator()() {
       if (__vec_.__begin_ != nullptr) {
-        __vec_.__clear();
+        __vec_.clear();
         __vec_.__annotate_delete();
         __alloc_traits::deallocate(__vec_.__alloc_, __vec_.__begin_, __vec_.capacity());
       }
@@ -759,7 +759,7 @@ private:
 
   _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI void __copy_assign_alloc(const vector& __c, true_type) {
     if (this->__alloc_ != __c.__alloc_) {
-      __clear();
+      clear();
       __annotate_delete();
       __alloc_traits::deallocate(this->__alloc_, this->__begin_, capacity());
       this->__begin_ = this->__end_ = this->__cap_ = nullptr;
