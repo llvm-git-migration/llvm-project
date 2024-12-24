@@ -665,7 +665,7 @@ function(add_mlir_python_extension libname extname)
 
     if (LLVM_COMPILER_IS_GCC_COMPATIBLE OR CLANG_CL)
       # Avoids warnings from upstream nanobind.
-      target_compile_options(nanobind-static
+      target_compile_options(${libname}
         PRIVATE
           -Wno-cast-qual
           -Wno-zero-length-array

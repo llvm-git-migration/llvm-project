@@ -24,13 +24,9 @@ In order to import the test file as python module, we remove all executing funct
 
 
 Observed warnings reported by TSAN.
-- Python 3.13.1 experimental free-threading build (tags/v3.13.1:06714517797, Dec 10 2024, 00:18:06) [Clang 15.0.7 ]
-- numpy      2.3.0.dev0
-- nanobind   2.5.0.dev1
-- pybind11   master
 
 CPython and free-threading known data-races:
-1) ctypes  => try to build libffi with TSAN. Reported data races may be false positives. => can't build libffi from source
+1) ctypes
 ```
 WARNING: ThreadSanitizer: data race (pid=99593)
   Atomic read of size 1 at 0x7f6054c485a8 by thread T3:
@@ -219,15 +215,12 @@ E                   #8 cfunction_call /tmp/cpython-tsan/Objects/methodobject.c:5
 
 """
 import concurrent.futures
-import functools
 import gc
 import importlib.util
 import sys
 import threading
 import tempfile
 
-from collections import defaultdict
-from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Optional
 
@@ -377,89 +370,89 @@ def run_construct_and_print_in_module(f):
 
 
 TEST_MODULES = [
-    ("execution_engine", run),  # Fail,
-    ("pass_manager", run),  # Fail
-    ("dialects/affine", run_with_insertion_point_v2),  # Pass
-    ("dialects/func", run_with_insertion_point_v2),  # Pass
-    ("dialects/arith_dialect", run),  # Pass
-    ("dialects/arith_llvm", run),  # Pass
-    ("dialects/async_dialect", run),  # Pass
-    ("dialects/builtin", run),  # Pass
-    ("dialects/cf", run_with_insertion_point_v4),  # Pass
-    ("dialects/complex_dialect", run),  # Pass
-    ("dialects/func", run_with_insertion_point_v2),  # Pass
-    ("dialects/index_dialect", run_with_insertion_point),  # Pass
-    ("dialects/llvm", run_with_insertion_point_v2),  # Pass
-    ("dialects/math_dialect", run),  # Pass
-    ("dialects/memref", run),  # Fail
-    ("dialects/ml_program", run_with_insertion_point_v2),  # Pass
-    ("dialects/nvgpu", run_with_insertion_point_v2),  # Pass
-    ("dialects/nvvm", run_with_insertion_point_v2),  # Pass
-    ("dialects/ods_helpers", run),  # Pass
-    ("dialects/openmp_ops", run_with_insertion_point_v2),  # Pass
-    ("dialects/pdl_ops", run_with_insertion_point_v2),  # Pass
+    ("execution_engine", run),
+    ("pass_manager", run),
+    ("dialects/affine", run_with_insertion_point_v2),
+    ("dialects/func", run_with_insertion_point_v2),
+    ("dialects/arith_dialect", run),
+    ("dialects/arith_llvm", run),
+    ("dialects/async_dialect", run),
+    ("dialects/builtin", run),
+    ("dialects/cf", run_with_insertion_point_v4),
+    ("dialects/complex_dialect", run),
+    ("dialects/func", run_with_insertion_point_v2),
+    ("dialects/index_dialect", run_with_insertion_point),
+    ("dialects/llvm", run_with_insertion_point_v2),
+    ("dialects/math_dialect", run),
+    ("dialects/memref", run),
+    ("dialects/ml_program", run_with_insertion_point_v2),
+    ("dialects/nvgpu", run_with_insertion_point_v2),
+    ("dialects/nvvm", run_with_insertion_point_v2),
+    ("dialects/ods_helpers", run),
+    ("dialects/openmp_ops", run_with_insertion_point_v2),
+    ("dialects/pdl_ops", run_with_insertion_point_v2),
     # ("dialects/python_test", run),  # TODO: Need to pass pybind11 or nanobind argv
-    ("dialects/quant", run),  # Pass
-    ("dialects/rocdl", run_with_insertion_point_v2),  # Pass
-    ("dialects/scf", run_with_insertion_point_v2),  # Pass
-    ("dialects/shape", run),  # Pass
-    ("dialects/spirv_dialect", run),  # Pass
-    ("dialects/tensor", run),  # Pass
+    ("dialects/quant", run),
+    ("dialects/rocdl", run_with_insertion_point_v2),
+    ("dialects/scf", run_with_insertion_point_v2),
+    ("dialects/shape", run),
+    ("dialects/spirv_dialect", run),
+    ("dialects/tensor", run),
     # ("dialects/tosa", ),  # Nothing to test
-    ("dialects/transform_bufferization_ext", run_with_insertion_point_v2),  # Pass
+    ("dialects/transform_bufferization_ext", run_with_insertion_point_v2),
     # ("dialects/transform_extras", ),  # Needs a more complicated execution schema
-    ("dialects/transform_gpu_ext", run_transform_tensor_ext),  # Pass
+    ("dialects/transform_gpu_ext", run_transform_tensor_ext),
     (
         "dialects/transform_interpreter",
         run_with_context_and_location,
         ["print_", "transform_options", "failed", "include"],
-    ),  # Fail
+    ),
     (
         "dialects/transform_loop_ext",
         run_with_insertion_point_v2,
         ["loopOutline"],
-    ),  # Pass
-    ("dialects/transform_memref_ext", run_with_insertion_point_v2),  # Pass
-    ("dialects/transform_nvgpu_ext", run_with_insertion_point_v2),  # Pass
-    ("dialects/transform_sparse_tensor_ext", run_transform_tensor_ext),  # Pass
-    ("dialects/transform_structured_ext", run_transform_structured_ext),  # Pass
-    ("dialects/transform_tensor_ext", run_transform_tensor_ext),  # Pass
+    ),
+    ("dialects/transform_memref_ext", run_with_insertion_point_v2),
+    ("dialects/transform_nvgpu_ext", run_with_insertion_point_v2),
+    ("dialects/transform_sparse_tensor_ext", run_transform_tensor_ext),
+    ("dialects/transform_structured_ext", run_transform_structured_ext),
+    ("dialects/transform_tensor_ext", run_transform_tensor_ext),
     (
         "dialects/transform_vector_ext",
         run_apply_patterns,
         ["configurable_patterns"],
-    ),  # Pass
-    ("dialects/transform", run_with_insertion_point_v3),  # Pass
-    ("dialects/vector", run_with_context_and_location),  # Pass
-    ("dialects/gpu/dialect", run_with_context_and_location),  # Pass
-    ("dialects/gpu/module-to-binary-nvvm", run_with_context_and_location),  # Pass
-    ("dialects/gpu/module-to-binary-rocdl", run_with_context_and_location),  # Fail
-    ("dialects/linalg/ops", run),  # Pass
+    ),
+    ("dialects/transform", run_with_insertion_point_v3),
+    ("dialects/vector", run_with_context_and_location),
+    ("dialects/gpu/dialect", run_with_context_and_location),
+    ("dialects/gpu/module-to-binary-nvvm", run_with_context_and_location),
+    ("dialects/gpu/module-to-binary-rocdl", run_with_context_and_location),
+    ("dialects/linalg/ops", run),
     # TO ADD: No proper tests in this dialects/linalg/opsdsl/*
-    # ("dialects/linalg/opsdsl/*", ...),  #
-    ("dialects/sparse_tensor/dialect", run),  # Pass
-    ("dialects/sparse_tensor/passes", run),  # Pass
-    ("integration/dialects/pdl", run_construct_and_print_in_module),  # Pass
-    ("integration/dialects/transform", run_construct_and_print_in_module),  # Pass
-    ("integration/dialects/linalg/opsrun", run),  # Fail
-    ("ir/affine_expr", run),  # Pass
-    ("ir/affine_map", run),  # Pass
-    ("ir/array_attributes", run),  # Pass
-    ("ir/attributes", run),  # Pass
-    ("ir/blocks", run),  # Pass
-    ("ir/builtin_types", run),  # Pass
-    ("ir/context_managers", run),  # Pass
-    ("ir/debug", run),  # Fail
-    ("ir/diagnostic_handler", run),  # Fail
-    ("ir/dialects", run),  # Fail
-    ("ir/exception", run),  # Pass
-    ("ir/insertion_point", run),  # Pass
-    ("ir/integer_set", run),  # Pass
-    ("ir/location", run),  # Pass
-    ("ir/module", run),  # Fail
-    ("ir/operation", run),  # Pass
-    ("ir/symbol_table", run),  # Pass
-    ("ir/value", run),  # Pass
+    # ("dialects/linalg/opsdsl/*", ...),
+    ("dialects/sparse_tensor/dialect", run),
+    ("dialects/sparse_tensor/passes", run),
+    ("integration/dialects/pdl", run_construct_and_print_in_module),
+    ("integration/dialects/transform", run_construct_and_print_in_module),
+    ("integration/dialects/linalg/opsrun", run),
+    ("ir/affine_expr", run),
+    ("ir/affine_map", run),
+    ("ir/array_attributes", run),
+    ("ir/attributes", run),
+    ("ir/blocks", run),
+    ("ir/builtin_types", run),
+    ("ir/context_managers", run),
+    ("ir/debug", run),
+    ("ir/diagnostic_handler", run),
+    ("ir/dialects", run),
+    ("ir/exception", run),
+    ("ir/insertion_point", run),
+    ("ir/integer_set", run),
+    ("ir/location", run),
+    ("ir/module", run),
+    ("ir/operation", run),
+    ("ir/symbol_table", run),
+    ("ir/value", run),
 ]
 
 TESTS_TO_SKIP = [
@@ -467,9 +460,7 @@ TESTS_TO_SKIP = [
     "test_execution_engine__testSharedLibLoad_multi_threaded",  # testSharedLibLoad can't run in multiple threads, even with GIL
     "test_dialects_arith_dialect__testArithValue_multi_threaded",  # RuntimeError: Value caster is already registered: <class 'dialects/arith_dialect.testArithValue.<locals>.ArithValue'>, even with GIL
     "test_ir_dialects__testAppendPrefixSearchPath_multi_threaded",  # PyGlobals::setDialectSearchPrefixes is not thread-safe, even with GIL. Strange usage of static PyGlobals vs python exposed _cext.globals
-    "test_ir_value__testValueCasters_multi_threaded_multi_threaded",  # RuntimeError: Value caster is already registered: <function testValueCasters.<locals>.dont_cast_int, even with GIL
-    "test_ir_operation_testKnownOpView_multi_threaded_multi_threaded",  # uses register_operation method in the test
-    "test_dialects_transform_structured_ext__testMatchInterfaceEnumReplaceAttributeBuilder_multi_threaded",  # uses register_attribute_builder method in the test
+    "test_ir_value__testValueCasters_multi_threaded",  # RuntimeError: Value caster is already registered: <function testValueCasters.<locals>.dont_cast_int, even with GIL
 ]
 
 TESTS_TO_XFAIL = [
@@ -521,6 +512,7 @@ TESTS_TO_XFAIL = [
     # IR tests
     "test_ir_diagnostic_handler__testDiagnosticCallbackException_multi_threaded",  # mlirEmitError is not thread-safe
     "test_ir_module__testParseSuccess_multi_threaded",  #  mlirOperationDump is not thread-safe
+    "test_ir_module__testModuleCapsule_multi_threaded",  #
 
     # https://github.com/python/cpython/issues/128013
     "test_ir_module__testRoundtripUnicode_multi_threaded",
@@ -638,7 +630,7 @@ def multi_threaded(
 
 
 @multi_threaded(
-    num_workers=8,
+    num_workers=10,
     num_runs=20,
     skip_tests=TESTS_TO_SKIP,
     xfail_tests=TESTS_TO_XFAIL,
@@ -673,3 +665,5 @@ class TestAllMultiThreaded:
 
             with InsertionPoint(module.body), Location.name("c"):
                 arith.constant(dtype, py_values[2])
+
+
