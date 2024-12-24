@@ -728,7 +728,53 @@ bool NVPTXDAGToDAGISel::tryIntrinsicNoChain(SDNode *N) {
   case Intrinsic::nvvm_texsurf_handle_internal:
     SelectTexSurfHandle(N);
     return true;
+  case Intrinsic::nvvm_cvt_float_to_tf32:
+    SelectCvtFloatToTF32(N);
+    return true;
   }
+}
+
+void NVPTXDAGToDAGISel::SelectCvtFloatToTF32(SDNode *N) {
+  // 0 - IID
+  // 1 - Input Float
+  // 2 - Rounding Mode
+  // 3 - Saturation Mode
+  // 4 - Relu Flag
+  uint64_t Rnd = N->getConstantOperandVal(2);
+  uint64_t Sat = N->getConstantOperandVal(3);
+  bool IsRelu = N->getConstantOperandVal(4) == 1;
+
+  if (!Subtarget->hasTF32Math())
+    report_fatal_error("TF32 destination format requires at least sm80");
+
+  using SatMode = nvvm::SaturationMode;
+  bool IsSatFinite = static_cast<SatMode>(Sat) == SatMode::SATFINITE;
+  if (IsSatFinite && Subtarget->getPTXVersion() < 81)
+    report_fatal_error("satfinite modifier requires PTX version 8.1 or higher");
+
+  using RndMode = nvvm::FPRoundingMode;
+  switch (static_cast<RndMode>(Rnd)) {
+  case RndMode::ROUND_RNA:
+    if (IsRelu)
+      report_fatal_error("relu not supported with rna rounding mode");
+    break;
+  case RndMode::ROUND_RN:
+  case RndMode::ROUND_RZ: {
+    if (Subtarget->getSmVersion() < 90)
+      report_fatal_error("rn/rz rounding modes require at least sm90");
+    if (IsSatFinite)
+      report_fatal_error("satfinite not supported with rn/rz rounding modes");
+    break;
+  }
+  default:
+    report_fatal_error("Invalid FP rounding mode in SelectCvtFloatToTF32");
+  }
+
+  SDLoc DL(N);
+  SDValue Ops[] = {N->getOperand(1), getI32Imm(Rnd, DL), getI32Imm(Sat, DL),
+                   getI32Imm(IsRelu, DL)};
+  ReplaceNode(N, CurDAG->getMachineNode(NVPTX::cvt_float_to_tf32, DL,
+                                        N->getVTList(), Ops));
 }
 
 void NVPTXDAGToDAGISel::SelectTexSurfHandle(SDNode *N) {

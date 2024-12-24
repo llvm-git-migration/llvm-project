@@ -83,6 +83,7 @@ public:
   bool hasFP16Math() const { return SmVersion >= 53; }
   bool hasBF16Math() const { return SmVersion >= 80; }
   bool allowFP16Math() const;
+  bool hasTF32Math() const { return SmVersion >= 80 && PTXVersion >= 70; }
   bool hasMaskOperator() const { return PTXVersion >= 71; }
   bool hasNoReturn() const { return SmVersion >= 30 && PTXVersion >= 64; }
   // Does SM & PTX support memory orderings (weak and atomic: relaxed, acquire,

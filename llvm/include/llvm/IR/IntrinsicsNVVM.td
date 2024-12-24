@@ -1466,6 +1466,15 @@ let TargetPrefix = "nvvm" in {
   def int_nvvm_e5m2x2_to_f16x2_rn_relu : ClangBuiltin<"__nvvm_e5m2x2_to_f16x2_rn_relu">,
       Intrinsic<[llvm_v2f16_ty], [llvm_i16_ty], [IntrNoMem, IntrNoCallback]>;
 
+// Convert Float to TF32
+def int_nvvm_cvt_float_to_tf32 : Intrinsic<[llvm_i32_ty],
+    [llvm_float_ty, // Input float
+     llvm_i8_ty,    // Flag for Rounding Modes
+     llvm_i8_ty,    // Flag for Saturation Modes
+     llvm_i1_ty],   // Flag for relu
+    [IntrNoMem, IntrNoCallback,
+     ImmArg<ArgIndex<1>>, ImmArg<ArgIndex<2>>, ImmArg<ArgIndex<3>>]>;
+
 // FNS
 
   def int_nvvm_fns : ClangBuiltin<"__nvvm_fns">,

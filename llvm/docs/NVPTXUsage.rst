@@ -462,6 +462,66 @@ to left-shift the found bit into the most-significant bit position, otherwise
 the result is the shift amount needed to right-shift the found bit into the
 least-significant bit position. 0xffffffff is returned if no 1 bit is found.
 
+Conversion Intrinsics (for cvt.* PTX instructions)
+--------------------------------------------------
+
+'``llvm.nvvm.cvt.float.to.tf32``'
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Syntax:
+"""""""
+
+.. code-block:: llvm
+
+  declare i32 @llvm.nvvm.cvt.float.to.tf32(float %f1, i8 %flag_fp_rnd_mode, i8 %flag_sat_mode, i1 %flag_relu)
+
+Overview:
+"""""""""
+
+The '``@llvm.nvvm.cvt.float.to.tf32``' intrinsic lowers to
+the ``cvt.*.tf32.f32`` set of PTX instructions.
+
+* The first argument is the input float to be converted to TF32.
+  This is followed by three flag arguments encoding the rounding mode,
+  saturation mode, and the relu modifier respectively.
+
+* The second argument (denoted by ``i8 %flag_fp_rnd_mode``) denotes
+  the floating-point rounding modes supported for this instruction.
+  This must be a compile-time constant and the encoding is as below:
+
+  ========== ==============
+  Enum Value  Rounding Mode
+  ========== ==============
+  ``0``       NONE
+  ``1``       ROUND_RZ
+  ``2``       ROUND_RN
+  ``3``       ROUND_RP
+  ``4``       ROUND_RM
+  ``5``       ROUND_RNA
+  ========== ==============
+
+  The valid rounding modes are ``RNA, RN and RZ``.
+
+* The third argument (denoted by ``i8 %flag_sat_mode``) denotes the
+  saturation modifier for this intrinsic. As of now, it can either
+  be None or Satfinite, according to the enumeration below:
+
+  ========== ================
+  Enum Value  Saturation Mode
+  ========== ================
+  ``0``       NONE
+  ``1``       SATFINITE
+  ========== ================
+
+* The last argument (denoted by ``i1 %flag_relu``) when set, generates
+  the ``.relu`` variant of the instruction.
+
+* Invalid values for the compile-time flag arguments may lead
+  to error(s) during Codegen.
+
+For more information, refer PTX ISA
+`<https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt>`_.
+
 TMA family of Intrinsics
 ------------------------
 

@@ -34,6 +34,22 @@ enum class TMAReductionOp : uint8_t {
   XOR = 7,
 };
 
+// Rounding Modes for floating point types
+enum class FPRoundingMode : uint8_t {
+  NONE = 0,
+  ROUND_RZ = 1,  // roundTowardZero
+  ROUND_RN = 2,  // roundToNearest-TiesToEven
+  ROUND_RP = 3,  // roundTowardPositiveInf
+  ROUND_RM = 4,  // roundTowardNegativeInf
+  ROUND_RNA = 5, // roundToNearest-TiesAwayFromZero
+};
+
+// Saturation Modes
+enum class SaturationMode : uint8_t {
+  NONE = 0,
+  SATFINITE = 1,
+};
+
 } // namespace nvvm
 } // namespace llvm
 #endif // LLVM_IR_NVVMINTRINSICFLAGS_H
