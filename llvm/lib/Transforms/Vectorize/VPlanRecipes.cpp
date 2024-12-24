@@ -1171,6 +1171,7 @@ void VPWidenSelectRecipe::print(raw_ostream &O, const Twine &Indent,
   O << Indent << "WIDEN-SELECT ";
   printAsOperand(O, SlotTracker);
   O << " = select ";
+  printFlags(O);
   getOperand(0)->printAsOperand(O, SlotTracker);
   O << ", ";
   getOperand(1)->printAsOperand(O, SlotTracker);
