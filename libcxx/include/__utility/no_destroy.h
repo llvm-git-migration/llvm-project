@@ -45,6 +45,9 @@ struct __no_destroy {
   _LIBCPP_HIDE_FROM_ABI _Tp& __get() { return *reinterpret_cast<_Tp*>(__obj_); }
   _LIBCPP_HIDE_FROM_ABI _Tp const& __get() const { return *reinterpret_cast<const _Tp*>(__obj_); }
 
+  _LIBCPP_HIDE_FROM_ABI _Tp* operator&() { return &__get(); }
+  _LIBCPP_HIDE_FROM_ABI const _Tp* operator&() const { return &__get(); }
+
 private:
   _ALIGNAS_TYPE(_Tp) char __obj_[sizeof(_Tp)];
 };
