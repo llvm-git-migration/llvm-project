@@ -1790,6 +1790,14 @@ public:
   }
 
   uint16_t getMinFunctionAlignment() const override { return 4; }
+
+  std::optional<uint32_t>
+  getInstructionSize(const MCInst &Inst) const override {
+    if (isPseudo(Inst)) {
+      return 0;
+    }
+    return 4;
+  }
 };
 
 } // end anonymous namespace

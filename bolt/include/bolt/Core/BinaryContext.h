@@ -1363,6 +1363,9 @@ public:
     if (std::optional<uint32_t> Size = MIB->getSize(Inst))
       return *Size;
 
+    if (std::optional<uint32_t> Size = MIB->getInstructionSize(Inst))
+      return *Size;
+
     if (!Emitter)
       Emitter = this->MCE.get();
     SmallString<256> Code;
