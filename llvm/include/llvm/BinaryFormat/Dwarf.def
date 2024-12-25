@@ -605,6 +605,10 @@ HANDLE_DW_AT(0x3b28, BORLAND_Delphi_ABI, 0, BORLAND)
 HANDLE_DW_AT(0x3b29, BORLAND_Delphi_return, 0, BORLAND)
 HANDLE_DW_AT(0x3b30, BORLAND_Delphi_frameptr, 0, BORLAND)
 HANDLE_DW_AT(0x3b31, BORLAND_closure, 0, BORLAND)
+
+// Rust extensions.
+HANDLE_DW_AT(0x3c00, RUST_short_backtrace, 0, RUST)
+
 // LLVM project extensions.
 HANDLE_DW_AT(0x3e00, LLVM_include_path, 0, LLVM)
 HANDLE_DW_AT(0x3e01, LLVM_config_macros, 0, LLVM)
