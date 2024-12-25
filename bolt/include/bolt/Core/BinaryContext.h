@@ -1363,6 +1363,17 @@ public:
     if (std::optional<uint32_t> Size = MIB->getSize(Inst))
       return *Size;
 
+    // Pseudo instrs will not be emiitted and have no size.
+    if (MIB->isPseudo(Inst)) {
+      return 0;
+    }
+
+    // Directly return 4 because AArch64 instructions always have a
+    // fixed size of 4 bytes.
+    if (isAArch64()) {
+      return 4;
+    }
+
     if (!Emitter)
       Emitter = this->MCE.get();
     SmallString<256> Code;
