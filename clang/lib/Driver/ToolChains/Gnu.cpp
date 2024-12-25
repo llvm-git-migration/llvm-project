@@ -464,7 +464,7 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       if (!Args.hasArg(options::OPT_shared)) {
         if (Args.hasArg(options::OPT_pg))
           crt1 = "gcrt1.o";
-        else if (IsPIE)
+        else if (IsPIE && Triple.getEnvironment() != llvm::Triple::LLVM)
           crt1 = "Scrt1.o";
         else if (IsStaticPIE)
           crt1 = "rcrt1.o";
