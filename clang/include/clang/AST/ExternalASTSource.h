@@ -51,6 +51,7 @@ class RecordDecl;
 class Selector;
 class Stmt;
 class TagDecl;
+class Module;
 
 /// Abstract interface for external sources of AST nodes.
 ///
@@ -145,12 +146,17 @@ public:
   /// Find all declarations with the given name in the given context,
   /// and add them to the context by calling SetExternalVisibleDeclsForName
   /// or SetNoExternalVisibleDeclsForName.
+  /// \param NamedModule, when this is set the external module local
+  /// declarations within the same module of \param NamedModule will be found
+  /// too. The \param NamedModule may be different than the owning module of
+  /// \param DC since the same namespace can appear in multiple module units.
   /// \return \c true if any declarations might have been found, \c false if
   /// we definitely have no declarations with tbis name.
   ///
   /// The default implementation of this method is a no-op returning \c false.
-  virtual bool
-  FindExternalVisibleDeclsByName(const DeclContext *DC, DeclarationName Name);
+  virtual bool FindExternalVisibleDeclsByName(const DeclContext *DC,
+                                              DeclarationName Name,
+                                              Module *NamedModule);
 
   /// Load all the external specializations for the Decl \param D if \param
   /// OnlyPartial is false. Otherwise, load all the external **partial**
