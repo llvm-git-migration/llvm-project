@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "src/time/localtime.h"
 #include "src/time/gmtime_r.h"
+#include "src/time/localtime.h"
 #include "src/time/time_utils.h"
 #include "test/UnitTest/Test.h"
 #include "test/src/time/TmMatcher.h"
