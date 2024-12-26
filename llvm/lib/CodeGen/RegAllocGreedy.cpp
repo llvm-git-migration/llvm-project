@@ -2764,8 +2764,11 @@ bool RAGreedy::runOnMachineFunction(MachineFunction &mf) {
                                : TRI->reverseLocalAssignment();
 
   ExtraInfo.emplace();
-  EvictAdvisor =
-      getAnalysis<RegAllocEvictionAdvisorAnalysisLegacy>().getProvider()->getAdvisor(*MF, *this);
+
+  auto &EvictAdvisorProvider =
+      getAnalysis<RegAllocEvictionAdvisorAnalysisLegacy>().getProvider();
+  EvictAdvisor = EvictAdvisorProvider->getAdvisor(*MF, *this, MBFI, Loops);
+
   PriorityAdvisor =
       getAnalysis<RegAllocPriorityAdvisorAnalysis>().getAdvisor(*MF, *this);
 
