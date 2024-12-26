@@ -2771,7 +2771,7 @@ bool RAGreedy::runOnMachineFunction(MachineFunction &mf) {
 
   PriorityAdvisor = getAnalysis<RegAllocPriorityAdvisorAnalysisLegacy>()
                         .getProvider()
-                        ->getAdvisor(*MF, *this);
+                        ->getAdvisor(*MF, *this, Indexes);
 
   VRAI = std::make_unique<VirtRegAuxInfo>(*MF, *LIS, *VRM, *Loops, *MBFI);
   SpillerInstance.reset(createInlineSpiller(*this, *MF, *VRM, *VRAI));
