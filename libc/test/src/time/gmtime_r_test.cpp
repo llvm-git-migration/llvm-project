@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/time/gmtime_r.h"
+#include "src/time/localtime.h"
 #include "src/time/time_utils.h"
 #include "test/UnitTest/Test.h"
 #include "test/src/time/TmMatcher.h"
@@ -15,7 +16,7 @@ using LIBC_NAMESPACE::time_utils::TimeConstants;
 
 // gmtime and gmtime_r share the same code and thus didn't repeat all the tests
 // from gmtime. Added couple of validation tests.
-/*TEST(LlvmLibcGmTimeR, EndOf32BitEpochYear) {
+TEST(LlvmLibcGmTimeR, EndOf32BitEpochYear) {
   // Test for maximum value of a signed 32-bit integer.
   // Test implementation can encode time for Tue 19 January 2038 03:14:07 UTC.
   time_t seconds = 0x7FFFFFFF;
@@ -33,9 +34,9 @@ using LIBC_NAMESPACE::time_utils::TimeConstants;
                    0}),
                *tm_data_ptr);
   EXPECT_TM_EQ(*tm_data_ptr, tm_data);
-}*/
+}
 
-/*TEST(LlvmLibcGmTimeR, Max64BitYear) {
+TEST(LlvmLibcGmTimeR, Max64BitYear) {
   if (sizeof(time_t) == 4)
     return;
   // Test for Tue Jan 1 12:50:50 in 2,147,483,647th year.
@@ -54,4 +55,4 @@ using LIBC_NAMESPACE::time_utils::TimeConstants;
                    0}),
                *tm_data_ptr);
   EXPECT_TM_EQ(*tm_data_ptr, tm_data);
-}*/
+}
