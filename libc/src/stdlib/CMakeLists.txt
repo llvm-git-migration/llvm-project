@@ -388,6 +388,57 @@ if(NOT LIBC_TARGET_OS_IS_BAREMETAL AND NOT LIBC_TARGET_OS_IS_GPU)
       DEPENDS
         ${SCUDO_DEPS}
     )
+  elseif(NOT ${LIBC_CONF_ALLOC_TYPE} MATCHES "LIBC_CONF_ALLOC_TYPE_EXTERN")
+    add_entrypoint_object(
+      aligned_alloc
+      SRCS
+        aligned_alloc.cpp
+      HDRS
+        aligned_alloc.h
+      DEPENDS
+        libc.src.__support.alloc.alloc
+    )
+
+    add_entrypoint_object(
+      malloc
+      SRCS
+        malloc.cpp
+      HDRS
+        malloc.h
+      DEPENDS
+        .aligned_alloc
+    )
+
+    add_entrypoint_object(
+      calloc
+      SRCS
+        calloc.cpp
+      HDRS
+        calloc.h
+      DEPENDS
+        .malloc
+    )
+
+    add_entrypoint_object(
+      realloc
+      SRCS
+        realloc.cpp
+      HDRS
+        realloc.h
+      DEPENDS
+        libc.src.__support.alloc.alloc
+    )
+
+    add_entrypoint_object(
+      free
+      SRCS
+        free.cpp
+      HDRS
+        free.h
+      DEPENDS
+        libc.src.__support.libc_assert
+        libc.src.__support.alloc.alloc
+    )
   else()
     add_entrypoint_external(
       malloc
