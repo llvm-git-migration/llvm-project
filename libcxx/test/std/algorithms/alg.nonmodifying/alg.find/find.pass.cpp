@@ -14,6 +14,7 @@
 // MSVC warning C4389: '==': signed/unsigned mismatch
 // MSVC warning C4805: '==': unsafe mix of type 'char' and type 'bool' in operation
 // ADDITIONAL_COMPILE_FLAGS(cl-style-warnings): /wd4245 /wd4305 /wd4310 /wd4389 /wd4805
+// ADDITIONAL_COMPILE_FLAGS(has-fconstexpr-steps): -fconstexpr-steps=20000000
 
 // <algorithm>
 
@@ -226,6 +227,19 @@ TEST_CONSTEXPR_CXX20 bool test() {
 #endif
 
   types::for_each(types::integral_types(), TestIntegerPromotions());
+
+  // Test vector<bool>::iterator optimization
+  if (TEST_STD_AT_LEAST_20_OR_RUNTIME_EVALUATED) {
+    std::vector<bool> vec(256 + 64);
+    for (ptrdiff_t i = 1; i != 256; ++i) {
+      for (size_t offset = 0; offset != 64; ++offset) {
+        std::fill(vec.begin(), vec.end(), false);
+        std::fill(vec.begin() + offset, vec.begin() + i + offset, true);
+        assert(std::find(vec.begin(), vec.begin() + i + offset, true) == vec.begin() + offset);
+        assert(std::find(vec.begin() + offset, vec.end(), false) == vec.begin() + offset + i);
+      }
+    }
+  }
 
   return true;
 }

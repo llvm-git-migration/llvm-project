@@ -46,53 +46,36 @@ struct Test {
   }
 };
 
-TEST_CONSTEXPR_CXX20 bool test() {
-  types::for_each(types::forward_iterator_list<char*>(), Test<char>());
-  types::for_each(types::forward_iterator_list<int*>(), Test<int>());
-  {   // test vector<bool>::iterator optimization
-    { // simple case
-      std::vector<bool> in(4, false);
-      std::vector<bool> expected(4, true);
+template <std::size_t N>
+struct TestBitIter {
+  TEST_CONSTEXPR_CXX20 void operator()() {
+    { // Test fill with full bytes
+      std::vector<bool> in(N);
+      std::vector<bool> expected(N, true);
       std::fill(in.begin(), in.end(), true);
       assert(in == expected);
     }
-    { // partial byte in the front is not filled
-      std::vector<bool> in(8, false);
-      std::vector<bool> expected(8, true);
-      expected[0] = false;
-      expected[1] = false;
-      std::fill(in.begin() + 2, in.end(), true);
-      assert(in == expected);
-    }
-    { // partial byte in the back is not filled
-      std::vector<bool> in(8, false);
-      std::vector<bool> expected(8, true);
-      expected[6] = false;
-      expected[7] = false;
-      std::fill(in.begin(), in.end() - 2, true);
-      assert(in == expected);
-    }
-    { // partial byte in the front and back is not filled
-      std::vector<bool> in(16, false);
-      std::vector<bool> expected(16, true);
-      expected[0]  = false;
-      expected[1]  = false;
-      expected[14] = false;
-      expected[15] = false;
-      std::fill(in.begin() + 2, in.end() - 2, true);
-      assert(in == expected);
-    }
-    { // only a few bits of a byte are set
-      std::vector<bool> in(8, false);
-      std::vector<bool> expected(8, true);
-      expected[0] = false;
-      expected[1] = false;
-      expected[6] = false;
-      expected[7] = false;
-      std::fill(in.begin() + 2, in.end() - 2, true);
+    { // Test fill with partial bytes
+      std::vector<bool> in(N + 4);
+      std::vector<bool> expected(N + 4, true);
+      std::fill(in.begin(), in.end(), true);
       assert(in == expected);
     }
   }
+};
+
+TEST_CONSTEXPR_CXX20 bool test() {
+  types::for_each(types::forward_iterator_list<char*>(), Test<char>());
+  types::for_each(types::forward_iterator_list<int*>(), Test<int>());
+
+  { // Test vector<bool>::iterator optimization
+    TestBitIter<8>()();
+    TestBitIter<16>()();
+    TestBitIter<32>()();
+    TestBitIter<64>()();
+    TestBitIter<256>()();
+  }
+
   return true;
 }
 

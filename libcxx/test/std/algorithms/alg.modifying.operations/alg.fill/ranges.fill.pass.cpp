@@ -20,6 +20,7 @@
 #include <cassert>
 #include <ranges>
 #include <string>
+#include <vector>
 
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
@@ -53,7 +54,7 @@ constexpr void test_iterators() {
     }
     {
       int a[3];
-      auto range = std::ranges::subrange(It(a), Sent(It(a + 3)));
+      auto range                = std::ranges::subrange(It(a), Sent(It(a + 3)));
       std::same_as<It> auto ret = std::ranges::fill(range, 1);
       assert(std::all_of(a, a + 3, [](int i) { return i == 1; }));
       assert(base(ret) == a + 3);
@@ -69,11 +70,29 @@ constexpr void test_iterators() {
     {
       std::array<int, 0> a;
       auto range = std::ranges::subrange(It(a.data()), Sent(It(a.data())));
-      auto ret = std::ranges::fill(range, 1);
+      auto ret   = std::ranges::fill(range, 1);
       assert(base(ret) == a.data());
     }
   }
 }
+
+template <std::size_t N>
+struct TestBitIter {
+  constexpr void operator()() {
+    { // Test range overload with full bytes
+      std::vector<bool> in(N);
+      std::vector<bool> expected(N, true);
+      std::ranges::fill(in, true);
+      assert(in == expected);
+    }
+    { // Test (iterator, sentinel) overload with partial bytes
+      std::vector<bool> in(N + 4);
+      std::vector<bool> expected(N + 4, true);
+      std::ranges::fill(std::ranges::begin(in), std::ranges::end(in), true);
+      assert(in == expected);
+    }
+  }
+};
 
 constexpr bool test() {
   test_iterators<cpp17_output_iterator<int*>, sentinel_wrapper<cpp17_output_iterator<int*>>>();
@@ -94,19 +113,19 @@ constexpr bool test() {
     };
     {
       S a[5];
-      std::ranges::fill(a, a + 5, S {true});
+      std::ranges::fill(a, a + 5, S{true});
       assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
     }
     {
       S a[5];
-      std::ranges::fill(a, S {true});
+      std::ranges::fill(a, S{true});
       assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
     }
   }
 
   { // check that std::ranges::dangling is returned
     [[maybe_unused]] std::same_as<std::ranges::dangling> decltype(auto) ret =
-        std::ranges::fill(std::array<int, 10> {}, 1);
+        std::ranges::fill(std::array<int, 10>{}, 1);
   }
 
   { // check that std::ranges::dangling isn't returned with a borrowing range
@@ -129,6 +148,14 @@ constexpr bool test() {
       assert(ret == a.end());
       assert(std::all_of(a.begin(), a.end(), [](auto& s) { return s == "long long string so no SSO"; }));
     }
+  }
+
+  { // Test vector<bool>::iterator optimization
+    TestBitIter<8>()();
+    TestBitIter<16>()();
+    TestBitIter<32>()();
+    TestBitIter<64>()();
+    TestBitIter<256>()();
   }
 
   return true;
