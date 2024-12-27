@@ -328,6 +328,7 @@ generic-cxx26)
     generate-cmake -C "${MONOREPO_ROOT}/libcxx/cmake/caches/Generic-cxx26.cmake"
     check-runtimes
     check-abi-list
+    run-clang-tidy -warnings-as-errors \* -source-filter ".*libcxx/src.*" -p "${BUILD_DIR}"
 ;;
 #
 # Other compiler support
