@@ -264,7 +264,9 @@ constexpr bool test() {
       for (size_t offset = 0; offset != 64; ++offset) {
         std::fill(vec.begin(), vec.end(), false);
         std::fill(vec.begin() + offset, vec.begin() + i + offset, true);
-        assert(std::ranges::count(vec.begin() + offset, vec.begin() + offset + 256, true) == i);
+
+        // check both (iterator, sentinel) and (range) overloads
+        assert(std::ranges::count(vec, true) == i);
         assert(std::ranges::count(vec.begin() + offset, vec.begin() + offset + 256, false) == 256 - i);
       }
     }
