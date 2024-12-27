@@ -21,6 +21,7 @@
 #include <array>
 #include <cassert>
 #include <ranges>
+#include <vector>
 
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
@@ -29,10 +30,9 @@
 // ======================================================
 
 template <class Iter = int*, class Sent = int*>
-concept HasRotateIter =
-    requires(Iter&& iter, Sent&& sent) {
-      std::ranges::rotate(std::forward<Iter>(iter), std::forward<Iter>(iter), std::forward<Sent>(sent));
-    };
+concept HasRotateIter = requires(Iter&& iter, Sent&& sent) {
+  std::ranges::rotate(std::forward<Iter>(iter), std::forward<Iter>(iter), std::forward<Sent>(sent));
+};
 
 static_assert(HasRotateIter<int*, int*>);
 
@@ -48,10 +48,9 @@ static_assert(!HasRotateIter<int*, SentinelForNotWeaklyEqualityComparableWith>);
 // =========================================
 
 template <class Range>
-concept HasRotateRange =
-    requires(Range&& range, std::ranges::iterator_t<Range> iter) {
-      std::ranges::rotate(std::forward<Range>(range), iter);
-    };
+concept HasRotateRange = requires(Range&& range, std::ranges::iterator_t<Range> iter) {
+  std::ranges::rotate(std::forward<Range>(range), iter);
+};
 
 template <class T>
 using R = UncheckedRange<T>;
@@ -73,10 +72,10 @@ constexpr void test_one(const std::array<int, N> input, std::size_t mid_index, s
   assert(mid_index <= N);
 
   { // (iterator, sentinel) overload.
-    auto in = input;
+    auto in    = input;
     auto begin = Iter(in.data());
-    auto mid = Iter(in.data() + mid_index);
-    auto end = Sent(Iter(in.data() + in.size()));
+    auto mid   = Iter(in.data() + mid_index);
+    auto end   = Sent(Iter(in.data() + in.size()));
 
     std::same_as<std::ranges::subrange<Iter>> decltype(auto) result = std::ranges::rotate(begin, mid, end);
     assert(base(result.begin()) == in.data() + in.size() - mid_index);
@@ -85,10 +84,10 @@ constexpr void test_one(const std::array<int, N> input, std::size_t mid_index, s
   }
 
   { // (range) overload.
-    auto in = input;
+    auto in    = input;
     auto begin = Iter(in.data());
-    auto mid = Iter(in.data() + mid_index);
-    auto end = Sent(Iter(in.data() + in.size()));
+    auto mid   = Iter(in.data() + mid_index);
+    auto end   = Sent(Iter(in.data() + in.size()));
     auto range = std::ranges::subrange(std::move(begin), std::move(end));
 
     std::same_as<std::ranges::subrange<Iter>> decltype(auto) result = std::ranges::rotate(range, mid);
@@ -146,18 +145,39 @@ constexpr void test_iterators() {
   test_iter<int*>();
 }
 
+template <std::size_t N>
+TEST_CONSTEXPR_CXX20 bool test_bit_iterator() {
+  for (int offset = -1; offset <= 1; ++offset) {
+    std::vector<bool> a(N, false);
+    std::size_t mid = N / 2 + offset;
+    for (std::size_t i = mid; i < N; ++i)
+      a[i] = true;
+
+    // (iterator, sentinel)-overload
+    std::ranges::rotate(std::ranges::begin(a), std::ranges::begin(a) + mid, std::ranges::end(a));
+    for (std::size_t i = 0; i < N; ++i)
+      assert(a[i] == (i < N - mid));
+
+    // range-overload
+    std::ranges::rotate(a, std::ranges::begin(a) + (N - mid));
+    for (std::size_t i = 0; i < N; ++i)
+      assert(a[i] == (i >= mid));
+  }
+  return true;
+};
+
 constexpr bool test() {
   test_iterators();
 
   { // Complexity: at most `last - first` swaps.
     const std::array input = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    auto expected = static_cast<int>(input.size());
+    auto expected          = static_cast<int>(input.size());
 
     {
-      auto in = input;
-      int swaps = 0;
+      auto in    = input;
+      int swaps  = 0;
       auto begin = adl::Iterator::TrackSwaps(in.data(), swaps);
-      auto end = adl::Iterator::TrackSwaps(in.data() + in.size(), swaps);
+      auto end   = adl::Iterator::TrackSwaps(in.data() + in.size(), swaps);
 
       for (std::size_t mid = 0; mid != input.size(); ++mid) {
         std::ranges::rotate(begin, begin + mid, end);
@@ -166,10 +186,10 @@ constexpr bool test() {
     }
 
     {
-      auto in = input;
-      int swaps = 0;
+      auto in    = input;
+      int swaps  = 0;
       auto begin = adl::Iterator::TrackSwaps(in.data(), swaps);
-      auto end = adl::Iterator::TrackSwaps(in.data() + in.size(), swaps);
+      auto end   = adl::Iterator::TrackSwaps(in.data() + in.size(), swaps);
       auto range = std::ranges::subrange(begin, end);
 
       for (std::size_t mid = 0; mid != input.size(); ++mid) {
@@ -178,6 +198,11 @@ constexpr bool test() {
       }
     }
   }
+
+  test_bit_iterator<8>();
+  test_bit_iterator<16>();
+  test_bit_iterator<64>();
+  test_bit_iterator<100>();
 
   return true;
 }
