@@ -257,20 +257,24 @@ public:
         FPBinOp ? FPBinOp->getFastMathFlags() : FastMathFlags()));
   }
 
-  VPInstruction *createCSAMaskPhi(VPValue *InitMask, DebugLoc DL,
-                                  const Twine &Name) {
-    return createInstruction(VPInstruction::CSAMaskPhi, {InitMask}, DL, Name);
+  VPInstruction *createConditionalScalarAssignmentMaskPhi(VPValue *InitMask,
+                                                          DebugLoc DL,
+                                                          const Twine &Name) {
+    return createInstruction(VPInstruction::ConditionalScalarAssignmentMaskPhi,
+                             {InitMask}, DL, Name);
   }
 
   VPInstruction *createAnyOf(VPValue *Cond, DebugLoc DL, const Twine &Name) {
     return createInstruction(VPInstruction::AnyOf, {Cond}, DL, Name);
   }
 
-  VPInstruction *createCSAMaskSel(VPValue *Cond, VPValue *MaskPhi,
-                                  VPValue *AnyOf, DebugLoc DL,
-                                  const Twine &Name) {
-    return createInstruction(VPInstruction::CSAMaskSel, {Cond, MaskPhi, AnyOf},
-                             DL, Name);
+  VPInstruction *createConditionalScalarAssignmentMaskSel(VPValue *Cond,
+                                                          VPValue *MaskPhi,
+                                                          VPValue *AnyOf,
+                                                          DebugLoc DL,
+                                                          const Twine &Name) {
+    return createInstruction(VPInstruction::ConditionalScalarAssignmentMaskSel,
+                             {Cond, MaskPhi, AnyOf}, DL, Name);
   }
 
   //===--------------------------------------------------------------------===//

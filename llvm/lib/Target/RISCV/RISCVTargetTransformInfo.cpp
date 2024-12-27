@@ -2361,7 +2361,7 @@ bool RISCVTTIImpl::isLegalMaskedExpandLoad(Type *DataTy, Align Alignment) {
   return true;
 }
 
-bool RISCVTTIImpl::enableCSAVectorization() const {
+bool RISCVTTIImpl::enableConditionalScalarAssignmentVectorization() const {
   return ST->hasVInstructions() &&
          ST->getProcFamily() == RISCVSubtarget::SiFive7;
 }

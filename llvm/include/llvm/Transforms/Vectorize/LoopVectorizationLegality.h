@@ -269,9 +269,11 @@ public:
   /// induction descriptor.
   using InductionList = MapVector<PHINode *, InductionDescriptor>;
 
-  /// CSAList contains the CSA descriptors for all the CSAs that were found
-  /// in the loop, rooted by their phis.
-  using CSAList = MapVector<PHINode *, CSADescriptor>;
+  /// ConditionalScalarAssignmentList contains the
+  /// ConditionalScalarAssignmentDescriptors for all the conditional scalar
+  /// assignments  that were found in the loop, rooted by their phis.
+  using ConditionalScalarAssignmentList =
+      MapVector<PHINode *, ConditionalScalarAssignmentDescriptor>;
 
   /// RecurrenceSet contains the phi nodes that are recurrences other than
   /// inductions and reductions.
@@ -325,11 +327,17 @@ public:
   /// Returns True if V is a Phi node of an induction variable in this loop.
   bool isInductionPhi(const Value *V) const;
 
-  /// Returns the CSAs found in the loop.
-  const CSAList &getCSAs() const { return CSAs; }
+  /// Returns the conditional scalar assignments found in the loop.
+  const ConditionalScalarAssignmentList &
+  getConditionalScalarAssignments() const {
+    return ConditionalScalarAssignments;
+  }
 
-  /// Returns true if Phi is the root of a CSA in the loop.
-  bool isCSAPhi(PHINode *Phi) const { return CSAs.count(Phi) != 0; }
+  /// Returns true if Phi is the root of a conditional scalar assignments in the
+  /// loop.
+  bool isConditionalScalarAssignmentPhi(PHINode *Phi) const {
+    return ConditionalScalarAssignments.count(Phi) != 0;
+  }
 
   /// Returns a pointer to the induction descriptor, if \p Phi is an integer or
   /// floating point induction.
@@ -560,9 +568,11 @@ private:
   void addInductionPhi(PHINode *Phi, const InductionDescriptor &ID,
                        SmallPtrSetImpl<Value *> &AllowedExit);
 
-  /// Updates the vetorization state by adding \p Phi to the CSA list.
-  void addCSAPhi(PHINode *Phi, const CSADescriptor &CSADesc,
-                 SmallPtrSetImpl<Value *> &AllowedExit);
+  /// Updates the vetorization state by adding \p Phi to the
+  /// ConditionalScalarAssignment list.
+  void addConditionalScalarAssignmentPhi(
+      PHINode *Phi, const ConditionalScalarAssignmentDescriptor &Desc,
+      SmallPtrSetImpl<Value *> &AllowedExit);
 
   /// The loop that we evaluate.
   Loop *TheLoop;
@@ -609,7 +619,7 @@ private:
   InductionList Inductions;
 
   /// Holds the conditional scalar assignments
-  CSAList CSAs;
+  ConditionalScalarAssignmentList ConditionalScalarAssignments;
 
   /// Holds all the casts that participate in the update chain of the induction
   /// variables, and that have been proven to be redundant (possibly under a

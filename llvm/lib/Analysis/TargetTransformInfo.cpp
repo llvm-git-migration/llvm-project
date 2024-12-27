@@ -1373,8 +1373,9 @@ bool TargetTransformInfo::preferEpilogueVectorization() const {
   return TTIImpl->preferEpilogueVectorization();
 }
 
-bool TargetTransformInfo::enableCSAVectorization() const {
-  return TTIImpl->enableCSAVectorization();
+bool TargetTransformInfo::enableConditionalScalarAssignmentVectorization()
+    const {
+  return TTIImpl->enableConditionalScalarAssignmentVectorization();
 }
 
 TargetTransformInfo::VPLegalization

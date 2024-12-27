@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 //
 // This file "describes" induction, recurrence, and conditional scalar
-// assignment (CSA) variables.
+// assignment variables.
 //
 //===----------------------------------------------------------------------===//
 
@@ -424,54 +424,64 @@ private:
   SmallVector<Instruction *, 2> RedundantCasts;
 };
 
-/// A Conditional Scalar Assignment (CSA) is an assignment from an initial
+/// A Conditional Scalar Assignment is an assignment from an initial
 /// scalar that may or may not occur.
-class CSADescriptor {
+class ConditionalScalarAssignmentDescriptor {
   /// If the conditional assignment occurs inside a loop, then Phi chooses
   /// the value of the assignment from the entry block or the loop body block.
   PHINode *Phi = nullptr;
 
-  /// The initial value of the CSA. If the condition guarding the assignment is
-  /// not met, then the assignment retains this value.
+  /// The initial value of the ConditionalScalarAssignment. If the condition
+  /// guarding the assignment is not met, then the assignment retains this
+  /// value.
   Value *InitScalar = nullptr;
 
   /// The Instruction that conditionally assigned to inside the loop.
   Instruction *Assignment = nullptr;
 
-  /// Create a CSA Descriptor that models a valid CSA with its members
-  /// initialized correctly.
-  CSADescriptor(PHINode *Phi, Instruction *Assignment, Value *InitScalar)
+  /// Create a ConditionalScalarAssignmentDescriptor that models a valid
+  /// conditional scalar assignment with its members initialized correctly.
+  ConditionalScalarAssignmentDescriptor(PHINode *Phi, Instruction *Assignment,
+                                        Value *InitScalar)
       : Phi(Phi), InitScalar(InitScalar), Assignment(Assignment) {}
 
 public:
-  /// Create a CSA Descriptor that models an invalid CSA.
-  CSADescriptor() = default;
+  /// Create a ConditionalScalarAssignmentDescriptor that models an invalid
+  /// ConditionalScalarAssignment.
+  ConditionalScalarAssignmentDescriptor() = default;
 
-  /// If Phi is the root of a CSA, set CSADesc as the CSA rooted by
-  /// Phi. Otherwise, return a false, leaving CSADesc unmodified.
-  static bool isCSAPhi(PHINode *Phi, Loop *TheLoop, CSADescriptor &CSADesc);
+  /// If Phi is the root of a ConditionalScalarAssignment, set
+  /// ConditionalScalarAssignmentDesc as the ConditionalScalarAssignment rooted
+  /// by Phi. Otherwise, return a false, leaving ConditionalScalarAssignmentDesc
+  /// unmodified.
+  static bool
+  isConditionalScalarAssignmentPhi(PHINode *Phi, Loop *TheLoop,
+                                   ConditionalScalarAssignmentDescriptor &Desc);
 
   operator bool() const { return isValid(); }
 
-  /// Returns whether SI is the Assignment in CSA
-  static bool isCSASelect(CSADescriptor Desc, SelectInst *SI) {
+  /// Returns whether SI is the Assignment in ConditionalScalarAssignment
+  static bool isConditionalScalarAssignmentSelect(
+      ConditionalScalarAssignmentDescriptor Desc, SelectInst *SI) {
     return Desc.getAssignment() == SI;
   }
 
-  /// Return whether this CSADescriptor models a valid CSA.
+  /// Return whether this ConditionalScalarAssignmentDescriptor models a valid
+  /// ConditionalScalarAssignment.
   bool isValid() const { return Phi && InitScalar && Assignment; }
 
-  /// Return the PHI that roots this CSA.
+  /// Return the PHI that roots this ConditionalScalarAssignment.
   PHINode *getPhi() const { return Phi; }
 
-  /// Return the initial value of the CSA. This is the value if the conditional
-  /// assignment does not occur.
+  /// Return the initial value of the ConditionalScalarAssignment. This is the
+  /// value if the conditional assignment does not occur.
   Value *getInitScalar() const { return InitScalar; }
 
   /// The Instruction that is used after the loop
   Instruction *getAssignment() const { return Assignment; }
 
-  /// Return the condition that this CSA is conditional upon.
+  /// Return the condition that this ConditionalScalarAssignment is conditional
+  /// upon.
   Value *getCond() const {
     if (auto *SI = dyn_cast_or_null<SelectInst>(Assignment))
       return SI->getCondition();

@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 //
 // This file "describes" induction, recurrence, and conditional scalar
-// assignment (CSA) variables.
+// assignment variables.
 //
 //===----------------------------------------------------------------------===//
 
@@ -1572,15 +1572,17 @@ bool InductionDescriptor::isInductionPHI(
   return true;
 }
 
-/// Return CSADescriptor that describes a CSA that matches one of these
-/// patterns:
+/// Return ConditionalScalarAssignmentDescriptor that describes a
+/// ConditionalScalarAssignment that matches one of these patterns:
 ///   phi loop_inv, (select cmp, value, phi)
 ///   phi loop_inv, (select cmp, phi, value)
 ///   phi (select cmp, value, phi), loop_inv
 ///   phi (select cmp, phi, value), loop_inv
-/// If the CSA does not match any of these paterns, return a CSADescriptor
-/// that describes an InvalidCSA.
-bool CSADescriptor::isCSAPhi(PHINode *Phi, Loop *TheLoop, CSADescriptor &CSA) {
+/// If the ConditionalScalarAssignment does not match any of these paterns,
+/// return a ConditionalScalarAssignmentDescriptor that describes an
+/// InvalidConditionalScalarAssignment.
+bool ConditionalScalarAssignmentDescriptor::isConditionalScalarAssignmentPhi(
+    PHINode *Phi, Loop *TheLoop, ConditionalScalarAssignmentDescriptor &Desc) {
 
   // Must be a scalar.
   Type *Type = Phi->getType();
@@ -1623,6 +1625,6 @@ bool CSADescriptor::isCSAPhi(PHINode *Phi, Loop *TheLoop, CSADescriptor &CSA) {
       !IsOnlyUsedOutsideLoop(Select, Phi))
     return false;
 
-  CSA = CSADescriptor(Phi, Select, LoopInv);
+  Desc = ConditionalScalarAssignmentDescriptor(Phi, Select, LoopInv);
   return true;
 }
