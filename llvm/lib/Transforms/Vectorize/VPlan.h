@@ -809,7 +809,8 @@ public:
   virtual bool isPhiThatGeneratesBackedge() const {
     assert(getVPDefID() != VPInstructionSC &&
            "VPInstructions implement this function themselves");
-    return getVPDefID() == VPWidenPHISC || getVPDefID() == VPCSAHeaderPHISC;
+    return getVPDefID() == VPWidenPHISC ||
+           getVPDefID() == VPConditionalScalarAssignmentHeaderPHISC;
   }
 
   /// Returns true if the recipe may read from memory.
@@ -902,9 +903,9 @@ public:
     case VPRecipeBase::VPWidenPointerInductionSC:
     case VPRecipeBase::VPReductionPHISC:
     case VPRecipeBase::VPScalarCastSC:
-    case VPRecipeBase::VPCSAHeaderPHISC:
-    case VPRecipeBase::VPCSADataUpdateSC:
-    case VPRecipeBase::VPCSAExtractScalarSC:
+    case VPRecipeBase::VPConditionalScalarAssignmentHeaderPHISC:
+    case VPRecipeBase::VPConditionalScalarAssignmentDataUpdateSC:
+    case VPRecipeBase::VPConditionalScalarAssignmentExtractScalarSC:
       return true;
     case VPRecipeBase::VPBranchOnMaskSC:
     case VPRecipeBase::VPInterleaveSC:
@@ -1247,8 +1248,8 @@ public:
     // Returns a scalar boolean value, which is true if any lane of its single
     // operand is true.
     AnyOf,
-    CSAMaskPhi,
-    CSAMaskSel,
+    ConditionalScalarAssignmentMaskPhi,
+    ConditionalScalarAssignmentMaskSel,
   };
 
 private:
@@ -2874,16 +2875,19 @@ public:
   }
 };
 
-class VPCSAHeaderPHIRecipe final : public VPHeaderPHIRecipe {
+class VPConditionalScalarAssignmentHeaderPHIRecipe final
+    : public VPHeaderPHIRecipe {
 public:
-  VPCSAHeaderPHIRecipe(PHINode *Phi, VPValue *VPInitData)
-      : VPHeaderPHIRecipe(VPDef::VPCSAHeaderPHISC, Phi, VPInitData) {}
+  VPConditionalScalarAssignmentHeaderPHIRecipe(PHINode *Phi,
+                                               VPValue *VPInitData)
+      : VPHeaderPHIRecipe(VPDef::VPConditionalScalarAssignmentHeaderPHISC, Phi,
+                          VPInitData) {}
 
-  ~VPCSAHeaderPHIRecipe() override = default;
+  ~VPConditionalScalarAssignmentHeaderPHIRecipe() override = default;
 
-  VPCSAHeaderPHIRecipe *clone() override {
-    return new VPCSAHeaderPHIRecipe(cast<PHINode>(getUnderlyingInstr()),
-                                    getOperand(0));
+  VPConditionalScalarAssignmentHeaderPHIRecipe *clone() override {
+    return new VPConditionalScalarAssignmentHeaderPHIRecipe(
+        cast<PHINode>(getUnderlyingInstr()), getOperand(0));
   }
 
   void execute(VPTransformState &State) override;
@@ -2897,10 +2901,10 @@ public:
              VPSlotTracker &SlotTracker) const override;
 #endif
 
-  VP_CLASSOF_IMPL(VPDef::VPCSAHeaderPHISC)
+  VP_CLASSOF_IMPL(VPDef::VPConditionalScalarAssignmentHeaderPHISC)
 
   static inline bool classof(const VPHeaderPHIRecipe *R) {
-    return R->getVPDefID() == VPDef::VPCSAHeaderPHISC;
+    return R->getVPDefID() == VPDef::VPConditionalScalarAssignmentHeaderPHISC;
   }
 
   VPValue *getVPInitData() { return getOperand(0); }
@@ -2910,17 +2914,20 @@ public:
   VPValue *getVPNewData() { return NewData; }
 };
 
-class VPCSADataUpdateRecipe final : public VPSingleDefRecipe {
+class VPConditionalScalarAssignmentDataUpdateRecipe final
+    : public VPSingleDefRecipe {
 public:
-  VPCSADataUpdateRecipe(SelectInst *SI, ArrayRef<VPValue *> Operands)
-      : VPSingleDefRecipe(VPDef::VPCSADataUpdateSC, Operands, SI) {}
+  VPConditionalScalarAssignmentDataUpdateRecipe(SelectInst *SI,
+                                                ArrayRef<VPValue *> Operands)
+      : VPSingleDefRecipe(VPDef::VPConditionalScalarAssignmentDataUpdateSC,
+                          Operands, SI) {}
 
-  ~VPCSADataUpdateRecipe() override = default;
+  ~VPConditionalScalarAssignmentDataUpdateRecipe() override = default;
 
-  VPCSADataUpdateRecipe *clone() override {
+  VPConditionalScalarAssignmentDataUpdateRecipe *clone() override {
     SmallVector<VPValue *> Ops(operands());
-    return new VPCSADataUpdateRecipe(cast<SelectInst>(getUnderlyingInstr()),
-                                     Ops);
+    return new VPConditionalScalarAssignmentDataUpdateRecipe(
+        cast<SelectInst>(getUnderlyingInstr()), Ops);
   }
 
   void execute(VPTransformState &State) override;
@@ -2934,7 +2941,7 @@ public:
              VPSlotTracker &SlotTracker) const override;
 #endif
 
-  VP_CLASSOF_IMPL(VPDef::VPCSADataUpdateSC)
+  VP_CLASSOF_IMPL(VPDef::VPConditionalScalarAssignmentDataUpdateSC)
 
   VPValue *getVPDataPhi() const { return getOperand(0); }
 
@@ -2960,20 +2967,22 @@ public:
   VPValue *getVPAnyOf() const { return getOperand(5); }
 };
 
-class VPCSAExtractScalarRecipe final : public VPSingleDefRecipe {
+class VPConditionalScalarAssignmentExtractScalarRecipe final
+    : public VPSingleDefRecipe {
   SmallVector<PHINode *> PhisToFix;
 
 public:
-  VPCSAExtractScalarRecipe(ArrayRef<VPValue *> Operands,
-                           SmallVector<PHINode *> PhisToFix)
-      : VPSingleDefRecipe(VPDef::VPCSAExtractScalarSC, Operands),
+  VPConditionalScalarAssignmentExtractScalarRecipe(
+      ArrayRef<VPValue *> Operands, SmallVector<PHINode *> PhisToFix)
+      : VPSingleDefRecipe(VPDef::VPConditionalScalarAssignmentExtractScalarSC,
+                          Operands),
         PhisToFix(PhisToFix) {}
 
-  ~VPCSAExtractScalarRecipe() override = default;
+  ~VPConditionalScalarAssignmentExtractScalarRecipe() override = default;
 
-  VPCSAExtractScalarRecipe *clone() override {
+  VPConditionalScalarAssignmentExtractScalarRecipe *clone() override {
     SmallVector<VPValue *> Ops(operands());
-    return new VPCSAExtractScalarRecipe(Ops, PhisToFix);
+    return new VPConditionalScalarAssignmentExtractScalarRecipe(Ops, PhisToFix);
   }
 
   void execute(VPTransformState &State) override;
@@ -2987,7 +2996,7 @@ public:
              VPSlotTracker &SlotTracker) const override;
 #endif
 
-  VP_CLASSOF_IMPL(VPDef::VPCSAExtractScalarSC)
+  VP_CLASSOF_IMPL(VPDef::VPConditionalScalarAssignmentExtractScalarSC)
 
   VPValue *getVPInitScalar() const { return getOperand(0); }
   VPValue *getVPMaskSel() const { return getOperand(1); }

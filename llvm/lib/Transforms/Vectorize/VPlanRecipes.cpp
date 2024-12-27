@@ -645,7 +645,7 @@ Value *VPInstruction::generate(VPTransformState &State) {
     Value *A = State.get(getOperand(0));
     return Builder.CreateOrReduce(A);
   }
-  case VPInstruction::CSAMaskPhi: {
+  case VPInstruction::ConditionalScalarAssignmentMaskPhi: {
     BasicBlock *PreheaderBB = State.CFG.getPreheaderBBFor(this);
     Value *InitMask = State.get(getOperand(0));
     PHINode *MaskPhi =
@@ -654,7 +654,7 @@ Value *VPInstruction::generate(VPTransformState &State) {
     State.set(this, MaskPhi);
     return MaskPhi;
   }
-  case VPInstruction::CSAMaskSel: {
+  case VPInstruction::ConditionalScalarAssignmentMaskSel: {
     Value *WidenedCond = State.get(getOperand(0));
     Value *MaskPhi = State.get(getOperand(1));
     Value *AnyOf = State.get(getOperand(2), /*NeedsScalar=*/true);
@@ -680,15 +680,15 @@ bool VPInstruction::isSingleScalar() const {
 }
 
 bool VPInstruction::isPhi() const {
-  return getOpcode() == VPInstruction::CSAMaskPhi;
+  return getOpcode() == VPInstruction::ConditionalScalarAssignmentMaskPhi;
 }
 
 bool VPInstruction::isHeaderPhi() const {
-  return getOpcode() == VPInstruction::CSAMaskPhi;
+  return getOpcode() == VPInstruction::ConditionalScalarAssignmentMaskPhi;
 }
 
 bool VPInstruction::isPhiThatGeneratesBackedge() const {
-  return getOpcode() == VPInstruction::CSAMaskPhi;
+  return getOpcode() == VPInstruction::ConditionalScalarAssignmentMaskPhi;
 }
 
 #if !defined(NDEBUG)
@@ -846,10 +846,10 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
   case VPInstruction::AnyOf:
     O << "any-of";
     break;
-  case VPInstruction::CSAMaskPhi:
+  case VPInstruction::ConditionalScalarAssignmentMaskPhi:
     O << "csa-mask-phi";
     break;
-  case VPInstruction::CSAMaskSel:
+  case VPInstruction::ConditionalScalarAssignmentMaskSel:
     O << "csa-mask-sel";
     break;
   default:
@@ -2395,8 +2395,8 @@ void VPScalarCastRecipe ::print(raw_ostream &O, const Twine &Indent,
 #endif
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-void VPCSAHeaderPHIRecipe::print(raw_ostream &O, const Twine &Indent,
-                                 VPSlotTracker &SlotTracker) const {
+void VPConditionalScalarAssignmentHeaderPHIRecipe::print(
+    raw_ostream &O, const Twine &Indent, VPSlotTracker &SlotTracker) const {
   O << Indent << "EMIT ";
   printAsOperand(O, SlotTracker);
   O << " = csa-data-phi ";
@@ -2404,7 +2404,8 @@ void VPCSAHeaderPHIRecipe::print(raw_ostream &O, const Twine &Indent,
 }
 #endif
 
-void VPCSAHeaderPHIRecipe::execute(VPTransformState &State) {
+void VPConditionalScalarAssignmentHeaderPHIRecipe::execute(
+    VPTransformState &State) {
   // PrevBB is this BB
   IRBuilder<>::InsertPointGuard Guard(State.Builder);
   State.Builder.SetInsertPoint(State.CFG.PrevBB->getFirstNonPHI());
@@ -2414,15 +2415,16 @@ void VPCSAHeaderPHIRecipe::execute(VPTransformState &State) {
       State.Builder.CreatePHI(InitData->getType(), 2, "csa.data.phi");
   BasicBlock *PreheaderBB = State.CFG.getPreheaderBBFor(this);
   DataPhi->addIncoming(InitData, PreheaderBB);
-  // Note: We didn't add Incoming for the new data since VPCSADataUpdateRecipe
-  // may not have been executed. We let VPCSADataUpdateRecipe::execute add the
+  // Note: We didn't add Incoming for the new data since
+  // VPConditionalScalarAssignmentDataUpdateRecipe may not have been executed.
+  // We let VPConditionalScalarAssignmentDataUpdateRecipe::execute add the
   // incoming operand to DataPhi.
 
   State.set(this, DataPhi);
 }
 
-InstructionCost VPCSAHeaderPHIRecipe::computeCost(ElementCount VF,
-                                                  VPCostContext &Ctx) const {
+InstructionCost VPConditionalScalarAssignmentHeaderPHIRecipe::computeCost(
+    ElementCount VF, VPCostContext &Ctx) const {
   if (VF.isScalar())
     return 0;
 
@@ -2432,16 +2434,16 @@ InstructionCost VPCSAHeaderPHIRecipe::computeCost(ElementCount VF,
 
   // FIXME: These costs should be moved into VPInstruction::computeCost. We put
   // them here for now since there is no VPInstruction::computeCost support.
-  // CSAInitMask
+  // ConditionalScalarAssignmentInitMask
   C += TTI.getShuffleCost(TargetTransformInfo::SK_Broadcast, VTy);
-  // CSAInitData
+  // ConditionalScalarAssignmentInitData
   C += TTI.getShuffleCost(TargetTransformInfo::SK_Broadcast, VTy);
   return C;
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-void VPCSADataUpdateRecipe::print(raw_ostream &O, const Twine &Indent,
-                                  VPSlotTracker &SlotTracker) const {
+void VPConditionalScalarAssignmentDataUpdateRecipe::print(
+    raw_ostream &O, const Twine &Indent, VPSlotTracker &SlotTracker) const {
   O << Indent << "EMIT ";
   printAsOperand(O, SlotTracker);
   O << " = csa-data-update ";
@@ -2449,7 +2451,8 @@ void VPCSADataUpdateRecipe::print(raw_ostream &O, const Twine &Indent,
 }
 #endif
 
-void VPCSADataUpdateRecipe::execute(VPTransformState &State) {
+void VPConditionalScalarAssignmentDataUpdateRecipe::execute(
+    VPTransformState &State) {
   Value *AnyOf = State.get(getVPAnyOf(), /*NeedsScalar=*/true);
   Value *DataUpdate = getVPDataPhi() == getVPTrue() ? State.get(getVPFalse())
                                                     : State.get(getVPTrue());
@@ -2462,8 +2465,8 @@ void VPCSADataUpdateRecipe::execute(VPTransformState &State) {
   State.set(this, DataSel);
 }
 
-InstructionCost VPCSADataUpdateRecipe::computeCost(ElementCount VF,
-                                                   VPCostContext &Ctx) const {
+InstructionCost VPConditionalScalarAssignmentDataUpdateRecipe::computeCost(
+    ElementCount VF, VPCostContext &Ctx) const {
   if (VF.isScalar())
     return 0;
 
@@ -2494,8 +2497,8 @@ InstructionCost VPCSADataUpdateRecipe::computeCost(ElementCount VF,
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
-void VPCSAExtractScalarRecipe::print(raw_ostream &O, const Twine &Indent,
-                                     VPSlotTracker &SlotTracker) const {
+void VPConditionalScalarAssignmentExtractScalarRecipe::print(
+    raw_ostream &O, const Twine &Indent, VPSlotTracker &SlotTracker) const {
   O << Indent << "EMIT ";
   printAsOperand(O, SlotTracker);
   O << " = CSA-EXTRACT-SCALAR ";
@@ -2503,7 +2506,8 @@ void VPCSAExtractScalarRecipe::print(raw_ostream &O, const Twine &Indent,
 }
 #endif
 
-void VPCSAExtractScalarRecipe::execute(VPTransformState &State) {
+void VPConditionalScalarAssignmentExtractScalarRecipe::execute(
+    VPTransformState &State) {
   IRBuilder<>::InsertPointGuard Guard(State.Builder);
   State.Builder.SetInsertPoint(State.CFG.ExitBB->getFirstNonPHI());
 
@@ -2544,9 +2548,8 @@ void VPCSAExtractScalarRecipe::execute(VPTransformState &State) {
   State.set(this, ChooseFromVecOrInit, /*IsScalar=*/true);
 }
 
-InstructionCost
-VPCSAExtractScalarRecipe::computeCost(ElementCount VF,
-                                      VPCostContext &Ctx) const {
+InstructionCost VPConditionalScalarAssignmentExtractScalarRecipe::computeCost(
+    ElementCount VF, VPCostContext &Ctx) const {
   if (VF.isScalar())
     return 0;
 

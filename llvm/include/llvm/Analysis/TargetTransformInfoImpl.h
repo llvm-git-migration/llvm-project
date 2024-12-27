@@ -1021,7 +1021,7 @@ public:
 
   bool isVectorShiftByScalarCheap(Type *Ty) const { return false; }
 
-  bool enableCSAVectorization() const { return false; }
+  bool enableConditionalScalarAssignmentVectorization() const { return false; }
 
   TargetTransformInfo::VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const {
