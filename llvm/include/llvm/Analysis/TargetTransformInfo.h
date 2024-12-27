@@ -1854,7 +1854,7 @@ public:
 
   /// \returns true if the loop vectorizer should vectorize conditional
   /// scalar assignments for the target.
-  bool enableCSAVectorization() const;
+  bool enableConditionalScalarAssignmentVectorization() const;
 
   /// \returns How the target needs this vector-predicated operation to be
   /// transformed.
@@ -2309,7 +2309,7 @@ public:
                              SmallVectorImpl<Use *> &OpsToSink) const = 0;
 
   virtual bool isVectorShiftByScalarCheap(Type *Ty) const = 0;
-  virtual bool enableCSAVectorization() const = 0;
+  virtual bool enableConditionalScalarAssignmentVectorization() const = 0;
   virtual VPLegalization
   getVPLegalizationStrategy(const VPIntrinsic &PI) const = 0;
   virtual bool hasArmWideBranch(bool Thumb) const = 0;
@@ -3135,8 +3135,8 @@ public:
     return Impl.isVectorShiftByScalarCheap(Ty);
   }
 
-  bool enableCSAVectorization() const override {
-    return Impl.enableCSAVectorization();
+  bool enableConditionalScalarAssignmentVectorization() const override {
+    return Impl.enableConditionalScalarAssignmentVectorization();
   }
 
   VPLegalization

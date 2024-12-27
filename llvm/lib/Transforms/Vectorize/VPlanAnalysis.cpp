@@ -256,13 +256,14 @@ Type *VPTypeAnalysis::inferScalarType(const VPValue *V) {
           .Case<VPReductionRecipe>([this](const auto *R) {
             return inferScalarType(R->getChainOp());
           })
-          .Case<VPCSAHeaderPHIRecipe>(
+          .Case<VPConditionalScalarAssignmentHeaderPHIRecipe>(
               [V](const auto *R) { return V->getUnderlyingValue()->getType(); })
-          .Case<VPCSADataUpdateRecipe>(
+          .Case<VPConditionalScalarAssignmentDataUpdateRecipe>(
               [V](const auto *R) { return V->getUnderlyingValue()->getType(); })
-          .Case<VPCSAExtractScalarRecipe>([V](const auto *R) {
-            return V->getUnderlyingValue()->getType();
-          });
+          .Case<VPConditionalScalarAssignmentExtractScalarRecipe>(
+              [V](const auto *R) {
+                return V->getUnderlyingValue()->getType();
+              });
 
   assert(ResultTy && "could not infer type for the given VPValue");
   CachedTypes[V] = ResultTy;
