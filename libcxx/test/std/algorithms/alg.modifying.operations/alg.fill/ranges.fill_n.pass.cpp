@@ -18,6 +18,7 @@
 #include <cassert>
 #include <ranges>
 #include <string>
+#include <vector>
 
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
@@ -48,6 +49,19 @@ constexpr void test_iterators() {
   }
 }
 
+// Test vector<bool>::iterator optimization
+constexpr void test_bit_iter() {
+  for (std::size_t N = 8; N <= 256; N *= 2) {
+    // Test with both full and partial bytes
+    for (std::size_t offset : {0, 8}) {
+      std::vector<bool> in(N + offset);
+      std::vector<bool> expected(N + offset, true);
+      std::ranges::fill_n(std::ranges::begin(in) + offset / 2, N + offset / 2, true);
+      assert(std::equal(in.begin() + offset / 2, in.end() - offset / 2, expected.begin() + offset / 2));
+    }
+  }
+}
+
 constexpr bool test() {
   test_iterators<cpp17_output_iterator<int*>, sentinel_wrapper<cpp17_output_iterator<int*>>>();
   test_iterators<cpp20_output_iterator<int*>, sentinel_wrapper<cpp20_output_iterator<int*>>>();
@@ -68,7 +82,7 @@ constexpr bool test() {
     };
 
     S a[5];
-    std::ranges::fill_n(a, 5, S {});
+    std::ranges::fill_n(a, 5, S{});
     assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
   }
 
@@ -78,6 +92,8 @@ constexpr bool test() {
     assert(ret == a.data() + a.size());
     assert(std::all_of(a.begin(), a.end(), [](auto& s) { return s == "long long string so no SSO"; }));
   }
+
+  test_bit_iter();
 
   return true;
 }
