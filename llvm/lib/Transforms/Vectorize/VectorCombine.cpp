@@ -3018,24 +3018,37 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
     return false;
 
   auto *VecTy = dyn_cast<FixedVectorType>(I.getType());
-  if (!VecTy || SrcVec->getType() != VecTy)
+  auto *SrcVecTy = dyn_cast<FixedVectorType>(SrcVec->getType());
+  // We can try combining vectors with different element sizes.
+  if (!VecTy || !SrcVecTy ||
+      SrcVecTy->getElementType() != VecTy->getElementType())
     return false;
 
   unsigned NumElts = VecTy->getNumElements();
-  if (ExtIdx >= NumElts || InsIdx >= NumElts)
+  unsigned NumSrcElts = SrcVecTy->getNumElements();
+  if (InsIdx >= NumElts || NumElts == 1)
     return false;
 
   // Insertion into poison is a cheaper single operand shuffle.
   TargetTransformInfo::ShuffleKind SK;
   SmallVector<int> Mask(NumElts, PoisonMaskElem);
-  if (isa<PoisonValue>(DstVec) && !isa<UndefValue>(SrcVec)) {
+
+  bool NeedExpOrNarrow = NumSrcElts != NumElts;
+  bool NeedDstSrcSwap = isa<PoisonValue>(DstVec) && !isa<UndefValue>(SrcVec);
+  if (NeedDstSrcSwap) {
     SK = TargetTransformInfo::SK_PermuteSingleSrc;
-    Mask[InsIdx] = ExtIdx;
+    if (!NeedExpOrNarrow)
+      Mask[InsIdx] = ExtIdx;
+    else
+      Mask[InsIdx] = 0;
     std::swap(DstVec, SrcVec);
   } else {
     SK = TargetTransformInfo::SK_PermuteTwoSrc;
     std::iota(Mask.begin(), Mask.end(), 0);
-    Mask[InsIdx] = ExtIdx + NumElts;
+    if (!NeedExpOrNarrow)
+      Mask[InsIdx] = ExtIdx + NumElts;
+    else
+      Mask[InsIdx] = NumElts;
   }
 
   // Cost
@@ -3047,8 +3060,23 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
       TTI.getVectorInstrCost(*Ext, VecTy, CostKind, ExtIdx);
   InstructionCost OldCost = ExtCost + InsCost;
 
-  InstructionCost NewCost = TTI.getShuffleCost(SK, VecTy, Mask, CostKind, 0,
-                                               nullptr, {DstVec, SrcVec});
+  InstructionCost NewCost = 0;
+  SmallVector<int> ExtToVecMask;
+  if (!NeedExpOrNarrow) {
+    NewCost = TTI.getShuffleCost(SK, VecTy, Mask, CostKind, 0, nullptr,
+                                 {DstVec, SrcVec});
+  } else {
+    // When creating length-changing-vector, always create with a Mask whose
+    // first element has an ExtIdx, so that the first element of the vector
+    // being created is always the target to be extracted.
+    ExtToVecMask.assign(NumElts, PoisonMaskElem);
+    ExtToVecMask[0] = ExtIdx;
+    // Add cost for expanding or narrowing
+    NewCost = TTI.getShuffleCost(TargetTransformInfo::SK_PermuteSingleSrc,
+                                 VecTy, ExtToVecMask, CostKind);
+    NewCost += TTI.getShuffleCost(SK, VecTy, Mask, CostKind);
+  }
+
   if (!Ext->hasOneUse())
     NewCost += ExtCost;
 
@@ -3058,6 +3086,13 @@ bool VectorCombine::foldInsExtVectorToShuffle(Instruction &I) {
 
   if (OldCost < NewCost)
     return false;
+
+  if (NeedExpOrNarrow) {
+    if (!NeedDstSrcSwap)
+      SrcVec = Builder.CreateShuffleVector(SrcVec, ExtToVecMask);
+    else
+      DstVec = Builder.CreateShuffleVector(DstVec, ExtToVecMask);
+  }
 
   // Canonicalize undef param to RHS to help further folds.
   if (isa<UndefValue>(DstVec) && !isa<UndefValue>(SrcVec)) {
