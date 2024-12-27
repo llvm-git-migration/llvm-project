@@ -3813,6 +3813,42 @@ static Value *foldSelectIntoAddConstant(SelectInst &SI,
   return nullptr;
 }
 
+static Instruction *foldFrexpOfSelect(ExtractValueInst *EV, CallInst *FrexpCall,
+                                      SelectInst *SelectInst) {
+  // A helper that folds frexp of select to select of frexp.
+  IRBuilder<> Builder(EV);
+
+  Value *Cond = SelectInst->getCondition();
+  Value *TrueVal = SelectInst->getTrueValue();
+  Value *FalseVal = SelectInst->getFalseValue();
+
+  ConstantFP *ConstOp = nullptr;
+  Value *VarOp = nullptr;
+  bool ConstIsTrue = false;
+
+  if ((ConstOp = dyn_cast<ConstantFP>(TrueVal))) {
+    VarOp = FalseVal;
+    ConstIsTrue = true;
+  } else {
+    ConstOp = dyn_cast<ConstantFP>(FalseVal);
+    VarOp = TrueVal;
+    ConstIsTrue = false;
+  }
+
+  CallInst *NewFrexp =
+      Builder.CreateCall(FrexpCall->getCalledFunction(), {VarOp}, "frexp");
+  Value *NewEV = Builder.CreateExtractValue(NewFrexp, 0);
+
+  APFloat ConstVal = ConstOp->getValueAPF();
+  int Exp;
+  APFloat Mantissa = frexp(ConstVal, Exp, APFloat::rmNearestTiesToEven);
+  Constant *ConstantMantissa = ConstantFP::get(ConstOp->getType(), Mantissa);
+  Value *NewSel =
+      Builder.CreateSelect(Cond, ConstIsTrue ? ConstantMantissa : NewEV,
+                           ConstIsTrue ? NewEV : ConstantMantissa);
+  return cast<Instruction>(NewSel);
+}
+
 Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
   Value *CondVal = SI.getCondition();
   Value *TrueVal = SI.getTrueValue();
@@ -3828,6 +3864,27 @@ Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
 
   if (Instruction *I = canonicalizeScalarSelectOfVecs(SI, *this))
     return I;
+
+  for (User *U : SI.users()) {
+    if (auto *EV = dyn_cast<ExtractValueInst>(U)) {
+      if (!EV->hasOneUse())
+        continue;
+      if (auto *FrexpCall = dyn_cast<CallInst>(EV->getAggregateOperand())) {
+        if (Function *F = FrexpCall->getCalledFunction()) {
+          if (F->getIntrinsicID() == Intrinsic::frexp &&
+              EV->getNumIndices() == 1 && EV->getIndices()[0] == 0) {
+            Value *SelectOp = FrexpCall->getArgOperand(0);
+            if (auto *SelInst = dyn_cast<SelectInst>(SelectOp)) {
+              if (isa<ConstantFP>(SelInst->getTrueValue()) ||
+                  isa<ConstantFP>(SelInst->getFalseValue())) {
+                return foldFrexpOfSelect(EV, FrexpCall, SelInst);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   // If the type of select is not an integer type or if the condition and
   // the selection type are not both scalar nor both vector types, there is no
