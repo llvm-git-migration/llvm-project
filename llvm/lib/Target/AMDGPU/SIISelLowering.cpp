@@ -1240,6 +1240,11 @@ bool SITargetLowering::getTgtMemIntrinsic(IntrinsicInfo &Info,
     }
 
     Info.flags |= MachineMemOperand::MODereferenceable;
+
+    if (CI.hasMetadata(LLVMContext::MD_nontemporal))
+      Info.flags |= MachineMemOperand::MONonTemporal;
+    Info.flags |= getTargetMMOFlags(CI);
+
     if (ME.onlyReadsMemory()) {
       if (RsrcIntr->IsImage) {
         unsigned MaxNumLanes = 4;
