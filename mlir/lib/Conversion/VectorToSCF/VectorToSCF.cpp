@@ -1333,12 +1333,22 @@ struct UnrollTransferReadConversion
             insertionIndices.push_back(rewriter.getIndexAttr(i));
 
             auto inBoundsAttr = dropFirstElem(b, xferOp.getInBoundsAttr());
-            auto newXferOp = b.create<vector::TransferReadOp>(
-                loc, newXferVecType, xferOp.getSource(), xferIndices,
-                AffineMapAttr::get(unpackedPermutationMap(b, xferOp)),
-                xferOp.getPadding(), Value(), inBoundsAttr);
-            maybeAssignMask(b, xferOp, newXferOp, i);
-            return b.create<vector::InsertOp>(loc, newXferOp, vec,
+            Value newXferOrLoadOp;
+            if (newXferVecType.getRank() != 0) {
+              newXferOrLoadOp = b.create<vector::TransferReadOp>(
+                  loc, newXferVecType, xferOp.getSource(), xferIndices,
+                  AffineMapAttr::get(unpackedPermutationMap(b, xferOp)),
+                  xferOp.getPadding(), Value(), inBoundsAttr);
+              maybeAssignMask(b, xferOp,
+                              dyn_cast<vector::TransferReadOp>(
+                                  newXferOrLoadOp.getDefiningOp()),
+                              i);
+            } else {
+              // TODO: Generalize so that this also works for Tensors.
+              newXferOrLoadOp = b.create<memref::LoadOp>(
+                  loc, xferOp.getSource(), xferIndices);
+            }
+            return b.create<vector::InsertOp>(loc, newXferOrLoadOp, vec,
                                               insertionIndices);
           },
           /*outOfBoundsCase=*/
