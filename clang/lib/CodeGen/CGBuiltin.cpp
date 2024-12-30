@@ -4782,6 +4782,30 @@ RValue CodeGenFunction::EmitBuiltinExpr(const GlobalDecl GD, unsigned BuiltinID,
     Function *F = CGM.getIntrinsic(Intrinsic::frameaddress, AllocaInt8PtrTy);
     return RValue::get(Builder.CreateCall(F, Depth));
   }
+  case Builtin::BI__builtin_stack_address: {
+    IntegerType *SPRegType;
+    StringRef SPRegName;
+    switch (getTarget().getTriple().getArch()) {
+    case Triple::x86:
+      SPRegType = Int32Ty;
+      SPRegName = "esp";
+      break;
+    case Triple::x86_64:
+      SPRegType = Int64Ty;
+      SPRegName = "rsp";
+      break;
+    default:
+      llvm_unreachable("Intrinsic __builtin_stack_address is not supported for "
+                       "the target architecture");
+    }
+    Function *F = CGM.getIntrinsic(Intrinsic::read_register, {SPRegType});
+    Value *SPRegValue = MetadataAsValue::get(
+        getLLVMContext(),
+        MDNode::get(getLLVMContext(),
+                    {MDString::get(getLLVMContext(), SPRegName)}));
+    Value *Call = Builder.CreateCall(F, SPRegValue);
+    return RValue::get(Builder.CreateIntToPtr(Call, Int8PtrTy));
+  }
   case Builtin::BI__builtin_extract_return_addr: {
     Value *Address = EmitScalarExpr(E->getArg(0));
     Value *Result = getTargetHooks().decodeReturnAddress(*this, Address);
