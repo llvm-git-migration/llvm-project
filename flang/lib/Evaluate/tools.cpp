@@ -906,13 +906,13 @@ bool IsAssumedRank(const ActualArgument &arg) {
   }
 }
 
-bool IsCoarray(const ActualArgument &arg) {
+int GetCorank(const ActualArgument &arg) {
   const auto *expr{arg.UnwrapExpr()};
-  return expr && IsCoarray(*expr);
+  return expr ? GetCorank(*expr) : 0;
 }
 
-bool IsCoarray(const Symbol &symbol) {
-  return GetAssociationRoot(symbol).Corank() > 0;
+int GetCorank(const Symbol &symbol) {
+  return GetAssociationRoot(symbol).Corank();
 }
 
 bool IsProcedureDesignator(const Expr<SomeType> &expr) {
