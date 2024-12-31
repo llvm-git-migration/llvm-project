@@ -1632,6 +1632,16 @@ Instruction *InstCombinerImpl::visitUDiv(BinaryOperator &I) {
         I, Builder.CreateLShr(Op0, Res, I.getName(), I.isExact()));
   }
 
+  // Op0 udiv Op1 -> Op0 lshr cttz(Op1), if Op1 is a power of 2.
+  if (isKnownToBeAPowerOfTwo(Op1, /*OrZero*/ true, /*Depth*/ 0, &I)) {
+    // This will increase instruction count but it's okay
+    // since bitwise operations are substantially faster than
+    // division.
+    auto *Cttz =
+        Builder.CreateBinaryIntrinsic(Intrinsic::cttz, Op1, Builder.getTrue());
+    return BinaryOperator::CreateLShr(Op0, Cttz);
+  }
+
   return nullptr;
 }
 
