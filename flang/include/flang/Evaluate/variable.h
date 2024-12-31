@@ -51,6 +51,7 @@ template <typename T> struct Variable;
 struct BaseObject {
   EVALUATE_UNION_CLASS_BOILERPLATE(BaseObject)
   int Rank() const;
+  int Corank() const;
   std::optional<Expr<SubscriptInteger>> LEN() const;
   llvm::raw_ostream &AsFortran(llvm::raw_ostream &) const;
   const Symbol *symbol() const {
@@ -84,6 +85,7 @@ public:
   SymbolRef &symbol() { return symbol_; }
 
   int Rank() const;
+  int Corank() const;
   const Symbol &GetFirstSymbol() const;
   const Symbol &GetLastSymbol() const { return symbol_; }
   std::optional<Expr<SubscriptInteger>> LEN() const;
@@ -116,6 +118,7 @@ public:
   Component *UnwrapComponent();
 
   int Rank() const;
+  int Corank() const;
   std::optional<Expr<SubscriptInteger>> LEN() const;
   bool operator==(const NamedEntity &) const;
   llvm::raw_ostream &AsFortran(llvm::raw_ostream &) const;
@@ -224,6 +227,7 @@ public:
   }
 
   int Rank() const;
+  int Corank() const;
   const Symbol &GetFirstSymbol() const;
   const Symbol &GetLastSymbol() const;
   std::optional<Expr<SubscriptInteger>> LEN() const;
@@ -271,6 +275,7 @@ public:
   CoarrayRef &set_team(Expr<SomeInteger> &&, bool isTeamNumber = false);
 
   int Rank() const;
+  int Corank() const { return 0; }
   const Symbol &GetFirstSymbol() const;
   const Symbol &GetLastSymbol() const;
   NamedEntity GetBase() const;
@@ -294,6 +299,7 @@ private:
 struct DataRef {
   EVALUATE_UNION_CLASS_BOILERPLATE(DataRef)
   int Rank() const;
+  int Corank() const;
   const Symbol &GetFirstSymbol() const;
   const Symbol &GetLastSymbol() const;
   std::optional<Expr<SubscriptInteger>> LEN() const;
@@ -331,6 +337,7 @@ public:
   Parent &parent() { return parent_; }
 
   int Rank() const;
+  int Corank() const;
   template <typename A> const A *GetParentIf() const {
     return std::get_if<A>(&parent_);
   }
@@ -361,6 +368,7 @@ public:
   const DataRef &complex() const { return complex_; }
   Part part() const { return part_; }
   int Rank() const;
+  int Corank() const;
   const Symbol &GetFirstSymbol() const { return complex_.GetFirstSymbol(); }
   const Symbol &GetLastSymbol() const { return complex_.GetLastSymbol(); }
   bool operator==(const ComplexPart &) const;
@@ -396,6 +404,7 @@ public:
 
   std::optional<DynamicType> GetType() const;
   int Rank() const;
+  int Corank() const;
   BaseObject GetBaseObject() const;
   const Symbol *GetLastSymbol() const;
   std::optional<Expr<SubscriptInteger>> LEN() const;

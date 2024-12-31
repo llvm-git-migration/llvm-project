@@ -106,11 +106,8 @@ template <typename A> bool IsAssumedRank(const A *x) {
 bool IsCoarray(const ActualArgument &);
 bool IsCoarray(const Symbol &);
 template <typename A> bool IsCoarray(const A &) { return false; }
-template <typename A> bool IsCoarray(const Designator<A> &designator) {
-  if (const auto *symbol{std::get_if<SymbolRef>(&designator.u)}) {
-    return IsCoarray(**symbol);
-  }
-  return false;
+template <typename T> bool IsCoarray(const Designator<T> &designator) {
+  return designator.Corank() > 0;
 }
 template <typename T> bool IsCoarray(const Expr<T> &expr) {
   return common::visit([](const auto &x) { return IsCoarray(x); }, expr.u);
