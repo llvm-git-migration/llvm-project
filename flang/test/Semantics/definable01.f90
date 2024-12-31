@@ -113,3 +113,14 @@ module m
     lp%next%next => null()
   end
 end module
+program main
+  use iso_fortran_env, only: lock_type
+  type(lock_type) lock
+  interface
+    subroutine inoutlock(lock)
+      import lock_type
+      type(lock_type), intent(in out) :: lock
+    end
+  end interface
+  call inoutlock(lock) ! ok
+end
