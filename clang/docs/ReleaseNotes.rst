@@ -1113,6 +1113,8 @@ AST Matchers
 
 - Add ``dependentNameType`` matcher to match a dependent name type.
 
+- Add ``dependentTemplateSpecializationType`` matcher to match dependent template specialization types.
+
 clang-format
 ------------
 
