@@ -57,9 +57,10 @@ template<typename T> struct F : D<bool> {
 F<bool> fb; // expected-note {{here}}
 
 template<typename T>
-struct G : T {
+struct G : T {        // expected-warning {{'const' qualifier on base class type 'const B1' have no effect}} \
+                      // expected-note {{base class 'const B1' specified here}}
   using T::T;
   G(int &) : G(0) {}
 };
 G<B1> g(123);
-G<const B1> g2(123);
+G<const B1> g2(123); // expected-note {{in instantiation of template class 'G<const B1>' requested here}}

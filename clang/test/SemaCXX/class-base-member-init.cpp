@@ -103,7 +103,8 @@ namespace PR16596 {
   class A { public: virtual ~A(); };
   typedef const A Foo;
   void Apply(Foo processor);
-  struct Bar : public Foo {};
+  struct Bar : public Foo {}; // expected-warning {{'const' qualifier on base class type 'Foo' (aka 'const PR16596::A') have no effect}}\
+                              // expected-note {{base class 'Foo' (aka 'const PR16596::A') specified here}}
   void Fetch() {
     Apply(Bar());
   }
