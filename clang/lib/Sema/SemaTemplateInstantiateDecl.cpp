@@ -1620,6 +1620,14 @@ Decl *TemplateDeclInstantiator::VisitEnumDecl(EnumDecl *D) {
   if (isDeclWithinFunction(D) ? D == Def : Def && !Enum->isScoped()) {
     SemaRef.CurrentInstantiationScope->InstantiatedLocal(D, Enum);
     InstantiateEnumDefinition(Enum, Def);
+  } else {
+    // C++11 [dcl.enum]p3: An enumeration declared by an opaque-enum-declaration
+    // has a fixed underlying type and is a complete type.
+    // C++11 [conv.prom]: A prvalue of an unscoped enumeration type whose
+    // underlying type is fixed ([dcl.enum]) can be converted to a prvalue
+    // of its underlying type.
+    if (D->isFixed() && !Def)
+      Enum->setPromotionType(Enum->getIntegerType());
   }
 
   return Enum;
