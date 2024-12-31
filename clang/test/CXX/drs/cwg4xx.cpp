@@ -1309,7 +1309,8 @@ namespace cwg484 { // cwg484: yes
   }
   CA::A() {}
 
-  struct B : CA {
+  struct B : CA { // expected-error {{'const' qualifier on base class type 'CA' (aka 'const cwg484::A') have no effect}} \
+                  // expected-note {{base class 'CA' (aka 'const cwg484::A') specified here}}
     B() : CA() {}
     void f() { return CA::f(); }
   };
