@@ -1382,14 +1382,15 @@ void Intrinsic::emitBodyAsBuiltinCall() {
     Type CastToType = T;
 
     // Check if an explicit cast is needed.
-    if (CastToType.isVector() &&
-        (LocalCK == ClassB || (T.isHalf() && !T.isScalarForMangling()))) {
-      CastToType.makeInteger(8, true);
-      Arg = "(" + CastToType.str() + ")" + Arg;
-    } else if (CastToType.isVector() && LocalCK == ClassI) {
-      if (CastToType.isInteger())
-        CastToType.makeSigned();
-      Arg = "(" + CastToType.str() + ")" + Arg;
+    if (CastToType.isVector()) {
+      if (LocalCK == ClassB || (T.isHalf() && !T.isScalarForMangling())) {
+        CastToType.makeInteger(8, true);
+        Arg = "__builtin_bit_cast(" + CastToType.str() + ", " + Arg + ")";
+      } else if (LocalCK == ClassI) {
+        if (CastToType.isInteger())
+          CastToType.makeSigned();
+        Arg = "__builtin_bit_cast(" + CastToType.str() + ", " + Arg + ")";
+      }
     }
 
     S += Arg + ", ";
@@ -1601,11 +1602,12 @@ Intrinsic::DagEmitter::emitDagCast(const DagInit *DI, bool IsBitCast) {
       N = "reint" + utostr(++I);
     Intr.Variables[N] = Variable(R.first, N + Intr.VariablePostfix);
 
-    Intr.OS << R.first.str() << " " << Intr.Variables[N].getName() << " = "
-            << R.second << ";";
+    Intr.OS << "  " << R.first.str() << " " << Intr.Variables[N].getName()
+            << " = " << R.second << ";";
     Intr.emitNewLine();
 
-    S = "*(" + castToType.str() + " *) &" + Intr.Variables[N].getName() + "";
+    S = "__builtin_bit_cast(" + castToType.str() + ", " +
+        Intr.Variables[N].getName() + ")";
   } else {
     // Emit a normal (static) cast.
     S = "(" + castToType.str() + ")(" + R.second + ")";

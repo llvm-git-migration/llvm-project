@@ -76,8 +76,8 @@ __attribute__((target("aes"))) poly128_t test_vmull_high_p64(poly64x2_t a, poly6
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_s8
 // CHECK-SAME: (<16 x i8> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <16 x i8> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <16 x i8> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_s8(int8x16_t a) {
   return vreinterpretq_p128_s8(a);
@@ -86,8 +86,8 @@ poly128_t test_vreinterpretq_p128_s8(int8x16_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_s16
 // CHECK-SAME: (<8 x i16> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <8 x i16> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <8 x i16> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_s16(int16x8_t a) {
   return vreinterpretq_p128_s16(a);
@@ -96,8 +96,8 @@ poly128_t test_vreinterpretq_p128_s16(int16x8_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_s32
 // CHECK-SAME: (<4 x i32> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <4 x i32> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x i32> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_s32(int32x4_t a) {
   return vreinterpretq_p128_s32(a);
@@ -106,8 +106,8 @@ poly128_t test_vreinterpretq_p128_s32(int32x4_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_s64
 // CHECK-SAME: (<2 x i64> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <2 x i64> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <2 x i64> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_s64(int64x2_t a) {
   return vreinterpretq_p128_s64(a);
@@ -116,8 +116,8 @@ poly128_t test_vreinterpretq_p128_s64(int64x2_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_u8
 // CHECK-SAME: (<16 x i8> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <16 x i8> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <16 x i8> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_u8(uint8x16_t a) {
   return vreinterpretq_p128_u8(a);
@@ -126,8 +126,8 @@ poly128_t test_vreinterpretq_p128_u8(uint8x16_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_u16
 // CHECK-SAME: (<8 x i16> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <8 x i16> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <8 x i16> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_u16(uint16x8_t a) {
   return vreinterpretq_p128_u16(a);
@@ -136,8 +136,8 @@ poly128_t test_vreinterpretq_p128_u16(uint16x8_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_u32
 // CHECK-SAME: (<4 x i32> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <4 x i32> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x i32> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_u32(uint32x4_t a) {
   return vreinterpretq_p128_u32(a);
@@ -146,8 +146,8 @@ poly128_t test_vreinterpretq_p128_u32(uint32x4_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_u64
 // CHECK-SAME: (<2 x i64> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <2 x i64> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <2 x i64> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_u64(uint64x2_t a) {
   return vreinterpretq_p128_u64(a);
@@ -156,8 +156,8 @@ poly128_t test_vreinterpretq_p128_u64(uint64x2_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_f32
 // CHECK-SAME: (<4 x float> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <4 x float> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x float> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_f32(float32x4_t a) {
   return vreinterpretq_p128_f32(a);
@@ -166,8 +166,8 @@ poly128_t test_vreinterpretq_p128_f32(float32x4_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_f64
 // CHECK-SAME: (<2 x double> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <2 x double> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <2 x double> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_f64(float64x2_t a) {
   return vreinterpretq_p128_f64(a);
@@ -176,8 +176,8 @@ poly128_t test_vreinterpretq_p128_f64(float64x2_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_p8
 // CHECK-SAME: (<16 x i8> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <16 x i8> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <16 x i8> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_p8(poly8x16_t a) {
   return vreinterpretq_p128_p8(a);
@@ -186,8 +186,8 @@ poly128_t test_vreinterpretq_p128_p8(poly8x16_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_p16
 // CHECK-SAME: (<8 x i16> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <8 x i16> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <8 x i16> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_p16(poly16x8_t a) {
   return vreinterpretq_p128_p16(a);
@@ -196,8 +196,8 @@ poly128_t test_vreinterpretq_p128_p16(poly16x8_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p128_p64
 // CHECK-SAME: (<2 x i64> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast <2 x i64> [[A]] to i128
-// CHECK-NEXT:    ret i128 [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <2 x i64> [[A]] to i128
+// CHECK-NEXT:    ret i128 [[DOTCAST]]
 //
 poly128_t test_vreinterpretq_p128_p64(poly64x2_t a) {
   return vreinterpretq_p128_p64(a);
@@ -206,8 +206,8 @@ poly128_t test_vreinterpretq_p128_p64(poly64x2_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_s8_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <16 x i8>
-// CHECK-NEXT:    ret <16 x i8> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <16 x i8>
+// CHECK-NEXT:    ret <16 x i8> [[DOTCAST]]
 //
 int8x16_t test_vreinterpretq_s8_p128(poly128_t a) {
   return vreinterpretq_s8_p128(a);
@@ -216,8 +216,8 @@ int8x16_t test_vreinterpretq_s8_p128(poly128_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_s16_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <8 x i16>
-// CHECK-NEXT:    ret <8 x i16> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <8 x i16>
+// CHECK-NEXT:    ret <8 x i16> [[DOTCAST]]
 //
 int16x8_t test_vreinterpretq_s16_p128(poly128_t  a) {
   return vreinterpretq_s16_p128(a);
@@ -226,8 +226,8 @@ int16x8_t test_vreinterpretq_s16_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_s32_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <4 x i32>
-// CHECK-NEXT:    ret <4 x i32> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <4 x i32>
+// CHECK-NEXT:    ret <4 x i32> [[DOTCAST]]
 //
 int32x4_t test_vreinterpretq_s32_p128(poly128_t a) {
   return vreinterpretq_s32_p128(a);
@@ -236,8 +236,8 @@ int32x4_t test_vreinterpretq_s32_p128(poly128_t a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_s64_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <2 x i64>
-// CHECK-NEXT:    ret <2 x i64> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <2 x i64>
+// CHECK-NEXT:    ret <2 x i64> [[DOTCAST]]
 //
 int64x2_t test_vreinterpretq_s64_p128(poly128_t  a) {
   return vreinterpretq_s64_p128(a);
@@ -246,8 +246,8 @@ int64x2_t test_vreinterpretq_s64_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_u8_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <16 x i8>
-// CHECK-NEXT:    ret <16 x i8> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <16 x i8>
+// CHECK-NEXT:    ret <16 x i8> [[DOTCAST]]
 //
 uint8x16_t test_vreinterpretq_u8_p128(poly128_t  a) {
   return vreinterpretq_u8_p128(a);
@@ -256,8 +256,8 @@ uint8x16_t test_vreinterpretq_u8_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_u16_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <8 x i16>
-// CHECK-NEXT:    ret <8 x i16> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <8 x i16>
+// CHECK-NEXT:    ret <8 x i16> [[DOTCAST]]
 //
 uint16x8_t test_vreinterpretq_u16_p128(poly128_t  a) {
   return vreinterpretq_u16_p128(a);
@@ -266,8 +266,8 @@ uint16x8_t test_vreinterpretq_u16_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_u32_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <4 x i32>
-// CHECK-NEXT:    ret <4 x i32> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <4 x i32>
+// CHECK-NEXT:    ret <4 x i32> [[DOTCAST]]
 //
 uint32x4_t test_vreinterpretq_u32_p128(poly128_t  a) {
   return vreinterpretq_u32_p128(a);
@@ -276,8 +276,8 @@ uint32x4_t test_vreinterpretq_u32_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_u64_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <2 x i64>
-// CHECK-NEXT:    ret <2 x i64> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <2 x i64>
+// CHECK-NEXT:    ret <2 x i64> [[DOTCAST]]
 //
 uint64x2_t test_vreinterpretq_u64_p128(poly128_t  a) {
   return vreinterpretq_u64_p128(a);
@@ -286,8 +286,8 @@ uint64x2_t test_vreinterpretq_u64_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_f32_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <4 x float>
-// CHECK-NEXT:    ret <4 x float> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <4 x float>
+// CHECK-NEXT:    ret <4 x float> [[DOTCAST]]
 //
 float32x4_t test_vreinterpretq_f32_p128(poly128_t  a) {
   return vreinterpretq_f32_p128(a);
@@ -296,8 +296,8 @@ float32x4_t test_vreinterpretq_f32_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_f64_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <2 x double>
-// CHECK-NEXT:    ret <2 x double> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <2 x double>
+// CHECK-NEXT:    ret <2 x double> [[DOTCAST]]
 //
 float64x2_t test_vreinterpretq_f64_p128(poly128_t  a) {
   return vreinterpretq_f64_p128(a);
@@ -306,8 +306,8 @@ float64x2_t test_vreinterpretq_f64_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p8_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <16 x i8>
-// CHECK-NEXT:    ret <16 x i8> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <16 x i8>
+// CHECK-NEXT:    ret <16 x i8> [[DOTCAST]]
 //
 poly8x16_t test_vreinterpretq_p8_p128(poly128_t  a) {
   return vreinterpretq_p8_p128(a);
@@ -316,8 +316,8 @@ poly8x16_t test_vreinterpretq_p8_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p16_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <8 x i16>
-// CHECK-NEXT:    ret <8 x i16> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <8 x i16>
+// CHECK-NEXT:    ret <8 x i16> [[DOTCAST]]
 //
 poly16x8_t test_vreinterpretq_p16_p128(poly128_t  a) {
   return vreinterpretq_p16_p128(a);
@@ -326,8 +326,8 @@ poly16x8_t test_vreinterpretq_p16_p128(poly128_t  a) {
 // CHECK-LABEL: define {{[^@]+}}@test_vreinterpretq_p64_p128
 // CHECK-SAME: (i128 noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = bitcast i128 [[A]] to <2 x i64>
-// CHECK-NEXT:    ret <2 x i64> [[TMP0]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast i128 [[A]] to <2 x i64>
+// CHECK-NEXT:    ret <2 x i64> [[DOTCAST]]
 //
 poly64x2_t test_vreinterpretq_p64_p128(poly128_t  a) {
   return vreinterpretq_p64_p128(a);

@@ -2834,8 +2834,8 @@ float32x4_t test_vcvtx_high_f32_f64(float32x2_t a, float64x2_t b) {
 // CHECK-LABEL: define dso_local <4 x float> @test_vcvt_f32_f16(
 // CHECK-SAME: <4 x half> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  [[ENTRY:.*:]]
-// CHECK-NEXT:    [[VCVT_F32_F16_I:%.*]] = bitcast <4 x half> [[A]] to <4 x i16>
-// CHECK-NEXT:    [[VCVT_F32_F161_I:%.*]] = call <4 x float> @llvm.aarch64.neon.vcvthf2fp(<4 x i16> [[VCVT_F32_F16_I]])
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x half> [[A]] to <4 x i16>
+// CHECK-NEXT:    [[VCVT_F32_F161_I:%.*]] = call <4 x float> @llvm.aarch64.neon.vcvthf2fp(<4 x i16> [[DOTCAST]])
 // CHECK-NEXT:    ret <4 x float> [[VCVT_F32_F161_I]]
 //
 float32x4_t test_vcvt_f32_f16(float16x4_t a) {
@@ -2846,8 +2846,8 @@ float32x4_t test_vcvt_f32_f16(float16x4_t a) {
 // CHECK-SAME: <8 x half> noundef [[A:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  [[ENTRY:.*:]]
 // CHECK-NEXT:    [[SHUFFLE_I:%.*]] = shufflevector <8 x half> [[A]], <8 x half> poison, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-// CHECK-NEXT:    [[VCVT_F32_F16_I_I:%.*]] = bitcast <4 x half> [[SHUFFLE_I]] to <4 x i16>
-// CHECK-NEXT:    [[VCVT_F32_F161_I_I:%.*]] = call <4 x float> @llvm.aarch64.neon.vcvthf2fp(<4 x i16> [[VCVT_F32_F16_I_I]])
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x half> [[SHUFFLE_I]] to <4 x i16>
+// CHECK-NEXT:    [[VCVT_F32_F161_I_I:%.*]] = call <4 x float> @llvm.aarch64.neon.vcvthf2fp(<4 x i16> [[DOTCAST]])
 // CHECK-NEXT:    ret <4 x float> [[VCVT_F32_F161_I_I]]
 //
 float32x4_t test_vcvt_high_f32_f16(float16x8_t a) {

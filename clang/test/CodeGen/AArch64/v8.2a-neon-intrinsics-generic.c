@@ -15,11 +15,11 @@
 // CHECK-LABEL: define {{[^@]+}}@test_vbsl_f16
 // CHECK-SAME: (<4 x i16> noundef [[A:%.*]], <4 x half> noundef [[B:%.*]], <4 x half> noundef [[C:%.*]]) #[[ATTR0:[0-9]+]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[VBSL1_I:%.*]] = bitcast <4 x half> [[B]] to <4 x i16>
-// CHECK-NEXT:    [[VBSL2_I:%.*]] = bitcast <4 x half> [[C]] to <4 x i16>
-// CHECK-NEXT:    [[VBSL3_I:%.*]] = and <4 x i16> [[A]], [[VBSL1_I]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <4 x half> [[B]] to <4 x i16>
+// CHECK-NEXT:    [[DOTCAST1:%.*]] = bitcast <4 x half> [[C]] to <4 x i16>
+// CHECK-NEXT:    [[VBSL3_I:%.*]] = and <4 x i16> [[A]], [[DOTCAST]]
 // CHECK-NEXT:    [[TMP0:%.*]] = xor <4 x i16> [[A]], splat (i16 -1)
-// CHECK-NEXT:    [[VBSL4_I:%.*]] = and <4 x i16> [[TMP0]], [[VBSL2_I]]
+// CHECK-NEXT:    [[VBSL4_I:%.*]] = and <4 x i16> [[TMP0]], [[DOTCAST1]]
 // CHECK-NEXT:    [[VBSL5_I:%.*]] = or disjoint <4 x i16> [[VBSL3_I]], [[VBSL4_I]]
 // CHECK-NEXT:    [[TMP1:%.*]] = bitcast <4 x i16> [[VBSL5_I]] to <4 x half>
 // CHECK-NEXT:    ret <4 x half> [[TMP1]]
@@ -31,11 +31,11 @@ float16x4_t test_vbsl_f16(uint16x4_t a, float16x4_t b, float16x4_t c) {
 // CHECK-LABEL: define {{[^@]+}}@test_vbslq_f16
 // CHECK-SAME: (<8 x i16> noundef [[A:%.*]], <8 x half> noundef [[B:%.*]], <8 x half> noundef [[C:%.*]]) #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[VBSL1_I:%.*]] = bitcast <8 x half> [[B]] to <8 x i16>
-// CHECK-NEXT:    [[VBSL2_I:%.*]] = bitcast <8 x half> [[C]] to <8 x i16>
-// CHECK-NEXT:    [[VBSL3_I:%.*]] = and <8 x i16> [[A]], [[VBSL1_I]]
+// CHECK-NEXT:    [[DOTCAST:%.*]] = bitcast <8 x half> [[B]] to <8 x i16>
+// CHECK-NEXT:    [[DOTCAST1:%.*]] = bitcast <8 x half> [[C]] to <8 x i16>
+// CHECK-NEXT:    [[VBSL3_I:%.*]] = and <8 x i16> [[A]], [[DOTCAST]]
 // CHECK-NEXT:    [[TMP0:%.*]] = xor <8 x i16> [[A]], splat (i16 -1)
-// CHECK-NEXT:    [[VBSL4_I:%.*]] = and <8 x i16> [[TMP0]], [[VBSL2_I]]
+// CHECK-NEXT:    [[VBSL4_I:%.*]] = and <8 x i16> [[TMP0]], [[DOTCAST1]]
 // CHECK-NEXT:    [[VBSL5_I:%.*]] = or disjoint <8 x i16> [[VBSL3_I]], [[VBSL4_I]]
 // CHECK-NEXT:    [[TMP1:%.*]] = bitcast <8 x i16> [[VBSL5_I]] to <8 x half>
 // CHECK-NEXT:    ret <8 x half> [[TMP1]]

@@ -129,7 +129,7 @@ def OP_VCVT_NA_HI_F32 : Op<(call "vcombine", $p0, (call "vcvt_f32_f64", $p1))>;
 def OP_VCVT_EX_HI_F32 : Op<(call "vcvt_f32_f16", (call "vget_high", $p0))>;
 def OP_VCVT_EX_HI_F64 : Op<(call "vcvt_f64_f32", (call "vget_high", $p0))>;
 def OP_VCVTX_HI : Op<(call "vcombine", $p0, (call "vcvtx_f32", $p1))>;
-def OP_REINT    : Op<(cast "R", $p0)>;
+def OP_REINT    : Op<(bitcast "R", $p0)>;
 def OP_ADDHNHi  : Op<(call "vcombine", $p0, (call "vaddhn", $p1, $p2))>;
 def OP_RADDHNHi : Op<(call "vcombine", $p0, (call "vraddhn", $p1, $p2))>;
 def OP_SUBHNHi  : Op<(call "vcombine", $p0, (call "vsubhn", $p1, $p2))>;
@@ -929,12 +929,12 @@ def CFMLE  : SOpInst<"vcle", "U..", "lUldQdQlQUl", OP_LE>;
 def CFMGT  : SOpInst<"vcgt", "U..", "lUldQdQlQUl", OP_GT>;
 def CFMLT  : SOpInst<"vclt", "U..", "lUldQdQlQUl", OP_LT>;
 
-def CMEQ  : SInst<"vceqz", "U.",
+def CMEQ  : SInst<"vceqz", "U(.!)",
                   "csilfUcUsUiUlPcPlQcQsQiQlQfQUcQUsQUiQUlQPcdQdQPl">;
-def CMGE  : SInst<"vcgez", "U.", "csilfdQcQsQiQlQfQd">;
-def CMLE  : SInst<"vclez", "U.", "csilfdQcQsQiQlQfQd">;
-def CMGT  : SInst<"vcgtz", "U.", "csilfdQcQsQiQlQfQd">;
-def CMLT  : SInst<"vcltz", "U.", "csilfdQcQsQiQlQfQd">;
+def CMGE  : SInst<"vcgez", "U(.!)", "csilfdQcQsQiQlQfQd">;
+def CMLE  : SInst<"vclez", "U(.!)", "csilfdQcQsQiQlQfQd">;
+def CMGT  : SInst<"vcgtz", "U(.!)", "csilfdQcQsQiQlQfQd">;
+def CMLT  : SInst<"vcltz", "U(.!)", "csilfdQcQsQiQlQfQd">;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Max/Min Integer
@@ -1672,11 +1672,11 @@ let TargetGuard = "fullfp16,neon" in {
   // ARMv8.2-A FP16 one-operand vector intrinsics.
 
   // Comparison
-  def CMEQH    : SInst<"vceqz", "U.", "hQh">;
-  def CMGEH    : SInst<"vcgez", "U.", "hQh">;
-  def CMGTH    : SInst<"vcgtz", "U.", "hQh">;
-  def CMLEH    : SInst<"vclez", "U.", "hQh">;
-  def CMLTH    : SInst<"vcltz", "U.", "hQh">;
+  def CMEQH    : SInst<"vceqz", "U(.!)", "hQh">;
+  def CMGEH    : SInst<"vcgez", "U(.!)", "hQh">;
+  def CMGTH    : SInst<"vcgtz", "U(.!)", "hQh">;
+  def CMLEH    : SInst<"vclez", "U(.!)", "hQh">;
+  def CMLTH    : SInst<"vcltz", "U(.!)", "hQh">;
 
   // Vector conversion
   def VCVT_F16     : SInst<"vcvt_f16", "F(.!)",  "sUsQsQUs">;
