@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "src/time/time_utils.h"
+#include "src/__support/File/file.h"
+#include "src/stdio/fseek.h"
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -26,14 +28,13 @@ static int64_t computeRemainingYears(int64_t daysPerYears,
 }
 
 volatile int file_usage = 0;
-volatile int fd = -1;
 
-void release_file(int fd) {
+void release_file(ErrorOr<File *> error_or_file) {
   file_usage = 0;
-  close(fd);
+  error_or_file.value()->close();
 }
 
-void acquire_file(char *filename) {
+ErrorOr<File *> acquire_file(char *filename) {
   while (1) {
     if (file_usage == 0) {
       file_usage = 1;
@@ -41,9 +42,7 @@ void acquire_file(char *filename) {
     }
   }
 
-  if ((fd = open(filename, O_RDONLY)) < 0) {
-    release_file(fd);
-  }
+  return LIBC_NAMESPACE::openfile(filename, "rb");
 }
 
 char *get_env_var(const char *input) {
@@ -214,18 +213,12 @@ timezone::tzset *get_localtime(struct tm *tm) {
     }
   }
 
-  acquire_file(tz_filename);
+  ErrorOr<File *> error_or_file = acquire_file(tz_filename);
+  File *file = error_or_file.value();
 
-  size_t filesize;
-  filesize = static_cast<size_t>(lseek(fd, 0, SEEK_END));
-  if (filesize < 0) {
-    close(fd);
-    return nullptr;
-  }
-  lseek(fd, 0, 0);
-
-  timezone::tzset *ptr_tzset = timezone::get_tzset(fd, filesize);
+  timezone::tzset *ptr_tzset = timezone::get_tzset(file);
   if (ptr_tzset == nullptr) {
+    release_file(file);
     return nullptr;
   }
 
@@ -239,7 +232,7 @@ timezone::tzset *get_localtime(struct tm *tm) {
   }
 
   if (file_usage == 1) {
-    release_file(fd);
+    release_file(file);
   }
 
   return ptr_tzset;
