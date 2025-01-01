@@ -3282,13 +3282,17 @@ func.func @load_0d(%memref : memref<200x100xf32>, %i : index, %j : index) -> vec
 }
 
 // CHECK-LABEL: func @load_0d
-// CHECK: %[[LOAD:.*]] = memref.load %{{.*}}[%{{.*}}, %{{.*}}]
-// CHECK: %[[VEC:.*]] = llvm.mlir.undef : vector<1xf32>
-// CHECK: %[[C0:.*]] = llvm.mlir.constant(0 : i32) : i32
-// CHECK: %[[INSERTED:.*]] = llvm.insertelement %[[LOAD]], %[[VEC]][%[[C0]] : i32] : vector<1xf32>
-// CHECK: %[[CAST:.*]] = builtin.unrealized_conversion_cast %[[INSERTED]] : vector<1xf32> to vector<f32>
-// CHECK: return %[[CAST]] : vector<f32>
-
+// CHECK: %[[T0:.*]] = builtin.unrealized_conversion_cast %{{.*}} : index to i64
+// CHECK: %[[T1:.*]] = builtin.unrealized_conversion_cast %{{.*}} : index to i64
+// CHECK: %[[T2:.*]] = builtin.unrealized_conversion_cast %{{.*}} : memref<200x100xf32> to !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)>
+// CHECK: %[[T3:.*]] = llvm.extractvalue %[[T2]][1] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
+// CHECK: %[[T4:.*]] = llvm.mlir.constant(100 : index) : i64
+// CHECK: %[[T5:.*]] = llvm.mul %[[T1]], %[[T4]] : i64
+// CHECK: %[[T6:.*]] = llvm.add %[[T5]], %[[T0]] : i64
+// CHECK: %[[T7:.*]] = llvm.getelementptr %[[T3]][%[[T6]]] : (!llvm.ptr, i64) -> !llvm.ptr, f32
+// CHECK: %[[T8:.*]] = llvm.load %[[T7]] {alignment = 4 : i64} : !llvm.ptr -> vector<1xf32>
+// CHECK: %[[T9:.*]] = builtin.unrealized_conversion_cast %[[T8]] : vector<1xf32> to vector<f32>
+// CHECK: return %[[T9]] : vector<f32>
 // -----
 
 //===----------------------------------------------------------------------===//
@@ -3382,11 +3386,18 @@ func.func @store_0d(%memref : memref<200x100xf32>, %i : index, %j : index) {
 }
 
 // CHECK-LABEL: func @store_0d
-// CHECK: %[[VAL:.*]] = arith.constant dense<1.100000e+01> : vector<f32>
-// CHECK: %[[CAST:.*]] = builtin.unrealized_conversion_cast %[[VAL]] : vector<f32> to vector<1xf32>
-// CHECK: %[[C0:.*]] = llvm.mlir.constant(0 : index) : i64
-// CHECK: %[[EXTRACTED:.*]] = llvm.extractelement %[[CAST]][%[[C0]] : i64] : vector<1xf32>
-// CHECK: memref.store %[[EXTRACTED]], %{{.*}}[%{{.*}}, %{{.*}}]
+// CHECK: %[[T0:.*]] = builtin.unrealized_conversion_cast %{{.*}} : index to i64
+// CHECK: %[[T1:.*]] = builtin.unrealized_conversion_cast %{{.*}} : index to i64
+// CHECK: %[[T2:.*]] = builtin.unrealized_conversion_cast %{{.*}} : memref<200x100xf32> to !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)>
+// CHECK: %[[CST:.*]] = arith.constant dense<1.100000e+01> : vector<f32>
+// CHECK: %[[T3:.*]] = builtin.unrealized_conversion_cast %[[CST]] : vector<f32> to vector<1xf32>
+// CHECK: %[[T4:.*]] = llvm.extractvalue %[[T2]][1] : !llvm.struct<(ptr, ptr, i64, array<2 x i64>, array<2 x i64>)> 
+// CHECK: %[[T5:.*]] = llvm.mlir.constant(100 : index) : i64
+// CHECK: %[[T6:.*]] = llvm.mul %[[T1]], %[[T5]] : i64
+// CHECK: %[[T7:.*]] = llvm.add %[[T6]], %[[T0]] : i64
+// CHECK: %[[T8:.*]] = llvm.getelementptr %[[T4]][%[[T7]]] : (!llvm.ptr, i64) -> !llvm.ptr, f32
+// CHECK: llvm.store %[[T3]], %[[T8]] {alignment = 4 : i64} : vector<1xf32>, !llvm.ptr
+// CHECK: return
 
 // -----
 
