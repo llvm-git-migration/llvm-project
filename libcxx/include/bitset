@@ -382,10 +382,12 @@ __bitset<_N_words, _Size>::to_ullong(true_type, true_type) const {
   unsigned long long __r = __first_[0];
   _LIBCPP_DIAGNOSTIC_PUSH
   _LIBCPP_GCC_DIAGNOSTIC_IGNORED("-Wshift-count-overflow")
+  // for (size_t __i = 1; __i < sizeof(unsigned long long) / sizeof(__storage_type); ++__i)
+  //   __r |= static_cast<unsigned long long>(__first_[__i]) << (sizeof(__storage_type) * CHAR_BIT);
   const size_t __ull_words = sizeof(unsigned long long) / sizeof(__storage_type);
-  const size_t __n_words = _N_words < __ull_words ? _N_words : __ull_words;
+  const size_t __n_words   = _N_words < __ull_words ? _N_words : __ull_words;
   for (size_t __i = 1; __i < __n_words; ++__i)
-    __r |= static_cast<unsigned long long>(__first_[__i]) << (sizeof(__storage_type) * CHAR_BIT * __i);
+    __r |= static_cast<unsigned long long>(__first_[__i]) << (__bits_per_word * __i);
   _LIBCPP_DIAGNOSTIC_POP
   return __r;
 }
