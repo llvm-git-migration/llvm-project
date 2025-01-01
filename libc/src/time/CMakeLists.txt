@@ -79,7 +79,7 @@ add_entrypoint_object(
 add_entrypoint_object(
   localtime
   SRCS
-    localtime.cpp
+    linux/localtime.cpp
   HDRS
     localtime.h
     timezone.h
@@ -93,7 +93,7 @@ add_entrypoint_object(
 add_entrypoint_object(
   localtime_r
   SRCS
-    localtime_r.cpp
+    linux/localtime_r.cpp
   HDRS
     localtime_r.h
     timezone.h
@@ -107,7 +107,7 @@ add_entrypoint_object(
 add_entrypoint_object(
   localtime_s
   SRCS
-    localtime_s.cpp
+    linux/localtime_s.cpp
   HDRS
     localtime_s.h
     timezone.h

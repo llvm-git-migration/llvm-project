@@ -7,23 +7,21 @@
 //===----------------------------------------------------------------------===//
 
 #include "ctime_r.h"
-#include "src/__support/CPP/limits.h"
-#include "src/__support/common.h"
-#include "src/__support/macros/config.h"
 #include "time_utils.h"
-#include "timezone.h"
 
 namespace LIBC_NAMESPACE_DECL {
 
 using LIBC_NAMESPACE::time_utils::TimeConstants;
 
 LLVM_LIBC_FUNCTION(char *, ctime_r, (const time_t *t_ptr, char *buffer)) {
+  static struct tm tm_out;
+
   if (t_ptr == nullptr || buffer == nullptr ||
       *t_ptr > cpp::numeric_limits<int32_t>::max()) {
     return nullptr;
   }
 
-  return time_utils::asctime(time_utils::localtime(t_ptr), buffer,
+  return time_utils::asctime(localtime_r(t_ptr, &tm_out), buffer,
                              TimeConstants::ASCTIME_MAX_BYTES);
 }
 
