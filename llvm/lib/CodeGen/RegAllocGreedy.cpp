@@ -242,8 +242,6 @@ PreservedAnalyses RAGreedyPass::run(MachineFunction &MF,
   PA.preserve<SlotIndexesAnalysis>();
   PA.preserve<LiveDebugVariablesAnalysis>();
   PA.preserve<LiveStacksAnalysis>();
-  PA.preserve<MachineDominatorTreeAnalysis>();
-  PA.preserve<MachineLoopAnalysis>();
   PA.preserve<VirtRegMapAnalysis>();
   PA.preserve<LiveRegMatrixAnalysis>();
   return PA;
