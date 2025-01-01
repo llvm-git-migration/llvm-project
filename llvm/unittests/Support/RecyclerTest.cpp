@@ -18,6 +18,10 @@ struct Object1 {
   char Data[1];
 };
 
+struct Object8 {
+  char Data[8];
+};
+
 class DecoratedMallocAllocator : public MallocAllocator {
 public:
   int DeallocCount = 0;
@@ -43,4 +47,19 @@ TEST(RecyclerTest, RecycleAllocation) {
   EXPECT_EQ(Allocator.DeallocCount, 2);
 }
 
+TEST(RecyclerTest, MoveConstructor) {
+  DecoratedMallocAllocator Allocator;
+  Recycler<Object8> R;
+  Object8 *A1 = R.Allocate(Allocator);
+  Object8 *A2 = R.Allocate(Allocator);
+  R.Deallocate(Allocator, A1);
+  R.Deallocate(Allocator, A2);
+  Recycler<Object8> R2(std::move(R));
+  Object8 *A3 = R2.Allocate(Allocator);
+  R2.Deallocate(Allocator, A3);
+  R.clear(Allocator); // Should not deallocate anything as it was moved from.
+  EXPECT_EQ(Allocator.DeallocCount, 0);
+  R2.clear(Allocator);
+  EXPECT_EQ(Allocator.DeallocCount, 2);
+}
 } // end anonymous namespace
