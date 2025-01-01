@@ -4053,6 +4053,8 @@ Instruction *InstCombinerImpl::visitExtractValueInst(ExtractValueInst &EV) {
                                           SQ.getWithInstruction(&EV)))
     return replaceInstUsesWith(EV, V);
 
+
+
   if (InsertValueInst *IV = dyn_cast<InsertValueInst>(Agg)) {
     // We're extracting from an insertvalue instruction, compare the indices
     const unsigned *exti, *exte, *insi, *inse;
