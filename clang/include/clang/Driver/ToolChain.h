@@ -619,7 +619,13 @@ public:
   virtual bool SupportsEmbeddedBitcode() const { return false; }
 
   /// getThreadModel() - Which thread model does this target use?
-  virtual std::string getThreadModel() const { return "posix"; }
+  virtual std::string getThreadModel() const {
+#ifdef _WIN32
+    return "win32";
+#else
+    return "posix";
+#endif
+  }
 
   /// isThreadModelSupported() - Does this target support a thread model?
   virtual bool isThreadModelSupported(const StringRef Model) const;
