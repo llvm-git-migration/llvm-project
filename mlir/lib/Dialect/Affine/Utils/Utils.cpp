@@ -56,7 +56,9 @@ public:
     auto rhs = visit(expr.getRHS());
     if (!lhs || !rhs)
       return nullptr;
-    auto op = builder.create<OpTy>(loc, lhs, rhs);
+    auto op = builder.create<OpTy>(loc, lhs, rhs,
+                                   arith::IntegerOverflowFlags::nsw |
+                                       arith::IntegerOverflowFlags::nuw);
     return op.getResult();
   }
 
@@ -93,8 +95,9 @@ public:
     Value zeroCst = builder.create<arith::ConstantIndexOp>(loc, 0);
     Value isRemainderNegative = builder.create<arith::CmpIOp>(
         loc, arith::CmpIPredicate::slt, remainder, zeroCst);
-    Value correctedRemainder =
-        builder.create<arith::AddIOp>(loc, remainder, rhs);
+    Value correctedRemainder = builder.create<arith::AddIOp>(
+        loc, remainder, rhs,
+        arith::IntegerOverflowFlags::nsw | arith::IntegerOverflowFlags::nuw);
     Value result = builder.create<arith::SelectOp>(
         loc, isRemainderNegative, correctedRemainder, remainder);
     return result;
@@ -178,8 +181,9 @@ public:
     Value quotient = builder.create<arith::DivSIOp>(loc, dividend, rhs);
     Value negatedQuotient =
         builder.create<arith::SubIOp>(loc, zeroCst, quotient);
-    Value incrementedQuotient =
-        builder.create<arith::AddIOp>(loc, quotient, oneCst);
+    Value incrementedQuotient = builder.create<arith::AddIOp>(
+        loc, quotient, oneCst,
+        arith::IntegerOverflowFlags::nsw | arith::IntegerOverflowFlags::nuw);
     Value result = builder.create<arith::SelectOp>(
         loc, nonPositive, negatedQuotient, incrementedQuotient);
     return result;
