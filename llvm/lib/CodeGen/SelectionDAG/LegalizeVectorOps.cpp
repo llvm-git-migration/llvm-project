@@ -402,6 +402,8 @@ SDValue VectorLegalizer::LegalizeOp(SDValue Op) {
   case ISD::FMAXNUM_IEEE:
   case ISD::FMINIMUM:
   case ISD::FMAXIMUM:
+  case ISD::FMINIMUMNUM:
+  case ISD::FMAXIMUMNUM:
   case ISD::FCOPYSIGN:
   case ISD::FSQRT:
   case ISD::FSIN:
