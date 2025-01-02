@@ -7,9 +7,8 @@
 //===----------------------------------------------------------------------===//
 //
 // This file implements a pass to convert gpu launch function into a vulkan
-// launch function. Creates a SPIR-V binary shader from the `spirv::ModuleOp`
-// using `spirv::serialize` function, attaches binary data and entry point name
-// as an attributes to vulkan launch call op.
+// launch function. Extracts the SPIR-V from a `gpu::BinaryOp` and attaches it
+// along with the entry point name as attributes to a Vulkan launch call op.
 //
 //===----------------------------------------------------------------------===//
 
@@ -40,10 +39,9 @@ static constexpr const char *kVulkanLaunch = "vulkanLaunch";
 
 namespace {
 
-/// A pass to convert gpu launch op to vulkan launch call op, by creating a
-/// SPIR-V binary shader from `spirv::ModuleOp` using `spirv::serialize`
-/// function and attaching binary data and entry point name as an attributes to
-/// created vulkan launch call op.
+/// A pass to convert gpu launch op to vulkan launch call op, by extracting a
+/// SPIR-V binary shader from a `gpu::BinaryOp` and attaching binary data and
+/// entry point name as an attributes to created vulkan launch call op.
 class ConvertGpuLaunchFuncToVulkanLaunchFunc
     : public impl::ConvertGpuLaunchFuncToVulkanLaunchFuncBase<
           ConvertGpuLaunchFuncToVulkanLaunchFunc> {
@@ -51,10 +49,10 @@ public:
   void runOnOperation() override;
 
 private:
-  /// Creates a SPIR-V binary shader from the given `module` using
-  /// `spirv::serialize` function.
-  LogicalResult createBinaryShader(ModuleOp module,
-                                   std::vector<char> &binaryShader);
+  /// Extracts a SPIR-V binary shader from the given `module`, if any.
+  /// Note that this also removes the binary from the IR.
+  LogicalResult getBinaryShader(ModuleOp module,
+                                std::vector<char> &binaryShader);
 
   /// Converts the given `launchOp` to vulkan launch call.
   void convertGpuLaunchFunc(gpu::LaunchFuncOp launchOp);
@@ -135,21 +133,38 @@ LogicalResult ConvertGpuLaunchFuncToVulkanLaunchFunc::declareVulkanLaunchFunc(
   return success();
 }
 
-LogicalResult ConvertGpuLaunchFuncToVulkanLaunchFunc::createBinaryShader(
+LogicalResult ConvertGpuLaunchFuncToVulkanLaunchFunc::getBinaryShader(
     ModuleOp module, std::vector<char> &binaryShader) {
   bool done = false;
   SmallVector<uint32_t, 0> binary;
-  for (auto spirvModule : module.getOps<spirv::ModuleOp>()) {
+  gpu::BinaryOp *binaryToErase;
+  for (auto gpuBinary : module.getOps<gpu::BinaryOp>()) {
     if (done)
-      return spirvModule.emitError("should only contain one 'spirv.module' op");
+      return gpuBinary.emitError("should only contain one 'gpu.binary' op");
     done = true;
 
-    if (failed(spirv::serialize(spirvModule, binary)))
-      return failure();
+    ArrayRef<Attribute> objects = gpuBinary.getObjectsAttr().getValue();
+    if (objects.size() != 1)
+      return gpuBinary.emitError("should only contain a single object");
+
+    auto object = cast<gpu::ObjectAttr>(objects[0]);
+
+    if (!isa<spirv::TargetEnvAttr>(object.getTarget()))
+      return gpuBinary.emitError(
+          "should contain an object with a SPIR-V target environment");
+
+    StringAttr objectStrAttr = object.getObject();
+    StringRef objectStr = objectStrAttr.getValue();
+    binaryShader.insert(binaryShader.end(), objectStr.bytes_begin(),
+                        objectStr.bytes_end());
+
+    binaryToErase = &gpuBinary;
   }
-  binaryShader.resize(binary.size() * sizeof(uint32_t));
-  std::memcpy(binaryShader.data(), reinterpret_cast<char *>(binary.data()),
-              binaryShader.size());
+  if (!done)
+    return module.emitError("should contain a 'gpu.binary' op");
+
+  // Remove the binary to avoid confusing later conversion passes.
+  binaryToErase->erase();
   return success();
 }
 
@@ -159,9 +174,9 @@ void ConvertGpuLaunchFuncToVulkanLaunchFunc::convertGpuLaunchFunc(
   OpBuilder builder(launchOp);
   Location loc = launchOp.getLoc();
 
-  // Serialize `spirv::Module` into binary form.
   std::vector<char> binary;
-  if (failed(createBinaryShader(module, binary)))
+  // Extract SPIR-V from `gpu.binary` op.
+  if (failed(getBinaryShader(module, binary)))
     return signalPassFailure();
 
   // Declare vulkan launch function.
