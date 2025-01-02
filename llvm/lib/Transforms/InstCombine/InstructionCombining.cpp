@@ -2296,6 +2296,58 @@ Instruction *InstCombinerImpl::foldVectorBinop(BinaryOperator &Inst) {
   return nullptr;
 }
 
+static Intrinsic::ID getReductionForBinop(Instruction::BinaryOps Opc) {
+  switch (Opc) {
+  default:
+    break;
+  case Instruction::Add:
+    return Intrinsic::vector_reduce_add;
+  case Instruction::Mul:
+    return Intrinsic::vector_reduce_mul;
+  case Instruction::And:
+    return Intrinsic::vector_reduce_and;
+  case Instruction::Or:
+    return Intrinsic::vector_reduce_or;
+  case Instruction::Xor:
+    return Intrinsic::vector_reduce_xor;
+  }
+  return Intrinsic::num_intrinsics;
+}
+
+Instruction *InstCombinerImpl::foldBinopOfReductions(BinaryOperator &Inst) {
+  IntrinsicInst *II0 = dyn_cast<IntrinsicInst>(Inst.getOperand(0));
+  if (!II0)
+    return nullptr;
+  IntrinsicInst *II1 = dyn_cast<IntrinsicInst>(Inst.getOperand(1));
+  if (!II1)
+    return nullptr;
+
+  Instruction::BinaryOps BinOpOpc = Inst.getOpcode();
+  Intrinsic::ID ReductionIID = getReductionForBinop(BinOpOpc);
+  if (BinOpOpc == Instruction::Sub)
+    ReductionIID = Intrinsic::vector_reduce_add;
+
+  if (ReductionIID == Intrinsic::num_intrinsics)
+    return nullptr;
+  if (II0->getIntrinsicID() != ReductionIID)
+    return nullptr;
+  if (II1->getIntrinsicID() != ReductionIID)
+    return nullptr;
+
+  Value *V0 = II0->getArgOperand(0);
+  Value *V1 = II1->getArgOperand(0);
+  Type *VTy = V0->getType();
+  if (V1->getType() != VTy)
+    return nullptr;
+
+  Value *VectorBO = Builder.CreateBinOp(BinOpOpc, V0, V1);
+  // if (auto *VectorInstBO = dyn_cast<BinaryOperator>(VectorBO))
+  //   VectorInstBO->copyIRFlags(&Inst);
+
+  Instruction *Rdx = Builder.CreateIntrinsic(ReductionIID, {VTy}, {VectorBO});
+  return Rdx;
+}
+
 /// Try to narrow the width of a binop if at least 1 operand is an extend of
 /// of a value. This requires a potentially expensive known bits check to make
 /// sure the narrow op does not overflow.
