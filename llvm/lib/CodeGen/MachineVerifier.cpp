@@ -353,6 +353,8 @@ struct MachineVerifier {
                        LaneBitmask LaneMask = LaneBitmask::getNone());
 
   void verifyStackFrame();
+  // Check that the stack protector is the top-most object in the stack.
+  void verifyStackProtector();
 
   void verifySlotIndexes() const;
   void verifyProperties(const MachineFunction &MF);
@@ -4035,6 +4037,47 @@ void MachineVerifier::verifyStackFrame() {
         report("A return block ends with a FrameSetup.", MBB);
       if (BBState.ExitValue)
         report("A return block ends with a nonzero stack adjustment.", MBB);
+    }
+  }
+}
+
+void MachineVerifier::verifyStackProtector() {
+  const MachineFrameInfo &MFI = MF->getFrameInfo();
+  if (!MFI.hasStackProtectorIndex())
+    return;
+  // Only applicable when the offsets of frame objects have been determined,
+  // which is indicated by a non-zero stack size.
+  if (!MFI.getStackSize())
+    return;
+  const TargetFrameLowering &TFI = *MF->getSubtarget().getFrameLowering();
+  bool StackGrowsDown =
+      TFI.getStackGrowthDirection() == TargetFrameLowering::StackGrowsDown;
+  assert(StackGrowsDown && "Only support stack growth down");
+  assert(MFI.isCalleeSavedInfoValid() &&
+         "Callee saved info is expected to be valid at this point");
+  // Collect the frame indices of the callee-saved registers which are spilled
+  // to the stack. These are the registers that are stored above the stack
+  // protector.
+  SmallSet<unsigned, 4> CalleeSavedFrameIndices;
+  for (const CalleeSavedInfo &Info : MFI.getCalleeSavedInfo()) {
+    if (!Info.isSpilledToReg())
+      CalleeSavedFrameIndices.insert(Info.getFrameIdx());
+  }
+  unsigned FI = MFI.getStackProtectorIndex();
+  int64_t SPOffset = MFI.getObjectOffset(FI);
+  for (unsigned I = 0, E = MFI.getObjectIndexEnd(); I != E; ++I) {
+    if (I == FI)
+      continue;
+    // Variable-sized objects do not have a fixed offset.
+    if (MFI.isVariableSizedObjectIndex(I))
+      continue;
+    if (CalleeSavedFrameIndices.contains(I))
+      continue;
+    if (SPOffset < MFI.getObjectOffset(I)) {
+      report("Stack protector is not the top-most object on the stack", MF);
+      OS << "Stack protector is not the top-most object on the stack in "
+         << MF->getName() << '\n';
+      break;
     }
   }
 }

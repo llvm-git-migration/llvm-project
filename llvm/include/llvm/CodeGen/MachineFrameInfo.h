@@ -358,7 +358,11 @@ public:
 
   /// Return the index for the stack protector object.
   int getStackProtectorIndex() const { return StackProtectorIdx; }
-  void setStackProtectorIndex(int I) { StackProtectorIdx = I; }
+  void setStackProtectorIndex(int I) {
+    assert(StackProtectorIdx == -1 && "Stack protector index already set");
+    assert(I >= 0 && "Invalid stack protector index");
+    StackProtectorIdx = I;
+  }
   bool hasStackProtectorIndex() const { return StackProtectorIdx != -1; }
 
   /// Return the index for the function context object.
