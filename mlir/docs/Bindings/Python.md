@@ -1223,7 +1223,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
 
 The exceptions to the free-threading compatibility:
 - Usage of Python `ctypes` is unsafe
-- IR printing is unsafe, e.g. when using `PassManager` with `PassManager.enable_ir_printing()`
+- IR printing is unsafe, e.g. when using `PassManager` with `PassManager.enable_ir_printing()` which calls thread-unsafe `llvm::raw_ostream`.
 - Usage of `mlirEmitError`, `mlirOperationDump` is unsafe
 
 
