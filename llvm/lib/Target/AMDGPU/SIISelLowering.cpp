@@ -5735,12 +5735,12 @@ bool SITargetLowering::isFMAFasterThanFMulAndFAdd(const MachineFunction &MF,
 // specific details.
 bool SITargetLowering::isFMAFasterThanFMulAndFAdd(const Function &F,
                                                   Type *Ty) const {
-  SIModeRegisterDefaults Mode = SIModeRegisterDefaults(F, *Subtarget);
   switch (Ty->getScalarSizeInBits()) {
   case 32: {
     if (!Subtarget->hasMadMacF32Insts())
       return Subtarget->hasFastFMAF32();
 
+    SIModeRegisterDefaults Mode = SIModeRegisterDefaults(F, *Subtarget);
     if (Mode.FP32Denormals != DenormalMode::getPreserveSign())
       return Subtarget->hasFastFMAF32() || Subtarget->hasDLInsts();
 
@@ -5748,9 +5748,11 @@ bool SITargetLowering::isFMAFasterThanFMulAndFAdd(const Function &F,
   }
   case 64:
     return true;
-  case 16:
+  case 16: {
+    SIModeRegisterDefaults Mode = SIModeRegisterDefaults(F, *Subtarget);
     return Subtarget->has16BitInsts() &&
            Mode.FP64FP16Denormals != DenormalMode::getPreserveSign();
+  }
   default:
     break;
   }
@@ -16973,8 +16975,6 @@ bool SITargetLowering::checkForPhysRegDependency(
 }
 
 /// Check if it is profitable to hoist instruction in then/else to if.
-/// Not profitable if I and it's user can form a FMA instruction
-/// because we prefer FMSUB/FMADD.
 bool SITargetLowering::isProfitableToHoist(Instruction *I) const {
   if (!I->hasOneUse())
     return true;
@@ -16989,13 +16989,11 @@ bool SITargetLowering::isProfitableToHoist(Instruction *I) const {
 
     const TargetOptions &Options = getTargetMachine().Options;
     const Function *F = I->getFunction();
-    const DataLayout &DL = F->getDataLayout();
-    Type *Ty = User->getOperand(0)->getType();
 
-    return !isOperationLegalOrCustom(ISD::FMA, getValueType(DL, Ty)) ||
-           (Options.AllowFPOpFusion != FPOpFusion::Fast &&
+    return ((!I->hasAllowContract() || !User->hasAllowContract()) &&
+            Options.AllowFPOpFusion != FPOpFusion::Fast &&
             !Options.UnsafeFPMath) ||
-           !isFMAFasterThanFMulAndFAdd(*F, Ty);
+           !isFMAFasterThanFMulAndFAdd(*F, User->getType());
   }
   default:
     return true;
