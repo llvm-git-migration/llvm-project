@@ -48,10 +48,11 @@ length_impl(T X) {
 }
 
 template <typename T, int N>
-constexpr enable_if_t<is_same<float, T>::value || is_same<half, T>::value, T>
+enable_if_t<is_same<float, T>::value || is_same<half, T>::value, T>
 length_vec_impl(vector<T, N> X) {
   vector<T, N> XSquared = X * X;
-  T XSquaredSum = __builtin_reduce_add(XSquared);
+  T XSquaredSum = XSquared[0];
+  [unroll] for (int i = 1; i < N; ++i) XSquaredSum += XSquared[i];
   return __builtin_elementwise_sqrt(XSquaredSum);
 }
 

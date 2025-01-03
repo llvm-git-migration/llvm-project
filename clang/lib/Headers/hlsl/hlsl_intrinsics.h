@@ -1300,13 +1300,11 @@ float4 lerp(float4, float4, float4);
 const inline half length(half X) { return __detail::length_impl(X); }
 const inline float length(float X) { return __detail::length_impl(X); }
 
-template <int N>
-const inline half length(vector<half, N> X) {
+template <int N> const inline half length(vector<half, N> X) {
   return __detail::length_vec_impl(X);
 }
 
-template <int N> 
-const inline float length(vector<float, N> X) {
+template <int N> const inline float length(vector<float, N> X) {
   return __detail::length_vec_impl(X);
 }
 
