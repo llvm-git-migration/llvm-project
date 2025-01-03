@@ -5565,6 +5565,15 @@ float APFloat::convertToFloat() const {
   return Temp.getIEEE().convertToFloat();
 }
 
+/// Returns true if the semantics can represent all of the values that the other
+/// semantics can represent.
+///
+/// \param Sem - type float semantics
+bool APFloat::isRepresentableBy(const fltSemantics &Sem,
+                                const fltSemantics &Other) {
+  return Sem.isRepresentableBy(Other);
+}
+
 } // namespace llvm
 
 #undef APFLOAT_DISPATCH_ON_SEMANTICS
