@@ -1301,13 +1301,16 @@ InstructionCost RISCVTTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst,
                                             : RISCV::VFNCVT_F_F_W;
     InstructionCost Cost = 0;
     for (; SrcEltSize != DstEltSize;) {
-      MVT ElementMVT = (ISD == ISD::TRUNCATE)
-                           ? MVT::getIntegerVT(DstEltSize)
+      MVT ElementMVT = (ISD == ISD::TRUNCATE) ? MVT::getIntegerVT(DstEltSize)
+                       : (ISD == ISD::FP_EXTEND)
+                           ? MVT::getFloatingPointVT(SrcEltSize)
                            : MVT::getFloatingPointVT(DstEltSize);
-      MVT DstMVT = DstLT.second.changeVectorElementType(ElementMVT);
-      DstEltSize =
-          (DstEltSize > SrcEltSize) ? DstEltSize >> 1 : DstEltSize << 1;
-      Cost += getRISCVInstructionCost(Op, DstMVT, CostKind);
+      MVT VTypeMVT = DstLT.second.changeVectorElementType(ElementMVT);
+      Cost += getRISCVInstructionCost(Op, VTypeMVT, CostKind);
+      if (DstEltSize > SrcEltSize)
+        SrcEltSize = SrcEltSize << 1;
+      else
+        DstEltSize = DstEltSize << 1;
     }
     return Cost;
   }
