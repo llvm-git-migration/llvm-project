@@ -473,7 +473,7 @@ protected:
   typedef __bitset __self;
   typedef __storage_type* __storage_pointer;
   typedef const __storage_type* __const_storage_pointer;
-  static const unsigned __bits_per_word = static_cast<unsigned>(sizeof(__storage_type) * CHAR_BIT);
+  static const unsigned __bits_per_word;
 
   friend class __bit_reference<__bitset>;
   friend class __bit_const_reference<__bitset>;
@@ -520,15 +520,15 @@ protected:
 };
 
 template <size_t _Size>
+const unsigned __bitset<1, _Size>::__bits_per_word =
+    static_cast<unsigned>(sizeof(typename __bitset<1, _Size>::__storage_type) * CHAR_BIT);
+
+template <size_t _Size>
 inline _LIBCPP_CONSTEXPR __bitset<1, _Size>::__bitset() _NOEXCEPT : __first_(0) {}
 
 template <size_t _Size>
 inline _LIBCPP_CONSTEXPR __bitset<1, _Size>::__bitset(unsigned long long __v) _NOEXCEPT
-    : __first_(static_cast<__storage_type>(__v)) {
-  // Force __bits_per_word to be instantiated to avoid "gdb.error: There is no member or method named
-  // __bits_per_word"
-  (void)__bits_per_word;
-}
+    : __first_(static_cast<__storage_type>(__v)) {}
 
 template <size_t _Size>
 inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX23 void
