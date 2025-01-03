@@ -26,192 +26,21 @@ In order to import the test file as python module, we remove all executing funct
 Observed warnings reported by TSAN.
 
 CPython and free-threading known data-races:
-1) ctypes
+1) ctypes, libffi, dlmalloc
 ```
-WARNING: ThreadSanitizer: data race (pid=99593)
-  Atomic read of size 1 at 0x7f6054c485a8 by thread T3:
-    #0 pthread_mutex_lock <null> (python3.13t+0xe83ca) (BuildId: de51a96f802ffcb0f2dcf5c04836201f1a81133c)
-    #1 ffi_closure_alloc <null> (libffi.so.8+0x5d55) (BuildId: 59c2a6b204f74f358ca7711d2dfd349d88711f6a)
-    #2 PyCFuncPtr_new /tmp/cpython-tsan/./Modules/_ctypes/_ctypes.c:3949:13 (_ctypes.cpython-313t-x86_64-linux-gnu.so+0x19205) (BuildId: 3866c4f0cc959b64602a68236b872ff98967ec7a)
-    #3 type_call /tmp/cpython-tsan/Objects/typeobject.c:1981:11 (python3.13t+0x2d9080) (BuildId: de51a96f802ffcb0f2dcf5c04836201f1a81133c)
-    #4 _PyObject_MakeTpCall /tmp/cpython-tsan/Objects/call.c:242:18 (python3.13t+0x1d6a6c) (BuildId: de51a96f802ffcb0f2dcf5c04836201f1a81133c)
-```
-
-LLVM related data-races
-1) mlir pass manager
-```
-E               WARNING: ThreadSanitizer: data race (pid=109173)
-E                 Write of size 8 at 0x7fef4f12a4a0 by thread T108 (mutexes: write M0):
-E                   #0 llvm::raw_fd_ostream::write_impl(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:743:7 (libMLIRPythonCAPI.so.20.0git+0x4897686) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::write(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:252:9 (libMLIRPythonCAPI.so.20.0git+0x4895aac) (BuildId: 85b3b16da1be79a4)
-E                   #2 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:230:14 (libMLIRPythonCAPI.so.20.0git+0x478ccbe) (BuildId: 85b3b16da1be79a4)
-E                   #3 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x478ccbe)
-E                   #4 (anonymous namespace)::IRPrinterInstrumentation::runAfterPass(mlir::Pass*, mlir::Operation*)::$_1::operator()(llvm::raw_ostream&) const /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:109:9 (libMLIRPythonCAPI.so.20.0git+0x478ccbe)
-E                   #5 void llvm::function_ref<void (llvm::raw_ostream&)>::callback_fn<(anonymous namespace)::IRPrinterInstrumentation::runAfterPass(mlir::Pass*, mlir::Operation*)::$_1>(long, llvm::raw_ostream&) /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:46:12 (libMLIRPythonCAPI.so.20.0git+0x478ccbe)
-E                   #6 llvm::function_ref<void (llvm::raw_ostream&)>::operator()(llvm::raw_ostream&) const /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:69:12 (libMLIRPythonCAPI.so.20.0git+0x478d54e) (BuildId: 85b3b16da1be79a4)
-E                   #7 (anonymous namespace)::BasicIRPrinterConfig::printAfterIfEnabled(mlir::Pass*, mlir::Operation*, llvm::function_ref<void (llvm::raw_ostream&)>) /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:195:7 (libMLIRPythonCAPI.so.20.0git+0x478d54e)
-E                   #8 (anonymous namespace)::IRPrinterInstrumentation::runAfterPass(mlir::Pass*, mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:108:11 (libMLIRPythonCAPI.so.20.0git+0x478b7d2) (BuildId: 85b3b16da1be79a4)
-E                   #9 mlir::PassInstrumentor::runAfterPass(mlir::Pass*, mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:1037:12 (libMLIRPythonCAPI.so.20.0git+0x4797282) (BuildId: 85b3b16da1be79a4)
-E                   #10 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:563:11 (libMLIRPythonCAPI.so.20.0git+0x4797282)
-E                   #11 mlir::detail::OpToOpPassAdaptor::runPipeline(mlir::OpPassManager&, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int, mlir::PassInstrumentor*, mlir::PassInstrumentation::PipelineParentInfo const*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:592:16 (libMLIRPythonCAPI.so.20.0git+0x479b55b) (BuildId: 85b3b16da1be79a4)
-E                   #12 mlir::PassManager::runPasses(mlir::Operation*, mlir::AnalysisManager) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:905:10 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #13 mlir::PassManager::run(mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:885:60 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #14 mlirPassManagerRunOnOp /tmp/jax/llvm-project/mlir/lib/CAPI/IR/Pass.cpp:44:36 (libMLIRPythonCAPI.so.20.0git+0x46c6150) (BuildId: 85b3b16da1be79a4)
-E                   #15 mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5::operator()((anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/Pass.cpp:154:40 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e) (BuildId: 6e516b7f12acec76)
-E                   #16 void pybind11::detail::argument_loader<(anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool>::call_impl<void, mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, 0ul, 1ul, 2ul, pybind11::detail::void_type>(mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e)
+WARNING: ThreadSanitizer: data race (pid=59410)
+  Read of size 8 at 0x7ffff618b6d0 by thread T2:
+    #0 dlmalloc /project/libffi/x86_64-pc-linux-gnu/../src/dlmalloc.c:4158:8 (libffi.so.8+0x58a5) (BuildId: 7b5c105b8eca23b7c54bb5eeab8b4ecf28fc7756)
+    #1 ffi_closure_alloc /project/libffi/x86_64-pc-linux-gnu/../src/closures.c:998:9 (libffi.so.8+0x56ec) (BuildId: 7b5c105b8eca23b7c54bb5eeab8b4ecf28fc7756)
+    #2 _ctypes_alloc_callback /project/cpython/./Modules/_ctypes/callbacks.c:367:20 (_ctypes.cpython-313t-x86_64-linux-gnu.so+0x1b435) (BuildId: e9fba41204b37973fe60945270803301c7df9615)
+    #3 PyCFuncPtr_new /project/cpython/./Modules/_ctypes/_ctypes.c:3955:13 (_ctypes.cpython-313t-x86_64-linux-gnu.so+0x18ba4) (BuildId: e9fba41204b37973fe60945270803301c7df9615)
 ```
 
-```
-E               WARNING: ThreadSanitizer: data race (pid=13402)
-E                 Write of size 8 at 0x7f5bf342a4a0 by thread T63:
-E                   #0 llvm::raw_fd_ostream::write_impl(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:743:7 (libMLIRPythonCAPI.so.20.0git+0x4897686) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::write(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:252:9 (libMLIRPythonCAPI.so.20.0git+0x4895aac) (BuildId: 85b3b16da1be79a4)
-E                   #2 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:230:14 (libMLIRPythonCAPI.so.20.0git+0x6996bd2) (BuildId: 85b3b16da1be79a4)
-E                   #3 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x6996bd2)
-E                   #4 (anonymous namespace)::PrintOpStatsPass::printSummary() /tmp/jax/llvm-project/mlir/lib/Transforms/OpStats.cpp:62:6 (libMLIRPythonCAPI.so.20.0git+0x6996bd2)
-E                   #5 (anonymous namespace)::PrintOpStatsPass::runOnOperation() /tmp/jax/llvm-project/mlir/lib/Transforms/OpStats.cpp:57:5 (libMLIRPythonCAPI.so.20.0git+0x6996bd2)
-E                   #6 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int)::$_7::operator()() const /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:526:17 (libMLIRPythonCAPI.so.20.0git+0x4796dc4) (BuildId: 85b3b16da1be79a4)
-E                   #7 void llvm::function_ref<void ()>::callback_fn<mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int)::$_7>(long) /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:46:12 (libMLIRPythonCAPI.so.20.0git+0x4796dc4)
-E                   #8 llvm::function_ref<void ()>::operator()() const /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:69:12 (libMLIRPythonCAPI.so.20.0git+0x4796dc4)
-E                   #9 void mlir::MLIRContext::executeAction<mlir::PassExecutionAction, mlir::Pass&>(llvm::function_ref<void ()>, llvm::ArrayRef<mlir::IRUnit>, mlir::Pass&) /tmp/jax/llvm-project/mlir/include/mlir/IR/MLIRContext.h:280:7 (libMLIRPythonCAPI.so.20.0git+0x4796dc4)
-E                   #10 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:520:21 (libMLIRPythonCAPI.so.20.0git+0x4796dc4)
-E                   #11 mlir::detail::OpToOpPassAdaptor::runPipeline(mlir::OpPassManager&, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int, mlir::PassInstrumentor*, mlir::PassInstrumentation::PipelineParentInfo const*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:592:16 (libMLIRPythonCAPI.so.20.0git+0x479b55b) (BuildId: 85b3b16da1be79a4)
-E                   #12 mlir::PassManager::runPasses(mlir::Operation*, mlir::AnalysisManager) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:905:10 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #13 mlir::PassManager::run(mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:885:60 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #14 mlirPassManagerRunOnOp /tmp/jax/llvm-project/mlir/lib/CAPI/IR/Pass.cpp:44:36 (libMLIRPythonCAPI.so.20.0git+0x46c6150) (BuildId: 85b3b16da1be79a4)
-E                   #15 mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5::operator()((anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/Pass.cpp:154:40 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e) (BuildId: 6e516b7f12acec76)
-E                   #16 void pybind11::detail::argument_loader<(anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool>::call_impl<void, mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, 0ul, 1ul, 2ul, pybind11::detail::void_type>(mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e)
-```
-
-
-```
-E               WARNING: ThreadSanitizer: data race (pid=14122)
-E                 Write of size 8 at 0x7fa88142a4a0 by thread T59 (mutexes: write M0):
-E                   #0 llvm::raw_fd_ostream::write_impl(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:743:7 (libMLIRPythonCAPI.so.20.0git+0x4897686) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::write(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:252:9 (libMLIRPythonCAPI.so.20.0git+0x4895aac) (BuildId: 85b3b16da1be79a4)
-E                   #2 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:230:14 (libMLIRPythonCAPI.so.20.0git+0x478c5be) (BuildId: 85b3b16da1be79a4)
-E                   #3 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x478c5be)
-E                   #4 (anonymous namespace)::IRPrinterInstrumentation::runBeforePass(mlir::Pass*, mlir::Operation*)::$_0::operator()(llvm::raw_ostream&) const /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:78:9 (libMLIRPythonCAPI.so.20.0git+0x478c5be)
-E                   #5 void llvm::function_ref<void (llvm::raw_ostream&)>::callback_fn<(anonymous namespace)::IRPrinterInstrumentation::runBeforePass(mlir::Pass*, mlir::Operation*)::$_0>(long, llvm::raw_ostream&) /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:46:12 (libMLIRPythonCAPI.so.20.0git+0x478c5be)
-E                   #6 llvm::function_ref<void (llvm::raw_ostream&)>::operator()(llvm::raw_ostream&) const /tmp/jax/llvm-project/llvm/include/llvm/ADT/STLFunctionalExtras.h:69:12 (libMLIRPythonCAPI.so.20.0git+0x478d49e) (BuildId: 85b3b16da1be79a4)
-E                   #7 (anonymous namespace)::BasicIRPrinterConfig::printBeforeIfEnabled(mlir::Pass*, mlir::Operation*, llvm::function_ref<void (llvm::raw_ostream&)>) /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:189:7 (libMLIRPythonCAPI.so.20.0git+0x478d49e)
-E                   #8 (anonymous namespace)::IRPrinterInstrumentation::runBeforePass(mlir::Pass*, mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/IRPrinting.cpp:77:11 (libMLIRPythonCAPI.so.20.0git+0x478b506) (BuildId: 85b3b16da1be79a4)
-E                   #9 mlir::PassInstrumentor::runBeforePass(mlir::Pass*, mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:1030:12 (libMLIRPythonCAPI.so.20.0git+0x4796ca2) (BuildId: 85b3b16da1be79a4)
-E                   #10 mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:517:9 (libMLIRPythonCAPI.so.20.0git+0x4796ca2)
-E                   #11 mlir::detail::OpToOpPassAdaptor::runPipeline(mlir::OpPassManager&, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int, mlir::PassInstrumentor*, mlir::PassInstrumentation::PipelineParentInfo const*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:592:16 (libMLIRPythonCAPI.so.20.0git+0x479b55b) (BuildId: 85b3b16da1be79a4)
-E                   #12 mlir::PassManager::runPasses(mlir::Operation*, mlir::AnalysisManager) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:905:10 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #13 mlir::PassManager::run(mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/Pass/Pass.cpp:885:60 (libMLIRPythonCAPI.so.20.0git+0x479b55b)
-E                   #14 mlirPassManagerRunOnOp /tmp/jax/llvm-project/mlir/lib/CAPI/IR/Pass.cpp:44:36 (libMLIRPythonCAPI.so.20.0git+0x46c6150) (BuildId: 85b3b16da1be79a4)
-E                   #15 mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5::operator()((anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/Pass.cpp:154:40 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e) (BuildId: 6e516b7f12acec76)
-E                   #16 void pybind11::detail::argument_loader<(anonymous namespace)::PyPassManager&, mlir::python::PyOperationBase&, bool>::call_impl<void, mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, 0ul, 1ul, 2ul, pybind11::detail::void_type>(mlir::python::populatePassManagerSubmodule(pybind11::module_&)::$_5&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x343e3e)
-```
-
-
-2) dialects/transform_interpreter.py
-
-```
-E               WARNING: ThreadSanitizer: data race (pid=15594)
-E                 Read of size 8 at 0x7fdece62a3f8 by thread T58:
-E                   #0 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:229:25 (libMLIRPythonCAPI.so.20.0git+0x5963297) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x5963297)
-E                   #2 mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:2787:16 (libMLIRPythonCAPI.so.20.0git+0x5963297)
-E                   #3 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::PrintOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58e1e9a) (BuildId: 85b3b16da1be79a4)
-E                   #4 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #5 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #6 applySequenceBlock(mlir::Block&, mlir::transform::FailurePropagationMode, mlir::transform::TransformState&, mlir::transform::TransformResults&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1786:15 (libMLIRPythonCAPI.so.20.0git+0x5958aa7) (BuildId: 85b3b16da1be79a4)
-E                   #7 mlir::transform::IncludeOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1827:40 (libMLIRPythonCAPI.so.20.0git+0x59584b3) (BuildId: 85b3b16da1be79a4)
-E                   #8 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::IncludeOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58d4dfa) (BuildId: 85b3b16da1be79a4)
-E                   #9 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #10 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #11 applySequenceBlock(mlir::Block&, mlir::transform::FailurePropagationMode, mlir::transform::TransformState&, mlir::transform::TransformResults&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1786:15 (libMLIRPythonCAPI.so.20.0git+0x5958aa7) (BuildId: 85b3b16da1be79a4)
-E                   #12 mlir::transform::IncludeOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1827:40 (libMLIRPythonCAPI.so.20.0git+0x59584b3) (BuildId: 85b3b16da1be79a4)
-E                   #13 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::IncludeOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58d4dfa) (BuildId: 85b3b16da1be79a4)
-E                   #14 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #15 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #16 applySequenceBlock(mlir::Block&, mlir::transform::FailurePropagationMode, mlir::transform::TransformState&, mlir::transform::TransformResults&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1786:15 (libMLIRPythonCAPI.so.20.0git+0x5958aa7) (BuildId: 85b3b16da1be79a4)
-E                   #17 mlir::transform::NamedSequenceOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:2153:10 (libMLIRPythonCAPI.so.20.0git+0x595ea87) (BuildId: 85b3b16da1be79a4)
-E                   #18 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::NamedSequenceOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58dda7a) (BuildId: 85b3b16da1be79a4)
-E                   #19 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #20 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #21 mlir::transform::applyTransforms(mlir::Operation*, mlir::transform::TransformOpInterface, mlir::RaggedArray<llvm::PointerUnion<mlir::Operation*, mlir::Attribute, mlir::Value>> const&, mlir::transform::TransformOptions const&, bool, llvm::function_ref<void (mlir::transform::TransformState&)>, llvm::function_ref<llvm::LogicalResult (mlir::transform::TransformState&)>) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:2018:13 (libMLIRPythonCAPI.so.20.0git+0xb256a9c) (BuildId: 85b3b16da1be79a4)
-E                   #22 mlir::transform::applyTransformNamedSequence(mlir::RaggedArray<llvm::PointerUnion<mlir::Operation*, mlir::Attribute, mlir::Value>>, mlir::transform::TransformOpInterface, mlir::ModuleOp, mlir::transform::TransformOptions const&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Transforms/TransformInterpreterUtils.cpp:234:10 (libMLIRPythonCAPI.so.20.0git+0x59991ab) (BuildId: 85b3b16da1be79a4)
-E                   #23 mlir::transform::applyTransformNamedSequence(mlir::Operation*, mlir::Operation*, mlir::ModuleOp, mlir::transform::TransformOptions const&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Transforms/TransformInterpreterUtils.cpp:196:10 (libMLIRPythonCAPI.so.20.0git+0x59986c4) (BuildId: 85b3b16da1be79a4)
-E                   #24 mlirTransformApplyNamedSequence /tmp/jax/llvm-project/mlir/lib/CAPI/Dialect/TransformInterpreter.cpp:71:15 (libMLIRPythonCAPI.so.20.0git+0x46d16b4) (BuildId: 85b3b16da1be79a4)
-E                   #25 populateTransformInterpreterSubmodule(pybind11::module_&)::$_4::operator()(MlirOperation, MlirOperation, MlirOperation, (anonymous namespace)::PyMlirTransformOptions const&) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/TransformInterpreter.cpp:74:36 (_mlirTransformInterpreter.cpython-313t-x86_64-linux-gnu.so+0x3fc0d) (BuildId: 7d3d2fbf5b54f7b5)
-E                   #26 void pybind11::detail::argument_loader<MlirOperation, MlirOperation, MlirOperation, (anonymous namespace)::PyMlirTransformOptions const&>::call_impl<void, populateTransformInterpreterSubmodule(pybind11::module_&)::$_4&, 0ul, 1ul, 2ul, 3ul, pybind11::detail::void_type>(populateTransformInterpreterSubmodule(pybind11::module_&)::$_4&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul, 3ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlirTransformInterpreter.cpython-313t-x86_64-linux-gnu.so+0x3fc0d)
-```
-
-```
-E               WARNING: ThreadSanitizer: data race (pid=16690)
-E                 Read of size 8 at 0x7fcda1b2a3f8 by thread T62:
-E                   #0 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:229:25 (libMLIRPythonCAPI.so.20.0git+0x5963297) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x5963297)
-E                   #2 mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:2787:16 (libMLIRPythonCAPI.so.20.0git+0x5963297)
-E                   #3 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::PrintOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58e1e9a) (BuildId: 85b3b16da1be79a4)
-E                   #4 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #5 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #6 applySequenceBlock(mlir::Block&, mlir::transform::FailurePropagationMode, mlir::transform::TransformState&, mlir::transform::TransformResults&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:1786:15 (libMLIRPythonCAPI.so.20.0git+0x5958aa7) (BuildId: 85b3b16da1be79a4)
-E                   #7 mlir::transform::NamedSequenceOp::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/IR/TransformOps.cpp:2153:10 (libMLIRPythonCAPI.so.20.0git+0x595ea87) (BuildId: 85b3b16da1be79a4)
-E                   #8 mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Model<mlir::transform::NamedSequenceOp>::apply(mlir::transform::detail::TransformOpInterfaceInterfaceTraits::Concept const*, mlir::Operation*, mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.h.inc:477:56 (libMLIRPythonCAPI.so.20.0git+0x58dda7a) (BuildId: 85b3b16da1be79a4)
-E                   #9 mlir::transform::TransformOpInterface::apply(mlir::transform::TransformRewriter&, mlir::transform::TransformResults&, mlir::transform::TransformState&) /tmp/jax/llvm-project/build-tsan/tools/mlir/include/mlir/Dialect/Transform/Interfaces/TransformInterfaces.cpp.inc:61:14 (libMLIRPythonCAPI.so.20.0git+0xb246960) (BuildId: 85b3b16da1be79a4)
-E                   #10 mlir::transform::TransformState::applyTransform(mlir::transform::TransformOpInterface) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:951:48 (libMLIRPythonCAPI.so.20.0git+0xb246960)
-E                   #11 mlir::transform::applyTransforms(mlir::Operation*, mlir::transform::TransformOpInterface, mlir::RaggedArray<llvm::PointerUnion<mlir::Operation*, mlir::Attribute, mlir::Value>> const&, mlir::transform::TransformOptions const&, bool, llvm::function_ref<void (mlir::transform::TransformState&)>, llvm::function_ref<llvm::LogicalResult (mlir::transform::TransformState&)>) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Interfaces/TransformInterfaces.cpp:2018:13 (libMLIRPythonCAPI.so.20.0git+0xb256a9c) (BuildId: 85b3b16da1be79a4)
-E                   #12 mlir::transform::applyTransformNamedSequence(mlir::RaggedArray<llvm::PointerUnion<mlir::Operation*, mlir::Attribute, mlir::Value>>, mlir::transform::TransformOpInterface, mlir::ModuleOp, mlir::transform::TransformOptions const&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Transforms/TransformInterpreterUtils.cpp:234:10 (libMLIRPythonCAPI.so.20.0git+0x59991ab) (BuildId: 85b3b16da1be79a4)
-E                   #13 mlir::transform::applyTransformNamedSequence(mlir::Operation*, mlir::Operation*, mlir::ModuleOp, mlir::transform::TransformOptions const&) /tmp/jax/llvm-project/mlir/lib/Dialect/Transform/Transforms/TransformInterpreterUtils.cpp:196:10 (libMLIRPythonCAPI.so.20.0git+0x59986c4) (BuildId: 85b3b16da1be79a4)
-E                   #14 mlirTransformApplyNamedSequence /tmp/jax/llvm-project/mlir/lib/CAPI/Dialect/TransformInterpreter.cpp:71:15 (libMLIRPythonCAPI.so.20.0git+0x46d16b4) (BuildId: 85b3b16da1be79a4)
-E                   #15 populateTransformInterpreterSubmodule(pybind11::module_&)::$_4::operator()(MlirOperation, MlirOperation, MlirOperation, (anonymous namespace)::PyMlirTransformOptions const&) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/TransformInterpreter.cpp:74:36 (_mlirTransformInterpreter.cpython-313t-x86_64-linux-gnu.so+0x3fc0d) (BuildId: 7d3d2fbf5b54f7b5)
-E                   #16 void pybind11::detail::argument_loader<MlirOperation, MlirOperation, MlirOperation, (anonymous namespace)::PyMlirTransformOptions const&>::call_impl<void, populateTransformInterpreterSubmodule(pybind11::module_&)::$_4&, 0ul, 1ul, 2ul, 3ul, pybind11::detail::void_type>(populateTransformInterpreterSubmodule(pybind11::module_&)::$_4&, std::integer_sequence<unsigned long, 0ul, 1ul, 2ul, 3ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlirTransformInterpreter.cpython-313t-x86_64-linux-gnu.so+0x3fc0d)
-```
-
-
-3) ir/diagnostic_handler.py
-```
-E               WARNING: ThreadSanitizer: data race (pid=19144)
-E                 Write of size 8 at 0x7ff1be8294a0 by thread T60 (mutexes: write M0):
-E                   #0 llvm::raw_fd_ostream::write_impl(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:743:7 (libMLIRPythonCAPI.so.20.0git+0x4897686) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::write(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:252:9 (libMLIRPythonCAPI.so.20.0git+0x4895aac) (BuildId: 85b3b16da1be79a4)
-E                   #2 llvm::raw_ostream::operator<<(llvm::StringRef) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:230:14 (libMLIRPythonCAPI.so.20.0git+0x49d130f) (BuildId: 85b3b16da1be79a4)
-E                   #3 llvm::raw_ostream::operator<<(char const*) /tmp/jax/llvm-project/llvm/include/llvm/Support/raw_ostream.h:257:18 (libMLIRPythonCAPI.so.20.0git+0x49d130f)
-E                   #4 mlir::detail::DiagnosticEngineImpl::emit(mlir::Diagnostic&&) /tmp/jax/llvm-project/mlir/lib/IR/Diagnostics.cpp:264:6 (libMLIRPythonCAPI.so.20.0git+0x49d130f)
-E                   #5 mlir::DiagnosticEngine::emit(mlir::Diagnostic&&) /tmp/jax/llvm-project/mlir/lib/IR/Diagnostics.cpp:299:9 (libMLIRPythonCAPI.so.20.0git+0x49d0ff4) (BuildId: 85b3b16da1be79a4)
-E                   #6 mlir::InFlightDiagnostic::report() /tmp/jax/llvm-project/mlir/lib/IR/Diagnostics.cpp:210:12 (libMLIRPythonCAPI.so.20.0git+0x49d0ff4)
-E                   #7 mlir::InFlightDiagnostic::~InFlightDiagnostic() /tmp/jax/llvm-project/mlir/include/mlir/IR/Diagnostics.h:325:7 (libMLIRPythonCAPI.so.20.0git+0x46bae43) (BuildId: 85b3b16da1be79a4)
-E                   #8 mlirEmitError /tmp/jax/llvm-project/mlir/lib/CAPI/IR/Diagnostics.cpp:79:3 (libMLIRPythonCAPI.so.20.0git+0x46bae43)
-E                   #9 mlir::python::populateIRCore(pybind11::module_&)::$_43::operator()(mlir::python::PyLocation&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/IRCore.cpp:2939:13 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26cce9) (BuildId: d60a319200e3423d)
-E                   #10 void pybind11::detail::argument_loader<mlir::python::PyLocation&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>::call_impl<void, mlir::python::populateIRCore(pybind11::module_&)::$_43&, 0ul, 1ul, pybind11::detail::void_type>(mlir::python::populateIRCore(pybind11::module_&)::$_43&, std::integer_sequence<unsigned long, 0ul, 1ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26cce9)
-```
-
-5) ir/module.py
-```
-E               WARNING: ThreadSanitizer: data race (pid=19407)
-E                 Write of size 8 at 0x7f1858429468 by thread T62:
-E                   #0 llvm::raw_ostream::copy_to_buffer(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:306:13 (libMLIRPythonCAPI.so.20.0git+0x48958bb) (BuildId: 85b3b16da1be79a4)
-E                   #1 llvm::raw_ostream::write(char const*, unsigned long) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:285:3 (libMLIRPythonCAPI.so.20.0git+0x48958bb)
-E                   #2 llvm::raw_ostream& write_padding<(char)32>(llvm::raw_ostream&, unsigned int) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:486:15 (libMLIRPythonCAPI.so.20.0git+0x489610e) (BuildId: 85b3b16da1be79a4)
-E                   #3 llvm::raw_ostream::indent(unsigned int) /tmp/jax/llvm-project/llvm/lib/Support/raw_ostream.cpp:498:10 (libMLIRPythonCAPI.so.20.0git+0x489610e)
-E                   #4 (anonymous namespace)::OperationPrinter::printFullOpWithIndentAndLoc(mlir::Operation*) /tmp/jax/llvm-project/mlir/lib/IR/AsmPrinter.cpp:3426:6 (libMLIRPythonCAPI.so.20.0git+0x4912af0) (BuildId: 85b3b16da1be79a4)
-E                   #5 mlir::Operation::print(llvm::raw_ostream&, mlir::AsmState&) /tmp/jax/llvm-project/mlir/lib/IR/AsmPrinter.cpp:3979:13 (libMLIRPythonCAPI.so.20.0git+0x4910238) (BuildId: 85b3b16da1be79a4)
-E                   #6 mlir::Operation::print(llvm::raw_ostream&, mlir::OpPrintingFlags const&) /tmp/jax/llvm-project/mlir/lib/IR/AsmPrinter.cpp:3971:3 (libMLIRPythonCAPI.so.20.0git+0x4913a05) (BuildId: 85b3b16da1be79a4)
-E                   #7 mlir::Operation::dump() /tmp/jax/llvm-project/mlir/lib/IR/AsmPrinter.cpp:3984:3 (libMLIRPythonCAPI.so.20.0git+0x4913a05)
-E                   #8 mlirOperationDump /tmp/jax/llvm-project/mlir/lib/CAPI/IR/IR.cpp:715:63 (libMLIRPythonCAPI.so.20.0git+0x46c05d9) (BuildId: 85b3b16da1be79a4)
-E                   #9 mlir::python::populateIRCore(pybind11::module_&)::$_50::operator()(mlir::python::PyModule&) const /tmp/jax/llvm-project/mlir/lib/Bindings/Python/IRCore.cpp:3000:13 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26fc90) (BuildId: d60a319200e3423d)
-E                   #10 void pybind11::detail::argument_loader<mlir::python::PyModule&>::call_impl<void, mlir::python::populateIRCore(pybind11::module_&)::$_50&, 0ul, pybind11::detail::void_type>(mlir::python::populateIRCore(pybind11::module_&)::$_50&, std::integer_sequence<unsigned long, 0ul>, pybind11::detail::void_type&&) && /usr/local/include/pybind11/cast.h:1685:16 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26fc90)
-```
-
-```
-E               WARNING: ThreadSanitizer: data race (pid=19669)
-E                 Write of size 8 at 0x7f3882591840 by thread T62:
-E                   #0 unicode_fill_utf8 /tmp/cpython-tsan/Objects/unicodeobject.c:5444:30 (python3.13t+0x3142a1) (BuildId: 31ded8fac9cea6b44dd4f3246be3853edec8d0dc)
-E                   #1 PyUnicode_AsUTF8AndSize /tmp/cpython-tsan/Objects/unicodeobject.c:4066:13 (python3.13t+0x3142a1)
-E                   #2 pybind11::detail::string_caster<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, false>::load(pybind11::handle, bool) /usr/local/include/pybind11/cast.h:444:51 (_mlir.cpython-313t-x86_64-linux-gnu.so+0xd6a25) (BuildId: d60a319200e3423d)
-E                   #3 bool pybind11::detail::argument_loader<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext>::load_impl_sequence<0ul, 1ul>(pybind11::detail::function_call&, std::integer_sequence<unsigned long, 0ul, 1ul>) /usr/local/include/pybind11/cast.h:1670:47 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26e4a5) (BuildId: d60a319200e3423d)
-E                   #4 pybind11::detail::argument_loader<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext>::load_args(pybind11::detail::function_call&) /usr/local/include/pybind11/cast.h:1648:50 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26e036) (BuildId: d60a319200e3423d)
-E                   #5 void pybind11::cpp_function::initialize<mlir::python::populateIRCore(pybind11::module_&)::$_45, pybind11::object, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext, pybind11::name, pybind11::scope, pybind11::sibling, pybind11::arg, pybind11::arg_v, char [168]>(mlir::python::populateIRCore(pybind11::module_&)::$_45&&, pybind11::object (*)(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext), pybind11::name const&, pybind11::scope const&, pybind11::sibling const&, pybind11::arg const&, pybind11::arg_v const&, char const (&) [168])::'lambda'(pybind11::detail::function_call&)::operator()(pybind11::detail::function_call&) const /usr/local/include/pybind11/pybind11.h:259:33 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26e036)
-E                   #6 void pybind11::cpp_function::initialize<mlir::python::populateIRCore(pybind11::module_&)::$_45, pybind11::object, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext, pybind11::name, pybind11::scope, pybind11::sibling, pybind11::arg, pybind11::arg_v, char [168]>(mlir::python::populateIRCore(pybind11::module_&)::$_45&&, pybind11::object (*)(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&, mlir::python::DefaultingPyMlirContext), pybind11::name const&, pybind11::scope const&, pybind11::sibling const&, pybind11::arg const&, pybind11::arg_v const&, char const (&) [168])::'lambda'(pybind11::detail::function_call&)::__invoke(pybind11::detail::function_call&) /usr/local/include/pybind11/pybind11.h:255:21 (_mlir.cpython-313t-x86_64-linux-gnu.so+0x26e036)
-E                   #7 pybind11::cpp_function::dispatcher(_object*, _object*, _object*) /usr/local/include/pybind11/pybind11.h:986:30 (_mlir.cpython-313t-x86_64-linux-gnu.so+0xe6227) (BuildId: d60a319200e3423d)
-E                   #8 cfunction_call /tmp/cpython-tsan/Objects/methodobject.c:540:18 (python3.13t+0x2795e7) (BuildId: 31ded8fac9cea6b44dd4f3246be3853edec8d0dc)
-
-```
+2) LLVM related data-races, llvm::raw_ostream is not thread-safe
+- mlir pass manager
+- dialects/transform_interpreter.py
+- ir/diagnostic_handler.py
+- ir/module.py
 
 """
 import concurrent.futures
@@ -228,7 +57,7 @@ import pytest
 
 import mlir.dialects.arith as arith
 from mlir.dialects import transform
-from mlir.ir import Context, Location, Module, IntegerType, F64Type, InsertionPoint
+from mlir.ir import Context, Location, Module, IntegerType, InsertionPoint
 
 
 def import_from_path(module_name: str, file_path: Path):
@@ -513,10 +342,6 @@ TESTS_TO_XFAIL = [
     "test_ir_diagnostic_handler__testDiagnosticCallbackException_multi_threaded",  # mlirEmitError is not thread-safe
     "test_ir_module__testParseSuccess_multi_threaded",  #  mlirOperationDump is not thread-safe
     "test_ir_module__testModuleCapsule_multi_threaded",  #
-
-    # https://github.com/python/cpython/issues/128013
-    "test_ir_module__testRoundtripUnicode_multi_threaded",
-    "test_ir_module__testRoundtripBinary_multi_threaded",
 ]
 
 
