@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ctime.h"
-#include "time_utils.h"
+#include "src/time/ctime.h"
+#include "src/time/time_utils.h"
 
 namespace LIBC_NAMESPACE_DECL {
 

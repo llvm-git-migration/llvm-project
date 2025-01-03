@@ -9,12 +9,10 @@
 #ifndef LLVM_LIBC_SRC_TIME_TIME_UTILS_H
 #define LLVM_LIBC_SRC_TIME_TIME_UTILS_H
 
-#include <time.h>
-
 #include "src/__support/CPP/limits.h"
 #include "src/errno/libc_errno.h"
-#include "timezone.h"
-#include <stdio.h>
+#include "src/time/timezone.h"
+#include <time.h>
 
 namespace LIBC_NAMESPACE_DECL {
 namespace time_utils {

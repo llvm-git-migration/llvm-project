@@ -14,6 +14,7 @@ add_libc_unittest(
   DEPENDS
     libc.src.time.timezone
     libc.src.time.asctime
+    libc.src.stdio.fopen
 )
 
 add_libc_unittest(
@@ -30,6 +31,7 @@ add_libc_unittest(
   DEPENDS
     libc.src.time.timezone
     libc.src.time.asctime_r
+    libc.src.stdio.fopen
 )
 
 add_libc_unittest(
