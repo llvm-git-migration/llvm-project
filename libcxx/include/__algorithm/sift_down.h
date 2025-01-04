@@ -44,10 +44,13 @@ __sift_down(_RandomAccessIterator __first,
   __child                         = 2 * __child + 1;
   _RandomAccessIterator __child_i = __first + __child;
 
-  if ((__child + 1) < __len && __comp(*__child_i, *(__child_i + difference_type(1)))) {
-    // right-child exists and is greater than left-child
-    ++__child_i;
-    ++__child;
+  if ((__child + 1) < __len) {
+    _RandomAccessIterator __right_child_i = _Ops::next(__child_i);
+    if (__comp(*__child_i, *__right_child_i)) {
+      // right-child exists and is greater than left-child
+      __child_i = __right_child_i;
+      ++__child;
+    }
   }
 
   // check if we are in heap-order
@@ -61,17 +64,20 @@ __sift_down(_RandomAccessIterator __first,
     *__start = _Ops::__iter_move(__child_i);
     __start  = __child_i;
 
-    if ((__len - 2) / 2 < __child)
+    __child = 2 * __child + 1;
+    if (!(__child < __len))
       break;
 
     // recompute the child based off of the updated parent
-    __child   = 2 * __child + 1;
     __child_i = __first + __child;
 
-    if ((__child + 1) < __len && __comp(*__child_i, *(__child_i + difference_type(1)))) {
-      // right-child exists and is greater than left-child
-      ++__child_i;
-      ++__child;
+    if ((__child + 1) < __len) {
+      _RandomAccessIterator __right_child_i = _Ops::next(__child_i);
+      if (__comp(*__child_i, *__right_child_i)) {
+        // right-child exists and is greater than left-child
+        __child_i = __right_child_i;
+        ++__child;
+      }
     }
 
     // check if we are in heap-order
