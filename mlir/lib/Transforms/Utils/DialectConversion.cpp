@@ -1364,6 +1364,14 @@ Block *ConversionPatternRewriterImpl::applySignatureConversion(
   if (hasRewrite<BlockTypeConversionRewrite>(rewrites, block))
     llvm::report_fatal_error("block was already converted");
 #endif // MLIR_ENABLE_EXPENSIVE_PATTERN_API_CHECKS
+#ifndef NDEBUG
+  // This check detects the following cases:
+  // * Attempting to convert the same block multiple times.
+  // * Block argument replaced, then attempting to convert the block.
+  for (BlockArgument arg : block->getArguments())
+    assert(mapping.lookupOrNull(arg).empty() &&
+           "cannot convert block whose arguments have been replaced");
+#endif // NDEBUG
 
   OpBuilder::InsertionGuard g(rewriter);
 
