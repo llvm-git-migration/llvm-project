@@ -29,17 +29,16 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _AlgPolicy, class _Compare, class _RandomAccessIterator>
 _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 void
-__sift_up(_RandomAccessIterator __first,
-          _RandomAccessIterator __last,
-          _Compare&& __comp,
-          typename iterator_traits<_RandomAccessIterator>::difference_type __len) {
-  using value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
+__sift_up(_RandomAccessIterator __first, _RandomAccessIterator __last, _Compare&& __comp) {
+  using difference_type = typename iterator_traits<_RandomAccessIterator>::difference_type;
+  using value_type      = typename iterator_traits<_RandomAccessIterator>::value_type;
 
+  difference_type __len = __last - __first;
   if (__len > 1) {
-    __len                       = (__len - 2) / 2;
+    __len                       = (__len - 1) / 2;
     _RandomAccessIterator __ptr = __first + __len;
 
-    if (__comp(*__ptr, *--__last)) {
+    if (__comp(*__ptr, *__last)) {
       value_type __t(_IterOps<_AlgPolicy>::__iter_move(__last));
       do {
         *__last = _IterOps<_AlgPolicy>::__iter_move(__ptr);
@@ -58,8 +57,8 @@ __sift_up(_RandomAccessIterator __first,
 template <class _AlgPolicy, class _RandomAccessIterator, class _Compare>
 inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 void
 __push_heap(_RandomAccessIterator __first, _RandomAccessIterator __last, _Compare& __comp) {
-  typename iterator_traits<_RandomAccessIterator>::difference_type __len = __last - __first;
-  std::__sift_up<_AlgPolicy, __comp_ref_type<_Compare> >(std::move(__first), std::move(__last), __comp, __len);
+  if (__first != __last)
+    std::__sift_up<_AlgPolicy, __comp_ref_type<_Compare> >(std::move(__first), std::move(--__last), __comp);
 }
 
 template <class _RandomAccessIterator, class _Compare>
