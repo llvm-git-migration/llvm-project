@@ -231,6 +231,10 @@ class Context {
   unsigned NumTargetBuiltins = 0;
   unsigned NumAuxTargetBuiltins = 0;
 
+  // FIXME: HACK FOR DEBUG
+  bool DebugHackTargetIsX86 = false;
+  bool DebugHackTargetIsNVPTX = false;
+
 public:
   Context();
 
