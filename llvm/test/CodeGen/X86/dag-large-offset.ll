@@ -11,7 +11,9 @@ define dso_local noundef i32 @foo(i1 %b) local_unnamed_addr #0 {
 ; CHECK-NEXT:    movl ___security_cookie, %eax
 ; CHECK-NEXT:    xorl %ebp, %eax
 ; CHECK-NEXT:    movl %eax, -8(%ebp)
-; CHECK-NEXT:    leal 2147483640(%ebp), %eax
+; CHECK-NEXT:    movl $-2147483647, %eax # imm = 0x80000001
+; CHECK-NEXT:    addl %ebp, %eax
+; CHECK-NEXT:    addl $-9, %eax
 ; CHECK-NEXT:    xorl %esi, %esi
 ; CHECK-NEXT:    testb $1, 8(%ebp)
 ; CHECK-NEXT:    cmovnel %eax, %esi
