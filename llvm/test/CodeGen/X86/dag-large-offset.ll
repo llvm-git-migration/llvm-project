@@ -21,7 +21,8 @@ define i32 @foo(i1 %b) #0 {
 ; CHECK-NEXT:    xorl %esi, %esi
 ; CHECK-NEXT:    jmp LBB0_3
 ; CHECK-NEXT:  LBB0_1:
-; CHECK-NEXT:    leal 2147483640(%ebp), %esi
+; CHECK-NEXT:    movl $-2147483647, %eax # imm = 0x80000001
+; CHECK-NEXT:    leal -9(%ebp,%eax), %esi
 ; CHECK-NEXT:  LBB0_3: # %entry
 ; CHECK-NEXT:    movl -8(%ebp), %ecx
 ; CHECK-NEXT:    xorl %ebp, %ecx
