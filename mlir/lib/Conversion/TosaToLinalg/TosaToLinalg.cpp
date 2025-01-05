@@ -611,10 +611,13 @@ static Value expandRank(PatternRewriter &rewriter, Location loc, Value tensor,
   SmallVector<SmallVector<int64_t, 2>> reassociationIndices(
       shapedType.getRank());
   int64_t index = 0;
-  for (index = 0; index <= numExtraDims; index++)
-    reassociationIndices[0].push_back(index);
-  for (size_t position = 1; position < reassociationIndices.size(); position++)
-    reassociationIndices[position].push_back(index++);
+  if (shapedType.getRank() != 0) {
+    for (index = 0; index <= numExtraDims; index++)
+      reassociationIndices[0].push_back(index);
+    for (size_t position = 1; position < reassociationIndices.size();
+         position++)
+      reassociationIndices[position].push_back(index++);
+  }
 
   // Compute result type
   SmallVector<int64_t> resultShape;
