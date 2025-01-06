@@ -330,6 +330,7 @@ ErrorOr<CharSetConverter> CharSetConverter::create(StringRef CSFrom,
   std::unique_ptr<details::CharSetConverterImplBase> Converter =
       std::make_unique<CharSetConverterIconv>(ConvDesc);
   return CharSetConverter(std::move(Converter));
-#endif
+#else
   return std::make_error_code(std::errc::invalid_argument);
+#endif
 }
