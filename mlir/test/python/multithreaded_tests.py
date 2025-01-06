@@ -521,4 +521,6 @@ class TestAllMultiThreaded(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    # Do not run the tests on CPython with GIL
+    if hasattr(sys, "_is_gil_enabled") and not sys._is_gil_enabled():
+        unittest.main()
