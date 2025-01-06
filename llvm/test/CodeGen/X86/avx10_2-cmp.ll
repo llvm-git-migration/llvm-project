@@ -265,9 +265,9 @@ define i32 @PR118606(x86_fp80 %val1) #0 {
 ; X86-NEXT:    xorl %eax, %eax
 ; X86-NEXT:    retl
 entry:
-  %cmp8 = fcmp oeq x86_fp80 %val1, 0xK00000000000000000000
-  %0 = select i1 %cmp8, x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK00000000000000000000
-  %cmp64 = fcmp ogt x86_fp80 %0, 0xK00000000000000000000
+  %cmp8 = fcmp oeq x86_fp80 %val1, f0x00000000000000000000
+  %0 = select i1 %cmp8, x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x00000000000000000000
+  %cmp64 = fcmp ogt x86_fp80 %0, f0x00000000000000000000
   br i1 %cmp64, label %if.then66, label %if.end70
 
 if.then66:                                        ; preds = %entry

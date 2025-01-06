@@ -274,11 +274,11 @@ define i1 @i64_cast_cmp_oeq_int_0_sitofp_half(i64 %i) {
 define i1 @i32_cast_cmp_oeq_int_0_uitofp_ppcf128(i32 %i) {
 ; CHECK-LABEL: @i32_cast_cmp_oeq_int_0_uitofp_ppcf128(
 ; CHECK-NEXT:    [[F:%.*]] = uitofp i32 [[I:%.*]] to ppc_fp128
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp oeq ppc_fp128 [[F]], 0xM00000000000000000000000000000000
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp oeq ppc_fp128 [[F]], f0x00000000000000000000000000000000
 ; CHECK-NEXT:    ret i1 [[CMP]]
 ;
   %f = uitofp i32 %i to ppc_fp128
-  %cmp = fcmp oeq ppc_fp128 %f, 0xM00000000000000000000000000000000
+  %cmp = fcmp oeq ppc_fp128 %f, f0x00000000000000000000000000000000
   ret i1 %cmp
 }
 

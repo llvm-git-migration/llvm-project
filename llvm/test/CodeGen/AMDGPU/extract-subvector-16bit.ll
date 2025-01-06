@@ -478,8 +478,8 @@ F:
 exit:
   %m = phi <8 x half> [ %t, %T ], [ %f, %F ]
   %v2 = shufflevector <8 x half> %m, <8 x half> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
-  %b2 = fcmp ugt <4 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
-  %r2 = select <4 x i1> %b2, <4 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <4 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
+  %b2 = fcmp ugt <4 x half> %v2, <half f0x3800, half f0x3800, half f0x3800, half f0x3800>
+  %r2 = select <4 x i1> %b2, <4 x half> <half f0x3900, half f0x3900, half f0x3900, half f0x3900>, <4 x half> <half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00>
   ret <4 x half> %r2
 }
 
@@ -1090,8 +1090,8 @@ F:
 exit:
   %m = phi <16 x half> [ %t, %T ], [ %f, %F ]
   %v2 = shufflevector <16 x half> %m, <16 x half> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 2>
-  %b2 = fcmp ugt <4 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
-  %r2 = select <4 x i1> %b2, <4 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <4 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
+  %b2 = fcmp ugt <4 x half> %v2, <half f0x3800, half f0x3800, half f0x3800, half f0x3800>
+  %r2 = select <4 x i1> %b2, <4 x half> <half f0x3900, half f0x3900, half f0x3900, half f0x3900>, <4 x half> <half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00>
   ret <4 x half> %r2
 }
 
@@ -1739,7 +1739,7 @@ F:
 exit:
   %m = phi <16 x half> [ %t, %T ], [ %f, %F ]
   %v2 = shufflevector <16 x half> %m, <16 x half> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %b2 = fcmp ugt <8 x half> %v2, <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>
-  %r2 = select <8 x i1> %b2, <8 x half> <half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900, half 0xH3900>, <8 x half> <half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00, half 0xH3D00>
+  %b2 = fcmp ugt <8 x half> %v2, <half f0x3800, half f0x3800, half f0x3800, half f0x3800, half f0x3800, half f0x3800, half f0x3800, half f0x3800>
+  %r2 = select <8 x i1> %b2, <8 x half> <half f0x3900, half f0x3900, half f0x3900, half f0x3900, half f0x3900, half f0x3900, half f0x3900, half f0x3900>, <8 x half> <half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00, half f0x3D00>
   ret <8 x half> %r2
 }

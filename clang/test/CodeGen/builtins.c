@@ -178,19 +178,19 @@ void bar(void) {
 
   f = __builtin_huge_valf();     // CHECK: float    0x7FF0000000000000
   d = __builtin_huge_val();      // CHECK: double   0x7FF0000000000000
-  ld = __builtin_huge_vall();    // CHECK: x86_fp80 0xK7FFF8000000000000000
+  ld = __builtin_huge_vall();    // CHECK: x86_fp80 f0x7FFF8000000000000000
   f = __builtin_nanf("");        // CHECK: float    0x7FF8000000000000
   d = __builtin_nan("");         // CHECK: double   0x7FF8000000000000
-  ld = __builtin_nanl("");       // CHECK: x86_fp80 0xK7FFFC000000000000000
+  ld = __builtin_nanl("");       // CHECK: x86_fp80 f0x7FFFC000000000000000
   f = __builtin_nanf("0xAE98");  // CHECK: float    0x7FF815D300000000
   d = __builtin_nan("0xAE98");   // CHECK: double   0x7FF800000000AE98
-  ld = __builtin_nanl("0xAE98"); // CHECK: x86_fp80 0xK7FFFC00000000000AE98
+  ld = __builtin_nanl("0xAE98"); // CHECK: x86_fp80 f0x7FFFC00000000000AE98
   f = __builtin_nansf("");       // CHECK: float    0x7FF4000000000000
   d = __builtin_nans("");        // CHECK: double   0x7FF4000000000000
-  ld = __builtin_nansl("");      // CHECK: x86_fp80 0xK7FFFA000000000000000
+  ld = __builtin_nansl("");      // CHECK: x86_fp80 f0x7FFFA000000000000000
   f = __builtin_nansf("0xAE98"); // CHECK: float    0x7FF015D300000000
   d = __builtin_nans("0xAE98");  // CHECK: double   0x7FF000000000AE98
-  ld = __builtin_nansl("0xAE98");// CHECK: x86_fp80 0xK7FFF800000000000AE98
+  ld = __builtin_nansl("0xAE98");// CHECK: x86_fp80 f0x7FFF800000000000AE98
 
 }
 // CHECK: }
@@ -245,7 +245,7 @@ void test_float_builtins(__fp16 *H, float F, double D, long double LD) {
 
   res = __builtin_isinf_sign(*H);
   // CHECK:  %[[ABS:.*]] = call half @llvm.fabs.f16(half %[[ARG:.*]])
-  // CHECK:  %[[ISINF:.*]] = fcmp oeq half %[[ABS]], 0xH7C00
+  // CHECK:  %[[ISINF:.*]] = fcmp oeq half %[[ABS]], f0x7C00
   // CHECK:  %[[BITCAST:.*]] = bitcast half %[[ARG]] to i16
   // CHECK:  %[[ISNEG:.*]] = icmp slt i16 %[[BITCAST]], 0
   // CHECK:  %[[SIGN:.*]] = select i1 %[[ISNEG]], i32 -1, i32 1
@@ -269,7 +269,7 @@ void test_float_builtins(__fp16 *H, float F, double D, long double LD) {
 
   res = __builtin_isinf_sign(LD);
   // CHECK:  %[[ABS:.*]] = call x86_fp80 @llvm.fabs.f80(x86_fp80 %[[ARG:.*]])
-  // CHECK:  %[[ISINF:.*]] = fcmp oeq x86_fp80 %[[ABS]], 0xK7FFF8000000000000000
+  // CHECK:  %[[ISINF:.*]] = fcmp oeq x86_fp80 %[[ABS]], f0x7FFF8000000000000000
   // CHECK:  %[[BITCAST:.*]] = bitcast x86_fp80 %[[ARG]] to i80
   // CHECK:  %[[ISNEG:.*]] = icmp slt i80 %[[BITCAST]], 0
   // CHECK:  %[[SIGN:.*]] = select i1 %[[ISNEG]], i32 -1, i32 1
@@ -384,7 +384,7 @@ void test_float_builtin_ops(float F, double D, long double LD, int I) {
 
   //FIXME: __builtin_fminimum_numl is not supported well yet.
   resld = __builtin_fminimum_numl(1.0, 2.0);
-  // CHECK: store volatile x86_fp80 0xK3FFF8000000000000000, ptr %resld, align 16
+  // CHECK: store volatile x86_fp80 f0x3FFF8000000000000000, ptr %resld, align 16
 
   resf = __builtin_fmaximum_numf(F, F);
   // CHECK: call float @llvm.maximumnum.f32
@@ -410,7 +410,7 @@ void test_float_builtin_ops(float F, double D, long double LD, int I) {
 
   //FIXME: __builtin_fmaximum_numl is not supported well yet.
   resld = __builtin_fmaximum_numl(1.0, 2.0);
-  // CHECK: store volatile x86_fp80 0xK40008000000000000000, ptr %resld, align 16
+  // CHECK: store volatile x86_fp80 f0x40008000000000000000, ptr %resld, align 16
 
   resf = __builtin_fabsf(F);
   // CHECK: call float @llvm.fabs.f32

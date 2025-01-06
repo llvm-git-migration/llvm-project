@@ -155,7 +155,7 @@ define half @constcall() {
 ; CHECK-FP16-HARD-NEXT:    vmov.f16 s0, #1.000000e+01
 ; CHECK-FP16-HARD-NEXT:    b ccc
 entry:
-  %call = tail call fast half @ccc(half 0xH4900)
+  %call = tail call fast half @ccc(half f0x4900)
   ret half %call
 }
 
@@ -185,7 +185,7 @@ define half @constret() {
 ; CHECK-FP16-HARD-NEXT:    vmov.f16 s0, #1.000000e+01
 ; CHECK-FP16-HARD-NEXT:    bx lr
 entry:
-  ret half 0xH4900
+  ret half f0x4900
 }
 
 declare half @ccc(half)

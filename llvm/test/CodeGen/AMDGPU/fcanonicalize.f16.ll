@@ -720,7 +720,7 @@ define amdgpu_kernel void @test_default_denormals_fold_canonicalize_denormal0_f1
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH03FF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x03FF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -762,7 +762,7 @@ define amdgpu_kernel void @test_denormals_fold_canonicalize_denormal0_f16(ptr ad
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH03FF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x03FF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -804,7 +804,7 @@ define amdgpu_kernel void @test_default_denormals_fold_canonicalize_denormal1_f1
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH83FF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x83FF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -846,7 +846,7 @@ define amdgpu_kernel void @test_denormals_fold_canonicalize_denormal1_f16(ptr ad
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH83FF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x83FF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -888,7 +888,7 @@ define amdgpu_kernel void @test_fold_canonicalize_qnan_f16(ptr addrspace(1) %out
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH7C00)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x7C00)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1014,7 +1014,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan0_value_f16(ptr addrspace(
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH7C01)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x7C01)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1056,7 +1056,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan1_value_f16(ptr addrspace(
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xH7DFF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0x7DFF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1098,7 +1098,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan2_value_f16(ptr addrspace(
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xHFDFF)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0xFDFF)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1140,7 +1140,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan3_value_f16(ptr addrspace(
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b16 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call half @llvm.canonicalize.f16(half 0xHFC01)
+  %canonicalized = call half @llvm.canonicalize.f16(half f0xFC01)
   store half %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1757,7 +1757,7 @@ define amdgpu_kernel void @test_no_denormals_fold_canonicalize_denormal0_v2f16(p
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH03FF, half 0xH03FF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x03FF, half f0x03FF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1799,7 +1799,7 @@ define amdgpu_kernel void @test_denormals_fold_canonicalize_denormal0_v2f16(ptr 
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH03FF, half 0xH03FF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x03FF, half f0x03FF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1841,7 +1841,7 @@ define amdgpu_kernel void @test_no_denormals_fold_canonicalize_denormal1_v2f16(p
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH83FF, half 0xH83FF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x83FF, half f0x83FF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1883,7 +1883,7 @@ define amdgpu_kernel void @test_denormals_fold_canonicalize_denormal1_v2f16(ptr 
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH83FF, half 0xH83FF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x83FF, half f0x83FF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -1925,7 +1925,7 @@ define amdgpu_kernel void @test_fold_canonicalize_qnan_v2f16(ptr addrspace(1) %o
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH7C00, half 0xH7C00>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x7C00, half f0x7C00>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -2051,7 +2051,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan0_value_v2f16(ptr addrspac
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH7C01, half 0xH7C01>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x7C01, half f0x7C01>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -2093,7 +2093,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan1_value_v2f16(ptr addrspac
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xH7DFF, half 0xH7DFF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0x7DFF, half f0x7DFF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -2135,7 +2135,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan2_value_v2f16(ptr addrspac
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xHFDFF, half 0xHFDFF>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0xFDFF, half f0xFDFF>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }
@@ -2177,7 +2177,7 @@ define amdgpu_kernel void @test_fold_canonicalize_snan3_value_v2f16(ptr addrspac
 ; GFX11-NEXT:    s_waitcnt lgkmcnt(0)
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
-  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half 0xHFC01, half 0xHFC01>)
+  %canonicalized = call <2 x half> @llvm.canonicalize.v2f16(<2 x half> <half f0xFC01, half f0xFC01>)
   store <2 x half> %canonicalized, ptr addrspace(1) %out
   ret void
 }

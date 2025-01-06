@@ -514,14 +514,14 @@ define half @fcmp_assume_issubnormal_callsite_arg_return(half %arg) {
 ; CHECK-SAME: (half returned [[ARG:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[FABS:%.*]] = call nofpclass(ninf nzero nsub nnorm) half @llvm.fabs.f16(half [[ARG]]) #[[ATTR20:[0-9]+]]
-; CHECK-NEXT:    [[IS_SUBNORMAL:%.*]] = fcmp olt half [[FABS]], 0xH0400
+; CHECK-NEXT:    [[IS_SUBNORMAL:%.*]] = fcmp olt half [[FABS]], f0x0400
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[IS_SUBNORMAL]]) #[[ATTR18]]
 ; CHECK-NEXT:    call void @extern.use.f16(half [[ARG]])
 ; CHECK-NEXT:    ret half [[ARG]]
 ;
 entry:
   %fabs = call half @llvm.fabs.f16(half %arg)
-  %is.subnormal = fcmp olt half %fabs, 0xH0400
+  %is.subnormal = fcmp olt half %fabs, f0x0400
   call void @llvm.assume(i1 %is.subnormal)
   call void @extern.use.f16(half %arg)
   ret half %arg
@@ -533,13 +533,13 @@ define half @fcmp_assume_not_inf_after_call(half %arg) {
 ; CHECK-SAME: (half returned [[ARG:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    call void @extern.use.f16(half [[ARG]])
-; CHECK-NEXT:    [[NOT_INF:%.*]] = fcmp oeq half [[ARG]], 0xH7C00
+; CHECK-NEXT:    [[NOT_INF:%.*]] = fcmp oeq half [[ARG]], f0x7C00
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[NOT_INF]])
 ; CHECK-NEXT:    ret half [[ARG]]
 ;
 entry:
   call void @extern.use.f16(half %arg)
-  %not.inf = fcmp oeq half %arg, 0xH7C00
+  %not.inf = fcmp oeq half %arg, f0x7C00
   call void @llvm.assume(i1 %not.inf)
   ret half %arg
 }
@@ -550,19 +550,19 @@ define half @fcmp_assume2_callsite_arg_return(half %arg) {
 ; CHECK-SAME: (half returned [[ARG:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[FABS:%.*]] = call nofpclass(ninf nzero nsub nnorm) half @llvm.fabs.f16(half [[ARG]]) #[[ATTR20]]
-; CHECK-NEXT:    [[NOT_SUBNORMAL_OR_ZERO:%.*]] = fcmp oge half [[FABS]], 0xH0400
+; CHECK-NEXT:    [[NOT_SUBNORMAL_OR_ZERO:%.*]] = fcmp oge half [[FABS]], f0x0400
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[NOT_SUBNORMAL_OR_ZERO]]) #[[ATTR18]]
-; CHECK-NEXT:    [[NOT_INF:%.*]] = fcmp one half [[ARG]], 0xH7C00
+; CHECK-NEXT:    [[NOT_INF:%.*]] = fcmp one half [[ARG]], f0x7C00
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[NOT_INF]]) #[[ATTR18]]
 ; CHECK-NEXT:    call void @extern.use.f16(half [[ARG]])
 ; CHECK-NEXT:    ret half [[ARG]]
 ;
 entry:
   %fabs = call half @llvm.fabs.f16(half %arg)
-  %not.subnormal.or.zero = fcmp oge half %fabs, 0xH0400
+  %not.subnormal.or.zero = fcmp oge half %fabs, f0x0400
   call void @llvm.assume(i1 %not.subnormal.or.zero)
 
-  %not.inf = fcmp one half %arg, 0xH7C00
+  %not.inf = fcmp one half %arg, f0x7C00
   call void @llvm.assume(i1 %not.inf)
 
   call void @extern.use.f16(half %arg)
@@ -592,9 +592,9 @@ define half @assume_fcmp_fabs_with_other_fabs_assume(half %arg) {
 ; CHECK-SAME: (half returned [[ARG:%.*]]) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[FABS:%.*]] = call nofpclass(ninf nzero nsub nnorm) half @llvm.fabs.f16(half [[ARG]]) #[[ATTR20]]
-; CHECK-NEXT:    [[UNRELATED_FABS:%.*]] = fcmp one half [[FABS]], 0xH0000
+; CHECK-NEXT:    [[UNRELATED_FABS:%.*]] = fcmp one half [[FABS]], f0x0000
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[UNRELATED_FABS]]) #[[ATTR18]]
-; CHECK-NEXT:    [[IS_SUBNORMAL:%.*]] = fcmp olt half [[FABS]], 0xH0400
+; CHECK-NEXT:    [[IS_SUBNORMAL:%.*]] = fcmp olt half [[FABS]], f0x0400
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[IS_SUBNORMAL]]) #[[ATTR18]]
 ; CHECK-NEXT:    call void @extern.use.f16(half [[ARG]])
 ; CHECK-NEXT:    call void @extern.use.f16(half nofpclass(ninf nzero nsub nnorm) [[FABS]])
@@ -605,7 +605,7 @@ entry:
   %fabs = call half @llvm.fabs.f16(half %arg)
   %unrelated.fabs = fcmp one half %fabs, 0.0
   call void @llvm.assume(i1 %unrelated.fabs)
-  %is.subnormal = fcmp olt half %fabs, 0xH0400
+  %is.subnormal = fcmp olt half %fabs, f0x0400
   call void @llvm.assume(i1 %is.subnormal)
   call void @extern.use.f16(half %arg)
   call void @extern.use.f16(half %fabs)
@@ -620,7 +620,7 @@ define half @assume_fcmp_fabs_with_other_fabs_assume_fallback(half %arg) {
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[FABS:%.*]] = call nofpclass(ninf nzero nsub nnorm) half @llvm.fabs.f16(half [[ARG]]) #[[ATTR20]]
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef true) #[[ATTR18]]
-; CHECK-NEXT:    [[UNRELATED_FABS:%.*]] = fcmp oeq half [[FABS]], 0xH0000
+; CHECK-NEXT:    [[UNRELATED_FABS:%.*]] = fcmp oeq half [[FABS]], f0x0000
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef [[UNRELATED_FABS]]) #[[ATTR18]]
 ; CHECK-NEXT:    call void @llvm.assume(i1 noundef true) #[[ATTR18]]
 ; CHECK-NEXT:    call void @extern.use.f16(half [[ARG]])
@@ -631,13 +631,13 @@ entry:
 
   %fabs = call half @llvm.fabs.f16(half %arg)
 
-  %one.inf = fcmp one half %arg, 0xH7C00
+  %one.inf = fcmp one half %arg, f0x7C00
   call void @llvm.assume(i1 %one.inf)
 
   %unrelated.fabs = fcmp oeq half %fabs, 0.0
   call void @llvm.assume(i1 %unrelated.fabs)
 
-  %is.subnormal = fcmp olt half %fabs, 0xH0400
+  %is.subnormal = fcmp olt half %fabs, f0x0400
   call void @llvm.assume(i1 %is.subnormal)
   call void @extern.use.f16(half %arg)
   call void @extern.use.f16(half %fabs)

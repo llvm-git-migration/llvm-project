@@ -116,8 +116,8 @@ define half @fptrunc_select_true_val_extra_use(half %x, float %y, i1 %cond) {
 
 define half @fptrunc_max(half %arg) {
 ; CHECK-LABEL: @fptrunc_max(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp olt half [[ARG:%.*]], 0xH0000
-; CHECK-NEXT:    [[NARROW_SEL:%.*]] = select i1 [[CMP]], half 0xH0000, half [[ARG]]
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp olt half [[ARG:%.*]], f0x0000
+; CHECK-NEXT:    [[NARROW_SEL:%.*]] = select i1 [[CMP]], half f0x0000, half [[ARG]]
 ; CHECK-NEXT:    ret half [[NARROW_SEL]]
 ;
   %ext = fpext half %arg to double

@@ -88,8 +88,8 @@ entry:
   %retval = alloca { ppc_fp128, ppc_fp128 }, align 16
   %retval.realp = getelementptr inbounds { ppc_fp128, ppc_fp128 }, ptr %retval, i32 0, i32 0
   %retval.imagp = getelementptr inbounds { ppc_fp128, ppc_fp128 }, ptr %retval, i32 0, i32 1
-  store ppc_fp128 0xM7ffeffffffffffffffffffffffffffff, ptr %retval.realp, align 16
-  store ppc_fp128 0xM3ffefffffffffffffffffffffffffffe, ptr %retval.imagp, align 16
+  store ppc_fp128 f0xffffffffffffffff7ffeffffffffffff, ptr %retval.realp, align 16
+  store ppc_fp128 f0xfffffffffffffffe3ffeffffffffffff, ptr %retval.imagp, align 16
   %0 = load { ppc_fp128, ppc_fp128 }, ptr %retval, align 16
   ret { ppc_fp128, ppc_fp128 } %0
 }

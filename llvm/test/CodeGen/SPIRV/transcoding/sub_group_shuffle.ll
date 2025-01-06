@@ -273,9 +273,9 @@ declare dso_local spir_func float @_Z21sub_group_shuffle_xorfj(float, i32) local
 ; CHECK-SPIRV: OpFunctionEnd
 
 define dso_local spir_kernel void @testShuffleHalf(half addrspace(1)* nocapture) local_unnamed_addr {
-  %2 = tail call spir_func half @_Z17sub_group_shuffleDhj(half 0xH0000, i32 0)
+  %2 = tail call spir_func half @_Z17sub_group_shuffleDhj(half f0x0000, i32 0)
   store half %2, half addrspace(1)* %0, align 2
-  %3 = tail call spir_func half @_Z21sub_group_shuffle_xorDhj(half 0xH0000, i32 0)
+  %3 = tail call spir_func half @_Z21sub_group_shuffle_xorDhj(half f0x0000, i32 0)
   %4 = getelementptr inbounds half, half addrspace(1)* %0, i64 1
   store half %3, half addrspace(1)* %4, align 2
   ret void

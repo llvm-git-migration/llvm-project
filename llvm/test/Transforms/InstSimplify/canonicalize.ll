@@ -397,7 +397,7 @@ define double @canonicalize_ninf_f64() {
 
 define half @canonicalize_zero_f16() {
 ; CHECK-LABEL: @canonicalize_zero_f16(
-; CHECK-NEXT:    ret half 0xH0000
+; CHECK-NEXT:    ret half f0x0000
 ;
   %ret = call half @llvm.canonicalize.f16(half 0.0)
   ret half %ret
@@ -405,7 +405,7 @@ define half @canonicalize_zero_f16() {
 
 define half @canonicalize_1.0_f16() {
 ; CHECK-LABEL: @canonicalize_1.0_f16(
-; CHECK-NEXT:    ret half 0xH3C00
+; CHECK-NEXT:    ret half f0x3C00
 ;
   %ret = call half @llvm.canonicalize.f16(half 1.0)
   ret half %ret
@@ -413,25 +413,25 @@ define half @canonicalize_1.0_f16() {
 
 define half @canonicalize_0x0001_f16() {
 ; CHECK-LABEL: @canonicalize_0x0001_f16(
-; CHECK-NEXT:    ret half 0xH0001
+; CHECK-NEXT:    ret half f0x0001
 ;
-  %ret = call half @llvm.canonicalize.f16(half 0xH0001)
+  %ret = call half @llvm.canonicalize.f16(half f0x0001)
   ret half %ret
 }
 
 define half @canonicalize_inf_f16() {
 ; CHECK-LABEL: @canonicalize_inf_f16(
-; CHECK-NEXT:    ret half 0xH7C00
+; CHECK-NEXT:    ret half f0x7C00
 ;
-  %ret = call half @llvm.canonicalize.f16(half 0xH7C00)
+  %ret = call half @llvm.canonicalize.f16(half f0x7C00)
   ret half %ret
 }
 
 define half @canonicalize_neg_inf_f16() {
 ; CHECK-LABEL: @canonicalize_neg_inf_f16(
-; CHECK-NEXT:    ret half 0xHFC00
+; CHECK-NEXT:    ret half f0xFC00
 ;
-  %ret = call half @llvm.canonicalize.f16(half 0xHFC00)
+  %ret = call half @llvm.canonicalize.f16(half f0xFC00)
   ret half %ret
 }
 
@@ -441,50 +441,50 @@ define half @canonicalize_neg_inf_f16() {
 
 define fp128 @canonicalize_zero_fp128() {
 ; CHECK-LABEL: @canonicalize_zero_fp128(
-; CHECK-NEXT:    ret fp128 0xL00000000000000000000000000000000
+; CHECK-NEXT:    ret fp128 f0x00000000000000000000000000000000
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL00000000000000000000000000000000)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0x00000000000000000000000000000000)
   ret fp128 %ret
 }
 
 define fp128 @canonicalize_1.0_fp128() {
 ; CHECK-LABEL: @canonicalize_1.0_fp128(
-; CHECK-NEXT:    ret fp128 0xL00000000000000003FFF000000000000
+; CHECK-NEXT:    ret fp128 f0x3FFF0000000000000000000000000000
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL00000000000000003FFF000000000000)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0x3FFF0000000000000000000000000000)
   ret fp128 %ret
 }
 
 define fp128 @canonicalize_0x00000000000000000000000000000001_fp128() {
 ; CHECK-LABEL: @canonicalize_0x00000000000000000000000000000001_fp128(
-; CHECK-NEXT:    ret fp128 0xL00000000000000000000000000000001
+; CHECK-NEXT:    ret fp128 f0x00000000000000010000000000000000
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL00000000000000000000000000000001)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0x00000000000000010000000000000000)
   ret fp128 %ret
 }
 
 define fp128 @canonicalize_inf_fp128() {
 ; CHECK-LABEL: @canonicalize_inf_fp128(
-; CHECK-NEXT:    ret fp128 0xL00000000000000007FFF000000000000
+; CHECK-NEXT:    ret fp128 f0x7FFF0000000000000000000000000000
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL00000000000000007FFF000000000000)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0x7FFF0000000000000000000000000000)
   ret fp128 %ret
 }
 
 define fp128 @canonicalize_neg_inf_fp128() {
 ; CHECK-LABEL: @canonicalize_neg_inf_fp128(
-; CHECK-NEXT:    ret fp128 0xL0000000000000000FFFF000000000000
+; CHECK-NEXT:    ret fp128 f0xFFFF0000000000000000000000000000
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL0000000000000000FFFF000000000000)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0xFFFF0000000000000000000000000000)
   ret fp128 %ret
 }
 
 define fp128 @canonicalize_nan_fp128() {
 ; CHECK-LABEL: @canonicalize_nan_fp128(
-; CHECK-NEXT:    [[RET:%.*]] = call fp128 @llvm.canonicalize.f128(fp128 0xL00000000000000007FFF800000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call fp128 @llvm.canonicalize.f128(fp128 f0x7FFF8000000000000000000000000000)
 ; CHECK-NEXT:    ret fp128 [[RET]]
 ;
-  %ret = call fp128 @llvm.canonicalize.fp128(fp128 0xL00000000000000007FFF800000000000)
+  %ret = call fp128 @llvm.canonicalize.fp128(fp128 f0x7FFF8000000000000000000000000000)
   ret fp128 %ret
 }
 
@@ -494,7 +494,7 @@ define fp128 @canonicalize_nan_fp128() {
 
 define bfloat @canonicalize_zero_bf16() {
 ; CHECK-LABEL: @canonicalize_zero_bf16(
-; CHECK-NEXT:    ret bfloat 0xR0000
+; CHECK-NEXT:    ret bfloat f0x0000
 ;
   %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0.0)
   ret bfloat %ret
@@ -502,7 +502,7 @@ define bfloat @canonicalize_zero_bf16() {
 
 define bfloat @canonicalize_1.0_bf16() {
 ; CHECK-LABEL: @canonicalize_1.0_bf16(
-; CHECK-NEXT:    ret bfloat 0xR3F80
+; CHECK-NEXT:    ret bfloat f0x3F80
 ;
   %ret = call bfloat @llvm.canonicalize.bf16(bfloat 1.0)
   ret bfloat %ret
@@ -510,42 +510,42 @@ define bfloat @canonicalize_1.0_bf16() {
 
 define bfloat @canonicalize_0x0001_bf16() {
 ; CHECK-LABEL: @canonicalize_0x0001_bf16(
-; CHECK-NEXT:    ret bfloat 0xR0001
+; CHECK-NEXT:    ret bfloat f0x0001
 ;
-  %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0xR0001)
+  %ret = call bfloat @llvm.canonicalize.bf16(bfloat f0x0001)
   ret bfloat %ret
 }
 
 define bfloat @canonicalize_inf_bf16() {
 ; CHECK-LABEL: @canonicalize_inf_bf16(
-; CHECK-NEXT:    ret bfloat 0xR7F80
+; CHECK-NEXT:    ret bfloat f0x7F80
 ;
-  %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0xR7F80)
+  %ret = call bfloat @llvm.canonicalize.bf16(bfloat f0x7F80)
   ret bfloat %ret
 }
 
 define bfloat @canonicalize_neg_inf_bf16() {
 ; CHECK-LABEL: @canonicalize_neg_inf_bf16(
-; CHECK-NEXT:    ret bfloat 0xRFF80
+; CHECK-NEXT:    ret bfloat f0xFF80
 ;
-  %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0xRFF80)
+  %ret = call bfloat @llvm.canonicalize.bf16(bfloat f0xFF80)
   ret bfloat %ret
 }
 
 define bfloat @canonicalize_nan_bf16() {
 ; CHECK-LABEL: @canonicalize_nan_bf16(
-; CHECK-NEXT:    [[RET:%.*]] = call bfloat @llvm.canonicalize.bf16(bfloat 0xR7FC0)
+; CHECK-NEXT:    [[RET:%.*]] = call bfloat @llvm.canonicalize.bf16(bfloat f0x7FC0)
 ; CHECK-NEXT:    ret bfloat [[RET]]
 ;
-  %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0xR7FC0)
+  %ret = call bfloat @llvm.canonicalize.bf16(bfloat f0x7FC0)
   ret bfloat %ret
 }
 
 define bfloat @canonicalize_0xff_bf16() {
 ; CHECK-LABEL: @canonicalize_0xff_bf16(
-; CHECK-NEXT:    ret bfloat 0xR00FF
+; CHECK-NEXT:    ret bfloat f0x00FF
 ;
-  %ret = call bfloat @llvm.canonicalize.bf16(bfloat 0xR00FF)
+  %ret = call bfloat @llvm.canonicalize.bf16(bfloat f0x00FF)
   ret bfloat %ret
 }
 
@@ -563,7 +563,7 @@ define x86_fp80 @canonicalize_poison_f80() {
 
 define x86_fp80 @canonicalize_undef_f80() {
 ; CHECK-LABEL: @canonicalize_undef_f80(
-; CHECK-NEXT:    ret x86_fp80 0xK00000000000000000000
+; CHECK-NEXT:    ret x86_fp80 f0x00000000000000000000
 ;
   %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 undef)
   ret x86_fp80 %ret
@@ -571,80 +571,80 @@ define x86_fp80 @canonicalize_undef_f80() {
 
 define x86_fp80 @canonicalize_zero_f80() {
 ; CHECK-LABEL: @canonicalize_zero_f80(
-; CHECK-NEXT:    ret x86_fp80 0xK00000000000000000000
+; CHECK-NEXT:    ret x86_fp80 f0x00000000000000000000
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK00000000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x00000000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_negzero_f80() {
 ; CHECK-LABEL: @canonicalize_negzero_f80(
-; CHECK-NEXT:    ret x86_fp80 0xK80000000000000000000
+; CHECK-NEXT:    ret x86_fp80 f0x80000000000000000000
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK80000000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x80000000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_inf_f80() {
 ; CHECK-LABEL: @canonicalize_inf_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK7FFF8000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x7FFF8000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK7FFF8000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x7FFF8000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_ninf_f80() {
 ; CHECK-LABEL: @canonicalize_ninf_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFF8000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFF8000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFF8000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFF8000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_qnan_f80() {
 ; CHECK-LABEL: @canonicalize_qnan_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFFC000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFFC000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFFC000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFFC000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_snan_f80() {
 ; CHECK-LABEL: @canonicalize_snan_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFFE000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFFE000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKFFFFE000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xFFFFE000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_1.0_f80() {
 ; CHECK-LABEL: @canonicalize_1.0_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK3FFF8000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x3FFF8000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK3FFF8000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x3FFF8000000000000000)
   ret x86_fp80 %ret
 }
 
 define x86_fp80 @canonicalize_neg1.0_f80() {
 ; CHECK-LABEL: @canonicalize_neg1.0_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKBFFF8000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xBFFF8000000000000000)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xKBFFF8000000000000000)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0xBFFF8000000000000000)
   ret x86_fp80 %ret
 }
 
-define x86_fp80 @canonicalize_0xK00000000000000000001_f80() {
-; CHECK-LABEL: @canonicalize_0xK00000000000000000001_f80(
-; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK00000000000000000001)
+define x86_fp80 @canonicalize_f0x00000000000000000001_f80() {
+; CHECK-LABEL: @canonicalize_f0x00000000000000000001_f80(
+; CHECK-NEXT:    [[RET:%.*]] = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x00000000000000000001)
 ; CHECK-NEXT:    ret x86_fp80 [[RET]]
 ;
-  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 0xK00000000000000000001)
+  %ret = call x86_fp80 @llvm.canonicalize.f80(x86_fp80 f0x00000000000000000001)
   ret x86_fp80 %ret
 }
 
@@ -662,7 +662,7 @@ define ppc_fp128 @canonicalize_poison_ppcf128() {
 
 define ppc_fp128 @canonicalize_undef_ppcf128() {
 ; CHECK-LABEL: @canonicalize_undef_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM00000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000000000000000000000
 ;
   %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 undef)
   ret ppc_fp128 %ret
@@ -670,95 +670,95 @@ define ppc_fp128 @canonicalize_undef_ppcf128() {
 
 define ppc_fp128 @canonicalize_zero_ppcf128() {
 ; CHECK-LABEL: @canonicalize_zero_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM00000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000000000000000000000
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM00000000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000000000000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_negzero_ppcf128() {
 ; CHECK-LABEL: @canonicalize_negzero_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM80000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000008000000000000000
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM80000000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000008000000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_noncanonical_zero_0_ppcf128() {
 ; CHECK-LABEL: @canonicalize_noncanonical_zero_0_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM00000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000000000000000000000
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM0000000000000000ffffffffffffffff)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0xffffffffffffffff0000000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_noncanonical_zero_1_ppcf128() {
 ; CHECK-LABEL: @canonicalize_noncanonical_zero_1_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM00000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000000000000000000000
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM00000000000000000000000000000001)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000010000000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_noncanonical_negzero_0_ppcf128() {
 ; CHECK-LABEL: @canonicalize_noncanonical_negzero_0_ppcf128(
-; CHECK-NEXT:    ret ppc_fp128 0xM80000000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000008000000000000000
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM8000000000000000ffffffffffffffff)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0xffffffffffffffff8000000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_inf_ppcf128() {
 ; CHECK-LABEL: @canonicalize_inf_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM7FF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000007FF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM7FF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000007FF0000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_neginf_ppcf128() {
 ; CHECK-LABEL: @canonicalize_neginf_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFF0000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_qnan_ppcf128() {
 ; CHECK-LABEL: @canonicalize_qnan_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFF80000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFF8000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFF80000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFF8000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_snan_ppcf128() {
 ; CHECK-LABEL: @canonicalize_snan_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFFC0000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFFC000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMFFFC0000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000FFFC000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_1.0_ppcf128() {
 ; CHECK-LABEL: @canonicalize_1.0_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM3FF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000003FF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xM3FF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x00000000000000003FF0000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_neg1.0_ppcf128() {
 ; CHECK-LABEL: @canonicalize_neg1.0_ppcf128(
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMBFF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000BFF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 0xMBFF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.canonicalize.ppcf128(ppc_fp128 f0x0000000000000000BFF0000000000000)
   ret ppc_fp128 %ret
 }
 

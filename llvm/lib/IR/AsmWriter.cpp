@@ -1501,32 +1501,27 @@ static void WriteAPFloatInternal(raw_ostream &Out, const APFloat &APF) {
   // Either half, bfloat or some form of long double.
   // These appear as a magic letter identifying the type, then a
   // fixed number of hex digits.
-  Out << "0x";
+  Out << "f0x";
   APInt API = APF.bitcastToAPInt();
   if (&APF.getSemantics() == &APFloat::x87DoubleExtended()) {
-    Out << 'K';
     Out << format_hex_no_prefix(API.getHiBits(16).getZExtValue(), 4,
                                 /*Upper=*/true);
     Out << format_hex_no_prefix(API.getLoBits(64).getZExtValue(), 16,
                                 /*Upper=*/true);
   } else if (&APF.getSemantics() == &APFloat::IEEEquad()) {
-    Out << 'L';
-    Out << format_hex_no_prefix(API.getLoBits(64).getZExtValue(), 16,
-                                /*Upper=*/true);
     Out << format_hex_no_prefix(API.getHiBits(64).getZExtValue(), 16,
+                                /*Upper=*/true);
+    Out << format_hex_no_prefix(API.getLoBits(64).getZExtValue(), 16,
                                 /*Upper=*/true);
   } else if (&APF.getSemantics() == &APFloat::PPCDoubleDouble()) {
-    Out << 'M';
-    Out << format_hex_no_prefix(API.getLoBits(64).getZExtValue(), 16,
-                                /*Upper=*/true);
     Out << format_hex_no_prefix(API.getHiBits(64).getZExtValue(), 16,
                                 /*Upper=*/true);
+    Out << format_hex_no_prefix(API.getLoBits(64).getZExtValue(), 16,
+                                /*Upper=*/true);
   } else if (&APF.getSemantics() == &APFloat::IEEEhalf()) {
-    Out << 'H';
     Out << format_hex_no_prefix(API.getZExtValue(), 4,
                                 /*Upper=*/true);
   } else if (&APF.getSemantics() == &APFloat::BFloat()) {
-    Out << 'R';
     Out << format_hex_no_prefix(API.getZExtValue(), 4,
                                 /*Upper=*/true);
   } else

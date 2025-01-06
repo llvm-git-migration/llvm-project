@@ -100,7 +100,7 @@ entry:
 
 define void @LongDoubleTest(ptr nocapture %a) nounwind uwtable sanitize_address {
 entry:
-    store x86_fp80 0xK3FFF8000000000000000, ptr %a, align 16
+    store x86_fp80 f0x3FFF8000000000000000, ptr %a, align 16
     ret void
 }
 

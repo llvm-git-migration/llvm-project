@@ -338,7 +338,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_1(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #1
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000>
+  %2 = fmul fast <8 x half> %0, <half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -348,7 +348,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_2(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #2
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400>
+  %2 = fmul fast <8 x half> %0, <half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -358,7 +358,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_3(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #3
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800>
+  %2 = fmul fast <8 x half> %0, <half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -368,7 +368,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_4(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #4
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00>
+  %2 = fmul fast <8 x half> %0, <half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -378,7 +378,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_5(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #5
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000>
+  %2 = fmul fast <8 x half> %0, <half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -388,7 +388,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_6(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #6
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400>
+  %2 = fmul fast <8 x half> %0, <half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -398,7 +398,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_7(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #7
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800>
+  %2 = fmul fast <8 x half> %0, <half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -408,7 +408,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_8(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #8
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00>
+  %2 = fmul fast <8 x half> %0, <half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -418,7 +418,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_9(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #9
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000>
+  %2 = fmul fast <8 x half> %0, <half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -428,7 +428,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_10(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #10
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400>
+  %2 = fmul fast <8 x half> %0, <half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -438,7 +438,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_11(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #11
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800>
+  %2 = fmul fast <8 x half> %0, <half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -448,7 +448,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_12(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #12
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00>
+  %2 = fmul fast <8 x half> %0, <half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -458,7 +458,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_13(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #13
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000>
+  %2 = fmul fast <8 x half> %0, <half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -468,7 +468,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_14(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #14
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400>
+  %2 = fmul fast <8 x half> %0, <half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -478,7 +478,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_i16_15(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #15
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800>
+  %2 = fmul fast <8 x half> %0, <half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -820,7 +820,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_1(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #1
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000>
+  %2 = fmul fast <8 x half> %0, <half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -830,7 +830,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_2(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #2
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400, half 0xH4400>
+  %2 = fmul fast <8 x half> %0, <half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400, half f0x4400>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -840,7 +840,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_3(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #3
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800, half 0xH4800>
+  %2 = fmul fast <8 x half> %0, <half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800, half f0x4800>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -850,7 +850,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_4(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #4
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00, half 0xH4C00>
+  %2 = fmul fast <8 x half> %0, <half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00, half f0x4C00>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -860,7 +860,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_5(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #5
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000, half 0xH5000>
+  %2 = fmul fast <8 x half> %0, <half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000, half f0x5000>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -870,7 +870,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_6(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #6
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400>
+  %2 = fmul fast <8 x half> %0, <half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -880,7 +880,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_7(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #7
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800>
+  %2 = fmul fast <8 x half> %0, <half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -890,7 +890,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_8(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #8
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00, half 0xH5C00>
+  %2 = fmul fast <8 x half> %0, <half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00, half f0x5C00>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -900,7 +900,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_9(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #9
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000, half 0xH6000>
+  %2 = fmul fast <8 x half> %0, <half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000, half f0x6000>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -910,7 +910,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_10(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #10
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400, half 0xH6400>
+  %2 = fmul fast <8 x half> %0, <half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400, half f0x6400>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -920,7 +920,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_11(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #11
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800, half 0xH6800>
+  %2 = fmul fast <8 x half> %0, <half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800, half f0x6800>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -930,7 +930,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_12(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #12
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00, half 0xH6C00>
+  %2 = fmul fast <8 x half> %0, <half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00, half f0x6C00>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -940,7 +940,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_13(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #13
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000>
+  %2 = fmul fast <8 x half> %0, <half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -950,7 +950,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_14(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #14
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400, half 0xH7400>
+  %2 = fmul fast <8 x half> %0, <half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400, half f0x7400>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -960,7 +960,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_15(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #15
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800>
+  %2 = fmul fast <8 x half> %0, <half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -972,7 +972,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_u16_inf(<8 x half> %0) {
 ; CHECK-NEXT:    vmul.f16 q0, q0, q1
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0
 ; CHECK-NEXT:    bx lr
-  %2 = fmul <8 x half> %0, <half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800>
+  %2 = fmul <8 x half> %0, <half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800>
   %3 = fptoui <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -982,7 +982,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_s16_inf(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #15
 ; CHECK-NEXT:    bx lr
-  %2 = fmul <8 x half> %0, <half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800, half 0xH7800>
+  %2 = fmul <8 x half> %0, <half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800, half f0x7800>
   %3 = fptosi <8 x half> %2 to <8 x i16>
   ret <8 x i16> %3
 }
@@ -1032,7 +1032,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_sat_s16_1(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #1
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000>
+  %2 = fmul fast <8 x half> %0, <half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000>
   %3 = call <8 x i16> @llvm.fptosi.sat.v8i16.v8f16(<8 x half> %2)
   ret <8 x i16> %3
 }
@@ -1042,7 +1042,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_sat_u16_1(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #1
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4000>
+  %2 = fmul fast <8 x half> %0, <half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000, half f0x4000>
   %3 = call <8 x i16> @llvm.fptoui.sat.v8i16.v8f16(<8 x half> %2)
   ret <8 x i16> %3
 }
@@ -1052,7 +1052,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_sat_s16_6(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.s16.f16 q0, q0, #6
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400, half 0xH5400>
+  %2 = fmul fast <8 x half> %0, <half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400, half f0x5400>
   %3 = call <8 x i16> @llvm.fptosi.sat.v8i16.v8f16(<8 x half> %2)
   ret <8 x i16> %3
 }
@@ -1062,7 +1062,7 @@ define arm_aapcs_vfpcc <8 x i16> @vcvt_sat_u16_7(<8 x half> %0) {
 ; CHECK:       @ %bb.0:
 ; CHECK-NEXT:    vcvt.u16.f16 q0, q0, #7
 ; CHECK-NEXT:    bx lr
-  %2 = fmul fast <8 x half> %0, <half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800, half 0xH5800>
+  %2 = fmul fast <8 x half> %0, <half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800, half f0x5800>
   %3 = call <8 x i16> @llvm.fptoui.sat.v8i16.v8f16(<8 x half> %2)
   ret <8 x i16> %3
 }

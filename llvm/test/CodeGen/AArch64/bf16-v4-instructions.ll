@@ -38,7 +38,7 @@ define <4 x bfloat> @build_h4(<4 x bfloat> %a) {
 ; CHECK-NEXT:    dup v0.4h, w8
 ; CHECK-NEXT:    ret
 entry:
-  ret <4 x bfloat> <bfloat 0xR3CCD, bfloat 0xR3CCD, bfloat 0xR3CCD, bfloat 0xR3CCD>
+  ret <4 x bfloat> <bfloat f0x3CCD, bfloat f0x3CCD, bfloat f0x3CCD, bfloat f0x3CCD>
 }
 
 

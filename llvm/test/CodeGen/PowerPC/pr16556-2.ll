@@ -32,7 +32,7 @@ noassert:                                         ; preds = %entry
   %tmp4 = sitofp i64 %tmp3 to ppc_fp128
   %tmp5 = load i64, ptr @_D4core4time12TickDuration11ticksPerSecyl
   %tmp6 = sitofp i64 %tmp5 to ppc_fp128
-  %tmp7 = fdiv ppc_fp128 %tmp6, 0xM80000000000000000000000000000000
+  %tmp7 = fdiv ppc_fp128 %tmp6, f0x00000000000000008000000000000000
   %tmp8 = fdiv ppc_fp128 %tmp4, %tmp7
   %tmp9 = fptosi ppc_fp128 %tmp8 to i64
   ret i64 %tmp9

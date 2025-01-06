@@ -21,8 +21,8 @@ target triple = "x86_64-unknown-linux-gnu"
 
 @array = internal global [2 x x86_fp80] zeroinitializer, align 16, !dbg !0
 
-; CHECK: @array.0 = internal unnamed_addr global x86_fp80 0xK00000000000000000000, align 16, !dbg ![[EL0:.*]]
-; CHECK: @array.1 = internal unnamed_addr global x86_fp80 0xK00000000000000000000, align 16, !dbg ![[EL1:.*]]
+; CHECK: @array.0 = internal unnamed_addr global x86_fp80 f0x00000000000000000000, align 16, !dbg ![[EL0:.*]]
+; CHECK: @array.1 = internal unnamed_addr global x86_fp80 f0x00000000000000000000, align 16, !dbg ![[EL1:.*]]
 ;
 ; CHECK: ![[EL0]] = !DIGlobalVariableExpression(var: ![[VAR:.*]], expr: !DIExpression(DW_OP_LLVM_fragment, 0, 128))
 ; CHECK: ![[VAR]] = distinct !DIGlobalVariable(name: "array"
@@ -76,7 +76,7 @@ entry:
   %6 = load x86_fp80, ptr @array, align 16, !dbg !29
   %7 = load x86_fp80, ptr getelementptr inbounds ([2 x x86_fp80], ptr @array, i64 0, i64 1), align 16, !dbg !30
   %add = fadd x86_fp80 %6, %7, !dbg !31
-  %cmp = fcmp ogt x86_fp80 %add, 0xK00000000000000000000, !dbg !32
+  %cmp = fcmp ogt x86_fp80 %add, f0x00000000000000000000, !dbg !32
   %conv5 = zext i1 %cmp to i32, !dbg !32
   ret i32 %conv5, !dbg !33
 }

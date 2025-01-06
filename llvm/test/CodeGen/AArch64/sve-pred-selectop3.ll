@@ -662,7 +662,7 @@ define <vscale x 8 x half> @fadd_nxv8f16_x(<vscale x 8 x half> %x, <vscale x 8 x
 ; CHECK-NEXT:    ret
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half 0xH8000)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half f0x8000)
   %b = fadd <vscale x 8 x half> %a, %x
   ret <vscale x 8 x half> %b
 }
@@ -752,7 +752,7 @@ define <vscale x 8 x half> @fmul_nxv8f16_x(<vscale x 8 x half> %x, <vscale x 8 x
 ; CHECK-NEXT:    ret
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half 0xH3C00)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half f0x3C00)
   %b = fmul <vscale x 8 x half> %a, %x
   ret <vscale x 8 x half> %b
 }
@@ -799,7 +799,7 @@ define <vscale x 8 x half> @fdiv_nxv8f16_x(<vscale x 8 x half> %x, <vscale x 8 x
 ; CHECK-NEXT:    ret
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half 0xH3C00)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %y, <vscale x 8 x half> splat (half f0x3C00)
   %b = fdiv <vscale x 8 x half> %x, %a
   ret <vscale x 8 x half> %b
 }
@@ -847,7 +847,7 @@ define <vscale x 8 x half> @fma_nxv8f16_x(<vscale x 8 x half> %x, <vscale x 8 x 
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
   %m = fmul fast <vscale x 8 x half> %y, %z
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %m, <vscale x 8 x half> splat (half 0xH8000)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %m, <vscale x 8 x half> splat (half f0x8000)
   %b = fadd fast <vscale x 8 x half> %a, %x
   ret <vscale x 8 x half> %b
 }
@@ -1563,7 +1563,7 @@ define <vscale x 8 x half> @fadd_nxv8f16_y(<vscale x 8 x half> %x, <vscale x 8 x
 ; CHECK-NEXT:    ret
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %x, <vscale x 8 x half> splat (half 0xH8000)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %x, <vscale x 8 x half> splat (half f0x8000)
   %b = fadd <vscale x 8 x half> %a, %y
   ret <vscale x 8 x half> %b
 }
@@ -1659,7 +1659,7 @@ define <vscale x 8 x half> @fmul_nxv8f16_y(<vscale x 8 x half> %x, <vscale x 8 x
 ; CHECK-NEXT:    ret
 entry:
   %c = fcmp ugt <vscale x 8 x half> %n, zeroinitializer
-  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %x, <vscale x 8 x half> splat (half 0xH3C00)
+  %a = select <vscale x 8 x i1> %c, <vscale x 8 x half> %x, <vscale x 8 x half> splat (half f0x3C00)
   %b = fmul <vscale x 8 x half> %a, %y
   ret <vscale x 8 x half> %b
 }

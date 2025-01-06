@@ -53,16 +53,16 @@ define fp128 @test_logl_pos(fp128 %f) {
 ; CHECK-LABEL: define fp128 @test_logl_pos(
 ; CHECK-SAME: fp128 [[F:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
-; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], 0xL00000000000000000000000000000000
+; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], f0x00000000000000000000000000000000
 ; CHECK-NEXT:    br i1 [[ISINF]], label %[[IF_END:.*]], label %[[RETURN:.*]]
 ; CHECK:       [[IF_END]]:
 ; CHECK-NEXT:    [[CALL:%.*]] = tail call fp128 @llvm.log.f128(fp128 [[F]])
 ; CHECK-NEXT:    ret fp128 [[CALL]]
 ; CHECK:       [[RETURN]]:
-; CHECK-NEXT:    ret fp128 0xL00000000000000000000000000000000
+; CHECK-NEXT:    ret fp128 f0x00000000000000000000000000000000
 ;
 entry:
-  %isinf = fcmp ole fp128 %f, 0xL00000000000000000000000000000000
+  %isinf = fcmp ole fp128 %f, f0x00000000000000000000000000000000
   br i1 %isinf, label %return, label %if.end
 
 if.end:
@@ -70,7 +70,7 @@ if.end:
   ret fp128 %call
 
 return:
-  ret fp128 0xL00000000000000000000000000000000
+  ret fp128 f0x00000000000000000000000000000000
 }
 
 define float @test_log10f_pos(float %f) {
@@ -125,16 +125,16 @@ define fp128 @test_log10l_pos(fp128 %f) {
 ; CHECK-LABEL: define fp128 @test_log10l_pos(
 ; CHECK-SAME: fp128 [[F:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
-; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], 0xL00000000000000000000000000000000
+; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], f0x00000000000000000000000000000000
 ; CHECK-NEXT:    br i1 [[ISINF]], label %[[IF_END:.*]], label %[[RETURN:.*]]
 ; CHECK:       [[IF_END]]:
 ; CHECK-NEXT:    [[CALL:%.*]] = tail call fp128 @llvm.log10.f128(fp128 [[F]])
 ; CHECK-NEXT:    ret fp128 [[CALL]]
 ; CHECK:       [[RETURN]]:
-; CHECK-NEXT:    ret fp128 0xL00000000000000000000000000000000
+; CHECK-NEXT:    ret fp128 f0x00000000000000000000000000000000
 ;
 entry:
-  %isinf = fcmp ole fp128 %f, 0xL00000000000000000000000000000000
+  %isinf = fcmp ole fp128 %f, f0x00000000000000000000000000000000
   br i1 %isinf, label %return, label %if.end
 
 if.end:
@@ -142,7 +142,7 @@ if.end:
   ret fp128 %call
 
 return:
-  ret fp128 0xL00000000000000000000000000000000
+  ret fp128 f0x00000000000000000000000000000000
 }
 
 define float @test_log2f_pos(float %f) {
@@ -197,16 +197,16 @@ define fp128 @test_log2l_pos(fp128 %f) {
 ; CHECK-LABEL: define fp128 @test_log2l_pos(
 ; CHECK-SAME: fp128 [[F:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
-; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], 0xL00000000000000000000000000000000
+; CHECK-NEXT:    [[ISINF:%.*]] = fcmp ugt fp128 [[F]], f0x00000000000000000000000000000000
 ; CHECK-NEXT:    br i1 [[ISINF]], label %[[IF_END:.*]], label %[[RETURN:.*]]
 ; CHECK:       [[IF_END]]:
 ; CHECK-NEXT:    [[CALL:%.*]] = tail call fp128 @llvm.log2.f128(fp128 [[F]])
 ; CHECK-NEXT:    ret fp128 [[CALL]]
 ; CHECK:       [[RETURN]]:
-; CHECK-NEXT:    ret fp128 0xL00000000000000000000000000000000
+; CHECK-NEXT:    ret fp128 f0x00000000000000000000000000000000
 ;
 entry:
-  %isinf = fcmp ole fp128 %f, 0xL00000000000000000000000000000000
+  %isinf = fcmp ole fp128 %f, f0x00000000000000000000000000000000
   br i1 %isinf, label %return, label %if.end
 
 if.end:
@@ -214,7 +214,7 @@ if.end:
   ret fp128 %call
 
 return:
-  ret fp128 0xL00000000000000000000000000000000
+  ret fp128 f0x00000000000000000000000000000000
 }
 
 

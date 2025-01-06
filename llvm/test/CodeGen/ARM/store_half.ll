@@ -4,6 +4,6 @@
 ; RUN: llc < %s -mtriple=armv8.2a-arm-none-eabi -mattr=+fullfp16 -filetype=obj -o /dev/null
 
 define void @woah(ptr %waythere) {
-  store half 0xHE110, ptr %waythere
+  store half f0xE110, ptr %waythere
   ret void
 }

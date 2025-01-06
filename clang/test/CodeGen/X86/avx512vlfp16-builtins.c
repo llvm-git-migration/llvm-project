@@ -17,13 +17,13 @@ _Float16 test_mm256_cvtsh_h(__m256h __A) {
 __m128h test_mm_set_sh(_Float16 __h) {
   // CHECK-LABEL: @test_mm_set_sh
   // CHECK: insertelement <8 x half> {{.*}}, i32 0
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 1
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 2
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 3
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 4
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 5
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 6
-  // CHECK: insertelement <8 x half> %{{.*}}, half 0xH0000, i32 7
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 1
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 2
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 3
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 4
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 5
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 6
+  // CHECK: insertelement <8 x half> %{{.*}}, half f0x0000, i32 7
   return _mm_set_sh(__h);
 }
 
@@ -3030,13 +3030,13 @@ __m256h test_mm256_permutexvar_ph(__m256i __A, __m256h __B) {
 
 _Float16 test_mm256_reduce_add_ph(__m256h __W) {
   // CHECK-LABEL: @test_mm256_reduce_add_ph
-  // CHECK: call reassoc half @llvm.vector.reduce.fadd.v16f16(half 0xH8000, <16 x half> %{{.*}})
+  // CHECK: call reassoc half @llvm.vector.reduce.fadd.v16f16(half f0x8000, <16 x half> %{{.*}})
   return _mm256_reduce_add_ph(__W);
 }
 
 _Float16 test_mm256_reduce_mul_ph(__m256h __W) {
   // CHECK-LABEL: @test_mm256_reduce_mul_ph
-  // CHECK: call reassoc half @llvm.vector.reduce.fmul.v16f16(half 0xH3C00, <16 x half> %{{.*}})
+  // CHECK: call reassoc half @llvm.vector.reduce.fmul.v16f16(half f0x3C00, <16 x half> %{{.*}})
   return _mm256_reduce_mul_ph(__W);
 }
 
@@ -3054,13 +3054,13 @@ _Float16 test_mm256_reduce_min_ph(__m256h __W) {
 
 _Float16 test_mm_reduce_add_ph(__m128h __W) {
   // CHECK-LABEL: @test_mm_reduce_add_ph
-  // CHECK: call reassoc half @llvm.vector.reduce.fadd.v8f16(half 0xH8000, <8 x half> %{{.*}})
+  // CHECK: call reassoc half @llvm.vector.reduce.fadd.v8f16(half f0x8000, <8 x half> %{{.*}})
   return _mm_reduce_add_ph(__W);
 }
 
 _Float16 test_mm_reduce_mul_ph(__m128h __W) {
   // CHECK-LABEL: @test_mm_reduce_mul_ph
-  // CHECK: call reassoc half @llvm.vector.reduce.fmul.v8f16(half 0xH3C00, <8 x half> %{{.*}})
+  // CHECK: call reassoc half @llvm.vector.reduce.fmul.v8f16(half f0x3C00, <8 x half> %{{.*}})
   return _mm_reduce_mul_ph(__W);
 }
 

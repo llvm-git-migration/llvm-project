@@ -16,7 +16,7 @@ define <vscale x 8 x i8> @alloca_access2() {
 
 ; CHECK-NOT: insertelement index out of range
 define <vscale x 8 x half> @insertelement() {
-  %insert = insertelement <vscale x 8 x half> poison, half 0xH0000, i64 100
+  %insert = insertelement <vscale x 8 x half> poison, half f0x0000, i64 100
   ret <vscale x 8 x half> %insert
 }
 

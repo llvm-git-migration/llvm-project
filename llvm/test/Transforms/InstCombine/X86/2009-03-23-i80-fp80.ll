@@ -7,13 +7,13 @@ define i80 @from() {
 ; CHECK-LABEL: @from(
 ; CHECK-NEXT:    ret i80 302245289961712575840256
 ;
-  %tmp = bitcast x86_fp80 0xK4000C000000000000000 to i80
+  %tmp = bitcast x86_fp80 f0x4000C000000000000000 to i80
   ret i80 %tmp
 }
 
 define x86_fp80 @to() {
 ; CHECK-LABEL: @to(
-; CHECK-NEXT:    ret x86_fp80 0xK40018000000000000000
+; CHECK-NEXT:    ret x86_fp80 f0x40018000000000000000
 ;
   %tmp = bitcast i80 302259125019767858003968 to x86_fp80
   ret x86_fp80 %tmp

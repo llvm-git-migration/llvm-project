@@ -9,7 +9,7 @@
 ; Check all soft floating point library function calls.
 
 @vf64 = common dso_local global double 0.000000e+00, align 8
-@vf128 = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
+@vf128 = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
 
 define dso_local void @Test128Add(fp128 %d1, fp128 %d2) nounwind {
 ; CHECK-LABEL: Test128Add:

@@ -22,7 +22,7 @@ entry:
 ; CHECK-COMMON-LABEL: build_h4:
 ; CHECK-COMMON:       mov [[GPR:w[0-9]+]], #15565
 ; CHECK-COMMON-NEXT:  dup v0.4h, [[GPR]]
-  ret <4 x half> <half 0xH3CCD, half 0xH3CCD, half 0xH3CCD, half 0xH3CCD>
+  ret <4 x half> <half f0x3CCD, half f0x3CCD, half f0x3CCD, half f0x3CCD>
 }
 
 

@@ -118,7 +118,7 @@ entry:
 ; CHECK-NEXT: ld  2,8([[GENREG]])
 define fp128 @call_longdouble() {
 entry:
-  %ret = call fp128 (fp128) @pass_longdouble(fp128 0xLE0FC1518450562CD4000921FB5444261)
+  %ret = call fp128 (fp128) @pass_longdouble(fp128 f0x4000921FB5444261E0FC1518450562CD)
   ret fp128 %ret
 }
 
@@ -131,7 +131,7 @@ entry:
 ; CHECK: lxr 4,5
 define i64 @call_floats0(fp128 %arg0, double %arg1) {
 entry:
-  %ret = call i64 (fp128, fp128, double) @pass_floats0(fp128 0xLE0FC1518450562CD4000921FB5444261, fp128 %arg0, double %arg1)
+  %ret = call i64 (fp128, fp128, double) @pass_floats0(fp128 f0x4000921FB5444261E0FC1518450562CD, fp128 %arg0, double %arg1)
   ret i64 %ret
 }
 
@@ -169,7 +169,7 @@ entry:
 ; CHECK: axbr  0,1
 define fp128 @pass_longdouble(fp128 %arg) {
 entry:
-  %X = fadd fp128 %arg, 0xL10000000000000004000921FB53C8D4F
+  %X = fadd fp128 %arg, f0x4000921FB53C8D4F1000000000000000
   ret fp128 %X
 }
 
@@ -182,7 +182,7 @@ define i64 @pass_floats0(fp128 %arg0, fp128 %arg1, double %arg2) {
   %X = fadd fp128 %arg0, %arg1
   %arg2_ext = fpext double %arg2 to fp128
   %Y = fadd fp128 %X, %arg2_ext
-  %ret_bool = fcmp ueq fp128 %Y, 0xLE0FC1518450562CD4000921FB5444261
+  %ret_bool = fcmp ueq fp128 %Y, f0x4000921FB5444261E0FC1518450562CD
   %ret = sext i1 %ret_bool to i64
   ret i64 %ret
 }

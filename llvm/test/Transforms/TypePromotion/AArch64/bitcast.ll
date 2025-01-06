@@ -22,12 +22,12 @@ entry:
 define i1 @halfbitcast() {
 ; CHECK-LABEL: define i1 @halfbitcast() {
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast half 0xH8000 to i16
+; CHECK-NEXT:    [[TMP0:%.*]] = bitcast half f0x8000 to i16
 ; CHECK-NEXT:    [[DOTNOT114:%.*]] = icmp eq i16 [[TMP0]], 0
 ; CHECK-NEXT:    ret i1 [[DOTNOT114]]
 ;
 entry:
-  %0 = bitcast half 0xH8000 to i16
+  %0 = bitcast half f0x8000 to i16
   %.not114 = icmp eq i16 %0, 0
   ret i1 %.not114
 }

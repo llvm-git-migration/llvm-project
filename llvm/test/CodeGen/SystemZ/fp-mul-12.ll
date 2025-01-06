@@ -29,7 +29,7 @@ define void @f2(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) {
   %f1 = load fp128, ptr %ptr1
   %f2 = load fp128, ptr %ptr2
   %f3 = load fp128, ptr %ptr3
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %f3
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %f3
   %res = call fp128 @llvm.fma.f128 (fp128 %f1, fp128 %f2, fp128 %neg)
   store fp128 %res, ptr %dst
   ret void
@@ -47,7 +47,7 @@ define void @f3(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) {
   %f2 = load fp128, ptr %ptr2
   %f3 = load fp128, ptr %ptr3
   %res = call fp128 @llvm.fma.f128 (fp128 %f1, fp128 %f2, fp128 %f3)
-  %negres = fsub fp128 0xL00000000000000008000000000000000, %res
+  %negres = fsub fp128 f0x80000000000000000000000000000000, %res
   store fp128 %negres, ptr %dst
   ret void
 }
@@ -63,9 +63,9 @@ define void @f4(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) {
   %f1 = load fp128, ptr %ptr1
   %f2 = load fp128, ptr %ptr2
   %f3 = load fp128, ptr %ptr3
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %f3
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %f3
   %res = call fp128 @llvm.fma.f128 (fp128 %f1, fp128 %f2, fp128 %neg)
-  %negres = fsub fp128 0xL00000000000000008000000000000000, %res
+  %negres = fsub fp128 f0x80000000000000000000000000000000, %res
   store fp128 %negres, ptr %dst
   ret void
 }

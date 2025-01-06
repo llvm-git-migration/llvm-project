@@ -11,7 +11,7 @@ target triple = "nvptx64-nvidia-cuda"
 
 ; LDST: .b8 bfloat_array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 @"bfloat_array" = addrspace(1) constant [4 x bfloat]
-                [bfloat 0xR0201, bfloat 0xR0403, bfloat 0xR0605, bfloat 0xR0807]
+                [bfloat f0x0201, bfloat f0x0403, bfloat f0x0605, bfloat f0x0807]
 
 define bfloat @test_fadd(bfloat %0, bfloat %1) {
 ; SM70-LABEL: test_fadd(

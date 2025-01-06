@@ -7,6 +7,6 @@ define x86_fp80 @cast() {
 }
 
 define i80 @invcast() {
-	%tmp = bitcast x86_fp80 0xK00000000000000000000 to i80		; <i80> [#uses=1]
+	%tmp = bitcast x86_fp80 f0x00000000000000000000 to i80		; <i80> [#uses=1]
 	ret i80 %tmp
 }

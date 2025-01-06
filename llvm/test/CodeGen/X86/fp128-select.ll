@@ -33,7 +33,7 @@ define void @test_select(ptr %p, ptr %q, i1 zeroext %c) {
 ; NOSSE-NEXT:    movq %rax, (%rsi)
 ; NOSSE-NEXT:    retq
   %a = load fp128, ptr %p, align 2
-  %r = select i1 %c, fp128 %a, fp128 0xL00000000000000007FFF800000000000
+  %r = select i1 %c, fp128 %a, fp128 f0x7FFF8000000000000000000000000000
   store fp128 %r, ptr %q
   ret void
 }

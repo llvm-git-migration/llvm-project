@@ -16,7 +16,7 @@ define noundef half @log10_half(half noundef %a) #0 {
 entry:
 ; DOPCHECK: call half @dx.op.unary.f16(i32 23, half %{{.*}})
 ; EXPCHECK: call half @llvm.log2.f16(half %a)
-; CHECK: fmul half 0xH34D1, %{{.*}}
+; CHECK: fmul half f0x34D1, %{{.*}}
   %elt.log10 = call half @llvm.log10.f16(half %a)
   ret half %elt.log10
 }

@@ -210,8 +210,8 @@ define void @f24(ptr %ptr, ptr %dst) {
 ; CHECK: vst [[RES]], 0(%r3)
 ; CHECK: br %r14
   %val = load fp128, ptr %ptr
-  %cmp = fcmp ogt fp128 %val, 0xL00000000000000000000000000000000
-  %res = select i1 %cmp, fp128 %val, fp128 0xL00000000000000000000000000000000
+  %cmp = fcmp ogt fp128 %val, f0x00000000000000000000000000000000
+  %res = select i1 %cmp, fp128 %val, fp128 f0x00000000000000000000000000000000
   store fp128 %res, ptr %dst
   ret void
 }
@@ -225,8 +225,8 @@ define void @f25(ptr %ptr, ptr %dst) {
 ; CHECK: vst [[RES]], 0(%r3)
 ; CHECK: br %r14
   %val = load fp128, ptr %ptr
-  %cmp = fcmp ugt fp128 %val, 0xL00000000000000000000000000000000
-  %res = select i1 %cmp, fp128 %val, fp128 0xL00000000000000000000000000000000
+  %cmp = fcmp ugt fp128 %val, f0x00000000000000000000000000000000
+  %res = select i1 %cmp, fp128 %val, fp128 f0x00000000000000000000000000000000
   store fp128 %res, ptr %dst
   ret void
 }

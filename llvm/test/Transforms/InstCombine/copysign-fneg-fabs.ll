@@ -278,66 +278,66 @@ define half @fneg_fabs_copysign_multi_use_fabs(half %x, half %y, ptr %ptr) {
 define half @copysign_pos(half %a) {
 ; CHECK-LABEL: @copysign_pos(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half 0xH3C00, half [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half f0x3C00, half [[A:%.*]])
 ; CHECK-NEXT:    ret half [[RET]]
 ;
 entry:
-  %ret = call half @llvm.copysign.f16(half 0xH3C00, half %a)
+  %ret = call half @llvm.copysign.f16(half f0x3C00, half %a)
   ret half %ret
 }
 
 define half @copysign_neg(half %a) {
 ; CHECK-LABEL: @copysign_neg(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half 0xH3C00, half [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half f0x3C00, half [[A:%.*]])
 ; CHECK-NEXT:    ret half [[RET]]
 ;
 entry:
-  %ret = call half @llvm.copysign.f16(half 0xHBC00, half %a)
+  %ret = call half @llvm.copysign.f16(half f0xBC00, half %a)
   ret half %ret
 }
 
 define half @copysign_negzero(half %a) {
 ; CHECK-LABEL: @copysign_negzero(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half 0xH0000, half [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half f0x0000, half [[A:%.*]])
 ; CHECK-NEXT:    ret half [[RET]]
 ;
 entry:
-  %ret = call half @llvm.copysign.f16(half 0xH8000, half %a)
+  %ret = call half @llvm.copysign.f16(half f0x8000, half %a)
   ret half %ret
 }
 
 define half @copysign_negnan(half %a) {
 ; CHECK-LABEL: @copysign_negnan(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half 0xH7E00, half [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half f0x7E00, half [[A:%.*]])
 ; CHECK-NEXT:    ret half [[RET]]
 ;
 entry:
-  %ret = call half @llvm.copysign.f16(half 0xHFE00, half %a)
+  %ret = call half @llvm.copysign.f16(half f0xFE00, half %a)
   ret half %ret
 }
 
 define half @copysign_neginf(half %a) {
 ; CHECK-LABEL: @copysign_neginf(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half 0xH7C00, half [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call half @llvm.copysign.f16(half f0x7C00, half [[A:%.*]])
 ; CHECK-NEXT:    ret half [[RET]]
 ;
 entry:
-  %ret = call half @llvm.copysign.f16(half 0xHFC00, half %a)
+  %ret = call half @llvm.copysign.f16(half f0xFC00, half %a)
   ret half %ret
 }
 
 define <4 x half> @copysign_splat(<4 x half> %a) {
 ; CHECK-LABEL: @copysign_splat(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call <4 x half> @llvm.copysign.v4f16(<4 x half> splat (half 0xH3C00), <4 x half> [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call <4 x half> @llvm.copysign.v4f16(<4 x half> splat (half f0x3C00), <4 x half> [[A:%.*]])
 ; CHECK-NEXT:    ret <4 x half> [[RET]]
 ;
 entry:
-  %ret = call <4 x half> @llvm.copysign.v4f16(<4 x half> splat(half 0xHBC00), <4 x half> %a)
+  %ret = call <4 x half> @llvm.copysign.v4f16(<4 x half> splat(half f0xBC00), <4 x half> %a)
   ret <4 x half> %ret
 }
 
@@ -346,11 +346,11 @@ entry:
 define <4 x half> @copysign_vec4(<4 x half> %a) {
 ; CHECK-LABEL: @copysign_vec4(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[RET:%.*]] = call <4 x half> @llvm.copysign.v4f16(<4 x half> <half 0xH3C00, half 0xHBC00, half undef, half poison>, <4 x half> [[A:%.*]])
+; CHECK-NEXT:    [[RET:%.*]] = call <4 x half> @llvm.copysign.v4f16(<4 x half> <half f0x3C00, half f0xBC00, half undef, half poison>, <4 x half> [[A:%.*]])
 ; CHECK-NEXT:    ret <4 x half> [[RET]]
 ;
 entry:
-  %ret = call <4 x half> @llvm.copysign.v4f16(<4 x half> <half 0xH3C00, half 0xHBC00, half undef, half poison>, <4 x half> %a)
+  %ret = call <4 x half> @llvm.copysign.v4f16(<4 x half> <half f0x3C00, half f0xBC00, half undef, half poison>, <4 x half> %a)
   ret <4 x half> %ret
 }
 

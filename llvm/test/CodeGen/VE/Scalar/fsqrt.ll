@@ -110,7 +110,7 @@ define fp128 @fsqrt_quad_zero() {
 ; CHECK-NEXT:    lea.sl %s12, sqrtl@hi(, %s2)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %1 = tail call fast fp128 @llvm.sqrt.f128(fp128 0xL00000000000000000000000000000000)
+  %1 = tail call fast fp128 @llvm.sqrt.f128(fp128 f0x00000000000000000000000000000000)
   ret fp128 %1
 }
 
@@ -146,6 +146,6 @@ define fp128 @fsqrt_quad_const() {
 ; CHECK-NEXT:    lea.sl %s12, sqrtl@hi(, %s2)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %1 = tail call fast fp128 @llvm.sqrt.f128(fp128 0xL0000000000000000C000000000000000)
+  %1 = tail call fast fp128 @llvm.sqrt.f128(fp128 f0xC0000000000000000000000000000000)
   ret fp128 %1
 }

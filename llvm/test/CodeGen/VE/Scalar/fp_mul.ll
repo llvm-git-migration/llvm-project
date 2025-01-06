@@ -57,7 +57,7 @@ define fp128 @func6(fp128 %a) {
 ; CHECK-NEXT:    ld %s5, (, %s2)
 ; CHECK-NEXT:    fmul.q %s0, %s0, %s4
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %r = fmul fp128 %a, 0xL00000000000000004001400000000000
+  %r = fmul fp128 %a, f0x40014000000000000000000000000000
   ret fp128 %r
 }
 
@@ -93,7 +93,7 @@ define fp128 @func9(fp128 %a) {
 ; CHECK-NEXT:    ld %s5, (, %s2)
 ; CHECK-NEXT:    fmul.q %s0, %s0, %s4
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %r = fmul fp128 %a, 0xLFFFFFFFFFFFFFFFF7FFEFFFFFFFFFFFF
+  %r = fmul fp128 %a, f0x7FFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF
   ret fp128 %r
 }
 

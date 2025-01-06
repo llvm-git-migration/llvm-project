@@ -1236,7 +1236,7 @@ define half @v_fneg_inv2pi_minnum_f16(half %a) #0 {
 ; GFX11-NEXT:    v_min_f16_e32 v0, 0.15915494, v0
 ; GFX11-NEXT:    v_xor_b32_e32 v0, 0x8000, v0
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
-  %min = call half @llvm.minnum.f16(half 0xH3118, half %a)
+  %min = call half @llvm.minnum.f16(half f0x3118, half %a)
   %fneg = fneg half %min
   ret half %fneg
 }
@@ -1266,7 +1266,7 @@ define half @v_fneg_neg_inv2pi_minnum_f16(half %a) #0 {
 ; GFX11-NEXT:    v_min_f16_e32 v0, 0.15915494, v0
 ; GFX11-NEXT:    v_xor_b32_e32 v0, 0x8000, v0
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
-  %min = call half @llvm.minnum.f16(half 0xH3118, half %a)
+  %min = call half @llvm.minnum.f16(half f0x3118, half %a)
   %fneg = fneg half %min
   ret half %fneg
 }
@@ -1358,7 +1358,7 @@ define half @v_fneg_inv2pi_minnum_foldable_use_f16(half %a, half %b) #0 {
 ; GFX11-NEXT:    v_min_f16_e32 v0, 0.15915494, v0
 ; GFX11-NEXT:    v_mul_f16_e64 v0, -v0, v1
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
-  %min = call half @llvm.minnum.f16(half 0xH3118, half %a)
+  %min = call half @llvm.minnum.f16(half f0x3118, half %a)
   %fneg = fneg half %min
   %mul = fmul half %fneg, %b
   ret half %mul

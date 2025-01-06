@@ -30,7 +30,7 @@
   target datalayout = "e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-f64:32:64-f80:32-n8:16:32-S128"
   target triple = "i386-unknown-linux-gnu"
   
-  @glob = dso_local local_unnamed_addr global x86_fp80 0xK3FFF9DF3B645A1CAC000, align 4, !dbg !0
+  @glob = dso_local local_unnamed_addr global x86_fp80 f0x3FFF9DF3B645A1CAC000, align 4, !dbg !0
   
   ; Function Attrs: nounwind
   define dso_local x86_fp80 @foo(x86_fp80 %a, x86_fp80 %b, x86_fp80 %c) local_unnamed_addr !dbg !13 {
@@ -46,7 +46,7 @@
     call void @llvm.dbg.value(metadata x86_fp80 %mul, metadata !17, metadata !DIExpression()), !dbg !20
     %call2 = tail call x86_fp80 @ext() #3, !dbg !24
     call void @llvm.dbg.value(metadata x86_fp80 undef, metadata !18, metadata !DIExpression()), !dbg !20
-    %cmp = fcmp olt x86_fp80 %mul, 0xK4001A000000000000000, !dbg !25
+    %cmp = fcmp olt x86_fp80 %mul, f0x4001A000000000000000, !dbg !25
     %0 = load x86_fp80, ptr @glob, align 4, !dbg !27
     %add3 = fadd x86_fp80 %mul, %0, !dbg !27
     %a.addr.0 = select i1 %cmp, x86_fp80 %add3, x86_fp80 %mul, !dbg !27

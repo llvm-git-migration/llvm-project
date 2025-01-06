@@ -43,6 +43,6 @@ body:             |
     ; CHECK: [[LDRHui:%[0-9]+]]:fpr16 = LDRHui [[ADRP]], target-flags(aarch64-pageoff, aarch64-nc) %const.0 :: (load (s16) from constant-pool)
     ; CHECK: $h0 = COPY [[LDRHui]]
     ; CHECK: RET_ReallyLR implicit $h0
-    %0:fpr(s16) = G_FCONSTANT half 0xH000B
+    %0:fpr(s16) = G_FCONSTANT half f0x000B
     $h0 = COPY %0(s16)
     RET_ReallyLR implicit $h0

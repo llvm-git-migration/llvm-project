@@ -475,15 +475,15 @@ declare dso_local spir_func float @_Z30sub_group_clustered_reduce_maxfj(float, i
 ; CHECK-SPIRV: OpFunctionEnd
 
 define dso_local spir_kernel void @testClusteredArithmeticHalf(half addrspace(1)* nocapture) local_unnamed_addr {
-  %2 = tail call spir_func half @_Z30sub_group_clustered_reduce_addDhj(half 0xH0000, i32 2)
+  %2 = tail call spir_func half @_Z30sub_group_clustered_reduce_addDhj(half f0x0000, i32 2)
   store half %2, half addrspace(1)* %0, align 2
-  %3 = tail call spir_func half @_Z30sub_group_clustered_reduce_mulDhj(half 0xH0000, i32 2)
+  %3 = tail call spir_func half @_Z30sub_group_clustered_reduce_mulDhj(half f0x0000, i32 2)
   %4 = getelementptr inbounds half, half addrspace(1)* %0, i64 1
   store half %3, half addrspace(1)* %4, align 2
-  %5 = tail call spir_func half @_Z30sub_group_clustered_reduce_minDhj(half 0xH0000, i32 2)
+  %5 = tail call spir_func half @_Z30sub_group_clustered_reduce_minDhj(half f0x0000, i32 2)
   %6 = getelementptr inbounds half, half addrspace(1)* %0, i64 2
   store half %5, half addrspace(1)* %6, align 2
-  %7 = tail call spir_func half @_Z30sub_group_clustered_reduce_maxDhj(half 0xH0000, i32 2)
+  %7 = tail call spir_func half @_Z30sub_group_clustered_reduce_maxDhj(half f0x0000, i32 2)
   %8 = getelementptr inbounds half, half addrspace(1)* %0, i64 3
   store half %7, half addrspace(1)* %8, align 2
   ret void

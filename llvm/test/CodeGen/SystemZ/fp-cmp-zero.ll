@@ -79,7 +79,7 @@ define i64 @f4m(i64 %a, i64 %b, double %V) {
 define i64 @f5(i64 %a, i64 %b, fp128 %V, ptr %dst) {
 ; CHECK-LABEL: f5:
 ; CHECK: ltxbr %f1, %f0
-  %cond = fcmp oeq fp128 %V, 0xL00000000000000008000000000000000
+  %cond = fcmp oeq fp128 %V, f0x80000000000000000000000000000000
   %res = select i1 %cond, i64 %a, i64 %b
   store volatile fp128 %V, ptr %dst
   ret i64 %res
@@ -88,7 +88,7 @@ define i64 @f5(i64 %a, i64 %b, fp128 %V, ptr %dst) {
 define i64 @f6(i64 %a, i64 %b, fp128 %V) {
 ; CHECK-LABEL: f6:
 ; CHECK: ltxbr %f0, %f0
-  %cond = fcmp oeq fp128 %V, 0xL00000000000000008000000000000000
+  %cond = fcmp oeq fp128 %V, f0x80000000000000000000000000000000
   %res = select i1 %cond, i64 %a, i64 %b
   ret i64 %res
 }

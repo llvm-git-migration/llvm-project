@@ -69,9 +69,9 @@ define i32 @fsub(i32 %arg) {
 
 define i32 @fneg_idiom(i32 %arg) {
 ; CHECK-LABEL: 'fneg_idiom'
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %F16 = fsub half 0xH8000, undef
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V4F16 = fsub <4 x half> splat (half 0xH8000), undef
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V8F16 = fsub <8 x half> splat (half 0xH8000), undef
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %F16 = fsub half f0x8000, undef
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V4F16 = fsub <4 x half> splat (half f0x8000), undef
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V8F16 = fsub <8 x half> splat (half f0x8000), undef
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %F32 = fsub float -0.000000e+00, undef
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V2F32 = fsub <2 x float> splat (float -0.000000e+00), undef
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %V4F32 = fsub <4 x float> splat (float -0.000000e+00), undef

@@ -3,7 +3,7 @@
 target datalayout = "E-m:e-p:32:32-i64:64-n32"
 target triple = "powerpc-buildroot-linux-gnu"
 
-@x = global ppc_fp128 0xM3FF00000000000000000000000000000, align 16
+@x = global ppc_fp128 f0x00000000000000003FF0000000000000, align 16
 @.str = private unnamed_addr constant [9 x i8] c"%Lf %Lf\0A\00", align 1
 
 define void @foo() #0 {

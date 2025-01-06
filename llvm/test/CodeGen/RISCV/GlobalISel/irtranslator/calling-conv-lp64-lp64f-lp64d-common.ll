@@ -108,7 +108,7 @@ define i64 @caller_i128_fp128_in_regs() nounwind {
   ; LP64-LABEL: name: caller_i128_fp128_in_regs
   ; LP64: bb.1 (%ir-block.0):
   ; LP64-NEXT:   [[C:%[0-9]+]]:_(s128) = G_CONSTANT i128 1
-  ; LP64-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 0xL00000000000000007FFF000000000000
+  ; LP64-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 f0x7FFF0000000000000000000000000000
   ; LP64-NEXT:   ADJCALLSTACKDOWN 0, 0, implicit-def $x2, implicit $x2
   ; LP64-NEXT:   [[UV:%[0-9]+]]:_(s64), [[UV1:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C]](s128)
   ; LP64-NEXT:   [[UV2:%[0-9]+]]:_(s64), [[UV3:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C1]](s128)
@@ -125,7 +125,7 @@ define i64 @caller_i128_fp128_in_regs() nounwind {
   ; LP64F-LABEL: name: caller_i128_fp128_in_regs
   ; LP64F: bb.1 (%ir-block.0):
   ; LP64F-NEXT:   [[C:%[0-9]+]]:_(s128) = G_CONSTANT i128 1
-  ; LP64F-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 0xL00000000000000007FFF000000000000
+  ; LP64F-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 f0x7FFF0000000000000000000000000000
   ; LP64F-NEXT:   ADJCALLSTACKDOWN 0, 0, implicit-def $x2, implicit $x2
   ; LP64F-NEXT:   [[UV:%[0-9]+]]:_(s64), [[UV1:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C]](s128)
   ; LP64F-NEXT:   [[UV2:%[0-9]+]]:_(s64), [[UV3:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C1]](s128)
@@ -142,7 +142,7 @@ define i64 @caller_i128_fp128_in_regs() nounwind {
   ; LP64D-LABEL: name: caller_i128_fp128_in_regs
   ; LP64D: bb.1 (%ir-block.0):
   ; LP64D-NEXT:   [[C:%[0-9]+]]:_(s128) = G_CONSTANT i128 1
-  ; LP64D-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 0xL00000000000000007FFF000000000000
+  ; LP64D-NEXT:   [[C1:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 f0x7FFF0000000000000000000000000000
   ; LP64D-NEXT:   ADJCALLSTACKDOWN 0, 0, implicit-def $x2, implicit $x2
   ; LP64D-NEXT:   [[UV:%[0-9]+]]:_(s64), [[UV1:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C]](s128)
   ; LP64D-NEXT:   [[UV2:%[0-9]+]]:_(s64), [[UV3:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C1]](s128)
@@ -155,7 +155,7 @@ define i64 @caller_i128_fp128_in_regs() nounwind {
   ; LP64D-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $x10
   ; LP64D-NEXT:   $x10 = COPY [[COPY]](s64)
   ; LP64D-NEXT:   PseudoRET implicit $x10
-  %1 = call i64 @callee_i128_fp128_in_regs(i128 1, fp128 0xL00000000000000007FFF000000000000)
+  %1 = call i64 @callee_i128_fp128_in_regs(i128 1, fp128 f0x7FFF0000000000000000000000000000)
   ret i64 %1
 }
 
@@ -910,12 +910,12 @@ define i64 @caller_small_scalar_ret() nounwind {
 define fp128 @callee_fp128_ret() nounwind {
   ; RV64I-LABEL: name: callee_fp128_ret
   ; RV64I: bb.1 (%ir-block.0):
-  ; RV64I-NEXT:   [[C:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 0xL00000000000000007FFF000000000000
+  ; RV64I-NEXT:   [[C:%[0-9]+]]:_(s128) = G_FCONSTANT fp128 f0x7FFF0000000000000000000000000000
   ; RV64I-NEXT:   [[UV:%[0-9]+]]:_(s64), [[UV1:%[0-9]+]]:_(s64) = G_UNMERGE_VALUES [[C]](s128)
   ; RV64I-NEXT:   $x10 = COPY [[UV]](s64)
   ; RV64I-NEXT:   $x11 = COPY [[UV1]](s64)
   ; RV64I-NEXT:   PseudoRET implicit $x10, implicit $x11
-  ret fp128 0xL00000000000000007FFF000000000000
+  ret fp128 f0x7FFF0000000000000000000000000000
 }
 
 define void @caller_fp128_ret() nounwind {

@@ -41,7 +41,7 @@ define fp128 @test_v1f128(<1 x fp128> %a) nounwind {
 ; CHECK-LABEL: test_v1f128:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ret
-  %b = call reassoc fp128 @llvm.vector.reduce.fadd.f128.v1f128(fp128 0xL00000000000000008000000000000000, <1 x fp128> %a)
+  %b = call reassoc fp128 @llvm.vector.reduce.fadd.f128.v1f128(fp128 f0x80000000000000000000000000000000, <1 x fp128> %a)
   ret fp128 %b
 }
 
@@ -82,7 +82,7 @@ define fp128 @test_v2f128(<2 x fp128> %a) nounwind {
 ; CHECK-LABEL: test_v2f128:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    b __addtf3
-  %b = call reassoc fp128 @llvm.vector.reduce.fadd.f128.v2f128(fp128 0xL00000000000000008000000000000000, <2 x fp128> %a)
+  %b = call reassoc fp128 @llvm.vector.reduce.fadd.f128.v2f128(fp128 f0x80000000000000000000000000000000, <2 x fp128> %a)
   ret fp128 %b
 }
 

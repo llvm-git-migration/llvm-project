@@ -16,6 +16,6 @@ define void @f1(ptr %x) {
 ;
 ; CONST: .quad 0x3fff000000000000
 ; CONST: .quad 0x0800000000000000
-  store fp128 0xL08000000000000003fff000000000000, ptr %x
+  store fp128 f0x3fff0000000000000800000000000000, ptr %x
   ret void
 }

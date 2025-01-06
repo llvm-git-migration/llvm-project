@@ -995,7 +995,7 @@ define x86_fp80 @test17(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp ugt i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1037,7 +1037,7 @@ define x86_fp80 @test18(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp uge i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1079,7 +1079,7 @@ define x86_fp80 @test19(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp ult i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1121,7 +1121,7 @@ define x86_fp80 @test20(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp ule i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1168,7 +1168,7 @@ define x86_fp80 @test21(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    retl
 ; We don't emit a branch for fp80, why?
   %cmp = icmp sgt i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1214,7 +1214,7 @@ define x86_fp80 @test22(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp sge i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1260,7 +1260,7 @@ define x86_fp80 @test23(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp slt i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }
 
@@ -1306,6 +1306,6 @@ define x86_fp80 @test24(i32 %a, i32 %b, x86_fp80 %x) nounwind {
 ; NOCMOV-NEXT:    fstp %st(1)
 ; NOCMOV-NEXT:    retl
   %cmp = icmp sle i32 %a, %b
-  %sel = select i1 %cmp, x86_fp80 0xK4005C600000000000000, x86_fp80 %x
+  %sel = select i1 %cmp, x86_fp80 f0x4005C600000000000000, x86_fp80 %x
   ret x86_fp80 %sel
 }

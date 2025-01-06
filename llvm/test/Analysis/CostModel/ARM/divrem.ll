@@ -279,36 +279,36 @@ define void @f16() {
 ; CHECK-NEON-LABEL: 'f16'
 ; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv half undef, undef
 ; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem half undef, undef
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %3 = fdiv half undef, 0xH4000
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %4 = frem half undef, 0xH4000
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %3 = fdiv half undef, f0x4000
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %4 = frem half undef, f0x4000
 ; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVE-LABEL: 'f16'
 ; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %1 = fdiv half undef, undef
 ; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %2 = frem half undef, undef
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, 0xH4000
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, 0xH4000
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, f0x4000
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, f0x4000
 ; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-V8M-MAIN-LABEL: 'f16'
 ; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %1 = fdiv half undef, undef
 ; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %2 = frem half undef, undef
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, 0xH4000
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, 0xH4000
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, f0x4000
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, f0x4000
 ; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret void
 ;
 ; CHECK-V8M-BASE-LABEL: 'f16'
 ; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %1 = fdiv half undef, undef
 ; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %2 = frem half undef, undef
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, 0xH4000
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, 0xH4000
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %3 = fdiv half undef, f0x4000
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: %4 = frem half undef, f0x4000
 ; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret void
 ;
 ; CHECK-V8R-LABEL: 'f16'
 ; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv half undef, undef
 ; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem half undef, undef
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %3 = fdiv half undef, 0xH4000
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %4 = frem half undef, 0xH4000
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %3 = fdiv half undef, f0x4000
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %4 = frem half undef, f0x4000
 ; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
   %1 = fdiv half undef, undef
@@ -1491,48 +1491,48 @@ define void @vi64_2() {
 
 define void @vf16_2() {
 ; CHECK-NEON-LABEL: 'vf16_2'
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half 0xH4000)
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %2 = frem <2 x half> undef, splat (half 0xH4000)
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half 0xH4000)
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %4 = frem <4 x half> undef, splat (half 0xH4000)
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half 0xH4000)
-; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 48 for instruction: %6 = frem <8 x half> undef, splat (half 0xH4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half f0x4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %2 = frem <2 x half> undef, splat (half f0x4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half f0x4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %4 = frem <4 x half> undef, splat (half f0x4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half f0x4000)
+; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 48 for instruction: %6 = frem <8 x half> undef, splat (half f0x4000)
 ; CHECK-NEON-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVE-LABEL: 'vf16_2'
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half 0xH4000)
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %2 = frem <2 x half> undef, splat (half 0xH4000)
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half 0xH4000)
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %4 = frem <4 x half> undef, splat (half 0xH4000)
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half 0xH4000)
-; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %6 = frem <8 x half> undef, splat (half 0xH4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half f0x4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %2 = frem <2 x half> undef, splat (half f0x4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half f0x4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %4 = frem <4 x half> undef, splat (half f0x4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half f0x4000)
+; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %6 = frem <8 x half> undef, splat (half f0x4000)
 ; CHECK-MVE-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-V8M-MAIN-LABEL: 'vf16_2'
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %3 = fdiv <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %4 = frem <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %5 = fdiv <8 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %6 = frem <8 x half> undef, splat (half 0xH4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv <2 x half> undef, splat (half f0x4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem <2 x half> undef, splat (half f0x4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %3 = fdiv <4 x half> undef, splat (half f0x4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %4 = frem <4 x half> undef, splat (half f0x4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %5 = fdiv <8 x half> undef, splat (half f0x4000)
+; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %6 = frem <8 x half> undef, splat (half f0x4000)
 ; CHECK-V8M-MAIN-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret void
 ;
 ; CHECK-V8M-BASE-LABEL: 'vf16_2'
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %3 = fdiv <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %4 = frem <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %5 = fdiv <8 x half> undef, splat (half 0xH4000)
-; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %6 = frem <8 x half> undef, splat (half 0xH4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %1 = fdiv <2 x half> undef, splat (half f0x4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %2 = frem <2 x half> undef, splat (half f0x4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %3 = fdiv <4 x half> undef, splat (half f0x4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %4 = frem <4 x half> undef, splat (half f0x4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %5 = fdiv <8 x half> undef, splat (half f0x4000)
+; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %6 = frem <8 x half> undef, splat (half f0x4000)
 ; CHECK-V8M-BASE-NEXT:  Cost Model: Found an estimated cost of 1 for instruction: ret void
 ;
 ; CHECK-V8R-LABEL: 'vf16_2'
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %2 = frem <2 x half> undef, splat (half 0xH4000)
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %4 = frem <4 x half> undef, splat (half 0xH4000)
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half 0xH4000)
-; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 48 for instruction: %6 = frem <8 x half> undef, splat (half 0xH4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %1 = fdiv <2 x half> undef, splat (half f0x4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %2 = frem <2 x half> undef, splat (half f0x4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %3 = fdiv <4 x half> undef, splat (half f0x4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %4 = frem <4 x half> undef, splat (half f0x4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %5 = fdiv <8 x half> undef, splat (half f0x4000)
+; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 48 for instruction: %6 = frem <8 x half> undef, splat (half f0x4000)
 ; CHECK-V8R-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
   %1 = fdiv <2 x half> undef, <half 2., half 2.>

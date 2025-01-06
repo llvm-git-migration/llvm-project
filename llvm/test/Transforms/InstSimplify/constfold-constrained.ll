@@ -339,7 +339,7 @@ entry:
 define half @fadd_10() #0 {
 ; CHECK-LABEL: @fadd_10(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    ret half 0xH4200
+; CHECK-NEXT:    ret half f0x4200
 ;
 entry:
   %result = call half @llvm.experimental.constrained.fadd.f16(half 1.0, half 2.0, metadata !"round.tonearest", metadata !"fpexcept.ignore") #0
@@ -349,7 +349,7 @@ entry:
 define bfloat @fadd_11() #0 {
 ; CHECK-LABEL: @fadd_11(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    ret bfloat 0xR4040
+; CHECK-NEXT:    ret bfloat f0x4040
 ;
 entry:
   %result = call bfloat @llvm.experimental.constrained.fadd.bf16(bfloat 1.0, bfloat 2.0, metadata !"round.tonearest", metadata !"fpexcept.ignore") #0

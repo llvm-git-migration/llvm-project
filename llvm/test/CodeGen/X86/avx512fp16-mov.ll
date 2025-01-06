@@ -2015,7 +2015,7 @@ define <8 x half> @test21(half %a, half %b, half %c) nounwind {
 ; X86-NEXT:    vpbroadcastw %xmm1, %xmm1
 ; X86-NEXT:    vshufps {{.*#+}} xmm0 = xmm0[0,1],xmm1[0,0]
 ; X86-NEXT:    retl
-  %1 = insertelement <8 x half> <half poison, half poison, half poison, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000>, half %a, i32 0
+  %1 = insertelement <8 x half> <half poison, half poison, half poison, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000>, half %a, i32 0
   %2 = insertelement <8 x half> %1, half %b, i32 1
   %3 = insertelement <8 x half> %2, half %c, i32 2
   ret <8 x half> %3

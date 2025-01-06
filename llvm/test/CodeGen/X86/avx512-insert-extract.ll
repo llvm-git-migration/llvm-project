@@ -2206,7 +2206,7 @@ define void @test_concat_v2i1(ptr %arg, ptr %arg1, ptr %arg2) nounwind {
 ; SKX-NEXT:    vzeroupper
 ; SKX-NEXT:    retq
   %tmp = load <2 x half>, ptr %arg, align 8
-  %tmp3 = fcmp fast olt <2 x half> %tmp, <half 0xH4600, half 0xH4600>
+  %tmp3 = fcmp fast olt <2 x half> %tmp, <half f0x4600, half f0x4600>
   %tmp4 = fcmp fast ogt <2 x half> %tmp, zeroinitializer
   %tmp5 = and <2 x i1> %tmp3, %tmp4
   %tmp6 = load <2 x half>, ptr %arg1, align 8

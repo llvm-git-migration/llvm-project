@@ -113,7 +113,7 @@ define i32 @f10(fp128 %x) {
 ; CHECK-LABEL: f10
 ; CHECK: tcxb %f0, 3279
   %y = call fp128 @llvm.fabs.f128(fp128 %x)
-  %res = fcmp ult fp128 %y, 0xL00000000000000000001000000000000
+  %res = fcmp ult fp128 %y, f0x00010000000000000000000000000000
   %xres = zext i1 %res to i32
   ret i32 %xres
 }

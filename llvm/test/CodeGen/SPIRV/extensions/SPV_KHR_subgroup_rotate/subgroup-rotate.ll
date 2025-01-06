@@ -279,7 +279,7 @@ entry:
   %dst.addr = alloca ptr addrspace(1), align 4
   %v = alloca half, align 2
   store ptr addrspace(1) %dst, ptr %dst.addr, align 4
-  store half 0xH0000, ptr %v, align 2
+  store half f0x0000, ptr %v, align 2
   %value = load half, ptr %v, align 2
   ; CHECK: OpGroupNonUniformRotateKHR %[[TyHalf]] %[[ScopeSubgroup]] %[[#]] %[[ConstInt2]]
   %call = call spir_func half @_Z16sub_group_rotateDhi(half noundef %value, i32 noundef 2) #2

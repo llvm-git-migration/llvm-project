@@ -166,7 +166,7 @@ define dso_local spir_kernel void @testSubGroupNonUniformAllEqual(i32 addrspace(
   store i32 %9, i32 addrspace(1)* %0, align 4
   %10 = tail call spir_func i32 @_Z31sub_group_non_uniform_all_equalf(float 0.000000e+00)
   store i32 %10, i32 addrspace(1)* %0, align 4
-  %11 = tail call spir_func i32 @_Z31sub_group_non_uniform_all_equalDh(half 0xH0000)
+  %11 = tail call spir_func i32 @_Z31sub_group_non_uniform_all_equalDh(half f0x0000)
   store i32 %11, i32 addrspace(1)* %0, align 4
   %12 = tail call spir_func i32 @_Z31sub_group_non_uniform_all_equald(double 0.000000e+00)
   store i32 %12, i32 addrspace(1)* %0, align 4

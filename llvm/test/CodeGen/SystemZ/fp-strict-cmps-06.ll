@@ -31,7 +31,7 @@ define i64 @f2(i64 %a, i64 %b, ptr %ptr) #0 {
 ; CHECK: br %r14
   %f = load fp128, ptr %ptr
   %cond = call i1 @llvm.experimental.constrained.fcmps.f128(
-                                               fp128 %f, fp128 0xL00000000000000000000000000000000,
+                                               fp128 %f, fp128 f0x00000000000000000000000000000000,
                                                metadata !"oeq",
                                                metadata !"fpexcept.strict") #0
   %res = select i1 %cond, i64 %a, i64 %b

@@ -285,7 +285,7 @@ define i32 @caller_large_scalars() nounwind {
 ; RV32I-WITHFP-NEXT:    lw s0, 40(sp) # 4-byte Folded Reload
 ; RV32I-WITHFP-NEXT:    addi sp, sp, 48
 ; RV32I-WITHFP-NEXT:    ret
-  %1 = call i32 @callee_large_scalars(i128 1, fp128 0xL00000000000000007FFF000000000000)
+  %1 = call i32 @callee_large_scalars(i128 1, fp128 f0x7FFF0000000000000000000000000000)
   ret i32 %1
 }
 
@@ -415,7 +415,7 @@ define i32 @caller_large_scalars_exhausted_regs() nounwind {
 ; RV32I-WITHFP-NEXT:    ret
   %1 = call i32 @callee_large_scalars_exhausted_regs(
       i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i128 8, i32 9,
-      fp128 0xL00000000000000007FFF000000000000)
+      fp128 f0x7FFF0000000000000000000000000000)
   ret i32 %1
 }
 
@@ -745,7 +745,7 @@ define void @caller_aligned_stack() nounwind {
 ; RV32I-WITHFP-NEXT:    addi sp, sp, 64
 ; RV32I-WITHFP-NEXT:    ret
   %1 = call i32 @callee_aligned_stack(i32 1, i32 11,
-    fp128 0xLEB851EB851EB851F400091EB851EB851, i32 12, i32 13,
+    fp128 f0x400091EB851EB851EB851EB851EB851F, i32 12, i32 13,
     i64 20000000000, i32 14, i32 15, i64 16, i32 17,
     [2 x i32] [i32 18, i32 19])
   ret void
@@ -902,7 +902,7 @@ define fp128 @callee_large_scalar_ret() nounwind {
 ; RV32I-WITHFP-NEXT:    lw s0, 8(sp) # 4-byte Folded Reload
 ; RV32I-WITHFP-NEXT:    addi sp, sp, 16
 ; RV32I-WITHFP-NEXT:    ret
-  ret fp128 0xL00000000000000007FFF000000000000
+  ret fp128 f0x7FFF0000000000000000000000000000
 }
 
 define void @caller_large_scalar_ret() nounwind {

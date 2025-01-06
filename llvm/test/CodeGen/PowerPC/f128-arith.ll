@@ -310,7 +310,7 @@ define dso_local void @qpNAbs(ptr nocapture readonly %a, ptr nocapture %res) {
 entry:
   %0 = load fp128, ptr %a, align 16
   %1 = tail call fp128 @llvm.fabs.f128(fp128 %0)
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %1
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %1
   store fp128 %neg, ptr %res, align 16
   ret void
 
@@ -337,7 +337,7 @@ define dso_local void @qpNeg(ptr nocapture readonly %a, ptr nocapture %res) {
 ; CHECK-P8-NEXT:    blr
 entry:
   %0 = load fp128, ptr %a, align 16
-  %sub = fsub fp128 0xL00000000000000008000000000000000, %0
+  %sub = fsub fp128 f0x80000000000000000000000000000000, %0
   store fp128 %sub, ptr %res, align 16
   ret void
 
@@ -846,8 +846,8 @@ entry:
 }
 declare fp128 @llvm.powi.f128.i32(fp128 %Val, i32 %power)
 
-@a = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
-@b = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
+@a = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
+@b = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
 
 define fp128 @qp_frem() #0 {
 ; CHECK-LABEL: qp_frem:

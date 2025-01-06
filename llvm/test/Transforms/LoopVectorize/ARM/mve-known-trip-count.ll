@@ -611,7 +611,7 @@ while.body:                                       ; preds = %while.body.preheade
   %incdec.ptr = getelementptr inbounds i8, ptr %pIn.07, i32 2
   %0 = load i16, ptr %pIn.07, align 2
   %conv1 = sitofp i16 %0 to half
-  %1 = fmul fast half %conv1, 0xH0200
+  %1 = fmul fast half %conv1, f0x0200
   %incdec.ptr2 = getelementptr inbounds i8, ptr %pDst.addr.06, i32 2
   store half %1, ptr %pDst.addr.06, align 2
   %dec = add nsw i32 %blkCnt.08, -1

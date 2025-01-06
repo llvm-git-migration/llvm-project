@@ -69,7 +69,7 @@ target triple = "x86_64-unknown-linux-gnu"
 ; SKX-NEXT:    fstpt 20(%rdi)
 ; SKX-NEXT:    retq
  bb:
-   %tmp = select <4 x i1> %m, <4 x x86_fp80> <x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK3FFF8000000000000000, x86_fp80             0xK3FFF8000000000000000>, <4 x x86_fp80> zeroinitializer
+   %tmp = select <4 x i1> %m, <4 x x86_fp80> <x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x3FFF8000000000000000, x86_fp80             f0x3FFF8000000000000000>, <4 x x86_fp80> zeroinitializer
    store <4 x x86_fp80> %tmp, ptr %p, align 16
    ret void
  }

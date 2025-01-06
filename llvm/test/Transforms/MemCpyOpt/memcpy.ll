@@ -24,7 +24,7 @@ define void @test1(ptr sret(%0)  %agg.result, x86_fp80 %z.0, x86_fp80 %z.1) noun
 ; CHECK-NEXT:  entry:
 ; CHECK-NEXT:    [[TMP2:%.*]] = alloca [[TMP0:%.*]], align 16
 ; CHECK-NEXT:    [[MEMTMP:%.*]] = alloca [[TMP0]], align 16
-; CHECK-NEXT:    [[TMP5:%.*]] = fsub x86_fp80 0xK80000000000000000000, [[Z_1:%.*]]
+; CHECK-NEXT:    [[TMP5:%.*]] = fsub x86_fp80 f0x80000000000000000000, [[Z_1:%.*]]
 ; CHECK-NEXT:    call void @ccoshl(ptr sret([[TMP0]]) [[TMP2]], x86_fp80 [[TMP5]], x86_fp80 [[Z_0:%.*]]) #[[ATTR2:[0-9]+]]
 ; CHECK-NEXT:    call void @llvm.memcpy.p0.p0.i32(ptr align 16 [[AGG_RESULT:%.*]], ptr align 16 [[TMP2]], i32 32, i1 false)
 ; CHECK-NEXT:    ret void
@@ -32,7 +32,7 @@ define void @test1(ptr sret(%0)  %agg.result, x86_fp80 %z.0, x86_fp80 %z.1) noun
 entry:
   %tmp2 = alloca %0
   %memtmp = alloca %0, align 16
-  %tmp5 = fsub x86_fp80 0xK80000000000000000000, %z.1
+  %tmp5 = fsub x86_fp80 f0x80000000000000000000, %z.1
   call void @ccoshl(ptr sret(%0) %memtmp, x86_fp80 %tmp5, x86_fp80 %z.0) nounwind
   call void @llvm.memcpy.p0.p0.i32(ptr align 16 %tmp2, ptr align 16 %memtmp, i32 32, i1 false)
   call void @llvm.memcpy.p0.p0.i32(ptr align 16 %agg.result, ptr align 16 %tmp2, i32 32, i1 false)

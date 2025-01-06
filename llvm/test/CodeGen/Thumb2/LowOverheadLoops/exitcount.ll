@@ -69,7 +69,7 @@ do.body6:                                         ; preds = %do.body6, %do.end
   %8 = tail call <8 x i1> @llvm.arm.mve.vctp16(i32 %blkCnt.1)
   %9 = tail call <8 x i16> @llvm.masked.load.v8i16.p0(ptr %px.0, i32 2, <8 x i1> %8, <8 x i16> zeroinitializer)
   %10 = tail call fast <8 x half> @llvm.arm.mve.vcvt.fp.int.predicated.v8f16.v8i16.v8i1(<8 x i16> %9, i32 0, <8 x i1> %8, <8 x half> undef)
-  %11 = tail call fast <8 x half> @llvm.arm.mve.mul.predicated.v8f16.v8i1(<8 x half> %10, <8 x half> <half 0xH1800, half 0xH1800, half 0xH1800, half 0xH1800, half 0xH1800, half 0xH1800, half 0xH1800, half 0xH1800>, <8 x i1> %8, <8 x half> undef)
+  %11 = tail call fast <8 x half> @llvm.arm.mve.mul.predicated.v8f16.v8i1(<8 x half> %10, <8 x half> <half f0x1800, half f0x1800, half f0x1800, half f0x1800, half f0x1800, half f0x1800, half f0x1800, half f0x1800>, <8 x i1> %8, <8 x half> undef)
   tail call void @llvm.masked.store.v8f16.p0(<8 x half> %11, ptr %pframef16.1, i32 2, <8 x i1> %8)
   %add.ptr8 = getelementptr inbounds i16, ptr %px.0, i32 8
   %add.ptr9 = getelementptr inbounds half, ptr %pframef16.1, i32 8

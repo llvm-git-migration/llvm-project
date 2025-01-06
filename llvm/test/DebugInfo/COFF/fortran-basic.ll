@@ -117,7 +117,7 @@ alloca_0:
   call void @llvm.for.cpystr.i64.i64.i64(ptr getelementptr inbounds ([18 x i8], ptr @COM, i32 0, i64 12), i64 6, ptr @strlit, i64 3, i64 0, i1 false), !dbg !47
   store %complex_64bit { float 0x40219999A0000000, float 0x3FF19999A0000000 }, ptr %"ARRAY$CMP8", align 8, !dbg !48
   store %complex_128bit { double 0x403028F5C0000000, double 0x40019999A0000000 }, ptr %"ARRAY$CMP16", align 8, !dbg !49
-  store %complex_256bit { fp128 0xL00000000000000004004028F5C000000, fp128 0xL00000000000000004000A66666000000 }, ptr %"ARRAY$CMP32", align 16, !dbg !50
+  store %complex_256bit { fp128 f0x4004028F5C0000000000000000000000, fp128 f0x4000A666660000000000000000000000 }, ptr %"ARRAY$CMP32", align 16, !dbg !50
   ret void, !dbg !51
 }
 

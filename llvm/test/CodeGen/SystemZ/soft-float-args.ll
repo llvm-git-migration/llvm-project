@@ -49,7 +49,7 @@ define fp128 @f2_fp128(fp128 %arg) {
 ; CHECK-NEXT: lg      %r3, 200(%r15)
 ; CHECK-NEXT: lmg     %r14, %r15, 320(%r15)
 ; CHECK-NEXT: br      %r14
-  %res = fadd fp128 %arg, 0xL00000000000000004001400000000000
+  %res = fadd fp128 %arg, f0x40014000000000000000000000000000
   ret fp128 %res
 }
 

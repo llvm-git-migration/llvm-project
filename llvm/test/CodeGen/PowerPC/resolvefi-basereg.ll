@@ -340,7 +340,7 @@ if.end:                                           ; preds = %if.then, %entry
   call void @llvm.memcpy.p0.p0.i64(ptr align 16 %agg.tmp117, ptr align 16 @s1998, i64 5168, i1 false)
   call void @llvm.memcpy.p0.p0.i64(ptr align 16 %agg.tmp118, ptr align 16 getelementptr inbounds ([5 x %struct.S1998], ptr @a1998, i32 0, i64 2), i64 5168, i1 false)
   call void @llvm.memcpy.p0.p0.i64(ptr align 16 %agg.tmp119, ptr align 16 @s1998, i64 5168, i1 false)
-  call void (i32, ...) @check1998va(i32 signext 2, ptr byval(%struct.S1998) align 16 %agg.tmp116, ptr byval(%struct.S1998) align 16 %agg.tmp117, ppc_fp128 0xM40000000000000000000000000000000, ptr byval(%struct.S1998) align 16 %agg.tmp118, ptr byval(%struct.S1998) align 16 %agg.tmp119)
+  call void (i32, ...) @check1998va(i32 signext 2, ptr byval(%struct.S1998) align 16 %agg.tmp116, ptr byval(%struct.S1998) align 16 %agg.tmp117, ppc_fp128 f0x00000000000000004000000000000000, ptr byval(%struct.S1998) align 16 %agg.tmp118, ptr byval(%struct.S1998) align 16 %agg.tmp119)
   ret void
 }
 

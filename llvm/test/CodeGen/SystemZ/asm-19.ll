@@ -27,7 +27,7 @@ define fp128 @f3() {
 ; CHECK: blah %v1 %v0
 ; CHECK: vst %v1, 0(%r2)
 ; CHECK: br %r14
-  %val = call fp128 asm "blah $0 $1", "=&v,v" (fp128 0xL00000000000000000000000000000000)
+  %val = call fp128 asm "blah $0 $1", "=&v,v" (fp128 f0x00000000000000000000000000000000)
   ret fp128 %val
 }
 
@@ -112,7 +112,7 @@ define fp128 @f12() {
 ; CHECK: blah %v4
 ; CHECK: vst %v4, 0(%r2)
 ; CHECK: br %r14
-  %ret = call fp128 asm "blah $0", "={v4},0" (fp128 0xL00000000000000000000000000000000)
+  %ret = call fp128 asm "blah $0", "={v4},0" (fp128 f0x00000000000000000000000000000000)
   ret fp128 %ret
 }
 

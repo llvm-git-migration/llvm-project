@@ -32,7 +32,7 @@ define dso_local i16 @t2(half %a) {
 ; CHECK-NEXT:    csetm w0, eq
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fcmp oeq half %a, 0xH0000
+  %0 = fcmp oeq half %a, f0x0000
   %vceqz = sext i1 %0 to i16
   ret i16 %vceqz
 }
@@ -44,7 +44,7 @@ define dso_local i16 @t3(half %a) {
 ; CHECK-NEXT:    csetm w0, ge
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fcmp oge half %a, 0xH0000
+  %0 = fcmp oge half %a, f0x0000
   %vcgez = sext i1 %0 to i16
   ret i16 %vcgez
 }
@@ -56,7 +56,7 @@ define dso_local i16 @t4(half %a) {
 ; CHECK-NEXT:    csetm w0, gt
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fcmp ogt half %a, 0xH0000
+  %0 = fcmp ogt half %a, f0x0000
   %vcgtz = sext i1 %0 to i16
   ret i16 %vcgtz
 }
@@ -68,7 +68,7 @@ define dso_local i16 @t5(half %a) {
 ; CHECK-NEXT:    csetm w0, ls
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fcmp ole half %a, 0xH0000
+  %0 = fcmp ole half %a, f0x0000
   %vclez = sext i1 %0 to i16
   ret i16 %vclez
 }
@@ -80,7 +80,7 @@ define dso_local i16 @t6(half %a) {
 ; CHECK-NEXT:    csetm w0, mi
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fcmp olt half %a, 0xH0000
+  %0 = fcmp olt half %a, f0x0000
   %vcltz = sext i1 %0 to i16
   ret i16 %vcltz
 }

@@ -5,8 +5,8 @@
 ; RUN:   -ppc-asm-full-reg-names -ppc-vsr-nums-as-vr < %s | FileCheck %s \
 ; RUN:   -check-prefix=CHECK-P8
 
-@a_qp = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
-@b_qp = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
+@a_qp = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
+@b_qp = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
 
 ; Function Attrs: noinline nounwind optnone
 define dso_local signext i32 @greater_qp() {

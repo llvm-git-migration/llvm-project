@@ -14,7 +14,7 @@ CF77:                                             ; preds = %CF81, %CF77, %CF
 
 CF80:                                             ; preds = %CF80, %CF77
   %B21 = mul <2 x i8> %Shuff12, <i8 -1, i8 -1>
-  %Cmp24 = fcmp une ppc_fp128 0xM00000000000000000000000000000000, 0xM00000000000000000000000000000000
+  %Cmp24 = fcmp une ppc_fp128 f0x00000000000000000000000000000000, f0x00000000000000000000000000000000
   br i1 %Cmp24, label %CF80, label %CF81
 
 CF81:                                             ; preds = %CF80

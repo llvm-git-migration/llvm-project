@@ -361,21 +361,21 @@ define <2 x half> @fmul_sel_op1(i1 %b, <2 x half> %p) {
 ; CHECK-NEXT:    ret <2 x half> zeroinitializer
 ;
   %x = fadd <2 x half> %p, <half 1.0, half 2.0> ; thwart complexity-based canonicalization
-  %s = select i1 %b, <2 x half> zeroinitializer, <2 x half> <half 0xHffff, half 0xHffff>
+  %s = select i1 %b, <2 x half> zeroinitializer, <2 x half> <half f0xffff, half f0xffff>
   %r = fmul nnan nsz <2 x half> %x, %s
   ret <2 x half> %r
 }
 
 define <2 x half> @fmul_sel_op1_use(i1 %b, <2 x half> %p) {
 ; CHECK-LABEL: @fmul_sel_op1_use(
-; CHECK-NEXT:    [[X:%.*]] = fadd <2 x half> [[P:%.*]], <half 0xH3C00, half 0xH4000>
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[B:%.*]], <2 x half> zeroinitializer, <2 x half> splat (half 0xHFFFF)
+; CHECK-NEXT:    [[X:%.*]] = fadd <2 x half> [[P:%.*]], <half f0x3C00, half f0x4000>
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[B:%.*]], <2 x half> zeroinitializer, <2 x half> splat (half f0xFFFF)
 ; CHECK-NEXT:    call void @use_v2f16(<2 x half> [[S]])
 ; CHECK-NEXT:    [[R:%.*]] = fmul nnan nsz <2 x half> [[X]], [[S]]
 ; CHECK-NEXT:    ret <2 x half> [[R]]
 ;
   %x = fadd <2 x half> %p, <half 1.0, half 2.0> ; thwart complexity-based canonicalization
-  %s = select i1 %b, <2 x half> zeroinitializer, <2 x half> <half 0xHffff, half 0xHffff>
+  %s = select i1 %b, <2 x half> zeroinitializer, <2 x half> <half f0xffff, half f0xffff>
   call void @use_v2f16(<2 x half> %s)
   %r = fmul nnan nsz <2 x half> %x, %s
   ret <2 x half> %r

@@ -181,7 +181,7 @@ define fp128 @fma_quad_fore_const(fp128 noundef %0, fp128 noundef %1) {
 ; CHECK-NEXT:    lea.sl %s12, fmal@hi(, %s6)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %3 = tail call fast fp128 @llvm.fma.f128(fp128 %0, fp128 0xL0000000000000000C000000000000000, fp128 %1)
+  %3 = tail call fast fp128 @llvm.fma.f128(fp128 %0, fp128 f0xC0000000000000000000000000000000, fp128 %1)
   ret fp128 %3
 }
 
@@ -231,6 +231,6 @@ define fp128 @fma_quad_back_const(fp128 noundef %0, fp128 noundef %1) {
 ; CHECK-NEXT:    lea.sl %s12, fmal@hi(, %s6)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %3 = tail call fast fp128 @llvm.fma.f128(fp128 %0, fp128 0xL0000000000000000C000000000000000, fp128 %1)
+  %3 = tail call fast fp128 @llvm.fma.f128(fp128 %0, fp128 f0xC0000000000000000000000000000000, fp128 %1)
   ret fp128 %3
 }

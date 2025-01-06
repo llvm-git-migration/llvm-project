@@ -13,7 +13,7 @@ define void @ccosl(ptr noalias writable sret(%0) %agg.result, ptr byval(%0) alig
 ; CHECK-NEXT:    [[MEMTMP:%.*]] = alloca [[TMP0]], align 16
 ; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr [[TMP0]], ptr [[Z:%.*]], i32 0, i32 1
 ; CHECK-NEXT:    [[TMP2:%.*]] = load x86_fp80, ptr [[TMP1]], align 16
-; CHECK-NEXT:    [[TMP3:%.*]] = fsub x86_fp80 0xK80000000000000000000, [[TMP2]]
+; CHECK-NEXT:    [[TMP3:%.*]] = fsub x86_fp80 f0x80000000000000000000, [[TMP2]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = getelementptr [[TMP0]], ptr [[IZ]], i32 0, i32 1
 ; CHECK-NEXT:    [[TMP8:%.*]] = load x86_fp80, ptr [[Z]], align 16
 ; CHECK-NEXT:    store x86_fp80 [[TMP3]], ptr [[IZ]], align 16
@@ -26,7 +26,7 @@ entry:
   %memtmp = alloca %0, align 16
   %tmp1 = getelementptr %0, ptr %z, i32 0, i32 1
   %tmp2 = load x86_fp80, ptr %tmp1, align 16
-  %tmp3 = fsub x86_fp80 0xK80000000000000000000, %tmp2
+  %tmp3 = fsub x86_fp80 f0x80000000000000000000, %tmp2
   %tmp4 = getelementptr %0, ptr %iz, i32 0, i32 1
   %tmp8 = load x86_fp80, ptr %z, align 16
   store x86_fp80 %tmp3, ptr %iz, align 16

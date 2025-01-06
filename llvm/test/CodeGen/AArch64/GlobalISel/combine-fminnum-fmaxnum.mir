@@ -10,7 +10,7 @@ body:             |
     ; CHECK: [[COPY:%[0-9]+]]:_(s16) = COPY $h0
     ; CHECK-NEXT: $h0 = COPY [[COPY]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMINNUM %0, %1
     $h0 = COPY %2
 ...
@@ -49,7 +49,7 @@ body:             |
     ; CHECK: [[COPY:%[0-9]+]]:_(s16) = COPY $h0
     ; CHECK-NEXT: $h0 = COPY [[COPY]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMINNUM %1, %0
     $h0 = COPY %2
 ...
@@ -88,7 +88,7 @@ body:             |
     ; CHECK: [[COPY:%[0-9]+]]:_(s16) = COPY $h0
     ; CHECK-NEXT: $h0 = COPY [[COPY]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMAXNUM %0, %1
     $h0 = COPY %2
 ...
@@ -127,7 +127,7 @@ body:             |
     ; CHECK: [[COPY:%[0-9]+]]:_(s16) = COPY $h0
     ; CHECK-NEXT: $h0 = COPY [[COPY]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMAXNUM %1, %0
     $h0 = COPY %2
 ...

@@ -16,7 +16,7 @@ define spir_func half @test() {
 entry:
   %x = alloca half, align 2
   %y = alloca half, align 2
-  store half 0xH2E66, half* %x, align 2
+  store half f0x2E66, half* %x, align 2
   %0 = load half, half* %x, align 2
   %conv = fpext half %0 to float
   %add = fadd float %conv, 2.000000e+00

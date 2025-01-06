@@ -22,7 +22,7 @@ define fp128 @loadConstant() {
 ; CHECK-P8-NEXT:    xxswapd v2, vs0
 ; CHECK-P8-NEXT:    blr
   entry:
-    ret fp128 0xL00000000000000004001400000000000
+    ret fp128 f0x40014000000000000000000000000000
 }
 
 ; Function Attrs: norecurse nounwind readnone
@@ -57,7 +57,7 @@ define fp128 @loadConstant2(fp128 %a, fp128 %b) {
 ; CHECK-P8-NEXT:    blr
   entry:
     %add = fadd fp128 %a, %b
-      %add1 = fadd fp128 %add, 0xL00000000000000004001400000000000
+      %add1 = fadd fp128 %add, f0x40014000000000000000000000000000
         ret fp128 %add1
 }
 

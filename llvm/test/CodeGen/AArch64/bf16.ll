@@ -69,7 +69,7 @@ define <8 x bfloat> @test_build_vector_const() {
 ; CHECK-LABEL: test_build_vector_const:
 ; CHECK: mov [[TMP:w[0-9]+]], #16256
 ; CHECK: dup v0.8h, [[TMP]]
-  ret  <8 x bfloat> <bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80, bfloat 0xR3F80>
+  ret  <8 x bfloat> <bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80, bfloat f0x3F80>
 }
 
 define { bfloat, ptr } @test_store_post(bfloat %val, ptr %ptr) {

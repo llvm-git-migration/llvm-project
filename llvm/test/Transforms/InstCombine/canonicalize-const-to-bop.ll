@@ -294,9 +294,9 @@ define i8 @multi_use_bop_negative(i8 %x) {
 define half @float_negative(half %x) {
 ; CHECK-LABEL: define half @float_negative(
 ; CHECK-SAME: half [[X:%.*]]) {
-; CHECK-NEXT:    [[ADD:%.*]] = fmul fast half [[X]], 0xH2E66
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp ugt half [[X]], 0xH5640
-; CHECK-NEXT:    [[S:%.*]] = select i1 [[CMP]], half 0xH4900, half [[ADD]]
+; CHECK-NEXT:    [[ADD:%.*]] = fmul fast half [[X]], f0x2E66
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ugt half [[X]], f0x5640
+; CHECK-NEXT:    [[S:%.*]] = select i1 [[CMP]], half f0x4900, half [[ADD]]
 ; CHECK-NEXT:    ret half [[S]]
 ;
   %add = fdiv fast half %x, 10.0

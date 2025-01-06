@@ -127,7 +127,7 @@ define i64 @call_vararg_both0(i64 %arg0, double %arg1) {
 ; CHECK-NEXT:    b 2(7)
 define i64 @call_vararg_long_double0() {
 entry:
-  %retval = call i64 (i64, i64, ...) @pass_vararg0(i64 1, i64 2, fp128 0xLE0FC1518450562CD4000921FB5444261)
+  %retval = call i64 (i64, i64, ...) @pass_vararg0(i64 1, i64 2, fp128 f0x4000921FB5444261E0FC1518450562CD)
   ret i64 %retval
 }
 
@@ -211,7 +211,7 @@ define void @call_vec_vararg_test0(<2 x double> %v) {
 ; ARCH12: vst   25,2208(4),3
 ; ARCH12: vst   24,2192(4),3
 define void @call_vec_vararg_test1(<4 x i32> %v, <2 x i64> %w) {
-  %retval = call i64(fp128, ...) @pass_vararg1(fp128 0xLE0FC1518450562CD4000921FB5444261, <4 x i32> %v, <2 x i64> %w)
+  %retval = call i64(fp128, ...) @pass_vararg1(fp128 f0x4000921FB5444261E0FC1518450562CD, <4 x i32> %v, <2 x i64> %w)
   ret void
 }
 

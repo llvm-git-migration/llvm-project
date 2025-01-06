@@ -26,6 +26,6 @@ define void @f3(ptr %x) {
 ; CHECK: lzxr [[REGISTER:%f[0-5]+]]
 ; CHECK: lcxbr %f0, [[REGISTER]]
 ; CHECK: br %r14
-  store fp128 0xL00000000000000008000000000000000, ptr %x
+  store fp128 f0x80000000000000000000000000000000, ptr %x
   ret void
 }

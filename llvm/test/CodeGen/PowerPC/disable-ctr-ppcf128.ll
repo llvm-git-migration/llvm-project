@@ -134,9 +134,9 @@ bb:
   br label %bb6
 
 bb6:                                              ; preds = %bb6, %bb
-  %i = phi ppc_fp128 [ %i8, %bb6 ], [ 0xM00000000000000000000000000000000, %bb ]
+  %i = phi ppc_fp128 [ %i8, %bb6 ], [ f0x00000000000000000000000000000000, %bb ]
   %i7 = phi i64 [ %i9, %bb6 ], [ 0, %bb ]
-  %i8 = tail call ppc_fp128 @llvm.fmuladd.ppcf128(ppc_fp128 0xM00000000000000000000000000000000, ppc_fp128 0xM00000000000000000000000000000000, ppc_fp128 %i) #4
+  %i8 = tail call ppc_fp128 @llvm.fmuladd.ppcf128(ppc_fp128 f0x00000000000000000000000000000000, ppc_fp128 f0x00000000000000000000000000000000, ppc_fp128 %i) #4
   %i9 = add i64 %i7, -4
   %i10 = icmp eq i64 %i9, 0
   br i1 %i10, label %bb14, label %bb6

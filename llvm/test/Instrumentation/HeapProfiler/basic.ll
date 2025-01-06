@@ -55,7 +55,7 @@ entry:
 
 define void @FP80Test(ptr nocapture %a) nounwind uwtable {
 entry:
-    store x86_fp80 0xK3FFF8000000000000000, ptr %a, align 16
+    store x86_fp80 f0x3FFF8000000000000000, ptr %a, align 16
     ret void
 }
 ; CHECK-LABEL: @FP80Test
@@ -65,7 +65,7 @@ entry:
 ; CHECK-NEXT: store i64 %[[NEW_ST_SHADOW]]
 ; CHECK-NOT:  store i64
 ; The actual store.
-; CHECK:      store x86_fp80 0xK3FFF8000000000000000, ptr %a
+; CHECK:      store x86_fp80 f0x3FFF8000000000000000, ptr %a
 ; CHECK:      ret void
 
 define void @i40test(ptr %a, ptr %b) nounwind uwtable {

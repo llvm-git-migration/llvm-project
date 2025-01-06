@@ -2631,7 +2631,7 @@ define void @va5_aligned_stack_caller() nounwind {
 ; LP64E-WITHFP-NEXT:    addi sp, sp, 64
 ; LP64E-WITHFP-NEXT:    ret
   %1 = call i32 (i32, ...) @va5_aligned_stack_callee(i32 1, i32 11,
-    fp128 0xLEB851EB851EB851F400091EB851EB851, i32 12, i32 13, i64 20000000000,
+    fp128 f0x400091EB851EB851EB851EB851EB851F, i32 12, i32 13, i64 20000000000,
     i32 14, double 2.720000e+00, i32 15, [2 x i32] [i32 16, i32 17])
   ret void
 }

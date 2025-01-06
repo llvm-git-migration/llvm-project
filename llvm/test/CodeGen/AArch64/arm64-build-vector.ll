@@ -60,7 +60,7 @@ define void @widen_f16_build_vector(ptr %addr) {
 ; CHECK-NEXT:    movk w8, #13294, lsl #16
 ; CHECK-NEXT:    str w8, [x0]
 ; CHECK-NEXT:    ret
-  store <2 x half> <half 0xH33EE, half 0xH33EE>, ptr %addr, align 2
+  store <2 x half> <half f0x33EE, half f0x33EE>, ptr %addr, align 2
   ret void
 }
 

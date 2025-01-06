@@ -799,8 +799,8 @@ define void @phi_v2f16(ptr %base, i64 %bound) {
 ; MIN16-NEXT:    [[BASE_I1:%.*]] = getelementptr half, ptr [[BASE:%.*]], i32 1
 ; MIN16-NEXT:    br label [[LOOP:%.*]]
 ; MIN16:       loop:
-; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ 0xH0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ f0x0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[IDX:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ [[IDX_NEXT:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[P:%.*]] = getelementptr <2 x half>, ptr [[BASE]], i64 [[IDX]]
 ; MIN16-NEXT:    [[A_I0:%.*]] = load half, ptr [[P]], align 2
@@ -857,9 +857,9 @@ define void @phi_v3f16(ptr %base, i64 %bound) {
 ; MIN16-NEXT:    [[BASE_I2:%.*]] = getelementptr half, ptr [[BASE]], i32 2
 ; MIN16-NEXT:    br label [[LOOP:%.*]]
 ; MIN16:       loop:
-; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ 0xH0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I2:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I2:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ f0x0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I2:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I2:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[IDX:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ [[IDX_NEXT:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[P:%.*]] = getelementptr <3 x half>, ptr [[BASE]], i64 [[IDX]]
 ; MIN16-NEXT:    [[A_I0:%.*]] = load half, ptr [[P]], align 2
@@ -885,7 +885,7 @@ define void @phi_v3f16(ptr %base, i64 %bound) {
 ; MIN32-NEXT:    br label [[LOOP:%.*]]
 ; MIN32:       loop:
 ; MIN32-NEXT:    [[X_I0:%.*]] = phi <2 x half> [ zeroinitializer, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
-; MIN32-NEXT:    [[X_I1:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
+; MIN32-NEXT:    [[X_I1:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
 ; MIN32-NEXT:    [[IDX:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ [[IDX_NEXT:%.*]], [[LOOP]] ]
 ; MIN32-NEXT:    [[P:%.*]] = getelementptr <3 x half>, ptr [[BASE]], i64 [[IDX]]
 ; MIN32-NEXT:    [[A_I0:%.*]] = load <2 x half>, ptr [[P]], align 2
@@ -927,10 +927,10 @@ define void @phi_v4f16(ptr %base, i64 %bound) {
 ; MIN16-NEXT:    [[BASE_I3:%.*]] = getelementptr half, ptr [[BASE]], i32 3
 ; MIN16-NEXT:    br label [[LOOP:%.*]]
 ; MIN16:       loop:
-; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ 0xH0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I2:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I2:%.*]], [[LOOP]] ]
-; MIN16-NEXT:    [[X_I3:%.*]] = phi half [ 0xH0000, [[ENTRY]] ], [ [[X_NEXT_I3:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I0:%.*]] = phi half [ f0x0000, [[ENTRY:%.*]] ], [ [[X_NEXT_I0:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I1:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I1:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I2:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I2:%.*]], [[LOOP]] ]
+; MIN16-NEXT:    [[X_I3:%.*]] = phi half [ f0x0000, [[ENTRY]] ], [ [[X_NEXT_I3:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[IDX:%.*]] = phi i64 [ 0, [[ENTRY]] ], [ [[IDX_NEXT:%.*]], [[LOOP]] ]
 ; MIN16-NEXT:    [[P:%.*]] = getelementptr <4 x half>, ptr [[BASE]], i64 [[IDX]]
 ; MIN16-NEXT:    [[A_I0:%.*]] = load half, ptr [[P]], align 2

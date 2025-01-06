@@ -25,11 +25,11 @@ bb1:		; preds = %newFuncRoot
 	%6 = fdiv x86_fp80 %.reload5, %5		; <x86_fp80> [#uses=1]
 	%7 = fadd x86_fp80 %5, %6		; <x86_fp80> [#uses=1]
 	%8 = fptrunc x86_fp80 %7 to double		; <double> [#uses=1]
-	%9 = fcmp olt x86_fp80 %.reload6, 0xK00000000000000000000		; <i1> [#uses=1]
+	%9 = fcmp olt x86_fp80 %.reload6, f0x00000000000000000000		; <i1> [#uses=1]
 	%iftmp.6.0 = select i1 %9, double 1.000000e+00, double -1.000000e+00		; <double> [#uses=1]
 	%10 = fmul double %8, %iftmp.6.0		; <double> [#uses=1]
 	%11 = fpext double %10 to x86_fp80		; <x86_fp80> [#uses=1]
-	%12 = fdiv x86_fp80 %.reload, 0xKC000C000000000000000		; <x86_fp80> [#uses=1]
+	%12 = fdiv x86_fp80 %.reload, f0xC000C000000000000000		; <x86_fp80> [#uses=1]
 	%13 = fadd x86_fp80 %11, %12		; <x86_fp80> [#uses=1]
 	%14 = fptrunc x86_fp80 %13 to double		; <double> [#uses=1]
 	store double %14, ptr %x, align 1

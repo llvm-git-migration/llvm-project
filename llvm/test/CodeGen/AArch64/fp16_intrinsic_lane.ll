@@ -183,7 +183,7 @@ define <4 x half> @t_vfms_lane_f16(<4 x half> %a, <4 x half> %b, <4 x half> %c, 
 ; CHECK-NEXT:    fmls v0.4h, v1.4h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <4 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <4 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %lane1 = shufflevector <4 x half> %c, <4 x half> undef, <4 x i32> zeroinitializer
   %fmla3 = tail call <4 x half> @llvm.fma.v4f16(<4 x half> %sub, <4 x half> %lane1, <4 x half> %a)
   ret <4 x half> %fmla3
@@ -196,7 +196,7 @@ define <8 x half> @t_vfmsq_lane_f16(<8 x half> %a, <8 x half> %b, <4 x half> %c,
 ; CHECK-NEXT:    fmls v0.8h, v1.8h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %lane1 = shufflevector <4 x half> %c, <4 x half> undef, <8 x i32> zeroinitializer
   %fmla3 = tail call <8 x half> @llvm.fma.v8f16(<8 x half> %sub, <8 x half> %lane1, <8 x half> %a)
   ret <8 x half> %fmla3
@@ -208,7 +208,7 @@ define <4 x half> @t_vfms_laneq_f16(<4 x half> %a, <4 x half> %b, <8 x half> %c,
 ; CHECK-NEXT:    fmls v0.4h, v1.4h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <4 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <4 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %lane1 = shufflevector <8 x half> %c, <8 x half> undef, <4 x i32> zeroinitializer
   %0 = tail call <4 x half> @llvm.fma.v4f16(<4 x half> %lane1, <4 x half> %sub, <4 x half> %a)
   ret <4 x half> %0
@@ -220,7 +220,7 @@ define <8 x half> @t_vfmsq_laneq_f16(<8 x half> %a, <8 x half> %b, <8 x half> %c
 ; CHECK-NEXT:    fmls v0.8h, v1.8h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %lane1 = shufflevector <8 x half> %c, <8 x half> undef, <8 x i32> zeroinitializer
   %0 = tail call <8 x half> @llvm.fma.v8f16(<8 x half> %lane1, <8 x half> %sub, <8 x half> %a)
   ret <8 x half> %0
@@ -233,7 +233,7 @@ define <4 x half> @t_vfms_n_f16(<4 x half> %a, <4 x half> %b, half %c) {
 ; CHECK-NEXT:    fmls v0.4h, v1.4h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <4 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <4 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %vecinit = insertelement <4 x half> undef, half %c, i32 0
   %vecinit3 = shufflevector <4 x half> %vecinit, <4 x half> undef, <4 x i32> zeroinitializer
   %0 = tail call <4 x half> @llvm.fma.v4f16(<4 x half> %sub, <4 x half> %vecinit3, <4 x half> %a) #4
@@ -247,7 +247,7 @@ define <8 x half> @t_vfmsq_n_f16(<8 x half> %a, <8 x half> %b, half %c) {
 ; CHECK-NEXT:    fmls v0.8h, v1.8h, v2.h[0]
 ; CHECK-NEXT:    ret
 entry:
-  %sub = fsub <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub = fsub <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %vecinit = insertelement <8 x half> undef, half %c, i32 0
   %vecinit7 = shufflevector <8 x half> %vecinit, <8 x half> undef, <8 x i32> zeroinitializer
   %0 = tail call <8 x half> @llvm.fma.v8f16(<8 x half> %sub, <8 x half> %vecinit7, <8 x half> %a) #4
@@ -261,7 +261,7 @@ define half @t_vfmsh_lane_f16_0(half %a, half %b, <4 x half> %c, i32 %lane) {
 ; CHECK-NEXT:    fmsub h0, h2, h1, h0
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <4 x half> %c, i32 0
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -274,7 +274,7 @@ define half @t_vfmsh_lane_f16_0_swap(half %a, half %b, <4 x half> %c, i32 %lane)
 ; CHECK-NEXT:    fmsub h0, h2, h1, h0
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <4 x half> %c, i32 0
   %1 = tail call half @llvm.fma.f16(half %extract, half %0, half %a)
   ret half %1
@@ -287,7 +287,7 @@ define half @t_vfmsh_lane_f16_3(half %a, half %b, <4 x half> %c, i32 %lane) {
 ; CHECK-NEXT:    fmls h0, h1, v2.h[3]
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <4 x half> %c, i32 3
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -299,7 +299,7 @@ define half @t_vfmsh_laneq_f16_0(half %a, half %b, <8 x half> %c, i32 %lane) {
 ; CHECK-NEXT:    fmsub h0, h2, h1, h0
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <8 x half> %c, i32 0
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -313,7 +313,7 @@ define half @t_vfmsh_lane_f16_0_3(half %a, <4 x half> %c, i32 %lane) {
 ; CHECK-NEXT:    ret
 entry:
   %b = extractelement <4 x half> %c, i32 0
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <4 x half> %c, i32 3
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -325,7 +325,7 @@ define half @t_vfmsh_laneq_f16_0_swap(half %a, half %b, <8 x half> %c, i32 %lane
 ; CHECK-NEXT:    fmsub h0, h2, h1, h0
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <8 x half> %c, i32 0
   %1 = tail call half @llvm.fma.f16(half %extract, half %0, half %a)
   ret half %1
@@ -337,7 +337,7 @@ define half @t_vfmsh_laneq_f16_7(half %a, half %b, <8 x half> %c, i32 %lane) {
 ; CHECK-NEXT:    fmls h0, h1, v2.h[7]
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <8 x half> %c, i32 7
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -571,7 +571,7 @@ define half @t_vfmsh_lane3_f16(half %a, half %b, <4 x half> %c) {
 ; CHECK-NEXT:    fmls h0, h1, v2.h[3]
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <4 x half> %c, i32 3
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1
@@ -583,7 +583,7 @@ define half @t_vfmsh_laneq7_f16(half %a, half %b, <8 x half> %c) {
 ; CHECK-NEXT:    fmls h0, h1, v2.h[7]
 ; CHECK-NEXT:    ret
 entry:
-  %0 = fsub half 0xH8000, %b
+  %0 = fsub half f0x8000, %b
   %extract = extractelement <8 x half> %c, i32 7
   %1 = tail call half @llvm.fma.f16(half %0, half %extract, half %a)
   ret half %1

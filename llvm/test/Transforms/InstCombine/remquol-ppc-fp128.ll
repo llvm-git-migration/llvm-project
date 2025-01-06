@@ -6,10 +6,10 @@ define ppc_fp128 @remquo_ppc_fp128(ptr %quo) {
 ; CHECK-SAME: ptr [[QUO:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
 ; CHECK-NEXT:    store i32 -2, ptr [[QUO]], align 4
-; CHECK-NEXT:    ret ppc_fp128 0xM3FF00000000000000000000000000000
+; CHECK-NEXT:    ret ppc_fp128 f0x00000000000000003FF0000000000000
 ;
 entry:
-  %call = call ppc_fp128 @remquol(ppc_fp128 0xMC0140000000000000000000000000000, ppc_fp128 0xM40080000000000000000000000000000, ptr %quo)
+  %call = call ppc_fp128 @remquol(ppc_fp128 f0x0000000000000000C014000000000000, ppc_fp128 f0x00000000000000004008000000000000, ptr %quo)
   ret ppc_fp128 %call
 }
 

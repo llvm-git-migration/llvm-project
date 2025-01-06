@@ -85,7 +85,7 @@ define void @test(<4 x i64> %a, <4 x x86_fp80> %b, ptr %c) local_unnamed_addr {
 ; AVX512VL-NEXT:    fadd %st, %st(0)
 ; AVX512VL-NEXT:    fstpt 40(%rdi)
   %1 = icmp eq <4 x i64> <i64 0, i64 1, i64 2, i64 3>, %a
-  %2 = select <4 x i1> %1, <4 x x86_fp80> <x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK3FFF8000000000000000, x86_fp80 0xK3FFF8000000000000000>, <4 x x86_fp80> zeroinitializer
+  %2 = select <4 x i1> %1, <4 x x86_fp80> <x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x3FFF8000000000000000, x86_fp80 f0x3FFF8000000000000000>, <4 x x86_fp80> zeroinitializer
   %3 = fadd <4 x x86_fp80> %2, %2
   %4 = shufflevector <4 x x86_fp80> %3, <4 x x86_fp80> %b, <8 x i32> <i32 0, i32 4, i32 1, i32 5, i32 2, i32 6, i32 3, i32 7>
   store <8 x x86_fp80> %4, ptr %c, align 16

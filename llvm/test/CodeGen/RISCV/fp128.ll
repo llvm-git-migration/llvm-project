@@ -2,8 +2,8 @@
 ; RUN: llc -mtriple=riscv32 -verify-machineinstrs < %s \
 ; RUN:   | FileCheck -check-prefix=RV32I %s
 
-@x = local_unnamed_addr global fp128 0xL00000000000000007FFF000000000000, align 16
-@y = local_unnamed_addr global fp128 0xL00000000000000007FFF000000000000, align 16
+@x = local_unnamed_addr global fp128 f0x7FFF0000000000000000000000000000, align 16
+@y = local_unnamed_addr global fp128 f0x7FFF0000000000000000000000000000, align 16
 
 ; Besides anything else, these tests help verify that libcall ABI lowering
 ; works correctly

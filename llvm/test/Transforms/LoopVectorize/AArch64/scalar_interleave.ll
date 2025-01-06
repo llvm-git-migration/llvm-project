@@ -51,7 +51,7 @@ define void @arm_correlate_f16(ptr nocapture noundef readonly %pSrcA, i32 nounde
 ; CHECK-NEXT:    br label [[FOR_BODY16:%.*]]
 ; CHECK:       for.body16:
 ; CHECK-NEXT:    [[J_074:%.*]] = phi i32 [ 0, [[FOR_COND14_PREHEADER]] ], [ [[INC:%.*]], [[FOR_INC:%.*]] ]
-; CHECK-NEXT:    [[SUM_073:%.*]] = phi half [ 0xH0000, [[FOR_COND14_PREHEADER]] ], [ [[SUM_1:%.*]], [[FOR_INC]] ]
+; CHECK-NEXT:    [[SUM_073:%.*]] = phi half [ f0x0000, [[FOR_COND14_PREHEADER]] ], [ [[SUM_1:%.*]], [[FOR_INC]] ]
 ; CHECK-NEXT:    [[SUB17:%.*]] = sub i32 [[I_077]], [[J_074]]
 ; CHECK-NEXT:    [[CMP18:%.*]] = icmp ult i32 [[SUB17]], [[SRCBLEN_ADDR_0]]
 ; CHECK-NEXT:    [[CMP19:%.*]] = icmp ult i32 [[J_074]], [[SRCALEN_ADDR_0]]
@@ -130,7 +130,7 @@ for.cond14.preheader:                             ; preds = %if.end12, %for.end
 
 for.body16:                                       ; preds = %for.cond14.preheader, %for.inc
   %j.074 = phi i32 [ 0, %for.cond14.preheader ], [ %inc, %for.inc ]
-  %sum.073 = phi half [ 0xH0000, %for.cond14.preheader ], [ %sum.1, %for.inc ]
+  %sum.073 = phi half [ f0x0000, %for.cond14.preheader ], [ %sum.1, %for.inc ]
   %sub17 = sub i32 %i.077, %j.074
   %cmp18 = icmp ult i32 %sub17, %srcBLen.addr.0
   %cmp19 = icmp ult i32 %j.074, %srcALen.addr.0

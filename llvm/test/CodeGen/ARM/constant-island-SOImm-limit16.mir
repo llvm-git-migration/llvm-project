@@ -27,11 +27,11 @@ constants:
 
 -
  id:              0
- value:           half 0xH5440
+ value:           half f0x5440
  alignment:       2
 -
  id:              1
- value:           half 0xH5441
+ value:           half f0x5441
  alignment:       2
 
 machineFunctionInfo: {}

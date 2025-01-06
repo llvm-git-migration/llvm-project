@@ -15,7 +15,7 @@ entry:
 }
 
 ; CHECK-LABEL: exp_half
-; CHECK: fmul half 0xH3DC5, %{{.*}}
+; CHECK: fmul half f0x3DC5, %{{.*}}
 ; CHECK: call half @dx.op.unary.f16(i32 21, half %{{.*}})
 ; Function Attrs: noinline nounwind optnone
 define noundef half @exp_half(half noundef %a) {

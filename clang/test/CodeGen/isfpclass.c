@@ -68,7 +68,7 @@ _Bool check_isfpclass_snan_f64_strict(double x) {
 // CHECK-LABEL: define dso_local noundef i1 @check_isfpclass_zero_f16
 // CHECK-SAME: (half noundef [[X:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // CHECK-NEXT:  entry:
-// CHECK-NEXT:    [[TMP0:%.*]] = fcmp oeq half [[X]], 0xH0000
+// CHECK-NEXT:    [[TMP0:%.*]] = fcmp oeq half [[X]], f0x0000
 // CHECK-NEXT:    ret i1 [[TMP0]]
 //
 _Bool check_isfpclass_zero_f16(_Float16 x) {

@@ -7,7 +7,7 @@ target triple = "i686-apple-darwin8"
 
 declare x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 %f)
 
-@_D3nan4rvale = global x86_fp80 0xK7FFF8001234000000000   ; <ptr> [#uses=1]
+@_D3nan4rvale = global x86_fp80 f0x7FFF8001234000000000   ; <ptr> [#uses=1]
 
 define i32 @main() {
 ; CHECK-LABEL: main:
@@ -32,7 +32,7 @@ define i32 @main() {
 entry_nan.main:
   %tmp = load x86_fp80, ptr @_D3nan4rvale   ; <x86_fp80> [#uses=1]
   call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 %tmp)
-  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 0xK7FFF8001234000000000)
-  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 0xK7FFFC001234000000400)
+  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 f0x7FFF8001234000000000)
+  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 f0x7FFFC001234000000400)
   ret i32 0
 }

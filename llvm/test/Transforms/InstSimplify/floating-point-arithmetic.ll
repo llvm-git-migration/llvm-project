@@ -172,7 +172,7 @@ define double @fmul_X_1(double %a) {
 
 define half @fmul_nnan_ninf_nneg_0.0(i15 %x) {
 ; CHECK-LABEL: @fmul_nnan_ninf_nneg_0.0(
-; CHECK-NEXT:    ret half 0xH0000
+; CHECK-NEXT:    ret half f0x0000
 ;
   %f = uitofp i15 %x to half
   %r = fmul half %f, 0.0
@@ -181,7 +181,7 @@ define half @fmul_nnan_ninf_nneg_0.0(i15 %x) {
 
 define half @fmul_nnan_ninf_nneg_n0.0(i15 %x) {
 ; CHECK-LABEL: @fmul_nnan_ninf_nneg_n0.0(
-; CHECK-NEXT:    ret half 0xH8000
+; CHECK-NEXT:    ret half f0x8000
 ;
   %f = uitofp i15 %x to half
   %r = fmul half %f, -0.0
@@ -193,7 +193,7 @@ define half @fmul_nnan_ninf_nneg_n0.0(i15 %x) {
 define half @fmul_nnan_nneg_0.0(i16 %x) {
 ; CHECK-LABEL: @fmul_nnan_nneg_0.0(
 ; CHECK-NEXT:    [[F:%.*]] = uitofp i16 [[X:%.*]] to half
-; CHECK-NEXT:    [[R:%.*]] = fmul half [[F]], 0xH0000
+; CHECK-NEXT:    [[R:%.*]] = fmul half [[F]], f0x0000
 ; CHECK-NEXT:    ret half [[R]]
 ;
   %f = uitofp i16 %x to half

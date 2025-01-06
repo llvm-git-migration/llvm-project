@@ -208,7 +208,7 @@ define i1 @negative_zero_oge(double %x) {
 
 define i1 @negative_zero_uge(half %x) {
 ; CHECK-LABEL: @negative_zero_uge(
-; CHECK-NEXT:    [[R:%.*]] = fcmp fast uge half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[R:%.*]] = fcmp fast uge half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %r = fcmp fast uge half %x, -0.0

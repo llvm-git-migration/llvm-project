@@ -74,7 +74,7 @@ define <1 x fp128> @f6() {
 ; CHECK-NEXT:    lzxr %f0
 ; CHECK-NEXT:    vmrhg %v24, %v0, %v2
 ; CHECK-NEXT:    br %r14
-  ret <1 x fp128><fp128 0xL00000000000000000000000000000000>
+  ret <1 x fp128><fp128 f0x00000000000000000000000000000000>
 }
 
 declare void @bar7(<1 x fp128>)
@@ -92,7 +92,7 @@ define void @f7() {
 ; CHECK-NEXT:    brasl %r14, bar7@PLT
 ; CHECK-NEXT:    lmg %r14, %r15, 272(%r15)
 ; CHECK-NEXT:    br %r14
-  call void @bar7 (<1 x fp128> <fp128 0xL00000000000000000000000000000000>)
+  call void @bar7 (<1 x fp128> <fp128 f0x00000000000000000000000000000000>)
   ret void
 }
 

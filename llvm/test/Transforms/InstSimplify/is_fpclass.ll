@@ -5,7 +5,7 @@ define <2 x i1> @f() {
 ; CHECK-LABEL: define <2 x i1> @f() {
 ; CHECK-NEXT:    ret <2 x i1> zeroinitializer
 ;
-  %i = call <2 x i1> @llvm.is.fpclass.v2f16(<2 x half> <half 0xH7C00, half 0xH7C00>, i32 3)
+  %i = call <2 x i1> @llvm.is.fpclass.v2f16(<2 x half> <half f0x7C00, half f0x7C00>, i32 3)
   ret <2 x i1> %i
 }
 

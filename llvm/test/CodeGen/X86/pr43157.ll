@@ -14,7 +14,7 @@ define void @foo(fp128 %x) {
 ; CHECK-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-NEXT:    retq
 entry:
-  %mul = fmul fp128 %x, 0xL00000000000000003FFF800000000000
+  %mul = fmul fp128 %x, f0x3FFF8000000000000000000000000000
   tail call void asm sideeffect "", "x,~{dirflag},~{fpsr},~{flags}"(fp128 %mul)
   ret void
 }

@@ -7,27 +7,27 @@ declare double @llvm.amdgcn.sin.f64(double) #0
 
 define void @test_f16(ptr %p) {
 ; CHECK-LABEL: @test_f16(
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P:%.*]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH39A8, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xHB9A8, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH3C00, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xHBC00, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]], align 2
-; CHECK-NEXT:    [[P1000:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xH63D0)
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P:%.*]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x39A8, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0xB9A8, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x3C00, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0xBC00, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]], align 2
+; CHECK-NEXT:    [[P1000:%.*]] = call half @llvm.amdgcn.sin.f16(half f0x63D0)
 ; CHECK-NEXT:    store volatile half [[P1000]], ptr [[P]], align 2
-; CHECK-NEXT:    [[N1000:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xHE3D0)
+; CHECK-NEXT:    [[N1000:%.*]] = call half @llvm.amdgcn.sin.f16(half f0xE3D0)
 ; CHECK-NEXT:    store volatile half [[N1000]], ptr [[P]], align 2
-; CHECK-NEXT:    [[PINF:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xH7C00)
+; CHECK-NEXT:    [[PINF:%.*]] = call half @llvm.amdgcn.sin.f16(half f0x7C00)
 ; CHECK-NEXT:    store volatile half [[PINF]], ptr [[P]], align 2
-; CHECK-NEXT:    [[NINF:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xHFC00)
+; CHECK-NEXT:    [[NINF:%.*]] = call half @llvm.amdgcn.sin.f16(half f0xFC00)
 ; CHECK-NEXT:    store volatile half [[NINF]], ptr [[P]], align 2
-; CHECK-NEXT:    [[NAN:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xH7E00)
+; CHECK-NEXT:    [[NAN:%.*]] = call half @llvm.amdgcn.sin.f16(half f0x7E00)
 ; CHECK-NEXT:    store volatile half [[NAN]], ptr [[P]], align 2
 ; CHECK-NEXT:    ret void
 ;
@@ -59,11 +59,11 @@ define void @test_f16(ptr %p) {
   store volatile half %p1000, ptr %p
   %n1000 = call half @llvm.amdgcn.sin.f16(half -1000.0)
   store volatile half %n1000, ptr %p
-  %pinf = call half @llvm.amdgcn.sin.f16(half 0xH7C00) ; +inf
+  %pinf = call half @llvm.amdgcn.sin.f16(half f0x7C00) ; +inf
   store volatile half %pinf, ptr %p
-  %ninf = call half @llvm.amdgcn.sin.f16(half 0xHFC00) ; -inf
+  %ninf = call half @llvm.amdgcn.sin.f16(half f0xFC00) ; -inf
   store volatile half %ninf, ptr %p
-  %nan = call half @llvm.amdgcn.sin.f16(half 0xH7E00) ; nan
+  %nan = call half @llvm.amdgcn.sin.f16(half f0x7E00) ; nan
   store volatile half %nan, ptr %p
   ret void
 }
@@ -196,9 +196,9 @@ define void @test_f64(ptr %p) {
 
 define void @test_f16_strictfp (ptr %p) #1 {
 ; CHECK-LABEL: @test_f16_strictfp(
-; CHECK-NEXT:    [[P0:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xH0000) #1
+; CHECK-NEXT:    [[P0:%.*]] = call half @llvm.amdgcn.sin.f16(half f0x0000) #1
 ; CHECK-NEXT:    store volatile half [[P0]], ptr [[P:%.*]], align 2
-; CHECK-NEXT:    [[P025:%.*]] = call half @llvm.amdgcn.sin.f16(half 0xH3400) #1
+; CHECK-NEXT:    [[P025:%.*]] = call half @llvm.amdgcn.sin.f16(half f0x3400) #1
 ; CHECK-NEXT:    store volatile half [[P025]], ptr [[P]], align 2
 ; CHECK-NEXT:    ret void
 ;

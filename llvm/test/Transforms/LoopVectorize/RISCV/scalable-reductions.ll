@@ -234,7 +234,7 @@ define half @fadd_fast_half_zvfh(ptr noalias nocapture readonly %a, i64 %n) "tar
 ; CHECK: %[[FADD2:.*]] = fadd fast <vscale x 8 x half> %[[LOAD2]]
 ; CHECK: middle.block:
 ; CHECK: %[[RDX:.*]] = fadd fast <vscale x 8 x half> %[[FADD2]], %[[FADD1]]
-; CHECK: call fast half @llvm.vector.reduce.fadd.nxv8f16(half 0xH0000, <vscale x 8 x half> %[[RDX]])
+; CHECK: call fast half @llvm.vector.reduce.fadd.nxv8f16(half f0x0000, <vscale x 8 x half> %[[RDX]])
 entry:
   br label %for.body
 
@@ -263,7 +263,7 @@ define half @fadd_fast_half_zvfhmin(ptr noalias nocapture readonly %a, i64 %n) "
 ; CHECK: %[[FADD2:.*]] = fadd fast <16 x half> %[[LOAD2]]
 ; CHECK: middle.block:
 ; CHECK: %[[RDX:.*]] = fadd fast <16 x half> %[[FADD2]], %[[FADD1]]
-; CHECK: call fast half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> %[[RDX]])
+; CHECK: call fast half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> %[[RDX]])
 entry:
   br label %for.body
 
@@ -292,7 +292,7 @@ define bfloat @fadd_fast_bfloat(ptr noalias nocapture readonly %a, i64 %n) "targ
 ; CHECK: %[[FADD2:.*]] = fadd fast <16 x bfloat> %[[LOAD2]]
 ; CHECK: middle.block:
 ; CHECK: %[[RDX:.*]] = fadd fast <16 x bfloat> %[[FADD2]], %[[FADD1]]
-; CHECK: call fast bfloat @llvm.vector.reduce.fadd.v16bf16(bfloat 0xR0000, <16 x bfloat> %[[RDX]])
+; CHECK: call fast bfloat @llvm.vector.reduce.fadd.v16bf16(bfloat f0x0000, <16 x bfloat> %[[RDX]])
 entry:
   br label %for.body
 
@@ -496,7 +496,7 @@ define half @fmuladd_f16_zvfh(ptr %a, ptr %b, i64 %n) "target-features"="+zvfh" 
 ; CHECK: [[MULADD2:%.*]] = call reassoc <vscale x 8 x half> @llvm.fmuladd.nxv8f16(<vscale x 8 x half> [[WIDE_LOAD2]], <vscale x 8 x half> [[WIDE_LOAD4]],
 ; CHECK: middle.block:
 ; CHECK: [[BIN_RDX:%.*]] = fadd reassoc <vscale x 8 x half> [[MULADD2]], [[MULADD1]]
-; CHECK: call reassoc half @llvm.vector.reduce.fadd.nxv8f16(half 0xH8000, <vscale x 8 x half> [[BIN_RDX]])
+; CHECK: call reassoc half @llvm.vector.reduce.fadd.nxv8f16(half f0x8000, <vscale x 8 x half> [[BIN_RDX]])
 ;
 entry:
   br label %for.body
@@ -533,7 +533,7 @@ define half @fmuladd_f16_zvfhmin(ptr %a, ptr %b, i64 %n) "target-features"="+zvf
 ; CHECK: [[MULADD2:%.*]] = call reassoc <16 x half> @llvm.fmuladd.v16f16(<16 x half> [[WIDE_LOAD2]], <16 x half> [[WIDE_LOAD4]],
 ; CHECK: middle.block:
 ; CHECK: [[BIN_RDX:%.*]] = fadd reassoc <16 x half> [[MULADD2]], [[MULADD1]]
-; CHECK: call reassoc half @llvm.vector.reduce.fadd.v16f16(half 0xH8000, <16 x half> [[BIN_RDX]])
+; CHECK: call reassoc half @llvm.vector.reduce.fadd.v16f16(half f0x8000, <16 x half> [[BIN_RDX]])
 ;
 entry:
   br label %for.body
@@ -567,7 +567,7 @@ define bfloat @fmuladd_bf16(ptr %a, ptr %b, i64 %n) "target-features"="+zvfbfmin
 ; CHECK: [[MULADD2:%.*]] = call reassoc <16 x bfloat> @llvm.fmuladd.v16bf16(<16 x bfloat> [[WIDE_LOAD2]], <16 x bfloat> [[WIDE_LOAD4]],
 ; CHECK: middle.block:
 ; CHECK: [[BIN_RDX:%.*]] = fadd reassoc <16 x bfloat> [[MULADD2]], [[MULADD1]]
-; CHECK: call reassoc bfloat @llvm.vector.reduce.fadd.v16bf16(bfloat 0xR8000, <16 x bfloat> [[BIN_RDX]])
+; CHECK: call reassoc bfloat @llvm.vector.reduce.fadd.v16bf16(bfloat f0x8000, <16 x bfloat> [[BIN_RDX]])
 ;
 entry:
   br label %for.body

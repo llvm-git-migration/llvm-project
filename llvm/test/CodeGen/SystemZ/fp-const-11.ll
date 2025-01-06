@@ -9,7 +9,7 @@ define void @f1(ptr %x) {
 ; CHECK: vzero [[REG:%v[0-9]+]]
 ; CHECK: vst [[REG]], 0(%r2)
 ; CHECK: br %r14
-  store fp128 0xL00000000000000000000000000000000, ptr %x
+  store fp128 f0x00000000000000000000000000000000, ptr %x
   ret void
 }
 
@@ -20,7 +20,7 @@ define void @f2(ptr %x) {
 ; CHECK: wflnxb [[REG]], [[REG]]
 ; CHECK: vst [[REG]], 0(%r2)
 ; CHECK: br %r14
-  store fp128 0xL00000000000000008000000000000000, ptr %x
+  store fp128 f0x80000000000000000000000000000000, ptr %x
   ret void
 }
 
@@ -35,7 +35,7 @@ define void @f3(ptr %x) {
 ; CHECK: br %r14
 ; CONST: .quad 0x3fff000002000000
 ; CONST: .quad 0x0
-  store fp128 0xL00000000000000003fff000002000000, ptr %x
+  store fp128 f0x3fff0000020000000000000000000000, ptr %x
   ret void
 }
 
@@ -45,7 +45,7 @@ define void @f4(ptr %x) {
 ; CHECK:      vgbm %v0, 21845
 ; CHECK-NEXT: vst %v0, 0(%r2)
 ; CHECK-NEXT: br %r14
-  store fp128 0xL00ff00ff00ff00ff00ff00ff00ff00ff, ptr %x
+  store fp128 f0x00ff00ff00ff00ff00ff00ff00ff00ff, ptr %x
   ret void
 }
 
@@ -55,7 +55,7 @@ define void @f5(ptr %x) {
 ; CHECK:      vrepib  %v0, -8
 ; CHECK-NEXT: vst %v0, 0(%r2)
 ; CHECK-NEXT: br %r14
-  store fp128 0xLf8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8, ptr %x
+  store fp128 f0xf8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8, ptr %x
   ret void
 }
 
@@ -65,6 +65,6 @@ define void @f6(ptr %x) {
 ; CHECK:      vgmg %v0, 12, 31
 ; CHECK-NEXT: vst %v0, 0(%r2)
 ; CHECK-NEXT: br %r14
-  store fp128 0xL000fffff00000000000fffff00000000, ptr %x
+  store fp128 f0x000fffff00000000000fffff00000000, ptr %x
   ret void
 }

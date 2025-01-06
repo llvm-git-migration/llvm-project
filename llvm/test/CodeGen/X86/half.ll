@@ -946,7 +946,7 @@ define half @PR40273(half) #0 {
 ; CHECK-I686-NEXT:    pinsrw $0, %eax, %xmm0
 ; CHECK-I686-NEXT:    addl $12, %esp
 ; CHECK-I686-NEXT:    retl
-  %2 = fcmp une half %0, 0xH0000
+  %2 = fcmp une half %0, f0x0000
   %3 = uitofp i1 %2 to half
   ret half %3
 }
@@ -1002,7 +1002,7 @@ define void @brcond(half %0) #0 {
 ; CHECK-I686-NEXT:    retl
 ; CHECK-I686-NEXT:  .LBB18_2: # %if.end
 entry:
-  %cmp = fcmp oeq half 0xH0000, %0
+  %cmp = fcmp oeq half f0x0000, %0
   br i1 %cmp, label %if.then, label %if.end
 
 if.then:                                          ; preds = %entry
@@ -1115,7 +1115,7 @@ define void @main.158() #0 {
 entry:
   %0 = tail call half @llvm.fabs.f16(half undef)
   %1 = fpext half %0 to float
-  %compare.2 = fcmp ole half %0, 0xH4800
+  %compare.2 = fcmp ole half %0, f0x4800
   %multiply.95 = fmul float %1, 5.000000e-01
   %add.82 = fadd float %multiply.95, -2.000000e+00
   %multiply.68 = fmul float %add.82, 0.000000e+00
@@ -1217,7 +1217,7 @@ entry:
   %4 = select i1 undef, <4 x i16> undef, <4 x i16> %3
   %5 = select <4 x i1> undef, <4 x i16> undef, <4 x i16> %4
   %6 = bitcast <4 x i16> %5 to <4 x half>
-  %7 = select <4 x i1> %2, <4 x half> <half 0xH7E00, half 0xH7E00, half 0xH7E00, half 0xH7E00>, <4 x half> %6
+  %7 = select <4 x i1> %2, <4 x half> <half f0x7E00, half f0x7E00, half f0x7E00, half f0x7E00>, <4 x half> %6
   store <4 x half> %7, ptr undef, align 16
   ret void
 }
@@ -2154,7 +2154,7 @@ define void @pr63114() {
 ; CHECK-I686-NEXT:    retl
   %1 = load <24 x half>, ptr poison, align 2
   %2 = shufflevector <24 x half> %1, <24 x half> poison, <8 x i32> <i32 2, i32 5, i32 8, i32 11, i32 14, i32 17, i32 20, i32 23>
-  %3 = shufflevector <8 x half> %2, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
+  %3 = shufflevector <8 x half> %2, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
   %4 = shufflevector <16 x half> poison, <16 x half> %3, <32 x i32> <i32 0, i32 8, i32 16, i32 24, i32 1, i32 9, i32 17, i32 25, i32 2, i32 10, i32 18, i32 26, i32 3, i32 11, i32 19, i32 27, i32 4, i32 12, i32 20, i32 28, i32 5, i32 13, i32 21, i32 29, i32 6, i32 14, i32 22, i32 30, i32 7, i32 15, i32 23, i32 31>
   store <32 x half> %4, ptr null, align 2
   ret void

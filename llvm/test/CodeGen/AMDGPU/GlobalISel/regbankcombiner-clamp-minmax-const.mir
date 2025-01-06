@@ -89,7 +89,7 @@ body: |
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:vgpr(s32) = COPY $vgpr0
     ; CHECK-NEXT: [[TRUNC:%[0-9]+]]:vgpr(s16) = G_TRUNC [[COPY]](s32)
-    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half 0xH4000
+    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half f0x4000
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:vgpr(s16) = COPY [[C]](s16)
     ; CHECK-NEXT: [[FMUL:%[0-9]+]]:vgpr(s16) = G_FMUL [[TRUNC]], [[COPY1]]
     ; CHECK-NEXT: [[FCANONICALIZE:%[0-9]+]]:vgpr(s16) = G_FCANONICALIZE [[FMUL]]
@@ -98,14 +98,14 @@ body: |
     ; CHECK-NEXT: $vgpr0 = COPY [[ANYEXT]](s32)
     %2:vgpr(s32) = COPY $vgpr0
     %0:vgpr(s16) = G_TRUNC %2(s32)
-    %3:sgpr(s16) = G_FCONSTANT half 0xH4000
+    %3:sgpr(s16) = G_FCONSTANT half f0x4000
     %12:vgpr(s16) = COPY %3(s16)
     %4:vgpr(s16) = G_FMUL %0, %12
-    %5:sgpr(s16) = G_FCONSTANT half 0xH0000
+    %5:sgpr(s16) = G_FCONSTANT half f0x0000
     %11:vgpr(s16) = G_FCANONICALIZE %4
     %13:vgpr(s16) = COPY %5(s16)
     %6:vgpr(s16) = G_FMAXNUM_IEEE %11, %13
-    %7:sgpr(s16) = G_FCONSTANT half 0xH3C00
+    %7:sgpr(s16) = G_FCONSTANT half f0x3C00
     %14:vgpr(s16) = COPY %7(s16)
     %8:vgpr(s16) = G_FMINNUM_IEEE %14, %6
     %10:vgpr(s32) = G_ANYEXT %8(s16)
@@ -129,7 +129,7 @@ body: |
     ; CHECK: liveins: $vgpr0
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:vgpr(<2 x s16>) = COPY $vgpr0
-    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half 0xH4000
+    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half f0x4000
     ; CHECK-NEXT: [[ANYEXT:%[0-9]+]]:sgpr(s32) = G_ANYEXT [[C]](s16)
     ; CHECK-NEXT: [[BUILD_VECTOR_TRUNC:%[0-9]+]]:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC [[ANYEXT]](s32), [[ANYEXT]](s32)
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:vgpr(<2 x s16>) = COPY [[BUILD_VECTOR_TRUNC]](<2 x s16>)
@@ -137,13 +137,13 @@ body: |
     ; CHECK-NEXT: [[AMDGPU_CLAMP:%[0-9]+]]:vgpr(<2 x s16>) = nnan G_AMDGPU_CLAMP [[FMUL]]
     ; CHECK-NEXT: $vgpr0 = COPY [[AMDGPU_CLAMP]](<2 x s16>)
     %0:vgpr(<2 x s16>) = COPY $vgpr0
-    %3:sgpr(s16) = G_FCONSTANT half 0xH4000
+    %3:sgpr(s16) = G_FCONSTANT half f0x4000
     %12:sgpr(s32) = G_ANYEXT %3(s16)
     %2:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %12(s32), %12(s32)
-    %6:sgpr(s16) = G_FCONSTANT half 0xH0000
+    %6:sgpr(s16) = G_FCONSTANT half f0x0000
     %13:sgpr(s32) = G_ANYEXT %6(s16)
     %5:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %13(s32), %13(s32)
-    %9:sgpr(s16) = G_FCONSTANT half 0xH3C00
+    %9:sgpr(s16) = G_FCONSTANT half f0x3C00
     %14:sgpr(s32) = G_ANYEXT %9(s16)
     %8:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %14(s32), %14(s32)
     %15:vgpr(<2 x s16>) = COPY %2(<2 x s16>)
@@ -172,7 +172,7 @@ body: |
     ; CHECK: liveins: $vgpr0
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:vgpr(<2 x s16>) = COPY $vgpr0
-    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half 0xH4000
+    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half f0x4000
     ; CHECK-NEXT: [[ANYEXT:%[0-9]+]]:sgpr(s32) = G_ANYEXT [[C]](s16)
     ; CHECK-NEXT: [[BUILD_VECTOR_TRUNC:%[0-9]+]]:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC [[ANYEXT]](s32), [[ANYEXT]](s32)
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:vgpr(<2 x s16>) = COPY [[BUILD_VECTOR_TRUNC]](<2 x s16>)
@@ -181,14 +181,14 @@ body: |
     ; CHECK-NEXT: [[AMDGPU_CLAMP:%[0-9]+]]:vgpr(<2 x s16>) = G_AMDGPU_CLAMP [[FCANONICALIZE]]
     ; CHECK-NEXT: $vgpr0 = COPY [[AMDGPU_CLAMP]](<2 x s16>)
     %0:vgpr(<2 x s16>) = COPY $vgpr0
-    %3:sgpr(s16) = G_FCONSTANT half 0xH4000
+    %3:sgpr(s16) = G_FCONSTANT half f0x4000
     %17:sgpr(s32) = G_ANYEXT %3(s16)
     %2:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %17(s32), %17(s32)
-    %6:sgpr(s16) = G_FCONSTANT half 0xH0000
+    %6:sgpr(s16) = G_FCONSTANT half f0x0000
     %18:sgpr(s32) = G_ANYEXT %6(s16)
     %19:sgpr(s32) = G_IMPLICIT_DEF
     %5:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %18(s32), %19(s32)
-    %10:sgpr(s16) = G_FCONSTANT half 0xH3C00
+    %10:sgpr(s16) = G_FCONSTANT half f0x3C00
     %20:sgpr(s32) = G_ANYEXT %10(s16)
     %9:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %20(s32), %19(s32)
     %21:vgpr(<2 x s16>) = COPY %2(<2 x s16>)
@@ -286,7 +286,7 @@ body: |
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:vgpr(s32) = COPY $vgpr0
     ; CHECK-NEXT: [[TRUNC:%[0-9]+]]:vgpr(s16) = G_TRUNC [[COPY]](s32)
-    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half 0xH4000
+    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half f0x4000
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:vgpr(s16) = COPY [[C]](s16)
     ; CHECK-NEXT: [[FMUL:%[0-9]+]]:vgpr(s16) = G_FMUL [[TRUNC]], [[COPY1]]
     ; CHECK-NEXT: [[AMDGPU_CLAMP:%[0-9]+]]:vgpr(s16) = nnan G_AMDGPU_CLAMP [[FMUL]]
@@ -294,13 +294,13 @@ body: |
     ; CHECK-NEXT: $vgpr0 = COPY [[ANYEXT]](s32)
     %2:vgpr(s32) = COPY $vgpr0
     %0:vgpr(s16) = G_TRUNC %2(s32)
-    %3:sgpr(s16) = G_FCONSTANT half 0xH4000
+    %3:sgpr(s16) = G_FCONSTANT half f0x4000
     %11:vgpr(s16) = COPY %3(s16)
     %4:vgpr(s16) = G_FMUL %0, %11
-    %5:sgpr(s16) = G_FCONSTANT half 0xH3C00
+    %5:sgpr(s16) = G_FCONSTANT half f0x3C00
     %12:vgpr(s16) = COPY %5(s16)
     %6:vgpr(s16) = nnan G_FMINNUM_IEEE %4, %12
-    %7:sgpr(s16) = G_FCONSTANT half 0xH0000
+    %7:sgpr(s16) = G_FCONSTANT half f0x0000
     %13:vgpr(s16) = COPY %7(s16)
     %8:vgpr(s16) = nnan G_FMAXNUM_IEEE %13, %6
     %10:vgpr(s32) = G_ANYEXT %8(s16)
@@ -324,7 +324,7 @@ body: |
     ; CHECK: liveins: $vgpr0
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:vgpr(<2 x s16>) = COPY $vgpr0
-    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half 0xH4000
+    ; CHECK-NEXT: [[C:%[0-9]+]]:sgpr(s16) = G_FCONSTANT half f0x4000
     ; CHECK-NEXT: [[ANYEXT:%[0-9]+]]:sgpr(s32) = G_ANYEXT [[C]](s16)
     ; CHECK-NEXT: [[BUILD_VECTOR_TRUNC:%[0-9]+]]:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC [[ANYEXT]](s32), [[ANYEXT]](s32)
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:vgpr(<2 x s16>) = COPY [[BUILD_VECTOR_TRUNC]](<2 x s16>)
@@ -332,14 +332,14 @@ body: |
     ; CHECK-NEXT: [[AMDGPU_CLAMP:%[0-9]+]]:vgpr(<2 x s16>) = nnan G_AMDGPU_CLAMP [[FMUL]]
     ; CHECK-NEXT: $vgpr0 = COPY [[AMDGPU_CLAMP]](<2 x s16>)
     %0:vgpr(<2 x s16>) = COPY $vgpr0
-    %3:sgpr(s16) = G_FCONSTANT half 0xH4000
+    %3:sgpr(s16) = G_FCONSTANT half f0x4000
     %13:sgpr(s32) = G_ANYEXT %3(s16)
     %2:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %13(s32), %13(s32)
-    %6:sgpr(s16) = G_FCONSTANT half 0xH3C00
+    %6:sgpr(s16) = G_FCONSTANT half f0x3C00
     %14:sgpr(s32) = G_ANYEXT %6(s16)
     %15:sgpr(s32) = G_IMPLICIT_DEF
     %5:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %14(s32), %15(s32)
-    %10:sgpr(s16) = G_FCONSTANT half 0xH0000
+    %10:sgpr(s16) = G_FCONSTANT half f0x0000
     %16:sgpr(s32) = G_ANYEXT %10(s16)
     %9:sgpr(<2 x s16>) = G_BUILD_VECTOR_TRUNC %15(s32), %16(s32)
     %17:vgpr(<2 x s16>) = COPY %2(<2 x s16>)

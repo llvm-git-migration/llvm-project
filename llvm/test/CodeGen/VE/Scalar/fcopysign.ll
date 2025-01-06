@@ -137,7 +137,7 @@ define fp128 @copysign_quad_zero(fp128 %0) {
 ; CHECK-NEXT:    ld %s0, 8(, %s11)
 ; CHECK-NEXT:    adds.l %s11, 32, %s11
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = tail call fast fp128 @llvm.copysign.f128(fp128 0xL00000000000000000000000000000000, fp128 %0)
+  %2 = tail call fast fp128 @llvm.copysign.f128(fp128 f0x00000000000000000000000000000000, fp128 %0)
   ret fp128 %2
 }
 
@@ -193,6 +193,6 @@ define fp128 @copysign_quad_const(fp128 %0) {
 ; CHECK-NEXT:    ld %s0, 8(, %s11)
 ; CHECK-NEXT:    adds.l %s11, 32, %s11
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = tail call fast fp128 @llvm.copysign.f128(fp128 0xL0000000000000000C000000000000000, fp128 %0)
+  %2 = tail call fast fp128 @llvm.copysign.f128(fp128 f0xC0000000000000000000000000000000, fp128 %0)
   ret fp128 %2
 }

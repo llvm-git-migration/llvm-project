@@ -643,7 +643,7 @@ if.end:                                           ; preds = %entry
   %argp.cur = load ptr, ptr %ap, align 8
   %argp.next = getelementptr inbounds i8, ptr %argp.cur, i64 16
   %0 = load fp128, ptr %argp.cur, align 8
-  %add = fadd fp128 %0, 0xL00000000000000000000000000000000
+  %add = fadd fp128 %0, f0x00000000000000000000000000000000
   %argp.next3 = getelementptr inbounds i8, ptr %argp.cur, i64 32
   store ptr %argp.next3, ptr %ap, align 8
   %1 = load fp128, ptr %argp.next, align 8
@@ -652,7 +652,7 @@ if.end:                                           ; preds = %entry
   br label %cleanup
 
 cleanup:                                          ; preds = %entry, %if.end
-  %retval.0 = phi fp128 [ %add4, %if.end ], [ 0xL00000000000000000000000000000000, %entry ]
+  %retval.0 = phi fp128 [ %add4, %if.end ], [ f0x00000000000000000000000000000000, %entry ]
   call void @llvm.lifetime.end.p0(i64 8, ptr nonnull %ap) #2
   ret fp128 %retval.0
 }

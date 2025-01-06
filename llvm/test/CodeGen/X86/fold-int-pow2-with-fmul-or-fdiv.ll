@@ -400,7 +400,7 @@ define <8 x half> @fmul_pow2_8xhalf(<8 x i16> %i) {
 ; CHECK-FMA-NEXT:    retq
   %p2 = shl <8 x i16> <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>, %i
   %p2_f = uitofp <8 x i16> %p2 to <8 x half>
-  %r = fmul <8 x half> <half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000>, %p2_f
+  %r = fmul <8 x half> <half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000>, %p2_f
   ret <8 x half> %r
 }
 
@@ -651,7 +651,7 @@ define <8 x half> @fmul_pow2_ldexp_8xhalf(<8 x i16> %i) {
 ; CHECK-AVX512F-NEXT:    addq $72, %rsp
 ; CHECK-AVX512F-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-AVX512F-NEXT:    retq
-  %r = call <8 x half> @llvm.ldexp.v8f16.v8i16(<8 x half> <half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000>, <8 x i16> %i)
+  %r = call <8 x half> @llvm.ldexp.v8f16.v8i16(<8 x half> <half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000>, <8 x i16> %i)
   ret <8 x half> %r
 }
 
@@ -672,7 +672,7 @@ define <8 x half> @fdiv_pow2_8xhalf(<8 x i16> %i) {
 ; CHECK-AVX-NEXT:    retq
   %p2 = shl <8 x i16> <i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1, i16 1>, %i
   %p2_f = uitofp <8 x i16> %p2 to <8 x half>
-  %r = fdiv <8 x half> <half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000, half 0xH7000>, %p2_f
+  %r = fdiv <8 x half> <half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000, half f0x7000>, %p2_f
   ret <8 x half> %r
 }
 
@@ -1448,7 +1448,7 @@ define half @fdiv_pow_shl_cnt_fail_out_of_bounds(i32 %cnt) nounwind {
 ; CHECK-FMA-NEXT:    retq
   %shl = shl nuw i32 1, %cnt
   %conv = uitofp i32 %shl to half
-  %mul = fdiv half 0xH7000, %conv
+  %mul = fdiv half f0x7000, %conv
   ret half %mul
 }
 
@@ -1470,7 +1470,7 @@ define half @fdiv_pow_shl_cnt_in_bounds(i16 %cnt) nounwind {
 ; CHECK-AVX-NEXT:    retq
   %shl = shl nuw i16 1, %cnt
   %conv = uitofp i16 %shl to half
-  %mul = fdiv half 0xH7000, %conv
+  %mul = fdiv half f0x7000, %conv
   ret half %mul
 }
 
@@ -1492,7 +1492,7 @@ define half @fdiv_pow_shl_cnt_in_bounds2(i16 %cnt) nounwind {
 ; CHECK-AVX-NEXT:    retq
   %shl = shl nuw i16 1, %cnt
   %conv = uitofp i16 %shl to half
-  %mul = fdiv half 0xH4800, %conv
+  %mul = fdiv half f0x4800, %conv
   ret half %mul
 }
 
@@ -1565,7 +1565,7 @@ define half @fdiv_pow_shl_cnt_fail_out_of_bound2(i16 %cnt) nounwind {
 ; CHECK-FMA-NEXT:    retq
   %shl = shl nuw i16 1, %cnt
   %conv = uitofp i16 %shl to half
-  %mul = fdiv half 0xH4000, %conv
+  %mul = fdiv half f0x4000, %conv
   ret half %mul
 }
 

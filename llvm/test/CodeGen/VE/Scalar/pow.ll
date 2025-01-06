@@ -100,7 +100,7 @@ define fp128 @func_fp_pow_zero_back_quad(fp128 noundef %0) {
 ; CHECK-NEXT:    ld %s0, 8(, %s2)
 ; CHECK-NEXT:    ld %s1, (, %s2)
 ; CHECK-NEXT:    b.l.t (, %s10)
-  ret fp128 0xL00000000000000003FFF000000000000
+  ret fp128 f0x3FFF0000000000000000000000000000
 }
 
 ; Function Attrs: mustprogress nofree nosync nounwind readnone willreturn
@@ -149,7 +149,7 @@ define fp128 @func_fp_pow_zero_fore_quad(fp128 noundef %0) {
 ; CHECK-NEXT:    lea.sl %s12, powl@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %2 = tail call fast fp128 @llvm.pow.f128(fp128 0xL00000000000000000000000000000000, fp128 %0)
+  %2 = tail call fast fp128 @llvm.pow.f128(fp128 f0x00000000000000000000000000000000, fp128 %0)
   ret fp128 %2
 }
 
@@ -242,7 +242,7 @@ define fp128 @func_fp_pow_const_fore_quad(fp128 noundef %0) {
 ; CHECK-NEXT:    lea.sl %s12, powl@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %2 = tail call fast fp128 @llvm.pow.f128(fp128 0xL0000000000000000C000000000000000, fp128 %0)
+  %2 = tail call fast fp128 @llvm.pow.f128(fp128 f0xC0000000000000000000000000000000, fp128 %0)
   ret fp128 %2
 }
 

@@ -90,7 +90,7 @@ define x86_intrcc void @test_isr_clobbers(ptr byval(%struct.interrupt_frame) %fr
   ret void
 }
 
-@f80 = common dso_local global x86_fp80 0xK00000000000000000000, align 4
+@f80 = common dso_local global x86_fp80 f0x00000000000000000000, align 4
 
 ; Test that the presence of x87 does not crash the FP stackifier
 define x86_intrcc void @test_isr_x87(ptr byval(%struct.interrupt_frame) %frame) {
@@ -102,7 +102,7 @@ define x86_intrcc void @test_isr_x87(ptr byval(%struct.interrupt_frame) %frame) 
   ; CHECK-NEXT: iretq
 entry:
   %ld = load x86_fp80, ptr @f80, align 4
-  %add = fadd x86_fp80 %ld, 0xK3FFF8000000000000000
+  %add = fadd x86_fp80 %ld, f0x3FFF8000000000000000
   store x86_fp80 %add, ptr @f80, align 4
   ret void
 }

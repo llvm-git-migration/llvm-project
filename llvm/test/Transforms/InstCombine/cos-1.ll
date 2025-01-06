@@ -380,7 +380,7 @@ define fp128 @tanl_negated_arg(fp128 %x) {
 ; ANY-NEXT:    [[R:%.*]] = fneg fp128 [[TMP1]]
 ; ANY-NEXT:    ret fp128 [[R]]
 ;
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %x
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %x
   %r = call fp128 @tanl(fp128 %neg)
   ret fp128 %r
 }

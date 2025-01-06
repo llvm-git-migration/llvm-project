@@ -8,5 +8,5 @@ define half @bf16() nounwind {
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    movi d0, #0000000000000000
 ; CHECK-NEXT:    ret
-  ret half 0xH0000
+  ret half f0x0000
 }

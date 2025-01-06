@@ -90,7 +90,7 @@ entry:
 define i32 @f128_compare2(ptr byval(fp128) %f0) {
 entry:
   %0 = load fp128, ptr %f0, align 8
-  %1 = fcmp ogt fp128 %0, 0xL00000000000000000000000000000000
+  %1 = fcmp ogt fp128 %0, f0x00000000000000000000000000000000
   br i1 %1, label %"5", label %"7"
 
 "5":                                              ; preds = %entry
@@ -237,7 +237,7 @@ entry:
 define void @f128_neg(ptr noalias sret(fp128) %scalar.result, ptr byval(fp128) %a) {
 entry:
   %0 = load fp128, ptr %a, align 8
-  %1 = fsub fp128 0xL00000000000000008000000000000000, %0
+  %1 = fsub fp128 f0x80000000000000000000000000000000, %0
   store fp128 %1, ptr %scalar.result, align 8
   ret void
 }

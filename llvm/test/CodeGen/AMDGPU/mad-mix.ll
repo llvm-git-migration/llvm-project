@@ -1109,7 +1109,7 @@ define float @v_mad_mix_f32_f16lo_f16lo_cvtf16imminv2pi(half %src0, half %src1) 
 ; GISEL-CI-NEXT:    s_setpc_b64 s[30:31]
   %src0.ext = fpext half %src0 to float
   %src1.ext = fpext half %src1 to float
-  %src2 = fpext half 0xH3118 to float
+  %src2 = fpext half f0x3118 to float
   %result = tail call float @llvm.fmuladd.f32(float %src0.ext, float %src1.ext, float %src2)
   ret float %result
 }
@@ -1210,7 +1210,7 @@ define float @v_mad_mix_f32_f16lo_f16lo_cvtf16imm63(half %src0, half %src1) #0 {
 ; GISEL-CI-NEXT:    s_setpc_b64 s[30:31]
   %src0.ext = fpext half %src0 to float
   %src1.ext = fpext half %src1 to float
-  %src2 = fpext half 0xH003F to float
+  %src2 = fpext half f0x003F to float
   %result = tail call float @llvm.fmuladd.f32(float %src0.ext, float %src1.ext, float %src2)
   ret float %result
 }
@@ -1481,7 +1481,7 @@ define <2 x float> @v_mad_mix_v2f32_cvtf16imminv2pi(<2 x half> %src0, <2 x half>
 ; GISEL-CI-NEXT:    s_setpc_b64 s[30:31]
   %src0.ext = fpext <2 x half> %src0 to <2 x float>
   %src1.ext = fpext <2 x half> %src1 to <2 x float>
-  %src2 = fpext <2 x half> <half 0xH3118, half 0xH3118> to <2 x float>
+  %src2 = fpext <2 x half> <half f0x3118, half f0x3118> to <2 x float>
   %result = tail call <2 x float> @llvm.fmuladd.v2f32(<2 x float> %src0.ext, <2 x float> %src1.ext, <2 x float> %src2)
   ret <2 x float> %result
 }
@@ -1616,7 +1616,7 @@ define <2 x float> @v_mad_mix_v2f32_f32imminv2pi(<2 x half> %src0, <2 x half> %s
 ; GISEL-CI-NEXT:    s_setpc_b64 s[30:31]
   %src0.ext = fpext <2 x half> %src0 to <2 x float>
   %src1.ext = fpext <2 x half> %src1 to <2 x float>
-  %src2 = fpext <2 x half> <half 0xH3118, half 0xH3118> to <2 x float>
+  %src2 = fpext <2 x half> <half f0x3118, half f0x3118> to <2 x float>
   %result = tail call <2 x float> @llvm.fmuladd.v2f32(<2 x float> %src0.ext, <2 x float> %src1.ext, <2 x float> <float 0x3FC45F3060000000, float 0x3FC45F3060000000>)
   ret <2 x float> %result
 }

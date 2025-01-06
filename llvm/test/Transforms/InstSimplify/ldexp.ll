@@ -419,9 +419,9 @@ define void @ldexp_f64() {
 
 define void @ldexp_f16() {
 ; CHECK-LABEL: @ldexp_f16(
-; CHECK-NEXT:    store volatile half 0xH4000, ptr addrspace(1) undef, align 2
-; CHECK-NEXT:    store volatile half 0xH4400, ptr addrspace(1) undef, align 2
-; CHECK-NEXT:    store volatile half 0xH7C00, ptr addrspace(1) undef, align 2
+; CHECK-NEXT:    store volatile half f0x4000, ptr addrspace(1) undef, align 2
+; CHECK-NEXT:    store volatile half f0x4400, ptr addrspace(1) undef, align 2
+; CHECK-NEXT:    store volatile half f0x7C00, ptr addrspace(1) undef, align 2
 ; CHECK-NEXT:    ret void
 ;
   %one.one = call half @llvm.ldexp.f16.i32(half 1.0, i32 1)
@@ -438,26 +438,26 @@ define void @ldexp_f16() {
 
 define void @ldexp_ppcf128() {
 ; CHECK-LABEL: @ldexp_ppcf128(
-; CHECK-NEXT:    store volatile ppc_fp128 0xMFFF00000000000000000000000000000, ptr addrspace(1) undef, align 16
-; CHECK-NEXT:    store volatile ppc_fp128 0xMFFFC0000000000000000000000000000, ptr addrspace(1) undef, align 16
-; CHECK-NEXT:    store volatile ppc_fp128 0xM3FD00000000000000000000000000000, ptr addrspace(1) undef, align 16
-; CHECK-NEXT:    store volatile ppc_fp128 0xM41700000000000000000000000000000, ptr addrspace(1) undef, align 16
-; CHECK-NEXT:    store volatile ppc_fp128 0xMC0700000000000000000000000000000, ptr addrspace(1) undef, align 16
+; CHECK-NEXT:    store volatile ppc_fp128 f0x0000000000000000FFF0000000000000, ptr addrspace(1) undef, align 16
+; CHECK-NEXT:    store volatile ppc_fp128 f0x0000000000000000FFFC000000000000, ptr addrspace(1) undef, align 16
+; CHECK-NEXT:    store volatile ppc_fp128 f0x00000000000000003FD0000000000000, ptr addrspace(1) undef, align 16
+; CHECK-NEXT:    store volatile ppc_fp128 f0x00000000000000004170000000000000, ptr addrspace(1) undef, align 16
+; CHECK-NEXT:    store volatile ppc_fp128 f0x0000000000000000C070000000000000, ptr addrspace(1) undef, align 16
 ; CHECK-NEXT:    ret void
 ;
-  %neginf = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 0xMFFF00000000000000000000000000000, i32 0)
+  %neginf = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 f0x0000000000000000FFF0000000000000, i32 0)
   store volatile ppc_fp128 %neginf, ptr addrspace(1) undef
 
-  %snan = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 0xMFFFC0000000000000000000000000000, i32 0)
+  %snan = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 f0x0000000000000000FFFC000000000000, i32 0)
   store volatile ppc_fp128 %snan, ptr addrspace(1) undef
 
-  %one.neg2 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 0xM3FF00000000000000000000000000000, i32 -2)
+  %one.neg2 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 f0x00000000000000003FF0000000000000, i32 -2)
   store volatile ppc_fp128 %one.neg2, ptr addrspace(1) undef
 
-  %one.24 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 0xM3FF00000000000000000000000000000, i32 24)
+  %one.24 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 f0x00000000000000003FF0000000000000, i32 24)
   store volatile ppc_fp128 %one.24, ptr addrspace(1) undef
 
-  %negone.8 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 0xMBFF00000000000000000000000000000, i32 8)
+  %negone.8 = call ppc_fp128 @llvm.ldexp.ppcf128.i32(ppc_fp128 f0x0000000000000000BFF0000000000000, i32 8)
   store volatile ppc_fp128 %negone.8, ptr addrspace(1) undef
 
   ret void

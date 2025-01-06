@@ -426,7 +426,7 @@ define x86_fp80 @test7(i32 %tmp8) nounwind {
 ; MCU-NEXT:    fldt {{\.?LCPI[0-9]+_[0-9]+}}(%eax)
 ; MCU-NEXT:    retl
   %tmp9 = icmp sgt i32 %tmp8, -1
-  %retval = select i1 %tmp9, x86_fp80 0xK4005B400000000000000, x86_fp80 0xK40078700000000000000
+  %retval = select i1 %tmp9, x86_fp80 f0x4005B400000000000000, x86_fp80 f0x40078700000000000000
   ret x86_fp80 %retval
 }
 

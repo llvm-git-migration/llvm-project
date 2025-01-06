@@ -7,10 +7,10 @@ body:             |
   bb.1:
   liveins:
     ; CHECK-LABEL: name: test_combine_nan_rhs_fminimum_half
-    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH7C01
+    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x7C01
     ; CHECK-NEXT: $h0 = COPY [[C]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMINIMUM %0, %1
     $h0 = COPY %2
 ...
@@ -46,10 +46,10 @@ body:             |
   bb.1:
   liveins:
     ; CHECK-LABEL: name: test_combine_nan_lhs_fminimum_half
-    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH7C01
+    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x7C01
     ; CHECK-NEXT: $h0 = COPY [[C]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMINIMUM %1, %0
     $h0 = COPY %2
 ...
@@ -85,10 +85,10 @@ body:             |
   bb.1:
   liveins:
     ; CHECK-LABEL: name: test_combine_nan_rhs_fmaximum_half
-    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH7C01
+    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x7C01
     ; CHECK-NEXT: $h0 = COPY [[C]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMAXIMUM %0, %1
     $h0 = COPY %2
 ...
@@ -124,10 +124,10 @@ body:             |
   bb.1:
   liveins:
     ; CHECK-LABEL: name: test_combine_nan_lhs_fmaximum_half
-    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH7C01
+    ; CHECK: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x7C01
     ; CHECK-NEXT: $h0 = COPY [[C]](s16)
     %0:_(s16) = COPY $h0
-    %1:_(s16) = G_FCONSTANT half 0xH7C01
+    %1:_(s16) = G_FCONSTANT half f0x7C01
     %2:_(s16) = G_FMAXIMUM %1, %0
     $h0 = COPY %2
 ...

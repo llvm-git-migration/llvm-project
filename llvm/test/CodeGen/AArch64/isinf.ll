@@ -17,7 +17,7 @@ define i32 @replace_isinf_call_f16(half %x) {
 ; CHECK-NEXT:    cset w0, eq
 ; CHECK-NEXT:    ret
   %abs = tail call half @llvm.fabs.f16(half %x)
-  %cmpinf = fcmp oeq half %abs, 0xH7C00
+  %cmpinf = fcmp oeq half %abs, f0x7C00
   %ret = zext i1 %cmpinf to i32
   ret i32 %ret
 }
@@ -68,7 +68,7 @@ define i32 @replace_isinf_call_f128(fp128 %x) {
 ; CHECK-NEXT:    cset w0, eq
 ; CHECK-NEXT:    ret
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %x)
-  %cmpinf = fcmp oeq fp128 %abs, 0xL00000000000000007FFF000000000000
+  %cmpinf = fcmp oeq fp128 %abs, f0x7FFF0000000000000000000000000000
   %ret = zext i1 %cmpinf to i32
   ret i32 %ret
 }

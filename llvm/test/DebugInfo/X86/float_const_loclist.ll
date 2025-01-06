@@ -15,7 +15,7 @@
 ;
 ; SANITY: CALL{{.*}} @barrier
 ; SANITY: DBG_VALUE float 0x40091EB860000000
-; SANITY: DBG_VALUE x86_fp80 0xK4000C8F5C28F5C28F800
+; SANITY: DBG_VALUE x86_fp80 f0x4000C8F5C28F5C28F800
 ; SANITY: TAILJMP{{.*}} @barrier
 ;
 ; CHECK: .debug_info contents:
@@ -35,7 +35,7 @@ define void @foo() #0 !dbg !4 {
 entry:
   tail call void (...) @barrier() #3, !dbg !16
   tail call void @llvm.dbg.value(metadata float 0x40091EB860000000, metadata !8, metadata !17), !dbg !18
-  tail call void @llvm.dbg.value(metadata x86_fp80 0xK4000C8F5C28F5C28F800, metadata !10, metadata !17), !dbg !19
+  tail call void @llvm.dbg.value(metadata x86_fp80 f0x4000C8F5C28F5C28F800, metadata !10, metadata !17), !dbg !19
   tail call void (...) @barrier() #3, !dbg !20
   ret void, !dbg !21
 }

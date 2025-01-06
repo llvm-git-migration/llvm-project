@@ -19,7 +19,7 @@ define half @Const0() {
 ; CHECK-NOFP16-NEXT:    movi d0, #0000000000000000
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH0000
+  ret half f0x0000
 }
 
 define half @Const1() {
@@ -34,7 +34,7 @@ define half @Const1() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI1_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH3C00
+  ret half f0x3C00
 }
 
 define half @Const2() {
@@ -49,7 +49,7 @@ define half @Const2() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI2_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH3000
+  ret half f0x3000
 }
 
 define half @Const3() {
@@ -64,7 +64,7 @@ define half @Const3() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI3_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH4F80
+  ret half f0x4F80
 }
 
 define half @Const4() {
@@ -79,7 +79,7 @@ define half @Const4() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI4_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH4FC0
+  ret half f0x4FC0
 }
 
 define half @Const5() {
@@ -95,7 +95,7 @@ define half @Const5() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI5_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH2FF0
+  ret half f0x2FF0
 }
 
 define half @Const6() {
@@ -111,7 +111,7 @@ define half @Const6() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI6_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH4FC1
+  ret half f0x4FC1
 }
 
 define half @Const7() {
@@ -127,6 +127,6 @@ define half @Const7() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI7_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret half 0xH5000
+  ret half f0x5000
 }
 

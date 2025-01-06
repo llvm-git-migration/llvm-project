@@ -665,7 +665,7 @@ define amdgpu_kernel void @v_fneg_inv2pi_minnum_f16(ptr addrspace(1) %out, ptr a
   %a.gep = getelementptr inbounds half, ptr addrspace(1) %a.ptr, i64 %tid.ext
   %out.gep = getelementptr inbounds half, ptr addrspace(1) %out, i64 %tid.ext
   %a = load volatile half, ptr addrspace(1) %a.gep
-  %min = call half @llvm.minnum.f16(half 0xH3118, half %a)
+  %min = call half @llvm.minnum.f16(half f0x3118, half %a)
   %fneg = fsub half -0.000000e+00, %min
   store half %fneg, ptr addrspace(1) %out.gep
   ret void
@@ -688,7 +688,7 @@ define amdgpu_kernel void @v_fneg_neg_inv2pi_minnum_f16(ptr addrspace(1) %out, p
   %a.gep = getelementptr inbounds half, ptr addrspace(1) %a.ptr, i64 %tid.ext
   %out.gep = getelementptr inbounds half, ptr addrspace(1) %out, i64 %tid.ext
   %a = load volatile half, ptr addrspace(1) %a.gep
-  %min = call half @llvm.minnum.f16(half 0xHB118, half %a)
+  %min = call half @llvm.minnum.f16(half f0xB118, half %a)
   %fneg = fsub half -0.000000e+00, %min
   store half %fneg, ptr addrspace(1) %out.gep
   ret void

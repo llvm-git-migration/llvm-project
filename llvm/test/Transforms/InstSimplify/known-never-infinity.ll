@@ -10,7 +10,7 @@ define i1 @isKnownNeverInfinity_uitofp(i15 %x) {
 ; CHECK-NEXT:    ret i1 true
 ;
   %f = uitofp i15 %x to half
-  %r = fcmp une half %f, 0xH7c00
+  %r = fcmp une half %f, f0x7c00
   ret i1 %r
 }
 
@@ -20,11 +20,11 @@ define i1 @isNotKnownNeverInfinity_uitofp(i16 %x) {
 ; CHECK-LABEL: define i1 @isNotKnownNeverInfinity_uitofp
 ; CHECK-SAME: (i16 [[X:%.*]]) {
 ; CHECK-NEXT:    [[F:%.*]] = uitofp i16 [[X]] to half
-; CHECK-NEXT:    [[R:%.*]] = fcmp une half [[F]], 0xH7C00
+; CHECK-NEXT:    [[R:%.*]] = fcmp une half [[F]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %f = uitofp i16 %x to half
-  %r = fcmp une half %f, 0xH7c00
+  %r = fcmp une half %f, f0x7c00
   ret i1 %r
 }
 
@@ -34,7 +34,7 @@ define i1 @isKnownNeverNegativeInfinity_uitofp(i15 %x) {
 ; CHECK-NEXT:    ret i1 false
 ;
   %f = uitofp i15 %x to half
-  %r = fcmp oeq half %f, 0xHfc00
+  %r = fcmp oeq half %f, f0xfc00
   ret i1 %r
 }
 
@@ -46,7 +46,7 @@ define i1 @isNotKnownNeverNegativeInfinity_uitofp(i16 %x) {
 ; CHECK-NEXT:    ret i1 false
 ;
   %f = uitofp i16 %x to half
-  %r = fcmp oeq half %f, 0xHfc00
+  %r = fcmp oeq half %f, f0xfc00
   ret i1 %r
 }
 
@@ -59,7 +59,7 @@ define i1 @isKnownNeverInfinity_sitofp(i16 %x) {
 ; CHECK-NEXT:    ret i1 true
 ;
   %f = sitofp i16 %x to half
-  %r = fcmp une half %f, 0xH7c00
+  %r = fcmp une half %f, f0x7c00
   ret i1 %r
 }
 
@@ -69,11 +69,11 @@ define i1 @isNotKnownNeverInfinity_sitofp(i17 %x) {
 ; CHECK-LABEL: define i1 @isNotKnownNeverInfinity_sitofp
 ; CHECK-SAME: (i17 [[X:%.*]]) {
 ; CHECK-NEXT:    [[F:%.*]] = sitofp i17 [[X]] to half
-; CHECK-NEXT:    [[R:%.*]] = fcmp une half [[F]], 0xH7C00
+; CHECK-NEXT:    [[R:%.*]] = fcmp une half [[F]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %f = sitofp i17 %x to half
-  %r = fcmp une half %f, 0xH7c00
+  %r = fcmp une half %f, f0x7c00
   ret i1 %r
 }
 
@@ -83,7 +83,7 @@ define i1 @isKnownNeverNegativeInfinity_sitofp(i16 %x) {
 ; CHECK-NEXT:    ret i1 false
 ;
   %f = sitofp i16 %x to half
-  %r = fcmp oeq half %f, 0xHfc00
+  %r = fcmp oeq half %f, f0xfc00
   ret i1 %r
 }
 
@@ -93,11 +93,11 @@ define i1 @isNotKnownNeverNegativeInfinity_sitofp(i17 %x) {
 ; CHECK-LABEL: define i1 @isNotKnownNeverNegativeInfinity_sitofp
 ; CHECK-SAME: (i17 [[X:%.*]]) {
 ; CHECK-NEXT:    [[F:%.*]] = sitofp i17 [[X]] to half
-; CHECK-NEXT:    [[R:%.*]] = fcmp oeq half [[F]], 0xHFC00
+; CHECK-NEXT:    [[R:%.*]] = fcmp oeq half [[F]], f0xFC00
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %f = sitofp i17 %x to half
-  %r = fcmp oeq half %f, 0xHfc00
+  %r = fcmp oeq half %f, f0xfc00
   ret i1 %r
 }
 
@@ -444,12 +444,12 @@ define i1 @isKnownNeverInfinity_floor_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.floor.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.floor.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -458,12 +458,12 @@ define i1 @isKnownNeverInfinity_ceil_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.ceil.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.ceil.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -472,12 +472,12 @@ define i1 @isKnownNeverInfinity_rint_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.rint.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.rint.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -486,12 +486,12 @@ define i1 @isKnownNeverInfinity_nearbyint_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.nearbyint.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.nearbyint.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -500,12 +500,12 @@ define i1 @isKnownNeverInfinity_round_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.round.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.round.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -514,12 +514,12 @@ define i1 @isKnownNeverInfinity_roundeven_ppcf128(ppc_fp128 %x) {
 ; CHECK-SAME: (ppc_fp128 [[X:%.*]]) {
 ; CHECK-NEXT:    [[A:%.*]] = fadd ninf ppc_fp128 [[X]], [[X]]
 ; CHECK-NEXT:    [[E:%.*]] = call ppc_fp128 @llvm.roundeven.ppcf128(ppc_fp128 [[A]])
-; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], 0xM7FF00000000000000000000000000000
+; CHECK-NEXT:    [[R:%.*]] = fcmp une ppc_fp128 [[E]], f0x00000000000000007FF0000000000000
 ; CHECK-NEXT:    ret i1 [[R]]
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.roundeven.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -530,7 +530,7 @@ define i1 @isKnownNeverInfinity_trunc_ppcf128(ppc_fp128 %x) {
 ;
   %a = fadd ninf ppc_fp128 %x, %x
   %e = call ppc_fp128 @llvm.trunc.ppcf128(ppc_fp128 %a)
-  %r = fcmp une ppc_fp128 %e, 0xM7FF00000000000000000000000000000
+  %r = fcmp une ppc_fp128 %e, f0x00000000000000007FF0000000000000
   ret i1 %r
 }
 
@@ -541,7 +541,7 @@ define i1 @isKnownNeverInfinity_ceil_x86_fp80(x86_fp80 %x) {
 ;
   %a = fadd ninf x86_fp80 %x, %x
   %e = call x86_fp80 @llvm.ceil.f80(x86_fp80 %a)
-  %r = fcmp une x86_fp80 %e, 0xK7FFF8000000000000000
+  %r = fcmp une x86_fp80 %e, f0x7FFF8000000000000000
   ret i1 %r
 }
 

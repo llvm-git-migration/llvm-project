@@ -44,7 +44,7 @@ entry:
   %res5 = tail call spir_func i1 @_Z25__spirv_GroupLogicalOrKHR(i32 2, i32 0, i1 false)
   %res6 = tail call spir_func i1 @_Z26__spirv_GroupLogicalXorKHR(i32 2, i32 0, i1 false)
   %res7 = tail call spir_func i32 @_Z20__spirv_GroupIMulKHR(i32 2, i32 0, i32 0)
-  %res8 = tail call spir_func half @_Z20__spirv_GroupFMulKHR(i32 2, i32 0, half 0xH0000)
+  %res8 = tail call spir_func half @_Z20__spirv_GroupFMulKHR(i32 2, i32 0, half f0x0000)
   ret void
 }
 
@@ -57,7 +57,7 @@ entry:
   %res5 = tail call spir_func i32  @_Z28work_group_reduce_logical_ori(i32 0)
   %res6 = tail call spir_func i32  @_Z29work_group_reduce_logical_xori(i32 0)
   %res7 = tail call spir_func i32  @_Z21work_group_reduce_muli(i32 0)
-  %res8 = tail call spir_func half @_Z21work_group_reduce_mulDh(half 0xH0000)
+  %res8 = tail call spir_func half @_Z21work_group_reduce_mulDh(half f0x0000)
   ret void
 }
 

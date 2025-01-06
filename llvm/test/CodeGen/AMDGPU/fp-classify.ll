@@ -632,7 +632,7 @@ define amdgpu_kernel void @test_isinf_pattern_f16(ptr addrspace(1) nocapture %ou
 ; GFX11-NEXT:    global_store_b32 v0, v1, s[0:1]
 ; GFX11-NEXT:    s_endpgm
   %fabs = tail call half @llvm.fabs.f16(half %x) #1
-  %cmp = fcmp oeq half %fabs, 0xH7C00
+  %cmp = fcmp oeq half %fabs, f0x7C00
   %ext = zext i1 %cmp to i32
   store i32 %ext, ptr addrspace(1) %out, align 4
   ret void
@@ -683,7 +683,7 @@ define amdgpu_kernel void @test_isfinite_pattern_0_f16(ptr addrspace(1) nocaptur
 ; GFX11-NEXT:    s_endpgm
   %ord = fcmp ord half %x, 0.0
   %x.fabs = tail call half @llvm.fabs.f16(half %x) #1
-  %ninf = fcmp une half %x.fabs, 0xH7C00
+  %ninf = fcmp une half %x.fabs, f0x7C00
   %and = and i1 %ord, %ninf
   %ext = zext i1 %and to i32
   store i32 %ext, ptr addrspace(1) %out, align 4
@@ -732,7 +732,7 @@ define amdgpu_kernel void @test_isfinite_pattern_4_f16(ptr addrspace(1) nocaptur
 ; GFX11-NEXT:    s_endpgm
   %ord = fcmp ord half %x, 0.0
   %x.fabs = tail call half @llvm.fabs.f16(half %x) #1
-  %ninf = fcmp one half %x.fabs, 0xH7C00
+  %ninf = fcmp one half %x.fabs, f0x7C00
   %and = and i1 %ord, %ninf
   %ext = zext i1 %and to i32
   store i32 %ext, ptr addrspace(1) %out, align 4

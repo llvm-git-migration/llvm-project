@@ -83,7 +83,7 @@ define fp128 @olt_sel(fp128 %a, fp128 %b) {
 ; CHECK-NEXT:    vmr v2, v3
 ; CHECK-NEXT:    blr
 entry:
-  %0 = fcmp fast olt fp128 %a, 0xL00000000000000000000000000000000
-  %1 = select i1 %0, fp128 %b, fp128 0xL00000000000000000000000000000000
+  %0 = fcmp fast olt fp128 %a, f0x00000000000000000000000000000000
+  %1 = select i1 %0, fp128 %b, fp128 f0x00000000000000000000000000000000
   ret fp128 %1
 }

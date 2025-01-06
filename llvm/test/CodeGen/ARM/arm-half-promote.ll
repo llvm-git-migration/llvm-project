@@ -120,7 +120,7 @@ define void @extract_insert(ptr %dst) optnone noinline {
 ; CHECK: vcvtb.f16.f32 s0, s0
 ; CHECK: vmov r1, s0
 ; CHECK: strh r1, [r0]
-  %splat.splatinsert = insertelement <1 x half> zeroinitializer, half 0xH0000, i32 0
+  %splat.splatinsert = insertelement <1 x half> zeroinitializer, half f0x0000, i32 0
   br label %next
 
 next:

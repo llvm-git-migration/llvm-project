@@ -6,8 +6,8 @@
 
 long double global;
 // SIZE64: @global = dso_local global double 0
-// SIZE80: @global = dso_local global x86_fp80 0xK{{0+}}, align 16
-// SIZE128: @global = dso_local global fp128 0
+// SIZE80: @global = dso_local global x86_fp80 f0x{{0+}}, align 16
+// SIZE128: @global = dso_local global fp128 f0x
 
 long double func(long double param) {
   // SIZE64: define dso_local double @func(double noundef %param)

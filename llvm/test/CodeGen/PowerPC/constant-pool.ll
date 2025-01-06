@@ -55,7 +55,7 @@ entry:
 ; CHECK-P9-NEXT:    lfd f2, .LCPI2_1@toc@l(r3)
 ; CHECK-P9-NEXT:    blr
 entry:
-  ret ppc_fp128 0xM03600000DBA876CC800D16974FD9D27B
+  ret ppc_fp128 f0x800D16974FD9D27B03600000DBA876CC
 }
 
  define fp128 @__Float128ConstantPool() {
@@ -71,7 +71,7 @@ entry:
 ; CHECK-P9-NEXT:    lxv vs34, 0(r3)
 ; CHECK-P9-NEXT:    blr
 entry:
-  ret fp128 0xL00000000000000003C00FFFFC5D02B3A
+  ret fp128 f0x3C00FFFFC5D02B3A0000000000000000
 }
 
  define <16 x i8> @VectorCharConstantPool() {
@@ -343,9 +343,9 @@ define fp128 @three_constants_f128(fp128 %a, fp128 %c) {
 ; CHECK-P9-NEXT:    xsaddqp v2, v2, v3
 ; CHECK-P9-NEXT:    blr
 entry:
-  %0 = fadd fp128 %a, 0xL8000000000000000400123851EB851EB
-  %1 = fadd fp128 %0, 0xL8000000000000000400123851EB991EB
-  %2 = fadd fp128 %1, 0xL8000000000000000400123851EB771EB
+  %0 = fadd fp128 %a, f0x400123851EB851EB8000000000000000
+  %1 = fadd fp128 %0, f0x400123851EB991EB8000000000000000
+  %2 = fadd fp128 %1, f0x400123851EB771EB8000000000000000
   ret fp128 %2
 }
 
@@ -405,9 +405,9 @@ define ppc_fp128 @three_constants_ppcf128(ppc_fp128 %a, ppc_fp128 %c) {
 ; CHECK-P9-NEXT:    mtlr r0
 ; CHECK-P9-NEXT:    blr
 entry:
-  %0 = fadd ppc_fp128 %a, 0xM40123851EB851EB80000000000000000
-  %1 = fadd ppc_fp128 %0, 0xM4012385199851EB80000000000000000
-  %2 = fadd ppc_fp128 %1, 0xM4012385100851EB80000000000000000
+  %0 = fadd ppc_fp128 %a, f0x000000000000000040123851EB851EB8
+  %1 = fadd ppc_fp128 %0, f0x00000000000000004012385199851EB8
+  %2 = fadd ppc_fp128 %1, f0x00000000000000004012385100851EB8
   ret ppc_fp128 %2
 }
 

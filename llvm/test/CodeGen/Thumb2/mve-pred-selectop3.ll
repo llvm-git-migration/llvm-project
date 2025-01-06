@@ -528,7 +528,7 @@ define arm_aapcs_vfpcc <8 x half> @fadd_v8f16_x(<8 x half> %x, <8 x half> %y, i3
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = fadd <8 x half> %a, %x
   ret <8 x half> %b
 }
@@ -614,7 +614,7 @@ define arm_aapcs_vfpcc <8 x half> @fmul_v8f16_x(<8 x half> %x, <8 x half> %y, i3
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>
+  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>
   %b = fmul <8 x half> %a, %x
   ret <8 x half> %b
 }
@@ -666,7 +666,7 @@ define arm_aapcs_vfpcc <8 x half> @fdiv_v8f16_x(<8 x half> %x, <8 x half> %y, i3
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>
+  %a = select <8 x i1> %c, <8 x half> %y, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>
   %b = fdiv <8 x half> %x, %a
   ret <8 x half> %b
 }
@@ -700,7 +700,7 @@ define arm_aapcs_vfpcc <8 x half> @fmai_v8f16_x(<8 x half> %x, <8 x half> %y, <8
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = call <8 x half> @llvm.fma.v8f16(<8 x half> %y, <8 x half> %z, <8 x half> %a)
   ret <8 x half> %b
 }
@@ -730,7 +730,7 @@ define arm_aapcs_vfpcc <8 x half> @fma_v8f16_x(<8 x half> %x, <8 x half> %y, <8 
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
   %m = fmul fast <8 x half> %y, %z
-  %a = select <8 x i1> %c, <8 x half> %m, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %m, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = fadd fast <8 x half> %a, %x
   ret <8 x half> %b
 }
@@ -1304,7 +1304,7 @@ entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
   %i = insertelement <8 x half> undef, half %y, i64 0
   %ys = shufflevector <8 x half> %i, <8 x half> undef, <8 x i32> zeroinitializer
-  %a = select <8 x i1> %c, <8 x half> %ys, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %ys, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = fadd <8 x half> %a, %x
   ret <8 x half> %b
 }
@@ -1372,7 +1372,7 @@ entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
   %i = insertelement <8 x half> undef, half %y, i64 0
   %ys = shufflevector <8 x half> %i, <8 x half> undef, <8 x i32> zeroinitializer
-  %a = select <8 x i1> %c, <8 x half> %ys, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>
+  %a = select <8 x i1> %c, <8 x half> %ys, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>
   %b = fmul <8 x half> %a, %x
   ret <8 x half> %b
 }
@@ -2101,7 +2101,7 @@ define arm_aapcs_vfpcc <8 x half> @fadd_v8f16_y(<8 x half> %x, <8 x half> %y, i3
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = fadd <8 x half> %a, %y
   ret <8 x half> %b
 }
@@ -2161,7 +2161,7 @@ define arm_aapcs_vfpcc <8 x half> @fmul_v8f16_y(<8 x half> %x, <8 x half> %y, i3
 ; CHECK-NEXT:    bx lr
 entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
-  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>
+  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>
   %b = fmul <8 x half> %a, %y
   ret <8 x half> %b
 }
@@ -2909,7 +2909,7 @@ entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
   %i = insertelement <8 x half> undef, half %y, i64 0
   %ys = shufflevector <8 x half> %i, <8 x half> undef, <8 x i32> zeroinitializer
-  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>
+  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>
   %b = fadd <8 x half> %ys, %a
   ret <8 x half> %b
 }
@@ -2985,7 +2985,7 @@ entry:
   %c = call <8 x i1> @llvm.arm.mve.vctp16(i32 %n)
   %i = insertelement <8 x half> undef, half %y, i64 0
   %ys = shufflevector <8 x half> %i, <8 x half> undef, <8 x i32> zeroinitializer
-  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>
+  %a = select <8 x i1> %c, <8 x half> %x, <8 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>
   %b = fmul <8 x half> %ys, %a
   ret <8 x half> %b
 }

@@ -261,7 +261,7 @@ define void @PR41749() {
 ; X64-NEXT:    fstp %st(1)
 ; X64-NEXT:    fstpt (%rax)
 ; X64-NEXT:    retq
-  %1 = call x86_fp80 @llvm.copysign.f80(x86_fp80 0xK00000000000000000000, x86_fp80 undef)
+  %1 = call x86_fp80 @llvm.copysign.f80(x86_fp80 f0x00000000000000000000, x86_fp80 undef)
   store x86_fp80 %1, ptr undef, align 16
   ret void
 }

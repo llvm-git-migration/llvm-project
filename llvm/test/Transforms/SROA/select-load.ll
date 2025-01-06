@@ -9,12 +9,12 @@
 define <2 x i16> @test_load_bitcast_select(i1 %cond1, i1 %cond2) {
 ; CHECK-LABEL: @test_load_bitcast_select(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast half 0xHFFFF to i16
-; CHECK-NEXT:    [[TMP1:%.*]] = bitcast half 0xH0000 to i16
+; CHECK-NEXT:    [[TMP0:%.*]] = bitcast half f0xFFFF to i16
+; CHECK-NEXT:    [[TMP1:%.*]] = bitcast half f0x0000 to i16
 ; CHECK-NEXT:    [[LD1_SROA_SPECULATED:%.*]] = select i1 [[COND1:%.*]], i16 [[TMP0]], i16 [[TMP1]]
 ; CHECK-NEXT:    [[V1:%.*]] = insertelement <2 x i16> poison, i16 [[LD1_SROA_SPECULATED]], i32 0
-; CHECK-NEXT:    [[TMP2:%.*]] = bitcast half 0xHFFFF to i16
-; CHECK-NEXT:    [[TMP3:%.*]] = bitcast half 0xH0000 to i16
+; CHECK-NEXT:    [[TMP2:%.*]] = bitcast half f0xFFFF to i16
+; CHECK-NEXT:    [[TMP3:%.*]] = bitcast half f0x0000 to i16
 ; CHECK-NEXT:    [[LD2_SROA_SPECULATED:%.*]] = select i1 [[COND2:%.*]], i16 [[TMP2]], i16 [[TMP3]]
 ; CHECK-NEXT:    [[V2:%.*]] = insertelement <2 x i16> [[V1]], i16 [[LD2_SROA_SPECULATED]], i32 1
 ; CHECK-NEXT:    ret <2 x i16> [[V2]]
@@ -22,8 +22,8 @@ define <2 x i16> @test_load_bitcast_select(i1 %cond1, i1 %cond2) {
 entry:
   %true = alloca half, align 2
   %false = alloca half, align 2
-  store half 0xHFFFF, ptr %true, align 2
-  store half 0xH0000, ptr %false, align 2
+  store half f0xFFFF, ptr %true, align 2
+  store half f0x0000, ptr %false, align 2
   %sel1 = select i1 %cond1, ptr %true, ptr %false
   %ld1 = load i16, ptr %sel1, align 2
   %v1 = insertelement <2 x i16> poison, i16 %ld1, i32 0

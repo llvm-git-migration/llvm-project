@@ -355,12 +355,12 @@ void foo(void) {
   // CHECK: [[F16TOF32]]
   // CHECK: [[F16TOF32]]
   // CHECK: [[F32TOF16]]
-  // NATIVE-HALF: fcmp une half {{.*}}, 0xH0000
+  // NATIVE-HALF: fcmp une half {{.*}}, f0x0000
   h1 = (h1 ? h2 : h0);
   // Check assignments (inc. compound)
   h0 = h1;
-  // NOTNATIVE: store {{.*}} half 0xHC000
-  // NATIVE-HALF: store {{.*}} half 0xHC000
+  // NOTNATIVE: store {{.*}} half f0xC000
+  // NATIVE-HALF: store {{.*}} half f0xC000
   h0 = (__fp16)-2.0f;
   // CHECK: [[F32TOF16]]
   // NATIVE-HALF: fptrunc float

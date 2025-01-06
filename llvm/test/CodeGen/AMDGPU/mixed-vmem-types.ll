@@ -137,7 +137,7 @@ define amdgpu_cs void @mixed_vmem_types(i32 inreg %globalTable, i32 inreg %perSh
   %i15 = getelementptr i8, ptr addrspace(4) %i6, i64 32
   %i16 = load <8 x i32>, ptr addrspace(4) %i15, align 32
   %i17 = load <4 x i32>, ptr addrspace(4) %i6, align 16
-  %i18 = call float @llvm.amdgcn.image.sample.lz.2d.f32.f16.v8i32.v4i32(i32 1, half 0xHBC00, half 0xHBC00, <8 x i32> %i16, <4 x i32> %i17, i1 false, i32 0, i32 0)
+  %i18 = call float @llvm.amdgcn.image.sample.lz.2d.f32.f16.v8i32.v4i32(i32 1, half f0xBC00, half f0xBC00, <8 x i32> %i16, <4 x i32> %i17, i1 false, i32 0, i32 0)
   %i19 = fcmp oeq float %i18, 0.000000e+00
   %i20 = call i32 @llvm.amdgcn.raw.buffer.load.i32(<4 x i32> %i14, i32 0, i32 0, i32 0)
   %.not = icmp eq i32 %i20, 2752
@@ -146,7 +146,7 @@ define amdgpu_cs void @mixed_vmem_types(i32 inreg %globalTable, i32 inreg %perSh
   %i22 = getelementptr i8, ptr addrspace(4) %i3, i64 16
   %i23 = load <8 x i32>, ptr addrspace(4) %i22, align 32
   %i24 = load <4 x i32>, ptr addrspace(4) %i3, align 16
-  %i25 = call float @llvm.amdgcn.image.sample.lz.2d.f32.f16.v8i32.v4i32(i32 1, half 0xHBC00, half 0xHBC00, <8 x i32> %i23, <4 x i32> %i24, i1 false, i32 0, i32 0)
+  %i25 = call float @llvm.amdgcn.image.sample.lz.2d.f32.f16.v8i32.v4i32(i32 1, half f0xBC00, half f0xBC00, <8 x i32> %i23, <4 x i32> %i24, i1 false, i32 0, i32 0)
   %i26 = fcmp oeq float %i25, 1.000000e+00
   %i27 = call i32 @llvm.amdgcn.raw.buffer.load.i32(<4 x i32> %i10, i32 0, i32 0, i32 0)
   %.not2 = icmp eq i32 %i27, 2752

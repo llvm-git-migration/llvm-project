@@ -29,7 +29,7 @@ entry:
 	%tmp = alloca double, align 8		; <ptr> [#uses=2]
 	%ld = alloca x86_fp80, align 16		; <ptr> [#uses=2]
 	%"alloca point" = bitcast i32 0 to i32		; <i32> [#uses=0]
-	store x86_fp80 0xK00000000000000000000, ptr %ld, align 16
+	store x86_fp80 f0x00000000000000000000, ptr %ld, align 16
 	%tmp1 = load x86_fp80, ptr %ld, align 16		; <x86_fp80> [#uses=1]
 	%tmp12 = fptrunc x86_fp80 %tmp1 to double		; <double> [#uses=1]
 	store double %tmp12, ptr %tmp, align 8

@@ -3,7 +3,7 @@
 
 ; CHECK: .b8 half_array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 @"half_array" = addrspace(1) constant [4 x half]
-                [half 0xH0201, half 0xH0403, half 0xH0605, half 0xH0807]
+                [half f0x0201, half f0x0403, half f0x0605, half f0x0807]
 
 define void @test_load_store(ptr addrspace(1) %in, ptr addrspace(1) %out) {
 ; CHECK-LABEL: @test_load_store

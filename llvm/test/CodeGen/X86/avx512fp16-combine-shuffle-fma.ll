@@ -47,7 +47,7 @@ define <2 x half> @foo(<2 x half> %0) "unsafe-fp-math"="true" nounwind {
 ; FP16-NEXT:    vfmaddsub231ph {{\.?LCPI[0-9]+_[0-9]+}}(%rip), %xmm1, %xmm0
 ; FP16-NEXT:    retq
   %2 = shufflevector <2 x half> %0, <2 x half> undef, <2 x i32> <i32 1, i32 2>
-  %3 = fmul fast <2 x half> %2, <half 0xH3D3A, half 0xH3854>
+  %3 = fmul fast <2 x half> %2, <half f0x3D3A, half f0x3854>
   %4 = fsub fast <2 x half> %3, %0
   %5 = fadd fast <2 x half> %3, %0
   %6 = shufflevector <2 x half> %4, <2 x half> %5, <2 x i32> <i32 0, i32 3>

@@ -15,7 +15,7 @@ float16_t test_vabsh_f16(float16_t a) {
 }
 
 // CHECK-LABEL: test_vceqzh_f16
-// CHECK:  [[TMP1:%.*]] = fcmp oeq half %a, 0xH0000
+// CHECK:  [[TMP1:%.*]] = fcmp oeq half %a, f0x0000
 // CHECK:  [[TMP2:%.*]] = sext i1 [[TMP1]] to i16
 // CHECK:  ret i16 [[TMP2]]
 uint16_t test_vceqzh_f16(float16_t a) {
@@ -23,7 +23,7 @@ uint16_t test_vceqzh_f16(float16_t a) {
 }
 
 // CHECK-LABEL: test_vcgezh_f16
-// CHECK:  [[TMP1:%.*]] = fcmp oge half %a, 0xH0000
+// CHECK:  [[TMP1:%.*]] = fcmp oge half %a, f0x0000
 // CHECK:  [[TMP2:%.*]] = sext i1 [[TMP1]] to i16
 // CHECK:  ret i16 [[TMP2]]
 uint16_t test_vcgezh_f16(float16_t a) {
@@ -31,7 +31,7 @@ uint16_t test_vcgezh_f16(float16_t a) {
 }
 
 // CHECK-LABEL: test_vcgtzh_f16
-// CHECK:  [[TMP1:%.*]] = fcmp ogt half %a, 0xH0000
+// CHECK:  [[TMP1:%.*]] = fcmp ogt half %a, f0x0000
 // CHECK:  [[TMP2:%.*]] = sext i1 [[TMP1]] to i16
 // CHECK:  ret i16 [[TMP2]]
 uint16_t test_vcgtzh_f16(float16_t a) {
@@ -39,7 +39,7 @@ uint16_t test_vcgtzh_f16(float16_t a) {
 }
 
 // CHECK-LABEL: test_vclezh_f16
-// CHECK:  [[TMP1:%.*]] = fcmp ole half %a, 0xH0000
+// CHECK:  [[TMP1:%.*]] = fcmp ole half %a, f0x0000
 // CHECK:  [[TMP2:%.*]] = sext i1 [[TMP1]] to i16
 // CHECK:  ret i16 [[TMP2]]
 uint16_t test_vclezh_f16(float16_t a) {
@@ -47,7 +47,7 @@ uint16_t test_vclezh_f16(float16_t a) {
 }
 
 // CHECK-LABEL: test_vcltzh_f16
-// CHECK:  [[TMP1:%.*]] = fcmp olt half %a, 0xH0000
+// CHECK:  [[TMP1:%.*]] = fcmp olt half %a, f0x0000
 // CHECK:  [[TMP2:%.*]] = sext i1 [[TMP1]] to i16
 // CHECK:  ret i16 [[TMP2]]
 uint16_t test_vcltzh_f16(float16_t a) {

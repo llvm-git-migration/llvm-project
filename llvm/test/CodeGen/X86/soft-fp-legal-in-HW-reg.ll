@@ -35,7 +35,7 @@ define fp128 @TestSelect(fp128 %a, fp128 %b) {
 ; CHECK-NEXT:    retq
   %cmp = fcmp ogt fp128 %a, %b
   %sub = fsub fp128 %a, %b
-  %res = select i1 %cmp, fp128 %sub, fp128 0xL00000000000000000000000000000000
+  %res = select i1 %cmp, fp128 %sub, fp128 f0x00000000000000000000000000000000
   ret fp128 %res
 }
 
@@ -71,6 +71,6 @@ define fp128 @TestFneg(fp128 %a) {
 ; CHECK-NEXT:    .cfi_def_cfa_offset 8
 ; CHECK-NEXT:    retq
   %mul = fmul fp128 %a, %a
-  %res = fsub fp128 0xL00000000000000008000000000000000, %mul
+  %res = fsub fp128 f0x80000000000000000000000000000000, %mul
   ret fp128 %res
 }

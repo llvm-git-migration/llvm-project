@@ -61,7 +61,7 @@ define <vscale x 8 x half> @idempotent_fmul_u_two_dups(<vscale x 8 x i1> %pg, <v
   ; together is sane.
 ; CHECK-LABEL: define <vscale x 8 x half> @idempotent_fmul_u_two_dups(
 ; CHECK-SAME: <vscale x 8 x i1> [[PG:%.*]], <vscale x 8 x half> [[A:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    ret <vscale x 8 x half> splat (half 0xH3C00)
+; CHECK-NEXT:    ret <vscale x 8 x half> splat (half f0x3C00)
 ;
   %1 = call <vscale x 8 x half> @llvm.aarch64.sve.dup.x.nxv8f16(half 1.0)
   %2 = call <vscale x 8 x half> @llvm.aarch64.sve.dup.x.nxv8f16(half 1.0)
@@ -73,7 +73,7 @@ define <vscale x 8 x half> @idempotent_fmul_u_two_dups(<vscale x 8 x i1> %pg, <v
 define <vscale x 8 x half> @non_idempotent_fmul_u_f16(<vscale x 8 x i1> %pg, <vscale x 8 x half> %a) #0 {
 ; CHECK-LABEL: define <vscale x 8 x half> @non_idempotent_fmul_u_f16(
 ; CHECK-SAME: <vscale x 8 x i1> [[PG:%.*]], <vscale x 8 x half> [[A:%.*]]) #[[ATTR0]] {
-; CHECK-NEXT:    [[TMP1:%.*]] = call <vscale x 8 x half> @llvm.aarch64.sve.fmul.u.nxv8f16(<vscale x 8 x i1> [[PG]], <vscale x 8 x half> [[A]], <vscale x 8 x half> splat (half 0xH4000))
+; CHECK-NEXT:    [[TMP1:%.*]] = call <vscale x 8 x half> @llvm.aarch64.sve.fmul.u.nxv8f16(<vscale x 8 x i1> [[PG]], <vscale x 8 x half> [[A]], <vscale x 8 x half> splat (half f0x4000))
 ; CHECK-NEXT:    ret <vscale x 8 x half> [[TMP1]]
 ;
   %1 = call <vscale x 8 x half> @llvm.aarch64.sve.dup.x.nxv8f16(half 2.0)

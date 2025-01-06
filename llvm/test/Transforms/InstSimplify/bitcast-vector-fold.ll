@@ -55,7 +55,7 @@ define i32 @test7() {
 ; CHECK-LABEL: @test7(
 ; CHECK-NEXT:    ret i32 1118464
 ;
-  %tmp3 = bitcast <2 x half> <half 0xH1100, half 0xH0011> to i32
+  %tmp3 = bitcast <2 x half> <half f0x1100, half f0x0011> to i32
   ret i32 %tmp3
 }
 

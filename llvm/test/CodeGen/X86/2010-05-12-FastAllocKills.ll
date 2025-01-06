@@ -40,12 +40,12 @@ isdigit339.exit11.preheader:                      ; preds = %bb2
   br i1 undef, label %bb12, label %bb10
 
 bb10:                                             ; preds = %bb10, %isdigit339.exit11.preheader
-  %divisor.041 = phi x86_fp80 [ %0, %bb10 ], [ 0xK3FFF8000000000000000, %isdigit339.exit11.preheader ] ; <x86_fp80> [#uses=1]
-  %0 = fmul x86_fp80 %divisor.041, 0xK4002A000000000000000 ; <x86_fp80> [#uses=2]
+  %divisor.041 = phi x86_fp80 [ %0, %bb10 ], [ f0x3FFF8000000000000000, %isdigit339.exit11.preheader ] ; <x86_fp80> [#uses=1]
+  %0 = fmul x86_fp80 %divisor.041, f0x4002A000000000000000 ; <x86_fp80> [#uses=2]
   br i1 false, label %bb12, label %bb10
 
 bb12:                                             ; preds = %bb10, %isdigit339.exit11.preheader
-  %divisor.0.lcssa = phi x86_fp80 [ 0xK3FFF8000000000000000, %isdigit339.exit11.preheader ], [ %0, %bb10 ] ; <x86_fp80> [#uses=0]
+  %divisor.0.lcssa = phi x86_fp80 [ f0x3FFF8000000000000000, %isdigit339.exit11.preheader ], [ %0, %bb10 ] ; <x86_fp80> [#uses=0]
   br label %bb13
 
 bb13:                                             ; preds = %bb12, %bb2

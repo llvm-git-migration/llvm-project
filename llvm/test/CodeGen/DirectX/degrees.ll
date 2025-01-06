@@ -6,7 +6,7 @@ define noundef half @degrees_half(half noundef %a) {
 ; CHECK-LABEL: define noundef half @degrees_half(
 ; CHECK-SAME: half noundef [[A:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
-; CHECK-NEXT:    [[DX_DEGREES1:%.*]] = fmul half [[A]], 0xH5329
+; CHECK-NEXT:    [[DX_DEGREES1:%.*]] = fmul half [[A]], f0x5329
 ; CHECK-NEXT:    ret half [[DX_DEGREES1]]
 ;
 entry:

@@ -1472,7 +1472,7 @@ define double @test_libcall_pow_10_f64_noerrno(double %x) {
 define half @test_pow_10_f16(half %x) {
 ; CHECK-LABEL: define half @test_pow_10_f16(
 ; CHECK-SAME: half [[X:%.*]]) {
-; CHECK-NEXT:    [[RETVAL:%.*]] = call half @llvm.pow.f16(half 0xH4900, half [[X]])
+; CHECK-NEXT:    [[RETVAL:%.*]] = call half @llvm.pow.f16(half f0x4900, half [[X]])
 ; CHECK-NEXT:    ret half [[RETVAL]]
 ;
   %retval = call half @llvm.pow.f16(half 10.0, half %x)
@@ -1512,7 +1512,7 @@ define double @test_pow_10_f64(double %x) {
 define fp128 @test_pow_10_fp128(fp128 %x) {
 ; CHECK-LABEL: define fp128 @test_pow_10_fp128(
 ; CHECK-SAME: fp128 [[X:%.*]]) {
-; CHECK-NEXT:    [[RETVAL:%.*]] = call fp128 @llvm.pow.f128(fp128 0xL00000000000000004002400000000000, fp128 [[X]])
+; CHECK-NEXT:    [[RETVAL:%.*]] = call fp128 @llvm.pow.f128(fp128 f0x40024000000000000000000000000000, fp128 [[X]])
 ; CHECK-NEXT:    ret fp128 [[RETVAL]]
 ;
   %ten = fpext double 10.0 to fp128
@@ -1523,7 +1523,7 @@ define fp128 @test_pow_10_fp128(fp128 %x) {
 define bfloat @test_pow_10_bf16(bfloat %x) {
 ; CHECK-LABEL: define bfloat @test_pow_10_bf16(
 ; CHECK-SAME: bfloat [[X:%.*]]) {
-; CHECK-NEXT:    [[RETVAL:%.*]] = call bfloat @llvm.pow.bf16(bfloat 0xR4120, bfloat [[X]])
+; CHECK-NEXT:    [[RETVAL:%.*]] = call bfloat @llvm.pow.bf16(bfloat f0x4120, bfloat [[X]])
 ; CHECK-NEXT:    ret bfloat [[RETVAL]]
 ;
   %retval = call bfloat @llvm.pow.bf16(bfloat 10.0, bfloat %x)
@@ -1533,7 +1533,7 @@ define bfloat @test_pow_10_bf16(bfloat %x) {
 define <2 x half> @test_pow_10_v2f16(<2 x half> %x) {
 ; CHECK-LABEL: define <2 x half> @test_pow_10_v2f16(
 ; CHECK-SAME: <2 x half> [[X:%.*]]) {
-; CHECK-NEXT:    [[RETVAL:%.*]] = call <2 x half> @llvm.pow.v2f16(<2 x half> splat (half 0xH4900), <2 x half> [[X]])
+; CHECK-NEXT:    [[RETVAL:%.*]] = call <2 x half> @llvm.pow.v2f16(<2 x half> splat (half f0x4900), <2 x half> [[X]])
 ; CHECK-NEXT:    ret <2 x half> [[RETVAL]]
 ;
   %retval = call <2 x half> @llvm.pow.v2f16(<2 x half> <half 10.0, half 10.0>, <2 x half> %x)
@@ -1563,7 +1563,7 @@ define <2 x double> @test_pow_10_v2f64(<2 x double> %x) {
 define <2 x bfloat> @test_pow_10_v2bf16(<2 x bfloat> %x) {
 ; CHECK-LABEL: define <2 x bfloat> @test_pow_10_v2bf16(
 ; CHECK-SAME: <2 x bfloat> [[X:%.*]]) {
-; CHECK-NEXT:    [[RETVAL:%.*]] = call <2 x bfloat> @llvm.pow.v2bf16(<2 x bfloat> splat (bfloat 0xR4120), <2 x bfloat> [[X]])
+; CHECK-NEXT:    [[RETVAL:%.*]] = call <2 x bfloat> @llvm.pow.v2bf16(<2 x bfloat> splat (bfloat f0x4120), <2 x bfloat> [[X]])
 ; CHECK-NEXT:    ret <2 x bfloat> [[RETVAL]]
 ;
   %retval = call <2 x bfloat> @llvm.pow.v2bf16(<2 x bfloat> <bfloat 10.0, bfloat 10.0>, <2 x bfloat> %x)

@@ -371,7 +371,7 @@ entry:
   %mul = fmul fp128 %val1, %val2
   store fp128 %mul, ptr %ptr2
   %cmp = call i1 @llvm.experimental.constrained.fcmp.f128(
-                                               fp128 %val1, fp128 0xL00000000000000000000000000000000,
+                                               fp128 %val1, fp128 f0x00000000000000000000000000000000,
                                                metadata !"olt",
                                                metadata !"fpexcept.strict") #0
   br i1 %cmp, label %exit, label %store

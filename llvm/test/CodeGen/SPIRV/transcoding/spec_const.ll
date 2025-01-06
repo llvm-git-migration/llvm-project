@@ -41,7 +41,7 @@ entry:
   %4 = call i64 @_Z20__spirv_SpecConstantix(i32 4, i64 3)
   store i64 %4, i64 addrspace(1)* %l, align 8
 
-  %5 = call half @_Z20__spirv_SpecConstantih(i32 5, half 0xH3800)
+  %5 = call half @_Z20__spirv_SpecConstantih(i32 5, half f0x3800)
   store half %5, half addrspace(1)* %h, align 2
 
   %6 = call float @_Z20__spirv_SpecConstantif(i32 6, float 1.250000e+00)

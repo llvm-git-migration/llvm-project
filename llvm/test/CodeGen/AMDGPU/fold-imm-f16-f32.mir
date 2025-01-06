@@ -5,7 +5,7 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile float, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
     %f32.add = fadd float %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile float %f32.add, ptr addrspace(1) undef
@@ -16,7 +16,7 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile float, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
     %f32.add = fadd float %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile float %f32.add, ptr addrspace(1) undef
@@ -27,7 +27,7 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile float, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
     %f32.add = fadd float %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile float %f32.add, ptr addrspace(1) undef
@@ -38,8 +38,8 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile float, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
-    %f16.add1 = fadd half %f16.val1, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
+    %f16.add1 = fadd half %f16.val1, f0x3C00
     %f32.add = fadd float %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile half %f16.add1, ptr addrspace(1) undef
@@ -50,8 +50,8 @@
   define amdgpu_kernel void @add_i32_1_multi_f16_use() #0 {
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH0001
-    %f16.add1 = fadd half %f16.val1, 0xH0001
+    %f16.add0 = fadd half %f16.val0, f0x0001
+    %f16.add1 = fadd half %f16.val1, f0x0001
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile half %f16.add1,ptr addrspace(1) undef
     ret void
@@ -61,8 +61,8 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile float, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xHFFFE
-    %f16.add1 = fadd half %f16.val1, 0xHFFFE
+    %f16.add0 = fadd half %f16.val0, f0xFFFE
+    %f16.add1 = fadd half %f16.val1, f0xFFFE
     %f32.add = fadd float %f32.val, 0xffffffffc0000000
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile half %f16.add1, ptr addrspace(1) undef
@@ -85,7 +85,7 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile half, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
     %f32.add = fadd half %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile half %f32.add, ptr addrspace(1) undef
@@ -96,7 +96,7 @@
     %f16.val0 = load volatile half, ptr addrspace(1) undef
     %f16.val1 = load volatile half, ptr addrspace(1) undef
     %f32.val = load volatile half, ptr addrspace(1) undef
-    %f16.add0 = fadd half %f16.val0, 0xH3C00
+    %f16.add0 = fadd half %f16.val0, f0x3C00
     %f32.add = fadd half %f32.val, 1.000000e+00
     store volatile half %f16.add0, ptr addrspace(1) undef
     store volatile half %f32.add, ptr addrspace(1) undef

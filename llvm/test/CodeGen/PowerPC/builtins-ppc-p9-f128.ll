@@ -1,10 +1,10 @@
 ; RUN: llc -verify-machineinstrs -mcpu=pwr9 -mtriple=powerpc64le-unknown-unknown \
 ; RUN:   -ppc-vsr-nums-as-vr -ppc-asm-full-reg-names < %s | FileCheck %s
 
-@A = common global fp128 0xL00000000000000000000000000000000, align 16
-@B = common global fp128 0xL00000000000000000000000000000000, align 16
-@C = common global fp128 0xL00000000000000000000000000000000, align 16
-@D = common global fp128 0xL00000000000000000000000000000000, align 16
+@A = common global fp128 f0x00000000000000000000000000000000, align 16
+@B = common global fp128 f0x00000000000000000000000000000000, align 16
+@C = common global fp128 f0x00000000000000000000000000000000, align 16
+@D = common global fp128 f0x00000000000000000000000000000000, align 16
 
 define fp128 @testSqrtOdd(fp128 %a) {
 entry:
@@ -21,15 +21,15 @@ define void @testFMAOdd(fp128 %a, fp128 %b, fp128 %c) {
 entry:
   %0 = call fp128 @llvm.ppc.fmaf128.round.to.odd(fp128 %a, fp128 %b, fp128 %c)
   store fp128 %0, ptr @A, align 16
-  %sub = fsub fp128 0xL00000000000000008000000000000000, %c
+  %sub = fsub fp128 f0x80000000000000000000000000000000, %c
   %1 = call fp128 @llvm.ppc.fmaf128.round.to.odd(fp128 %a, fp128 %b, fp128 %sub)
   store fp128 %1, ptr @B, align 16
   %2 = call fp128 @llvm.ppc.fmaf128.round.to.odd(fp128 %a, fp128 %b, fp128 %c)
-  %sub1 = fsub fp128 0xL00000000000000008000000000000000, %2
+  %sub1 = fsub fp128 f0x80000000000000000000000000000000, %2
   store fp128 %sub1, ptr @C, align 16
-  %sub2 = fsub fp128 0xL00000000000000008000000000000000, %c
+  %sub2 = fsub fp128 f0x80000000000000000000000000000000, %c
   %3 = call fp128 @llvm.ppc.fmaf128.round.to.odd(fp128 %a, fp128 %b, fp128 %sub2)
-  %sub3 = fsub fp128 0xL00000000000000008000000000000000, %3
+  %sub3 = fsub fp128 f0x80000000000000000000000000000000, %3
   store fp128 %sub3, ptr @D, align 16
   ret void
 ; CHECK-LABEL: testFMAOdd

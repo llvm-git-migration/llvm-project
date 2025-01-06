@@ -483,7 +483,7 @@ define i32 @select_add_bitcast_select(i1 %cond) {
 ; multiple uses.
 define <2 x half> @multi_use_cast_regression(i1 %cond) {
 ; IR-LABEL: @multi_use_cast_regression(
-; IR-NEXT:    [[SELECT:%.*]] = select i1 [[COND:%.*]], half 0xH3C00, half 0xH0000
+; IR-NEXT:    [[SELECT:%.*]] = select i1 [[COND:%.*]], half f0x3C00, half f0x0000
 ; IR-NEXT:    [[FPEXT:%.*]] = fpext half [[SELECT]] to float
 ; IR-NEXT:    [[FSUB:%.*]] = fsub nsz float 1.000000e+00, [[FPEXT]]
 ; IR-NEXT:    [[CALL:%.*]] = call nsz <2 x half> @llvm.amdgcn.cvt.pkrtz(float [[FPEXT]], float [[FSUB]])

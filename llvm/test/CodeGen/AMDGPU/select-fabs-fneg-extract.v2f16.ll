@@ -1475,7 +1475,7 @@ define <2 x half> @add_select_fneg_inv2pi_v2f16(<2 x i32> %c, <2 x half> %x, <2 
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
   %cmp = icmp eq <2 x i32> %c, zeroinitializer
   %fneg.x = fneg <2 x half> %x
-  %select = select <2 x i1> %cmp, <2 x half> %fneg.x, <2 x half> <half 0xH3118, half 0xH3118>
+  %select = select <2 x i1> %cmp, <2 x half> %fneg.x, <2 x half> <half f0x3118, half f0x3118>
   %add = fadd <2 x half> %select, %y
   ret <2 x half> %add
 }
@@ -1544,7 +1544,7 @@ define <2 x half> @add_select_fneg_neginv2pi_v2f16(<2 x i32> %c, <2 x half> %x, 
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
   %cmp = icmp eq <2 x i32> %c, zeroinitializer
   %fneg.x = fneg <2 x half> %x
-  %select = select <2 x i1> %cmp, <2 x half> %fneg.x, <2 x half> <half 0xHB118, half 0xHB118>
+  %select = select <2 x i1> %cmp, <2 x half> %fneg.x, <2 x half> <half f0xB118, half f0xB118>
   %add = fadd <2 x half> %select, %y
   ret <2 x half> %add
 }

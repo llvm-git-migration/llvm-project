@@ -24,7 +24,7 @@ target triple = "x86_64-unknown-linux-gnu"
 
 @static_struct = internal global %struct.mystruct zeroinitializer, align 16, !dbg !0
 
-; CHECK: @static_struct.0 = internal unnamed_addr global x86_fp80 0xK00000000000000000000, align 16, !dbg ![[EL0:.*]]
+; CHECK: @static_struct.0 = internal unnamed_addr global x86_fp80 f0x00000000000000000000, align 16, !dbg ![[EL0:.*]]
 ; CHECK: @static_struct.1 = internal unnamed_addr global i32 0, align 16, !dbg ![[EL1:.*]]
 
 ; CHECK: ![[EL0]] = !DIGlobalVariableExpression(var: ![[VAR:.*]], expr: !DIExpression(DW_OP_LLVM_fragment, 0, 128))
@@ -79,7 +79,7 @@ entry:
   %7 = load i32, ptr getelementptr inbounds (%struct.mystruct, ptr @static_struct, i32 0, i32 1), align 16, !dbg !31
   %conv5 = sitofp i32 %7 to x86_fp80, !dbg !32
   %add = fadd x86_fp80 %6, %conv5, !dbg !33
-  %cmp = fcmp ogt x86_fp80 %add, 0xK00000000000000000000, !dbg !34
+  %cmp = fcmp ogt x86_fp80 %add, f0x00000000000000000000, !dbg !34
   %conv6 = zext i1 %cmp to i32, !dbg !34
   ret i32 %conv6, !dbg !35
 }

@@ -292,7 +292,7 @@ define half @test_rootn_f16_3(half %x) {
 define half @test_rootn_f16_neg1(half %x) {
 ; CHECK-LABEL: define half @test_rootn_f16_neg1(
 ; CHECK-SAME: half [[X:%.*]]) {
-; CHECK-NEXT:    [[__ROOTN2DIV:%.*]] = fdiv half 0xH3C00, [[X]]
+; CHECK-NEXT:    [[__ROOTN2DIV:%.*]] = fdiv half f0x3C00, [[X]]
 ; CHECK-NEXT:    ret half [[__ROOTN2DIV]]
 ;
   %call = tail call half @_Z5rootnDhi(half %x, i32 -1)
@@ -303,7 +303,7 @@ define half @test_rootn_f16_neg2(half %x) {
 ; CHECK-LABEL: define half @test_rootn_f16_neg2(
 ; CHECK-SAME: half [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = call contract half @llvm.sqrt.f16(half [[X]])
-; CHECK-NEXT:    [[__ROOTN2RSQRT:%.*]] = fdiv contract half 0xH3C00, [[TMP1]], !fpmath [[META0]]
+; CHECK-NEXT:    [[__ROOTN2RSQRT:%.*]] = fdiv contract half f0x3C00, [[TMP1]], !fpmath [[META0]]
 ; CHECK-NEXT:    ret half [[__ROOTN2RSQRT]]
 ;
   %call = tail call half @_Z5rootnDhi(half %x, i32 -2)
@@ -362,7 +362,7 @@ define <2 x half> @test_rootn_v2f16_2(<2 x half> %x) {
 define <2 x half> @test_rootn_v2f16_neg1(<2 x half> %x) {
 ; CHECK-LABEL: define <2 x half> @test_rootn_v2f16_neg1(
 ; CHECK-SAME: <2 x half> [[X:%.*]]) {
-; CHECK-NEXT:    [[__ROOTN2DIV:%.*]] = fdiv <2 x half> splat (half 0xH3C00), [[X]]
+; CHECK-NEXT:    [[__ROOTN2DIV:%.*]] = fdiv <2 x half> splat (half f0x3C00), [[X]]
 ; CHECK-NEXT:    ret <2 x half> [[__ROOTN2DIV]]
 ;
   %call = tail call <2 x half> @_Z5rootnDv2_DhDv2_i(<2 x half> %x, <2 x i32> <i32 -1, i32 -1>)
@@ -373,7 +373,7 @@ define <2 x half> @test_rootn_v2f16_neg2(<2 x half> %x) {
 ; CHECK-LABEL: define <2 x half> @test_rootn_v2f16_neg2(
 ; CHECK-SAME: <2 x half> [[X:%.*]]) {
 ; CHECK-NEXT:    [[TMP1:%.*]] = call contract <2 x half> @llvm.sqrt.v2f16(<2 x half> [[X]])
-; CHECK-NEXT:    [[__ROOTN2RSQRT:%.*]] = fdiv contract <2 x half> splat (half 0xH3C00), [[TMP1]], !fpmath [[META0]]
+; CHECK-NEXT:    [[__ROOTN2RSQRT:%.*]] = fdiv contract <2 x half> splat (half f0x3C00), [[TMP1]], !fpmath [[META0]]
 ; CHECK-NEXT:    ret <2 x half> [[__ROOTN2RSQRT]]
 ;
   %call = tail call <2 x half> @_Z5rootnDv2_DhDv2_i(<2 x half> %x, <2 x i32> <i32 -2, i32 -2>)

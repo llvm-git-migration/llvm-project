@@ -2670,7 +2670,7 @@ define half @v_mul_0x1pn23_f16(half %x) {
 ; GCN-NEXT:    s_waitcnt vmcnt(0) expcnt(0) lgkmcnt(0)
 ; GCN-NEXT:    v_mul_f16_e32 v0, 2, v0
 ; GCN-NEXT:    s_setpc_b64 s[30:31]
-  %mul = fmul half %x, 0xH0002
+  %mul = fmul half %x, f0x0002
   ret half %mul
 }
 

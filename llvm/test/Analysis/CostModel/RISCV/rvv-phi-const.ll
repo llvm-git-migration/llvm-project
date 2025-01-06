@@ -316,7 +316,7 @@ define <4 x half> @phi_v4f16_splat(i1 %c) {
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br i1 %c, label %a, label %b
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ splat (half 0xH3C00), %a ], [ <half 0xH4000, half 0xH4000, half 0xH4000, half 0xH4D00>, %b ]
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ splat (half f0x3C00), %a ], [ <half f0x4000, half f0x4000, half f0x4000, half f0x4D00>, %b ]
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <4 x half> %x
 ;
   br i1 %c, label %a, label %b
@@ -334,7 +334,7 @@ define <4 x half> @phi_v4f16(i1 %c) {
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br i1 %c, label %a, label %b
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ <half 0xH3C00, half 0xH4000, half 0xH4200, half 0xH4400>, %a ], [ <half 0xH4000, half 0xH4400, half 0xH4600, half 0xH4800>, %b ]
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ <half f0x3C00, half f0x4000, half f0x4200, half f0x4400>, %a ], [ <half f0x4000, half f0x4400, half f0x4600, half f0x4800>, %b ]
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <4 x half> %x
 ;
   br i1 %c, label %a, label %b
@@ -353,7 +353,7 @@ define <4 x half> @phi_v4f16_cheap_and_expensive(i1 %c) {
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br i1 %c, label %a, label %b
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: br label %d
-; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ splat (half 0xH3C00), %a ], [ <half 0xH6F42, half 0xHECB8, half 0xH5DF6, half 0xH4A40>, %b ]
+; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: %x = phi <4 x half> [ splat (half f0x3C00), %a ], [ <half f0x6F42, half f0xECB8, half f0x5DF6, half f0x4A40>, %b ]
 ; CHECK-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret <4 x half> %x
 ;
   br i1 %c, label %a, label %b

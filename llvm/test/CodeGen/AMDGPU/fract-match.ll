@@ -1441,7 +1441,7 @@ define half @basic_fract_f16_nonan(half nofpclass(nan) %x) {
 ; GFX6-IR-NEXT:  entry:
 ; GFX6-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX6-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
+; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
 ; GFX6-IR-NEXT:    ret half [[MIN]]
 ;
 ; GFX7-IR-LABEL: define half @basic_fract_f16_nonan
@@ -1449,7 +1449,7 @@ define half @basic_fract_f16_nonan(half nofpclass(nan) %x) {
 ; GFX7-IR-NEXT:  entry:
 ; GFX7-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX7-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
+; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
 ; GFX7-IR-NEXT:    ret half [[MIN]]
 ;
 ; IR-LEGALF16-LABEL: define half @basic_fract_f16_nonan
@@ -1502,7 +1502,7 @@ define half @basic_fract_f16_nonan(half nofpclass(nan) %x) {
 entry:
   %floor = tail call half @llvm.floor.f16(half %x)
   %sub = fsub half %x, %floor
-  %min = tail call half @llvm.minnum.f16(half %sub, half 0xH3BFF)
+  %min = tail call half @llvm.minnum.f16(half %sub, half f0x3BFF)
   ret half %min
 }
 
@@ -1512,7 +1512,7 @@ define <2 x half> @basic_fract_v2f16_nonan(<2 x half> nofpclass(nan) %x) {
 ; GFX6-IR-NEXT:  entry:
 ; GFX6-IR-NEXT:    [[FLOOR:%.*]] = tail call <2 x half> @llvm.floor.v2f16(<2 x half> [[X]])
 ; GFX6-IR-NEXT:    [[SUB:%.*]] = fsub <2 x half> [[X]], [[FLOOR]]
-; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half 0xH3BFF))
+; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half f0x3BFF))
 ; GFX6-IR-NEXT:    ret <2 x half> [[MIN]]
 ;
 ; GFX7-IR-LABEL: define <2 x half> @basic_fract_v2f16_nonan
@@ -1520,7 +1520,7 @@ define <2 x half> @basic_fract_v2f16_nonan(<2 x half> nofpclass(nan) %x) {
 ; GFX7-IR-NEXT:  entry:
 ; GFX7-IR-NEXT:    [[FLOOR:%.*]] = tail call <2 x half> @llvm.floor.v2f16(<2 x half> [[X]])
 ; GFX7-IR-NEXT:    [[SUB:%.*]] = fsub <2 x half> [[X]], [[FLOOR]]
-; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half 0xH3BFF))
+; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half f0x3BFF))
 ; GFX7-IR-NEXT:    ret <2 x half> [[MIN]]
 ;
 ; IR-LEGALF16-LABEL: define <2 x half> @basic_fract_v2f16_nonan
@@ -1598,7 +1598,7 @@ define <2 x half> @basic_fract_v2f16_nonan(<2 x half> nofpclass(nan) %x) {
 entry:
   %floor = tail call <2 x half> @llvm.floor.v2f16(<2 x half> %x)
   %sub = fsub <2 x half> %x, %floor
-  %min = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> %sub, <2 x half> <half 0xH3BFF, half 0xH3BFF>)
+  %min = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> %sub, <2 x half> <half f0x3BFF, half f0x3BFF>)
   ret <2 x half> %min
 }
 
@@ -1674,8 +1674,8 @@ define half @safe_math_fract_f16_noinf_check(half %x, ptr addrspace(1) nocapture
 ; GFX6-IR-NEXT:  entry:
 ; GFX6-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX6-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
-; GFX6-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], 0xH0000
+; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
+; GFX6-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], f0x0000
 ; GFX6-IR-NEXT:    [[COND:%.*]] = select i1 [[UNO]], half [[X]], half [[MIN]]
 ; GFX6-IR-NEXT:    store half [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX6-IR-NEXT:    ret half [[COND]]
@@ -1685,8 +1685,8 @@ define half @safe_math_fract_f16_noinf_check(half %x, ptr addrspace(1) nocapture
 ; GFX7-IR-NEXT:  entry:
 ; GFX7-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX7-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
-; GFX7-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], 0xH0000
+; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
+; GFX7-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], f0x0000
 ; GFX7-IR-NEXT:    [[COND:%.*]] = select i1 [[UNO]], half [[X]], half [[MIN]]
 ; GFX7-IR-NEXT:    store half [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX7-IR-NEXT:    ret half [[COND]]
@@ -1768,7 +1768,7 @@ define half @safe_math_fract_f16_noinf_check(half %x, ptr addrspace(1) nocapture
 entry:
   %floor = tail call half @llvm.floor.f16(half %x)
   %sub = fsub half %x, %floor
-  %min = tail call half @llvm.minnum.f16(half %sub, half 0xH3BFF)
+  %min = tail call half @llvm.minnum.f16(half %sub, half f0x3BFF)
   %uno = fcmp uno half %x, 0.000000e+00
   %cond = select i1 %uno, half %x, half %min
   store half %floor, ptr addrspace(1) %ip, align 4
@@ -2270,12 +2270,12 @@ define half @safe_math_fract_f16(half %x, ptr addrspace(1) nocapture writeonly %
 ; GFX6-IR-NEXT:  entry:
 ; GFX6-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX6-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
-; GFX6-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], 0xH0000
+; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
+; GFX6-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], f0x0000
 ; GFX6-IR-NEXT:    [[COND:%.*]] = select i1 [[UNO]], half [[X]], half [[MIN]]
 ; GFX6-IR-NEXT:    [[FABS:%.*]] = tail call half @llvm.fabs.f16(half [[X]])
-; GFX6-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], 0xH7C00
-; GFX6-IR-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half 0xH0000, half [[COND]]
+; GFX6-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], f0x7C00
+; GFX6-IR-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half f0x0000, half [[COND]]
 ; GFX6-IR-NEXT:    store half [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX6-IR-NEXT:    ret half [[COND6]]
 ;
@@ -2284,12 +2284,12 @@ define half @safe_math_fract_f16(half %x, ptr addrspace(1) nocapture writeonly %
 ; GFX7-IR-NEXT:  entry:
 ; GFX7-IR-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; GFX7-IR-NEXT:    [[SUB:%.*]] = fsub half [[X]], [[FLOOR]]
-; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half 0xH3BFF)
-; GFX7-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], 0xH0000
+; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call half @llvm.minnum.f16(half [[SUB]], half f0x3BFF)
+; GFX7-IR-NEXT:    [[UNO:%.*]] = fcmp uno half [[X]], f0x0000
 ; GFX7-IR-NEXT:    [[COND:%.*]] = select i1 [[UNO]], half [[X]], half [[MIN]]
 ; GFX7-IR-NEXT:    [[FABS:%.*]] = tail call half @llvm.fabs.f16(half [[X]])
-; GFX7-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], 0xH7C00
-; GFX7-IR-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half 0xH0000, half [[COND]]
+; GFX7-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], f0x7C00
+; GFX7-IR-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half f0x0000, half [[COND]]
 ; GFX7-IR-NEXT:    store half [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX7-IR-NEXT:    ret half [[COND6]]
 ;
@@ -2299,8 +2299,8 @@ define half @safe_math_fract_f16(half %x, ptr addrspace(1) nocapture writeonly %
 ; IR-LEGALF16-NEXT:    [[FLOOR:%.*]] = tail call half @llvm.floor.f16(half [[X]])
 ; IR-LEGALF16-NEXT:    [[COND:%.*]] = call half @llvm.amdgcn.fract.f16(half [[X]])
 ; IR-LEGALF16-NEXT:    [[FABS:%.*]] = tail call half @llvm.fabs.f16(half [[X]])
-; IR-LEGALF16-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], 0xH7C00
-; IR-LEGALF16-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half 0xH0000, half [[COND]]
+; IR-LEGALF16-NEXT:    [[CMPINF:%.*]] = fcmp oeq half [[FABS]], f0x7C00
+; IR-LEGALF16-NEXT:    [[COND6:%.*]] = select i1 [[CMPINF]], half f0x0000, half [[COND]]
 ; IR-LEGALF16-NEXT:    store half [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; IR-LEGALF16-NEXT:    ret half [[COND6]]
 ;
@@ -2390,11 +2390,11 @@ define half @safe_math_fract_f16(half %x, ptr addrspace(1) nocapture writeonly %
 entry:
   %floor = tail call half @llvm.floor.f16(half %x)
   %sub = fsub half %x, %floor
-  %min = tail call half @llvm.minnum.f16(half %sub, half 0xH3BFF)
+  %min = tail call half @llvm.minnum.f16(half %sub, half f0x3BFF)
   %uno = fcmp uno half %x, 0.000000e+00
   %cond = select i1 %uno, half %x, half %min
   %fabs = tail call half @llvm.fabs.f16(half %x)
-  %cmpinf = fcmp oeq half %fabs, 0xH7C00
+  %cmpinf = fcmp oeq half %fabs, f0x7C00
   %cond6 = select i1 %cmpinf, half 0.000000e+00, half %cond
   store half %floor, ptr addrspace(1) %ip, align 4
   ret half %cond6
@@ -2406,11 +2406,11 @@ define <2 x half> @safe_math_fract_v2f16(<2 x half> %x, ptr addrspace(1) nocaptu
 ; GFX6-IR-NEXT:  entry:
 ; GFX6-IR-NEXT:    [[FLOOR:%.*]] = tail call <2 x half> @llvm.floor.v2f16(<2 x half> [[X]])
 ; GFX6-IR-NEXT:    [[SUB:%.*]] = fsub <2 x half> [[X]], [[FLOOR]]
-; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half 0xH3BFF))
+; GFX6-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half f0x3BFF))
 ; GFX6-IR-NEXT:    [[UNO:%.*]] = fcmp uno <2 x half> [[X]], zeroinitializer
 ; GFX6-IR-NEXT:    [[COND:%.*]] = select <2 x i1> [[UNO]], <2 x half> [[X]], <2 x half> [[MIN]]
 ; GFX6-IR-NEXT:    [[FABS:%.*]] = tail call <2 x half> @llvm.fabs.v2f16(<2 x half> [[X]])
-; GFX6-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half 0xH7C00)
+; GFX6-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half f0x7C00)
 ; GFX6-IR-NEXT:    [[COND6:%.*]] = select <2 x i1> [[CMPINF]], <2 x half> zeroinitializer, <2 x half> [[COND]]
 ; GFX6-IR-NEXT:    store <2 x half> [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX6-IR-NEXT:    ret <2 x half> [[COND6]]
@@ -2420,11 +2420,11 @@ define <2 x half> @safe_math_fract_v2f16(<2 x half> %x, ptr addrspace(1) nocaptu
 ; GFX7-IR-NEXT:  entry:
 ; GFX7-IR-NEXT:    [[FLOOR:%.*]] = tail call <2 x half> @llvm.floor.v2f16(<2 x half> [[X]])
 ; GFX7-IR-NEXT:    [[SUB:%.*]] = fsub <2 x half> [[X]], [[FLOOR]]
-; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half 0xH3BFF))
+; GFX7-IR-NEXT:    [[MIN:%.*]] = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> [[SUB]], <2 x half> splat (half f0x3BFF))
 ; GFX7-IR-NEXT:    [[UNO:%.*]] = fcmp uno <2 x half> [[X]], zeroinitializer
 ; GFX7-IR-NEXT:    [[COND:%.*]] = select <2 x i1> [[UNO]], <2 x half> [[X]], <2 x half> [[MIN]]
 ; GFX7-IR-NEXT:    [[FABS:%.*]] = tail call <2 x half> @llvm.fabs.v2f16(<2 x half> [[X]])
-; GFX7-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half 0xH7C00)
+; GFX7-IR-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half f0x7C00)
 ; GFX7-IR-NEXT:    [[COND6:%.*]] = select <2 x i1> [[CMPINF]], <2 x half> zeroinitializer, <2 x half> [[COND]]
 ; GFX7-IR-NEXT:    store <2 x half> [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; GFX7-IR-NEXT:    ret <2 x half> [[COND6]]
@@ -2440,7 +2440,7 @@ define <2 x half> @safe_math_fract_v2f16(<2 x half> %x, ptr addrspace(1) nocaptu
 ; IR-LEGALF16-NEXT:    [[TMP4:%.*]] = insertelement <2 x half> poison, half [[TMP2]], i64 0
 ; IR-LEGALF16-NEXT:    [[COND:%.*]] = insertelement <2 x half> [[TMP4]], half [[TMP3]], i64 1
 ; IR-LEGALF16-NEXT:    [[FABS:%.*]] = tail call <2 x half> @llvm.fabs.v2f16(<2 x half> [[X]])
-; IR-LEGALF16-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half 0xH7C00)
+; IR-LEGALF16-NEXT:    [[CMPINF:%.*]] = fcmp oeq <2 x half> [[FABS]], splat (half f0x7C00)
 ; IR-LEGALF16-NEXT:    [[COND6:%.*]] = select <2 x i1> [[CMPINF]], <2 x half> zeroinitializer, <2 x half> [[COND]]
 ; IR-LEGALF16-NEXT:    store <2 x half> [[FLOOR]], ptr addrspace(1) [[IP]], align 4
 ; IR-LEGALF16-NEXT:    ret <2 x half> [[COND6]]
@@ -2579,11 +2579,11 @@ define <2 x half> @safe_math_fract_v2f16(<2 x half> %x, ptr addrspace(1) nocaptu
 entry:
   %floor = tail call <2 x half> @llvm.floor.v2f16(<2 x half> %x)
   %sub = fsub <2 x half> %x, %floor
-  %min = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> %sub, <2 x half> <half 0xH3BFF, half 0xH3BFF>)
+  %min = tail call <2 x half> @llvm.minnum.v2f16(<2 x half> %sub, <2 x half> <half f0x3BFF, half f0x3BFF>)
   %uno = fcmp uno <2 x half> %x, zeroinitializer
   %cond = select <2 x i1> %uno, <2 x half> %x, <2 x half> %min
   %fabs = tail call <2 x half> @llvm.fabs.v2f16(<2 x half> %x)
-  %cmpinf = fcmp oeq <2 x half> %fabs, <half 0xH7C00, half 0xH7C00>
+  %cmpinf = fcmp oeq <2 x half> %fabs, <half f0x7C00, half f0x7C00>
   %cond6 = select <2 x i1> %cmpinf, <2 x half> zeroinitializer, <2 x half> %cond
   store <2 x half> %floor, ptr addrspace(1) %ip, align 4
   ret <2 x half> %cond6

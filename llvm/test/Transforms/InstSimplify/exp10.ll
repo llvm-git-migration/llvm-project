@@ -235,28 +235,28 @@ define float @exp10_neg_denorm() {
 
 define ppc_fp128 @exp10_one_ppcf128() {
 ; CHECK-LABEL: define ppc_fp128 @exp10_one_ppcf128() {
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xM3FF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x00000000000000003FF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xM3FF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x00000000000000003FF0000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @exp10_negone_ppcf128() {
 ; CHECK-LABEL: define ppc_fp128 @exp10_negone_ppcf128() {
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xMBFF00000000000000000000000000000)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x0000000000000000BFF0000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xMBFF00000000000000000000000000000)
+  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x0000000000000000BFF0000000000000)
   ret ppc_fp128 %ret
 }
 
 define ppc_fp128 @canonicalize_noncanonical_zero_1_ppcf128() {
 ; CHECK-LABEL: define ppc_fp128 @canonicalize_noncanonical_zero_1_ppcf128() {
-; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xM00000000000000000000000000000001)
+; CHECK-NEXT:    [[RET:%.*]] = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x00000000000000010000000000000000)
 ; CHECK-NEXT:    ret ppc_fp128 [[RET]]
 ;
-  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 0xM00000000000000000000000000000001)
+  %ret = call ppc_fp128 @llvm.exp10.ppcf128(ppc_fp128 f0x00000000000000010000000000000000)
   ret ppc_fp128 %ret
 }
 

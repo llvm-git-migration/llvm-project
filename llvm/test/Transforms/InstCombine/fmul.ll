@@ -1278,7 +1278,7 @@ define <vscale x 2 x float> @mul_scalable_splat_zero(<vscale x 2 x float> %z) {
 
 define half @mul_zero_nnan(half %x) {
 ; CHECK-LABEL: @mul_zero_nnan(
-; CHECK-NEXT:    [[R:%.*]] = call nnan half @llvm.copysign.f16(half 0xH0000, half [[X:%.*]])
+; CHECK-NEXT:    [[R:%.*]] = call nnan half @llvm.copysign.f16(half f0x0000, half [[X:%.*]])
 ; CHECK-NEXT:    ret half [[R]]
 ;
   %r = fmul nnan half %x, 0.0
@@ -1300,7 +1300,7 @@ define <2 x float> @mul_zero_nnan_vec_poison(<2 x float> %x) {
 
 define half @mul_zero(half %x) {
 ; CHECK-LABEL: @mul_zero(
-; CHECK-NEXT:    [[R:%.*]] = fmul ninf nsz half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[R:%.*]] = fmul ninf nsz half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret half [[R]]
 ;
   %r = fmul ninf nsz half %x, 0.0
@@ -1310,7 +1310,7 @@ define half @mul_zero(half %x) {
 define half @mul_negzero_nnan(half %x) {
 ; CHECK-LABEL: @mul_negzero_nnan(
 ; CHECK-NEXT:    [[TMP1:%.*]] = fneg nnan half [[X:%.*]]
-; CHECK-NEXT:    [[R:%.*]] = call nnan half @llvm.copysign.f16(half 0xH0000, half [[TMP1]])
+; CHECK-NEXT:    [[R:%.*]] = call nnan half @llvm.copysign.f16(half f0x0000, half [[TMP1]])
 ; CHECK-NEXT:    ret half [[R]]
 ;
   %r = fmul nnan half %x, -0.0

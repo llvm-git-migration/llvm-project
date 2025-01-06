@@ -904,7 +904,7 @@ define <2 x half> @fma_negone_vec(<2 x half> %x, <2 x half> %y) {
 
 define <2 x half> @fma_negone_vec_partial_undef(<2 x half> %x, <2 x half> %y) {
 ; CHECK-LABEL: @fma_negone_vec_partial_undef(
-; CHECK-NEXT:    [[SUB:%.*]] = call <2 x half> @llvm.fma.v2f16(<2 x half> [[X:%.*]], <2 x half> <half undef, half 0xHBC00>, <2 x half> [[Y:%.*]])
+; CHECK-NEXT:    [[SUB:%.*]] = call <2 x half> @llvm.fma.v2f16(<2 x half> [[X:%.*]], <2 x half> <half undef, half f0xBC00>, <2 x half> [[Y:%.*]])
 ; CHECK-NEXT:    ret <2 x half> [[SUB]]
 ;
   %sub = call <2 x half> @llvm.fma.v2f16(<2 x half> %x, <2 x half> <half undef, half -1.0>, <2 x half> %y)
@@ -915,7 +915,7 @@ define <2 x half> @fma_negone_vec_partial_undef(<2 x half> %x, <2 x half> %y) {
 
 define half @fma_non_negone(half %x, half %y) {
 ; CHECK-LABEL: @fma_non_negone(
-; CHECK-NEXT:    [[SUB:%.*]] = call half @llvm.fma.f16(half [[X:%.*]], half 0xHBE00, half [[Y:%.*]])
+; CHECK-NEXT:    [[SUB:%.*]] = call half @llvm.fma.f16(half [[X:%.*]], half f0xBE00, half [[Y:%.*]])
 ; CHECK-NEXT:    ret half [[SUB]]
 ;
   %sub = call half @llvm.fma.f16(half %x, half -1.5, half %y)

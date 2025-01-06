@@ -6,7 +6,7 @@
   define hidden i32 @main() {
   entry:
     %P5 = alloca half, align 2
-    store half 0xH3FE0, ptr %P5, align 2
+    store half f0x3FE0, ptr %P5, align 2
     %0 = load half, ptr %P5, align 2
     call void @z_bar(half %0)
     ret i32 0
@@ -33,7 +33,7 @@ stack:
   - { id: 2, type: spill-slot, offset: -8, size: 4, alignment: 4, callee-saved-register: '$r7' }
 constants:
   - id:              0
-    value:           half 0xH3FE0
+    value:           half f0x3FE0
     alignment:       2
 machineFunctionInfo: {}
 body:             |

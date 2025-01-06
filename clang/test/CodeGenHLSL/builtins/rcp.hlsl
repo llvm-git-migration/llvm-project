@@ -15,7 +15,7 @@
 
 // DXIL_NATIVE_HALF: define noundef half @
 // SPIR_NATIVE_HALF: define spir_func noundef half @
-// NATIVE_HALF: %hlsl.rcp = fdiv half 0xH3C00, %{{.*}} 
+// NATIVE_HALF: %hlsl.rcp = fdiv half f0x3C00, %{{.*}} 
 // NATIVE_HALF: ret half %hlsl.rcp
 // DXIL_NO_HALF: define noundef float @
 // SPIR_NO_HALF: define spir_func noundef float @
@@ -25,7 +25,7 @@ half test_rcp_half(half p0) { return rcp(p0); }
 
 // DXIL_NATIVE_HALF: define noundef <2 x half> @
 // SPIR_NATIVE_HALF: define spir_func noundef <2 x half> @
-// NATIVE_HALF: %hlsl.rcp = fdiv <2 x half> splat (half  0xH3C00), %{{.*}} 
+// NATIVE_HALF: %hlsl.rcp = fdiv <2 x half> splat (half  f0x3C00), %{{.*}} 
 // NATIVE_HALF: ret <2 x half> %hlsl.rcp
 // DXIL_NO_HALF: define noundef <2 x float> @
 // SPIR_NO_HALF: define spir_func noundef <2 x float> @
@@ -35,7 +35,7 @@ half2 test_rcp_half2(half2 p0) { return rcp(p0); }
 
 // DXIL_NATIVE_HALF: define noundef <3 x half> @
 // SPIR_NATIVE_HALF: define spir_func noundef <3 x half> @
-// NATIVE_HALF: %hlsl.rcp = fdiv <3 x half> splat (half  0xH3C00), %{{.*}} 
+// NATIVE_HALF: %hlsl.rcp = fdiv <3 x half> splat (half  f0x3C00), %{{.*}} 
 // NATIVE_HALF: ret <3 x half> %hlsl.rcp
 // DXIL_NO_HALF: define noundef <3 x float> @
 // SPIR_NO_HALF: define spir_func noundef <3 x float> @
@@ -45,7 +45,7 @@ half3 test_rcp_half3(half3 p0) { return rcp(p0); }
 
 // DXIL_NATIVE_HALF: define noundef <4 x half> @
 // SPIR_NATIVE_HALF: define spir_func noundef <4 x half> @
-// NATIVE_HALF: %hlsl.rcp = fdiv <4 x half> splat (half  0xH3C00), %{{.*}} 
+// NATIVE_HALF: %hlsl.rcp = fdiv <4 x half> splat (half  f0x3C00), %{{.*}} 
 // NATIVE_HALF: ret <4 x half> %hlsl.rcp
 // DXIL_NO_HALF: define noundef <4 x float> @
 // SPIR_NO_HALF: define spir_func noundef <4 x float> @

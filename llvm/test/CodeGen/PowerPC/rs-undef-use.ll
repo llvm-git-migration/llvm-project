@@ -32,7 +32,7 @@ CF84:                                             ; preds = %CF84, %CF84.critedg
 CF85:                                             ; preds = %CF84
   %L47 = load i64, ptr %A3
   store i64 %E18, ptr %A3
-  store ppc_fp128 0xM4D436562A0416DE00000000000000000, ptr %A2
+  store ppc_fp128 f0x00000000000000004D436562A0416DE0, ptr %A2
   %Cmp61 = icmp slt i64 %L47, %L40
   br i1 %Cmp61, label %CF, label %CF77
 

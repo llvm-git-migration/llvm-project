@@ -7,7 +7,7 @@ target triple = "powerpc-buildroot-linux-gnu"
 
 define i32 @main() #0 {
 entry:
-  %call = tail call i32 (ptr, ...) @printf(ptr @.str, ppc_fp128 0xM3FF00000000000000000000000000000)
+  %call = tail call i32 (ptr, ...) @printf(ptr @.str, ppc_fp128 f0x00000000000000003FF0000000000000)
   ret i32 0
 }
 

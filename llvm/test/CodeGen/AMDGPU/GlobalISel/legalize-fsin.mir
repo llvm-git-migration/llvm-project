@@ -102,7 +102,7 @@ body: |
     ; VI-NEXT: {{  $}}
     ; VI-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; VI-NEXT: [[TRUNC:%[0-9]+]]:_(s16) = G_TRUNC [[COPY]](s32)
-    ; VI-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; VI-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; VI-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C]]
     ; VI-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.fract), [[FMUL]](s16)
     ; VI-NEXT: [[INT1:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[INT]](s16)
@@ -113,7 +113,7 @@ body: |
     ; GFX9-NEXT: {{  $}}
     ; GFX9-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $vgpr0
     ; GFX9-NEXT: [[TRUNC:%[0-9]+]]:_(s16) = G_TRUNC [[COPY]](s32)
-    ; GFX9-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; GFX9-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; GFX9-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C]]
     ; GFX9-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[FMUL]](s16)
     ; GFX9-NEXT: [[ANYEXT:%[0-9]+]]:_(s32) = G_ANYEXT [[INT]](s16)
@@ -327,7 +327,7 @@ body: |
     ; VI-NEXT: [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 16
     ; VI-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[BITCAST]], [[C]](s32)
     ; VI-NEXT: [[TRUNC1:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR]](s32)
-    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; VI-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; VI-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.fract), [[FMUL]](s16)
     ; VI-NEXT: [[INT1:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[INT]](s16)
@@ -349,7 +349,7 @@ body: |
     ; GFX9-NEXT: [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 16
     ; GFX9-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[BITCAST]], [[C]](s32)
     ; GFX9-NEXT: [[TRUNC1:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR]](s32)
-    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; GFX9-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; GFX9-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[FMUL]](s16)
     ; GFX9-NEXT: [[FMUL1:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC1]], [[C1]]
@@ -407,7 +407,7 @@ body: |
     ; VI-NEXT: [[TRUNC1:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR]](s32)
     ; VI-NEXT: [[BITCAST1:%[0-9]+]]:_(s32) = G_BITCAST [[UV1]](<2 x s16>)
     ; VI-NEXT: [[TRUNC2:%[0-9]+]]:_(s16) = G_TRUNC [[BITCAST1]](s32)
-    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; VI-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; VI-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.fract), [[FMUL]](s16)
     ; VI-NEXT: [[INT1:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[INT]](s16)
@@ -432,7 +432,7 @@ body: |
     ; GFX9-NEXT: [[TRUNC1:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR]](s32)
     ; GFX9-NEXT: [[BITCAST1:%[0-9]+]]:_(s32) = G_BITCAST [[UV1]](<2 x s16>)
     ; GFX9-NEXT: [[TRUNC2:%[0-9]+]]:_(s16) = G_TRUNC [[BITCAST1]](s32)
-    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; GFX9-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; GFX9-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[FMUL]](s16)
     ; GFX9-NEXT: [[FMUL1:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC1]], [[C1]]
@@ -517,7 +517,7 @@ body: |
     ; VI-NEXT: [[TRUNC2:%[0-9]+]]:_(s16) = G_TRUNC [[BITCAST1]](s32)
     ; VI-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[BITCAST1]], [[C]](s32)
     ; VI-NEXT: [[TRUNC3:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR1]](s32)
-    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; VI-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; VI-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; VI-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.fract), [[FMUL]](s16)
     ; VI-NEXT: [[INT1:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[INT]](s16)
@@ -556,7 +556,7 @@ body: |
     ; GFX9-NEXT: [[TRUNC2:%[0-9]+]]:_(s16) = G_TRUNC [[BITCAST1]](s32)
     ; GFX9-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[BITCAST1]], [[C]](s32)
     ; GFX9-NEXT: [[TRUNC3:%[0-9]+]]:_(s16) = G_TRUNC [[LSHR1]](s32)
-    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH3118
+    ; GFX9-NEXT: [[C1:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x3118
     ; GFX9-NEXT: [[FMUL:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC]], [[C1]]
     ; GFX9-NEXT: [[INT:%[0-9]+]]:_(s16) = G_INTRINSIC intrinsic(@llvm.amdgcn.sin), [[FMUL]](s16)
     ; GFX9-NEXT: [[FMUL1:%[0-9]+]]:_(s16) = G_FMUL [[TRUNC1]], [[C1]]

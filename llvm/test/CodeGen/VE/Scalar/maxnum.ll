@@ -118,7 +118,7 @@ define fp128 @func_fp_fmax_zero_quad(fp128 noundef %0) {
 ; CHECK-NEXT:    or %s0, 0, %s2
 ; CHECK-NEXT:    or %s1, 0, %s3
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = tail call fast fp128 @llvm.maxnum.f128(fp128 %0, fp128 0xL00000000000000000000000000000000)
+  %2 = tail call fast fp128 @llvm.maxnum.f128(fp128 %0, fp128 f0x00000000000000000000000000000000)
   ret fp128 %2
 }
 
@@ -157,6 +157,6 @@ define fp128 @func_fp_fmax_const_quad(fp128 noundef %0) {
 ; CHECK-NEXT:    or %s0, 0, %s2
 ; CHECK-NEXT:    or %s1, 0, %s3
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = tail call fast fp128 @llvm.maxnum.f128(fp128 %0, fp128 0xL0000000000000000C000000000000000)
+  %2 = tail call fast fp128 @llvm.maxnum.f128(fp128 %0, fp128 f0xC0000000000000000000000000000000)
   ret fp128 %2
 }

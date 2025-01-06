@@ -9,7 +9,7 @@ target triple = "sparc64"
 define void @fn1(fp128 %b) local_unnamed_addr !dbg !7 {
 entry:
   tail call void @llvm.dbg.value(metadata fp128 %b, i64 0, metadata !13, metadata !18), !dbg !17
-  tail call void @llvm.dbg.value(metadata fp128 0xL00000000000000000000000000000000, i64 0, metadata !13, metadata !19), !dbg !17
+  tail call void @llvm.dbg.value(metadata fp128 f0x00000000000000000000000000000000, i64 0, metadata !13, metadata !19), !dbg !17
   ret void, !dbg !20
 }
 

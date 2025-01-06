@@ -33,7 +33,7 @@ define spir_func noundef half @test_rcp_half(half noundef %p0) #0 {
 entry:
   ; CHECK: %[[#arg0:]] = OpFunctionParameter %[[#float_16]]
   ; CHECK: OpFDiv %[[#float_16]] %[[#const_f16_1]] %[[#arg0]]
-  %hlsl.rcp = fdiv half 0xH3C00, %p0
+  %hlsl.rcp = fdiv half f0x3C00, %p0
   ret half %hlsl.rcp
 }
 
@@ -41,7 +41,7 @@ define spir_func noundef <2 x half> @test_rcp_half2(<2 x half> noundef %p0) #0 {
 entry:
   ; CHECK: %[[#arg0:]] = OpFunctionParameter %[[#vec2_float_16]]
   ; CHECK: OpFDiv %[[#vec2_float_16]] %[[#vec2_const_ones_f16]] %[[#arg0]]
-  %hlsl.rcp = fdiv <2 x half> <half 0xH3C00, half 0xH3C00>, %p0
+  %hlsl.rcp = fdiv <2 x half> <half f0x3C00, half f0x3C00>, %p0
   ret <2 x half> %hlsl.rcp
 }
 
@@ -49,7 +49,7 @@ define spir_func noundef <3 x half> @test_rcp_half3(<3 x half> noundef %p0) #0 {
 entry:
   ; CHECK: %[[#arg0:]] = OpFunctionParameter %[[#vec3_float_16]]
   ; CHECK: OpFDiv %[[#vec3_float_16]] %[[#vec3_const_ones_f16]] %[[#arg0]]
-  %hlsl.rcp = fdiv <3 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00>, %p0
+  %hlsl.rcp = fdiv <3 x half> <half f0x3C00, half f0x3C00, half f0x3C00>, %p0
   ret <3 x half> %hlsl.rcp
 }
 
@@ -57,7 +57,7 @@ define spir_func noundef <4 x half> @test_rcp_half4(<4 x half> noundef %p0) #0 {
 entry:
   ; CHECK: %[[#arg0:]] = OpFunctionParameter %[[#vec4_float_16]]
   ; CHECK: OpFDiv %[[#vec4_float_16]] %[[#vec4_const_ones_f16]] %[[#arg0]]
-  %hlsl.rcp = fdiv <4 x half> <half 0xH3C00, half 0xH3C00, half 0xH3C00, half 0xH3C00>, %p0
+  %hlsl.rcp = fdiv <4 x half> <half f0x3C00, half f0x3C00, half f0x3C00, half f0x3C00>, %p0
   ret <4 x half> %hlsl.rcp
 }
 

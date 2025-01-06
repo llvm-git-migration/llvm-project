@@ -2452,7 +2452,7 @@ define half @fmul_select_f16_test10_sel_log2val_neg11_pos11(half %x, i32 %bool.a
 ; GFX11-GISEL-NEXT:    v_ldexp_f16_e32 v0, v0, v1
 ; GFX11-GISEL-NEXT:    s_setpc_b64 s[30:31]
   %bool = icmp eq i32 %bool.arg1, %bool.arg2
-  %y = select i1 %bool, half 0xH1000, half 0xH6800
+  %y = select i1 %bool, half f0x1000, half f0x6800
   %ldexp = fmul half %x, %y
   ret half %ldexp
 }
@@ -2535,7 +2535,7 @@ define half @fmul_select_f16_test11_sel_log2val_pos7_neg14(half %x, i32 %bool.ar
 ; GFX11-GISEL-NEXT:    v_ldexp_f16_e32 v0, v0, v1
 ; GFX11-GISEL-NEXT:    s_setpc_b64 s[30:31]
   %bool = icmp eq i32 %bool.arg1, %bool.arg2
-  %y = select i1 %bool, half 0xH5800, half 0xH0400
+  %y = select i1 %bool, half f0x5800, half f0x0400
   %ldexp = fmul half %x, %y
   ret half %ldexp
 }
@@ -3771,7 +3771,7 @@ define bfloat @fmul_select_bf16_test10_sel_log2val_pos65_pos56(bfloat %x, i32 %b
 ; GFX11-GISEL-NEXT:    v_ldexp_f16_e64 v0, -v0, v1
 ; GFX11-GISEL-NEXT:    s_setpc_b64 s[30:31]
   %bool = icmp eq i32 %bool.arg1, %bool.arg2
-  %y = select i1 %bool, bfloat 0xRE000, bfloat 0xRDB80
+  %y = select i1 %bool, bfloat f0xE000, bfloat f0xDB80
   %ldexp = fmul bfloat %x, %y
   ret bfloat %ldexp
 }
@@ -3883,7 +3883,7 @@ define bfloat @fmul_select_bf16_test11_sel_log2val_neg22_pos25(bfloat %x, i32 %b
 ; GFX11-GISEL-NEXT:    v_ldexp_f16_e32 v0, v0, v1
 ; GFX11-GISEL-NEXT:    s_setpc_b64 s[30:31]
   %bool = icmp eq i32 %bool.arg1, %bool.arg2
-  %y = select i1 %bool, bfloat 0xR3480, bfloat 0xR4C00
+  %y = select i1 %bool, bfloat f0x3480, bfloat f0x4C00
   %ldexp = fmul bfloat %x, %y
   ret bfloat %ldexp
 }

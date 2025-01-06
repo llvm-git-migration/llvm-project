@@ -113,7 +113,7 @@ define half @test_fmaak(half %x, half %y, half %z) {
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    v_fmaak_f16 v0, v0, v1, 0x4200
 ; GFX12-NEXT:    s_setpc_b64 s[30:31]
-  %r = call half @llvm.fma.f16(half %x, half %y, half 0xH4200)
+  %r = call half @llvm.fma.f16(half %x, half %y, half f0x4200)
   ret half %r
 }
 
@@ -154,7 +154,7 @@ define half @test_fmamk(half %x, half %y, half %z) {
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    v_fmamk_f16 v0, v0, 0x4200, v2
 ; GFX12-NEXT:    s_setpc_b64 s[30:31]
-  %r = call half @llvm.fma.f16(half %x, half 0xH4200, half %z)
+  %r = call half @llvm.fma.f16(half %x, half f0x4200, half %z)
   ret half %r
 }
 
@@ -272,10 +272,10 @@ define i32 @test_D139469_f16(half %arg) {
 ; GFX12-GISEL-NEXT:    v_cndmask_b32_e64 v0, 0, 1, s0
 ; GFX12-GISEL-NEXT:    s_setpc_b64 s[30:31]
 bb:
-  %i = fmul contract half %arg, 0xH291E
-  %i1 = fcmp olt half %i, 0xH0000
-  %i2 = fadd contract half %i, 0xH211E
-  %i3 = fcmp olt half %i2, 0xH0000
+  %i = fmul contract half %arg, f0x291E
+  %i1 = fcmp olt half %i, f0x0000
+  %i2 = fadd contract half %i, f0x211E
+  %i3 = fcmp olt half %i2, f0x0000
   %i4 = or i1 %i1, %i3
   %i5 = zext i1 %i4 to i32
   ret i32 %i5
@@ -434,10 +434,10 @@ define <2 x i32> @test_D139469_v2f16(<2 x half> %arg) {
 ; GFX12-GISEL-NEXT:    v_cndmask_b32_e64 v1, 0, 1, s0
 ; GFX12-GISEL-NEXT:    s_setpc_b64 s[30:31]
 bb:
-  %i = fmul contract <2 x half> %arg, <half 0xH291E, half 0xH291E>
-  %i1 = fcmp olt <2 x half> %i, <half 0xH0000, half 0xH0000>
-  %i2 = fadd contract <2 x half> %i, <half 0xH211E, half 0xH211E>
-  %i3 = fcmp olt <2 x half> %i2, <half 0xH0000, half 0xH0000>
+  %i = fmul contract <2 x half> %arg, <half f0x291E, half f0x291E>
+  %i1 = fcmp olt <2 x half> %i, <half f0x0000, half f0x0000>
+  %i2 = fadd contract <2 x half> %i, <half f0x211E, half f0x211E>
+  %i3 = fcmp olt <2 x half> %i2, <half f0x0000, half f0x0000>
   %i4 = or <2 x i1> %i1, %i3
   %i5 = zext <2 x i1> %i4 to <2 x i32>
   ret <2 x i32> %i5

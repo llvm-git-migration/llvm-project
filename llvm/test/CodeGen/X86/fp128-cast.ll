@@ -18,8 +18,8 @@
 @vu128 = common dso_local global i128 0, align 16
 @vf32 = common dso_local global float 0.000000e+00, align 4
 @vf64 = common dso_local global double 0.000000e+00, align 8
-@vf80 = common dso_local global x86_fp80 0xK00000000000000000000, align 8
-@vf128 = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
+@vf80 = common dso_local global x86_fp80 f0x00000000000000000000, align 8
+@vf128 = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
 
 define dso_local void @TestFPExtF32_F128() nounwind {
 ; X64-SSE-LABEL: TestFPExtF32_F128:
@@ -1046,7 +1046,7 @@ define dso_local i32 @TestConst128(fp128 %v) nounwind {
 ; X64-AVX-NEXT:    popq %rcx
 ; X64-AVX-NEXT:    retq
 entry:
-  %cmp = fcmp ogt fp128 %v, 0xL00000000000000003FFF000000000000
+  %cmp = fcmp ogt fp128 %v, f0x3FFF0000000000000000000000000000
   %conv = zext i1 %cmp to i32
   ret i32 %conv
 }
@@ -1097,7 +1097,7 @@ define dso_local i32 @TestConst128Zero(fp128 %v) nounwind {
 ; X64-AVX-NEXT:    popq %rcx
 ; X64-AVX-NEXT:    retq
 entry:
-  %cmp = fcmp ogt fp128 %v, 0xL00000000000000000000000000000000
+  %cmp = fcmp ogt fp128 %v, f0x00000000000000000000000000000000
   %conv = zext i1 %cmp to i32
   ret i32 %conv
 }
@@ -1376,7 +1376,7 @@ define i1 @PR34866(i128 %x) nounwind {
 ; X64-AVX-NEXT:    orq %rsi, %rdi
 ; X64-AVX-NEXT:    sete %al
 ; X64-AVX-NEXT:    retq
-  %bc_mmx = bitcast fp128 0xL00000000000000000000000000000000 to i128
+  %bc_mmx = bitcast fp128 f0x00000000000000000000000000000000 to i128
   %cmp = icmp eq i128 %bc_mmx, %x
   ret i1 %cmp
 }
@@ -1411,7 +1411,7 @@ define i1 @PR34866_commute(i128 %x) nounwind {
 ; X64-AVX-NEXT:    orq %rsi, %rdi
 ; X64-AVX-NEXT:    sete %al
 ; X64-AVX-NEXT:    retq
-  %bc_mmx = bitcast fp128 0xL00000000000000000000000000000000 to i128
+  %bc_mmx = bitcast fp128 f0x00000000000000000000000000000000 to i128
   %cmp = icmp eq i128 %x, %bc_mmx
   ret i1 %cmp
 }

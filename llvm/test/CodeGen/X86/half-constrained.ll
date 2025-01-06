@@ -4,9 +4,9 @@
 ; RUN: llc < %s -mtriple=x86_64-linux-gnu | FileCheck %s --check-prefix=X64-NOF16C
 ; RUN: llc < %s -mtriple=x86_64-linux-gnu -mattr=f16c | FileCheck %s --check-prefix=X64-F16C
 
-@a = global half 0xH0000, align 2
-@b = global half 0xH0000, align 2
-@c = global half 0xH0000, align 2
+@a = global half f0x0000, align 2
+@b = global half f0x0000, align 2
+@c = global half f0x0000, align 2
 
 define float @half_to_float() strictfp {
 ; X86-NOF16C-LABEL: half_to_float:

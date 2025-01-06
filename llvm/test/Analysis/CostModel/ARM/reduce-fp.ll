@@ -7,10 +7,10 @@ target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 
 define void @fadd_strict() {
 ; CHECK-V8-LABEL: 'fadd_strict'
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 64 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 64 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v2f32 = call float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v4f32 = call float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v8f32 = call float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -20,10 +20,10 @@ define void @fadd_strict() {
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEFP-LABEL: 'fadd_strict'
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %fadd_v2f32 = call float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v4f32 = call float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v8f32 = call float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -33,10 +33,10 @@ define void @fadd_strict() {
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEI-LABEL: 'fadd_strict'
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v2f16 = call half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v4f16 = call half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v8f16 = call half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fadd_v16f16 = call half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v2f32 = call float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v4f32 = call float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fadd_v8f32 = call float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -61,10 +61,10 @@ define void @fadd_strict() {
 
 define void @fadd_unordered() {
 ; CHECK-V8-LABEL: 'fadd_unordered'
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 20 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 44 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 92 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 20 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 44 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 92 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v2f32 = call reassoc float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v4f32 = call reassoc float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v8f32 = call reassoc float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -74,10 +74,10 @@ define void @fadd_unordered() {
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEFP-LABEL: 'fadd_unordered'
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 10 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 10 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %fadd_v2f32 = call reassoc float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fadd_v4f32 = call reassoc float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fadd_v8f32 = call reassoc float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -87,10 +87,10 @@ define void @fadd_unordered() {
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEI-LABEL: 'fadd_unordered'
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 169 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 225 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fadd_v2f16 = call reassoc half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fadd_v4f16 = call reassoc half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 169 for instruction: %fadd_v8f16 = call reassoc half @llvm.vector.reduce.fadd.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 225 for instruction: %fadd_v16f16 = call reassoc half @llvm.vector.reduce.fadd.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fadd_v2f32 = call reassoc float @llvm.vector.reduce.fadd.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fadd_v4f32 = call reassoc float @llvm.vector.reduce.fadd.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 85 for instruction: %fadd_v8f32 = call reassoc float @llvm.vector.reduce.fadd.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -114,10 +114,10 @@ define void @fadd_unordered() {
 
 define void @fmul_strict() {
 ; CHECK-V8-LABEL: 'fmul_strict'
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 64 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 64 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v2f32 = call float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v4f32 = call float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v8f32 = call float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -127,10 +127,10 @@ define void @fmul_strict() {
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEFP-LABEL: 'fmul_strict'
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 12 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 24 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %fmul_v2f32 = call float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v4f32 = call float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v8f32 = call float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -140,10 +140,10 @@ define void @fmul_strict() {
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEI-LABEL: 'fmul_strict'
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v2f16 = call half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v4f16 = call half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v8f16 = call half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 32 for instruction: %fmul_v16f16 = call half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v2f32 = call float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v4f32 = call float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 16 for instruction: %fmul_v8f32 = call float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -168,10 +168,10 @@ define void @fmul_strict() {
 
 define void @fmul_unordered() {
 ; CHECK-V8-LABEL: 'fmul_unordered'
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 20 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 44 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 92 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 20 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 44 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 92 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v2f32 = call reassoc float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v4f32 = call reassoc float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v8f32 = call reassoc float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -181,10 +181,10 @@ define void @fmul_unordered() {
 ; CHECK-V8-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEFP-LABEL: 'fmul_unordered'
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 10 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 3 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 8 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 10 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 2 for instruction: %fmul_v2f32 = call reassoc float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 4 for instruction: %fmul_v4f32 = call reassoc float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 6 for instruction: %fmul_v8f32 = call reassoc float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)
@@ -194,10 +194,10 @@ define void @fmul_unordered() {
 ; CHECK-MVEFP-NEXT:  Cost Model: Found an estimated cost of 0 for instruction: ret void
 ;
 ; CHECK-MVEI-LABEL: 'fmul_unordered'
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half 0xH0000, <2 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half 0xH0000, <4 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 169 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half 0xH0000, <8 x half> undef)
-; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 225 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half 0xH0000, <16 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fmul_v2f16 = call reassoc half @llvm.vector.reduce.fmul.v2f16(half f0x0000, <2 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fmul_v4f16 = call reassoc half @llvm.vector.reduce.fmul.v4f16(half f0x0000, <4 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 169 for instruction: %fmul_v8f16 = call reassoc half @llvm.vector.reduce.fmul.v8f16(half f0x0000, <8 x half> undef)
+; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 225 for instruction: %fmul_v16f16 = call reassoc half @llvm.vector.reduce.fmul.v16f16(half f0x0000, <16 x half> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 15 for instruction: %fmul_v2f32 = call reassoc float @llvm.vector.reduce.fmul.v2f32(float 0.000000e+00, <2 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 57 for instruction: %fmul_v4f32 = call reassoc float @llvm.vector.reduce.fmul.v4f32(float 0.000000e+00, <4 x float> undef)
 ; CHECK-MVEI-NEXT:  Cost Model: Found an estimated cost of 85 for instruction: %fmul_v8f32 = call reassoc float @llvm.vector.reduce.fmul.v8f32(float 0.000000e+00, <8 x float> undef)

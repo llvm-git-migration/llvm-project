@@ -83,7 +83,7 @@ define float @minnum_float_qnan_p0() {
 
 define bfloat @minnum_bfloat() {
 ; CHECK-LABEL: @minnum_bfloat(
-; CHECK-NEXT:    ret bfloat 0xR40A0
+; CHECK-NEXT:    ret bfloat f0x40A0
 ;
   %1 = call bfloat @llvm.minnum.bf16(bfloat 5.0, bfloat 42.0)
   ret bfloat %1
@@ -91,7 +91,7 @@ define bfloat @minnum_bfloat() {
 
 define half @minnum_half() {
 ; CHECK-LABEL: @minnum_half(
-; CHECK-NEXT:    ret half 0xH4500
+; CHECK-NEXT:    ret half f0x4500
 ;
   %1 = call half @llvm.minnum.f16(half 5.0, half 42.0)
   ret half %1
@@ -109,7 +109,7 @@ define <4 x float> @minnum_float_vec() {
 
 define <4 x bfloat> @minnum_bfloat_vec() {
 ; CHECK-LABEL: @minnum_bfloat_vec(
-; CHECK-NEXT:    ret <4 x bfloat> <bfloat 0xR7FC0, bfloat 0xR40A0, bfloat 0xR4228, bfloat 0xR40A0>
+; CHECK-NEXT:    ret <4 x bfloat> <bfloat f0x7FC0, bfloat f0x40A0, bfloat f0x4228, bfloat f0x40A0>
 ;
   %1 = call <4 x bfloat> @llvm.minnum.v4bf16(<4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 0x7FF8000000000000, bfloat 42., bfloat 42.>, <4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 5., bfloat 0x7FF8000000000000, bfloat 5.>)
   ret <4 x bfloat> %1
@@ -117,7 +117,7 @@ define <4 x bfloat> @minnum_bfloat_vec() {
 
 define <4 x half> @minnum_half_vec() {
 ; CHECK-LABEL: @minnum_half_vec(
-; CHECK-NEXT:    ret <4 x half> <half 0xH7E00, half 0xH4500, half 0xH5140, half 0xH4500>
+; CHECK-NEXT:    ret <4 x half> <half f0x7E00, half f0x4500, half f0x5140, half f0x4500>
 ;
   %1 = call <4 x half> @llvm.minnum.v4f16(<4 x half> <half 0x7FF8000000000000, half 0x7FF8000000000000, half 42., half 42.>, <4 x half> <half 0x7FF8000000000000, half 5., half 0x7FF8000000000000, half 5.>)
   ret <4 x half> %1
@@ -175,7 +175,7 @@ define float @maxnum_float_qnan_p0() {
 
 define bfloat @maxnum_bfloat() {
 ; CHECK-LABEL: @maxnum_bfloat(
-; CHECK-NEXT:    ret bfloat 0xR4228
+; CHECK-NEXT:    ret bfloat f0x4228
 ;
   %1 = call bfloat @llvm.maxnum.bf16(bfloat 5.0, bfloat 42.0)
   ret bfloat %1
@@ -183,7 +183,7 @@ define bfloat @maxnum_bfloat() {
 
 define half @maxnum_half() {
 ; CHECK-LABEL: @maxnum_half(
-; CHECK-NEXT:    ret half 0xH5140
+; CHECK-NEXT:    ret half f0x5140
 ;
   %1 = call half @llvm.maxnum.f16(half 5.0, half 42.0)
   ret half %1
@@ -201,7 +201,7 @@ define <4 x float> @maxnum_float_vec() {
 
 define <4 x bfloat> @maxnum_bfloat_vec() {
 ; CHECK-LABEL: @maxnum_bfloat_vec(
-; CHECK-NEXT:    ret <4 x bfloat> <bfloat 0xR7FC0, bfloat 0xR40A0, bfloat 0xR4228, bfloat 0xR4228>
+; CHECK-NEXT:    ret <4 x bfloat> <bfloat f0x7FC0, bfloat f0x40A0, bfloat f0x4228, bfloat f0x4228>
 ;
   %1 = call <4 x bfloat> @llvm.maxnum.v4bf16(<4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 0x7FF8000000000000, bfloat 42., bfloat 42.>, <4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 5., bfloat 0x7FF8000000000000, bfloat 5.>)
   ret <4 x bfloat> %1
@@ -209,7 +209,7 @@ define <4 x bfloat> @maxnum_bfloat_vec() {
 
 define <4 x half> @maxnum_half_vec() {
 ; CHECK-LABEL: @maxnum_half_vec(
-; CHECK-NEXT:    ret <4 x half> <half 0xH7E00, half 0xH4500, half 0xH5140, half 0xH5140>
+; CHECK-NEXT:    ret <4 x half> <half f0x7E00, half f0x4500, half f0x5140, half f0x5140>
 ;
   %1 = call <4 x half> @llvm.maxnum.v4f16(<4 x half> <half 0x7FF8000000000000, half 0x7FF8000000000000, half 42., half 42.>, <4 x half> <half 0x7FF8000000000000, half 5., half 0x7FF8000000000000, half 5.>)
   ret <4 x half> %1
@@ -235,7 +235,7 @@ define float @minimum_float() {
 
 define bfloat @minimum_bfloat() {
 ; CHECK-LABEL: @minimum_bfloat(
-; CHECK-NEXT:    ret bfloat 0xR40A0
+; CHECK-NEXT:    ret bfloat f0x40A0
 ;
   %1 = call bfloat @llvm.minimum.bf16(bfloat 5.0, bfloat 42.0)
   ret bfloat %1
@@ -243,7 +243,7 @@ define bfloat @minimum_bfloat() {
 
 define half @minimum_half() {
 ; CHECK-LABEL: @minimum_half(
-; CHECK-NEXT:    ret half 0xH4500
+; CHECK-NEXT:    ret half f0x4500
 ;
   %1 = call half @llvm.minimum.f16(half 5.0, half 42.0)
   ret half %1
@@ -261,7 +261,7 @@ define <4 x float> @minimum_float_vec() {
 
 define <4 x bfloat> @minimum_bfloat_vec() {
 ; CHECK-LABEL: @minimum_bfloat_vec(
-; CHECK-NEXT:    ret <4 x bfloat> <bfloat 0xR7FC0, bfloat 0xR7FC0, bfloat 0xR7FC0, bfloat 0xR40A0>
+; CHECK-NEXT:    ret <4 x bfloat> <bfloat f0x7FC0, bfloat f0x7FC0, bfloat f0x7FC0, bfloat f0x40A0>
 ;
   %1 = call <4 x bfloat> @llvm.minimum.v4bf16(<4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 0x7FF8000000000000, bfloat 42., bfloat 42.>, <4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 5., bfloat 0x7FF8000000000000, bfloat 5.>)
   ret <4 x bfloat> %1
@@ -269,7 +269,7 @@ define <4 x bfloat> @minimum_bfloat_vec() {
 
 define <4 x half> @minimum_half_vec() {
 ; CHECK-LABEL: @minimum_half_vec(
-; CHECK-NEXT:    ret <4 x half> <half 0xH7E00, half 0xH7E00, half 0xH7E00, half 0xH4500>
+; CHECK-NEXT:    ret <4 x half> <half f0x7E00, half f0x7E00, half f0x7E00, half f0x4500>
 ;
   %1 = call <4 x half> @llvm.minimum.v4f16(<4 x half> <half 0x7FF8000000000000, half 0x7FF8000000000000, half 42., half 42.>, <4 x half> <half 0x7FF8000000000000, half 5., half 0x7FF8000000000000, half 5.>)
   ret <4 x half> %1
@@ -295,7 +295,7 @@ define float @maximum_float() {
 
 define bfloat @maximum_bfloat() {
 ; CHECK-LABEL: @maximum_bfloat(
-; CHECK-NEXT:    ret bfloat 0xR4228
+; CHECK-NEXT:    ret bfloat f0x4228
 ;
   %1 = call bfloat @llvm.maximum.bf16(bfloat 5.0, bfloat 42.0)
   ret bfloat %1
@@ -303,7 +303,7 @@ define bfloat @maximum_bfloat() {
 
 define half @maximum_half() {
 ; CHECK-LABEL: @maximum_half(
-; CHECK-NEXT:    ret half 0xH5140
+; CHECK-NEXT:    ret half f0x5140
 ;
   %1 = call half @llvm.maximum.f16(half 5.0, half 42.0)
   ret half %1
@@ -321,7 +321,7 @@ define <4 x float> @maximum_float_vec() {
 
 define <4 x bfloat> @maximum_bfloat_vec() {
 ; CHECK-LABEL: @maximum_bfloat_vec(
-; CHECK-NEXT:    ret <4 x bfloat> <bfloat 0xR7FC0, bfloat 0xR7FC0, bfloat 0xR7FC0, bfloat 0xR4228>
+; CHECK-NEXT:    ret <4 x bfloat> <bfloat f0x7FC0, bfloat f0x7FC0, bfloat f0x7FC0, bfloat f0x4228>
 ;
   %1 = call <4 x bfloat> @llvm.maximum.v4bf16(<4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 0x7FF8000000000000, bfloat 42., bfloat 42.>, <4 x bfloat> <bfloat 0x7FF8000000000000, bfloat 5., bfloat 0x7FF8000000000000, bfloat 5.>)
   ret <4 x bfloat> %1
@@ -329,7 +329,7 @@ define <4 x bfloat> @maximum_bfloat_vec() {
 
 define <4 x half> @maximum_half_vec() {
 ; CHECK-LABEL: @maximum_half_vec(
-; CHECK-NEXT:    ret <4 x half> <half 0xH7E00, half 0xH7E00, half 0xH7E00, half 0xH5140>
+; CHECK-NEXT:    ret <4 x half> <half f0x7E00, half f0x7E00, half f0x7E00, half f0x5140>
 ;
   %1 = call <4 x half> @llvm.maximum.v4f16(<4 x half> <half 0x7FF8000000000000, half 0x7FF8000000000000, half 42., half 42.>, <4 x half> <half 0x7FF8000000000000, half 5., half 0x7FF8000000000000, half 5.>)
   ret <4 x half> %1

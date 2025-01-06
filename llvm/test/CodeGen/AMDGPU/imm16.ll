@@ -534,7 +534,7 @@ define amdgpu_kernel void @store_inline_imm_inv_2pi_f16(ptr addrspace(1) %out) {
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  store half 0xH3118, ptr addrspace(1) %out
+  store half f0x3118, ptr addrspace(1) %out
   ret void
 }
 
@@ -578,7 +578,7 @@ define amdgpu_kernel void @store_inline_imm_m_inv_2pi_f16(ptr addrspace(1) %out)
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  store half 0xHB118, ptr addrspace(1) %out
+  store half f0xB118, ptr addrspace(1) %out
   ret void
 }
 
@@ -1321,7 +1321,7 @@ define amdgpu_kernel void @add_inline_imm_1_f16(ptr addrspace(1) %out, half %x) 
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  %y = fadd half %x, 0xH0001
+  %y = fadd half %x, f0x0001
   store half %y, ptr addrspace(1) %out
   ret void
 }
@@ -1375,7 +1375,7 @@ define amdgpu_kernel void @add_inline_imm_2_f16(ptr addrspace(1) %out, half %x) 
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  %y = fadd half %x, 0xH0002
+  %y = fadd half %x, f0x0002
   store half %y, ptr addrspace(1) %out
   ret void
 }
@@ -1429,7 +1429,7 @@ define amdgpu_kernel void @add_inline_imm_16_f16(ptr addrspace(1) %out, half %x)
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  %y = fadd half %x, 0xH0010
+  %y = fadd half %x, f0x0010
   store half %y, ptr addrspace(1) %out
   ret void
 }
@@ -1720,7 +1720,7 @@ define amdgpu_kernel void @add_inline_imm_63_f16(ptr addrspace(1) %out, half %x)
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  %y = fadd half %x, 0xH003F
+  %y = fadd half %x, f0x003F
   store half %y, ptr addrspace(1) %out
   ret void
 }
@@ -1774,7 +1774,7 @@ define amdgpu_kernel void @add_inline_imm_64_f16(ptr addrspace(1) %out, half %x)
 ; SI-NEXT:    s_waitcnt lgkmcnt(0)
 ; SI-NEXT:    buffer_store_short v0, off, s[0:3], 0
 ; SI-NEXT:    s_endpgm
-  %y = fadd half %x, 0xH0040
+  %y = fadd half %x, f0x0040
   store half %y, ptr addrspace(1) %out
   ret void
 }
@@ -2136,7 +2136,7 @@ define void @mul_inline_imm_inv2pi_i16(ptr addrspace(1) %out, i16 %x) {
 ; SI-NEXT:    buffer_store_short v2, v[0:1], s[4:7], 0 addr64
 ; SI-NEXT:    s_waitcnt vmcnt(0) expcnt(0)
 ; SI-NEXT:    s_setpc_b64 s[30:31]
-  %y = mul i16 %x, bitcast (half 0xH3118 to i16)
+  %y = mul i16 %x, bitcast (half f0x3118 to i16)
   store i16 %y, ptr addrspace(1) %out
   ret void
 }

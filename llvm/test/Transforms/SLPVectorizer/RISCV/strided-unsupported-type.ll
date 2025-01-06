@@ -14,12 +14,12 @@ define void @loads() {
 entry:
   %_M_value.imagp.i266 = getelementptr { fp128, fp128 }, ptr null, i64 0, i32 1
   %0 = load fp128, ptr null, align 16
-  %cmp.i382 = fcmp une fp128 %0, 0xL00000000000000000000000000000000
+  %cmp.i382 = fcmp une fp128 %0, f0x00000000000000000000000000000000
   %1 = load fp128, ptr %_M_value.imagp.i266, align 16
-  %cmp4.i385 = fcmp une fp128 %1, 0xL00000000000000000000000000000000
+  %cmp4.i385 = fcmp une fp128 %1, f0x00000000000000000000000000000000
   call void null(i32 0, ptr null, i32 0)
-  %cmp.i386 = fcmp une fp128 %0, 0xL00000000000000000000000000000000
-  %cmp2.i388 = fcmp une fp128 %1, 0xL00000000000000000000000000000000
+  %cmp.i386 = fcmp une fp128 %0, f0x00000000000000000000000000000000
+  %cmp2.i388 = fcmp une fp128 %1, f0x00000000000000000000000000000000
   ret void
 }
 

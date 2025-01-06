@@ -241,8 +241,8 @@ int float_int_overflow(float f) {
 int long_double_int_overflow(long double ld) {
   // CHECK-UBSAN: alloca x86_fp80
 
-  // CHECK-COMMON: %[[GE:.*]] = fcmp ogt x86_fp80 %[[F:.*]], 0xKC01E800000010000000
-  // CHECK-COMMON: %[[LE:.*]] = fcmp olt x86_fp80 %[[F]], 0xK401E800000000000000
+  // CHECK-COMMON: %[[GE:.*]] = fcmp ogt x86_fp80 %[[F:.*]], f0xC01E800000010000000
+  // CHECK-COMMON: %[[LE:.*]] = fcmp olt x86_fp80 %[[F]], f0x401E800000000000000
   // CHECK-COMMON: %[[INBOUNDS:.*]] = and i1 %[[GE]], %[[LE]]
   // CHECK-COMMON-NEXT: br i1 %[[INBOUNDS]]
 

@@ -66,7 +66,7 @@ bb:
 define amdgpu_kernel void @v_mfma_f32_4x4x4f16_aaaa(ptr addrspace(1) %arg) {
 bb:
   %in.1 = load <4 x float>, ptr addrspace(1) %arg
-  %mai.1 = tail call <4 x float> asm "v_mfma_f32_4x4x4f16 $0, $1, $2, $3", "=a,a,a,a"(<4 x half> <half 0xH3800, half 0xH3800, half 0xH3800, half 0xH3800>, <4 x half> <half 0xH03FF, half 0xH03FF, half 0xH03FF, half 0xH03FF>, <4 x float> %in.1)
+  %mai.1 = tail call <4 x float> asm "v_mfma_f32_4x4x4f16 $0, $1, $2, $3", "=a,a,a,a"(<4 x half> <half f0x3800, half f0x3800, half f0x3800, half f0x3800>, <4 x half> <half f0x03FF, half f0x03FF, half f0x03FF, half f0x03FF>, <4 x float> %in.1)
   store <4 x float> %mai.1, ptr addrspace(1) %arg
   ret void
 }

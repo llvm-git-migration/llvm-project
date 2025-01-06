@@ -83,7 +83,7 @@ declare double @llvm.amdgcn.sqrt.f64(double) nounwind readnone
 
 define half @test_constant_fold_sqrt_f16_undef() nounwind {
 ; CHECK-LABEL: @test_constant_fold_sqrt_f16_undef(
-; CHECK-NEXT:    ret half 0xH7E00
+; CHECK-NEXT:    ret half f0x7E00
 ;
   %val = call half @llvm.amdgcn.sqrt.f16(half undef) nounwind readnone
   ret half %val
@@ -107,7 +107,7 @@ define double @test_constant_fold_sqrt_f64_undef() nounwind {
 
 define half @test_constant_fold_sqrt_f16_0() nounwind {
 ; CHECK-LABEL: @test_constant_fold_sqrt_f16_0(
-; CHECK-NEXT:    ret half 0xH0000
+; CHECK-NEXT:    ret half f0x0000
 ;
   %val = call half @llvm.amdgcn.sqrt.f16(half 0.0) nounwind readnone
   ret half %val
@@ -133,7 +133,7 @@ define double @test_constant_fold_sqrt_f64_0() nounwind {
 
 define half @test_constant_fold_sqrt_f16_neg0() nounwind {
 ; CHECK-LABEL: @test_constant_fold_sqrt_f16_neg0(
-; CHECK-NEXT:    ret half 0xH8000
+; CHECK-NEXT:    ret half f0x8000
 ;
   %val = call half @llvm.amdgcn.sqrt.f16(half -0.0) nounwind readnone
   ret half %val
@@ -1146,7 +1146,7 @@ define <2 x half> @constant_splat0_cvt_pkrtz() {
 
 define <2 x half> @constant_cvt_pkrtz() {
 ; CHECK-LABEL: @constant_cvt_pkrtz(
-; CHECK-NEXT:    ret <2 x half> <half 0xH4000, half 0xH4400>
+; CHECK-NEXT:    ret <2 x half> <half f0x4000, half f0x4400>
 ;
   %cvt = call <2 x half> @llvm.amdgcn.cvt.pkrtz(float 2.0, float 4.0)
   ret <2 x half> %cvt
@@ -1155,7 +1155,7 @@ define <2 x half> @constant_cvt_pkrtz() {
 ; Test constant values where rtz changes result
 define <2 x half> @constant_rtz_pkrtz() {
 ; CHECK-LABEL: @constant_rtz_pkrtz(
-; CHECK-NEXT:    ret <2 x half> splat (half 0xH7BFF)
+; CHECK-NEXT:    ret <2 x half> splat (half f0x7BFF)
 ;
   %cvt = call <2 x half> @llvm.amdgcn.cvt.pkrtz(float 65535.0, float 65535.0)
   ret <2 x half> %cvt
@@ -1163,7 +1163,7 @@ define <2 x half> @constant_rtz_pkrtz() {
 
 define <2 x half> @fpext_const_cvt_pkrtz(half %x) {
 ; CHECK-LABEL: @fpext_const_cvt_pkrtz(
-; CHECK-NEXT:    [[CVT:%.*]] = insertelement <2 x half> <half poison, half 0xH4200>, half [[X:%.*]], i64 0
+; CHECK-NEXT:    [[CVT:%.*]] = insertelement <2 x half> <half poison, half f0x4200>, half [[X:%.*]], i64 0
 ; CHECK-NEXT:    ret <2 x half> [[CVT]]
 ;
   %ext = fpext half %x to float
@@ -1173,7 +1173,7 @@ define <2 x half> @fpext_const_cvt_pkrtz(half %x) {
 
 define <2 x half> @const_fpext_cvt_pkrtz(half %y) {
 ; CHECK-LABEL: @const_fpext_cvt_pkrtz(
-; CHECK-NEXT:    [[CVT:%.*]] = insertelement <2 x half> <half 0xH4500, half poison>, half [[Y:%.*]], i64 1
+; CHECK-NEXT:    [[CVT:%.*]] = insertelement <2 x half> <half f0x4500, half poison>, half [[Y:%.*]], i64 1
 ; CHECK-NEXT:    ret <2 x half> [[CVT]]
 ;
   %ext = fpext half %y to float
@@ -1183,8 +1183,8 @@ define <2 x half> @const_fpext_cvt_pkrtz(half %y) {
 
 define <2 x half> @const_fpext_multi_cvt_pkrtz(half %y) {
 ; CHECK-LABEL: @const_fpext_multi_cvt_pkrtz(
-; CHECK-NEXT:    [[CVT1:%.*]] = insertelement <2 x half> <half 0xH4500, half poison>, half [[Y:%.*]], i64 1
-; CHECK-NEXT:    [[CVT2:%.*]] = insertelement <2 x half> <half 0xH4200, half poison>, half [[Y]], i64 1
+; CHECK-NEXT:    [[CVT1:%.*]] = insertelement <2 x half> <half f0x4500, half poison>, half [[Y:%.*]], i64 1
+; CHECK-NEXT:    [[CVT2:%.*]] = insertelement <2 x half> <half f0x4200, half poison>, half [[Y]], i64 1
 ; CHECK-NEXT:    [[ADD:%.*]] = fadd <2 x half> [[CVT1]], [[CVT2]]
 ; CHECK-NEXT:    ret <2 x half> [[ADD]]
 ;
@@ -1673,9 +1673,9 @@ declare void @llvm.amdgcn.exp.compr.v2f16(i32 immarg, i32 immarg, <2 x half>, <2
 define void @exp_compr_disabled_inputs_to_undef(<2 x half> %xy, <2 x half> %zw) {
 ; CHECK-LABEL: @exp_compr_disabled_inputs_to_undef(
 ; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 0, <2 x half> undef, <2 x half> undef, i1 true, i1 false)
-; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 1, <2 x half> <half 0xH3C00, half 0xH4000>, <2 x half> undef, i1 true, i1 false)
-; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 2, <2 x half> <half 0xH3C00, half 0xH4000>, <2 x half> undef, i1 true, i1 false)
-; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 3, <2 x half> <half 0xH3C00, half 0xH4000>, <2 x half> undef, i1 true, i1 false)
+; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 1, <2 x half> <half f0x3C00, half f0x4000>, <2 x half> undef, i1 true, i1 false)
+; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 2, <2 x half> <half f0x3C00, half f0x4000>, <2 x half> undef, i1 true, i1 false)
+; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 3, <2 x half> <half f0x3C00, half f0x4000>, <2 x half> undef, i1 true, i1 false)
 ; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 0, <2 x half> undef, <2 x half> undef, i1 true, i1 false)
 ; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 1, <2 x half> [[XY:%.*]], <2 x half> undef, i1 true, i1 false)
 ; CHECK-NEXT:    call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 2, <2 x half> [[XY]], <2 x half> undef, i1 true, i1 false)
@@ -4024,7 +4024,7 @@ define amdgpu_kernel void @image_sample_a16_c_d_o_2darray_V2(ptr addrspace(1) %o
 
 define amdgpu_kernel void @image_sample_a16_c_d_o_2darray_const(ptr addrspace(1) %out, <8 x i32> inreg %rsrc, <4 x i32> inreg %samp, i32 %offset, float %zcompare, half %dsdh, half %dtdh, half %dsdv, half %dtdv, half %s, half %slice) {
 ; CHECK-LABEL: @image_sample_a16_c_d_o_2darray_const(
-; CHECK-NEXT:    [[RES:%.*]] = call <2 x float> @llvm.amdgcn.image.sample.c.d.o.2darray.v2f32.f16.f16.v8i32.v4i32(i32 6, i32 [[OFFSET:%.*]], float [[ZCOMPARE:%.*]], half [[DSDH:%.*]], half [[DTDH:%.*]], half [[DSDV:%.*]], half [[DTDV:%.*]], half [[S:%.*]], half 0xH3400, half [[SLICE:%.*]], <8 x i32> [[RSRC:%.*]], <4 x i32> [[SAMP:%.*]], i1 false, i32 0, i32 0)
+; CHECK-NEXT:    [[RES:%.*]] = call <2 x float> @llvm.amdgcn.image.sample.c.d.o.2darray.v2f32.f16.f16.v8i32.v4i32(i32 6, i32 [[OFFSET:%.*]], float [[ZCOMPARE:%.*]], half [[DSDH:%.*]], half [[DTDH:%.*]], half [[DSDV:%.*]], half [[DTDV:%.*]], half [[S:%.*]], half f0x3400, half [[SLICE:%.*]], <8 x i32> [[RSRC:%.*]], <4 x i32> [[SAMP:%.*]], i1 false, i32 0, i32 0)
 ; CHECK-NEXT:    store <2 x float> [[RES]], ptr addrspace(1) [[OUT:%.*]], align 8
 ; CHECK-NEXT:    ret void
 ;
@@ -6182,7 +6182,7 @@ define float @test_constant_fold_log_f32_snan() {
 
 define half @test_constant_fold_log_f16_p0() {
 ; CHECK-LABEL: @test_constant_fold_log_f16_p0(
-; CHECK-NEXT:    ret half 0xHFC00
+; CHECK-NEXT:    ret half f0xFC00
 ;
   %val = call half @llvm.amdgcn.log.f16(half 0.0)
   ret half %val
@@ -6190,7 +6190,7 @@ define half @test_constant_fold_log_f16_p0() {
 
 define half @test_constant_fold_log_f16_neg10() {
 ; CHECK-LABEL: @test_constant_fold_log_f16_neg10(
-; CHECK-NEXT:    ret half 0xH7E00
+; CHECK-NEXT:    ret half f0x7E00
 ;
   %val = call half @llvm.amdgcn.log.f16(half -10.0)
   ret half %val
@@ -6251,18 +6251,18 @@ define float @test_constant_fold_log_f32_ninf_strictfp() strictfp {
 
 define half @test_constant_fold_log_f16_denorm() {
 ; CHECK-LABEL: @test_constant_fold_log_f16_denorm(
-; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.log.f16(half 0xH03FF)
+; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.log.f16(half f0x03FF)
 ; CHECK-NEXT:    ret half [[VAL]]
 ;
-  %val = call half @llvm.amdgcn.log.f16(half 0xH03ff)
+  %val = call half @llvm.amdgcn.log.f16(half f0x03ff)
   ret half %val
 }
 
 define half @test_constant_fold_log_f16_neg_denorm() {
 ; CHECK-LABEL: @test_constant_fold_log_f16_neg_denorm(
-; CHECK-NEXT:    ret half 0xH7E00
+; CHECK-NEXT:    ret half f0x7E00
 ;
-  %val = call half @llvm.amdgcn.log.f16(half 0xH83ff)
+  %val = call half @llvm.amdgcn.log.f16(half f0x83ff)
   ret half %val
 }
 
@@ -6427,7 +6427,7 @@ define float @test_constant_fold_exp2_f32_snan() {
 
 define half @test_constant_fold_exp2_f16_p0() {
 ; CHECK-LABEL: @test_constant_fold_exp2_f16_p0(
-; CHECK-NEXT:    ret half 0xH3C00
+; CHECK-NEXT:    ret half f0x3C00
 ;
   %val = call half @llvm.amdgcn.exp2.f16(half 0.0)
   ret half %val
@@ -6435,7 +6435,7 @@ define half @test_constant_fold_exp2_f16_p0() {
 
 define half @test_constant_fold_exp2_f16_neg10() {
 ; CHECK-LABEL: @test_constant_fold_exp2_f16_neg10(
-; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half 0xHC900)
+; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half f0xC900)
 ; CHECK-NEXT:    ret half [[VAL]]
 ;
   %val = call half @llvm.amdgcn.exp2.f16(half -10.0)
@@ -6532,19 +6532,19 @@ define float @test_constant_fold_exp2_f32_ninf_strictfp() strictfp {
 
 define half @test_constant_fold_exp2_f16_denorm() {
 ; CHECK-LABEL: @test_constant_fold_exp2_f16_denorm(
-; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half 0xH03FF)
+; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half f0x03FF)
 ; CHECK-NEXT:    ret half [[VAL]]
 ;
-  %val = call half @llvm.amdgcn.exp2.f16(half 0xH03ff)
+  %val = call half @llvm.amdgcn.exp2.f16(half f0x03ff)
   ret half %val
 }
 
 define half @test_constant_fold_exp2_f16_neg_denorm() {
 ; CHECK-LABEL: @test_constant_fold_exp2_f16_neg_denorm(
-; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half 0xH83FF)
+; CHECK-NEXT:    [[VAL:%.*]] = call half @llvm.amdgcn.exp2.f16(half f0x83FF)
 ; CHECK-NEXT:    ret half [[VAL]]
 ;
-  %val = call half @llvm.amdgcn.exp2.f16(half 0xH83ff)
+  %val = call half @llvm.amdgcn.exp2.f16(half f0x83ff)
   ret half %val
 }
 

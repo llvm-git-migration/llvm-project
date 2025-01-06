@@ -177,7 +177,7 @@ define void @test_alignment_fp() #0 {
 ; CHECK-NEXT:    retl
 entry:
   %f = alloca fp128
-  store fp128 0xL00000000000000004000000000000000, ptr %f
+  store fp128 f0x40000000000000000000000000000000, ptr %f
   call void @foofp(ptr inreg %f)
   ret void
 }

@@ -4,7 +4,7 @@
 --- |
   define ppc_fp128 @freeze_select(ppc_fp128 %a, ppc_fp128 %b) {
     %sel.frozen = freeze ppc_fp128 %a
-    %cmp = fcmp one ppc_fp128 %sel.frozen, 0xM00000000000000000000000000000000
+    %cmp = fcmp one ppc_fp128 %sel.frozen, f0x00000000000000000000000000000000
     br i1 %cmp, label %select.end, label %select.false
 
   select.false:                                     ; preds = %0

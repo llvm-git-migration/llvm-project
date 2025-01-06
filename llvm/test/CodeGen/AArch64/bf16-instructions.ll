@@ -656,10 +656,10 @@ define void @test_fccmp(bfloat %in, ptr %out) {
 ; CHECK-NEXT:    fcsel s0, s0, s1, gt
 ; CHECK-NEXT:    str h0, [x0]
 ; CHECK-NEXT:    ret
-  %cmp1 = fcmp ogt bfloat %in, 0xR4800
-  %cmp2 = fcmp olt bfloat %in, 0xR4500
+  %cmp1 = fcmp ogt bfloat %in, f0x4800
+  %cmp2 = fcmp olt bfloat %in, f0x4500
   %cond = and i1 %cmp1, %cmp2
-  %result = select i1 %cond, bfloat %in, bfloat 0xR4500
+  %result = select i1 %cond, bfloat %in, bfloat f0x4500
   store bfloat %result, ptr %out
   ret void
 }

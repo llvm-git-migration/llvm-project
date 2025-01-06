@@ -443,14 +443,14 @@ TEST_UNINIT(fp16, __fp16);
 // CHECK:       %uninit = alloca half, align
 // CHECK-NEXT:  call void @{{.*}}used{{.*}}%uninit)
 // PATTERN-LABEL: @test_fp16_uninit()
-// PATTERN: store half 0xHFFFF, ptr %uninit, align 2, !annotation [[AUTO_INIT]]
+// PATTERN: store half f0xFFFF, ptr %uninit, align 2, !annotation [[AUTO_INIT]]
 // ZERO-LABEL: @test_fp16_uninit()
-// ZERO: store half 0xH0000, ptr %uninit, align 2, !annotation [[AUTO_INIT]]
+// ZERO: store half f0x0000, ptr %uninit, align 2, !annotation [[AUTO_INIT]]
 
 TEST_BRACES(fp16, __fp16);
 // CHECK-LABEL: @test_fp16_braces()
 // CHECK:       %braces = alloca half, align [[ALIGN:[0-9]*]]
-// CHECK-NEXT:  store half 0xH0000, ptr %braces, align [[ALIGN]]
+// CHECK-NEXT:  store half f0x0000, ptr %braces, align [[ALIGN]]
 // CHECK-NOT:   !annotation
 // CHECK-NEXT:  call void @{{.*}}used{{.*}}%braces)
 
@@ -491,14 +491,14 @@ TEST_UNINIT(longdouble, long double);
 // CHECK:       %uninit = alloca x86_fp80, align
 // CHECK-NEXT:  call void @{{.*}}used{{.*}}%uninit)
 // PATTERN-LABEL: @test_longdouble_uninit()
-// PATTERN: store x86_fp80 0xKFFFFFFFFFFFFFFFFFFFF, ptr %uninit, align {{.+}}, !annotation [[AUTO_INIT]]
+// PATTERN: store x86_fp80 f0xFFFFFFFFFFFFFFFFFFFF, ptr %uninit, align {{.+}}, !annotation [[AUTO_INIT]]
 // ZERO-LABEL: @test_longdouble_uninit()
-// ZERO: store x86_fp80 0xK00000000000000000000, ptr %uninit, align {{.+}}, !annotation [[AUTO_INIT]]
+// ZERO: store x86_fp80 f0x00000000000000000000, ptr %uninit, align {{.+}}, !annotation [[AUTO_INIT]]
 
 TEST_BRACES(longdouble, long double);
 // CHECK-LABEL: @test_longdouble_braces()
 // CHECK:       %braces = alloca x86_fp80, align [[ALIGN:[0-9]*]]
-// CHECK-NEXT:  store x86_fp80 0xK00000000000000000000, ptr %braces, align [[ALIGN]]
+// CHECK-NEXT:  store x86_fp80 f0x00000000000000000000, ptr %braces, align [[ALIGN]]
 // CHECK-NOT:   !annotation
 // CHECK-NEXT:  call void @{{.*}}used{{.*}}%braces)
 
@@ -1683,7 +1683,7 @@ TEST_UNINIT(longdoublevec32, long double  __attribute__((vector_size(sizeof(long
 // CHECK:       %uninit = alloca <2 x x86_fp80>, align
 // CHECK-NEXT:  call void @{{.*}}used{{.*}}%uninit)
 // PATTERN-LABEL: @test_longdoublevec32_uninit()
-// PATTERN: store <2 x x86_fp80> splat (x86_fp80 0xKFFFFFFFFFFFFFFFFFFFF), ptr %uninit, align 32, !annotation [[AUTO_INIT]]
+// PATTERN: store <2 x x86_fp80> splat (x86_fp80 f0xFFFFFFFFFFFFFFFFFFFF), ptr %uninit, align 32, !annotation [[AUTO_INIT]]
 // ZERO-LABEL: @test_longdoublevec32_uninit()
 // ZERO: store <2 x x86_fp80> zeroinitializer, ptr %uninit, align 32, !annotation [[AUTO_INIT]]
 

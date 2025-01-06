@@ -1114,11 +1114,11 @@ entry:
 ;  Convert QP to DP
 
 @f128Array = global [4 x fp128]
-                      [fp128 0xL00000000000000004004C00000000000,
-                       fp128 0xLF000000000000000400808AB851EB851,
-                       fp128 0xL5000000000000000400E0C26324C8366,
-                       fp128 0xL8000000000000000400A24E2E147AE14], align 16
-@f128global = global fp128 0xL300000000000000040089CA8F5C28F5C, align 16
+                      [fp128 f0x4004C000000000000000000000000000,
+                       fp128 f0x400808AB851EB851F000000000000000,
+                       fp128 f0x400E0C26324C83665000000000000000,
+                       fp128 f0x400A24E2E147AE148000000000000000], align 16
+@f128global = global fp128 f0x40089CA8F5C28F5C3000000000000000, align 16
 
 ; Function Attrs: norecurse nounwind readonly
 define double @qpConv2dp(ptr nocapture readonly %a) {
@@ -1450,7 +1450,7 @@ entry:
   ret void
 }
 
-@f128Glob = common global fp128 0xL00000000000000000000000000000000, align 16
+@f128Glob = common global fp128 f0x00000000000000000000000000000000, align 16
 
 ; Function Attrs: norecurse nounwind readnone
 define fp128 @dpConv2qp(double %a) {

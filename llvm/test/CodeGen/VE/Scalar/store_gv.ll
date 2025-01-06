@@ -7,7 +7,7 @@
 @vi128 = common dso_local local_unnamed_addr global i128 0, align 16
 @vf32 = common dso_local local_unnamed_addr global float 0.000000e+00, align 4
 @vf64 = common dso_local local_unnamed_addr global double 0.000000e+00, align 8
-@vf128 = common dso_local local_unnamed_addr global fp128 0xL00000000000000000000000000000000, align 16
+@vf128 = common dso_local local_unnamed_addr global fp128 f0x00000000000000000000000000000000, align 16
 
 ; Function Attrs: norecurse nounwind readonly
 define void @storef128com(fp128 %0) {

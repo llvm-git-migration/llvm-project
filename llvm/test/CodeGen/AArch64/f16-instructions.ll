@@ -812,10 +812,10 @@ define void @test_fccmp(half %in, ptr %out) {
 ; CHECK-FP16-GI-NEXT:    csel w8, w8, w9, gt
 ; CHECK-FP16-GI-NEXT:    strh w8, [x0]
 ; CHECK-FP16-GI-NEXT:    ret
-  %cmp1 = fcmp ogt half %in, 0xH4800
-  %cmp2 = fcmp olt half %in, 0xH4500
+  %cmp1 = fcmp ogt half %in, f0x4800
+  %cmp2 = fcmp olt half %in, f0x4500
   %cond = and i1 %cmp1, %cmp2
-  %result = select i1 %cond, half %in, half 0xH4500
+  %result = select i1 %cond, half %in, half f0x4500
   store half %result, ptr %out
   ret void
 }

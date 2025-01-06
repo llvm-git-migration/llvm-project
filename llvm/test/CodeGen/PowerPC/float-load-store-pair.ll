@@ -20,8 +20,8 @@
 @a13 = dso_local local_unnamed_addr global double 0.000000e+00, align 8
 @a14 = dso_local local_unnamed_addr global double 0.000000e+00, align 8
 @a15 = dso_local local_unnamed_addr global double 0.000000e+00, align 8
-@a16 = dso_local local_unnamed_addr global ppc_fp128 0xM00000000000000000000000000000000, align 16
-@a17 = dso_local local_unnamed_addr global fp128 0xL00000000000000000000000000000000, align 16
+@a16 = dso_local local_unnamed_addr global ppc_fp128 f0x00000000000000000000000000000000, align 16
+@a17 = dso_local local_unnamed_addr global fp128 f0x00000000000000000000000000000000, align 16
 
 ; Because this test function is trying to pass float argument by stack,
 ; so the fpr is only used to load/store float argument

@@ -398,7 +398,7 @@ define fp128 @test_neg_sub(fp128 %in) {
 ; CHECK-NEXT:    strb w8, [sp, #15]
 ; CHECK-NEXT:    ldr q0, [sp], #16
 ; CHECK-NEXT:    ret
-  %ret = fsub fp128 0xL00000000000000008000000000000000, %in
+  %ret = fsub fp128 f0x80000000000000000000000000000000, %in
   ret fp128 %ret
 }
 

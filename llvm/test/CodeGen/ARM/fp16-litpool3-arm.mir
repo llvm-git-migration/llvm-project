@@ -15,9 +15,9 @@
   define dso_local i32 @CP() #1 {
   entry:
     %res = alloca half, align 2
-    store half 0xH706B, ptr %res, align 2
+    store half f0x706B, ptr %res, align 2
     %0 = load half, ptr %res, align 2
-    %tobool = fcmp une half %0, 0xH0000
+    %tobool = fcmp une half %0, f0x0000
     br i1 %tobool, label %LA, label %END
 
   LA:                                               ; preds = %entry
@@ -72,7 +72,7 @@ stack:
       debug-info-location: '' }
 constants:
   - id:              0
-    value:           half 0xH706B
+    value:           half f0x706B
     alignment:       2
     isTargetSpecific: false
 

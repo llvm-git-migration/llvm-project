@@ -57,7 +57,7 @@ define fp128 @func6(fp128 %a) {
 ; CHECK-NEXT:    ld %s5, (, %s2)
 ; CHECK-NEXT:    fadd.q %s0, %s0, %s4
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %r = fadd fp128 %a, 0xL0000000000000000C001400000000000
+  %r = fadd fp128 %a, f0xC0014000000000000000000000000000
   ret fp128 %r
 }
 
@@ -93,7 +93,7 @@ define fp128 @func9(fp128 %a) {
 ; CHECK-NEXT:    ld %s5, (, %s2)
 ; CHECK-NEXT:    fadd.q %s0, %s0, %s4
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %r = fadd fp128 %a, 0xLFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFF
+  %r = fadd fp128 %a, f0xFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF
   ret fp128 %r
 }
 

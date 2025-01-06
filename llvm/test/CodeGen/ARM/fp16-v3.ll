@@ -19,7 +19,7 @@ target triple = "armv7a--none-eabi"
 ; CHECK-NEXT: bx lr
 define void @test_vec3(ptr %arr, i32 %i) #0 {
   %H = sitofp i32 %i to half
-  %S = fadd half %H, 0xH4A00
+  %S = fadd half %H, f0x4A00
   %1 = insertelement <3 x half> undef, half %S, i32 0
   %2 = insertelement <3 x half> %1, half %S, i32 1
   %3 = insertelement <3 x half> %2, half %S, i32 2

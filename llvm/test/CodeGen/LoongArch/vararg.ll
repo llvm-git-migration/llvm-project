@@ -256,7 +256,7 @@ define void @va_aligned_register_caller() nounwind {
 ; LA64-WITHFP-NEXT:    addi.d $sp, $sp, 16
 ; LA64-WITHFP-NEXT:    ret
  %1 = call i64 (i64, i128, ...) @va_aligned_register(i64 2, i128 1111,
-   fp128 0xLEB851EB851EB851F400091EB851EB851)
+   fp128 f0x400091EB851EB851EB851EB851EB851F)
  ret void
 }
 
@@ -348,7 +348,7 @@ define void @va_aligned_stack_caller() nounwind {
 ; LA64-WITHFP-NEXT:    ret
   %1 = call i32 (i32, ...) @va_aligned_stack_callee(i32 1, i32 11,
     i256 1000, i32 12, i32 13, i128 18446744073709551616, i32 14,
-    fp128 0xLEB851EB851EB851F400091EB851EB851, i64 15,
+    fp128 f0x400091EB851EB851EB851EB851EB851F, i64 15,
     [2 x i64] [i64 16, i64 17])
   ret void
 }

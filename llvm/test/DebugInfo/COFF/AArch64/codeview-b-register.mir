@@ -29,7 +29,7 @@
   define internal fastcc i1 @test.fn(half %0) !dbg !4 {
   Entry:
     call void @llvm.dbg.value(metadata half %0, metadata !11, metadata !DIExpression()), !dbg !13
-    %1 = fcmp une half 0xH0000, %0, !dbg !14
+    %1 = fcmp une half f0x0000, %0, !dbg !14
     ret i1 %1
   }
 

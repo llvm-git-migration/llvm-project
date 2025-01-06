@@ -290,7 +290,7 @@ define void @caller_indirect_args() nounwind {
 ; CHECK-LARGE-ZICFILP-NEXT:    addi sp, sp, 32
 ; CHECK-LARGE-ZICFILP-NEXT:    ret
 entry:
-  %call = tail call i32 @callee_indirect_args(fp128 0xL00000000000000003FFF000000000000)
+  %call = tail call i32 @callee_indirect_args(fp128 f0x3FFF0000000000000000000000000000)
   ret void
 }
 

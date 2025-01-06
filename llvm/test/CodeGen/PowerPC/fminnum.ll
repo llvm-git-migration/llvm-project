@@ -440,7 +440,7 @@ define ppc_fp128 @fminnum_const(ppc_fp128 %0) {
 ; CHECK-NEXT:    addi 1, 1, 96
 ; CHECK-NEXT:    mtlr 0
 ; CHECK-NEXT:    blr
-  %2 = tail call fast ppc_fp128 @llvm.minnum.ppcf128(ppc_fp128 %0, ppc_fp128 0xM3FF00000000000000000000000000000)
+  %2 = tail call fast ppc_fp128 @llvm.minnum.ppcf128(ppc_fp128 %0, ppc_fp128 f0x00000000000000003FF0000000000000)
   ret ppc_fp128 %2
 }
 

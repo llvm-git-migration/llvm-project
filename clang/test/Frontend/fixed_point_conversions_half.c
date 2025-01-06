@@ -26,7 +26,7 @@ _Float16 h;
 // CHECK-LABEL: @half_fix1(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // CHECK-NEXT:    [[TMP2:%.*]] = fptosi half [[TMP1]] to i8
 // CHECK-NEXT:    store i8 [[TMP2]], ptr @sf, align 1
 // CHECK-NEXT:    ret void
@@ -51,7 +51,7 @@ void half_fix2(void) {
 // CHECK-LABEL: @half_fix3(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // CHECK-NEXT:    [[TMP2:%.*]] = fptosi half [[TMP1]] to i16
 // CHECK-NEXT:    store i16 [[TMP2]], ptr @sa, align 2
 // CHECK-NEXT:    ret void
@@ -85,7 +85,7 @@ void half_fix4(void) {
 // UNSIGNED-LABEL: @half_fix5(
 // UNSIGNED-NEXT:  entry:
 // UNSIGNED-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// UNSIGNED-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// UNSIGNED-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // UNSIGNED-NEXT:    [[TMP2:%.*]] = fptosi half [[TMP1]] to i16
 // UNSIGNED-NEXT:    store i16 [[TMP2]], ptr @usa, align 2
 // UNSIGNED-NEXT:    ret void
@@ -120,7 +120,7 @@ void half_fix6(void) {
 // CHECK-LABEL: @half_sat1(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // CHECK-NEXT:    [[TMP2:%.*]] = call i8 @llvm.fptosi.sat.i8.f16(half [[TMP1]])
 // CHECK-NEXT:    store i8 [[TMP2]], ptr @sf_sat, align 1
 // CHECK-NEXT:    ret void
@@ -145,7 +145,7 @@ void half_sat2(void) {
 // CHECK-LABEL: @half_sat3(
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// CHECK-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // CHECK-NEXT:    [[TMP2:%.*]] = call i16 @llvm.fptosi.sat.i16.f16(half [[TMP1]])
 // CHECK-NEXT:    store i16 [[TMP2]], ptr @sa_sat, align 2
 // CHECK-NEXT:    ret void
@@ -179,7 +179,7 @@ void half_sat4(void) {
 // UNSIGNED-LABEL: @half_sat5(
 // UNSIGNED-NEXT:  entry:
 // UNSIGNED-NEXT:    [[TMP0:%.*]] = load half, ptr @h, align 2
-// UNSIGNED-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], 0xH5800
+// UNSIGNED-NEXT:    [[TMP1:%.*]] = fmul half [[TMP0]], f0x5800
 // UNSIGNED-NEXT:    [[TMP2:%.*]] = call i16 @llvm.fptosi.sat.i16.f16(half [[TMP1]])
 // UNSIGNED-NEXT:    [[TMP3:%.*]] = icmp slt i16 [[TMP2]], 0
 // UNSIGNED-NEXT:    [[SATMIN:%.*]] = select i1 [[TMP3]], i16 0, i16 [[TMP2]]
@@ -219,7 +219,7 @@ void half_sat6(void) {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load i8, ptr @sf, align 1
 // CHECK-NEXT:    [[TMP1:%.*]] = sitofp i8 [[TMP0]] to half
-// CHECK-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], 0xH2000
+// CHECK-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], f0x2000
 // CHECK-NEXT:    store half [[TMP2]], ptr @h, align 2
 // CHECK-NEXT:    ret void
 //
@@ -244,7 +244,7 @@ void fix_half2(void) {
 // CHECK-NEXT:  entry:
 // CHECK-NEXT:    [[TMP0:%.*]] = load i16, ptr @sa, align 2
 // CHECK-NEXT:    [[TMP1:%.*]] = sitofp i16 [[TMP0]] to half
-// CHECK-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], 0xH2000
+// CHECK-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], f0x2000
 // CHECK-NEXT:    store half [[TMP2]], ptr @h, align 2
 // CHECK-NEXT:    ret void
 //
@@ -278,7 +278,7 @@ void fix_half4(void) {
 // UNSIGNED-NEXT:  entry:
 // UNSIGNED-NEXT:    [[TMP0:%.*]] = load i16, ptr @usa, align 2
 // UNSIGNED-NEXT:    [[TMP1:%.*]] = uitofp i16 [[TMP0]] to half
-// UNSIGNED-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], 0xH2000
+// UNSIGNED-NEXT:    [[TMP2:%.*]] = fmul half [[TMP1]], f0x2000
 // UNSIGNED-NEXT:    store half [[TMP2]], ptr @h, align 2
 // UNSIGNED-NEXT:    ret void
 //

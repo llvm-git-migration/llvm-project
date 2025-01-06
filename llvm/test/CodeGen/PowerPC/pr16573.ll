@@ -3,7 +3,7 @@
 target triple = "powerpc64-unknown-linux-gnu"
 
 define double @test() {
-  %1 = fptrunc ppc_fp128 0xM818F2887B9295809800000000032D000 to double
+  %1 = fptrunc ppc_fp128 f0x800000000032D000818F2887B9295809 to double
   ret double %1
 }
 

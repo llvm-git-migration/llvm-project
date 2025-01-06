@@ -14,7 +14,7 @@ define void @vectorize_fp128(fp128 %c, fp128 %d) #0 {
 ; CHECK-NEXT:    [[TMP0:%.*]] = insertelement <2 x fp128> poison, fp128 [[C:%.*]], i32 0
 ; CHECK-NEXT:    [[TMP1:%.*]] = insertelement <2 x fp128> [[TMP0]], fp128 [[D:%.*]], i32 1
 ; CHECK-NEXT:    [[TMP2:%.*]] = call <2 x fp128> @llvm.fabs.v2f128(<2 x fp128> [[TMP1]])
-; CHECK-NEXT:    [[TMP3:%.*]] = fcmp oeq <2 x fp128> [[TMP2]], splat (fp128 0xL00000000000000007FFF000000000000)
+; CHECK-NEXT:    [[TMP3:%.*]] = fcmp oeq <2 x fp128> [[TMP2]], splat (fp128 f0x7FFF0000000000000000000000000000)
 ; CHECK-NEXT:    [[TMP4:%.*]] = extractelement <2 x i1> [[TMP3]], i32 0
 ; CHECK-NEXT:    [[TMP5:%.*]] = extractelement <2 x i1> [[TMP3]], i32 1
 ; CHECK-NEXT:    [[OR_COND39:%.*]] = or i1 [[TMP4]], [[TMP5]]
@@ -26,9 +26,9 @@ define void @vectorize_fp128(fp128 %c, fp128 %d) #0 {
 ;
 entry:
   %0 = tail call fp128 @llvm.fabs.f128(fp128 %c)
-  %cmpinf10 = fcmp oeq fp128 %0, 0xL00000000000000007FFF000000000000
+  %cmpinf10 = fcmp oeq fp128 %0, f0x7FFF0000000000000000000000000000
   %1 = tail call fp128 @llvm.fabs.f128(fp128 %d)
-  %cmpinf12 = fcmp oeq fp128 %1, 0xL00000000000000007FFF000000000000
+  %cmpinf12 = fcmp oeq fp128 %1, f0x7FFF0000000000000000000000000000
   %or.cond39 = or i1 %cmpinf10, %cmpinf12
   br i1 %or.cond39, label %if.then13, label %if.end24
 

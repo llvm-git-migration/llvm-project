@@ -103,7 +103,7 @@ define fp128 @fabs_quad_zero() {
 ; CHECK-NEXT:    ld %s0, 8(, %s2)
 ; CHECK-NEXT:    ld %s1, (, %s2)
 ; CHECK-NEXT:    b.l.t (, %s10)
-  ret fp128 0xL00000000000000000000000000000000
+  ret fp128 f0x00000000000000000000000000000000
 }
 
 ; Function Attrs: norecurse nounwind readnone
@@ -134,6 +134,6 @@ define fp128 @fabs_quad_const() {
 ; CHECK-NEXT:    ld %s0, 8(, %s2)
 ; CHECK-NEXT:    ld %s1, (, %s2)
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %1 = tail call fast fp128 @llvm.fabs.f128(fp128 0xL0000000000000000C000000000000000)
+  %1 = tail call fast fp128 @llvm.fabs.f128(fp128 f0xC0000000000000000000000000000000)
   ret fp128 %1
 }

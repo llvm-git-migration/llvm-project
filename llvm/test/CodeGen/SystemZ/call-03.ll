@@ -45,7 +45,7 @@ define void @f3() {
 ; CHECK-LABEL: f3:
 ; CHECK: brasl %r14, uses_indirect@PLT
 ; CHECK: br %r14
-  tail call void @uses_indirect(fp128 0xL00000000000000000000000000000000)
+  tail call void @uses_indirect(fp128 f0x00000000000000000000000000000000)
   ret void
 }
 

@@ -131,7 +131,7 @@ define half @test_half(float, half %arg) {
 define half @test_half_const() {
 ; CHECK-LABEL: test_half_const:
 ; CHECK: ldr h0, [x{{[0-9]+}}, :lo12:{{.*}}]
-  ret half 0xH4248
+  ret half f0x4248
 }
 
 ; Check that v4f16 can be passed and returned in registers

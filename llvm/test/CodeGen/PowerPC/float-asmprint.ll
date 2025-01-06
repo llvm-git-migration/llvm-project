@@ -4,8 +4,8 @@
 ; on a big-endian target. x86_fp80 can't actually print for unrelated reasons,
 ; but that's not really a problem.
 
-@var128 = global fp128 0xL00000000000000008000000000000000, align 16
-@varppc128 = global ppc_fp128 0xM80000000000000000000000000000000, align 16
+@var128 = global fp128 f0x80000000000000000000000000000000, align 16
+@varppc128 = global ppc_fp128 f0x00000000000000008000000000000000, align 16
 @var64 = global double -0.0, align 8
 @var32 = global float -0.0, align 4
 @var16 = global half -0.0, align 2

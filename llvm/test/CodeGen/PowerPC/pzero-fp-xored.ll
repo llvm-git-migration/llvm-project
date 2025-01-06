@@ -83,7 +83,7 @@ define signext i32 @t3(ppc_fp128 %x) local_unnamed_addr #0 {
 ; CHECK-NVSXALT-NEXT:    isel 3, 4, 3, 20
 ; CHECK-NVSXALT-NEXT:    blr
 entry:
-  %cmp = fcmp ogt ppc_fp128 %x, 0xM00000000000000000000000000000000
+  %cmp = fcmp ogt ppc_fp128 %x, f0x00000000000000000000000000000000
   %tmp = select i1 %cmp, i32 43, i32 11
   ret i32 %tmp
 

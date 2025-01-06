@@ -11,7 +11,7 @@ define noundef half @radians_half(half noundef %a) {
 ; CHECK-LABEL: define noundef half @radians_half(
 ; CHECK-SAME: half noundef [[A:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
-; CHECK-NEXT:    [[TMP0:%.*]] = fmul half [[A]], 0xH2478
+; CHECK-NEXT:    [[TMP0:%.*]] = fmul half [[A]], f0x2478
 ; CHECK-NEXT:    ret half [[TMP0]]
 ;
 entry:
@@ -36,13 +36,13 @@ define noundef <4 x half> @radians_half_vector(<4 x half> noundef %a) {
 ; CHECK-SAME: <4 x half> noundef [[A:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
 ; CHECK: [[ee0:%.*]] = extractelement <4 x half> [[A]], i64 0
-; CHECK: [[ie0:%.*]] = fmul half [[ee0]], 0xH2478
+; CHECK: [[ie0:%.*]] = fmul half [[ee0]], f0x2478
 ; CHECK: [[ee1:%.*]] = extractelement <4 x half> [[A]], i64 1
-; CHECK: [[ie1:%.*]] = fmul half [[ee1]], 0xH2478
+; CHECK: [[ie1:%.*]] = fmul half [[ee1]], f0x2478
 ; CHECK: [[ee2:%.*]] = extractelement <4 x half> [[A]], i64 2
-; CHECK: [[ie2:%.*]] = fmul half [[ee2]], 0xH2478
+; CHECK: [[ie2:%.*]] = fmul half [[ee2]], f0x2478
 ; CHECK: [[ee3:%.*]] = extractelement <4 x half> [[A]], i64 3
-; CHECK: [[ie3:%.*]] = fmul half [[ee3]], 0xH2478
+; CHECK: [[ie3:%.*]] = fmul half [[ee3]], f0x2478
 ; CHECK: [[TMP0:%.*]] = insertelement <4 x half> poison, half [[ie0]], i64 0
 ; CHECK: [[TMP1:%.*]] = insertelement <4 x half> [[TMP0]], half [[ie1]], i64 1
 ; CHECK: [[TMP2:%.*]] = insertelement <4 x half> [[TMP1]], half [[ie2]], i64 2

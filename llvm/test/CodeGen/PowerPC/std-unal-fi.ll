@@ -29,7 +29,7 @@ CF83:                                             ; preds = %CF82
 
 CF81:                                             ; preds = %CF83
   %Shuff43 = shufflevector <16 x i32> %Shuff7, <16 x i32> undef, <16 x i32> <i32 15, i32 17, i32 19, i32 21, i32 23, i32 undef, i32 undef, i32 29, i32 31, i32 undef, i32 3, i32 5, i32 7, i32 9, i32 11, i32 13>
-  store ppc_fp128 0xM00000000000000000000000000000000, ptr %A4
+  store ppc_fp128 f0x00000000000000000000000000000000, ptr %A4
   br i1 undef, label %CF77, label %CF78
 
 CF78:                                             ; preds = %CF78, %CF81

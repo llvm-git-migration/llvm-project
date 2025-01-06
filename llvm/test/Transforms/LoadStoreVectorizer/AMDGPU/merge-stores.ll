@@ -82,7 +82,7 @@ define amdgpu_kernel void @merge_global_store_2_constants_i16_align_1(ptr addrsp
 
 define amdgpu_kernel void @merge_global_store_2_constants_half_natural_align(ptr addrspace(1) %out) #0 {
 ; CHECK-LABEL: @merge_global_store_2_constants_half_natural_align(
-; CHECK-NEXT:    store <2 x half> <half 0xH3C00, half 0xH4000>, ptr addrspace(1) [[OUT:%.*]], align 2
+; CHECK-NEXT:    store <2 x half> <half f0x3C00, half f0x4000>, ptr addrspace(1) [[OUT:%.*]], align 2
 ; CHECK-NEXT:    ret void
 ;
   %out.gep.1 = getelementptr half, ptr addrspace(1) %out, i32 1
@@ -94,7 +94,7 @@ define amdgpu_kernel void @merge_global_store_2_constants_half_natural_align(ptr
 
 define amdgpu_kernel void @merge_global_store_2_constants_half_align_1(ptr addrspace(1) %out) #0 {
 ; CHECK-LABEL: @merge_global_store_2_constants_half_align_1(
-; CHECK-NEXT:    store <2 x half> <half 0xH3C00, half 0xH4000>, ptr addrspace(1) [[OUT:%.*]], align 1
+; CHECK-NEXT:    store <2 x half> <half f0x3C00, half f0x4000>, ptr addrspace(1) [[OUT:%.*]], align 1
 ; CHECK-NEXT:    ret void
 ;
   %out.gep.1 = getelementptr half, ptr addrspace(1) %out, i32 1

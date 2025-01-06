@@ -1031,7 +1031,7 @@ define half @v_fneg_inv2pi_minnum_f16(half %a) #0 {
 ; VI-NEXT:    v_min_f16_e32 v0, 0.15915494, v0
 ; VI-NEXT:    v_xor_b32_e32 v0, 0x8000, v0
 ; VI-NEXT:    s_setpc_b64 s[30:31]
-  %min = call half @llvm.minnum.f16(half 0xH3118, half %a)
+  %min = call half @llvm.minnum.f16(half f0x3118, half %a)
   %fneg = fneg half %min
   ret half %fneg
 }
@@ -1051,7 +1051,7 @@ define half @v_fneg_neg_inv2pi_minnum_f16(half %a) #0 {
 ; VI-NEXT:    v_max_f16_e64 v0, -v0, -v0
 ; VI-NEXT:    v_max_f16_e32 v0, 0.15915494, v0
 ; VI-NEXT:    s_setpc_b64 s[30:31]
-  %min = call half @llvm.minnum.f16(half 0xHB118, half %a)
+  %min = call half @llvm.minnum.f16(half f0xB118, half %a)
   %fneg = fneg half %min
   ret half %fneg
 }

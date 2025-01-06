@@ -96,7 +96,7 @@ define i1 @test_fp128_is_inf_or_nan(fp128 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
-  %ret = fcmp ueq fp128 %abs, 0xL00000000000000007FFF000000000000
+  %ret = fcmp ueq fp128 %abs, f0x7FFF0000000000000000000000000000
   ret i1 %ret
 }
 
@@ -107,7 +107,7 @@ define i1 @test_fp128_is_not_inf_or_nan(fp128 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
-  %ret = fcmp one fp128 %abs, 0xL00000000000000007FFF000000000000
+  %ret = fcmp one fp128 %abs, f0x7FFF0000000000000000000000000000
   ret i1 %ret
 }
 
@@ -118,7 +118,7 @@ define i1 @test_fp128_is_inf(fp128 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
-  %ret = fcmp oeq fp128 %abs, 0xL00000000000000007FFF000000000000
+  %ret = fcmp oeq fp128 %abs, f0x7FFF0000000000000000000000000000
   ret i1 %ret
 }
 
@@ -129,7 +129,7 @@ define i1 @test_fp128_is_not_inf(fp128 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call fp128 @llvm.fabs.f128(fp128 %arg)
-  %ret = fcmp une fp128 %abs, 0xL00000000000000007FFF000000000000
+  %ret = fcmp une fp128 %abs, f0x7FFF0000000000000000000000000000
   ret i1 %ret
 }
 
@@ -140,7 +140,7 @@ define i1 @test_x86_fp80_is_inf_or_nan(x86_fp80 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
-  %ret = fcmp ueq x86_fp80 %abs, 0xK7FFF8000000000000000
+  %ret = fcmp ueq x86_fp80 %abs, f0x7FFF8000000000000000
   ret i1 %ret
 }
 
@@ -151,7 +151,7 @@ define i1 @test_x86_fp80_is_not_inf_or_nan(x86_fp80 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
-  %ret = fcmp one x86_fp80 %abs, 0xK7FFF8000000000000000
+  %ret = fcmp one x86_fp80 %abs, f0x7FFF8000000000000000
   ret i1 %ret
 }
 
@@ -162,7 +162,7 @@ define i1 @test_x86_fp80_is_inf(x86_fp80 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
-  %ret = fcmp oeq x86_fp80 %abs, 0xK7FFF8000000000000000
+  %ret = fcmp oeq x86_fp80 %abs, f0x7FFF8000000000000000
   ret i1 %ret
 }
 
@@ -173,6 +173,6 @@ define i1 @test_x86_fp80_is_not_inf(x86_fp80 %arg) {
 ; CHECK-NEXT:    ret i1 [[TMP1]]
 ;
   %abs = tail call x86_fp80 @llvm.fabs.f80(x86_fp80 %arg)
-  %ret = fcmp une x86_fp80 %abs, 0xK7FFF8000000000000000
+  %ret = fcmp une x86_fp80 %abs, f0x7FFF8000000000000000
   ret i1 %ret
 }

@@ -2,7 +2,7 @@
 ; RUN: llc < %s -verify-machineinstrs -mcpu=pwr9 -mtriple=powerpc64le-unknown-unknown | FileCheck %s -check-prefix=PWR9
 ; RUN: llc < %s -verify-machineinstrs -mcpu=pwr8 -mtriple=powerpc64le-unknown-unknown | FileCheck %s -check-prefix=PWR8
 
-@a = internal global fp128 0xL00000000000000000000000000000000, align 16
+@a = internal global fp128 f0x00000000000000000000000000000000, align 16
 @x = internal global [4 x fp128] zeroinitializer, align 16
 @y = internal global [4 x fp128] zeroinitializer, align 16
 

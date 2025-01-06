@@ -13,6 +13,6 @@ define void @f1(ptr %x) {
 ; CHECK: br %r14
 ;
 ; CONST: .quad 0x3ff0000010000000
-  store fp128 0xL00000000000000003fff000001000000, ptr %x
+  store fp128 f0x3fff0000010000000000000000000000, ptr %x
   ret void
 }

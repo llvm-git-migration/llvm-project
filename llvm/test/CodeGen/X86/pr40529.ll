@@ -34,10 +34,10 @@ entry:
   %conv = fptosi x86_fp80 %z to i32
   %conv1 = sitofp i32 %conv to x86_fp80
   %sub = fsub x86_fp80 %z, %conv1
-  %mul = fmul x86_fp80 %sub, 0xK40178000000000000000
+  %mul = fmul x86_fp80 %sub, f0x40178000000000000000
   %conv2 = fptosi x86_fp80 %mul to i32
   %conv3 = sitofp i32 %conv2 to x86_fp80
   %sub4 = fsub x86_fp80 %mul, %conv3
-  %mul5 = fmul x86_fp80 %sub4, 0xK40178000000000000000
+  %mul5 = fmul x86_fp80 %sub4, f0x40178000000000000000
   ret x86_fp80 %mul5
 }

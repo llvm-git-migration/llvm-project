@@ -48,7 +48,7 @@ define fp128 @copysign0() {
 entry:
   %v = load double, ptr @val_double, align 8
   %conv = fpext double %v to fp128
-  %call = tail call fp128 @llvm.copysign.f128(fp128 0xL00000000000000007FFF000000000000, fp128 %conv) #2
+  %call = tail call fp128 @llvm.copysign.f128(fp128 f0x7FFF0000000000000000000000000000, fp128 %conv) #2
   ret fp128 %call
 }
 

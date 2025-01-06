@@ -303,7 +303,7 @@ declare half @llvm.canonicalize.f16(half)
 
 ; CHECK-LABEL: {{^}}bitcast_f32_to_v1i32:
 define amdgpu_kernel void @bitcast_f32_to_v1i32(ptr addrspace(1) %out) {
-  %f16 = call arcp afn half @llvm.canonicalize.f16(half 0xH03F0)
+  %f16 = call arcp afn half @llvm.canonicalize.f16(half f0x03F0)
   %f32 = fpext half %f16 to float
   %v = bitcast float %f32 to <1 x i32>
   %v1 = extractelement <1 x i32> %v, i32 0

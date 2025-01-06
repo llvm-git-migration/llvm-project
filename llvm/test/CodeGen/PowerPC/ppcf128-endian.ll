@@ -4,7 +4,7 @@
 target datalayout = "e-m:e-i64:64-n32:64"
 target triple = "powerpc64le-unknown-linux-gnu"
 
-@g = common global ppc_fp128 0xM00000000000000000000000000000000, align 16
+@g = common global ppc_fp128 f0x00000000000000000000000000000000, align 16
 
 define void @callee(ppc_fp128 %x) {
 ; CHECK-LABEL: callee:
@@ -69,7 +69,7 @@ define void @caller_const() {
 ; CHECK-NEXT:    mtlr 0
 ; CHECK-NEXT:    blr
 entry:
-  call void @test(ppc_fp128 0xM3FF00000000000000000000000000000)
+  call void @test(ppc_fp128 f0x00000000000000003FF0000000000000)
   ret void
 }
 

@@ -13,8 +13,8 @@ define half @test1(half %x) {
 ; CHECK-NEXT:    vpinsrw $0, %ecx, %xmm0, %xmm0
 ; CHECK-NEXT:    retq
 entry:
-  %cmp2 = fcmp ogt half %x, 0xHFC00
-  %cond.v = select i1 %cmp2, half %x, half 0xHFC00
+  %cmp2 = fcmp ogt half %x, f0xFC00
+  %cond.v = select i1 %cmp2, half %x, half f0xFC00
   ret half %cond.v
 }
 
@@ -31,7 +31,7 @@ define <8 x half> @test2(<8 x half> %x) {
 ; CHECK-NEXT:    vzeroupper
 ; CHECK-NEXT:    retq
 entry:
-  %cmp2 = fcmp ogt <8 x half> %x, splat (half 0xHFC00)
-  %cond.v = select <8 x i1> %cmp2, <8 x half> %x, <8 x half> splat (half 0xHFC00)
+  %cmp2 = fcmp ogt <8 x half> %x, splat (half f0xFC00)
+  %cond.v = select <8 x i1> %cmp2, <8 x half> %x, <8 x half> splat (half f0xFC00)
   ret <8 x half> %cond.v
 }

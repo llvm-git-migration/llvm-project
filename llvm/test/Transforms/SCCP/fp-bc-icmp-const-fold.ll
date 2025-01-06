@@ -35,7 +35,7 @@ if.else14:                                        ; preds = %if.end4
   br label %do.body
 
 do.body:                                          ; preds = %do.body, %if.else14
-  %scale.0 = phi ppc_fp128 [ 0xM3FF00000000000000000000000000000, %if.else14 ], [ %scale.0, %do.body ]
+  %scale.0 = phi ppc_fp128 [ f0x00000000000000003FF0000000000000, %if.else14 ], [ %scale.0, %do.body ]
   br i1 %arg, label %do.body, label %if.then33
 
 if.then33:                                        ; preds = %do.body

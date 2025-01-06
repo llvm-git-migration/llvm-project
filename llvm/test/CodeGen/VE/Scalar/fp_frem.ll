@@ -116,7 +116,7 @@ define fp128 @frem_quad_zero(fp128 %0) {
 ; CHECK-NEXT:    lea.sl %s12, fmodl@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %2 = frem fp128 0xL00000000000000000000000000000000, %0
+  %2 = frem fp128 f0x00000000000000000000000000000000, %0
   ret fp128 %2
 }
 
@@ -166,6 +166,6 @@ define fp128 @frem_quad_cont(fp128 %0) {
 ; CHECK-NEXT:    lea.sl %s12, fmodl@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %2 = frem fp128 0xL0000000000000000C000000000000000, %0
+  %2 = frem fp128 f0xC0000000000000000000000000000000, %0
   ret fp128 %2
 }

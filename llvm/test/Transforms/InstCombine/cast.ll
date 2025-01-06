@@ -1442,7 +1442,7 @@ define <2 x i32> @test90() {
 ; LE-LABEL: @test90(
 ; LE-NEXT:    ret <2 x i32> <i32 0, i32 1006632960>
 ;
-  %t6 = bitcast <4 x half> <half poison, half poison, half poison, half 0xH3C00> to <2 x i32>
+  %t6 = bitcast <4 x half> <half poison, half poison, half poison, half f0x3C00> to <2 x i32>
   ret <2 x i32> %t6
 }
 

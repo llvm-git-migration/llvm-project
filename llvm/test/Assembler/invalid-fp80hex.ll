@@ -3,4 +3,4 @@
 ; Tests bug: 24640
 ; CHECK: expected '=' in global variable
 
-@- 0xKate potb8ed
+@- f0xate potb8ed

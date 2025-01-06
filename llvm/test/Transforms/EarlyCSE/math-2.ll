@@ -102,9 +102,9 @@ define double @i_powi() {
 
 define half @pr98665() {
 ; CHECK-LABEL: @pr98665(
-; CHECK-NEXT:    ret half 0xH3C00
+; CHECK-NEXT:    ret half f0x3C00
 ;
-  %x = call half @llvm.powi.f16.i32(half 0xH3C00, i32 1)
+  %x = call half @llvm.powi.f16.i32(half f0x3C00, i32 1)
   ret half %x
 }
 

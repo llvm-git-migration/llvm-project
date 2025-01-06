@@ -779,7 +779,7 @@ define half @add_select_fneg_inv2pi_f16(i32 %c, half %x, half %y) {
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
   %cmp = icmp eq i32 %c, 0
   %fneg.x = fneg half %x
-  %select = select i1 %cmp, half %fneg.x, half 0xH3118
+  %select = select i1 %cmp, half %fneg.x, half f0x3118
   %add = fadd half %select, %y
   ret half %add
 }
@@ -817,7 +817,7 @@ define half @add_select_fneg_neginv2pi_f16(i32 %c, half %x, half %y) {
 ; GFX11-NEXT:    s_setpc_b64 s[30:31]
   %cmp = icmp eq i32 %c, 0
   %fneg.x = fneg half %x
-  %select = select i1 %cmp, half %fneg.x, half 0xHB118
+  %select = select i1 %cmp, half %fneg.x, half f0xB118
   %add = fadd half %select, %y
   ret half %add
 }

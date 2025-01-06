@@ -911,7 +911,7 @@ define void @caller_aligned_stack() {
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    .cfi_def_cfa_offset 8
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    tail __riscv_restore_1
   %1 = call i32 @callee_aligned_stack(i32 1, i32 11,
-    fp128 0xLEB851EB851EB851F400091EB851EB851, i32 12, i32 13,
+    fp128 f0x400091EB851EB851EB851EB851EB851F, i32 12, i32 13,
     i64 20000000000, i32 14, i32 15, double 2.720000e+00, i32 16,
     [2 x i32] [i32 17, i32 18])
   ret void
@@ -1619,7 +1619,7 @@ define i32 @caller_large_scalars() {
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    addi sp, sp, 40
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    .cfi_def_cfa_offset 8
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    tail __riscv_restore_1
-  %1 = call i32 @callee_large_scalars(i128 1, fp128 0xL00000000000000007FFF000000000000)
+  %1 = call i32 @callee_large_scalars(i128 1, fp128 f0x7FFF0000000000000000000000000000)
   ret i32 %1
 }
 
@@ -1921,7 +1921,7 @@ define i32 @caller_large_scalars_exhausted_regs() {
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    tail __riscv_restore_1
   %1 = call i32 @callee_large_scalars_exhausted_regs(
       i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i128 8, i32 9,
-      fp128 0xL00000000000000007FFF000000000000)
+      fp128 f0x7FFF0000000000000000000000000000)
   ret i32 %1
 }
 
@@ -2517,7 +2517,7 @@ define fp128 @callee_large_scalar_ret() {
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    sw a1, 12(a0)
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    .cfi_def_cfa sp, 8
 ; ILP32E-WITHFP-SAVE-RESTORE-NEXT:    tail __riscv_restore_1
-  ret fp128 0xL00000000000000007FFF000000000000
+  ret fp128 f0x7FFF0000000000000000000000000000
 }
 
 define void @caller_large_scalar_ret() {

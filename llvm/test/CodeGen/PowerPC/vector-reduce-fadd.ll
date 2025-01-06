@@ -3513,7 +3513,7 @@ define dso_local ppc_fp128 @v2ppcf128(<2 x ppc_fp128> %a) local_unnamed_addr #0 
 ; PWR10BE-NEXT:    mtlr r0
 ; PWR10BE-NEXT:    blr
 entry:
-  %0 = call ppc_fp128 @llvm.vector.reduce.fadd.v2ppcf128(ppc_fp128 0xM80000000000000000000000000000000, <2 x ppc_fp128> %a)
+  %0 = call ppc_fp128 @llvm.vector.reduce.fadd.v2ppcf128(ppc_fp128 f0x00000000000000008000000000000000, <2 x ppc_fp128> %a)
   ret ppc_fp128 %0
 }
 
@@ -3688,7 +3688,7 @@ define dso_local ppc_fp128 @v2ppcf128_fast(<2 x ppc_fp128> %a) local_unnamed_add
 ; PWR10BE-NEXT:    mtlr r0
 ; PWR10BE-NEXT:    blr
 entry:
-  %0 = call fast ppc_fp128 @llvm.vector.reduce.fadd.v2ppcf128(ppc_fp128 0xM80000000000000000000000000000000, <2 x ppc_fp128> %a)
+  %0 = call fast ppc_fp128 @llvm.vector.reduce.fadd.v2ppcf128(ppc_fp128 f0x00000000000000008000000000000000, <2 x ppc_fp128> %a)
   ret ppc_fp128 %0
 }
 
@@ -3818,7 +3818,7 @@ define dso_local ppc_fp128 @v4ppcf128(<4 x ppc_fp128> %a) local_unnamed_addr #0 
 ; PWR10BE-NEXT:    mtlr r0
 ; PWR10BE-NEXT:    blr
 entry:
-  %0 = call ppc_fp128 @llvm.vector.reduce.fadd.v4ppcf128(ppc_fp128 0xM80000000000000000000000000000000, <4 x ppc_fp128> %a)
+  %0 = call ppc_fp128 @llvm.vector.reduce.fadd.v4ppcf128(ppc_fp128 f0x00000000000000008000000000000000, <4 x ppc_fp128> %a)
   ret ppc_fp128 %0
 }
 
@@ -4197,7 +4197,7 @@ define dso_local ppc_fp128 @v4ppcf128_fast(<4 x ppc_fp128> %a) local_unnamed_add
 ; PWR10BE-NEXT:    mtlr r0
 ; PWR10BE-NEXT:    blr
 entry:
-  %0 = call fast ppc_fp128 @llvm.vector.reduce.fadd.v4ppcf128(ppc_fp128 0xM80000000000000000000000000000000, <4 x ppc_fp128> %a)
+  %0 = call fast ppc_fp128 @llvm.vector.reduce.fadd.v4ppcf128(ppc_fp128 f0x00000000000000008000000000000000, <4 x ppc_fp128> %a)
   ret ppc_fp128 %0
 }
 

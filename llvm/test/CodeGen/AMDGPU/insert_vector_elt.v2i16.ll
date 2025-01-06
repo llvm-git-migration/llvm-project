@@ -1151,7 +1151,7 @@ define amdgpu_kernel void @v_insertelement_v2f16_0_inlineimm(ptr addrspace(1) %o
   %in.gep = getelementptr inbounds <2 x half>, ptr addrspace(1) %in, i64 %tid.ext
   %out.gep = getelementptr inbounds <2 x half>, ptr addrspace(1) %out, i64 %tid.ext
   %vec = load <2 x half>, ptr addrspace(1) %in.gep
-  %vecins = insertelement <2 x half> %vec, half 0xH0035, i32 0
+  %vecins = insertelement <2 x half> %vec, half f0x0035, i32 0
   store <2 x half> %vecins, ptr addrspace(1) %out.gep
   ret void
 }
@@ -1295,7 +1295,7 @@ define amdgpu_kernel void @v_insertelement_v2f16_1_inlineimm(ptr addrspace(1) %o
   %in.gep = getelementptr inbounds <2 x half>, ptr addrspace(1) %in, i64 %tid.ext
   %out.gep = getelementptr inbounds <2 x half>, ptr addrspace(1) %out, i64 %tid.ext
   %vec = load <2 x half>, ptr addrspace(1) %in.gep
-  %vecins = insertelement <2 x half> %vec, half 0xH0023, i32 1
+  %vecins = insertelement <2 x half> %vec, half f0x0023, i32 1
   store <2 x half> %vecins, ptr addrspace(1) %out.gep
   ret void
 }
@@ -1566,7 +1566,7 @@ define amdgpu_kernel void @v_insertelement_v2f16_dynamic_vgpr(ptr addrspace(1) %
   %out.gep = getelementptr inbounds <2 x half>, ptr addrspace(1) %out, i64 %tid.ext
   %idx = load i32, ptr addrspace(1) %idx.gep
   %vec = load <2 x half>, ptr addrspace(1) %in.gep
-  %vecins = insertelement <2 x half> %vec, half 0xH1234, i32 %idx
+  %vecins = insertelement <2 x half> %vec, half f0x1234, i32 %idx
   store <2 x half> %vecins, ptr addrspace(1) %out.gep
   ret void
 }

@@ -1012,7 +1012,7 @@ define <32 x bfloat> @pr63017_2() nounwind {
 ; AVXNC-NEXT:  .LBB12_2:
 ; AVXNC-NEXT:    vmovaps %ymm0, %ymm1
 ; AVXNC-NEXT:    retq
-  %1 = call <32 x bfloat> @llvm.masked.load.v32bf16.p0(ptr poison, i32 2, <32 x i1> poison, <32 x bfloat> <bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80, bfloat 0xRBF80>)
+  %1 = call <32 x bfloat> @llvm.masked.load.v32bf16.p0(ptr poison, i32 2, <32 x i1> poison, <32 x bfloat> <bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80, bfloat f0xBF80>)
   ret <32 x bfloat> %1
 }
 

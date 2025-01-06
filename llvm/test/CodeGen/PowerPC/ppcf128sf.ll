@@ -1,7 +1,7 @@
 ; RUN: llc -verify-machineinstrs  -mtriple=powerpc-unknown-linux-gnu -O0 < %s | FileCheck %s
 
-@ld = common global ppc_fp128 0xM00000000000000000000000000000000, align 16
-@ld2 = common global ppc_fp128 0xM00000000000000000000000000000000, align 16
+@ld = common global ppc_fp128 f0x00000000000000000000000000000000, align 16
+@ld2 = common global ppc_fp128 f0x00000000000000000000000000000000, align 16
 @d = common global double 0.000000e+00, align 8
 @f = common global float 0.000000e+00, align 4
 @i = common global i32 0, align 4

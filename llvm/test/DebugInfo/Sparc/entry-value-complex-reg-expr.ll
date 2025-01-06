@@ -40,7 +40,7 @@ target triple = "sparc64"
 ; CHECK-NEXT: .xword  0
 ; CHECK-NEXT: .xword  0
 
-@global = common global fp128 0xL00000000000000000000000000000000, align 16, !dbg !0
+@global = common global fp128 f0x00000000000000000000000000000000, align 16, !dbg !0
 
 ; Function Attrs: nounwind
 define signext i32 @foo(fp128 %p) #0 !dbg !12 {

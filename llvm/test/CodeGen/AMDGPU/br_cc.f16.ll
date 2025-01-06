@@ -174,11 +174,11 @@ define amdgpu_kernel void @br_cc_f16_imm_a(
     ptr addrspace(1) %b) {
 entry:
   %b.val = load half, ptr addrspace(1) %b
-  %fcmp = fcmp olt half 0xH3800, %b.val
+  %fcmp = fcmp olt half f0x3800, %b.val
   br i1 %fcmp, label %one, label %two
 
 one:
-  store half 0xH3800, ptr addrspace(1) %r
+  store half f0x3800, ptr addrspace(1) %r
   ret void
 
 two:
@@ -258,7 +258,7 @@ define amdgpu_kernel void @br_cc_f16_imm_b(
     ptr addrspace(1) %a) {
 entry:
   %a.val = load half, ptr addrspace(1) %a
-  %fcmp = fcmp olt half %a.val, 0xH3800
+  %fcmp = fcmp olt half %a.val, f0x3800
   br i1 %fcmp, label %one, label %two
 
 one:
@@ -266,6 +266,6 @@ one:
   ret void
 
 two:
-  store half 0xH3800, ptr addrspace(1) %r
+  store half f0x3800, ptr addrspace(1) %r
   ret void
 }

@@ -15,11 +15,11 @@
     %S = alloca half, align 2
     %tmp.0.extract.trunc = trunc i32 %A.coerce to i16
     %0 = bitcast i16 %tmp.0.extract.trunc to half
-    store volatile half 0xH3C00, ptr %S, align 2
+    store volatile half f0x3C00, ptr %S, align 2
     store volatile i64 4242424242424242, ptr %LL, align 8
     %1 = call i32 @llvm.arm.space(i32 8920, i32 undef)
     %S.0.S.0.570 = load volatile half, ptr %S, align 2
-    %add298 = fadd half %S.0.S.0.570, 0xH2E66
+    %add298 = fadd half %S.0.S.0.570, f0x2E66
     store volatile half %add298, ptr %S, align 2
     %2 = call i32 @llvm.arm.space(i32 1350, i32 undef)
     %3 = bitcast half %add298 to i16
@@ -51,7 +51,7 @@ constants:
     value:           i32 987766
     alignment:       4
   - id:              2
-    value:           half 0xH2E66
+    value:           half f0x2E66
     alignment:       2
 
 #CHECK:  B %[[BB4:bb.[0-9]]]

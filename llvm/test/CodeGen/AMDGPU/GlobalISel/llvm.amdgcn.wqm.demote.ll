@@ -875,7 +875,7 @@ define amdgpu_ps void @wqm_deriv(<2 x float> %input, float %arg, i32 %index) {
   br label %.continue1
 
 .continue1:
-  call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 15, <2 x half> <half 0xH3C00, half 0xH0000>, <2 x half> <half 0xH0000, half 0xH3C00>, i1 true, i1 true) #3
+  call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 15, <2 x half> <half f0x3C00, half f0x0000>, <2 x half> <half f0x0000, half f0x3C00>, i1 true, i1 true) #3
   ret void
 }
 
@@ -1175,7 +1175,7 @@ define amdgpu_ps void @wqm_deriv_loop(<2 x float> %input, float %arg, i32 %index
   br i1 %loop.cond, label %.continue0, label %.return
 
 .return:
-  call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 15, <2 x half> <half 0xH3C00, half 0xH0000>, <2 x half> <half 0xH0000, half 0xH3C00>, i1 true, i1 true) #3
+  call void @llvm.amdgcn.exp.compr.v2f16(i32 0, i32 15, <2 x half> <half f0x3C00, half f0x0000>, <2 x half> <half f0x0000, half f0x3C00>, i1 true, i1 true) #3
   ret void
 }
 

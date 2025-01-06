@@ -1274,7 +1274,7 @@ define half @PR40273(half) #0 {
 ; SOFT-NEXT:    ld r0, 16(r1)
 ; SOFT-NEXT:    mtlr r0
 ; SOFT-NEXT:    blr
-  %2 = fcmp une half %0, 0xH0000
+  %2 = fcmp une half %0, f0x0000
   %3 = uitofp i1 %2 to half
   ret half %3
 }

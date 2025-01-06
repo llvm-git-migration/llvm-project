@@ -10,7 +10,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH0000, half 0xH3C00>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x0000, half f0x3C00>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -23,7 +23,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH3C00, half 0xH0000>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x3C00, half f0x0000>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -36,7 +36,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH3C00, half 0xH3C00>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x3C00, half f0x3C00>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -49,7 +49,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH0000, half 0xHBC00>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x0000, half f0xBC00>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -62,7 +62,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xHBC00, half 0xH0000>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0xBC00, half f0x0000>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -75,7 +75,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xHBC00, half 0xHBC00>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0xBC00, half f0xBC00>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -88,7 +88,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH0000, half 0xH0000>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x0000, half f0x0000>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -103,7 +103,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH0000, half 0xH41C8>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x0000, half f0x41C8>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
@@ -133,7 +133,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH42CA, half 0xH41C8>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x42CA, half f0x41C8>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }

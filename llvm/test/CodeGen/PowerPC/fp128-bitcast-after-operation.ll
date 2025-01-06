@@ -83,7 +83,7 @@ define i128 @test_neg(ppc_fp128 %x) nounwind  {
 ; PPC32-NEXT:    addi 1, 1, 32
 ; PPC32-NEXT:    blr
 entry:
-	%0 = fsub ppc_fp128 0xM80000000000000000000000000000000, %x
+	%0 = fsub ppc_fp128 f0x00000000000000008000000000000000, %x
 	%1 = bitcast ppc_fp128 %0 to i128
 	ret i128 %1
 }
@@ -229,7 +229,7 @@ define i128 @test_copysign_const(ppc_fp128 %x) nounwind  {
 ; PPC32-NEXT:    addi 1, 1, 32
 ; PPC32-NEXT:    blr
 entry:
-	%0 = tail call ppc_fp128 @llvm.copysign.ppcf128(ppc_fp128 0xM400F000000000000BCB0000000000000, ppc_fp128 %x)
+	%0 = tail call ppc_fp128 @llvm.copysign.ppcf128(ppc_fp128 f0xBCB0000000000000400F000000000000, ppc_fp128 %x)
 	%1 = bitcast ppc_fp128 %0 to i128
 	ret i128 %1
 }

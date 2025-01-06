@@ -37,7 +37,7 @@ define fp128 @baz() optsize {
 ; CHECK:  adrp x[[REG:[0-9]+]], lCPI3_0@PAGE
 ; CHECK:  ldr  q0, [x[[REG]], lCPI3_0@PAGEOFF]
 ; CHECK-NEXT:  ret
-  ret fp128 0xL00000000000000000000000000000000
+  ret fp128 f0x00000000000000000000000000000000
 }
 
 ; CHECK: literal8

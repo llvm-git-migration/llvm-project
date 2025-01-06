@@ -8,7 +8,7 @@ define bfloat @Const0() {
 ; CHECK-NEXT:    movi d0, #0000000000000000
 ; CHECK-NEXT:    ret
 entry:
-  ret bfloat 0xR0000
+  ret bfloat f0x0000
 }
 
 define bfloat @Const1() {
@@ -23,7 +23,7 @@ define bfloat @Const1() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI1_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR3C00
+  ret bfloat f0x3C00
 }
 
 define bfloat @Const2() {
@@ -38,7 +38,7 @@ define bfloat @Const2() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI2_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR3000
+  ret bfloat f0x3000
 }
 
 define bfloat @Const3() {
@@ -53,7 +53,7 @@ define bfloat @Const3() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI3_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR4F80
+  ret bfloat f0x4F80
 }
 
 define bfloat @Const4() {
@@ -68,7 +68,7 @@ define bfloat @Const4() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI4_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR4FC0
+  ret bfloat f0x4FC0
 }
 
 define bfloat @Const5() {
@@ -84,7 +84,7 @@ define bfloat @Const5() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI5_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR2FF0
+  ret bfloat f0x2FF0
 }
 
 define bfloat @Const6() {
@@ -100,7 +100,7 @@ define bfloat @Const6() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI6_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR4FC1
+  ret bfloat f0x4FC1
 }
 
 define bfloat @Const7() {
@@ -116,6 +116,6 @@ define bfloat @Const7() {
 ; CHECK-NOFP16-NEXT:    ldr h0, [x8, :lo12:.LCPI7_0]
 ; CHECK-NOFP16-NEXT:    ret
 entry:
-  ret bfloat 0xR5000
+  ret bfloat f0x5000
 }
 

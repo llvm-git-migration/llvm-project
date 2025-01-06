@@ -637,7 +637,7 @@ define void @br_cc_quad_imm(fp128 %0) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:  .LBB27_2:
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = fcmp fast olt fp128 %0, 0xL00000000000000000000000000000000
+  %2 = fcmp fast olt fp128 %0, f0x00000000000000000000000000000000
   br i1 %2, label %3, label %4
 
 3:                                                ; preds = %1
@@ -971,7 +971,7 @@ define void @br_cc_imm_quad(fp128 %0) {
 ; CHECK-NEXT:    #NO_APP
 ; CHECK-NEXT:  .LBB41_2:
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %2 = fcmp fast ult fp128 %0, 0xL00000000000000000000000000000000
+  %2 = fcmp fast ult fp128 %0, f0x00000000000000000000000000000000
   br i1 %2, label %4, label %3
 
 3:                                                ; preds = %1

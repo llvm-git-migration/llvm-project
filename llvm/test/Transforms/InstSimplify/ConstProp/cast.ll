@@ -57,7 +57,7 @@ define float @nan_f64_trunc() {
 
 define <3 x half> @nan_v3f64_trunc() {
 ; CHECK-LABEL: @nan_v3f64_trunc(
-; CHECK-NEXT:    ret <3 x half> splat (half 0xH7E00)
+; CHECK-NEXT:    ret <3 x half> splat (half f0x7E00)
 ;
   %f = fptrunc <3 x double> <double 0x7FF0020000000000, double 0x7FF003FFFFFFFFFF, double 0x7FF8000000000001> to <3 x half>
   ret <3 x half> %f
@@ -65,7 +65,7 @@ define <3 x half> @nan_v3f64_trunc() {
 
 define bfloat @nan_bf16_trunc() {
 ; CHECK-LABEL: @nan_bf16_trunc(
-; CHECK-NEXT:    ret bfloat 0xR7FC0
+; CHECK-NEXT:    ret bfloat f0x7FC0
 ;
   %f = fptrunc double 0x7FF0000000000001 to bfloat
   ret bfloat %f

@@ -7,17 +7,17 @@ declare double @llvm.amdgcn.fract.f64(double)
 
 define void @test_f16(ptr %p) {
 ; CHECK-LABEL: @test_f16(
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P:%.*]]
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH0000, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH3400, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH3B00, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH0400, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH3BFF, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH7E00, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH7E00, ptr [[P]]
-; CHECK-NEXT:    store volatile half 0xH7E00, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P:%.*]]
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x0000, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x3400, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x3B00, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x0400, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x3BFF, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x7E00, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x7E00, ptr [[P]]
+; CHECK-NEXT:    store volatile half f0x7E00, ptr [[P]]
 ; CHECK-NEXT:    ret void
 ;
   %p0 = call half @llvm.amdgcn.fract.f16(half +0.0)
@@ -32,15 +32,15 @@ define void @test_f16(ptr %p) {
   store volatile half %p225, ptr %p
   %n6125 = call half @llvm.amdgcn.fract.f16(half -6.125)
   store volatile half %n6125, ptr %p
-  %ptiny = call half @llvm.amdgcn.fract.f16(half 0xH0400) ; +min normal
+  %ptiny = call half @llvm.amdgcn.fract.f16(half f0x0400) ; +min normal
   store volatile half %ptiny, ptr %p
-  %ntiny = call half @llvm.amdgcn.fract.f16(half 0xH8400) ; -min normal
+  %ntiny = call half @llvm.amdgcn.fract.f16(half f0x8400) ; -min normal
   store volatile half %ntiny, ptr %p
-  %pinf = call half @llvm.amdgcn.fract.f16(half 0xH7C00) ; +inf
+  %pinf = call half @llvm.amdgcn.fract.f16(half f0x7C00) ; +inf
   store volatile half %pinf, ptr %p
-  %ninf = call half @llvm.amdgcn.fract.f16(half 0xHFC00) ; -inf
+  %ninf = call half @llvm.amdgcn.fract.f16(half f0xFC00) ; -inf
   store volatile half %ninf, ptr %p
-  %nan = call half @llvm.amdgcn.fract.f16(half 0xH7E00) ; nan
+  %nan = call half @llvm.amdgcn.fract.f16(half f0x7E00) ; nan
   store volatile half %nan, ptr %p
   ret void
 }

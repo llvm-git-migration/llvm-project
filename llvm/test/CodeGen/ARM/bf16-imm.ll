@@ -67,7 +67,7 @@ define bfloat @zero() {
 ; CHECK-HARD-NEXT:  @ %bb.1:
 ; CHECK-HARD-NEXT:  .LCPI1_0:
 ; CHECK-HARD-NEXT:    .short 0x0000 @ bfloat 0
-  ret bfloat 0xR0000
+  ret bfloat f0x0000
 }
 
 define bfloat @bitcast_tenk() {
@@ -133,5 +133,5 @@ define bfloat @minus0() {
 ; CHECK-HARD-NEXT:  @ %bb.1:
 ; CHECK-HARD-NEXT:  .LCPI3_0:
 ; CHECK-HARD-NEXT:    .short 0x8000 @ bfloat -0
-  ret bfloat 0xR8000
+  ret bfloat f0x8000
 }

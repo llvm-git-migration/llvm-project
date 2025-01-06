@@ -16,8 +16,8 @@ define void @example() nounwind ssp uwtable {
 ; CHECK-NEXT:    [[TMP0:%.*]] = or disjoint i64 [[INDEX]], 1
 ; CHECK-NEXT:    [[TMP1:%.*]] = getelementptr inbounds [1024 x x86_fp80], ptr @x, i64 0, i64 [[INDEX]]
 ; CHECK-NEXT:    [[TMP2:%.*]] = getelementptr inbounds [1024 x x86_fp80], ptr @x, i64 0, i64 [[TMP0]]
-; CHECK-NEXT:    store x86_fp80 0xK3FFF8000000000000000, ptr [[TMP1]], align 16
-; CHECK-NEXT:    store x86_fp80 0xK3FFF8000000000000000, ptr [[TMP2]], align 16
+; CHECK-NEXT:    store x86_fp80 f0x3FFF8000000000000000, ptr [[TMP1]], align 16
+; CHECK-NEXT:    store x86_fp80 f0x3FFF8000000000000000, ptr [[TMP2]], align 16
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add nuw i64 [[INDEX]], 2
 ; CHECK-NEXT:    [[TMP3:%.*]] = icmp eq i64 [[INDEX_NEXT]], 1024
 ; CHECK-NEXT:    br i1 [[TMP3]], label [[FOR_END:%.*]], label [[VECTOR_BODY]], !llvm.loop [[LOOP0:![0-9]+]]

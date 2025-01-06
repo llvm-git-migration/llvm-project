@@ -139,17 +139,17 @@ define <vscale x 1 x double> @fdivl_nan_op0_scalable_vec(<vscale x 1 x double> %
 
 define <2 x half> @fdiv_nan_op1(<2 x half> %x) {
 ; CHECK-LABEL: @fdiv_nan_op1(
-; CHECK-NEXT:    ret <2 x half> <half 0xH7FFF, half 0xHFF00>
+; CHECK-NEXT:    ret <2 x half> <half f0x7FFF, half f0xFF00>
 ;
-  %r = fdiv <2 x half> %x, <half 0xH7FFF, half 0xHFF00>
+  %r = fdiv <2 x half> %x, <half f0x7FFF, half f0xFF00>
   ret <2 x half> %r
 }
 
 define <vscale x 1 x half> @fdiv_nan_op1_scalable_vec(<vscale x 1 x half> %x) {
 ; CHECK-LABEL: @fdiv_nan_op1_scalable_vec(
-; CHECK-NEXT:    ret <vscale x 1 x half> splat (half 0xH7FFF)
+; CHECK-NEXT:    ret <vscale x 1 x half> splat (half f0x7FFF)
 ;
-  %r = fdiv <vscale x 1 x half> %x, splat (half 0xH7FFF)
+  %r = fdiv <vscale x 1 x half> %x, splat (half f0x7FFF)
   ret <vscale x 1 x half> %r
 }
 

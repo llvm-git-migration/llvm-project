@@ -197,7 +197,7 @@ entry:
 
 for.cond:
   %0 = load half, ptr %f, align 2
-  %cmp = fcmp nnan ninf nsz ole half %0, 0xH6800
+  %cmp = fcmp nnan ninf nsz ole half %0, f0x6800
   br i1 %cmp, label %for.body, label %for.end
 
 for.body:
@@ -541,7 +541,7 @@ define i32 @movi(i32 %a.coerce) {
 entry:
   %tmp.0.extract.trunc = trunc i32 %a.coerce to i16
   %0 = bitcast i16 %tmp.0.extract.trunc to half
-  %add = fadd half %0, 0xHC000
+  %add = fadd half %0, f0xC000
   %1 = bitcast half %add to i16
   %tmp2.0.insert.ext = zext i16 %1 to i32
   ret i32 %tmp2.0.insert.ext
@@ -694,8 +694,8 @@ entry:
 ; 35. VSELEQ
 define half @select_cc1(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz oeq half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz oeq half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc1:
@@ -722,8 +722,8 @@ define half @select_cc1(ptr %a0)  {
 ; 36. VSELGE
 define half @select_cc_ge1(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz oge half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz oge half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_ge1:
@@ -745,8 +745,8 @@ define half @select_cc_ge1(ptr %a0)  {
 
 define half @select_cc_ge2(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz ole half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ole half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_ge2:
@@ -768,8 +768,8 @@ define half @select_cc_ge2(ptr %a0)  {
 
 define half @select_cc_ge3(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz ugt half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ugt half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_ge3:
@@ -791,8 +791,8 @@ define half @select_cc_ge3(ptr %a0)  {
 
 define half @select_cc_ge4(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz ult half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ult half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_ge4:
@@ -815,8 +815,8 @@ define half @select_cc_ge4(ptr %a0)  {
 ; 37. VSELGT
 define half @select_cc_gt1(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz ogt half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ogt half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_gt1:
@@ -838,8 +838,8 @@ define half @select_cc_gt1(ptr %a0)  {
 
 define half @select_cc_gt2(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz uge half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz uge half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_gt2:
@@ -861,8 +861,8 @@ define half @select_cc_gt2(ptr %a0)  {
 
 define half @select_cc_gt3(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz ule half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ule half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_gt3:
@@ -884,8 +884,8 @@ define half @select_cc_gt3(ptr %a0)  {
 
 define half @select_cc_gt4(ptr %a0)  {
   %1 = load half, ptr %a0
-  %2 = fcmp nsz olt half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz olt half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
   ret half %3
 
 ; CHECK-LABEL:                 select_cc_gt4:
@@ -912,8 +912,8 @@ entry:
   %tmp.0.extract.trunc = trunc i32 %0 to i16
   %1 = bitcast i16 %tmp.0.extract.trunc to half
 
-  %2 = fcmp nsz ueq half %1, 0xH0001
-  %3 = select i1 %2, half 0xHC000, half 0xH0002
+  %2 = fcmp nsz ueq half %1, f0x0001
+  %3 = select i1 %2, half f0xC000, half f0x0002
 
   %4 = bitcast half %3 to i16
   %tmp4.0.insert.ext = zext i16 %4 to i32
@@ -1017,7 +1017,7 @@ entry:
   %S = alloca half, align 2
   %tmp.0.extract.trunc = trunc i32 %A.coerce to i16
   %0 = bitcast i16 %tmp.0.extract.trunc to half
-  store volatile half 0xH3C00, ptr %S, align 2
+  store volatile half f0x3C00, ptr %S, align 2
   %S.0.S.0. = load volatile half, ptr %S, align 2
   %add = fadd half %S.0.S.0., %0
   %1 = bitcast half %add to i16
@@ -1038,10 +1038,10 @@ define i32 @fn1() {
 entry:
   %coerce = alloca half, align 2
   %tmp2 = alloca i32, align 4
-  store half 0xH7C00, ptr %coerce, align 2
+  store half f0x7C00, ptr %coerce, align 2
   %0 = load i32, ptr %tmp2, align 4
   %call = call i32 @fn2(i32 %0)
-  store half 0xH7C00, ptr %coerce, align 2
+  store half f0x7C00, ptr %coerce, align 2
   %1 = load i32, ptr %tmp2, align 4
   %call3 = call i32 @fn3(i32 %1)
   ret i32 %call3

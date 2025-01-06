@@ -25,6 +25,6 @@ define void @f3(ptr %x) {
 ; CHECK: std %f0, 0(%r2)
 ; CHECK: std %f2, 8(%r2)
 ; CHECK: br %r14
-  store fp128 0xL00000000000000000000000000000000, ptr %x
+  store fp128 f0x00000000000000000000000000000000, ptr %x
   ret void
 }

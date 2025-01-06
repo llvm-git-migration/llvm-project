@@ -80,7 +80,7 @@ define zeroext i1 @abs_isinfq(fp128 %x) {
 ; P9-NEXT:    blr
 entry:
   %0 = tail call fp128 @llvm.fabs.f128(fp128 %x)
-  %cmpinf = fcmp oeq fp128 %0, 0xL00000000000000007FFF000000000000
+  %cmpinf = fcmp oeq fp128 %0, f0x7FFF0000000000000000000000000000
   ret i1 %cmpinf
 }
 
@@ -162,7 +162,7 @@ define zeroext i1 @abs_isinfornanq(fp128 %x) {
 ; P9-NEXT:    blr
 entry:
   %0 = tail call fp128 @llvm.fabs.f128(fp128 %x)
-  %cmpinf = fcmp ueq fp128 %0, 0xL00000000000000007FFF000000000000
+  %cmpinf = fcmp ueq fp128 %0, f0x7FFF0000000000000000000000000000
   ret i1 %cmpinf
 }
 
@@ -292,7 +292,7 @@ define zeroext i1 @iszeroq(fp128 %x) {
 ; P9-NEXT:    iseleq 3, 4, 3
 ; P9-NEXT:    blr
 entry:
-  %cmp = fcmp oeq fp128 %x, 0xL00000000000000000000000000000000
+  %cmp = fcmp oeq fp128 %x, f0x00000000000000000000000000000000
   ret i1 %cmp
 }
 

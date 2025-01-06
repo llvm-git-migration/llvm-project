@@ -8,7 +8,7 @@ define void @nvcast_v2i32(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.2s, #171, lsl #16
 ; CHECK-NEXT:    str d0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <4 x half> <half 0xH0000, half 0xH00AB, half 0xH0000, half 0xH00AB>, ptr %a
+  store volatile <4 x half> <half f0x0000, half f0x00AB, half f0x0000, half f0x00AB>, ptr %a
   ret void
 }
 
@@ -19,7 +19,7 @@ define void @nvcast_v4i16(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.4h, #171
 ; CHECK-NEXT:    str d0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <4 x half> <half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB>, ptr %a
+  store volatile <4 x half> <half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB>, ptr %a
   ret void
 }
 
@@ -30,7 +30,7 @@ define void @nvcast_v8i8(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.8b, #171
 ; CHECK-NEXT:    str d0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <4 x half> <half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB>, ptr %a
+  store volatile <4 x half> <half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB>, ptr %a
   ret void
 }
 
@@ -52,7 +52,7 @@ define void @nvcast_v4i32(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.4s, #171, lsl #16
 ; CHECK-NEXT:    str q0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <8 x half> <half 0xH0000, half 0xH00AB, half 0xH0000, half 0xH00AB, half 0xH0000, half 0xH00AB, half 0xH0000, half 0xH00AB>, ptr %a
+  store volatile <8 x half> <half f0x0000, half f0x00AB, half f0x0000, half f0x00AB, half f0x0000, half f0x00AB, half f0x0000, half f0x00AB>, ptr %a
   ret void
 }
 
@@ -63,7 +63,7 @@ define void @nvcast_v8i16(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.8h, #171
 ; CHECK-NEXT:    str q0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <8 x half> <half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB, half 0xH00AB>, ptr %a
+  store volatile <8 x half> <half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB, half f0x00AB>, ptr %a
   ret void
 }
 
@@ -74,7 +74,7 @@ define void @nvcast_v16i8(ptr %a) #0 {
 ; CHECK-NEXT:    movi v0.16b, #171
 ; CHECK-NEXT:    str q0, [x0]
 ; CHECK-NEXT:    ret
-  store volatile <8 x half> <half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB, half 0xHABAB>, ptr %a
+  store volatile <8 x half> <half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB, half f0xABAB>, ptr %a
   ret void
 }
 

@@ -479,10 +479,10 @@ define float @powf_ok_base_no_afn(float %e) {
 
 define fp128 @powl_long_dbl_no_fold(fp128 %e) {
 ; CHECK-LABEL: @powl_long_dbl_no_fold(
-; CHECK-NEXT:    [[CALL:%.*]] = tail call nnan ninf afn fp128 @powl(fp128 0xL00000000000000005001000000000000, fp128 [[E:%.*]])
+; CHECK-NEXT:    [[CALL:%.*]] = tail call nnan ninf afn fp128 @powl(fp128 f0x50010000000000000000000000000000, fp128 [[E:%.*]])
 ; CHECK-NEXT:    ret fp128 [[CALL]]
 ;
-  %call = tail call afn nnan ninf fp128 @powl(fp128 0xL00000000000000005001000000000000, fp128 %e)
+  %call = tail call afn nnan ninf fp128 @powl(fp128 f0x50010000000000000000000000000000, fp128 %e)
   ret fp128 %call
 }
 

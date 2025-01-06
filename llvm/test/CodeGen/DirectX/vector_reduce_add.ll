@@ -13,7 +13,7 @@ define noundef half @test_length_half2(<2 x half> noundef %p0) {
 ; CHECK-NEXT:    ret half [[TMP2]]
 ;
 entry:
-  %rdx.fadd = call half @llvm.vector.reduce.fadd.v2f16(half 0xH0000, <2 x half> %p0)
+  %rdx.fadd = call half @llvm.vector.reduce.fadd.v2f16(half f0x0000, <2 x half> %p0)
   ret half %rdx.fadd
 }
 
@@ -22,13 +22,13 @@ define noundef half @test_length_half2_start1(<2 x half> noundef %p0) {
 ; CHECK-SAME: <2 x half> noundef [[P0:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
 ; CHECK-NEXT:    [[TMP0:%.*]] = extractelement <2 x half> [[P0]], i64 0
-; CHECK-NEXT:    [[TMP1:%.*]] = fadd half [[TMP0]], 0xH0001
+; CHECK-NEXT:    [[TMP1:%.*]] = fadd half [[TMP0]], f0x0001
 ; CHECK-NEXT:    [[TMP2:%.*]] = extractelement <2 x half> [[P0]], i64 1
 ; CHECK-NEXT:    [[TMP3:%.*]] = fadd half [[TMP1]], [[TMP2]]
 ; CHECK-NEXT:    ret half [[TMP3]]
 ;
 entry:
-  %rdx.fadd = call half @llvm.vector.reduce.fadd.v2f16(half 0xH0001, <2 x half> %p0)
+  %rdx.fadd = call half @llvm.vector.reduce.fadd.v2f16(half f0x0001, <2 x half> %p0)
   ret half %rdx.fadd
 }
 
@@ -44,7 +44,7 @@ define noundef half @test_length_half3(<3 x half> noundef %p0) {
 ; CHECK-NEXT:    ret half [[TMP4]]
 ;
 entry:
-  %rdx.fadd = call half @llvm.vector.reduce.fadd.v3f16(half 0xH0000, <3 x half> %p0)
+  %rdx.fadd = call half @llvm.vector.reduce.fadd.v3f16(half f0x0000, <3 x half> %p0)
   ret half %rdx.fadd
 }
 
@@ -62,7 +62,7 @@ define noundef half @test_length_half4(<4 x half> noundef %p0) {
 ; CHECK-NEXT:    ret half [[TMP6]]
 ;
 entry:
-  %rdx.fadd = call half @llvm.vector.reduce.fadd.v4f16(half 0xH0000, <4 x half> %p0)
+  %rdx.fadd = call half @llvm.vector.reduce.fadd.v4f16(half f0x0000, <4 x half> %p0)
   ret half %rdx.fadd
 }
 

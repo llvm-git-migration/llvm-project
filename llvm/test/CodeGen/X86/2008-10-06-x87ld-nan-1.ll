@@ -21,6 +21,6 @@ define i32 @main() {
 ; CHECK-NEXT:    addl $28, %esp
 ; CHECK-NEXT:    retl
 entry_nan.main:
-  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 0xK7FFFC001234000000800)
+  call x86_stdcallcc void @_D3nan5printFeZv(x86_fp80 f0x7FFFC001234000000800)
   ret i32 0
 }

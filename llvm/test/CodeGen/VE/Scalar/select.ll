@@ -358,7 +358,7 @@ define fp128 @select_quad_mimm(i1 zeroext %0, fp128 %1) {
 ; CHECK-NEXT:    or %s0, 0, %s2
 ; CHECK-NEXT:    or %s1, 0, %s3
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %3 = select fast i1 %0, fp128 0xL0000000000000000C000000000000000, fp128 %1
+  %3 = select fast i1 %0, fp128 f0xC0000000000000000000000000000000, fp128 %1
   ret fp128 %3
 }
 
@@ -524,6 +524,6 @@ define fp128 @select_mimm_quad(i1 zeroext %0, fp128 %1) {
 ; CHECK-NEXT:    or %s0, 0, %s4
 ; CHECK-NEXT:    or %s1, 0, %s5
 ; CHECK-NEXT:    b.l.t (, %s10)
-  %3 = select fast i1 %0, fp128 %1, fp128 0xL0000000000000000C000000000000000
+  %3 = select fast i1 %0, fp128 %1, fp128 f0xC0000000000000000000000000000000
   ret fp128 %3
 }

@@ -77,7 +77,7 @@ define void @test_i1x16_one() nounwind {
   ret void
 }
 
-@half = internal constant half 0xH0000, align 4
+@half = internal constant half f0x0000, align 4
 define void @test_half() nounwind {
 ; CHECK-LABEL: @test_half(
 ; CHECK-NEXT:    [[A:%.*]] = alloca half, align 4

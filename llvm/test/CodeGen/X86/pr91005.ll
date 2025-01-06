@@ -28,7 +28,7 @@ common.ret:                                       ; preds = %4, %1
   ret void
 
 4:                                                ; preds = %1
-  %5 = select <2 x i1> %3, <2 x half> <half 0xH3C00, half 0xH3C00>, <2 x half> zeroinitializer
+  %5 = select <2 x i1> %3, <2 x half> <half f0x3C00, half f0x3C00>, <2 x half> zeroinitializer
   %6 = fmul <2 x half> %5, zeroinitializer
   %7 = fsub <2 x half> %6, zeroinitializer
   %8 = extractelement <2 x half> %7, i64 0

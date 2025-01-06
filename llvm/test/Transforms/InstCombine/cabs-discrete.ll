@@ -123,7 +123,7 @@ define fp128 @cabsl_zero_real(fp128 %imag) {
 ; CHECK-NEXT:    [[CABS:%.*]] = tail call fp128 @llvm.fabs.f128(fp128 [[IMAG:%.*]])
 ; CHECK-NEXT:    ret fp128 [[CABS]]
 ;
-  %call = tail call fp128 @cabsl(fp128 0xL00000000000000000000000000000000, fp128 %imag)
+  %call = tail call fp128 @cabsl(fp128 f0x00000000000000000000000000000000, fp128 %imag)
   ret fp128 %call
 }
 
@@ -132,7 +132,7 @@ define fp128 @cabsl_zero_imag(fp128 %real) {
 ; CHECK-NEXT:    [[CABS:%.*]] = tail call fp128 @llvm.fabs.f128(fp128 [[REAL:%.*]])
 ; CHECK-NEXT:    ret fp128 [[CABS]]
 ;
-  %call = tail call fp128 @cabsl(fp128 %real, fp128 0xL00000000000000000000000000000000)
+  %call = tail call fp128 @cabsl(fp128 %real, fp128 f0x00000000000000000000000000000000)
   ret fp128 %call
 }
 
@@ -141,7 +141,7 @@ define fp128 @fast_cabsl_neg_zero_imag(fp128 %real) {
 ; CHECK-NEXT:    [[CABS:%.*]] = tail call fast fp128 @llvm.fabs.f128(fp128 [[REAL:%.*]])
 ; CHECK-NEXT:    ret fp128 [[CABS]]
 ;
-  %call = tail call fast fp128 @cabsl(fp128 %real, fp128 0xL00000000000000008000000000000000)
+  %call = tail call fast fp128 @cabsl(fp128 %real, fp128 f0x80000000000000000000000000000000)
   ret fp128 %call
 }
 

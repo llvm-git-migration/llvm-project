@@ -339,7 +339,7 @@ define <8 x i8> @constantdiff2(<8 x i8> %a) {
 
 define <8 x half> @constantsplatf(<8 x half> %a) {
 ; CHECK-LABEL: @constantsplatf(
-; CHECK-NEXT:    [[R:%.*]] = fadd <8 x half> [[A:%.*]], splat (half 0xH4900)
+; CHECK-NEXT:    [[R:%.*]] = fadd <8 x half> [[A:%.*]], splat (half f0x4900)
 ; CHECK-NEXT:    ret <8 x half> [[R]]
 ;
   %ab = shufflevector <8 x half> %a, <8 x half> poison, <4 x i32> <i32 3, i32 2, i32 1, i32 0>
@@ -1206,7 +1206,7 @@ define <16 x i32> @const_types(<16 x i32> %wide.vec, <16 x i32> %wide.vec116) {
 define <32 x half> @cast_types(<32 x i16> %wide.vec) {
 ; CHECK-LABEL: @cast_types(
 ; CHECK-NEXT:    [[TMP1:%.*]] = sitofp <32 x i16> [[WIDE_VEC:%.*]] to <32 x half>
-; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = fmul fast <32 x half> [[TMP1]], splat (half 0xH0200)
+; CHECK-NEXT:    [[INTERLEAVED_VEC:%.*]] = fmul fast <32 x half> [[TMP1]], splat (half f0x0200)
 ; CHECK-NEXT:    ret <32 x half> [[INTERLEAVED_VEC]]
 ;
   %strided.vec = shufflevector <32 x i16> %wide.vec, <32 x i16> poison, <8 x i32> <i32 0, i32 4, i32 8, i32 12, i32 16, i32 20, i32 24, i32 28>
@@ -1214,13 +1214,13 @@ define <32 x half> @cast_types(<32 x i16> %wide.vec) {
   %strided.vec50 = shufflevector <32 x i16> %wide.vec, <32 x i16> poison, <8 x i32> <i32 2, i32 6, i32 10, i32 14, i32 18, i32 22, i32 26, i32 30>
   %strided.vec51 = shufflevector <32 x i16> %wide.vec, <32 x i16> poison, <8 x i32> <i32 3, i32 7, i32 11, i32 15, i32 19, i32 23, i32 27, i32 31>
   %5 = sitofp <8 x i16> %strided.vec to <8 x half>
-  %6 = fmul fast <8 x half> %5, splat (half 0xH0200)
+  %6 = fmul fast <8 x half> %5, splat (half f0x0200)
   %7 = sitofp <8 x i16> %strided.vec49 to <8 x half>
-  %8 = fmul fast <8 x half> %7, splat (half 0xH0200)
+  %8 = fmul fast <8 x half> %7, splat (half f0x0200)
   %9 = sitofp <8 x i16> %strided.vec50 to <8 x half>
-  %10 = fmul fast <8 x half> %9, splat (half 0xH0200)
+  %10 = fmul fast <8 x half> %9, splat (half f0x0200)
   %11 = sitofp <8 x i16> %strided.vec51 to <8 x half>
-  %12 = fmul fast <8 x half> %11, splat (half 0xH0200)
+  %12 = fmul fast <8 x half> %11, splat (half f0x0200)
   %13 = shufflevector <8 x half> %6, <8 x half> %8, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
   %14 = shufflevector <8 x half> %10, <8 x half> %12, <16 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
   %interleaved.vec = shufflevector <16 x half> %13, <16 x half> %14, <32 x i32> <i32 0, i32 8, i32 16, i32 24, i32 1, i32 9, i32 17, i32 25, i32 2, i32 10, i32 18, i32 26, i32 3, i32 11, i32 19, i32 27, i32 4, i32 12, i32 20, i32 28, i32 5, i32 13, i32 21, i32 29, i32 6, i32 14, i32 22, i32 30, i32 7, i32 15, i32 23, i32 31>

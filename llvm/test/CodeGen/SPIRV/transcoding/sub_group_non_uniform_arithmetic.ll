@@ -1084,39 +1084,39 @@ declare dso_local spir_func float @_Z40sub_group_non_uniform_scan_exclusive_maxf
 ; CHECK-SPIRV: OpFunctionEnd
 
 define dso_local spir_kernel void @testNonUniformArithmeticHalf(half addrspace(1)* nocapture) local_unnamed_addr {
-  %2 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_addDh(half 0xH0000)
+  %2 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_addDh(half f0x0000)
   store half %2, half addrspace(1)* %0, align 2
-  %3 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_mulDh(half 0xH0000)
+  %3 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_mulDh(half f0x0000)
   %4 = getelementptr inbounds half, half addrspace(1)* %0, i64 1
   store half %3, half addrspace(1)* %4, align 2
-  %5 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_minDh(half 0xH0000)
+  %5 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_minDh(half f0x0000)
   %6 = getelementptr inbounds half, half addrspace(1)* %0, i64 2
   store half %5, half addrspace(1)* %6, align 2
-  %7 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_maxDh(half 0xH0000)
+  %7 = tail call spir_func half @_Z32sub_group_non_uniform_reduce_maxDh(half f0x0000)
   %8 = getelementptr inbounds half, half addrspace(1)* %0, i64 3
   store half %7, half addrspace(1)* %8, align 2
-  %9 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_addDh(half 0xH0000)
+  %9 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_addDh(half f0x0000)
   %10 = getelementptr inbounds half, half addrspace(1)* %0, i64 4
   store half %9, half addrspace(1)* %10, align 2
-  %11 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_mulDh(half 0xH0000)
+  %11 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_mulDh(half f0x0000)
   %12 = getelementptr inbounds half, half addrspace(1)* %0, i64 5
   store half %11, half addrspace(1)* %12, align 2
-  %13 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_minDh(half 0xH0000)
+  %13 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_minDh(half f0x0000)
   %14 = getelementptr inbounds half, half addrspace(1)* %0, i64 6
   store half %13, half addrspace(1)* %14, align 2
-  %15 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_maxDh(half 0xH0000)
+  %15 = tail call spir_func half @_Z40sub_group_non_uniform_scan_inclusive_maxDh(half f0x0000)
   %16 = getelementptr inbounds half, half addrspace(1)* %0, i64 7
   store half %15, half addrspace(1)* %16, align 2
-  %17 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_addDh(half 0xH0000)
+  %17 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_addDh(half f0x0000)
   %18 = getelementptr inbounds half, half addrspace(1)* %0, i64 8
   store half %17, half addrspace(1)* %18, align 2
-  %19 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_mulDh(half 0xH0000)
+  %19 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_mulDh(half f0x0000)
   %20 = getelementptr inbounds half, half addrspace(1)* %0, i64 9
   store half %19, half addrspace(1)* %20, align 2
-  %21 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_minDh(half 0xH0000)
+  %21 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_minDh(half f0x0000)
   %22 = getelementptr inbounds half, half addrspace(1)* %0, i64 10
   store half %21, half addrspace(1)* %22, align 2
-  %23 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_maxDh(half 0xH0000)
+  %23 = tail call spir_func half @_Z40sub_group_non_uniform_scan_exclusive_maxDh(half f0x0000)
   %24 = getelementptr inbounds half, half addrspace(1)* %0, i64 11
   store half %23, half addrspace(1)* %24, align 2
   ret void

@@ -383,7 +383,7 @@ define dso_local <4 x half> @test_vneg_f16(<4 x half> %a) {
 ; CHECK-NEXT:    vneg.f16 d0, d0
 ; CHECK-NEXT:    bx lr
 entry:
-  %sub.i = fsub <4 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %a
+  %sub.i = fsub <4 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %a
   ret <4 x half> %sub.i
 }
 
@@ -394,7 +394,7 @@ define dso_local <8 x half> @test_vnegq_f16(<8 x half> %a) {
 ; CHECK-NEXT:    vneg.f16 q0, q0
 ; CHECK-NEXT:    bx lr
 entry:
-  %sub.i = fsub <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %a
+  %sub.i = fsub <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %a
   ret <8 x half> %sub.i
 }
 
@@ -1136,7 +1136,7 @@ define dso_local <4 x half> @test_vfms_f16(<4 x half> %a, <4 x half> %b, <4 x ha
 ; CHECK-NEXT:    vfma.f16 d0, d16, d2
 ; CHECK-NEXT:    bx lr
 entry:
-  %sub.i = fsub <4 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub.i = fsub <4 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %0 = tail call <4 x half> @llvm.fma.v4f16(<4 x half> %sub.i, <4 x half> %c, <4 x half> %a)
   ret <4 x half> %0
 }
@@ -1148,7 +1148,7 @@ define dso_local <8 x half> @test_vfmsq_f16(<8 x half> %a, <8 x half> %b, <8 x h
 ; CHECK-NEXT:    vfma.f16 q0, q8, q2
 ; CHECK-NEXT:    bx lr
 entry:
-  %sub.i = fsub <8 x half> <half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000, half 0xH8000>, %b
+  %sub.i = fsub <8 x half> <half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000, half f0x8000>, %b
   %0 = tail call <8 x half> @llvm.fma.v8f16(<8 x half> %sub.i, <8 x half> %c, <8 x half> %a)
   ret <8 x half> %0
 }

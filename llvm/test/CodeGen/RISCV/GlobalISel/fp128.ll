@@ -146,7 +146,7 @@ define fp128 @constant(fp128 %x) nounwind {
 ; CHECK-NEXT:    ld ra, 8(sp) # 8-byte Folded Reload
 ; CHECK-NEXT:    addi sp, sp, 16
 ; CHECK-NEXT:    ret
-  %a = fadd fp128 %x, 0xL00000000000000007FFF000000000000
+  %a = fadd fp128 %x, f0x7FFF0000000000000000000000000000
   ret fp128 %a
 }
 

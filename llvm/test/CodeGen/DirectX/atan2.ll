@@ -32,20 +32,20 @@ entry:
 ; CHECK: [[DIV:%.+]] = fdiv half %y, %x
 ; EXPCHECK: [[ATAN:%.+]] = call half @llvm.atan.f16(half [[DIV]])
 ; DOPCHECK: [[ATAN:%.+]] = call half @dx.op.unary.f16(i32 17, half [[DIV]])
-; CHECK-DAG: [[ADD_PI:%.+]] = fadd half [[ATAN]], 0xH4248
-; CHECK-DAG: [[SUB_PI:%.+]] = fsub half [[ATAN]], 0xH4248
-; CHECK-DAG: [[X_LT_0:%.+]] = fcmp olt half %x, 0xH0000
-; CHECK-DAG: [[X_EQ_0:%.+]] = fcmp oeq half %x, 0xH0000 
-; CHECK-DAG: [[Y_GE_0:%.+]] = fcmp oge half %y, 0xH0000 
-; CHECK-DAG: [[Y_LT_0:%.+]] = fcmp olt half %y, 0xH0000
+; CHECK-DAG: [[ADD_PI:%.+]] = fadd half [[ATAN]], f0x4248
+; CHECK-DAG: [[SUB_PI:%.+]] = fsub half [[ATAN]], f0x4248
+; CHECK-DAG: [[X_LT_0:%.+]] = fcmp olt half %x, f0x0000
+; CHECK-DAG: [[X_EQ_0:%.+]] = fcmp oeq half %x, f0x0000 
+; CHECK-DAG: [[Y_GE_0:%.+]] = fcmp oge half %y, f0x0000 
+; CHECK-DAG: [[Y_LT_0:%.+]] = fcmp olt half %y, f0x0000
 ; CHECK: [[XLT0_AND_YGE0:%.+]] = and i1 [[X_LT_0]], [[Y_GE_0]]
 ; CHECK: [[SELECT_ADD_PI:%.+]] = select i1 [[XLT0_AND_YGE0]], half [[ADD_PI]], half [[ATAN]]
 ; CHECK: [[XLT0_AND_YLT0:%.+]] = and i1 [[X_LT_0]], [[Y_LT_0]]
 ; CHECK: [[SELECT_SUB_PI:%.+]] = select i1 [[XLT0_AND_YLT0]], half [[SUB_PI]], half [[SELECT_ADD_PI]]
 ; CHECK: [[XEQ0_AND_YLT0:%.+]] = and i1 [[X_EQ_0]], [[Y_LT_0]]
-; CHECK: [[SELECT_NEGHPI:%.+]] = select i1 [[XEQ0_AND_YLT0]], half 0xHBE48, half [[SELECT_SUB_PI]]
+; CHECK: [[SELECT_NEGHPI:%.+]] = select i1 [[XEQ0_AND_YLT0]], half f0xBE48, half [[SELECT_SUB_PI]]
 ; CHECK: [[XEQ0_AND_YGE0:%.+]] = and i1 [[X_EQ_0]], [[Y_GE_0]]
-; CHECK: [[SELECT_HPI:%.+]] = select i1 [[XEQ0_AND_YGE0]], half 0xH3E48, half [[SELECT_NEGHPI]]
+; CHECK: [[SELECT_HPI:%.+]] = select i1 [[XEQ0_AND_YGE0]], half f0x3E48, half [[SELECT_NEGHPI]]
 ; CHECK: ret half [[SELECT_HPI]]
   %elt.atan2 = call half @llvm.atan2.f16(half %y, half %x)
   ret half %elt.atan2

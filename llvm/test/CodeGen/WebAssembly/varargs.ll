@@ -146,7 +146,7 @@ declare void @callee_with_nonlegal_fixed(fp128, ...) nounwind
 ; CHECK: i32.const       $push[[L2:[0-9]+]]=, 0
 ; CHECK: call            callee_with_nonlegal_fixed, $pop[[L0]], $pop[[L1]], $pop[[L2]]{{$}}
 define void @call_nonlegal_fixed() nounwind {
-  call void (fp128, ...) @callee_with_nonlegal_fixed(fp128 0xL00000000000000000000000000000000)
+  call void (fp128, ...) @callee_with_nonlegal_fixed(fp128 f0x00000000000000000000000000000000)
   ret void
 }
 
@@ -197,7 +197,7 @@ define void @nonlegal_fixed(fp128 %x, ...) nounwind {
 ; UNKNOWN-NEXT: call            callee, $1
 define void @call_fp128_alignment(ptr %p) {
 entry:
-  call void (...) @callee(i8 7, fp128 0xL00000000000000018000000000000000)
+  call void (...) @callee(i8 7, fp128 f0x80000000000000000000000000000001)
   ret void
 }
 

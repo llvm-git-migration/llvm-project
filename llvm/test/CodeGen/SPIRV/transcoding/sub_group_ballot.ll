@@ -748,8 +748,8 @@ declare dso_local spir_func float @_Z25sub_group_broadcast_firstf(float) local_u
 ; CHECK-SPIRV: OpFunctionEnd
 
 define dso_local spir_kernel void @testNonUniformBroadcastHalfs() local_unnamed_addr {
-  %1 = tail call spir_func half @_Z31sub_group_non_uniform_broadcastDhj(half 0xH0000, i32 0)
-  %2 = insertelement <16 x half> <half undef, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000, half 0xH0000>, half %1, i64 0
+  %1 = tail call spir_func half @_Z31sub_group_non_uniform_broadcastDhj(half f0x0000, i32 0)
+  %2 = insertelement <16 x half> <half undef, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000, half f0x0000>, half %1, i64 0
   %3 = shufflevector <16 x half> %2, <16 x half> undef, <2 x i32> <i32 0, i32 1>
   %4 = tail call spir_func <2 x half> @_Z31sub_group_non_uniform_broadcastDv2_Dhj(<2 x half> %3, i32 0)
   %5 = shufflevector <2 x half> %4, <2 x half> undef, <16 x i32> <i32 0, i32 1, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef, i32 undef>

@@ -440,8 +440,8 @@ define half @select_fcmp_nnan_ugt_negzero(half %x) {
 
 define half @select_fcmp_nnan_oge_negzero(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_oge_negzero(
-; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp oge half [[X:%.*]], 0xH0000
-; CHECK-NEXT:    [[NEGX:%.*]] = fsub nnan half 0xH0000, [[X]]
+; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp oge half [[X:%.*]], f0x0000
+; CHECK-NEXT:    [[NEGX:%.*]] = fsub nnan half f0x0000, [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select i1 [[GTZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
 ;
@@ -843,7 +843,7 @@ define <2 x float> @select_fcmp_nnan_nsz_ugt_zero_unary_fneg(<2 x float> %x) {
 
 define half @select_fcmp_nnan_nsz_ogt_negzero(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_ogt_negzero(
-; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp ogt half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp ogt half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg fast half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan ninf i1 [[GTZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
@@ -858,7 +858,7 @@ define half @select_fcmp_nnan_nsz_ogt_negzero(half %x) {
 
 define half @select_fcmp_nnan_nsz_ugt_negzero(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_ugt_negzero(
-; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp ugt half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GTZERO:%.*]] = fcmp ugt half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg fast half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan ninf i1 [[GTZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
@@ -931,7 +931,7 @@ define <2 x double> @select_fcmp_nnan_nsz_uge_zero_unary_fneg(<2 x double> %x) {
 
 define half @select_fcmp_nnan_nsz_oge_negzero(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_oge_negzero(
-; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp oge half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp oge half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg nnan nsz half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan i1 [[GEZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
@@ -946,7 +946,7 @@ define half @select_fcmp_nnan_nsz_oge_negzero(half %x) {
 
 define half @select_fcmp_nnan_nsz_uge_negzero(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_uge_negzero(
-; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp uge half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp uge half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg nnan nsz half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan i1 [[GEZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
@@ -959,7 +959,7 @@ define half @select_fcmp_nnan_nsz_uge_negzero(half %x) {
 
 define half @select_fcmp_nnan_nsz_oge_negzero_unary_fneg(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_oge_negzero_unary_fneg(
-; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp oge half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp oge half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg nnan nsz half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan i1 [[GEZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]
@@ -974,7 +974,7 @@ define half @select_fcmp_nnan_nsz_oge_negzero_unary_fneg(half %x) {
 
 define half @select_fcmp_nnan_nsz_uge_negzero_unary_fneg(half %x) {
 ; CHECK-LABEL: @select_fcmp_nnan_nsz_uge_negzero_unary_fneg(
-; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp uge half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[GEZERO:%.*]] = fcmp uge half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    [[NEGX:%.*]] = fneg nnan nsz half [[X]]
 ; CHECK-NEXT:    [[FABS:%.*]] = select nnan i1 [[GEZERO]], half [[X]], half [[NEGX]]
 ; CHECK-NEXT:    ret half [[FABS]]

@@ -11,13 +11,13 @@ body:             |
     ; GCN: liveins: $vgpr0
     ; GCN-NEXT: {{  $}}
     ; GCN-NEXT: [[COPY:%[0-9]+]]:_(<2 x s16>) = COPY $vgpr0
-    ; GCN-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half 0xH4200
+    ; GCN-NEXT: [[C:%[0-9]+]]:_(s16) = G_FCONSTANT half f0x4200
     ; GCN-NEXT: [[BUILD_VECTOR:%[0-9]+]]:_(<2 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16)
     ; GCN-NEXT: [[SUB:%[0-9]+]]:_(<2 x s16>) = G_SUB [[COPY]], [[BUILD_VECTOR]]
     ; GCN-NEXT: $vgpr0 = COPY [[SUB]](<2 x s16>)
     ; GCN-NEXT: SI_RETURN implicit $vgpr0
     %0:_(<2 x s16>) = COPY $vgpr0
-    %2:_(s16) = G_FCONSTANT half 0xH4200
+    %2:_(s16) = G_FCONSTANT half f0x4200
     %1:_(<2 x s16>) = G_BUILD_VECTOR %2(s16), %2(s16)
     %3:_(<2 x s16>) = G_SUB %0, %1
     $vgpr0 = COPY %3(<2 x s16>)

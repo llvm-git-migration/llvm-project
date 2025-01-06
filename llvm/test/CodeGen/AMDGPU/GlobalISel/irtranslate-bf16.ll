@@ -18,7 +18,7 @@ define <3 x bfloat> @v3bf16(<3 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT3:%[0-9]+]]:_(s32) = G_ANYEXT [[UV3]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<3 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<3 x s16>) = G_TRUNC [[BUILD_VECTOR]](<3 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<3 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<3 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<3 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2)
   ; GFX9-NEXT:   [[UV4:%[0-9]+]]:_(s16), [[UV5:%[0-9]+]]:_(s16), [[UV6:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<3 x s16>)
@@ -46,7 +46,7 @@ define <4 x bfloat> @v4bf16(<4 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT3:%[0-9]+]]:_(s32) = G_ANYEXT [[UV3]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<4 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32), [[ANYEXT3]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<4 x s16>) = G_TRUNC [[BUILD_VECTOR]](<4 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<4 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<4 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<4 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2, 0)
   ; GFX9-NEXT:   [[UV4:%[0-9]+]]:_(s16), [[UV5:%[0-9]+]]:_(s16), [[UV6:%[0-9]+]]:_(s16), [[UV7:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<4 x s16>)
@@ -78,7 +78,7 @@ define <5 x bfloat> @v5bf16(<5 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT5:%[0-9]+]]:_(s32) = G_ANYEXT [[UV5]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<5 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32), [[ANYEXT3]](s32), [[ANYEXT4]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<5 x s16>) = G_TRUNC [[BUILD_VECTOR]](<5 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<5 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<5 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<5 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2, 0, 4)
   ; GFX9-NEXT:   [[UV6:%[0-9]+]]:_(s16), [[UV7:%[0-9]+]]:_(s16), [[UV8:%[0-9]+]]:_(s16), [[UV9:%[0-9]+]]:_(s16), [[UV10:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<5 x s16>)
@@ -112,7 +112,7 @@ define <6 x bfloat> @v6bf16(<6 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT5:%[0-9]+]]:_(s32) = G_ANYEXT [[UV5]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<6 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32), [[ANYEXT3]](s32), [[ANYEXT4]](s32), [[ANYEXT5]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<6 x s16>) = G_TRUNC [[BUILD_VECTOR]](<6 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<6 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<6 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<6 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2, 0, 4, 5)
   ; GFX9-NEXT:   [[UV6:%[0-9]+]]:_(s16), [[UV7:%[0-9]+]]:_(s16), [[UV8:%[0-9]+]]:_(s16), [[UV9:%[0-9]+]]:_(s16), [[UV10:%[0-9]+]]:_(s16), [[UV11:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<6 x s16>)
@@ -150,7 +150,7 @@ define <7 x bfloat> @v7bf16(<7 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT7:%[0-9]+]]:_(s32) = G_ANYEXT [[UV7]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<7 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32), [[ANYEXT3]](s32), [[ANYEXT4]](s32), [[ANYEXT5]](s32), [[ANYEXT6]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<7 x s16>) = G_TRUNC [[BUILD_VECTOR]](<7 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<7 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<7 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<7 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2, 0, 4, 5, 6)
   ; GFX9-NEXT:   [[UV8:%[0-9]+]]:_(s16), [[UV9:%[0-9]+]]:_(s16), [[UV10:%[0-9]+]]:_(s16), [[UV11:%[0-9]+]]:_(s16), [[UV12:%[0-9]+]]:_(s16), [[UV13:%[0-9]+]]:_(s16), [[UV14:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<7 x s16>)
@@ -190,7 +190,7 @@ define <8 x bfloat> @v8bf16(<8 x bfloat> %arg0) {
   ; GFX9-NEXT:   [[ANYEXT7:%[0-9]+]]:_(s32) = G_ANYEXT [[UV7]](s16)
   ; GFX9-NEXT:   [[BUILD_VECTOR:%[0-9]+]]:_(<8 x s32>) = G_BUILD_VECTOR [[ANYEXT]](s32), [[ANYEXT1]](s32), [[ANYEXT2]](s32), [[ANYEXT3]](s32), [[ANYEXT4]](s32), [[ANYEXT5]](s32), [[ANYEXT6]](s32), [[ANYEXT7]](s32)
   ; GFX9-NEXT:   [[TRUNC:%[0-9]+]]:_(<8 x s16>) = G_TRUNC [[BUILD_VECTOR]](<8 x s32>)
-  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat 0xR0000
+  ; GFX9-NEXT:   [[C:%[0-9]+]]:_(s16) = G_FCONSTANT bfloat f0x0000
   ; GFX9-NEXT:   [[BUILD_VECTOR1:%[0-9]+]]:_(<8 x s16>) = G_BUILD_VECTOR [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16), [[C]](s16)
   ; GFX9-NEXT:   [[SHUF:%[0-9]+]]:_(<8 x s16>) = G_SHUFFLE_VECTOR [[TRUNC]](<8 x s16>), [[BUILD_VECTOR1]], shufflemask(3, 1, 2, 0, 4, 5, 6, 7)
   ; GFX9-NEXT:   [[UV8:%[0-9]+]]:_(s16), [[UV9:%[0-9]+]]:_(s16), [[UV10:%[0-9]+]]:_(s16), [[UV11:%[0-9]+]]:_(s16), [[UV12:%[0-9]+]]:_(s16), [[UV13:%[0-9]+]]:_(s16), [[UV14:%[0-9]+]]:_(s16), [[UV15:%[0-9]+]]:_(s16) = G_UNMERGE_VALUES [[SHUF]](<8 x s16>)

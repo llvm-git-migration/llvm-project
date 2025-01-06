@@ -43,10 +43,10 @@ define float @callatanDenorm() {
 ; TODO: long double calls currently not folded
 define x86_fp80 @atanl_x86(x86_fp80 %x) {
 ; CHECK-LABEL: @atanl_x86(
-; CHECK-NEXT:    [[CALL:%.*]] = call x86_fp80 @atanl(x86_fp80 noundef 0xK3FFF8CCCCCCCCCCCCCCD)
+; CHECK-NEXT:    [[CALL:%.*]] = call x86_fp80 @atanl(x86_fp80 noundef f0x3FFF8CCCCCCCCCCCCCCD)
 ; CHECK-NEXT:    ret x86_fp80 [[CALL]]
 ;
-  %call = call x86_fp80 @atanl(x86_fp80 noundef 0xK3FFF8CCCCCCCCCCCCCCD)
+  %call = call x86_fp80 @atanl(x86_fp80 noundef f0x3FFF8CCCCCCCCCCCCCCD)
   ret x86_fp80 %call
 }
 

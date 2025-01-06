@@ -4631,12 +4631,12 @@ define i1 @intersect_fmf_4(double %a, double %b) {
 define i1 @clang_builtin_isnormal_inf_check(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp uge half %fabs.x, 0xH7C00
+  %cmp = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4644,12 +4644,12 @@ define i1 @clang_builtin_isnormal_inf_check(half %x) {
 define <2 x i1> @clang_builtin_isnormal_inf_check_vector(<2 x half> %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_vector(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call <2 x half> @llvm.fabs.v2f16(<2 x half> [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq <2 x half> [[FABS_X]], splat (half 0xH7C00)
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq <2 x half> [[FABS_X]], splat (half f0x7C00)
 ; CHECK-NEXT:    ret <2 x i1> [[AND]]
 ;
   %fabs.x = call <2 x half> @llvm.fabs.v2f16(<2 x half> %x)
   %ord = fcmp ord <2 x half> %fabs.x, zeroinitializer
-  %cmp = fcmp uge <2 x half> %fabs.x, <half 0xH7C00, half 0xH7C00>
+  %cmp = fcmp uge <2 x half> %fabs.x, <half f0x7C00, half f0x7C00>
   %and = and <2 x i1> %ord, %cmp
   ret <2 x i1> %and
 }
@@ -4657,12 +4657,12 @@ define <2 x i1> @clang_builtin_isnormal_inf_check_vector(<2 x half> %x) {
 define i1 @clang_builtin_isnormal_inf_check_commute(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_commute(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp uge half %fabs.x, 0xH7C00
+  %cmp = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %cmp, %ord
   ret i1 %and
 }
@@ -4670,12 +4670,12 @@ define i1 @clang_builtin_isnormal_inf_check_commute(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_commute_nsz_rhs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_commute_nsz_rhs(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp nsz ord half %fabs.x, 0.0
-  %cmp = fcmp uge half %fabs.x, 0xH7C00
+  %cmp = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %cmp, %ord
   ret i1 %and
 }
@@ -4683,23 +4683,23 @@ define i1 @clang_builtin_isnormal_inf_check_commute_nsz_rhs(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_commute_nsz_lhs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_commute_nsz_lhs(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp nsz uge half %fabs.x, 0xH7C00
+  %cmp = fcmp nsz uge half %fabs.x, f0x7C00
   %and = and i1 %cmp, %ord
   ret i1 %and
 }
 
 define i1 @clang_builtin_isnormal_inf_check_commute_nofabs_ueq(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_commute_nofabs_ueq(
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %ord = fcmp ord half %x, 0.0
-  %cmp = fcmp ueq half %x, 0xH7C00
+  %cmp = fcmp ueq half %x, f0x7C00
   %and = and i1 %cmp, %ord
   ret i1 %and
 }
@@ -4707,12 +4707,12 @@ define i1 @clang_builtin_isnormal_inf_check_commute_nofabs_ueq(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_commute_nsz(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_commute_nsz(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp nsz oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp nsz oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp nsz ord half %fabs.x, 0.0
-  %cmp = fcmp nsz uge half %fabs.x, 0xH7C00
+  %cmp = fcmp nsz uge half %fabs.x, f0x7C00
   %and = and i1 %cmp, %ord
   ret i1 %and
 }
@@ -4724,7 +4724,7 @@ define i1 @clang_builtin_isnormal_inf_check_ugt(half %x) {
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ugt half %fabs.x, 0xH7C00
+  %cmp = fcmp ugt half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4733,12 +4733,12 @@ define i1 @clang_builtin_isnormal_inf_check_ugt(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_ult(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_ult(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ult half %fabs.x, 0xH7C00
+  %cmp = fcmp ult half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4746,12 +4746,12 @@ define i1 @clang_builtin_isnormal_inf_check_ult(half %x) {
 ; ule -> ole
 define i1 @clang_builtin_isnormal_inf_check_ule(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_ule(
-; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[ORD]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ule half %fabs.x, 0xH7C00
+  %cmp = fcmp ule half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4760,12 +4760,12 @@ define i1 @clang_builtin_isnormal_inf_check_ule(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_ueq(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_ueq(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ueq half %fabs.x, 0xH7C00
+  %cmp = fcmp ueq half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4774,12 +4774,12 @@ define i1 @clang_builtin_isnormal_inf_check_ueq(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_une(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_une(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp une half %fabs.x, 0xH7C00
+  %cmp = fcmp une half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4791,7 +4791,7 @@ define i1 @clang_builtin_isnormal_inf_check_uno(half %x) {
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp uno half %fabs.x, 0xH7C00
+  %cmp = fcmp uno half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4799,12 +4799,12 @@ define i1 @clang_builtin_isnormal_inf_check_uno(half %x) {
 ; ord -> ord
 define i1 @clang_builtin_isnormal_inf_check_ord(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_ord(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[CMP]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ord half %fabs.x, 0xH7C00
+  %cmp = fcmp ord half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4812,12 +4812,12 @@ define i1 @clang_builtin_isnormal_inf_check_ord(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_oge(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_oge(
 ; CHECK-NEXT:    [[TMP1:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[TMP1]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[TMP1]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp oge half %fabs.x, 0xH7C00
+  %cmp = fcmp oge half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4825,24 +4825,24 @@ define i1 @clang_builtin_isnormal_inf_check_oge(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_olt(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_olt(
 ; CHECK-NEXT:    [[TMP1:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[TMP1]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp one half [[TMP1]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp olt half %fabs.x, 0xH7C00
+  %cmp = fcmp olt half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
 
 define i1 @clang_builtin_isnormal_inf_check_ole(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_ole(
-; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[CMP:%.*]] = fcmp ord half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[CMP]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp ole half %fabs.x, 0xH7C00
+  %cmp = fcmp ole half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4850,12 +4850,12 @@ define i1 @clang_builtin_isnormal_inf_check_ole(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_oeq(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_oeq(
 ; CHECK-NEXT:    [[TMP1:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[TMP1]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[TMP1]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp = fcmp oeq half %fabs.x, 0xH7C00
+  %cmp = fcmp oeq half %fabs.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4863,12 +4863,12 @@ define i1 @clang_builtin_isnormal_inf_check_oeq(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_unnececcary_fabs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_unnececcary_fabs(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %x, 0.0
-  %ueq = fcmp uge half %fabs.x, 0xH7C00
+  %ueq = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
@@ -4876,36 +4876,36 @@ define i1 @clang_builtin_isnormal_inf_check_unnececcary_fabs(half %x) {
 ; Negative test
 define i1 @clang_builtin_isnormal_inf_check_not_ord(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_not_ord(
-; CHECK-NEXT:    [[AND:%.*]] = fcmp uno half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[AND:%.*]] = fcmp uno half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp uno half %fabs.x, 0.0
-  %ueq = fcmp uge half %fabs.x, 0xH7C00
+  %ueq = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
 
 define i1 @clang_builtin_isnormal_inf_check_missing_fabs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_missing_fabs(
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %x, 0.0
-  %ueq = fcmp uge half %x, 0xH7C00
+  %ueq = fcmp uge half %x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
 
 define i1 @clang_builtin_isnormal_inf_check_neg_inf(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_neg_inf(
-; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X:%.*]], 0xH0000
+; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X:%.*]], f0x0000
 ; CHECK-NEXT:    ret i1 [[ORD]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %ueq = fcmp uge half %fabs.x, 0xHFC00
+  %ueq = fcmp uge half %fabs.x, f0xFC00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
@@ -4914,14 +4914,14 @@ define i1 @clang_builtin_isnormal_inf_check_neg_inf(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_not_inf(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_not_inf(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X]], 0xH0000
-; CHECK-NEXT:    [[UEQ:%.*]] = fcmp uge half [[FABS_X]], 0xH7BFF
+; CHECK-NEXT:    [[ORD:%.*]] = fcmp ord half [[X]], f0x0000
+; CHECK-NEXT:    [[UEQ:%.*]] = fcmp uge half [[FABS_X]], f0x7BFF
 ; CHECK-NEXT:    [[AND:%.*]] = and i1 [[ORD]], [[UEQ]]
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %ueq = fcmp uge half %fabs.x, 0xH7BFF
+  %ueq = fcmp uge half %fabs.x, f0x7BFF
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
@@ -4929,12 +4929,12 @@ define i1 @clang_builtin_isnormal_inf_check_not_inf(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_nsz_lhs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_nsz_lhs(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp nsz ord half %fabs.x, 0.0
-  %ueq = fcmp uge half %fabs.x, 0xH7C00
+  %ueq = fcmp uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
@@ -4942,12 +4942,12 @@ define i1 @clang_builtin_isnormal_inf_check_nsz_lhs(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_nsz_rhs(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_nsz_rhs(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %ueq = fcmp nsz uge half %fabs.x, 0xH7C00
+  %ueq = fcmp nsz uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
@@ -4955,24 +4955,24 @@ define i1 @clang_builtin_isnormal_inf_check_nsz_rhs(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_nsz(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_nsz(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp nsz oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp nsz oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp nsz ord half %fabs.x, 0.0
-  %ueq = fcmp nsz uge half %fabs.x, 0xH7C00
+  %ueq = fcmp nsz uge half %fabs.x, f0x7C00
   %and = and i1 %ord, %ueq
   ret i1 %and
 }
 
 define i1 @clang_builtin_isnormal_inf_check_fneg(half %x) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_fneg(
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[X:%.*]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fneg.x = fneg half %x
   %ord = fcmp ord half %fneg.x, 0.0
-  %cmp = fcmp uge half %x, 0xH7C00
+  %cmp = fcmp uge half %x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4980,12 +4980,12 @@ define i1 @clang_builtin_isnormal_inf_check_fneg(half %x) {
 define i1 @clang_builtin_isnormal_inf_check_copysign(half %x, half %y) {
 ; CHECK-LABEL: @clang_builtin_isnormal_inf_check_copysign(
 ; CHECK-NEXT:    [[COPYSIGN_X:%.*]] = call half @llvm.copysign.f16(half [[X:%.*]], half [[Y:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[COPYSIGN_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[COPYSIGN_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %copysign.x = call half @llvm.copysign.f16(half %x, half %y)
   %ord = fcmp ord half %x, 0.0
-  %cmp = fcmp uge half %copysign.x, 0xH7C00
+  %cmp = fcmp uge half %copysign.x, f0x7C00
   %and = and i1 %ord, %cmp
   ret i1 %and
 }
@@ -4993,12 +4993,12 @@ define i1 @clang_builtin_isnormal_inf_check_copysign(half %x, half %y) {
 define i1 @isnormal_logical_select_0(half %x) {
 ; CHECK-LABEL: @isnormal_logical_select_0(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp.inf = fcmp uge half %fabs.x, 0xH7C00
+  %cmp.inf = fcmp uge half %fabs.x, f0x7C00
   %and = select i1 %ord, i1 %cmp.inf, i1 false
   ret i1 %and
 }
@@ -5006,12 +5006,12 @@ define i1 @isnormal_logical_select_0(half %x) {
 define i1 @isnormal_logical_select_1(half %x) {
 ; CHECK-LABEL: @isnormal_logical_select_1(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp.inf = fcmp uge half %fabs.x, 0xH7C00
+  %cmp.inf = fcmp uge half %fabs.x, f0x7C00
   %and = select i1 %cmp.inf, i1 %ord, i1 false
   ret i1 %and
 }
@@ -5019,12 +5019,12 @@ define i1 @isnormal_logical_select_1(half %x) {
 define i1 @isnormal_logical_select_0_fmf0(half %x) {
 ; CHECK-LABEL: @isnormal_logical_select_0_fmf0(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp reassoc nsz arcp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp reassoc nsz arcp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp nsz arcp reassoc ord half %fabs.x, 0.0
-  %cmp.inf = fcmp nsz arcp reassoc uge half %fabs.x, 0xH7C00
+  %cmp.inf = fcmp nsz arcp reassoc uge half %fabs.x, f0x7C00
   %and = select i1 %ord, i1 %cmp.inf, i1 false
   ret i1 %and
 }
@@ -5032,12 +5032,12 @@ define i1 @isnormal_logical_select_0_fmf0(half %x) {
 define i1 @isnormal_logical_select_0_fmf1(half %x) {
 ; CHECK-LABEL: @isnormal_logical_select_0_fmf1(
 ; CHECK-NEXT:    [[FABS_X:%.*]] = call half @llvm.fabs.f16(half [[X:%.*]])
-; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], 0xH7C00
+; CHECK-NEXT:    [[AND:%.*]] = fcmp oeq half [[FABS_X]], f0x7C00
 ; CHECK-NEXT:    ret i1 [[AND]]
 ;
   %fabs.x = call half @llvm.fabs.f16(half %x)
   %ord = fcmp ord half %fabs.x, 0.0
-  %cmp.inf = fcmp nsz arcp reassoc uge half %fabs.x, 0xH7C00
+  %cmp.inf = fcmp nsz arcp reassoc uge half %fabs.x, f0x7C00
   %and = select i1 %ord, i1 %cmp.inf, i1 false
   ret i1 %and
 }

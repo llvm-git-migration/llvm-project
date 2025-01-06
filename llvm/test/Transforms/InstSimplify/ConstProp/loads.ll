@@ -113,10 +113,10 @@ define i128 @test_i128() {
 
 define fp128 @test_fp128() {
 ; LE-LABEL: @test_fp128(
-; LE-NEXT:    ret fp128 0xL000000000000007B0000000006B1BFF8
+; LE-NEXT:    ret fp128 f0x0000000006B1BFF8000000000000007B
 ;
 ; BE-LABEL: @test_fp128(
-; BE-NEXT:    ret fp128 0xL0000000006B1BFF8000000000000007B
+; BE-NEXT:    ret fp128 f0x000000000000007B0000000006B1BFF8
 ;
   %r = load fp128, ptr @g3
   ret fp128 %r
@@ -135,10 +135,10 @@ define ppc_fp128 @test_ppc_fp128() {
 
 define x86_fp80 @test_x86_fp80() {
 ; LE-LABEL: @test_x86_fp80(
-; LE-NEXT:    ret x86_fp80 0xKFFFF000000000000007B
+; LE-NEXT:    ret x86_fp80 f0xFFFF000000000000007B
 ;
 ; BE-LABEL: @test_x86_fp80(
-; BE-NEXT:    ret x86_fp80 0xK000000000000007B0000
+; BE-NEXT:    ret x86_fp80 f0x000000000000007B0000
 ;
   %r = load x86_fp80, ptr @g3
   ret x86_fp80 %r
@@ -146,10 +146,10 @@ define x86_fp80 @test_x86_fp80() {
 
 define bfloat @test_bfloat() {
 ; LE-LABEL: @test_bfloat(
-; LE-NEXT:    ret bfloat 0xR007B
+; LE-NEXT:    ret bfloat f0x007B
 ;
 ; BE-LABEL: @test_bfloat(
-; BE-NEXT:    ret bfloat 0xR0000
+; BE-NEXT:    ret bfloat f0x0000
 ;
   %r = load bfloat, ptr @g3
   ret bfloat %r

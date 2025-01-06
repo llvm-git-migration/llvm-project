@@ -40,7 +40,7 @@ entry:
   %0 = bitcast fp128 %b to i128
   %xor.i = xor i128 %0, 0
   %cmp19.i = icmp eq i128 %xor.i, -170141183460469231731687303715884105728
-  %spec.select277.i = select i1 %cmp19.i, fp128 0xL00000000000000007FFF800000000000, fp128 %a
+  %spec.select277.i = select i1 %cmp19.i, fp128 f0x7FFF8000000000000000000000000000, fp128 %a
   ret fp128 %spec.select277.i
 }
 
@@ -76,7 +76,7 @@ entry:
   %0 = bitcast fp128 %b to i128
   %xor.i = xor i128 %0, 0
   %cmp19.i = icmp eq i128 %xor.i, -170141183460469231731687303715884105728
-  %spec.select277.i = select i1 %cmp19.i, fp128 0xL00000000000000007FFF800000000000, fp128 %a
+  %spec.select277.i = select i1 %cmp19.i, fp128 f0x7FFF8000000000000000000000000000, fp128 %a
   ret fp128 %spec.select277.i
 }
 

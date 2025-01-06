@@ -10,15 +10,15 @@ target triple = "i386-pc-linux-gnu"
 define internal fastcc void @initialize(ptr noalias nocapture sret(%0) %agg.result) nounwind {
 ; CHECK-LABEL: @initialize(
 ; CHECK-NEXT:  entry:
-; CHECK-NEXT:    store x86_fp80 0xK00000000000000000000, ptr [[AGG_RESULT:%.*]], align 4
+; CHECK-NEXT:    store x86_fp80 f0x00000000000000000000, ptr [[AGG_RESULT:%.*]], align 4
 ; CHECK-NEXT:    [[AGG_RESULT_15:%.*]] = getelementptr [[TMP0:%.*]], ptr [[AGG_RESULT]], i32 0, i32 1
-; CHECK-NEXT:    store x86_fp80 0xK00000000000000000000, ptr [[AGG_RESULT_15]], align 4
+; CHECK-NEXT:    store x86_fp80 f0x00000000000000000000, ptr [[AGG_RESULT_15]], align 4
 ; CHECK-NEXT:    ret void
 ;
 entry:
-  store x86_fp80 0xK00000000000000000000, ptr %agg.result
+  store x86_fp80 f0x00000000000000000000, ptr %agg.result
   %agg.result.15 = getelementptr %0, ptr %agg.result, i32 0, i32 1
-  store x86_fp80 0xK00000000000000000000, ptr %agg.result.15
+  store x86_fp80 f0x00000000000000000000, ptr %agg.result.15
   ret void
 }
 

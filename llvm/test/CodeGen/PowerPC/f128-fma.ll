@@ -229,7 +229,7 @@ entry:
   %2 = load fp128, ptr %c, align 16
   %mul = fmul contract fp128 %1, %2
   %add = fadd contract fp128 %0, %mul
-  %sub = fsub fp128 0xL00000000000000008000000000000000, %add
+  %sub = fsub fp128 f0x80000000000000000000000000000000, %add
   store fp128 %sub, ptr %res, align 16
   ret void
 }
@@ -290,7 +290,7 @@ entry:
   %mul = fmul contract fp128 %0, %1
   %2 = load fp128, ptr %c, align 16
   %add = fadd contract fp128 %mul, %2
-  %sub = fsub fp128 0xL00000000000000008000000000000000, %add
+  %sub = fsub fp128 f0x80000000000000000000000000000000, %add
   store fp128 %sub, ptr %res, align 16
   ret void
 }
@@ -466,7 +466,7 @@ entry:
   %2 = load fp128, ptr %c, align 16
   %mul = fmul contract fp128 %1, %2
   %sub = fsub contract fp128 %0, %mul
-  %sub1 = fsub fp128 0xL00000000000000008000000000000000, %sub
+  %sub1 = fsub fp128 f0x80000000000000000000000000000000, %sub
   store fp128 %sub1, ptr %res, align 16
   ret void
 }
@@ -527,7 +527,7 @@ entry:
   %mul = fmul contract fp128 %0, %1
   %2 = load fp128, ptr %c, align 16
   %sub = fsub contract fp128 %mul, %2
-  %sub1 = fsub fp128 0xL00000000000000008000000000000000, %sub
+  %sub1 = fsub fp128 f0x80000000000000000000000000000000, %sub
   store fp128 %sub1, ptr %res, align 16
   ret void
 }

@@ -2,7 +2,7 @@
 
 ; Test that fexup[rl].w don't crash LLVM during type legalization.
 
-@g = local_unnamed_addr global <8 x half> <half 0xH5BF8, half 0xH5BF8, half 0xH5BF8, half 0xH5BF8, half 0xH73C0, half 0xH73C0, half 0xH73C0, half 0xH73C0>, align 16
+@g = local_unnamed_addr global <8 x half> <half f0x5BF8, half f0x5BF8, half f0x5BF8, half f0x5BF8, half f0x73C0, half f0x73C0, half f0x73C0, half f0x73C0>, align 16
 @i = local_unnamed_addr global <4 x float> zeroinitializer, align 16
 @j = local_unnamed_addr global <4 x float> zeroinitializer, align 16
 

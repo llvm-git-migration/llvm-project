@@ -67,7 +67,7 @@ define x86_fp80 @f0(x86_fp80 noundef %a) nounwind {
   %a.addr = alloca x86_fp80, align 16
   %x = alloca x86_fp80, align 16
   store x86_fp80 %a, ptr %a.addr, align 16
-  store x86_fp80 0xK400A8000000000000000, ptr %x, align 16
+  store x86_fp80 f0x400A8000000000000000, ptr %x, align 16
   %load1 = load x86_fp80, ptr %a.addr, align 16
   %load2 = load x86_fp80, ptr %x, align 16
   %add = fadd x86_fp80 %load1, %load2

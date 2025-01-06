@@ -16,9 +16,9 @@
 @_ZL19StaticSignedLongVar = internal unnamed_addr global i64 0, align 8
 @_ZL14StaticFloatVar = internal unnamed_addr global float 0.000000e+00, align 4
 @_ZL15StaticDoubleVar = internal unnamed_addr global double 0.000000e+00, align 8
-@_ZL19StaticLongDoubleVar = internal unnamed_addr global ppc_fp128 0xM00000000000000000000000000000000, align 16
+@_ZL19StaticLongDoubleVar = internal unnamed_addr global ppc_fp128 f0x00000000000000000000000000000000, align 16
 @_ZL23StaticSigned__Int128Var = internal unnamed_addr global i128 0, align 16
-@_ZL19Static__Float128Var = internal unnamed_addr global fp128 0xL00000000000000000000000000000000, align 16
+@_ZL19Static__Float128Var = internal unnamed_addr global fp128 f0x00000000000000000000000000000000, align 16
 @_ZL25StaticVectorSignedCharVar = internal unnamed_addr global <16 x i8> zeroinitializer, align 16
 @_ZL26StaticVectorSignedShortVar = internal unnamed_addr global <8 x i16> zeroinitializer, align 16
 @_ZL24StaticVectorSignedIntVar = internal unnamed_addr global <4 x i32> zeroinitializer, align 16

@@ -239,7 +239,7 @@ entry:
   %b.val = load volatile half, ptr addrspace(1) %b
   %c.val = load volatile half, ptr addrspace(1) %c
   %d.val = load volatile half, ptr addrspace(1) %d
-  %fcmp = fcmp olt half 0xH3800, %b.val
+  %fcmp = fcmp olt half f0x3800, %b.val
   %r.val = select i1 %fcmp, half %c.val, half %d.val
   store half %r.val, ptr addrspace(1) %r
   ret void
@@ -350,7 +350,7 @@ entry:
   %a.val = load volatile half, ptr addrspace(1) %a
   %c.val = load volatile half, ptr addrspace(1) %c
   %d.val = load volatile half, ptr addrspace(1) %d
-  %fcmp = fcmp olt half %a.val, 0xH3800
+  %fcmp = fcmp olt half %a.val, f0x3800
   %r.val = select i1 %fcmp, half %c.val, half %d.val
   store half %r.val, ptr addrspace(1) %r
   ret void
@@ -463,7 +463,7 @@ entry:
   %b.val = load volatile half, ptr addrspace(1) %b
   %d.val = load volatile half, ptr addrspace(1) %d
   %fcmp = fcmp olt half %a.val, %b.val
-  %r.val = select i1 %fcmp, half 0xH3800, half %d.val
+  %r.val = select i1 %fcmp, half f0x3800, half %d.val
   store half %r.val, ptr addrspace(1) %r
   ret void
 }
@@ -575,7 +575,7 @@ entry:
   %b.val = load volatile half, ptr addrspace(1) %b
   %c.val = load volatile half, ptr addrspace(1) %c
   %fcmp = fcmp olt half %a.val, %b.val
-  %r.val = select i1 %fcmp, half %c.val, half 0xH3800
+  %r.val = select i1 %fcmp, half %c.val, half f0x3800
   store half %r.val, ptr addrspace(1) %r
   ret void
 }
@@ -872,7 +872,7 @@ entry:
   %b.val = load <2 x half>, ptr addrspace(1) %b
   %c.val = load <2 x half>, ptr addrspace(1) %c
   %d.val = load <2 x half>, ptr addrspace(1) %d
-  %fcmp = fcmp olt <2 x half> <half 0xH3800, half 0xH3900>, %b.val
+  %fcmp = fcmp olt <2 x half> <half f0x3800, half f0x3900>, %b.val
   %r.val = select <2 x i1> %fcmp, <2 x half> %c.val, <2 x half> %d.val
   store <2 x half> %r.val, ptr addrspace(1) %r
   ret void
@@ -1011,7 +1011,7 @@ entry:
   %a.val = load <2 x half>, ptr addrspace(1) %a
   %c.val = load <2 x half>, ptr addrspace(1) %c
   %d.val = load <2 x half>, ptr addrspace(1) %d
-  %fcmp = fcmp olt <2 x half> %a.val, <half 0xH3800, half 0xH3900>
+  %fcmp = fcmp olt <2 x half> %a.val, <half f0x3800, half f0x3900>
   %r.val = select <2 x i1> %fcmp, <2 x half> %c.val, <2 x half> %d.val
   store <2 x half> %r.val, ptr addrspace(1) %r
   ret void
@@ -1153,7 +1153,7 @@ entry:
   %b.val = load <2 x half>, ptr addrspace(1) %b
   %d.val = load <2 x half>, ptr addrspace(1) %d
   %fcmp = fcmp olt <2 x half> %a.val, %b.val
-  %r.val = select <2 x i1> %fcmp, <2 x half> <half 0xH3800, half 0xH3900>, <2 x half> %d.val
+  %r.val = select <2 x i1> %fcmp, <2 x half> <half f0x3800, half f0x3900>, <2 x half> %d.val
   store <2 x half> %r.val, ptr addrspace(1) %r
   ret void
 }
@@ -1294,7 +1294,7 @@ entry:
   %b.val = load <2 x half>, ptr addrspace(1) %b
   %c.val = load <2 x half>, ptr addrspace(1) %c
   %fcmp = fcmp olt <2 x half> %a.val, %b.val
-  %r.val = select <2 x i1> %fcmp, <2 x half> %c.val, <2 x half> <half 0xH3800, half 0xH3900>
+  %r.val = select <2 x i1> %fcmp, <2 x half> %c.val, <2 x half> <half f0x3800, half f0x3900>
   store <2 x half> %r.val, ptr addrspace(1) %r
   ret void
 }

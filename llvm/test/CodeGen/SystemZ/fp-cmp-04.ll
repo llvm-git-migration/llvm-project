@@ -293,7 +293,7 @@ entry:
   store fp128 %div, ptr %ptr1
   %mul = fmul fp128 %val1, %val2
   store fp128 %mul, ptr %ptr2
-  %cmp = fcmp olt fp128 %val1, 0xL00000000000000000000000000000000
+  %cmp = fcmp olt fp128 %val1, f0x00000000000000000000000000000000
   br i1 %cmp, label %exit, label %store
 
 store:

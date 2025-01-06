@@ -63,7 +63,7 @@ define fp128 @func6(fp128 %a) {
 ; CHECK-NEXT:    lea.sl %s12, __divtf3@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %r = fdiv fp128 %a, 0xL00000000000000004001400000000000
+  %r = fdiv fp128 %a, f0x40014000000000000000000000000000
   ret fp128 %r
 }
 
@@ -103,6 +103,6 @@ define fp128 @func9(fp128 %a) {
 ; CHECK-NEXT:    lea.sl %s12, __divtf3@hi(, %s4)
 ; CHECK-NEXT:    bsic %s10, (, %s12)
 ; CHECK-NEXT:    or %s11, 0, %s9
-  %r = fdiv fp128 %a, 0xLFFFFFFFFFFFFFFFF7FFEFFFFFFFFFFFF
+  %r = fdiv fp128 %a, f0x7FFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF
   ret fp128 %r
 }

@@ -115,8 +115,8 @@ define i16 @test_fccmp(i1 %a, i16 %in) {
 ; CHECK-NEXT:    cinc w0, w8, pl
 ; CHECK-NEXT:    ret
   %f16 = bitcast i16 %in to half
-  %cmp0 = fcmp ogt half 0xH3333, %f16
-  %cmp1 = fcmp ogt half 0xH2222, %f16
+  %cmp0 = fcmp ogt half f0x3333, %f16
+  %cmp1 = fcmp ogt half f0x2222, %f16
   %x = select i1 %cmp0, i16 0, i16 1
   %or = or i1 %cmp1, %cmp0
   %y = select i1 %or, i16 4, i16 1

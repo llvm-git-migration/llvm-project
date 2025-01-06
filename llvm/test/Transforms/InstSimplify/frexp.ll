@@ -228,25 +228,25 @@ define { float, i32 } @frexp_neg_denorm() {
 
 define { ppc_fp128, i32 } @frexp_one_ppcf128() {
 ; CHECK-LABEL: define { ppc_fp128, i32 } @frexp_one_ppcf128() {
-; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 0xM3FE00000000000000000000000000000, i32 1 }
+; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 f0x00000000000000003FE0000000000000, i32 1 }
 ;
-  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 0xM3FF00000000000000000000000000000)
+  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 f0x00000000000000003FF0000000000000)
   ret { ppc_fp128, i32 } %ret
 }
 
 define { ppc_fp128, i32 } @frexp_negone_ppcf128() {
 ; CHECK-LABEL: define { ppc_fp128, i32 } @frexp_negone_ppcf128() {
-; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 0xMBFE00000000000000000000000000000, i32 1 }
+; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 f0x0000000000000000BFE0000000000000, i32 1 }
 ;
-  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 0xMBFF00000000000000000000000000000)
+  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 f0x0000000000000000BFF0000000000000)
   ret { ppc_fp128, i32 } %ret
 }
 
 define { ppc_fp128, i32} @canonicalize_noncanonical_zero_1_ppcf128() {
 ; CHECK-LABEL: define { ppc_fp128, i32 } @canonicalize_noncanonical_zero_1_ppcf128() {
-; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 0xM00000000000000000000000000000001, i32 0 }
+; CHECK-NEXT:    ret { ppc_fp128, i32 } { ppc_fp128 f0x00000000000000010000000000000000, i32 0 }
 ;
-  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 0xM00000000000000000000000000000001)
+  %ret = call { ppc_fp128, i32 } @llvm.frexp.ppcf128.i32(ppc_fp128 f0x00000000000000010000000000000000)
   ret { ppc_fp128, i32 } %ret
 }
 

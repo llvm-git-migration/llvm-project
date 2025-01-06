@@ -59,8 +59,8 @@ entry:
   %a = load half, ptr %p, align 2
   %b = load half, ptr %p1, align 2
 
-  %aflag = fcmp oeq half %a, 0xH0000
-  %bflag = fcmp oeq half %b, 0xH0000
+  %aflag = fcmp oeq half %a, f0x0000
+  %bflag = fcmp oeq half %b, f0x0000
   %flag = or i1 %aflag, %bflag
   br i1 %flag, label %call, label %out
 

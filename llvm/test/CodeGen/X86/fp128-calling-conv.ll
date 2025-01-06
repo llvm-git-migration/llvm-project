@@ -3,7 +3,7 @@
 ; RUN: llc < %s -O2 -mtriple=x86_64-linux-gnu -mattr=+mmx | FileCheck %s
 
 ; __float128 myFP128 = 1.0L;  // x86_64-linux-android
-@myFP128 = global fp128 0xL00000000000000003FFF000000000000, align 16
+@myFP128 = global fp128 f0x3FFF0000000000000000000000000000, align 16
 
 ; The first few parameters are passed in registers and the other are on stack.
 

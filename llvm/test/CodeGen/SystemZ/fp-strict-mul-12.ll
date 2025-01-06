@@ -32,7 +32,7 @@ define void @f2(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) #0 {
   %f1 = load fp128, ptr %ptr1
   %f2 = load fp128, ptr %ptr2
   %f3 = load fp128, ptr %ptr3
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %f3
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %f3
   %res = call fp128 @llvm.experimental.constrained.fma.f128 (
                         fp128 %f1, fp128 %f2, fp128 %neg,
                         metadata !"round.dynamic",
@@ -56,7 +56,7 @@ define void @f3(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) #0 {
                         fp128 %f1, fp128 %f2, fp128 %f3,
                         metadata !"round.dynamic",
                         metadata !"fpexcept.strict") #0
-  %negres = fsub fp128 0xL00000000000000008000000000000000, %res
+  %negres = fsub fp128 f0x80000000000000000000000000000000, %res
   store fp128 %negres, ptr %dst
   ret void
 }
@@ -72,12 +72,12 @@ define void @f4(ptr %ptr1, ptr %ptr2, ptr %ptr3, ptr %dst) #0 {
   %f1 = load fp128, ptr %ptr1
   %f2 = load fp128, ptr %ptr2
   %f3 = load fp128, ptr %ptr3
-  %neg = fsub fp128 0xL00000000000000008000000000000000, %f3
+  %neg = fsub fp128 f0x80000000000000000000000000000000, %f3
   %res = call fp128 @llvm.experimental.constrained.fma.f128 (
                         fp128 %f1, fp128 %f2, fp128 %neg,
                         metadata !"round.dynamic",
                         metadata !"fpexcept.strict") #0
-  %negres = fsub fp128 0xL00000000000000008000000000000000, %res
+  %negres = fsub fp128 f0x80000000000000000000000000000000, %res
   store fp128 %negres, ptr %dst
   ret void
 }

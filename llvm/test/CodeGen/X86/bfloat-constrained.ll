@@ -3,9 +3,9 @@
 ; RUN: llc < %s -mtriple=x86_64-linux-gnu -mattr=+avx2 | FileCheck %s --check-prefixes=X64
 ; RUN: llc < %s -mtriple=x86_64-linux-gnu -mattr=+avx512bf16,+avx512vl | FileCheck %s --check-prefixes=X64
 
-@a = global bfloat 0xR0000, align 2
-@b = global bfloat 0xR0000, align 2
-@c = global bfloat 0xR0000, align 2
+@a = global bfloat f0x0000, align 2
+@b = global bfloat f0x0000, align 2
+@c = global bfloat f0x0000, align 2
 
 define float @bfloat_to_float() strictfp {
 ; X86-LABEL: bfloat_to_float:

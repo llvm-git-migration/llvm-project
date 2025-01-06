@@ -36,8 +36,8 @@ define dso_local void @loop_sve_f128(ptr nocapture %ptr, i64 %N) {
 ; CHECK: vector.body
 ; CHECK: %[[LOAD1:.*]] = load fp128, ptr
 ; CHECK-NEXT: %[[LOAD2:.*]] = load fp128, ptr
-; CHECK-NEXT: %[[FSUB1:.*]] = fsub fp128 %[[LOAD1]], 0xL00000000000000008000000000000000
-; CHECK-NEXT: %[[FSUB2:.*]] = fsub fp128 %[[LOAD2]], 0xL00000000000000008000000000000000
+; CHECK-NEXT: %[[FSUB1:.*]] = fsub fp128 %[[LOAD1]], f0x80000000000000000000000000000000
+; CHECK-NEXT: %[[FSUB2:.*]] = fsub fp128 %[[LOAD2]], f0x80000000000000000000000000000000
 ; CHECK-NEXT: store fp128 %[[FSUB1]], ptr {{.*}}
 ; CHECK-NEXT: store fp128 %[[FSUB2]], ptr {{.*}}
 entry:
@@ -47,7 +47,7 @@ for.body:
   %iv = phi i64 [ 0, %entry ], [ %iv.next, %for.body ]
   %arrayidx = getelementptr inbounds fp128, ptr %ptr, i64 %iv
   %0 = load fp128, ptr %arrayidx, align 16
-  %add = fsub fp128 %0, 0xL00000000000000008000000000000000
+  %add = fsub fp128 %0, f0x80000000000000000000000000000000
   store fp128 %add, ptr %arrayidx, align 16
   %iv.next = add nuw nsw i64 %iv, 1
   %exitcond.not = icmp eq i64 %iv.next, %N

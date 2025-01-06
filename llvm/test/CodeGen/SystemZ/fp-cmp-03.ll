@@ -30,7 +30,7 @@ define i64 @f2(i64 %a, i64 %b, ptr %ptr) {
 ; CHECK: lgr %r2, %r3
 ; CHECK: br %r14
   %f = load fp128, ptr %ptr
-  %cond = fcmp oeq fp128 %f, 0xL00000000000000000000000000000000
+  %cond = fcmp oeq fp128 %f, f0x00000000000000000000000000000000
   %res = select i1 %cond, i64 %a, i64 %b
   ret i64 %res
 }

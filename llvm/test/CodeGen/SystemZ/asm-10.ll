@@ -25,6 +25,6 @@ define double @f3() {
 ; CHECK: lzxr %f1
 ; CHECK: blah %f0 %f1
 ; CHECK: br %r14
-  %val = call double asm "blah $0 $1", "=&f,f" (fp128 0xL00000000000000000000000000000000)
+  %val = call double asm "blah $0 $1", "=&f,f" (fp128 f0x00000000000000000000000000000000)
   ret double %val
 }

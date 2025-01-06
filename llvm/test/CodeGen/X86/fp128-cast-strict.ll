@@ -12,8 +12,8 @@
 @vf16 = common dso_local global half 0.000000e+00, align 2
 @vf32 = common dso_local global float 0.000000e+00, align 4
 @vf64 = common dso_local global double 0.000000e+00, align 8
-@vf80 = common dso_local global x86_fp80 0xK00000000000000000000, align 8
-@vf128 = common dso_local global fp128 0xL00000000000000000000000000000000, align 16
+@vf80 = common dso_local global x86_fp80 f0x00000000000000000000, align 8
+@vf128 = common dso_local global fp128 f0x00000000000000000000000000000000, align 16
 
 define dso_local void @TestFPExtF16_F128() nounwind strictfp {
 ; X64-SSE-LABEL: TestFPExtF16_F128:

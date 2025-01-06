@@ -6,7 +6,7 @@ entry:
   %retval = alloca i32, align 4                   ; <ptr> [#uses=2]
   %r = alloca i32, align 4                        ; <ptr> [#uses=2]
   store i32 0, ptr %retval
-  %tmp = call x86_fp80 @llvm.powi.f80.i32(x86_fp80 0xK3FFF8000000000000000, i32 -64) ; <x86_fp80> [#uses=1]
+  %tmp = call x86_fp80 @llvm.powi.f80.i32(x86_fp80 f0x3FFF8000000000000000, i32 -64) ; <x86_fp80> [#uses=1]
   %conv = fptosi x86_fp80 %tmp to i32             ; <i32> [#uses=1]
   store i32 %conv, ptr %r
   %tmp1 = load i32, ptr %r                            ; <i32> [#uses=1]

@@ -9,8 +9,8 @@ define void @test() {
 ;
 entry:
   %0 = extractelement <8 x half> zeroinitializer, i64 1
-  %tobool = fcmp une half %0, 0xH0000
+  %tobool = fcmp une half %0, f0x0000
   %1 = extractelement <8 x half> zeroinitializer, i64 1
-  %tobool3 = fcmp une half %1, 0xH0000
+  %tobool3 = fcmp une half %1, f0x0000
   ret void
 }

@@ -668,8 +668,8 @@ define void @constant_fold_vector_to_float() {
 
 define void @constant_fold_vector_to_half() {
 ; CHECK-LABEL: @constant_fold_vector_to_half(
-; CHECK-NEXT:    store volatile half 0xH4000, ptr undef, align 2
-; CHECK-NEXT:    store volatile half 0xH4000, ptr undef, align 2
+; CHECK-NEXT:    store volatile half f0x4000, ptr undef, align 2
+; CHECK-NEXT:    store volatile half f0x4000, ptr undef, align 2
 ; CHECK-NEXT:    ret void
 ;
   store volatile half bitcast (<2 x i8> <i8 0, i8 64> to half), ptr undef

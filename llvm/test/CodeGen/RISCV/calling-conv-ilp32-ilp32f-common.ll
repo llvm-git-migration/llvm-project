@@ -236,7 +236,7 @@ define void @caller_aligned_stack() nounwind {
 ; RV32I-WITHFP-NEXT:    addi sp, sp, 64
 ; RV32I-WITHFP-NEXT:    ret
   %1 = call i32 @callee_aligned_stack(i32 1, i32 11,
-    fp128 0xLEB851EB851EB851F400091EB851EB851, i32 12, i32 13,
+    fp128 f0x400091EB851EB851EB851EB851EB851F, i32 12, i32 13,
     i64 20000000000, i32 14, i32 15, double 2.720000e+00, i32 16,
     [2 x i32] [i32 17, i32 18])
   ret void

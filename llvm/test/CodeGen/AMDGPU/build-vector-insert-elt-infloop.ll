@@ -12,7 +12,7 @@ bb:
 
 bb1:
   %tmp = phi <2 x i16> [ <i16 15360, i16 15360>, %bb ], [ %tmp5, %bb1 ]
-  %tmp2 = phi half [ 0xH0000, %bb ], [ %tmp8, %bb1 ]
+  %tmp2 = phi half [ f0x0000, %bb ], [ %tmp8, %bb1 ]
   %tmp3 = load volatile half, ptr null, align 536870912
   %tmp4 = bitcast half %tmp3 to i16
   %tmp5 = insertelement <2 x i16> <i16 0, i16 undef>, i16 %tmp4, i32 1
