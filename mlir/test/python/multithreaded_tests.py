@@ -1,3 +1,4 @@
+# RUN: %PYTHON %s
 """
 This script generates multi-threaded tests to check free-threading mode using CPython compiled with TSAN.
 Tests can be run using pytest:
@@ -46,14 +47,16 @@ WARNING: ThreadSanitizer: data race (pid=59410)
 import concurrent.futures
 import gc
 import importlib.util
+import os
 import sys
 import threading
 import tempfile
+import unittest
 
+from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 from typing import Optional
-
-import pytest
 
 import mlir.dialects.arith as arith
 from mlir.dialects import transform
@@ -386,6 +389,34 @@ def add_existing_tests(test_modules, test_prefix: str = "_original_test"):
     return decorator
 
 
+@contextmanager
+def _capture_output(fp):
+    # Inspired from jax test_utils.py capture_stderr method
+    # ``None`` means nothing has not been captured yet.
+    captured = None
+
+    def get_output() -> str:
+        if captured is None:
+            raise ValueError("get_output() called while the context is active.")
+        return captured
+
+    with tempfile.NamedTemporaryFile(mode="w+", encoding='utf-8') as f:
+        original_fd = os.dup(fp.fileno())
+        os.dup2(f.fileno(), fp.fileno())
+        try:
+            yield get_output
+        finally:
+            # Python also has its own buffers, make sure everything is flushed.
+            fp.flush()
+            os.fsync(fp.fileno())
+            f.seek(0)
+            captured = f.read()
+            os.dup2(original_fd, fp.fileno())
+
+capture_stdout = partial(_capture_output, sys.stdout)
+capture_stderr = partial(_capture_output, sys.stderr)
+
+
 def multi_threaded(
     num_workers: int,
     num_runs: int = 5,
@@ -410,42 +441,38 @@ def multi_threaded(
                     continue
 
             def multi_threaded_test_fn(
-                self, capfd, *args, __test_fn__=test_fn, **kwargs
+                self, *args, __test_fn__=test_fn, **kwargs
             ):
-                barrier = threading.Barrier(num_workers)
+                with capture_stdout(), capture_stderr() as get_output:
+                    barrier = threading.Barrier(num_workers)
 
-                def closure():
-                    barrier.wait()
-                    for _ in range(num_runs):
-                        __test_fn__(self, *args, **kwargs)
+                    def closure():
+                        barrier.wait()
+                        for _ in range(num_runs):
+                            __test_fn__(self, *args, **kwargs)
 
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=num_workers
-                ) as executor:
-                    futures = []
-                    for _ in range(num_workers):
-                        futures.append(executor.submit(closure))
-                    # We should call future.result() to re-raise an exception if test has
-                    # failed
-                    assert len(list(f.result() for f in futures)) == num_workers
+                    with concurrent.futures.ThreadPoolExecutor(
+                        max_workers=num_workers
+                    ) as executor:
+                        futures = []
+                        for _ in range(num_workers):
+                            futures.append(executor.submit(closure))
+                        # We should call future.result() to re-raise an exception if test has
+                        # failed
+                        assert len(list(f.result() for f in futures)) == num_workers
 
-                gc.collect()
-                assert Context._get_live_count() == 0
+                    gc.collect()
+                    assert Context._get_live_count() == 0
 
-                captured = capfd.readouterr()
-                if len(captured.err) > 0:
-                    if "ThreadSanitizer" in captured.err:
-                        raise RuntimeError(
-                            f"ThreadSanitizer reported warnings:\n{captured.err}"
-                        )
-                    else:
-                        pass
-                        # There are tests that write to stderr, we should ignore them
-                        # raise RuntimeError(f"Other error:\n{captured.err}")
+                captured = get_output()
+                if len(captured) > 0 and "ThreadSanitizer" in captured:
+                    raise RuntimeError(
+                        f"ThreadSanitizer reported warnings:\n{captured}"
+                    )
 
             test_new_name = f"{name}{multithreaded_test_postfix}"
             if xfail_tests is not None and test_new_name in xfail_tests:
-                multi_threaded_test_fn = pytest.mark.xfail(multi_threaded_test_fn)
+                multi_threaded_test_fn = unittest.expectedFailure(multi_threaded_test_fn)
 
             setattr(test_cls, test_new_name, multi_threaded_test_fn)
 
@@ -461,11 +488,12 @@ def multi_threaded(
     xfail_tests=TESTS_TO_XFAIL,
 )
 @add_existing_tests(test_modules=TEST_MODULES, test_prefix="_original_test")
-class TestAllMultiThreaded:
-    @pytest.fixture(scope="class")
-    def teardown(self):
-        if hasattr(self, "output_folder"):
-            self.output_folder.cleanup()
+class TestAllMultiThreaded(unittest.TestCase):
+
+    @classmethod
+    def tearDownClass(cls):
+        if hasattr(cls, "output_folder"):
+            cls.output_folder.cleanup()
 
     def _original_test_create_context(self):
         with Context() as ctx:
@@ -492,3 +520,5 @@ class TestAllMultiThreaded:
                 arith.constant(dtype, py_values[2])
 
 
+if __name__ == "__main__":
+    unittest.main()
