@@ -1463,7 +1463,7 @@ define <64 x half> @f27() #0 {
 ; CHECK-NEXT:     v0 = vxor(v0,v0)
 ; CHECK-NEXT:     jumpr r31
 ; CHECK-NEXT:    }
-  %v0 = insertelement <64 x half> undef, half 0xH0, i32 0
+  %v0 = insertelement <64 x half> undef, half f0x0000, i32 0
   %v1 = shufflevector <64 x half> %v0, <64 x half> undef, <64 x i32> zeroinitializer
   ret <64 x half> %v1
 }
@@ -1475,7 +1475,7 @@ define <128 x half> @f28() #0 {
 ; CHECK-NEXT:     v1:0.w = vsub(v1:0.w,v1:0.w)
 ; CHECK-NEXT:     jumpr r31
 ; CHECK-NEXT:    }
-  %v0 = insertelement <128 x half> undef, half 0xH0, i32 0
+  %v0 = insertelement <128 x half> undef, half f0x0000, i32 0
   %v1 = shufflevector <128 x half> %v0, <128 x half> undef, <128 x i32> zeroinitializer
   ret <128 x half> %v1
 }

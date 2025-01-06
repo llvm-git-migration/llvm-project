@@ -118,7 +118,7 @@ bb:
   %tmp1 = zext i32 %tmp to i64
   %tmp2 = getelementptr inbounds <2 x half>, ptr addrspace(1) %arg, i64 %tmp1
   %tmp3 = load <2 x half>, ptr addrspace(1) %tmp2, align 4
-  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half 0xH41C8, half 0xH0>)
+  %tmp4 = tail call <2 x half> @llvm.maxnum.v2f16(<2 x half> %tmp3, <2 x half> <half f0x41C8, half f0x0000>)
   store <2 x half> %tmp4, ptr addrspace(1) %tmp2, align 4
   ret void
 }
