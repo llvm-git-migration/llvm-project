@@ -198,7 +198,8 @@ static void reportError(void *Addr, int Size, tysan_type_descriptor *TD,
 
   if (pc) {
 
-    bool request_fast = StackTrace::WillUseFastUnwind(true);
+    bool request_fast =
+        StackTrace::WillUseFastUnwind(true) && !flags().print_stacktrace;
     BufferedStackTrace ST;
     ST.Unwind(kStackTraceMax, pc, bp, 0, 0, 0, request_fast);
     ST.Print();
