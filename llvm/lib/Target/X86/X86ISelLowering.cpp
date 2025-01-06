@@ -56098,8 +56098,19 @@ static SDValue combineUIntToFP(SDNode *N, SelectionDAG &DAG,
   if (InVT.isVector() && VT.getVectorElementType() == MVT::f16) {
     unsigned ScalarSize = InVT.getScalarSizeInBits();
     if ((ScalarSize == 16 && Subtarget.hasFP16()) || ScalarSize == 32 ||
-        ScalarSize >= 64)
-      return SDValue();
+        ScalarSize >= 64) {
+      if (ScalarSize != 32 || VT.getScalarSizeInBits() != 16 ||
+          Subtarget.hasFP16())
+        return SDValue();
+      // UINT_TO_FP(vXi32 to vXf16) -> FP_ROUND(UINT_TO_FP(vXi32 to vXf32), 0)
+      return DAG.getNode(
+          ISD::FP_ROUND, SDLoc(N), VT,
+          DAG.getNode(ISD::UINT_TO_FP, SDLoc(N),
+                      InVT.changeVectorElementType(MVT::f32), Op0),
+          DAG.getTargetConstant(
+              0, SDLoc(N),
+              DAG.getTargetLoweringInfo().getPointerTy(DAG.getDataLayout())));
+    }
     SDLoc dl(N);
     EVT DstVT =
         EVT::getVectorVT(*DAG.getContext(),
