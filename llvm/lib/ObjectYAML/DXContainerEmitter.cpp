@@ -11,6 +11,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/BinaryFormat/DXContainer.h"
 #include "llvm/MC/DXContainerPSVInfo.h"
 #include "llvm/ObjectYAML/ObjectYAML.h"
@@ -261,6 +262,12 @@ void DXContainerWriter::writeParts(raw_ostream &OS) {
     }
     case dxbc::PartType::Unknown:
       break; // Skip any handling for unrecognized parts.
+    case dxbc::PartType::RTS0:
+      if (!P.RootSignature)
+        continue;
+      OS.write(reinterpret_cast<const char *>(&P.RootSignature),
+               sizeof(dxil::root_signature::VersionedRootSignatureDesc));
+      break;
     }
     uint64_t BytesWritten = OS.tell() - DataStart;
     RollingOffset += BytesWritten;

@@ -13,6 +13,7 @@
 
 #include "llvm/ObjectYAML/DXContainerYAML.h"
 #include "llvm/ADT/ScopeExit.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/BinaryFormat/DXContainer.h"
 #include "llvm/Support/ScopedPrinter.h"
 
@@ -188,6 +189,12 @@ void MappingTraits<DXContainerYAML::Signature>::mapping(
   IO.mapRequired("Parameters", S.Parameters);
 }
 
+void MappingTraits<DXContainerYAML::RootSignature>::mapping(
+    IO &IO, DXContainerYAML::RootSignature &S) {
+  IO.mapRequired("Version", S.Version);
+  IO.mapRequired("Flags", S.Flags);
+}
+
 void MappingTraits<DXContainerYAML::Part>::mapping(IO &IO,
                                                    DXContainerYAML::Part &P) {
   IO.mapRequired("Name", P.Name);
@@ -197,6 +204,7 @@ void MappingTraits<DXContainerYAML::Part>::mapping(IO &IO,
   IO.mapOptional("Hash", P.Hash);
   IO.mapOptional("PSVInfo", P.Info);
   IO.mapOptional("Signature", P.Signature);
+  IO.mapOptional("RootSignature", P.RootSignature);
 }
 
 void MappingTraits<DXContainerYAML::Object>::mapping(
@@ -290,6 +298,66 @@ void ScalarEnumerationTraits<dxbc::SigComponentType>::enumeration(
     IO.enumCase(Value, E.Name.str().c_str(), E.Value);
 }
 
+template <>
+struct llvm::yaml::ScalarEnumerationTraits<
+    dxil::root_signature::RootSignatureVersion> {
+  static void enumeration(IO &io,
+                          dxil::root_signature::RootSignatureVersion &Val) {
+    io.enumCase(Val, "1.0",
+                dxil::root_signature::RootSignatureVersion::Version_1);
+    io.enumCase(Val, "1.0",
+                dxil::root_signature::RootSignatureVersion::Version_1_0);
+    io.enumCase(Val, "1.1",
+                dxil::root_signature::RootSignatureVersion::Version_1_1);
+    io.enumCase(Val, "1.2",
+                dxil::root_signature::RootSignatureVersion::Version_1_2);
+  }
+};
+
+template <>
+struct llvm::yaml::ScalarEnumerationTraits<
+    dxil::root_signature::RootSignatureFlags> {
+  static void enumeration(IO &io,
+                          dxil::root_signature::RootSignatureFlags &Val) {
+    io.enumCase(Val, "AllowInputAssemblerInputLayout",
+                dxil::root_signature::RootSignatureFlags::
+                    AllowInputAssemblerInputLayout);
+    io.enumCase(
+        Val, "DenyVertexShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyVertexShaderRootAccess);
+    io.enumCase(
+        Val, "DenyHullShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyHullShaderRootAccess);
+    io.enumCase(
+        Val, "DenyDomainShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyDomainShaderRootAccess);
+    io.enumCase(
+        Val, "DenyGeometryShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyGeometryShaderRootAccess);
+    io.enumCase(
+        Val, "DenyPixelShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyPixelShaderRootAccess);
+    io.enumCase(Val, "AllowStreamOutput",
+                dxil::root_signature::RootSignatureFlags::AllowStreamOutput);
+    io.enumCase(Val, "LocalRootSignature",
+                dxil::root_signature::RootSignatureFlags::LocalRootSignature);
+    io.enumCase(Val, "DenyAmplificationShaderRootAccess",
+                dxil::root_signature::RootSignatureFlags::
+                    DenyAmplificationShaderRootAccess);
+    io.enumCase(
+        Val, "DenyMeshShaderRootAccess",
+        dxil::root_signature::RootSignatureFlags::DenyMeshShaderRootAccess);
+    io.enumCase(
+        Val, "CBVSRVUAVHeapDirectlyIndexed",
+        dxil::root_signature::RootSignatureFlags::CBVSRVUAVHeapDirectlyIndexed);
+    io.enumCase(
+        Val, "SamplerHeapDirectlyIndexed",
+        dxil::root_signature::RootSignatureFlags::SamplerHeapDirectlyIndexed);
+    io.enumCase(Val, "AllowLowTierReservedHwCbLimit",
+                dxil::root_signature::RootSignatureFlags::
+                    AllowLowTierReservedHwCbLimit);
+  }
+};
 } // namespace yaml
 
 void DXContainerYAML::PSVInfo::mapInfoForVersion(yaml::IO &IO) {

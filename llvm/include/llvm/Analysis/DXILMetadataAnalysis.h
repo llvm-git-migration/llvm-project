@@ -10,6 +10,7 @@
 #define LLVM_ANALYSIS_DXILMETADATA_H
 
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/VersionTuple.h"
@@ -37,6 +38,7 @@ struct ModuleMetadataInfo {
   Triple::EnvironmentType ShaderProfile{Triple::UnknownEnvironment};
   VersionTuple ValidatorVersion{};
   SmallVector<EntryProperties> EntryPropertyVec{};
+  root_signature::VersionedRootSignatureDesc RootSignatureDesc;
   void print(raw_ostream &OS) const;
 };
 

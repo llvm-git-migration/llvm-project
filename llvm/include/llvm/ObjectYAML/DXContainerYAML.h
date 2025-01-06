@@ -16,6 +16,7 @@
 #define LLVM_OBJECTYAML_DXCONTAINERYAML_H
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/BinaryFormat/DXContainer.h"
 #include "llvm/ObjectYAML/YAML.h"
 #include "llvm/Support/YAMLTraits.h"
@@ -149,6 +150,13 @@ struct Signature {
   llvm::SmallVector<SignatureParameter> Parameters;
 };
 
+struct RootSignature {
+  RootSignature() = default;
+
+  dxil::root_signature::RootSignatureVersion Version;
+  dxil::root_signature::RootSignatureFlags Flags;
+};
+
 struct Part {
   Part() = default;
   Part(std::string N, uint32_t S) : Name(N), Size(S) {}
@@ -159,6 +167,7 @@ struct Part {
   std::optional<ShaderHash> Hash;
   std::optional<PSVInfo> Info;
   std::optional<DXContainerYAML::Signature> Signature;
+  std::optional<DXContainerYAML::RootSignature> RootSignature;
 };
 
 struct Object {
@@ -239,6 +248,11 @@ template <> struct MappingTraits<DXContainerYAML::SignatureParameter> {
 
 template <> struct MappingTraits<DXContainerYAML::Signature> {
   static void mapping(IO &IO, llvm::DXContainerYAML::Signature &El);
+};
+
+template <> struct MappingTraits<DXContainerYAML::RootSignature> {
+  static void mapping(IO &IO,
+                      llvm::DXContainerYAML::RootSignature &RootSignature);
 };
 
 } // namespace yaml

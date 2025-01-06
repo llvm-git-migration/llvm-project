@@ -17,6 +17,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/DXILMetadataAnalysis.h"
 #include "llvm/Analysis/DXILResource.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/BinaryFormat/DXContainer.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/Constants.h"
@@ -41,6 +42,7 @@ class DXContainerGlobals : public llvm::ModulePass {
   GlobalVariable *buildSignature(Module &M, Signature &Sig, StringRef Name,
                                  StringRef SectionName);
   void addSignature(Module &M, SmallVector<GlobalValue *> &Globals);
+  void addRootSignature(Module &M, SmallVector<GlobalValue *> &Globals);
   void addResourcesForPSV(Module &M, PSVRuntimeInfo &PSV);
   void addPipelineStateValidationInfo(Module &M,
                                       SmallVector<GlobalValue *> &Globals);
@@ -73,6 +75,7 @@ bool DXContainerGlobals::runOnModule(Module &M) {
   Globals.push_back(getFeatureFlags(M));
   Globals.push_back(computeShaderHash(M));
   addSignature(M, Globals);
+  addRootSignature(M, Globals);
   addPipelineStateValidationInfo(M, Globals);
   appendToCompilerUsed(M, Globals);
   return true;
@@ -142,6 +145,23 @@ void DXContainerGlobals::addSignature(Module &M,
 
   Signature OutputSig;
   Globals.emplace_back(buildSignature(M, OutputSig, "dx.osg1", "OSG1"));
+}
+
+void DXContainerGlobals::addRootSignature(Module &M,
+                                          SmallVector<GlobalValue *> &Globals) {
+
+  root_signature::VersionedRootSignatureDesc Desc =
+      getAnalysis<DXILMetadataAnalysisWrapperPass>()
+          .getModuleMetadata()
+          .RootSignatureDesc;
+
+  SmallString<256> Data;
+  raw_svector_ostream OS(Data);
+  OS.write(reinterpret_cast<const char *>(&Desc),
+           sizeof(root_signature::VersionedRootSignatureDesc));
+  Constant *Constant =
+      ConstantDataArray::getString(M.getContext(), Data, /*AddNull*/ false);
+  Globals.emplace_back(buildContainerGlobal(M, Constant, "dx.rts0", "RTS0"));
 }
 
 void DXContainerGlobals::addResourcesForPSV(Module &M, PSVRuntimeInfo &PSV) {

@@ -7,9 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "obj2yaml.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/Object/DXContainer.h"
 #include "llvm/ObjectYAML/DXContainerYAML.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ErrorHandling.h"
 
 #include <algorithm>
 
@@ -23,6 +25,23 @@ static DXContainerYAML::Signature dumpSignature(const DirectX::Signature &Sig) {
         Param.Stream, Sig.getName(Param.NameOffset).str(), Param.Index,
         Param.SystemValue, Param.CompType, Param.Register, Param.Mask,
         Param.ExclusiveMask, Param.MinPrecision});
+  return YAML;
+}
+
+static DXContainerYAML::RootSignature dumpRootSignature(
+    const dxil::root_signature::VersionedRootSignatureDesc &Desc) {
+  DXContainerYAML::RootSignature YAML;
+  YAML.Version = Desc.Version;
+
+  switch (Desc.Version) {
+  case dxil::root_signature::RootSignatureVersion::Version_1:
+    YAML.Flags = Desc.Desc_1_0.Flags;
+    break;
+  case dxil::root_signature::RootSignatureVersion::Version_1_1:
+  case dxil::root_signature::RootSignatureVersion::Version_1_2:
+    llvm_unreachable("Not Implemented yet");
+    break;
+  }
   return YAML;
 }
 
@@ -152,6 +171,9 @@ dumpDXContainer(MemoryBufferRef Source) {
       NewPart.Signature = dumpSignature(Container.getPatchConstantSignature());
       break;
     case dxbc::PartType::Unknown:
+      break;
+    case dxbc::PartType::RTS0:
+      NewPart.RootSignature = dumpRootSignature(*Container.getRootSignature());
       break;
     }
   }

@@ -62,6 +62,7 @@ add_llvm_component_library(LLVMAnalysis
   DominanceFrontier.cpp
   DXILResource.cpp
   DXILMetadataAnalysis.cpp
+  DXILRootSignature.cpp
   FunctionPropertiesAnalysis.cpp
   GlobalsModRef.cpp
   GuardUtils.cpp

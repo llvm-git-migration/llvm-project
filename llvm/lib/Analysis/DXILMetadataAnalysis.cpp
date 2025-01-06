@@ -10,12 +10,15 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 #include "llvm/InitializePasses.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
+#include <memory>
 
 #define DEBUG_TYPE "dxil-metadata-analysis"
 
@@ -28,6 +31,7 @@ static ModuleMetadataInfo collectMetadataInfo(Module &M) {
   MMDAI.DXILVersion = TT.getDXILVersion();
   MMDAI.ShaderModelVersion = TT.getOSVersion();
   MMDAI.ShaderProfile = TT.getEnvironment();
+
   NamedMDNode *ValidatorVerNode = M.getNamedMetadata("dx.valver");
   if (ValidatorVerNode) {
     auto *ValVerMD = cast<MDNode>(ValidatorVerNode->getOperand(0));
@@ -35,6 +39,19 @@ static ModuleMetadataInfo collectMetadataInfo(Module &M) {
     auto *MinorMD = mdconst::extract<ConstantInt>(ValVerMD->getOperand(1));
     MMDAI.ValidatorVersion =
         VersionTuple(MajorMD->getZExtValue(), MinorMD->getZExtValue());
+  }
+
+  NamedMDNode *RootSignatureNode = M.getNamedMetadata("dx.rootsignatures");
+  if (RootSignatureNode) {
+    auto RootSignatureParser =
+        root_signature::MetadataParser(RootSignatureNode);
+
+    root_signature::VersionedRootSignatureDesc Desc;
+
+    RootSignatureParser.Parse(root_signature::RootSignatureVersion::Version_1,
+                              &Desc);
+
+    MMDAI.RootSignatureDesc = Desc;
   }
 
   // For all HLSL Shader functions

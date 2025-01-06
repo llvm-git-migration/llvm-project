@@ -7,9 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Object/DXContainer.h"
+#include "llvm/Analysis/DXILRootSignature.h"
 #include "llvm/BinaryFormat/DXContainer.h"
 #include "llvm/Object/Error.h"
 #include "llvm/Support/Alignment.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FormatVariadic.h"
 
 using namespace llvm;
@@ -89,6 +91,14 @@ Error DXContainer::parseHash(StringRef Part) {
   if (Error Err = readStruct(Part, Part.begin(), ReadHash))
     return Err;
   Hash = ReadHash;
+  return Error::success();
+}
+
+Error DXContainer::parseRootSignature(StringRef Part) {
+  dxil::root_signature::VersionedRootSignatureDesc Desc;
+  if (Error Err = readStruct(Part, Part.begin(), Desc))
+    return Err;
+  RootSignature = Desc;
   return Error::success();
 }
 
@@ -192,6 +202,11 @@ Error DXContainer::parsePartOffsets() {
         return Err;
       break;
     case dxbc::PartType::Unknown:
+      break;
+    case dxbc::PartType::RTS0:
+      if (Error Err = parseRootSignature(PartData))
+        return Err;
+
       break;
     }
   }
