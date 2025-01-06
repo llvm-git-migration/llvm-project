@@ -79,7 +79,12 @@ endif()
 
 get_filename_component(_test_compiler_name "${COMPILER_RT_TEST_COMPILER}" NAME)
 if("${COMPILER_RT_TEST_COMPILER}" STREQUAL "${CMAKE_C_COMPILER}")
-  set(COMPILER_RT_TEST_COMPILER_ID "${CMAKE_C_COMPILER_ID}")
+  if ("${CMAKE_C_COMPILER}" STREQUAL "AppleClang")
+    # Compiler-rt tests expect compiler ID 'Clang' for AppleClang.
+    set(COMPILER_RT_TEST_COMPILER_ID Clang)
+  else()
+    set(COMPILER_RT_TEST_COMPILER_ID "${CMAKE_C_COMPILER_ID}")
+  endif()
 elseif("${_test_compiler_name}" MATCHES "clang.*")
   set(COMPILER_RT_TEST_COMPILER_ID Clang)
 elseif("${_test_compiler_name}" MATCHES "cl.exe$")
