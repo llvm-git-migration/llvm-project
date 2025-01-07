@@ -1190,9 +1190,9 @@ loaded along with the dialect.
 
 ## Free-threading (No-GIL) support
 
-Free-threading or no-GIL support refers to CPython interpreter (>=3.13) with Global Interpreter Lock made optional. For details on the topic, please check [PEP-703](https://peps.python.org/pep-0703/) and this [link](https://py-free-threading.github.io/).
+Free-threading or no-GIL support refers to CPython interpreter (>=3.13) with Global Interpreter Lock made optional. For details on the topic, please check [PEP-703](https://peps.python.org/pep-0703/) and this [Python free-threading guide](https://py-free-threading.github.io/).
 
-MLIR Python bindings are made free-threading compatible with exceptions (discussed below) in the following sense: it is safe to work in multiple threads with **independent** contexts/modules. Below we show an example code of safe usage:
+MLIR Python bindings are free-threading compatible with exceptions (discussed below) in the following sense: it is safe to work in multiple threads with **independent** contexts. Below we show an example code of safe usage:
 
 ```python
 # python3.13t example.py
@@ -1222,9 +1222,8 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
 ```
 
 The exceptions to the free-threading compatibility:
-- Usage of Python `ctypes` is unsafe
 - IR printing is unsafe, e.g. when using `PassManager` with `PassManager.enable_ir_printing()` which calls thread-unsafe `llvm::raw_ostream`.
-- Usage of `mlirEmitError`, `mlirOperationDump` is unsafe
-
-
-For more details, please see the list of xfailed tests in `mlir/test/python/multithreaded_tests.py`.
+- Usage of `Location.emit_error` is unsafe (due to thread-unsafe `llvm::raw_ostream`).
+- Usage of `Module.dump` is unsafe (due to thread-unsafe `llvm::raw_ostream`).
+- Usage of `mlir.dialects.transform.interpreter` is unsafe.
+- Usage of `mlir.dialects.gpu` and `gpu-module-to-binary` is unsafe.

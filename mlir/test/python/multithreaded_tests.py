@@ -27,22 +27,13 @@ In order to import the test file as python module, we remove all executing funct
 Observed warnings reported by TSAN.
 
 CPython and free-threading known data-races:
-1) ctypes, libffi, dlmalloc
-```
-WARNING: ThreadSanitizer: data race (pid=59410)
-  Read of size 8 at 0x7ffff618b6d0 by thread T2:
-    #0 dlmalloc /project/libffi/x86_64-pc-linux-gnu/../src/dlmalloc.c:4158:8 (libffi.so.8+0x58a5) (BuildId: 7b5c105b8eca23b7c54bb5eeab8b4ecf28fc7756)
-    #1 ffi_closure_alloc /project/libffi/x86_64-pc-linux-gnu/../src/closures.c:998:9 (libffi.so.8+0x56ec) (BuildId: 7b5c105b8eca23b7c54bb5eeab8b4ecf28fc7756)
-    #2 _ctypes_alloc_callback /project/cpython/./Modules/_ctypes/callbacks.c:367:20 (_ctypes.cpython-313t-x86_64-linux-gnu.so+0x1b435) (BuildId: e9fba41204b37973fe60945270803301c7df9615)
-    #3 PyCFuncPtr_new /project/cpython/./Modules/_ctypes/_ctypes.c:3955:13 (_ctypes.cpython-313t-x86_64-linux-gnu.so+0x18ba4) (BuildId: e9fba41204b37973fe60945270803301c7df9615)
-```
-
+1) ctypes related races: https://github.com/python/cpython/issues/127945
 2) LLVM related data-races, llvm::raw_ostream is not thread-safe
 - mlir pass manager
 - dialects/transform_interpreter.py
 - ir/diagnostic_handler.py
 - ir/module.py
-
+3) Dialect gpu module-to-binary method is unsafe
 """
 import concurrent.futures
 import gc
@@ -293,43 +284,49 @@ TESTS_TO_SKIP = [
     "test_dialects_arith_dialect__testArithValue_multi_threaded",  # RuntimeError: Value caster is already registered: <class 'dialects/arith_dialect.testArithValue.<locals>.ArithValue'>, even with GIL
     "test_ir_dialects__testAppendPrefixSearchPath_multi_threaded",  # PyGlobals::setDialectSearchPrefixes is not thread-safe, even with GIL. Strange usage of static PyGlobals vs python exposed _cext.globals
     "test_ir_value__testValueCasters_multi_threaded",  # RuntimeError: Value caster is already registered: <function testValueCasters.<locals>.dont_cast_int, even with GIL
+
+    # tests indirectly calling thread-unsafe llvm::raw_ostream
+    "test_execution_engine__testInvalidModule_multi_threaded",  # mlirExecutionEngineCreate calls thread-unsafe llvm::raw_ostream
+    "test_pass_manager__testPrintIrAfterAll_multi_threaded",  # IRPrinterInstrumentation::runAfterPass calls thread-unsafe llvm::raw_ostream
+    "test_pass_manager__testPrintIrBeforeAndAfterAll_multi_threaded",  # IRPrinterInstrumentation::runBeforePass calls thread-unsafe llvm::raw_ostream
+    "test_pass_manager__testPrintIrLargeLimitElements_multi_threaded",  # IRPrinterInstrumentation::runAfterPass calls thread-unsafe llvm::raw_ostream
+    "test_pass_manager__testPrintIrTree_multi_threaded",  # IRPrinterInstrumentation::runAfterPass calls thread-unsafe llvm::raw_ostream
+    "test_pass_manager__testRunPipeline_multi_threaded",  # PrintOpStatsPass::printSummary calls thread-unsafe llvm::raw_ostream
+    "test_dialects_transform_interpreter__include_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) calls thread-unsafe llvm::raw_ostream
+    "test_dialects_transform_interpreter__transform_options_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) calls thread-unsafe llvm::raw_ostream
+    "test_dialects_transform_interpreter__print_self_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) call thread-unsafe llvm::raw_ostream
+    "test_ir_diagnostic_handler__testDiagnosticCallbackException_multi_threaded",  # mlirEmitError calls thread-unsafe llvm::raw_ostream
+    "test_ir_module__testParseSuccess_multi_threaded",  # mlirOperationDump calls thread-unsafe llvm::raw_ostream
+
 ]
 
 TESTS_TO_XFAIL = [
-    # execution_engine tests, ctypes related data-races, may be false-positive as libffi was not instrumented with TSAN
+    # execution_engine tests:
+    # - ctypes related data-races: https://github.com/python/cpython/issues/127945
     "test_execution_engine__testBF16Memref_multi_threaded",
     "test_execution_engine__testBasicCallback_multi_threaded",
-    "test_execution_engine__testCapsule_multi_threaded",
     "test_execution_engine__testComplexMemrefAdd_multi_threaded",
     "test_execution_engine__testComplexUnrankedMemrefAdd_multi_threaded",
-    "test_execution_engine__testDumpToObjectFile_multi_threaded",
     "test_execution_engine__testDynamicMemrefAdd2D_multi_threaded",
     "test_execution_engine__testF16MemrefAdd_multi_threaded",
     "test_execution_engine__testF8E5M2Memref_multi_threaded",
-    "test_execution_engine__testInvalidModule_multi_threaded",
     "test_execution_engine__testInvokeFloatAdd_multi_threaded",
-    "test_execution_engine__testInvokeVoid_multi_threaded",
+    "test_execution_engine__testInvokeVoid_multi_threaded",  # a ctypes race
     "test_execution_engine__testMemrefAdd_multi_threaded",
     "test_execution_engine__testRankedMemRefCallback_multi_threaded",
     "test_execution_engine__testRankedMemRefWithOffsetCallback_multi_threaded",
     "test_execution_engine__testUnrankedMemRefCallback_multi_threaded",
     "test_execution_engine__testUnrankedMemRefWithOffsetCallback_multi_threaded",
-    # pass_manager tests
-    "test_pass_manager__testPrintIrAfterAll_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
-    "test_pass_manager__testPrintIrBeforeAndAfterAll_multi_threaded",  # IRPrinterInstrumentation::runBeforePass is not thread-safe
-    "test_pass_manager__testPrintIrLargeLimitElements_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
-    "test_pass_manager__testPrintIrTree_multi_threaded",  # IRPrinterInstrumentation::runAfterPass is not thread-safe
-    "test_pass_manager__testRunPipeline_multi_threaded",  # PrintOpStatsPass::printSummary is not thread-safe
     # dialects tests
     "test_dialects_memref__testSubViewOpInferReturnTypeExtensiveSlicing_multi_threaded",  # Related to ctypes data races
-    "test_dialects_transform_interpreter__include_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
+
     "test_dialects_transform_interpreter__print_other_multi_threaded",  # Fatal Python error: Aborted or mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
-    "test_dialects_transform_interpreter__print_self_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
-    "test_dialects_transform_interpreter__transform_options_multi_threaded",  # mlir::transform::PrintOp::apply(mlir::transform::TransformRewriter...) is not thread-safe
+
     "test_dialects_gpu_module-to-binary-rocdl__testGPUToASMBin_multi_threaded",  # Due to global llvm-project/llvm/lib/Target/AMDGPU/GCNSchedStrategy.cpp::GCNTrackers variable mutation
     "test_dialects_gpu_module-to-binary-nvvm__testGPUToASMBin_multi_threaded",
     "test_dialects_gpu_module-to-binary-nvvm__testGPUToLLVMBin_multi_threaded",
     "test_dialects_gpu_module-to-binary-rocdl__testGPUToLLVMBin_multi_threaded",
+
     # integration tests
     "test_integration_dialects_linalg_opsrun__test_elemwise_builtin_multi_threaded",  # Related to ctypes data races
     "test_integration_dialects_linalg_opsrun__test_elemwise_generic_multi_threaded",  # Related to ctypes data races
@@ -341,10 +338,6 @@ TESTS_TO_XFAIL = [
     "test_integration_dialects_linalg_opsrun__test_max_pooling_generic_multi_threaded", # ctypes
     "test_integration_dialects_linalg_opsrun__test_min_pooling_builtin_multi_threaded", # ctypes
     "test_integration_dialects_linalg_opsrun__test_min_pooling_generic_multi_threaded", # ctypes
-    # IR tests
-    "test_ir_diagnostic_handler__testDiagnosticCallbackException_multi_threaded",  # mlirEmitError is not thread-safe
-    "test_ir_module__testParseSuccess_multi_threaded",  #  mlirOperationDump is not thread-safe
-    "test_ir_module__testModuleCapsule_multi_threaded",  #
 ]
 
 
