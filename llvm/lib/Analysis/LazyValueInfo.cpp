@@ -1159,6 +1159,28 @@ getRangeViaSLT(CmpInst::Predicate Pred, APInt RHS,
   return std::nullopt;
 }
 
+/// Get value range for a "ctpop(Val) Pred RHS" condition.
+static ValueLatticeElement getValueFromICmpCtpop(ICmpInst::Predicate Pred,
+                                                 Value *RHS) {
+  unsigned BitWidth = RHS->getType()->getPrimitiveSizeInBits();
+
+  auto RHSConst = dyn_cast<ConstantInt>(RHS);
+  if (!RHSConst)
+    return ValueLatticeElement::getOverdefined();
+
+  auto &RHSVal = RHSConst->getValue();
+
+  ConstantRange ResValRange = ConstantRange::makeExactICmpRegion(Pred, RHSVal);
+
+  unsigned ResMin = ResValRange.getUnsignedMin().getLimitedValue(BitWidth);
+  unsigned ResMax = ResValRange.getUnsignedMax().getLimitedValue(BitWidth);
+
+  APInt ValMin = APInt::getLowBitsSet(BitWidth, ResMin);
+  APInt ValMax = APInt::getHighBitsSet(BitWidth, ResMax);
+  return ValueLatticeElement::getRange(
+      ConstantRange{std::move(ValMin), ValMax + 1});
+}
+
 std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
     Value *Val, ICmpInst *ICI, bool isTrueDest, bool UseBlockValue) {
   Value *LHS = ICI->getOperand(0);
@@ -1191,6 +1213,9 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
   if (matchICmpOperand(Offset, RHS, Val, SwappedPred))
     return getValueFromSimpleICmpCondition(SwappedPred, LHS, Offset, ICI,
                                            UseBlockValue);
+
+  if (match(LHS, m_Intrinsic<Intrinsic::ctpop>(m_Specific(Val))))
+    return getValueFromICmpCtpop(EdgePred, RHS);
 
   const APInt *Mask, *C;
   if (match(LHS, m_And(m_Specific(Val), m_APInt(Mask))) &&
