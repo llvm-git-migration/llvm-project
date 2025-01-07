@@ -52,6 +52,14 @@ public:
   void computeInfo(CGFunctionInfo &FI) const override;
   RValue EmitVAArg(CodeGenFunction &CGF, Address VAListAddr, QualType Ty,
                    AggValueSlot Slot) const override;
+
+  llvm::FixedVectorType *
+  getOptimalVectorType(llvm::FixedVectorType *T,
+                       const LangOptions &Opt) const override {
+    if (T->getNumElements() == 3 && T->getScalarSizeInBits() == 32)
+      return T;
+    return DefaultABIInfo::getOptimalVectorType(T, Opt);
+  }
 };
 
 bool AMDGPUABIInfo::isHomogeneousAggregateBaseType(QualType Ty) const {
