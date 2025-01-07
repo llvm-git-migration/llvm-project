@@ -8488,6 +8488,20 @@ static SelectPatternResult matchMinMax(CmpInst::Predicate Pred,
   LHS = TrueVal;
   RHS = FalseVal;
 
+  // Handle constant RHS cases like X < 3 ? 2 : X -> max(X, 2)
+  auto *CmpRHSC = dyn_cast<ConstantInt>(CmpRHS);
+  if (ICmpInst::isRelational(Pred) && CmpRHSC) {
+    if (auto Flipped =
+            getFlippedStrictnessPredicateAndConstant(Pred, CmpRHSC)) {
+      // icmp Pred X, C ? X : C
+      if (TrueVal == CmpLHS && Flipped->second == FalseVal)
+        return getSelectPattern(Flipped->first);
+      // icmp Pred X, C ? C : X --> icmp InversePred X, C ? X : C
+      if (FalseVal == CmpLHS && Flipped->second == TrueVal)
+        return getSelectPattern(ICmpInst::getInversePredicate(Flipped->first));
+    }
+  }
+
   SelectPatternResult SPR = matchClamp(Pred, CmpLHS, CmpRHS, TrueVal, FalseVal);
   if (SPR.Flavor != SelectPatternFlavor::SPF_UNKNOWN)
     return SPR;
@@ -8639,6 +8653,80 @@ SelectPatternResult llvm::getSelectPattern(CmpInst::Predicate Pred,
   case FCmpInst::FCMP_OLE:
     return {SPF_FMINNUM, NaNBehavior, Ordered};
   }
+}
+
+std::optional<std::pair<CmpPredicate, Constant *>>
+llvm::getFlippedStrictnessPredicateAndConstant(CmpPredicate Pred, Constant *C) {
+  assert(ICmpInst::isRelational(Pred) && ICmpInst::isIntPredicate(Pred) &&
+         "Only for relational integer predicates.");
+  if (isa<UndefValue>(C))
+    return std::nullopt;
+
+  Type *Type = C->getType();
+  bool IsSigned = ICmpInst::isSigned(Pred);
+
+  CmpInst::Predicate UnsignedPred = ICmpInst::getUnsignedPredicate(Pred);
+  bool WillIncrement =
+      UnsignedPred == ICmpInst::ICMP_ULE || UnsignedPred == ICmpInst::ICMP_UGT;
+
+  // Check if the constant operand can be safely incremented/decremented
+  // without overflowing/underflowing.
+  auto ConstantIsOk = [WillIncrement, IsSigned](ConstantInt *C) {
+    return WillIncrement ? !C->isMaxValue(IsSigned) : !C->isMinValue(IsSigned);
+  };
+
+  Constant *SafeReplacementConstant = nullptr;
+  if (auto *CI = dyn_cast<ConstantInt>(C)) {
+    // Bail out if the constant can't be safely incremented/decremented.
+    if (!ConstantIsOk(CI))
+      return std::nullopt;
+  } else if (auto *FVTy = dyn_cast<FixedVectorType>(Type)) {
+    unsigned NumElts = FVTy->getNumElements();
+    for (unsigned i = 0; i != NumElts; ++i) {
+      Constant *Elt = C->getAggregateElement(i);
+      if (!Elt)
+        return std::nullopt;
+
+      if (isa<UndefValue>(Elt))
+        continue;
+
+      // Bail out if we can't determine if this constant is min/max or if we
+      // know that this constant is min/max.
+      auto *CI = dyn_cast<ConstantInt>(Elt);
+      if (!CI || !ConstantIsOk(CI))
+        return std::nullopt;
+
+      if (!SafeReplacementConstant)
+        SafeReplacementConstant = CI;
+    }
+  } else if (isa<VectorType>(C->getType())) {
+    // Handle scalable splat
+    Value *SplatC = C->getSplatValue();
+    auto *CI = dyn_cast_or_null<ConstantInt>(SplatC);
+    // Bail out if the constant can't be safely incremented/decremented.
+    if (!CI || !ConstantIsOk(CI))
+      return std::nullopt;
+  } else {
+    // ConstantExpr?
+    return std::nullopt;
+  }
+
+  // It may not be safe to change a compare predicate in the presence of
+  // undefined elements, so replace those elements with the first safe constant
+  // that we found.
+  // TODO: in case of poison, it is safe; let's replace undefs only.
+  if (C->containsUndefOrPoisonElement()) {
+    assert(SafeReplacementConstant && "Replacement constant not set");
+    C = Constant::replaceUndefsWith(C, SafeReplacementConstant);
+  }
+
+  CmpInst::Predicate NewPred = CmpInst::getFlippedStrictnessPredicate(Pred);
+
+  // Increment or decrement the constant.
+  Constant *OneOrNegOne = ConstantInt::get(Type, WillIncrement ? 1 : -1, true);
+  Constant *NewC = ConstantExpr::getAdd(C, OneOrNegOne);
+
+  return std::make_pair(NewPred, NewC);
 }
 
 static SelectPatternResult matchSelectPattern(CmpInst::Predicate Pred,
