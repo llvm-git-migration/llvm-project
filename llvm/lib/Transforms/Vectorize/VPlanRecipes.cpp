@@ -57,7 +57,6 @@ bool VPRecipeBase::mayWriteToMemory() const {
     case Instruction::Or:
     case Instruction::ICmp:
     case Instruction::Select:
-    case VPInstruction::AnyOf:
     case VPInstruction::Not:
     case VPInstruction::CalculateTripCountMinusVF:
     case VPInstruction::CanonicalIVIncrementForPart:
@@ -65,6 +64,8 @@ bool VPRecipeBase::mayWriteToMemory() const {
     case VPInstruction::FirstOrderRecurrenceSplice:
     case VPInstruction::LogicalAnd:
     case VPInstruction::PtrAdd:
+    case VPInstruction::AnyOf:
+    case VPInstruction::ExtractFirstActive:
       return false;
     default:
       return true;
@@ -645,7 +646,13 @@ Value *VPInstruction::generate(VPTransformState &State) {
     Value *A = State.get(getOperand(0));
     return Builder.CreateOrReduce(A);
   }
-
+  case VPInstruction::ExtractFirstActive: {
+    Value *Vec = State.get(getOperand(0));
+    Value *Mask = State.get(getOperand(1));
+    Value *Ctz =
+        Builder.CreateCountTrailingZeroElems(Builder.getInt64Ty(), Mask);
+    return Builder.CreateExtractElement(Vec, Ctz);
+  }
   default:
     llvm_unreachable("Unsupported opcode for instruction");
   }
@@ -654,7 +661,8 @@ Value *VPInstruction::generate(VPTransformState &State) {
 bool VPInstruction::isVectorToScalar() const {
   return getOpcode() == VPInstruction::ExtractFromEnd ||
          getOpcode() == VPInstruction::ComputeReductionResult ||
-         getOpcode() == VPInstruction::AnyOf;
+         getOpcode() == VPInstruction::AnyOf ||
+         getOpcode() == VPInstruction::ExtractFirstActive;
 }
 
 bool VPInstruction::isSingleScalar() const {
@@ -816,6 +824,9 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
   case VPInstruction::AnyOf:
     O << "any-of";
     break;
+  case VPInstruction::ExtractFirstActive:
+    O << "extract-first-active";
+    break;
   default:
     O << Instruction::getOpcodeName(getOpcode());
   }
@@ -833,8 +844,9 @@ void VPInstruction::print(raw_ostream &O, const Twine &Indent,
 void VPIRInstruction::execute(VPTransformState &State) {
   assert((isa<PHINode>(&I) || getNumOperands() == 0) &&
          "Only PHINodes can have extra operands");
-  for (const auto &[Idx, Op] : enumerate(operands())) {
-    VPValue *ExitValue = Op;
+  for (const auto &[Idx, ExitValue] : enumerate(operands())) {
+    if (ExitValue->isNull())
+      continue;
     auto Lane = vputils::isUniformAfterVectorization(ExitValue)
                     ? VPLane::getFirstLane()
                     : VPLane::getLastLaneForVF(State.VF);

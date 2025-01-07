@@ -55,6 +55,8 @@ class VPValue {
 
   SmallVector<VPUser *, 1> Users;
 
+  static VPValue *Null;
+
 protected:
   // Hold the underlying Value, if any, attached to this VPValue.
   Value *UnderlyingVal;
@@ -188,6 +190,15 @@ public:
     assert(!UnderlyingVal && "Underlying Value is already set.");
     UnderlyingVal = Val;
   }
+
+  /// Get a null VPValue, used for processing the incoming PHI values in a
+  /// VPIRBasicBlock. Indicates the incoming value is being handled outside of
+  /// VPInstruction::generate.
+  static VPValue *getNull() { return Null; }
+
+  /// Returns true if this is a null VPValue, used when processing incoming PHI
+  /// values in a VPIRInstruction.
+  bool isNull() const { return this == Null; }
 };
 
 typedef DenseMap<Value *, VPValue *> Value2VPValueTy;

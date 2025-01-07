@@ -83,6 +83,9 @@ Value *VPLane::getAsRuntimeExpr(IRBuilderBase &Builder,
   llvm_unreachable("Unknown lane kind");
 }
 
+static VPValue NullValue;
+VPValue *VPValue::Null = &NullValue;
+
 VPValue::VPValue(const unsigned char SC, Value *UV, VPDef *Def)
     : SubclassID(SC), UnderlyingVal(UV), Def(Def) {
   if (Def)
