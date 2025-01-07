@@ -1527,9 +1527,10 @@ bool RegisterCoalescer::reMaterializeTrivialDef(const CoalescerPair &CP,
     // In a situation like the following:
     //
     //    undef %2.subreg:reg = INST %1:reg         ; DefMI (rematerializable),
-    //                                              ; DefSubIdx = subreg
-    //    %3:reg = COPY %2                          ; SrcIdx = DstIdx = 0
-    //    .... = SOMEINSTR %3:reg, %2
+    //                                              ; Defines only some of lanes,
+    //                                              ; so DefSubIdx = NewIdx = subreg
+    //    %3:reg = COPY %2                          ; Copy full reg
+    //    .... = SOMEINSTR %3:reg                   ; Use full reg
     //
     // there are no subranges for %3 so after rematerialization we need
     // to explicitly create them. Undefined subranges are removed later on.
