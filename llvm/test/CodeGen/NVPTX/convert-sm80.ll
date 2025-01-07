@@ -261,3 +261,21 @@ define <2 x half> @fold_ff2f16x2(float %lo, float %hi) {
   %v1 = insertelement <2 x half> %v0, half %hih, i64 1
   ret <2 x half> %v1
 }
+
+declare i32 @llvm.nvvm.convert.to.tf32.f32(float %f1, metadata, i8, i1)
+
+define i32 @cvt_rna_tf32_f32_flags(float %f1) {
+; CHECK-LABEL: cvt_rna_tf32_f32_flags(
+; CHECK:       {
+; CHECK-NEXT:    .reg .b32 %r<2>;
+; CHECK-NEXT:    .reg .f32 %f<2>;
+; CHECK-EMPTY:
+; CHECK-NEXT:  // %bb.0:
+; CHECK-NEXT:    ld.param.f32 %f1, [cvt_rna_tf32_f32_flags_param_0];
+; CHECK-NEXT:    cvt.rna.tf32.f32 %r1, %f1;
+; CHECK-NEXT:    st.param.b32 [func_retval0], %r1;
+; CHECK-NEXT:    ret;
+  %val = call i32 @llvm.nvvm.convert.to.tf32.f32(float %f1, metadata !0, i8 0, i1 0)
+  ret i32 %val
+}
+!0 = !{!"round.tonearestaway"}

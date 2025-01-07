@@ -453,3 +453,53 @@ void NVPTXInstPrinter::printTmaReductionMode(const MCInst *MI, int OpNum,
   llvm_unreachable(
       "Invalid Reduction Op in printCpAsyncBulkTensorReductionMode");
 }
+
+void NVPTXInstPrinter::printFPRoundingMode(const MCInst *MI, int OpNum,
+                                           raw_ostream &O,
+                                           const char *Modifier) {
+  const MCOperand &MO = MI->getOperand(OpNum);
+  switch (static_cast<llvm::RoundingMode>(MO.getImm())) {
+  case llvm::RoundingMode::NearestTiesToEven:
+    O << ".rn";
+    return;
+  case llvm::RoundingMode::NearestTiesToAway:
+    O << ".rna";
+    return;
+  case llvm::RoundingMode::TowardZero:
+    O << ".rz";
+    return;
+  case llvm::RoundingMode::TowardPositive:
+    O << ".rp";
+    return;
+  case llvm::RoundingMode::TowardNegative:
+    O << ".rm";
+    return;
+  default:
+    O << "";
+    return;
+  }
+}
+
+void NVPTXInstPrinter::printSaturationMode(const MCInst *MI, int OpNum,
+                                           raw_ostream &O,
+                                           const char *Modifier) {
+  const MCOperand &MO = MI->getOperand(OpNum);
+  using Mode = nvvm::SaturationMode;
+
+  switch (static_cast<Mode>(MO.getImm())) {
+  case Mode::NONE:
+    O << "";
+    return;
+  case Mode::SATFINITE:
+    O << ".satfinite";
+    return;
+  }
+  llvm_unreachable("Invalid mode in printSaturationMode");
+}
+
+void NVPTXInstPrinter::printReluModifier(const MCInst *MI, int OpNum,
+                                         raw_ostream &O, const char *Modifier) {
+  const MCOperand &MO = MI->getOperand(OpNum);
+  if (MO.getImm())
+    O << ".relu";
+}

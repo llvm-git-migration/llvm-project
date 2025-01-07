@@ -1802,6 +1802,22 @@ def : Pat<(int_nvvm_e5m2x2_to_f16x2_rn Int16Regs:$a),
 def : Pat<(int_nvvm_e5m2x2_to_f16x2_rn_relu Int16Regs:$a),
           (CVT_f16x2_e5m2x2 $a, CvtRN_RELU)>;
 
+def FPRoundingMode : Operand<i32> {
+  let PrintMethod = "printFPRoundingMode";
+}
+
+def SatMode : Operand<i32> {
+  let PrintMethod = "printSaturationMode";
+}
+
+def ReluFlag : Operand<i32> {
+  let PrintMethod = "printReluModifier";
+}
+
+def cvt_f32_to_tf32 : NVPTXInst<(outs Int32Regs:$dest),
+    (ins Float32Regs:$a, FPRoundingMode:$rnd, SatMode:$sat, ReluFlag:$relu),
+    "cvt${rnd:rnd}${sat:sat}${relu:relu}.tf32.f32 \t$dest, $a;", []>;
+
 //
 // FNS
 //

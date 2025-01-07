@@ -171,6 +171,12 @@ IntrinsicGetRoundingMode(Intrinsic::ID IntrinsicID) {
   return APFloat::roundingMode::Invalid;
 }
 
+// Saturation Modes
+enum class SaturationMode : uint8_t {
+  NONE = 0,
+  SATFINITE = 1,
+};
+
 } // namespace nvvm
 } // namespace llvm
 #endif // LLVM_IR_NVVMINTRINSICUTILS_H

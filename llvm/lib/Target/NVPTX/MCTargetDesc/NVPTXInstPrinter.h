@@ -56,6 +56,12 @@ public:
                      const char *Modifier = nullptr);
   void printTmaReductionMode(const MCInst *MI, int OpNum, raw_ostream &O,
                              const char *Modifier = nullptr);
+  void printFPRoundingMode(const MCInst *MI, int OpNum, raw_ostream &O,
+                           const char *Modifier = nullptr);
+  void printSaturationMode(const MCInst *MI, int OpNum, raw_ostream &O,
+                           const char *Modifier = nullptr);
+  void printReluModifier(const MCInst *MI, int OpNum, raw_ostream &O,
+                         const char *Modifier = nullptr);
 };
 
 }
