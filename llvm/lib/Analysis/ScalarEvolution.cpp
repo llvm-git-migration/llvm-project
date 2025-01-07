@@ -226,7 +226,7 @@ static cl::opt<unsigned> RangeIterThreshold(
 
 static cl::opt<unsigned> MaxLoopGuardCollectionDepth(
     "scalar-evolution-max-loop-guard-collection-depth", cl::Hidden,
-    cl::desc("Maximum depth for recrusive loop guard collection"), cl::init(1));
+    cl::desc("Maximum depth for recursive loop guard collection"), cl::init(1));
 
 static cl::opt<bool>
 ClassifyExpressions("scalar-evolution-classify-expressions",
@@ -251,7 +251,7 @@ static cl::opt<bool>
                             cl::init(true));
 
 static cl::opt<bool> UseContextForNoWrapFlagInference(
-    "scalar-evolution-use-context-for-no-wrap-flag-strenghening", cl::Hidden,
+    "scalar-evolution-use-context-for-no-wrap-flag-strengthening", cl::Hidden,
     cl::desc("Infer nuw/nsw flags using context where suitable"),
     cl::init(true));
 
