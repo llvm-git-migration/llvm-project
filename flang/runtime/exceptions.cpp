@@ -15,8 +15,7 @@
 #include <xmmintrin.h>
 #endif
 
-// When not supported, these macro are undefined in cfenv.h,
-// set them to zero in that case.
+// fenv.h may not define exception macros.
 #ifndef FE_INVALID
 #define FE_INVALID 0
 #endif
@@ -73,14 +72,6 @@ uint32_t RTNAME(MapException)(uint32_t excepts) {
   return except_value;
 }
 
-// Verify that the size of ieee_modes_type and ieee_status_type objects from
-// intrinsic module file __fortran_ieee_exceptions.f90 are large enough to
-// hold fenv_t object.
-// TODO: fenv_t can be way larger than
-//	sizeof(int) * _FORTRAN_RUNTIME_IEEE_FENV_T_EXTENT
-// on some systems, e.g. Solaris, so omit object size comparison for now.
-// TODO: consider femode_t object size comparison once its more mature.
-
 // Check if the processor has the ability to control whether to halt or
 // continue execution when a given exception is raised.
 bool RTNAME(SupportHalting)([[maybe_unused]] uint32_t except) {
@@ -117,6 +108,17 @@ void RTNAME(SetUnderflowMode)(bool flag) {
   // GRADUAL argument. It affects real computations of kinds 3, 4, and 8.
   _MM_SET_FLUSH_ZERO_MODE(flag ? _MM_FLUSH_ZERO_OFF : _MM_FLUSH_ZERO_ON);
 #endif
+}
+
+size_t RTNAME(GetModesTypeSize)(void) {
+#ifdef _AIX
+  return 8; // femode_t is not defined
+#else
+  return sizeof(femode_t); // byte size of ieee_modes_type data
+#endif
+}
+size_t RTNAME(GetStatusTypeSize)(void) {
+  return sizeof(fenv_t); // byte size of ieee_status_type data
 }
 
 } // extern "C"
