@@ -438,8 +438,14 @@ ModuleImport::processAliasScopeMetadata(const llvm::MDNode *node) {
     if (aliasDomain->getNumOperands() >= 2)
       if (auto *operand = dyn_cast<llvm::MDString>(aliasDomain->getOperand(1)))
         description = builder.getStringAttr(operand->getString());
-    return builder.getAttr<AliasScopeDomainAttr>(
-        DistinctAttr::create(builder.getUnitAttr()), description);
+    if (verifySelfRef(aliasDomain))
+      return builder.getAttr<AliasScopeDomainAttr>(
+          DistinctAttr::create(builder.getUnitAttr()), description);
+    else {
+      auto Name = cast<llvm::MDString>(aliasDomain->getOperand(0));
+      return builder.getAttr<AliasScopeDomainAttr>(
+          builder.getStringAttr(Name->getString()), description);
+    }
   };
 
   // Collect the alias scopes and domains to translate them.
@@ -452,12 +458,28 @@ ModuleImport::processAliasScopeMetadata(const llvm::MDNode *node) {
       // verifying its domain. Perform the verification before looking it up in
       // the alias scope mapping since it could have been inserted as a domain
       // node before.
-      if (!verifySelfRef(scope) || !domain || !verifyDescription(scope, 2))
-        return emitError(loc) << "unsupported alias scope node: "
+      if (!domain)
+        return emitError(loc) << "unsupported alias scope node (no domain): "
                               << diagMD(scope, llvmModule.get());
-      if (!verifySelfRef(domain) || !verifyDescription(domain, 1))
-        return emitError(loc) << "unsupported alias domain node: "
-                              << diagMD(domain, llvmModule.get());
+      if (verifySelfRef(scope) && !verifyDescription(scope, 2))
+        return emitError(loc)
+               << "unsupported alias scope node (bad description): "
+               << diagMD(scope, llvmModule.get());
+      if (!verifySelfRef(scope) && (scope->getNumOperands() == 0 ||
+                                    !isa<llvm::MDString>(scope->getOperand(0))))
+        return emitError(loc)
+               << "unsupported alias scope node (not self-ref and no string): "
+               << diagMD(scope, llvmModule.get());
+      if (!verifyDescription(domain, 1))
+        return emitError(loc)
+               << "unsupported alias domain node (bad description): "
+               << diagMD(domain, llvmModule.get());
+      if (!verifySelfRef(domain) &&
+          (domain->getNumOperands() == 0 ||
+           !isa<llvm::MDString>(domain->getOperand(0))))
+        return emitError(loc)
+               << "unsupported alias domain node (not self ref and no string): "
+               << diagMD(scope, llvmModule.get());
 
       if (aliasScopeMapping.contains(scope))
         continue;
@@ -473,9 +495,18 @@ ModuleImport::processAliasScopeMetadata(const llvm::MDNode *node) {
       StringAttr description = nullptr;
       if (!aliasScope.getName().empty())
         description = builder.getStringAttr(aliasScope.getName());
-      auto aliasScopeOp = builder.getAttr<AliasScopeAttr>(
-          DistinctAttr::create(builder.getUnitAttr()),
-          cast<AliasScopeDomainAttr>(it->second), description);
+      AliasScopeAttr aliasScopeOp;
+      if (verifySelfRef(scope))
+        aliasScopeOp = builder.getAttr<AliasScopeAttr>(
+            DistinctAttr::create(builder.getUnitAttr()),
+            cast<AliasScopeDomainAttr>(it->second), description);
+      else {
+        auto Name = cast<llvm::MDString>(scope->getOperand(0));
+        aliasScopeOp = builder.getAttr<AliasScopeAttr>(
+            builder.getStringAttr(Name->getString()),
+            cast<AliasScopeDomainAttr>(it->second), description);
+      }
+
       aliasScopeMapping.try_emplace(aliasScope.getNode(), aliasScopeOp);
     }
   }
