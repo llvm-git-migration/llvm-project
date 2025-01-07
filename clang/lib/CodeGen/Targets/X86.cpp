@@ -2191,7 +2191,7 @@ ABIArgInfo X86_64ABIInfo::getIndirectReturnResult(QualType Ty) const {
   return getNaturalAlignIndirect(Ty);
 }
 
-static bool IsIllegalVector(QualType Ty, 
+static bool IsIllegalVector(QualType Ty,
                             uint64_t Size,
                             X86AVXABILevel AVXLevel) {
   if (const VectorType *VecTy = Ty->getAs<VectorType>()) {
