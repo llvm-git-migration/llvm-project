@@ -26,6 +26,8 @@ public:
     other.executionEngine.ptr = nullptr;
   }
   ~PyExecutionEngine() {
+    // Avoid races in llvm::orc::LLJIT::deinitialize
+    nb::ft_lock_guard lock(mutex);
     if (!mlirExecutionEngineIsNull(executionEngine))
       mlirExecutionEngineDestroy(executionEngine);
   }
@@ -59,7 +61,10 @@ private:
   // so that they don't get garbage collected. (The ExecutionEngine itself
   // just holds raw pointers with no lifetime semantics).
   std::vector<nb::object> referencedObjects;
+  static nb::ft_mutex mutex;
 };
+
+nb::ft_mutex PyExecutionEngine::mutex;
 
 } // namespace
 
