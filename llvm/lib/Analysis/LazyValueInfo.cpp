@@ -386,6 +386,9 @@ class LazyValueInfoImpl {
 
   void solve();
 
+  ValueLatticeElement getValueFromICmpCtpop(ICmpInst::Predicate Pred,
+                                            Value *RHS);
+
   // For the following methods, if UseBlockValue is true, the function may
   // push additional values to the worklist and return nullopt. If
   // UseBlockValue is false, it will never return nullopt.
@@ -1159,6 +1162,49 @@ getRangeViaSLT(CmpInst::Predicate Pred, APInt RHS,
   return std::nullopt;
 }
 
+static bool matchBitIntrinsic(Value *LHS, Value *Val, Intrinsic::ID &IID) {
+  auto *II = dyn_cast<IntrinsicInst>(LHS);
+  if (!II)
+    return false;
+  auto ID = II->getIntrinsicID();
+  switch (ID) {
+  case Intrinsic::ctpop:
+  case Intrinsic::ctlz:
+  case Intrinsic::cttz:
+    break;
+  default:
+    return false;
+  }
+  if (II->getArgOperand(0) != Val)
+    return false;
+  IID = ID;
+  return true;
+}
+
+/// Get value range for a "ctpop(Val) Pred RHS" condition.
+ValueLatticeElement
+LazyValueInfoImpl::getValueFromICmpCtpop(ICmpInst::Predicate Pred, Value *RHS) {
+  unsigned BitWidth = RHS->getType()->getPrimitiveSizeInBits();
+
+  auto RHSConst = dyn_cast<ConstantInt>(RHS);
+  if (!RHSConst)
+    return ValueLatticeElement::getOverdefined();
+
+  auto &RHSVal = RHSConst->getValue();
+
+  ConstantRange ResValRange =
+      ConstantRange::makeAllowedICmpRegion(Pred, {RHSVal, RHSVal + 1});
+
+  unsigned ResMin = ResValRange.getUnsignedMin().getLimitedValue(BitWidth);
+  unsigned ResMax = ResValRange.getUnsignedMax().getLimitedValue(BitWidth);
+
+  APInt ValMin, ValMax;
+  APInt AllOnes = APInt::getAllOnes(BitWidth);
+  ValMin = AllOnes.lshr(BitWidth - ResMin);
+  ValMax = AllOnes.shl(BitWidth - ResMax);
+  return ValueLatticeElement::getRange(ConstantRange{ValMin, ValMax + 1});
+}
+
 std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
     Value *Val, ICmpInst *ICI, bool isTrueDest, bool UseBlockValue) {
   Value *LHS = ICI->getOperand(0);
@@ -1191,6 +1237,9 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
   if (matchICmpOperand(Offset, RHS, Val, SwappedPred))
     return getValueFromSimpleICmpCondition(SwappedPred, LHS, Offset, ICI,
                                            UseBlockValue);
+
+  if (match(LHS, m_Intrinsic<Intrinsic::ctpop>(m_Specific(Val))))
+    return getValueFromICmpCtpop(EdgePred, RHS);
 
   const APInt *Mask, *C;
   if (match(LHS, m_And(m_Specific(Val), m_APInt(Mask))) &&
