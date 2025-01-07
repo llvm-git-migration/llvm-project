@@ -391,6 +391,11 @@ class LazyValueInfoImpl {
   // UseBlockValue is false, it will never return nullopt.
 
   std::optional<ValueLatticeElement>
+  getValueFromICmpBitIntrinsic(ICmpInst::Predicate Pred, unsigned ValBitWidth,
+                               Intrinsic::ID IID, Value *RHS, Instruction *CtxI,
+                               bool UseBlockValue);
+
+  std::optional<ValueLatticeElement>
   getValueFromSimpleICmpCondition(CmpInst::Predicate Pred, Value *RHS,
                                   const APInt &Offset, Instruction *CxtI,
                                   bool UseBlockValue);
@@ -1159,6 +1164,67 @@ getRangeViaSLT(CmpInst::Predicate Pred, APInt RHS,
   return std::nullopt;
 }
 
+static bool matchBitIntrinsic(Value *LHS, Value *Val, Intrinsic::ID &IID) {
+  auto *II = dyn_cast<IntrinsicInst>(LHS);
+  if (!II)
+    return false;
+  auto ID = II->getIntrinsicID();
+  switch (ID) {
+  case Intrinsic::ctpop:
+  case Intrinsic::ctlz:
+  case Intrinsic::cttz:
+    break;
+  default:
+    return false;
+  }
+  if (II->getArgOperand(0) != Val)
+    return false;
+  IID = ID;
+  return true;
+}
+
+/// Get value range for a "intrinsic(Val) Pred RHS" condition, where intrinsic
+/// can be one of ctpop, ctlz, and cttz.
+std::optional<ValueLatticeElement>
+LazyValueInfoImpl::getValueFromICmpBitIntrinsic(ICmpInst::Predicate Pred,
+                                                unsigned ValBitWidth,
+                                                Intrinsic::ID IID, Value *RHS,
+                                                Instruction *CtxI,
+                                                bool UseBlockValue) {
+  unsigned BitWidth = ValBitWidth;
+  auto Offset = APInt::getZero(BitWidth);
+
+  auto ResValLattice =
+      getValueFromSimpleICmpCondition(Pred, RHS, Offset, CtxI, UseBlockValue);
+  if (!ResValLattice)
+    return std::nullopt;
+  if (ResValLattice->isOverdefined())
+    return ValueLatticeElement::getOverdefined();
+  auto &ResValRange = ResValLattice->getConstantRange();
+
+  unsigned ResMin = ResValRange.getUnsignedMin().getLimitedValue(BitWidth);
+  unsigned ResMax = ResValRange.getUnsignedMax().getLimitedValue(BitWidth);
+
+  APInt ValMin, ValMax;
+  APInt AllOnes = APInt::getAllOnes(BitWidth);
+  switch (IID) {
+  case Intrinsic::ctpop:
+    ValMin = AllOnes.lshr(BitWidth - ResMin);
+    ValMax = AllOnes.shl(BitWidth - ResMax);
+    break;
+  case Intrinsic::ctlz:
+    ValMin = ResMax == BitWidth ? APInt(BitWidth, 0)
+                                : APInt(BitWidth, 1).shl(BitWidth - ResMax - 1);
+    ValMax = AllOnes.lshr(ResMin);
+    break;
+  case Intrinsic::cttz:
+    ValMin = APInt(BitWidth, 1).shl(ResMin);
+    ValMax = AllOnes.shl(ResMin);
+    break;
+  }
+  return ValueLatticeElement::getRange(ConstantRange{ValMin, ValMax + 1});
+}
+
 std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
     Value *Val, ICmpInst *ICI, bool isTrueDest, bool UseBlockValue) {
   Value *LHS = ICI->getOperand(0);
@@ -1191,6 +1257,13 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
   if (matchICmpOperand(Offset, RHS, Val, SwappedPred))
     return getValueFromSimpleICmpCondition(SwappedPred, LHS, Offset, ICI,
                                            UseBlockValue);
+  Intrinsic::ID IID;
+  if (matchBitIntrinsic(LHS, Val, IID))
+    return getValueFromICmpBitIntrinsic(EdgePred, BitWidth, IID, RHS, ICI,
+                                        UseBlockValue);
+  if (matchBitIntrinsic(RHS, Val, IID))
+    return getValueFromICmpBitIntrinsic(SwappedPred, BitWidth, IID, LHS, ICI,
+                                        UseBlockValue);
 
   const APInt *Mask, *C;
   if (match(LHS, m_And(m_Specific(Val), m_APInt(Mask))) &&
