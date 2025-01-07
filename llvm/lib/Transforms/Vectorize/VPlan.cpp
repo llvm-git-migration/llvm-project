@@ -504,6 +504,11 @@ void VPBasicBlock::execute(VPTransformState *State) {
     UnreachableInst *Terminator = State->Builder.CreateUnreachable();
     // Register NewBB in its loop. In innermost loops its the same for all
     // BB's.
+    // TODO: This is not always correct, for example if this block has a single
+    // successor that is an exit block in the original loop and the exit block
+    // is in a different loop to CurrentParentLoop. Or the exit block may not
+    // be in a loop at all! See fixVectorizedLoop where we have to patch up
+    // cases like this for loops with uncountable early exits.
     if (State->CurrentParentLoop)
       State->CurrentParentLoop->addBasicBlockToLoop(NewBB, *State->LI);
     State->Builder.SetInsertPoint(Terminator);

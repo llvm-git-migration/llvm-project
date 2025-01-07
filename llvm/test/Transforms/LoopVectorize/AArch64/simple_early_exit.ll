@@ -22,9 +22,9 @@ define i64 @same_exit_block_pre_inc_use1() #1 {
 ; CHECK-NEXT:    [[TMP3:%.*]] = mul i64 [[TMP2]], 16
 ; CHECK-NEXT:    [[N_MOD_VF:%.*]] = urem i64 64, [[TMP3]]
 ; CHECK-NEXT:    [[N_VEC:%.*]] = sub i64 64, [[N_MOD_VF]]
-; CHECK-NEXT:    [[INDEX_NEXT1:%.*]] = add i64 3, [[N_VEC]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = call i64 @llvm.vscale.i64()
 ; CHECK-NEXT:    [[TMP5:%.*]] = mul i64 [[TMP4]], 16
+; CHECK-NEXT:    [[INDEX_NEXT1:%.*]] = add i64 3, [[N_VEC]]
 ; CHECK-NEXT:    br label [[LOOP:%.*]]
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX1:%.*]] = phi i64 [ 0, [[VECTOR_PH]] ], [ [[INDEX_NEXT3:%.*]], [[LOOP]] ]
@@ -117,9 +117,9 @@ define i64 @same_exit_block_pre_inc_use4() #1 {
 ; CHECK-NEXT:    [[TMP3:%.*]] = mul i64 [[TMP14]], 2
 ; CHECK-NEXT:    [[N_MOD_VF:%.*]] = urem i64 64, [[TMP3]]
 ; CHECK-NEXT:    [[N_VEC:%.*]] = sub i64 64, [[N_MOD_VF]]
-; CHECK-NEXT:    [[IND_END:%.*]] = add i64 3, [[N_VEC]]
 ; CHECK-NEXT:    [[TMP4:%.*]] = call i64 @llvm.vscale.i64()
 ; CHECK-NEXT:    [[TMP15:%.*]] = mul i64 [[TMP4]], 2
+; CHECK-NEXT:    [[IND_END:%.*]] = add i64 3, [[N_VEC]]
 ; CHECK-NEXT:    [[TMP16:%.*]] = call <vscale x 2 x i64> @llvm.stepvector.nxv2i64()
 ; CHECK-NEXT:    [[TMP17:%.*]] = mul <vscale x 2 x i64> [[TMP16]], splat (i64 1)
 ; CHECK-NEXT:    [[INDUCTION:%.*]] = add <vscale x 2 x i64> splat (i64 3), [[TMP17]]
@@ -473,9 +473,9 @@ define i32 @diff_exit_block_needs_scev_check(i32 %end) #1 {
 ; CHECK-NEXT:    [[TMP24:%.*]] = mul i64 [[TMP23]], 4
 ; CHECK-NEXT:    [[N_MOD_VF:%.*]] = urem i64 [[UMAX1]], [[TMP24]]
 ; CHECK-NEXT:    [[N_VEC:%.*]] = sub i64 [[UMAX1]], [[N_MOD_VF]]
-; CHECK-NEXT:    [[IND_END:%.*]] = trunc i64 [[N_VEC]] to i8
 ; CHECK-NEXT:    [[TMP13:%.*]] = call i64 @llvm.vscale.i64()
 ; CHECK-NEXT:    [[TMP25:%.*]] = mul i64 [[TMP13]], 4
+; CHECK-NEXT:    [[IND_END:%.*]] = trunc i64 [[N_VEC]] to i8
 ; CHECK-NEXT:    br label [[FOR_BODY:%.*]]
 ; CHECK:       vector.body:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ 0, [[VECTOR_PH]] ], [ [[INDEX_NEXT:%.*]], [[FOR_BODY]] ]

@@ -3094,18 +3094,21 @@ void InnerLoopVectorizer::fixVectorizedLoop(VPTransformState &State) {
   PSE.getSE()->forgetLoop(OrigLoop);
   PSE.getSE()->forgetBlockAndLoopDispositions();
 
-  // When dealing with uncountable early exits we create middle.split blocks
-  // between the vector loop region and the exit block. These blocks need
-  // adding to any outer loop.
+  // When dealing with uncountable early exits we create a vector.early.exit
+  // block predecessor of the exit block. This block needs to have the same
+  // parent loop as the exit block itself.
   VPRegionBlock *VectorRegion = State.Plan->getVectorLoopRegion();
-  Loop *OuterLoop = OrigLoop->getParentLoop();
-  if (Legal->hasUncountableEarlyExit() && OuterLoop) {
-    BasicBlock *OrigEarlyExitBB = Legal->getUncountableEarlyExitBlock();
-    if (Loop *EEL = LI->getLoopFor(OrigEarlyExitBB)) {
-      BasicBlock *VectorEarlyExitBB =
-          State.CFG.VPBB2IRBB[VectorRegion->getEarlyExit()];
+  if (BasicBlock *OrigEarlyExitBB = Legal->getUncountableEarlyExitBlock()) {
+    // This has possibly been added to the wrong loop - we need to add this
+    // to the same loop as the original exit block.
+    BasicBlock *VectorEarlyExitBB =
+        State.CFG.VPBB2IRBB[VectorRegion->getEarlyExit()];
+    if (LI->getLoopFor(VectorEarlyExitBB))
+      LI->removeBlock(VectorEarlyExitBB);
+
+    Loop *EEL = LI->getLoopFor(OrigEarlyExitBB);
+    if (EEL)
       EEL->addBasicBlockToLoop(VectorEarlyExitBB, *LI);
-    }
   }
 
   // After vectorization, the exit blocks of the original loop will have

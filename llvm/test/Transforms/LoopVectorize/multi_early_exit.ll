@@ -14,18 +14,18 @@ define i64 @one_uncountable_two_countable_same_exit_phi_of_consts() {
 ; CHECK:       loop:
 ; CHECK-NEXT:    [[INDEX:%.*]] = phi i64 [ [[INDEX_NEXT:%.*]], [[LOOP_INC:%.*]] ], [ 3, [[ENTRY:%.*]] ]
 ; CHECK-NEXT:    [[CMP1:%.*]] = icmp ne i64 [[INDEX]], 64
-; CHECK-NEXT:    br i1 [[CMP1]], label [[SEARCH:%.*]], label [[LOOP_END1:%.*]]
+; CHECK-NEXT:    br i1 [[CMP1]], label [[SEARCH:%.*]], label [[LOOP_END:%.*]]
 ; CHECK:       search:
 ; CHECK-NEXT:    [[ARRAYIDX:%.*]] = getelementptr inbounds i8, ptr [[P1]], i64 [[INDEX]]
 ; CHECK-NEXT:    [[LD1:%.*]] = load i8, ptr [[ARRAYIDX]], align 1
 ; CHECK-NEXT:    [[ARRAYIDX1:%.*]] = getelementptr inbounds i8, ptr [[P2]], i64 [[INDEX]]
 ; CHECK-NEXT:    [[LD2:%.*]] = load i8, ptr [[ARRAYIDX1]], align 1
 ; CHECK-NEXT:    [[CMP3:%.*]] = icmp eq i8 [[LD1]], [[LD2]]
-; CHECK-NEXT:    br i1 [[CMP3]], label [[LOOP_END1]], label [[LOOP_INC]]
+; CHECK-NEXT:    br i1 [[CMP3]], label [[LOOP_END]], label [[LOOP_INC]]
 ; CHECK:       loop.inc:
 ; CHECK-NEXT:    [[INDEX_NEXT]] = add i64 [[INDEX]], 1
 ; CHECK-NEXT:    [[EXITCOND:%.*]] = icmp ne i64 [[INDEX_NEXT]], 128
-; CHECK-NEXT:    br i1 [[EXITCOND]], label [[LOOP]], label [[LOOP_END1]]
+; CHECK-NEXT:    br i1 [[EXITCOND]], label [[LOOP]], label [[LOOP_END]]
 ; CHECK:       loop.end:
 ; CHECK-NEXT:    [[RETVAL:%.*]] = phi i64 [ 0, [[LOOP]] ], [ 1, [[SEARCH]] ], [ 0, [[LOOP_INC]] ]
 ; CHECK-NEXT:    ret i64 [[RETVAL]]
