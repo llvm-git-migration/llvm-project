@@ -21,7 +21,8 @@ namespace std {
 // Enable the declaration even if the compiler doesn't support the language
 // feature.
 struct destroying_delete_t {
-  explicit destroying_delete_t() = default;
+  explicit destroying_delete_t() =
+  default;
 };
 inline constexpr destroying_delete_t destroying_delete{};
 } // namespace std
