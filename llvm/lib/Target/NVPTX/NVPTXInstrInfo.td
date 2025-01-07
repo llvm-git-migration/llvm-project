@@ -64,6 +64,9 @@ def CvtNONE_RELU   : PatLeaf<(i32 0x40)>;
 def CvtRN_RELU   : PatLeaf<(i32 0x45)>;
 def CvtRZ_RELU   : PatLeaf<(i32 0x46)>;
 
+def CvtNONE_SATFINITE : PatLeaf<(i32 0x80)>;
+def CvtRNA_SATFINITE  : PatLeaf<(i32 0x89)>;
+
 def CvtMode : Operand<i32> {
   let PrintMethod = "printCvtMode";
 }
@@ -725,6 +728,12 @@ let hasSideEffects = false in {
 
   def CVT_f16x2_e4m3x2 : CVT_f16x2_fp8<"e4m3">;
   def CVT_f16x2_e5m2x2 : CVT_f16x2_fp8<"e5m2">;
+
+  // Float to TF32 conversions.
+  def CVT_tf32_f32 : NVPTXInst<(outs Int32Regs:$dst),
+                     (ins Float32Regs:$src, CvtMode:$mode),
+                     !strconcat("cvt${mode:base}${mode:relu}${mode:satfinite}.",
+                     "tf32.f32 \t$dst, $src;"), []>;
 }
 
 def fpround_oneuse : PatFrag<(ops node:$a), (fpround node:$a), [{
