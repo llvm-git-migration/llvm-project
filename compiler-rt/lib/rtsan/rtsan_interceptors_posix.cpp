@@ -376,6 +376,58 @@ INTERCEPTOR(void, setbuffer, FILE *stream, char *buf, int size) {
 #define RTSAN_MAYBE_INTERCEPT_SETBUFFER
 #endif
 
+#if SANITIZER_INTERCEPT_FSEEK
+INTERCEPTOR(int, fgetpos, FILE *stream, fpos_t *pos) {
+  __rtsan_notify_intercepted_call("fgetpos");
+  return REAL(fgetpos)(stream, pos);
+}
+
+INTERCEPTOR(int, fseek, FILE *stream, long offset, int whence) {
+  __rtsan_notify_intercepted_call("fseek");
+  return REAL(fgetpos)(stream, offset, whence);
+}
+
+INTERCEPTOR(int, fseeko, FILE *stream, long offset, int whence) {
+  __rtsan_notify_intercepted_call("fseeko");
+  return REAL(fgetpos)(stream, offset, whence);
+}
+
+INTERCEPTOR(int, fsetpos, FILE *stream, const fpos_t pos) {
+  __rtsan_notify_intercepted_call("fsetpos");
+  return REAL(fsetpos)(stream, pos);
+}
+
+INTERCEPTOR(long, ftell, FILE *stream) {
+  __rtsan_notify_intercepted_call("ftell");
+  return REAL(ftell)(stream);
+}
+
+INTERCEPTOR(off_t, ftello, FILE *stream) {
+  __rtsan_notify_intercepted_call("ftello");
+  return REAL(ftello)(stream);
+}
+
+INTERCEPTOR(void, rewind, FILE *stream) {
+  __rtsan_notify_intercepted_call("rewind");
+  return REAL(rewind)(stream);
+}
+#define RTSAN_MAYBE_INTERCEPT_FGETPOS INTERCEPT_FUNCTION(fgetpos)
+#define RTSAN_MAYBE_INTERCEPT_FSEEK INTERCEPT_FUNCTION(fseek)
+#define RTSAN_MAYBE_INTERCEPT_FSEEKO INTERCEPT_FUNCTION(fseeko)
+#define RTSAN_MAYBE_INTERCEPT_FSETPOS INTERCEPT_FUNCTION(fsetpos)
+#define RTSAN_MAYBE_INTERCEPT_FTELL INTERCEPT_FUNCTION(ftell)
+#define RTSAN_MAYBE_INTERCEPT_FTELLO INTERCEPT_FUNCTION(ftello)
+#define RTSAN_MAYBE_INTERCEPT_REWIND INTERCEPT_FUNCTION(rewind)
+#else
+#define RTSAN_MAYBE_INTERCEPT_FGETPOS
+#define RTSAN_MAYBE_INTERCEPT_FSEEK
+#define RTSAN_MAYBE_INTERCEPT_FSEEKO
+#define RTSAN_MAYBE_INTERCEPT_FSETPOS
+#define RTSAN_MAYBE_INTERCEPT_FTELL
+#define RTSAN_MAYBE_INTERCEPT_FTELLO
+#define RTSAN_MAYBE_INTERCEPT_REWIND
+#endif
+
 INTERCEPTOR(int, puts, const char *s) {
   __rtsan_notify_intercepted_call("puts");
   return REAL(puts)(s);
@@ -1042,6 +1094,13 @@ void __rtsan::InitializeInterceptors() {
   RTSAN_MAYBE_INTERCEPT_SETVBUF;
   RTSAN_MAYBE_INTERCEPT_SETLINEBUF;
   RTSAN_MAYBE_INTERCEPT_SETBUFFER;
+  RTSAN_MAYBE_INTERCEPT_FGETPOS;
+  RTSAN_MAYBE_INTERCEPT_FSEEK;
+  RTSAN_MAYBE_INTERCEPT_FSEEKO;
+  RTSAN_MAYBE_INTERCEPT_FSETPOS;
+  RTSAN_MAYBE_INTERCEPT_FTELL;
+  RTSAN_MAYBE_INTERCEPT_FTELLO;
+  RTSAN_MAYBE_INTERCEPT_REWIND;
   INTERCEPT_FUNCTION(lseek);
   RTSAN_MAYBE_INTERCEPT_LSEEK64;
   INTERCEPT_FUNCTION(dup);
