@@ -6183,7 +6183,8 @@ TEST_F(OpenMPIRBuilderTest, TargetRegion) {
   TargetRegionEntryInfo EntryInfo("func", 42, 4711, 17);
   OpenMPIRBuilder::LocationDescription OmpLoc({Builder.saveIP(), DL});
   OpenMPIRBuilder::TargetKernelDefaultAttrs DefaultAttrs = {
-      /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0}, /*MinThreads=*/0};
+      /*IsSPMD=*/false, /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0},
+      /*MinThreads=*/0};
   OpenMPIRBuilder::InsertPointOrErrorTy AfterIP =
       OMPBuilder.createTarget(OmpLoc, /*IsOffloadEntry=*/true, Builder.saveIP(),
                               Builder.saveIP(), EntryInfo, DefaultAttrs, Inputs,
@@ -6296,7 +6297,8 @@ TEST_F(OpenMPIRBuilderTest, TargetRegionDevice) {
                                   /*Line=*/3, /*Count=*/0);
 
   OpenMPIRBuilder::TargetKernelDefaultAttrs DefaultAttrs = {
-      /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0}, /*MinThreads=*/0};
+      /*IsSPMD=*/false, /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0},
+      /*MinThreads=*/0};
   OpenMPIRBuilder::InsertPointOrErrorTy AfterIP = OMPBuilder.createTarget(
       Loc, /*IsOffloadEntry=*/true, EntryIP, EntryIP, EntryInfo, DefaultAttrs,
       CapturedArgs, GenMapInfoCB, BodyGenCB, SimpleArgAccessorCB);
@@ -6453,7 +6455,8 @@ TEST_F(OpenMPIRBuilderTest, ConstantAllocaRaise) {
                                   /*Line=*/3, /*Count=*/0);
 
   OpenMPIRBuilder::TargetKernelDefaultAttrs DefaultAttrs = {
-      /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0}, /*MinThreads=*/0};
+      /*IsSPMD=*/false, /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0},
+      /*MinThreads=*/0};
   OpenMPIRBuilder::InsertPointOrErrorTy AfterIP = OMPBuilder.createTarget(
       Loc, /*IsOffloadEntry=*/true, EntryIP, EntryIP, EntryInfo, DefaultAttrs,
       CapturedArgs, GenMapInfoCB, BodyGenCB, SimpleArgAccessorCB);

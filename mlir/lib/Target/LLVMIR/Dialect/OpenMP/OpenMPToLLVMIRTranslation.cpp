@@ -4087,7 +4087,8 @@ convertOmpTarget(Operation &opInst, llvm::IRBuilderBase &builder,
 
   // TODO: Populate default attributes based on the construct and clauses.
   llvm::OpenMPIRBuilder::TargetKernelDefaultAttrs defaultAttrs = {
-      /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0}, /*MinThreads=*/0};
+      /*IsSPMD=*/false, /*MaxTeams=*/{-1}, /*MinTeams=*/0, /*MaxThreads=*/{0},
+      /*MinThreads=*/0};
 
   llvm::SmallVector<llvm::Value *, 4> kernelInput;
   for (size_t i = 0; i < mapVars.size(); ++i) {

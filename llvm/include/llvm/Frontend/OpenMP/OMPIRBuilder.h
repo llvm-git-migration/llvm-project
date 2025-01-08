@@ -2233,6 +2233,7 @@ public:
   /// time. The number of max values will be 1 except for the case where
   /// ompx_bare is set.
   struct TargetKernelDefaultAttrs {
+    bool IsSPMD = false;
     SmallVector<int32_t, 3> MaxTeams = {-1};
     int32_t MinTeams = 1;
     SmallVector<int32_t, 3> MaxThreads = {-1};
@@ -2741,11 +2742,10 @@ public:
   /// Create a runtime call for kmpc_target_init
   ///
   /// \param Loc The insert and source location description.
-  /// \param IsSPMD Flag to indicate if the kernel is an SPMD kernel or not.
-  /// \param Attrs Structure containing the default numbers of threads and teams
-  ///        to launch the kernel with.
+  /// \param Attrs Structure containing the default attributes, including
+  ///        numbers of threads and teams to launch the kernel with.
   InsertPointTy createTargetInit(
-      const LocationDescription &Loc, bool IsSPMD,
+      const LocationDescription &Loc,
       const llvm::OpenMPIRBuilder::TargetKernelDefaultAttrs &Attrs);
 
   /// Create a runtime call for kmpc_target_deinit
