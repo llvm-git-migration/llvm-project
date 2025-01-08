@@ -97,9 +97,6 @@ private:
   void SelectCpAsyncBulkTensorPrefetchCommon(SDNode *N, bool IsIm2Col = false);
   void SelectCpAsyncBulkTensorReduceCommon(SDNode *N, unsigned RedOp,
                                            bool IsIm2Col = false);
-  std::optional<uint64_t>
-  FindRootAddressAndTotalOffset(SDValue Addr, SDValue &Base,
-                                uint64_t AccumulatedOffset);
 
   inline SDValue getI32Imm(unsigned Imm, const SDLoc &DL) {
     return CurDAG->getTargetConstant(Imm, DL, MVT::i32);
