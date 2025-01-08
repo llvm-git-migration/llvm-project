@@ -7,174 +7,48 @@
 ; effect of disabling DAG combines, which exposes the bug. When combines are
 ; enabled the bug does not occur.
 
-%struct.8float = type <{ [8 x float] }>
+%struct.1float = type <{ [1 x float] }>
 
-declare i32 @callee(%struct.8float %a)
+declare i32 @callee(%struct.1float %a)
 
-define i32 @test(%struct.8float alignstack(32) %data) {
+define i32 @test(%struct.1float alignstack(32) %data) {
 ; CHECK-LABEL: test(
 ; CHECK:       {
-; CHECK-NEXT:    .reg .b32 %r<123>;
-; CHECK-NEXT:    .reg .f32 %f<9>;
+; CHECK-NEXT:    .reg .b32 %r<18>;
+; CHECK-NEXT:    .reg .f32 %f<2>;
 ; CHECK-EMPTY:
 ; CHECK-NEXT:  // %bb.0:
-; CHECK-NEXT:    ld.param.u8 %r1, [test_param_0+29];
+; CHECK-NEXT:    ld.param.u8 %r1, [test_param_0+1];
 ; CHECK-NEXT:    shl.b32 %r2, %r1, 8;
-; CHECK-NEXT:    ld.param.u8 %r3, [test_param_0+28];
+; CHECK-NEXT:    ld.param.u8 %r3, [test_param_0];
 ; CHECK-NEXT:    or.b32 %r4, %r2, %r3;
-; CHECK-NEXT:    ld.param.u8 %r5, [test_param_0+31];
+; CHECK-NEXT:    ld.param.u8 %r5, [test_param_0+3];
 ; CHECK-NEXT:    shl.b32 %r6, %r5, 8;
-; CHECK-NEXT:    ld.param.u8 %r7, [test_param_0+30];
+; CHECK-NEXT:    ld.param.u8 %r7, [test_param_0+2];
 ; CHECK-NEXT:    or.b32 %r8, %r6, %r7;
 ; CHECK-NEXT:    shl.b32 %r9, %r8, 16;
-; CHECK-NEXT:    or.b32 %r122, %r9, %r4;
-; CHECK-NEXT:    mov.b32 %f1, %r122;
-; CHECK-NEXT:    ld.param.u8 %r11, [test_param_0+25];
-; CHECK-NEXT:    shl.b32 %r12, %r11, 8;
-; CHECK-NEXT:    ld.param.u8 %r13, [test_param_0+24];
-; CHECK-NEXT:    or.b32 %r14, %r12, %r13;
-; CHECK-NEXT:    ld.param.u8 %r15, [test_param_0+27];
-; CHECK-NEXT:    shl.b32 %r16, %r15, 8;
-; CHECK-NEXT:    ld.param.u8 %r17, [test_param_0+26];
-; CHECK-NEXT:    or.b32 %r18, %r16, %r17;
-; CHECK-NEXT:    shl.b32 %r19, %r18, 16;
-; CHECK-NEXT:    or.b32 %r121, %r19, %r14;
-; CHECK-NEXT:    mov.b32 %f2, %r121;
-; CHECK-NEXT:    ld.param.u8 %r21, [test_param_0+21];
-; CHECK-NEXT:    shl.b32 %r22, %r21, 8;
-; CHECK-NEXT:    ld.param.u8 %r23, [test_param_0+20];
-; CHECK-NEXT:    or.b32 %r24, %r22, %r23;
-; CHECK-NEXT:    ld.param.u8 %r25, [test_param_0+23];
-; CHECK-NEXT:    shl.b32 %r26, %r25, 8;
-; CHECK-NEXT:    ld.param.u8 %r27, [test_param_0+22];
-; CHECK-NEXT:    or.b32 %r28, %r26, %r27;
-; CHECK-NEXT:    shl.b32 %r29, %r28, 16;
-; CHECK-NEXT:    or.b32 %r120, %r29, %r24;
-; CHECK-NEXT:    mov.b32 %f3, %r120;
-; CHECK-NEXT:    ld.param.u8 %r31, [test_param_0+17];
-; CHECK-NEXT:    shl.b32 %r32, %r31, 8;
-; CHECK-NEXT:    ld.param.u8 %r33, [test_param_0+16];
-; CHECK-NEXT:    or.b32 %r34, %r32, %r33;
-; CHECK-NEXT:    ld.param.u8 %r35, [test_param_0+19];
-; CHECK-NEXT:    shl.b32 %r36, %r35, 8;
-; CHECK-NEXT:    ld.param.u8 %r37, [test_param_0+18];
-; CHECK-NEXT:    or.b32 %r38, %r36, %r37;
-; CHECK-NEXT:    shl.b32 %r39, %r38, 16;
-; CHECK-NEXT:    or.b32 %r119, %r39, %r34;
-; CHECK-NEXT:    mov.b32 %f4, %r119;
-; CHECK-NEXT:    ld.param.u8 %r41, [test_param_0+13];
-; CHECK-NEXT:    shl.b32 %r42, %r41, 8;
-; CHECK-NEXT:    ld.param.u8 %r43, [test_param_0+12];
-; CHECK-NEXT:    or.b32 %r44, %r42, %r43;
-; CHECK-NEXT:    ld.param.u8 %r45, [test_param_0+15];
-; CHECK-NEXT:    shl.b32 %r46, %r45, 8;
-; CHECK-NEXT:    ld.param.u8 %r47, [test_param_0+14];
-; CHECK-NEXT:    or.b32 %r48, %r46, %r47;
-; CHECK-NEXT:    shl.b32 %r49, %r48, 16;
-; CHECK-NEXT:    or.b32 %r118, %r49, %r44;
-; CHECK-NEXT:    mov.b32 %f5, %r118;
-; CHECK-NEXT:    ld.param.u8 %r51, [test_param_0+9];
-; CHECK-NEXT:    shl.b32 %r52, %r51, 8;
-; CHECK-NEXT:    ld.param.u8 %r53, [test_param_0+8];
-; CHECK-NEXT:    or.b32 %r54, %r52, %r53;
-; CHECK-NEXT:    ld.param.u8 %r55, [test_param_0+11];
-; CHECK-NEXT:    shl.b32 %r56, %r55, 8;
-; CHECK-NEXT:    ld.param.u8 %r57, [test_param_0+10];
-; CHECK-NEXT:    or.b32 %r58, %r56, %r57;
-; CHECK-NEXT:    shl.b32 %r59, %r58, 16;
-; CHECK-NEXT:    or.b32 %r117, %r59, %r54;
-; CHECK-NEXT:    mov.b32 %f6, %r117;
-; CHECK-NEXT:    ld.param.u8 %r61, [test_param_0+5];
-; CHECK-NEXT:    shl.b32 %r62, %r61, 8;
-; CHECK-NEXT:    ld.param.u8 %r63, [test_param_0+4];
-; CHECK-NEXT:    or.b32 %r64, %r62, %r63;
-; CHECK-NEXT:    ld.param.u8 %r65, [test_param_0+7];
-; CHECK-NEXT:    shl.b32 %r66, %r65, 8;
-; CHECK-NEXT:    ld.param.u8 %r67, [test_param_0+6];
-; CHECK-NEXT:    or.b32 %r68, %r66, %r67;
-; CHECK-NEXT:    shl.b32 %r69, %r68, 16;
-; CHECK-NEXT:    or.b32 %r116, %r69, %r64;
-; CHECK-NEXT:    mov.b32 %f7, %r116;
-; CHECK-NEXT:    ld.param.u8 %r71, [test_param_0+1];
-; CHECK-NEXT:    shl.b32 %r72, %r71, 8;
-; CHECK-NEXT:    ld.param.u8 %r73, [test_param_0];
-; CHECK-NEXT:    or.b32 %r74, %r72, %r73;
-; CHECK-NEXT:    ld.param.u8 %r75, [test_param_0+3];
-; CHECK-NEXT:    shl.b32 %r76, %r75, 8;
-; CHECK-NEXT:    ld.param.u8 %r77, [test_param_0+2];
-; CHECK-NEXT:    or.b32 %r78, %r76, %r77;
-; CHECK-NEXT:    shl.b32 %r79, %r78, 16;
-; CHECK-NEXT:    or.b32 %r115, %r79, %r74;
-; CHECK-NEXT:    mov.b32 %f8, %r115;
-; CHECK-NEXT:    shr.u32 %r82, %r115, 8;
-; CHECK-NEXT:    shr.u32 %r83, %r115, 16;
-; CHECK-NEXT:    shr.u32 %r84, %r115, 24;
-; CHECK-NEXT:    shr.u32 %r86, %r116, 8;
-; CHECK-NEXT:    shr.u32 %r87, %r116, 16;
-; CHECK-NEXT:    shr.u32 %r88, %r116, 24;
-; CHECK-NEXT:    shr.u32 %r90, %r117, 8;
-; CHECK-NEXT:    shr.u32 %r91, %r117, 16;
-; CHECK-NEXT:    shr.u32 %r92, %r117, 24;
-; CHECK-NEXT:    shr.u32 %r94, %r118, 8;
-; CHECK-NEXT:    shr.u32 %r95, %r118, 16;
-; CHECK-NEXT:    shr.u32 %r96, %r118, 24;
-; CHECK-NEXT:    shr.u32 %r98, %r119, 8;
-; CHECK-NEXT:    shr.u32 %r99, %r119, 16;
-; CHECK-NEXT:    shr.u32 %r100, %r119, 24;
-; CHECK-NEXT:    shr.u32 %r102, %r120, 8;
-; CHECK-NEXT:    shr.u32 %r103, %r120, 16;
-; CHECK-NEXT:    shr.u32 %r104, %r120, 24;
-; CHECK-NEXT:    shr.u32 %r106, %r121, 8;
-; CHECK-NEXT:    shr.u32 %r107, %r121, 16;
-; CHECK-NEXT:    shr.u32 %r108, %r121, 24;
-; CHECK-NEXT:    shr.u32 %r110, %r122, 8;
-; CHECK-NEXT:    shr.u32 %r111, %r122, 16;
-; CHECK-NEXT:    shr.u32 %r112, %r122, 24;
+; CHECK-NEXT:    or.b32 %r17, %r9, %r4;
+; CHECK-NEXT:    mov.b32 %f1, %r17;
+; CHECK-NEXT:    shr.u32 %r12, %r17, 8;
+; CHECK-NEXT:    shr.u32 %r13, %r17, 16;
+; CHECK-NEXT:    shr.u32 %r14, %r17, 24;
 ; CHECK-NEXT:    { // callseq 0, 0
-; CHECK-NEXT:    .param .align 1 .b8 param0[32];
-; CHECK-NEXT:    st.param.b8 [param0], %r115;
-; CHECK-NEXT:    st.param.b8 [param0+1], %r82;
-; CHECK-NEXT:    st.param.b8 [param0+2], %r83;
-; CHECK-NEXT:    st.param.b8 [param0+3], %r84;
-; CHECK-NEXT:    st.param.b8 [param0+4], %r116;
-; CHECK-NEXT:    st.param.b8 [param0+5], %r86;
-; CHECK-NEXT:    st.param.b8 [param0+6], %r87;
-; CHECK-NEXT:    st.param.b8 [param0+7], %r88;
-; CHECK-NEXT:    st.param.b8 [param0+8], %r117;
-; CHECK-NEXT:    st.param.b8 [param0+9], %r90;
-; CHECK-NEXT:    st.param.b8 [param0+10], %r91;
-; CHECK-NEXT:    st.param.b8 [param0+11], %r92;
-; CHECK-NEXT:    st.param.b8 [param0+12], %r118;
-; CHECK-NEXT:    st.param.b8 [param0+13], %r94;
-; CHECK-NEXT:    st.param.b8 [param0+14], %r95;
-; CHECK-NEXT:    st.param.b8 [param0+15], %r96;
-; CHECK-NEXT:    st.param.b8 [param0+16], %r119;
-; CHECK-NEXT:    st.param.b8 [param0+17], %r98;
-; CHECK-NEXT:    st.param.b8 [param0+18], %r99;
-; CHECK-NEXT:    st.param.b8 [param0+19], %r100;
-; CHECK-NEXT:    st.param.b8 [param0+20], %r120;
-; CHECK-NEXT:    st.param.b8 [param0+21], %r102;
-; CHECK-NEXT:    st.param.b8 [param0+22], %r103;
-; CHECK-NEXT:    st.param.b8 [param0+23], %r104;
-; CHECK-NEXT:    st.param.b8 [param0+24], %r121;
-; CHECK-NEXT:    st.param.b8 [param0+25], %r106;
-; CHECK-NEXT:    st.param.b8 [param0+26], %r107;
-; CHECK-NEXT:    st.param.b8 [param0+27], %r108;
-; CHECK-NEXT:    st.param.b8 [param0+28], %r122;
-; CHECK-NEXT:    st.param.b8 [param0+29], %r110;
-; CHECK-NEXT:    st.param.b8 [param0+30], %r111;
-; CHECK-NEXT:    st.param.b8 [param0+31], %r112;
+; CHECK-NEXT:    .param .align 1 .b8 param0[4];
+; CHECK-NEXT:    st.param.b8 [param0], %r17;
+; CHECK-NEXT:    st.param.b8 [param0+1], %r12;
+; CHECK-NEXT:    st.param.b8 [param0+2], %r13;
+; CHECK-NEXT:    st.param.b8 [param0+3], %r14;
 ; CHECK-NEXT:    .param .b32 retval0;
 ; CHECK-NEXT:    call.uni (retval0),
 ; CHECK-NEXT:    callee,
 ; CHECK-NEXT:    (
 ; CHECK-NEXT:    param0
 ; CHECK-NEXT:    );
-; CHECK-NEXT:    ld.param.b32 %r113, [retval0];
+; CHECK-NEXT:    ld.param.b32 %r15, [retval0];
 ; CHECK-NEXT:    } // callseq 0
-; CHECK-NEXT:    st.param.b32 [func_retval0], %r113;
+; CHECK-NEXT:    st.param.b32 [func_retval0], %r15;
 ; CHECK-NEXT:    ret;
 
-  %1 = call i32 @callee(%struct.8float %data)
+  %1 = call i32 @callee(%struct.1float %data)
   ret i32 %1
 }
