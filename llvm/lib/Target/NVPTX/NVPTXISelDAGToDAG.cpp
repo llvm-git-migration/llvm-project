@@ -2472,26 +2472,26 @@ bool NVPTXDAGToDAGISel::SelectDirectAddr(SDValue N, SDValue &Address) {
   return false;
 }
 
-std::optional<uint64_t>
-NVPTXDAGToDAGISel::FindRootAddressAndTotalOffset(SDValue Addr, SDValue &Base,
-                                                 uint64_t AccumulatedOffset) {
-  if (Addr.getOpcode() == ISD::ADD) {
-    if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1))) {
-      SDValue base = Addr.getOperand(0);
-      AccumulatedOffset += CN->getZExtValue();
-      if (SelectDirectAddr(base, Base))
-        return AccumulatedOffset;
-      return FindRootAddressAndTotalOffset(base, Base, AccumulatedOffset);
-    }
-  }
-  return std::nullopt;
-}
-
 // symbol+offset
 bool NVPTXDAGToDAGISel::SelectADDRsi_imp(SDNode *OpNode, SDValue Addr,
                                          SDValue &Base, SDValue &Offset,
                                          MVT mvt) {
-  if (auto AccumulatedOffset = FindRootAddressAndTotalOffset(Addr, Base, 0)) {
+  std::function<std::optional<uint64_t>(SDValue, uint64_t)>
+      FindRootAddressAndTotalOffset =
+          [&](SDValue Addr,
+              uint64_t AccumulatedOffset) -> std::optional<uint64_t> {
+    if (Addr.getOpcode() == ISD::ADD) {
+      if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1))) {
+        SDValue base = Addr.getOperand(0);
+        AccumulatedOffset += CN->getZExtValue();
+        if (SelectDirectAddr(base, Base))
+          return AccumulatedOffset;
+        return FindRootAddressAndTotalOffset(base, AccumulatedOffset);
+      }
+    }
+    return std::nullopt;
+  };
+  if (auto AccumulatedOffset = FindRootAddressAndTotalOffset(Addr, 0)) {
     Offset = CurDAG->getTargetConstant(*AccumulatedOffset, SDLoc(OpNode), mvt);
     return true;
   }
