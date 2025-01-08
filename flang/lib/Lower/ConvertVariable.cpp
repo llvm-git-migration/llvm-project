@@ -50,7 +50,6 @@ static llvm::cl::opt<bool>
     allowAssumedRank("allow-assumed-rank",
                      llvm::cl::desc("Enable assumed rank lowering"),
                      llvm::cl::init(true));
-
 #define DEBUG_TYPE "flang-lower-variable"
 
 /// Helper to lower a scalar expression using a specific symbol mapping.
@@ -635,7 +634,11 @@ static fir::GlobalOp defineGlobal(Fortran::lower::AbstractConverter &converter,
       global.setLinkName(builder.createCommonLinkage());
     Fortran::lower::createGlobalInitialization(
         builder, global, [&](fir::FirOpBuilder &builder) {
-          mlir::Value initValue = builder.create<fir::ZeroOp>(loc, symTy);
+          mlir::Value initValue;
+          if (converter.getLoweringOptions().getZeroInitGlobalsWithoutInit())
+            initValue = builder.create<fir::ZeroOp>(loc, symTy);
+          else
+            initValue = builder.create<fir::UndefOp>(loc, symTy);
           builder.create<fir::HasValueOp>(loc, initValue);
         });
   }
