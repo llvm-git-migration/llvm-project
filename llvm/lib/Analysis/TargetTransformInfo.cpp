@@ -1405,6 +1405,14 @@ bool TargetTransformInfo::isProfitableToSinkOperands(
   return TTIImpl->isProfitableToSinkOperands(I, OpsToSink);
 }
 
+bool TargetTransformInfo::isSExtCostConstant() const {
+  return TTIImpl->isSExtCostConstant();
+}
+
+bool TargetTransformInfo::isZExtCostConstant() const {
+  return TTIImpl->isZExtCostConstant();
+}
+
 bool TargetTransformInfo::isVectorShiftByScalarCheap(Type *Ty) const {
   return TTIImpl->isVectorShiftByScalarCheap(Ty);
 }
