@@ -1053,6 +1053,7 @@ RISC-V Support
 
 CUDA/HIP Language Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+* Added initial support for version 3 of the compressed offload bundle format, which uses 64-bit fields for Total File Size and Uncompressed Binary Size. This enables support for files larger than 4GB. The support is currently experimental and can be enabled by setting the environment variable `COMPRESSED_BUNDLE_FORMAT_VERSION=3`.
 
 CUDA Support
 ^^^^^^^^^^^^
