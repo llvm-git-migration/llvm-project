@@ -6380,6 +6380,11 @@ std::string Driver::GetFilePath(StringRef Name, const ToolChain &TC) const {
   if (llvm::sys::fs::exists(Twine(R)))
     return std::string(R);
 
+  SmallString<128> R2(ResourceDir);
+  llvm::sys::path::append(R2, "..", "..", Name);
+  if (llvm::sys::fs::exists(Twine(R2)))
+    return std::string(R2);
+
   SmallString<128> P(TC.getCompilerRTPath());
   llvm::sys::path::append(P, Name);
   if (llvm::sys::fs::exists(Twine(P)))
