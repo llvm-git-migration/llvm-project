@@ -1,4 +1,7 @@
 #include <vector>
+#include <__verbose_abort>
+
+void *libcpp_verbose_abort_ptr = (void *) &std::__libcpp_verbose_abort;
 
 struct Foo {
   int a;

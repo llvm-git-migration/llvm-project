@@ -1,4 +1,7 @@
 #include <array>
+#include <__verbose_abort>
+
+void *libcpp_verbose_abort_ptr = (void *) &std::__libcpp_verbose_abort;
 
 struct DbgInfo {
   int v = 4;
