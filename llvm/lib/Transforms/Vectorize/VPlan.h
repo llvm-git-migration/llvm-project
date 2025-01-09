@@ -347,6 +347,9 @@ struct VPTransformState {
     /// vector loop.
     BasicBlock *ExitBB = nullptr;
 
+    /// The uncountable early exit block in the original scalar loop.
+    BasicBlock *UncountableEarlyExitBB = nullptr;
+
     /// A mapping of each VPBasicBlock to the corresponding BasicBlock. In case
     /// of replication, maps the BasicBlock of the last replica created.
     SmallDenseMap<VPBasicBlock *, BasicBlock *> VPBB2IRBB;
@@ -1225,6 +1228,9 @@ public:
     // Returns a scalar boolean value, which is true if any lane of its single
     // operand is true.
     AnyOf,
+    // Extracts the first active lane of a vector, where the first operand is
+    // the predicate, and the second operand is the vector to extract.
+    ExtractFirstActive,
   };
 
 private:
@@ -3870,6 +3876,22 @@ public:
   /// Returns the VPRegionBlock of the vector loop.
   VPRegionBlock *getVectorLoopRegion();
   const VPRegionBlock *getVectorLoopRegion() const;
+
+  /// Get the vector early exit block
+  VPBasicBlock *getEarlyExit() {
+    auto LoopRegion = getVectorLoopRegion();
+    if (!LoopRegion)
+      return nullptr;
+
+    auto *SuccessorVPBB = LoopRegion->getSingleSuccessor();
+    auto *MiddleVPBB = getMiddleBlock();
+    if (SuccessorVPBB == MiddleVPBB)
+      return nullptr;
+
+    assert(SuccessorVPBB->getSuccessors()[1] == MiddleVPBB &&
+           "Expected second successor to be the middle block");
+    return cast<VPBasicBlock>(SuccessorVPBB->getSuccessors()[0]);
+  }
 
   /// Returns the 'middle' block of the plan, that is the block that selects
   /// whether to execute the scalar tail loop or the exit block from the loop
