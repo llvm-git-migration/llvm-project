@@ -464,6 +464,16 @@ TEST_F(RtsanOpenedFileTest, FgetposDieWhenRealtime) {
   ExpectNonRealtimeSurvival(Func);
 }
 
+TEST_F(RtsanOpenedFileTest, FsetposDieWhenRealtime) {
+  auto Func = [this]() {
+    int ret = fsetpos(GetOpenFile(), 0);
+    ASSERT_THAT(ret, Eq(0));
+  };
+
+  ExpectRealtimeDeath(Func, MAYBE_APPEND_64("fsetpos"));
+  ExpectNonRealtimeSurvival(Func);
+}
+
 TEST_F(RtsanOpenedFileTest, FseekDieWhenRealtime) {
   auto Func = [this]() {
     int ret = fseek(GetOpenFile(), 0, SEEK_CUR);
