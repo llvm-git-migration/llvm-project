@@ -19380,43 +19380,59 @@ class HorizontalReduction {
   /// Creates reduction operation with the current opcode.
   static Value *createOp(IRBuilderBase &Builder, RecurKind Kind, Value *LHS,
                          Value *RHS, const Twine &Name, bool UseSelect) {
-    if (UseSelect) {
-      if (RecurrenceDescriptor::isIntMinMaxRecurrenceKind(Kind)) {
-        CmpInst::Predicate Pred = llvm::getMinMaxReductionPredicate(Kind);
-        Value *Cmp = Builder.CreateCmp(Pred, LHS, RHS, Name);
-        return Builder.CreateSelect(Cmp, LHS, RHS, Name);
-      }
-      if ((Kind == RecurKind::Or || Kind == RecurKind::And) &&
-          LHS->getType() == CmpInst::makeCmpResultType(LHS->getType())) {
-        Value *TrueVal = Kind == RecurKind::Or ? Builder.getTrue() : RHS;
-        Value *FalseVal = Kind == RecurKind::Or ? RHS : Builder.getFalse();
-        return Builder.CreateSelect(LHS, TrueVal, FalseVal, Name);
-      }
-    }
-
+    unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(Kind);
     switch (Kind) {
     case RecurKind::Or:
+      if (UseSelect &&
+          LHS->getType() == CmpInst::makeCmpResultType(LHS->getType()))
+        return Builder.CreateSelect(LHS, Builder.getTrue(), RHS, Name);
+      return Builder.CreateBinOp((Instruction::BinaryOps)RdxOpcode, LHS, RHS,
+                                 Name);
     case RecurKind::And:
+      if (UseSelect &&
+          LHS->getType() == CmpInst::makeCmpResultType(LHS->getType()))
+        return Builder.CreateSelect(LHS, RHS, Builder.getFalse(), Name);
+      return Builder.CreateBinOp((Instruction::BinaryOps)RdxOpcode, LHS, RHS,
+                                 Name);
     case RecurKind::Add:
     case RecurKind::Mul:
     case RecurKind::Xor:
     case RecurKind::FAdd:
-    case RecurKind::FMul: {
-      unsigned RdxOpcode = RecurrenceDescriptor::getOpcode(Kind);
+    case RecurKind::FMul:
       return Builder.CreateBinOp((Instruction::BinaryOps)RdxOpcode, LHS, RHS,
                                  Name);
-    }
     case RecurKind::FMax:
+      return Builder.CreateBinaryIntrinsic(Intrinsic::maxnum, LHS, RHS);
     case RecurKind::FMin:
+      return Builder.CreateBinaryIntrinsic(Intrinsic::minnum, LHS, RHS);
     case RecurKind::FMaximum:
+      return Builder.CreateBinaryIntrinsic(Intrinsic::maximum, LHS, RHS);
     case RecurKind::FMinimum:
+      return Builder.CreateBinaryIntrinsic(Intrinsic::minimum, LHS, RHS);
     case RecurKind::SMax:
+      if (UseSelect) {
+        Value *Cmp = Builder.CreateICmpSGT(LHS, RHS, Name);
+        return Builder.CreateSelect(Cmp, LHS, RHS, Name);
+      }
+      return Builder.CreateBinaryIntrinsic(Intrinsic::smax, LHS, RHS);
     case RecurKind::SMin:
+      if (UseSelect) {
+        Value *Cmp = Builder.CreateICmpSLT(LHS, RHS, Name);
+        return Builder.CreateSelect(Cmp, LHS, RHS, Name);
+      }
+      return Builder.CreateBinaryIntrinsic(Intrinsic::smin, LHS, RHS);
     case RecurKind::UMax:
-    case RecurKind::UMin: {
-      Intrinsic::ID Id = llvm::getMinMaxReductionIntrinsicOp(Kind);
-      return Builder.CreateBinaryIntrinsic(Id, LHS, RHS);
-    }
+      if (UseSelect) {
+        Value *Cmp = Builder.CreateICmpUGT(LHS, RHS, Name);
+        return Builder.CreateSelect(Cmp, LHS, RHS, Name);
+      }
+      return Builder.CreateBinaryIntrinsic(Intrinsic::umax, LHS, RHS);
+    case RecurKind::UMin:
+      if (UseSelect) {
+        Value *Cmp = Builder.CreateICmpULT(LHS, RHS, Name);
+        return Builder.CreateSelect(Cmp, LHS, RHS, Name);
+      }
+      return Builder.CreateBinaryIntrinsic(Intrinsic::umin, LHS, RHS);
     default:
       llvm_unreachable("Unknown reduction operation.");
     }
