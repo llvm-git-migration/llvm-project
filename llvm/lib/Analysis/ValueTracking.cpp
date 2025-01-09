@@ -9335,8 +9335,8 @@ static bool isTruePredicate(CmpInst::Predicate Pred, const Value *LHS,
 /// Return true if "icmp Pred BLHS BRHS" is true whenever "icmp Pred
 /// ALHS ARHS" is true.  Otherwise, return std::nullopt.
 static std::optional<bool>
-isImpliedCondOperands(CmpPredicate Pred, const Value *ALHS, const Value *ARHS,
-                      const Value *BLHS, const Value *BRHS) {
+isImpliedCondOperands(CmpInst::Predicate Pred, const Value *ALHS,
+                      const Value *ARHS, const Value *BLHS, const Value *BRHS) {
   switch (Pred) {
   default:
     return std::nullopt;
