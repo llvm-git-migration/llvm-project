@@ -2,17 +2,21 @@
 ; requires: asserts
 
 ; RUN: llc -stop-after=block-placement %s -o - | llc --run-pass=static-data-splitter -stats -x mir -o - 2>&1 | FileCheck %s --check-prefix=STAT
+; RUN: llc -enable-split-machine-functions -split-static-data --function-sections -data-sections %s -o - 2>&1 | FileCheck %s --check-prefix=SECTION
 
 ; `func_with_hot_jumptable` contains a hot jump table and `func_with_cold_jumptable` contains a cold one. 
 ; `func_without_entry_count` simulates the functions without profile information (e.g., not instrumented or not profiled),
 ; it's jump table hotness is unknown and regarded as hot conservatively.
 ;
 ; Tests stat messages are expected.
-; TODO: Update test to verify section suffixes when target-lowering and assembler changes are implemented.
-;
 ; STAT-DAG: 1 static-data-splitter - Number of cold jump tables seen
 ; STAT-DAG: 1 static-data-splitter - Number of hot jump tables seen
 ; STAT-DAG: 1 static-data-splitter - Number of jump tables with unknown hotness
+
+; TODO: Construct a test case where a hot function has a cold jump table.
+; SECTION: .section .rodata.hot.func_with_hot_jumptable
+; SECTION: .section .rodata.unlikely.func_with_cold_jumptable
+; SECTION: .section .rodata.hot.func_without_entry_count
 
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-linux-gnu"
