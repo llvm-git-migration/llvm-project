@@ -4,7 +4,7 @@
 
 // CHECK-LABEL: D3DCOLORtoUBYTE4
 int4 test_D3DCOLORtoUBYTE4(float4 p1) {
-  // CHECK: %[[SCALED:.*]] = fmul <4 x float> %{{.*}}, splat (float 0x406FE01000000000)
+  // CHECK: %[[SCALED:.*]] = fmul [[FMFLAGS:.*]]<4 x float> %{{.*}}, splat (float 0x406FE01000000000)
   // CHECK: %[[CONVERTED:.*]] = fptoui <4 x float> %[[SCALED]] to <4 x i32>
   // CHECK: %[[SHUFFLED:.*]] = shufflevector <4 x i32> %{{.*}}, <4 x i32> poison, <4 x i32> <i32 2, i32 1, i32 0, i32 3>
   // CHECK: ret <4 x i32> %[[SHUFFLED]]
