@@ -602,6 +602,55 @@ template <> struct MDNodeKeyImpl<DIDerivedType> {
   }
 };
 
+template <> struct MDNodeKeyImpl<DISubrangeType> {
+  MDString *Name;
+  Metadata *File;
+  unsigned Line;
+  Metadata *Scope;
+  uint64_t SizeInBits;
+  uint32_t AlignInBits;
+  unsigned Flags;
+  Metadata *BaseType;
+  Metadata *LowerBound;
+  Metadata *UpperBound;
+  Metadata *Stride;
+  Metadata *Bias;
+
+  MDNodeKeyImpl(MDString *Name, Metadata *File, unsigned Line, Metadata *Scope,
+                uint64_t SizeInBits, uint32_t AlignInBits, unsigned Flags,
+                Metadata *BaseType, Metadata *LowerBound, Metadata *UpperBound,
+                Metadata *Stride, Metadata *Bias)
+      : Name(Name), File(File), Line(Line), Scope(Scope),
+        SizeInBits(SizeInBits), AlignInBits(AlignInBits), BaseType(BaseType),
+        LowerBound(LowerBound), UpperBound(UpperBound), Stride(Stride),
+        Bias(Bias) {}
+  MDNodeKeyImpl(const DISubrangeType *N)
+      : Name(N->getRawName()), File(N->getRawFile()), Line(N->getLine()),
+        Scope(N->getRawScope()), SizeInBits(N->getSizeInBits()),
+        AlignInBits(N->getAlignInBits()), BaseType(N->getRawBaseType()),
+        LowerBound(N->getRawLowerBound()), UpperBound(N->getRawUpperBound()),
+        Stride(N->getRawStride()), Bias(N->getRawBias()) {}
+
+  bool isKeyOf(const DISubrangeType *RHS) const {
+    return Name == RHS->getRawName() && File == RHS->getRawFile() &&
+           Line == RHS->getLine() && Scope == RHS->getRawScope() &&
+           SizeInBits == RHS->getSizeInBits() &&
+           AlignInBits == RHS->getAlignInBits() &&
+           BaseType == RHS->getRawBaseType() &&
+           LowerBound == RHS->getRawLowerBound() &&
+           UpperBound == RHS->getRawUpperBound() &&
+           Stride == RHS->getRawStride() && Bias == RHS->getRawBias();
+  }
+
+  unsigned getHashValue() const {
+    // Intentionally computes the hash on a subset of the operands for
+    // performance reason. The subset has to be significant enough to avoid
+    // collision "most of the time". There is no correctness issue in case of
+    // collision because of the full check above.
+    return hash_combine(Name, File, Line, Scope, BaseType, Flags);
+  }
+};
+
 template <> struct MDNodeSubsetEqualImpl<DIDerivedType> {
   using KeyTy = MDNodeKeyImpl<DIDerivedType>;
 
