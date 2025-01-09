@@ -1791,11 +1791,33 @@ InstructionCost ARMTTIImpl::getExtendedReductionCost(
 
   int ISD = TLI->InstructionOpcodeToISD(Opcode);
 
+  auto CastCost = [=]() -> unsigned {
+    // MVE extend costs, taken from codegen tests. i8->i16 or i16->i32 is one
+    // instruction, i8->i32 is two. i64 zexts are an VAND with a constant, sext
+    // are linearised so take more.
+    static const TypeConversionCostTblEntry MVEVectorConversionTbl[] = {
+        {ISD::SIGN_EXTEND, MVT::v8i16, MVT::v8i8, 1},
+        {ISD::ZERO_EXTEND, MVT::v8i16, MVT::v8i8, 1},
+        {ISD::SIGN_EXTEND, MVT::v4i32, MVT::v4i8, 2},
+        {ISD::ZERO_EXTEND, MVT::v4i32, MVT::v4i8, 2},
+        {ISD::SIGN_EXTEND, MVT::v4i32, MVT::v4i16, 1},
+        {ISD::ZERO_EXTEND, MVT::v4i32, MVT::v4i16, 1},
+    };
+
+    if (ST->hasMVEIntegerOps()) {
+      if (const auto *Entry = ConvertCostTableLookup(
+              MVEVectorConversionTbl,
+              (IsUnsigned) ? ISD::ZERO_EXTEND : ISD::SIGN_EXTEND,
+              ResVT.getSimpleVT(), ValVT.getSimpleVT()))
+        return Entry->Cost;
+    }
+    return 0;
+  };
+
   switch (ISD) {
   case ISD::ADD:
     if (ST->hasMVEIntegerOps() && ValVT.isSimple() && ResVT.isSimple()) {
       std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(ValTy);
-
       // The legal cases are:
       //   VADDV u/s 8/16/32
       //   VADDLV u/s 32
@@ -1807,7 +1829,7 @@ InstructionCost ARMTTIImpl::getExtendedReductionCost(
           ((LT.second == MVT::v16i8 && RevVTSize <= 32) ||
            (LT.second == MVT::v8i16 && RevVTSize <= 32) ||
            (LT.second == MVT::v4i32 && RevVTSize <= 64)))
-        return ST->getMVEVectorCostFactor(CostKind) * LT.first;
+        return CastCost() + ST->getMVEVectorCostFactor(CostKind) * LT.first;
     }
     break;
   default:
