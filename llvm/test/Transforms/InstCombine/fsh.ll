@@ -6,6 +6,7 @@ declare i16 @llvm.fshr.i16(i16, i16, i16)
 declare i32 @llvm.fshl.i32(i32, i32, i32)
 declare i33 @llvm.fshr.i33(i33, i33, i33)
 declare <2 x i32> @llvm.fshr.v2i32(<2 x i32>, <2 x i32>, <2 x i32>)
+declare <2 x i16> @llvm.fshl.v2i16(<2 x i16>, <2 x i16>, <2 x i16>)
 declare <2 x i31> @llvm.fshl.v2i31(<2 x i31>, <2 x i31>, <2 x i31>)
 declare <3 x i16> @llvm.fshl.v3i16(<3 x i16>, <3 x i16>, <3 x i16>)
 
@@ -1009,4 +1010,92 @@ define <2 x i32> @fshr_vec_zero_elem(<2 x i32> %x, <2 x i32> %y) {
 ;
   %fsh = call <2 x i32> @llvm.fshr.v2i32(<2 x i32> %x, <2 x i32> %y, <2 x i32> <i32 2, i32 0>)
   ret <2 x i32> %fsh
+}
+
+define i16 @fshl_i16_shl(i16 %x, i16 %y) {
+; CHECK-LABEL: @fshl_i16_shl(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i16 @llvm.fshl.i16(i16 [[X:%.*]], i16 0, i16 [[Y:%.*]])
+; CHECK-NEXT:    ret i16 [[RES]]
+;
+entry:
+  %res = call i16 @llvm.fshl.i16(i16 %x, i16 0, i16 %y)
+  ret i16 %res
+}
+
+define i32 @fshl_i32_shl(i32 %x, i32 %y) {
+; CHECK-LABEL: @fshl_i32_shl(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i32 @llvm.fshl.i32(i32 [[X:%.*]], i32 0, i32 [[Y:%.*]])
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+entry:
+  %res = call i32 @llvm.fshl.i32(i32 %x, i32 0, i32 %y)
+  ret i32 %res
+}
+
+define <2 x i16> @fshl_vi16_shl(<2 x i16>  %x, <2 x i16> %y) {
+; CHECK-LABEL: @fshl_vi16_shl(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> [[X:%.*]], <2 x i16> zeroinitializer, <2 x i16> [[Y:%.*]])
+; CHECK-NEXT:    ret <2 x i16> [[RES]]
+;
+entry:
+  %res = call <2 x i16> @llvm.fshl.v2i16(<2 x i16> %x, <2 x i16> <i16 0, i16 0>, <2 x i16> %y)
+  ret <2 x i16> %res
+}
+
+define <2 x i31> @fshl_vi31_shl(<2 x i31>  %x, <2 x i31> %y) {
+; CHECK-LABEL: @fshl_vi31_shl(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call <2 x i31> @llvm.fshl.v2i31(<2 x i31> [[X:%.*]], <2 x i31> zeroinitializer, <2 x i31> [[Y:%.*]])
+; CHECK-NEXT:    ret <2 x i31> [[RES]]
+;
+entry:
+  %res = call <2 x i31> @llvm.fshl.v2i31(<2 x i31> %x, <2 x i31> <i31 0, i31 0>, <2 x i31>  %y)
+  ret <2 x i31>  %res
+}
+
+define i16 @fshl_i16_shl_with_range(i16 %x, i16 range(i16 0, 16) %y) {
+; CHECK-LABEL: @fshl_i16_shl_with_range(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i16 @llvm.fshl.i16(i16 [[X:%.*]], i16 0, i16 [[Y:%.*]])
+; CHECK-NEXT:    ret i16 [[RES]]
+;
+entry:
+  %res = call i16 @llvm.fshl.i16(i16 %x, i16 0, i16 %y)
+  ret i16 %res
+}
+
+define i32 @fshl_i32_shl_with_range(i32 %x, i32 range(i32 0, 32) %y) {
+; CHECK-LABEL: @fshl_i32_shl_with_range(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i32 @llvm.fshl.i32(i32 [[X:%.*]], i32 0, i32 [[Y:%.*]])
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+entry:
+  %res = call i32 @llvm.fshl.i32(i32 %x, i32 0, i32 %y)
+  ret i32 %res
+}
+
+define i16 @fshl_i16_shl_with_range_ignored(i16 %x, i16 range(i16 0, 17) %y) {
+; CHECK-LABEL: @fshl_i16_shl_with_range_ignored(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i16 @llvm.fshl.i16(i16 [[X:%.*]], i16 0, i16 [[Y:%.*]])
+; CHECK-NEXT:    ret i16 [[RES]]
+;
+entry:
+  %res = call i16 @llvm.fshl.i16(i16 %x, i16 0, i16 %y)
+  ret i16 %res
+}
+
+define i32 @fshl_i32_shl_with_range_ignored(i32 %x, i32 range(i32 0, 33) %y) {
+; CHECK-LABEL: @fshl_i32_shl_with_range_ignored(
+; CHECK-NEXT:  entry:
+; CHECK-NEXT:    [[RES:%.*]] = call i32 @llvm.fshl.i32(i32 [[X:%.*]], i32 0, i32 [[Y:%.*]])
+; CHECK-NEXT:    ret i32 [[RES]]
+;
+entry:
+  %res = call i32 @llvm.fshl.i32(i32 %x, i32 0, i32 %y)
+  ret i32 %res
 }
