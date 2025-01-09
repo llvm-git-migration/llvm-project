@@ -1,0 +1,14 @@
+llvm/test/CodeGen/RISCV/rvv/fixed-vectors-fp.ll \
+llvm/test/CodeGen/RISCV/rvv/fmaximum-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/fminimum-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/setcc-fp-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfadd-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfdiv-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfmax-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfmin-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfptosi-vp-mask.ll \
+llvm/test/CodeGen/RISCV/rvv/vfptosi-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfptoui-vp-mask.ll \
+llvm/test/CodeGen/RISCV/rvv/vfptoui-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfsqrt-vp.ll \
+llvm/test/CodeGen/RISCV/rvv/vfsub-vp.ll
