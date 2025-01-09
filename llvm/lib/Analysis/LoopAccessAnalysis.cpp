@@ -1990,10 +1990,17 @@ MemoryDepChecker::getDependenceDistanceStrideAndSize(
   }
 
   uint64_t TypeByteSize = DL.getTypeAllocSize(ATy);
-  bool HasSameSize =
-      DL.getTypeStoreSizeInBits(ATy) == DL.getTypeStoreSizeInBits(BTy);
-  if (!HasSameSize)
-    TypeByteSize = 0;
+
+  // When the distance is zero, we're reading/writing the same memory location:
+  // check that the store sizes are equal. Otherwise, fail with an unknown
+  // dependence for which we should not generate runtime checks.
+  TypeSize AStoreSz = DL.getTypeStoreSizeInBits(ATy),
+           BStoreSz = DL.getTypeStoreSizeInBits(BTy);
+  if (Dist->isZero() && AStoreSz != BStoreSz) {
+    LLVM_DEBUG(
+        dbgs() << "LAA: zero dependence distance but different type sizes\n");
+    return Dependence::Unknown;
+  }
 
   StrideAPtrInt = std::abs(StrideAPtrInt);
   StrideBPtrInt = std::abs(StrideBPtrInt);
@@ -2029,7 +2036,6 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   auto &[Dist, MaxStride, CommonStride, ShouldRetryWithRuntimeCheck,
          TypeByteSize, AIsWrite, BIsWrite] =
       std::get<DepDistanceStrideAndSizeInfo>(Res);
-  bool HasSameSize = TypeByteSize > 0;
 
   if (isa<SCEVCouldNotCompute>(Dist)) {
     // TODO: Relax requirement that there is a common unscaled stride to retry
@@ -2047,9 +2053,9 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   // upper bound of the number of iterations), the accesses are independet, i.e.
   // they are far enough appart that accesses won't access the same location
   // across all loop ierations.
-  if (HasSameSize && isSafeDependenceDistance(
-                         DL, SE, *(PSE.getSymbolicMaxBackedgeTakenCount()),
-                         *Dist, MaxStride, TypeByteSize))
+  if (isSafeDependenceDistance(DL, SE,
+                               *(PSE.getSymbolicMaxBackedgeTakenCount()), *Dist,
+                               MaxStride, TypeByteSize))
     return Dependence::NoDep;
 
   const SCEVConstant *ConstDist = dyn_cast<SCEVConstant>(Dist);
@@ -2060,7 +2066,7 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
 
     // If the distance between accesses and their strides are known constants,
     // check whether the accesses interlace each other.
-    if (Distance > 0 && CommonStride && CommonStride > 1 && HasSameSize &&
+    if (Distance > 0 && CommonStride && CommonStride > 1 &&
         areStridedAccessesIndependent(Distance, *CommonStride, TypeByteSize)) {
       LLVM_DEBUG(dbgs() << "LAA: Strided accesses are independent\n");
       return Dependence::NoDep;
@@ -2074,15 +2080,9 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
 
   // Negative distances are not plausible dependencies.
   if (SE.isKnownNonPositive(Dist)) {
-    if (SE.isKnownNonNegative(Dist)) {
-      if (HasSameSize) {
-        // Write to the same location with the same size.
-        return Dependence::Forward;
-      }
-      LLVM_DEBUG(dbgs() << "LAA: possibly zero dependence difference but "
-                           "different type sizes\n");
-      return Dependence::Unknown;
-    }
+    if (SE.isKnownNonNegative(Dist))
+      // Write to the same location with the same size.
+      return Dependence::Forward;
 
     bool IsTrueDataDependence = (AIsWrite && !BIsWrite);
     // Check if the first access writes to a location that is read in a later
@@ -2102,8 +2102,7 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
         FoundNonConstantDistanceDependence |= ShouldRetryWithRuntimeCheck;
         return Dependence::Unknown;
       }
-      if (!HasSameSize ||
-          couldPreventStoreLoadForward(
+      if (couldPreventStoreLoadForward(
               ConstDist->getAPInt().abs().getZExtValue(), TypeByteSize)) {
         LLVM_DEBUG(
             dbgs() << "LAA: Forward but may prevent st->ld forwarding\n");
@@ -2132,12 +2131,6 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
     // did not set it when strides were different but there is no inherent
     // reason to.
     FoundNonConstantDistanceDependence |= ShouldRetryWithRuntimeCheck;
-  }
-
-  if (!HasSameSize) {
-    LLVM_DEBUG(dbgs() << "LAA: ReadWrite-Write positive dependency with "
-                         "different type sizes\n");
-    return Dependence::Unknown;
   }
 
   if (!CommonStride)
