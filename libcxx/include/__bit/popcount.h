@@ -15,6 +15,8 @@
 #include <__bit/rotate.h>
 #include <__concepts/arithmetic.h>
 #include <__config>
+#include <__type_traits/enable_if.h>
+#include <__type_traits/is_unsigned.h>
 #include <limits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -38,31 +40,83 @@ inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __libcpp_popcount(unsigned lo
   return __builtin_popcountll(__x);
 }
 
+#ifndef _LIBCPP_CXX03_LANG
+// constexpr implementation for C++11 and later
+
+template <class _Tp>
+_LIBCPP_HIDE_FROM_ABI constexpr int __popcount(_Tp __t) _NOEXCEPT {
+  static_assert(is_unsigned<_Tp>::value, "__popcount only works with unsigned types");
+  if constexpr (sizeof(_Tp) <= sizeof(unsigned int)) {
+    return std::__libcpp_popcount(static_cast<unsigned int>(__t));
+  } else if constexpr (sizeof(_Tp) <= sizeof(unsigned long)) {
+    return std::__libcpp_popcount(static_cast<unsigned long>(__t));
+  } else if constexpr (sizeof(_Tp) <= sizeof(unsigned long long)) {
+    return std::__libcpp_popcount(static_cast<unsigned long long>(__t));
+  } else {
+#  if _LIBCPP_STD_VER == 11
+    // A recursive constexpr implementation for C++11
+    return __t != 0 ? std::__libcpp_popcount(static_cast<unsigned long long>(__t)) +
+                          std::__popcount<_Tp>(__t >> numeric_limits<unsigned long long>::digits)
+                    : 0;
+#  else
+    int __ret = 0;
+    while (__t != 0) {
+      __ret += std::__libcpp_popcount(static_cast<unsigned long long>(__t));
+      __t >>= std::numeric_limits<unsigned long long>::digits;
+    }
+    return __ret;
+  }
+#  endif
+}
+
+#else
+// Implementation for C++03
+
+template < class _Tp, __enable_if_t<is_unsigned<_Tp>::value && sizeof(_Tp) <= sizeof(unsigned int), int> = 0>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __popcount(_Tp __t) {
+  return std::__libcpp_popcount(static_cast<unsigned int>(__t));
+}
+
+template < class _Tp,
+           __enable_if_t<is_unsigned<_Tp>::value && (sizeof(_Tp) > sizeof(unsigned int)) &&
+                             sizeof(_Tp) <= sizeof(unsigned long),
+                         int> = 0 >
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __popcount(_Tp __t) {
+  return std::__libcpp_popcount(static_cast<unsigned long>(__t));
+}
+
+template < class _Tp,
+           __enable_if_t<is_unsigned<_Tp>::value && (sizeof(_Tp) > sizeof(unsigned long)) &&
+                             sizeof(_Tp) <= sizeof(unsigned long long),
+                         int> = 0 >
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __popcount(_Tp __t) {
+  return std::__libcpp_popcount(static_cast<unsigned long long>(__t));
+}
+
+template < class _Tp, __enable_if_t<is_unsigned<_Tp>::value && (sizeof(_Tp) > sizeof(unsigned long long)), int> = 0 >
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __popcount(_Tp __t) {
+  int __ret = 0;
+  while (__t != 0) {
+    __ret += std::__libcpp_popcount(static_cast<unsigned long long>(__t));
+    __t >>= std::numeric_limits<unsigned long long>::digits;
+  }
+  return __ret;
+}
+
+#endif // _LIBCPP_CXX03_LANG
+
 #if _LIBCPP_STD_VER >= 20
 
 template <__libcpp_unsigned_integer _Tp>
 [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr int popcount(_Tp __t) noexcept {
 #  if __has_builtin(__builtin_popcountg)
   return __builtin_popcountg(__t);
-#  else  // __has_builtin(__builtin_popcountg)
-  if (sizeof(_Tp) <= sizeof(unsigned int))
-    return std::__libcpp_popcount(static_cast<unsigned int>(__t));
-  else if (sizeof(_Tp) <= sizeof(unsigned long))
-    return std::__libcpp_popcount(static_cast<unsigned long>(__t));
-  else if (sizeof(_Tp) <= sizeof(unsigned long long))
-    return std::__libcpp_popcount(static_cast<unsigned long long>(__t));
-  else {
-    int __ret = 0;
-    while (__t != 0) {
-      __ret += std::__libcpp_popcount(static_cast<unsigned long long>(__t));
-      __t >>= numeric_limits<unsigned long long>::digits;
-    }
-    return __ret;
-  }
-#  endif // __has_builtin(__builtin_popcountg)
+#  else
+  return std::__popcount(__t);
+#  endif
 }
 
-#endif // _LIBCPP_STD_VER >= 20
+#endif
 
 _LIBCPP_END_NAMESPACE_STD
 
