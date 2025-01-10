@@ -6232,7 +6232,8 @@ TEST_F(OpenMPIRBuilderTest, TargetRegion) {
   ASSERT_EXPECTED_INIT(
       OpenMPIRBuilder::InsertPointTy, AfterIP,
       OMPBuilder.createTarget(OmpLoc, /*IsOffloadEntry=*/true, Builder.saveIP(),
-                              Builder.saveIP(), EntryInfo, -1, 0, Inputs,
+                              Builder.saveIP(), EntryInfo, /*NumTeams=*/-1,
+                              /*NumThreads=*/0, Inputs, /*IfCond=*/nullptr,
                               GenMapInfoCB, BodyGenCB, SimpleArgAccessorCB));
   Builder.restoreIP(AfterIP);
   OMPBuilder.finalize();
@@ -6343,8 +6344,8 @@ TEST_F(OpenMPIRBuilderTest, TargetRegionDevice) {
   ASSERT_EXPECTED_INIT(
       OpenMPIRBuilder::InsertPointTy, AfterIP,
       OMPBuilder.createTarget(Loc, /*IsOffloadEntry=*/true, EntryIP, EntryIP,
-                              EntryInfo, /*NumTeams=*/-1,
-                              /*NumThreads=*/0, CapturedArgs, GenMapInfoCB,
+                              EntryInfo, /*NumTeams=*/-1, /*NumThreads=*/0,
+                              CapturedArgs, /*IfCond=*/nullptr, GenMapInfoCB,
                               BodyGenCB, SimpleArgAccessorCB));
   Builder.restoreIP(AfterIP);
 
@@ -6500,8 +6501,8 @@ TEST_F(OpenMPIRBuilderTest, ConstantAllocaRaise) {
   ASSERT_EXPECTED_INIT(
       OpenMPIRBuilder::InsertPointTy, AfterIP,
       OMPBuilder.createTarget(Loc, /*IsOffloadEntry=*/true, EntryIP, EntryIP,
-                              EntryInfo, /*NumTeams=*/-1,
-                              /*NumThreads=*/0, CapturedArgs, GenMapInfoCB,
+                              EntryInfo, /*NumTeams=*/-1, /*NumThreads=*/0,
+                              CapturedArgs, /*IfCond=*/nullptr, GenMapInfoCB,
                               BodyGenCB, SimpleArgAccessorCB));
   Builder.restoreIP(AfterIP);
 
