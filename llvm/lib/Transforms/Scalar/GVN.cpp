@@ -838,10 +838,9 @@ PreservedAnalyses GVNPass::run(Function &F, FunctionAnalysisManager &AM) {
   auto *MemDep =
       isMemDepEnabled() ? &AM.getResult<MemoryDependenceAnalysis>(F) : nullptr;
   auto &LI = AM.getResult<LoopAnalysis>(F);
-  auto *MSSA =
-      isMemorySSAEnabled() ? &AM.getResult<MemorySSAAnalysis>(F) : nullptr;
-  assert(!(MemDep && MSSA) &&
-         "Should not use both MemDep and MemorySSA simultaneously!");
+  auto *MSSA = AM.getCachedResult<MemorySSAAnalysis>(F);
+  if (isMemorySSAEnabled() && !MSSA)
+    MSSA = &AM.getResult<MemorySSAAnalysis>(F);
   auto &ORE = AM.getResult<OptimizationRemarkEmitterAnalysis>(F);
   bool Changed = runImpl(F, AC, DT, TLI, AA, MemDep, LI, &ORE,
                          MSSA ? &MSSA->getMSSA() : nullptr);
