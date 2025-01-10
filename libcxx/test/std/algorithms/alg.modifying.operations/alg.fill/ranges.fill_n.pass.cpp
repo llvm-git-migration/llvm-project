@@ -18,7 +18,9 @@
 #include <cassert>
 #include <ranges>
 #include <string>
+#include <vector>
 
+#include "sized_allocator.h"
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
 
@@ -48,6 +50,37 @@ constexpr void test_iterators() {
   }
 }
 
+TEST_CONSTEXPR_CXX20 void test_bititer_with_custom_sized_types() {
+  {
+    using Alloc = sized_allocator<bool, std::uint8_t, std::int8_t>;
+    std::vector<bool, Alloc> in(100, false, Alloc(1));
+    std::vector<bool, Alloc> expected(100, true, Alloc(1));
+    std::ranges::fill_n(std::ranges::begin(in), in.size(), true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint16_t, std::int16_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill_n(std::ranges::begin(in), in.size(), true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint32_t, std::int32_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill_n(std::ranges::begin(in), in.size(), true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint64_t, std::int64_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill_n(std::ranges::begin(in), in.size(), true);
+    assert(in == expected);
+  }
+}
+
 constexpr bool test() {
   test_iterators<cpp17_output_iterator<int*>, sentinel_wrapper<cpp17_output_iterator<int*>>>();
   test_iterators<cpp20_output_iterator<int*>, sentinel_wrapper<cpp20_output_iterator<int*>>>();
@@ -68,7 +101,7 @@ constexpr bool test() {
     };
 
     S a[5];
-    std::ranges::fill_n(a, 5, S {});
+    std::ranges::fill_n(a, 5, S{});
     assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
   }
 
