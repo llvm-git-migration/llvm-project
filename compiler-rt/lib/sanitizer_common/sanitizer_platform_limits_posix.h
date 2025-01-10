@@ -1091,6 +1091,10 @@ extern unsigned struct_sioc_sg_req_sz;
 extern unsigned struct_sioc_vif_req_sz;
 #endif
 
+#  if !SANITIZER_FREEBSD && !SANITIZER_NETBSD
+extern unsigned fpos_t_sz;
+#  endif
+
 // ioctl request identifiers
 
 // A special value to mark ioctls that are not present on the target platform,

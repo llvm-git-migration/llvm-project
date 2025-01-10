@@ -384,7 +384,7 @@ INTERCEPTOR(int, fgetpos, FILE *stream, fpos_t *pos) {
 
 INTERCEPTOR(int, fseek, FILE *stream, long offset, int whence) {
   __rtsan_notify_intercepted_call("fseek");
-  return REAL(fgetpos)(stream, offset, whence);
+  return REAL(fseek)(stream, offset, whence);
 }
 
 INTERCEPTOR(int, fseeko, FILE *stream, off_t offset, int whence) {
@@ -392,7 +392,7 @@ INTERCEPTOR(int, fseeko, FILE *stream, off_t offset, int whence) {
   return REAL(fseeko)(stream, offset, whence);
 }
 
-INTERCEPTOR(int, fsetpos, FILE *stream, const fpos_t pos) {
+INTERCEPTOR(int, fsetpos, FILE *stream, const fpos_t *pos) {
   __rtsan_notify_intercepted_call("fsetpos");
   return REAL(fsetpos)(stream, pos);
 }
@@ -407,7 +407,7 @@ INTERCEPTOR(off_t, ftello, FILE *stream) {
   return REAL(ftello)(stream);
 }
 
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX && !SANITIZER_MUSL
 INTERCEPTOR(int, fgetpos64, FILE *stream, fpos64_t *pos) {
   __rtsan_notify_intercepted_call("fgetpos64");
   return REAL(fgetpos64)(stream, pos);
@@ -415,10 +415,10 @@ INTERCEPTOR(int, fgetpos64, FILE *stream, fpos64_t *pos) {
 
 INTERCEPTOR(int, fseeko64, FILE *stream, off64_t offset, int whence) {
   __rtsan_notify_intercepted_call("fseeko64");
-  return REAL(fgetpos)(stream, offset, whence);
+  return REAL(fseeko64)(stream, offset, whence);
 }
 
-INTERCEPTOR(int, fsetpos64, FILE *stream, const fpos64_t pos) {
+INTERCEPTOR(int, fsetpos64, FILE *stream, const fpos64_t *pos) {
   __rtsan_notify_intercepted_call("fsetpos64");
   return REAL(fsetpos64)(stream, pos);
 }
@@ -440,7 +440,7 @@ INTERCEPTOR(void, rewind, FILE *stream) {
 #define RTSAN_MAYBE_INTERCEPT_FTELL INTERCEPT_FUNCTION(ftell)
 #define RTSAN_MAYBE_INTERCEPT_FTELLO INTERCEPT_FUNCTION(ftello)
 #define RTSAN_MAYBE_INTERCEPT_REWIND INTERCEPT_FUNCTION(rewind)
-#if SANITIZER_LINUX
+#if SANITIZER_LINUX && !SANITIZER_MUSL
 #define RTSAN_MAYBE_INTERCEPT_FGETPOS64 INTERCEPT_FUNCTION(fgetpos64)
 #define RTSAN_MAYBE_INTERCEPT_FSEEKO64 INTERCEPT_FUNCTION(fseeko64)
 #define RTSAN_MAYBE_INTERCEPT_FSETPOS64 INTERCEPT_FUNCTION(fsetpos64)

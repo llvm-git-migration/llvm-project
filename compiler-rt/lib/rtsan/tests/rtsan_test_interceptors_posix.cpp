@@ -453,11 +453,37 @@ TEST_F(RtsanFileTest, SetbufferDieWhenRealtime) {
 }
 #endif
 
+class RtsanOpenedFileTest : public RtsanFileTest {
+protected:
+  void SetUp() override {
+    RtsanFileTest::SetUp();
+    file = fopen(GetTemporaryFilePath(), "w");
+    ASSERT_THAT(file, Ne(nullptr));
+    fd = fileno(file);
+    ASSERT_THAT(fd, Ne(-1));
+  }
+
+  void TearDown() override {
+    if (file != nullptr)
+      fclose(file);
+    RtsanFileTest::TearDown();
+  }
+
+  FILE *GetOpenFile() { return file; }
+
+  int GetOpenFd() { return fd; }
+
+private:
+  FILE *file = nullptr;
+  int fd = -1;
+};
+
 #if SANITIZER_INTERCEPT_FSEEK
 TEST_F(RtsanOpenedFileTest, FgetposDieWhenRealtime) {
   auto Func = [this]() {
-    int pos = fgetpos(GetOpenFile());
-    ASSERT_THAT(pos, Eq(0));
+    fpos_t pos;
+    int ret = fgetpos(GetOpenFile(), &pos);
+    ASSERT_THAT(ret, Eq(0));
   };
 
   ExpectRealtimeDeath(Func, MAYBE_APPEND_64("fgetpos"));
@@ -465,8 +491,11 @@ TEST_F(RtsanOpenedFileTest, FgetposDieWhenRealtime) {
 }
 
 TEST_F(RtsanOpenedFileTest, FsetposDieWhenRealtime) {
-  auto Func = [this]() {
-    int ret = fsetpos(GetOpenFile(), 0);
+  fpos_t pos;
+  int ret = fgetpos(GetOpenFile(), &pos);
+  ASSERT_THAT(ret, Eq(0));
+  auto Func = [this, pos]() {
+    int ret = fsetpos(GetOpenFile(), &pos);
     ASSERT_THAT(ret, Eq(0));
   };
 
@@ -522,31 +551,6 @@ TEST_F(RtsanOpenedFileTest, RewindDieWhenRealtime) {
   ExpectNonRealtimeSurvival(Func);
 }
 #endif
-
-class RtsanOpenedFileTest : public RtsanFileTest {
-protected:
-  void SetUp() override {
-    RtsanFileTest::SetUp();
-    file = fopen(GetTemporaryFilePath(), "w");
-    ASSERT_THAT(file, Ne(nullptr));
-    fd = fileno(file);
-    ASSERT_THAT(fd, Ne(-1));
-  }
-
-  void TearDown() override {
-    if (file != nullptr)
-      fclose(file);
-    RtsanFileTest::TearDown();
-  }
-
-  FILE *GetOpenFile() { return file; }
-
-  int GetOpenFd() { return fd; }
-
-private:
-  FILE *file = nullptr;
-  int fd = -1;
-};
 
 TEST(TestRtsanInterceptors, IoctlDiesWhenRealtime) {
   auto Func = []() { ioctl(0, FIONREAD); };
