@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Support/LLVM.h"
 #include "llvm/ADT/APSInt.h"
@@ -54,6 +55,18 @@ void dispatchIndexOpFoldResult(OpFoldResult ofr,
     staticVec.push_back(apInt.getSExtValue());
     return;
   }
+
+  Operation *definingOp = v.getDefiningOp();
+  if (definingOp) {
+    // Check if definingOp is an arith.constant
+    if (auto constantOp = dyn_cast<arith::ConstantOp>(definingOp)) {
+      if (auto intAttr = mlir::dyn_cast<IntegerAttr>(constantOp.getValue())) {
+        staticVec.push_back(intAttr.getValue().getSExtValue());
+        return;
+      }
+    }
+  }
+
   dynamicVec.push_back(v);
   staticVec.push_back(ShapedType::kDynamic);
 }
