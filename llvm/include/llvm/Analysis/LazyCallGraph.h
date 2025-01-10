@@ -1086,7 +1086,10 @@ public:
   /// other new functions.
   ///
   /// Mark the original function as referencing all new functions.
-  /// Mark all new functions as referencing each other.
+  ///
+  /// The CG must be updated following the use of this helper, for example with
+  /// updateCGAndAnalysisManagerForCGSCCPass(), to ensure the RefSCCs and SCCs
+  /// are correct.
   void addSplitRefRecursiveFunctions(Function &OriginalFunction,
                                      ArrayRef<Function *> NewFunctions);
 
