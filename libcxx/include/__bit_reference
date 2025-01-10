@@ -25,6 +25,7 @@
 #include <__memory/pointer_traits.h>
 #include <__type_traits/conditional.h>
 #include <__type_traits/is_constant_evaluated.h>
+#include <__type_traits/is_unsigned.h>
 #include <__type_traits/void_t.h>
 #include <__utility/pair.h>
 #include <__utility/swap.h>
@@ -57,6 +58,20 @@ struct __size_difference_type_traits<_Cp, __void_t<typename _Cp::difference_type
   using difference_type = typename _Cp::difference_type;
   using size_type       = typename _Cp::size_type;
 };
+
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __trailing_mask(unsigned __clz) {
+  static_assert(is_unsigned<_StorageType>::value, "__trailing_mask only works with unsigned types");
+  return static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) >> __clz);
+}
+
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __middle_mask(unsigned __clz, unsigned __ctz) {
+  static_assert(is_unsigned<_StorageType>::value, "__middle_mask only works with unsigned types");
+  return static_cast<_StorageType>(
+      static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) << __ctz) &
+      std::__trailing_mask<_StorageType>(__clz));
+}
 
 template <class _Cp, bool = __has_storage_type<_Cp>::value>
 class __bit_reference {
