@@ -20,7 +20,9 @@
 #include <cassert>
 #include <ranges>
 #include <string>
+#include <vector>
 
+#include "sized_allocator.h"
 #include "almost_satisfies_types.h"
 #include "test_iterators.h"
 
@@ -53,7 +55,7 @@ constexpr void test_iterators() {
     }
     {
       int a[3];
-      auto range = std::ranges::subrange(It(a), Sent(It(a + 3)));
+      auto range                = std::ranges::subrange(It(a), Sent(It(a + 3)));
       std::same_as<It> auto ret = std::ranges::fill(range, 1);
       assert(std::all_of(a, a + 3, [](int i) { return i == 1; }));
       assert(base(ret) == a + 3);
@@ -69,9 +71,40 @@ constexpr void test_iterators() {
     {
       std::array<int, 0> a;
       auto range = std::ranges::subrange(It(a.data()), Sent(It(a.data())));
-      auto ret = std::ranges::fill(range, 1);
+      auto ret   = std::ranges::fill(range, 1);
       assert(base(ret) == a.data());
     }
+  }
+}
+
+TEST_CONSTEXPR_CXX20 void test_bititer_with_custom_sized_types() {
+  {
+    using Alloc = sized_allocator<bool, std::uint8_t, std::int8_t>;
+    std::vector<bool, Alloc> in(100, false, Alloc(1));
+    std::vector<bool, Alloc> expected(100, true, Alloc(1));
+    std::ranges::fill(in, true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint16_t, std::int16_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill(in, true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint32_t, std::int32_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill(in, true);
+    assert(in == expected);
+  }
+  {
+    using Alloc = sized_allocator<bool, std::uint64_t, std::int64_t>;
+    std::vector<bool, Alloc> in(200, false, Alloc(1));
+    std::vector<bool, Alloc> expected(200, true, Alloc(1));
+    std::ranges::fill(in, true);
+    assert(in == expected);
   }
 }
 
@@ -94,19 +127,19 @@ constexpr bool test() {
     };
     {
       S a[5];
-      std::ranges::fill(a, a + 5, S {true});
+      std::ranges::fill(a, a + 5, S{true});
       assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
     }
     {
       S a[5];
-      std::ranges::fill(a, S {true});
+      std::ranges::fill(a, S{true});
       assert(std::all_of(a, a + 5, [](S& s) { return s.copied; }));
     }
   }
 
   { // check that std::ranges::dangling is returned
     [[maybe_unused]] std::same_as<std::ranges::dangling> decltype(auto) ret =
-        std::ranges::fill(std::array<int, 10> {}, 1);
+        std::ranges::fill(std::array<int, 10>{}, 1);
   }
 
   { // check that std::ranges::dangling isn't returned with a borrowing range
@@ -130,6 +163,8 @@ constexpr bool test() {
       assert(std::all_of(a.begin(), a.end(), [](auto& s) { return s == "long long string so no SSO"; }));
     }
   }
+
+  test_bititer_with_custom_sized_types();
 
   return true;
 }
