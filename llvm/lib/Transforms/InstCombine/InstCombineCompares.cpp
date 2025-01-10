@@ -2679,7 +2679,8 @@ Instruction *InstCombinerImpl::foldICmpSRemConstant(ICmpInst &Cmp,
   // (X % pow2C) sgt/slt 0
   const ICmpInst::Predicate Pred = Cmp.getPredicate();
   if (Pred != ICmpInst::ICMP_SGT && Pred != ICmpInst::ICMP_SLT &&
-      Pred != ICmpInst::ICMP_EQ && Pred != ICmpInst::ICMP_NE)
+      Pred != ICmpInst::ICMP_EQ && Pred != ICmpInst::ICMP_NE &&
+      Pred != ICmpInst::ICMP_UGT && Pred != ICmpInst::ICMP_ULT)
     return nullptr;
 
   // TODO: The one-use check is standard because we do not typically want to
@@ -2692,22 +2693,35 @@ Instruction *InstCombinerImpl::foldICmpSRemConstant(ICmpInst &Cmp,
   if (!match(SRem->getOperand(1), m_Power2(DivisorC)))
     return nullptr;
 
+  Type *Ty = SRem->getType();
+  APInt SignMask = APInt::getSignMask(Ty->getScalarSizeInBits());
+  // Setting the lsb instead of adding one properly handles i1.
+  APInt SignMaskOrOne = SignMask | 1;
+
   // For cmp_sgt/cmp_slt only zero valued C is handled.
   // For cmp_eq/cmp_ne only positive valued C is handled.
+  // For cmp_ugt only signed min/max valued C is handled.
+  // For cmp_ult only signed min | 0/1 valued C is handled.
   if (((Pred == ICmpInst::ICMP_SGT || Pred == ICmpInst::ICMP_SLT) &&
        !C.isZero()) ||
       ((Pred == ICmpInst::ICMP_EQ || Pred == ICmpInst::ICMP_NE) &&
-       !C.isStrictlyPositive()))
+       !C.isStrictlyPositive()) ||
+      (Pred == ICmpInst::ICMP_UGT && !C.isMinSignedValue() &&
+       !C.isMaxSignedValue()) ||
+      (Pred == ICmpInst::ICMP_ULT && !C.isMinSignedValue() &&
+       C != SignMaskOrOne))
     return nullptr;
 
   // Mask off the sign bit and the modulo bits (low-bits).
-  Type *Ty = SRem->getType();
-  APInt SignMask = APInt::getSignMask(Ty->getScalarSizeInBits());
   Constant *MaskC = ConstantInt::get(Ty, SignMask | (*DivisorC - 1));
   Value *And = Builder.CreateAnd(SRem->getOperand(0), MaskC);
 
   if (Pred == ICmpInst::ICMP_EQ || Pred == ICmpInst::ICMP_NE)
     return new ICmpInst(Pred, And, ConstantInt::get(Ty, C));
+
+  if (Pred == ICmpInst::ICMP_ULT)
+    return new ICmpInst(ICmpInst::ICMP_ULT, And,
+                        ConstantInt::get(Ty, SignMaskOrOne));
 
   // For 'is positive?' check that the sign-bit is clear and at least 1 masked
   // bit is set. Example:
