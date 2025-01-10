@@ -2488,11 +2488,12 @@ bool NVPTXDAGToDAGISel::SelectADDRsi_imp(SDNode *OpNode, SDValue Addr,
               uint64_t AccumulatedOffset) -> std::optional<uint64_t> {
     if (isAddLike(Addr)) {
       if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1))) {
-        SDValue base = Addr.getOperand(0);
+        SDValue PossibleBaseAddr = Addr.getOperand(0);
         AccumulatedOffset += CN->getZExtValue();
-        if (SelectDirectAddr(base, Base))
+        if (SelectDirectAddr(PossibleBaseAddr, Base))
           return AccumulatedOffset;
-        return FindRootAddressAndTotalOffset(base, AccumulatedOffset);
+        return FindRootAddressAndTotalOffset(PossibleBaseAddr,
+                                             AccumulatedOffset);
       }
     }
     return std::nullopt;
