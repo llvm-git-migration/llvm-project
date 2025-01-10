@@ -1089,7 +1089,7 @@ public:
   ///
   /// The CG must be updated following the use of this helper, for example with
   /// updateCGAndAnalysisManagerForCGSCCPass(), to ensure the RefSCCs and SCCs
-  /// are correct.
+  /// are correctly identified.
   void addSplitRefRecursiveFunctions(Function &OriginalFunction,
                                      ArrayRef<Function *> NewFunctions);
 
