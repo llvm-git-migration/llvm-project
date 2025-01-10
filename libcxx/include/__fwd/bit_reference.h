@@ -23,6 +23,12 @@ class __bit_iterator;
 template <class, class = void>
 struct __size_difference_type_traits;
 
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __trailing_mask(unsigned __clz);
+
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __middle_mask(unsigned __clz, unsigned __ctz);
+
 _LIBCPP_END_NAMESPACE_STD
 
 #endif // _LIBCPP___FWD_BIT_REFERENCE_H
