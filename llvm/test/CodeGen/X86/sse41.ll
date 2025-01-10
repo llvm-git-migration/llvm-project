@@ -2124,14 +2124,14 @@ define <4 x float> @build_vector_to_shuffle_1(<4 x float> %A) {
 ; AVX1-LABEL: build_vector_to_shuffle_1:
 ; AVX1:       ## %bb.0:
 ; AVX1-NEXT:    vxorps %xmm1, %xmm1, %xmm1 ## encoding: [0xc5,0xf0,0x57,0xc9]
-; AVX1-NEXT:    vblendps $10, %xmm0, %xmm1, %xmm0 ## encoding: [0xc4,0xe3,0x71,0x0c,0xc0,0x0a]
+; AVX1-NEXT:    vblendps $5, %xmm1, %xmm0, %xmm0 ## encoding: [0xc4,0xe3,0x79,0x0c,0xc1,0x05]
 ; AVX1-NEXT:    ## xmm0 = xmm1[0],xmm0[1],xmm1[2],xmm0[3]
 ; AVX1-NEXT:    ret{{[l|q]}} ## encoding: [0xc3]
 ;
 ; AVX512-LABEL: build_vector_to_shuffle_1:
 ; AVX512:       ## %bb.0:
 ; AVX512-NEXT:    vxorps %xmm1, %xmm1, %xmm1 ## EVEX TO VEX Compression encoding: [0xc5,0xf0,0x57,0xc9]
-; AVX512-NEXT:    vblendps $10, %xmm0, %xmm1, %xmm0 ## encoding: [0xc4,0xe3,0x71,0x0c,0xc0,0x0a]
+; AVX512-NEXT:    vblendps $5, %xmm1, %xmm0, %xmm0 ## encoding: [0xc4,0xe3,0x79,0x0c,0xc1,0x05]
 ; AVX512-NEXT:    ## xmm0 = xmm1[0],xmm0[1],xmm1[2],xmm0[3]
 ; AVX512-NEXT:    ret{{[l|q]}} ## encoding: [0xc3]
   %vecext = extractelement <4 x float> %A, i32 1
@@ -2152,14 +2152,14 @@ define <4 x float> @build_vector_to_shuffle_2(<4 x float> %A) {
 ; AVX1-LABEL: build_vector_to_shuffle_2:
 ; AVX1:       ## %bb.0:
 ; AVX1-NEXT:    vxorps %xmm1, %xmm1, %xmm1 ## encoding: [0xc5,0xf0,0x57,0xc9]
-; AVX1-NEXT:    vblendps $2, %xmm0, %xmm1, %xmm0 ## encoding: [0xc4,0xe3,0x71,0x0c,0xc0,0x02]
+; AVX1-NEXT:    vblendps $13, %xmm1, %xmm0, %xmm0 ## encoding: [0xc4,0xe3,0x79,0x0c,0xc1,0x0d]
 ; AVX1-NEXT:    ## xmm0 = xmm1[0],xmm0[1],xmm1[2,3]
 ; AVX1-NEXT:    ret{{[l|q]}} ## encoding: [0xc3]
 ;
 ; AVX512-LABEL: build_vector_to_shuffle_2:
 ; AVX512:       ## %bb.0:
 ; AVX512-NEXT:    vxorps %xmm1, %xmm1, %xmm1 ## EVEX TO VEX Compression encoding: [0xc5,0xf0,0x57,0xc9]
-; AVX512-NEXT:    vblendps $2, %xmm0, %xmm1, %xmm0 ## encoding: [0xc4,0xe3,0x71,0x0c,0xc0,0x02]
+; AVX512-NEXT:    vblendps $13, %xmm1, %xmm0, %xmm0 ## encoding: [0xc4,0xe3,0x79,0x0c,0xc1,0x0d]
 ; AVX512-NEXT:    ## xmm0 = xmm1[0],xmm0[1],xmm1[2,3]
 ; AVX512-NEXT:    ret{{[l|q]}} ## encoding: [0xc3]
   %vecext = extractelement <4 x float> %A, i32 1
