@@ -174,6 +174,15 @@ static LogicalResult checkImplementationStatus(Operation &op) {
     if (op.getHint())
       op.emitWarning("hint clause discarded");
   };
+  auto checkHostEval = [](auto op, LogicalResult &result) {
+    // Host evaluated clauses are supported, except for loop bounds.
+    for (BlockArgument arg :
+         cast<omp::BlockArgOpenMPOpInterface>(*op).getHostEvalBlockArgs())
+      for (Operation *user : arg.getUsers())
+        if (isa<omp::LoopNestOp>(user))
+          result = op.emitError("not yet implemented: host evaluation of loop "
+                                "bounds in omp.target operation");
+  };
   auto checkIf = [&todo](auto op, LogicalResult &result) {
     if (op.getIfExpr())
       result = todo("if");
@@ -212,8 +221,24 @@ static LogicalResult checkImplementationStatus(Operation &op) {
       result = todo("priority");
   };
   auto checkPrivate = [&todo](auto op, LogicalResult &result) {
-    if (!op.getPrivateVars().empty() || op.getPrivateSyms())
-      result = todo("privatization");
+    if constexpr (std::is_same_v<std::decay_t<decltype(op)>, omp::TargetOp>) {
+      // Privatization clauses are supported, except on some situations, so we
+      // need to check here whether any of these unsupported cases are being
+      // translated.
+      if (std::optional<ArrayAttr> privateSyms = op.getPrivateSyms()) {
+        for (Attribute privatizerNameAttr : *privateSyms) {
+          omp::PrivateClauseOp privatizer = findPrivatizer(
+              op.getOperation(), cast<SymbolRefAttr>(privatizerNameAttr));
+
+          if (privatizer.getDataSharingType() ==
+              omp::DataSharingClauseType::FirstPrivate)
+            result = todo("firstprivate");
+        }
+      }
+    } else {
+      if (!op.getPrivateVars().empty() || op.getPrivateSyms())
+        result = todo("privatization");
+    }
   };
   auto checkReduction = [&todo](auto op, LogicalResult &result) {
     if (!op.getReductionVars().empty() || op.getReductionByref() ||
@@ -281,32 +306,11 @@ static LogicalResult checkImplementationStatus(Operation &op) {
         checkBare(op, result);
         checkDevice(op, result);
         checkHasDeviceAddr(op, result);
-
-        // Host evaluated clauses are supported, except for target SPMD loop
-        // bounds.
-        for (BlockArgument arg :
-             cast<omp::BlockArgOpenMPOpInterface>(*op).getHostEvalBlockArgs())
-          for (Operation *user : arg.getUsers())
-            if (isa<omp::LoopNestOp>(user))
-              result = op.emitError("not yet implemented: host evaluation of "
-                                    "loop bounds in omp.target operation");
-
+        checkHostEval(op, result);
         checkIf(op, result);
         checkInReduction(op, result);
         checkIsDevicePtr(op, result);
-        // Privatization clauses are supported, except on some situations, so we
-        // need to check here whether any of these unsupported cases are being
-        // translated.
-        if (std::optional<ArrayAttr> privateSyms = op.getPrivateSyms()) {
-          for (Attribute privatizerNameAttr : *privateSyms) {
-            omp::PrivateClauseOp privatizer = findPrivatizer(
-                op.getOperation(), cast<SymbolRefAttr>(privatizerNameAttr));
-
-            if (privatizer.getDataSharingType() ==
-                omp::DataSharingClauseType::FirstPrivate)
-              result = todo("firstprivate");
-          }
-        }
+        checkPrivate(op, result);
       })
       .Default([](Operation &) {
         // Assume all clauses for an operation can be translated unless they are
@@ -3923,7 +3927,11 @@ static void extractHostEvalClauses(omp::TargetOp targetOp, Value &numThreads,
               llvm_unreachable("unsupported host_eval use");
           })
           .Case([&](omp::LoopNestOp loopOp) {
-            // TODO: Extract bounds and step values.
+            // TODO: Extract bounds and step values. Currently, this cannot be
+            // reached because translation would have been stopped earlier as a
+            // result of `checkImplementationStatus` detecting and reporting
+            // this situation.
+            llvm_unreachable("unsupported host_eval use");
           })
           .Default([](Operation *) {
             llvm_unreachable("unsupported host_eval use");
@@ -3951,6 +3959,20 @@ static OpTy castOrGetParentOfType(Operation *op, bool immediateParent = false) {
     return dyn_cast_if_present<OpTy>(op->getParentOp());
 
   return op->getParentOfType<OpTy>();
+}
+
+/// If the given \p value is defined by an \c llvm.mlir.constant operation and
+/// it is of an integer type, return its value.
+static std::optional<int64_t> extractConstInteger(Value value) {
+  if (!value)
+    return std::nullopt;
+
+  if (auto constOp =
+          dyn_cast_if_present<LLVM::ConstantOp>(value.getDefiningOp()))
+    if (auto constAttr = dyn_cast<IntegerAttr>(constOp.getValue()))
+      return constAttr.getInt();
+
+  return std::nullopt;
 }
 
 /// Populate default `MinTeams`, `MaxTeams` and `MaxThreads` to their default
@@ -3984,15 +4006,6 @@ initTargetDefaultAttrs(omp::TargetOp targetOp,
       numThreads = parallelOp.getNumThreads();
   }
 
-  auto extractConstInteger = [](Value value) -> std::optional<int64_t> {
-    if (auto constOp =
-            dyn_cast_if_present<LLVM::ConstantOp>(value.getDefiningOp()))
-      if (auto constAttr = dyn_cast<IntegerAttr>(constOp.getValue()))
-        return constAttr.getInt();
-
-    return std::nullopt;
-  };
-
   // Handle clauses impacting the number of teams.
 
   int32_t minTeamsVal = 1, maxTeamsVal = -1;
@@ -4016,8 +4029,7 @@ initTargetDefaultAttrs(omp::TargetOp targetOp,
 
   // Handle clauses impacting the number of threads.
 
-  auto setMaxValueFromClause = [&extractConstInteger](Value clauseValue,
-                                                      int32_t &result) {
+  auto setMaxValueFromClause = [](Value clauseValue, int32_t &result) {
     if (!clauseValue)
       return;
 
