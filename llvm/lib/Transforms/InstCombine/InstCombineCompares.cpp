@@ -2674,10 +2674,41 @@ Instruction *InstCombinerImpl::foldICmpShrConstant(ICmpInst &Cmp,
 Instruction *InstCombinerImpl::foldICmpSRemConstant(ICmpInst &Cmp,
                                                     BinaryOperator *SRem,
                                                     const APInt &C) {
+  const ICmpInst::Predicate Pred = Cmp.getPredicate();
+  if (Pred == ICmpInst::ICMP_UGT || Pred == ICmpInst::ICMP_ULT) {
+    // Canonicalize unsigned predicates to signed:
+    // (X % DivisorC) ugt C -> (X % DivisorC) slt 0
+    //   iff abs(DivisorC) ule (C slt 0 ? ~C : C)+1
+    // (X % DivisorC) ult C+1 -> (X % DivisorC) sgt -1
+    //   iff abs(DivisorC) ule (C+1 slt 0 ? ~C : C)+1
+
+    const APInt *DivisorC;
+    if (!match(SRem->getOperand(1), m_APInt(DivisorC)))
+      return nullptr;
+
+    APInt NormalizedC = C;
+    assert(!NormalizedC.isZero() &&
+           "srem X, 0 should have been simplified already.");
+    if (Pred == ICmpInst::ICMP_ULT)
+      --NormalizedC;
+    if (C.isNegative())
+      NormalizedC.flipAllBits();
+    assert(!NormalizedC.isMaxValue() &&
+           "srem i1 X, -1 should have been simplified already.");
+    ++NormalizedC;
+    if (!DivisorC->abs().ule(NormalizedC))
+      return nullptr;
+
+    Type *Ty = SRem->getType();
+    if (Pred == ICmpInst::ICMP_UGT)
+      return new ICmpInst(ICmpInst::ICMP_SLT, SRem,
+                          ConstantInt::getNullValue(Ty));
+    return new ICmpInst(ICmpInst::ICMP_SGT, SRem,
+                        ConstantInt::getAllOnesValue(Ty));
+  }
   // Match an 'is positive' or 'is negative' comparison of remainder by a
   // constant power-of-2 value:
   // (X % pow2C) sgt/slt 0
-  const ICmpInst::Predicate Pred = Cmp.getPredicate();
   if (Pred != ICmpInst::ICMP_SGT && Pred != ICmpInst::ICMP_SLT &&
       Pred != ICmpInst::ICMP_EQ && Pred != ICmpInst::ICMP_NE)
     return nullptr;
