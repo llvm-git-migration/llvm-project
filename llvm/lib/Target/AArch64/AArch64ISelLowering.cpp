@@ -24898,16 +24898,34 @@ static SDValue reassociateCSELOperandsForCSE(SDNode *N, SelectionDAG &DAG) {
   SDValue SubsNode = N->getOperand(3);
   if (SubsNode.getOpcode() != AArch64ISD::SUBS || !SubsNode.hasOneUse())
     return SDValue();
-  auto *CmpOpConst = dyn_cast<ConstantSDNode>(SubsNode.getOperand(1));
-  if (!CmpOpConst)
-    return SDValue();
 
+  SDValue CmpOpToMatch = SubsNode.getOperand(1);
   SDValue CmpOpOther = SubsNode.getOperand(0);
   EVT VT = N->getValueType(0);
 
+  unsigned ExpectedOpcode;
+  std::function<bool(SDValue)> CheckOp;
+  SDValue SubsOp;
+  auto *CmpOpConst = dyn_cast<ConstantSDNode>(CmpOpToMatch);
+  if (CmpOpConst) {
+    ExpectedOpcode = ISD::ADD;
+    CheckOp = [&](SDValue Op) {
+      auto *AddOpConst = dyn_cast<ConstantSDNode>(Op);
+      return AddOpConst &&
+             AddOpConst->getAPIntValue() == -CmpOpConst->getAPIntValue();
+    };
+    SubsOp = DAG.getConstant(CmpOpConst->getAPIntValue(), SDLoc(CmpOpConst),
+                             CmpOpConst->getValueType(0));
+  } else {
+    ExpectedOpcode = ISD::SUB;
+    CheckOp = [&](SDValue Op) { return Op == CmpOpToMatch; };
+    SubsOp = CmpOpToMatch;
+  }
+
   // Get the operand that can be reassociated with the SUBS instruction.
-  auto GetReassociationOp = [&](SDValue Op, APInt ExpectedConst) {
-    if (Op.getOpcode() != ISD::ADD)
+  auto GetReassociationOp = [&](SDValue Op,
+                                std::function<bool(SDValue)> CheckOp) {
+    if (Op.getOpcode() != ExpectedOpcode)
       return SDValue();
     if (Op.getOperand(0).getOpcode() != ISD::ADD ||
         !Op.getOperand(0).hasOneUse())
@@ -24918,24 +24936,21 @@ static SDValue reassociateCSELOperandsForCSE(SDNode *N, SelectionDAG &DAG) {
       std::swap(X, Y);
     if (X != CmpOpOther)
       return SDValue();
-    auto *AddOpConst = dyn_cast<ConstantSDNode>(Op.getOperand(1));
-    if (!AddOpConst || AddOpConst->getAPIntValue() != ExpectedConst)
+    if (!CheckOp(Op.getOperand(1)))
       return SDValue();
     return Y;
   };
 
   // Try the reassociation using the given constant and condition code.
-  auto Fold = [&](APInt NewCmpConst, AArch64CC::CondCode NewCC) {
-    APInt ExpectedConst = -NewCmpConst;
-    SDValue TReassocOp = GetReassociationOp(N->getOperand(0), ExpectedConst);
-    SDValue FReassocOp = GetReassociationOp(N->getOperand(1), ExpectedConst);
+  auto Fold = [&](AArch64CC::CondCode NewCC,
+                  std::function<bool(SDValue)> CheckOp, SDValue SubsOp) {
+    SDValue TReassocOp = GetReassociationOp(N->getOperand(0), CheckOp);
+    SDValue FReassocOp = GetReassociationOp(N->getOperand(1), CheckOp);
     if (!TReassocOp && !FReassocOp)
       return SDValue();
 
     SDValue NewCmp = DAG.getNode(AArch64ISD::SUBS, SDLoc(SubsNode),
-                                 DAG.getVTList(VT, MVT_CC), CmpOpOther,
-                                 DAG.getConstant(NewCmpConst, SDLoc(CmpOpConst),
-                                                 CmpOpConst->getValueType(0)));
+                                 DAG.getVTList(VT, MVT_CC), CmpOpOther, SubsOp);
 
     auto Reassociate = [&](SDValue ReassocOp, unsigned OpNum) {
       if (!ReassocOp)
@@ -24957,8 +24972,18 @@ static SDValue reassociateCSELOperandsForCSE(SDNode *N, SelectionDAG &DAG) {
 
   // First, try to eliminate the compare instruction by searching for a
   // subtraction with the same constant.
-  if (SDValue R = Fold(CmpOpConst->getAPIntValue(), CC))
+  if (SDValue R = Fold(CC, CheckOp, SubsOp))
     return R;
+
+  if (!CmpOpConst) {
+    // Try again with the operands of the SUBS instruction and the condition
+    // swapped. Due to canonicalization, this only helps for non-constant
+    // operands of the SUBS instruction.
+    std::swap(CmpOpToMatch, CmpOpOther);
+    if (SDValue R = Fold(getSwappedCondition(CC), CheckOp, CmpOpToMatch))
+      return R;
+    return SDValue();
+  }
 
   if ((CC == AArch64CC::EQ || CC == AArch64CC::NE) && !CmpOpConst->isZero())
     return SDValue();
@@ -24971,7 +24996,13 @@ static SDValue reassociateCSELOperandsForCSE(SDNode *N, SelectionDAG &DAG) {
   // them here but check for them nevertheless to be on the safe side.
   auto CheckedFold = [&](bool Check, APInt NewCmpConst,
                          AArch64CC::CondCode NewCC) {
-    return Check ? Fold(NewCmpConst, NewCC) : SDValue();
+    auto CheckOp = [=](SDValue Op) {
+      auto *AddOpConst = dyn_cast<ConstantSDNode>(Op);
+      return AddOpConst && AddOpConst->getAPIntValue() == -NewCmpConst;
+    };
+    auto SubsOp = DAG.getConstant(NewCmpConst, SDLoc(CmpOpConst),
+                                  CmpOpConst->getValueType(0));
+    return Check ? Fold(NewCC, CheckOp, SubsOp) : SDValue();
   };
   switch (CC) {
   case AArch64CC::EQ:
