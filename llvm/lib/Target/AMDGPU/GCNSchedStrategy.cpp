@@ -1615,6 +1615,59 @@ void GCNSchedStage::revertScheduling() {
   DAG.Regions[RegionIdx] = std::pair(DAG.RegionBegin, DAG.RegionEnd);
 }
 
+/// allUsesAvailableAt - Return true if all registers used by InstToRemat at
+/// OriginalIdx are also available with the same value at RematIdx.
+bool PreRARematStage::allUsesAvailableAt(const MachineInstr *InstToRemat,
+                                         SlotIndex OriginalIdx,
+                                         SlotIndex RematIdx) const {
+
+  LiveIntervals *LIS = DAG.LIS;
+  MachineRegisterInfo &MRI = DAG.MRI;
+  OriginalIdx = OriginalIdx.getRegSlot(true);
+  RematIdx = std::max(RematIdx, RematIdx.getRegSlot(true));
+  for (const MachineOperand &MO : InstToRemat->operands()) {
+    if (!MO.isReg() || !MO.getReg() || !MO.readsReg())
+      continue;
+
+    if (!MO.getReg().isVirtual())
+      continue;
+
+    LiveInterval &LI = LIS->getInterval(MO.getReg());
+    const VNInfo *OVNI = LI.getVNInfoAt(OriginalIdx);
+    assert(OVNI);
+
+    // Don't allow rematerialization immediately after the original def.
+    // It would be incorrect if InstToRemat redefines the register.
+    // See PR14098.
+    if (SlotIndex::isSameInstr(OriginalIdx, RematIdx))
+      return false;
+
+    if (OVNI != LI.getVNInfoAt(RematIdx))
+      return false;
+
+    // Check that subrange is live at RematIdx.
+    if (LI.hasSubRanges()) {
+      const TargetRegisterInfo *TRI = MRI.getTargetRegisterInfo();
+      unsigned SubReg = MO.getSubReg();
+      LaneBitmask LM = SubReg ? TRI->getSubRegIndexLaneMask(SubReg)
+                              : MRI.getMaxLaneMaskForVReg(MO.getReg());
+      for (LiveInterval::SubRange &SR : LI.subranges()) {
+        if ((SR.LaneMask & LM).none())
+          continue;
+        if (!SR.liveAt(RematIdx))
+          return false;
+
+        // Early exit if all used lanes are checked. No need to continue.
+        LM &= ~SR.LaneMask;
+        if (LM.none())
+          break;
+      }
+      assert(LM.none());
+    }
+  }
+  return true;
+}
+
 void PreRARematStage::collectRematerializableInstructions() {
   const SIRegisterInfo *SRI = static_cast<const SIRegisterInfo *>(DAG.TRI);
   for (unsigned I = 0, E = DAG.MRI.getNumVirtRegs(); I != E; ++I) {
@@ -1629,7 +1682,7 @@ void PreRARematStage::collectRematerializableInstructions() {
 
     MachineOperand *Op = DAG.MRI.getOneDef(Reg);
     MachineInstr *Def = Op->getParent();
-    if (Op->getSubReg() != 0 || !isTriviallyReMaterializable(*Def))
+    if (Op->getSubReg() != 0 || !DAG.TII->isTriviallyReMaterializable(*Def))
       continue;
 
     MachineInstr *UseI = &*DAG.MRI.use_instr_nodbg_begin(Reg);
@@ -1644,8 +1697,13 @@ void PreRARematStage::collectRematerializableInstructions() {
       auto It = DAG.LiveIns[I].find(Reg);
       if (It != DAG.LiveIns[I].end() && !It->second.none()) {
         if (DAG.RegionsWithMinOcc[I]) {
-          RematerializableInsts[I][Def] = UseI;
-          AddedToRematList = true;
+          SlotIndex DefIdx = DAG.LIS->getInstructionIndex(*Def);
+          SlotIndex UseIdx =
+              DAG.LIS->getInstructionIndex(*UseI).getRegSlot(true);
+          if (allUsesAvailableAt(Def, DefIdx, UseIdx)) {
+            RematerializableInsts[I][Def] = UseI;
+            AddedToRematList = true;
+          }
         }
 
         // Collect regions with rematerializable reg as live-in to avoid
@@ -1719,6 +1777,27 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
       Register DefReg = Def->getOperand(0).getReg();
       TotalSinkableRegs +=
           SIRegisterInfo::getNumCoveredRegs(NewLiveIns[I][DefReg]);
+#ifdef EXPENSIVE_CHECKS
+      // All uses are known to be available / live at the remat point. Thus, the
+      // uses should already be live in to the region.
+      for (MachineOperand &MO : Def->operands()) {
+        if (!MO.isReg() || !MO.getReg() || !MO.readsReg())
+          continue;
+
+        Register UseReg = MO.getReg();
+        if (!UseReg.isVirtual())
+          continue;
+
+        LiveInterval &LI = LIS->getInterval(UseReg);
+        LaneBitmask LM = DAG.MRI.getMaxLaneMaskForVReg(MO.getReg());
+        if (LI.hasSubRanges() && MO.getSubReg())
+          LM = DAG.TRI->getSubRegIndexLaneMask(MO.getSubReg());
+
+        assert(NewLiveIns[I].contains(UseReg));
+        LaneBitmask LiveInMask = NewLiveIns[I][UseReg];
+        assert((LiveInMask & LM) == LM);
+      }
+#endif
     }
     int VGPRsAfterSink = VGPRUsage - TotalSinkableRegs;
     unsigned OptimisticOccupancy = ST.getOccupancyWithNumVGPRs(VGPRsAfterSink);
@@ -1838,18 +1917,6 @@ bool PreRARematStage::sinkTriviallyRematInsts(const GCNSubtarget &ST,
 
   SIMachineFunctionInfo &MFI = *MF.getInfo<SIMachineFunctionInfo>();
   MFI.increaseOccupancy(MF, ++DAG.MinOccupancy);
-
-  return true;
-}
-
-// Copied from MachineLICM
-bool PreRARematStage::isTriviallyReMaterializable(const MachineInstr &MI) {
-  if (!DAG.TII->isTriviallyReMaterializable(MI))
-    return false;
-
-  for (const MachineOperand &MO : MI.all_uses())
-    if (MO.getReg().isVirtual())
-      return false;
 
   return true;
 }

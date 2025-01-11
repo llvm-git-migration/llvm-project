@@ -448,13 +448,14 @@ private:
   // and single use outside the defining block into RematerializableInsts.
   void collectRematerializableInstructions();
 
-  bool isTriviallyReMaterializable(const MachineInstr &MI);
-
   // TODO: Should also attempt to reduce RP of SGPRs and AGPRs
   // Attempt to reduce RP of VGPR by sinking trivially rematerializable
   // instructions. Returns true if we were able to sink instruction(s).
   bool sinkTriviallyRematInsts(const GCNSubtarget &ST,
                                const TargetInstrInfo *TII);
+
+  bool allUsesAvailableAt(const MachineInstr *InstToRemat,
+                          SlotIndex OriginalIdx, SlotIndex RematIdx) const;
 
 public:
   bool initGCNSchedStage() override;
