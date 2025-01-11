@@ -176,6 +176,15 @@ public:
   /// is invoked before inlined terminator operations have been processed.
   virtual void processInlinedCallBlocks(
       Operation *call, iterator_range<Region::iterator> inlinedBlocks) const {}
+
+  /// Process a set of blocks that have been inlined. This callback is invoked
+  /// *before* inlined terminator operations have been processed. Returns true
+  /// if the inliner can assume a fast path of not creating a new block, if
+  /// there is only one block.
+  virtual bool
+  processInlinedBlocks(iterator_range<Region::iterator> inlinedBlocks) const {
+    return true;
+  }
 };
 
 /// This interface provides the hooks into the inlining interface.
@@ -185,11 +194,6 @@ class InlinerInterface
     : public DialectInterfaceCollection<DialectInlinerInterface> {
 public:
   using Base::Base;
-
-  /// Process a set of blocks that have been inlined. This callback is invoked
-  /// *before* inlined terminator operations have been processed.
-  virtual void
-  processInlinedBlocks(iterator_range<Region::iterator> inlinedBlocks) {}
 
   /// These hooks mirror the hooks for the DialectInlinerInterface, with default
   /// implementations that call the hook on the handler for the dialect 'op' is
@@ -210,6 +214,9 @@ public:
   //===--------------------------------------------------------------------===//
   // Transformation Hooks
   //===--------------------------------------------------------------------===//
+
+  virtual bool
+  processInlinedBlocks(iterator_range<Region::iterator> inlinedBlocks);
 
   virtual void handleTerminator(Operation *op, Block *newDest) const;
   virtual void handleTerminator(Operation *op, ValueRange valuesToRepl) const;

@@ -382,7 +382,7 @@ struct InlinerInterfaceImpl : public InlinerInterface {
 
   /// Process a set of blocks that have been inlined. This callback is invoked
   /// *before* inlined terminator operations have been processed.
-  void
+  bool
   processInlinedBlocks(iterator_range<Region::iterator> inlinedBlocks) final {
     // Find the closest callgraph node from the first block.
     CallGraphNode *node;
@@ -394,6 +394,7 @@ struct InlinerInterfaceImpl : public InlinerInterface {
 
     collectCallOps(inlinedBlocks, node, cg, symbolTable, calls,
                    /*traverseNestedCGNodes=*/true);
+    return InlinerInterface::processInlinedBlocks(inlinedBlocks);
   }
 
   /// Mark the given callgraph node for deletion.

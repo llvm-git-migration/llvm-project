@@ -118,6 +118,21 @@ void InlinerInterface::handleTerminator(Operation *op,
   handler->handleTerminator(op, valuesToRepl);
 }
 
+/// Process a set of blocks that have been inlined. This callback is invoked
+/// *before* inlined terminator operations have been processed. Returns true
+/// if the inliner can assume a fast path of not creating a new block, if
+/// there is only one block.
+bool InlinerInterface::processInlinedBlocks(
+    iterator_range<Region::iterator> inlinedBlocks) {
+  if (inlinedBlocks.empty()) {
+    return true;
+  } else {
+    auto *handler = getInterfaceFor(inlinedBlocks.begin()->getParentOp());
+    assert(handler && "expected valid dialect handler");
+    return handler->processInlinedBlocks(inlinedBlocks);
+  }
+}
+
 Value InlinerInterface::handleArgument(OpBuilder &builder, Operation *call,
                                        Operation *callable, Value argument,
                                        DictionaryAttr argumentAttrs) const {
@@ -292,10 +307,10 @@ inlineRegionImpl(InlinerInterface &interface, Region *src, Block *inlineBlock,
   // Process the newly inlined blocks.
   if (call)
     interface.processInlinedCallBlocks(call, newBlocks);
-  interface.processInlinedBlocks(newBlocks);
+  bool singleBlockFastPath = interface.processInlinedBlocks(newBlocks);
 
   // Handle the case where only a single block was inlined.
-  if (std::next(newBlocks.begin()) == newBlocks.end()) {
+  if (singleBlockFastPath && std::next(newBlocks.begin()) == newBlocks.end()) {
     // Run the result attribute handler on the terminator operands.
     Operation *firstBlockTerminator = firstNewBlock->getTerminator();
     builder.setInsertionPoint(firstBlockTerminator);
