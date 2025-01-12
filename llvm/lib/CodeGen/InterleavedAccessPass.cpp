@@ -545,7 +545,8 @@ bool InterleavedAccessImpl::runOnFunction(Function &F) {
   }
 
   for (auto *I : DeadInsts)
-    I->eraseFromParent();
+    if (I->getParent())
+      I->eraseFromParent();
 
   return Changed;
 }
