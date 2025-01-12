@@ -116,7 +116,7 @@
 // RUN: not clang-offload-bundler -type=i -targets=host-powerpc64le-ibm-linux-gnu,openmp-powerpc64le-ibm-linux-gnu,xpenmp-x86_xx-pc-linux-gnu -input=%t.i -input=%t.tgt1 -input=%t.tgt2 -output=%t.bundle.i 2>&1 | FileCheck %s --check-prefix CK-ERR8B
 // CK-ERR8B: error: invalid target 'xpenmp-x86_xx-pc-linux-gnu', unknown offloading kind 'xpenmp', unknown target triple 'x86_xx-pc-linux-gnu'
 
-// RUN: not clang-offload-bundler -type=i -targets=openmp-powerpc64le-linux,openmp-powerpc64le-ibm-linux-gnu,openmp-x86_64-pc-linux-gnu -input=%t.i -input=%t.tgt1 -input=%t.tgt2 -output=%t.bundle.i 2>&1 | FileCheck %s --check-prefix CK-ERR9A
+// RUN: not clang-offload-bundler -type=i -targets=openmp-powerpc64le-ibm-linux-gnu,openmp-x86_64-pc-linux-gnu -input=%t.i -input=%t.tgt1 -output=%t.bundle.i 2>&1 | FileCheck %s --check-prefix CK-ERR9A
 // CK-ERR9A: error: expecting exactly one host target but got 0
 
 // RUN: not clang-offload-bundler -type=i -targets=host-%itanium_abi_triple,host-%itanium_abi_triple,openmp-x86_64-pc-linux-gnu -input=%t.i -input=%t.tgt1 -input=%t.tgt2 -output=%t.bundle.i 2>&1 | FileCheck %s --check-prefix CK-ERR9B
@@ -364,15 +364,15 @@
 // RUN: not clang-offload-bundler -type=bc -input=%t.hip.bundle.bc -output=%t.tmp.bc -output=%t.tmp2.bc -unbundle \
 // RUN:   -targets=hip-amdgcn-amd-amdhsa--gfx906,hip-amdgcn-amd-amdhsa--gfx900 \
 // RUN:   2>&1 | FileCheck -check-prefix=MISS1 %s
-// MISS1: error: Can't find bundles for hip-amdgcn-amd-amdhsa--gfx906
+// MISS1: error: Can't find bundles for hip-amdgcn-amd-amdhsa-unknown-gfx906
 // RUN: not clang-offload-bundler -type=bc -input=%t.hip.bundle.bc -output=%t.tmp.bc -output=%t.tmp2.bc -unbundle \
 // RUN:   -targets=hip-amdgcn-amd-amdhsa--gfx906,hip-amdgcn-amd-amdhsa--gfx803 \
 // RUN:   2>&1 | FileCheck -check-prefix=MISS2 %s
-// MISS2: error: Can't find bundles for hip-amdgcn-amd-amdhsa--gfx803 and hip-amdgcn-amd-amdhsa--gfx906
+// MISS2: error: Can't find bundles for hip-amdgcn-amd-amdhsa-unknown-gfx803 and hip-amdgcn-amd-amdhsa-unknown-gfx906
 // RUN: not clang-offload-bundler -type=bc -input=%t.hip.bundle.bc -output=%t.tmp.bc -output=%t.tmp2.bc -output=%t.tmp3.bc -unbundle \
 // RUN:   -targets=hip-amdgcn-amd-amdhsa--gfx906,hip-amdgcn-amd-amdhsa--gfx803,hip-amdgcn-amd-amdhsa--gfx1010 \
 // RUN:   2>&1 | FileCheck -check-prefix=MISS3 %s
-// MISS3: error: Can't find bundles for hip-amdgcn-amd-amdhsa--gfx1010, hip-amdgcn-amd-amdhsa--gfx803, and hip-amdgcn-amd-amdhsa--gfx906
+// MISS3: error: Can't find bundles for hip-amdgcn-amd-amdhsa-unknown-gfx1010, hip-amdgcn-amd-amdhsa-unknown-gfx803, and hip-amdgcn-amd-amdhsa-unknown-gfx906
 
 //
 // Check error due to duplicate targets
@@ -422,10 +422,10 @@
 // RUN:   -output=%T/hip_900.a -output=%T/hip_906.a -input=%T/hip_archive.a
 // RUN: llvm-ar t %T/hip_900.a | FileCheck -check-prefix=HIP-AR-900 %s
 // RUN: llvm-ar t %T/hip_906.a | FileCheck -check-prefix=HIP-AR-906 %s
-// HIP-AR-900-DAG: hip_bundle1-hip-amdgcn-amd-amdhsa--gfx900
-// HIP-AR-900-DAG: hip_bundle2-hip-amdgcn-amd-amdhsa--gfx900
-// HIP-AR-906-DAG: hip_bundle1-hip-amdgcn-amd-amdhsa--gfx906
-// HIP-AR-906-DAG: hip_bundle2-hip-amdgcn-amd-amdhsa--gfx906
+// HIP-AR-900-DAG: hip_bundle1-hip-amdgcn-amd-amdhsa-unknown-gfx900
+// HIP-AR-900-DAG: hip_bundle2-hip-amdgcn-amd-amdhsa-unknown-gfx900
+// HIP-AR-906-DAG: hip_bundle1-hip-amdgcn-amd-amdhsa-unknown-gfx906
+// HIP-AR-906-DAG: hip_bundle2-hip-amdgcn-amd-amdhsa-unknown-gfx906
 
 //
 // Check unbundling archive for host target
@@ -469,8 +469,8 @@
 // RUN: diff %t.tgt2 %t.res.tgt2
 //
 // NOHOST-NOT: host-
-// NOHOST-DAG: hip-amdgcn-amd-amdhsa--gfx900
-// NOHOST-DAG: hip-amdgcn-amd-amdhsa--gfx906
+// NOHOST-DAG: hip-amdgcn-amd-amdhsa-unknown-gfx900
+// NOHOST-DAG: hip-amdgcn-amd-amdhsa-unknown-gfx906
 
 //
 // Check bundling ID compatibility for HIP.
