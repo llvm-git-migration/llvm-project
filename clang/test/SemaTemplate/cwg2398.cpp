@@ -362,15 +362,17 @@ namespace classes {
 
 namespace packs {
   namespace t1 {
-    // FIXME: This should be rejected
     template<template<int, int...> class> struct A {};
-    // old-note@-1 {{previous non-type template parameter with type 'int' is here}}
+    // new-error@-1 {{non-type parameter of template template parameter cannot be narrowed from type 'int' to 'char'}}
+    // new-note@-2 {{previous template template parameter is here}}
+    // old-note@-3 {{previous non-type template parameter with type 'int' is here}}
 
     template<char> struct B;
     // old-note@-1 {{template non-type parameter has a different type 'char' in template argument}}
 
     template struct A<B>;
-    // old-error@-1 {{has different template parameters}}
+    // new-note@-1 {{has different template parameters}}
+    // old-error@-2 {{has different template parameters}}
   } // namespace t1
   namespace t2 {
     template<template<char, int...> class> struct A {};
@@ -383,15 +385,17 @@ namespace packs {
     // old-error@-1 {{has different template parameters}}
   } // namespace t2
   namespace t3 {
-    // FIXME: This should be rejected
     template<template<int...> class> struct A {};
-    // old-note@-1 {{previous non-type template parameter with type 'int' is here}}
+    // new-error@-1 {{non-type parameter of template template parameter cannot be narrowed from type 'int' to 'char'}}
+    // new-note@-2 {{previous template template parameter is here}}
+    // old-note@-3 {{previous non-type template parameter with type 'int' is here}}
 
     template<char> struct B;
     // old-note@-1 {{template non-type parameter has a different type 'char' in template argument}}
 
     template struct A<B>;
-    // old-error@-1 {{has different template parameters}}
+    // new-note@-1 {{has different template parameters}}
+    // old-error@-2 {{has different template parameters}}
   } // namespace t3
   namespace t4 {
     template<template<char...> class> struct A {};
@@ -648,3 +652,50 @@ namespace nttp_auto {
     // new-note@-1 {{different template parameters}}
   } // namespace t3
 } // namespace nttp_auto
+
+namespace nttp_partial_order {
+  namespace t1 {
+    // FIXME: This should pick the second overload.
+    template<template<short> class TT1> void f(TT1<0>);
+    // new-note@-1 {{here}}
+    template<template<int>   class TT2> void f(TT2<0>) {};
+    // new-note@-1 {{here}}
+    template<int> struct B {};
+    template void f<B>(B<0>);
+    // new-error@-1 {{ambiguous}}
+  } // namespace t1
+  namespace t2 {
+    // FIXME: This should pick the second overload.
+    struct A {} a;
+    template<template<A&>       class TT1> void f(TT1<a>);
+    // new-note@-1 {{here}}
+    template<template<const A&> class TT2> void f(TT2<a>) {};
+    // new-note@-1 {{here}}
+    template<const A&> struct B {};
+    template void f<B>(B<a>);
+    // new-error@-1 {{ambiguous}}
+  } // namespace t2
+  namespace t3 {
+    // FIXME: This should pick the second overload.
+    struct A {} a;
+    template<template<A*>       class TT1> void f(TT1<&a>);
+    // new-note@-1 {{here}}
+    template<template<const A*> class TT2> void f(TT2<&a>) {};
+    // new-note@-1 {{here}}
+    template<const A*> struct B {};
+    template void f<B>(B<&a>);
+    // new-error@-1 {{ambiguous}}
+  } // namespace t3
+  namespace t4 {
+    // FIXME: This should pick the second overload.
+    struct A {};
+    using nullptr_t = decltype(nullptr);
+    template<template<nullptr_t> class TT2> void f(TT2<nullptr>);
+    // new-note@-1 {{here}}
+    template<template<A*>        class TT1> void f(TT1<nullptr>) {};
+    // new-note@-1 {{here}}
+    template<A*> struct B {};
+    template void f<B>(B<nullptr>);
+    // new-error@-1 {{ambiguous}}
+  } // namespace t4
+} // namespace nttp_partial_order
