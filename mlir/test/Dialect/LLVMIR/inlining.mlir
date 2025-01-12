@@ -641,6 +641,21 @@ llvm.func @caller(%ptr : !llvm.ptr) -> i32 {
 
 // -----
 
+llvm.func @threadidx() -> i32 {
+  %tid = call i32 @llvm.nvvm.read.ptx.sreg.tid.x()
+  llvm.return %tid : i32
+}
+
+// CHECK-LABEL: func @caller
+llvm.func @caller() -> i32 {
+  // CHECK-NOT: llvm.call @private_func
+  // CHECK: call i32 @llvm.nvvm.read.ptx.sreg.tid.x
+  %z = llvm.call @private_func() : () -> (i32)
+  llvm.return %z : i32
+}
+
+// -----
+
 llvm.func @vararg_func(...) {
   llvm.return
 }
