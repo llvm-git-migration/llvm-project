@@ -12,6 +12,7 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/IR/Builders.h"
 
 namespace mlir {
@@ -58,7 +59,8 @@ public:
         "expected single result op");
 
     static_assert(std::is_base_of<OpTrait::SameOperandsAndResultType<SourceOp>,
-                                  SourceOp>::value,
+                                  SourceOp>::value ||
+                      std::is_same_v<SourceOp, math::FPowIOp>,
                   "expected op with same operand and result types");
 
     if (!op->template getParentOfType<FunctionOpInterface>()) {
