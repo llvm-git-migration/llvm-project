@@ -437,7 +437,8 @@ bool lldb_private::formatters::LibcxxContainerSummaryProvider(
     stream.Printf("0x%016" PRIx64 " ", value);
   }
   return FormatEntity::FormatStringRef("size=${svar%#}", stream, nullptr,
-                                       nullptr, nullptr, &valobj, false, false);
+                                       nullptr, nullptr, nullptr, &valobj,
+                                       false, false);
 }
 
 /// The field layout in a libc++ string (cap, side, data or data, size, cap).

@@ -5059,7 +5059,7 @@ public:
             frame_sp->GetSymbolContext(eSymbolContextEverything);
         ExecutionContext exe_ctx(frame_sp);
         if (FormatEntity::Format(m_format, strm, &sc, &exe_ctx, nullptr,
-                                 nullptr, false, false)) {
+                                 nullptr, nullptr, false, false)) {
           int right_pad = 1;
           window.PutCStringTruncated(right_pad, strm.GetString().str().c_str());
         }
@@ -5117,7 +5117,7 @@ public:
       StreamString strm;
       ExecutionContext exe_ctx(thread_sp);
       if (FormatEntity::Format(m_format, strm, nullptr, &exe_ctx, nullptr,
-                               nullptr, false, false)) {
+                               nullptr, nullptr, false, false)) {
         int right_pad = 1;
         window.PutCStringTruncated(right_pad, strm.GetString().str().c_str());
       }
@@ -5216,7 +5216,7 @@ public:
       StreamString strm;
       ExecutionContext exe_ctx(process_sp);
       if (FormatEntity::Format(m_format, strm, nullptr, &exe_ctx, nullptr,
-                               nullptr, false, false)) {
+                               nullptr, nullptr, false, false)) {
         int right_pad = 1;
         window.PutCStringTruncated(right_pad, strm.GetString().str().c_str());
       }
@@ -6747,8 +6747,9 @@ public:
 
       if (StateIsStoppedState(state, true)) {
         StreamString strm;
-        if (thread && FormatEntity::Format(m_format, strm, nullptr, &exe_ctx,
-                                           nullptr, nullptr, false, false)) {
+        if (thread &&
+            FormatEntity::Format(m_format, strm, nullptr, &exe_ctx, nullptr,
+                                 nullptr, nullptr, false, false)) {
           window.MoveCursor(40, 0);
           window.PutCStringTruncated(1, strm.GetString().str().c_str());
         }

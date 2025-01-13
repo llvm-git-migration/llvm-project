@@ -1880,7 +1880,7 @@ bool StackFrame::DumpUsingFormat(Stream &strm,
   s.PutCString(frame_marker);
 
   if (format && FormatEntity::Format(*format, s, &m_sc, &exe_ctx, nullptr,
-                                     nullptr, false, false)) {
+                                     nullptr, nullptr, false, false)) {
     strm.PutCString(s.GetString());
     return true;
   }

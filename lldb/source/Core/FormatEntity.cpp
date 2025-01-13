@@ -162,7 +162,13 @@ constexpr Definition g_thread_child_entries[] = {
     Definition("completed-expression", EntryType::ThreadCompletedExpression)};
 
 constexpr Definition g_target_child_entries[] = {
-    Definition("arch", EntryType::TargetArch)};
+    Definition("arch", EntryType::TargetArch),
+    Entry::DefinitionWithChildren("file", EntryType::TargetFile,
+                                  g_file_child_entries)};
+
+constexpr Definition g_progress_child_entries[] = {
+    Definition("count", EntryType::ProgressCount),
+    Definition("message", EntryType::ProgressMessage)};
 
 #define _TO_STR2(_val) #_val
 #define _TO_STR(_val) _TO_STR2(_val)
@@ -257,7 +263,10 @@ constexpr Definition g_top_level_entries[] = {
     Entry::DefinitionWithChildren("target", EntryType::Invalid,
                                   g_target_child_entries),
     Entry::DefinitionWithChildren("var", EntryType::Variable,
-                                  g_var_child_entries, true)};
+                                  g_var_child_entries, true),
+    Entry::DefinitionWithChildren("progress", EntryType::Invalid,
+                                  g_progress_child_entries),
+};
 
 constexpr Definition g_root = Entry::DefinitionWithChildren(
     "<root>", EntryType::Root, g_top_level_entries);
@@ -322,6 +331,7 @@ const char *FormatEntity::Entry::TypeToCString(Type t) {
     ENUM_TO_CSTR(ScriptThread);
     ENUM_TO_CSTR(ThreadInfo);
     ENUM_TO_CSTR(TargetArch);
+    ENUM_TO_CSTR(TargetFile);
     ENUM_TO_CSTR(ScriptTarget);
     ENUM_TO_CSTR(ModuleFile);
     ENUM_TO_CSTR(File);
@@ -355,6 +365,8 @@ const char *FormatEntity::Entry::TypeToCString(Type t) {
     ENUM_TO_CSTR(LineEntryStartAddress);
     ENUM_TO_CSTR(LineEntryEndAddress);
     ENUM_TO_CSTR(CurrentPCArrow);
+    ENUM_TO_CSTR(ProgressCount);
+    ENUM_TO_CSTR(ProgressMessage);
   }
   return "???";
 }
@@ -993,8 +1005,9 @@ static bool DumpValue(Stream &s, const SymbolContext *sc,
         success &= item->DumpPrintableRepresentation(s, val_obj_display,
                                                      custom_format);
       } else {
-        success &= FormatEntity::FormatStringRef(
-            special_directions, s, sc, exe_ctx, nullptr, item, false, false);
+        success &=
+            FormatEntity::FormatStringRef(special_directions, s, sc, exe_ctx,
+                                          nullptr, nullptr, item, false, false);
       }
 
       if (--max_num_children == 0) {
@@ -1151,14 +1164,15 @@ static void FormatInlinedBlock(Stream &out_stream, Block *block) {
 bool FormatEntity::FormatStringRef(const llvm::StringRef &format_str, Stream &s,
                                    const SymbolContext *sc,
                                    const ExecutionContext *exe_ctx,
-                                   const Address *addr, ValueObject *valobj,
-                                   bool function_changed,
+                                   const Address *addr,
+                                   const Debugger *debugger,
+                                   ValueObject *valobj, bool function_changed,
                                    bool initial_function) {
   if (!format_str.empty()) {
     FormatEntity::Entry root;
     Status error = FormatEntity::Parse(format_str, root);
     if (error.Success()) {
-      return FormatEntity::Format(root, s, sc, exe_ctx, addr, valobj,
+      return FormatEntity::Format(root, s, sc, exe_ctx, addr, debugger, valobj,
                                   function_changed, initial_function);
     }
   }
@@ -1168,14 +1182,15 @@ bool FormatEntity::FormatStringRef(const llvm::StringRef &format_str, Stream &s,
 bool FormatEntity::FormatCString(const char *format, Stream &s,
                                  const SymbolContext *sc,
                                  const ExecutionContext *exe_ctx,
-                                 const Address *addr, ValueObject *valobj,
-                                 bool function_changed, bool initial_function) {
+                                 const Address *addr, const Debugger *debugger,
+                                 ValueObject *valobj, bool function_changed,
+                                 bool initial_function) {
   if (format && format[0]) {
     FormatEntity::Entry root;
     llvm::StringRef format_str(format);
     Status error = FormatEntity::Parse(format_str, root);
     if (error.Success()) {
-      return FormatEntity::Format(root, s, sc, exe_ctx, addr, valobj,
+      return FormatEntity::Format(root, s, sc, exe_ctx, addr, debugger, valobj,
                                   function_changed, initial_function);
     }
   }
@@ -1185,8 +1200,17 @@ bool FormatEntity::FormatCString(const char *format, Stream &s,
 bool FormatEntity::Format(const Entry &entry, Stream &s,
                           const SymbolContext *sc,
                           const ExecutionContext *exe_ctx, const Address *addr,
-                          ValueObject *valobj, bool function_changed,
-                          bool initial_function) {
+                          const Debugger *debugger, ValueObject *valobj,
+                          bool function_changed, bool initial_function) {
+  auto CalculateDebugger = [&]() -> const Debugger * {
+    if (debugger)
+      return debugger;
+    if (exe_ctx)
+      if (Target *target = exe_ctx->GetTargetPtr())
+        return &target->GetDebugger();
+    return nullptr;
+  };
+
   switch (entry.type) {
   case Entry::Type::Invalid:
   case Entry::Type::ParentNumber: // Only used for
@@ -1195,12 +1219,9 @@ bool FormatEntity::Format(const Entry &entry, Stream &s,
                                   // FormatEntity::Entry::Definition encoding
     return false;
   case Entry::Type::EscapeCode:
-    if (exe_ctx) {
-      if (Target *target = exe_ctx->GetTargetPtr()) {
-        Debugger &debugger = target->GetDebugger();
-        if (debugger.GetUseColor()) {
-          s.PutCString(entry.string);
-        }
+    if (const Debugger *debugger_ptr = CalculateDebugger()) {
+      if (debugger_ptr->GetUseColor()) {
+        s.PutCString(entry.string);
       }
     }
     // Always return true, so colors being disabled is transparent.
@@ -1208,8 +1229,8 @@ bool FormatEntity::Format(const Entry &entry, Stream &s,
 
   case Entry::Type::Root:
     for (const auto &child : entry.children) {
-      if (!Format(child, s, sc, exe_ctx, addr, valobj, function_changed,
-                  initial_function)) {
+      if (!Format(child, s, sc, exe_ctx, addr, debugger, valobj,
+                  function_changed, initial_function)) {
         return false; // If any item of root fails, then the formatting fails
       }
     }
@@ -1223,7 +1244,7 @@ bool FormatEntity::Format(const Entry &entry, Stream &s,
     StreamString scope_stream;
     bool success = false;
     for (const auto &child : entry.children) {
-      success = Format(child, scope_stream, sc, exe_ctx, addr, valobj,
+      success = Format(child, scope_stream, sc, exe_ctx, addr, debugger, valobj,
                        function_changed, initial_function);
       if (!success)
         break;
@@ -1464,6 +1485,19 @@ bool FormatEntity::Format(const Entry &entry, Stream &s,
         if (arch.IsValid()) {
           s.PutCString(arch.GetArchitectureName());
           return true;
+        }
+      }
+    }
+    return false;
+
+  case Entry::Type::TargetFile:
+    if (exe_ctx) {
+      Target *target = exe_ctx->GetTargetPtr();
+      if (target) {
+        Module *exe_module = target->GetExecutableModulePointer();
+        if (exe_module) {
+          if (DumpFile(s, exe_module->GetFileSpec(), (FileKind)entry.number))
+            return true;
         }
       }
     }
@@ -1898,7 +1932,28 @@ bool FormatEntity::Format(const Entry &entry, Stream &s,
       return true;
     }
     return false;
+
+  case Entry::Type::ProgressCount:
+    if (const Debugger *debugger_ptr = CalculateDebugger()) {
+      if (auto progress = debugger_ptr->GetCurrentProgressReport()) {
+        if (progress->total != UINT64_MAX) {
+          s.Printf("[%llu/%llu]", progress->completed, progress->total);
+          return true;
+        }
+      }
+    }
+    return false;
+
+  case Entry::Type::ProgressMessage:
+    if (const Debugger *debugger_ptr = CalculateDebugger()) {
+      if (auto progress = debugger_ptr->GetCurrentProgressReport()) {
+        s.PutCString(progress->message);
+        return true;
+      }
+    }
+    return false;
   }
+
   return false;
 }
 
