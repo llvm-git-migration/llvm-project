@@ -558,8 +558,8 @@ define <2 x i32> @vectorize_sdiv_v2i32(<2 x i32> %a, <2 x i32> %x, <2 x i32> %y,
 ; NO-SVE-SAME: <2 x i32> [[A:%.*]], <2 x i32> [[X:%.*]], <2 x i32> [[Y:%.*]], <2 x i32> [[Z:%.*]]) #[[ATTR0]] {
 ; NO-SVE-NEXT:    [[A0:%.*]] = extractelement <2 x i32> [[A]], i64 0
 ; NO-SVE-NEXT:    [[A1:%.*]] = extractelement <2 x i32> [[A]], i64 1
-; NO-SVE-NEXT:    [[TMP1:%.*]] = sdiv i32 [[A0]], 2
-; NO-SVE-NEXT:    [[TMP2:%.*]] = sdiv i32 [[A1]], 4
+; NO-SVE-NEXT:    [[TMP1:%.*]] = sdiv i32 [[A0]], [[A1]]
+; NO-SVE-NEXT:    [[TMP2:%.*]] = sdiv i32 [[A1]], [[A0]]
 ; NO-SVE-NEXT:    [[X0:%.*]] = extractelement <2 x i32> [[X]], i64 0
 ; NO-SVE-NEXT:    [[X1:%.*]] = extractelement <2 x i32> [[X]], i64 1
 ; NO-SVE-NEXT:    [[TMP3:%.*]] = add i32 [[TMP1]], [[X0]]
@@ -578,7 +578,8 @@ define <2 x i32> @vectorize_sdiv_v2i32(<2 x i32> %a, <2 x i32> %x, <2 x i32> %y,
 ;
 ; SVE-LABEL: define <2 x i32> @vectorize_sdiv_v2i32(
 ; SVE-SAME: <2 x i32> [[A:%.*]], <2 x i32> [[X:%.*]], <2 x i32> [[Y:%.*]], <2 x i32> [[Z:%.*]]) #[[ATTR0]] {
-; SVE-NEXT:    [[TMP1:%.*]] = sdiv <2 x i32> [[A]], <i32 2, i32 4>
+; SVE-NEXT:    [[TMP5:%.*]] = shufflevector <2 x i32> [[A]], <2 x i32> poison, <2 x i32> <i32 1, i32 0>
+; SVE-NEXT:    [[TMP1:%.*]] = sdiv <2 x i32> [[A]], [[TMP5]]
 ; SVE-NEXT:    [[TMP2:%.*]] = add <2 x i32> [[TMP1]], [[X]]
 ; SVE-NEXT:    [[TMP3:%.*]] = sub <2 x i32> [[TMP2]], [[Y]]
 ; SVE-NEXT:    [[TMP4:%.*]] = mul <2 x i32> [[TMP3]], [[Z]]
@@ -587,8 +588,8 @@ define <2 x i32> @vectorize_sdiv_v2i32(<2 x i32> %a, <2 x i32> %x, <2 x i32> %y,
 {
   %a0 = extractelement <2 x i32> %a, i64 0
   %a1 = extractelement <2 x i32> %a, i64 1
-  %1 = sdiv i32 %a0, 2
-  %2 = sdiv i32 %a1, 4
+  %1 = sdiv i32 %a0, %a1
+  %2 = sdiv i32 %a1, %a0
   %x0 = extractelement <2 x i32> %x, i64 0
   %x1 = extractelement <2 x i32> %x, i64 1
   %3 = add i32 %1, %x0
