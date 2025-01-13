@@ -80,6 +80,17 @@
 // RUN:   %S/Inputs/hip_multiple_inputs/b.hip \
 // RUN: 2>&1 | FileCheck -check-prefixes=DEVICE %s
 
+// Check cuid is supported by the new driver.
+// RUN: %clang -### -x hip \
+// RUN:   --target=x86_64-unknown-linux-gnu \
+// RUN:   --no-offload-new-driver \
+// RUN:   --offload-arch=gfx900 \
+// RUN:   --offload-arch=gfx906 \
+// RUN:   -c -nogpuinc -nogpulib --offload-new-driver \
+// RUN:   %S/Inputs/hip_multiple_inputs/a.cu \
+// RUN:   %S/Inputs/hip_multiple_inputs/b.hip \
+// RUN: 2>&1 | FileCheck -check-prefixes=COMMON,HEX %s
+
 // INVALID: invalid value 'invalid' in '-fuse-cuid=invalid'
 
 // COMMON: "-cc1"{{.*}} "-triple" "amdgcn-amd-amdhsa"
