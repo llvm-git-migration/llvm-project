@@ -72,6 +72,29 @@ enum ModuleHeaderMode {
   HeaderMode_System
 };
 
+/// Options for specifying CUID used by CUDA/HIP for uniquely identifying
+/// compilation units.
+class CUIDOptions {
+public:
+  enum class Kind { Hash, Random, Fixed, None, Invalid };
+
+  CUIDOptions() = default;
+  CUIDOptions(const CUIDOptions &) = default;
+  CUIDOptions(llvm::opt::DerivedArgList &Args, const Driver &D);
+
+  // Get the CUID for an input string
+  std::string getCUID(StringRef InputFile,
+                      llvm::opt::DerivedArgList &Args) const;
+
+  bool isEnabled() const {
+    return UseCUID != Kind::None && UseCUID != Kind::Invalid;
+  }
+
+private:
+  Kind UseCUID = Kind::None;
+  StringRef FixedCUID;
+};
+
 /// Driver - Encapsulate logic for constructing compilation processes
 /// from a set of gcc-driver-like command line arguments.
 class Driver {
@@ -118,6 +141,9 @@ class Driver {
 
   /// LTO mode selected via -f(no-offload-)?lto(=.*)? options.
   LTOKind OffloadLTOMode;
+
+  /// Options for CUID
+  CUIDOptions CUIDOpts;
 
 public:
   enum OpenMPRuntimeKind {
@@ -727,6 +753,9 @@ public:
 
   /// Get the specific kind of offload LTO being performed.
   LTOKind getOffloadLTOMode() const { return OffloadLTOMode; }
+
+  /// Get the CUID option.
+  const CUIDOptions &getCUIDOpts() const { return CUIDOpts; }
 
 private:
 
