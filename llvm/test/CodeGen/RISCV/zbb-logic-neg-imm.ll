@@ -330,10 +330,9 @@ define i64 @andimm64srli(i64 %x) {
 ;
 ; RV64-LABEL: andimm64srli:
 ; RV64:       # %bb.0:
-; RV64-NEXT:    li a1, -1
-; RV64-NEXT:    slli a1, a1, 56
-; RV64-NEXT:    addi a1, a1, 255
-; RV64-NEXT:    and a0, a0, a1
+; RV64-NEXT:    lui a1, 1048560
+; RV64-NEXT:    srli a1, a1, 8
+; RV64-NEXT:    andn a0, a0, a1
 ; RV64-NEXT:    ret
   %and = and i64 %x, -72057594037927681
   ret i64 %and
@@ -349,10 +348,9 @@ define i64 @andimm64srli2(i64 %x) {
 ;
 ; NOZBS64-LABEL: andimm64srli2:
 ; NOZBS64:       # %bb.0:
-; NOZBS64-NEXT:    li a1, -1
-; NOZBS64-NEXT:    slli a1, a1, 63
-; NOZBS64-NEXT:    addi a1, a1, 2047
-; NOZBS64-NEXT:    and a0, a0, a1
+; NOZBS64-NEXT:    lui a1, 1048575
+; NOZBS64-NEXT:    srli a1, a1, 1
+; NOZBS64-NEXT:    andn a0, a0, a1
 ; NOZBS64-NEXT:    ret
 ;
 ; ZBS64-LABEL: andimm64srli2:
