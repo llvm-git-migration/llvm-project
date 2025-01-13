@@ -7818,9 +7818,6 @@ DenseMap<const SCEV *, Value *> LoopVectorizationPlanner::executePlan(
     State.LVer->prepareNoAliasMetadata();
   }
 
-  // Set the uncountable early exit block in the VPTransformState.
-  State.CFG.UncountableEarlyExitBB = ILV.Legal->getUncountableEarlyExitBlock();
-
   ILV.printDebugTracesAtStart();
 
   //===------------------------------------------------===//
@@ -9278,7 +9275,7 @@ addUsersInExitBlocks(VPlan &Plan,
       if (PredVPBB != MiddleVPBB) {
         assert(ExitIRI->getParent()->getNumPredecessors() <= 2);
 
-        // Cache the early exit mask
+        // Lookup and cache the early exit mask.
         if (!EarlyExitMask) {
           VPBasicBlock *MiddleSplitVPBB =
               cast<VPBasicBlock>(VectorEarlyExitVPBB->getSinglePredecessor());
