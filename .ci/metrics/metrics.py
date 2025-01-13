@@ -26,6 +26,13 @@ class JobMetrics:
     workflow_id: int
 
 
+@dataclass
+class GaugeMetric:
+    name: str
+    value: int
+    time_ns: int
+
+
 def get_metrics(github_repo: github.Repository, workflows_to_track: dict[str, int]):
     """Gets the metrics for specified Github workflows.
 
@@ -49,8 +56,21 @@ def get_metrics(github_repo: github.Repository, workflows_to_track: dict[str, in
 
     workflows_to_include = set(workflows_to_track.keys())
 
+    running_workflow_count = 0
+    queued_workflow_count = 0
+
     while len(workflows_to_include) > 0:
         workflow_run = next(workflow_runs)
+
+        if workflow_run.status == "in_progress":
+          running_workflow_count += 1
+
+        # Other states are available (pending, waiting, etc), but the meaning
+        # is not documented (See #70540).
+        # "queued" seems to be the info we want.
+        if workflow_run.status == "queued":
+          queued_workflow_count += 1
+
         if workflow_run.status != "completed":
             continue
 
@@ -113,6 +133,11 @@ def get_metrics(github_repo: github.Repository, workflows_to_track: dict[str, in
             )
         )
 
+    workflow_metrics.append(GaugeMetric("metrics_container_queued_workflow_count", queued_workflow_count, time.time_ns()))
+    workflow_metrics.append(GaugeMetric("metrics_container_running_workflow_count", running_workflow_count, time.time_ns()))
+    # Always send a hearbeat metric so we can monitor is this container is still able to log to Grafana.
+    workflow_metrics.append(GaugeMetric("metrics_container_heartbeat", 1, time.time_ns()))
+
     return workflow_metrics
 
 
@@ -129,10 +154,14 @@ def upload_metrics(workflow_metrics, metrics_userid, api_key):
     """
     metrics_batch = []
     for workflow_metric in workflow_metrics:
-        workflow_formatted_name = workflow_metric.job_name.lower().replace(" ", "_")
-        metrics_batch.append(
-            f"{workflow_formatted_name} queue_time={workflow_metric.queue_time},run_time={workflow_metric.run_time},status={workflow_metric.status} {workflow_metric.created_at_ns}"
-        )
+        if isinstance(workflow_metric, GaugeMetric):
+            name = workflow_metric.name.lower().replace(" ", "_")
+            metrics_batch.append(f"{name} value={workflow_metric.value} {workflow_metric.time_ns}")
+        else:
+            name = workflow_metric.job_name.lower().replace(" ", "_")
+            metrics_batch.append(
+                f"{name} queue_time={workflow_metric.queue_time},run_time={workflow_metric.run_time},status={workflow_metric.status} {workflow_metric.created_at_ns}"
+            )
 
     request_data = "\n".join(metrics_batch)
     response = requests.post(
@@ -146,17 +175,6 @@ def upload_metrics(workflow_metrics, metrics_userid, api_key):
         print(
             f"Failed to submit data to Grafana: {response.status_code}", file=sys.stderr
         )
-
-
-def make_heartbeat_metric():
-    return JobMetrics(
-        "metrics_container_heartbeat",
-        1,  # queue time seconds
-        2,  # run time seconds
-        3,  # job result
-        time.time_ns(),  # created at ns
-        0,  # workflow run ID
-    )
 
 
 def main():
@@ -179,15 +197,12 @@ def main():
         if len(current_metrics) == 0:
             print("No metrics found to upload.", file=sys.stdout)
 
-        # Always send a hearbeat metric so we can monitor is this container
-        # is still able to log to Grafana.
-        current_metrics.append(make_heartbeat_metric())
-
         upload_metrics(current_metrics, grafana_metrics_userid, grafana_api_key)
         print(f"Uploaded {len(current_metrics)} metrics", file=sys.stdout)
 
         for workflow_metric in reversed(current_metrics):
-            workflows_to_track[workflow_metric.job_name] = workflow_metric.workflow_id
+            if isinstance(workflow_metric, JobMetrics):
+              workflows_to_track[workflow_metric.job_name] = workflow_metric.workflow_id
 
         time.sleep(SCRAPE_INTERVAL_SECONDS)
 
