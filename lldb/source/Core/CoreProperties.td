@@ -172,6 +172,14 @@ let Definition = "debugger" in {
     Global,
     DefaultStringValue<"${ansi.normal}">,
     Desc<"When displaying progress in a color-enabled terminal, use the ANSI terminal code specified in this format immediately after the progress message.">;
+  def ShowStatusline: Property<"show-statusline", "Boolean">,
+    Global,
+    DefaultTrue,
+    Desc<"Whether to show a statusline at the bottom of the terminal.">;
+  def StatuslineFormat: Property<"statusline-format", "FormatEntityList">,
+    Global,
+    DefaultStringValue<"${module.file.basename} ${line.file.basename}:${line.number}:${line.column} ${thread.stop-reason}">,
+    Desc<"List of statusline format entities.">;
   def UseSourceCache: Property<"use-source-cache", "Boolean">,
     Global,
     DefaultTrue,
