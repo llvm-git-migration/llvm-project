@@ -6,7 +6,7 @@
 ; RUN: llc -mtriple=riscv32 -mattr=+zbb,+zbs -verify-machineinstrs < %s \
 ; RUN:   | FileCheck %s --check-prefixes=CHECK,RV32,ZBS
 ; RUN: llc -mtriple=riscv64 -mattr=+zbb,+zbs -verify-machineinstrs < %s \
-; RUN:   | FileCheck %s --check-prefixes=CHECK,RV64,ZBS
+; RUN:   | FileCheck %s --check-prefixes=CHECK,RV64,ZBS,ZBS64
 
 define i32 @and0xabcdefff(i32 %x) {
 ; CHECK-LABEL: and0xabcdefff:
@@ -301,8 +301,8 @@ define i64 @andimm64(i64 %x) {
   ret i64 %and
 }
 
-define i64 @andimm64srli(i64 %x) {
-; RV32-LABEL: andimm64srli:
+define i64 @orimm64srli(i64 %x) {
+; RV32-LABEL: orimm64srli:
 ; RV32:       # %bb.0:
 ; RV32-NEXT:    lui a2, 1040384
 ; RV32-NEXT:    orn a0, a0, a2
@@ -310,7 +310,7 @@ define i64 @andimm64srli(i64 %x) {
 ; RV32-NEXT:    or a1, a1, a2
 ; RV32-NEXT:    ret
 ;
-; RV64-LABEL: andimm64srli:
+; RV64-LABEL: orimm64srli:
 ; RV64:       # %bb.0:
 ; RV64-NEXT:    lui a1, 983040
 ; RV64-NEXT:    srli a1, a1, 3
@@ -318,4 +318,49 @@ define i64 @andimm64srli(i64 %x) {
 ; RV64-NEXT:    ret
   %or = or i64 %x, -2305843009180139521
   ret i64 %or
+}
+
+define i64 @andimm64srli(i64 %x) {
+; RV32-LABEL: andimm64srli:
+; RV32:       # %bb.0:
+; RV32-NEXT:    lui a2, 1044480
+; RV32-NEXT:    and a1, a1, a2
+; RV32-NEXT:    andi a0, a0, 255
+; RV32-NEXT:    ret
+;
+; RV64-LABEL: andimm64srli:
+; RV64:       # %bb.0:
+; RV64-NEXT:    li a1, -1
+; RV64-NEXT:    slli a1, a1, 56
+; RV64-NEXT:    addi a1, a1, 255
+; RV64-NEXT:    and a0, a0, a1
+; RV64-NEXT:    ret
+  %and = and i64 %x, -72057594037927681
+  ret i64 %and
+}
+
+define i64 @andimm64srli2(i64 %x) {
+; RV32-LABEL: andimm64srli2:
+; RV32:       # %bb.0:
+; RV32-NEXT:    lui a2, 524288
+; RV32-NEXT:    and a1, a1, a2
+; RV32-NEXT:    andi a0, a0, 2047
+; RV32-NEXT:    ret
+;
+; NOZBS64-LABEL: andimm64srli2:
+; NOZBS64:       # %bb.0:
+; NOZBS64-NEXT:    li a1, -1
+; NOZBS64-NEXT:    slli a1, a1, 63
+; NOZBS64-NEXT:    addi a1, a1, 2047
+; NOZBS64-NEXT:    and a0, a0, a1
+; NOZBS64-NEXT:    ret
+;
+; ZBS64-LABEL: andimm64srli2:
+; ZBS64:       # %bb.0:
+; ZBS64-NEXT:    li a1, 2047
+; ZBS64-NEXT:    bseti a1, a1, 63
+; ZBS64-NEXT:    and a0, a0, a1
+; ZBS64-NEXT:    ret
+  %and = and i64 %x, -9223372036854773761
+  ret i64 %and
 }
