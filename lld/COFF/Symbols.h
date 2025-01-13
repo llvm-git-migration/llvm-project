@@ -50,6 +50,7 @@ public:
     // the higher kind when testing whether one symbol should take precedence
     // over another.
     DefinedRegularKind = 0,
+    DefinedSectionKind,
     DefinedCommonKind,
     DefinedLocalImportKind,
     DefinedImportThunkKind,
@@ -222,6 +223,31 @@ public:
   uint64_t getRVA() const { return (*data)->getRVA() + sym->Value; }
   SectionChunk *getChunk() const { return *data; }
   uint32_t getValue() const { return sym->Value; }
+
+  SectionChunk **data;
+};
+
+// A symbol for a section; this is like DefinedRegular above, but ignoring
+// sym->Value in getRVA
+class DefinedSection : public DefinedCOFF {
+public:
+  DefinedSection(InputFile *f, const coff_symbol_generic *s = nullptr,
+                 SectionChunk *c = nullptr)
+      : DefinedCOFF(DefinedSectionKind, f, /*name=*/"", s),
+        data(c ? &c->repl : nullptr) {
+    this->isExternal = false;
+    this->isCOMDAT = false;
+    this->isWeak = false;
+  }
+
+  static bool classof(const Symbol *s) {
+    return s->kind() == DefinedSectionKind;
+  }
+
+  uint64_t getRVA() const { return (*data)->getRVA(); }
+  SectionChunk *getChunk() const { return *data; }
+  // No need for getValue(); it's not a virtual method and it is only present
+  // in DefinedRegular.
 
   SectionChunk **data;
 };
@@ -461,6 +487,8 @@ inline uint64_t Defined::getRVA() {
     return cast<DefinedCommon>(this)->getRVA();
   case DefinedRegularKind:
     return cast<DefinedRegular>(this)->getRVA();
+  case DefinedSectionKind:
+    return cast<DefinedSection>(this)->getRVA();
   case LazyArchiveKind:
   case LazyObjectKind:
   case LazyDLLSymbolKind:
@@ -486,6 +514,8 @@ inline Chunk *Defined::getChunk() {
     return cast<DefinedLocalImport>(this)->getChunk();
   case DefinedCommonKind:
     return cast<DefinedCommon>(this)->getChunk();
+  case DefinedSectionKind:
+    return cast<DefinedSection>(this)->getChunk();
   case LazyArchiveKind:
   case LazyObjectKind:
   case LazyDLLSymbolKind:
@@ -500,6 +530,7 @@ inline Chunk *Defined::getChunk() {
 // using the placement new.
 union SymbolUnion {
   alignas(DefinedRegular) char a[sizeof(DefinedRegular)];
+  alignas(DefinedSection) char l[sizeof(DefinedSection)];
   alignas(DefinedCommon) char b[sizeof(DefinedCommon)];
   alignas(DefinedAbsolute) char c[sizeof(DefinedAbsolute)];
   alignas(DefinedSynthetic) char d[sizeof(DefinedSynthetic)];

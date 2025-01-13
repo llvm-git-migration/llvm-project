@@ -458,9 +458,12 @@ Symbol *ObjFile::createRegular(COFFSymbolRef sym) {
       return nullptr;
     return symtab.addUndefined(name, this, false);
   }
-  if (sc)
+  if (sc) {
+    if (sym.isSection())
+      return make<DefinedSection>(this, sym.getGeneric(), sc);
     return make<DefinedRegular>(this, /*Name*/ "", /*IsCOMDAT*/ false,
                                 /*IsExternal*/ false, sym.getGeneric(), sc);
+  }
   return nullptr;
 }
 
@@ -755,15 +758,18 @@ std::optional<Symbol *> ObjFile::createDefined(
     memset(hdr, 0, sizeof(*hdr));
     strncpy(hdr->Name, name.data(),
             std::min(name.size(), (size_t)COFF::NameSize));
-    // We have no idea what characteristics should be assumed here; pick
-    // a default. This matches what is used for .idata sections in the regular
-    // object files in import libraries.
-    hdr->Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ |
-                           IMAGE_SCN_MEM_WRITE | IMAGE_SCN_ALIGN_4BYTES;
+    // The Value field in a section symbol may contain the characteristics,
+    // or it may be zero, where we make something up (that matches what is
+    // used in .idata sections in the regular object files in import libraries).
+    if (sym.getValue())
+      hdr->Characteristics = sym.getValue() | IMAGE_SCN_ALIGN_4BYTES;
+    else
+      hdr->Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA |
+                             IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE |
+                             IMAGE_SCN_ALIGN_4BYTES;
     auto *sc = make<SectionChunk>(this, hdr);
     chunks.push_back(sc);
-    return make<DefinedRegular>(this, /*name=*/"", /*isCOMDAT=*/false,
-                                /*isExternal=*/false, sym.getGeneric(), sc);
+    return make<DefinedSection>(this, sym.getGeneric(), sc);
   }
 
   if (llvm::COFF::isReservedSectionNumber(sectionNumber))
