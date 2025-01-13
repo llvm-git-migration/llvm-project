@@ -2882,6 +2882,10 @@ public:
   ///   - DecayedType
   QualType getPointeeType() const;
 
+  /// Return getElementType() if this is an array type, and getPointeeType()
+  /// otherwise.
+  QualType getPointerLikeOrArrayElementType() const;
+
   /// Return the specified type with any "sugar" removed from the type,
   /// removing any typedefs, typeofs, etc., as well as any qualifiers.
   const Type *getUnqualifiedDesugaredType() const;

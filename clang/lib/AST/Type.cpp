@@ -751,6 +751,12 @@ QualType Type::getPointeeType() const {
   return {};
 }
 
+QualType Type::getPointerLikeOrArrayElementType() const {
+  if (const auto *A = getAs<ArrayType>())
+    return A->getElementType();
+  return getPointeeType();
+}
+
 const RecordType *Type::getAsStructureType() const {
   // If this is directly a structure type, return it.
   if (const auto *RT = dyn_cast<RecordType>(this)) {
