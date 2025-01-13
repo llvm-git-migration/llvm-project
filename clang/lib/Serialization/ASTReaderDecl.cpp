@@ -3118,13 +3118,9 @@ public:
     return Reader.readVersionTuple();
   }
 
-  void skipInts(unsigned N) {
-    Reader.skipInts(N);
-  }
+  void skipInts(unsigned N) { Reader.skipInts(N); }
 
-  unsigned getCurrentIdx() {
-    return Reader.getIdx();
-  }
+  unsigned getCurrentIdx() { return Reader.getIdx(); }
 
   OMPTraitInfo *readOMPTraitInfo() { return Reader.readOMPTraitInfo(); }
 
