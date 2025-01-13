@@ -139,13 +139,19 @@ void Statusline::Update() {
   if (auto frame_sp = exe_ctx.GetFrameSP())
     symbol_ctx = frame_sp->GetSymbolContext(eSymbolContextEverything);
 
+  llvm::StringRef separator = m_debugger.GetStatuslineSeparator();
+
   // Add the user-configured components.
   bool add_separator = false;
   for (const FormatEntity::Entry &entry : m_debugger.GetStatuslineFormat()) {
+    StreamString format_entity_stream;
     if (add_separator)
-      stream << " | ";
-    add_separator = FormatEntity::Format(entry, stream, &symbol_ctx, &exe_ctx,
-                                         nullptr, nullptr, false, false);
+      format_entity_stream << separator;
+    add_separator =
+        FormatEntity::Format(entry, format_entity_stream, &symbol_ctx, &exe_ctx,
+                             nullptr, nullptr, false, false);
+    if (add_separator)
+      stream << format_entity_stream.GetString();
   }
 
   // Add progress reports at the end, if enabled.
@@ -157,7 +163,7 @@ void Statusline::Update() {
     }
     if (m_progress_report) {
       if (add_separator)
-        stream << " | ";
+        stream << separator;
       stream << m_progress_report->message;
     }
   }

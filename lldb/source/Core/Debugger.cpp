@@ -469,6 +469,12 @@ std::vector<FormatEntity::Entry> Debugger::GetStatuslineFormat() const {
   return GetPropertyAtIndexAs<std::vector<FormatEntity::Entry>>(idx, {});
 }
 
+llvm::StringRef Debugger::GetStatuslineSeparator() const {
+  const uint32_t idx = ePropertyStatuslineSeparator;
+  return GetPropertyAtIndexAs<llvm::StringRef>(
+      idx, g_debugger_properties[idx].default_cstr_value);
+}
+
 bool Debugger::GetUseAutosuggestion() const {
   const uint32_t idx = ePropertyShowAutosuggestion;
   return GetPropertyAtIndexAs<bool>(

@@ -180,6 +180,10 @@ let Definition = "debugger" in {
     Global,
     DefaultStringValue<"${target.file.basename} ${line.file.basename}:${line.number}:${line.column} ${thread.stop-reason}">,
     Desc<"List of statusline format entities.">;
+  def StatuslineSeparator: Property<"statusline-separator", "String">,
+    Global,
+    DefaultStringValue<" | ">,
+    Desc<"Separator between statusline format entities.">;
   def UseSourceCache: Property<"use-source-cache", "Boolean">,
     Global,
     DefaultTrue,

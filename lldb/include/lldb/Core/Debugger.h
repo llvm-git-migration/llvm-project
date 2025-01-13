@@ -313,6 +313,8 @@ public:
 
   std::vector<FormatEntity::Entry> GetStatuslineFormat() const;
 
+  llvm::StringRef GetStatuslineSeparator() const;
+
   llvm::StringRef GetShowProgressAnsiPrefix() const;
 
   llvm::StringRef GetShowProgressAnsiSuffix() const;
