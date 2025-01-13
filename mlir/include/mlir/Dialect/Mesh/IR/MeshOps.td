@@ -324,6 +324,22 @@ def Mesh_ShardingOp : Mesh_Op<"sharding", [
   let hasCanonicalizer = 1;
 }
 
+def Mesh_GetShardingOp : Mesh_Op<"get_sharding", [Pure]> {
+  let summary = "Get the sharding of the given tensor.";
+  let description = [{
+    This operation returns the sharding of the given tensor as a MeshSharding.
+  }];
+  let arguments = (ins
+    AnyRankedTensor:$source
+  );
+  let results = (outs
+    Mesh_Sharding:$result
+  );
+  let assemblyFormat = [{
+    $source attr-dict `:` type($source) `->` type($result)
+  }];
+}
+
 def Mesh_ShardShapeOp : Mesh_Op<"shard_shape", [Pure]> {
   let summary = "Get the shard shape of a given process/device.";
   let description = [{
