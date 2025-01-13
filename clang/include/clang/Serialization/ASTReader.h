@@ -1205,6 +1205,12 @@ private:
   /// been completed.
   std::deque<PendingDeclContextInfo> PendingDeclContextInfos;
 
+  struct PendingPreferredNameAttribute {
+    uint64_t RecordIdx;
+    Decl *D;
+  };
+  SmallVector<PendingPreferredNameAttribute> PendingPreferredNameAttributes;
+
   template <typename DeclTy>
   using DuplicateObjCDecls = std::pair<DeclTy *, DeclTy *>;
 
@@ -1551,6 +1557,8 @@ private:
   void loadPendingDeclChain(Decl *D, uint64_t LocalOffset);
   void loadObjCCategories(GlobalDeclID ID, ObjCInterfaceDecl *D,
                           unsigned PreviousGeneration = 0);
+  void loadPreferredNameAttribute(
+      const PendingPreferredNameAttribute &PreferredNameAttribute);
 
   RecordLocation getLocalBitOffset(uint64_t GlobalOffset);
   uint64_t getGlobalBitOffset(ModuleFile &M, uint64_t LocalOffset);

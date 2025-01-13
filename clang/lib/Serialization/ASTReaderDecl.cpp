@@ -612,7 +612,7 @@ void ASTDeclReader::VisitDecl(Decl *D) {
 
   if (HasAttrs) {
     AttrVec Attrs;
-    Record.readAttributes(Attrs);
+    Record.readAttributes(Attrs, D);
     // Avoid calling setAttrs() directly because it uses Decl::getASTContext()
     // internally which is unsafe during derialization.
     D->setAttrsImpl(Attrs, Reader.getContext());
@@ -3118,13 +3118,22 @@ public:
     return Reader.readVersionTuple();
   }
 
+  void skipInts(unsigned N) {
+    Reader.skipInts(N);
+  }
+
+  unsigned getCurrentIdx() {
+    return Reader.getIdx();
+  }
+
   OMPTraitInfo *readOMPTraitInfo() { return Reader.readOMPTraitInfo(); }
 
   template <typename T> T *readDeclAs() { return Reader.readDeclAs<T>(); }
 };
 }
 
-Attr *ASTRecordReader::readAttr() {
+/// Reads one attribute from the current stream position, advancing Idx.
+Attr *ASTRecordReader::readAttrImpl(Decl *D) {
   AttrReader Record(*this);
   auto V = Record.readInt();
   if (!V)
@@ -3134,6 +3143,17 @@ Attr *ASTRecordReader::readAttr() {
   // Kind is stored as a 1-based integer because 0 is used to indicate a null
   // Attr pointer.
   auto Kind = static_cast<attr::Kind>(V - 1);
+  if (Kind == attr::PreferredName && D != nullptr) {
+    if (D != nullptr) {
+      Reader->PendingPreferredNameAttributes.push_back(
+          {Record.getCurrentIdx() - 1, D});
+      auto SkipCount = Record.readInt();
+      Record.skipInts(SkipCount);
+      return nullptr;
+    }
+    // Ignore the skip count when resolving pending actions.
+    Record.readInt();
+  }
   ASTContext &Context = getContext();
 
   IdentifierInfo *AttrName = Record.readIdentifier();
@@ -3159,11 +3179,25 @@ Attr *ASTRecordReader::readAttr() {
   return New;
 }
 
+void ASTRecordReader::readAttributesImpl(AttrVec &Attrs, Decl *D) {
+  for (unsigned I = 0, E = readInt(); I != E; ++I)
+    if (auto *A = readAttr(D))
+      Attrs.push_back(A);
+}
+
+Attr *ASTRecordReader::readAttr() { return readAttrImpl(nullptr); }
+
 /// Reads attributes from the current stream position.
 void ASTRecordReader::readAttributes(AttrVec &Attrs) {
-  for (unsigned I = 0, E = readInt(); I != E; ++I)
-    if (auto *A = readAttr())
-      Attrs.push_back(A);
+  readAttributesImpl(Attrs, nullptr);
+}
+
+/// Reads one attribute from the current stream position, advancing Idx.
+Attr *ASTRecordReader::readAttr(Decl *D) { return readAttrImpl(D); }
+
+/// Reads attributes from the current stream position, advancing Idx.
+void ASTRecordReader::readAttributes(AttrVec &Attrs, Decl *D) {
+  readAttributesImpl(Attrs, D);
 }
 
 //===----------------------------------------------------------------------===//
@@ -4422,6 +4456,51 @@ void ASTReader::loadPendingDeclChain(Decl *FirstLocal, uint64_t LocalOffset) {
     MostRecent = D;
   }
   ASTDeclReader::attachLatestDecl(CanonDecl, MostRecent);
+}
+
+void ASTReader::loadPreferredNameAttribute(
+    const PendingPreferredNameAttribute &PreferredNameAttribute) {
+  Decl *D = PreferredNameAttribute.D;
+  ModuleFile *M = getOwningModuleFile(D);
+
+  unsigned LocalDeclIndex = D->getGlobalID().getLocalDeclIndex();
+  const DeclOffset &DOffs = M->DeclOffsets[LocalDeclIndex];
+  RecordLocation Loc(M, DOffs.getBitOffset(M->DeclsBlockStartOffset));
+
+  llvm::BitstreamCursor &Cursor = Loc.F->DeclsCursor;
+  SavedStreamPosition SavedPosition(Cursor);
+  if (llvm::Error Err = Cursor.JumpToBit(Loc.Offset)) {
+    Error(std::move(Err));
+  }
+
+  Expected<unsigned> MaybeCode = Cursor.ReadCode();
+  if (!MaybeCode) {
+    llvm::report_fatal_error(
+        Twine("ASTReader::loadPreferredNameAttribute failed reading code: ") +
+        toString(MaybeCode.takeError()));
+  }
+  unsigned Code = MaybeCode.get();
+
+  ASTRecordReader Record(*this, *Loc.F);
+  Expected<unsigned> MaybeRecCode = Record.readRecord(Cursor, Code);
+  if (!MaybeRecCode) {
+    llvm::report_fatal_error(
+        Twine(
+            "ASTReader::loadPreferredNameAttribute failed reading rec code: ") +
+        toString(MaybeCode.takeError()));
+  }
+  unsigned RecCode = MaybeRecCode.get();
+  if (RecCode != DECL_CXX_RECORD) {
+    llvm::report_fatal_error(
+        Twine("ASTReader::loadPreferredNameAttribute failed reading rec code: "
+              "expected CXXRecord") +
+        toString(MaybeCode.takeError()));
+  }
+
+  Record.skipInts(PreferredNameAttribute.RecordIdx);
+  Attr *PreferredNameAttr = Record.readAttr(nullptr);
+  AttrVec &Attrs = getContext().getDeclAttrs(D);
+  Attrs.push_back(PreferredNameAttr);
 }
 
 namespace {
