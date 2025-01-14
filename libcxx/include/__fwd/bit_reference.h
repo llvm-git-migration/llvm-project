@@ -24,6 +24,9 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 template <class _Cp, bool _IsConst, typename _Cp::__storage_type = 0>
 class __bit_iterator;
 
+template <class, class = void>
+struct __size_difference_type_traits;
+
 template <class _StorageType, __enable_if_t<is_unsigned<_StorageType>::value, int> = 0>
 _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR _StorageType
 __fill_range_in_word(_StorageType __word, unsigned __ctz, unsigned __clz, bool __fill_val) {
