@@ -3233,11 +3233,14 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
         if (!RK || RK.AttrKind != Attribute::Alignment ||
             !isPowerOf2_64(RK.ArgValue))
           continue;
-        SetVector<const Instruction *> WorkList;
+        SetVector<const Value *> WorkList;
         bool AlignNeeded = false;
-        WorkList.insert(II);
+          for (const User *U : RK.WasOn->users())
+            WorkList.insert(cast<Instruction>(U));
+
         for (unsigned I = 0; I != WorkList.size(); ++I) {
-          if (auto *LI = dyn_cast<LoadInst>(WorkList[I])) {
+          auto *Curr = WorkList[I];
+          if (auto *LI = dyn_cast<LoadInst>(Curr)) {
             if (auto *AlignMD = LI->getMetadata(LLVMContext::MD_align)) {
               auto *A = mdconst::extract<ConstantInt>(AlignMD->getOperand(0));
 
@@ -3245,9 +3248,20 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
                 AlignNeeded = true;
                 break;
               }
+
+              if (LI->getAlign().value() < RK.ArgValue) {
+                AlignNeeded = true;
+                break;
+              }
             }
           }
-          if (isa<ICmpInst>(WorkList[I])) {
+          if (auto *SI = dyn_cast<StoreInst>(Curr)) {
+            if (SI->getAlign().value() < RK.ArgValue) {
+              AlignNeeded = true;
+              break;
+            }
+          }
+          if (isa<ICmpInst>(Curr) && !isa<Constant>(cast<Instruction>(Curr)->getOperand(0)) && !isa<Constant>(cast<Instruction>(Curr)->getOperand(1))) {
             AlignNeeded = true;
             break;
           }
@@ -3256,11 +3270,13 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
             break;
           }
 
-          for (const User *U : WorkList[I]->users())
+          for (const User *U : Curr->users())
             WorkList.insert(cast<Instruction>(U));
         }
-        auto *New = CallBase::removeOperandBundle(II, OBU.getTagID());
-        return New;
+        if (!AlignNeeded) {
+          auto *New = CallBase::removeOperandBundle(II, OBU.getTagID());
+          return New;
+        }
       }
     }
 
