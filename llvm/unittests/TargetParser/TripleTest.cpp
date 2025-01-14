@@ -1416,6 +1416,33 @@ TEST(TripleTest, Normalization) {
 
   EXPECT_EQ("x86_64-unknown-linux-gnu", Triple::normalize("x86_64-gnu-linux"));
 
+  EXPECT_EQ("a-unknown-unknown",
+            Triple::normalize("a", Triple::CanonicalForm::THREE_IDENT));
+  EXPECT_EQ("a-b-unknown",
+            Triple::normalize("a-b", Triple::CanonicalForm::THREE_IDENT));
+  EXPECT_EQ("a-b-c",
+            Triple::normalize("a-b-c", Triple::CanonicalForm::THREE_IDENT));
+  EXPECT_EQ("a-b-c-d",
+            Triple::normalize("a-b-c-d", Triple::CanonicalForm::THREE_IDENT));
+
+  EXPECT_EQ("a-unknown-unknown-unknown",
+            Triple::normalize("a", Triple::CanonicalForm::FOUR_IDENT));
+  EXPECT_EQ("a-b-unknown-unknown",
+            Triple::normalize("a-b", Triple::CanonicalForm::FOUR_IDENT));
+  EXPECT_EQ("a-b-c-unknown",
+            Triple::normalize("a-b-c", Triple::CanonicalForm::FOUR_IDENT));
+  EXPECT_EQ("a-b-c-d",
+            Triple::normalize("a-b-c-d", Triple::CanonicalForm::FOUR_IDENT));
+
+  EXPECT_EQ("a-unknown-unknown-unknown-unknown",
+            Triple::normalize("a", Triple::CanonicalForm::FIVE_IDENT));
+  EXPECT_EQ("a-b-unknown-unknown-unknown",
+            Triple::normalize("a-b", Triple::CanonicalForm::FIVE_IDENT));
+  EXPECT_EQ("a-b-c-unknown-unknown",
+            Triple::normalize("a-b-c", Triple::CanonicalForm::FIVE_IDENT));
+  EXPECT_EQ("a-b-c-d-unknown",
+            Triple::normalize("a-b-c-d", Triple::CanonicalForm::FIVE_IDENT));
+
   // Check that normalizing a permutated set of valid components returns a
   // triple with the unpermuted components.
   //
