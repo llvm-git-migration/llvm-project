@@ -5308,8 +5308,8 @@ void OpenMPIRBuilder::applySimd(CanonicalLoopInfo *CanonicalLoop,
       Value *Alignment = AlignedItem.second;
       Instruction *loadInst = dyn_cast<Instruction>(AlignedPtr);
       Builder.SetInsertPoint(loadInst->getNextNode());
-      Builder.CreateAlignmentAssumption(F->getDataLayout(),
-                                        AlignedPtr, Alignment);
+      Builder.CreateAlignmentAssumption(F->getDataLayout(), AlignedPtr,
+                                        Alignment);
     }
     Builder.restoreIP(IP);
   }
@@ -5457,16 +5457,16 @@ static int32_t computeHeuristicUnrollFactor(CanonicalLoopInfo *CLI) {
   Loop *L = LI.getLoopFor(CLI->getHeader());
   assert(L && "Expecting CanonicalLoopInfo to be recognized as a loop");
 
-  TargetTransformInfo::UnrollingPreferences UP =
-      gatherUnrollingPreferences(L, SE, TTI,
-                                 /*BlockFrequencyInfo=*/nullptr,
-                                 /*ProfileSummaryInfo=*/nullptr, ORE, static_cast<int>(OptLevel),
-                                 /*UserThreshold=*/std::nullopt,
-                                 /*UserCount=*/std::nullopt,
-                                 /*UserAllowPartial=*/true,
-                                 /*UserAllowRuntime=*/true,
-                                 /*UserUpperBound=*/std::nullopt,
-                                 /*UserFullUnrollMaxCount=*/std::nullopt);
+  TargetTransformInfo::UnrollingPreferences UP = gatherUnrollingPreferences(
+      L, SE, TTI,
+      /*BlockFrequencyInfo=*/nullptr,
+      /*ProfileSummaryInfo=*/nullptr, ORE, static_cast<int>(OptLevel),
+      /*UserThreshold=*/std::nullopt,
+      /*UserCount=*/std::nullopt,
+      /*UserAllowPartial=*/true,
+      /*UserAllowRuntime=*/true,
+      /*UserUpperBound=*/std::nullopt,
+      /*UserFullUnrollMaxCount=*/std::nullopt);
 
   UP.Force = true;
 
@@ -7423,34 +7423,36 @@ emitTargetCall(OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder,
 
     SmallVector<Value *, 3> NumTeamsC;
     for (auto [DefaultVal, RuntimeVal] :
-        zip_equal(DefaultAttrs.MaxTeams, RuntimeAttrs.MaxTeams))
-      NumTeamsC.push_back(RuntimeVal ? RuntimeVal : Builder.getInt32(DefaultVal));
+         zip_equal(DefaultAttrs.MaxTeams, RuntimeAttrs.MaxTeams))
+      NumTeamsC.push_back(RuntimeVal ? RuntimeVal
+                                     : Builder.getInt32(DefaultVal));
 
-    // Calculate number of threads: 0 if no clauses specified, otherwise it is the
-    // minimum between optional THREAD_LIMIT and NUM_THREADS clauses.
+    // Calculate number of threads: 0 if no clauses specified, otherwise it is
+    // the minimum between optional THREAD_LIMIT and NUM_THREADS clauses.
     auto InitMaxThreadsClause = [&Builder](Value *Clause) {
       if (Clause)
         Clause = Builder.CreateIntCast(Clause, Builder.getInt32Ty(),
-                                      /*isSigned=*/false);
+                                       /*isSigned=*/false);
       return Clause;
     };
     auto CombineMaxThreadsClauses = [&Builder](Value *Clause, Value *&Result) {
       if (Clause)
-        Result = Result
-                    ? Builder.CreateSelect(Builder.CreateICmpULT(Result, Clause),
-                                            Result, Clause)
-                    : Clause;
+        Result =
+            Result ? Builder.CreateSelect(Builder.CreateICmpULT(Result, Clause),
+                                          Result, Clause)
+                   : Clause;
     };
 
     // If a multi-dimensional THREAD_LIMIT is set, it is the OMPX_BARE case, so
     // the NUM_THREADS clause is overriden by THREAD_LIMIT.
     SmallVector<Value *, 3> NumThreadsC;
-    Value *MaxThreadsClause = RuntimeAttrs.TeamsThreadLimit.size() == 1
-                                  ? InitMaxThreadsClause(RuntimeAttrs.MaxThreads)
-                                  : nullptr;
+    Value *MaxThreadsClause =
+        RuntimeAttrs.TeamsThreadLimit.size() == 1
+            ? InitMaxThreadsClause(RuntimeAttrs.MaxThreads)
+            : nullptr;
 
-    for (auto [TeamsVal, TargetVal] : zip_equal(RuntimeAttrs.TeamsThreadLimit,
-                                                RuntimeAttrs.TargetThreadLimit)) {
+    for (auto [TeamsVal, TargetVal] : zip_equal(
+             RuntimeAttrs.TeamsThreadLimit, RuntimeAttrs.TargetThreadLimit)) {
       Value *TeamsThreadLimitClause = InitMaxThreadsClause(TeamsVal);
       Value *NumThreads = InitMaxThreadsClause(TargetVal);
 
@@ -7466,13 +7468,13 @@ emitTargetCall(OpenMPIRBuilder &OMPBuilder, IRBuilderBase &Builder,
     uint32_t SrcLocStrSize;
     Constant *SrcLocStr = OMPBuilder.getOrCreateDefaultSrcLocStr(SrcLocStrSize);
     Value *RTLoc = OMPBuilder.getOrCreateIdent(SrcLocStr, SrcLocStrSize,
-                                              llvm::omp::IdentFlag(0), 0);
+                                               llvm::omp::IdentFlag(0), 0);
 
     Value *TripCount = RuntimeAttrs.LoopTripCount
-                          ? Builder.CreateIntCast(RuntimeAttrs.LoopTripCount,
-                                                  Builder.getInt64Ty(),
-                                                  /*isSigned=*/false)
-                          : Builder.getInt64(0);
+                           ? Builder.CreateIntCast(RuntimeAttrs.LoopTripCount,
+                                                   Builder.getInt64Ty(),
+                                                   /*isSigned=*/false)
+                           : Builder.getInt64(0);
 
     // TODO: Use correct DynCGGroupMem
     Value *DynCGGroupMem = Builder.getInt32(0);
