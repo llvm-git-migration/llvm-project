@@ -96,6 +96,9 @@ enum {
   StateStrict = StateStrictWWM | StateStrictWQM,
 };
 
+using InstRange =
+    std::pair<MachineBasicBlock::iterator, MachineBasicBlock::iterator>;
+
 struct PrintState {
 public:
   int State;
@@ -212,11 +215,12 @@ private:
                       MachineBasicBlock::iterator Before, Register SavedOrig,
                       char NonStrictState, char CurrentStrictState);
 
-  MachineBasicBlock *splitBlock(MachineBasicBlock *BB, MachineInstr *TermMI);
-
-  MachineInstr *lowerKillI1(MachineBasicBlock &MBB, MachineInstr &MI,
-                            bool IsWQM);
-  MachineInstr *lowerKillF32(MachineBasicBlock &MBB, MachineInstr &MI);
+  // These methods return a range of instructions (as a pair of iterators) with
+  // the instructions that are left to process in the block, since the
+  // instruction block may be splitted.
+  InstRange splitBlock(MachineInstr &TermMI);
+  InstRange lowerKillI1(MachineInstr &MI, bool IsWQM);
+  InstRange lowerKillF32(MachineInstr &MI);
 
   void lowerBlock(MachineBasicBlock &MBB, BlockInfo &BI);
   void processBlock(MachineBasicBlock &MBB, BlockInfo &BI, bool IsEntry);
@@ -746,18 +750,20 @@ SIWholeQuadMode::saveSCC(MachineBasicBlock &MBB,
   return Restore;
 }
 
-MachineBasicBlock *SIWholeQuadMode::splitBlock(MachineBasicBlock *BB,
-                                               MachineInstr *TermMI) {
-  LLVM_DEBUG(dbgs() << "Split block " << printMBBReference(*BB) << " @ "
-                    << *TermMI << "\n");
+// Splits the block at TermMI. Returns an instruction range with the
+// instructions after TermMI
+InstRange SIWholeQuadMode::splitBlock(MachineInstr &TermMI) {
 
-  MachineBasicBlock *SplitBB =
-      BB->splitAt(*TermMI, /*UpdateLiveIns*/ true, LIS);
+  MachineBasicBlock *BB = TermMI.getParent();
+  LLVM_DEBUG(dbgs() << "Split block " << printMBBReference(*BB) << " @ "
+                    << TermMI << "\n");
+
+  MachineBasicBlock *SplitBB = BB->splitAt(TermMI, /*UpdateLiveIns*/ true, LIS);
 
   // Convert last instruction in block to a terminator.
   // Note: this only covers the expected patterns
   unsigned NewOpcode = 0;
-  switch (TermMI->getOpcode()) {
+  switch (TermMI.getOpcode()) {
   case AMDGPU::S_AND_B32:
     NewOpcode = AMDGPU::S_AND_B32_term;
     break;
@@ -770,11 +776,19 @@ MachineBasicBlock *SIWholeQuadMode::splitBlock(MachineBasicBlock *BB,
   case AMDGPU::S_MOV_B64:
     NewOpcode = AMDGPU::S_MOV_B64_term;
     break;
-  default:
+  case AMDGPU::S_ANDN2_B32:
+    NewOpcode = AMDGPU::S_ANDN2_B32_term;
     break;
+  case AMDGPU::S_ANDN2_B64:
+    NewOpcode = AMDGPU::S_ANDN2_B64_term;
+    break;
+  default:
+    llvm_unreachable("Unexpected instruction");
   }
-  if (NewOpcode)
-    TermMI->setDesc(TII->get(NewOpcode));
+
+  // these terminators fallthrough to the next block, no need to add an
+  // unconditional branch to the next block (SplitBB)
+  TermMI.setDesc(TII->get(NewOpcode));
 
   if (SplitBB != BB) {
     // Update dominator trees
@@ -789,19 +803,12 @@ MachineBasicBlock *SIWholeQuadMode::splitBlock(MachineBasicBlock *BB,
       MDT->applyUpdates(DTUpdates);
     if (PDT)
       PDT->applyUpdates(DTUpdates);
-
-    // Link blocks
-    MachineInstr *MI =
-        BuildMI(*BB, BB->end(), DebugLoc(), TII->get(AMDGPU::S_BRANCH))
-            .addMBB(SplitBB);
-    LIS->InsertMachineInstrInMaps(*MI);
+    return {SplitBB->begin(), SplitBB->end()};
   }
-
-  return SplitBB;
+  return {BB->end(), BB->end()};
 }
 
-MachineInstr *SIWholeQuadMode::lowerKillF32(MachineBasicBlock &MBB,
-                                            MachineInstr &MI) {
+InstRange SIWholeQuadMode::lowerKillF32(MachineInstr &MI) {
   assert(LiveMaskReg.isVirtual());
 
   const DebugLoc &DL = MI.getDebugLoc();
@@ -869,6 +876,8 @@ MachineInstr *SIWholeQuadMode::lowerKillF32(MachineBasicBlock &MBB,
     llvm_unreachable("invalid ISD:SET cond code");
   }
 
+  MachineBasicBlock &MBB = *MI.getParent();
+
   // Pick opcode based on comparison type.
   MachineInstr *VcmpMI;
   const MachineOperand &Op0 = MI.getOperand(0);
@@ -904,8 +913,6 @@ MachineInstr *SIWholeQuadMode::lowerKillF32(MachineBasicBlock &MBB,
       BuildMI(MBB, MI, DL, TII->get(AndN2Opc), Exec).addReg(Exec).addReg(VCC);
 
   assert(MBB.succ_size() == 1);
-  MachineInstr *NewTerm = BuildMI(MBB, MI, DL, TII->get(AMDGPU::S_BRANCH))
-                              .addMBB(*MBB.succ_begin());
 
   // Update live intervals
   LIS->ReplaceMachineInstrInMaps(MI, *VcmpMI);
@@ -914,14 +921,14 @@ MachineInstr *SIWholeQuadMode::lowerKillF32(MachineBasicBlock &MBB,
   LIS->InsertMachineInstrInMaps(*MaskUpdateMI);
   LIS->InsertMachineInstrInMaps(*ExecMaskMI);
   LIS->InsertMachineInstrInMaps(*EarlyTermMI);
-  LIS->InsertMachineInstrInMaps(*NewTerm);
 
-  return NewTerm;
+  return splitBlock(*ExecMaskMI);
 }
 
-MachineInstr *SIWholeQuadMode::lowerKillI1(MachineBasicBlock &MBB,
-                                           MachineInstr &MI, bool IsWQM) {
+InstRange SIWholeQuadMode::lowerKillI1(MachineInstr &MI, bool IsWQM) {
   assert(LiveMaskReg.isVirtual());
+
+  MachineBasicBlock &MBB = *MI.getParent();
 
   const DebugLoc &DL = MI.getDebugLoc();
   MachineInstr *MaskUpdateMI = nullptr;
@@ -942,17 +949,18 @@ MachineInstr *SIWholeQuadMode::lowerKillI1(MachineBasicBlock &MBB,
                          .addReg(Exec);
     } else {
       // Static: kill does nothing
-      MachineInstr *NewTerm = nullptr;
-      if (MI.getOpcode() == AMDGPU::SI_DEMOTE_I1) {
-        LIS->RemoveMachineInstrFromMaps(MI);
-      } else {
-        assert(MBB.succ_size() == 1);
-        NewTerm = BuildMI(MBB, MI, DL, TII->get(AMDGPU::S_BRANCH))
-                      .addMBB(*MBB.succ_begin());
+      auto OneAfterMI = std::next(MI.getIterator());
+      bool IsLastTerminator = OneAfterMI == MBB.end();
+      if (IsLastTerminator) {
+        assert(MBB.succ_size() == 1 && MI.getOpcode() != AMDGPU::SI_DEMOTE_I1);
+        MachineInstr *NewTerm = BuildMI(MBB, MI, DL, TII->get(AMDGPU::S_BRANCH))
+                                    .addMBB(*MBB.succ_begin());
         LIS->ReplaceMachineInstrInMaps(MI, *NewTerm);
+      } else {
+        LIS->RemoveMachineInstrFromMaps(MI);
       }
       MBB.remove(&MI);
-      return NewTerm;
+      return {OneAfterMI, MBB.end()};
     }
   } else {
     if (!KillVal) {
@@ -1029,7 +1037,7 @@ MachineInstr *SIWholeQuadMode::lowerKillI1(MachineBasicBlock &MBB,
   if (LiveMaskWQM)
     LIS->createAndComputeVirtRegInterval(LiveMaskWQM);
 
-  return NewTerm;
+  return splitBlock(*NewTerm);
 }
 
 // Replace (or supplement) instructions accessing live mask.
@@ -1041,25 +1049,27 @@ void SIWholeQuadMode::lowerBlock(MachineBasicBlock &MBB, BlockInfo &BI) {
 
   LLVM_DEBUG(dbgs() << "\nLowering block " << printMBBReference(MBB) << ":\n");
 
-  SmallVector<MachineInstr *, 4> SplitPoints;
   Register ActiveLanesReg = 0;
   char State = BI.InitialState;
 
-  for (MachineInstr &MI : llvm::make_early_inc_range(
-           llvm::make_range(MBB.getFirstNonPHI(), MBB.end()))) {
+  // lowerKillI1/F32 may split the block. Both return the new instruction range
+  // to process
+  MachineBasicBlock::iterator It = MBB.getFirstNonPHI();
+  MachineBasicBlock::iterator End = MBB.end();
+  while (It != End) {
+    MachineInstr &MI = *It;
     auto MIState = StateTransition.find(&MI);
     if (MIState != StateTransition.end())
       State = MIState->second;
 
-    MachineInstr *SplitPoint = nullptr;
     switch (MI.getOpcode()) {
     case AMDGPU::SI_DEMOTE_I1:
     case AMDGPU::SI_KILL_I1_TERMINATOR:
-      SplitPoint = lowerKillI1(MBB, MI, State == StateWQM);
-      break;
+      std::tie(It, End) = lowerKillI1(MI, State == StateWQM);
+      continue;
     case AMDGPU::SI_KILL_F32_COND_IMM_TERMINATOR:
-      SplitPoint = lowerKillF32(MBB, MI);
-      break;
+      std::tie(It, End) = lowerKillF32(MI);
+      continue;
     case AMDGPU::ENTER_STRICT_WWM:
       ActiveLanesReg = MI.getOperand(0).getReg();
       break;
@@ -1079,16 +1089,7 @@ void SIWholeQuadMode::lowerBlock(MachineBasicBlock &MBB, BlockInfo &BI) {
     default:
       break;
     }
-    if (SplitPoint)
-      SplitPoints.push_back(SplitPoint);
-  }
-
-  // Perform splitting after instruction scan to simplify iteration.
-  if (!SplitPoints.empty()) {
-    MachineBasicBlock *BB = &MBB;
-    for (MachineInstr *MI : SplitPoints) {
-      BB = splitBlock(BB, MI);
-    }
+    ++It;
   }
 }
 
@@ -1546,19 +1547,15 @@ bool SIWholeQuadMode::lowerCopyInstrs() {
 
 bool SIWholeQuadMode::lowerKillInstrs(bool IsWQM) {
   for (MachineInstr *MI : KillInstrs) {
-    MachineBasicBlock *MBB = MI->getParent();
-    MachineInstr *SplitPoint = nullptr;
     switch (MI->getOpcode()) {
     case AMDGPU::SI_DEMOTE_I1:
     case AMDGPU::SI_KILL_I1_TERMINATOR:
-      SplitPoint = lowerKillI1(*MBB, *MI, IsWQM);
+      lowerKillI1(*MI, IsWQM);
       break;
     case AMDGPU::SI_KILL_F32_COND_IMM_TERMINATOR:
-      SplitPoint = lowerKillF32(*MBB, *MI);
+      lowerKillF32(*MI);
       break;
     }
-    if (SplitPoint)
-      splitBlock(MBB, SplitPoint);
   }
   return !KillInstrs.empty();
 }
