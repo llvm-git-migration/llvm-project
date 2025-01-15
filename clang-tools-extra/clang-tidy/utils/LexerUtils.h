@@ -89,10 +89,6 @@ SourceLocation findNextAnyTokenKind(SourceLocation Start,
   }
 }
 
-std::optional<Token>
-findNextTokenIncludingComments(SourceLocation Start, const SourceManager &SM,
-                               const LangOptions &LangOpts);
-
 // Finds next token that's not a comment.
 std::optional<Token> findNextTokenSkippingComments(SourceLocation Start,
                                                    const SourceManager &SM,
