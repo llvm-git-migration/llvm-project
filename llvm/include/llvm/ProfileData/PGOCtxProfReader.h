@@ -183,5 +183,7 @@ public:
 
   Expected<std::map<GlobalValue::GUID, PGOCtxProfContext>> loadContexts();
 };
+
+void convertToYaml(raw_ostream &OS, const PGOCtxProfContext::CallTargetMapTy &);
 } // namespace llvm
 #endif
