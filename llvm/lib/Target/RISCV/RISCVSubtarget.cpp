@@ -68,7 +68,7 @@ static cl::opt<bool>
                          cl::init(false), cl::Hidden);
 
 static cl::opt<bool> UseCCMovInsn("riscv-ccmov",
-                                  cl::desc("RISCV: Use 'ccmov' instruction"),
+                                  cl::desc("RISCV: Use 'mips.ccmov' instruction"),
                                   cl::init(true), cl::Hidden);
 
 void RISCVSubtarget::anchor() {}
