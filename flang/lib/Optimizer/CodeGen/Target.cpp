@@ -572,12 +572,12 @@ struct TargetX86_64 : public GenericTarget<TargetX86_64> {
       // select an fp type of the right size, and it makes things simpler
       // here.
       if (partByteSize > 8)
-        return mlir::FloatType::getF128(context);
+        return mlir::Float128Type::get(context);
       if (partByteSize > 4)
-        return mlir::FloatType::getF64(context);
+        return mlir::Float64Type::get(context);
       if (partByteSize > 2)
-        return mlir::FloatType::getF32(context);
-      return mlir::FloatType::getF16(context);
+        return mlir::Float16Type::get(context);
+      return mlir::Float16Type::get(context);
     }
     assert(partByteSize <= 8 &&
            "expect integer part of aggregate argument to fit into eight bytes");
@@ -914,10 +914,18 @@ struct TargetAArch64 : public GenericTarget<TargetAArch64> {
         .Case<mlir::IntegerType>([&](auto intTy) {
           return intTy.getWidth() == 128 ? NRegs{2, false} : NRegs{1, false};
         })
-        .Case<mlir::FloatType>([&](auto) { return NRegs{1, true}; })
-        .Case<mlir::ComplexType>([&](auto) { return NRegs{2, true}; })
-        .Case<fir::LogicalType>([&](auto) { return NRegs{1, false}; })
-        .Case<fir::CharacterType>([&](auto) { return NRegs{1, false}; })
+        .Case<mlir::FloatType>([&](auto) {
+          return NRegs{1, true};
+        })
+        .Case<mlir::ComplexType>([&](auto) {
+          return NRegs{2, true};
+        })
+        .Case<fir::LogicalType>([&](auto) {
+          return NRegs{1, false};
+        })
+        .Case<fir::CharacterType>([&](auto) {
+          return NRegs{1, false};
+        })
         .Case<fir::SequenceType>([&](auto ty) {
           assert(ty.getShape().size() == 1 &&
                  "invalid array dimensions in BIND(C)");
