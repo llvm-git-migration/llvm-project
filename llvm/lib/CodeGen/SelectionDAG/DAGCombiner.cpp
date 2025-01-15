@@ -22809,7 +22809,8 @@ static SDValue scalarizeExtractedBinOp(SDNode *ExtElt, SelectionDAG &DAG,
 
   EVT ResVT = ExtElt->getValueType(0);
   if (Opc == ISD::SETCC &&
-      (ResVT != Vec.getValueType().getVectorElementType() || LegalTypes))
+      (ResVT != Vec.getValueType().getVectorElementType() || ResVT != MVT::i1 ||
+       LegalTypes))
     return SDValue();
 
   // Targets may want to avoid this to prevent an expensive register transfer.

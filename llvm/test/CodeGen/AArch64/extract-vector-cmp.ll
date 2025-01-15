@@ -58,10 +58,11 @@ define i128 @extract_icmp_v1i128(ptr %p) {
 ; CHECK-LABEL: extract_icmp_v1i128:
 ; CHECK:       // %bb.0:
 ; CHECK-NEXT:    ldp x9, x8, [x0]
-; CHECK-NEXT:    mov x1, xzr
 ; CHECK-NEXT:    orr x8, x9, x8
 ; CHECK-NEXT:    cmp x8, #0
-; CHECK-NEXT:    cset w0, eq
+; CHECK-NEXT:    cset w8, eq
+; CHECK-NEXT:    sbfx x0, x8, #0, #1
+; CHECK-NEXT:    mov x1, x0
 ; CHECK-NEXT:    ret
   %load = load <1 x i128>, ptr %p, align 16
   %cmp = icmp eq <1 x i128> %load, zeroinitializer
@@ -144,9 +145,9 @@ for.cond.cleanup:
 define i32 @issue_121372(<4 x i32> %0) {
 ; CHECK-LABEL: issue_121372:
 ; CHECK:       // %bb.0:
+; CHECK-NEXT:    movi v1.2d, #0000000000000000
+; CHECK-NEXT:    cmhs v0.4s, v1.4s, v0.4s
 ; CHECK-NEXT:    fmov w8, s0
-; CHECK-NEXT:    cmp w8, #0
-; CHECK-NEXT:    cset w8, eq
 ; CHECK-NEXT:    cmp w8, #1
 ; CHECK-NEXT:    csetm w0, lt
 ; CHECK-NEXT:    ret
