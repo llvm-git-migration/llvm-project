@@ -9,9 +9,11 @@
 #ifndef _LIBCPP___FWD_BIT_REFERENCE_H
 #define _LIBCPP___FWD_BIT_REFERENCE_H
 
+#include <__assert>
 #include <__config>
 #include <__type_traits/enable_if.h>
 #include <__type_traits/is_unsigned.h>
+#include <climits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -25,20 +27,18 @@ class __bit_iterator;
 template <class, class = void>
 struct __size_difference_type_traits;
 
+// This function is designed to operate correctly even for smaller integral types like `uint8_t`, `uint16_t`,
+// or `unsigned short`. Casting back to _StorageType is crucial to prevent undefined behavior that can arise
+// from integral promotions.
+// See https://github.com/llvm/llvm-project/pull/122410
 template <class _StorageType, __enable_if_t<is_unsigned<_StorageType>::value, int> = 0>
-_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __leading_mask(unsigned __shift) {
-  return static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) << __shift);
-}
-
-template <class _StorageType, __enable_if_t<is_unsigned<_StorageType>::value, int> = 0>
-_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __trailing_mask(unsigned __shift) {
-  return static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) >> __shift);
-}
-
-template <class _StorageType, __enable_if_t<is_unsigned<_StorageType>::value, int> = 0>
-_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __middle_mask(unsigned __lshift, unsigned __rshift) {
-  return static_cast<_StorageType>(
-      std::__leading_mask<_StorageType>(__lshift) & std::__trailing_mask<_StorageType>(__rshift));
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR _StorageType
+__fill_range_in_word(_StorageType __word, unsigned __ctz, unsigned __clz, bool __fill_val) {
+  _LIBCPP_ASSERT_VALID_INPUT_RANGE(
+      __ctz + __clz < sizeof(_StorageType) * CHAR_BIT, "__fill_range called with invalid range");
+  _StorageType __m = static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) << __ctz) &
+                     static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) >> __clz);
+  return __fill_val ? __word | __m : __word & ~__m;
 }
 
 _LIBCPP_END_NAMESPACE_STD
