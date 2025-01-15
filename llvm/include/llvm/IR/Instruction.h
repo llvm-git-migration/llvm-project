@@ -503,6 +503,9 @@ public:
   /// Determine whether the the nneg flag is set.
   bool hasNonNeg() const LLVM_READONLY;
 
+  constexpr static const unsigned PoisonGeneratingMetadataIDs[] = {
+      LLVMContext::MD_range, LLVMContext::MD_nonnull, LLVMContext::MD_align};
+
   /// Return true if this operator has flags which may cause this instruction
   /// to evaluate to poison despite having non-poison inputs.
   bool hasPoisonGeneratingFlags() const LLVM_READONLY;
