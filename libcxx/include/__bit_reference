@@ -14,7 +14,9 @@
 #include <__algorithm/copy_backward.h>
 #include <__algorithm/copy_n.h>
 #include <__algorithm/min.h>
+#include <__assert>
 #include <__bit/countr.h>
+#include <__bit/invert_if.h>
 #include <__compare/ordering.h>
 #include <__config>
 #include <__cstddef/ptrdiff_t.h>
@@ -25,9 +27,11 @@
 #include <__memory/pointer_traits.h>
 #include <__type_traits/conditional.h>
 #include <__type_traits/is_constant_evaluated.h>
+#include <__type_traits/is_unsigned.h>
 #include <__type_traits/void_t.h>
 #include <__utility/pair.h>
 #include <__utility/swap.h>
+#include <climits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -57,6 +61,34 @@ struct __size_difference_type_traits<_Cp, __void_t<typename _Cp::difference_type
   using difference_type = typename _Cp::difference_type;
   using size_type       = typename _Cp::size_type;
 };
+
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __trailing_mask(unsigned __clz) {
+  static_assert(is_unsigned<_StorageType>::value, "__trailing_mask only works with unsigned types");
+  return static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) >> __clz);
+}
+
+template <class _StorageType>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX20 _StorageType __middle_mask(unsigned __clz, unsigned __ctz) {
+  static_assert(is_unsigned<_StorageType>::value, "__middle_mask only works with unsigned types");
+  return static_cast<_StorageType>(
+      static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) << __ctz) &
+      std::__trailing_mask<_StorageType>(__clz));
+}
+
+template <bool _ToFind, class _StoragePointer>
+_LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR unsigned
+__find_in_masked_range(_StoragePointer __word, unsigned __clz, unsigned __ctz) {
+  static_assert(is_unsigned<typename pointer_traits<_StoragePointer>::element_type>::value,
+                "__find_in_masked_range must be called with unsigned types");
+  using _StorageType = typename pointer_traits<_StoragePointer>::element_type;
+  _LIBCPP_ASSERT_VALID_INPUT_RANGE(
+      __ctz + __clz < sizeof(_StorageType) * CHAR_BIT, "__find_in_masked_range called with invalid range");
+  _StorageType __m = static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) >> __clz) &
+                     static_cast<_StorageType>(static_cast<_StorageType>(~static_cast<_StorageType>(0)) << __ctz);
+  _StorageType __b = std::__invert_if<!_ToFind>(*__word) & __m;
+  return static_cast<unsigned>(std::__countr_zero(__b));
+}
 
 template <class _Cp, bool = __has_storage_type<_Cp>::value>
 class __bit_reference {
