@@ -2042,12 +2042,12 @@ const inline float reflect(float I, float N) {
 
 template <int L>
 _HLSL_16BIT_AVAILABILITY(shadermodel, 6.2)
-const inline half reflect(vector<half, L> I, vector<half, L> N) {
+const inline vector<half, L> reflect(vector<half, L> I, vector<half, L> N) {
   return __detail::reflect_vec_impl(I, N);
 }
 
 template <int L>
-const inline float reflect(vector<float, L> I, vector<float, L> N) {
+const inline vector<float, L> reflect(vector<float, L> I, vector<float, L> N) {
   return __detail::reflect_vec_impl(I, N);
 }
 
