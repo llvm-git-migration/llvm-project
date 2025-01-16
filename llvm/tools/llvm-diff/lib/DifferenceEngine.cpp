@@ -536,6 +536,21 @@ class FunctionDifferenceEngine {
       return true;
     }
 
+    if (L->getNumOperands() == 2 &&
+        Instruction::isAssociative(L->getOpcode())) {
+      Value *LO1 = L->getOperand(0), *RO1 = R->getOperand(0),
+            *LO2 = L->getOperand(1), *RO2 = R->getOperand(1);
+      if ((equivalentAsOperands(LO1, RO1, AC) &&
+           equivalentAsOperands(LO2, RO2, AC)) ||
+          (equivalentAsOperands(LO1, RO2, AC) &&
+           equivalentAsOperands(LO2, RO1, AC)))
+        return false;
+      if (Complain)
+        Engine.logf("operands <%l, %l> and <%r, %r> differ")
+            << LO1 << LO2 << RO1 << RO2;
+      return true;
+    }
+
     for (unsigned I = 0, E = L->getNumOperands(); I != E; ++I) {
       Value *LO = L->getOperand(I), *RO = R->getOperand(I);
       if (!equivalentAsOperands(LO, RO, AC)) {
