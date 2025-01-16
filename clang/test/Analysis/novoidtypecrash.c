@@ -5,6 +5,7 @@ y(void **z) { // no-crash
   int *w;
   y(&w);
   *w;
+  return 0;
 }
 
 a;

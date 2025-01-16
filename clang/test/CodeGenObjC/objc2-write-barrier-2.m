@@ -17,12 +17,12 @@ id W, *X, **Y;
 
 void func(id a, id *b, id **c) {
    static id w, *x, **y;
-   W = a;  
+   W = a;
    w = a;
    X = b;
-   x = b; 
+   x = b;
    Y = c;
-   y = c; 
+   y = c;
 }
 
 // Instances
@@ -50,7 +50,7 @@ void funct2(AStruct *aptr) {
     id **ppptr = somefunc();
     aptr->alfred = 0;
     **ppptr = aptr->alfred;
-    *ppptr = somefunc2(); 
+    *ppptr = somefunc2();
 }
 
 typedef const struct __CFString * CFStringRef;
@@ -59,7 +59,7 @@ __strong CFStringRef *_documentNames;
   struct {
     id *innerNames;
     struct {
-      id *nestedDeeperNames; 
+      id *nestedDeeperNames;
       struct I {
          id *is1;
          id is2[5];
@@ -78,6 +78,7 @@ __strong CFStringRef *_documentNames;
   inner.inner_most.nestedDeeperNames[filteredPos] = 0;
   inner.inner_most.arrI[3].is1[5] = 0;
   inner.inner_most.arrI[3].is2[5] = 0;
+  return 0;
 }
 @end
 

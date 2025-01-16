@@ -603,6 +603,7 @@ X test4(bool B) {
       return x; // NRVO happens
   }
   exit(1);
+  __builtin_unreachable(); // for -Wreturn-type
 }
 
 #ifdef __EXCEPTIONS
@@ -1083,6 +1084,7 @@ X test8(bool b) {
 //
 Y<int> test9() {
   Y<int>::f();
+  __builtin_unreachable(); // for -Wreturn-type
 }
 
 // CHECK-LABEL: @_Z6test10b(

@@ -25,16 +25,17 @@
 
 // PR4541
 @class NSString;
-@interface NSAttributedString 
+@interface NSAttributedString
 - (NSString *)string;
-@end 
-@interface NSMutableAttributedString : NSAttributedString 
-@end 
+@end
+@interface NSMutableAttributedString : NSAttributedString
+@end
 @class NSImage;
-@implementation CYObjectsController 
+@implementation CYObjectsController
 + (void)initialize {
 }
 + (NSAttributedString *)attributedStringWithString:(id)string image:(NSImage *)image  {
   NSMutableAttributedString *attrStr;
+  return nullptr;
 }
 @end
