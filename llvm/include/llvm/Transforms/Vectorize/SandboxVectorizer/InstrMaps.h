@@ -1,4 +1,4 @@
-//===- InstructionMaps.h ----------------------------------------*- C++ -*-===//
+//===- InstrMaps.h ----------------------------------------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRUCTIONMAPS_H
-#define LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRUCTIONMAPS_H
+#ifndef LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRMAPS_H
+#define LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRMAPS_H
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
@@ -32,7 +32,7 @@ class InstrMaps {
   DenseMap<Value *, DenseMap<Value *, unsigned>> VectorToOrigLaneMap;
 
 public:
-  /// \Returns all the vector value that we got from vectorizing \p Orig, or
+  /// \Returns the vector value that we got from vectorizing \p Orig, or
   /// nullptr if not found.
   Value *getVectorForOrig(Value *Orig) const {
     auto It = OrigToVectorMap.find(Orig);
@@ -40,7 +40,7 @@ public:
   }
   /// \Returns the lane of \p Orig before it got vectorized into \p Vec, or
   /// nullopt if not found.
-  std::optional<int> getOrigLane(Value *Vec, Value *Orig) const {
+  std::optional<unsigned> getOrigLane(Value *Vec, Value *Orig) const {
     auto It1 = VectorToOrigLaneMap.find(Vec);
     if (It1 == VectorToOrigLaneMap.end())
       return std::nullopt;
@@ -74,4 +74,4 @@ public:
 };
 } // namespace llvm::sandboxir
 
-#endif // LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRUCTIONMAPS_H
+#endif // LLVM_TRANSFORMS_VECTORIZE_SANDBOXVEC_PASSES_INSTRMAPS_H
