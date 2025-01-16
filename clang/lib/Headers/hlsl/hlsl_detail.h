@@ -87,8 +87,7 @@ reflect_impl(T I, T N) {
 }
 
 template <typename T, int L>
-constexpr enable_if_t<is_same<float, T>::value || is_same<half, T>::value, T>
-reflect_vec_impl(vector<T, L> I, vector<T, L> N) {
+constexpr vector<T, L> reflect_vec_impl(vector<T, L> I, vector<T, L> N) {
 #if (__has_builtin(__builtin_spirv_reflect))
   return __builtin_spirv_reflect(I, N);
 #else

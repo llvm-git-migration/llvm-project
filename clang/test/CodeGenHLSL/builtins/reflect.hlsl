@@ -44,7 +44,7 @@ half test_reflect_half(half I, half N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <2 x half> @_Z18test_reflect_half2Dv2_DhS_(
 // SPVCHECK-SAME: <2 x half> noundef nofpclass(nan inf) [[I:%.*]], <2 x half> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <2 x half> @llvm.spv.reflect.v2f16(<2 x half> [[I]], <2 x half> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <2 x half> @llvm.spv.reflect.v2f16(<2 x half> [[I]], <2 x half> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <2 x half> [[SPV_REFLECT_I]], <2 x half> poison, <2 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <2 x half> [[SPLAT_SPLAT]]
 //
@@ -68,7 +68,7 @@ half2 test_reflect_half2(half2 I, half2 N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <3 x half> @_Z18test_reflect_half3Dv3_DhS_(
 // SPVCHECK-SAME: <3 x half> noundef nofpclass(nan inf) [[I:%.*]], <3 x half> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <3 x half> @llvm.spv.reflect.v3f16(<3 x half> [[I]], <3 x half> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <3 x half> @llvm.spv.reflect.v3f16(<3 x half> [[I]], <3 x half> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <3 x half> [[SPV_REFLECT_I]], <3 x half> poison, <3 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <3 x half> [[SPLAT_SPLAT]]
 //
@@ -92,7 +92,7 @@ half3 test_reflect_half3(half3 I, half3 N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <4 x half> @_Z18test_reflect_half4Dv4_DhS_(
 // SPVCHECK-SAME: <4 x half> noundef nofpclass(nan inf) [[I:%.*]], <4 x half> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <4 x half> @llvm.spv.reflect.v4f16(<4 x half> [[I]], <4 x half> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <4 x half> @llvm.spv.reflect.v4f16(<4 x half> [[I]], <4 x half> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <4 x half> [[SPV_REFLECT_I]], <4 x half> poison, <4 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <4 x half> [[SPLAT_SPLAT]]
 //
@@ -138,7 +138,7 @@ float test_reflect_float(float I, float N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <2 x float> @_Z19test_reflect_float2Dv2_fS_(
 // SPVCHECK-SAME: <2 x float> noundef nofpclass(nan inf) [[I:%.*]], <2 x float> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <2 x float> @llvm.spv.reflect.v2f32(<2 x float> [[I]], <2 x float> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <2 x float> @llvm.spv.reflect.v2f32(<2 x float> [[I]], <2 x float> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <2 x float> [[SPV_REFLECT_I]], <2 x float> poison, <2 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <2 x float> [[SPLAT_SPLAT]]
 //
@@ -162,7 +162,7 @@ float2 test_reflect_float2(float2 I, float2 N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <3 x float> @_Z19test_reflect_float3Dv3_fS_(
 // SPVCHECK-SAME: <3 x float> noundef nofpclass(nan inf) [[I:%.*]], <3 x float> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <3 x float> @llvm.spv.reflect.v3f32(<3 x float> [[I]], <3 x float> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <3 x float> @llvm.spv.reflect.v3f32(<3 x float> [[I]], <3 x float> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <3 x float> [[SPV_REFLECT_I]], <3 x float> poison, <3 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <3 x float> [[SPLAT_SPLAT]]
 //
@@ -186,7 +186,7 @@ float3 test_reflect_float3(float3 I, float3 N) {
 // SPVCHECK-LABEL: define spir_func noundef nofpclass(nan inf) <4 x float> @_Z19test_reflect_float4Dv4_fS_(
 // SPVCHECK-SAME: <4 x float> noundef nofpclass(nan inf) [[I:%.*]], <4 x float> noundef nofpclass(nan inf) [[N:%.*]]) local_unnamed_addr #[[ATTR0]] {
 // SPVCHECK-NEXT:  [[ENTRY:.*:]]
-// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn <4 x float> @llvm.spv.reflect.v4f32(<4 x float> [[I]], <4 x float> [[N]])
+// SPVCHECK-NEXT:    [[SPV_REFLECT_I:%.*]] = tail call reassoc nnan ninf nsz arcp afn noundef <4 x float> @llvm.spv.reflect.v4f32(<4 x float> [[I]], <4 x float> [[N]])
 // SPVCHECK-NEXT:    [[SPLAT_SPLAT:%.*]] = shufflevector <4 x float> [[SPV_REFLECT_I]], <4 x float> poison, <4 x i32> zeroinitializer
 // SPVCHECK-NEXT:    ret <4 x float> [[SPLAT_SPLAT]]
 //
