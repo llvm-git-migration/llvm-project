@@ -891,9 +891,10 @@ public:
                  isPointer, Fortran::semantics::Symbol::Flags());
   }
 
-  void copyHostAssociateVar(
-      const Fortran::semantics::Symbol &sym,
-      mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr) override final {
+  void
+  copyHostAssociateVar(const Fortran::semantics::Symbol &sym,
+                       mlir::OpBuilder::InsertPoint *copyAssignIP = nullptr,
+                       bool hostIsSource = true) override final {
     // 1) Fetch the original copy of the variable.
     assert(sym.has<Fortran::semantics::HostAssocDetails>() &&
            "No host-association found");
@@ -915,8 +916,7 @@ public:
       builder->setInsertionPointAfter(sb.getAddr().getDefiningOp());
 
     Fortran::lower::SymbolBox *lhs_sb, *rhs_sb;
-    if (copyAssignIP && copyAssignIP->isSet() &&
-        sym.test(Fortran::semantics::Symbol::Flag::OmpLastPrivate)) {
+    if (!hostIsSource) {
       // lastprivate case
       lhs_sb = &hsb;
       rhs_sb = &sb;
@@ -927,10 +927,8 @@ public:
 
     copyVar(sym, *lhs_sb, *rhs_sb, sym.flags());
 
-    if (copyAssignIP && copyAssignIP->isSet() &&
-        sym.test(Fortran::semantics::Symbol::Flag::OmpLastPrivate)) {
+    if (!hostIsSource)
       builder->restoreInsertionPoint(insPt);
-    }
   }
 
   void genEval(Fortran::lower::pft::Evaluation &eval,
