@@ -36,7 +36,7 @@
 
 using namespace llvm;
 
-static cl::opt<unsigned> UseDerefAtPointSemantics(
+cl::opt<unsigned> UseDerefAtPointSemantics(
     "use-dereferenceable-at-point-semantics", cl::Hidden, cl::init(false),
     cl::desc("Deref attributes and metadata infer facts at definition only"));
 
