@@ -70,6 +70,13 @@ bool isCastLikeInsertSliceOp(InsertSliceOp op);
 /// unit dimensions of the source tensor or extracts the entire source tensor.
 bool isCastLikeExtractSliceOp(ExtractSliceOp op);
 
+/// Try to remove a tensor operation if it would only reshape a constant.
+/// Removes the op and replaces the constant with a new constant of the result
+/// shape. When an optional cst attribute is passed, it is reshaped only if the
+/// splat value matches the value in the attribute.
+OpFoldResult reshapeConstantSource(DenseElementsAttr source, TensorType result,
+                                   std::optional<Attribute> cst = std::nullopt);
+
 } // namespace tensor
 } // namespace mlir
 
