@@ -1319,7 +1319,7 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
     ExtraPasses.addPass(EarlyCSEPass());
     ExtraPasses.addPass(CorrelatedValuePropagationPass());
     ExtraPasses.addPass(
-        InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
+        InstCombinePass(InstCombineOptions()));
     LoopPassManager LPM;
     LPM.addPass(LICMPass(PTO.LicmMssaOptCap, PTO.LicmMssaNoAccForPromotionCap,
                          /*AllowSpeculation=*/true));
@@ -1331,7 +1331,7 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
     ExtraPasses.addPass(
         SimplifyCFGPass(SimplifyCFGOptions().convertSwitchRangeToICmp(true)));
     ExtraPasses.addPass(
-        InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
+        InstCombinePass());
     FPM.addPass(std::move(ExtraPasses));
   }
 
@@ -1355,7 +1355,7 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
   if (IsFullLTO) {
     FPM.addPass(SCCPPass());
     FPM.addPass(
-        InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
+        InstCombinePass(InstCombineOptions()));
     FPM.addPass(BDCEPass());
   }
 
@@ -1371,7 +1371,7 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
 
   if (!IsFullLTO) {
     FPM.addPass(
-        InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
+        InstCombinePass(InstCombineOptions()));
     // Unroll small loops to hide loop backedge latency and saturate any
     // parallel execution resources of an out-of-order processor. We also then
     // need to clean up redundancies and loop invariant code.
@@ -1398,7 +1398,7 @@ void PassBuilder::addVectorPasses(OptimizationLevel Level,
 
   FPM.addPass(InferAlignmentPass());
   FPM.addPass(
-      InstCombinePass(InstCombineOptions().setCleanupAssumptions(true)));
+      InstCombinePass(InstCombineOptions()));
 
   // This is needed for two reasons:
   //   1. It works around problems that instcombine introduces, such as sinking

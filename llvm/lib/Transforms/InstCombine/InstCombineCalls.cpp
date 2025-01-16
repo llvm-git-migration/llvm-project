@@ -3233,10 +3233,15 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
             !isValidAssumeForContext(II, LI, &DT, /*AllowEphemerals=*/true))
           continue;
 
+        if (!CleanupAssumptions && isa<Argument>(LI->getPointerOperand()))
+          continue;
         LI->setMetadata(
             LLVMContext::MD_align,
             MDNode::get(II->getContext(), ValueAsMetadata::getConstant(
                                               Builder.getInt64(RK.ArgValue))));
+          MDNode *MD = MDNode::get(II->getContext(), {});
+          LI->setMetadata(LLVMContext::MD_noundef, MD);
+
         auto *New = CallBase::removeOperandBundle(II, OBU.getTagID());
         return New;
       }
