@@ -1110,6 +1110,29 @@ LogicalResult NVVM::BarrierOp::verify() {
   return success();
 }
 
+#define CP_ASYNC_ID_IMPL(mod, size, suffix)                                    \
+  llvm::Intrinsic::nvvm_cp_async_##mod##_shared_global_##size##suffix
+
+#define GET_CP_ASYNC_ID(mod, size, has_cpsize)                                 \
+  has_cpsize ? CP_ASYNC_ID_IMPL(mod, size, _s) : CP_ASYNC_ID_IMPL(mod, size, )
+
+llvm::Intrinsic::ID
+CpAsyncOp::getIntrinsicID(int size, NVVM::LoadCacheModifierKind cacheMod,
+                          bool hasCpSize) {
+  switch (size) {
+  case 4:
+    return GET_CP_ASYNC_ID(ca, 4, hasCpSize);
+  case 8:
+    return GET_CP_ASYNC_ID(ca, 8, hasCpSize);
+  case 16:
+    return (cacheMod == NVVM::LoadCacheModifierKind::CG)
+               ? GET_CP_ASYNC_ID(cg, 16, hasCpSize)
+               : GET_CP_ASYNC_ID(ca, 16, hasCpSize);
+  default:
+    llvm_unreachable("Invalid copy size in CpAsyncOp.");
+  }
+}
+
 llvm::Intrinsic::ID CpAsyncBulkTensorPrefetchOp::getIntrinsicID(int tensorDims,
                                                                 bool isIm2Col) {
   switch (tensorDims) {
