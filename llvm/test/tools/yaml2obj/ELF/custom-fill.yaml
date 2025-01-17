@@ -158,7 +158,9 @@ Sections:
 ## Check that the "Size" field is mandatory.
 # RUN: not yaml2obj --docnum=5 2>&1 %s | FileCheck %s --check-prefix=NOSIZE
 
-## NOSIZE: error: missing required key 'Size'
+# NOSIZE: error: missing required key 'Size'
+# NOSIZE-NOT: error:
+# NOSIZE: error: failed to parse YAML
 
 --- !ELF
 FileHeader:
