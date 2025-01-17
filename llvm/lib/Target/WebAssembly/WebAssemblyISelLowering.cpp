@@ -2143,6 +2143,35 @@ WebAssemblyTargetLowering::LowerSIGN_EXTEND_INREG(SDValue Op,
                      Op.getOperand(1));
 }
 
+static SDValue GetHighToLowShuffleOperand(SDValue Op) {
+  if (Op.getOpcode() != ISD::VECTOR_SHUFFLE)
+    return SDValue();
+
+  // Look for a shuffle which moves from the high half to the low half. We
+  // can then use EXTEND_HIGH instead.
+  auto IsHighToLow = [](ShuffleVectorSDNode *Shuffle) {
+    ArrayRef<int> Mask = Shuffle->getMask();
+
+    size_t BeginElement = Mask.size() / 2;
+    for (size_t i = 0; i < Mask.size() / 2; ++i) {
+      if (Mask[i] != static_cast<int>(BeginElement + i)) {
+        return false;
+      }
+    }
+    // The rest will be undef.
+    for (size_t i = Mask.size() / 2; i < Mask.size(); ++i) {
+      if (Mask[i] != -1) {
+        return false;
+      }
+    }
+    return true;
+  };
+  if (IsHighToLow(cast<ShuffleVectorSDNode>(Op.getNode()))) {
+    return Op.getOperand(0);
+  }
+  return SDValue();
+}
+
 SDValue
 WebAssemblyTargetLowering::LowerEXTEND_VECTOR_INREG(SDValue Op,
                                                     SelectionDAG &DAG) const {
@@ -2170,6 +2199,15 @@ WebAssemblyTargetLowering::LowerEXTEND_VECTOR_INREG(SDValue Op,
   case ISD::SIGN_EXTEND_VECTOR_INREG:
     Ext = WebAssemblyISD::EXTEND_LOW_S;
     break;
+  }
+
+  if (Scale == 2) {
+    if (auto ShuffleIn = GetHighToLowShuffleOperand(Op.getOperand(0))) {
+      unsigned Opc = Ext == WebAssemblyISD::EXTEND_LOW_S
+                         ? WebAssemblyISD::EXTEND_HIGH_S
+                         : WebAssemblyISD::EXTEND_HIGH_U;
+      return DAG.getNode(Opc, DL, VT, ShuffleIn);
+    }
   }
 
   SDValue Ret = Src;
