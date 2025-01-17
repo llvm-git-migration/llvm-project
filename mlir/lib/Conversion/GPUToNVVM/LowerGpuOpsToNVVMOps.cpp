@@ -509,6 +509,7 @@ void mlir::populateGpuToNVVMConversionPatterns(
 
   populateOpPatterns<arith::RemFOp>(converter, patterns, "__nv_fmodf",
                                     "__nv_fmod");
+  populateOpPatterns<math::AbsIOp>(converter, patterns, "__nv_abs");
   populateOpPatterns<math::AbsFOp>(converter, patterns, "__nv_fabsf",
                                    "__nv_fabs");
   populateOpPatterns<math::AcosOp>(converter, patterns, "__nv_acosf",
@@ -555,6 +556,7 @@ void mlir::populateGpuToNVVMConversionPatterns(
                                    "__nv_log2", "__nv_fast_log2f");
   populateOpPatterns<math::PowFOp>(converter, patterns, "__nv_powf", "__nv_pow",
                                    "__nv_fast_powf");
+  populateOpPatterns<math::FPowIOp>(converter, patterns, "__nv_powif", "__nv_powi");
   populateOpPatterns<math::RoundOp>(converter, patterns, "__nv_roundf",
                                     "__nv_round");
   populateOpPatterns<math::RoundEvenOp>(converter, patterns, "__nv_rintf",
