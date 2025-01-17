@@ -119,7 +119,7 @@ namespace test3 {
   struct S  {
       virtual void m();
   };
-  
+
   template<typename T>
   void S<T>::m() { }
 
@@ -140,7 +140,7 @@ namespace test4 {
     B b;
   }
 
-  unsigned test() {
+  void test() {
     A<int>::foo();
   }
 }

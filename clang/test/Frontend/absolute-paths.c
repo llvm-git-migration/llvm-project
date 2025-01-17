@@ -12,11 +12,11 @@
 // directory in the path.
 // NORMAL: SystemHeaderPrefix
 // ABSOLUTE-NOT: SystemHeaderPrefix
-// CHECK: warning: non-void function does not return a value
+// CHECK: warning: declaration does not declare anything
 
 
 // For files which don't exist, just print the filename.
 #line 123 "non-existant.c"
-int g(void) {}
-// NORMAL: non-existant.c:123:14: warning: non-void function does not return a value
-// ABSOLUTE: non-existant.c:123:14: warning: non-void function does not return a value
+void g(void) { int; }
+// NORMAL: non-existant.c:123:17: warning: declaration does not declare anything
+// ABSOLUTE: non-existant.c:123:17: warning: declaration does not declare anything

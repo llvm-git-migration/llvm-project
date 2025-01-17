@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -triple i686-apple-darwin9 -fobjc-runtime=macosx-fragile-10.5 -emit-llvm -o %t %s
+// RUN: %clang_cc1 -Wno-error=return-type -triple i686-apple-darwin9 -fobjc-runtime=macosx-fragile-10.5 -emit-llvm -o %t %s
 // RUN: FileCheck < %t %s
 //
 // CHECK: @OBJC_METH_VAR_TYPE_{{.*}} = private unnamed_addr constant [16 x i8] c"v12@0:4[3[4@]]8\00"
@@ -49,7 +49,7 @@ struct Innermost {
 @implementation Derived
 @end
 
-@interface B1 
+@interface B1
 {
     struct objc_class *isa;
     Int1 *sBase;
@@ -60,12 +60,12 @@ struct Innermost {
 @implementation B1
 @end
 
-@interface Test 
+@interface Test
 {
 	int ivar;
          __attribute__((objc_gc(weak))) SEL selector;
 }
--(void) test3: (Test*  [3] [4])b ; 
+-(void) test3: (Test*  [3] [4])b ;
 - (SEL**) meth : (SEL) arg : (SEL*****) arg1 : (SEL*)arg2 : (SEL**) arg3;
 @end
 
@@ -119,14 +119,14 @@ enum Enum1X { one, two, three, four };
   int b: 3;
   enum Enum1X c: 4;
   unsigned d: 5;
-} 
+}
 @end
 
 @interface Derived1X: Base1X {
   signed e: 5;
   int f: 4;
   enum Enum1X g: 3;
-} 
+}
 @end
 
 @implementation Base1X @end

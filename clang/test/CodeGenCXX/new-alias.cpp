@@ -3,6 +3,7 @@
 using size_t = decltype(sizeof(0));
 
 extern "C" char *something(long long x) {
+  return nullptr;
 }
 
 // CHECK: @_Znwm ={{.*}} alias ptr (i64), ptr @something

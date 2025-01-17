@@ -839,7 +839,7 @@ namespace test36 {
   template<unsigned> struct A { };
 
   template<typename ...Types>
-  auto f1(Types... values) -> A<sizeof...(values)> { }
+  auto f1(Types... values) -> A<sizeof...(values)> { return {}; }
 
   // CHECK: define weak_odr {{.*}} @_ZN6test362f1IJifEEENS_1AIXsZfp_EEEDpT_
   template A<2> f1(int, float);

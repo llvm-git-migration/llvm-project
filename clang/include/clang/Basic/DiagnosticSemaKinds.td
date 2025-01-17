@@ -8358,10 +8358,10 @@ let CategoryName = "Lambda Issue" in {
     "lambda declared 'noreturn' should not return">;
   def warn_maybe_falloff_nonvoid_lambda : Warning<
     "non-void lambda does not return a value in all control paths">,
-    InGroup<ReturnType>;
+    InGroup<ReturnType>, DefaultError;
   def warn_falloff_nonvoid_lambda : Warning<
     "non-void lambda does not return a value">,
-    InGroup<ReturnType>;
+    InGroup<ReturnType>, DefaultError;
   def err_access_lambda_capture : Error<
     // The ERRORs represent other special members that aren't constructors, in
     // hopes that someone will bother noticing and reporting if they appear

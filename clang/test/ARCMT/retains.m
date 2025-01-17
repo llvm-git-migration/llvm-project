@@ -21,7 +21,7 @@ id IhaveSideEffect(void);
 
 @synthesize bar;
 
--(id)something {}
+-(id)something { return 0; }
 
 -(id)test:(id)obj {
   id x = self.bar;
@@ -44,7 +44,7 @@ id IhaveSideEffect(void);
   [x release];
   return [self retain];
 }
-  
+
 - (id)test1 {
   id x=0;
   ([x retain]);

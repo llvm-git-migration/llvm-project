@@ -3,7 +3,7 @@
 
 extern "C" {
   namespace N {
-    struct X { 
+    struct X {
       virtual void f();
     };
     void X::f() { }
@@ -29,5 +29,6 @@ extern "C" {
   struct test3_s {
   };
   bool operator==(const int& a, const test3_s& b)  {
+    return false;
   }
 }

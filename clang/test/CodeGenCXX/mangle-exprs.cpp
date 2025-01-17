@@ -43,7 +43,7 @@ namespace Casts {
   template< unsigned O >
   void implicit(typename enable_if< O <= 4 >::type* = 0) {
   }
-  
+
   template< unsigned O >
   void cstyle(typename enable_if< O <= (unsigned)4 >::type* = 0) {
   }
@@ -51,7 +51,7 @@ namespace Casts {
   template< unsigned O >
   void functional(typename enable_if< O <= unsigned(4) >::type* = 0) {
   }
-  
+
   template< unsigned O >
   void static_(typename enable_if< O <= static_cast<unsigned>(4) >::type* = 0) {
   }
@@ -82,7 +82,7 @@ namespace Casts {
 
   extern int i;
   extern struct S {} s;
-  
+
   // CHECK-LABEL: define weak_odr void @_ZN5Casts8implicitILj4EEEvPN9enable_ifIXleT_Li4EEvE4typeE
   template void implicit<4>(void*);
   // CHECK-LABEL: define weak_odr void @_ZN5Casts6cstyleILj4EEEvPN9enable_ifIXleT_cvjLi4EEvE4typeE
@@ -169,7 +169,7 @@ namespace test2 {
 }
 
 namespace test3 {
-  template <class T, class U> void a(T x, U y, decltype(x.*y) z) {}  
+  template <class T, class U> void a(T x, U y, decltype(x.*y) z) {}
 
   struct X {
     int *member;
@@ -301,33 +301,33 @@ namespace test7 {
   struct E { E(std::initializer_list<int>); };
   struct F { F(E); };
 
-  template<class T> decltype(A{1,2},T()) fA1(T t) {}
-  template<class T> decltype(A({1,2}),T()) fA2(T t) {}
-  template<class T> decltype(B{1,2},T()) fB1(T t) {}
-  template<class T> decltype(B({1,2}),T()) fB2(T t) {}
-  template<class T> decltype(C{{1,2}},T()) fC1(T t) {}
-  template<class T> decltype(C({1,2}),T()) fC2(T t) {}
-  template<class T> decltype(D{b},T()) fD1(T t) {}
-  template<class T> decltype(D(b),T()) fD2(T t) {}
-  template<class T> decltype(E{1,2},T()) fE1(T t) {}
-  template<class T> decltype(E({1,2}),T()) fE2(T t) {}
-  template<class T> decltype(F{{1,2}},T()) fF1(T t) {}
-  template<class T> decltype(F({1,2}),T()) fF2(T t) {}
+  template<class T> decltype(A{1,2},T()) fA1(T t) { return {}; }
+  template<class T> decltype(A({1,2}),T()) fA2(T t) { return {}; }
+  template<class T> decltype(B{1,2},T()) fB1(T t) { return {}; }
+  template<class T> decltype(B({1,2}),T()) fB2(T t) { return {}; }
+  template<class T> decltype(C{{1,2}},T()) fC1(T t) { return {}; }
+  template<class T> decltype(C({1,2}),T()) fC2(T t) { return {}; }
+  template<class T> decltype(D{b},T()) fD1(T t) { return {}; }
+  template<class T> decltype(D(b),T()) fD2(T t) { return {}; }
+  template<class T> decltype(E{1,2},T()) fE1(T t) { return {}; }
+  template<class T> decltype(E({1,2}),T()) fE2(T t) { return {}; }
+  template<class T> decltype(F{{1,2}},T()) fF1(T t) { return {}; }
+  template<class T> decltype(F({1,2}),T()) fF2(T t) { return {}; }
 
-  template<class T> decltype(T{}) fT1(T t) {}
-  template<class T> decltype(T()) fT2(T t) {}
-  template<class T> decltype(T{1}) fT3(T t) {}
-  template<class T> decltype(T(1)) fT4(T t) {}
-  template<class T> decltype(T{1,2}) fT5(T t) {}
-  template<class T> decltype(T(1,2)) fT6(T t) {}
-  template<class T> decltype(T{{}}) fT7(T t) {}
-  template<class T> decltype(T({})) fT8(T t) {}
-  template<class T> decltype(T{{1}}) fT9(T t) {}
-  template<class T> decltype(T({1})) fTA(T t) {}
-  template<class T> decltype(T{{1,2}}) fTB(T t) {}
-  template<class T> decltype(T({1,2})) fTC(T t) {}
+  template<class T> decltype(T{}) fT1(T t) { return {}; }
+  template<class T> decltype(T()) fT2(T t) { return {}; }
+  template<class T> decltype(T{1}) fT3(T t) { return {}; }
+  template<class T> decltype(T(1)) fT4(T t) { return {}; }
+  template<class T> decltype(T{1,2}) fT5(T t) { return {}; }
+  template<class T> decltype(T(1,2)) fT6(T t) { return {}; }
+  template<class T> decltype(T{{}}) fT7(T t) { return {}; }
+  template<class T> decltype(T({})) fT8(T t) { return {}; }
+  template<class T> decltype(T{{1}}) fT9(T t) { return {}; }
+  template<class T> decltype(T({1})) fTA(T t) { return {}; }
+  template<class T> decltype(T{{1,2}}) fTB(T t) { return {}; }
+  template<class T> decltype(T({1,2})) fTC(T t) { return {}; }
 
-  int main() {
+  void main() {
     fA1(1); // CHECK-LABEL: define {{.*}} @_ZN5test73fA1IiEEDTcmtlNS_1AELi1ELi2EEcvT__EES2_
     fA2(1); // CHECK-LABEL: define {{.*}} @_ZN5test73fA2IiEEDTcmcvNS_1AEilLi1ELi2EEcvT__EES2_
     fB1(1); // CHECK-LABEL: define {{.*}} @_ZN5test73fB1IiEEDTcmtlNS_1BELi1ELi2EEcvT__EES2_

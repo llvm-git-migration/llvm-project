@@ -53,7 +53,7 @@ llvm-gcc -m32 -emit-llvm -S -o - metadata-symbols-32.m | \
 @interface A<P> {
   int _ivar;
 }
- 
+
 @property (assign) int ivar;
 
 +(void) fm0;
@@ -80,7 +80,7 @@ llvm-gcc -m32 -emit-llvm -S -o - metadata-symbols-32.m | \
 
 @implementation J0(Category) @end
 
-void *f0(void) {
+void f0(void) {
    [B im0];
    [C im1];
 }

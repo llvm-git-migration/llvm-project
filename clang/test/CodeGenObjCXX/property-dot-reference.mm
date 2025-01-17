@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -triple x86_64-apple-darwin10 -emit-llvm -fexceptions -o - %s | FileCheck %s
+// RUN: %clang_cc1 -Wno-error=return-type -triple x86_64-apple-darwin10 -emit-llvm -fexceptions -o - %s | FileCheck %s
 
 struct TFENode {
 void GetURL() const;
@@ -8,7 +8,7 @@ void GetURL() const;
 - (const TFENode&) node;
 @end
 
-@implementation TNodeIconAndNameCell     
+@implementation TNodeIconAndNameCell
 - (const TFENode&) node {
 // CHECK: call noundef nonnull align {{[0-9]+}} dereferenceable({{[0-9]+}}) ptr @objc_msgSend
 // CHECK-NEXT: call void @_ZNK7TFENode6GetURLEv(ptr {{[^,]*}} %{{.*}})
@@ -41,8 +41,8 @@ void f1(A *a) {
 @end
 void test2() {
     Test2 *obj;
-    (void) obj.myProperty; 
-    (void) obj.myGetter; 
+    (void) obj.myProperty;
+    (void) obj.myGetter;
     static_cast<void>(obj.myProperty);
     static_cast<void>(obj.myGetter);
     void(obj.myProperty);

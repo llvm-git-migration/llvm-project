@@ -166,19 +166,19 @@ template <int N>
 struct selector {};
 
 template <class T, unsigned long R, unsigned long C>
-selector<0> use_matrix(matrix<T, R, C> &m) {}
+selector<0> use_matrix(matrix<T, R, C> &m) { return  {}; }
 
 template <class T, unsigned long R>
-selector<1> use_matrix(matrix<T, R, 10> &m) {}
+selector<1> use_matrix(matrix<T, R, 10> &m) { return  {}; }
 
 template <class T>
-selector<2> use_matrix(matrix<T, 10, 10> &m) {}
+selector<2> use_matrix(matrix<T, 10, 10> &m) { return  {}; }
 
 template <class T, unsigned long C>
-selector<3> use_matrix(matrix<T, 10, C> &m) {}
+selector<3> use_matrix(matrix<T, 10, C> &m) { return  {}; }
 
 template <unsigned long R, unsigned long C>
-selector<4> use_matrix(matrix<float, R, C> &m) {}
+selector<4> use_matrix(matrix<float, R, C> &m) { return  {}; }
 
 void test_template_deduction() {
 
@@ -275,19 +275,19 @@ void test_auto_t() {
 }
 
 template <unsigned long R, unsigned long C>
-matrix<float, R + 1, C + 2> use_matrix_2(matrix<int, R, C> &m) {}
+matrix<float, R + 1, C + 2> use_matrix_2(matrix<int, R, C> &m) { return {}; }
 
 template <unsigned long R, unsigned long C>
-selector<0> use_matrix_2(matrix<int, R + 2, C / 2> &m1, matrix<float, R, C> &m2) {}
+selector<0> use_matrix_2(matrix<int, R + 2, C / 2> &m1, matrix<float, R, C> &m2) { return {}; }
 
 template <unsigned long R, unsigned long C>
-selector<1> use_matrix_2(matrix<int, R + C, C> &m1, matrix<float, R, C - R> &m2) {}
+selector<1> use_matrix_2(matrix<int, R + C, C> &m1, matrix<float, R, C - R> &m2) { return {}; }
 
 template <unsigned long R>
-matrix<float, R + R, R - 3> use_matrix_2(matrix<int, R, 10> &m1) {}
+matrix<float, R + R, R - 3> use_matrix_2(matrix<int, R, 10> &m1) { return {}; }
 
 template <unsigned long R>
-selector<2> use_matrix_3(matrix<int, R - 2, R> &m) {}
+selector<2> use_matrix_3(matrix<int, R - 2, R> &m) { return {}; }
 
 void test_use_matrix_2() {
   // CHECK-LABEL: define{{.*}} void @_Z17test_use_matrix_2v()

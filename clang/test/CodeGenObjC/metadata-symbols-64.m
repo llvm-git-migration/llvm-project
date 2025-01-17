@@ -58,7 +58,7 @@ llvm-gcc -m64 -emit-llvm -S -o - metadata-symbols-64.m | \
 @interface A<P> {
   int _ivar;
 }
- 
+
 @property (assign) int ivar;
 
 +(void) fm0;
@@ -93,7 +93,7 @@ llvm-gcc -m64 -emit-llvm -S -o - metadata-symbols-64.m | \
 @end
 
 // Test for FP dispatch method APIs
-@interface Example 
+@interface Example
 @end
 
 float FLOAT;
@@ -116,7 +116,7 @@ id    ID;
    }
 @end
 
-void *f0(id x) {
+void f0(id x) {
    Example* pe;
    double dd = [pe RET_DOUBLE];
    dd = [pe RET_FLOAT];
