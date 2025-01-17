@@ -3241,7 +3241,7 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
                                                 Builder.getInt64(RK.ArgValue))));
           MDNode *MD = MDNode::get(II->getContext(), {});
           LI->setMetadata(LLVMContext::MD_noundef, MD);
-        } else {
+        } else if (!isa<Argument>(RK.WasOn)) {
           // Try to get the instruction before the assumption to use as context.
           Instruction *CtxI = nullptr;
           if (CtxI && II->getParent()->begin() != II->getIterator())
