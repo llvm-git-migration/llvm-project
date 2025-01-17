@@ -2778,10 +2778,7 @@ BasicBlock *InnerLoopVectorizer::createVectorizedLoopSkeleton(
 }
 
 static bool isValueIncomingFromBlock(BasicBlock *ExitingBB, Value *V,
-                                     Instruction *UI) {
-  PHINode *PHI = dyn_cast<PHINode>(UI);
-  assert(PHI && "Expected LCSSA form");
-
+                                     PHINode *PHI) {
   // If this loop has an uncountable early exit then there could be
   // different users of OrigPhi with either:
   //   1. Multiple users, because each exiting block (countable or
@@ -2821,7 +2818,7 @@ void InnerLoopVectorizer::fixupIVUsers(PHINode *OrigPhi,
   for (User *U : PostInc->users()) {
     Instruction *UI = cast<Instruction>(U);
     if (!OrigLoop->contains(UI)) {
-      if (isValueIncomingFromBlock(OrigLoopLatch, PostInc, UI))
+      if (isValueIncomingFromBlock(OrigLoopLatch, PostInc, cast<PHINode>(UI)))
         MissingVals[cast<PHINode>(UI)] = EndValue;
     }
   }
@@ -2832,7 +2829,7 @@ void InnerLoopVectorizer::fixupIVUsers(PHINode *OrigPhi,
   for (User *U : OrigPhi->users()) {
     auto *UI = cast<Instruction>(U);
     if (!OrigLoop->contains(UI)) {
-      if (!isValueIncomingFromBlock(OrigLoopLatch, OrigPhi, UI))
+      if (!isValueIncomingFromBlock(OrigLoopLatch, OrigPhi, cast<PHINode>(UI)))
         continue;
       IRBuilder<> B(MiddleBlock->getTerminator());
 
