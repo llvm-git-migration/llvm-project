@@ -2291,6 +2291,12 @@ void LinkerDriver::linkerMain(ArrayRef<const char *> argsArr) {
   if (auto *arg = args.getLastArg(OPT_deffile)) {
     // parseModuleDefs mutates Config object.
     mainSymtab.parseModuleDefs(arg->getValue());
+    if (ctx.hybridSymtab) {
+      // MSVC ignores the /defArm64Native argument on non-ARM64X targets.
+      // It is also ignored if the /def option is not specified.
+      if (auto *arg = args.getLastArg(OPT_defarm64native))
+        ctx.symtab.parseModuleDefs(arg->getValue());
+    }
   }
 
   // Handle generation of import library from a def file.
