@@ -1847,6 +1847,37 @@ Instruction *InstCombinerImpl::visitCallInst(CallInst &CI) {
         return CastInst::Create(Instruction::ZExt, NarrowMaxMin, II->getType());
       }
     }
+    // If C0 is not 0:
+    //   umax(nuw_shl(x, C0), x + 1) -> x == 0 ? 1 : nuw_shl(x, C0)
+    // If C0 is not 0 or 1:
+    //   umax(nuw_mul(x, C0), x + 1) -> x == 0 ? 1 : nuw_mul(x, C0)
+    ConstantInt *C0;
+    bool isShl = false;
+    BinaryOperator *Op = nullptr;
+    auto matchShiftOrMul = [&](Value *I) {
+      if (match(I, m_OneUse(m_NUWShl(m_Value(X), m_ConstantInt(C0))))) {
+        isShl = true;
+        return true;
+      } else if (match(I, m_OneUse(m_NUWMul(m_Value(X), m_ConstantInt(C0)))) &&
+                 C0 && !C0->isOne()) {
+        isShl = false;
+        return true;
+      }
+      return false;
+    };
+    if (((matchShiftOrMul(I0) &&
+          match(I1, m_OneUse(m_Add(m_Specific(X), m_One())))) ||
+         (matchShiftOrMul(I1) &&
+          match(I0, m_OneUse(m_Add(m_Specific(X), m_One()))))) &&
+        C0 && !C0->isZero()) {
+      Op = isShl ? BinaryOperator::CreateNUWShl(X, C0)
+                 : BinaryOperator::CreateNUWMul(X, C0);
+      Builder.Insert(Op);
+      Value *Cmp = Builder.CreateICmpEQ(X, ConstantInt::get(X->getType(), 0));
+      Value *NewSelect =
+          Builder.CreateSelect(Cmp, ConstantInt::get(X->getType(), 1), Op);
+      return replaceInstUsesWith(*II, NewSelect);
+    }
     // If both operands of unsigned min/max are sign-extended, it is still ok
     // to narrow the operation.
     [[fallthrough]];
