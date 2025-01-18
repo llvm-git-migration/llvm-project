@@ -73,6 +73,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Regex.h"
 
 #include <string>
 
@@ -172,6 +173,32 @@ inline std::string FormatAnsiTerminalCodes(llvm::StringRef format,
   return fmt;
 }
 }
+
+inline std::string StripAnsiTerminalCodes(llvm::StringRef str) {
+  std::string stripped;
+  while (!str.empty()) {
+    llvm::StringRef left, right;
+
+    std::tie(left, right) = str.split(ANSI_ESC_START);
+    stripped += left;
+
+    // ANSI_ESC_START not found.
+    if (right.empty())
+      break;
+
+    std::tie(left, right) = right.split(ANSI_ESC_END);
+
+    // ANSI_ESC_END not found.
+    if (right.empty()) {
+      stripped += ANSI_ESC_START;
+      stripped += left;
+    }
+
+    str = right;
+  }
+  return stripped;
+}
+
 } // namespace lldb_private
 
 #endif
