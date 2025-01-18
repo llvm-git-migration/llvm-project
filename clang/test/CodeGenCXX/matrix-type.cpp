@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -no-enable-noundef-analysis -fenable-matrix -fclang-abi-compat=latest -triple x86_64-apple-darwin %s -emit-llvm -disable-llvm-passes -o - -std=c++17 | FileCheck %s
+// RUN: %clang_cc1 -Wno-error=return-type -no-enable-noundef-analysis -fenable-matrix -fclang-abi-compat=latest -triple x86_64-apple-darwin %s -emit-llvm -disable-llvm-passes -o - -std=c++17 | FileCheck %s
 
 typedef double dx5x5_t __attribute__((matrix_type(5, 5)));
 typedef float fx3x4_t __attribute__((matrix_type(3, 4)));
@@ -166,19 +166,19 @@ template <int N>
 struct selector {};
 
 template <class T, unsigned long R, unsigned long C>
-selector<0> use_matrix(matrix<T, R, C> &m) { return  {}; }
+selector<0> use_matrix(matrix<T, R, C> &m) {}
 
 template <class T, unsigned long R>
-selector<1> use_matrix(matrix<T, R, 10> &m) { return  {}; }
+selector<1> use_matrix(matrix<T, R, 10> &m) {}
 
 template <class T>
-selector<2> use_matrix(matrix<T, 10, 10> &m) { return  {}; }
+selector<2> use_matrix(matrix<T, 10, 10> &m) {}
 
 template <class T, unsigned long C>
-selector<3> use_matrix(matrix<T, 10, C> &m) { return  {}; }
+selector<3> use_matrix(matrix<T, 10, C> &m) {}
 
 template <unsigned long R, unsigned long C>
-selector<4> use_matrix(matrix<float, R, C> &m) { return  {}; }
+selector<4> use_matrix(matrix<float, R, C> &m) {}
 
 void test_template_deduction() {
 
@@ -275,19 +275,19 @@ void test_auto_t() {
 }
 
 template <unsigned long R, unsigned long C>
-matrix<float, R + 1, C + 2> use_matrix_2(matrix<int, R, C> &m) { return {}; }
+matrix<float, R + 1, C + 2> use_matrix_2(matrix<int, R, C> &m) {}
 
 template <unsigned long R, unsigned long C>
-selector<0> use_matrix_2(matrix<int, R + 2, C / 2> &m1, matrix<float, R, C> &m2) { return {}; }
+selector<0> use_matrix_2(matrix<int, R + 2, C / 2> &m1, matrix<float, R, C> &m2) {}
 
 template <unsigned long R, unsigned long C>
-selector<1> use_matrix_2(matrix<int, R + C, C> &m1, matrix<float, R, C - R> &m2) { return {}; }
+selector<1> use_matrix_2(matrix<int, R + C, C> &m1, matrix<float, R, C - R> &m2) {}
 
 template <unsigned long R>
-matrix<float, R + R, R - 3> use_matrix_2(matrix<int, R, 10> &m1) { return {}; }
+matrix<float, R + R, R - 3> use_matrix_2(matrix<int, R, 10> &m1) {}
 
 template <unsigned long R>
-selector<2> use_matrix_3(matrix<int, R - 2, R> &m) { return {}; }
+selector<2> use_matrix_3(matrix<int, R - 2, R> &m) {}
 
 void test_use_matrix_2() {
   // CHECK-LABEL: define{{.*}} void @_Z17test_use_matrix_2v()

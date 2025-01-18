@@ -54,7 +54,7 @@ typedef struct {
 } Point;
 
 void test_pointed_object(void *p) {
-// CHECK: define {{.*}} ptr @test_pointed_object
+// CHECK: define {{.*}} void @test_pointed_object
   Point *pt = (Point *)p;
   cmse_check_pointed_object(pt, CMSE_NONSECURE
                               | CMSE_MPU_READ

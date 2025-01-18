@@ -3,7 +3,7 @@
 // An attribute-specifier-seq in a lambda-declarator appertains to the
 // type of the corresponding function call operator.
 void test_attributes() {
-  auto nrl = [](int x) -> int { if (x > 0) return x; }; // expected-warning{{on-void lambda does not return a value in all control paths}}
+  auto nrl = [](int x) -> int { if (x > 0) return x; }; // expected-error{{non-void lambda does not return a value in all control paths}}
 
   // FIXME: GCC accepts the [[gnu::noreturn]] attribute here.
   auto nrl2 = []() [[gnu::noreturn]] { return; }; // expected-warning{{attribute 'noreturn' ignored}}
@@ -25,7 +25,7 @@ void test_quals() {
   lc();
 
   auto ml = [=]() mutable{}; // expected-note{{method is not marked const}} \
-                             // expected-note{{method is not marked volatile}} 
+                             // expected-note{{method is not marked volatile}}
   const decltype(ml) mlc = ml;
   ml();
   mlc(); // expected-error{{no matching function for call to object of type}}
@@ -56,8 +56,8 @@ void test_exception_spec() {
   auto ntl1 = []() throw() {};
   auto ntl2 = []() noexcept(true) {};
   auto ntl3 = []() noexcept {};
-  static_assert(noexcept(ntl1()), "lambda cannot throw");  
-  static_assert(noexcept(ntl2()), "lambda cannot throw");  
-  static_assert(noexcept(ntl3()), "lambda cannot throw");  
+  static_assert(noexcept(ntl1()), "lambda cannot throw");
+  static_assert(noexcept(ntl2()), "lambda cannot throw");
+  static_assert(noexcept(ntl3()), "lambda cannot throw");
 }
 

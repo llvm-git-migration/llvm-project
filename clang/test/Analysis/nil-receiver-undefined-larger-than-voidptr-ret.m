@@ -1,8 +1,8 @@
-// RUN: %clang_analyze_cc1 -triple i386-apple-darwin8 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.1 2>&1
+// RUN: %clang_analyze_cc1 -Wno-error=return-type -triple i386-apple-darwin8 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.1 2>&1
 // RUN: FileCheck -input-file=%t.1 -check-prefix=CHECK-darwin8 %s
-// RUN: %clang_analyze_cc1 -triple i386-apple-darwin9 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.2 2>&1
+// RUN: %clang_analyze_cc1 -Wno-error=return-type -triple i386-apple-darwin9 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.2 2>&1
 // RUN: FileCheck -input-file=%t.2 -check-prefix=CHECK-darwin9 %s
-// RUN: %clang_analyze_cc1 -triple thumbv6-apple-ios4.0 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.3 2>&1
+// RUN: %clang_analyze_cc1 -Wno-error=return-type -triple thumbv6-apple-ios4.0 -analyzer-checker=core,alpha.core -Wno-objc-root-class %s > %t.3 2>&1
 // RUN: FileCheck -input-file=%t.3 -check-prefix=CHECK-darwin9 %s
 
 @interface MyClass {}
@@ -25,53 +25,53 @@
 @end
 
 void createFoo(void) {
-  MyClass *obj = 0;  
-  
+  MyClass *obj = 0;
+
   void *v = [obj voidPtrM]; // no-warning
   int i = [obj intM]; // no-warning
 }
 
 void createFoo2(void) {
-  MyClass *obj = 0;  
-  
+  MyClass *obj = 0;
+
   long double ld = [obj longDoubleM];
 }
 
 void createFoo3(void) {
   MyClass *obj;
-  obj = 0;  
-  
+  obj = 0;
+
   long long ll = [obj longlongM];
 }
 
 void createFoo4(void) {
-  MyClass *obj = 0;  
-  
+  MyClass *obj = 0;
+
   double d = [obj doubleM];
 }
 
 void createFoo5(void) {
-  MyClass *obj = (id)@"";  
-  
+  MyClass *obj = (id)@"";
+
   double d = [obj doubleM]; // no-warning
 }
 
 void createFoo6(void) {
   MyClass *obj;
-  obj = 0;  
-  
+  obj = 0;
+
   unsigned long long ull = [obj unsignedLongLongM];
 }
 
 void handleNilPruneLoop(MyClass *obj) {
   if (!!obj)
     return;
-  
+
   // Test if [obj intM] evaluates to 0, thus pruning the entire loop.
   for (int i = 0; i < [obj intM]; i++) {
     long long j = [obj longlongM];
   }
-  
+
   long long j = [obj longlongM];
 }
 

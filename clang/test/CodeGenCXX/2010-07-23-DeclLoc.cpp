@@ -16,7 +16,7 @@ namespace std {
   public:
     typedef _Tp element_type;
     auto_ptr(element_type* __p = 0) throw() : _M_ptr(__p) {    }
-    element_type&     operator*() const throw()     {    }
+    element_type&     operator*() const throw()     { return *_M_ptr; }
   };
 }
 class Pointer32 {
