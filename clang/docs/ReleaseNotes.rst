@@ -81,8 +81,8 @@ code bases.
   ``-fno-strict-overflow`` to opt-in to a language dialect where signed integer
   and pointer overflow are well-defined.
 
-- The `-Wreturn-type` warning now defaults to an error. This behaviour can currently
-  be turned off by specifying `-Wno-error=return-type`.
+- The ``-Wreturn-type`` warning now defaults to an error. To revert it back to a
+  warning, pass ``-Wno-error=return-type``, as with other warnings.
 
 C/C++ Language Potentially Breaking Changes
 -------------------------------------------
