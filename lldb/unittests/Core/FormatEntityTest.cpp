@@ -148,6 +148,7 @@ constexpr llvm::StringRef lookupStrings[] = {
     "${thread.return-value}",
     "${thread.completed-expression}",
     "${target.arch}",
+    "${target.file}",
     "${var.dummy-var-to-test-wildcard}"};
 
 TEST(FormatEntity, LookupAllEntriesInTree) {
