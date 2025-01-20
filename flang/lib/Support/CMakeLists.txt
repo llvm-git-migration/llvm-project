@@ -50,11 +50,13 @@ add_flang_library(FortranSupport
   LangOptions.cpp
   OpenMP-utils.cpp
   Version.cpp
+  Timing.cpp
   ${version_inc}
 
   LINK_COMPONENTS
   Support
 
-  LINK_LIBS
+  MLIR_LIBS
   MLIRIR
+  MLIRSupport
 )
