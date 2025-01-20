@@ -48,6 +48,8 @@ add_flang_library(FIRTransforms
   FIRSupport
   FortranSupport
   HLFIRDialect
+
+  MLIR_LIBS
   MLIRAffineUtils
   MLIRFuncDialect
   MLIRGPUDialect
