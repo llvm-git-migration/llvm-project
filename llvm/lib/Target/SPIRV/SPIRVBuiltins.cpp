@@ -606,13 +606,13 @@ static Register buildMemSemanticsReg(Register SemanticsRegister,
                                      SPIRVGlobalRegistry *GR) {
   if (SemanticsRegister.isValid()) {
     MachineRegisterInfo *MRI = MIRBuilder.getMRI();
-    std::memory_order Order =
-        static_cast<std::memory_order>(getIConstVal(SemanticsRegister, MRI));
-    Semantics =
-        getSPIRVMemSemantics(Order) |
+    int MemoryOrderValue = getIConstVal(SemanticsRegister, MRI);
+    std::memory_order Order = static_cast<std::memory_order>(MemoryOrderValue);
+    unsigned OrderSemantics = getSPIRVMemSemantics(Order);
+    unsigned StorageClassSemantics =
         getMemSemanticsForStorageClass(GR->getPointerStorageClass(PtrRegister));
-
-    if (Order == Semantics) {
+    Semantics = OrderSemantics | StorageClassSemantics;
+    if (OrderSemantics == Semantics) {
       MRI->setRegClass(SemanticsRegister, &SPIRV::iIDRegClass);
       return SemanticsRegister;
     }
