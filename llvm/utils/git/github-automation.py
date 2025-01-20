@@ -353,6 +353,111 @@ If you don't get any reports, no action is required from you. Your changes are w
         return True
 
 
+"""
+CheckCommitAccess and CheckPRsNeedMerge work together to implement a flow that
+notifies approvers of PRs from authors without commit access, when an approved
+PR is ready to merge. The steps are as follows:
+
+* Newly opened PRs from users without commit access are labelled to indicate that
+  fact.
+* Periodically, PRs with this label are checked.
+* If they have approvals, the author is prompted to check that the PR is merge
+  ready and the approvers are prompted to merge it on their behalf if it is
+  in a mergeable state.
+* The label is removed from the PR.
+
+If we were able to write to the repo in response to a pull_request_review event,
+we could run the second part in response to the review submitted event.
+We cannot, so the second part runs on a timer instead. See:
+https://github.com/orgs/community/discussions/26651
+https://github.com/orgs/community/discussions/55940
+
+"""
+
+
+def user_can_merge(user: str, repo):
+    try:
+        return repo.get_collaborator_permission(user) in ["admin", "write"]
+    # There is a UnknownObjectException for this scenario, but this method
+    # does not use it.
+    except github.GithubException as e:
+        # 404 means the author was not found in the collaborator list, so we
+        # know they don't have push permissions. Anything else is a real API
+        # issue, raise it so it is visible.
+        if e.status != 404:
+            raise e
+        return False
+
+
+NO_COMMIT_ACCESS_LABEL = "no-commit-access"
+
+
+class CheckCommitAccess:
+    def __init__(self, token: str, repo: str, pr_number: int, author: str):
+        self.repo = github.Github(token).get_repo(repo)
+        self.pr = self.repo.get_issue(pr_number).as_pull_request()
+        self.author = author
+
+    def run(self) -> bool:
+        if not user_can_merge(self.author, self.repo):
+            self.pr.as_issue().add_to_labels(NO_COMMIT_ACCESS_LABEL)
+
+        return True
+
+
+class CheckPRsNeedMerge:
+    PR_READY_COMMENT = "! This PR is ready to merge !"
+
+    def __init__(self, token: str, repo: str):
+        self.repo = github.Github(token).get_repo(repo)
+
+    @staticmethod
+    def at_users(users):
+        return ", ".join([f"@{user.login}" for user in users])
+
+    def run(self) -> bool:
+        # "Either open, closed, or all to filter by state." - no "approved"
+        # unfortunately.
+        for pull in self.repo.get_pulls(state="open"):
+            for label in pull.as_issue().get_labels():
+                if label.name == NO_COMMIT_ACCESS_LABEL:
+                    break
+            else:
+                # PR is from someone with commit access.
+                continue
+
+            approvers = [r.user for r in pull.get_reviews() if r.state == "APPROVED"]
+            if not approvers:
+                # Can't do anything until there is at least one approval.
+                continue
+
+            # Even approvers may not have commit access.
+            can_merge = [a for a in approvers if user_can_merge(a, self.repo)]
+
+            if not can_merge:
+                # If no one can merge, find someone who can.
+                to_approvers = f"{self.at_users(approvers)}, please find someone who can merge this PR on behalf of {self.at_users([pull.user])}."
+            elif len(can_merge) == 1:
+                # Ask this specific approver to merge.
+                to_approvers = f"{self.at_users(can_merge)}, please merge this PR on behalf of {self.at_users([pull.user])}."
+            else:
+                # Ask all who can merge to do so.
+                to_approvers = f"{self.at_users(can_merge)}, one of you should merge this PR on behalf of {self.at_users([pull.user])}."
+
+            pull.as_issue().create_comment(
+                f"""\
+{self.at_users([pull.user])} please ensure that this PR is ready to be merged. Make sure that:
+* The PR title and description describe the final changes. These will be used as the title and message of the final squashed commit. The titles and messages of commits in the PR will **not** be used.
+* You have set a valid [email address](https://llvm.org/docs/DeveloperPolicy.html#github-email-address) in your GitHub account. This will be associated with this contribution.
+
+Assuming that the items above have been done, {to_approvers}"""
+            )
+
+            pull.as_issue().remove_from_labels(NO_COMMIT_ACCESS_LABEL)
+
+        return True
+
+
 def setup_llvmbot_git(git_dir="."):
     """
     Configure the git repo in `git_dir` with the llvmbot account so
@@ -746,6 +851,12 @@ pr_buildbot_information_parser = subparsers.add_parser("pr-buildbot-information"
 pr_buildbot_information_parser.add_argument("--issue-number", type=int, required=True)
 pr_buildbot_information_parser.add_argument("--author", type=str, required=True)
 
+check_commit_access_parser = subparsers.add_parser("check-commit-access")
+check_commit_access_parser.add_argument("--issue-number", type=int, required=True)
+check_commit_access_parser.add_argument("--author", type=str, required=True)
+
+check_pr_needs_merge_parser = subparsers.add_parser("check-prs-need-merge")
+
 release_workflow_parser = subparsers.add_parser("release-workflow")
 release_workflow_parser.add_argument(
     "--llvm-project-dir",
@@ -820,6 +931,14 @@ elif args.command == "pr-buildbot-information":
         args.token, args.repo, args.issue_number, args.author
     )
     pr_buildbot_information.run()
+elif args.command == "check-commit-access":
+    check_commit_access = CheckCommitAccess(
+        args.token, args.repo, args.issue_number, args.author
+    )
+    check_commit_access.run()
+elif args.command == "check-prs-need-merge":
+    check_needs_merge = CheckPRsNeedMerge(args.token, args.repo)
+    check_needs_merge.run()
 elif args.command == "release-workflow":
     release_workflow = ReleaseWorkflow(
         args.token,
