@@ -20,6 +20,7 @@
 #include "flang/Lower/LoweringOptions.h"
 #include "flang/Parser/parsing.h"
 #include "flang/Semantics/semantics.h"
+#include "mlir/Support/Timing.h"
 #include "flang/Support/LangOptions.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticOptions.h"
@@ -143,6 +144,10 @@ class CompilerInvocation : public CompilerInvocationBase {
       },
   };
 
+  /// Whether to time the invocation. Set when -ftime-report or -ftime-report=
+  /// is enabled.
+  bool enableTimers;
+
 public:
   CompilerInvocation() = default;
 
@@ -221,6 +226,8 @@ public:
   const Fortran::common::IntrinsicTypeDefaultKinds &getDefaultKinds() const {
     return defaultKinds;
   }
+
+  bool getEnableTimers() const { return enableTimers; }
 
   /// Create a compiler invocation from a list of input options.
   /// \returns true on success.
