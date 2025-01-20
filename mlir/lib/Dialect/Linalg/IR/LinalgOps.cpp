@@ -4094,8 +4094,6 @@ static SmallVector<Value> getNewOperands(DestinationStyleOpInterface op,
 //  * the corresponding size from mixedTiles is still dynamic.
 // Otherwise, the original tile size is preserved.
 // Note - packed-type-dim and mixed-tile-size should always match!
-//
-// FIXME: Duplicates similar hook from TensorOps.cpp!
 static SmallVector<OpFoldResult>
 getNewMixedTileSizes(PatternRewriter &rewriter, Type newPackedTy,
                      SmallVector<OpFoldResult> mixedTiles) {
