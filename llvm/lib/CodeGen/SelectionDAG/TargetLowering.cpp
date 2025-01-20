@@ -7970,7 +7970,7 @@ static bool isNonZeroModBitWidthOrUndef(SDValue Z, unsigned BW) {
   return ISD::matchUnaryPredicate(
       Z,
       [=](ConstantSDNode *C) { return !C || C->getAPIntValue().urem(BW) != 0; },
-      true);
+      true, true);
 }
 
 static SDValue expandVPFunnelShift(SDNode *Node, SelectionDAG &DAG) {
