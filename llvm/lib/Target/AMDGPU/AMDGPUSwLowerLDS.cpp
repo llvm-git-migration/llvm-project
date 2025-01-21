@@ -192,8 +192,7 @@ public:
   void getLDSMemoryInstructions(Function *Func,
                                 SetVector<Instruction *> &LDSInstructions);
   void replaceKernelLDSAccesses(Function *Func);
-  Value *getTranslatedGlobalMemoryPtrOfLDS(Value *LoadMallocPtr,
-                                                  Value *LDSPtr);
+  Value *getTranslatedGlobalMemoryPtrOfLDS(Value *LoadMallocPtr, Value *LDSPtr);
   void translateLDSMemoryOperationsToGlobalMemory(
       Function *Func, Value *LoadMallocPtr,
       SetVector<Instruction *> &LDSInstructions);
@@ -665,8 +664,7 @@ void AMDGPUSwLowerLDS::getLDSMemoryInstructions(
   }
 }
 
-Value *
-AMDGPUSwLowerLDS::getTranslatedGlobalMemoryPtrOfLDS(Value *LoadMallocPtr,
+Value *AMDGPUSwLowerLDS::getTranslatedGlobalMemoryPtrOfLDS(Value *LoadMallocPtr,
                                                            Value *LDSPtr) {
   assert(LDSPtr && "Invalid LDS pointer operand");
   Type *LDSPtrType = LDSPtr->getType();
@@ -677,11 +675,13 @@ AMDGPUSwLowerLDS::getTranslatedGlobalMemoryPtrOfLDS(Value *LoadMallocPtr,
     ElementCount NumElements = VecPtrTy->getElementCount();
     Type *Int32VecTy = VectorType::get(IRB.getInt32Ty(), NumElements);
     Value *PtrToInt = IRB.CreatePtrToInt(LDSPtr, Int32VecTy);
-    Type *GlobalPtrVecTy = VectorType::get(IRB.getPtrTy(AMDGPUAS::GLOBAL_ADDRESS), NumElements);
+    Type *GlobalPtrVecTy =
+        VectorType::get(IRB.getPtrTy(AMDGPUAS::GLOBAL_ADDRESS), NumElements);
     Value *GlobalPtrVec = PoisonValue::get(GlobalPtrVecTy);
     for (uint64_t Index = 0; Index < NumElements.getKnownMinValue(); ++Index) {
       Value *ExtElem = IRB.CreateExtractElement(PtrToInt, Index);
-      Value *Gep = IRB.CreateInBoundsGEP(IRB.getInt8Ty(), LoadMallocPtr, {ExtElem});
+      Value *Gep =
+          IRB.CreateInBoundsGEP(IRB.getInt8Ty(), LoadMallocPtr, {ExtElem});
       GlobalPtrVec = IRB.CreateInsertElement(GlobalPtrVec, Gep, Index);
     }
     return GlobalPtrVec;
@@ -720,8 +720,8 @@ void AMDGPUSwLowerLDS::translateLDSMemoryOperationsToGlobalMemory(
     } else if (AtomicRMWInst *RMW = dyn_cast<AtomicRMWInst>(Inst)) {
       Value *RMWPtrOperand = RMW->getPointerOperand();
       Value *RMWValOperand = RMW->getValOperand();
-      Value *Replacement = getTranslatedGlobalMemoryPtrOfLDS(
-          LoadMallocPtr, RMWPtrOperand);
+      Value *Replacement =
+          getTranslatedGlobalMemoryPtrOfLDS(LoadMallocPtr, RMWPtrOperand);
       AtomicRMWInst *NewRMW = IRB.CreateAtomicRMW(
           RMW->getOperation(), Replacement, RMWValOperand, RMW->getAlign(),
           RMW->getOrdering(), RMW->getSyncScopeID());
@@ -731,8 +731,8 @@ void AMDGPUSwLowerLDS::translateLDSMemoryOperationsToGlobalMemory(
       RMW->eraseFromParent();
     } else if (AtomicCmpXchgInst *XCHG = dyn_cast<AtomicCmpXchgInst>(Inst)) {
       Value *XCHGPtrOperand = XCHG->getPointerOperand();
-      Value *Replacement = getTranslatedGlobalMemoryPtrOfLDS(
-          LoadMallocPtr, XCHGPtrOperand);
+      Value *Replacement =
+          getTranslatedGlobalMemoryPtrOfLDS(LoadMallocPtr, XCHGPtrOperand);
       AtomicCmpXchgInst *NewXCHG = IRB.CreateAtomicCmpXchg(
           Replacement, XCHG->getCompareOperand(), XCHG->getNewValOperand(),
           XCHG->getAlign(), XCHG->getSuccessOrdering(),

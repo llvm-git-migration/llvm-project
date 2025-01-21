@@ -48,7 +48,7 @@ define amdgpu_kernel void @example() sanitize_address {
 ; CHECK-NEXT:    [[TMP22:%.*]] = getelementptr inbounds i8, ptr addrspace(3) @llvm.amdgcn.sw.lds.example, i32 [[TMP21]]
 ; CHECK-NEXT:    [[TMP23:%.*]] = load i32, ptr addrspace(1) getelementptr inbounds ([[LLVM_AMDGCN_SW_LDS_EXAMPLE_MD_TYPE]], ptr addrspace(1) @llvm.amdgcn.sw.lds.example.md, i32 0, i32 2, i32 0), align 4
 ; CHECK-NEXT:    [[TMP24:%.*]] = getelementptr inbounds i8, ptr addrspace(3) @llvm.amdgcn.sw.lds.example, i32 [[TMP23]]
-; CHECK-NEXT:    [[VEC_LDS_PTRS:%.*]] = insertelement <2 x ptr addrspace(3)> undef, ptr addrspace(3) [[TMP22]], i32 0
+; CHECK-NEXT:    [[VEC_LDS_PTRS:%.*]] = insertelement <2 x ptr addrspace(3)> poison, ptr addrspace(3) [[TMP22]], i32 0
 ; CHECK-NEXT:    [[VEC_LDS_PTRS1:%.*]] = insertelement <2 x ptr addrspace(3)> [[VEC_LDS_PTRS]], ptr addrspace(3) [[TMP24]], i32 1
 ; CHECK-NEXT:    [[TMP25:%.*]] = ptrtoint <2 x ptr addrspace(3)> [[VEC_LDS_PTRS1]] to <2 x i32>
 ; CHECK-NEXT:    [[TMP26:%.*]] = extractelement <2 x i32> [[TMP25]], i64 0
@@ -77,7 +77,7 @@ define amdgpu_kernel void @example() sanitize_address {
 ;
 entry:
   ; Create a vector of flat pointers
-  %vec_lds_ptrs = insertelement <2 x ptr addrspace(3)> undef, ptr addrspace(3) @lds_var1, i32 0
+  %vec_lds_ptrs = insertelement <2 x ptr addrspace(3)> poison, ptr addrspace(3) @lds_var1, i32 0
   %vec_lds_ptrs1 = insertelement <2 x ptr addrspace(3)> %vec_lds_ptrs, ptr addrspace(3) @lds_var2, i32 1
   %vec_flat_ptrs = addrspacecast <2 x ptr addrspace(3)> %vec_lds_ptrs1 to <2 x ptr>
   %elem0 = extractelement <2 x ptr> %vec_flat_ptrs, i32 0
