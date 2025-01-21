@@ -466,13 +466,7 @@ bool mips::isNaN2008(const Driver &D, const ArgList &Args,
 }
 
 bool mips::isFP64ADefault(const llvm::Triple &Triple, StringRef CPUName) {
-  if (!Triple.isAndroid())
-    return false;
-
-  // Android MIPS32R6 defaults to FP64A.
-  return llvm::StringSwitch<bool>(CPUName)
-      .Case("mips32r6", true)
-      .Default(false);
+  return false;
 }
 
 bool mips::isFPXXDefault(const llvm::Triple &Triple, StringRef CPUName,
