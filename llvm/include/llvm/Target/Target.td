@@ -54,8 +54,11 @@ class HwModeSelect<list<HwMode> Ms> {
 // patterns.
 class ValueTypeByHwMode<list<HwMode> Ms, list<ValueType> Ts>
     : HwModeSelect<Ms>, ValueType<0, 0> {
-  // The length of this list must be the same as the length of Ms.
   list<ValueType> Objects = Ts;
+
+  // The length of this list must be the same as the length of Ms.
+  assert !eq(!size(Objects), !size(Modes)),
+     "The Objects and Modes lists must be the same length";
 }
 
 // A class that implements a counterpart of PtrValueType, which is
@@ -79,8 +82,11 @@ class RegInfo<int RS, int SS, int SA> {
 // The register size/alignment information, parameterized by a HW mode.
 class RegInfoByHwMode<list<HwMode> Ms = [], list<RegInfo> Ts = []>
     : HwModeSelect<Ms> {
-  // The length of this list must be the same as the length of Ms.
   list<RegInfo> Objects = Ts;
+
+  // The length of this list must be the same as the length of Ms.
+  assert !eq(!size(Objects), !size(Modes)),
+     "The Objects and Modes lists must be the same length";
 }
 
 class SubRegRange<int size, int offset = 0> {
@@ -90,8 +96,11 @@ class SubRegRange<int size, int offset = 0> {
 
 class SubRegRangeByHwMode<list<HwMode> Ms = [], list<SubRegRange> Ts = []>
     : HwModeSelect<Ms> {
-  // The length of this list must be the same as the length of Ms.
   list<SubRegRange> Objects = Ts;
+
+  // The length of this list must be the same as the length of Ms.
+  assert !eq(!size(Objects), !size(Modes)),
+     "The Objects and Modes lists must be the same length";
 }
 
 // SubRegIndex - Use instances of SubRegIndex to identify subregisters.
@@ -575,8 +584,11 @@ class InstructionEncoding {
 // to encode and decode based on HwMode.
 class EncodingByHwMode<list<HwMode> Ms = [], list<InstructionEncoding> Ts = []>
     : HwModeSelect<Ms> {
-  // The length of this list must be the same as the length of Ms.
   list<InstructionEncoding> Objects = Ts;
+
+  // The length of this list must be the same as the length of Ms.
+  assert !eq(!size(Objects), !size(Modes)),
+     "The Objects and Modes lists must be the same length";
 }
 
 //===----------------------------------------------------------------------===//
