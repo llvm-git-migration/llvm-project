@@ -2584,7 +2584,7 @@ static mlir::Value genAtomBinOp(fir::FirOpBuilder &builder, mlir::Location &loc,
   auto llvmPointerType = mlir::LLVM::LLVMPointerType::get(builder.getContext());
   arg0 = builder.createConvert(loc, llvmPointerType, arg0);
   return builder.create<mlir::LLVM::AtomicRMWOp>(
-      loc, binOp, arg0, arg1, mlir::LLVM::AtomicOrdering::seq_cst);
+      loc, binOp, arg0, arg1, mlir::LLVM::AtomicOrdering::monotonic);
 }
 
 mlir::Value IntrinsicLibrary::genAtomAdd(mlir::Type resultType,

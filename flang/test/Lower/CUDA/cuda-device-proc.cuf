@@ -34,10 +34,10 @@ end
 ! CHECK: %{{.*}} = fir.call @llvm.nvvm.barrier0.and(%c1_i32_0) fastmath<contract> : (i32) -> i32
 ! CHECK: %{{.*}} = fir.call @llvm.nvvm.barrier0.popc(%c1_i32_1) fastmath<contract> : (i32) -> i32
 ! CHECK: %{{.*}} = fir.call @llvm.nvvm.barrier0.or(%c1_i32_2) fastmath<contract> : (i32) -> i32
-! CHECK: %{{.*}} = llvm.atomicrmw add  %{{.*}}, %{{.*}} seq_cst : !llvm.ptr, i32
-! CHECK: %{{.*}} = llvm.atomicrmw add  %{{.*}}, %{{.*}} seq_cst : !llvm.ptr, i64
-! CHECK: %{{.*}} = llvm.atomicrmw fadd %{{.*}}, %{{.*}} seq_cst : !llvm.ptr, f32
-! CHECK: %{{.*}} = llvm.atomicrmw fadd %{{.*}}, %{{.*}} seq_cst : !llvm.ptr, f64
+! CHECK: %{{.*}} = llvm.atomicrmw add  %{{.*}}, %{{.*}} monotonic : !llvm.ptr, i32
+! CHECK: %{{.*}} = llvm.atomicrmw add  %{{.*}}, %{{.*}} monotonic : !llvm.ptr, i64
+! CHECK: %{{.*}} = llvm.atomicrmw fadd %{{.*}}, %{{.*}} monotonic : !llvm.ptr, f32
+! CHECK: %{{.*}} = llvm.atomicrmw fadd %{{.*}}, %{{.*}} monotonic : !llvm.ptr, f64
 
 ! CHECK: func.func private @llvm.nvvm.barrier0()
 ! CHECK: func.func private @__syncwarp(!fir.ref<i32> {cuf.data_attr = #cuf.cuda<device>}) attributes {cuf.proc_attr = #cuf.cuda_proc<device>, fir.bindc_name = "__syncwarp", fir.proc_attrs = #fir.proc_attrs<bind_c>}
