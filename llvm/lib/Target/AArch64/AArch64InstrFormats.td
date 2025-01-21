@@ -5487,7 +5487,7 @@ multiclass IntegerToFP<bits<2> rmode, bits<3> opcode, string asm, SDPatternOpera
   }
 }
 
-multiclass IntegerToFPSIMDScalar<bits<2> rmode, bits<3> opcode, string asm, SDPatternOperator node = null_frag> {
+multiclass IntegerToFPSIMDScalar<bits<2> rmode, bits<3> opcode, string asm, SDPatternOperator op, SDPatternOperator node = null_frag> {
   // 32-bit to half-precision
   def HSr: BaseIntegerToFPUnscaled<rmode, opcode, FPR32, FPR16, f16, asm, node> {
     let Inst{31} = 0; // 32-bit FPR flag
@@ -5511,6 +5511,15 @@ multiclass IntegerToFPSIMDScalar<bits<2> rmode, bits<3> opcode, string asm, SDPa
     let Inst{31} = 1; // 64-bit FPR flag
     let Inst{23-22} = 0b00; // 32-bit FPR flag
   }
+
+  def : Pat<(f16 (any_fpround (f32 (op (i32 FPR32:$Rn))))),
+          (!cast<Instruction>(NAME # HSr) $Rn)>;
+  def : Pat<(f64 (op (i32 (extractelt (v4i32 V128:$Rn), (i64 0))))),
+          (!cast<Instruction>(NAME # DSr) (EXTRACT_SUBREG $Rn, ssub))>;
+  def : Pat<(f16 (any_fpround (f32 (op (i64 FPR64:$Rn))))),
+          (!cast<Instruction>(NAME # HDr) $Rn)>;
+  def : Pat<(f32 (op (i64 (extractelt (v2i64 V128:$Rn), (i64 0))))),
+          (!cast<Instruction>(NAME # SDr) (EXTRACT_SUBREG $Rn, dsub))>;
 }
 
 //---
@@ -13270,4 +13279,3 @@ multiclass SIMDThreeSameVectorFP8MatrixMul<string asm>{
       let Predicates = [HasNEON, HasF8F32MM];
     }
 }
-
