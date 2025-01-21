@@ -908,7 +908,7 @@ bool IsAssumedRank(const ActualArgument &arg) {
 
 int GetCorank(const ActualArgument &arg) {
   const auto *expr{arg.UnwrapExpr()};
-  return GetCorank(*expr);
+  return expr ? GetCorank(*expr) : 0;
 }
 
 bool IsProcedureDesignator(const Expr<SomeType> &expr) {
