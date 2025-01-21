@@ -32,7 +32,7 @@
 
 #if defined(_LIBUNWIND_TARGET_LINUX) &&                                        \
     (defined(_LIBUNWIND_TARGET_AARCH64) || defined(_LIBUNWIND_TARGET_RISCV) || \
-     defined(_LIBUNWIND_TARGET_S390X))
+     defined(_LIBUNWIND_TARGET_S390X) || defined(_LIBUNWIND_TARGET_LOONGARCH))
 #include <errno.h>
 #include <signal.h>
 #include <sys/syscall.h>
@@ -999,6 +999,10 @@ private:
 #if defined(_LIBUNWIND_TARGET_RISCV)
   bool setInfoForSigReturn(Registers_riscv &);
   int stepThroughSigReturn(Registers_riscv &);
+#endif
+#if defined(_LIBUNWIND_TARGET_LOONGARCH)
+  bool setInfoForSigReturn(Registers_loongarch &);
+  int stepThroughSigReturn(Registers_loongarch &);
 #endif
 #if defined(_LIBUNWIND_TARGET_S390X)
   bool setInfoForSigReturn(Registers_s390x &);
@@ -2860,6 +2864,61 @@ int UnwindCursor<A, R>::stepThroughSigReturn(Registers_riscv &) {
   _registers.setIP(_addressSpace.get64(sigctx));
   for (int i = UNW_RISCV_X1; i <= UNW_RISCV_X31; ++i) {
     uint64_t value = _addressSpace.get64(sigctx + static_cast<pint_t>(i * 8));
+    _registers.setRegister(i, value);
+  }
+  _isSignalFrame = true;
+  return UNW_STEP_SUCCESS;
+}
+#endif // defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN) &&
+       // defined(_LIBUNWIND_TARGET_RISCV)
+
+#if defined(_LIBUNWIND_CHECK_LINUX_SIGRETURN) &&                               \
+    defined(_LIBUNWIND_TARGET_LOONGARCH)
+template <typename A, typename R>
+bool UnwindCursor<A, R>::setInfoForSigReturn(Registers_loongarch &) {
+  const pint_t pc = static_cast<pint_t>(getReg(UNW_REG_IP));
+  // The PC might contain an invalid address if the unwind info is bad, so
+  // directly accessing it could cause a SIGSEGV.
+  if (!isReadableAddr(pc))
+    return false;
+  const auto *instructions = reinterpret_cast<const uint32_t *>(pc);
+  // Look for the two instructions used in the sigreturn trampoline
+  // __vdso_rt_sigreturn:
+  //
+  // 0x03822c0b li a7,0x8b
+  // 0x002b0000 syscall 0
+  if (instructions[0] != 0x03822c0b || instructions[1] != 0x002b0000)
+    return false;
+
+  _info = {};
+  _info.start_ip = pc;
+  _info.end_ip = pc + 4;
+  _isSigReturn = true;
+  return true;
+}
+
+template <typename A, typename R>
+int UnwindCursor<A, R>::stepThroughSigReturn(Registers_loongarch &) {
+  // In the signal trampoline frame, sp points to an rt_sigframe[1], which is:
+  //  - 128-byte siginfo struct
+  //  - ucontext_t struct:
+  //     - 8-byte long (__uc_flags)
+  //     - 8-byte pointer (*uc_link)
+  //     - 24-byte uc_stack
+  //     - 8-byte uc_sigmask
+  //     - 120-byte of padding to allow sigset_t to be expanded in the future
+  //     - 8 bytes of padding because sigcontext has 16-byte alignment
+  //     - struct sigcontext uc_mcontext
+  // [1]
+  // https://github.com/torvalds/linux/blob/master/arch/loongarch/kernel/signal.c
+  const pint_t kOffsetSpToSigcontext = 128 + 8 + 8 + 24 + 8 + 128;
+
+  const pint_t sigctx = _registers.getSP() + kOffsetSpToSigcontext;
+  _registers.setIP(_addressSpace.get64(sigctx));
+  for (int i = UNW_LOONGARCH_R1; i <= UNW_LOONGARCH_R31; ++i) {
+    // skip R0
+    uint64_t value =
+        _addressSpace.get64(sigctx + static_cast<pint_t>((i + 1) * 8));
     _registers.setRegister(i, value);
   }
   _isSignalFrame = true;
