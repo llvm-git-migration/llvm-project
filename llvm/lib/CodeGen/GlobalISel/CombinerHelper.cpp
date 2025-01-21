@@ -6442,27 +6442,27 @@ unsigned CombinerHelper::getFPMinMaxOpcForSelect(
   case CmpInst::FCMP_OGT:
   case CmpInst::FCMP_OGE:
     if (VsNaNRetVal == SelectPatternNaNBehaviour::RETURNS_OTHER)
-      return TargetOpcode::G_FMAXNUM;
+      return TargetOpcode::G_FMAXNUM_IEEE;
     if (VsNaNRetVal == SelectPatternNaNBehaviour::RETURNS_NAN)
-      return TargetOpcode::G_FMAXIMUM;
-    if (isLegal({TargetOpcode::G_FMAXNUM, {DstTy}}))
-      return TargetOpcode::G_FMAXNUM;
+      return TargetOpcode::G_FMAXNUM_IEEE;
+    if (isLegal({TargetOpcode::G_FMAXNUM_IEEE, {DstTy}}))
+      return TargetOpcode::G_FMAXNUM_IEEE;
     if (isLegal({TargetOpcode::G_FMAXIMUM, {DstTy}}))
-      return TargetOpcode::G_FMAXIMUM;
+      return TargetOpcode::G_FMAXNUM_IEEE;
     return 0;
   case CmpInst::FCMP_ULT:
   case CmpInst::FCMP_ULE:
   case CmpInst::FCMP_OLT:
   case CmpInst::FCMP_OLE:
     if (VsNaNRetVal == SelectPatternNaNBehaviour::RETURNS_OTHER)
-      return TargetOpcode::G_FMINNUM;
+      return TargetOpcode::G_FMINNUM_IEEE;
     if (VsNaNRetVal == SelectPatternNaNBehaviour::RETURNS_NAN)
-      return TargetOpcode::G_FMINIMUM;
-    if (isLegal({TargetOpcode::G_FMINNUM, {DstTy}}))
-      return TargetOpcode::G_FMINNUM;
-    if (!isLegal({TargetOpcode::G_FMINIMUM, {DstTy}}))
+      return TargetOpcode::G_FMINNUM_IEEE;
+    if (isLegal({TargetOpcode::G_FMINNUM_IEEE, {DstTy}}))
+      return TargetOpcode::G_FMINNUM_IEEE;
+    if (!isLegal({TargetOpcode::G_FMINNUM_IEEE, {DstTy}}))
       return 0;
-    return TargetOpcode::G_FMINIMUM;
+    return TargetOpcode::G_FMINNUM_IEEE;
   }
 }
 
@@ -6522,21 +6522,8 @@ bool CombinerHelper::matchFPSelectToMinMax(Register Dst, Register Cond,
     return false;
   // Decide what type of max/min this should be based off of the predicate.
   unsigned Opc = getFPMinMaxOpcForSelect(Pred, DstTy, ResWithKnownNaNInfo);
-  if (!Opc || !isLegal({Opc, {DstTy}}))
+  if (!Opc || !isLegalOrBeforeLegalizer({Opc, {DstTy}}))
     return false;
-  // Comparisons between signed zero and zero may have different results...
-  // unless we have fmaximum/fminimum. In that case, we know -0 < 0.
-  if (Opc != TargetOpcode::G_FMAXIMUM && Opc != TargetOpcode::G_FMINIMUM) {
-    // We don't know if a comparison between two 0s will give us a consistent
-    // result. Be conservative and only proceed if at least one side is
-    // non-zero.
-    auto KnownNonZeroSide = getFConstantVRegValWithLookThrough(CmpLHS, MRI);
-    if (!KnownNonZeroSide || !KnownNonZeroSide->Value.isNonZero()) {
-      KnownNonZeroSide = getFConstantVRegValWithLookThrough(CmpRHS, MRI);
-      if (!KnownNonZeroSide || !KnownNonZeroSide->Value.isNonZero())
-        return false;
-    }
-  }
   MatchInfo = [=](MachineIRBuilder &B) {
     B.buildInstr(Opc, {Dst}, {CmpLHS, CmpRHS});
   };
