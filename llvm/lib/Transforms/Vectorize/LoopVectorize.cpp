@@ -9073,14 +9073,26 @@ addUsersInExitBlocks(VPlan &Plan,
     return;
 
   auto *MiddleVPBB = Plan.getMiddleBlock();
-  VPBuilder B(MiddleVPBB, MiddleVPBB->getFirstNonPhi());
   VPBuilder MiddleB(MiddleVPBB, MiddleVPBB->getFirstNonPhi());
   VPBuilder EarlyExitB;
   VPBasicBlock *VectorEarlyExitVPBB = Plan.getEarlyExit();
   VPValue *EarlyExitMask = nullptr;
-  if (VectorEarlyExitVPBB)
+  if (VectorEarlyExitVPBB) {
     EarlyExitB.setInsertPoint(VectorEarlyExitVPBB,
                               VectorEarlyExitVPBB->getFirstNonPhi());
+
+    // Lookup and cache the early exit mask.
+    VPBasicBlock *MiddleSplitVPBB =
+        cast<VPBasicBlock>(VectorEarlyExitVPBB->getSinglePredecessor());
+    VPInstruction *PredTerm =
+        cast<VPInstruction>(MiddleSplitVPBB->getTerminator());
+    assert(PredTerm->getOpcode() == VPInstruction::BranchOnCond &&
+           "Unexpected middle split block terminator");
+    VPInstruction *ScalarCond = cast<VPInstruction>(PredTerm->getOperand(0));
+    assert(ScalarCond->getOpcode() == VPInstruction::AnyOf &&
+           "Unexpected condition for middle split block terminator branch");
+    EarlyExitMask = ScalarCond->getOperand(0);
+  }
 
   // Introduce extract for exiting values and update the VPIRInstructions
   // modeling the corresponding LCSSA phis.
@@ -9097,22 +9109,6 @@ addUsersInExitBlocks(VPlan &Plan,
           cast<VPBasicBlock>(ExitIRI->getParent()->getPredecessors()[Idx]);
       if (PredVPBB != MiddleVPBB) {
         assert(ExitIRI->getParent()->getNumPredecessors() <= 2);
-
-        // Lookup and cache the early exit mask.
-        if (!EarlyExitMask) {
-          VPBasicBlock *MiddleSplitVPBB =
-              cast<VPBasicBlock>(VectorEarlyExitVPBB->getSinglePredecessor());
-          VPInstruction *PredTerm =
-              cast<VPInstruction>(MiddleSplitVPBB->getTerminator());
-          assert(PredTerm->getOpcode() == VPInstruction::BranchOnCond &&
-                 "Unexpected middle split block terminator");
-          VPInstruction *ScalarCond =
-              cast<VPInstruction>(PredTerm->getOperand(0));
-          assert(
-              ScalarCond->getOpcode() == VPInstruction::AnyOf &&
-              "Unexpected condition for middle split block terminator branch");
-          EarlyExitMask = ScalarCond->getOperand(0);
-        }
         Ext = EarlyExitB.createNaryOp(VPInstruction::ExtractFirstActive,
                                       {Op, EarlyExitMask});
       } else {

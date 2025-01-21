@@ -957,6 +957,26 @@ void VPlan::prepareToExecute(Value *TripCountV, Value *VectorTripCountV,
   }
 }
 
+bool VPlan::isExitBlock(VPBlockBase *VPBB) {
+  if (!isa<VPIRBasicBlock>(VPBB) || VPBB->getNumSuccessors() ||
+      VPBB == getScalarHeader())
+    return false;
+
+  VPRegionBlock *RegionBlock = getVectorLoopRegion();
+  if (!RegionBlock)
+    return false;
+
+  // The block must be a successor of the region block.
+  if (llvm::is_contained(
+          vp_depth_first_shallow(RegionBlock->getSingleSuccessor()), VPBB)) {
+    assert(llvm::is_contained(getExitBlocks(), VPBB) &&
+           "Expected to find VPlan block in list of exit blocks!");
+    return true;
+  }
+
+  return false;
+}
+
 /// Generate the code inside the preheader and body of the vectorized loop.
 /// Assumes a single pre-header basic-block was created for this. Introduce
 /// additional basic-blocks as needed, and fill them all.
