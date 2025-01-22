@@ -372,14 +372,29 @@ static void emitDXILAttributes(const RecordKeeper &Records, raw_ostream &OS) {
   OS << "#endif\n\n";
 }
 
-// Helper function to determine if the given Attr is defined in the vector
-// Attrs, by comparing the names
-static bool attrIsDefined(std::vector<const Record *> Attrs,
-                          const Record *Attr) {
-  for (auto CurAttr : Attrs)
-    if (CurAttr->getName() == Attr->getName())
+// Helper function to determine if Recs contains Rec
+static bool containsRec(ArrayRef<const Record *> Recs, const Record *Rec) {
+  for (auto CurRec : Recs)
+    if (CurRec->getName() == Rec->getName())
       return true;
   return false;
+}
+
+// Iterate through AllRecords and output 'true' if there is a Rec with the same name in
+// CurRecords, output all others as 'false' to create a boolean table.
+// Eg)
+// In:
+//   CurRecords->getName() = {"Cat"}
+//   DefinedRecords->getName() = {"Dog", "Cat", "Cow"}
+// Out:
+//   false, true, false
+static void emitBoolTable(ArrayRef<const Record *> CurRecords, ArrayRef<const Record *> AllRecords, raw_ostream &OS) {
+  for (const Record *Rec : AllRecords) {
+    std::string HasRec = ", false";
+    if (containsRec(CurRecords, Rec))
+      HasRec = ", true";
+    OS << HasRec;
+  }
 }
 
 /// Emit a table of bools denoting a DXIL op's function attributes
@@ -393,6 +408,7 @@ static void emitDXILOpAttributes(const RecordKeeper &Records,
   //
   //     OpName, VersionMajor, VersionMinor, FnAttr1, FnAttr2, ...
   // Eg)    Abs,            1,            0,    true,   false, ...
+  auto DefinedAttrs = Records.getAllDerivedDefinitions("DXILAttribute");
   OS << "#ifdef DXIL_OP_ATTRIBUTES\n";
   for (const auto &Op : Ops) {
     for (const auto *Rec : Op.AttrRecs) {
@@ -402,18 +418,9 @@ static void emitDXILOpAttributes(const RecordKeeper &Records,
           Rec->getValueAsDef("dxil_version")->getValueAsInt("Minor");
       OS << "DXIL_OP_ATTRIBUTES(dxil::OpCode::" << Op.OpName << ", ";
       OS << std::to_string(Major) << ", " << std::to_string(Minor);
-      // These Attrs are the ones set for above DXIL version
-      auto Attrs = Rec->getValueAsListOfDefs("fn_attrs");
-      // We will then iteratre through all possible attributes and mark the
-      // present ones as 'true' and all the others as 'false' to create the
-      // boolean table, eg) true, false, false, false
-      for (const Record *Attr :
-           Records.getAllDerivedDefinitions("DXILAttribute")) {
-        std::string HasAttr = ", false";
-        if (attrIsDefined(Attrs, Attr))
-          HasAttr = ", true";
-        OS << HasAttr;
-      }
+      // These Attrs are the ones set for on an op with the above DXIL version
+      auto OpAttrs = Rec->getValueAsListOfDefs("fn_attrs");
+      emitBoolTable(OpAttrs, DefinedAttrs, OS);
       OS << ")\n";
     }
   }
