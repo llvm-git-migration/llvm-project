@@ -3935,9 +3935,10 @@ struct FoldTensorCastProducerOp
   LogicalResult matchAndRewrite(DestinationStyleOpInterface op,
                                 PatternRewriter &rewriter) const override {
 
-    // Reject PackOp/UnpackOp - there are dedicated patterns for that instead.
+    // Reject PackOp/UnpackOp (i.e. RelayoutOps) - there are dedicated patterns
+    // for that instead.
     if (!foldTensorCastPrecondition(op) ||
-        isa<linalg::PackOp, linalg::UnPackOp>(*op))
+        isa<linalg::RelayoutOpInterface>(*op))
       return failure();
 
     SmallVector<Type> newResultTypes(op->getResultTypes());
