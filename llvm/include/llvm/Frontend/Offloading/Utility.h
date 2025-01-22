@@ -24,11 +24,15 @@ namespace offloading {
 /// This is the record of an object that just be registered with the offloading
 /// runtime.
 struct EntryTy {
+  uint64_t Reserved = 0x0;
+  uint16_t Version = 0x1;
+  uint16_t Kind;
+  uint32_t Flags;
   void *Address;
   char *SymbolName;
-  size_t Size;
-  int32_t Flags;
-  int32_t Data;
+  uint64_t Size;
+  uint64_t Data;
+  void *AuxAddr;
 };
 
 /// Offloading entry flags for CUDA / HIP. The first three bits indicate the
@@ -55,10 +59,6 @@ enum OffloadEntryKindFlag : uint32_t {
 /// globals that will be registered with the offloading runtime.
 StructType *getEntryTy(Module &M);
 
-/// Returns the struct type we store the two pointers for CUDA / HIP managed
-/// variables in. Necessary until we widen the offload entry struct.
-StructType *getManagedTy(Module &M);
-
 /// Create an offloading section struct used to register this global at
 /// runtime.
 ///
@@ -69,15 +69,17 @@ StructType *getManagedTy(Module &M);
 /// \param Flags Flags associated with the entry.
 /// \param Data Extra data storage associated with the entry.
 /// \param SectionName The section this entry will be placed at.
-void emitOffloadingEntry(Module &M, Constant *Addr, StringRef Name,
-                         uint64_t Size, int32_t Flags, int32_t Data,
-                         StringRef SectionName);
+void emitOffloadingEntry(Module &M, object::OffloadKind Kind, Constant *Addr,
+                         StringRef Name, uint64_t Size, uint32_t Flags,
+                         uint64_t Data, StringRef SectionName,
+                         Constant *AuxAddr = nullptr);
 /// Create a constant struct initializer used to register this global at
 /// runtime.
 /// \return the constant struct and the global variable holding the symbol name.
 std::pair<Constant *, GlobalVariable *>
-getOffloadingEntryInitializer(Module &M, Constant *Addr, StringRef Name,
-                              uint64_t Size, int32_t Flags, int32_t Data);
+getOffloadingEntryInitializer(Module &M, object::OffloadKind Kind,
+                              Constant *Addr, StringRef Name, uint64_t Size,
+                              uint32_t Flags, uint64_t Data, Constant *AuxAddr);
 
 /// Creates a pair of globals used to iterate the array of offloading entries by
 /// accessing the section variables provided by the linker.
