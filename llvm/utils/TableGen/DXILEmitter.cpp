@@ -380,15 +380,17 @@ static bool containsRec(ArrayRef<const Record *> Recs, const Record *Rec) {
   return false;
 }
 
-// Iterate through AllRecords and output 'true' if there is a Rec with the same name in
-// CurRecords, output all others as 'false' to create a boolean table.
+// Iterate through AllRecords and output 'true' if there is a Rec with the same
+// name in CurRecords, output all others as 'false' to create a boolean table.
 // Eg)
 // In:
 //   CurRecords->getName() = {"Cat"}
 //   DefinedRecords->getName() = {"Dog", "Cat", "Cow"}
 // Out:
 //   false, true, false
-static void emitBoolTable(ArrayRef<const Record *> CurRecords, ArrayRef<const Record *> AllRecords, raw_ostream &OS) {
+static void emitBoolTable(ArrayRef<const Record *> CurRecords,
+                          ArrayRef<const Record *> AllRecords,
+                          raw_ostream &OS) {
   for (const Record *Rec : AllRecords) {
     std::string HasRec = ", false";
     if (containsRec(CurRecords, Rec))

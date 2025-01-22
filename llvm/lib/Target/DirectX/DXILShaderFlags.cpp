@@ -11,8 +11,8 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "DXILConstants.h"
 #include "DXILShaderFlags.h"
+#include "DXILConstants.h"
 #include "DirectX.h"
 #include "llvm/ADT/SCCIterator.h"
 #include "llvm/ADT/SmallVector.h"
@@ -34,8 +34,10 @@ using namespace llvm::dxil;
 static dxil::Properties getOpCodeProperties(dxil::OpCode OpCode) {
   dxil::Properties Props;
   switch (OpCode) {
-#define DXIL_OP_PROPERTIES(OpCode, ...) \
-  case OpCode: Props = dxil::Properties{__VA_ARGS__}; break;
+#define DXIL_OP_PROPERTIES(OpCode, ...)                                        \
+  case OpCode:                                                                 \
+    Props = dxil::Properties{__VA_ARGS__};                                     \
+    break;
 #include "DXILOperation.inc"
   }
   return Props;
@@ -43,8 +45,9 @@ static dxil::Properties getOpCodeProperties(dxil::OpCode OpCode) {
 
 static bool checkWaveOps(Intrinsic::ID IID) {
   switch (IID) {
-#define DXIL_OP_INTRINSIC(OpCode, IntrinsicID, ...) \
-  case IntrinsicID: return getOpCodeProperties(OpCode).IsWave;
+#define DXIL_OP_INTRINSIC(OpCode, IntrinsicID, ...)                            \
+  case IntrinsicID:                                                            \
+    return getOpCodeProperties(OpCode).IsWave;
 #include "DXILOperation.inc"
   }
   return false;
