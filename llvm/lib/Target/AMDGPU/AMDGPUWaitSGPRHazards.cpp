@@ -70,15 +70,14 @@ public:
     default:
       break;
     }
-    unsigned RegN = TRI.getEncodingValue(Reg);
+    unsigned RegN = TRI.getHWRegIndex(Reg);
     if (RegN > 127)
       return {};
     return RegN;
   }
 
-  static inline bool IsVCC(Register Reg) {
-    return (Reg == AMDGPU::VCC || Reg == AMDGPU::VCC_LO ||
-            Reg == AMDGPU::VCC_HI);
+  static inline bool isVCC(Register Reg) {
+    return Reg == AMDGPU::VCC || Reg == AMDGPU::VCC_LO || Reg == AMDGPU::VCC_HI;
   }
 
   // Adjust global offsets for instructions bundled with S_GETPC_B64 after
@@ -274,7 +273,7 @@ public:
         if (IsUse) {
           // SALU reading SGPR clears VALU hazards
           if (IsSALU) {
-            if (IsVCC(Reg)) {
+            if (isVCC(Reg)) {
               if (State.VCCHazard & HazardState::VALU)
                 State.VCCHazard = HazardState::None;
             } else {
@@ -286,7 +285,7 @@ public:
             Wait |= State.SALUHazards[RegN + RegIdx] ? WA_SALU : 0;
             Wait |= IsVALU && State.VALUHazards[RegN + RegIdx] ? WA_VALU : 0;
           }
-          if (IsVCC(Reg) && State.VCCHazard) {
+          if (isVCC(Reg) && State.VCCHazard) {
             // Note: it's possible for both SALU and VALU to exist if VCC
             // was updated differently by merged predecessors.
             if (State.VCCHazard & HazardState::SALU)
@@ -296,7 +295,7 @@ public:
           }
         } else {
           // Update hazards
-          if (IsVCC(Reg)) {
+          if (isVCC(Reg)) {
             State.VCCHazard = IsSALU ? HazardState::SALU : HazardState::VALU;
           } else {
             for (uint8_t RegIdx = 0; RegIdx < SGPRCount; ++RegIdx) {
@@ -311,15 +310,15 @@ public:
 
       const bool IsSetPC =
           (MI->isCall() || MI->isReturn() || MI->isIndirectBranch()) &&
-          !(MI->getOpcode() == AMDGPU::S_ENDPGM ||
-            MI->getOpcode() == AMDGPU::S_ENDPGM_SAVED);
+          MI->getOpcode() != AMDGPU::S_ENDPGM &&
+          MI->getOpcode() != AMDGPU::S_ENDPGM_SAVED;
 
       // Only consider implicit VCC specified by instruction descriptor.
       const bool HasImplicitVCC =
           llvm::any_of(MI->getDesc().implicit_uses(),
-                       [](MCPhysReg Reg) { return IsVCC(Reg); }) ||
+                       [](MCPhysReg Reg) { return isVCC(Reg); }) ||
           llvm::any_of(MI->getDesc().implicit_defs(),
-                       [](MCPhysReg Reg) { return IsVCC(Reg); });
+                       [](MCPhysReg Reg) { return isVCC(Reg); });
 
       if (IsSetPC) {
         // All SGPR writes before a call/return must be flushed as the
@@ -340,7 +339,7 @@ public:
         SeenRegs.clear();
         for (const MachineOperand &Op : MI->all_uses()) {
           if (Op.isImplicit() &&
-              (!HasImplicitVCC || !Op.isReg() || !IsVCC(Op.getReg())))
+              (!HasImplicitVCC || !Op.isReg() || !isVCC(Op.getReg())))
             continue;
           processOperand(Op, true);
         }
@@ -379,7 +378,7 @@ public:
       SeenRegs.clear();
       for (const MachineOperand &Op : MI->all_defs()) {
         if (Op.isImplicit() &&
-            (!HasImplicitVCC || !Op.isReg() || !IsVCC(Op.getReg())))
+            (!HasImplicitVCC || !Op.isReg() || !isVCC(Op.getReg())))
           continue;
         processOperand(Op, false);
       }
