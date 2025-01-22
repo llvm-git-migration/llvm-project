@@ -2880,7 +2880,8 @@ instrumentation:
    environment variable to specify an alternate file. If non-default file name
    is specified by both the environment variable and the command line option,
    the environment variable takes precedence. The file name pattern specified
-   can include different modifiers: ``%p``, ``%h``, ``%m``, ``%t``, and ``%c``.
+   can include different modifiers: ``%p``, ``%h``, ``%m``, ``%b``, ``%t``, and
+   ``%c``.
 
    Any instance of ``%p`` in that file name will be replaced by the process
    ID, so that you can easily distinguish the profile output from multiple
@@ -2917,7 +2918,7 @@ instrumentation:
      $ LLVM_PROFILE_FILE="code-%m.profraw" ./code
 
    See `this <SourceBasedCodeCoverage.html#running-the-instrumented-program>`_ section
-   about the ``%t``, and ``%c`` modifiers.
+   about the ``%b``, ``%t``, and ``%c`` modifiers.
 
 3. Combine profiles from multiple runs and convert the "raw" profile format to
    the input expected by clang. Use the ``merge`` command of the
