@@ -1889,9 +1889,6 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(InsertElementInst, Value)
 struct ShuffleMaskAttrs {
   bool SingleSource : 1;
   bool Identity : 1;
-  // bool IdentityWithPadding : 1;
-  // bool IdentityWithExtract : 1;
-  // bool Concat : 1;
   bool Reverse : 1;
   bool ZeroEltSplat : 1;
   bool Select : 1;
