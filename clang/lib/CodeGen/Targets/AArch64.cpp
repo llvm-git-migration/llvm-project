@@ -768,7 +768,7 @@ bool AArch64ABIInfo::passAsPureScalableType(
     isPredicate = true;                                                        \
     break;
 #define SVE_TYPE(Name, Id, SingletonId)
-#include "clang/Basic/AArch64SVEACLETypes.def"
+#include "clang/Basic/AArch64Types.def"
   default:
     return false;
   }

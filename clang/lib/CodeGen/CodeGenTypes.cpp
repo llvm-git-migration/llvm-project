@@ -508,7 +508,7 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
 #define AARCH64_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                \
   case BuiltinType::Id:
 #define SVE_OPAQUE_TYPE(Name, MangledName, Id, SingletonId)
-#include "clang/Basic/AArch64SVEACLETypes.def"
+#include "clang/Basic/AArch64Types.def"
       {
         ASTContext::BuiltinVectorTypeInfo Info =
             Context.getBuiltinVectorTypeInfo(cast<BuiltinType>(Ty));
