@@ -2,6 +2,7 @@
 
 define float @f(float %val) strictfp {
 ; CHECK-LABEL: @f
+; CHECK-REMARK: remark: partially-inline-libcalls: Partially inlined call to sqrt function despite having to use errno for error handling: target has fast sqrt instruction
 ; CHECK: call{{.*}}@sqrtf
 ; CHECK-NOT: call{{.*}}@sqrtf
   %res = tail call float @sqrtf(float %val) strictfp
