@@ -2099,12 +2099,13 @@ void VPlanTransforms::handleUncountableEarlyExit(
       Builder.createNaryOp(VPInstruction::AnyOf, {EarlyExitTakenCond});
 
   VPBasicBlock *NewMiddle = Plan.createVPBasicBlock("middle.split");
-  VPBasicBlock *EarlyExitVPBB = Plan.createVPBasicBlock("vector.early.exit");
+  VPBasicBlock *VectorEarlyExitVPBB =
+      Plan.createVPBasicBlock("vector.early.exit");
   VPBlockUtils::insertOnEdge(LoopRegion, MiddleVPBB, NewMiddle);
-  VPBlockUtils::connectBlocks(NewMiddle, EarlyExitVPBB);
+  VPBlockUtils::connectBlocks(NewMiddle, VectorEarlyExitVPBB);
   NewMiddle->swapSuccessors();
 
-  VPBlockUtils::connectBlocks(EarlyExitVPBB, VPEarlyExitBlock);
+  VPBlockUtils::connectBlocks(VectorEarlyExitVPBB, VPEarlyExitBlock);
 
   VPBuilder MiddleBuilder(NewMiddle);
   MiddleBuilder.createNaryOp(VPInstruction::BranchOnCond, {IsEarlyExitTaken});
@@ -2122,4 +2123,27 @@ void VPlanTransforms::handleUncountableEarlyExit(
       Instruction::Or, {IsEarlyExitTaken, IsLatchExitTaken});
   Builder.createNaryOp(VPInstruction::BranchOnCond, AnyExitTaken);
   LatchExitingBranch->eraseFromParent();
+
+  // Fix up any users of loop-defined values in the early exit block.
+  VPBuilder EarlyExitB(VectorEarlyExitVPBB,
+                       VectorEarlyExitVPBB->getFirstNonPhi());
+  for (VPRecipeBase &R : *VPEarlyExitBlock) {
+    auto *ExitIRI = dyn_cast<VPIRInstruction>(&R);
+    if (!ExitIRI)
+      continue;
+    auto *ExitPhi = dyn_cast<PHINode>(&ExitIRI->getInstruction());
+    if (!ExitPhi)
+      break;
+
+    Value *IncomingValue =
+        ExitPhi->getIncomingValueForBlock(UncountableExitingBlock);
+    VPValue *V = RecipeBuilder.getVPValueOrAddLiveIn(IncomingValue);
+
+    // Pass live-in values used by exit phis directly through to their users
+    // in the exit block.
+    if (!V->isLiveIn())
+      V = EarlyExitB.createNaryOp(VPInstruction::ExtractFirstActive,
+                                  {V, EarlyExitTakenCond});
+    ExitIRI->addOperand(V);
+  }
 }

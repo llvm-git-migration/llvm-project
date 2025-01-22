@@ -9043,13 +9043,8 @@ collectUsersInExitBlocks(Loop *OrigLoop, VPRecipeBuilder &Builder,
         break;
       for (VPBlockBase *PredVPBB : ExitVPBB->getPredecessors()) {
         BasicBlock *ExitingBB = OrigLoop->getLoopLatch();
-        if (PredVPBB != MiddleVPBB) {
-          SmallVector<BasicBlock *> ExitingBlocks;
-          OrigLoop->getExitingBlocks(ExitingBlocks);
-          assert(ExitingBlocks.size() == 2 && "only support 2 exiting blocks");
-          ExitingBB = ExitingBB == ExitingBlocks[0] ? ExitingBlocks[1]
-                                                    : ExitingBlocks[0];
-        }
+        if (PredVPBB != MiddleVPBB)
+          continue;
         Value *IncomingValue = ExitPhi->getIncomingValueForBlock(ExitingBB);
         VPValue *V = Builder.getVPValueOrAddLiveIn(IncomingValue);
         ExitUsersToFix.insert(ExitIRI);
@@ -9070,26 +9065,7 @@ addUsersInExitBlocks(VPlan &Plan,
     return;
 
   auto *MiddleVPBB = Plan.getMiddleBlock();
-  VPBuilder MiddleB(MiddleVPBB, MiddleVPBB->getFirstNonPhi());
-  VPBuilder EarlyExitB;
-  VPBasicBlock *VectorEarlyExitVPBB = Plan.getEarlyExit();
-  VPValue *EarlyExitMask = nullptr;
-  if (VectorEarlyExitVPBB) {
-    EarlyExitB.setInsertPoint(VectorEarlyExitVPBB,
-                              VectorEarlyExitVPBB->getFirstNonPhi());
-
-    // Lookup and cache the early exit mask.
-    VPBasicBlock *MiddleSplitVPBB =
-        cast<VPBasicBlock>(VectorEarlyExitVPBB->getSinglePredecessor());
-    VPInstruction *PredTerm =
-        cast<VPInstruction>(MiddleSplitVPBB->getTerminator());
-    assert(PredTerm->getOpcode() == VPInstruction::BranchOnCond &&
-           "Unexpected middle split block terminator");
-    VPInstruction *ScalarCond = cast<VPInstruction>(PredTerm->getOperand(0));
-    assert(ScalarCond->getOpcode() == VPInstruction::AnyOf &&
-           "Unexpected condition for middle split block terminator branch");
-    EarlyExitMask = ScalarCond->getOperand(0);
-  }
+  VPBuilder B(MiddleVPBB, MiddleVPBB->getFirstNonPhi());
 
   // Introduce extract for exiting values and update the VPIRInstructions
   // modeling the corresponding LCSSA phis.
@@ -9100,19 +9076,17 @@ addUsersInExitBlocks(VPlan &Plan,
       if (Op->isLiveIn())
         continue;
 
-      LLVMContext &Ctx = ExitIRI->getInstruction().getContext();
-      VPValue *Ext;
+      // Values that came from an uncountable early exiting block are dealt
+      // with separately in handleUncountableEarlyExit.
       VPBasicBlock *PredVPBB =
           cast<VPBasicBlock>(ExitIRI->getParent()->getPredecessors()[Idx]);
-      if (PredVPBB != MiddleVPBB) {
-        assert(ExitIRI->getParent()->getNumPredecessors() <= 2);
-        Ext = EarlyExitB.createNaryOp(VPInstruction::ExtractFirstActive,
-                                      {Op, EarlyExitMask});
-      } else {
-        Ext = MiddleB.createNaryOp(VPInstruction::ExtractFromEnd,
-                                   {Op, Plan.getOrAddLiveIn(ConstantInt::get(
-                                            IntegerType::get(Ctx, 32), 1))});
-      }
+      if (PredVPBB != MiddleVPBB)
+        continue;
+
+      LLVMContext &Ctx = ExitIRI->getInstruction().getContext();
+      VPValue *Ext = B.createNaryOp(VPInstruction::ExtractFromEnd,
+                                    {Op, Plan.getOrAddLiveIn(ConstantInt::get(
+                                             IntegerType::get(Ctx, 32), 1))});
       ExitIRI->setOperand(Idx, Ext);
     }
   }
@@ -9409,6 +9383,12 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
     R->setOperand(1, WideIV->getStepValue());
   }
 
+  // This must be called before handleUncountableEarlyExit in order to preserve
+  // the correct ordering of operands, which should correspond like-for-like
+  // with the order of exit block predecessors in vplan. The middle block is
+  // always the first predecessor, followed by the vector early exit block.
+  SetVector<VPIRInstruction *> ExitUsersToFix =
+      collectUsersInExitBlocks(OrigLoop, RecipeBuilder, *Plan);
   if (auto *UncountableExitingBlock =
           Legal->getUncountableEarlyExitingBlock()) {
     VPlanTransforms::handleUncountableEarlyExit(
@@ -9416,8 +9396,6 @@ LoopVectorizationPlanner::tryToBuildVPlanWithVPRecipes(VFRange &Range) {
   }
   DenseMap<VPValue *, VPValue *> IVEndValues;
   addScalarResumePhis(RecipeBuilder, *Plan, IVEndValues);
-  SetVector<VPIRInstruction *> ExitUsersToFix =
-      collectUsersInExitBlocks(OrigLoop, RecipeBuilder, *Plan);
   addExitUsersForFirstOrderRecurrences(*Plan, ExitUsersToFix);
   addUsersInExitBlocks(*Plan, ExitUsersToFix);
 
