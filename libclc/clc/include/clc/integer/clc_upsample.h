@@ -1,11 +1,6 @@
 #ifndef __CLC_INTEGER_CLC_UPSAMPLE_H__
 #define __CLC_INTEGER_CLC_UPSAMPLE_H__
 
-#if defined(CLC_CLSPV) || defined(CLC_SPIRV)
-// clspv and spir-v targets provide their own OpenCL-compatible upsample
-#define __clc_upsample upsample
-#else
-
 #include <clc/clctypes.h>
 
 #define __CLC_UPSAMPLE_DECL(BGENTYPE, GENTYPE, UGENTYPE)                       \
@@ -32,7 +27,5 @@ __CLC_UPSAMPLE_TYPES()
 #undef __CLC_UPSAMPLE_TYPES
 #undef __CLC_UPSAMPLE_DECL
 #undef __CLC_UPSAMPLE_VEC
-
-#endif
 
 #endif // __CLC_INTEGER_CLC_UPSAMPLE_H__

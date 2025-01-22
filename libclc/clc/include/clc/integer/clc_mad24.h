@@ -1,11 +1,6 @@
 #ifndef __CLC_INTEGER_CLC_MAD24_H__
 #define __CLC_INTEGER_CLC_MAD24_H__
 
-#if defined(CLC_CLSPV) || defined(CLC_SPIRV)
-// clspv and spir-v targets provide their own OpenCL-compatible mad24
-#define __clc_mad24 mad24
-#else
-
 #include <clc/clcfunc.h>
 #include <clc/clctypes.h>
 
@@ -14,8 +9,7 @@
 
 #include <clc/integer/gentype24.inc>
 
+#undef __CLC_BODY
 #undef FUNCTION
-
-#endif
 
 #endif // __CLC_INTEGER_CLC_MAD24_H__
