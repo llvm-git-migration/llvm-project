@@ -4,12 +4,12 @@
 #include <clc/clcfunc.h>
 #include <clc/clctypes.h>
 
-#define FUNCTION __clc_clz
-#define __CLC_BODY "unary_decl.h"
+#define __CLC_FUNCTION __clc_clz
+#define __CLC_BODY <clc/shared/unary_decl.inc>
 
 #include <clc/integer/gentype.inc>
 
 #undef __CLC_BODY
-#undef FUNCTION
+#undef __CLC_FUNCTION
 
 #endif // __CLC_INTEGER_CLC_CLZ_H__
