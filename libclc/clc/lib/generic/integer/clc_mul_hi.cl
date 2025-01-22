@@ -19,12 +19,14 @@
     return (GENTYPE)(((BGENTYPE)x * (BGENTYPE)y) >> GENSIZE);                  \
   }
 
-// FOIL-based long mul_hi
-//
-//  Summary: Treat mul_hi(long x, long y) as:
-//  (a+b) * (c+d) where a and c are the high-order parts of x and y respectively
-//  and b and d are the low-order parts of x and y.
-//  Thinking back to algebra, we use FOIL to do the work.
+#define __CLC_MUL_HI_DEC_IMPL(BTYPE, TYPE, BITS)                               \
+  __CLC_MUL_HI_IMPL(BTYPE, TYPE, BITS)                                         \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##2, TYPE##2, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##3, TYPE##3, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##4, TYPE##4, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##8, TYPE##8, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##16, TYPE##16, BITS)
+
 _CLC_OVERLOAD _CLC_DEF long __clc_mul_hi(long x, long y) {
   long f, o, i;
   ulong l;
@@ -81,32 +83,33 @@ _CLC_OVERLOAD _CLC_DEF ulong __clc_mul_hi(ulong x, ulong y) {
   return (f + (__clc_hadd(o, (i + (l >> 32))) >> 31));
 }
 
-#define __CLC_MUL_HI_VEC(GENTYPE)                                              \
-  _CLC_OVERLOAD _CLC_DEF GENTYPE##2 __clc_mul_hi(GENTYPE##2 x, GENTYPE##2 y) { \
-    return (GENTYPE##2){__clc_mul_hi(x.s0, y.s0), __clc_mul_hi(x.s1, y.s1)};   \
-  }                                                                            \
-  _CLC_OVERLOAD _CLC_DEF GENTYPE##3 __clc_mul_hi(GENTYPE##3 x, GENTYPE##3 y) { \
-    return (GENTYPE##3){__clc_mul_hi(x.s0, y.s0), __clc_mul_hi(x.s1, y.s1),    \
-                        __clc_mul_hi(x.s2, y.s2)};                             \
-  }                                                                            \
-  _CLC_OVERLOAD _CLC_DEF GENTYPE##4 __clc_mul_hi(GENTYPE##4 x, GENTYPE##4 y) { \
-    return (GENTYPE##4){__clc_mul_hi(x.lo, y.lo), __clc_mul_hi(x.hi, y.hi)};   \
-  }                                                                            \
-  _CLC_OVERLOAD _CLC_DEF GENTYPE##8 __clc_mul_hi(GENTYPE##8 x, GENTYPE##8 y) { \
-    return (GENTYPE##8){__clc_mul_hi(x.lo, y.lo), __clc_mul_hi(x.hi, y.hi)};   \
-  }                                                                            \
-  _CLC_OVERLOAD _CLC_DEF GENTYPE##16 __clc_mul_hi(GENTYPE##16 x,               \
-                                                  GENTYPE##16 y) {             \
-    return (GENTYPE##16){__clc_mul_hi(x.lo, y.lo), __clc_mul_hi(x.hi, y.hi)};  \
+// Vector-based mul_hi implementation for logn/ulong. See comments in the scalar
+// versions for more detail.
+#define __CLC_MUL_HI_LONG_VEC_IMPL(TY, UTY)                                    \
+  _CLC_OVERLOAD _CLC_DEF TY __clc_mul_hi(TY x, TY y) {                         \
+    TY f, o, i;                                                                \
+    UTY l;                                                                     \
+                                                                               \
+    TY x_hi = x >> 32;                                                         \
+    TY x_lo = x & UINT_MAX;                                                    \
+    TY y_hi = y >> 32;                                                         \
+    TY y_lo = y & UINT_MAX;                                                    \
+                                                                               \
+    f = x_hi * y_hi;                                                           \
+    o = x_hi * y_lo;                                                           \
+    i = x_lo * y_hi;                                                           \
+    l = __CLC_CONVERT_TY(x_lo * y_lo, UTY);                                    \
+    i += __CLC_CONVERT_TY(l >> (UTY)32, TY);                                   \
+                                                                               \
+    return f + (__clc_hadd(o, i) >> (TY)31);                                   \
   }
 
-#define __CLC_MUL_HI_DEC_IMPL(BTYPE, TYPE, BITS)                               \
-  __CLC_MUL_HI_IMPL(BTYPE, TYPE, BITS)                                         \
-  __CLC_MUL_HI_VEC_IMPL(BTYPE##2, TYPE##2, BITS)                               \
-  __CLC_MUL_HI_VEC_IMPL(BTYPE##3, TYPE##3, BITS)                               \
-  __CLC_MUL_HI_VEC_IMPL(BTYPE##4, TYPE##4, BITS)                               \
-  __CLC_MUL_HI_VEC_IMPL(BTYPE##8, TYPE##8, BITS)                               \
-  __CLC_MUL_HI_VEC_IMPL(BTYPE##16, TYPE##16, BITS)
+#define __CLC_MUL_HI_LONG_IMPL(BTYPE, UBTYPE)                                  \
+  __CLC_MUL_HI_LONG_VEC_IMPL(BTYPE##2, UBTYPE##2)                              \
+  __CLC_MUL_HI_LONG_VEC_IMPL(BTYPE##3, UBTYPE##3)                              \
+  __CLC_MUL_HI_LONG_VEC_IMPL(BTYPE##4, UBTYPE##4)                              \
+  __CLC_MUL_HI_LONG_VEC_IMPL(BTYPE##8, UBTYPE##8)                              \
+  __CLC_MUL_HI_LONG_VEC_IMPL(BTYPE##16, UBTYPE##16)
 
 #define __CLC_MUL_HI_TYPES()                                                   \
   __CLC_MUL_HI_DEC_IMPL(short, char, 8)                                        \
@@ -115,14 +118,15 @@ _CLC_OVERLOAD _CLC_DEF ulong __clc_mul_hi(ulong x, ulong y) {
   __CLC_MUL_HI_DEC_IMPL(uint, ushort, 16)                                      \
   __CLC_MUL_HI_DEC_IMPL(long, int, 32)                                         \
   __CLC_MUL_HI_DEC_IMPL(ulong, uint, 32)                                       \
-  __CLC_MUL_HI_VEC(long)                                                       \
-  __CLC_MUL_HI_VEC(ulong)
+  __CLC_MUL_HI_LONG_IMPL(long, ulong)                                          \
+  __CLC_MUL_HI_LONG_IMPL(ulong, ulong)
 
 __CLC_MUL_HI_TYPES()
 
 #undef __CLC_MUL_HI_TYPES
+#undef __CLC_MUL_HI_LONG_IMPL
+#undef __CLC_MUL_HI_LONG_VEC_IMPL
 #undef __CLC_MUL_HI_DEC_IMPL
 #undef __CLC_MUL_HI_IMPL
-#undef __CLC_MUL_HI_VEC
 #undef __CLC_MUL_HI_VEC_IMPL
 #undef __CLC_CONVERT_TY
