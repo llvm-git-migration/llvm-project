@@ -1,4 +1,5 @@
 // RUN: %clang_cc1 -std=c++23 -verify %s
+// RUN: %clang_cc1 -std=c++23 -verify %s -fexperimental-new-constant-interpreter -DNEW_INTERP
 
 using size_t = decltype(sizeof(0));
 
@@ -47,11 +48,18 @@ void splash(Swim& swam) {
 }
 
 extern Swim dc;
-extern Swim& trident; // expected-note {{declared here}}
-
 constexpr auto& sandeno   = typeid(dc);         // ok: can only be typeid(Swim)
-constexpr auto& gallagher = typeid(trident);    // expected-error {{constexpr variable 'gallagher' must be initialized by a constant expression}}
-                                                // expected-note@-1 {{initializer of 'trident' is not a constant expression}}
+
+#ifdef NEW_INTERP
+  /// FIXME: This is a difference between the two interpreters. The AST walker will diagnose a non-constant initializer of trident.
+  ///   However, trident doesn't even have an initializer.
+  extern Swim& trident;
+  constexpr auto& gallagher = typeid(trident);    // expected-error {{constexpr variable 'gallagher' must be initialized by a constant expression}}
+#else
+  extern Swim& trident; // expected-note {{declared here}}
+  constexpr auto& gallagher = typeid(trident);    // expected-error {{constexpr variable 'gallagher' must be initialized by a constant expression}}
+                                                  // expected-note@-1 {{initializer of 'trident' is not a constant expression}}
+#endif
 
 namespace explicitThis {
 struct C {
