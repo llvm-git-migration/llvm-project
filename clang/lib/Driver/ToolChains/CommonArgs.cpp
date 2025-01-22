@@ -1868,6 +1868,7 @@ tools::ParsePICArgs(const ToolChain &ToolChain, const ArgList &Args) {
     case llvm::Triple::armeb:
     case llvm::Triple::thumb:
     case llvm::Triple::thumbeb:
+    case llvm::Triple::riscv64:
       PIC = true; // "-fpic"
       break;
 
