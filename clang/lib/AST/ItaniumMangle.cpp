@@ -1792,7 +1792,7 @@ void CXXNameMangler::mangleOCLDeviceStubName(const IdentifierInfo *II) {
   // <identifier> <number> ::= [n] <non-negative decimal integer> <identifier>
   // ::= <unqualified source code identifier>
   StringRef OCLDeviceStubNamePrefix = "__clang_ocl_kern_imp_";
-  Out << II->getLength() + OCLDeviceStubNamePrefix.size() - 1
+  Out << II->getLength() + OCLDeviceStubNamePrefix.size()
       << OCLDeviceStubNamePrefix << II->getName();
 }
 
