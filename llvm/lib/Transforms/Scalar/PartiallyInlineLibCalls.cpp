@@ -56,6 +56,14 @@ static bool optimizeSQRT(CallInst *Call, Function *CalledFunc,
   // dst = phi(v0, v1)
   //
 
+  ORE.emit([&]() {
+    return OptimizationRemarkMissed(DEBUG_TYPE, "BranchRequired",
+                                    Call->getDebugLoc(), CurrBB)
+           << "Branch to library sqrt fn had to be inserted to satisfy the "
+           "current target's requirement for math functions to set errno on "
+           "invalid inputs.";
+  });
+
   Type *Ty = Call->getType();
   IRBuilder<> Builder(Call->getNextNode());
 
