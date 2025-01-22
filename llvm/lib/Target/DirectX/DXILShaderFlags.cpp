@@ -11,6 +11,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "DXILConstants.h"
 #include "DXILShaderFlags.h"
 #include "DirectX.h"
 #include "llvm/ADT/SCCIterator.h"
@@ -29,6 +30,25 @@
 
 using namespace llvm;
 using namespace llvm::dxil;
+
+static dxil::Properties getOpCodeProperties(dxil::OpCode OpCode) {
+  dxil::Properties Props;
+  switch (OpCode) {
+#define DXIL_OP_PROPERTIES(OpCode, ...) \
+  case OpCode: Props = dxil::Properties{__VA_ARGS__}; break;
+#include "DXILOperation.inc"
+  }
+  return Props;
+}
+
+static bool checkWaveOps(Intrinsic::ID IID) {
+  switch (IID) {
+#define DXIL_OP_INTRINSIC(OpCode, IntrinsicID, ...) \
+  case IntrinsicID: return getOpCodeProperties(OpCode).IsWave;
+#include "DXILOperation.inc"
+  }
+  return false;
+}
 
 /// Update the shader flags mask based on the given instruction.
 /// \param CSF Shader flags mask to update.
@@ -92,6 +112,8 @@ void ModuleShaderFlags::updateFunctionFlags(ComputedShaderFlags &CSF,
 
     // TODO: Set DX11_1_DoubleExtensions if I is a call to DXIL intrinsic
     // DXIL::Opcode::Fma https://github.com/llvm/llvm-project/issues/114554
+
+    CSF.WaveOps |= checkWaveOps(CI->getIntrinsicID());
   }
 }
 

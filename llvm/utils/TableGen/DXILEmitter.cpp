@@ -437,6 +437,21 @@ static void emitDXILProperties(const RecordKeeper &Records, raw_ostream &OS) {
   OS << "#endif\n\n";
 }
 
+/// Emit a table of bools denoting a DXIL op's properties
+static void emitDXILOpProperties(const RecordKeeper &Records,
+                                 ArrayRef<DXILOperationDesc> Ops,
+                                 raw_ostream &OS) {
+  auto DefinedProps = Records.getAllDerivedDefinitions("DXILProperty");
+  OS << "#ifdef DXIL_OP_PROPERTIES\n";
+  for (const auto &Op : Ops) {
+    OS << "DXIL_OP_PROPERTIES(dxil::OpCode::" << Op.OpName;
+    emitBoolTable(Op.PropRecs, DefinedProps, OS);
+    OS << ")\n";
+  }
+  OS << "#undef DXIL_OP_PROPERTIES\n";
+  OS << "#endif\n\n";
+}
+
 /// Emit a list of DXIL op function types
 static void emitDXILOpFunctionTypes(ArrayRef<DXILOperationDesc> Ops,
                                     raw_ostream &OS) {
@@ -641,6 +656,7 @@ static void emitDxilOperation(const RecordKeeper &Records, raw_ostream &OS) {
   emitDXILAttributes(Records, OS);
   emitDXILOpAttributes(Records, DXILOps, OS);
   emitDXILProperties(Records, OS);
+  emitDXILOpProperties(Records, DXILOps, OS);
   emitDXILOpFunctionTypes(DXILOps, OS);
   emitDXILIntrinsicArgSelectTypes(Records, OS);
   emitDXILIntrinsicMap(DXILOps, OS);
