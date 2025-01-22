@@ -1717,7 +1717,7 @@ The AMDGPU backend supports the following LLVM IR attributes.
 
      "amdgpu-sgpr-hazard-mem-wait-cull"      Enable insertion of SGPR hazard cull sequences before memory waits.
                                              Cull sequence reduces future hazard waits, but has a performance cost.
-                                             Attempt to amortize cost by overlaping with memory access.
+                                             Attempt to amortize cost by overlapping with memory accesses.
 
      "amdgpu-sgpr-hazard-mem-wait-cull-threshold"
                                              Sets the number of active SGPR hazards that must be present before
