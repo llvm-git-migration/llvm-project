@@ -3,6 +3,6 @@
 #include <clc/common/clc_sign.h>
 
 #define FUNCTION sign
-#define __CLC_BODY "unary_def.inc"
+#define __CLC_BODY <clc/shared/unary_def.inc>
 
-#include <clc/common/floatn.inc>
+#include <clc/math/gentype.inc>
