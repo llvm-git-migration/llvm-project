@@ -2,6 +2,17 @@
 #include <clc/integer/definitions.h>
 #include <clc/internal/clc.h>
 
+// TODO: Replace with __clc_convert_<type> when available
+#define __CLC_CONVERT_TY(X, TY) __builtin_convertvector(X, TY)
+
+#define __CLC_MUL_HI_VEC_IMPL(BGENTYPE, GENTYPE, GENSIZE)                      \
+  _CLC_OVERLOAD _CLC_DEF GENTYPE __clc_mul_hi(GENTYPE x, GENTYPE y) {          \
+    BGENTYPE large_x = __CLC_CONVERT_TY(x, BGENTYPE);                          \
+    BGENTYPE large_y = __CLC_CONVERT_TY(y, BGENTYPE);                          \
+    BGENTYPE large_mul_hi = (large_x * large_y) >> (BGENTYPE)GENSIZE;          \
+    return __CLC_CONVERT_TY(large_mul_hi, GENTYPE);                            \
+  }
+
 // For all types EXCEPT long, which is implemented separately
 #define __CLC_MUL_HI_IMPL(BGENTYPE, GENTYPE, GENSIZE)                          \
   _CLC_OVERLOAD _CLC_DEF GENTYPE __clc_mul_hi(GENTYPE x, GENTYPE y) {          \
@@ -14,7 +25,6 @@
 //  (a+b) * (c+d) where a and c are the high-order parts of x and y respectively
 //  and b and d are the low-order parts of x and y.
 //  Thinking back to algebra, we use FOIL to do the work.
-
 _CLC_OVERLOAD _CLC_DEF long __clc_mul_hi(long x, long y) {
   long f, o, i;
   ulong l;
@@ -92,7 +102,11 @@ _CLC_OVERLOAD _CLC_DEF ulong __clc_mul_hi(ulong x, ulong y) {
 
 #define __CLC_MUL_HI_DEC_IMPL(BTYPE, TYPE, BITS)                               \
   __CLC_MUL_HI_IMPL(BTYPE, TYPE, BITS)                                         \
-  __CLC_MUL_HI_VEC(TYPE)
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##2, TYPE##2, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##3, TYPE##3, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##4, TYPE##4, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##8, TYPE##8, BITS)                               \
+  __CLC_MUL_HI_VEC_IMPL(BTYPE##16, TYPE##16, BITS)
 
 #define __CLC_MUL_HI_TYPES()                                                   \
   __CLC_MUL_HI_DEC_IMPL(short, char, 8)                                        \
@@ -110,4 +124,5 @@ __CLC_MUL_HI_TYPES()
 #undef __CLC_MUL_HI_DEC_IMPL
 #undef __CLC_MUL_HI_IMPL
 #undef __CLC_MUL_HI_VEC
-#undef __CLC_B32
+#undef __CLC_MUL_HI_VEC_IMPL
+#undef __CLC_CONVERT_TY
