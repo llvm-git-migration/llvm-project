@@ -1,6 +1,7 @@
-#define FUNCTION hadd
-#define __CLC_BODY "binary_decl.h"
+#define __CLC_FUNCTION hadd
+#define __CLC_BODY <clc/shared/binary_decl.inc>
 
 #include <clc/integer/gentype.inc>
 
-#undef FUNCTION
+#undef __CLC_BODY
+#undef __CLC_FUNCTION

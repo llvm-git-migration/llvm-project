@@ -1,6 +1,7 @@
-#define FUNCTION mul24
-#define __CLC_BODY "binary_decl.h"
+#define __CLC_FUNCTION mul24
+#define __CLC_BODY <clc/shared/binary_decl.inc>
 
 #include <clc/integer/gentype24.inc>
 
-#undef FUNCTION
+#undef __CLC_BODY
+#undef __CLC_FUNCTION
