@@ -450,7 +450,7 @@ arm::FloatABI arm::getDefaultFloatABI(const llvm::Triple &Triple) {
       // EABI is always AAPCS, and if it was not marked 'hard', it's softfp
       return FloatABI::SoftFP;
     case llvm::Triple::Android:
-      return (SubArch >= 7) ? FloatABI::SoftFP : FloatABI::Soft;
+      return FloatABI::SoftFP;
     default:
       return FloatABI::Invalid;
     }
