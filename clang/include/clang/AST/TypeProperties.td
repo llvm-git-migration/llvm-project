@@ -884,7 +884,7 @@ let Class = BuiltinType in {
       case BuiltinType::ID: return ctx.ID##Ty;
 #include "clang/Basic/OpenCLExtensionTypes.def"
 
-#define SVE_TYPE(NAME, ID, SINGLETON_ID) \
+#define AARCH64_TYPE(NAME, ID, SINGLETON_ID) \
       case BuiltinType::ID: return ctx.SINGLETON_ID;
 #include "clang/Basic/AArch64Types.def"
 

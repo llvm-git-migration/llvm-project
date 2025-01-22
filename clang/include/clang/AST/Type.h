@@ -3041,7 +3041,7 @@ public:
 #define EXT_OPAQUE_TYPE(ExtType, Id, Ext) Id,
 #include "clang/Basic/OpenCLExtensionTypes.def"
 // SVE Types
-#define SVE_TYPE(Name, Id, SingletonId) Id,
+#define AARCH64_TYPE(Name, Id, SingletonId) Id,
 #include "clang/Basic/AArch64Types.def"
 // PPC MMA Types
 #define PPC_VECTOR_TYPE(Name, Id, Size) Id,

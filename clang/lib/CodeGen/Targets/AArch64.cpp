@@ -767,7 +767,7 @@ bool AArch64ABIInfo::passAsPureScalableType(
   case BuiltinType::Id:                                                        \
     isPredicate = true;                                                        \
     break;
-#define SVE_TYPE(Name, Id, SingletonId)
+#define AARCH64_TYPE(Name, Id, SingletonId)
 #include "clang/Basic/AArch64Types.def"
   default:
     return false;

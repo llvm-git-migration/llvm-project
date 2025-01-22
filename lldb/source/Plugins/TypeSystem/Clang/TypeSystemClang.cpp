@@ -5022,7 +5022,7 @@ lldb::Encoding TypeSystemClang::GetEncoding(lldb::opaque_compiler_type_t type,
       break;
 
     // ARM -- Scalable Vector Extension
-#define SVE_TYPE(Name, Id, SingletonId) case clang::BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case clang::BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
       break;
 
