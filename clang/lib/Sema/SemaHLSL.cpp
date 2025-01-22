@@ -651,28 +651,30 @@ void SemaHLSL::emitLogicalOperatorFixIt(Expr *LHS, Expr *RHS,
 void SemaHLSL::handleRootSignatureAttr(Decl *D, const ParsedAttr &AL) {
   using namespace llvm::hlsl::root_signature;
 
-  if (AL.getNumArgs() != 1) return;
+  if (AL.getNumArgs() != 1)
+    return;
 
   StringRef Signature;
   if (!SemaRef.checkStringLiteralArgumentAttr(AL, 0, Signature))
-   return;
+    return;
 
   SourceLocation Loc = AL.getArgAsExpr(0)->getExprLoc();
   // FIXME: pass down below to lexer when fp is supported
   // llvm::RoundingMode RM = SemaRef.CurFPFeatures.getRoundingMode();
   SmallVector<RootSignatureToken> Tokens;
   RootSignatureLexer Lexer(Signature, Loc, SemaRef.getPreprocessor());
-  if (Lexer.Lex(Tokens)) return;
+  if (Lexer.Lex(Tokens))
+    return;
 
   SmallVector<RootElement> Elements;
   RootSignatureParser Parser(Elements, Tokens);
-  if (Parser.Parse()) return;
+  if (Parser.Parse())
+    return;
 
-  auto *RootElements =
-    ::new (getASTContext()) ArrayRef<RootElement>(Elements);
+  auto *RootElements = ::new (getASTContext()) ArrayRef<RootElement>(Elements);
 
-  auto *Result =
-    ::new (getASTContext()) HLSLRootSignatureAttr(getASTContext(), AL, Signature);
+  auto *Result = ::new (getASTContext())
+      HLSLRootSignatureAttr(getASTContext(), AL, Signature);
   Result->setElements(*RootElements);
   D->addAttr(Result);
 }
