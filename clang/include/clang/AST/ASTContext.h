@@ -1202,8 +1202,7 @@ public:
 #define EXT_OPAQUE_TYPE(ExtType, Id, Ext) \
   CanQualType Id##Ty;
 #include "clang/Basic/OpenCLExtensionTypes.def"
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  CanQualType SingletonId;
+#define AARCH64_TYPE(Name, Id, SingletonId) CanQualType SingletonId;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
   CanQualType Id##Ty;

@@ -1120,8 +1120,8 @@ ExpectedType ASTNodeImporter::VisitBuiltinType(const BuiltinType *T) {
   case BuiltinType::Id: \
     return Importer.getToContext().Id##Ty;
 #include "clang/Basic/OpenCLExtensionTypes.def"
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case BuiltinType::Id: \
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  case BuiltinType::Id:                                                        \
     return Importer.getToContext().SingletonId;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \

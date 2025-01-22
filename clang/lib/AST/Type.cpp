@@ -2527,7 +2527,7 @@ bool Type::isSVESizelessBuiltinType() const {
 #define SVE_PREDICATE_TYPE(Name, MangledName, Id, SingletonId)                 \
   case BuiltinType::Id:                                                        \
     return true;
-#define NEON_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                \
+#define NEON_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                   \
   case BuiltinType::Id:                                                        \
     return false;
 #include "clang/Basic/AArch64Types.def"
@@ -3482,8 +3482,8 @@ StringRef BuiltinType::getName(const PrintingPolicy &Policy) const {
   case Id: \
     return #ExtType;
 #include "clang/Basic/OpenCLExtensionTypes.def"
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case Id: \
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  case Id:                                                                     \
     return Name;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
@@ -4854,8 +4854,7 @@ bool Type::canHaveNullability(bool ResultIfUnknown) const {
     case BuiltinType::OCLClkEvent:
     case BuiltinType::OCLQueue:
     case BuiltinType::OCLReserveID:
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-    case BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
     case BuiltinType::Id:

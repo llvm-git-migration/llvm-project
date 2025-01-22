@@ -443,8 +443,7 @@ NSAPI::getNSNumberFactoryMethodKind(QualType T) const {
   case BuiltinType::OCLClkEvent:
   case BuiltinType::OCLQueue:
   case BuiltinType::OCLReserveID:
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
   case BuiltinType::Id:

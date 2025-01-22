@@ -1440,8 +1440,8 @@ void ASTContext::InitBuiltinTypes(const TargetInfo &Target,
 
   if (Target.hasAArch64SVETypes() ||
       (AuxTarget && AuxTarget->hasAArch64SVETypes())) {
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-    InitBuiltinType(SingletonId, BuiltinType::Id);
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  InitBuiltinType(SingletonId, BuiltinType::Id);
 #include "clang/Basic/AArch64Types.def"
   }
 
@@ -2269,8 +2269,8 @@ TypeInfo ASTContext::getTypeInfoImpl(const Type *T) const {
     Width = 0;                                                                 \
     Align = 16;                                                                \
     break;
-#define NEON_VECTOR_TYPE_MFLOAT(Name, MangledName, Id, SingletonId, NumEls, \
-                                   ElBits, NF)                                 \
+#define NEON_VECTOR_TYPE_MFLOAT(Name, MangledName, Id, SingletonId, NumEls,    \
+                                ElBits, NF)                                    \
   case BuiltinType::Id:                                                        \
     Width = NumEls * ElBits * NF;                                              \
     Align = NumEls * ElBits;                                                   \
@@ -3424,7 +3424,7 @@ static void encodeTypeForFunctionPointerAuth(const ASTContext &Ctx,
   case BuiltinType::Id:                                                        \
     return;
 #include "clang/Basic/OpenCLExtensionTypes.def"
-#define AARCH64_TYPE(Name, Id, SingletonId)                                        \
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
   case BuiltinType::Id:                                                        \
     return;
 #include "clang/Basic/AArch64Types.def"
@@ -4398,8 +4398,8 @@ ASTContext::getBuiltinVectorTypeInfo(const BuiltinType *Ty) const {
 #define SVE_PREDICATE_TYPE_ALL(Name, MangledName, Id, SingletonId, NumEls, NF) \
   case BuiltinType::Id:                                                        \
     return {BoolTy, llvm::ElementCount::getScalable(NumEls), NF};
-#define NEON_VECTOR_TYPE_MFLOAT(Name, MangledName, Id, SingletonId, NumEls, \
-                                   ElBits, NF)                                 \
+#define NEON_VECTOR_TYPE_MFLOAT(Name, MangledName, Id, SingletonId, NumEls,    \
+                                ElBits, NF)                                    \
   case BuiltinType::Id:                                                        \
     return {getIntTypeForBitwidth(ElBits, false),                              \
             llvm::ElementCount::getFixed(NumEls), NF};
@@ -8777,8 +8777,7 @@ static char getObjCEncodingForPrimitiveType(const ASTContext *C,
       // FIXME: potentially need @encodes for these!
       return ' ';
 
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-    case BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
 #define RVV_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/RISCVVTypes.def"

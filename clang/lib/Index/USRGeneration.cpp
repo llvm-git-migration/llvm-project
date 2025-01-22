@@ -763,9 +763,10 @@ void USRGenerator::VisitType(QualType T) {
           Out << "@BT@OCLReserveID"; break;
         case BuiltinType::OCLSampler:
           Out << "@BT@OCLSampler"; break;
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-        case BuiltinType::Id: \
-          Out << "@BT@" << Name; break;
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  case BuiltinType::Id:                                                        \
+    Out << "@BT@" << Name;                                                     \
+    break;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
         case BuiltinType::Id: \

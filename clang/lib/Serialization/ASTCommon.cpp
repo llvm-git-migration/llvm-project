@@ -241,9 +241,9 @@ serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {
   case BuiltinType::OCLReserveID:
     ID = PREDEF_TYPE_RESERVE_ID_ID;
     break;
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case BuiltinType::Id: \
-    ID = PREDEF_TYPE_##Id##_ID; \
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  case BuiltinType::Id:                                                        \
+    ID = PREDEF_TYPE_##Id##_ID;                                                \
     break;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \

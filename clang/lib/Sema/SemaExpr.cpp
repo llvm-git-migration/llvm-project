@@ -6144,8 +6144,7 @@ static bool isPlaceholderToRemoveAsArg(QualType type) {
 #include "clang/Basic/OpenCLExtensionTypes.def"
   // In practice we'll never use this, since all SVE types are sugared
   // via TypedefTypes rather than exposed directly as BuiltinTypes.
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
   case BuiltinType::Id:
@@ -21134,8 +21133,7 @@ ExprResult Sema::CheckPlaceholderExpr(Expr *E) {
 #define EXT_OPAQUE_TYPE(ExtType, Id, Ext) \
   case BuiltinType::Id:
 #include "clang/Basic/OpenCLExtensionTypes.def"
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-  case BuiltinType::Id:
+#define AARCH64_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
   case BuiltinType::Id:

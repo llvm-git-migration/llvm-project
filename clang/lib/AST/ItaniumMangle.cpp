@@ -3433,7 +3433,7 @@ void CXXNameMangler::mangleType(const BuiltinType *T) {
     type_name = MangledName;                                                   \
     Out << (type_name == Name ? "u" : "") << type_name.size() << type_name;    \
     break;
-#define NEON_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                \
+#define NEON_VECTOR_TYPE(Name, MangledName, Id, SingletonId)                   \
   case BuiltinType::Id:                                                        \
     type_name = MangledName;                                                   \
     Out << (type_name == Name ? "u" : "") << type_name.size() << type_name;    \

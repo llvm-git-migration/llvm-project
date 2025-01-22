@@ -7685,10 +7685,10 @@ QualType ASTReader::GetType(TypeID ID) {
     case PREDEF_TYPE_OMP_ITERATOR:
       T = Context.OMPIteratorTy;
       break;
-#define AARCH64_TYPE(Name, Id, SingletonId) \
-    case PREDEF_TYPE_##Id##_ID: \
-      T = Context.SingletonId; \
-      break;
+#define AARCH64_TYPE(Name, Id, SingletonId)                                    \
+  case PREDEF_TYPE_##Id##_ID:                                                  \
+    T = Context.SingletonId;                                                   \
+    break;
 #include "clang/Basic/AArch64Types.def"
 #define PPC_VECTOR_TYPE(Name, Id, Size) \
     case PREDEF_TYPE_##Id##_ID: \
