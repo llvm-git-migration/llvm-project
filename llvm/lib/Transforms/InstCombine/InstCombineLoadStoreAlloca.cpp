@@ -704,10 +704,6 @@ static Instruction *unpackLoadToAggregate(InstCombinerImpl &IC, LoadInst &LI) {
     const DataLayout &DL = IC.getDataLayout();
     auto *SL = DL.getStructLayout(ST);
 
-    // Don't unpack for structure with scalable vector.
-    if (SL->getSizeInBits().isScalable())
-      return nullptr;
-
     if (SL->hasPadding())
       return nullptr;
 
@@ -722,11 +718,19 @@ static Instruction *unpackLoadToAggregate(InstCombinerImpl &IC, LoadInst &LI) {
         Zero,
         ConstantInt::get(IdxType, i),
       };
-      auto *Ptr = IC.Builder.CreateInBoundsGEP(ST, Addr, ArrayRef(Indices),
-                                               Name + ".elt");
+      auto *Ptr = !SL->getSizeInBits().isScalable()
+                      ? IC.Builder.CreateInBoundsGEP(
+                            ST, Addr, ArrayRef(Indices), Name + ".elt")
+                      : IC.Builder.CreateInBoundsPtrAdd(
+                            Addr,
+                            IC.Builder.CreateVScale(ConstantInt::get(
+                                DL.getIndexType(Addr->getType()),
+                                SL->getElementOffset(i).getKnownMinValue())),
+                            Name + ".elt");
       auto *L = IC.Builder.CreateAlignedLoad(
           ST->getElementType(i), Ptr,
-          commonAlignment(Align, SL->getElementOffset(i)), Name + ".unpack");
+          commonAlignment(Align, SL->getElementOffset(i).getKnownMinValue()),
+          Name + ".unpack");
       // Propagate AA metadata. It'll still be valid on the narrowed load.
       L->setAAMetadata(LI.getAAMetadata());
       V = IC.Builder.CreateInsertValue(V, L, i);
@@ -1222,10 +1226,6 @@ static bool unpackStoreToAggregate(InstCombinerImpl &IC, StoreInst &SI) {
     const DataLayout &DL = IC.getDataLayout();
     auto *SL = DL.getStructLayout(ST);
 
-    // Don't unpack for structure with scalable vector.
-    if (SL->getSizeInBits().isScalable())
-      return false;
-
     if (SL->hasPadding())
       return false;
 
@@ -1244,10 +1244,18 @@ static bool unpackStoreToAggregate(InstCombinerImpl &IC, StoreInst &SI) {
         Zero,
         ConstantInt::get(IdxType, i),
       };
-      auto *Ptr =
-          IC.Builder.CreateInBoundsGEP(ST, Addr, ArrayRef(Indices), AddrName);
+      auto *Ptr = !SL->getSizeInBits().isScalable()
+                      ? IC.Builder.CreateInBoundsGEP(
+                            ST, Addr, ArrayRef(Indices), AddrName)
+                      : IC.Builder.CreateInBoundsPtrAdd(
+                            Addr,
+                            IC.Builder.CreateVScale(ConstantInt::get(
+                                DL.getIndexType(Addr->getType()),
+                                SL->getElementOffset(i).getKnownMinValue())),
+                            AddrName);
       auto *Val = IC.Builder.CreateExtractValue(V, i, EltName);
-      auto EltAlign = commonAlignment(Align, SL->getElementOffset(i));
+      auto EltAlign =
+          commonAlignment(Align, SL->getElementOffset(i).getKnownMinValue());
       llvm::Instruction *NS = IC.Builder.CreateAlignedStore(Val, Ptr, EltAlign);
       NS->setAAMetadata(SI.getAAMetadata());
     }
