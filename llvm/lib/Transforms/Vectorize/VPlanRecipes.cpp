@@ -834,6 +834,29 @@ bool VPInstruction::onlyFirstPartUsed(const VPValue *Op) const {
   llvm_unreachable("switch should return");
 }
 
+InstructionCost VPInstruction::computeCost(ElementCount VF,
+                                           VPCostContext &Ctx) const {
+  Type *ValTy = Ctx.Types.inferScalarType(getOperand(0));
+
+  switch (getOpcode()) {
+  case VPInstruction::BranchOnCount: {
+    // BranchOnCount will genearte icmp_eq + br instructions and the
+    // cost of branch will be calculated in VPRegionBlock.
+    // If the vector loop only executed once, ignore the cost of the cmp.
+    auto TC = dyn_cast_if_present<ConstantInt>(
+        getParent()->getPlan()->getTripCount()->getUnderlyingValue());
+    if (TC && VF.isFixed() && TC->getSExtValue() == VF.getFixedValue())
+      return 0;
+    return Ctx.TTI.getCmpSelInstrCost(Instruction::ICmp, ValTy, nullptr,
+                                      CmpInst::ICMP_EQ, Ctx.CostKind);
+  }
+  default:
+    // TODO: Compute accurate cost after retiring the legacy cost model.
+    return 0;
+  };
+  llvm_unreachable("switch should return");
+}
+
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void VPInstruction::dump() const {
   VPSlotTracker SlotTracker(getParent()->getPlan());
