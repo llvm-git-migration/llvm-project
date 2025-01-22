@@ -360,12 +360,6 @@ foreach( t ${LIBCLC_TARGETS_TO_BUILD} )
 
     set( clc_build_flags ${build_flags} -DCLC_INTERNAL )
 
-    # clspv and spir-v targets remap some CLC functions to OpenCL builtins.
-    # Automatically provide those declarations to the compiler for CLC builtins.
-    if ( ARCH STREQUAL spirv OR ARCH STREQUAL spirv64 OR ARCH STREQUAL clspv OR ARCH STREQUAL clspv64 )
-      list( APPEND clc_build_flags -Xclang -fdeclare-opencl-builtins )
-    endif()
-
     add_libclc_builtin_set(
       CLC_INTERNAL
       ARCH ${ARCH}
