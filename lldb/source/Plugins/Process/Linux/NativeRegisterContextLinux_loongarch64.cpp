@@ -36,6 +36,14 @@
   0xa03 /* LoongArch Advanced SIMD eXtension registers */
 #endif
 
+#ifndef NT_LOONGARCH_HW_BREAK
+#define NT_LOONGARCH_HW_BREAK	0xa05   /* LoongArch hardware breakpoint registers */
+#endif
+
+#ifndef NT_LOONGARCH_HW_WATCH
+#define NT_LOONGARCH_HW_WATCH	0xa06   /* LoongArch hardware watchpoint registers */
+#endif
+
 #define REG_CONTEXT_SIZE                                                       \
   (GetGPRSize() + GetFPRSize() + sizeof(m_lsx) + sizeof(m_lasx))
 
