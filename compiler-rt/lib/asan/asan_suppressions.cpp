@@ -26,9 +26,10 @@ static const char kInterceptorName[] = "interceptor_name";
 static const char kInterceptorViaFunction[] = "interceptor_via_fun";
 static const char kInterceptorViaLibrary[] = "interceptor_via_lib";
 static const char kODRViolation[] = "odr_violation";
+static const char kAllocDeallocMismatch[] = "alloc_dealloc_mismatch";
 static const char *kSuppressionTypes[] = {
     kInterceptorName, kInterceptorViaFunction, kInterceptorViaLibrary,
-    kODRViolation};
+    kODRViolation, kAllocDeallocMismatch};
 
 SANITIZER_INTERFACE_WEAK_DEF(const char *, __asan_default_suppressions, void) {
   return "";
@@ -52,7 +53,8 @@ bool IsInterceptorSuppressed(const char *interceptor_name) {
 bool HaveStackTraceBasedSuppressions() {
   CHECK(suppression_ctx);
   return suppression_ctx->HasSuppressionType(kInterceptorViaFunction) ||
-         suppression_ctx->HasSuppressionType(kInterceptorViaLibrary);
+         suppression_ctx->HasSuppressionType(kInterceptorViaLibrary) ||
+         suppression_ctx->HasSuppressionType(kAllocDeallocMismatch);
 }
 
 bool IsODRViolationSuppressed(const char *global_var_name) {
@@ -79,19 +81,22 @@ bool IsStackTraceSuppressed(const StackTrace *stack) {
           return true;
     }
 
-    if (suppression_ctx->HasSuppressionType(kInterceptorViaFunction)) {
-      SymbolizedStackHolder symbolized_stack(symbolizer->SymbolizePC(addr));
-      const SymbolizedStack *frames = symbolized_stack.get();
-      CHECK(frames);
-      for (const SymbolizedStack *cur = frames; cur; cur = cur->next) {
-        const char *function_name = cur->info.function;
-        if (!function_name) {
-          continue;
-        }
-        // Match "interceptor_via_fun" suppressions.
-        if (suppression_ctx->Match(function_name, kInterceptorViaFunction,
-                                   &s)) {
-          return true;
+    const char *suppressions[] = {kInterceptorViaFunction,
+                                  kAllocDeallocMismatch};
+    for (const char *suppression : suppressions) {
+      if (suppression_ctx->HasSuppressionType(suppression)) {
+        SymbolizedStackHolder symbolized_stack(symbolizer->SymbolizePC(addr));
+        const SymbolizedStack *frames = symbolized_stack.get();
+        CHECK(frames);
+        for (const SymbolizedStack *cur = frames; cur; cur = cur->next) {
+          const char *function_name = cur->info.function;
+          if (!function_name) {
+            continue;
+          }
+          // Match suppressions.
+          if (suppression_ctx->Match(function_name, suppression, &s)) {
+            return true;
+          }
         }
       }
     }
