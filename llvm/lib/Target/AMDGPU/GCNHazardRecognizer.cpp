@@ -150,6 +150,7 @@ static bool isSendMsgTraceDataOrGDS(const SIInstrInfo &TII,
   case AMDGPU::DS_NOP:
   case AMDGPU::DS_PERMUTE_B32:
   case AMDGPU::DS_BPERMUTE_B32:
+  case AMDGPU::DS_BPERMUTE_FI_B32:
     return false;
   default:
     if (TII.isDS(MI.getOpcode())) {
