@@ -128,6 +128,7 @@ using Int32Envar = Envar<int32_t>;
 using Int64Envar = Envar<int64_t>;
 using UInt32Envar = Envar<uint32_t>;
 using UInt64Envar = Envar<uint64_t>;
+using SizeTEnvar = Envar<size_t>;
 using StringEnvar = Envar<std::string>;
 using BoolEnvar = Envar<bool>;
 
