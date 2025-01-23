@@ -29,6 +29,7 @@
 #include "clang/Analysis/Analyses/CFGReachabilityAnalysis.h"
 #include "clang/Analysis/Analyses/CalledOnceCheck.h"
 #include "clang/Analysis/Analyses/Consumed.h"
+#include "clang/Analysis/Analyses/DanglingReference.h"
 #include "clang/Analysis/Analyses/ReachableCode.h"
 #include "clang/Analysis/Analyses/ThreadSafety.h"
 #include "clang/Analysis/Analyses/UninitializedValues.h"
@@ -2826,6 +2827,13 @@ void clang::sema::AnalysisBasedWarnings::IssueWarnings(
     }
   }
 
+  if (S.getLangOpts().CPlusPlus &&
+      !Diags.isIgnored(diag::warn_ret_stack_variable_ref_cfg,
+                       D->getBeginLoc())) {
+    if (CFG *cfg = AC.getCFG()) {
+      runDanglingReferenceAnalysis(*cast<DeclContext>(D), *cfg, AC, S);
+    }
+  }
   // Check for violations of "called once" parameter properties.
   if (S.getLangOpts().ObjC && !S.getLangOpts().CPlusPlus &&
       shouldAnalyzeCalledOnceParameters(Diags, D->getBeginLoc())) {
