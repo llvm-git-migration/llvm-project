@@ -509,6 +509,15 @@ func.func @wgmma_wait_group_sync_aligned() {
   return
 }
 
+// CHECK-LABEL: @mapa
+func.func @mapa(%a: !llvm.ptr, %a_shared: !llvm.ptr<3>, %b : i32) {
+  // CHECK:   nvvm.mapa %{{.*}}
+  %0 = nvvm.mapa %a, %b
+  // CHECK:   nvvm.mapa.shared.cluster %{{.*}}
+  %1 = nvvm.mapa.shared.cluster %a_shared, %b
+  return
+}
+
 // -----
 
 // Just check these don't emit errors.

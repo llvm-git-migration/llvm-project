@@ -2512,6 +2512,43 @@ def NVVM_WgmmaMmaAsyncOp : NVVM_Op<"wgmma.mma_async",
   }];
 }
 
+//===----------------------------------------------------------------------===//
+// NVVM Mapa Ops
+//===----------------------------------------------------------------------===//
+
+def NVVM_MapaOp : NVVM_IntrOp<"mapa", [], 1> {
+  let results = (outs LLVM_PointerGeneric:$res);
+  let arguments = (ins LLVM_PointerGeneric:$a, I32:$b);
+
+  let description = [{
+    Maps the generic address pointing to a shared memory variable in the 
+    target CTA. Source `a` and `res` are registers containing generic 
+    addresses pointing to shared memory. 
+    `b` is a 32-bit integer operand representing the rank of the target CTA. 
+    [For more information, see PTX ISA]
+    (https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-mapa)
+  }];
+    
+  let assemblyFormat ="$a`,` $b attr-dict";
+}
+
+def NVVM_MapaSharedClusterOp : NVVM_IntrOp<"mapa.shared.cluster", [], 1> {
+  let results = (outs LLVM_PointerShared:$res);
+  let arguments = (ins LLVM_PointerShared:$a, I32:$b);
+
+  let description = [{
+    Maps the address pointing to a shared memory variable in the target CTA. 
+    source `a` is either a shared memory variable or a register containing a 
+    valid shared memory address and register `res` contains a shared memory 
+    address. `b` is a 32-bit integer operand representing the rank of the 
+    target CTA.
+    [For more information, see PTX ISA]
+    (https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-mapa)
+  }];
+    
+  let assemblyFormat = "$a`,` $b attr-dict";
+}
+
 def NVVM_Exit : NVVM_Op<"exit"> {
   let summary = "Exit Op";
   let description = [{
