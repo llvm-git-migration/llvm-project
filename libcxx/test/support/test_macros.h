@@ -451,7 +451,7 @@ inline Tp const& DoNotOptimize(Tp const& value) {
 #  define TEST_HAS_NO_RANDOM_DEVICE
 #endif
 
-#if defined(_LIBCPP_HAS_NO_EXPERIMENTAL_TZDB)
+#if defined(_LIBCPP_VERSION) && !_LIBCPP_HAS_EXPERIMENTAL_TZDB
 #  define TEST_HAS_NO_EXPERIMENTAL_TZDB
 #endif
 
