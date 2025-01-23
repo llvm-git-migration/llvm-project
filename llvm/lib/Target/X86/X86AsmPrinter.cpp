@@ -920,6 +920,9 @@ void X86AsmPrinter::emitStartOfAsmFile(Module &M) {
     OutStreamer->emitSymbolAttribute(S, MCSA_Global);
     OutStreamer->emitAssignment(
         S, MCConstantExpr::create(Feat00Value, MMI->getContext()));
+
+    if (M.getModuleFlag("import-call-optimization"))
+      EnableImportCallOptimization = true;
   }
   OutStreamer->emitSyntaxDirective();
 
@@ -1021,6 +1024,35 @@ void X86AsmPrinter::emitEndOfAsmFile(Module &M) {
     // safe to set.
     OutStreamer->emitAssemblerFlag(MCAF_SubsectionsViaSymbols);
   } else if (TT.isOSBinFormatCOFF()) {
+    // If import call optimization is enabled, emit the appropriate section.
+    // We do this whether or not we recorded any items.
+    if (EnableImportCallOptimization) {
+      OutStreamer->switchSection(getObjFileLowering().getImportCallSection());
+
+      // Section always starts with some magic.
+      constexpr char ImpCallMagic[12] = "RetpolineV1";
+      OutStreamer->emitBytes(StringRef{ImpCallMagic, sizeof(ImpCallMagic)});
+
+      // Layout of this section is:
+      // Per section that contains an item to record:
+      //  uint32_t SectionSize: Size in bytes for information in this section.
+      //  uint32_t Section Number
+      //  Per call to imported function in section:
+      //    uint32_t Kind: the kind of item.
+      //    uint32_t InstOffset: the offset of the instr in its parent section.
+      for (auto &[Section, CallsToImportedFuncs] :
+           SectionToImportedFunctionCalls) {
+        unsigned SectionSize =
+            sizeof(uint32_t) * (2 + 2 * CallsToImportedFuncs.size());
+        OutStreamer->emitInt32(SectionSize);
+        OutStreamer->emitCOFFSecNumber(Section->getBeginSymbol());
+        for (auto &[CallsiteSymbol, Kind] : CallsToImportedFuncs) {
+          OutStreamer->emitInt32(Kind);
+          OutStreamer->emitCOFFSecOffset(CallsiteSymbol);
+        }
+      }
+    }
+
     if (usesMSVCFloatingPoint(TT, M)) {
       // In Windows' libcmt.lib, there is a file which is linked in only if the
       // symbol _fltused is referenced. Linking this in causes some
