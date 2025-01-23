@@ -53,7 +53,7 @@ private:
   std::optional<MachineOperand> getMinimumVLForUser(MachineOperand &UserOp);
   /// Returns the largest common VL MachineOperand that may be used to optimize
   /// MI. Returns std::nullopt if it failed to find a suitable VL.
-  std::optional<MachineOperand> checkUsers(MachineInstr &MI);
+  std::optional<MachineOperand> checkUsers(const MachineInstr &MI);
   bool tryReduceVL(MachineInstr &MI);
   bool isCandidate(const MachineInstr &MI) const;
 };
@@ -1221,7 +1221,8 @@ RISCVVLOptimizer::getMinimumVLForUser(MachineOperand &UserOp) {
   return VLOp;
 }
 
-std::optional<MachineOperand> RISCVVLOptimizer::checkUsers(MachineInstr &MI) {
+std::optional<MachineOperand>
+RISCVVLOptimizer::checkUsers(const MachineInstr &MI) {
   // FIXME: Avoid visiting each user for each time we visit something on the
   // worklist, combined with an extra visit from the outer loop. Restructure
   // along lines of an instcombine style worklist which integrates the outer
@@ -1235,15 +1236,20 @@ std::optional<MachineOperand> RISCVVLOptimizer::checkUsers(MachineInstr &MI) {
       return std::nullopt;
     }
 
-    // Tied operands might pass through.
-    if (UserOp.isTied()) {
-      LLVM_DEBUG(dbgs() << "    Abort because user used as tied operand\n");
-      return std::nullopt;
-    }
-
     auto VLOp = getMinimumVLForUser(UserOp);
     if (!VLOp)
       return std::nullopt;
+
+    // If the user is a passthru, we will need to preserve it if its tail is
+    // demanded.
+    if (UserOp.isTied()) {
+      auto DemandedVL = checkUsers(UserMI);
+      if (!DemandedVL || !RISCV::isVLKnownLE(*DemandedVL, *VLOp)) {
+        LLVM_DEBUG(dbgs() << "    Abort because user is passthru in "
+                             "instruction with demanded tail\n");
+        return std::nullopt;
+      }
+    }
 
     // Use the largest VL among all the users. If we cannot determine this
     // statically, then we cannot optimize the VL.
