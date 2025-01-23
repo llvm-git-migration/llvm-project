@@ -1926,6 +1926,8 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
   // Remove unused arguments from functions.
   MPM.addPass(DeadArgumentEliminationPass());
 
+  MPM.addPass(RelLookupTableConverterPass());
+
   // Reduce the code after globalopt and ipsccp.  Both can open up significant
   // simplification opportunities, and both can propagate functions through
   // function pointers.  When this happens, we often have to resolve varargs
