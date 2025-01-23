@@ -603,9 +603,6 @@ public:
     AU.addRequired<MachineLoopInfoWrapperPass>();
     RegAllocEvictionAdvisorAnalysisLegacy::getAnalysisUsage(AU);
   }
-
-private:
-  // std::unique_ptr<DevelopmentModeEvictionAdvisorProvider> Provider;
 };
 
 #endif // #ifdef LLVM_HAVE_TFLITE
