@@ -2121,6 +2121,8 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
   if (PTO.MergeFunctions)
     MPM.addPass(MergeFunctionsPass());
 
+  MPM.addPass(RelLookupTableConverterPass());
+
   if (PTO.CallGraphProfile)
     MPM.addPass(CGProfilePass(/*InLTOPostLink=*/true));
 
