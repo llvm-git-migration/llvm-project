@@ -402,6 +402,12 @@ Changes in existing checks
   <clang-tidy/checks/readability/use-std-min-max>` check to use correct template
   type in ``std::min`` and ``std::max`` when operand is integer literal.
 
+- Improved :doc:`google-readability-namespace-comments
+  <clang-tidy/checks/google/readability-namespace-comments>` that permits 
+  omitting namespace comments entirely. With this option enabled, the check
+  only fails if a namespace comment is present but does not match.
+
+
 Removed checks
 ^^^^^^^^^^^^^^
 
