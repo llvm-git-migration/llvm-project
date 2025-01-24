@@ -58,5 +58,9 @@ mlir::Value genGetEnvVariable(fir::FirOpBuilder &, mlir::Location,
 mlir::Value genGetCwd(fir::FirOpBuilder &builder, mlir::Location loc,
                       mlir::Value c);
 
+/// Generate a call to the Ierrno runtime function which implements
+/// the IERRNO intrinsic.
+mlir::Value genIerrno(fir::FirOpBuilder &, mlir::Location);
+
 } // namespace fir::runtime
 #endif // FORTRAN_OPTIMIZER_BUILDER_RUNTIME_COMMAND_H

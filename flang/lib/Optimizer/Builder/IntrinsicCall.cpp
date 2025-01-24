@@ -403,6 +403,7 @@ static constexpr IntrinsicHandler handlers[]{
     {"ieee_unordered", &I::genIeeeUnordered},
     {"ieee_value", &I::genIeeeValue},
     {"ieor", &I::genIeor},
+    {"ierrno", &I::genIerrno},
     {"index",
      &I::genIndex,
      {{{"string", asAddr},
@@ -5544,6 +5545,13 @@ mlir::Value IntrinsicLibrary::genIeor(mlir::Type resultType,
   assert(args.size() == 2);
   return builder.createUnsigned<mlir::arith::XOrIOp>(loc, resultType, args[0],
                                                      args[1]);
+}
+
+// IERRNO
+mlir::Value IntrinsicLibrary::genIerrno(mlir::Type resultType,
+                                        llvm::ArrayRef<mlir::Value> args) {
+  assert(args.size() == 0);
+  return fir::runtime::genIerrno(builder, loc);
 }
 
 // INDEX

@@ -591,6 +591,7 @@ static const IntrinsicInterface genericIntrinsicFunction[]{
         {{"i", OperandUnsigned}, {"j", OperandUnsigned, Rank::elementalOrBOZ}},
         OperandUnsigned},
     {"ieor", {{"i", BOZ}, {"j", SameIntOrUnsigned}}, SameIntOrUnsigned},
+    {"ierrno", {}, DefaultInt},
     {"image_index",
         {{"coarray", AnyData, Rank::coarray}, {"sub", AnyInt, Rank::vector}},
         DefaultInt, Rank::scalar, IntrinsicClass::transformationalFunction},

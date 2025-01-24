@@ -101,3 +101,11 @@ mlir::Value fir::runtime::genGetCwd(fir::FirOpBuilder &builder,
       builder, loc, runtimeFuncTy, cwd, sourceFile, sourceLine);
   return builder.create<fir::CallOp>(loc, func, args).getResult(0);
 }
+
+mlir::Value fir::runtime::genIerrno(fir::FirOpBuilder &builder,
+                                    mlir::Location loc) {
+  auto runtimeFunc =
+      fir::runtime::getRuntimeFunc<mkRTKey(Ierrno)>(loc, builder);
+  mlir::FunctionType runtimeFuncTy = runtimeFunc.getFunctionType();
+  return builder.create<fir::CallOp>(loc, runtimeFunc).getResult(0);
+}

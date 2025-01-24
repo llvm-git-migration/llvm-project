@@ -59,6 +59,10 @@ std::int32_t RTNAME(GetEnvVariable)(const Descriptor &name,
 // Calls getcwd()
 std::int32_t RTNAME(GetCwd)(
     const Descriptor &cwd, const char *sourceFile, int line);
+
+// IERRNO
+// Returns the last system error number, as given by the C errno variable.
+int RTNAME(Ierrno)();
 }
 } // namespace Fortran::runtime
 

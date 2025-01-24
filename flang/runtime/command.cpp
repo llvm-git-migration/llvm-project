@@ -261,4 +261,6 @@ std::int32_t RTNAME(GetCwd)(
   return status;
 }
 
+int RTNAME(Ierrno)() { return errno; }
+
 } // namespace Fortran::runtime

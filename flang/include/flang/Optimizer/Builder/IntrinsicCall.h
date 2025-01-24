@@ -307,6 +307,8 @@ struct IntrinsicLibrary {
   mlir::Value genIeor(mlir::Type, llvm::ArrayRef<mlir::Value>);
   fir::ExtendedValue genIndex(mlir::Type, llvm::ArrayRef<fir::ExtendedValue>);
   mlir::Value genIor(mlir::Type, llvm::ArrayRef<mlir::Value>);
+  mlir::Value genIerrno(mlir::Type resultType,
+                        llvm::ArrayRef<mlir::Value> args);
   fir::ExtendedValue genIparity(mlir::Type, llvm::ArrayRef<fir::ExtendedValue>);
   fir::ExtendedValue genIsContiguous(mlir::Type,
                                      llvm::ArrayRef<fir::ExtendedValue>);
