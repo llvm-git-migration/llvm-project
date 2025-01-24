@@ -80,6 +80,7 @@ public:
   void constrainAsLaneMask(Incoming &In) override;
 
   bool lowerTempDivergence();
+  bool lowerTempDivergenceI1();
 };
 
 DivergenceLoweringHelper::DivergenceLoweringHelper(
@@ -221,6 +222,54 @@ bool DivergenceLoweringHelper::lowerTempDivergence() {
   return false;
 }
 
+bool DivergenceLoweringHelper::lowerTempDivergenceI1() {
+  MachineRegisterInfo::VRegAttrs BoolS1 = {ST->getBoolRC(), LLT::scalar(1)};
+  initializeLaneMaskRegisterAttributes(BoolS1);
+
+  for (auto [Inst, UseInst, Cycle] : MUI->get_TDCs()) {
+    Register Reg = Inst->getOperand(0).getReg();
+    if (MRI->getType(Reg) != LLT::scalar(1))
+      continue;
+
+    Register MergedMask = MRI->createVirtualRegister(BoolS1);
+    Register PrevIterMask = MRI->createVirtualRegister(BoolS1);
+
+    MachineBasicBlock *CycleHeaderMBB = Cycle->getHeader();
+    SmallVector<MachineBasicBlock *, 1> ExitingBlocks;
+    Cycle->getExitingBlocks(ExitingBlocks);
+    assert(ExitingBlocks.size() == 1);
+    MachineBasicBlock *CycleExitingMBB = ExitingBlocks[0];
+
+    B.setInsertPt(*CycleHeaderMBB, CycleHeaderMBB->begin());
+    auto CrossIterPHI = B.buildInstr(AMDGPU::PHI).addDef(PrevIterMask);
+
+    // We only care about cycle iterration path - merge Reg with previous
+    // iteration. For other incomings use implicit def.
+    // Predecessors should be CyclePredecessor and CycleExitingMBB.
+    // In older versions of irreducible control flow lowering there could be
+    // cases with more predecessors. To keep this lowering as generic as
+    // possible also handle those cases.
+    for (auto MBB : CycleHeaderMBB->predecessors()) {
+      if (MBB == CycleExitingMBB) {
+        CrossIterPHI.addReg(MergedMask);
+      } else {
+        B.setInsertPt(*MBB, MBB->getFirstTerminator());
+        auto ImplDef = B.buildInstr(AMDGPU::IMPLICIT_DEF, {BoolS1}, {});
+        CrossIterPHI.addReg(ImplDef.getReg(0));
+      }
+      CrossIterPHI.addMBB(MBB);
+    }
+
+    buildMergeLaneMasks(*CycleExitingMBB, CycleExitingMBB->getFirstTerminator(),
+                        {}, MergedMask, PrevIterMask, Reg);
+
+    replaceUsesOfRegInInstWith(Reg, const_cast<MachineInstr *>(UseInst),
+                               MergedMask);
+  }
+
+  return false;
+}
+
 } // End anonymous namespace.
 
 INITIALIZE_PASS_BEGIN(AMDGPUGlobalISelDivergenceLowering, DEBUG_TYPE,
@@ -260,6 +309,12 @@ bool AMDGPUGlobalISelDivergenceLowering::runOnMachineFunction(
 
   // Non-i1 temporal divergence lowering.
   Changed |= Helper.lowerTempDivergence();
+  // This covers both uniform and divergent i1s. Lane masks are in sgpr and need
+  // to be updated in each iteration.
+  Changed |= Helper.lowerTempDivergenceI1();
+  // Temporal divergence lowering of divergent i1 phi used outside of the cycle
+  // could also be handled by lowerPhis but we do it in lowerTempDivergenceI1
+  // since in some case lowerPhis does unnecessary lane mask merging.
   Changed |= Helper.lowerPhis();
   return Changed;
 }
