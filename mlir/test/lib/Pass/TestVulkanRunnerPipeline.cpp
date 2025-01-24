@@ -26,6 +26,14 @@
 
 using namespace mlir;
 
+// Defined in the test directory, no public header.
+namespace mlir {
+namespace test {
+std::unique_ptr<Pass> createTestConvertToSPIRVPass(bool convertGPUModules,
+                                                   bool nestInGPUModule);
+}
+} // namespace mlir
+
 namespace {
 
 struct VulkanRunnerPipelineOptions
@@ -47,10 +55,8 @@ void buildTestVulkanRunnerPipeline(OpPassManager &passManager,
       "SPV_KHR_storage_buffer_storage_class");
   passManager.addPass(createGpuSPIRVAttachTarget(attachTargetOptions));
 
-  ConvertToSPIRVPassOptions convertToSPIRVOptions{};
-  convertToSPIRVOptions.convertGPUModules = true;
-  convertToSPIRVOptions.nestInGPUModule = true;
-  passManager.addPass(createConvertToSPIRVPass(convertToSPIRVOptions));
+  passManager.addPass(test::createTestConvertToSPIRVPass(
+      /*convertGPUModules=*/true, /*nestInGPUModule=*/true));
 
   OpPassManager &spirvModulePM =
       passManager.nest<gpu::GPUModuleOp>().nest<spirv::ModuleOp>();
