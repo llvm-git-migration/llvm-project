@@ -512,8 +512,25 @@ LogicalResult LoadGatherOp::verify() {
 
   if (tdescTy.getRank() == 2) {
     if (!getTransposeAttr())
-      return emitOpError("load_gather has to be transposed.");
+      return emitOpError("load has to be transposed.");
     transpose({1, 0}, tdescShape);
+  }
+
+  if (auto sgMap = tdescTy.getSGMapAttr()) {
+    auto valueVecTy = cast<VectorType>(valueTy);
+    const int32_t wiData =
+        sgMap.getWiData()[0] > 1 ? sgMap.getWiData()[0] : sgMap.getWiData()[1];
+    if (valueVecTy.getRank() != 1)
+      return emitOpError("Load in SIMT should return a 1D vector.");
+    if (valueVecTy.getDimSize(0) != wiData ||
+        valueVecTy.getDimSize(0) != tdescTy.getChunkSize()) {
+      return emitOpError("Chunk size, vector size and wi_data must match.");
+    }
+    if (tdescTy.getRank() == 1) {
+      tdescShape = {1};
+    } else {
+      tdescShape = {tdescShape[0]};
+    }
   }
 
   if (valueShape != tdescShape)
@@ -551,8 +568,25 @@ LogicalResult StoreScatterOp::verify() {
 
   if (tdescTy.getRank() == 2) {
     if (!getTransposeAttr())
-      return emitOpError("load_gather has to be transposed.");
+      return emitOpError("Store op has to be transposed.");
     transpose({1, 0}, tdescShape);
+  }
+
+  if (auto sgMap = tdescTy.getSGMapAttr()) {
+    auto valueVecTy = cast<VectorType>(valueTy);
+    const int32_t wiData =
+        sgMap.getWiData()[0] > 1 ? sgMap.getWiData()[0] : sgMap.getWiData()[1];
+    if (valueVecTy.getRank() != 1)
+      return emitOpError("Store in SIMT should return a 1D vector.");
+    if (valueVecTy.getDimSize(0) != wiData ||
+        valueVecTy.getDimSize(0) != tdescTy.getChunkSize()) {
+      return emitOpError("Chunk size, vector size and wi_data must match.");
+    }
+    if (tdescTy.getRank() == 1) {
+      tdescShape = {1};
+    } else {
+      tdescShape = {tdescShape[0]};
+    }
   }
 
   if (valueShape != tdescShape)
