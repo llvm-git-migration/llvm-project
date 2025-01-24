@@ -342,6 +342,10 @@ public:
       typename SyncDependenceAnalysisT::DivergenceDescriptor;
   using BlockLabelMapT = typename SyncDependenceAnalysisT::BlockLabelMap;
 
+  // Use outside cycle with divergent exit
+  using UOCWDE =
+      std::tuple<const InstructionT *, const InstructionT *, const CycleT *>;
+
   GenericUniformityAnalysisImpl(const DominatorTreeT &DT, const CycleInfoT &CI,
                                 const TargetTransformInfo *TTI)
       : Context(CI.getSSAContext()), F(*Context.getFunction()), CI(CI),
@@ -395,6 +399,14 @@ public:
   }
 
   void print(raw_ostream &out) const;
+  SmallVector<UOCWDE, 8> UsesOutsideCycleWithDivergentExit;
+  void recordUseOutsideCycleWithDivergentExit(const InstructionT *,
+                                              const InstructionT *,
+                                              const CycleT *);
+  inline iterator_range<UOCWDE *> getUsesOutsideCycleWithDivergentExit() const {
+    return make_range(UsesOutsideCycleWithDivergentExit.begin(),
+                      UsesOutsideCycleWithDivergentExit.end());
+  }
 
 protected:
   /// \brief Value/block pair representing a single phi input.
@@ -1130,6 +1142,14 @@ void GenericUniformityAnalysisImpl<ContextT>::compute() {
 }
 
 template <typename ContextT>
+void GenericUniformityAnalysisImpl<
+    ContextT>::recordUseOutsideCycleWithDivergentExit(const InstructionT *Inst,
+                                                      const InstructionT *User,
+                                                      const CycleT *Cycle) {
+  UsesOutsideCycleWithDivergentExit.emplace_back(Inst, User, Cycle);
+}
+
+template <typename ContextT>
 bool GenericUniformityAnalysisImpl<ContextT>::isAlwaysUniform(
     const InstructionT &Instr) const {
   return UniformOverrides.contains(&Instr);
@@ -1180,6 +1200,16 @@ void GenericUniformityAnalysisImpl<ContextT>::print(raw_ostream &OS) const {
     }
   }
 
+  if (!UsesOutsideCycleWithDivergentExit.empty()) {
+    OS << "\nUSES OUTSIDE CYCLES WITH DIVERGENT EXIT:\n";
+
+    for (auto [Inst, UseInst, Cycle] : UsesOutsideCycleWithDivergentExit) {
+      OS << "Inst    :" << Context.print(Inst)
+         << "Used by :" << Context.print(UseInst)
+         << "Outside cycle :" << Cycle->print(Context) << "\n\n";
+    }
+  }
+
   for (auto &block : F) {
     OS << "\nBLOCK " << Context.print(&block) << '\n';
 
@@ -1208,6 +1238,13 @@ void GenericUniformityAnalysisImpl<ContextT>::print(raw_ostream &OS) const {
 
     OS << "END BLOCK\n";
   }
+}
+
+template <typename ContextT>
+iterator_range<typename GenericUniformityInfo<ContextT>::UOCWDE *>
+GenericUniformityInfo<ContextT>::getUsesOutsideCycleWithDivergentExit() const {
+  return make_range(DA->UsesOutsideCycleWithDivergentExit.begin(),
+                    DA->UsesOutsideCycleWithDivergentExit.end());
 }
 
 template <typename ContextT>

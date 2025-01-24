@@ -40,6 +40,10 @@ public:
   using CycleInfoT = GenericCycleInfo<ContextT>;
   using CycleT = typename CycleInfoT::CycleT;
 
+  // Use outside cycle with divergent exit
+  using UOCWDE =
+      std::tuple<const InstructionT *, const InstructionT *, const CycleT *>;
+
   GenericUniformityInfo(const DominatorTreeT &DT, const CycleInfoT &CI,
                         const TargetTransformInfo *TTI = nullptr);
   GenericUniformityInfo() = default;
@@ -77,6 +81,8 @@ public:
   bool hasDivergentTerminator(const BlockT &B);
 
   void print(raw_ostream &Out) const;
+
+  iterator_range<UOCWDE *> getUsesOutsideCycleWithDivergentExit() const;
 
 private:
   using ImplT = GenericUniformityAnalysisImpl<ContextT>;

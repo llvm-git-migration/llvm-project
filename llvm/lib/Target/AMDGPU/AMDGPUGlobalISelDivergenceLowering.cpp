@@ -16,6 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
+#include "AMDGPUGlobalISelUtils.h"
 #include "SILowerI1Copies.h"
 #include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -45,7 +46,6 @@ public:
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.setPreservesCFG();
     AU.addRequired<MachineDominatorTreeWrapperPass>();
     AU.addRequired<MachinePostDominatorTreeWrapperPass>();
     AU.addRequired<MachineUniformityAnalysisPass>();
@@ -78,6 +78,8 @@ public:
                            Register DstReg, Register PrevReg,
                            Register CurReg) override;
   void constrainAsLaneMask(Incoming &In) override;
+
+  bool lowerTempDivergence();
 };
 
 DivergenceLoweringHelper::DivergenceLoweringHelper(
@@ -188,6 +190,37 @@ void DivergenceLoweringHelper::constrainAsLaneMask(Incoming &In) {
   In.Reg = Copy.getReg(0);
 }
 
+void replaceUsesOfRegInInstWith(Register Reg, MachineInstr *Inst,
+                                Register NewReg) {
+  for (MachineOperand &Op : Inst->operands()) {
+    if (Op.isReg() && Op.getReg() == Reg)
+      Op.setReg(NewReg);
+  }
+}
+
+bool DivergenceLoweringHelper::lowerTempDivergence() {
+  AMDGPU::IntrinsicLaneMaskAnalyzer ILMA(*MF);
+
+  for (auto [Inst, UseInst, _] : MUI->getUsesOutsideCycleWithDivergentExit()) {
+    Register Reg = Inst->getOperand(0).getReg();
+    if (MRI->getType(Reg) == LLT::scalar(1) || MUI->isDivergent(Reg) ||
+        ILMA.isS32S64LaneMask(Reg))
+      continue;
+
+    MachineInstr *MI = const_cast<MachineInstr *>(Inst);
+    MachineBasicBlock *MBB = MI->getParent();
+    B.setInsertPt(*MBB, MBB->SkipPHIsAndLabels(std::next(MI->getIterator())));
+
+    Register VgprReg = MRI->createGenericVirtualRegister(MRI->getType(Reg));
+    B.buildInstr(AMDGPU::COPY, {VgprReg}, {Reg})
+        .addUse(ExecReg, RegState::Implicit);
+
+    replaceUsesOfRegInInstWith(Reg, const_cast<MachineInstr *>(UseInst),
+                               VgprReg);
+  }
+  return false;
+}
+
 } // End anonymous namespace.
 
 INITIALIZE_PASS_BEGIN(AMDGPUGlobalISelDivergenceLowering, DEBUG_TYPE,
@@ -218,5 +251,15 @@ bool AMDGPUGlobalISelDivergenceLowering::runOnMachineFunction(
 
   DivergenceLoweringHelper Helper(&MF, &DT, &PDT, &MUI);
 
-  return Helper.lowerPhis();
+  bool Changed = false;
+  // Temporal divergence lowering needs to inspect list of instructions used
+  // outside cycle with divergent exit provided by uniformity analysis. Uniform
+  // instructions from the list require lowering, no instruction is deleted.
+  // Thus it needs to be run before lowerPhis that deletes phis that require
+  // lowering and replaces them with new instructions.
+
+  // Non-i1 temporal divergence lowering.
+  Changed |= Helper.lowerTempDivergence();
+  Changed |= Helper.lowerPhis();
+  return Changed;
 }
