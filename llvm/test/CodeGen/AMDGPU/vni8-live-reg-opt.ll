@@ -8,20 +8,14 @@ define amdgpu_kernel void @v3i8_liveout(ptr addrspace(1) %src1, ptr addrspace(1)
 ; GFX906-NEXT:    [[IDX:%.*]] = call i32 @llvm.amdgcn.workitem.id.x()
 ; GFX906-NEXT:    [[GEP1:%.*]] = getelementptr <3 x i8>, ptr addrspace(1) [[SRC1]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC1:%.*]] = load <3 x i8>, ptr addrspace(1) [[GEP1]], align 4
-; GFX906-NEXT:    [[TMP0:%.*]] = shufflevector <3 x i8> [[VEC1]], <3 x i8> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; GFX906-NEXT:    [[VEC1_BC:%.*]] = bitcast <4 x i8> [[TMP0]] to i32
 ; GFX906-NEXT:    [[GEP2:%.*]] = getelementptr <3 x i8>, ptr addrspace(1) [[SRC2]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC2:%.*]] = load <3 x i8>, ptr addrspace(1) [[GEP2]], align 4
-; GFX906-NEXT:    [[TMP1:%.*]] = shufflevector <3 x i8> [[VEC2]], <3 x i8> poison, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-; GFX906-NEXT:    [[VEC2_BC:%.*]] = bitcast <4 x i8> [[TMP1]] to i32
 ; GFX906-NEXT:    [[CMP:%.*]] = icmp ult i32 [[IDX]], 15
 ; GFX906-NEXT:    br i1 [[CMP]], label [[BB_1:%.*]], label [[BB_2:%.*]]
 ; GFX906:       bb.1:
 ; GFX906-NEXT:    br label [[BB_2]]
 ; GFX906:       bb.2:
-; GFX906-NEXT:    [[TMP5_TC:%.*]] = phi i32 [ [[VEC1_BC]], [[ENTRY:%.*]] ], [ [[VEC2_BC]], [[BB_1]] ]
-; GFX906-NEXT:    [[TMP2:%.*]] = trunc i32 [[TMP5_TC]] to i24
-; GFX906-NEXT:    [[TMP3:%.*]] = bitcast i24 [[TMP2]] to <3 x i8>
+; GFX906-NEXT:    [[TMP3:%.*]] = phi <3 x i8> [ [[VEC1]], [[ENTRY:%.*]] ], [ [[VEC2]], [[BB_1]] ]
 ; GFX906-NEXT:    store <3 x i8> [[TMP3]], ptr addrspace(1) [[DST]], align 4
 ; GFX906-NEXT:    ret void
 ;
@@ -49,17 +43,14 @@ define amdgpu_kernel void @v4i8_liveout(ptr addrspace(1) %src1, ptr addrspace(1)
 ; GFX906-NEXT:    [[IDX:%.*]] = call i32 @llvm.amdgcn.workitem.id.x()
 ; GFX906-NEXT:    [[GEP1:%.*]] = getelementptr <4 x i8>, ptr addrspace(1) [[SRC1]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC1:%.*]] = load <4 x i8>, ptr addrspace(1) [[GEP1]], align 4
-; GFX906-NEXT:    [[VEC1_BC:%.*]] = bitcast <4 x i8> [[VEC1]] to i32
 ; GFX906-NEXT:    [[GEP2:%.*]] = getelementptr <4 x i8>, ptr addrspace(1) [[SRC2]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC2:%.*]] = load <4 x i8>, ptr addrspace(1) [[GEP2]], align 4
-; GFX906-NEXT:    [[VEC2_BC:%.*]] = bitcast <4 x i8> [[VEC2]] to i32
 ; GFX906-NEXT:    [[CMP:%.*]] = icmp ult i32 [[IDX]], 15
 ; GFX906-NEXT:    br i1 [[CMP]], label [[BB_1:%.*]], label [[BB_2:%.*]]
 ; GFX906:       bb.1:
 ; GFX906-NEXT:    br label [[BB_2]]
 ; GFX906:       bb.2:
-; GFX906-NEXT:    [[TMP5_TC:%.*]] = phi i32 [ [[VEC1_BC]], [[ENTRY:%.*]] ], [ [[VEC2_BC]], [[BB_1]] ]
-; GFX906-NEXT:    [[TMP5_TC_BC:%.*]] = bitcast i32 [[TMP5_TC]] to <4 x i8>
+; GFX906-NEXT:    [[TMP5_TC_BC:%.*]] = phi <4 x i8> [ [[VEC1]], [[ENTRY:%.*]] ], [ [[VEC2]], [[BB_1]] ]
 ; GFX906-NEXT:    store <4 x i8> [[TMP5_TC_BC]], ptr addrspace(1) [[DST]], align 4
 ; GFX906-NEXT:    ret void
 ;
@@ -87,20 +78,14 @@ define amdgpu_kernel void @v5i8_liveout(ptr addrspace(1) %src1, ptr addrspace(1)
 ; GFX906-NEXT:    [[IDX:%.*]] = call i32 @llvm.amdgcn.workitem.id.x()
 ; GFX906-NEXT:    [[GEP1:%.*]] = getelementptr <5 x i8>, ptr addrspace(1) [[SRC1]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC1:%.*]] = load <5 x i8>, ptr addrspace(1) [[GEP1]], align 8
-; GFX906-NEXT:    [[TMP0:%.*]] = shufflevector <5 x i8> [[VEC1]], <5 x i8> poison, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 5, i32 5>
-; GFX906-NEXT:    [[VEC1_BC:%.*]] = bitcast <8 x i8> [[TMP0]] to <2 x i32>
 ; GFX906-NEXT:    [[GEP2:%.*]] = getelementptr <5 x i8>, ptr addrspace(1) [[SRC2]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC2:%.*]] = load <5 x i8>, ptr addrspace(1) [[GEP2]], align 8
-; GFX906-NEXT:    [[TMP1:%.*]] = shufflevector <5 x i8> [[VEC2]], <5 x i8> poison, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 5, i32 5>
-; GFX906-NEXT:    [[VEC2_BC:%.*]] = bitcast <8 x i8> [[TMP1]] to <2 x i32>
 ; GFX906-NEXT:    [[CMP:%.*]] = icmp ult i32 [[IDX]], 15
 ; GFX906-NEXT:    br i1 [[CMP]], label [[BB_1:%.*]], label [[BB_2:%.*]]
 ; GFX906:       bb.1:
 ; GFX906-NEXT:    br label [[BB_2]]
 ; GFX906:       bb.2:
-; GFX906-NEXT:    [[TMP5_TC:%.*]] = phi <2 x i32> [ [[VEC1_BC]], [[ENTRY:%.*]] ], [ [[VEC2_BC]], [[BB_1]] ]
-; GFX906-NEXT:    [[TMP2:%.*]] = bitcast <2 x i32> [[TMP5_TC]] to <8 x i8>
-; GFX906-NEXT:    [[TMP3:%.*]] = shufflevector <8 x i8> [[TMP2]], <8 x i8> poison, <5 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4>
+; GFX906-NEXT:    [[TMP3:%.*]] = phi <5 x i8> [ [[VEC1]], [[ENTRY:%.*]] ], [ [[VEC2]], [[BB_1]] ]
 ; GFX906-NEXT:    store <5 x i8> [[TMP3]], ptr addrspace(1) [[DST]], align 4
 ; GFX906-NEXT:    ret void
 ;
@@ -166,10 +151,8 @@ define amdgpu_kernel void @repeat_successor(i32 %in, ptr addrspace(1) %src1, ptr
 ; GFX906-NEXT:    [[IDX:%.*]] = call i32 @llvm.amdgcn.workitem.id.x()
 ; GFX906-NEXT:    [[GEP1:%.*]] = getelementptr <4 x i8>, ptr addrspace(1) [[SRC1]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC1:%.*]] = load <4 x i8>, ptr addrspace(1) [[GEP1]], align 4
-; GFX906-NEXT:    [[VEC1_BC:%.*]] = bitcast <4 x i8> [[VEC1]] to i32
 ; GFX906-NEXT:    [[GEP2:%.*]] = getelementptr <4 x i8>, ptr addrspace(1) [[SRC2]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC2:%.*]] = load <4 x i8>, ptr addrspace(1) [[GEP2]], align 4
-; GFX906-NEXT:    [[VEC2_BC:%.*]] = bitcast <4 x i8> [[VEC2]] to i32
 ; GFX906-NEXT:    switch i32 [[IN]], label [[RETURN:%.*]] [
 ; GFX906-NEXT:      i32 1, label [[RETURN_SINK_SPLIT:%.*]]
 ; GFX906-NEXT:      i32 2, label [[RETURN_SINK_SPLIT]]
@@ -178,8 +161,7 @@ define amdgpu_kernel void @repeat_successor(i32 %in, ptr addrspace(1) %src1, ptr
 ; GFX906:       sw.bb5:
 ; GFX906-NEXT:    br label [[RETURN_SINK_SPLIT]]
 ; GFX906:       return.sink.split:
-; GFX906-NEXT:    [[TMP5_TC:%.*]] = phi i32 [ [[VEC2_BC]], [[SW_BB5]] ], [ [[VEC1_BC]], [[ENTRY:%.*]] ], [ [[VEC1_BC]], [[ENTRY]] ]
-; GFX906-NEXT:    [[TMP5_TC_BC:%.*]] = bitcast i32 [[TMP5_TC]] to <4 x i8>
+; GFX906-NEXT:    [[TMP5_TC_BC:%.*]] = phi <4 x i8> [ [[VEC2]], [[SW_BB5]] ], [ [[VEC1]], [[ENTRY:%.*]] ], [ [[VEC1]], [[ENTRY]] ]
 ; GFX906-NEXT:    store <4 x i8> [[TMP5_TC_BC]], ptr addrspace(1) [[DST]], align 4
 ; GFX906-NEXT:    ret void
 ; GFX906:       return:
@@ -314,14 +296,11 @@ define amdgpu_kernel void @v32i8_loop_carried(ptr addrspace(1) %src1, ptr addrsp
 ; GFX906-NEXT:    [[IDX:%.*]] = call i32 @llvm.amdgcn.workitem.id.x()
 ; GFX906-NEXT:    [[GEP1:%.*]] = getelementptr <32 x i8>, ptr addrspace(1) [[SRC1]], i32 [[IDX]]
 ; GFX906-NEXT:    [[VEC1:%.*]] = load <4 x i8>, ptr addrspace(1) [[GEP1]], align 4
-; GFX906-NEXT:    [[VEC1_BC:%.*]] = bitcast <4 x i8> [[VEC1]] to i32
 ; GFX906-NEXT:    br label [[BB_1:%.*]]
 ; GFX906:       bb.1:
-; GFX906-NEXT:    [[TEMP_TC:%.*]] = phi i32 [ [[VEC1_BC]], [[ENTRY:%.*]] ], [ [[VEC2_BC:%.*]], [[BB_1]] ]
-; GFX906-NEXT:    [[TEMP_TC_BC:%.*]] = bitcast i32 [[TEMP_TC]] to <4 x i8>
-; GFX906-NEXT:    [[VEC1_BC_BC:%.*]] = bitcast i32 [[VEC1_BC]] to <4 x i8>
-; GFX906-NEXT:    [[VEC2:%.*]] = shufflevector <4 x i8> [[VEC1_BC_BC]], <4 x i8> [[TEMP_TC_BC]], <4 x i32> <i32 0, i32 2, i32 4, i32 6>
-; GFX906-NEXT:    [[VEC2_BC]] = bitcast <4 x i8> [[VEC2]] to i32
+; GFX906-NEXT:    [[TEMP:%.*]] = phi <4 x i8> [ [[VEC1]], [[ENTRY:%.*]] ], [ [[VEC2:%.*]], [[BB_1]] ]
+; GFX906-NEXT:    [[VEC2]] = shufflevector <4 x i8> [[VEC1]], <4 x i8> [[TEMP]], <4 x i32> <i32 0, i32 2, i32 4, i32 6>
+; GFX906-NEXT:    [[VEC2_BC:%.*]] = bitcast <4 x i8> [[VEC2]] to i32
 ; GFX906-NEXT:    [[CMP:%.*]] = icmp ult i32 [[IDX]], 15
 ; GFX906-NEXT:    br i1 [[CMP]], label [[BB_1]], label [[BB_2:%.*]]
 ; GFX906:       0:
@@ -402,12 +381,10 @@ define amdgpu_kernel void @reuseOp() {
 ; GFX906:       bb.1:
 ; GFX906-NEXT:    [[VEC1_BC_BC:%.*]] = bitcast <4 x i32> [[VEC1_BC]] to <16 x i8>
 ; GFX906-NEXT:    [[SEL0:%.*]] = select i1 false, <16 x i8> zeroinitializer, <16 x i8> zeroinitializer
-; GFX906-NEXT:    [[SEL0_BC:%.*]] = bitcast <16 x i8> [[SEL0]] to <4 x i32>
 ; GFX906-NEXT:    [[SEL1:%.*]] = select i1 false, <16 x i8> [[VEC1_BC_BC]], <16 x i8> [[SEL0]]
 ; GFX906-NEXT:    br label [[BB_2:%.*]]
 ; GFX906:       bb.2:
-; GFX906-NEXT:    [[SEL0_BC_BC:%.*]] = bitcast <4 x i32> [[SEL0_BC]] to <16 x i8>
-; GFX906-NEXT:    [[VAL:%.*]] = extractelement <16 x i8> [[SEL0_BC_BC]], i64 0
+; GFX906-NEXT:    [[VAL:%.*]] = extractelement <16 x i8> [[SEL0]], i64 0
 ; GFX906-NEXT:    ret void
 ;
 entry:
