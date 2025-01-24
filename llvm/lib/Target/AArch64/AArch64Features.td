@@ -809,6 +809,9 @@ def FeatureUseFixedOverScalableIfEqualCost: SubtargetFeature<"use-fixed-over-sca
   "UseFixedOverScalableIfEqualCost", "true",
   "Prefer fixed width loop vectorization over scalable if the cost-model assigns equal costs">;
 
+def FeatureAvoidLDAPUR: SubtargetFeature<"avoid-ldapur", "AvoidLDAPUR", "true",
+  "Prefer add+ldapr to offset ldapur">;
+
 //===----------------------------------------------------------------------===//
 // Architectures.
 //
