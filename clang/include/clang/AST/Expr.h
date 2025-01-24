@@ -2262,6 +2262,16 @@ protected:
   }
 
 public:
+  enum OnStack_t { OnStack };
+  UnaryOperator(OnStack_t _, const ASTContext &Ctx, Expr *input, Opcode opc,
+                QualType type, ExprValueKind VK, ExprObjectKind OK,
+                SourceLocation l, bool CanOverflow,
+                FPOptionsOverride FPFeatures)
+      : UnaryOperator(Ctx, input, opc, type, VK, OK, l, CanOverflow,
+                      FPFeatures) {
+    assert(!FPFeatures.requiresTrailingStorage());
+  }
+
   static UnaryOperator *CreateEmpty(const ASTContext &C, bool hasFPFeatures);
 
   static UnaryOperator *Create(const ASTContext &C, Expr *input, Opcode opc,

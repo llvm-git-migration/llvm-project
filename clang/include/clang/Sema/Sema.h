@@ -11753,6 +11753,8 @@ public:
   /// If an error occurred, it returns ExprError(); otherwise, it
   /// returns the converted template argument. \p ParamType is the
   /// type of the non-type template parameter after it has been instantiated.
+  /// \p Arg is the input template argument expression to be converted.
+  /// this expression may not necessarily outlive the converted result.
   ExprResult CheckTemplateArgument(NonTypeTemplateParmDecl *Param,
                                    QualType InstantiatedParamType, Expr *Arg,
                                    TemplateArgument &SugaredConverted,
