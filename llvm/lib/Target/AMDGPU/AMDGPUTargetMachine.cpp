@@ -1366,7 +1366,8 @@ bool GCNPassConfig::addPreISel() {
   // control flow modifications.
   addPass(createAMDGPURewriteUndefForPHILegacyPass());
 
-  addPass(createLCSSAPass());
+  if (!getCGPassBuilderOption().EnableGlobalISelOption)
+    addPass(createLCSSAPass());
 
   if (TM->getOptLevel() > CodeGenOptLevel::Less)
     addPass(&AMDGPUPerfHintAnalysisLegacyID);
@@ -2062,7 +2063,8 @@ void AMDGPUCodeGenPassBuilder::addPreISel(AddIRPass &addPass) const {
   // control flow modifications.
   addPass(AMDGPURewriteUndefForPHIPass());
 
-  addPass(LCSSAPass());
+  if (!getCGPassBuilderOption().EnableGlobalISelOption)
+    addPass(LCSSAPass());
 
   if (TM.getOptLevel() > CodeGenOptLevel::Less)
     addPass(AMDGPUPerfHintAnalysisPass(TM));
