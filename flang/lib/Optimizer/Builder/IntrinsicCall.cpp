@@ -185,6 +185,10 @@ static constexpr IntrinsicHandler handlers[]{
     {"c_ptr_ne", &I::genCPtrCompare<mlir::arith::CmpIPredicate::ne>},
     {"ceiling", &I::genCeiling},
     {"char", &I::genChar},
+    {"chdir",
+     &I::genChdir,
+     {{{"dir", asValue}, {"status", asAddr, handleDynamicOptional}}},
+     /*isElemental=*/false},
     {"cmplx",
      &I::genCmplx,
      {{{"x", asValue}, {"y", asValue, handleDynamicOptional}}}},
@@ -3073,6 +3077,19 @@ IntrinsicLibrary::genChar(mlir::Type type,
   mlir::Value len =
       builder.createIntegerConstant(loc, builder.getCharacterLengthType(), 1);
   return fir::CharBoxValue{cast, len};
+}
+
+// CHDIR
+void IntrinsicLibrary::genChdir(llvm::ArrayRef<fir::ExtendedValue> args) {
+  assert(args.size() == 2);
+  mlir::Value status =
+      isStaticallyAbsent(args[1])
+          ? builder
+                .create<fir::AbsentOp>(
+                    loc, builder.getRefType(builder.getNoneType()))
+                .getResult()
+          : fir::getBase(args[1]);
+  fir::runtime::genChdir(builder, loc, fir::getBase(args[0]), status);
 }
 
 // CMPLX

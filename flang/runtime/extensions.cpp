@@ -21,6 +21,7 @@
 #include <ctime>
 #include <signal.h>
 #include <thread>
+#include <unistd.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -247,6 +248,13 @@ cleanup:
   return ret;
 }
 #endif
+
+// CHDIR(DIR)
+void RTNAME(Chdir)(const char *dir, int *status) {
+  int stat = chdir(dir);
+  if (status)
+    *status = stat;
+}
 
 } // namespace Fortran::runtime
 } // extern "C"
