@@ -655,25 +655,17 @@ namespace nttp_auto {
 
 namespace nttp_partial_order {
   namespace t1 {
-    // FIXME: This should pick the second overload.
     template<template<short> class TT1> void f(TT1<0>);
-    // new-note@-1 {{here}}
     template<template<int>   class TT2> void f(TT2<0>) {};
-    // new-note@-1 {{here}}
     template<int> struct B {};
     template void f<B>(B<0>);
-    // new-error@-1 {{ambiguous}}
   } // namespace t1
   namespace t2 {
-    // FIXME: This should pick the second overload.
     struct A {} a;
     template<template<A&>       class TT1> void f(TT1<a>);
-    // new-note@-1 {{here}}
     template<template<const A&> class TT2> void f(TT2<a>) {};
-    // new-note@-1 {{here}}
     template<const A&> struct B {};
     template void f<B>(B<a>);
-    // new-error@-1 {{ambiguous}}
   } // namespace t2
   namespace t3 {
     // FIXME: This should pick the second overload.
