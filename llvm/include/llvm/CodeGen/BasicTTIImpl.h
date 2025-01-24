@@ -470,6 +470,8 @@ public:
     return getTLI()->isTypeLegal(VT);
   }
 
+  bool isOpLegal(Instruction *I) { return isTypeLegal(I->getType()); }
+
   unsigned getRegUsageForType(Type *Ty) {
     EVT ETy = getTLI()->getValueType(DL, Ty);
     return getTLI()->getNumRegisters(Ty->getContext(), ETy);
