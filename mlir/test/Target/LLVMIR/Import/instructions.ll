@@ -570,6 +570,41 @@ define void @varargs_call(i32 %0) {
 
 ; // -----
 
+; CHECK: @varargs(...)
+declare void @varargs(...)
+
+; CHECK-LABEL: @varargs_call
+; CHECK-SAME:  %[[ARG1:[a-zA-Z0-9]+]]
+define void @varargs_call(i32 %0) {
+  ; CHECK:  llvm.call @varargs(%[[ARG1]]) vararg(!llvm.func<void (...)>) : (i32) -> ()
+  call void @varargs(i32 %0)
+  ret void
+}
+
+; // -----
+
+; CHECK: @varargs(...)
+declare void @varargs(...)
+
+; CHECK-LABEL: @empty_varargs_call
+define void @empty_varargs_call() {
+  ; CHECK:  llvm.call @varargs() vararg(!llvm.func<void (...)>) : () -> ()
+  call void @varargs()
+  ret void
+}
+
+; // -----
+
+; CHECK-LABEL: @undef_call
+define void @undef_call() {
+  ; CHECK: %[[UNDEF:[0-9]+]] = llvm.mlir.undef : !llvm.ptr
+  ; CHECK-NEXT: %[[CONST:[0-9]+]] = llvm.mlir.constant(0 : i32) : i32
+  ; CHECK-NEXT: llvm.call %[[UNDEF]](%[[CONST]]) : !llvm.ptr, (i32) -> ()
+  call void undef(i32 0)
+  ret void
+}
+; // -----
+
 ; CHECK: llvm.func @f()
 declare void @f()
 
