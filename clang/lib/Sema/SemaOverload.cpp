@@ -7733,10 +7733,10 @@ void Sema::AddMethodTemplateCandidate(
           MethodTmpl, ExplicitTemplateArgs, Args, Specialization, Info,
           PartialOverloading, /*AggregateDeductionCandidate=*/false, ObjectType,
           ObjectClassification,
-          [&](ArrayRef<QualType> ParamTypes) {
+          [&](ArrayRef<QualType> ParamTypes, bool NonInstOnly) {
             return CheckNonDependentConversions(
                 MethodTmpl, ParamTypes, Args, CandidateSet, Conversions,
-                SuppressUserConversions, ActingContext, ObjectType,
+                SuppressUserConversions, NonInstOnly, ActingContext, ObjectType,
                 ObjectClassification, PO);
           });
       Result != TemplateDeductionResult::Success) {
@@ -7818,10 +7818,11 @@ void Sema::AddTemplateOverloadCandidate(
           PartialOverloading, AggregateCandidateDeduction,
           /*ObjectType=*/QualType(),
           /*ObjectClassification=*/Expr::Classification(),
-          [&](ArrayRef<QualType> ParamTypes) {
+          [&](ArrayRef<QualType> ParamTypes, bool NonInstOnly) {
             return CheckNonDependentConversions(
                 FunctionTemplate, ParamTypes, Args, CandidateSet, Conversions,
-                SuppressUserConversions, nullptr, QualType(), {}, PO);
+                SuppressUserConversions, NonInstOnly, nullptr, QualType(), {},
+                PO);
           });
       Result != TemplateDeductionResult::Success) {
     OverloadCandidate &Candidate =
@@ -7863,7 +7864,7 @@ bool Sema::CheckNonDependentConversions(
     FunctionTemplateDecl *FunctionTemplate, ArrayRef<QualType> ParamTypes,
     ArrayRef<Expr *> Args, OverloadCandidateSet &CandidateSet,
     ConversionSequenceList &Conversions, bool SuppressUserConversions,
-    CXXRecordDecl *ActingContext, QualType ObjectType,
+    bool NonInstOnly, CXXRecordDecl *ActingContext, QualType ObjectType,
     Expr::Classification ObjectClassification, OverloadCandidateParamOrder PO) {
   // FIXME: The cases in which we allow explicit conversions for constructor
   // arguments never consider calling a constructor template. It's not clear
@@ -7900,6 +7901,63 @@ bool Sema::CheckNonDependentConversions(
     }
   }
 
+  // https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;h=2154bcd6d43cfd821ca70e1583880c4ed955355d
+  auto ConversionMightInduceInstantiation = [&](QualType ParmType,
+                                                QualType ArgType) {
+    ParmType = ParmType.getNonReferenceType();
+    ArgType = ArgType.getNonReferenceType();
+    bool PointerConv = ParmType->isPointerType() && ArgType->isPointerType();
+    if (PointerConv) {
+      ParmType = ParmType->getPointeeType();
+      ArgType = ArgType->getPointeeType();
+    }
+
+    // If one of the types is a not-yet-instantiated class template
+    // specialization, then computing the conversion might instantiate it in
+    // order to inspect bases, conversion functions and/or converting
+    // constructors.
+    auto IsInstantiation = [&](QualType T) {
+      if (auto *RT = T->getAs<RecordType>()) {
+        if (auto *RD = dyn_cast<CXXRecordDecl>(RT->getDecl())) {
+          if (auto *ClassTemplateSpec =
+                  dyn_cast<ClassTemplateSpecializationDecl>(RD))
+            return ClassTemplateSpec->getSpecializationKind() == TSK_Undeclared;
+          if (RD->getInstantiatedFromMemberClass())
+            return RD->getMemberSpecializationInfo()
+                       ->getTemplateSpecializationKind() !=
+                   TemplateSpecializationKind::TSK_ExplicitSpecialization;
+        }
+      }
+      return false;
+    };
+    if (IsInstantiation(ParmType) || IsInstantiation(ArgType))
+      return true;
+
+    // Converting from one pointer type to another, or between reference-related
+    // types, always yields a standard conversion.
+    if (PointerConv || CompareReferenceRelationship(SourceLocation(), ParmType,
+                                                    ArgType) == Ref_Related)
+      return false;
+
+    // Converting to a non-aggregate class type will consider its user-declared
+    // constructors, which might induce instantiation.
+    if (auto *RT = ParmType->getAs<RecordType>())
+      if (auto *RD = dyn_cast<CXXRecordDecl>(RT->getDecl());
+          RD && RD->hasDefinition() && !RD->isAggregate())
+        return false;
+
+    // Similarly, converting from a class type will consider its conversion
+    // functions.
+    if (auto *RT = ArgType->getAs<RecordType>())
+      if (auto *RD = dyn_cast<CXXRecordDecl>(RT->getDecl()))
+        return RD->hasDefinition() &&
+               !RD->getVisibleConversionFunctions().empty();
+
+    // Otherwise, computing this conversion definitely won't induce template
+    // instantiation.
+    return false;
+  };
+
   unsigned Offset =
       Method && Method->hasCXXExplicitFunctionObjectParameter() ? 1 : 0;
 
@@ -7920,6 +7978,8 @@ bool Sema::CheckNonDependentConversions(
         // For members, 'this' got ConvIdx = 0 previously.
         ConvIdx = ThisConversions + I;
       }
+      if (NonInstOnly && ConversionMightInduceInstantiation(ParamType, Args[I]->getType()))
+        continue;
       Conversions[ConvIdx]
         = TryCopyInitialization(*this, Args[I], ParamType,
                                 SuppressUserConversions,
