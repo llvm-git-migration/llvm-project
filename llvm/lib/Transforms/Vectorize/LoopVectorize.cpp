@@ -8721,13 +8721,6 @@ std::optional<std::pair<PartialReductionChain, unsigned>>
 VPRecipeBuilder::getScaledReduction(PHINode *PHI,
                                     const RecurrenceDescriptor &Rdx,
                                     VFRange &Range) {
-  // TODO: Allow scaling reductions when predicating. The select at
-  // the end of the loop chooses between the phi value and most recent
-  // reduction result, both of which have different VFs to the active lane
-  // mask when scaling.
-  if (CM.blockNeedsPredicationForAnyReason(Rdx.getLoopExitInstr()->getParent()))
-    return std::nullopt;
-
   auto *Update = dyn_cast<BinaryOperator>(Rdx.getLoopExitInstr());
   if (!Update)
     return std::nullopt;
@@ -8875,7 +8868,9 @@ VPRecipeBuilder::tryToCreatePartialReduction(Instruction *Reduction,
   if (isa<VPReductionPHIRecipe>(BinOp->getDefiningRecipe()))
     std::swap(BinOp, Phi);
 
-  return new VPPartialReductionRecipe(Reduction->getOpcode(), BinOp, Phi,
+  VPValue *Mask = getBlockInMask(Reduction->getParent());
+
+  return new VPPartialReductionRecipe(Reduction->getOpcode(), BinOp, Phi, Mask,
                                       Reduction);
 }
 
@@ -9712,8 +9707,9 @@ void LoopVectorizationPlanner::adjustRecipesForReductions(
           PhiTy->isFloatingPointTy()
               ? std::make_optional(RdxDesc.getFastMathFlags())
               : std::nullopt;
-      NewExitingVPV =
-          Builder.createSelect(Cond, OrigExitingVPV, PhiR, {}, "", FMFs);
+      if (!isa<VPPartialReductionRecipe>(OrigExitingVPV->getDefiningRecipe()))
+        NewExitingVPV =
+            Builder.createSelect(Cond, OrigExitingVPV, PhiR, {}, "", FMFs);
       OrigExitingVPV->replaceUsesWithIf(NewExitingVPV, [](VPUser &U, unsigned) {
         return isa<VPInstruction>(&U) &&
                cast<VPInstruction>(&U)->getOpcode() ==
