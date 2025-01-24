@@ -85,6 +85,11 @@ private:
   void collectContextSizeInfo(CallStackTrieNode *Node,
                               std::vector<ContextTotalSize> &ContextSizeInfo);
 
+  // Recursively convert hot allocation types to notcold, since we don't
+  // actually do any cloning for hot contexts, to facilitate more aggressive
+  // pruning of contexts.
+  void convertHotToNotCold(CallStackTrieNode *Node);
+
   // Recursive helper to trim contexts and create metadata nodes.
   bool buildMIBNodes(CallStackTrieNode *Node, LLVMContext &Ctx,
                      std::vector<uint64_t> &MIBCallStack,
