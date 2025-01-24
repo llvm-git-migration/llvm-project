@@ -71,6 +71,16 @@ def int_minmax_to_med3 : GICombineRule<
          [{ return matchIntMinMaxToMed3(*${min_or_max}, ${matchinfo}); }]),
   (apply [{ applyMed3(*${min_or_max}, ${matchinfo}); }])>;
 
+def minmax3_matchdata : GIDefMatchData<"VOP3MatchInfo">;
+
+def minmax_to_minmax3
+    : GICombineRule<
+          (defs root:$min_or_max, minmax3_matchdata:$matchinfo),
+          (match(wip_match_opcode G_SMAX, G_SMIN, G_UMAX, G_UMIN, G_FMAXNUM,
+               G_FMINNUM, G_FMAXNUM_IEEE, G_FMINNUM_IEEE):$min_or_max,
+              [{ return matchMinMaxToMinMax3(*${min_or_max}, ${matchinfo}); }]),
+          (apply [{ applyVOP3(*${min_or_max}, ${matchinfo}); }])>;
+
 def fp_minmax_to_med3 : GICombineRule<
   (defs root:$min_or_max, med3_matchdata:$matchinfo),
   (match (wip_match_opcode G_FMAXNUM,
@@ -175,10 +185,9 @@ def AMDGPUPostLegalizerCombiner: GICombiner<
   let CombineAllMethodName = "tryCombineAllImpl";
 }
 
-def AMDGPURegBankCombiner : GICombiner<
-  "AMDGPURegBankCombinerImpl",
-  [unmerge_merge, unmerge_cst, unmerge_undef,
-   zext_trunc_fold, int_minmax_to_med3, ptr_add_immed_chain,
-   fp_minmax_to_clamp, fp_minmax_to_med3, fmed3_intrinsic_to_clamp,
-   redundant_and]> {
-}
+def AMDGPURegBankCombiner
+    : GICombiner<"AMDGPURegBankCombinerImpl",
+                 [unmerge_merge, unmerge_cst, unmerge_undef, zext_trunc_fold,
+                  int_minmax_to_med3, ptr_add_immed_chain, fp_minmax_to_clamp,
+                  fp_minmax_to_med3, fmed3_intrinsic_to_clamp, redundant_and,
+                  minmax_to_minmax3]> {}
