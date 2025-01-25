@@ -317,34 +317,43 @@ static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   Value operandA = op.getOperand(0);
   Value operandB = op.getOperand(1);
   Type opType = operandA.getType();
+
+  // Constants
   Value zero = createFloatConst(op->getLoc(), opType, 0.00, rewriter);
   Value one = createFloatConst(op->getLoc(), opType, 1.00, rewriter);
-  Value two = createFloatConst(op->getLoc(), opType, 2.00, rewriter);
   Value negOne = createFloatConst(op->getLoc(), opType, -1.00, rewriter);
-  Value opASquared = b.create<arith::MulFOp>(opType, operandA, operandA);
-  Value opBHalf = b.create<arith::DivFOp>(opType, operandB, two);
+  Value two = createFloatConst(op->getLoc(), opType, 2.00, rewriter);
 
-  Value logA = b.create<math::LogOp>(opType, opASquared);
-  Value mult = b.create<arith::MulFOp>(opType, opBHalf, logA);
+  // Compute |a| (absolute value of operandA)
+  Value absA = b.create<math::AbsFOp>(opType, operandA);
+
+  // Compute sign(a) as -1.0 if a < 0, else 1.0
+  Value isNegative = b.create<arith::CmpFOp>(arith::CmpFPredicate::OLT, operandA, zero);
+  Value signA = b.create<arith::SelectOp>(op->getLoc(), isNegative, negOne, one);
+
+  // Compute ln(|a|)
+  Value logA = b.create<math::LogOp>(opType, absA);
+
+  // Compute b * ln(|a|)
+  Value mult = b.create<arith::MulFOp>(opType, operandB, logA);
+
+  // Compute exp(b * ln(|a|))
   Value expResult = b.create<math::ExpOp>(opType, mult);
-  Value negExpResult = b.create<arith::MulFOp>(opType, expResult, negOne);
-  Value remainder = b.create<arith::RemFOp>(opType, operandB, two);
-  Value negCheck =
-      b.create<arith::CmpFOp>(arith::CmpFPredicate::OLT, operandA, zero);
-  Value oddPower =
-      b.create<arith::CmpFOp>(arith::CmpFPredicate::ONE, remainder, zero);
-  Value oddAndNeg = b.create<arith::AndIOp>(op->getLoc(), oddPower, negCheck);
+  Value logSign = b.create<math::LogOp>(opType, signA);
+  Value signMult = b.create<arith::MulFOp>(opType, operandB, logSign);
+  Value signPow = b.create<math::ExpOp>(opType, signMult);
+
+  Value resultWithSign = b.create<arith::MulFOp>(opType, expResult, signPow);
 
   // First, we select between the exp value and the adjusted value for odd
   // powers of negatives. Then, we ensure that one is produced if `b` is zero.
   // This corresponds to `libm` behavior, even for `0^0`. Without this check,
   // `exp(0 * ln(0)) = exp(0 *-inf) = exp(-nan) = -nan`.
-  Value zeroCheck =
-      b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, operandB, zero);
-  Value res = b.create<arith::SelectOp>(op->getLoc(), oddAndNeg, negExpResult,
-                                        expResult);
-  res = b.create<arith::SelectOp>(op->getLoc(), zeroCheck, one, res);
-  rewriter.replaceOp(op, res);
+  Value zeroCheck = 
+    b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, operandB, zero);
+  Value finalResult = 
+    b.create<arith::SelectOp>(op->getLoc(), zeroCheck, one, resultWithSign);
+  rewriter.replaceOp(op, finalResult);
   return success();
 }
 
