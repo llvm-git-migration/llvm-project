@@ -53,11 +53,15 @@ jobs:
           'generic-cxx26'
         ]
         cc: [ 'clang-19' ]
-        cxx: [ 'clang++-19' ]
+        cxx: [ 'failure' ]
+
     steps:
       - uses: actions/checkout@v4
       - name: ${{ matrix.config }}.${{ matrix.cxx }}
-        run: libcxx/utils/ci/run-buildbot ${{ matrix.config }}
+        run: |
+          echo "1. clang++-${{ env.LLVM_VERSION_HEAD }}"
+          echo "2. clang++-$LLVM_VERSION_HEAD"
+          libcxx/utils/ci/run-buildbot ${{ matrix.config }}
         env:
           CC: ${{ matrix.cc }}
           CXX: ${{ matrix.cxx }}
