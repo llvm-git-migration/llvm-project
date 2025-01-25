@@ -528,3 +528,19 @@ D d(0); // expected-note {{in implicit initialization for inherited constructor 
 // expected-error@-1 {{call to immediate function 'GH112677::D::SimpleCtor' is not a constant expression}}
 
 }
+
+
+namespace GH118000 {
+consteval int baz() { return 0;}
+struct S {
+    int mSize = baz();
+};
+
+consteval void bar() {
+    S s;
+}
+
+void foo() {
+    S s;
+}
+}
