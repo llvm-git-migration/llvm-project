@@ -10,6 +10,7 @@
 #define TEST_STD_UTILITIES_FORMAT_FORMAT_RANGE_FORMAT_RANGE_FMTMAP_FORMAT_FUNCTIONS_TESTS_H
 
 #include <algorithm>
+#include <flat_map>
 #include <format>
 #include <map>
 #include <unordered_map>
@@ -442,6 +443,9 @@ void test_int(TestFunction check, ExceptionTest check_exception, auto&& input) {
 template <class CharT, class TestFunction, class ExceptionTest>
 void test_int(TestFunction check, ExceptionTest check_exception) {
   test_int<CharT>(check, check_exception, std::map<int, int>{{1, -1}, {42, -42}, {-42, 42}});
+#if TEST_STD_VER >= 23
+  test_int<CharT>(check, check_exception, std::flat_map<int, int>{{1, -1}, {42, -42}, {-42, 42}});
+#endif
 }
 
 //
