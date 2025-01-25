@@ -318,7 +318,6 @@ static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   Value operandB = op.getOperand(1);
   Type opType = operandA.getType();
 
-  // Constants
   Value zero = createFloatConst(op->getLoc(), opType, 0.00, rewriter);
   Value one = createFloatConst(op->getLoc(), opType, 1.00, rewriter);
   Value negOne = createFloatConst(op->getLoc(), opType, -1.00, rewriter);
@@ -328,8 +327,10 @@ static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   Value absA = b.create<math::AbsFOp>(opType, operandA);
 
   // Compute sign(a) as -1.0 if a < 0, else 1.0
-  Value isNegative = b.create<arith::CmpFOp>(arith::CmpFPredicate::OLT, operandA, zero);
-  Value signA = b.create<arith::SelectOp>(op->getLoc(), isNegative, negOne, one);
+  Value isNegative =
+      b.create<arith::CmpFOp>(arith::CmpFPredicate::OLT, operandA, zero);
+  Value signA =
+      b.create<arith::SelectOp>(op->getLoc(), isNegative, negOne, one);
 
   // Compute ln(|a|)
   Value logA = b.create<math::LogOp>(opType, absA);
@@ -349,10 +350,10 @@ static LogicalResult convertPowfOp(math::PowFOp op, PatternRewriter &rewriter) {
   // powers of negatives. Then, we ensure that one is produced if `b` is zero.
   // This corresponds to `libm` behavior, even for `0^0`. Without this check,
   // `exp(0 * ln(0)) = exp(0 *-inf) = exp(-nan) = -nan`.
-  Value zeroCheck = 
-    b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, operandB, zero);
-  Value finalResult = 
-    b.create<arith::SelectOp>(op->getLoc(), zeroCheck, one, resultWithSign);
+  Value zeroCheck =
+      b.create<arith::CmpFOp>(arith::CmpFPredicate::OEQ, operandB, zero);
+  Value finalResult =
+      b.create<arith::SelectOp>(op->getLoc(), zeroCheck, one, resultWithSign);
   rewriter.replaceOp(op, finalResult);
   return success();
 }
