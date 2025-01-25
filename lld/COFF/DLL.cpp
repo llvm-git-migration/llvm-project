@@ -716,32 +716,49 @@ private:
 void IdataContents::create(COFFLinkerContext &ctx) {
   std::vector<std::vector<DefinedImportData *>> v = binImports(ctx, imports);
 
-  // Merge compatible EC and native import files in hybrid images.
+  // In hybrid images, EC and native code are usually very similar,
+  // resulting in a highly similar set of imported symbols. Consequently,
+  // their import tables can be shared, with ARM64X relocations handling any
+  // differences. Identify matching import files used by EC and native code, and
+  // merge them into a single hybrid import entry.
   if (ctx.hybridSymtab) {
     for (std::vector<DefinedImportData *> &syms : v) {
-      // At this point, symbols are sorted by base name, ensuring that
-      // compatible import files, if present, are adjacent.
       std::vector<DefinedImportData *> hybridSyms;
       ImportFile *prev = nullptr;
       for (DefinedImportData *sym : syms) {
         ImportFile *file = sym->file;
+        // At this stage, symbols are sorted by base name, ensuring that
+        // compatible import files, if present, are adjacent. Check if the
+        // current symbol's file imports the same symbol as the previously added
+        // one (if any and if it was not already merged). Additionally, verify
+        // that one of them is native while the other is EC. In rare cases,
+        // separate matching import entries may exist within the same namespace,
+        // which cannot be merged.
         if (!prev || file->isEC() == prev->isEC() ||
             !file->isSameImport(prev)) {
+          // We can't merge the import file, just add it to hybridSyms
+          // and set prev to its file so that we can try to match the next
+          // symbol.
           hybridSyms.push_back(sym);
           prev = file;
           continue;
         }
 
-        // The native variant exposes a subset of EC symbols and chunks. Use the
-        // EC variant to represent both.
+        // A matching symbol may appear in syms in any order. The native variant
+        // exposes a subset of EC symbols and chunks, so always use the EC
+        // variant as the hybrid import file. If the native file was already
+        // added, replace it with the EC symbol in hybridSyms. Otherwise, the EC
+        // variant is already pushed, so we can simply merge it.
         if (file->isEC()) {
           hybridSyms.pop_back();
           hybridSyms.push_back(sym);
         }
 
+        // Merge import files by storing their hybrid form in the corresponding
+        // file class.
         prev->hybridFile = file;
         file->hybridFile = prev;
-        prev = nullptr;
+        prev = nullptr; // A hybrid import file cannot be merged again.
       }
 
       // Sort symbols by type: native-only files first, followed by merged
@@ -780,11 +797,15 @@ void IdataContents::create(COFFLinkerContext &ctx) {
       }
 
       // Detect the first EC-only import in the hybrid IAT. Emit null chunks
-      // and add an ARM64X relocation to replace it with the import for the EC
-      // view. Additionally, use the original chunks as import terminators
-      // and zero them with ARM64X relocations. Since these chunks appear
-      // after the null terminator in the native view, they are always ignored
-      // by the loader. However, MSVC emits them for some reason.
+      // as a terminator for the native view, and add an ARM64X relocation to
+      // replace it with the correct import for the EC view.
+      //
+      // Additionally, for MSVC compatibility, store the lookup and address
+      // chunks and append them at the end of EC-only imports, where a null
+      // terminator chunk would typically be placed. Since they appear after
+      // the native terminator, they will be ignored in the native view.
+      // In the EC view, they should act as terminators, so emit ZEROFILL
+      // relocations overriding them.
       if (ctx.hybridSymtab && !lookupsTerminator && s->file->isEC() &&
           !s->file->hybridFile) {
         lookupsTerminator = lookupsChunk;
@@ -846,8 +867,8 @@ void IdataContents::create(COFFLinkerContext &ctx) {
     dirs.push_back(dir);
 
     if (ctx.hybridSymtab) {
-      // If native-only imports exist, emit ARM64X relocations, skipping them in
-      // the EC view.
+      // If native-only imports exist, they will appear as a prefix to all
+      // imports. Emit ARM64X relocations to skip them in the EC view.
       uint32_t nativeOnly =
           llvm::find_if(syms,
                         [](DefinedImportData *s) { return s->file->isEC(); }) -

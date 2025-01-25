@@ -9,6 +9,7 @@ RUN: llvm-mc -filetype=obj -triple=arm64ec-windows func123-arm64ec.s -o func123-
 RUN: llvm-mc -filetype=obj -triple=aarch64-windows func12-arm64.s -o func12-arm64.obj
 RUN: llvm-mc -filetype=obj -triple=aarch64-windows func234-arm64.s -o func234-arm64.obj
 RUN: llvm-mc -filetype=obj -triple=arm64ec-windows func12o-arm64ec.s -o func12o-arm64ec.obj
+RUN: llvm-mc -filetype=obj -triple=aarch64-windows func34-arm64.s -o func34-arm64.obj
 RUN: llvm-mc -filetype=obj -triple=aarch64-windows func34o-arm64.s -o func34o-arm64.obj
 RUN: llvm-mc -filetype=obj -triple=aarch64-windows funco-arm64.s -o funco-arm64.obj
 RUN: llvm-mc -filetype=obj -triple=arm64ec-windows icall.s -o icall.obj
@@ -21,6 +22,7 @@ RUN: llvm-lib -machine:arm64x -def:imp-ord10.def -defArm64Native:imp.def -out:im
 RUN: llvm-lib -machine:arm64x -def:imp-ord10.def -defArm64Native:imp-ord20.def -out:imp-ecord.lib
 RUN: llvm-lib -machine:arm64x -def:imp2.def -defArm64Native:imp2.def -out:imp2.lib
 RUN: llvm-lib -machine:arm64x -def:noname-ec.def -defArm64Native:noname-native.def -out:noname.lib
+RUN: llvm-lib -machine:arm64x -def:dup-ec.def -defArm64Native:dup-native.def -out:dup.lib
 
 
 # Link to the imported func1, func2, and func1's thunks from both native and EC code.
@@ -244,7 +246,7 @@ RUN: llvm-readobj --hex-dump=.testa test-234-123.dll | FileCheck --check-prefix=
 TEST-234-123A: 0x180008000 08200000 10200000 00200000
 
 
-# Link to the imported func3 and func4 from both native code, and func1 and func2 from EC code.
+# Link to the imported func3 and func4 from native code, and func1 and func2 from EC code.
 
 RUN: lld-link -machine:arm64x -dll -noentry -out:test-34-12.dll loadconfig-arm64.obj loadconfig-arm64ec.obj \
 RUN:          icall.obj func12o-arm64ec.obj func34o-arm64.obj imp-arm64x.lib imp2.lib
@@ -356,6 +358,33 @@ IMPORTS-N12-NEXT:   }
 IMPORTS-N12-NEXT: }
 
 
+RUN: lld-link -machine:arm64x -dll -noentry -out:test-dup.dll loadconfig-arm64.obj loadconfig-arm64ec.obj icall.obj \
+RUN:          func12-arm64ec.obj func34-arm64.obj dup.lib
+
+RUN: llvm-readobj --coff-imports test-dup.dll | FileCheck --check-prefix=IMPORTS-DUP %s
+IMPORTS-DUP:      Format: COFF-ARM64X
+IMPORTS-DUP-NEXT: Arch: aarch64
+IMPORTS-DUP-NEXT: AddressSize: 64bit
+IMPORTS-DUP-NEXT: Import {
+IMPORTS-DUP-NEXT:   Name: test.dll
+IMPORTS-DUP-NEXT:   ImportLookupTableRVA: 0x3338
+IMPORTS-DUP-NEXT:   ImportAddressTableRVA: 0x2000
+IMPORTS-DUP-NEXT:   Symbol: func4 (0)
+IMPORTS-DUP-NEXT:   Symbol: func4 (0)
+IMPORTS-DUP-NEXT: }
+IMPORTS-DUP-NEXT: HybridObject {
+IMPORTS-DUP-NEXT:   Format: COFF-ARM64EC
+IMPORTS-DUP-NEXT:   Arch: aarch64
+IMPORTS-DUP-NEXT:   AddressSize: 64bit
+IMPORTS-DUP-NEXT:   Import {
+IMPORTS-DUP-NEXT:     Name: test.dll
+IMPORTS-DUP-NEXT:     ImportLookupTableRVA: 0x3348
+IMPORTS-DUP-NEXT:     ImportAddressTableRVA: 0x2010
+IMPORTS-DUP-NEXT:     Symbol: func1 (0)
+IMPORTS-DUP-NEXT:     Symbol: func1 (0)
+IMPORTS-DUP-NEXT:   }
+IMPORTS-DUP-NEXT: }
+
 #--- func12-thunks-arm64ec.s
     .section .test, "r"
     .rva __imp_func1
@@ -412,6 +441,11 @@ IMPORTS-N12-NEXT: }
     .rva __imp_aux_func2
     .rva __imp_otherfunc
     .rva __imp_aux_otherfunc
+
+#--- func34-arm64.s
+    .section .testa, "r"
+    .rva __imp_func3
+    .rva __imp_func4
 
 #--- func34o-arm64.s
     .section .testa, "r"
@@ -485,3 +519,15 @@ NAME test.dll
 EXPORTS
     func1 @12 NONAME
     func2 @11 NONAME
+
+#--- dup-ec.def
+NAME test.dll
+EXPORTS
+    func1
+    func2 EXPORTAS func1
+
+#--- dup-native.def
+NAME test.dll
+EXPORTS
+    func3 EXPORTAS func4
+    func4
