@@ -133,8 +133,8 @@ TemplateName getReferencedTemplateName(const Type *T) {
 CXXRecordDecl *HeuristicResolverImpl::resolveTypeToRecordDecl(const Type *T) {
   assert(T);
 
-  // Unwrap type sugar such as type aliases.
-  T = T->getCanonicalTypeInternal().getTypePtr();
+  // Unwrap references and type sugar such as type aliases.
+  T = T->getCanonicalTypeInternal().getNonReferenceType().getTypePtr();
 
   if (const auto *DNT = T->getAs<DependentNameType>()) {
     T = resolveDeclsToType(resolveDependentNameType(DNT), Ctx)
