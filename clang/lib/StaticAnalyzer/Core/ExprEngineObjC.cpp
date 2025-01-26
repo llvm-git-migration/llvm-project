@@ -124,24 +124,26 @@ void ExprEngine::VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S,
 
   bool isContainerNull = state->isNull(collectionV).isConstrainedTrue();
 
-  ExplodedNodeSet dstLocation;
-  evalLocation(dstLocation, S, elem, Pred, state, elementV, false);
+  ExplodedNodeSet NewPreds; // evalLocation may alter `Pred`
+  evalLocation(NewPreds, S, elem, Pred, state, elementV, false);
 
-  ExplodedNodeSet Tmp;
-  StmtNodeBuilder Bldr(Pred, Tmp, *currBldrCtx);
+  for (ExplodedNode *Pred : NewPreds) {
+    ExplodedNodeSet PredSingleton{Pred}, Tmp;
+    StmtNodeBuilder Bldr(Pred, Tmp, *currBldrCtx);
 
-  if (!isContainerNull)
-    populateObjCForDestinationSet(dstLocation, svalBuilder, S, elem, elementV,
+    if (!isContainerNull)
+      populateObjCForDestinationSet(PredSingleton, svalBuilder, S, elem,
+                                    elementV, SymMgr, currBldrCtx, Bldr,
+                                    /*hasElements=*/true);
+
+    populateObjCForDestinationSet(PredSingleton, svalBuilder, S, elem, elementV,
                                   SymMgr, currBldrCtx, Bldr,
-                                  /*hasElements=*/true);
+                                  /*hasElements=*/false);
 
-  populateObjCForDestinationSet(dstLocation, svalBuilder, S, elem, elementV,
-                                SymMgr, currBldrCtx, Bldr,
-                                /*hasElements=*/false);
-
-  // Finally, run any custom checkers.
-  // FIXME: Eventually all pre- and post-checks should live in VisitStmt.
-  getCheckerManager().runCheckersForPostStmt(Dst, Tmp, S, *this);
+    // Finally, run any custom checkers.
+    // FIXME: Eventually all pre- and post-checks should live in VisitStmt.
+    getCheckerManager().runCheckersForPostStmt(Dst, Tmp, S, *this);
+  }
 }
 
 void ExprEngine::VisitObjCMessage(const ObjCMessageExpr *ME,
