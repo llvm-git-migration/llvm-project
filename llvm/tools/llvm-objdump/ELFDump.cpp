@@ -221,6 +221,10 @@ template <class ELFT> void ELFDumper<ELFT>::printDynamicSection() {
   std::string TagFmt = "  %-" + std::to_string(MaxLen) + "s ";
 
   outs() << "\nDynamic Section:\n";
+  const auto StringTableSize =
+      unwrapOrError(Elf.getSection(ELF::SHT_DYNAMIC), Obj.getFileName())
+          ->sh_size;
+
   for (const typename ELFT::Dyn &Dyn : DynamicEntries) {
     if (Dyn.d_tag == ELF::DT_NULL)
       continue;
@@ -235,6 +239,11 @@ template <class ELFT> void ELFDumper<ELFT>::printDynamicSection() {
       Expected<StringRef> StrTabOrErr = getDynamicStrTab(Elf);
       if (StrTabOrErr) {
         const char *Data = StrTabOrErr->data();
+        if (Dyn.getVal() > StringTableSize) {
+          reportWarning("Invalid string table offset for section .dynstr",
+                        Obj.getFileName());
+          continue;
+        }
         outs() << format(TagFmt.c_str(), Str.c_str()) << Data + Dyn.getVal()
                << "\n";
         continue;
