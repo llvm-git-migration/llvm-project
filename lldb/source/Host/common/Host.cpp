@@ -26,10 +26,14 @@
 #include <mach/mach_port.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/api-level.h>
+#endif
+
 #if defined(__linux__) || defined(__FreeBSD__) ||                              \
     defined(__FreeBSD_kernel__) || defined(__APPLE__) ||                       \
     defined(__NetBSD__) || defined(__OpenBSD__) || defined(__EMSCRIPTEN__)
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) || __ANDROID_API__ >= 28
 #include <spawn.h>
 #endif
 #include <sys/syscall.h>
