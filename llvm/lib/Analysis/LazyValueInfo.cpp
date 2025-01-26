@@ -398,6 +398,8 @@ class LazyValueInfoImpl {
   std::optional<ValueLatticeElement>
   getValueFromICmpCondition(Value *Val, ICmpInst *ICI, bool isTrueDest,
                             bool UseBlockValue);
+  std::optional<ValueLatticeElement>
+  getValueFromTrunc(Value *Val, TruncInst *Trunc, bool IsTrueDest);
 
   std::optional<ValueLatticeElement>
   getValueFromCondition(Value *Val, Value *Cond, bool IsTrueDest,
@@ -1283,6 +1285,20 @@ std::optional<ValueLatticeElement> LazyValueInfoImpl::getValueFromICmpCondition(
   return ValueLatticeElement::getOverdefined();
 }
 
+std::optional<ValueLatticeElement>
+LazyValueInfoImpl::getValueFromTrunc(Value *Val, TruncInst *Trunc,
+                                     bool IsTrueDest) {
+  assert(Trunc->getType()->isIntegerTy(1));
+
+  Type *Ty = Val->getType();
+  if (!Ty->isIntegerTy() || Trunc->getOperand(0) != Val)
+    return ValueLatticeElement::getOverdefined();
+
+  if (IsTrueDest)
+    return ValueLatticeElement::getNot(Constant::getNullValue(Ty));
+  return ValueLatticeElement::getNot(Constant::getAllOnesValue(Ty));
+}
+
 // Handle conditions of the form
 // extractvalue(op.with.overflow(%x, C), 1).
 static ValueLatticeElement getValueFromOverflowCondition(
@@ -1311,6 +1327,9 @@ LazyValueInfoImpl::getValueFromCondition(Value *Val, Value *Cond,
                                          unsigned Depth) {
   if (ICmpInst *ICI = dyn_cast<ICmpInst>(Cond))
     return getValueFromICmpCondition(Val, ICI, IsTrueDest, UseBlockValue);
+
+  if (auto *Trunc = dyn_cast<TruncInst>(Cond))
+    return getValueFromTrunc(Val, Trunc, IsTrueDest);
 
   if (auto *EVI = dyn_cast<ExtractValueInst>(Cond))
     if (auto *WO = dyn_cast<WithOverflowInst>(EVI->getAggregateOperand()))

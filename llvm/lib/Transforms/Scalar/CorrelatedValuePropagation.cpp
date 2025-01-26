@@ -348,6 +348,21 @@ static bool processCmp(CmpInst *Cmp, LazyValueInfo *LVI) {
   return false;
 }
 
+static bool processTrunc(TruncInst *Trunc, LazyValueInfo *LVI) {
+  Type *Ty = Trunc->getType();
+  if (!Ty->isIntegerTy(1))
+    return false;
+
+  Value *Arg = Trunc->getOperand(0);
+  ConstantRange Res = LVI->getConstantRange(Arg, Trunc, false);
+  if (Res.contains(APInt::getZero(Arg->getType()->getScalarSizeInBits())))
+    return false;
+
+  Trunc->replaceAllUsesWith(ConstantInt::getTrue(Ty));
+  Trunc->eraseFromParent();
+  return true;
+}
+
 /// Simplify a switch instruction by removing cases which can never fire. If the
 /// uselessness of a case could be determined locally then constant propagation
 /// would already have figured it out. Instead, walk the predecessors and
@@ -1238,6 +1253,9 @@ static bool runImpl(Function &F, LazyValueInfo *LVI, DominatorTree *DT,
       case Instruction::ICmp:
       case Instruction::FCmp:
         BBChanged |= processCmp(cast<CmpInst>(&II), LVI);
+        break;
+      case Instruction::Trunc:
+        BBChanged |= processTrunc(cast<TruncInst>(&II), LVI);
         break;
       case Instruction::Call:
       case Instruction::Invoke:
