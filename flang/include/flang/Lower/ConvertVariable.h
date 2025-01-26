@@ -67,7 +67,7 @@ bool hasDefaultInitialization(const Fortran::semantics::Symbol &sym);
 
 /// Call default initialization runtime routine to initialize \p var.
 void defaultInitializeAtRuntime(Fortran::lower::AbstractConverter &converter,
-                                const Fortran::semantics::Symbol &sym,
+                                const Fortran::lower::pft::Variable &var,
                                 Fortran::lower::SymMap &symMap);
 
 /// Call clone initialization runtime routine to initialize \p sym's value.
