@@ -1,4 +1,5 @@
-! RUN: bbc -emit-fir -hlfir=false %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir -hlfir=false -target x86_64-unknown-linux-gnu %s -o - | FileCheck %s
 
 ! CHECK-LABEL: func.func @_QPanint_test(
 ! CHECK-SAME:                           %[[VAL_0:.*]]: !fir.ref<f32> {fir.bindc_name = "a"},

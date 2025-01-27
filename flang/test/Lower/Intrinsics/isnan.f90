@@ -1,5 +1,6 @@
-! RUN: bbc -emit-fir %s -o - | FileCheck %s
-! RUN: flang -fc1 -emit-fir %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir %s -o - | FileCheck %s
+! RUN: %flang_fc1 -target x86_64-unknown-linux-gnu -emit-fir %s -o - | FileCheck %s
 
 ! CHECK-LABEL: isnan_f32
 subroutine isnan_f32(r)

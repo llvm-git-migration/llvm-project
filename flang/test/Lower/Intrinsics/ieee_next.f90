@@ -1,4 +1,5 @@
-! RUN: bbc -emit-fir -o - %s | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir -o - %s | FileCheck %s
 
 ! CHECK-LABEL: c.func @_QQmain
 program p
