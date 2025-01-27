@@ -13103,6 +13103,11 @@ ASTContext::createMangleNumberingContext() const {
   return ABI->createMangleNumberingContext();
 }
 
+const llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> *
+ASTContext::getRecordToCopyCtor() const {
+  return ABI->getRecordToCopyCtor();
+}
+
 const CXXConstructorDecl *
 ASTContext::getCopyConstructorForExceptionObject(CXXRecordDecl *RD) {
   return ABI->getCopyConstructorForExceptionObject(

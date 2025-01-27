@@ -4313,6 +4313,19 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       for (unsigned I = 0, N = Record.size(); I != N; /*in loop*/)
         DeclsToCheckForDeferredDiags.insert(ReadDeclID(F, Record, I));
       break;
+
+    case MSCXXABI_EXCEPTION_COPYING_CONSTRUCTORS: {
+      if (Record.size() % 2 != 0)
+        return llvm::createStringError(
+            std::errc::illegal_byte_sequence,
+            "Invalid MSCXXABI_EXCEPTION_COPYING_CONSTRUCTORS record");
+      for (unsigned I = 0, N = Record.size(); I != N; /* in loop */) {
+        RecordToCopyingCtor.push_back(
+            {ReadDeclID(F, Record, I),
+             ReadDeclID(F, Record, I)});
+      }
+      break;
+    }
     }
   }
 }
@@ -9370,6 +9383,16 @@ void ASTReader::ReadLateParsedTemplates(
   }
 
   LateParsedTemplates.clear();
+}
+
+void ASTReader::ReadRecordExceptionCopyingConstructors(
+    llvm::MapVector<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor) {
+  for (const auto &[RecordID, CtorID] : RecordToCopyingCtor) {
+    auto *RD = cast<CXXRecordDecl>(GetDecl(RecordID));
+    auto *CD = cast<CXXConstructorDecl>(GetDecl(CtorID));
+    RecordToCtor.insert({RD, CD});
+  }
+  RecordToCopyingCtor.clear();
 }
 
 void ASTReader::AssignedLambdaNumbering(CXXRecordDecl *Lambda) {

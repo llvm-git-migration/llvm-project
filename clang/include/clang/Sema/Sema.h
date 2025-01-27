@@ -5428,6 +5428,8 @@ public:
   /// \returns true if any work was done, false otherwise.
   bool DefineUsedVTables();
 
+  void LoadExternalRecordToExceptionCopyingCtor();
+
   /// AddImplicitlyDeclaredMembersToClass - Adds any implicitly-declared
   /// special functions, such as the default constructor, copy
   /// constructor, or destructor, to the given C++ class (C++

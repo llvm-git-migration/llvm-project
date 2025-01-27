@@ -1044,6 +1044,12 @@ private:
   /// The IDs of all decls with function effects to be checked.
   SmallVector<GlobalDeclID> DeclsWithEffectsToVerify;
 
+  struct RecordAndCopyingCtor {
+    GlobalDeclID RecordID;
+    GlobalDeclID CtorID;
+  };
+  SmallVector<RecordAndCopyingCtor> RecordToCopyingCtor;
+
 private:
   struct ImportedSubmodule {
     serialization::SubmoduleID ID;
@@ -2288,6 +2294,10 @@ public:
   void ReadLateParsedTemplates(
       llvm::MapVector<const FunctionDecl *, std::unique_ptr<LateParsedTemplate>>
           &LPTMap) override;
+
+  void ReadRecordExceptionCopyingConstructors(
+      llvm::MapVector<CXXRecordDecl *,
+                      CXXConstructorDecl *> &RecordToCtor) override;
 
   void AssignedLambdaNumbering(CXXRecordDecl *Lambda) override;
 
