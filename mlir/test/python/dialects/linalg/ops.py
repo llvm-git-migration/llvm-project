@@ -84,6 +84,7 @@ def testNamedStructuredOpCustomForm():
 
     print(module)
 
+
 # CHECK-LABEL: TEST: testIdentityRegionOps
 @run
 def testIdentityRegionOps():
@@ -159,5 +160,65 @@ def testIdentityRegionOps():
                 linalg.fill_builtin_region(op4.operation)
                 # CHECK: linalg.broadcast ins(%[[VAL_13]] : memref<64xf32>) outs(%[[VAL_12]] : memref<16x64xf32>) dimensions = [0]
                 op5 = linalg.broadcast(op3, outs=[op2], dimensions=[0])
+
+    print(module)
+
+
+# CHECK-LABEL: TEST: testGenericOp
+@run
+def testGenericOp():
+    with Context(), Location.unknown():
+        module = Module.create()
+        f32 = F32Type.get()
+        with InsertionPoint(module.body):
+            id_map = AffineMap.get_identity(2)
+            # CHECK: %[[VAL_0:.*]] = tensor.empty() : tensor<16x16xf32>
+            # CHECK: %[[VAL_1:.*]] = tensor.empty() : tensor<16x16xf32>
+            x = tensor.empty((16, 16), f32)
+            y = tensor.empty((16, 16), f32)
+
+            # CHECK: %[[VAL_3:*]] = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%[[VAL_0]] : tensor<16x16xf32>) outs(%[[VAL_1]] : tensor<16x16xf32>) {
+            # CHECK: ^bb0(%in: f32, %out: f32):
+            # CHECK:   linalg.yield %in : f32
+            # CHECK: } -> tensor<16x16xf32>
+            @linalg.generic(
+                [x],
+                [y],
+                [id_map, id_map],
+                [linalg.IteratorType.parallel, linalg.IteratorType.parallel],
+            )
+            def f(x, y):
+                return x
+
+            assert isinstance(f, Value)
+            assert isinstance(f.type, RankedTensorType)
+
+            # CHECK: %[[VAL_3:.*]] = tensor.empty() : tensor<16x16x16xf32>
+            z = tensor.empty((16, 16, 16), f32)
+
+            minor_id = AffineMap.get_minor_identity(3, 2)
+            id_map = AffineMap.get_identity(3)
+
+            # CHECK: %%[[VAL_4:.*]]:2 = linalg.generic {indexing_maps = [#map1, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%[[VAL_0]] : tensor<16x16xf32>) outs(%[[VAL_3]], %[[VAL_3]] : tensor<16x16x16xf32>, tensor<16x16x16xf32>) {
+            # CHECK: ^bb0(%in: f32, %out: f32, %out_0: f32):
+            # CHECK:   linalg.yield %in, %out : f32, f32
+            # CHECK: } -> (tensor<16x16x16xf32>, tensor<16x16x16xf32>)
+            @linalg.generic(
+                [x],
+                [z, z],
+                [minor_id, id_map, id_map],
+                [
+                    linalg.IteratorType.parallel,
+                    linalg.IteratorType.parallel,
+                    linalg.IteratorType.parallel,
+                ],
+            )
+            def g(x, z1, z2):
+                return x, z1
+
+            assert isinstance(g, OpResultList)
+            assert len(g) == 2
+            assert isinstance(g[0].type, RankedTensorType)
+            assert isinstance(g[1].type, RankedTensorType)
 
     print(module)
