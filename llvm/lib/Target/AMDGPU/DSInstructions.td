@@ -699,7 +699,8 @@ def DS_PERMUTE_B32  : DS_1A1D_PERMUTE <"ds_permute_b32",
                                        int_amdgcn_ds_permute>;
 def DS_BPERMUTE_B32 : DS_1A1D_PERMUTE <"ds_bpermute_b32",
                                        int_amdgcn_ds_bpermute>;
-def DS_BPERMUTE_FI_B32 : DS_1A1D_PERMUTE <"ds_bpermute_fi_b32">;
+def DS_BPERMUTE_FI_B32 : DS_1A1D_PERMUTE <"ds_bpermute_fi_b32",
+                                        int_amdgcn_ds_bpermute_fi_b32>;
 }
 
 } // let SubtargetPredicate = isGFX8Plus
