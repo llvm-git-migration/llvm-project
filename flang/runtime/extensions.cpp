@@ -248,5 +248,7 @@ cleanup:
 }
 #endif
 
+int FORTRAN_PROCEDURE_NAME(ierrno)() { return errno; }
+
 } // namespace Fortran::runtime
 } // extern "C"

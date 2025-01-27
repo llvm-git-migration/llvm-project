@@ -1064,3 +1064,14 @@ This intrinsic is an alias for `LEN_TRIM`, without the optional KIND argument.
 - **Arguments:** `TIME` - a REAL value into which the elapsed CPU time in
                           seconds is written
 - **RETURN value:** same as TIME argument
+
+### Non-Standard Intrinsics: IERRNO
+
+#### Description
+`IERRNO()` returns the last system error number, as given by the C `errno` variable.
+
+#### Usage and Info
+
+- **Standard:** GNU extension
+- **Class:** function
+- **Syntax:** `RESULT = IERRNO()`
