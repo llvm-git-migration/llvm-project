@@ -242,6 +242,8 @@ std::vector<const NamedDecl *> HeuristicResolverImpl::resolveMemberExpr(
       BaseType = resolveExprToType(Base);
     }
   }
+  if (BaseType.isNull())
+    return {};
   if (const auto *AT = BaseType->getContainedAutoType()) {
     // If BaseType contains a dependent `auto` type, deduction will not have
     // been performed on it yet. In simple cases (e.g. `auto` variable with
