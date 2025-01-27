@@ -384,6 +384,47 @@ void CombinerHelper::applyCombineConcatVectors(
   MI.eraseFromParent();
 }
 
+bool CombinerHelper::matchCombineShuffleExtract(MachineInstr &MI, int64_t &Idx) const {
+  assert(MI.getOpcode() == TargetOpcode::G_SHUFFLE_VECTOR &&
+         "Invalid instruction");
+  auto &Shuffle = cast<GShuffleVector>(MI);
+  const auto &TLI = getTargetLowering();
+  
+  auto SrcVec1 = Shuffle.getSrc1Reg();
+  auto SrcVec2 = Shuffle.getSrc2Reg();
+  auto Mask = Shuffle.getMask();
+
+  int Width = MRI.getType(SrcVec1).getNumElements();
+
+  // Check if all elements are extracted from the same vector, or within single
+  // vector.
+  auto MaxValue = *std::max_element(Mask.begin(), Mask.end());
+  auto MinValue = *std::min_element(Mask.begin(), Mask.end());
+  if (MaxValue >= Width && MinValue < Width) {
+    return false;
+  }
+  // Check if the extractee's order is kept:
+  if (!std::is_sorted(Mask.begin(), Mask.end())) {
+    return false;
+  }
+
+  Idx = Mask.front();
+  return true;
+}
+
+void CombinerHelper::applyCombineShuffleExtract(MachineInstr &MI, int64_t Idx) const {
+  auto &Shuffle = cast<GShuffleVector>(MI);
+
+  auto SrcVec1 = Shuffle.getSrc1Reg();
+  auto SrcVec2 = Shuffle.getSrc2Reg();
+  int Width = MRI.getType(SrcVec1).getNumElements();
+
+  auto SrcVec = Idx < Width ? SrcVec1 : SrcVec2;
+
+  Builder.buildExtractSubvector(MI.getOperand(0).getReg(), SrcVec, Idx);
+  MI.eraseFromParent();
+}
+
 bool CombinerHelper::matchCombineShuffleConcat(
     MachineInstr &MI, SmallVector<Register> &Ops) const {
   ArrayRef<int> Mask = MI.getOperand(3).getShuffleMask();

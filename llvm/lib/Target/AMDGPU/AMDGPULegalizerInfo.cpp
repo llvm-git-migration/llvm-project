@@ -29,6 +29,7 @@
 #include "llvm/CodeGen/GlobalISel/MIPatternMatch.h"
 #include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
 #include "llvm/CodeGen/GlobalISel/Utils.h"
+#include "llvm/CodeGen/Register.h"
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/IntrinsicsAMDGPU.h"
@@ -1832,6 +1833,11 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
       .lower();
   }
 
+  getActionDefinitionsBuilder(G_EXTRACT_SUBVECTOR)
+    //.fewerElementsIf(isWideVec16(0), changeTo(0, V2S16))
+    .customFor({V8S16, V4S16})
+    .lower();
+
   getActionDefinitionsBuilder(G_EXTRACT_VECTOR_ELT)
     .unsupportedIf([=](const LegalityQuery &Query) {
         const LLT &EltTy = Query.Types[1].getElementType();
@@ -2127,6 +2133,8 @@ bool AMDGPULegalizerInfo::legalizeCustom(
   case TargetOpcode::G_FMINNUM_IEEE:
   case TargetOpcode::G_FMAXNUM_IEEE:
     return legalizeMinNumMaxNum(Helper, MI);
+  case TargetOpcode::G_EXTRACT_SUBVECTOR:
+    return legalizeExtractSubvector(MI, MRI, B);
   case TargetOpcode::G_EXTRACT_VECTOR_ELT:
     return legalizeExtractVectorElt(MI, MRI, B);
   case TargetOpcode::G_INSERT_VECTOR_ELT:
@@ -2714,6 +2722,57 @@ bool AMDGPULegalizerInfo::legalizeMinNumMaxNum(LegalizerHelper &Helper,
     return true;
 
   return Helper.lowerFMinNumMaxNum(MI) == LegalizerHelper::Legalized;
+}
+
+static auto buildExtractSubvector(MachineIRBuilder &B, SrcOp Src,
+                                  LLT DstTy, unsigned Start) {
+  SmallVector<Register, 8> Subvectors;
+  for (unsigned i = Start, e = Start + DstTy.getNumElements(); i != e; ++i) {
+    Subvectors.push_back(
+        B.buildExtractVectorElementConstant(DstTy.getElementType(), Src, i)
+            .getReg(0));
+  }
+  return B.buildBuildVector(DstTy, Subvectors);
+}
+
+bool AMDGPULegalizerInfo::legalizeExtractSubvector(
+  MachineInstr &MI, MachineRegisterInfo &MRI,
+  MachineIRBuilder &B) const {
+  const auto &Instr = llvm::cast<GExtractSubvector>(MI);
+  Register Src = Instr.getSrcVec();
+  Register Dst = MI.getOperand(0).getReg();
+  auto Start = Instr.getIndexImm();
+
+  LLT SrcTy = MRI.getType(Src);
+  LLT DstTy = MRI.getType(Dst);
+
+  LLT EltTy = SrcTy.getElementType();
+  assert(EltTy == DstTy.getElementType());
+  auto Count = DstTy.getNumElements();
+  assert(SrcTy.getNumElements() % 2 == 0 && Count % 2 == 0);
+
+  // Split vector size into legal sub vectors, and use build_vector
+  // to merge the result.
+  if (EltTy.getScalarSizeInBits() == 16 && Start % 2 == 0) {
+    bool UseScalar = Count == 2;
+    // Extract 32-bit registers at a time.
+    LLT NewSrcTy =
+        UseScalar ? S32 : LLT::fixed_vector(SrcTy.getNumElements() / 2, S32);
+    auto Bitcasted = B.buildBitcast(NewSrcTy, Src).getReg(0);
+    LLT NewDstTy = LLT::fixed_vector(DstTy.getNumElements() / 2, S32);
+
+    SmallVector<Register, 8> Subvectors;
+    for (unsigned i = Start / 2, e = (Start + Count) / 2; i != e; ++i) {
+      auto Subvec = B.buildExtractVectorElementConstant(S32, Bitcasted, i);
+      Subvectors.push_back(Subvec.getReg(0));
+    }
+
+    auto BuildVec = B.buildBuildVector(NewDstTy, Subvectors);
+    B.buildBitcast(Dst, BuildVec.getReg(0));
+    MI.eraseFromParent();
+    return true;
+  }
+  return false;
 }
 
 bool AMDGPULegalizerInfo::legalizeExtractVectorElt(
