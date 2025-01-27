@@ -1,4 +1,5 @@
-! RUN: bbc -emit-fir %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir %s -o - | FileCheck %s
  
 ! FRACTION
 ! CHECK-LABE: fraction_test

@@ -1,4 +1,5 @@
-! RUN: bbc -emit-hlfir %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-hlfir %s -o - | FileCheck %s
 
 module reduce_mod
 
