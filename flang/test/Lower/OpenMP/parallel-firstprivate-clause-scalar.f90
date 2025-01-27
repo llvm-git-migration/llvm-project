@@ -1,7 +1,8 @@
 ! This test checks lowering of `FIRSTPRIVATE` clause for scalar types.
 
+! REQUIRES: x86_64-registered-target
 ! REQUIRES: shell
-! RUN: bbc -fopenmp -emit-hlfir %s -o - \
+! RUN: bbc -target x86_64-unknown-linux-gnu -fopenmp -emit-hlfir %s -o - \
 ! RUN: | FileCheck %s --check-prefix=CHECK
 
 !CHECK:  omp.private {type = firstprivate} @[[ARG2_LOGICAL_PRIVATIZER:_QFfirstprivate_logicalEarg2_firstprivate_ref_l8]] : !fir.ref<!fir.logical<1>> alloc

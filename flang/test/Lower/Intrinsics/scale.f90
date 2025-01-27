@@ -1,4 +1,5 @@
-! RUN: bbc -emit-fir -hlfir=false %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir -hlfir=false %s -o - | FileCheck %s
 
 ! CHECK-LABEL: scale_test1
 subroutine scale_test1(x, i)

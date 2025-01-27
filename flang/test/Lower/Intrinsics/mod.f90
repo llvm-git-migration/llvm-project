@@ -1,5 +1,6 @@
-! RUN: bbc -emit-fir -hlfir=false %s -o - | FileCheck %s
-! RUN: %flang_fc1 -emit-fir -flang-deprecated-no-hlfir %s -o - | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu -emit-fir -hlfir=false %s -o - | FileCheck %s
+! RUN: %flang_fc1 -target x86_64-unknown-linux-gnu -emit-fir -flang-deprecated-no-hlfir %s -o - | FileCheck %s
 
 ! CHECK-LABEL: func @_QPmod_testr4(
 ! CHECK-SAME: %[[arg0:.*]]: !fir.ref<f32>{{.*}}, %[[arg1:.*]]: !fir.ref<f32>{{.*}}, %[[arg2:.*]]: !fir.ref<f32>{{.*}}) {
