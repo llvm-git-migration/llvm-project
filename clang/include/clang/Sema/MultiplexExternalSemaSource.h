@@ -345,6 +345,10 @@ public:
   void ReadDeclsToCheckForDeferredDiags(
       llvm::SmallSetVector<Decl *, 4> &Decls) override;
 
+  void ReadRecordExceptionCopyingConstructors(
+      llvm::MapVector<CXXRecordDecl *,
+                      CXXConstructorDecl *> &RecordToCtor) override;
+
   /// \copydoc ExternalSemaSource::CorrectTypo
   /// \note Returns the first nonempty correction.
   TypoCorrection CorrectTypo(const DeclarationNameInfo &Typo,

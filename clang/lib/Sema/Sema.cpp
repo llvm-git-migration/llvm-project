@@ -1101,6 +1101,8 @@ void Sema::ActOnStartOfTranslationUnit() {
   if (getLangOpts().CPlusPlusModules &&
       getLangOpts().getCompilingModule() == LangOptions::CMK_HeaderUnit)
     HandleStartOfHeaderUnit();
+
+  LoadExternalRecordToExceptionCopyingCtor();
 }
 
 void Sema::ActOnEndOfTranslationUnitFragment(TUFragmentKind Kind) {

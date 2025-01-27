@@ -200,6 +200,9 @@ public:
   virtual void
   ReadDeclsToCheckForDeferredDiags(llvm::SmallSetVector<Decl *, 4> &Decls) {}
 
+  virtual void ReadRecordExceptionCopyingConstructors(
+      llvm::MapVector<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor) {}
+
   /// \copydoc Sema::CorrectTypo
   /// \note LookupKind must correspond to a valid Sema::LookupNameKind
   ///

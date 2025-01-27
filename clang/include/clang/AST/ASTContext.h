@@ -3289,6 +3289,9 @@ public:
       const FunctionDecl *FD,
       llvm::function_ref<void(FunctionDecl *)> Pred) const;
 
+  const llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> *
+  getRecordToCopyCtor() const;
+
   const CXXConstructorDecl *
   getCopyConstructorForExceptionObject(CXXRecordDecl *RD);
 
