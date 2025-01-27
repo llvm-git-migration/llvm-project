@@ -3,7 +3,7 @@
        {
          "name" : "MemRef_B",
          "sizes" : [ "*", "1024" ],
-	 "type" : "doble"
+	 "type" : "double"
       },
       {
          "name" : "MemRef_A",
