@@ -121,7 +121,7 @@ struct testIndirectFieldDecl {
   };
 };
 // CHECK:      IndirectFieldDecl{{.*}} TestIndirectFieldDecl 'int'
-// CHECK-NEXT:   Field{{.*}} ''
+// CHECK-NEXT:   Field{{.*}} index 0
 // CHECK-NEXT:   Field{{.*}} 'TestIndirectFieldDecl'
 
 // FIXME: It would be nice to dump the enum and its enumerators.
