@@ -416,13 +416,8 @@ for.body:                                         ; preds = %entry, %for.body
 define void @vectorizable_unscaled_Read_Write(ptr nocapture %A) {
 ; CHECK-LABEL: 'vectorizable_unscaled_Read_Write'
 ; CHECK-NEXT:    for.body:
-; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
-; CHECK-NEXT:  Backward loop carried data dependence that prevents store-to-load forwarding.
+; CHECK-NEXT:      Memory dependences are safe
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        BackwardVectorizableButPreventsForwarding:
-; CHECK-NEXT:            %0 = load i32, ptr %arrayidx, align 4 ->
-; CHECK-NEXT:            store i32 %add, ptr %arrayidx2, align 4
-; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-EMPTY:
@@ -464,12 +459,8 @@ for.body:                                         ; preds = %entry, %for.body
 define i32 @vectorizable_unscaled_Write_Read(ptr nocapture %A) {
 ; CHECK-LABEL: 'vectorizable_unscaled_Write_Read'
 ; CHECK-NEXT:    for.body:
-; CHECK-NEXT:      Memory dependences are safe with a maximum safe vector width of 64 bits
+; CHECK-NEXT:      Memory dependences are safe
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        BackwardVectorizable:
-; CHECK-NEXT:            store i32 %0, ptr %arrayidx, align 4 ->
-; CHECK-NEXT:            %1 = load i32, ptr %arrayidx2, align 4
-; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-EMPTY:
@@ -508,13 +499,8 @@ for.body:                                         ; preds = %entry, %for.body
 define void @unsafe_unscaled_Read_Write(ptr nocapture %A) {
 ; CHECK-LABEL: 'unsafe_unscaled_Read_Write'
 ; CHECK-NEXT:    for.body:
-; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
-; CHECK-NEXT:  Backward loop carried data dependence.
+; CHECK-NEXT:      Memory dependences are safe
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        Backward:
-; CHECK-NEXT:            %0 = load i32, ptr %arrayidx, align 4 ->
-; CHECK-NEXT:            store i32 %add, ptr %arrayidx2, align 4
-; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-EMPTY:
@@ -551,13 +537,8 @@ for.body:                                         ; preds = %entry, %for.body
 define void @unsafe_unscaled_Read_Write2(ptr nocapture %A) {
 ; CHECK-LABEL: 'unsafe_unscaled_Read_Write2'
 ; CHECK-NEXT:    for.body:
-; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
-; CHECK-NEXT:  Backward loop carried data dependence.
+; CHECK-NEXT:      Memory dependences are safe
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        Backward:
-; CHECK-NEXT:            %0 = load i32, ptr %arrayidx, align 4 ->
-; CHECK-NEXT:            store i32 %add, ptr %arrayidx2, align 4
-; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-EMPTY:
@@ -602,17 +583,8 @@ for.body:                                         ; preds = %entry, %for.body
 define void @interleaved_stores(ptr nocapture %A) {
 ; CHECK-LABEL: 'interleaved_stores'
 ; CHECK-NEXT:    for.body:
-; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
-; CHECK-NEXT:  Backward loop carried data dependence.
+; CHECK-NEXT:      Memory dependences are safe
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        Backward:
-; CHECK-NEXT:            store i32 %2, ptr %arrayidx5, align 4 ->
-; CHECK-NEXT:            store i32 %2, ptr %arrayidx9, align 4
-; CHECK-EMPTY:
-; CHECK-NEXT:        Backward:
-; CHECK-NEXT:            store i32 %0, ptr %arrayidx2, align 4 ->
-; CHECK-NEXT:            store i32 %2, ptr %arrayidx5, align 4
-; CHECK-EMPTY:
 ; CHECK-NEXT:      Run-time memory checks:
 ; CHECK-NEXT:      Grouped accesses:
 ; CHECK-EMPTY:

@@ -1799,8 +1799,7 @@ void MemoryDepChecker::mergeInStatus(VectorizationSafetyStatus S) {
 ///     }
 static bool isSafeDependenceDistance(const DataLayout &DL, ScalarEvolution &SE,
                                      const SCEV &MaxBTC, const SCEV &Dist,
-                                     uint64_t MaxStride,
-                                     uint64_t TypeByteSize) {
+                                     uint64_t MaxStride) {
 
   // If we can prove that
   //      (**) |Dist| > MaxBTC * Step
@@ -1819,8 +1818,7 @@ static bool isSafeDependenceDistance(const DataLayout &DL, ScalarEvolution &SE,
   // will be executed only if LoopCount >= VF, proving distance >= LoopCount
   // also guarantees that distance >= VF.
   //
-  const uint64_t ByteStride = MaxStride * TypeByteSize;
-  const SCEV *Step = SE.getConstant(MaxBTC.getType(), ByteStride);
+  const SCEV *Step = SE.getConstant(MaxBTC.getType(), MaxStride);
   const SCEV *Product = SE.getMulExpr(&MaxBTC, Step);
 
   const SCEV *CastedDist = &Dist;
@@ -1854,24 +1852,16 @@ static bool isSafeDependenceDistance(const DataLayout &DL, ScalarEvolution &SE,
 /// bytes.
 ///
 /// \returns true if they are independent.
-static bool areStridedAccessesIndependent(uint64_t Distance, uint64_t Stride,
-                                          uint64_t TypeByteSize) {
+static bool areStridedAccessesIndependent(uint64_t Distance, uint64_t Stride) {
   assert(Stride > 1 && "The stride must be greater than 1");
-  assert(TypeByteSize > 0 && "The type size in byte must be non-zero");
   assert(Distance > 0 && "The distance must be non-zero");
 
-  // Skip if the distance is not multiple of type byte size.
-  if (Distance % TypeByteSize)
-    return false;
-
-  uint64_t ScaledDist = Distance / TypeByteSize;
-
-  // No dependence if the scaled distance is not multiple of the stride.
+  // No dependence if the distance is not multiple of the stride.
   // E.g.
   //      for (i = 0; i < 1024 ; i += 4)
   //        A[i+2] = A[i] + 1;
   //
-  // Two accesses in memory (scaled distance is 2, stride is 4):
+  // Two accesses in memory (distance is 2, stride is 4):
   //     | A[0] |      |      |      | A[4] |      |      |      |
   //     |      |      | A[2] |      |      |      | A[6] |      |
   //
@@ -1879,10 +1869,10 @@ static bool areStridedAccessesIndependent(uint64_t Distance, uint64_t Stride,
   //      for (i = 0; i < 1024 ; i += 3)
   //        A[i+4] = A[i] + 1;
   //
-  // Two accesses in memory (scaled distance is 4, stride is 3):
+  // Two accesses in memory (distance is 4, stride is 3):
   //     | A[0] |      |      | A[3] |      |      | A[6] |      |      |
   //     |      |      |      |      | A[4] |      |      | A[7] |      |
-  return ScaledDist % Stride;
+  return Distance % Stride;
 }
 
 std::variant<MemoryDepChecker::Dependence::DepType,
@@ -1990,25 +1980,34 @@ MemoryDepChecker::getDependenceDistanceStrideAndSize(
     return MemoryDepChecker::Dependence::Unknown;
   }
 
-  uint64_t TypeByteSize = DL.getTypeAllocSize(ATy);
-  bool HasSameSize =
-      DL.getTypeStoreSizeInBits(ATy) == DL.getTypeStoreSizeInBits(BTy);
-  if (!HasSameSize)
-    TypeByteSize = 0;
+  TypeSize AStoreSz = DL.getTypeStoreSize(ATy),
+           BStoreSz = DL.getTypeStoreSize(BTy);
 
-  StrideAPtrInt = std::abs(StrideAPtrInt);
-  StrideBPtrInt = std::abs(StrideBPtrInt);
+  // Fail early if either store size is scalable.
+  if (AStoreSz.isScalable() || BStoreSz.isScalable())
+    return MemoryDepChecker::Dependence::Unknown;
 
-  uint64_t MaxStride = std::max(StrideAPtrInt, StrideBPtrInt);
+  // The TypeByteSize is used to scale Distance and VF. In these contexts, the
+  // only size that matters is the size of the Sink. If store sizes are not the
+  // same, set TypeByteSize to zero, so we can check it in the caller.
+  uint64_t ASz = alignTo(AStoreSz, DL.getABITypeAlign(ATy)),
+           TypeByteSize = AStoreSz == BStoreSz
+                              ? alignTo(BStoreSz, DL.getABITypeAlign(BTy))
+                              : 0;
+
+  uint64_t StrideAScaled = std::abs(StrideAPtrInt) * ASz;
+  uint64_t StrideBScaled = std::abs(StrideBPtrInt) * TypeByteSize;
+
+  uint64_t MaxStride = std::max(StrideAScaled, StrideBScaled);
 
   std::optional<uint64_t> CommonStride;
-  if (StrideAPtrInt == StrideBPtrInt)
-    CommonStride = StrideAPtrInt;
+  if (StrideAScaled == StrideBScaled)
+    CommonStride = StrideAScaled;
 
   // TODO: Historically, we don't retry with runtime checks unless the
   // (unscaled) strides are the same. Fix this once the condition for runtime
   // checks in isDependent is fixed.
-  bool ShouldRetryWithRuntimeCheck = CommonStride.has_value();
+  bool ShouldRetryWithRuntimeCheck = StrideAPtrInt == StrideBPtrInt;
 
   return DepDistanceStrideAndSizeInfo(Dist, MaxStride, CommonStride,
                                       ShouldRetryWithRuntimeCheck, TypeByteSize,
@@ -2048,9 +2047,9 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   // upper bound of the number of iterations), the accesses are independet, i.e.
   // they are far enough appart that accesses won't access the same location
   // across all loop ierations.
-  if (HasSameSize && isSafeDependenceDistance(
-                         DL, SE, *(PSE.getSymbolicMaxBackedgeTakenCount()),
-                         *Dist, MaxStride, TypeByteSize))
+  if (HasSameSize &&
+      isSafeDependenceDistance(
+          DL, SE, *(PSE.getSymbolicMaxBackedgeTakenCount()), *Dist, MaxStride))
     return Dependence::NoDep;
 
   const SCEVConstant *ConstDist = dyn_cast<SCEVConstant>(Dist);
@@ -2062,7 +2061,7 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
     // If the distance between accesses and their strides are known constants,
     // check whether the accesses interlace each other.
     if (Distance > 0 && CommonStride && CommonStride > 1 && HasSameSize &&
-        areStridedAccessesIndependent(Distance, *CommonStride, TypeByteSize)) {
+        areStridedAccessesIndependent(Distance, *CommonStride)) {
       LLVM_DEBUG(dbgs() << "LAA: Strided accesses are independent\n");
       return Dependence::NoDep;
     }
@@ -2154,8 +2153,8 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
 
   // It's not vectorizable if the distance is smaller than the minimum distance
   // needed for a vectroized/unrolled version. Vectorizing one iteration in
-  // front needs TypeByteSize * Stride. Vectorizing the last iteration needs
-  // TypeByteSize (No need to plus the last gap distance).
+  // front needs CommonStride. Vectorizing the last iteration needs TypeByteSize
+  // (No need to plus the last gap distance).
   //
   // E.g. Assume one char is 1 byte in memory and one int is 4 bytes.
   //      foo(int *A) {
@@ -2182,8 +2181,7 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
   // We know that Dist is positive, but it may not be constant. Use the signed
   // minimum for computations below, as this ensures we compute the closest
   // possible dependence distance.
-  uint64_t MinDistanceNeeded =
-      TypeByteSize * *CommonStride * (MinNumIter - 1) + TypeByteSize;
+  uint64_t MinDistanceNeeded = *CommonStride * (MinNumIter - 1) + TypeByteSize;
   if (MinDistanceNeeded > static_cast<uint64_t>(MinDistance)) {
     if (!ConstDist) {
       // For non-constant distances, we checked the lower bound of the
@@ -2239,7 +2237,7 @@ MemoryDepChecker::isDependent(const MemAccessInfo &A, unsigned AIdx,
 
   // An update to MinDepDistBytes requires an update to MaxSafeVectorWidthInBits
   // since there is a backwards dependency.
-  uint64_t MaxVF = MinDepDistBytes / (TypeByteSize * *CommonStride);
+  uint64_t MaxVF = MinDepDistBytes / *CommonStride;
   LLVM_DEBUG(dbgs() << "LAA: Positive min distance " << MinDistance
                     << " with max VF = " << MaxVF << '\n');
 

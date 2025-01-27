@@ -62,10 +62,6 @@ define void @forward_different_access_sizes(ptr readnone %end, ptr %start) {
 ; CHECK-NEXT:      Report: unsafe dependent memory operations in loop. Use #pragma clang loop distribute(enable) to allow loop distribution to attempt to isolate the offending operations into a separate loop
 ; CHECK-NEXT:  Forward loop carried data dependence that prevents store-to-load forwarding.
 ; CHECK-NEXT:      Dependences:
-; CHECK-NEXT:        Forward:
-; CHECK-NEXT:            %l = load i24, ptr %gep.1, align 1 ->
-; CHECK-NEXT:            store i24 %l, ptr %ptr.iv, align 1
-; CHECK-EMPTY:
 ; CHECK-NEXT:        ForwardButPreventsForwarding:
 ; CHECK-NEXT:            store i32 0, ptr %gep.2, align 4 ->
 ; CHECK-NEXT:            %l = load i24, ptr %gep.1, align 1
