@@ -4,6 +4,7 @@
 # Polly/LLVM update_check.py
 # Update lit FileCheck files by replacing the 'CHECK:' lines by the actual output of the 'RUN:' command.
 
+from __future__ import print_function
 import argparse
 import os
 import subprocess

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import random
 import gmpapi
 
@@ -42,7 +43,7 @@ mm_ushort1 = [minus1(MAX_USHORT)]
 mm_all = mm_slong + mm_ulong + mm_sint + mm_uint + mm_sshort + mm_ushort
 zero_one_all = mzero_one + zero_one
 
-mpz_std_list = zero_one_all + mm_all + apply(plus1, mm_all) + apply(minus1, mm_all)
+mpz_std_list = zero_one_all + mm_all + plus1(*mm_all) + minus1(*mm_all)
 si_std_list = (
     zero_one + mm_slong + mm_sint + mm_sshort + mm_slong1 + mm_sint1 + mm_sshort1
 )

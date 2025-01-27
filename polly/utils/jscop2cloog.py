@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import argparse, os
 import json
 
@@ -50,7 +51,7 @@ c # language is C
   context = scop['context']
   domains = getDomains(scop)
   schedules = getSchedules(scop)
-  print template % (context, domains, schedules)
+  print(template % (context, domains, schedules))
 
 def __main__():
   description = 'Translate JSCoP into iscc input'
