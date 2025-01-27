@@ -996,6 +996,7 @@ Bug Fixes to C++ Support
 - Fix template argument checking so that converted template arguments are
   converted again. This fixes some issues with partial ordering involving
   template template parameters with non-type template parameters.
+- Fix nondeduced mismatch with nullptr template arguments.
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
