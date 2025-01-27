@@ -4568,9 +4568,23 @@ buildCapturedStmtCaptureList(Sema &S, CapturedRegionScopeInfo *RSI,
   return false;
 }
 
+static bool
+isOpenMPCapturedRegionInArmStreamingFunction(Sema const &S,
+                                             CapturedRegionKind Kind) {
+  if (!S.getLangOpts().OpenMP || Kind != CR_OpenMP)
+    return false;
+  FunctionDecl *FD = S.getCurFunctionDecl(/*AllowLambda=*/true);
+  if (!FD)
+    return false;
+  return IsArmStreamingFunction(FD, /*IncludeLocallyStreaming=*/true);
+}
+
 void Sema::ActOnCapturedRegionStart(SourceLocation Loc, Scope *CurScope,
                                     CapturedRegionKind Kind,
                                     unsigned NumParams) {
+  if (isOpenMPCapturedRegionInArmStreamingFunction(*this, Kind))
+    Diag(Loc, diag::err_sme_openmp_captured_region);
+
   CapturedDecl *CD = nullptr;
   RecordDecl *RD = CreateCapturedStmtRecordDecl(CD, Loc, NumParams);
 
@@ -4602,6 +4616,9 @@ void Sema::ActOnCapturedRegionStart(SourceLocation Loc, Scope *CurScope,
                                     CapturedRegionKind Kind,
                                     ArrayRef<CapturedParamNameType> Params,
                                     unsigned OpenMPCaptureLevel) {
+  if (isOpenMPCapturedRegionInArmStreamingFunction(*this, Kind))
+    Diag(Loc, diag::err_sme_openmp_captured_region);
+
   CapturedDecl *CD = nullptr;
   RecordDecl *RD = CreateCapturedStmtRecordDecl(CD, Loc, Params.size());
 
