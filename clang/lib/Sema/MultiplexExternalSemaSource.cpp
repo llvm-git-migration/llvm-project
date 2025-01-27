@@ -336,6 +336,12 @@ void MultiplexExternalSemaSource::ReadLateParsedTemplates(
     Sources[i]->ReadLateParsedTemplates(LPTMap);
 }
 
+void MultiplexExternalSemaSource::ReadRecordExceptionCopyingConstructors(
+    llvm::MapVector<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor) {
+  for (size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->ReadRecordExceptionCopyingConstructors(RecordToCtor);
+}
+
 TypoCorrection MultiplexExternalSemaSource::CorrectTypo(
                                      const DeclarationNameInfo &Typo,
                                      int LookupKind, Scope *S, CXXScopeSpec *SS,

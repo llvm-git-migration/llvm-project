@@ -18720,6 +18720,19 @@ bool Sema::DefineUsedVTables() {
   return DefinedAnything;
 }
 
+void Sema::LoadExternalRecordToExceptionCopyingCtor() {
+  if (!ExternalSource)
+    return;
+
+  if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
+    llvm::MapVector<CXXRecordDecl *, CXXConstructorDecl *> RecordToCtorMap;
+    ExternalSource->ReadRecordExceptionCopyingConstructors(RecordToCtorMap);
+    for (const auto &[RD, CD] : RecordToCtorMap) {
+      Context.addCopyConstructorForExceptionObject(RD, CD);
+    }
+  }
+}
+
 void Sema::MarkVirtualMemberExceptionSpecsNeeded(SourceLocation Loc,
                                                  const CXXRecordDecl *RD) {
   for (const auto *I : RD->methods())

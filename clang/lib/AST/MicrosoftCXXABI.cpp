@@ -146,6 +146,11 @@ public:
     llvm_unreachable("unapplicable to the MS ABI");
   }
 
+  const llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> *
+  getRecordToCopyCtor() const override {
+    return &RecordToCopyCtor;
+  }
+
   const CXXConstructorDecl *
   getCopyConstructorForExceptionObject(CXXRecordDecl *RD) override {
     return RecordToCopyCtor[RD];

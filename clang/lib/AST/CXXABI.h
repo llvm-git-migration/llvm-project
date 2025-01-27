@@ -56,6 +56,9 @@ public:
   virtual void addCopyConstructorForExceptionObject(CXXRecordDecl *,
                                                     CXXConstructorDecl *) = 0;
 
+  virtual const llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> *
+  getRecordToCopyCtor() const = 0;
+
   /// Retrieves the mapping from class to copy constructor for this C++ ABI.
   virtual const CXXConstructorDecl *
   getCopyConstructorForExceptionObject(CXXRecordDecl *) = 0;
