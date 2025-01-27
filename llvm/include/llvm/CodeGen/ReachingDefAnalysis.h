@@ -142,7 +142,7 @@ private:
 
   MBBReachingDefsInfo MBBReachingDefs;
   using MBBFrameObjsReachingDefsInfo =
-      std::vector<std::vector<SmallVector<int>>>;
+      DenseMap<unsigned, DenseMap<int, SmallVector<int>>>;
   // MBBFrameObjsReachingDefs[i][j] is a list of instruction indices (relative
   // to begining of MBB) that define frame index (j +
   // MF->getFrameInfo().getObjectIndexBegin()) in MBB i. This is used in
