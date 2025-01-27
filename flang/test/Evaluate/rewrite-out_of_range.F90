@@ -1,4 +1,5 @@
 ! Tests rewriting of OUT_OF_RANGE()
+! REQUIRES: x86-registered-target
 ! RUN: %flang_fc1 -fdebug-unparse -cpp %s 2>&1 | FileCheck %s --check-prefixes=CHECK%if target=x86_64{{.*}} %{,CHECK-X86-64%}
 
 logical round

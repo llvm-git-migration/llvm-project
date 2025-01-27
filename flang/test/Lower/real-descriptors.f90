@@ -1,4 +1,5 @@
-! RUN: bbc %s -o - | tco | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu %s -o - | tco | FileCheck %s
 
 ! CHECK-LABEL: define void @_QQmain()
 program p
