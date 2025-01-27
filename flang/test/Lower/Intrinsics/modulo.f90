@@ -1,3 +1,4 @@
+! REQUIRES: flang-supports-f128-math
 ! RUN: bbc -emit-fir -hlfir=false %s -o - | FileCheck %s -check-prefixes=HONORINF,ALL
 ! RUN: flang -fc1 -menable-no-infs -emit-fir -flang-deprecated-no-hlfir %s -o - | FileCheck %s -check-prefixes=CHECK,ALL
 

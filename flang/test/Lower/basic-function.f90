@@ -1,4 +1,5 @@
-! RUN: bbc %s -o "-" -emit-fir -hlfir=false | FileCheck %s
+! REQUIRES: x86_64-registered-target
+! RUN: bbc -target x86_64-unknown-linux-gnu %s -o "-" -emit-fir -hlfir=false | FileCheck %s
 
 integer(1) function fct1()
 end

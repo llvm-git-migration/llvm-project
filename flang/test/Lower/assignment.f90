@@ -1,3 +1,4 @@
+! REQUIRES: flang-supports-f128-math
 ! RUN: %flang_fc1 %s -o "-" -emit-fir -cpp -flang-deprecated-no-hlfir | FileCheck %s --check-prefixes=CHECK%if target=x86_64{{.*}} %{,CHECK-X86-64%}
 
 subroutine sub1(a)

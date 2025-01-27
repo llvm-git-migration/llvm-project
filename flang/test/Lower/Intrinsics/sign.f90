@@ -1,3 +1,4 @@
+! REQUIRES: flang-supports-f128-math
 ! RUN: bbc %s -o - | FileCheck %s
 
 ! CHECK-LABEL: sign_testi

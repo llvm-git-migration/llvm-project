@@ -1,4 +1,5 @@
 ! Test lowering of variables to fir.declare
+! REQUIRES: flang-supports-f128-math
 ! RUN: bbc -emit-hlfir %s -o - | FileCheck %s
 
 subroutine scalar_numeric(x)

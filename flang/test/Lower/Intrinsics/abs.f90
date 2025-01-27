@@ -1,3 +1,4 @@
+! REQUIRES: flang-supports-f128-math
 ! RUN: bbc -emit-fir -hlfir=false %s -o - | FileCheck %s --check-prefixes="CHECK,CMPLX,CMPLX-PRECISE"
 ! RUN: bbc -emit-fir -hlfir=false --math-runtime=precise %s -o - | FileCheck %s --check-prefixes="CMPLX,CMPLX-PRECISE"
 ! RUN: bbc --force-mlir-complex -emit-fir -hlfir=false %s -o - | FileCheck %s --check-prefixes="CMPLX,CMPLX-FAST"
