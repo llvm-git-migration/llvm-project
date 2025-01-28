@@ -308,6 +308,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseEmptyTest) {
 TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   const llvm::StringLiteral Source = R"cc(
     DescriptorTable(
+      visibility = SHADER_VISIBILITY_PIXEL,
       CBV(b0),
       SRV(t42, space = 3, offset = 32, numDescriptors = 4),
       Sampler(s987, space = 2, offset = DESCRIPTOR_RANGE_OFFSET_APPEND),
@@ -382,11 +383,15 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   Elem = Elements[4];
   ASSERT_TRUE(std::holds_alternative<DescriptorTable>(Elem));
   ASSERT_EQ(std::get<DescriptorTable>(Elem).NumClauses, (uint32_t)4);
+  ASSERT_EQ(std::get<DescriptorTable>(Elem).Visibility,
+            ShaderVisibility::Pixel);
 
   Elem = Elements[5];
   // Test generated DescriptorTable start has correct default values
   ASSERT_TRUE(std::holds_alternative<DescriptorTable>(Elem));
   ASSERT_EQ(std::get<DescriptorTable>(Elem).NumClauses, (uint32_t)0);
+  ASSERT_EQ(std::get<DescriptorTable>(Elem).Visibility, ShaderVisibility::All);
+
   ASSERT_TRUE(Consumer->IsSatisfied());
 }
 
@@ -445,6 +450,33 @@ TEST_F(ParseHLSLRootSignatureTest, InvalidParseRepeatedParamTest) {
   const llvm::StringLiteral Source = R"cc(
     DescriptorTable(
       CBV(b0, numDescriptors = 3, numDescriptors = 1)
+    )
+  )cc";
+
+  TrivialModuleLoader ModLoader;
+  auto PP = CreatePP(Source, ModLoader);
+  auto TokLoc = SourceLocation();
+
+  // Test correct diagnostic produced
+  Consumer->SetExpected(diag::err_hlsl_rootsig_repeat_param);
+  hlsl::RootSignatureLexer Lexer(Source, TokLoc, *PP);
+
+  SmallVector<hlsl::RootSignatureToken> Tokens;
+  ASSERT_FALSE(Lexer.Lex(Tokens));
+
+  SmallVector<RootElement> Elements;
+  hlsl::RootSignatureParser Parser(Elements, Tokens, Diags);
+
+  ASSERT_TRUE(Parser.Parse());
+
+  ASSERT_TRUE(Consumer->IsSatisfied());
+}
+
+TEST_F(ParseHLSLRootSignatureTest, InvalidParseRepeatedVisibilityTest) {
+  const llvm::StringLiteral Source = R"cc(
+    DescriptorTable(
+      visibility = SHADER_VISIBILITY_GEOMETRY,
+      visibility = SHADER_VISIBILITY_HULL
     )
   )cc";
 
