@@ -323,8 +323,15 @@ private:
   /// MLIR as a value.
   FailureOr<SmallVector<Value>>
   convertCallOperands(llvm::CallBase *callInst, bool allowInlineAsm = false);
-  /// Converts the parameter attributes attached to `func` and adds them to the
-  /// `funcOp`.
+  /// Converts the callee's function type. For direct calls, it converts the
+  /// actual function type, which may differ from the called operand type in
+  /// variadic functions. For indirect calls, it converts the function type
+  /// associated with the call instruction.
+  LLVMFunctionType convertFunctionType(llvm::CallBase *callInst);
+  /// Returns the callee name, or an empty symbol if the call is not direct.
+  FlatSymbolRefAttr convertCalleeName(llvm::CallBase *callInst);
+  /// Converts the parameter attributes attached to `func` and adds them to
+  /// the `funcOp`.
   void convertParameterAttributes(llvm::Function *func, LLVMFuncOp funcOp,
                                   OpBuilder &builder);
   /// Converts the AttributeSet of one parameter in LLVM IR to a corresponding
