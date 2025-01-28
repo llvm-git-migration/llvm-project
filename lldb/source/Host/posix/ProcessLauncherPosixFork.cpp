@@ -231,12 +231,6 @@ MakeForkActions(const ProcessLaunchInfo &info) {
 }
 
 static Environment::Envp FixupEnvironment(Environment env) {
-#ifdef __ANDROID__
-  // If there is no PATH variable specified inside the environment then set the
-  // path to /system/bin. It is required because the default path used by
-  // execve() is wrong on android.
-  env.try_emplace("PATH", "/system/bin");
-#endif
   return env.getEnvp();
 }
 
