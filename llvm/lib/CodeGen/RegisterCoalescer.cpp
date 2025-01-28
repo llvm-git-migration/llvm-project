@@ -376,6 +376,10 @@ class RegisterCoalescer : private LiveRangeEdit::Delegate {
                                         LiveRange &RegRange, JoinVals &Vals2);
 
 public:
+  // For legacy pass only.
+  RegisterCoalescer() {}
+  RegisterCoalescer &operator=(RegisterCoalescer &&Other) = default;
+
   RegisterCoalescer(LiveIntervals *LIS, SlotIndexes *SI,
                     const MachineLoopInfo *Loops)
       : LIS(LIS), SI(SI), Loops(Loops) {}
@@ -386,7 +390,7 @@ public:
 };
 
 class RegisterCoalescerLegacy : public MachineFunctionPass {
-  std::unique_ptr<RegisterCoalescer> Impl;
+  RegisterCoalescer Impl;
 
 public:
   static char ID; ///< Class identification, replacement for typeinfo
@@ -402,14 +406,14 @@ public:
         MachineFunctionProperties::Property::IsSSA);
   }
 
-  void releaseMemory() override { Impl->releaseMemory(); }
+  void releaseMemory() override { Impl.releaseMemory(); }
 
   /// This is the pass entry point.
   bool runOnMachineFunction(MachineFunction &) override;
 
   /// Implement the dump method.
   void print(raw_ostream &O, const Module * = nullptr) const override {
-    Impl->print(O, nullptr);
+    Impl.print(O, nullptr);
   }
 };
 
@@ -4278,8 +4282,8 @@ bool RegisterCoalescerLegacy::runOnMachineFunction(MachineFunction &MF) {
   auto *Loops = &getAnalysis<MachineLoopInfoWrapperPass>().getLI();
   auto *SIWrapper = getAnalysisIfAvailable<SlotIndexesWrapperPass>();
   SlotIndexes *SI = SIWrapper ? &SIWrapper->getSI() : nullptr;
-  Impl.reset(new RegisterCoalescer(LIS, SI, Loops));
-  return Impl->run(MF);
+  Impl = RegisterCoalescer(LIS, SI, Loops);
+  return Impl.run(MF);
 }
 
 bool RegisterCoalescer::run(MachineFunction &fn) {
