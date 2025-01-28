@@ -112,6 +112,27 @@ public:
   bool Parse();
 
 private:
+  // Root Element helpers
+  bool ParseRootElement(bool First);
+  bool ParseDescriptorTable();
+
+  // Increment the token iterator if we have not reached the end.
+  // Return value denotes if we were already at the last token.
+  bool ConsumeNextToken();
+
+  // Is the current token one of the expected kinds
+  bool EnsureExpectedToken(TokenKind AnyExpected);
+  bool EnsureExpectedToken(ArrayRef<TokenKind> AnyExpected);
+
+  // Consume the next token and report an error if it is not of the expected
+  // kind.
+  //
+  // Return value denotes if it failed to match the expected kind, either it is
+  // the end of the stream or it didn't match any of the expected kinds.
+  bool ConsumeExpectedToken(TokenKind Expected);
+  bool ConsumeExpectedToken(ArrayRef<TokenKind> AnyExpected);
+
+private:
   SmallVector<rs::RootElement> &Elements;
   SmallVector<RootSignatureToken>::const_iterator CurTok;
   SmallVector<RootSignatureToken>::const_iterator LastTok;

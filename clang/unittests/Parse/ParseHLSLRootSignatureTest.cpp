@@ -383,4 +383,34 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseEmptyTest) {
   ASSERT_TRUE(Consumer->IsSatisfied());
 }
 
+TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
+  const llvm::StringLiteral Source = R"cc(
+    DescriptorTable()
+  )cc";
+
+  TrivialModuleLoader ModLoader;
+  auto PP = CreatePP(Source, ModLoader);
+  auto TokLoc = SourceLocation();
+
+  hlsl::RootSignatureLexer Lexer(Source, TokLoc, *PP);
+
+  SmallVector<hlsl::RootSignatureToken> Tokens;
+
+  // Test no diagnostics produced
+  Consumer->SetNoDiag();
+  ASSERT_FALSE(Lexer.Lex(Tokens));
+
+  SmallVector<RootElement> Elements;
+  hlsl::RootSignatureParser Parser(Elements, Tokens, Diags);
+
+  ASSERT_FALSE(Parser.Parse());
+  RootElement Elem = Elements[0];
+
+  // Test generated DescriptorTable start has correct default values
+  ASSERT_TRUE(std::holds_alternative<DescriptorTable>(Elem));
+  ASSERT_EQ(std::get<DescriptorTable>(Elem).NumClauses, (uint32_t)0);
+
+  ASSERT_TRUE(Consumer->IsSatisfied());
+}
+
 } // anonymous namespace

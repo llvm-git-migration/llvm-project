@@ -207,7 +207,90 @@ bool RootSignatureParser::Parse() {
   if (CurTok == LastTok)
     return false;
 
+  bool First = true;
+  // Iterate as many RootElements as possible
+  while (!ParseRootElement(First)) {
+    First = false;
+    // Avoid use of ConsumeNextToken here to skip incorrect end of tokens error
+    CurTok++;
+    if (CurTok == LastTok)
+      return false;
+    if (EnsureExpectedToken(TokenKind::pu_comma))
+      return true;
+  }
+
   return true;
+}
+
+bool RootSignatureParser::ParseRootElement(bool First) {
+  if (First && EnsureExpectedToken(TokenKind::kw_DescriptorTable))
+    return true;
+  if (!First && ConsumeExpectedToken(TokenKind::kw_DescriptorTable))
+    return true;
+
+  // Dispatch onto the correct parse method
+  switch (CurTok->Kind) {
+  case TokenKind::kw_DescriptorTable:
+    return ParseDescriptorTable();
+  default:
+    llvm_unreachable("Switch for an expected token was not provided");
+    return true;
+  }
+}
+
+bool RootSignatureParser::ParseDescriptorTable() {
+  DescriptorTable Table;
+
+  if (ConsumeExpectedToken(TokenKind::pu_l_paren))
+    return true;
+
+  // Empty case:
+  if (!ConsumeExpectedToken(TokenKind::pu_r_paren)) {
+    Elements.push_back(Table);
+    return false;
+  }
+
+  return true;
+
+}
+
+bool RootSignatureParser::ConsumeNextToken() {
+  CurTok++;
+  if (LastTok == CurTok) {
+    return true;
+  }
+  return false;
+}
+
+// Is given token one of the expected kinds
+static bool IsExpectedToken(TokenKind Kind, ArrayRef<TokenKind> AnyExpected) {
+  for (auto Expected : AnyExpected)
+    if (Kind == Expected)
+      return true;
+  return false;
+}
+
+bool RootSignatureParser::EnsureExpectedToken(TokenKind Expected) {
+  return EnsureExpectedToken(ArrayRef{Expected});
+}
+
+bool RootSignatureParser::EnsureExpectedToken(ArrayRef<TokenKind> AnyExpected) {
+  if (IsExpectedToken(CurTok->Kind, AnyExpected))
+    return false;
+
+  return true;
+}
+
+bool RootSignatureParser::ConsumeExpectedToken(TokenKind Expected) {
+  return ConsumeExpectedToken(ArrayRef{Expected});
+}
+
+bool RootSignatureParser::ConsumeExpectedToken(
+    ArrayRef<TokenKind> AnyExpected) {
+  if (ConsumeNextToken())
+    return true;
+
+  return EnsureExpectedToken(AnyExpected);
 }
 
 } // namespace hlsl
