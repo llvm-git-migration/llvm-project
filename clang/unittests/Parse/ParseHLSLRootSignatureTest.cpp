@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 
 using namespace clang;
+using namespace llvm::hlsl::root_signature;
 
 namespace {
 
@@ -276,6 +277,31 @@ TEST_F(ParseHLSLRootSignatureTest, InvalidLexIdentifierTest) {
 
   SmallVector<hlsl::RootSignatureToken> Tokens;
   ASSERT_TRUE(Lexer.Lex(Tokens));
+  ASSERT_TRUE(Consumer->IsSatisfied());
+}
+
+// Valid Parser Tests
+
+TEST_F(ParseHLSLRootSignatureTest, ValidParseEmptyTest) {
+  const llvm::StringLiteral Source = R"cc()cc";
+
+  TrivialModuleLoader ModLoader;
+  auto PP = CreatePP(Source, ModLoader);
+  auto TokLoc = SourceLocation();
+
+  // Test no diagnostics produced
+  Consumer->SetNoDiag();
+  hlsl::RootSignatureLexer Lexer(Source, TokLoc, *PP);
+
+  SmallVector<hlsl::RootSignatureToken> Tokens;
+  ASSERT_FALSE(Lexer.Lex(Tokens));
+
+  SmallVector<RootElement> Elements;
+  hlsl::RootSignatureParser Parser(Elements, Tokens, Diags);
+
+  ASSERT_FALSE(Parser.Parse());
+  ASSERT_EQ((int)Elements.size(), 0);
+
   ASSERT_TRUE(Consumer->IsSatisfied());
 }
 
