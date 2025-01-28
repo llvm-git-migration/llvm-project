@@ -147,9 +147,6 @@ LogicalResult CvtFloatToTF32Op::verify() {
     break;
   case RndMode::RN:
   case RndMode::RZ:
-    if (getSat() != NVVM::SaturationMode::NONE)
-      return emitError(
-          "Saturation mode not supported with rn/rz rounding modes.");
     break;
   default:
     return emitError(
@@ -1225,17 +1222,29 @@ llvm::Intrinsic::ID CvtFloatToTF32Op::getIntrinsicID(NVVM::FPRoundingMode rnd,
                                                      NVVM::SaturationMode sat,
                                                      bool hasRelu) {
   using RndMode = NVVM::FPRoundingMode;
+  bool hasSatFinite = (sat == NVVM::SaturationMode::SATFINITE);
+  bool hasReluAndSatFinite = hasRelu && hasSatFinite;
   switch (rnd) {
   case RndMode::RN:
-    return hasRelu ? llvm::Intrinsic::nvvm_f2tf32_rn_relu
-                   : llvm::Intrinsic::nvvm_f2tf32_rn;
+    if(hasReluAndSatFinite)
+      return llvm::Intrinsic::nvvm_f2tf32_rn_relu_satfinite;
+    if(hasRelu)
+      return llvm::Intrinsic::nvvm_f2tf32_rn_relu;
+    if(hasSatFinite)
+      return llvm::Intrinsic::nvvm_f2tf32_rn_satfinite;
+    return llvm::Intrinsic::nvvm_f2tf32_rn;
   case RndMode::RZ:
-    return hasRelu ? llvm::Intrinsic::nvvm_f2tf32_rz_relu
-                   : llvm::Intrinsic::nvvm_f2tf32_rz;
+    if(hasReluAndSatFinite)
+      return llvm::Intrinsic::nvvm_f2tf32_rz_relu_satfinite;
+    if(hasRelu)
+      return llvm::Intrinsic::nvvm_f2tf32_rz_relu;
+    if(hasSatFinite)
+      return llvm::Intrinsic::nvvm_f2tf32_rz_satfinite;
+    return llvm::Intrinsic::nvvm_f2tf32_rz;
   case RndMode::RNA:
-    return (sat == NVVM::SaturationMode::SATFINITE)
-               ? llvm::Intrinsic::nvvm_f2tf32_rna_satfinite
-               : llvm::Intrinsic::nvvm_f2tf32_rna;
+    return hasSatFinite
+            ? llvm::Intrinsic::nvvm_f2tf32_rna_satfinite
+            : llvm::Intrinsic::nvvm_f2tf32_rna;
   default:
     llvm_unreachable("Invalid RoundingMode for CvtFloatToTF32Op");
   }
