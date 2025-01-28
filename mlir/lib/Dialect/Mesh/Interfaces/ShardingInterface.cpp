@@ -174,11 +174,6 @@ LogicalResult mesh::ShardingInterface::verifyShardingInterfaceImpl() {
     if (!llvm::isa<RankedTensorType>(type) && !type.isIntOrIndexOrFloat())
       return failure();
 
-  // check loop types
-  // SmallVector<utils::IteratorType> loopTypes = getLoopIteratorTypes();
-  // if (loopTypes.empty())
-  //   return failure();
-
   // check maps
   SmallVector<AffineMap> maps = getIndexingMaps();
   if (maps.empty())
