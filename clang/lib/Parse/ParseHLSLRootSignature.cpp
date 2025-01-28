@@ -278,8 +278,23 @@ bool RootSignatureParser::ParseDescriptorTable() {
     return false;
   }
 
+  bool SeenVisibility = false;
   // Iterate through all the defined clauses
   do {
+    // Handle the visibility parameter
+    if (!TryConsumeExpectedToken(TokenKind::kw_visibility)) {
+      if (SeenVisibility) {
+        Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_repeat_param)
+            << FormatTokenKinds(CurTok->Kind);
+        return true;
+      }
+      SeenVisibility = true;
+      if (ParseParam(&Table.Visibility))
+        return true;
+      continue;
+    }
+
+    // Otherwise, we expect a clause
     if (ParseDescriptorTableClause())
       return true;
     Table.NumClauses++;
@@ -355,6 +370,9 @@ bool RootSignatureParser::ParseParam(ParamType Ref) {
   std::visit(OverloadedMethods{[&](uint32_t *X) { Error = ParseUInt(X); },
                                [&](DescriptorRangeOffset *X) {
                                  Error = ParseDescriptorRangeOffset(X);
+                               },
+                               [&](ShaderVisibility *Enum) {
+                                 Error = ParseShaderVisibility(Enum);
                                },
   }, Ref);
 
@@ -434,6 +452,39 @@ bool RootSignatureParser::ParseRegister(Register *Register) {
   Register->Number = CurTok->NumLiteral.getInt().getExtValue();
 
   return false;
+}
+
+template <typename EnumType>
+bool RootSignatureParser::ParseEnum(
+    llvm::SmallDenseMap<TokenKind, EnumType> EnumMap, EnumType *Enum) {
+  SmallVector<TokenKind> EnumToks;
+  for (auto EnumPair : EnumMap)
+    EnumToks.push_back(EnumPair.first);
+
+  // If invoked we expect to have an enum
+  if (ConsumeExpectedToken(EnumToks))
+    return true;
+
+  // Effectively a switch statement on the token kinds
+  for (auto EnumPair : EnumMap)
+    if (CurTok->Kind == EnumPair.first) {
+      *Enum = EnumPair.second;
+      return false;
+    }
+
+  llvm_unreachable("Switch for an expected token was not provided");
+  return true;
+}
+
+bool RootSignatureParser::ParseShaderVisibility(ShaderVisibility *Enum) {
+  // Define the possible flag kinds
+  llvm::SmallDenseMap<TokenKind, ShaderVisibility> EnumMap = {
+#define SHADER_VISIBILITY_ENUM(NAME, LIT)                                      \
+  {TokenKind::en_##NAME, ShaderVisibility::NAME},
+#include "clang/Parse/HLSLRootSignatureTokenKinds.def"
+  };
+
+  return ParseEnum(EnumMap, Enum);
 }
 
 RootSignatureToken RootSignatureParser::PeekNextToken() {
