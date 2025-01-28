@@ -476,6 +476,7 @@ bool RootSignatureParser::ParseEnum(
   // Handle the edge case when '0' is used to specify None
   if (CurTok->Kind == TokenKind::int_literal) {
     if (CurTok->NumLiteral.getInt() != 0) {
+      Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_non_zero_flag);
       return true;
     }
     // Set enum to None equivalent
