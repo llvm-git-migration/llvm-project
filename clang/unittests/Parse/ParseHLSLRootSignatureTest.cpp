@@ -387,8 +387,8 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   const llvm::StringLiteral Source = R"cc(
     DescriptorTable(
       CBV(b0),
-      SRV(t42, numDescriptors = 4),
-      Sampler(s987),
+      SRV(t42, space = 3, numDescriptors = 4),
+      Sampler(s987, space = 2),
       UAV(u987234)
     ),
     DescriptorTable()
@@ -417,6 +417,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
             RegisterType::BReg);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number, (uint32_t)0);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Space, (uint32_t)0);
 
   Elem = Elements[1];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -426,6 +427,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)42);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)4);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Space, (uint32_t)3);
 
   Elem = Elements[2];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -435,6 +437,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)987);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Space, (uint32_t)2);
 
   Elem = Elements[3];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -444,6 +447,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)987234);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Space, (uint32_t)0);
 
   Elem = Elements[4];
   ASSERT_TRUE(std::holds_alternative<DescriptorTable>(Elem));
