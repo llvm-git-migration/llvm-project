@@ -448,8 +448,8 @@ static FailureOr<MeshSharding> getSharding(OpOperand &opOperand,
                                            AffineMap map) {
   Value operandValue = opOperand.get();
   auto operandType = dyn_cast<RankedTensorType>(operandValue.getType());
-  if(!operandType) {
-    if(operandValue.getType().isIntOrIndexOrFloat())
+  if (!operandType) {
+    if (operandValue.getType().isIntOrIndexOrFloat())
       return MeshSharding();
     return failure();
   }

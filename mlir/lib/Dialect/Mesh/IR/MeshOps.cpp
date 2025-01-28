@@ -775,7 +775,7 @@ MeshSharding::MeshSharding(Value rhs) {
   auto splitAxes = shardingOp.getSplitAxes().getAxes();
   auto partialAxes = shardingOp.getPartialAxes().value_or(ArrayRef<MeshAxis>());
   // If splitAxes and partialAxes are empty, use "empty" constructor.
-  if(splitAxes.empty() && partialAxes.empty()) {
+  if (splitAxes.empty() && partialAxes.empty()) {
     *this = MeshSharding(shardingOp.getMeshAttr());
     return;
   }
@@ -796,7 +796,7 @@ MeshSharding MeshSharding::get(::mlir::FlatSymbolRefAttr mesh_,
                                ArrayRef<Value> dynamic_halo_sizes_,
                                ArrayRef<Value> dynamic_sharded_dims_offsets_) {
   MeshSharding res(mesh_);
-  if(split_axes_.empty() && partial_axes_.empty()) {
+  if (split_axes_.empty() && partial_axes_.empty()) {
     return res;
   }
 
