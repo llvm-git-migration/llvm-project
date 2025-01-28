@@ -119,6 +119,8 @@ private:
   bool ParseDescriptorTableClause();
 
   // Helper dispatch method
+  bool ParseRegister(rs::Register *Reg);
+
   // Increment the token iterator if we have not reached the end.
   // Return value denotes if we were already at the last token.
   bool ConsumeNextToken();
