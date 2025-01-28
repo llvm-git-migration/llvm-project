@@ -1809,4 +1809,5 @@ def err_hlsl_packoffset_invalid_reg : Error<"invalid resource class specifier '%
 // HLSL Root Signature Parser Diagnostics
 def err_hlsl_rootsig_unexpected_eos : Error<"unexpected end to token stream">;
 def err_hlsl_rootsig_unexpected_token_kind : Error<"expected the %select{following|one of the following}0 token kinds '%1'">;
+def err_hlsl_rootsig_repeat_param : Error<"specified the same parameter '%0' multiple times">;
 } // end of Parser diagnostics
