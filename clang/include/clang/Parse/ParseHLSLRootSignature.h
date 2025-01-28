@@ -122,6 +122,7 @@ private:
   // Common parsing helpers
   bool ParseRegister(rs::Register *Reg);
   bool ParseUInt(uint32_t *X);
+  bool ParseDescriptorRangeOffset(rs::DescriptorRangeOffset *X);
 
   // Increment the token iterator if we have not reached the end.
   // Return value denotes if we were already at the last token.
