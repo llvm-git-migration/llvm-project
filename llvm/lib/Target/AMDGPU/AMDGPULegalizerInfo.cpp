@@ -2010,7 +2010,7 @@ AMDGPULegalizerInfo::AMDGPULegalizerInfo(const GCNSubtarget &ST_,
     .legalForCartesianProduct(AllF64Vectors, {F64})
     .clampNumElements(0, V16I32, V32I32)
     .clampNumElements(0, V2I64, V16I64)
-    .fewerElementsIf(isWideVec16(0), changeElementCountTo(0, V2I16))
+    .fewerElementsIf(isWideVec16(0), changeElementCountTo(0, ElementCount::getFixed(2)))
     .moreElementsIf(
       isIllegalRegisterType(0),
       moreElementsToNextExistingRegClass(0));
