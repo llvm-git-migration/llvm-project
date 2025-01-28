@@ -1,9 +1,58 @@
 #include "clang/Parse/ParseHLSLRootSignature.h"
 
+#include "llvm/Support/raw_ostream.h"
+
 using namespace llvm::hlsl::root_signature;
 
 namespace clang {
 namespace hlsl {
+
+// Helper definitions
+
+static std::string FormatTokenKinds(ArrayRef<TokenKind> Kinds) {
+  std::string TokenString;
+  llvm::raw_string_ostream Out(TokenString);
+  bool First = true;
+  for (auto Kind : Kinds) {
+    if (!First)
+      Out << ", ";
+    switch (Kind) {
+    case TokenKind::invalid:
+      break;
+    case TokenKind::int_literal:
+      Out << "integer literal";
+      break;
+    case TokenKind::bReg:
+      Out << "b register";
+      break;
+    case TokenKind::tReg:
+      Out << "t register";
+      break;
+    case TokenKind::uReg:
+      Out << "u register";
+      break;
+    case TokenKind::sReg:
+      Out << "s register";
+      break;
+#define PUNCTUATOR(X, Y)                                                       \
+  case TokenKind::pu_##X:                                                      \
+    Out << #Y;                                                                 \
+    break;
+#define KEYWORD(NAME)                                                          \
+  case TokenKind::kw_##NAME:                                                   \
+    Out << #NAME;                                                              \
+    break;
+#define ENUM(NAME, LIT)                                                        \
+  case TokenKind::en_##NAME:                                                   \
+    Out << LIT;                                                                \
+    break;
+#include "clang/Parse/HLSLRootSignatureTokenKinds.def"
+    }
+    First = false;
+  }
+
+  return TokenString;
+}
 
 // Lexer Definitions
 
@@ -251,12 +300,13 @@ bool RootSignatureParser::ParseDescriptorTable() {
   }
 
   return true;
-
 }
 
 bool RootSignatureParser::ConsumeNextToken() {
   CurTok++;
   if (LastTok == CurTok) {
+    // Report unexpected end of tokens error
+    Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_unexpected_eos);
     return true;
   }
   return false;
@@ -278,6 +328,9 @@ bool RootSignatureParser::EnsureExpectedToken(ArrayRef<TokenKind> AnyExpected) {
   if (IsExpectedToken(CurTok->Kind, AnyExpected))
     return false;
 
+  // Report unexpected token kind error
+  Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_unexpected_token_kind)
+      << (unsigned)(AnyExpected.size() != 1) << FormatTokenKinds(AnyExpected);
   return true;
 }
 
