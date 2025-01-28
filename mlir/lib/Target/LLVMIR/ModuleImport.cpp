@@ -1489,15 +1489,14 @@ ModuleImport::convertBranchArgs(llvm::Instruction *branch,
   return success();
 }
 
-LogicalResult ModuleImport::convertCallTypeAndOperands(
-    llvm::CallBase *callInst, SmallVectorImpl<Type> &types,
-    SmallVectorImpl<Value> &operands, bool allowInlineAsm) {
-  if (!callInst->getType()->isVoidTy())
-    types.push_back(convertType(callInst->getType()));
-
+FailureOr<SmallVector<Value>>
+ModuleImport::convertCallOperands(llvm::CallBase *callInst,
+                                  bool allowInlineAsm) {
   bool isInlineAsm = callInst->isInlineAsm();
   if (isInlineAsm && !allowInlineAsm)
     return failure();
+
+  SmallVector<Value> operands;
 
   // Cannot use isIndirectCall() here because we need to handle Constant callees
   // that are not considered indirect calls by LLVM. However, in MLIR, they are
@@ -1515,8 +1514,9 @@ LogicalResult ModuleImport::convertCallTypeAndOperands(
   FailureOr<SmallVector<Value>> arguments = convertValues(args);
   if (failed(arguments))
     return failure();
+
   llvm::append_range(operands, *arguments);
-  return success();
+  return operands;
 }
 
 LogicalResult ModuleImport::convertIntrinsic(llvm::CallInst *inst) {
@@ -1603,10 +1603,9 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
     auto callInst = cast<llvm::CallInst>(inst);
     llvm::Value *calledOperand = callInst->getCalledOperand();
 
-    SmallVector<Type> types;
-    SmallVector<Value> operands;
-    if (failed(convertCallTypeAndOperands(callInst, types, operands,
-                                          /*allowInlineAsm=*/true)))
+    FailureOr<SmallVector<Value>> operands =
+        convertCallOperands(callInst, /*allowInlineAsm=*/true);
+    if (failed(operands))
       return failure();
 
     if (auto asmI = dyn_cast<llvm::InlineAsm>(calledOperand)) {
@@ -1614,7 +1613,7 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
       if (!resultTy)
         return failure();
       auto callOp = builder.create<InlineAsmOp>(
-          loc, resultTy, operands, builder.getStringAttr(asmI->getAsmString()),
+          loc, resultTy, *operands, builder.getStringAttr(asmI->getAsmString()),
           builder.getStringAttr(asmI->getConstraintString()),
           /*has_side_effects=*/true,
           /*is_align_stack=*/false, /*asm_dialect=*/nullptr,
@@ -1639,9 +1638,9 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
       auto callOp = [&]() -> CallOp {
         if (auto callee = dyn_cast<llvm::Function>(calledOperand)) {
           auto name = SymbolRefAttr::get(context, callee->getName());
-          return builder.create<CallOp>(loc, funcTy, name, operands);
+          return builder.create<CallOp>(loc, funcTy, name, *operands);
         }
-        return builder.create<CallOp>(loc, funcTy, operands);
+        return builder.create<CallOp>(loc, funcTy, *operands);
       }();
 
       // Handle function attributes.
@@ -1695,9 +1694,9 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
   if (inst->getOpcode() == llvm::Instruction::Invoke) {
     auto *invokeInst = cast<llvm::InvokeInst>(inst);
 
-    SmallVector<Type> types;
-    SmallVector<Value> operands;
-    if (failed(convertCallTypeAndOperands(invokeInst, types, operands)))
+
+    FailureOr<SmallVector<Value>> operands = convertCallOperands(invokeInst);
+    if (failed(operands))
       return failure();
 
     // Check whether the invoke result is an argument to the normal destination
@@ -1736,12 +1735,12 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
     if (llvm::Function *callee = invokeInst->getCalledFunction()) {
       invokeOp = builder.create<InvokeOp>(
           loc, funcTy,
-          SymbolRefAttr::get(builder.getContext(), callee->getName()), operands,
-          directNormalDest, ValueRange(),
+          SymbolRefAttr::get(builder.getContext(), callee->getName()),
+          *operands, directNormalDest, ValueRange(),
           lookupBlock(invokeInst->getUnwindDest()), unwindArgs);
     } else {
       invokeOp = builder.create<InvokeOp>(
-          loc, funcTy, /*callee=*/nullptr, operands, directNormalDest,
+          loc, funcTy, /*callee=*/nullptr, *operands, directNormalDest,
           ValueRange(), lookupBlock(invokeInst->getUnwindDest()), unwindArgs);
     }
     invokeOp.setCConv(convertCConvFromLLVM(invokeInst->getCallingConv()));
