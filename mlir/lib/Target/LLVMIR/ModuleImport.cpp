@@ -1694,6 +1694,9 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
   if (inst->getOpcode() == llvm::Instruction::Invoke) {
     auto *invokeInst = cast<llvm::InvokeInst>(inst);
 
+    if (invokeInst->isInlineAsm()) {
+      return emitError(loc) << "invoke of inline assembly is not supported";
+    }
 
     FailureOr<SmallVector<Value>> operands = convertCallOperands(invokeInst);
     if (failed(operands))
