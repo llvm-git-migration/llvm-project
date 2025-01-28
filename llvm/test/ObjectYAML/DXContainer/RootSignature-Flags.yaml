@@ -14,7 +14,6 @@ Parts:
     RootSignature:
       Size: 44
       Version:         1
-      AllowInputAssemblerInputLayout: true
       NumParameters:       1
       Parameters:
         - Type:            Constants32Bit
@@ -23,10 +22,19 @@ Parts:
             Num32BitValues: 3
             ShaderRegister: 1
             RegisterSpace: 2
+      AllowInputAssemblerInputLayout: true
 
-#CHECK:    - Name: RTS0
-#CHECK-NEXT: Size: 8
-#CHECK-NEXT: RootSignature:
-#CHECK-NEXT:   Size: 8
-#CHECK-NEXT:   Version: 1
-#CHECK-NEXT:   AllowInputAssemblerInputLayout: true
+#CHECK: - Name:            RTS0
+#CHECK-NEXT:   Size:            44
+#CHECK-NEXT:   RootSignature:
+#CHECK-NEXT:     Size:            64
+#CHECK-NEXT:     Version:         1
+#CHECK-NEXT:     NumParameters:   1
+#CHECK-NEXT:     Parameters:
+#CHECK-NEXT:       - Type:            Constants32Bit
+#CHECK-NEXT:         ShaderVisibility: All
+#CHECK-NEXT:         Constants:
+#CHECK-NEXT:           Num32BitValues:  3
+#CHECK-NEXT:           ShaderRegister:  1
+#CHECK-NEXT:           RegisterSpace:   2
+#CHECK-NEXT:     AllowInputAssemblerInputLayout: true
