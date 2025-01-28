@@ -447,6 +447,9 @@ Changes to the LLVM tools
 Changes to LLDB
 ---------------------------------
 
+* When building LLDB with Python support, the minimum version of Python is now
+  3.8.
+
 * It is now recommended that LLDB be built with Python >= 3.8, but no changes
   have been made to the supported Python versions. The next release, LLDB 21,
   will require Python >= 3.8.
