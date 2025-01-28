@@ -137,6 +137,12 @@ private:
   bool ParseUInt(uint32_t *X);
   bool ParseDescriptorRangeOffset(rs::DescriptorRangeOffset *X);
 
+  // Various flags/enum parsing helpers
+  template <typename EnumType>
+  bool ParseEnum(llvm::SmallDenseMap<TokenKind, EnumType> EnumMap,
+                 EnumType *Enum);
+  bool ParseShaderVisibility(rs::ShaderVisibility *Enum);
+
   // Increment the token iterator if we have not reached the end.
   // Return value denotes if we were already at the last token.
   bool ConsumeNextToken();
