@@ -338,6 +338,9 @@ private:
   /// DictionaryAttr for the LLVM dialect.
   DictionaryAttr convertParameterAttribute(llvm::AttributeSet llvmParamAttrs,
                                            OpBuilder &builder);
+  /// Converts the attributes attached to `inst` and adds them to the `op`.
+  LogicalResult convertCallAttributes(llvm::CallInst *inst, CallOp op);
+  LogicalResult convertInvokeAttributes(llvm::InvokeInst *inst, InvokeOp op);
   /// Returns the builtin type equivalent to the given LLVM dialect type or
   /// nullptr if there is no equivalent. The returned type can be used to create
   /// an attribute for a GlobalOp or a ConstantOp.
