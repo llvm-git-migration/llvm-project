@@ -309,7 +309,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   const llvm::StringLiteral Source = R"cc(
     DescriptorTable(
       CBV(b0),
-      SRV(t42),
+      SRV(t42, numDescriptors = 4),
       Sampler(s987),
       UAV(u987234)
     ),
@@ -338,6 +338,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.ViewType,
             RegisterType::BReg);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number, (uint32_t)0);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
 
   Elem = Elements[1];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -346,6 +347,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
             RegisterType::TReg);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)42);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)4);
 
   Elem = Elements[2];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -354,6 +356,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
             RegisterType::SReg);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)987);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
 
   Elem = Elements[3];
   ASSERT_TRUE(std::holds_alternative<DescriptorTableClause>(Elem));
@@ -362,6 +365,7 @@ TEST_F(ParseHLSLRootSignatureTest, ValidParseDTClausesTest) {
             RegisterType::UReg);
   ASSERT_EQ(std::get<DescriptorTableClause>(Elem).Register.Number,
             (uint32_t)987234);
+  ASSERT_EQ(std::get<DescriptorTableClause>(Elem).NumDescriptors, (uint32_t)1);
 
   Elem = Elements[4];
   ASSERT_TRUE(std::holds_alternative<DescriptorTable>(Elem));
