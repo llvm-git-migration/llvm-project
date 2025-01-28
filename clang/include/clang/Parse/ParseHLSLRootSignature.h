@@ -138,9 +138,13 @@ private:
   bool ParseDescriptorRangeOffset(rs::DescriptorRangeOffset *X);
 
   // Various flags/enum parsing helpers
-  template <typename EnumType>
+  template <bool AllowZero = false, typename EnumType>
   bool ParseEnum(llvm::SmallDenseMap<TokenKind, EnumType> EnumMap,
                  EnumType *Enum);
+  template <typename FlagType>
+  bool ParseFlags(llvm::SmallDenseMap<TokenKind, FlagType> EnumMap,
+                  FlagType *Enum);
+  bool ParseDescriptorRangeFlags(rs::DescriptorRangeFlags *Enum);
   bool ParseShaderVisibility(rs::ShaderVisibility *Enum);
 
   // Increment the token iterator if we have not reached the end.
