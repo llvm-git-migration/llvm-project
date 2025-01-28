@@ -329,7 +329,7 @@ define iXLen @va1_va_arg_alloca(ptr %fmt, ...) nounwind {
 ; RV64-NEXT:    addi a1, a0, 8
 ; RV64-NEXT:    sd a1, -32(s0)
 ; RV64-NEXT:    ld s1, 0(a0)
-; RV64-NEXT:    addi a0, s1, 15
+; RV64-NEXT:    addiw a0, s1, 15
 ; RV64-NEXT:    andi a0, a0, -16
 ; RV64-NEXT:    sub a0, sp, a0
 ; RV64-NEXT:    mv sp, a0
@@ -399,7 +399,7 @@ define iXLen @va1_va_arg_alloca(ptr %fmt, ...) nounwind {
 ; RV64-WITHFP-NEXT:    addi a1, a0, 8
 ; RV64-WITHFP-NEXT:    sd a1, -32(s0)
 ; RV64-WITHFP-NEXT:    ld s1, 0(a0)
-; RV64-WITHFP-NEXT:    addi a0, s1, 15
+; RV64-WITHFP-NEXT:    addiw a0, s1, 15
 ; RV64-WITHFP-NEXT:    andi a0, a0, -16
 ; RV64-WITHFP-NEXT:    sub a0, sp, a0
 ; RV64-WITHFP-NEXT:    mv sp, a0

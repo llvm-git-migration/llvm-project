@@ -48,7 +48,7 @@ define void @test_scoped_alloca(i64 %n) {
 ; RV64-NEXT:    .cfi_offset s1, -24
 ; RV64-NEXT:    addi s0, sp, 32
 ; RV64-NEXT:    .cfi_def_cfa s0, 0
-; RV64-NEXT:    addi a0, a0, 15
+; RV64-NEXT:    addiw a0, a0, 15
 ; RV64-NEXT:    andi a0, a0, -16
 ; RV64-NEXT:    sub a0, sp, a0
 ; RV64-NEXT:    mv s1, sp
