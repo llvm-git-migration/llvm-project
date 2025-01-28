@@ -1519,6 +1519,26 @@ ModuleImport::convertCallOperands(llvm::CallBase *callInst,
   return operands;
 }
 
+LLVMFunctionType ModuleImport::convertFunctionType(llvm::CallBase *callInst) {
+  llvm::Value *calledOperand = callInst->getCalledOperand();
+  Type converted = [&] {
+    if (auto callee = dyn_cast<llvm::Function>(calledOperand))
+      return convertType(callee->getFunctionType());
+    return convertType(callInst->getFunctionType());
+  }();
+
+  if (auto funcTy = dyn_cast_or_null<LLVMFunctionType>(converted))
+    return funcTy;
+  return {};
+}
+
+FlatSymbolRefAttr ModuleImport::convertCalleeName(llvm::CallBase *callInst) {
+  llvm::Value *calledOperand = callInst->getCalledOperand();
+  if (auto callee = dyn_cast<llvm::Function>(calledOperand))
+    return SymbolRefAttr::get(context, callee->getName());
+  return {};
+}
+
 LogicalResult ModuleImport::convertIntrinsic(llvm::CallInst *inst) {
   if (succeeded(iface.convertIntrinsic(builder, inst, *this)))
     return success();
@@ -1623,25 +1643,12 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
       else
         mapNoResultOp(inst, callOp);
     } else {
-      auto funcTy = dyn_cast<LLVMFunctionType>([&]() -> Type {
-        // Retrieve the real function type. For direct calls, use the callee's
-        // function type, as it may differ from the operand type in the case of
-        // variadic functions. For indirect calls, use the call function type.
-        if (auto callee = dyn_cast<llvm::Function>(calledOperand))
-          return convertType(callee->getFunctionType());
-        return convertType(callInst->getFunctionType());
-      }());
-
+      auto funcTy = convertFunctionType(callInst);
       if (!funcTy)
         return failure();
 
-      auto callOp = [&]() -> CallOp {
-        if (auto callee = dyn_cast<llvm::Function>(calledOperand)) {
-          auto name = SymbolRefAttr::get(context, callee->getName());
-          return builder.create<CallOp>(loc, funcTy, name, *operands);
-        }
-        return builder.create<CallOp>(loc, funcTy, *operands);
-      }();
+      FlatSymbolRefAttr calleeName = convertCalleeName(callInst);
+      auto callOp = builder.create<CallOp>(loc, funcTy, calleeName, *operands);
 
       // Handle function attributes.
       callOp.setCConv(convertCConvFromLLVM(callInst->getCallingConv()));
@@ -1726,26 +1733,19 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
                                  unwindArgs)))
       return failure();
 
-    auto funcTy =
-        dyn_cast<LLVMFunctionType>(convertType(invokeInst->getFunctionType()));
+    auto funcTy = convertFunctionType(invokeInst);
     if (!funcTy)
       return failure();
+
+    FlatSymbolRefAttr calleeName = convertCalleeName(invokeInst);
 
     // Create the invoke operation. Normal destination block arguments will be
     // added later on to handle the case in which the operation result is
     // included in this list.
-    InvokeOp invokeOp;
-    if (llvm::Function *callee = invokeInst->getCalledFunction()) {
-      invokeOp = builder.create<InvokeOp>(
-          loc, funcTy,
-          SymbolRefAttr::get(builder.getContext(), callee->getName()),
-          *operands, directNormalDest, ValueRange(),
-          lookupBlock(invokeInst->getUnwindDest()), unwindArgs);
-    } else {
-      invokeOp = builder.create<InvokeOp>(
-          loc, funcTy, /*callee=*/nullptr, *operands, directNormalDest,
-          ValueRange(), lookupBlock(invokeInst->getUnwindDest()), unwindArgs);
-    }
+    auto invokeOp = builder.create<InvokeOp>(
+        loc, funcTy, calleeName, *operands, directNormalDest, ValueRange(),
+        lookupBlock(invokeInst->getUnwindDest()), unwindArgs);
+
     invokeOp.setCConv(convertCConvFromLLVM(invokeInst->getCallingConv()));
     if (!invokeInst->getType()->isVoidTy())
       mapValue(inst, invokeOp.getResults().front());
