@@ -1342,7 +1342,9 @@ lldb::SBWatchpoint SBTarget::WatchAddress(lldb::addr_t addr, size_t size,
 
   SBWatchpointOptions options;
   options.SetWatchpointTypeRead(read);
-  options.SetWatchpointTypeWrite(eWatchpointWriteTypeOnModify);
+  if (modify) {
+    options.SetWatchpointTypeWrite(eWatchpointWriteTypeOnModify);
+  }
   return WatchpointCreateByAddress(addr, size, options, error);
 }
 
