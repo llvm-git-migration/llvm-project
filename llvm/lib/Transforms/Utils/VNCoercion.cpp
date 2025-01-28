@@ -13,32 +13,54 @@ static bool isFirstClassAggregateOrScalableType(Type *Ty) {
   return Ty->isStructTy() || Ty->isArrayTy() || isa<ScalableVectorType>(Ty);
 }
 
+static std::optional<unsigned> getKnownVScale(Function *F) {
+  const auto &Attrs = F->getAttributes().getFnAttrs();
+  unsigned MinVScale = Attrs.getVScaleRangeMin();
+  if (Attrs.getVScaleRangeMax() == MinVScale)
+    return MinVScale;
+  return std::nullopt;
+}
+
 /// Return true if coerceAvailableValueToLoadType will succeed.
 bool canCoerceMustAliasedValueToLoad(Value *StoredVal, Type *LoadTy,
-                                     const DataLayout &DL) {
+                                     Function *F) {
   Type *StoredTy = StoredVal->getType();
-
   if (StoredTy == LoadTy)
     return true;
 
+  const DataLayout &DL = F->getDataLayout();
   if (isa<ScalableVectorType>(StoredTy) && isa<ScalableVectorType>(LoadTy) &&
       DL.getTypeSizeInBits(StoredTy) == DL.getTypeSizeInBits(LoadTy))
     return true;
 
-  // If the loaded/stored value is a first class array/struct, or scalable type,
-  // don't try to transform them. We need to be able to bitcast to integer.
-  if (isFirstClassAggregateOrScalableType(LoadTy) ||
-      isFirstClassAggregateOrScalableType(StoredTy))
-    return false;
+  // If the loaded/stored value is a first class array/struct, don't try to
+  // transform them. We need to be able to bitcast to integer. For scalable
+  // vectors forwarded to fixed-sized vectors with a compile-time known
+  // vscale, @llvm.vector.extract is used.
+  uint64_t StoreSize, LoadSize;
+  if (isa<ScalableVectorType>(StoredTy) && isa<FixedVectorType>(LoadTy)) {
+    std::optional<unsigned> VScale = getKnownVScale(F);
+    if (!VScale || StoredTy->getScalarType() != LoadTy->getScalarType())
+      return false;
 
-  uint64_t StoreSize = DL.getTypeSizeInBits(StoredTy).getFixedValue();
+    StoreSize =
+        DL.getTypeSizeInBits(StoredTy).getKnownMinValue() * VScale.value();
+    LoadSize = DL.getTypeSizeInBits(LoadTy).getFixedValue();
+  } else {
+    if (isFirstClassAggregateOrScalableType(LoadTy) ||
+        isFirstClassAggregateOrScalableType(StoredTy))
+      return false;
+
+    StoreSize = DL.getTypeSizeInBits(StoredTy).getFixedValue();
+    LoadSize = DL.getTypeSizeInBits(LoadTy).getFixedValue();
+  }
 
   // The store size must be byte-aligned to support future type casts.
   if (llvm::alignTo(StoreSize, 8) != StoreSize)
     return false;
 
   // The store has to be at least as big as the load.
-  if (StoreSize < DL.getTypeSizeInBits(LoadTy).getFixedValue())
+  if (StoreSize < LoadSize)
     return false;
 
   bool StoredNI = DL.isNonIntegralPointerType(StoredTy->getScalarType());
@@ -57,11 +79,10 @@ bool canCoerceMustAliasedValueToLoad(Value *StoredVal, Type *LoadTy,
     return false;
   }
 
-
   // The implementation below uses inttoptr for vectors of unequal size; we
   // can't allow this for non integral pointers. We could teach it to extract
   // exact subvectors if desired.
-  if (StoredNI && StoreSize != DL.getTypeSizeInBits(LoadTy).getFixedValue())
+  if (StoredNI && StoreSize != LoadSize)
     return false;
 
   if (StoredTy->isTargetExtTy() || LoadTy->isTargetExtTy())
@@ -79,13 +100,22 @@ bool canCoerceMustAliasedValueToLoad(Value *StoredVal, Type *LoadTy,
 Value *coerceAvailableValueToLoadType(Value *StoredVal, Type *LoadedTy,
                                       IRBuilderBase &Helper,
                                       const DataLayout &DL) {
-  assert(canCoerceMustAliasedValueToLoad(StoredVal, LoadedTy, DL) &&
+  assert(canCoerceMustAliasedValueToLoad(
+             StoredVal, LoadedTy, Helper.GetInsertBlock()->getParent()) &&
          "precondition violation - materialization can't fail");
   if (auto *C = dyn_cast<Constant>(StoredVal))
     StoredVal = ConstantFoldConstant(C, DL);
 
   // If this is already the right type, just return it.
   Type *StoredValTy = StoredVal->getType();
+
+  // If this is a scalable vector forwarded to a fixed vector load, create
+  // a @llvm.vector.extract instead of bitcasts.
+  if (isa<ScalableVectorType>(StoredVal->getType()) &&
+      isa<FixedVectorType>(LoadedTy)) {
+    return Helper.CreateIntrinsic(LoadedTy, Intrinsic::vector_extract,
+                                  {StoredVal, Helper.getInt64(0)});
+  }
 
   TypeSize StoredValSize = DL.getTypeSizeInBits(StoredValTy);
   TypeSize LoadedValSize = DL.getTypeSizeInBits(LoadedTy);
@@ -220,7 +250,7 @@ int analyzeLoadFromClobberingStore(Type *LoadTy, Value *LoadPtr,
   if (isFirstClassAggregateOrScalableType(StoredVal->getType()))
     return -1;
 
-  if (!canCoerceMustAliasedValueToLoad(StoredVal, LoadTy, DL))
+  if (!canCoerceMustAliasedValueToLoad(StoredVal, LoadTy, DepSI->getFunction()))
     return -1;
 
   Value *StorePtr = DepSI->getPointerOperand();
@@ -235,11 +265,11 @@ int analyzeLoadFromClobberingStore(Type *LoadTy, Value *LoadPtr,
 /// the other load can feed into the second load.
 int analyzeLoadFromClobberingLoad(Type *LoadTy, Value *LoadPtr, LoadInst *DepLI,
                                   const DataLayout &DL) {
-  // Cannot handle reading from store of first-class aggregate yet.
-  if (DepLI->getType()->isStructTy() || DepLI->getType()->isArrayTy())
+  // Cannot handle reading from store of first-class aggregate or scalable type.
+  if (isFirstClassAggregateOrScalableType(DepLI->getType()))
     return -1;
 
-  if (!canCoerceMustAliasedValueToLoad(DepLI, LoadTy, DL))
+  if (!canCoerceMustAliasedValueToLoad(DepLI, LoadTy, DepLI->getFunction()))
     return -1;
 
   Value *DepPtr = DepLI->getPointerOperand();
@@ -315,6 +345,16 @@ static Value *getStoreValueForLoadHelper(Value *SrcVal, unsigned Offset,
     return SrcVal;
   }
 
+  // For the case of a scalable vector beeing forwarded to a fixed-sized load,
+  // only equal element types are allowed and a @llvm.vector.extract will be
+  // used instead of bitcasts.
+  if (isa<ScalableVectorType>(SrcVal->getType()) &&
+      isa<FixedVectorType>(LoadTy)) {
+    assert(Offset == 0 &&
+           SrcVal->getType()->getScalarType() == LoadTy->getScalarType());
+    return SrcVal;
+  }
+
   uint64_t StoreSize =
       (DL.getTypeSizeInBits(SrcVal->getType()).getFixedValue() + 7) / 8;
   uint64_t LoadSize = (DL.getTypeSizeInBits(LoadTy).getFixedValue() + 7) / 8;
@@ -348,6 +388,10 @@ Value *getValueForLoad(Value *SrcVal, unsigned Offset, Type *LoadTy,
 #ifndef NDEBUG
   TypeSize SrcValSize = DL.getTypeStoreSize(SrcVal->getType());
   TypeSize LoadSize = DL.getTypeStoreSize(LoadTy);
+  if (SrcValSize.isScalable() && !LoadSize.isScalable())
+    SrcValSize =
+        TypeSize::getFixed(SrcValSize.getKnownMinValue() *
+                           getKnownVScale(InsertPt->getFunction()).value());
   assert(SrcValSize.isScalable() == LoadSize.isScalable());
   assert((SrcValSize.isScalable() || Offset + LoadSize <= SrcValSize) &&
          "Expected Offset + LoadSize <= SrcValSize");

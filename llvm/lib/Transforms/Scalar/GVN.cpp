@@ -1291,7 +1291,8 @@ GVNPass::AnalyzeLoadAvailability(LoadInst *Load, MemDepResult DepInfo,
 
         // If MD reported clobber, check it was nested.
         if (DepInfo.isClobber() &&
-            canCoerceMustAliasedValueToLoad(DepLoad, LoadType, DL)) {
+            canCoerceMustAliasedValueToLoad(DepLoad, LoadType,
+                                            DepLoad->getFunction())) {
           const auto ClobberOff = MD->getClobberOffset(DepLoad);
           // GVN has no deal with a negative offset.
           Offset = (ClobberOff == std::nullopt || *ClobberOff < 0)
@@ -1343,7 +1344,7 @@ GVNPass::AnalyzeLoadAvailability(LoadInst *Load, MemDepResult DepInfo,
     // different types if we have to. If the stored value is convertable to
     // the loaded value, we can reuse it.
     if (!canCoerceMustAliasedValueToLoad(S->getValueOperand(), Load->getType(),
-                                         DL))
+                                         S->getFunction()))
       return std::nullopt;
 
     // Can't forward from non-atomic to atomic without violating memory model.
@@ -1357,7 +1358,8 @@ GVNPass::AnalyzeLoadAvailability(LoadInst *Load, MemDepResult DepInfo,
     // If the types mismatch and we can't handle it, reject reuse of the load.
     // If the stored value is larger or equal to the loaded value, we can reuse
     // it.
-    if (!canCoerceMustAliasedValueToLoad(LD, Load->getType(), DL))
+    if (!canCoerceMustAliasedValueToLoad(LD, Load->getType(),
+                                         LD->getFunction()))
       return std::nullopt;
 
     // Can't forward from non-atomic to atomic without violating memory model.

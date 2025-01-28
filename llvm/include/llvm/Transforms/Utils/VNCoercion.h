@@ -23,6 +23,7 @@
 
 namespace llvm {
 class Constant;
+class Function;
 class StoreInst;
 class LoadInst;
 class MemIntrinsic;
@@ -35,7 +36,7 @@ namespace VNCoercion {
 /// Return true if CoerceAvailableValueToLoadType would succeed if it was
 /// called.
 bool canCoerceMustAliasedValueToLoad(Value *StoredVal, Type *LoadTy,
-                                     const DataLayout &DL);
+                                     Function *F);
 
 /// If we saw a store of a value to memory, and then a load from a must-aliased
 /// pointer of a different type, try to coerce the stored value to the loaded

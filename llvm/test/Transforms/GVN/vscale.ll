@@ -648,9 +648,7 @@ define <vscale x 4 x float> @scalable_store_to_fixed_load(<vscale x 4 x float> %
 ; CHECK-NEXT:    [[RETVAL:%.*]] = alloca { <16 x float> }, align 64
 ; CHECK-NEXT:    [[TMP0:%.*]] = fadd <vscale x 4 x float> [[DOTCOERCE:%.*]], [[DOTCOERCE]]
 ; CHECK-NEXT:    store <vscale x 4 x float> [[TMP0]], ptr [[RETVAL]], align 16
-; CHECK-NEXT:    [[TMP1:%.*]] = load <16 x float>, ptr [[RETVAL]], align 64
-; CHECK-NEXT:    [[CAST_SCALABLE:%.*]] = tail call <vscale x 4 x float> @llvm.vector.insert.nxv4f32.v16f32(<vscale x 4 x float> poison, <16 x float> [[TMP1]], i64 0)
-; CHECK-NEXT:    ret <vscale x 4 x float> [[CAST_SCALABLE]]
+; CHECK-NEXT:    ret <vscale x 4 x float> [[TMP0]]
 ;
 entry:
   %retval = alloca { <16 x float> }
