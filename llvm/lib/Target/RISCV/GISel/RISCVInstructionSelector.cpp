@@ -58,10 +58,17 @@ private:
   getRegClassForTypeOnBank(LLT Ty, const RegisterBank &RB) const;
 
   // const MachineInstr &MI
-  bool hasAllNBitUsers(const MachineInstr &MI, unsigned Bits, const unsigned Depth = 0) const;
-  bool hasAllBUsers(const MachineInstr &MI) const { return hasAllNBitUsers(MI, 8); }
-  bool hasAllHUsers(const MachineInstr &MI) const { return hasAllNBitUsers(MI, 16); }
-  bool hasAllWUsers(const MachineInstr &MI) const { return hasAllNBitUsers(MI, 32); }
+  bool hasAllNBitUsers(const MachineInstr &MI, unsigned Bits,
+                       const unsigned Depth = 0) const;
+  bool hasAllBUsers(const MachineInstr &MI) const {
+    return hasAllNBitUsers(MI, 8);
+  }
+  bool hasAllHUsers(const MachineInstr &MI) const {
+    return hasAllNBitUsers(MI, 16);
+  }
+  bool hasAllWUsers(const MachineInstr &MI) const {
+    return hasAllNBitUsers(MI, 32);
+  }
 
   bool isRegInGprb(Register Reg) const;
   bool isRegInFprb(Register Reg) const;
@@ -192,7 +199,9 @@ RISCVInstructionSelector::RISCVInstructionSelector(
 {
 }
 
-bool RISCVInstructionSelector::hasAllNBitUsers(const MachineInstr &MI, unsigned Bits, const unsigned Depth) const {
+bool RISCVInstructionSelector::hasAllNBitUsers(const MachineInstr &MI,
+                                               unsigned Bits,
+                                               const unsigned Depth) const {
 
   assert((MI.getOpcode() == TargetOpcode::G_ADD ||
           MI.getOpcode() == TargetOpcode::G_SUB ||
