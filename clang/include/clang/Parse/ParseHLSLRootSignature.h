@@ -106,7 +106,22 @@ private:
   bool ParseDescriptorTableClause();
 
   // Helper dispatch method
+  //
+  // These will switch on the Variant kind to dispatch to the respective Parse
+  // method and store the parsed value back into Ref.
+  //
+  // It is helpful to have a generalized dispatch method so that when we need
+  // to parse multiple optional parameters in any order, we can invoke this
+  // method
+  bool ParseParam(rs::ParamType Ref);
+
+  // Parse as many optional parameters as possible in any order
+  bool
+  ParseOptionalParams(llvm::SmallDenseMap<TokenKind, rs::ParamType> RefMap);
+
+  // Common parsing helpers
   bool ParseRegister(rs::Register *Reg);
+  bool ParseUInt(uint32_t *X);
 
   // Increment the token iterator if we have not reached the end.
   // Return value denotes if we were already at the last token.
