@@ -5850,16 +5850,17 @@ void ASTWriter::WriteSpecialDeclRecords(Sema &SemaRef) {
     Stream.EmitRecord(VTABLES_TO_EMIT, VTablesToEmit);
 
   if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
-    RecordData ExceptionCopyingConstructors;
     const auto *RecordToCopyCtor = Context.getRecordToCopyCtor();
-    assert(RecordToCopyCtor);
-    for (const auto [RD, CD] : *RecordToCopyCtor) {
-      AddDeclRef(RD, ExceptionCopyingConstructors);
-      AddDeclRef(CD, ExceptionCopyingConstructors);
+    if (RecordToCopyCtor) {
+      RecordData ExceptionCopyingConstructors;
+      for (const auto [RD, CD] : *RecordToCopyCtor) {
+        AddDeclRef(RD, ExceptionCopyingConstructors);
+        AddDeclRef(CD, ExceptionCopyingConstructors);
+      }
+      if (!ExceptionCopyingConstructors.empty())
+        Stream.EmitRecord(MSCXXABI_EXCEPTION_COPYING_CONSTRUCTORS,
+                          ExceptionCopyingConstructors);
     }
-    if (!ExceptionCopyingConstructors.empty())
-      Stream.EmitRecord(MSCXXABI_EXCEPTION_COPYING_CONSTRUCTORS,
-                        ExceptionCopyingConstructors);
   }
 }
 

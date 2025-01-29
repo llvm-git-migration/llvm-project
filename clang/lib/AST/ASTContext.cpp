@@ -13106,7 +13106,10 @@ ASTContext::createMangleNumberingContext() const {
 
 llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> *
 ASTContext::getRecordToCopyCtor() {
-  return ABI->getRecordToCopyCtor();
+  if (ABI) { // TODO Why can this be null?
+    return ABI->getRecordToCopyCtor();
+  }
+  return nullptr;
 }
 
 const CXXConstructorDecl *
