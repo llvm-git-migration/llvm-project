@@ -17,9 +17,6 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include <cassert>
-#include <cstdint>
 
 using namespace llvm;
 using namespace llvm::dxil;
