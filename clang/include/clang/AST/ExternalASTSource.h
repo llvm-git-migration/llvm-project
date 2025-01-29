@@ -175,6 +175,9 @@ public:
   LoadExternalSpecializations(const Decl *D,
                               ArrayRef<TemplateArgument> TemplateArgs);
 
+  virtual void LoadExternalExceptionCopyingConstructors(
+      llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor);
+
   /// Ensures that the table of all visible declarations inside this
   /// context is up to date.
   ///
