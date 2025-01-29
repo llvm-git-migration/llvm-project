@@ -3290,9 +3290,11 @@ bool SimplifyCFGOpt::speculativelyExecuteBB(BranchInst *BI,
   bool HoistLoadsStores = HoistLoadsStoresWithCondFaulting &&
                           Options.HoistLoadsStoresWithCondFaulting;
   SmallVector<Instruction *, 2> SpeculatedConditionalLoadsStores;
+  InstructionCost BlockCostSoFar = 0;
   Value *SpeculatedStoreValue = nullptr;
   StoreInst *SpeculatedStore = nullptr;
   EphemeralValueTracker EphTracker;
+  bool PatternFound = false;
   for (Instruction &I : reverse(drop_end(*ThenBB))) {
     // Skip debug info.
     if (isa<DbgInfoIntrinsic>(I)) {
@@ -3329,9 +3331,6 @@ bool SimplifyCFGOpt::speculativelyExecuteBB(BranchInst *BI,
     else
       ++SpeculatedInstructions;
 
-    if (SpeculatedInstructions > 1)
-      return false;
-
     // Don't hoist the instruction if it's unsafe or expensive.
     if (!IsSafeCheapLoadStore &&
         !isSafeToSpeculativelyExecute(&I, BI, Options.AC) &&
@@ -3339,9 +3338,22 @@ bool SimplifyCFGOpt::speculativelyExecuteBB(BranchInst *BI,
           (SpeculatedStoreValue =
                isSafeToSpeculateStore(&I, BB, ThenBB, EndBB))))
       return false;
-    if (!IsSafeCheapLoadStore && !SpeculatedStoreValue &&
-        computeSpeculationCost(&I, TTI) >
+
+    if (match(&I,
+              m_ExtractValue<1>(m_OneUse(
+                  m_Intrinsic<Intrinsic::umul_with_overflow>(m_Value())))) &&
+        ThenBB->size() <= 3) {
+      PatternFound = true;
+    }
+
+    BlockCostSoFar += computeSpeculationCost(&I, TTI);
+    if (! PatternFound && !IsSafeCheapLoadStore && !SpeculatedStoreValue &&
+        BlockCostSoFar >
             PHINodeFoldingThreshold * TargetTransformInfo::TCC_Basic)
+      return false;
+    // If we don't find any pattern, that must be cheap, then only speculatively
+    // execute a single instruction (not counting the terminator).
+    if (!PatternFound && SpeculatedInstructions > 1)
       return false;
 
     // Store the store speculation candidate.
