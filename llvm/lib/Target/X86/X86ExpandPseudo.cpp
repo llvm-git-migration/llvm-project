@@ -284,7 +284,7 @@ bool X86ExpandPseudo::expandMI(MachineBasicBlock &MBB,
     // Adjust stack pointer.
     int StackAdj = StackAdjust.getImm();
     int MaxTCDelta = X86FI->getTCReturnAddrDelta();
-    int Offset = 0;
+    int64_t Offset = 0;
     assert(MaxTCDelta <= 0 && "MaxTCDelta should never be positive");
 
     // Incoporate the retaddr area.
