@@ -567,10 +567,11 @@ RootSignatureToken RootSignatureParser::PeekNextToken() {
 }
 
 bool RootSignatureParser::ConsumeNextToken() {
+  SourceLocation EndLoc = CurTok->TokLoc;
   CurTok++;
   if (LastTok == CurTok) {
     // Report unexpected end of tokens error
-    Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_unexpected_eos);
+    Diags.Report(EndLoc, diag::err_hlsl_rootsig_unexpected_eos);
     return true;
   }
   return false;
