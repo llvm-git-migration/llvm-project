@@ -32,6 +32,6 @@ void RootSignatureHeader::write(raw_ostream &OS) {
   }
 }
 
-void RootSignatureHeader::pushPart(dxbc::RootParameter Param){
+void RootSignatureHeader::pushPart(dxbc::RootParameter Param) {
   Parameters.push_back(Param);
 }
