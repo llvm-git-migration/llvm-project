@@ -134,6 +134,12 @@ bool MultiplexExternalSemaSource::LoadExternalSpecializations(
   return AnyNewSpecsLoaded;
 }
 
+void MultiplexExternalSemaSource::LoadExternalExceptionCopyingConstructors(
+    llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor) {
+  for (size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->LoadExternalExceptionCopyingConstructors(RecordToCtor);
+}
+
 void MultiplexExternalSemaSource::completeVisibleDeclsMap(const DeclContext *DC){
   for(size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->completeVisibleDeclsMap(DC);
@@ -334,12 +340,6 @@ void MultiplexExternalSemaSource::ReadLateParsedTemplates(
         &LPTMap) {
   for (size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->ReadLateParsedTemplates(LPTMap);
-}
-
-void MultiplexExternalSemaSource::ReadRecordExceptionCopyingConstructors(
-    llvm::MapVector<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor) {
-  for (size_t i = 0; i < Sources.size(); ++i)
-    Sources[i]->ReadRecordExceptionCopyingConstructors(RecordToCtor);
 }
 
 TypoCorrection MultiplexExternalSemaSource::CorrectTypo(

@@ -104,6 +104,10 @@ public:
   LoadExternalSpecializations(const Decl *D,
                               ArrayRef<TemplateArgument> TemplateArgs) override;
 
+  void LoadExternalExceptionCopyingConstructors(
+      llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor)
+      override;
+
   /// Ensures that the table of all visible declarations inside this
   /// context is up to date.
   void completeVisibleDeclsMap(const DeclContext *DC) override;
@@ -344,10 +348,6 @@ public:
   /// introduce the same declarations repeatedly.
   void ReadDeclsToCheckForDeferredDiags(
       llvm::SmallSetVector<Decl *, 4> &Decls) override;
-
-  void ReadRecordExceptionCopyingConstructors(
-      llvm::MapVector<CXXRecordDecl *,
-                      CXXConstructorDecl *> &RecordToCtor) override;
 
   /// \copydoc ExternalSemaSource::CorrectTypo
   /// \note Returns the first nonempty correction.

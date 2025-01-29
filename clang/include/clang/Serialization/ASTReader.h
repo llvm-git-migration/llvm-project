@@ -2165,6 +2165,10 @@ public:
   LoadExternalSpecializations(const Decl *D,
                               ArrayRef<TemplateArgument> TemplateArgs) override;
 
+  void LoadExternalExceptionCopyingConstructors(
+      llvm::SmallDenseMap<CXXRecordDecl *, CXXConstructorDecl *> &RecordToCtor)
+      override;
+
   /// Finds all the visible declarations with a given name.
   /// The current implementation of this method just loads the entire
   /// lookup table as unmaterialized references.
@@ -2294,10 +2298,6 @@ public:
   void ReadLateParsedTemplates(
       llvm::MapVector<const FunctionDecl *, std::unique_ptr<LateParsedTemplate>>
           &LPTMap) override;
-
-  void ReadRecordExceptionCopyingConstructors(
-      llvm::MapVector<CXXRecordDecl *,
-                      CXXConstructorDecl *> &RecordToCtor) override;
 
   void AssignedLambdaNumbering(CXXRecordDecl *Lambda) override;
 
