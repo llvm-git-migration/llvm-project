@@ -1187,6 +1187,7 @@ public:
 
 private:
   CompilerType m_type;
+  /// If this result entity can (and should) track the value on inferior memory.
   bool m_is_program_reference;
   bool m_keep_in_memory;
 
