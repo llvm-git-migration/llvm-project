@@ -16,15 +16,17 @@
 
 #include "test_macros.h"
 
-template <typename T, typename SIZE_TYPE = std::size_t, typename DIFF_TYPE = std::ptrdiff_t>
+// Allocator with a provided size_type and difference_type, used to test corner cases
+// like arithmetic on Allocator::size_type in generic code.
+template <typename T, typename Size = std::size_t, typename Difference = std::ptrdiff_t>
 class sized_allocator {
   template <typename U, typename Sz, typename Diff>
   friend class sized_allocator;
 
 public:
   using value_type                  = T;
-  using size_type                   = SIZE_TYPE;
-  using difference_type             = DIFF_TYPE;
+  using size_type                   = Size;
+  using difference_type             = Difference;
   using propagate_on_container_swap = std::true_type;
 
   TEST_CONSTEXPR_CXX20 explicit sized_allocator(int d = 0) : data_(d) {}
@@ -55,4 +57,4 @@ private:
   }
 };
 
-#endif
+#endif // TEST_SUPPORT_SIZED_ALLOCATOR_H
