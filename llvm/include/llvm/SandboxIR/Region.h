@@ -92,11 +92,14 @@ class Region {
   /// All the instructions in the Region. Only new instructions generated during
   /// vectorization are part of the Region.
   SetVector<Instruction *> Insts;
+  /// An auxiliary sequence of Instruction-Index pairs.
+  SmallVector<Instruction *> Aux;
 
   /// MDNode that we'll use to mark instructions as being part of the region.
   MDNode *RegionMDN;
   static constexpr const char *MDKind = "sandboxvec";
   static constexpr const char *RegionStr = "sandboxregion";
+  static constexpr const char *AuxMDKind = "sbaux";
 
   Context &Ctx;
   /// Keeps track of cost of instructions added and removed.
@@ -124,6 +127,12 @@ public:
   bool contains(Instruction *I) const { return Insts.contains(I); }
   /// Returns true if the Region has no instructions.
   bool empty() const { return Insts.empty(); }
+  /// Set the auxiliary vector.
+  void setAux(ArrayRef<Instruction *> Aux);
+  /// Set \p I as the \p Idx'th element in the auxiliary vector.
+  void setAux(uint32_t Idx, Instruction *I);
+  /// \Returns the auxiliary vector.
+  const SmallVector<Instruction *> &getAux() const { return Aux; }
 
   using iterator = decltype(Insts.begin());
   iterator begin() { return Insts.begin(); }
