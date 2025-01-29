@@ -7,8 +7,7 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:
 
 define i1 @known_constexpr_add_eq() {
 ; CHECK-LABEL: define i1 @known_constexpr_add_eq() {
-; CHECK-NEXT:    [[COND:%.*]] = icmp eq ptr getelementptr inbounds nuw (i8, ptr @glob, i64 80), inttoptr (i64 add (i64 ptrtoint (ptr @glob to i64), i64 -80) to ptr)
-; CHECK-NEXT:    ret i1 [[COND]]
+; CHECK-NEXT:    ret i1 false
 ;
   %cond = icmp eq ptr getelementptr inbounds nuw (i8, ptr @glob, i64 80), inttoptr (i64 add (i64 ptrtoint (ptr @glob to i64), i64 -80) to ptr)
   ret i1 %cond
@@ -16,8 +15,7 @@ define i1 @known_constexpr_add_eq() {
 
 define i1 @known_constexpr_add_ne() {
 ; CHECK-LABEL: define i1 @known_constexpr_add_ne() {
-; CHECK-NEXT:    [[COND:%.*]] = icmp ne ptr getelementptr inbounds nuw (i8, ptr @glob, i64 80), inttoptr (i64 add (i64 ptrtoint (ptr @glob to i64), i64 -80) to ptr)
-; CHECK-NEXT:    ret i1 [[COND]]
+; CHECK-NEXT:    ret i1 true
 ;
   %cond = icmp ne ptr getelementptr inbounds nuw (i8, ptr @glob, i64 80), inttoptr (i64 add (i64 ptrtoint (ptr @glob to i64), i64 -80) to ptr)
   ret i1 %cond
@@ -34,8 +32,7 @@ define i1 @wrap_positive_to_negate() {
 ; 9223372036854775808 = 2^63
 define i1 @wrap_positive_to_zero() {
 ; CHECK-LABEL: define i1 @wrap_positive_to_zero() {
-; CHECK-NEXT:    [[COND:%.*]] = icmp eq ptr @glob, inttoptr (i64 add (i64 ptrtoint (ptr getelementptr nuw (i8, ptr @glob, i64 -9223372036854775808) to i64), i64 -9223372036854775808) to ptr)
-; CHECK-NEXT:    ret i1 [[COND]]
+; CHECK-NEXT:    ret i1 true
 ;
   %cond = icmp eq ptr @glob, inttoptr (i64 add (i64 ptrtoint (ptr getelementptr nuw (i8, ptr @glob, i64 9223372036854775808)to i64), i64 9223372036854775808) to ptr)
   ret i1 %cond
