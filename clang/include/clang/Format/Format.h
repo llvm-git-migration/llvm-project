@@ -1225,7 +1225,7 @@ struct FormatStyle {
   ///                20,
   ///                21};
   /// \endcode
-  /// \version 20
+  /// \version 21
   bool BinPackLongBracedLists;
 
   /// Different way to try to fit all parameters on a line.
