@@ -2184,7 +2184,7 @@ the configuration (without a prefix: ``Auto``).
 
 .. _BinPackLongBracedLists:
 
-**BinPackLongBracedLists** (``Boolean``) :versionbadge:`clang-format 20` :ref:`¶ <BinPackLongBracedLists>`
+**BinPackLongBracedLists** (``Boolean``) :versionbadge:`clang-format 21` :ref:`¶ <BinPackLongBracedLists>`
   If ``BinPackLongBracedLists`` is ``true`` it overrides
   ``BinPackArguments`` if there are 20 or more items in a braced
   initializer list.
