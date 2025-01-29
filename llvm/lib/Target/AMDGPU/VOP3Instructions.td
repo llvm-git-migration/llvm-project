@@ -200,6 +200,19 @@ defm V_DIV_FMAS_F64 : VOP3Inst_Pseudo_Wrapper  <"v_div_fmas_f64", VOP_F64_F64_F6
 
 } // End isCommutable = 1
 
+let True16Predicate = UseFakeTrue16Insts in
+multiclass int_amdgcn_alignbyte_fake16<string inst_name> {
+ defvar inst = !cast<VOP_Pseudo>(inst_name#"_fake16_e64");
+ def : GCNPat <
+ (i32 (int_amdgcn_alignbyte (i32 (VOP3OpSelMods i32:$src0, i32:$src0_modifiers)),
+                            (i32 (VOP3OpSelMods i32:$src1, i32:$src1_modifiers)),
+                            (i32 (VOP3OpSelMods i32:$src2, i32:$src2_modifiers)))),
+ (inst i32:$src0_mods, VSrc_b32:$src0,
+       i32:$src1_mods, VSrc_b32:$src1,
+       0, VGPR_32:$src2)
+>;
+}
+
 let isReMaterializable = 1 in {
 let mayRaiseFPException = 0 in {
 defm V_CUBEID_F32 : VOP3Inst <"v_cubeid_f32", VOP3_Profile<VOP_F32_F32_F32_F32>, int_amdgcn_cubeid>;
@@ -212,11 +225,14 @@ defm V_BFE_U32 : VOP3Inst <"v_bfe_u32", VOP3_Profile<VOP_I32_I32_I32_I32>, AMDGP
 defm V_BFE_I32 : VOP3Inst <"v_bfe_i32", VOP3_Profile<VOP_I32_I32_I32_I32>, AMDGPUbfe_i32>;
 defm V_BFI_B32 : VOP3Inst <"v_bfi_b32", VOP3_Profile<VOP_I32_I32_I32_I32>, AMDGPUbfi>;
 defm V_ALIGNBIT_B32 : VOP3Inst <"v_alignbit_b32", VOP3_Profile<VOP_I32_I32_I32_I32>, fshr>;
-defm V_ALIGNBYTE_B32 : VOP3Inst_t16_with_profiles <"v_alignbyte_b32",
-                                                   VOP3_Profile<VOP_I32_I32_I32_I32>,
-                                                   VOP3_Profile_True16<VOP_I32_I32_I32_I16, VOP3_OPSEL>,
-                                                   VOP3_Profile_Fake16<VOP_I32_I32_I32_I16, VOP3_OPSEL>,
-                                                   int_amdgcn_alignbyte>;
+
+let True16Predicate = NotHasTrue16BitInsts in
+defm V_ALIGNBYTE_B32 : VOP3Inst <"v_alignbyte_b32", VOP3_Profile<VOP_I32_I32_I32_I32>, int_amdgcn_alignbyte>;
+let True16Predicate = UseRealTrue16Insts in
+defm V_ALIGNBYTE_B32_t16 : VOP3Inst <"v_alignbyte_b32_t16", VOP3_Profile_True16<VOP_I32_I32_I32_I16, VOP3_OPSEL>>;
+let True16Predicate = UseFakeTrue16Insts in {
+defm V_ALIGNBYTE_B32_fake16 : VOP3Inst <"v_alignbyte_b32_fake16", VOP3_Profile_Fake16<VOP_I32_I32_I32_I16, VOP3_OPSEL>>;
+}
 
 // XXX - No FPException seems suspect but manual doesn't say it does
 let mayRaiseFPException = 0 in {
