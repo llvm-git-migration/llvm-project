@@ -870,8 +870,6 @@ private:
   template <class _Dp, bool _IC>
   _LIBCPP_CONSTEXPR_SINCE_CXX20 friend __bit_iterator<_Dp, false> __copy_backward_unaligned(
       __bit_iterator<_Dp, _IC> __first, __bit_iterator<_Dp, _IC> __last, __bit_iterator<_Dp, false> __result);
-  // Note: dependent nested name specifier __copy_backward_impl<_AlgPolicy>::operator() for friend declaration
-  // is not supported in clang. Thus, we use a friend declaration for the entire class.
   template <class _AlgPolicy>
   friend struct __copy_backward_impl;
   template <class _Cl, class _Cr>
