@@ -1,0 +1,13 @@
+# RUN: llc -mtriple=riscv64 -run-pass none -o - %s \
+# RUN: | llc -mtriple=riscv64 -x=mir -run-pass none -o - \
+# RUN: | FileCheck %s
+
+# Check that we don't print a trailing comma for CFI escape indices, and that
+# in general we can round trip them.
+
+name: func
+# CHECK-LABEL: name: func
+body: |
+  bb.0:
+    CFI_INSTRUCTION llvm_reg_offset $x1, $x2, -42
+    ; CHECK: CFI_INSTRUCTION llvm_reg_offset $x1, $x2, -42
