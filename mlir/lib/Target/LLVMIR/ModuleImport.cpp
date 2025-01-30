@@ -1620,7 +1620,7 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
     return success();
   }
   if (inst->getOpcode() == llvm::Instruction::Call) {
-    auto callInst = cast<llvm::CallInst>(inst);
+    auto *callInst = cast<llvm::CallInst>(inst);
     llvm::Value *calledOperand = callInst->getCalledOperand();
 
     FailureOr<SmallVector<Value>> operands =
@@ -1629,10 +1629,10 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
       return failure();
 
     auto callOp = [&]() -> FailureOr<Operation *> {
-      if (auto asmI = dyn_cast<llvm::InlineAsm>(calledOperand)) {
-        Type resultTy = convertType(callInst->getType());
-        if (!resultTy)
-          return failure();
+      Type resultTy = convertType(callInst->getType());
+      if (!resultTy)
+        return failure();
+      if (auto *asmI = dyn_cast<llvm::InlineAsm>(calledOperand)) {
         return builder
             .create<InlineAsmOp>(
                 loc, resultTy, *operands,
@@ -1642,17 +1642,21 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
                 /*is_align_stack=*/false, /*asm_dialect=*/nullptr,
                 /*operand_attrs=*/nullptr)
             .getOperation();
-      } else {
-        LLVMFunctionType funcTy = convertFunctionType(callInst);
-        if (!funcTy)
-          return failure();
-
-        FlatSymbolRefAttr callee = convertCalleeName(callInst);
-        auto callOp = builder.create<CallOp>(loc, funcTy, callee, *operands);
-        if (failed(convertCallAttributes(callInst, callOp)))
-          return failure();
-        return callOp.getOperation();
       }
+      LLVMFunctionType funcTy = convertFunctionType(callInst);
+      if (!funcTy)
+        return failure();
+
+      if (funcTy.getReturnType() != resultTy)
+        return emitError(loc)
+               << "incompatible call and function return types: " << resultTy
+               << " vs. " << funcTy.getReturnType();
+
+      FlatSymbolRefAttr callee = convertCalleeName(callInst);
+      auto callOp = builder.create<CallOp>(loc, funcTy, callee, *operands);
+      if (failed(convertCallAttributes(callInst, callOp)))
+        return failure();
+      return callOp.getOperation();
     }();
 
     if (failed(callOp))
@@ -1719,6 +1723,14 @@ LogicalResult ModuleImport::convertInstruction(llvm::Instruction *inst) {
     auto funcTy = convertFunctionType(invokeInst);
     if (!funcTy)
       return failure();
+
+    Type resultTy = convertType(invokeInst->getType());
+    if (!resultTy)
+      return failure();
+    if (funcTy.getReturnType() != resultTy)
+      return emitError(loc)
+             << "incompatible invoke and function return types: " << resultTy
+             << " vs. " << funcTy.getReturnType();
 
     FlatSymbolRefAttr calleeName = convertCalleeName(invokeInst);
 

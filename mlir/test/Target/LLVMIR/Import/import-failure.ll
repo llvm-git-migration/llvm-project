@@ -1,4 +1,4 @@
-; RUN: not mlir-translate -import-llvm -emit-expensive-warnings -split-input-file %s 2>&1 | FileCheck %s
+; RUN: not mlir-translate -import-llvm -emit-expensive-warnings -split-input-file %s 2>&1 -o /dev/null | FileCheck %s
 
 ; CHECK:      <unknown>
 ; CHECK-SAME: error: unhandled instruction: indirectbr ptr %dst, [label %bb1, label %bb2]
@@ -353,3 +353,33 @@ declare void @llvm.experimental.noalias.scope.decl(metadata)
 ; CHECK:      import-failure.ll
 ; CHECK-SAME: warning: unhandled data layout token: ni:42
 target datalayout = "e-ni:42-i64:64"
+
+; // -----
+
+; CHECK:      <unknown>
+; CHECK-SAME: incompatible call and function return types: 'i64' vs. '!llvm.ptr'
+define i64 @incompatible_call_and_callee_types() {
+L.entry:
+  %0 = call i64 @callee()
+  ret i64 %0
+}
+
+declare ptr @callee()
+
+; // -----
+
+; CHECK:      <unknown>
+; CHECK-SAME: incompatible invoke and function return types: '!llvm.void' vs. 'i32'
+define void @f() personality ptr @__gxx_personality_v0 {
+entry:
+  invoke void @g() to label %bb1 unwind label %bb2
+bb1:
+  ret void
+bb2:
+  %0 = landingpad i32 cleanup
+  unreachable
+}
+
+declare i32 @g()
+
+declare i32 @__gxx_personality_v0(...)
