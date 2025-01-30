@@ -7434,6 +7434,12 @@ static bool planContainsAdditionalSimplifications(VPlan &Plan,
     for (VPRecipeBase &R : *VPBB) {
       if (auto *IR = dyn_cast<VPInterleaveRecipe>(&R)) {
         auto *IG = IR->getInterleaveGroup();
+        // The legacy-based cost model is more accurate for interleaving and
+        // comparing against the VPlan-based cost isn't desirable.
+        // At least skip interleaving with factor > 2 as higher factors
+        // cause higher cost difference.
+        if (IG->getFactor() > 2)
+          return true;
         unsigned NumMembers = IG->getNumMembers();
         for (unsigned I = 0; I != NumMembers; ++I) {
           if (Instruction *M = IG->getMember(I))
