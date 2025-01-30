@@ -54,7 +54,7 @@ entry:
 }
 
 declare void @zar(ptr)
-; CHECK-LABEL: define weak_odr hidden void @weak_odr_caller_of_foo_1(
+; CHECK-LABEL: define private void @0(
 ; CHECK-SAME: ptr [[P:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
 ; CHECK-NEXT:    tail call void @foo(ptr [[P]])
@@ -72,7 +72,7 @@ declare void @zar(ptr)
 ; CHECK-NEXT:    ret void
 ;
 ;
-; CHECK-LABEL: define hidden void @non_weak_caller_of_zar_1(
+; CHECK-LABEL: define private void @1(
 ; CHECK-SAME: ptr [[P:%.*]]) {
 ; CHECK-NEXT:  [[ENTRY:.*:]]
 ; CHECK-NEXT:    tail call void @zar(ptr [[P]])
@@ -83,7 +83,13 @@ declare void @zar(ptr)
 ;
 ; CHECK-LABEL: define weak_odr hidden void @weak_odr_caller_of_foo_2(
 ; CHECK-SAME: ptr [[TMP0:%.*]]) {
-; CHECK-NEXT:    tail call void @weak_odr_caller_of_foo_1(ptr [[TMP0]])
+; CHECK-NEXT:    tail call void @[[GLOB0:[0-9]+]](ptr [[TMP0]])
+; CHECK-NEXT:    ret void
+;
+;
+; CHECK-LABEL: define weak_odr hidden void @weak_odr_caller_of_foo_1(
+; CHECK-SAME: ptr [[TMP0:%.*]]) {
+; CHECK-NEXT:    tail call void @[[GLOB0]](ptr [[TMP0]])
 ; CHECK-NEXT:    ret void
 ;
 ;
@@ -95,6 +101,12 @@ declare void @zar(ptr)
 ;
 ; CHECK-LABEL: define weak_odr hidden void @weak_odr_caller_of_zar_2(
 ; CHECK-SAME: ptr [[TMP0:%.*]]) {
-; CHECK-NEXT:    tail call void @non_weak_caller_of_zar_1(ptr [[TMP0]])
+; CHECK-NEXT:    tail call void @[[GLOB1:[0-9]+]](ptr [[TMP0]])
+; CHECK-NEXT:    ret void
+;
+;
+; CHECK-LABEL: define hidden void @non_weak_caller_of_zar_1(
+; CHECK-SAME: ptr [[TMP0:%.*]]) {
+; CHECK-NEXT:    tail call void @[[GLOB1]](ptr [[TMP0]])
 ; CHECK-NEXT:    ret void
 ;
