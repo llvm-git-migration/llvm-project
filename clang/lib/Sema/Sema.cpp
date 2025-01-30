@@ -479,7 +479,7 @@ void Sema::Initialize() {
       (Context.getAuxTargetInfo() &&
        Context.getAuxTargetInfo()->hasAArch64SVETypes())) {
 #define AARCH64_TYPE(Name, Id, SingletonId)                                    \
-  addImplicitTypedef(Name, Context.SingletonId);
+  addImplicitTypedef(#Name, Context.SingletonId);
 #include "clang/Basic/AArch64Types.def"
   }
 
