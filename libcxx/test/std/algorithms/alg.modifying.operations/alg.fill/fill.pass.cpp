@@ -46,20 +46,35 @@ struct Test {
   }
 };
 
+TEST_CONSTEXPR_CXX20 bool test_vector_bool(std::size_t N) {
+  { // Test with full bytes
+    std::vector<bool> in(N, false);
+    std::vector<bool> expected(N, true);
+    std::fill(in.begin(), in.end(), true);
+    assert(in == expected);
+  }
+  { // Test with partial bytes
+    std::vector<bool> in(N, false);
+    std::vector<bool> expected(N, true);
+    std::fill(in.begin() + 4, in.end() - 4, true);
+    assert(std::equal(in.begin() + 4, in.end() - 4, expected.begin()));
+  }
+
+  return true;
+}
+
 TEST_CONSTEXPR_CXX20 bool test() {
   types::for_each(types::forward_iterator_list<char*>(), Test<char>());
   types::for_each(types::forward_iterator_list<int*>(), Test<int>());
 
   { // Test vector<bool>::iterator optimization
-    for (std::size_t N = 8; N <= 256; N *= 2) {
-      // Test with both full and partial bytes
-      for (std::size_t offset = 0; offset <= 4; offset += 4) {
-        std::vector<bool> in(N + 2 * offset);
-        std::vector<bool> expected(N, true);
-        std::fill(in.begin() + offset, in.end() - offset, true);
-        assert(std::equal(in.begin() + offset, in.end() - offset, expected.begin()));
-      }
-    }
+    assert(test_vector_bool(8));
+    assert(test_vector_bool(19));
+    assert(test_vector_bool(32));
+    assert(test_vector_bool(49));
+    assert(test_vector_bool(64));
+    assert(test_vector_bool(199));
+    assert(test_vector_bool(256));
   }
 
   return true;
