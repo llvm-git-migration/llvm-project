@@ -191,7 +191,7 @@ Parts:
                           0x0, 0x0, 0x7, 0x50, 0x10, 0xCD, 0x14, 0x61, 0x0, 
                           0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ]
   - Name:            RTS0
-    Size:            8
+    Size:            4
     RootSignature:
       Size: 8
       AllowInputAssemblerInputLayout: true
@@ -199,7 +199,7 @@ Parts:
 
 
 #CHECK:    - Name: RTS0
-#CHECK-NEXT: Size: 8
+#CHECK-NEXT: Size: 4
 #CHECK-NEXT: RootSignature:
 #CHECK-NEXT:   Size: 8
 #CHECK-NEXT:   AllowInputAssemblerInputLayout: true
