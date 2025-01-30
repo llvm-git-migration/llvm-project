@@ -696,6 +696,7 @@ class TestGDBServerTargetXML(GDBRemoteTestBase):
 
             def qXferRead(self, obj, annex, offset, length):
                 if annex == "target.xml":
+                    # Note that this XML does not include any aliases, LLDB must generate them itself.
                     return (
                         """<?xml version="1.0"?>
                         <!DOCTYPE feature SYSTEM "gdb-target.dtd">
