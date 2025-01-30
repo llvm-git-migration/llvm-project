@@ -86,6 +86,13 @@ struct RootConstants {
 };
 
 struct RootParameter {
+  RootParameter() = default;
+  RootParameter(RootConstants RootConstant, ShaderVisibilityFlag Visibility) {
+    ParameterType = RootParameterType::Constants32Bit;
+    Constants = RootConstant;
+    ShaderVisibility = Visibility;
+  }
+  
   RootParameterType ParameterType;
   union {
     RootConstants Constants;

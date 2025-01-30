@@ -72,6 +72,23 @@ public:
 
 } // namespace
 
+static dxbc::RootParameter constructHeaderPart(const RootSignaturePart &Part) {
+  
+  dxbc::ShaderVisibilityFlag Visibility = static_cast<dxbc::ShaderVisibilityFlag>(Part.Visibility);
+
+  switch(Part.Type){
+
+  case PartType::Constants:{
+
+    return dxbc::RootParameter(dxbc::RootConstants {
+      Part.Constants.ShaderRegistry,
+      Part.Constants.RegistrySpace,
+      Part.Constants.Number32BitValues
+    }, Visibility);
+  } break;
+  }
+}
+
 bool DXContainerGlobals::runOnModule(Module &M) {
   llvm::SmallVector<GlobalValue *> Globals;
   Globals.push_back(getFeatureFlags(M));
@@ -163,6 +180,11 @@ void DXContainerGlobals::addRootSignature(Module &M,
   RootSignatureHeader RSH;
   RSH.Flags = MRS->Flags;
   RSH.Version = MRS->Version;
+
+  for(const auto &Part : MRS->Parts){
+    RSH.pushPart(constructHeaderPart(Part));
+  }
+
   RSH.write(OS);
 
   Constant *Constant =
