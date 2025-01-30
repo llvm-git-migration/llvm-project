@@ -40,6 +40,7 @@ class ASTConsumer;
 class ASTContext;
 class ASTSourceDescriptor;
 class CXXBaseSpecifier;
+class CXXConstructorDecl;
 class CXXCtorInitializer;
 class CXXRecordDecl;
 class DeclarationName;
