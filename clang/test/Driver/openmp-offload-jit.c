@@ -19,11 +19,11 @@
 //      PHASES-JIT: 0: input, "[[INPUT:.+]]", c, (host-openmp)
 // PHASES-JIT-NEXT: 1: preprocessor, {0}, cpp-output, (host-openmp)
 // PHASES-JIT-NEXT: 2: compiler, {1}, ir, (host-openmp)
-// PHASES-JIT-NEXT: 3: input, "[[INPUT]]", c, (device-openmp)
-// PHASES-JIT-NEXT: 4: preprocessor, {3}, cpp-output, (device-openmp)
-// PHASES-JIT-NEXT: 5: compiler, {4}, ir, (device-openmp)
+// PHASES-JIT-NEXT: 3: input, "[[INPUT]]", c, (device-openmp, {{.*}})
+// PHASES-JIT-NEXT: 4: preprocessor, {3}, cpp-output, (device-openmp, {{.*}})
+// PHASES-JIT-NEXT: 5: compiler, {4}, ir, (device-openmp, {{.*}})
 // PHASES-JIT-NEXT: 6: offload, "host-openmp (x86_64-unknown-linux-gnu)" {2}, "device-openmp ([[TARGET:.+]])" {5}, ir
-// PHASES-JIT-NEXT: 7: backend, {6}, lto-bc, (device-openmp)
+// PHASES-JIT-NEXT: 7: backend, {6}, lto-bc, (device-openmp, {{.*}})
 // PHASES-JIT-NEXT: 8: offload, "device-openmp ([[TARGET]])" {7}, lto-bc
 // PHASES-JIT-NEXT: 9: clang-offload-packager, {8}, image, (device-openmp)
 // PHASES-JIT-NEXT: 10: offload, "host-openmp (x86_64-unknown-linux-gnu)" {2}, "device-openmp (x86_64-unknown-linux-gnu)" {9}, ir
