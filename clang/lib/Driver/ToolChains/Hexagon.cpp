@@ -803,7 +803,7 @@ bool HexagonToolChain::isAutoHVXEnabled(const llvm::opt::ArgList &Args) {
 // if no Hexagon processor is selected at the command-line.
 //
 StringRef HexagonToolChain::GetDefaultCPU() {
-  return "hexagonv60";
+  return "hexagonv68";
 }
 
 StringRef HexagonToolChain::GetTargetCPUVersion(const ArgList &Args) {
