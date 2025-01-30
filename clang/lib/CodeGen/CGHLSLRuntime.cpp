@@ -126,8 +126,8 @@ void addRootSignature(
 
   llvm::hlsl::root_signature::MetadataBuilder Builder(Ctx, Elements);
   MDNode *RootSignature = Builder.BuildRootSignature();
-  MDNode *FnPairing = MDNode::get(Ctx, {ValueAsMetadata::get(Fn),
-                                        RootSignature});
+  MDNode *FnPairing =
+      MDNode::get(Ctx, {ValueAsMetadata::get(Fn), RootSignature});
 
   StringRef RootSignatureValKey = "dx.rootsignatures";
   auto *RootSignatureValMD = M.getOrInsertNamedMetadata(RootSignatureValKey);

@@ -129,9 +129,9 @@ using ParamType = std::variant<uint32_t *, DescriptorRangeOffset *,
                                DescriptorRangeFlags *, ShaderVisibility *>;
 
 class MetadataBuilder {
- public:
+public:
   MetadataBuilder(llvm::LLVMContext &Ctx, ArrayRef<RootElement> Elements)
-   : Ctx(Ctx), Elements(Elements) {}
+      : Ctx(Ctx), Elements(Elements) {}
 
   // Iterates through the elements and dispatches onto the correct Build method
   //
@@ -139,7 +139,7 @@ class MetadataBuilder {
   // a list of all the elements
   MDNode *BuildRootSignature();
 
- private:
+private:
   // Define the various builders for the different metadata types
   MDNode *BuildDescriptorTable(const DescriptorTable &Table);
   MDNode *BuildDescriptorTableClause(const DescriptorTableClause &Clause);
