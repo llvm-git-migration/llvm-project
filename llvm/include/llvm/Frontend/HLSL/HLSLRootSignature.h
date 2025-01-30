@@ -133,7 +133,10 @@ class MetadataBuilder {
   MetadataBuilder(llvm::LLVMContext &Ctx, ArrayRef<RootElement> Elements)
    : Ctx(Ctx), Elements(Elements) {}
 
-  // Iterates through the elements and builds the respective nodes
+  // Iterates through the elements and dispatches onto the correct Build method
+  //
+  // Accumulates the root signature and returns the Metadata node that is just
+  // a list of all the elements
   MDNode *BuildRootSignature();
 
  private:

@@ -471,10 +471,9 @@ void CGHLSLRuntime::emitEntryFunction(const FunctionDecl *FD,
 
   // Add and identify root signature to function, if applicable
   const AttrVec &Attrs = FD->getAttrs();
-  for (const Attr *Attr : Attrs) {
+  for (const Attr *Attr : Attrs)
     if (const auto *RSAttr = dyn_cast<HLSLRootSignatureAttr>(Attr))
       addRootSignature(RSAttr->getElements(), EntryFn, M);
-  }
 }
 
 void CGHLSLRuntime::setHLSLFunctionAttributes(const FunctionDecl *FD,
