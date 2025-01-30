@@ -722,17 +722,19 @@ public:
       const DataLayout &DL, APInt &Offset, bool AllowNonInbounds,
       bool AllowInvariantGroup = false,
       function_ref<bool(Value &Value, APInt &Offset)> ExternalAnalysis =
-          nullptr) const;
+          nullptr,
+      bool LookThroughIntToPtr = false) const;
 
   Value *stripAndAccumulateConstantOffsets(
       const DataLayout &DL, APInt &Offset, bool AllowNonInbounds,
       bool AllowInvariantGroup = false,
       function_ref<bool(Value &Value, APInt &Offset)> ExternalAnalysis =
-          nullptr) {
+          nullptr,
+      bool LookThroughIntToPtr = false) {
     return const_cast<Value *>(
         static_cast<const Value *>(this)->stripAndAccumulateConstantOffsets(
-            DL, Offset, AllowNonInbounds, AllowInvariantGroup,
-            ExternalAnalysis));
+            DL, Offset, AllowNonInbounds, AllowInvariantGroup, ExternalAnalysis,
+            LookThroughIntToPtr));
   }
 
   /// This is a wrapper around stripAndAccumulateConstantOffsets with the
