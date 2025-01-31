@@ -5292,7 +5292,12 @@ void Sema::InstantiateFunctionDefinition(SourceLocation PointOfInstantiation,
                               });
       assert(It != Primary->redecls().end() &&
              "Should't get here without a definition");
-      DC = (*It)->getLexicalDeclContext();
+      if (FunctionDecl *Def = cast<FunctionTemplateDecl>(*It)
+                                  ->getTemplatedDecl()
+                                  ->getDefinition())
+        DC = Def->getLexicalDeclContext();
+      else
+        DC = (*It)->getLexicalDeclContext();
       Innermost.emplace(Function->getTemplateSpecializationArgs()->asArray());
     }
     MultiLevelTemplateArgumentList TemplateArgs = getTemplateInstantiationArgs(
