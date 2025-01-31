@@ -80,6 +80,7 @@
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCDwarf.h"
+#include "llvm/Support/CodeGen.h"
 #include "llvm/Target/TargetMachine.h"
 
 #include <iterator>
@@ -247,6 +248,11 @@ fixupBlock(MachineBasicBlock &CurrBB, const BlockFlagsVector &BlockInfo,
   const BlockFlags &Info = BlockInfo[CurrBB.getNumber()];
 
   if (!Info.Reachable)
+    return false;
+
+  // Only async unwind tables need to fix up CFI at the block level. Otherwise,
+  // the function/section level is sufficient.
+  if (!TFL.enableAsyncCFIFixup(MF) && !CurrBB.isBeginSection())
     return false;
 
   // If the previous block and the current block are in the same section,
