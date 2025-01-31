@@ -397,6 +397,52 @@ TEST_F(AnalyzeTest, SpellingIncludesWithSymlinks) {
   }
 }
 
+// Make sure that the references to implicit operator new/delete are reported as
+// ambigious.
+TEST_F(AnalyzeTest, ImplicitOperatorNewDelete) {
+  ExtraFS = llvm::makeIntrusiveRefCnt<llvm::vfs::InMemoryFileSystem>();
+  ExtraFS->addFile("header.h",
+                   /*ModificationTime=*/{},
+                   llvm::MemoryBuffer::getMemBufferCopy(guard(R"cpp(
+  void* operator new(decltype(sizeof(int)));
+  )cpp")));
+  ExtraFS->addFile("wrapper.h",
+                   /*ModificationTime=*/{},
+                   llvm::MemoryBuffer::getMemBufferCopy(guard(R"cpp(
+  #include "header.h"
+  )cpp")));
+
+  // Check that header.h is not reported as missing.
+  {
+    Inputs.Code = R"cpp(
+      #include "wrapper.h"
+      void bar() {
+        operator new(3);
+      })cpp";
+    TestAST AST(Inputs);
+    std::vector<Decl *> DeclsInTU;
+    for (auto *D : AST.context().getTranslationUnitDecl()->decls())
+      DeclsInTU.push_back(D);
+    auto Results = analyze(DeclsInTU, {}, PP.Includes, &PI, AST.preprocessor());
+    EXPECT_THAT(Results.Missing, testing::IsEmpty());
+  }
+
+  // Check that header.h is not reported as unused.
+  {
+    Inputs.Code = R"cpp(
+      #include "header.h"
+      void bar() {
+        operator new(3);
+      })cpp";
+    TestAST AST(Inputs);
+    std::vector<Decl *> DeclsInTU;
+    for (auto *D : AST.context().getTranslationUnitDecl()->decls())
+      DeclsInTU.push_back(D);
+    auto Results = analyze(DeclsInTU, {}, PP.Includes, &PI, AST.preprocessor());
+    EXPECT_THAT(Results.Unused, Not(testing::IsEmpty()));
+  }
+}
+
 TEST(FixIncludes, Basic) {
   llvm::StringRef Code = R"cpp(#include "d.h"
 #include "a.h"
