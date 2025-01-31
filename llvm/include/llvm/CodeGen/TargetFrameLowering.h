@@ -20,10 +20,10 @@
 #include <vector>
 
 namespace llvm {
-  class BitVector;
-  class CalleeSavedInfo;
-  class MachineFunction;
-  class RegScavenger;
+class BitVector;
+class CalleeSavedInfo;
+class MachineFunction;
+class RegScavenger;
 
 namespace TargetStackID {
 enum Value {
@@ -45,8 +45,8 @@ enum Value {
 class TargetFrameLowering {
 public:
   enum StackDirection {
-    StackGrowsUp,        // Adding to the stack increases the stack address
-    StackGrowsDown       // Adding to the stack decreases the stack address
+    StackGrowsUp,  // Adding to the stack increases the stack address
+    StackGrowsDown // Adding to the stack decreases the stack address
   };
 
   // Maps a callee saved register to a stack slot with a fixed offset.
@@ -78,6 +78,7 @@ private:
   Align TransientStackAlignment;
   int LocalAreaOffset;
   bool StackRealignable;
+
 public:
   TargetFrameLowering(StackDirection D, Align StackAl, int LAO,
                       Align TransAl = Align(1), bool StackReal = true)
@@ -128,9 +129,7 @@ public:
 
   /// isStackRealignable - This method returns whether the stack can be
   /// realigned.
-  bool isStackRealignable() const {
-    return StackRealignable;
-  }
+  bool isStackRealignable() const { return StackRealignable; }
 
   /// This method returns whether or not it is safe for an object with the
   /// given stack id to be bundled into the local area.
@@ -148,8 +147,8 @@ public:
   ///
   /// If this returns true, the frame indexes used by the RegScavenger will be
   /// allocated closest to the incoming stack pointer.
-  virtual bool allocateScavengingFrameIndexesNearIncomingSP(
-    const MachineFunction &MF) const;
+  virtual bool
+  allocateScavengingFrameIndexesNearIncomingSP(const MachineFunction &MF) const;
 
   /// assignCalleeSavedSpillSlots - Allows target to override spill slot
   /// assignment logic.  If implemented, assignCalleeSavedSpillSlots() should
@@ -190,9 +189,7 @@ public:
   /// targetHandlesStackFrameRounding - Returns true if the target is
   /// responsible for rounding up the stack frame (probably at emitPrologue
   /// time).
-  virtual bool targetHandlesStackFrameRounding() const {
-    return false;
-  }
+  virtual bool targetHandlesStackFrameRounding() const { return false; }
 
   /// Returns true if the target will correctly handle shrink wrapping.
   virtual bool enableShrinkWrapping(const MachineFunction &MF) const {
@@ -229,10 +226,16 @@ public:
 
   /// Returns true if we may need to fix the unwind information for the
   /// function.
-  virtual bool enableCFIFixup(MachineFunction &MF) const;
+  virtual bool enableCFIFixup(const MachineFunction &MF) const;
+
+  /// enableBlockLevelCFIFixup - Returns true if we may need to fix up the
+  /// function at a basic block level (e.g. for async unwind tables).
+  virtual bool enableBlockLevelCFIFixup(const MachineFunction &MF) const {
+    return enableCFIFixup(MF);
+  };
 
   /// Emit CFI instructions that recreate the state of the unwind information
-  /// upon fucntion entry.
+  /// upon function entry.
   virtual void resetCFIToInitialState(MachineBasicBlock &MBB) const {}
 
   /// Replace a StackProbe stub (if any) with the actual probe code inline
@@ -352,7 +355,7 @@ public:
   /// Returns the callee-saved registers as computed by determineCalleeSaves
   /// in the BitVector \p SavedRegs.
   virtual void getCalleeSaves(const MachineFunction &MF,
-                                  BitVector &SavedRegs) const;
+                              BitVector &SavedRegs) const;
 
   /// This method determines which of the registers reported by
   /// TargetRegisterInfo::getCalleeSavedRegs() should actually get saved.
@@ -372,9 +375,9 @@ public:
   /// finalized.  Once the frame is finalized, MO_FrameIndex operands are
   /// replaced with direct constants.  This method is optional.
   ///
-  virtual void processFunctionBeforeFrameFinalized(MachineFunction &MF,
-                                             RegScavenger *RS = nullptr) const {
-  }
+  virtual void
+  processFunctionBeforeFrameFinalized(MachineFunction &MF,
+                                      RegScavenger *RS = nullptr) const {}
 
   /// processFunctionBeforeFrameIndicesReplaced - This method is called
   /// immediately before MO_FrameIndex operands are eliminated, but after the
@@ -394,13 +397,11 @@ public:
   /// implemented if using call frame setup/destroy pseudo instructions.
   /// Returns an iterator pointing to the instruction after the replaced one.
   virtual MachineBasicBlock::iterator
-  eliminateCallFramePseudoInstr(MachineFunction &MF,
-                                MachineBasicBlock &MBB,
+  eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MI) const {
     llvm_unreachable("Call Frame Pseudo Instructions do not exist on this "
                      "target!");
   }
-
 
   /// Order the symbols in the local stack frame.
   /// The list of objects that we want to order is in \p objectsToAllocate as
@@ -410,8 +411,7 @@ public:
   /// By default, just maintain the original order.
   virtual void
   orderFrameObjects(const MachineFunction &MF,
-                    SmallVectorImpl<int> &objectsToAllocate) const {
-  }
+                    SmallVectorImpl<int> &objectsToAllocate) const {}
 
   /// Check whether or not the given \p MBB can be used as a prologue
   /// for the target.
@@ -457,9 +457,7 @@ public:
   static bool isSafeForNoCSROpt(const Function &F);
 
   /// Check if the no-CSR optimisation is profitable for the given function.
-  virtual bool isProfitableForNoCSROpt(const Function &F) const {
-    return true;
-  }
+  virtual bool isProfitableForNoCSROpt(const Function &F) const { return true; }
 
   /// Return initial CFA offset value i.e. the one valid at the beginning of the
   /// function (before any stack operations).
@@ -486,6 +484,6 @@ protected:
   virtual bool hasFPImpl(const MachineFunction &MF) const = 0;
 };
 
-} // End llvm namespace
+} // namespace llvm
 
 #endif

@@ -80,6 +80,7 @@
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCDwarf.h"
+#include "llvm/Support/CodeGen.h"
 #include "llvm/Target/TargetMachine.h"
 
 #include <iterator>
@@ -247,6 +248,10 @@ fixupBlock(MachineBasicBlock &CurrBB, const BlockFlagsVector &BlockInfo,
   const BlockFlags &Info = BlockInfo[CurrBB.getNumber()];
 
   if (!Info.Reachable)
+    return false;
+
+  // If we don't need to fix up CFI at the block level, we only need to fix up the first basic block in the section.
+  if (!TFL.enableBlockLevelCFIFixup(MF) && !CurrBB.isBeginSection())
     return false;
 
   // If the previous block and the current block are in the same section,
