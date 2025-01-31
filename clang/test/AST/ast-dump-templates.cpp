@@ -1,7 +1,14 @@
-// RUN: %clang_cc1 -std=c++1z -ast-print %s > %t
+// RUN: %clang_cc1 -std=c++17 -ast-print %s > %t
 // RUN: FileCheck < %t %s -check-prefix=CHECK1
 // RUN: FileCheck < %t %s -check-prefix=CHECK2
-// RUN: %clang_cc1 -std=c++1z -ast-dump %s | FileCheck --check-prefix=DUMP %s
+// RUN: %clang_cc1 -std=c++17 -ast-dump %s | FileCheck --check-prefix=DUMP %s
+
+// Test with serialization:
+// RUN: %clang_cc1 -std=c++17 -emit-pch -o %t %s
+// RUN: %clang_cc1 -x c++ -std=c++17 -include-pch %t \
+// RUN: -ast-dump-all /dev/null \
+// RUN: | sed -e "s/ <undeserialized declarations>//" -e "s/ imported//" \
+// RUN: | FileCheck --strict-whitespace --check-prefix=DUMP %s
 
 template <int X, typename Y, int Z = 5>
 struct foo {
@@ -118,3 +125,11 @@ void func() {
 // DUMP-NEXT:     `-TemplateTypeParm {{.*}} 'Key'
 }
 }
+
+namespace test7 {
+  template <template<class> class TT> struct A {};
+  template <class...> class B {};
+  template struct A<B>;
+// DUMP-LABEL: NamespaceDecl {{.*}} test7{{$}}
+// DUMP:       ClassTemplateSpecializationDecl {{.*}} struct A definition explicit_instantiation_definition strict_pack_match{{$}}
+} // namespce test7
