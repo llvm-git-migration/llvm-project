@@ -37,7 +37,7 @@ add_mlir_translation_library(MLIRTargetLLVMIRExport
   LINK_LIBS PUBLIC
   MLIRDLTIDialect
   MLIRLLVMDialect
-  MLIRLLVMIRTransforms
+  MLIRLLVMIRTransformsLegalizeForExport
   MLIRTranslateLib
   MLIRTransformUtils
   )
