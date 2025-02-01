@@ -579,38 +579,63 @@ static bool processCmpIntrinsic(CmpIntrinsic *CI, LazyValueInfo *LVI) {
 // See if this min/max intrinsic always picks it's one specific operand.
 // If not, check whether we can canonicalize signed minmax into unsigned version
 static bool processMinMaxIntrinsic(MinMaxIntrinsic *MM, LazyValueInfo *LVI) {
+  bool Changed = false;
   CmpInst::Predicate Pred = CmpInst::getNonStrictPredicate(MM->getPredicate());
-  ConstantRange LHS_CR = LVI->getConstantRangeAtUse(MM->getOperandUse(0),
-                                                    /*UndefAllowed*/ false);
-  ConstantRange RHS_CR = LVI->getConstantRangeAtUse(MM->getOperandUse(1),
-                                                    /*UndefAllowed*/ false);
-  if (LHS_CR.icmp(Pred, RHS_CR)) {
-    ++NumMinMax;
-    MM->replaceAllUsesWith(MM->getLHS());
-    MM->eraseFromParent();
-    return true;
+  for (Use &U : make_early_inc_range(MM->uses())) {
+    ConstantRange LHS_CR =
+        ConstantRange::getEmpty(MM->getType()->getScalarSizeInBits());
+    ConstantRange RHS_CR = LHS_CR;
+    auto *CxtI = cast<Instruction>(U.getUser());
+    if (auto *PN = dyn_cast<PHINode>(CxtI)) {
+      BasicBlock *FromBB = PN->getIncomingBlock(U);
+      LHS_CR = LVI->getConstantRangeOnEdge(MM->getOperand(0), FromBB,
+                                           CxtI->getParent(), CxtI);
+      RHS_CR = LVI->getConstantRangeOnEdge(MM->getOperand(1), FromBB,
+                                           CxtI->getParent(), CxtI);
+    } else {
+      LHS_CR = LVI->getConstantRange(MM->getOperand(0), CxtI,
+                                     /*UndefAllowed=*/false);
+      RHS_CR = LVI->getConstantRange(MM->getOperand(1), CxtI,
+                                     /*UndefAllowed=*/false);
+    }
+    if (LHS_CR.icmp(Pred, RHS_CR)) {
+      Changed = true;
+      ++NumMinMax;
+      U.set(MM->getLHS());
+      continue;
+    }
+    if (RHS_CR.icmp(Pred, LHS_CR)) {
+      Changed = true;
+      ++NumMinMax;
+      U.set(MM->getRHS());
+      continue;
+    }
   }
-  if (RHS_CR.icmp(Pred, LHS_CR)) {
-    ++NumMinMax;
-    MM->replaceAllUsesWith(MM->getRHS());
+
+  if (MM->use_empty()) {
     MM->eraseFromParent();
     return true;
   }
 
-  if (MM->isSigned() &&
-      ConstantRange::areInsensitiveToSignednessOfICmpPredicate(LHS_CR,
-                                                               RHS_CR)) {
-    ++NumSMinMax;
-    IRBuilder<> B(MM);
-    MM->replaceAllUsesWith(B.CreateBinaryIntrinsic(
-        MM->getIntrinsicID() == Intrinsic::smin ? Intrinsic::umin
-                                                : Intrinsic::umax,
-        MM->getLHS(), MM->getRHS()));
-    MM->eraseFromParent();
-    return true;
+  if (MM->isSigned()) {
+    ConstantRange LHS_CR = LVI->getConstantRangeAtUse(MM->getOperandUse(0),
+                                                      /*UndefAllowed=*/false);
+    ConstantRange RHS_CR = LVI->getConstantRangeAtUse(MM->getOperandUse(1),
+                                                      /*UndefAllowed=*/false);
+    if (ConstantRange::areInsensitiveToSignednessOfICmpPredicate(LHS_CR,
+                                                                 RHS_CR)) {
+      ++NumSMinMax;
+      IRBuilder<> B(MM);
+      MM->replaceAllUsesWith(B.CreateBinaryIntrinsic(
+          MM->getIntrinsicID() == Intrinsic::smin ? Intrinsic::umin
+                                                  : Intrinsic::umax,
+          MM->getLHS(), MM->getRHS()));
+      MM->eraseFromParent();
+      return true;
+    }
   }
 
-  return false;
+  return Changed;
 }
 
 // Rewrite this with.overflow intrinsic as non-overflowing.
