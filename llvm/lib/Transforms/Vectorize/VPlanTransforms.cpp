@@ -591,7 +591,7 @@ static void legalizeAndOptimizeInductions(VPlan &Plan) {
   using namespace llvm::VPlanPatternMatch;
   VPBasicBlock *HeaderVPBB = Plan.getVectorLoopRegion()->getEntryBasicBlock();
   bool HasOnlyVectorVFs = !Plan.hasVF(ElementCount::getFixed(1));
-  VPBuilder Builder(HeaderVPBB, HeaderVPBB->getFirstNonPhi());
+  VPBuilder Builder(Plan, HeaderVPBB, HeaderVPBB->getFirstNonPhi());
   for (VPRecipeBase &Phi : HeaderVPBB->phis()) {
     auto *PhiR = dyn_cast<VPWidenInductionRecipe>(&Phi);
     if (!PhiR)
@@ -744,7 +744,7 @@ void VPlanTransforms::optimizeInductionExitUsers(
          "predecessor must be the middle block");
 
   VPTypeAnalysis TypeInfo(Plan.getCanonicalIV()->getScalarType());
-  VPBuilder B(Plan.getMiddleBlock()->getTerminator());
+  VPBuilder B(Plan, Plan.getMiddleBlock()->getTerminator());
   for (VPRecipeBase &R : *ExitVPBB) {
     auto *ExitIRI = cast<VPIRInstruction>(&R);
     if (!isa<PHINode>(ExitIRI->getInstruction()))
@@ -1505,7 +1505,7 @@ static VPActiveLaneMaskPHIRecipe *addVPLaneMaskPhiAndUpdateExitBranch(
   // we have to take unrolling into account. Each part needs to start at
   //   Part * VF
   auto *VecPreheader = Plan.getVectorPreheader();
-  VPBuilder Builder(VecPreheader);
+  VPBuilder Builder(Plan, VecPreheader);
 
   // Create the ActiveLaneMask instruction using the correct start values.
   VPValue *TC = Plan.getTripCount();
@@ -1624,7 +1624,8 @@ void VPlanTransforms::addActiveLaneMask(
     LaneMask = addVPLaneMaskPhiAndUpdateExitBranch(
         Plan, DataAndControlFlowWithoutRuntimeCheck);
   } else {
-    VPBuilder B = VPBuilder::getToInsertAfter(WideCanonicalIV);
+    VPBuilder B(Plan, WideCanonicalIV->getParent(),
+                std::next(WideCanonicalIV->getIterator()));
     LaneMask = B.createNaryOp(VPInstruction::ActiveLaneMask,
                               {WideCanonicalIV, Plan.getTripCount()}, nullptr,
                               "active.lane.mask");
@@ -1828,7 +1829,7 @@ bool VPlanTransforms::tryAddExplicitVectorLength(
   // Create the ExplicitVectorLengthPhi recipe in the main loop.
   auto *EVLPhi = new VPEVLBasedIVPHIRecipe(StartV, DebugLoc());
   EVLPhi->insertAfter(CanonicalIVPHI);
-  VPBuilder Builder(Header, Header->getFirstNonPhi());
+  VPBuilder Builder(Plan, Header, Header->getFirstNonPhi());
   // Compute original TC - IV as the AVL (application vector length).
   VPValue *AVL = Builder.createNaryOp(
       Instruction::Sub, {Plan.getTripCount(), EVLPhi}, DebugLoc(), "avl");
@@ -1909,7 +1910,7 @@ void VPlanTransforms::dropPoisonGeneratingRecipes(
         // where the operands are disjoint or poison otherwise.
         if (match(RecWithFlags, m_BinaryOr(m_VPValue(A), m_VPValue(B))) &&
             RecWithFlags->isDisjoint()) {
-          VPBuilder Builder(RecWithFlags);
+          VPBuilder Builder(Plan, RecWithFlags);
           VPInstruction *New = Builder.createOverflowingOp(
               Instruction::Add, {A, B}, {false, false},
               RecWithFlags->getDebugLoc());
@@ -2023,7 +2024,7 @@ void VPlanTransforms::createInterleaveGroups(
                    /*IsSigned=*/true);
       VPValue *OffsetVPV = Plan.getOrAddLiveIn(
           ConstantInt::get(IRInsertPos->getParent()->getContext(), -Offset));
-      VPBuilder B(InsertPos);
+      VPBuilder B(Plan, InsertPos);
       Addr = InBounds ? B.createInBoundsPtrAdd(InsertPos->getAddr(), OffsetVPV)
                       : B.createPtrAdd(InsertPos->getAddr(), OffsetVPV);
     }
@@ -2069,7 +2070,7 @@ void VPlanTransforms::handleUncountableEarlyExit(
     BasicBlock *UncountableExitingBlock, VPRecipeBuilder &RecipeBuilder) {
   VPRegionBlock *LoopRegion = Plan.getVectorLoopRegion();
   auto *LatchVPBB = cast<VPBasicBlock>(LoopRegion->getExiting());
-  VPBuilder Builder(LatchVPBB->getTerminator());
+  VPBuilder Builder(Plan, LatchVPBB->getTerminator());
   auto *MiddleVPBB = Plan.getMiddleBlock();
   VPValue *IsEarlyExitTaken = nullptr;
 
@@ -2110,8 +2111,8 @@ void VPlanTransforms::handleUncountableEarlyExit(
   VPBlockUtils::connectBlocks(VectorEarlyExitVPBB, VPEarlyExitBlock);
 
   // Update the exit phis in the early exit block.
-  VPBuilder MiddleBuilder(NewMiddle);
-  VPBuilder EarlyExitB(VectorEarlyExitVPBB);
+  VPBuilder MiddleBuilder(Plan, NewMiddle);
+  VPBuilder EarlyExitB(Plan, VectorEarlyExitVPBB);
   for (VPRecipeBase &R : *VPEarlyExitBlock) {
     auto *ExitIRI = cast<VPIRInstruction>(&R);
     auto *ExitPhi = dyn_cast<PHINode>(&ExitIRI->getInstruction());

@@ -25,7 +25,6 @@
 #define LLVM_TRANSFORMS_VECTORIZE_LOOPVECTORIZATIONPLANNER_H
 
 #include "VPlan.h"
-#include "llvm/ADT/SmallSet.h"
 #include "llvm/Support/InstructionCost.h"
 
 namespace llvm {
@@ -45,6 +44,7 @@ class VPRecipeBuilder;
 class VPBuilder {
   VPBasicBlock *BB = nullptr;
   VPBasicBlock::iterator InsertPt = VPBasicBlock::iterator();
+  [[maybe_unused]] VPlan &Plan;
 
   /// Insert \p VPI in BB at InsertPt if BB is set.
   template <typename T> T *tryInsertInstruction(T *R) {
@@ -66,10 +66,15 @@ class VPBuilder {
   }
 
 public:
-  VPBuilder() = default;
-  VPBuilder(VPBasicBlock *InsertBB) { setInsertPoint(InsertBB); }
-  VPBuilder(VPRecipeBase *InsertPt) { setInsertPoint(InsertPt); }
-  VPBuilder(VPBasicBlock *TheBB, VPBasicBlock::iterator IP) {
+  VPBuilder(VPlan &Plan) : Plan(Plan) {}
+  VPBuilder(VPlan &Plan, VPBasicBlock *InsertBB) : Plan(Plan) {
+    setInsertPoint(InsertBB);
+  }
+  VPBuilder(VPlan &Plan, VPRecipeBase *InsertPt) : Plan(Plan) {
+    setInsertPoint(InsertPt);
+  }
+  VPBuilder(VPlan &Plan, VPBasicBlock *TheBB, VPBasicBlock::iterator IP)
+      : Plan(Plan) {
     setInsertPoint(TheBB, IP);
   }
 
@@ -82,13 +87,6 @@ public:
 
   VPBasicBlock *getInsertBlock() const { return BB; }
   VPBasicBlock::iterator getInsertPoint() const { return InsertPt; }
-
-  /// Create a VPBuilder to insert after \p R.
-  static VPBuilder getToInsertAfter(VPRecipeBase *R) {
-    VPBuilder B;
-    B.setInsertPoint(R->getParent(), std::next(R->getIterator()));
-    return B;
-  }
 
   /// InsertPoint - A saved insertion point.
   class VPInsertPoint {
@@ -389,9 +387,6 @@ class LoopVectorizationPlanner {
 
   /// Profitable vector factors.
   SmallVector<VectorizationFactor, 8> ProfitableVFs;
-
-  /// A builder used to construct the current plan.
-  VPBuilder Builder;
 
   /// Computes the cost of \p Plan for vectorization factor \p VF.
   ///
