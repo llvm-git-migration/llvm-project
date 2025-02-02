@@ -20,22 +20,10 @@
 
 template <class S>
 TEST_CONSTEXPR_CXX20 void test(S s, typename S::size_type n, S expected) {
-  if (n <= s.max_size()) {
-    s.resize(n);
-    LIBCPP_ASSERT(s.__invariants());
-    assert(s == expected);
-    LIBCPP_ASSERT(is_string_asan_correct(s));
-  }
-#ifndef TEST_HAS_NO_EXCEPTIONS
-  else if (!TEST_IS_CONSTANT_EVALUATED) {
-    try {
-      s.resize(n);
-      assert(false);
-    } catch (std::length_error&) {
-      assert(n > s.max_size());
-    }
-  }
-#endif
+  s.resize(n);
+  LIBCPP_ASSERT(s.__invariants());
+  assert(s == expected);
+  LIBCPP_ASSERT(is_string_asan_correct(s));
 }
 
 template <class S>
@@ -56,7 +44,26 @@ TEST_CONSTEXPR_CXX20 void test_string() {
   test(S("12345678901234567890123456789012345678901234567890"),
        60,
        S("12345678901234567890123456789012345678901234567890\0\0\0\0\0\0\0\0\0\0", 60));
-  test(S(), S::npos, S("not going to happen"));
+}
+
+template <class CharT>
+TEST_CONSTEXPR_CXX20 void test_max_size() {
+#ifndef TEST_HAS_NO_EXCEPTIONS
+  if (!TEST_IS_CONSTANT_EVALUATED) {
+    std::basic_string<CharT> str;
+    try {
+      str.resize(std::string::npos);
+      assert(false);
+    } catch (const std::length_error&) {
+    }
+  }
+#endif
+
+  {
+    std::basic_string<CharT, std::char_traits<CharT>, tiny_size_allocator<32, CharT>> str;
+    str.resize(str.max_size());
+    assert(str.size() == str.max_size());
+  }
 }
 
 TEST_CONSTEXPR_CXX20 bool test() {
@@ -64,6 +71,11 @@ TEST_CONSTEXPR_CXX20 bool test() {
 #if TEST_STD_VER >= 11
   test_string<std::basic_string<char, std::char_traits<char>, min_allocator<char>>>();
   test_string<std::basic_string<char, std::char_traits<char>, safe_allocator<char>>>();
+#endif
+
+  test_max_size<char>();
+#ifndef TEST_HAS_NO_WIDE_CHARACTERS
+  test_max_size<wchar_t>();
 #endif
 
   return true;
