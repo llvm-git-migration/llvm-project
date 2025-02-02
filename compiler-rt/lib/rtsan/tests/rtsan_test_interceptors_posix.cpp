@@ -280,7 +280,7 @@ TEST_F(RtsanOpenedMmapTest, MsyncDiesWhenRealtime) {
 }
 
 TEST_F(RtsanOpenedMmapTest, MincoreDiesWhenRealtime) {
-#if SANITIZER_APPLE
+#if SANITIZER_APPLE || SANITIZER_FREEBSD
   std::vector<char> vec(GetSize() / 1024);
 #else
   std::vector<unsigned char> vec(GetSize() / 1024);
@@ -1527,6 +1527,7 @@ TEST_F(KqueueTest, KeventDiesWhenRealtime) {
   ExpectNonRealtimeSurvival(Func);
 }
 
+#if SANITIZER_APPLE
 TEST_F(KqueueTest, Kevent64DiesWhenRealtime) {
   struct kevent64_s event;
   EV_SET64(&event, 0, EVFILT_READ, EV_ADD, 0, 0, 0, 0, 0);
@@ -1539,6 +1540,7 @@ TEST_F(KqueueTest, Kevent64DiesWhenRealtime) {
   ExpectRealtimeDeath(Func, "kevent64");
   ExpectNonRealtimeSurvival(Func);
 }
+#endif // SANITIZER_APPLE
 #endif // SANITIZER_INTERCEPT_KQUEUE
 
 #if SANITIZER_LINUX
