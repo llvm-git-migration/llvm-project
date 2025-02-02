@@ -733,6 +733,8 @@ Improvements to Clang's diagnostics
       scope.Unlock();
       require(scope); // Warning!  Requires mu1.
     }
+    
+- Clang now forces attributes to not be scope parents (#84072).
 
 Improvements to Clang's time-trace
 ----------------------------------
