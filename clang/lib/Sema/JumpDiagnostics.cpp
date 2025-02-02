@@ -310,8 +310,8 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
   unsigned &ParentScope = ((isa<Expr>(S) && !isa<StmtExpr>(S))
                             ? origParentScope : independentParentScope);
 
-  unsigned StmtsToSkip = 0u;
-
+  unsigned StmtsToSkip = 0u;  
+  
   // If we found a label, remember that it is in ParentScope scope.
   switch (S->getStmtClass()) {
   case Stmt::AddrLabelExprClass:
@@ -597,15 +597,6 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     LabelAndGotoScopes[S] = ParentScope;
     break;
 
-  case Stmt::AttributedStmtClass: {
-    AttributedStmt *AS = cast<AttributedStmt>(S);
-    if (GetMustTailAttr(AS)) {
-      LabelAndGotoScopes[AS] = ParentScope;
-      MustTailStmts.push_back(AS);
-    }
-    break;
-  }
-
   case Stmt::OpenACCComputeConstructClass: {
     unsigned NewParentScope = Scopes.size();
     OpenACCComputeConstruct *CC = cast<OpenACCComputeConstruct>(S);
@@ -658,6 +649,13 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
         Next = SC->getSubStmt();
       else if (LabelStmt *LS = dyn_cast<LabelStmt>(SubStmt))
         Next = LS->getSubStmt();
+      else if (AttributedStmt *AS = dyn_cast<AttributedStmt>(SubStmt)){
+        if (GetMustTailAttr(AS)) {
+          LabelAndGotoScopes[AS] = ParentScope;
+          MustTailStmts.push_back(AS);
+        }
+        Next = AS->getSubStmt();
+      }
       else
         break;
 
@@ -945,7 +943,7 @@ void JumpScopeChecker::CheckJump(Stmt *From, Stmt *To, SourceLocation DiagLoc,
 
   unsigned FromScope = LabelAndGotoScopes[From];
   unsigned ToScope = LabelAndGotoScopes[To];
-
+  
   // Common case: exactly the same scope, which is fine.
   if (FromScope == ToScope) return;
 
