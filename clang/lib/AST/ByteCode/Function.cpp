@@ -19,12 +19,24 @@ Function::Function(Program &P, FunctionDeclTy Source, unsigned ArgSize,
                    llvm::SmallVectorImpl<PrimType> &&ParamTypes,
                    llvm::DenseMap<unsigned, ParamDescriptor> &&Params,
                    llvm::SmallVectorImpl<unsigned> &&ParamOffsets,
-                   bool HasThisPointer, bool HasRVO, unsigned BuiltinID)
-    : P(P), Source(Source), ArgSize(ArgSize), ParamTypes(std::move(ParamTypes)),
-      Params(std::move(Params)), ParamOffsets(std::move(ParamOffsets)),
-      HasThisPointer(HasThisPointer), HasRVO(HasRVO), BuiltinID(BuiltinID) {
-  if (const auto *F = Source.dyn_cast<const FunctionDecl *>())
+                   bool HasThisPointer, bool HasRVO)
+    : P(P), Kind(FunctionKind::Normal), Source(Source), ArgSize(ArgSize),
+      ParamTypes(std::move(ParamTypes)), Params(std::move(Params)),
+      ParamOffsets(std::move(ParamOffsets)), HasThisPointer(HasThisPointer),
+      HasRVO(HasRVO) {
+  if (const auto *F = Source.dyn_cast<const FunctionDecl *>()) {
     Variadic = F->isVariadic();
+    BuiltinID = F->getBuiltinID();
+    if (isa<CXXConstructorDecl>(F))
+      Kind = FunctionKind::Ctor;
+    else if (isa<CXXDestructorDecl>(F))
+      Kind = FunctionKind::Dtor;
+    else if (const auto *MD = dyn_cast<CXXMethodDecl>(F);
+             MD && MD->isLambdaStaticInvoker())
+      Kind = FunctionKind::LambdaStaticInvoker;
+    else if (clang::isLambdaCallOperator(F))
+      Kind = FunctionKind::LambdaCallOperator;
+  }
 }
 
 Function::ParamDescriptor Function::getParamDescriptor(unsigned Offset) const {
