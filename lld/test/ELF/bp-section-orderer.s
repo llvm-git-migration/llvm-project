@@ -21,6 +21,7 @@
 # RUN: ld.lld a.o --irpgo-profile=a.profdata --bp-startup-sort=function --verbose-bp-section-orderer --icf=all 2>&1 | FileCheck %s --check-prefix=STARTUP-FUNC-ORDER
 
 # STARTUP-FUNC-ORDER: Ordered 3 sections using balanced partitioning
+# STARTUP-FUNC-ORDER: Total area under the page fault curve: 3.
 
 # RUN: ld.lld -o - a.o --symbol-ordering-file a.orderfile --irpgo-profile=a.profdata --bp-startup-sort=function | llvm-nm --numeric-sort --format=just-symbols - | FileCheck %s --check-prefix=ORDERFILE
 # RUN: ld.lld -o - a.o --symbol-ordering-file a.orderfile --bp-compression-sort=both | llvm-nm --numeric-sort --format=just-symbols - | FileCheck %s --check-prefix=ORDERFILE
