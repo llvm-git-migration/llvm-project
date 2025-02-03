@@ -393,10 +393,11 @@ MachineInstrBuilder X86FrameLowering::BuildStackAdjustment(
   return MI;
 }
 
-template <typename T>
+template <typename FoundT, typename CalcT>
 int64_t X86FrameLowering::mergeSPUpdates(MachineBasicBlock &MBB,
                                          MachineBasicBlock::iterator &MBBI,
-                                         T CalcNewOffset,
+                                         FoundT FoundStackAdjust,
+                                         CalcT CalcNewOffset,
                                          bool doMergeWithPrevious) const {
   if ((doMergeWithPrevious && MBBI == MBB.begin()) ||
       (!doMergeWithPrevious && MBBI == MBB.end()))
@@ -442,6 +443,7 @@ int64_t X86FrameLowering::mergeSPUpdates(MachineBasicBlock &MBB,
     } else
       return CalcNewOffset(0);
 
+    FoundStackAdjust(PI, Offset);
     if (std::abs((int64_t)CalcNewOffset(Offset)) < MaxSPChunk)
       break;
 
@@ -3839,13 +3841,24 @@ MachineBasicBlock::iterator X86FrameLowering::eliminateCallFramePseudoInstr(
 
     // Add Amount to SP to destroy a frame, or subtract to setup.
     int64_t StackAdjustment = isDestroy ? Amount : -Amount;
+    int64_t CfaAdjustment = StackAdjustment;
 
     if (StackAdjustment) {
       // Merge with any previous or following adjustment instruction. Note: the
       // instructions merged with here do not have CFI, so their stack
-      // adjustments do not feed into CfaAdjustment.
-      StackAdjustment = mergeSPAdd(MBB, InsertPos, StackAdjustment, true);
-      StackAdjustment = mergeSPAdd(MBB, InsertPos, StackAdjustment, false);
+      // adjustments do not feed into CfaAdjustment
+
+      auto FoundStackAdjust = [&CfaAdjustment](MachineBasicBlock::iterator PI,
+                                               int64_t Offset) {
+        CfaAdjustment += Offset;
+      };
+      auto CalcNewOffset = [&StackAdjustment](int64_t Offset) {
+        return StackAdjustment + Offset;
+      };
+      StackAdjustment =
+          mergeSPUpdates(MBB, InsertPos, FoundStackAdjust, CalcNewOffset, true);
+      StackAdjustment = mergeSPUpdates(MBB, InsertPos, FoundStackAdjust,
+                                       CalcNewOffset, false);
 
       if (StackAdjustment) {
         if (!(F.hasMinSize() &&
@@ -3855,7 +3868,7 @@ MachineBasicBlock::iterator X86FrameLowering::eliminateCallFramePseudoInstr(
       }
     }
 
-    if (DwarfCFI && !hasFP(MF)) {
+    if (DwarfCFI && !hasFP(MF) && CfaAdjustment) {
       // If we don't have FP, but need to generate unwind information,
       // we need to set the correct CFA offset after the stack adjustment.
       // How much we adjust the CFA offset depends on whether we're emitting
@@ -3863,14 +3876,11 @@ MachineBasicBlock::iterator X86FrameLowering::eliminateCallFramePseudoInstr(
       // offset to be correct at each call site, while for debugging we want
       // it to be more precise.
 
-      int64_t CfaAdjustment = -StackAdjustment;
       // TODO: When not using precise CFA, we also need to adjust for the
       // InternalAmt here.
-      if (CfaAdjustment) {
-        BuildCFI(
-            MBB, InsertPos, DL,
-            MCCFIInstruction::createAdjustCfaOffset(nullptr, CfaAdjustment));
-      }
+      BuildCFI(
+          MBB, InsertPos, DL,
+          MCCFIInstruction::createAdjustCfaOffset(nullptr, -CfaAdjustment));
     }
 
     return I;

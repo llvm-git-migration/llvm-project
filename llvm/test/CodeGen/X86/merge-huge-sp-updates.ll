@@ -1,4 +1,4 @@
-; RUN: llc < %s -O3 -mtriple=x86_64-linux-unknown -verify-machineinstrs -o %t.s
+; RUN: llc < %s -mtriple=x86_64-linux-unknown -verify-machineinstrs -o %t.s
 ; RUN: FileCheck --input-file=%t.s %s
 
 ; Double-check that we are able to assemble the generated '.s'. A symptom of the
@@ -23,6 +23,7 @@ entry:
 ; CHECK: call{{.*}}bar
 ; CHECK: addq{{.*}}$2147483647, %rsp
 ; CHECK: addq{{.*}}$372037585, %rsp
+; CHECK: .cfi_adjust_cfa_offset -2519521232
   ret void
 }
 
