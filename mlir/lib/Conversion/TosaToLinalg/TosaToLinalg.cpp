@@ -36,6 +36,81 @@
 using namespace mlir;
 using namespace mlir::tosa;
 
+// Helper function to materialize the semantically correct compare and select
+// operations a reduction operation with a specific NaN propagation mode.
+//
+// In the case of "PROPAGATE" semantics no compare and selection is required and
+// this function does nothing.
+//
+// In the case of "IGNORE" semantics this function materializes a comparison of
+// the current operand to the reduction which will return true for a NaN
+// argument and then selects between the initial reduction value and the
+// calculated result based on whether the argument is NaN or not. In pseudo
+// code:
+//
+// reduce<op>(x, init):
+//   result = op(init, x)
+//   return init if x == NaN else result
+static Value materializeReductionNanCheckIfRequired(Operation *op,
+                                                    PatternRewriter &rewriter,
+                                                    Value in, Value init,
+                                                    Value result) {
+  const auto nanMode = getNanMode(op, rewriter);
+  if (!nanMode)
+    return {};
+
+  if (*nanMode == "PROPAGATE")
+    return result;
+
+  assert(*nanMode == "IGNORE" && "Unhandled nan-propagation mode");
+
+  // Unordered comparison of NaN against itself will always return true.
+  Value isNaN = rewriter.create<arith::CmpFOp>(
+      op->getLoc(), arith::CmpFPredicate::UNO, in, in);
+  return rewriter.create<arith::SelectOp>(op->getLoc(), isNaN, init, result);
+}
+
+// Helper function to materialize the semantically correct compare and select
+// operations a binary operation with a specific NaN propagation mode.
+//
+// In the case of "PROPAGATE" semantics no compare and selection is required and
+// this function does nothing.
+//
+// In the case of "IGNORE" semantics this function materializes a comparison of
+// the current operands to the op which will return true for any NaN
+// argument and then selects between the non-NaN operation argument and the
+// calculated result based on whether the lhs or rhs is NaN or not. In pseudo
+// code:
+//
+// binary<op>(lhs, rhs):
+//   result = op(lhs, rhs)
+//   if lhs == NaN return rhs
+//   if rhs == NaN return lhs
+//   return result
+static Value materializeBinaryNanCheckIfRequired(Operation *op,
+                                                 PatternRewriter &rewriter,
+                                                 Value lhs, Value rhs,
+                                                 Value result) {
+  const auto nanMode = getNanMode(op, rewriter);
+  if (!nanMode)
+    return {};
+
+  if (*nanMode == "PROPAGATE")
+    return result;
+
+  assert(*nanMode == "IGNORE" && "Unhandled nan-propagation mode");
+
+  // Unordered comparison of NaN against itself will always return true.
+  Value lhsIsNaN = rewriter.create<arith::CmpFOp>(
+      op->getLoc(), arith::CmpFPredicate::UNO, lhs, lhs);
+  Value rhsIsNaN = rewriter.create<arith::CmpFOp>(
+      op->getLoc(), arith::CmpFPredicate::UNO, rhs, rhs);
+  Value rhsOrResult =
+      rewriter.create<arith::SelectOp>(op->getLoc(), lhsIsNaN, rhs, result);
+  return rewriter.create<arith::SelectOp>(op->getLoc(), rhsIsNaN, lhs,
+                                          rhsOrResult);
+}
+
 template <typename T>
 static arith::ConstantOp
 createConstFromIntAttribute(Operation *op, const std::string &attrName,
@@ -358,7 +433,9 @@ static Value createLinalgBodyCalculationForElementwiseOp(
 
   // tosa::MaximumOp
   if (isa<tosa::MaximumOp>(op) && isa<FloatType>(elementTy)) {
-    return rewriter.create<arith::MaximumFOp>(loc, args[0], args[1]);
+    auto max = rewriter.create<arith::MaximumFOp>(loc, args[0], args[1]);
+    return materializeBinaryNanCheckIfRequired(op, rewriter, args[0], args[1],
+                                               max);
   }
 
   if (isa<tosa::MaximumOp>(op) && elementTy.isSignlessInteger()) {
@@ -367,7 +444,9 @@ static Value createLinalgBodyCalculationForElementwiseOp(
 
   // tosa::MinimumOp
   if (isa<tosa::MinimumOp>(op) && isa<FloatType>(elementTy)) {
-    return rewriter.create<arith::MinimumFOp>(loc, args[0], args[1]);
+    auto min = rewriter.create<arith::MinimumFOp>(loc, args[0], args[1]);
+    return materializeBinaryNanCheckIfRequired(op, rewriter, args[0], args[1],
+                                               min);
   }
 
   if (isa<tosa::MinimumOp>(op) && elementTy.isSignlessInteger()) {
@@ -395,7 +474,11 @@ static Value createLinalgBodyCalculationForElementwiseOp(
         loc, elementTy, rewriter.getFloatAttr(elementTy, minApf));
     auto max = rewriter.create<arith::ConstantOp>(
         loc, elementTy, rewriter.getFloatAttr(elementTy, maxApf));
-    return clampFloatHelper(loc, args[0], min, max, rewriter);
+    auto result = clampFloatHelper(loc, args[0], min, max, rewriter);
+    // TOSA specifies that in "ignore" NaN mode the result is "min" if the input
+    // is NaN.
+    return materializeReductionNanCheckIfRequired(op, rewriter, args[0], min,
+                                                  result);
   }
 
   if (isa<tosa::ClampOp>(op) && isa<IntegerType>(elementTy)) {
@@ -1042,7 +1125,9 @@ static Value createLinalgBodyCalculationForReduceOp(Operation *op,
   }
 
   if (isa<tosa::ReduceMinOp>(op) && isa<FloatType>(elementTy)) {
-    return rewriter.create<arith::MinimumFOp>(loc, args[0], args[1]);
+    auto min = rewriter.create<arith::MinimumFOp>(loc, args[0], args[1]);
+    return materializeReductionNanCheckIfRequired(op, rewriter, args[0],
+                                                  args[1], min);
   }
 
   if (isa<tosa::ReduceMinOp>(op) && isa<IntegerType>(elementTy)) {
@@ -1050,7 +1135,9 @@ static Value createLinalgBodyCalculationForReduceOp(Operation *op,
   }
 
   if (isa<tosa::ReduceMaxOp>(op) && isa<FloatType>(elementTy)) {
-    return rewriter.create<arith::MaximumFOp>(loc, args[0], args[1]);
+    auto max = rewriter.create<arith::MaximumFOp>(loc, args[0], args[1]);
+    return materializeReductionNanCheckIfRequired(op, rewriter, args[0],
+                                                  args[1], max);
   }
 
   if (isa<tosa::ReduceMaxOp>(op) && isa<IntegerType>(elementTy)) {
@@ -2078,6 +2165,32 @@ public:
               nestedLoc, predicate, newValue, oldValue);
           auto resultIndex = rewriter.create<arith::SelectOp>(
               nestedLoc, predicate, newIndex, oldIndex);
+
+          // Check if we need to materialize compare and select for the given
+          // NaN propagation mode.
+          const auto nanMode = getNanMode(argmaxOp, rewriter);
+          if (!nanMode) {
+            didEncounterError = true;
+            return;
+          }
+
+          // "PROPAGATE" matches the default NaN propagation mode of the arith
+          // dialect so no compare and select is required.
+          //
+          // In the case "IGNORE" we check if the current argument is NaN and
+          // select the old index and value otherwise take the updated index and
+          // value.
+          if (*nanMode == "IGNORE") {
+            // Unordered comparison of NaN against itself will always return
+            // true.
+            Value isNaN = rewriter.create<arith::CmpFOp>(
+                argmaxOp.getLoc(), arith::CmpFPredicate::UNO, newValue,
+                newValue);
+            resultMax = rewriter.create<arith::SelectOp>(nestedLoc, isNaN,
+                                                         oldValue, resultMax);
+            resultIndex = rewriter.create<arith::SelectOp>(
+                nestedLoc, isNaN, oldIndex, resultIndex);
+          }
           nestedBuilder.create<linalg::YieldOp>(
               nestedLoc, ValueRange({resultIndex, resultMax}));
         });

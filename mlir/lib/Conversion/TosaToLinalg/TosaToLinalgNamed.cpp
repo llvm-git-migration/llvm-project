@@ -807,11 +807,47 @@ public:
       rewriter.replaceOpWithNewOp<linalg::PoolingNhwcMaxUnsignedOp>(
           op, ArrayRef<Type>{resultTy}, ValueRange{paddedInput, fakeWindowDims},
           filledEmptyTensor, strideAttr, dilationAttr);
-    } else {
-      rewriter.replaceOpWithNewOp<linalg::PoolingNhwcMaxOp>(
-          op, ArrayRef<Type>{resultTy}, ValueRange{paddedInput, fakeWindowDims},
-          filledEmptyTensor, strideAttr, dilationAttr);
+      return llvm::success();
     }
+
+    auto resultOp = rewriter.create<linalg::PoolingNhwcMaxOp>(
+        op->getLoc(), ArrayRef<Type>{resultTy},
+        ValueRange{paddedInput, fakeWindowDims}, filledEmptyTensor, strideAttr,
+        dilationAttr);
+
+    // Check the NaN propgation mode is present.
+    const auto nanMode = getNanMode(op, rewriter);
+    if (!nanMode)
+      return failure();
+
+    // "PROPAGATE" mode matches the behaviour of the LinAlg named op, so no
+    // compare and select materialization is required.
+    //
+    // In the case of "IGNORE" we need to insert a compare and select. Since
+    // we've already produced a named op we will just take its body and modify
+    // it to include the appropriate checks. If the current value is NaN the
+    // old value of pool will be taken otherwise we use the result.
+    if (nanMode == "IGNORE") {
+      auto *block = resultOp.getBlock();
+      rewriter.setInsertionPointToEnd(block);
+
+      auto in = block->getArgument(0);
+      auto out = block->getArgument(1);
+
+      auto *oldYieldOp = &*block->rbegin();
+      auto result = oldYieldOp->getOperand(0);
+
+      Value isNaN = rewriter.create<arith::CmpFOp>(
+          op->getLoc(), arith::CmpFPredicate::UNO, in, in);
+
+      auto selectOp =
+          rewriter.create<arith::SelectOp>(op->getLoc(), isNaN, out, result);
+      auto newYieldOp = rewriter.create<linalg::YieldOp>(oldYieldOp->getLoc(),
+                                                         selectOp.getResult());
+      rewriter.replaceOp(oldYieldOp, newYieldOp);
+    }
+
+    rewriter.replaceOp(op, resultOp);
     return success();
   }
 };
