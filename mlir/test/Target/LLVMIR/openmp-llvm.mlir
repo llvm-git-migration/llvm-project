@@ -2825,10 +2825,11 @@ llvm.func @task(%arg0 : !llvm.ptr) {
 // CHECK-LABEL: @task
 // CHECK-SAME:      (ptr %[[ARG:.*]])
 // CHECK:         %[[STRUCT_ARG:.*]] = alloca { ptr }, align 8
-// CHECK:         %[[OMP_PRIVATE_ALLOC:.*]] = alloca i32, align 4
 //                ...
 // CHECK:         br label %omp.private.init
 // CHECK:       omp.private.init:
+// CHECK:         %[[OMP_TASK_CONTEXT_PTR:.*]] = tail call ptr @malloc(
+// CHECK:         %[[OMP_PRIVATE_ALLOC:.*]] = getelementptr { i32 }, ptr %[[OMP_TASK_CONTEXT_PTR]]
 // CHECK:         br label %omp.private.copy1
 // CHECK:       omp.private.copy1:
 // CHECK:         %[[LOADED:.*]] = load i32, ptr %[[ARG]], align 4
