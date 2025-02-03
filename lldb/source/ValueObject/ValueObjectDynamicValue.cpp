@@ -145,6 +145,7 @@ bool ValueObjectDynamicValue::UpdateValue() {
   Address dynamic_address;
   bool found_dynamic_type = false;
   Value::ValueType value_type;
+  llvm::ArrayRef<uint8_t> local_buffer;
 
   LanguageRuntime *runtime = nullptr;
 
@@ -157,7 +158,7 @@ bool ValueObjectDynamicValue::UpdateValue() {
       // Try the preferred runtime first.
       found_dynamic_type = preferred_runtime->GetDynamicTypeAndAddress(
           *m_parent, m_use_dynamic, class_type_or_name, dynamic_address,
-          value_type);
+          value_type, local_buffer);
       if (found_dynamic_type)
         // Set the operative `runtime` for later use in this function.
         runtime = preferred_runtime;
@@ -166,20 +167,20 @@ bool ValueObjectDynamicValue::UpdateValue() {
       // Fallback to the runtime for `known_type`.
       found_dynamic_type = runtime->GetDynamicTypeAndAddress(
           *m_parent, m_use_dynamic, class_type_or_name, dynamic_address,
-          value_type);
+          value_type, local_buffer);
   } else {
     runtime = process->GetLanguageRuntime(lldb::eLanguageTypeC_plus_plus);
     if (runtime)
       found_dynamic_type = runtime->GetDynamicTypeAndAddress(
           *m_parent, m_use_dynamic, class_type_or_name, dynamic_address,
-          value_type);
+          value_type, local_buffer);
 
     if (!found_dynamic_type) {
       runtime = process->GetLanguageRuntime(lldb::eLanguageTypeObjC);
       if (runtime)
         found_dynamic_type = runtime->GetDynamicTypeAndAddress(
             *m_parent, m_use_dynamic, class_type_or_name, dynamic_address,
-            value_type);
+            value_type, local_buffer);
     }
   }
 
@@ -241,8 +242,8 @@ bool ValueObjectDynamicValue::UpdateValue() {
 
     // If we found a host address, point to the buffer in host memory.
     // Later on this function will copy the buffer over.
-    if (value_type == Value::ValueType::HostAddress) {
-      m_value.GetScalar() = dynamic_address.GetOffset();
+    if (value_type == Value::ValueType::HostAddress && !local_buffer.empty()) {
+      m_value.GetScalar() = (uint64_t)local_buffer.data();
       m_address = LLDB_INVALID_ADDRESS;
     } else {
       // Otherwise we have a legitimate address on the target. Point to the load
