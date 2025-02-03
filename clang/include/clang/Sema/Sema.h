@@ -1909,7 +1909,19 @@ public:
   /// '\#pragma clang attribute push' directives to the given declaration.
   void AddPragmaAttributes(Scope *S, Decl *D);
 
-  void PrintPragmaAttributeInstantiationPoint();
+  using DiagFuncRef =
+      llvm::function_ref<void(SourceLocation, PartialDiagnostic)>;
+  auto getDefaultDiagFunc() {
+    return [this](SourceLocation Loc, PartialDiagnostic PD) {
+      DiagnosticBuilder Builder(Diags.Report(Loc, PD.getDiagID()));
+      PD.Emit(Builder);
+    };
+  }
+
+  void PrintPragmaAttributeInstantiationPoint(DiagFuncRef DiagFunc);
+  void PrintPragmaAttributeInstantiationPoint() {
+    PrintPragmaAttributeInstantiationPoint(getDefaultDiagFunc());
+  }
 
   void DiagnoseUnterminatedPragmaAttribute();
 
@@ -13260,18 +13272,22 @@ public:
   void pushCodeSynthesisContext(CodeSynthesisContext Ctx);
   void popCodeSynthesisContext();
 
-  void PrintContextStack() {
+  void PrintContextStack(DiagFuncRef DiagFunc) {
     if (!CodeSynthesisContexts.empty() &&
         CodeSynthesisContexts.size() != LastEmittedCodeSynthesisContextDepth) {
-      PrintInstantiationStack();
+      PrintInstantiationStack(DiagFunc);
       LastEmittedCodeSynthesisContextDepth = CodeSynthesisContexts.size();
     }
     if (PragmaAttributeCurrentTargetDecl)
-      PrintPragmaAttributeInstantiationPoint();
+      PrintPragmaAttributeInstantiationPoint(DiagFunc);
   }
+  void PrintContextStack() { PrintContextStack(getDefaultDiagFunc()); }
   /// Prints the current instantiation stack through a series of
   /// notes.
-  void PrintInstantiationStack();
+  void PrintInstantiationStack(DiagFuncRef DiagFunc);
+  void PrintInstantiationStack() {
+    PrintInstantiationStack(getDefaultDiagFunc());
+  }
 
   /// Determines whether we are currently in a context where
   /// template argument substitution failures are not considered
