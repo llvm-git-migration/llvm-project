@@ -72,7 +72,7 @@ private:
   // Priority queue of instructions using modified registers, ordered by
   // their relative position in a basic block.
   struct UseQueueType {
-    UseQueueType() : Uses(Dist) {}
+    UseQueueType() : Dist(), Uses(Dist) {}
 
     unsigned size() const {
       return Uses.size();
@@ -100,9 +100,9 @@ private:
       bool operator()(const MachineInstr *MI, const MachineInstr *MJ) const;
       DenseMap<const MachineInstr*,unsigned> &Dist;
     };
-    std::priority_queue<MachineInstr*, std::vector<MachineInstr*>, Cmp> Uses;
     DenseSet<const MachineInstr*> Set; // Set to avoid adding duplicate entries.
     DenseMap<const MachineInstr*,unsigned> Dist;
+    std::priority_queue<MachineInstr *, std::vector<MachineInstr *>, Cmp> Uses;
   };
 
   void reset();
