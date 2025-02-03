@@ -1032,6 +1032,31 @@ static bool setShiftFlags(BinaryOperator &I, const SimplifyQuery &Q) {
   return Changed;
 }
 
+static Instruction *transformClampedShift64(BinaryOperator &I,
+					    const SimplifyQuery &Q,
+					    InstCombiner::BuilderTy &Builder) {
+  Value *Op0 = I.getOperand(0), *Op1 = I.getOperand(1);
+  Type *I32Type = Type::getInt32Ty(I.getContext());
+  Type *I64Type = Type::getInt64Ty(I.getContext());
+
+  if (I.getType() == I64Type) {
+    KnownBits KnownAmt = computeKnownBits(Op1, /* Depth */ 0, Q);
+    if (KnownAmt.getMinValue().uge(32)) {
+      Value *TruncVal         = Builder.CreateTrunc(Op0, I32Type);
+      Value *TruncShiftAmt    = Builder.CreateTrunc(Op1, I32Type);
+      Value *AdjustedShiftAmt = Builder.CreateSub  (TruncShiftAmt,
+                                                   ConstantInt::get(I32Type, 32));
+      Value *Shl32   = Builder.CreateShl(TruncVal, AdjustedShiftAmt);
+      Value *VResult = Builder.CreateVectorSplat(2, ConstantInt::get(I32Type, 0));
+
+      VResult = Builder.CreateInsertElement(VResult, Shl32,
+                                           ConstantInt::get(I32Type, 1));
+      return CastInst::Create(Instruction::BitCast, VResult, I64Type);
+    }
+  }
+  return nullptr;
+}
+
 Instruction *InstCombinerImpl::visitShl(BinaryOperator &I) {
   const SimplifyQuery Q = SQ.getWithInstruction(&I);
 
@@ -1265,6 +1290,10 @@ Instruction *InstCombinerImpl::visitShl(BinaryOperator &I) {
       return BinaryOperator::CreateAnd(NegX, X);
     }
   }
+
+  if (this->shouldReduceShl64ToShl32())
+    if (Instruction *V = transformClampedShift64(I, Q, Builder))
+      return V;
 
   return nullptr;
 }

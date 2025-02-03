@@ -720,14 +720,15 @@ define double @test_pown_afn_nnan_ninf_f64(double %x, i32 %y) {
 ; CHECK-NEXT:    [[POWNI2F:%.*]] = sitofp i32 [[Y]] to double
 ; CHECK-NEXT:    [[__YLOGX:%.*]] = fmul nnan ninf afn double [[__LOG2]], [[POWNI2F]]
 ; CHECK-NEXT:    [[__EXP2:%.*]] = call nnan ninf afn double @_Z4exp2d(double [[__YLOGX]])
-; CHECK-NEXT:    [[__YTOU:%.*]] = zext i32 [[Y]] to i64
-; CHECK-NEXT:    [[__YEVEN:%.*]] = shl i64 [[__YTOU]], 63
-; CHECK-NEXT:    [[TMP0:%.*]] = bitcast double [[X]] to i64
-; CHECK-NEXT:    [[__POW_SIGN:%.*]] = and i64 [[__YEVEN]], [[TMP0]]
-; CHECK-NEXT:    [[TMP1:%.*]] = bitcast double [[__EXP2]] to i64
-; CHECK-NEXT:    [[TMP2:%.*]] = or i64 [[__POW_SIGN]], [[TMP1]]
-; CHECK-NEXT:    [[TMP3:%.*]] = bitcast i64 [[TMP2]] to double
-; CHECK-NEXT:    ret double [[TMP3]]
+; CHECK-NEXT:    [[TMP0:%.*]] = shl i32 [[Y]], 31
+; CHECK-NEXT:    [[TMP1:%.*]] = insertelement <2 x i32> <i32 0, i32 poison>, i32 [[TMP0]], i64 1
+; CHECK-NEXT:    [[__YEVEN:%.*]] = bitcast <2 x i32> [[TMP1]] to i64
+; CHECK-NEXT:    [[TMP2:%.*]] = bitcast double [[X]] to i64
+; CHECK-NEXT:    [[__POW_SIGN:%.*]] = and i64 [[TMP2]], [[__YEVEN]]
+; CHECK-NEXT:    [[TMP3:%.*]] = bitcast double [[__EXP2]] to i64
+; CHECK-NEXT:    [[TMP4:%.*]] = or i64 [[__POW_SIGN]], [[TMP3]]
+; CHECK-NEXT:    [[TMP5:%.*]] = bitcast i64 [[TMP4]] to double
+; CHECK-NEXT:    ret double [[TMP5]]
 ;
 entry:
   %call = tail call nnan ninf afn double @_Z4powndi(double %x, i32 %y)

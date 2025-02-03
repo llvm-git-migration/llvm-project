@@ -194,6 +194,13 @@ bool InstCombiner::isValidAddrSpaceCast(unsigned FromAS, unsigned ToAS) const {
   return TTIForTargetIntrinsicsOnly.isValidAddrSpaceCast(FromAS, ToAS);
 }
 
+bool InstCombiner::shouldReduceShl64ToShl32() {
+  InstructionCost costShl32 = TTIForTargetIntrinsicsOnly.getArithmeticInstrCost(Instruction::Shl, Builder.getInt32Ty(), TTI::TCK_Latency);
+  InstructionCost costShl64 = TTIForTargetIntrinsicsOnly.getArithmeticInstrCost(Instruction::Shl, Builder.getInt64Ty(), TTI::TCK_Latency);
+
+  return costShl32<costShl64;
+}
+
 Value *InstCombinerImpl::EmitGEPOffset(GEPOperator *GEP, bool RewriteGEP) {
   if (!RewriteGEP)
     return llvm::emitGEPOffset(&Builder, DL, GEP);
