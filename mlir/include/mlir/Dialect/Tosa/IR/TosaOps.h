@@ -141,6 +141,22 @@ namespace tosa {
 
 bool isa_tosa_shape_type(mlir::Type t);
 
+// Helper function to materialize the semantically correct compare and select
+// operations a reduction operation with a specific NaN propagation mode.
+//
+// In the case of "PROPAGATE" semantics no compare and selection is required and
+// this function does nothing.
+//
+// In the case of "IGNORE" semantics this function materializes a comparison of
+// the current operand to the reduction which will return true for a NaN
+// argument and then selects between the initial reduction value and the
+// calculated result based on whether the argument is NaN or not. In pseudo
+// code:
+//
+// reduce<op>(x, init):
+//   result = op(init, x)
+//   return init if x == NaN else result
+
 } // namespace tosa
 
 } // namespace mlir
@@ -267,6 +283,32 @@ extractConvZpPair(TosaConvOp op, PatternRewriter &rewriter) {
 
   return std::make_optional<ConvZpPair>(*maybeInputZp, *maybeWeightZp);
 }
+
+// Helper to determine if an operation should have the "nan_mode" string
+// attribute.
+inline bool shouldHaveNanPropagation(Operation *op) {
+  return isa<tosa::ClampOp>(op) || isa<tosa::MaxPool2dOp>(op) ||
+         isa<tosa::ReduceMinOp>(op) || isa<tosa::ReduceMaxOp>(op) ||
+         isa<tosa::MaximumOp>(op) || isa<tosa::MinimumOp>(op) ||
+         isa<tosa::ArgMaxOp>(op);
+}
+
+// Helper function to extract the NaN propagation mode from an operation.
+// Note that the for operations which support NaN mode propagation the attribute
+// is optional and its default value is "PROPAGATE".
+//
+// If the function is called with an operator that doesn't support the NaN mode
+// attribute it will return a std::nullopt.
+inline std::optional<std::string> getNanMode(Operation *op,
+                                             PatternRewriter &rewriter) {
+  if (shouldHaveNanPropagation(op))
+    return op->hasAttr("nan_mode") ? op->getAttrOfType<StringAttr>(
+                                           rewriter.getStringAttr("nan_mode"))
+                                         .str()
+                                   : "PROPAGATE";
+  return std::nullopt;
+}
+
 } // namespace tosa
 } // namespace mlir
 
