@@ -267,6 +267,26 @@ extractConvZpPair(TosaConvOp op, PatternRewriter &rewriter) {
 
   return std::make_optional<ConvZpPair>(*maybeInputZp, *maybeWeightZp);
 }
+
+// Helper function to extract the NaN propagation mode from an operation.
+// Note that the for operations which support NaN mode propagation the attribute
+// is optional and its default value is "PROPAGATE".
+//
+// If the function is called with an operator that doesn't support the NaN mode
+// attribute it will return a std::nullopt.
+inline std::optional<std::string> getNanMode(Operation *op,
+                                             PatternRewriter &rewriter) {
+  if (isa<tosa::ClampOp>(op) || isa<tosa::MaxPool2dOp>(op) ||
+      isa<tosa::ReduceMinOp>(op) || isa<tosa::ReduceMaxOp>(op) ||
+      isa<tosa::MaximumOp>(op) || isa<tosa::MinimumOp>(op) ||
+      isa<tosa::ArgMaxOp>(op))
+    return op->hasAttr("nan_mode") ? op->getAttrOfType<StringAttr>(
+                                           rewriter.getStringAttr("nan_mode"))
+                                         .str()
+                                   : "PROPAGATE";
+  return std::nullopt;
+}
+
 } // namespace tosa
 } // namespace mlir
 
