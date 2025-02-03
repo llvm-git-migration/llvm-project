@@ -23,8 +23,13 @@
 # STARTUP-FUNC-ORDER: Ordered 3 sections using balanced partitioning
 # STARTUP-FUNC-ORDER: Total area under the page fault curve: 3.
 
-# RUN: ld.lld -o - a.o --symbol-ordering-file a.txt --irpgo-profile=a.profdata --bp-startup-sort=function | llvm-nm --numeric-sort --format=just-symbols - | FileCheck %s --check-prefix=ORDERFILE
-# RUN: ld.lld -o - a.o --symbol-ordering-file a.txt --bp-compression-sort=both | llvm-nm --numeric-sort --format=just-symbols - | FileCheck %s --check-prefix=ORDERFILE
+# RUN: ld.lld a.o --irpgo-profile=a.profdata --bp-startup-sort=function
+# RUN: llvm-nm -jn a.out | tr '\n' , | FileCheck %s --check-prefix=STARTUP
+# STARTUP: s1,s2,s3,A,B,C,F,E,D,_start,r1,r2,r3,r4,
+
+# RUN: ld.lld a.o --irpgo-profile=a.profdata --bp-startup-sort=function --symbol-ordering-file a.txt
+# RUN: llvm-nm -jn a.out | tr '\n' , | FileCheck %s --check-prefix=ORDER-STARTUP
+# ORDER-STARTUP: s2,s1,s3,A,F,E,D,B,C,_start,r3,r2,r1,r4,
 
 ## Rodata
 # ORDERFILE:      s2
@@ -36,8 +41,8 @@
 # ORDERFILE-NEXT: F
 # ORDERFILE-NEXT: E
 # ORDERFILE-NEXT: D
-# ORDERFILE-DAG: B
-# ORDERFILE-DAG: C
+# ORDERFILE-DAG:  B
+# ORDERFILE-DAG:  C
 # ORDERFILE-NEXT: _start
 
 ## Data
