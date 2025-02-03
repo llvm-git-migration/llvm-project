@@ -167,6 +167,10 @@ public:
 
   void addSInt(DIELoc &Die, std::optional<dwarf::Form> Form, int64_t Integer);
 
+  /// Add an integer attribute data and value; value may be any width.
+  void addInt(DIE &Die, dwarf::Attribute Attribute, const APInt &Integer,
+	      bool Unsigned);
+
   /// Add a string attribute data and value.
   ///
   /// We always emit a reference to the string pool instead of immediate
