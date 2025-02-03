@@ -148,6 +148,7 @@ class LLVMConfig(object):
             features.add("long_tests")
 
         if target_triple:
+            print(target_triple)
             if re.match(r"^x86_64.*-apple", target_triple):
                 features.add("x86_64-apple")
                 host_cxx = getattr(config, "host_cxx", None)
@@ -169,8 +170,12 @@ class LLVMConfig(object):
                 features.add("target-aarch64")
             elif re.match(r"^arm.*", target_triple):
                 features.add("target-arm")
-            if re.match(r'^ppc64le.*-linux', target_triple):
+            elif re.match(r'^ppc64le.*-linux', target_triple):
                 features.add('target=powerpc64le-linux')
+            elif re.match(r'^riscv64-.*-elf', target_triple):
+                features.add('target-riscv64')
+            elif re.match(r'^riscv32-.*-elf.', target_triple):
+                features.add('target-riscv32')
 
         if not user_is_root():
             features.add("non-root-user")
