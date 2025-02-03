@@ -240,9 +240,13 @@ bool ValueObjectDynamicValue::UpdateValue() {
     if (m_address.IsValid())
       SetValueDidChange(true);
 
-    // If we found a host address, point to the buffer in host memory.
-    // Later on this function will copy the buffer over.
-    if (value_type == Value::ValueType::HostAddress && !local_buffer.empty()) {
+    auto *exe_scope = exe_ctx.GetBestExecutionContextScope();
+    // If we found a host address, and the dynamic type fits in the local buffer
+    // that was found, point to thar buffer. Later on this function will copy
+    // the buffer over.
+    if (value_type == Value::ValueType::HostAddress && !local_buffer.empty() &&
+        local_buffer.size() <=
+            m_dynamic_type_info.GetCompilerType().GetByteSize(exe_scope)) {
       m_value.GetScalar() = (uint64_t)local_buffer.data();
       m_address = LLDB_INVALID_ADDRESS;
     } else {
