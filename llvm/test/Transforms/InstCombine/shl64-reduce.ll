@@ -1,8 +1,17 @@
+;; Test reduction of:
+;;
+;;   DST = shl i64 X, Y
+;;
+;; where Y is in the range [63-32] to:
+;;
+;;   DST = [shl i32 X, (Y - 32), 0]
+
 ; RUN: opt < %s -passes=instcombine -S | FileCheck %s
 
 
 target triple = "amdgcn-amd-amdhsa"
 
+; Test reduction where range information comes from meta-data
 define i64 @func_range(i64 noundef %arg0, ptr %arg1.ptr) {
   %shift.amt = load i64, ptr %arg1.ptr, !range !0
   %shl = shl i64 %arg0, %shift.amt
@@ -21,11 +30,19 @@ define i64 @func_range(i64 noundef %arg0, ptr %arg1.ptr) {
 }
 !0 = !{i64 32, i64 64}
 
+; FIXME: This case should be reduced too, but computeKnownBits() cannot
+;        determine the range.  Match current results for now.
 define i64 @func_max(i64 noundef %arg0, i64 noundef %arg1) {
   %max = call i64 @llvm.umax.i64(i64 %arg1, i64 32)
   %min = call i64 @llvm.umin.i64(i64 %max,  i64 63)  
   %shl = shl i64 %arg0, %min
   ret i64 %shl
+
+; CHECK:  define i64 @func_max(i64 noundef %arg0, i64 noundef %arg1) {
+; CHECK:    %max = call i64 @llvm.umax.i64(i64 %arg1, i64 32)
+; CHECK:    %min = call i64 @llvm.umin.i64(i64 %max,  i64 63)
+; CHECK:    %shl = shl i64 %arg0, %min
+; CHECK:    ret i64 %shl
 }
   
 
