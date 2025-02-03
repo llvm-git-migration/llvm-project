@@ -137,6 +137,26 @@ struct VectorBroadcastConvert final
   }
 };
 
+// SPIR-V does not have a concept of a poison index for certain instructions,
+// which creates a UB hazard when lowering from otherwise equivalent Vector
+// dialect instructions, because this index will be considered out-of-bounds.
+// To avoid this, this function implements a dynamic sanitization, arbitrarily
+// choosing to replace the poison index with index 0 (always in-bounds).
+static Value sanitizeDynamicIndex(ConversionPatternRewriter &rewriter,
+                                  Location loc, Value dynamicIndex,
+                                  int64_t kPoisonIndex) {
+  Value poisonIndex = rewriter.create<spirv::ConstantOp>(
+      loc, dynamicIndex.getType(),
+      rewriter.getIntegerAttr(dynamicIndex.getType(), kPoisonIndex));
+  Value cmpResult =
+      rewriter.create<spirv::IEqualOp>(loc, dynamicIndex, poisonIndex);
+  Value sanitizedIndex = rewriter.create<spirv::SelectOp>(
+      loc, cmpResult,
+      spirv::ConstantOp::getZero(dynamicIndex.getType(), loc, rewriter),
+      dynamicIndex);
+  return sanitizedIndex;
+}
+
 struct VectorExtractOpConvert final
     : public OpConversionPattern<vector::ExtractOp> {
   using OpConversionPattern::OpConversionPattern;
@@ -154,14 +174,26 @@ struct VectorExtractOpConvert final
     }
 
     if (std::optional<int64_t> id =
-            getConstantIntValue(extractOp.getMixedPosition()[0]))
-      rewriter.replaceOpWithNewOp<spirv::CompositeExtractOp>(
-          extractOp, dstType, adaptor.getVector(),
-          rewriter.getI32ArrayAttr(id.value()));
-    else
+            getConstantIntValue(extractOp.getMixedPosition()[0])) {
+      // TODO: It would be better to apply the ub.poison folding for this case
+      //       unconditionally, and have a specific SPIR-V lowering for it,
+      //       rather than having to handle it here.
+      if (id == vector::ExtractOp::kPoisonIndex) {
+        // Arbitrary choice of poison result, intended to stick out.
+        Value zero =
+            spirv::ConstantOp::getZero(dstType, extractOp.getLoc(), rewriter);
+        rewriter.replaceOp(extractOp, zero);
+      } else
+        rewriter.replaceOpWithNewOp<spirv::CompositeExtractOp>(
+            extractOp, dstType, adaptor.getVector(),
+            rewriter.getI32ArrayAttr(id.value()));
+    } else {
+      Value sanitizedIndex = sanitizeDynamicIndex(
+          rewriter, extractOp.getLoc(), adaptor.getDynamicPosition()[0],
+          vector::ExtractOp::kPoisonIndex);
       rewriter.replaceOpWithNewOp<spirv::VectorExtractDynamicOp>(
-          extractOp, dstType, adaptor.getVector(),
-          adaptor.getDynamicPosition()[0]);
+          extractOp, dstType, adaptor.getVector(), sanitizedIndex);
+    }
     return success();
   }
 };
@@ -266,13 +298,25 @@ struct VectorInsertOpConvert final
     }
 
     if (std::optional<int64_t> id =
-            getConstantIntValue(insertOp.getMixedPosition()[0]))
-      rewriter.replaceOpWithNewOp<spirv::CompositeInsertOp>(
-          insertOp, adaptor.getSource(), adaptor.getDest(), id.value());
-    else
+            getConstantIntValue(insertOp.getMixedPosition()[0])) {
+      // TODO: It would be better to apply the ub.poison folding for this case
+      //       unconditionally, and have a specific SPIR-V lowering for it,
+      //       rather than having to handle it here.
+      if (id == vector::InsertOp::kPoisonIndex) {
+        // Arbitrary choice of poison result, intended to stick out.
+        Value zero = spirv::ConstantOp::getZero(insertOp.getDestVectorType(),
+                                                insertOp.getLoc(), rewriter);
+        rewriter.replaceOp(insertOp, zero);
+      } else
+        rewriter.replaceOpWithNewOp<spirv::CompositeInsertOp>(
+            insertOp, adaptor.getSource(), adaptor.getDest(), id.value());
+    } else {
+      Value sanitizedIndex = sanitizeDynamicIndex(
+          rewriter, insertOp.getLoc(), adaptor.getDynamicPosition()[0],
+          vector::InsertOp::kPoisonIndex);
       rewriter.replaceOpWithNewOp<spirv::VectorInsertDynamicOp>(
-          insertOp, insertOp.getDest(), adaptor.getSource(),
-          adaptor.getDynamicPosition()[0]);
+          insertOp, insertOp.getDest(), adaptor.getSource(), sanitizedIndex);
+    }
     return success();
   }
 };
