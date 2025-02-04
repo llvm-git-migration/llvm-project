@@ -37,3 +37,8 @@
 // RUN:   -Xarch_sm_52 --offload-arch=sm_52 -S -nogpulib -nogpuinc -### 2>&1 \
 // RUN: | FileCheck -check-prefix=SPECIFIC %s
 // SPECIFIC: "-cc1" "-triple" "nvptx64-nvidia-cuda" {{.*}}"-target-cpu" "sm_52"
+
+// RUN: %clang -x cuda %s -nogpulib -nogpuinc \
+// RUN:   -Xarch_sm_51 --offload-arch=sm_52 -S -### 2>&1 \
+// RUN: | FileCheck -check-prefix=SPECIFIC-WARN %s
+// SPECIFIC-WARN: warning: argument unused during compilation: '-Xarch_sm_51 --offload-arch=sm_52'
