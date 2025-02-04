@@ -2545,7 +2545,16 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
   // Non-entry HLSL functions must always be inlined.
   if (getLangOpts().HLSL && !F->hasFnAttribute(llvm::Attribute::NoInline) &&
       !D->hasAttr<NoInlineAttr>()) {
-    B.addAttribute(llvm::Attribute::AlwaysInline);
+    // Set OptimizeNone for HLSL entry functions if ShouldAddOptNone
+    // or for all HLSL functions compiled for Library target.
+    llvm::Triple T(F->getParent()->getTargetTriple());
+    if (ShouldAddOptNone &&
+        (D->hasAttr<HLSLShaderAttr>() ||
+         T.getEnvironment() == llvm::Triple::EnvironmentType::Library)) {
+      B.addAttribute(llvm::Attribute::OptimizeNone);
+      B.addAttribute(llvm::Attribute::NoInline);
+    } else
+      B.addAttribute(llvm::Attribute::AlwaysInline);
   } else if ((ShouldAddOptNone || D->hasAttr<OptimizeNoneAttr>()) &&
              !F->hasFnAttribute(llvm::Attribute::AlwaysInline)) {
     // Add optnone, but do so only if the function isn't always_inline.

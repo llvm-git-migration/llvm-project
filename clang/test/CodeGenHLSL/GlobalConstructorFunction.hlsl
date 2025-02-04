@@ -32,11 +32,10 @@ void main(unsigned GI : SV_GroupIndex) {}
 // NOINLINE-NEXT:   call void @_Z12call_me_lastv(
 // NOINLINE-NEXT:   ret void
 
-// Verify constructor calls are inlined when AlwaysInline is run
-// INLINE-NEXT:   alloca
+// Verify constructor calls are inlined
 // INLINE-NEXT:   store i32 12
 // INLINE-NEXT:   store i32 13
 // INLINE-NEXT:   %0 = call i32 @llvm.dx.flattened.thread.id.in.group()
-// INLINE-NEXT:   store i32 %
+// INLINE-NEXT:   call void @_Z4mainj(i32 %0)
 // INLINE-NEXT:   store i32 0
 // INLINE:   ret void

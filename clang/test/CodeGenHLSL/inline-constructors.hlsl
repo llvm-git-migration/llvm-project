@@ -1,9 +1,9 @@
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -emit-llvm -o - -disable-llvm-passes %s | FileCheck %s --check-prefixes=CHECK,NOINLINE
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -emit-llvm -o - -disable-llvm-passes %s | FileCheck %s --check-prefixes=CHECK,NOINLINE
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -emit-llvm -o - -O0 %s | FileCheck %s --check-prefixes=CHECK,INLINE
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -emit-llvm -o - -O0 %s | FileCheck %s --check-prefixes=CHECK,INLINE
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -emit-llvm -o - -O1 %s | FileCheck %s --check-prefixes=CHECK,INLINE
-// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -emit-llvm -o - -O1 %s | FileCheck %s --check-prefixes=CHECK,INLINE
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -disable-llvm-passes %s | FileCheck %s --check-prefixes=CHECK,NOINLINE
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -disable-llvm-passes %s | FileCheck %s --check-prefixes=CHECK,NOINLINE
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -O0 %s | FileCheck %s --check-prefixes=CHECK,NOINLINE_INTERNAL
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -O0 %s | FileCheck %s --check-prefixes=CHECK,NOINLINE_INTERNAL
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.0-compute -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -O1 %s | FileCheck %s --check-prefixes=CHECK,INLINE
+// RUN: %clang_cc1 -triple dxil-pc-shadermodel6.3-library -std=hlsl202x -Wno-hlsl-extensions -emit-llvm -o - -O1 %s | FileCheck %s --check-prefixes=CHECK,INLINE
 
 // Tests that implicit constructor calls for user classes will always be inlined.
 
@@ -67,6 +67,8 @@ void main(unsigned GI : SV_GroupIndex) {
 // NOINLINE-NEXT:   call void @_Z9rainyMainv()
 // Verify inlining leaves only calls to "llvm." intrinsics
 // INLINE-NOT:      call {{[^@]*}} @{{[^l][^l][^v][^m][^\.]}}
+// Verify internal function is not inlined
+// NOINLINE_INTERNAL: call void @_Z9rainyMainv()
 // CHECK:           ret void
 [shader("compute")]
 [numthreads(1,1,1)]

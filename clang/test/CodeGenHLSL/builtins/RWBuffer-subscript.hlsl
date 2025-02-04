@@ -6,7 +6,8 @@ RWBuffer<int> Out;
 
 [numthreads(1,1,1)]
 void main(unsigned GI : SV_GroupIndex) {
-  // CHECK: define void @main()
+  // DXC: define internal void @_Z4mainj(i32 noundef %GI)
+  // SPIRV: define internal spir_func void @_Z4mainj(i32 noundef %GI)
 
   // DXC: %[[INPTR:.*]] = call noundef nonnull align 4 dereferenceable(4) ptr @llvm.dx.resource.getpointer.p0.tdx.TypedBuffer_i32_1_0_1t(target("dx.TypedBuffer", i32, 1, 0, 1) %{{.*}}, i32 %{{.*}})
   // SPIRV: %[[INPTR:.*]] = call noundef nonnull align 4 dereferenceable(4) ptr @llvm.spv.resource.getpointer.p0.tspirv.Image_i32_5_2_0_0_2_0t(target("spirv.Image", i32, 5, 2, 0, 0, 2, 0) %{{.*}}, i32 %{{.*}})

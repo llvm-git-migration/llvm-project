@@ -1,5 +1,5 @@
-// RUN: %clang_cc1 -x hlsl -triple dxil-pc-shadermodel6.3-library  -finclude-default-header %s -emit-llvm -disable-llvm-passes -o - | FileCheck %s
-// RUN: %clang_cc1 -x hlsl -triple dxil-pc-shadermodel6.0-compute  -finclude-default-header %s -emit-llvm -disable-llvm-passes -o - | FileCheck %s
+// RUN: %clang_cc1 -x hlsl -triple dxil-pc-shadermodel6.3-library  -finclude-default-header %s -emit-llvm -disable-llvm-passes -o - | FileCheck %s --check-prefixes=CHECK,LIB
+// RUN: %clang_cc1 -x hlsl -triple dxil-pc-shadermodel6.0-compute  -finclude-default-header %s -emit-llvm -disable-llvm-passes -o - | FileCheck %s --check-prefixes=CHECK,COMPUTE
 
 // Verify that a few different function types all get the NoRecurse attribute
 
@@ -11,7 +11,8 @@ struct Node {
   uint left, right;
 };
 
-// CHECK: Function Attrs:{{.*}}norecurse
+// LIB: Function Attrs:{{.*}}norecurse{{.*}}optnone
+// COMPUTE: Function Attrs: alwaysinline{{.*}}norecurse
 // CHECK: define noundef i32 @_Z4FindA100_4Nodej(ptr noundef byval([100 x %struct.Node]) align 4 %SortedTree, i32 noundef %key) [[IntAttr:\#[0-9]+]]
 // CHECK: ret i32
 // Find and return value corresponding to key in the SortedTree
@@ -30,7 +31,8 @@ uint Find(Node SortedTree[MAX], uint key) {
   }
 }
 
-// CHECK: Function Attrs:{{.*}}norecurse
+// LIB: Function Attrs:{{.*}}norecurse{{.*}}optnone
+// COMPUTE: Function Attrs: alwaysinline{{.*}}norecurse
 // CHECK: define noundef i1 @_Z8InitTreeA100_4NodeN4hlsl8RWBufferIDv4_jEEj(ptr noundef byval([100 x %struct.Node]) align 4 %tree, ptr noundef byval(%"class.hlsl::RWBuffer") align 4 %encodedTree, i32 noundef %maxDepth) [[ExtAttr:\#[0-9]+]]
 // CHECK: ret i1
 // Initialize tree with given buffer
@@ -51,12 +53,13 @@ bool InitTree(/*inout*/ Node tree[MAX], RWBuffer<uint4> encodedTree, uint maxDep
 RWBuffer<uint4> gTree;
 
 // Mangled entry points are internal
-// CHECK: Function Attrs:{{.*}}norecurse
-// CHECK: define internal void @_Z4mainj(i32 noundef %GI) [[IntAttr]]
+// CHECK: Function Attrs:{{.*}}norecurse{{.*}}optnone
+// LIB: define internal void @_Z4mainj(i32 noundef %GI) [[IntAttr]]
+// COMPUTE: define internal void @_Z4mainj(i32 noundef %GI) [[IntComputeAttr:\#[0-9]]]
 // CHECK: ret void
 
 // Canonical entry points are external and shader attributed
-// CHECK: Function Attrs:{{.*}}norecurse
+// CHECK: Function Attrs: convergent noinline norecurse
 // CHECK: define void @main() [[EntryAttr:\#[0-9]+]]
 // CHECK: ret void
 
@@ -70,12 +73,13 @@ void main(uint GI : SV_GroupIndex) {
 }
 
 // Mangled entry points are internal
-// CHECK: Function Attrs:{{.*}}norecurse
-// CHECK: define internal void @_Z11defaultMainv() [[IntAttr]]
+// CHECK: Function Attrs:{{.*}}norecurse{{.*}}optnone
+// LIB: define internal void @_Z11defaultMainv() [[IntAttr]]
+// COMPUTE: define internal void @_Z11defaultMainv() [[IntComputeAttr]]
 // CHECK: ret void
 
 // Canonical entry points are external and shader attributed
-// CHECK: Function Attrs:{{.*}}norecurse
+// CHECK: Function Attrs: convergent noinline norecurse
 // CHECK: define void @defaultMain() [[EntryAttr]]
 // CHECK: ret void
 
@@ -88,6 +92,7 @@ void defaultMain() {
     needle = Find(haystack, needle);
 }
 
-// CHECK: attributes [[IntAttr]] = {{.*}} norecurse
-// CHECK: attributes [[ExtAttr]] = {{.*}} norecurse
-// CHECK: attributes [[EntryAttr]] = {{.*}} norecurse
+// CHECK: attributes [[IntAttr]] = {{.*}}norecurse
+// CHECK: attributes [[ExtAttr]] = {{.*}}norecurse
+// COMPUTE: attributes [[IntComputeAttr]] = {{.*}}norecurse
+// CHECK: attributes [[EntryAttr]] = {{.*}}norecurse

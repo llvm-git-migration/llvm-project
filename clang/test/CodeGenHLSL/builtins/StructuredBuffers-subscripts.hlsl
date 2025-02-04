@@ -6,8 +6,7 @@ RasterizerOrderedStructuredBuffer<int> Out2;
 
 [numthreads(1,1,1)]
 void main(unsigned GI : SV_GroupIndex) {
-  // CHECK: define void @main()
-
+  // CHECK: define internal void @_Z4mainj(i32 noundef %GI)
   // CHECK: %[[INPTR:.*]] = call noundef nonnull align 4 dereferenceable(4) ptr @llvm.dx.resource.getpointer.p0.tdx.RawBuffer_i32_0_0t(target("dx.RawBuffer", i32, 0, 0) %{{.*}}, i32 %{{.*}})
   // CHECK: %[[LOAD:.*]] = load i32, ptr %[[INPTR]]
   // CHECK: %[[OUT1PTR:.*]] = call noundef nonnull align 4 dereferenceable(4) ptr @llvm.dx.resource.getpointer.p0.tdx.RawBuffer_i32_1_0t(target("dx.RawBuffer", i32, 1, 0) %{{.*}}, i32 %{{.*}})
