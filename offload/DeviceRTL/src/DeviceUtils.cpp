@@ -15,6 +15,8 @@
 #include "Interface.h"
 #include "Mapping.h"
 
+#include <gpuintrin.h>
+
 using namespace ompx;
 
 namespace impl {
@@ -29,17 +31,12 @@ uint64_t Pack(uint32_t LowBits, uint32_t HighBits) {
   return (((uint64_t)HighBits) << 32) | (uint64_t)LowBits;
 }
 
-int32_t shuffle(uint64_t Mask, int32_t Var, int32_t SrcLane, int32_t Width);
-int32_t shuffleDown(uint64_t Mask, int32_t Var, uint32_t LaneDelta,
-                    int32_t Width);
-
-uint64_t ballotSync(uint64_t Mask, int32_t Pred);
-
 /// AMDGCN Implementation
 ///
 ///{
 #ifdef __AMDGPU__
 
+// TODO: Move this to <gpuintrin.h>.
 int32_t shuffle(uint64_t Mask, int32_t Var, int32_t SrcLane, int32_t Width) {
   int Self = mapping::getThreadIdInWarp();
   int Index = SrcLane + (Self & ~(Width - 1));
@@ -53,15 +50,6 @@ int32_t shuffleDown(uint64_t Mask, int32_t Var, uint32_t LaneDelta,
   Index = (int)(LaneDelta + (Self & (Width - 1))) >= Width ? Self : Index;
   return __builtin_amdgcn_ds_bpermute(Index << 2, Var);
 }
-
-uint64_t ballotSync(uint64_t Mask, int32_t Pred) {
-  return Mask & __builtin_amdgcn_ballot_w64(Pred);
-}
-
-bool isSharedMemPtr(const void *Ptr) {
-  return __builtin_amdgcn_is_shared(
-      (const __attribute__((address_space(0))) void *)Ptr);
-}
 #endif
 ///}
 
@@ -70,6 +58,7 @@ bool isSharedMemPtr(const void *Ptr) {
 ///{
 #ifdef __NVPTX__
 
+// TODO: Move this to <gpuintrin.h>.
 int32_t shuffle(uint64_t Mask, int32_t Var, int32_t SrcLane, int32_t Width) {
   return __nvvm_shfl_sync_idx_i32(Mask, Var, SrcLane, Width - 1);
 }
@@ -78,13 +67,6 @@ int32_t shuffleDown(uint64_t Mask, int32_t Var, uint32_t Delta, int32_t Width) {
   int32_t T = ((mapping::getWarpSize() - Width) << 8) | 0x1f;
   return __nvvm_shfl_sync_down_i32(Mask, Var, Delta, T);
 }
-
-uint64_t ballotSync(uint64_t Mask, int32_t Pred) {
-  return __nvvm_vote_ballot_sync(static_cast<uint32_t>(Mask), Pred);
-}
-
-bool isSharedMemPtr(const void *Ptr) { return __nvvm_isspacep_shared(Ptr); }
-
 #endif
 ///}
 } // namespace impl
@@ -117,10 +99,10 @@ int64_t utils::shuffleDown(uint64_t Mask, int64_t Var, uint32_t Delta,
 }
 
 uint64_t utils::ballotSync(uint64_t Mask, int32_t Pred) {
-  return impl::ballotSync(Mask, Pred);
+  return __gpu_ballot(Mask, Pred);
 }
 
-bool utils::isSharedMemPtr(void *Ptr) { return impl::isSharedMemPtr(Ptr); }
+bool utils::isSharedMemPtr(void *Ptr) { return __gpu_is_ptr_local(Ptr); }
 
 extern "C" {
 int32_t __kmpc_shuffle_int32(int32_t Val, int16_t Delta, int16_t SrcLane) {
