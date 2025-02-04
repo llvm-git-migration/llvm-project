@@ -108,9 +108,9 @@ public:
   /// This call should return true if it could set the name and/or the type
   /// Sets address to the address of the dynamic type if value_type is set to
   /// a file or load address. Sets local_buffer to a buffer containing the data
-  /// of the dynamic type if value_type is set to a host address. Callers should 
+  /// of the dynamic type if value_type is set to a host address. Callers should
   /// copy local_buffer over into their own buffer if they want to keep the data
-  ///alive.
+  /// alive.
   virtual bool GetDynamicTypeAndAddress(
       ValueObject &in_value, lldb::DynamicValueType use_dynamic,
       TypeAndOrName &class_type_or_name, Address &address,
