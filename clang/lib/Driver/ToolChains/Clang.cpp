@@ -7619,6 +7619,16 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   Args.addOptOutFlag(CmdArgs, options::OPT_fgnu_inline_asm,
                      options::OPT_fno_gnu_inline_asm);
 
+  // Handle -floop-interchange
+  if (Arg *A = Args.getLastArg(options::OPT_floop_interchange,
+                               options::OPT_fno_loop_interchange)) {
+    CmdArgs.push_back("-mllvm");
+    if (A->getOption().matches(options::OPT_floop_interchange))
+      CmdArgs.push_back("-enable-loopinterchange=true");
+    else
+      CmdArgs.push_back("-enable-loopinterchange=false");
+  }
+
   // Enable vectorization per default according to the optimization level
   // selected. For optimization levels that want vectorization we use the alias
   // option to simplify the hasFlag logic.

@@ -4073,6 +4073,9 @@ defm assumptions : BoolFOption<"assumptions",
           "Disable codegen and compile-time checks for C++23's [[assume]] attribute">,
   PosFlag<SetTrue>>;
 
+def floop_interchange : Flag<["-"], "floop-interchange">, Group<f_Group>,
+  HelpText<"Enable the loop interchange pass">;
+def fno_loop_interchange: Flag<["-"], "fno-loop-interchange">, Group<f_Group>;
 def fvectorize : Flag<["-"], "fvectorize">, Group<f_Group>,
   HelpText<"Enable the loop vectorization passes">;
 def fno_vectorize : Flag<["-"], "fno-vectorize">, Group<f_Group>;

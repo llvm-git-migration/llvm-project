@@ -156,6 +156,13 @@
 // CHECK-VECTORIZE: "-vectorize-loops"
 // CHECK-NO-VECTORIZE-NOT: "-vectorize-loops"
 
+// RUN: %clang -### -S -floop-interchange %s 2>&1 | FileCheck -check-prefix=CHECK-INTERCHANGE %s
+// RUN: %clang -### -S -fno-loop-interchange -floop-interchange %s 2>&1 | FileCheck -check-prefix=CHECK-INTERCHANGE %s
+// RUN: %clang -### -S -fno-loop-interchange %s 2>&1 | FileCheck -check-prefix=CHECK-NO-INTERCHANGE %s
+// RUN: %clang -### -S -floop-interchange -fno-loop-interchange %s 2>&1 | FileCheck -check-prefix=CHECK-NO-INTERCHANGE %s
+// CHECK-INTERCHANGE: "-mllvm" "-enable-loopinterchange=true"
+// CHECK-NO-INTERCHANGE: "-mllvm" "-enable-loopinterchange=false"
+
 // RUN: %clang -### -S -fslp-vectorize %s 2>&1 | FileCheck -check-prefix=CHECK-SLP-VECTORIZE %s
 // RUN: %clang -### -S -fno-slp-vectorize -fslp-vectorize %s 2>&1 | FileCheck -check-prefix=CHECK-SLP-VECTORIZE %s
 // RUN: %clang -### -S -fno-slp-vectorize %s 2>&1 | FileCheck -check-prefix=CHECK-NO-SLP-VECTORIZE %s
