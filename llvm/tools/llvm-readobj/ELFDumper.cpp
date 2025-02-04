@@ -5367,7 +5367,7 @@ static std::string getGNUProperty(uint32_t Type, uint32_t DataSize,
   case GNU_PROPERTY_AARCH64_FEATURE_1_AND:
   case GNU_PROPERTY_X86_FEATURE_1_AND:
     static_assert(GNU_PROPERTY_AARCH64_FEATURE_1_AND ==
-                  GNU_PROPERTY_RISCV_FEATURE_1_AND,
+                      GNU_PROPERTY_RISCV_FEATURE_1_AND,
                   "GNU_PROPERTY_RISCV_FEATURE_1_AND should equal "
                   "GNU_PROPERTY_AARCH64_FEATURE_1_AND, otherwise "
                   "GNU_PROPERTY_RISCV_FEATURE_1_AND would be skipped!");
@@ -5399,7 +5399,8 @@ static std::string getGNUProperty(uint32_t Type, uint32_t DataSize,
       DumpBit(GNU_PROPERTY_AARCH64_FEATURE_1_PAC, "PAC");
       DumpBit(GNU_PROPERTY_AARCH64_FEATURE_1_GCS, "GCS");
     } else if (Target == EM_RISCV) {
-      DumpBit(GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_UNLABELED, "ZICFILP-unlabeled");
+      DumpBit(GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_UNLABELED,
+              "ZICFILP-unlabeled");
       DumpBit(GNU_PROPERTY_RISCV_FEATURE_1_CFI_SS, "ZICFISS");
       DumpBit(GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_FUNC_SIG, "ZICFILP-func-sig");
     } else {
