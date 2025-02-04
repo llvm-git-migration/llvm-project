@@ -4360,6 +4360,7 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
     case Intrinsic::vector_reduce_or:
       handleVectorReduceOrIntrinsic(I);
       break;
+
     case Intrinsic::vector_reduce_add:
     case Intrinsic::vector_reduce_xor:
     case Intrinsic::vector_reduce_mul:
@@ -4367,8 +4368,12 @@ struct MemorySanitizerVisitor : public InstVisitor<MemorySanitizerVisitor> {
     case Intrinsic::aarch64_neon_faddv:
     case Intrinsic::aarch64_neon_saddv:
     case Intrinsic::aarch64_neon_uaddv:
+    // Sum long across vector
+    case Intrinsic::aarch64_neon_saddlv:
+    case Intrinsic::aarch64_neon_uaddlv:
       handleVectorReduceIntrinsic(I);
       break;
+
     case Intrinsic::vector_reduce_fadd:
     case Intrinsic::vector_reduce_fmul:
       handleVectorReduceWithStarterIntrinsic(I);
