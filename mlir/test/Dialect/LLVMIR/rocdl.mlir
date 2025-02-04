@@ -771,10 +771,10 @@ llvm.func @rocdl_8bit_floats(%source: i32, %stoch: i32) -> i32 {
   llvm.return %source5 : i32
 }
 
-llvm.func @rocdl.waitcnt() {
-  // CHECK-LABEL: rocdl.waitcnt
-  // CHECK: rocdl.waitcnt 0
-  rocdl.waitcnt 0
+llvm.func @rocdl.s.waitcnt() {
+  // CHECK-LABEL: rocdl.s.waitcnt
+  // CHECK: rocdl.s.waitcnt 0
+  rocdl.s.waitcnt 0
   llvm.return
 }
 
