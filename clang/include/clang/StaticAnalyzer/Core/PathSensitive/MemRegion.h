@@ -344,7 +344,7 @@ public:
 };
 
 /// The region containing globals which can be modified by calls to
-/// "internally" defined functions - (for now just) functions other then system
+/// "internally" defined functions - (for now just) functions other than system
 /// calls.
 class GlobalInternalSpaceRegion : public NonStaticGlobalSpaceRegion {
   friend class MemRegionManager;
