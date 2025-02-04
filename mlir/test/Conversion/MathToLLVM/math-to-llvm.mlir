@@ -161,11 +161,33 @@ func.func @rsqrt(%arg0 : f32) {
 
 // -----
 
-// CHECK-LABEL: func @sine(
+// CHECK-LABEL: func @trigonometrics(
 // CHECK-SAME: f32
-func.func @sine(%arg0 : f32) {
+func.func @trigonometrics(%arg0 : f32) {
   // CHECK: llvm.intr.sin(%arg0) : (f32) -> f32
   %0 = math.sin %arg0 : f32
+
+  // CHECK: llvm.intr.cos(%arg0) : (f32) -> f32
+  %1 = math.cos %arg0 : f32
+
+  // CHECK: llvm.intr.tan(%arg0) : (f32) -> f32
+  %2 = math.tan %arg0 : f32
+  func.return
+}
+
+// -----
+
+// CHECK-LABEL: func @hyperbolics(
+// CHECK-SAME: f32
+func.func @hyperbolics(%arg0 : f32) {
+  // CHECK: llvm.intr.sinh(%arg0) : (f32) -> f32
+  %0 = math.sinh %arg0 : f32
+
+  // CHECK: llvm.intr.cosh(%arg0) : (f32) -> f32
+  %1 = math.cosh %arg0 : f32
+
+  // CHECK: llvm.intr.tanh(%arg0) : (f32) -> f32
+  %2 = math.tanh %arg0 : f32
   func.return
 }
 
