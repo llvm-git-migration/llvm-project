@@ -79,8 +79,7 @@ define i32 @iv_zext_zext_gt_slt(i32 %iter.count, ptr %ptr) {
 ; CHECK-NEXT:    [[INDVARS_IV_NEXT2]] = add nsw i64 [[INDVARS_IV1]], -1
 ; CHECK-NEXT:    [[GEP_OUTER:%.*]] = getelementptr double, ptr [[PTR]], i64 [[INDVARS_IV_NEXT2]]
 ; CHECK-NEXT:    store double poison, ptr [[GEP_OUTER]], align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = trunc nsw i64 [[INDVARS_IV1]] to i32
-; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i32 [[TMP1]], 1
+; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i64 [[INDVARS_IV1]], 1
 ; CHECK-NEXT:    br i1 [[EXIT_COND_OUTER]], label %[[INNER_LOOP_PREHEADER:.*]], label %[[PH]]
 ; CHECK:       [[INNER_LOOP_PREHEADER]]:
 ; CHECK-NEXT:    br label %[[INNER_LOOP:.*]]
@@ -320,8 +319,7 @@ define i32 @iv_sext_sext_gt_slt(i32 %iter.count, ptr %ptr) {
 ; CHECK-NEXT:    [[INDVARS_IV_NEXT2]] = add nsw i64 [[INDVARS_IV1]], -1
 ; CHECK-NEXT:    [[GEP_OUTER:%.*]] = getelementptr double, ptr [[PTR]], i64 [[INDVARS_IV_NEXT2]]
 ; CHECK-NEXT:    store double poison, ptr [[GEP_OUTER]], align 8
-; CHECK-NEXT:    [[TMP1:%.*]] = trunc nsw i64 [[INDVARS_IV1]] to i32
-; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i32 [[TMP1]], 1
+; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i64 [[INDVARS_IV1]], 1
 ; CHECK-NEXT:    br i1 [[EXIT_COND_OUTER]], label %[[INNER_LOOP_PREHEADER:.*]], label %[[PH]]
 ; CHECK:       [[INNER_LOOP_PREHEADER]]:
 ; CHECK-NEXT:    br label %[[INNER_LOOP:.*]]
@@ -442,8 +440,7 @@ define i32 @iv_sext_sext_gt_lt(i32 %iter.count, ptr %ptr) {
 ; CHECK-NEXT:    [[INDVARS_IV_NEXT4]] = add nsw i64 [[INDVARS_IV3]], -1
 ; CHECK-NEXT:    [[GEP_OUTER:%.*]] = getelementptr double, ptr [[PTR]], i64 [[INDVARS_IV_NEXT4]]
 ; CHECK-NEXT:    store double poison, ptr [[GEP_OUTER]], align 8
-; CHECK-NEXT:    [[TMP2:%.*]] = trunc nsw i64 [[INDVARS_IV3]] to i32
-; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i32 [[TMP2]], 1
+; CHECK-NEXT:    [[EXIT_COND_OUTER:%.*]] = icmp samesign ugt i64 [[INDVARS_IV3]], 1
 ; CHECK-NEXT:    br i1 [[EXIT_COND_OUTER]], label %[[INNER_LOOP_PREHEADER:.*]], label %[[PH]]
 ; CHECK:       [[INNER_LOOP_PREHEADER]]:
 ; CHECK-NEXT:    [[WIDE_TRIP_COUNT:%.*]] = zext i32 [[INDVARS_IV1]] to i64
