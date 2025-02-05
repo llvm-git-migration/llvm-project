@@ -19,7 +19,7 @@
 
 namespace llvm {
 namespace hlsl {
-namespace root_signature {
+namespace rootsig {
 
 #define RS_DEFINE_ENUM_CLASS_FLAGS_OPERATORS(Class)                            \
   inline Class operator|(Class a, Class b) {                                   \
@@ -122,7 +122,7 @@ using RootElement = std::variant<DescriptorTable, DescriptorTableClause>;
 using ParamType = std::variant<uint32_t *, DescriptorRangeOffset *,
                                DescriptorRangeFlags *, ShaderVisibility *>;
 
-} // namespace root_signature
+} // namespace rootsig
 } // namespace hlsl
 } // namespace llvm
 

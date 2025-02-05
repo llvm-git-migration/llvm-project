@@ -24,7 +24,7 @@
 #include "gtest/gtest.h"
 
 using namespace clang;
-using namespace llvm::hlsl::root_signature;
+using namespace llvm::hlsl::rootsig;
 
 namespace {
 

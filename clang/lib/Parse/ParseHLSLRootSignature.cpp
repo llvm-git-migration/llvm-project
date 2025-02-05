@@ -2,7 +2,7 @@
 
 #include "llvm/Support/raw_ostream.h"
 
-using namespace llvm::hlsl::root_signature;
+using namespace llvm::hlsl::rootsig;
 
 namespace clang {
 namespace hlsl {
@@ -364,7 +364,7 @@ bool RootSignatureParser::ParseDescriptorTableClause() {
     return true;
 
   // Parse optional paramaters
-  llvm::SmallDenseMap<TokenKind, rs::ParamType> RefMap = {
+  llvm::SmallDenseMap<TokenKind, ParamType> RefMap = {
       {TokenKind::kw_numDescriptors, &Clause.NumDescriptors},
       {TokenKind::kw_space, &Clause.Space},
       {TokenKind::kw_offset, &Clause.Offset},
@@ -408,7 +408,7 @@ bool RootSignatureParser::ParseParam(ParamType Ref) {
 }
 
 bool RootSignatureParser::ParseOptionalParams(
-    llvm::SmallDenseMap<TokenKind, rs::ParamType> RefMap) {
+    llvm::SmallDenseMap<TokenKind, ParamType> RefMap) {
   SmallVector<TokenKind> ParamKeywords;
   for (auto RefPair : RefMap)
     ParamKeywords.push_back(RefPair.first);
