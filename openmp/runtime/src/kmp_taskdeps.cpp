@@ -1009,13 +1009,16 @@ void __kmpc_omp_taskwait_deps_51(ident_t *loc_ref, kmp_int32 gtid,
     return;
   }
 
-  kmp_depnode_t node = {0};
-  __kmp_init_node(&node);
-#if KMP_DEBUG
-  node.dn.on_stack = thread;
+#if USE_FAST_MEMORY
+  kmp_depnode_t *node =
+      (kmp_depnode_t *)__kmp_fast_allocate(thread, sizeof(kmp_depnode_t));
+#else
+  kmp_depnode_t *node =
+      (kmp_depnode_t *)__kmp_thread_malloc(thread, sizeof(kmp_depnode_t));
 #endif
+  __kmp_init_node(node);
 
-  if (!__kmp_check_deps(gtid, &node, NULL, &current_task->td_dephash,
+  if (!__kmp_check_deps(gtid, node, NULL, &current_task->td_dephash,
                         DEP_BARRIER, ndeps, dep_list, ndeps_noalias,
                         noalias_dep_list)) {
     KA_TRACE(10, ("__kmpc_omp_taskwait_deps(exit): T#%d has no blocking "
@@ -1029,20 +1032,14 @@ void __kmpc_omp_taskwait_deps_51(ident_t *loc_ref, kmp_int32 gtid,
 
   int thread_finished = FALSE;
   kmp_flag_32<false, false> flag(
-      (std::atomic<kmp_uint32> *)&node.dn.npredecessors, 0U);
-  while (node.dn.npredecessors > 0) {
+      (std::atomic<kmp_uint32> *)&node->dn.npredecessors, 0U);
+  while (node->dn.npredecessors > 0) {
     flag.execute_tasks(thread, gtid, FALSE,
                        &thread_finished USE_ITT_BUILD_ARG(NULL),
                        __kmp_task_stealing_constraint);
   }
 
-  // Wait until the last __kmp_release_deps is finished before we free the
-  // current stack frame holding the "node" variable; once its nrefs count
-  // reaches 1, we're sure nobody else can try to reference it again.
-  kmp_int32 nrefs;
-  while ((nrefs = node.dn.nrefs) > 1)
-    KMP_YIELD(TRUE);
-  KMP_DEBUG_ASSERT(nrefs == 1);
+  __kmp_node_deref(thread, node);
 
 #if OMPT_SUPPORT
   __ompt_taskwait_dep_finish(current_task, taskwait_task_data);
