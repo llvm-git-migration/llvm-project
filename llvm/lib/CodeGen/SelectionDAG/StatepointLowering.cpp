@@ -257,7 +257,7 @@ static bool willLowerDirectly(SDValue Incoming) {
   if (Incoming.getValueType().getSizeInBits() > 64)
     return false;
 
-  return isIntOrFPConstant(Incoming) || Incoming.isUndef();
+  return isIntOrFPConstant(Incoming) || Incoming.isUndefOrPoison();
 }
 
 /// Try to find existing copies of the incoming values in stack slots used for
@@ -443,8 +443,8 @@ lowerIncomingStatepointValue(SDValue Incoming, bool RequireSpillSlot,
     }
 
     assert(Incoming.getValueType().getSizeInBits() <= 64);
-    
-    if (Incoming.isUndef()) {
+
+    if (Incoming.isUndefOrPoison()) {
       // Put an easily recognized constant that's unlikely to be a valid
       // value so that uses of undef by the consumer of the stackmap is
       // easily recognized. This is legal since the compiler is always
@@ -1287,7 +1287,7 @@ void SelectionDAGBuilder::visitGCRelocate(const GCRelocateInst &Relocate) {
   assert(Record.type == RecordType::NoRelocate);
   SDValue SD = getValue(DerivedPtr);
 
-  if (SD.isUndef() && SD.getValueType().getSizeInBits() <= 64) {
+  if (SD.isUndefOrPoison() && SD.getValueType().getSizeInBits() <= 64) {
     // Lowering relocate(undef) as arbitrary constant. Current constant value
     // is chosen such that it's unlikely to be a valid pointer.
     setValue(&Relocate, DAG.getConstant(0xFEFEFEFE, SDLoc(SD), MVT::i64));

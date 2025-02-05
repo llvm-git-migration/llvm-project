@@ -977,6 +977,22 @@ void SelectionDAGLegalize::LegalizeOp(SDNode *Node) {
   TargetLowering::LegalizeAction Action = TargetLowering::Legal;
   bool SimpleFinishLegalizing = true;
   switch (Node->getOpcode()) {
+  // FIXME: If the node represents a poison value, replace it with an undef
+  // value.
+  //  A poison value results from an erroneous operation but does not cause
+  //  immediate undefined behavior, allowing speculative execution.
+  //  Since most operations propagate poison, it is valid to replace poison
+  //  with an undef value, which can take any legal value of the same type.
+  //  This ensures that downstream computations do not rely on poison semantics.
+  //  Poison is more restrictive than undef. Since we replace poison with undef
+  //  here, the poison information will be lost after the code is executed. In
+  //  the futher, If we need to retain the poison information after the code is
+  //  executed, we will need to modify the code accordingly.
+  case ISD::POISON: {
+    SDValue UndefNode = DAG.getUNDEF(Node->getValueType(0));
+    ReplaceNode(Node, UndefNode.getNode());
+    break;
+  }
   case ISD::INTRINSIC_W_CHAIN:
   case ISD::INTRINSIC_WO_CHAIN:
   case ISD::INTRINSIC_VOID:
@@ -1548,7 +1564,8 @@ SDValue SelectionDAGLegalize::ExpandVectorBuildThroughStack(SDNode* Node) {
   // Store (in the right endianness) the elements to memory.
   for (unsigned i = 0, e = Node->getNumOperands(); i != e; ++i) {
     // Ignore undef elements.
-    if (Node->getOperand(i).isUndef()) continue;
+    if (Node->getOperand(i).isUndefOrPoison())
+      continue;
 
     unsigned Offset = TypeByteSize*i;
 
@@ -1869,7 +1886,7 @@ ExpandBVWithShuffles(SDNode *Node, SelectionDAG &DAG,
                                                               NewIntermedVals;
     for (unsigned i = 0; i < NumElems; ++i) {
       SDValue V = Node->getOperand(i);
-      if (V.isUndef())
+      if (V.isUndefOrPoison())
         continue;
 
       SDValue Vec;
@@ -1961,7 +1978,7 @@ SDValue SelectionDAGLegalize::ExpandBUILD_VECTOR(SDNode *Node) {
   bool isConstant = true;
   for (unsigned i = 0; i < NumElems; ++i) {
     SDValue V = Node->getOperand(i);
-    if (V.isUndef())
+    if (V.isUndefOrPoison())
       continue;
     if (i > 0)
       isOnlyLowElement = false;
@@ -2004,7 +2021,7 @@ SDValue SelectionDAGLegalize::ExpandBUILD_VECTOR(SDNode *Node) {
                                         CI->getZExtValue()));
         }
       } else {
-        assert(Node->getOperand(i).isUndef());
+        assert(Node->getOperand(i).isUndefOrPoison());
         Type *OpNTy = EltVT.getTypeForEVT(*DAG.getContext());
         CV.push_back(UndefValue::get(OpNTy));
       }
@@ -2021,7 +2038,7 @@ SDValue SelectionDAGLegalize::ExpandBUILD_VECTOR(SDNode *Node) {
 
   SmallSet<SDValue, 16> DefinedValues;
   for (unsigned i = 0; i < NumElems; ++i) {
-    if (Node->getOperand(i).isUndef())
+    if (Node->getOperand(i).isUndefOrPoison())
       continue;
     DefinedValues.insert(Node->getOperand(i));
   }
@@ -2031,7 +2048,7 @@ SDValue SelectionDAGLegalize::ExpandBUILD_VECTOR(SDNode *Node) {
       SmallVector<int, 8> ShuffleVec(NumElems, -1);
       for (unsigned i = 0; i < NumElems; ++i) {
         SDValue V = Node->getOperand(i);
-        if (V.isUndef())
+        if (V.isUndefOrPoison())
           continue;
         ShuffleVec[i] = V == Value1 ? 0 : NumElems;
       }
@@ -3136,6 +3153,7 @@ bool SelectionDAGLegalize::ExpandNode(SDNode *Node) {
     for (unsigned i = 0; i < Node->getNumValues(); i++)
       Results.push_back(Node->getOperand(i));
     break;
+  case ISD::POISON:
   case ISD::UNDEF: {
     EVT VT = Node->getValueType(0);
     if (VT.isInteger())
@@ -4002,7 +4020,7 @@ bool SelectionDAGLegalize::ExpandNode(SDNode *Node) {
                          Node->getOperand(2));
     } else {
       // We test only the i1 bit.  Skip the AND if UNDEF or another AND.
-      if (Tmp2.isUndef() ||
+      if (Tmp2.isUndefOrPoison() ||
           (Tmp2.getOpcode() == ISD::AND && isOneConstant(Tmp2.getOperand(1))))
         Tmp3 = Tmp2;
       else

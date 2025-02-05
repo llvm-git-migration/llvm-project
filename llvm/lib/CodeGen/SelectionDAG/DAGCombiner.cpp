@@ -1043,7 +1043,7 @@ static bool isConstantOrConstantVector(SDValue N, bool NoOpaques = false) {
     return false;
   unsigned BitWidth = N.getScalarValueSizeInBits();
   for (const SDValue &Op : N->op_values()) {
-    if (Op.isUndef())
+    if (Op.isUndefOrPoison())
       continue;
     ConstantSDNode *Const = dyn_cast<ConstantSDNode>(Op);
     if (!Const || Const->getAPIntValue().getBitWidth() != BitWidth ||
@@ -2098,7 +2098,7 @@ SDValue DAGCombiner::visitFCANONICALIZE(SDNode *N) {
   SDLoc dl(N);
 
   // Canonicalize undef to quiet NaN.
-  if (Operand.isUndef()) {
+  if (Operand.isUndefOrPoison()) {
     APFloat CanonicalQNaN = APFloat::getQNaN(VT.getFltSemantics());
     return DAG.getConstantFP(CanonicalQNaN, dl, VT);
   }
@@ -2660,9 +2660,9 @@ SDValue DAGCombiner::visitADDLike(SDNode *N) {
   SDLoc DL(N);
 
   // fold (add x, undef) -> undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return N0;
-  if (N1.isUndef())
+  if (N1.isUndefOrPoison())
     return N1;
 
   // fold (add c1, c2) -> c1+c2
@@ -3039,7 +3039,7 @@ SDValue DAGCombiner::visitADDSAT(SDNode *N) {
   SDLoc DL(N);
 
   // fold (add_sat x, undef) -> -1
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getAllOnesConstant(DL, VT);
 
   // fold (add_sat c1, c2) -> c3
@@ -4043,9 +4043,9 @@ SDValue DAGCombiner::visitSUB(SDNode *N) {
                        DAG.getNode(ISD::MUL, DL, VT, B, C));
 
   // If either operand of a sub is undef, the result is undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return N0;
-  if (N1.isUndef())
+  if (N1.isUndefOrPoison())
     return N1;
 
   if (SDValue V = foldAddSubBoolOfMaskedVal(N, DL, DAG))
@@ -4240,7 +4240,7 @@ SDValue DAGCombiner::visitSUBSAT(SDNode *N) {
   SDLoc DL(N);
 
   // fold (sub_sat x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (sub_sat x, x) -> 0
@@ -4393,7 +4393,7 @@ SDValue DAGCombiner::visitMULFIX(SDNode *N) {
   EVT VT = N0.getValueType();
 
   // fold (mulfix x, undef, scale) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, SDLoc(N), VT);
 
   // Canonicalize constant to RHS (vector doesn't have to splat)
@@ -4418,7 +4418,7 @@ template <class MatchContextClass> SDValue DAGCombiner::visitMUL(SDNode *N) {
   MatchContextClass Matcher(DAG, TLI, N);
 
   // fold (mul x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (mul c1, c2) -> c1*c2
@@ -4778,7 +4778,7 @@ static SDValue simplifyDivRem(SDNode *N, SelectionDAG &DAG) {
 
   // undef / X -> 0
   // undef % X -> 0
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // 0 / X -> 0
@@ -5197,7 +5197,7 @@ SDValue DAGCombiner::visitMULHS(SDNode *N) {
         DAG.getShiftAmountConstant(N0.getScalarValueSizeInBits() - 1, VT, DL));
 
   // fold (mulhs x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // If the type twice as wide is legal, transform the mulhs to a wider multiply
@@ -5254,7 +5254,7 @@ SDValue DAGCombiner::visitMULHU(SDNode *N) {
     return DAG.getConstant(0, DL, VT);
 
   // fold (mulhu x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (mulhu x, (1 << c)) -> x >> (bitwidth - c)
@@ -5318,9 +5318,9 @@ SDValue DAGCombiner::visitAVG(SDNode *N) {
       return FoldedVOp;
 
   // fold (avg x, undef) -> x
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return N1;
-  if (N1.isUndef())
+  if (N1.isUndefOrPoison())
     return N0;
 
   // fold (avg x, x) --> x
@@ -5413,7 +5413,7 @@ SDValue DAGCombiner::visitABD(SDNode *N) {
       return FoldedVOp;
 
   // fold (abd x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (abd x, x) -> 0
@@ -5840,8 +5840,9 @@ SDValue DAGCombiner::visitIMINMAX(SDNode *N) {
   // 2. The saturation pattern is broken by canonicalization in InstCombine.
   bool IsOpIllegal = !TLI.isOperationLegal(Opcode, VT);
   bool IsSatBroken = Opcode == ISD::UMIN && N0.getOpcode() == ISD::SMAX;
-  if ((IsSatBroken || IsOpIllegal) && (N0.isUndef() || DAG.SignBitIsZero(N0)) &&
-      (N1.isUndef() || DAG.SignBitIsZero(N1))) {
+  if ((IsSatBroken || IsOpIllegal) &&
+      (N0.isUndefOrPoison() || DAG.SignBitIsZero(N0)) &&
+      (N1.isUndefOrPoison() || DAG.SignBitIsZero(N1))) {
     unsigned AltOpcode;
     switch (Opcode) {
     case ISD::SMIN: AltOpcode = ISD::UMIN; break;
@@ -6043,7 +6044,7 @@ SDValue DAGCombiner::hoistLogicOpWithSameOpcodeHands(SDNode *N) {
     // Don't try to fold this node if it requires introducing a
     // build vector of all zeros that might be illegal at this stage.
     SDValue ShOp = N0.getOperand(1);
-    if (LogicOpcode == ISD::XOR && !ShOp.isUndef())
+    if (LogicOpcode == ISD::XOR && !ShOp.isUndefOrPoison())
       ShOp = tryFoldToZero(DL, TLI, VT, DAG, LegalOperations);
 
     // (logic_op (shuf (A, C), shuf (B, C))) --> shuf (logic_op (A, B), C)
@@ -6056,7 +6057,7 @@ SDValue DAGCombiner::hoistLogicOpWithSameOpcodeHands(SDNode *N) {
     // Don't try to fold this node if it requires introducing a
     // build vector of all zeros that might be illegal at this stage.
     ShOp = N0.getOperand(0);
-    if (LogicOpcode == ISD::XOR && !ShOp.isUndef())
+    if (LogicOpcode == ISD::XOR && !ShOp.isUndefOrPoison())
       ShOp = tryFoldToZero(DL, TLI, VT, DAG, LegalOperations);
 
     // (logic_op (shuf (C, A), shuf (C, B))) --> shuf (C, logic_op (A, B))
@@ -6502,7 +6503,7 @@ SDValue DAGCombiner::visitANDLike(SDValue N0, SDValue N1, SDNode *N) {
   SDLoc DL(N);
 
   // fold (and x, undef) -> 0
-  if (N0.isUndef() || N1.isUndef())
+  if (N0.isUndefOrPoison() || N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   if (SDValue V = foldLogicOfSetCCs(true, N0, N1, DL))
@@ -7851,7 +7852,7 @@ SDValue DAGCombiner::visitORLike(SDValue N0, SDValue N1, const SDLoc &DL) {
   EVT VT = N1.getValueType();
 
   // fold (or x, undef) -> -1
-  if (!LegalOperations && (N0.isUndef() || N1.isUndef()))
+  if (!LegalOperations && (N0.isUndefOrPoison() || N1.isUndefOrPoison()))
     return DAG.getAllOnesConstant(DL, VT);
 
   if (SDValue V = foldLogicOfSetCCs(false, N0, N1, DL))
@@ -9551,13 +9552,13 @@ SDValue DAGCombiner::visitXOR(SDNode *N) {
   SDLoc DL(N);
 
   // fold (xor undef, undef) -> 0. This is a common idiom (misuse).
-  if (N0.isUndef() && N1.isUndef())
+  if (N0.isUndefOrPoison() && N1.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (xor x, undef) -> undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return N0;
-  if (N1.isUndef())
+  if (N1.isUndefOrPoison())
     return N1;
 
   // fold (xor c1, c2) -> c1^c2
@@ -10952,7 +10953,7 @@ SDValue DAGCombiner::visitFunnelShift(SDNode *N) {
       return IsFSHL ? N0 : N1;
 
   auto IsUndefOrZero = [](SDValue V) {
-    return V.isUndef() || isNullOrNullSplat(V, /*AllowUndefs*/ true);
+    return V.isUndefOrPoison() || isNullOrNullSplat(V, /*AllowUndefs*/ true);
   };
 
   // TODO - support non-uniform vector shift amounts.
@@ -12075,7 +12076,7 @@ static SDValue ConvertSelectToConcatVector(SDNode *N, SelectionDAG &DAG) {
   // length of the BV and see if all the non-undef nodes are the same.
   ConstantSDNode *BottomHalf = nullptr;
   for (int i = 0; i < NumElems / 2; ++i) {
-    if (Cond->getOperand(i)->isUndef())
+    if (Cond->getOperand(i)->isUndefOrPoison())
       continue;
 
     if (BottomHalf == nullptr)
@@ -12087,7 +12088,7 @@ static SDValue ConvertSelectToConcatVector(SDNode *N, SelectionDAG &DAG) {
   // Do the same for the second half of the BuildVector
   ConstantSDNode *TopHalf = nullptr;
   for (int i = NumElems / 2; i < NumElems; ++i) {
-    if (Cond->getOperand(i)->isUndef())
+    if (Cond->getOperand(i)->isUndefOrPoison())
       continue;
 
     if (TopHalf == nullptr)
@@ -12251,7 +12252,7 @@ SDValue DAGCombiner::visitMSTORE(SDNode *N) {
   if (MaskedStoreSDNode *MST1 = dyn_cast<MaskedStoreSDNode>(Chain)) {
     if (MST->isUnindexed() && MST->isSimple() && MST1->isUnindexed() &&
         MST1->isSimple() && MST1->getBasePtr() == Ptr &&
-        !MST->getBasePtr().isUndef() &&
+        !MST->getBasePtr().isUndefOrPoison() &&
         ((Mask == MST1->getMask() && MST->getMemoryVT().getStoreSize() ==
                                          MST1->getMemoryVT().getStoreSize()) ||
          ISD::isConstantSplatVectorAllOnes(Mask.getNode())) &&
@@ -12339,13 +12340,13 @@ SDValue DAGCombiner::visitVECTOR_COMPRESS(SDNode *N) {
   SDValue Passthru = N->getOperand(2);
   EVT VecVT = Vec.getValueType();
 
-  bool HasPassthru = !Passthru.isUndef();
+  bool HasPassthru = !Passthru.isUndefOrPoison();
 
   APInt SplatVal;
   if (ISD::isConstantSplatVector(Mask.getNode(), SplatVal))
     return TLI.isConstTrueVal(Mask) ? Vec : Passthru;
 
-  if (Vec.isUndef() || Mask.isUndef())
+  if (Vec.isUndefOrPoison() || Mask.isUndefOrPoison())
     return Passthru;
 
   // No need for potentially expensive compress if the mask is constant.
@@ -12357,7 +12358,7 @@ SDValue DAGCombiner::visitVECTOR_COMPRESS(SDNode *N) {
     for (unsigned I = 0; I < NumElmts; ++I) {
       SDValue MaskI = Mask.getOperand(I);
       // We treat undef mask entries as "false".
-      if (MaskI.isUndef())
+      if (MaskI.isUndefOrPoison())
         continue;
 
       if (TLI.isConstTrueVal(MaskI)) {
@@ -12535,7 +12536,7 @@ SDValue DAGCombiner::foldVSelectOfConstants(SDNode *N) {
   for (unsigned i = 0; i != Elts; ++i) {
     SDValue N1Elt = N1.getOperand(i);
     SDValue N2Elt = N2.getOperand(i);
-    if (N1Elt.isUndef() || N2Elt.isUndef())
+    if (N1Elt.isUndefOrPoison() || N2Elt.isUndefOrPoison())
       continue;
     if (N1Elt.getValueType() != N2Elt.getValueType()) {
       AllAddOne = false;
@@ -12897,7 +12898,7 @@ SDValue DAGCombiner::visitSELECT_CC(SDNode *N) {
 
     // When the condition is UNDEF, just return the first operand. This is
     // coherent the DAG creation, no setcc node is created in this case
-    if (SCC->isUndef())
+    if (SCC->isUndefOrPoison())
       return N2;
 
     // Fold to a simpler select_cc
@@ -13204,7 +13205,7 @@ static SDValue tryToFoldExtendOfConstant(SDNode *N, const SDLoc &DL,
 
   for (unsigned i = 0; i != NumElts; ++i) {
     SDValue Op = N0.getOperand(i);
-    if (Op.isUndef()) {
+    if (Op.isUndefOrPoison()) {
       if (Opcode == ISD::ANY_EXTEND || Opcode == ISD::ANY_EXTEND_VECTOR_INREG)
         Elts.push_back(DAG.getUNDEF(SVT));
       else
@@ -13850,7 +13851,7 @@ SDValue DAGCombiner::visitSIGN_EXTEND(SDNode *N) {
       return FoldedVOp;
 
   // sext(undef) = 0 because the top bit will all be the same.
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   if (SDValue Res = tryToFoldExtendOfConstant(N, DL, TLI, DAG, LegalTypes))
@@ -14125,7 +14126,7 @@ SDValue DAGCombiner::visitZERO_EXTEND(SDNode *N) {
       return FoldedVOp;
 
   // zext(undef) = 0
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   if (SDValue Res = tryToFoldExtendOfConstant(N, DL, TLI, DAG, LegalTypes))
@@ -14450,7 +14451,7 @@ SDValue DAGCombiner::visitANY_EXTEND(SDNode *N) {
   SDLoc DL(N);
 
   // aext(undef) = undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   if (SDValue Res = tryToFoldExtendOfConstant(N, DL, TLI, DAG, LegalTypes))
@@ -14956,7 +14957,7 @@ SDValue DAGCombiner::visitSIGN_EXTEND_INREG(SDNode *N) {
   SDLoc DL(N);
 
   // sext_vector_inreg(undef) = 0 because the top bit will all be the same.
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstant(0, DL, VT);
 
   // fold (sext_in_reg c1) -> c1
@@ -15176,7 +15177,7 @@ SDValue DAGCombiner::visitEXTEND_VECTOR_INREG(SDNode *N) {
   EVT VT = N->getValueType(0);
   SDLoc DL(N);
 
-  if (N0.isUndef()) {
+  if (N0.isUndefOrPoison()) {
     // aext_vector_inreg(undef) = undef because the top bits are undefined.
     // {s/z}ext_vector_inreg(undef) = 0 because the top bits must be the same.
     return N->getOpcode() == ISD::ANY_EXTEND_VECTOR_INREG
@@ -15322,7 +15323,7 @@ SDValue DAGCombiner::visitTRUNCATE(SDNode *N) {
   SDLoc DL(N);
 
   // trunc(undef) = undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // fold (truncate (truncate x)) -> (truncate x)
@@ -15542,7 +15543,7 @@ SDValue DAGCombiner::visitTRUNCATE(SDNode *N) {
 
     for (unsigned i = 0, e = N0.getNumOperands(); i != e; ++i) {
       SDValue X = N0.getOperand(i);
-      if (!X.isUndef()) {
+      if (!X.isUndefOrPoison()) {
         V = X;
         Idx = i;
         NumDefs++;
@@ -15788,7 +15789,7 @@ SDValue DAGCombiner::visitBITCAST(SDNode *N) {
   SDValue N0 = N->getOperand(0);
   EVT VT = N->getValueType(0);
 
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // If the input is a BUILD_VECTOR with all constant elements, fold this now.
@@ -16025,7 +16026,7 @@ SDValue DAGCombiner::visitBITCAST(SDNode *N) {
       if (Op.getOpcode() == ISD::BITCAST &&
           Op.getOperand(0).getValueType() == VT)
         return SDValue(Op.getOperand(0));
-      if (Op.isUndef() || isAnyConstantBuildVector(Op))
+      if (Op.isUndefOrPoison() || isAnyConstantBuildVector(Op))
         return DAG.getBitcast(VT, Op);
       return SDValue();
     };
@@ -16105,8 +16106,9 @@ SDValue DAGCombiner::visitFREEZE(SDNode *N) {
     if (llvm::ISD::isBuildVectorOfConstantSDNodes(N0.getNode())) {
       SmallVector<SDValue, 8> NewVecC;
       for (const SDValue &Op : N0->op_values())
-        NewVecC.push_back(
-            Op.isUndef() ? DAG.getConstant(0, DL, Op.getValueType()) : Op);
+        NewVecC.push_back(Op.isUndefOrPoison()
+                              ? DAG.getConstant(0, DL, Op.getValueType())
+                              : Op);
       return DAG.getBuildVector(VT, DL, NewVecC);
     }
   }
@@ -16145,7 +16147,7 @@ SDValue DAGCombiner::visitFREEZE(SDNode *N) {
     // also recursively replace t184 by t150.
     SDValue MaybePoisonOperand = N->getOperand(0).getOperand(OpNo);
     // Don't replace every single UNDEF everywhere with frozen UNDEF, though.
-    if (MaybePoisonOperand.getOpcode() == ISD::UNDEF)
+    if (MaybePoisonOperand.isUndefOrPoison())
       continue;
     // First, freeze each offending operand.
     SDValue FrozenMaybePoisonOperand = DAG.getFreeze(MaybePoisonOperand);
@@ -16171,9 +16173,10 @@ SDValue DAGCombiner::visitFREEZE(SDNode *N) {
   // Finally, recreate the node, it's operands were updated to use
   // frozen operands, so we just need to use it's "original" operands.
   SmallVector<SDValue> Ops(N0->ops());
-  // Special-handle ISD::UNDEF, each single one of them can be it's own thing.
+  // Special-handle ISD::UNDEF, ISD::POISON, each single one of them can be it's
+  // own thing.
   for (SDValue &Op : Ops) {
-    if (Op.getOpcode() == ISD::UNDEF)
+    if (Op.isUndefOrPoison())
       Op = DAG.getFreeze(Op);
   }
 
@@ -18136,7 +18139,7 @@ SDValue DAGCombiner::visitSINT_TO_FP(SDNode *N) {
   SDLoc DL(N);
 
   // [us]itofp(undef) = 0, because the result value is bounded.
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstantFP(0.0, DL, VT);
 
   // fold (sint_to_fp c1) -> c1fp
@@ -18184,7 +18187,7 @@ SDValue DAGCombiner::visitUINT_TO_FP(SDNode *N) {
   SDLoc DL(N);
 
   // [us]itofp(undef) = 0, because the result value is bounded.
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getConstantFP(0.0, DL, VT);
 
   // fold (uint_to_fp c1) -> c1fp
@@ -18262,7 +18265,7 @@ SDValue DAGCombiner::visitFP_TO_SINT(SDNode *N) {
   SDLoc DL(N);
 
   // fold (fp_to_sint undef) -> undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // fold (fp_to_sint c1fp) -> c1
@@ -18278,7 +18281,7 @@ SDValue DAGCombiner::visitFP_TO_UINT(SDNode *N) {
   SDLoc DL(N);
 
   // fold (fp_to_uint undef) -> undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // fold (fp_to_uint c1fp) -> c1
@@ -18294,7 +18297,7 @@ SDValue DAGCombiner::visitXROUND(SDNode *N) {
 
   // fold (lrint|llrint undef) -> undef
   // fold (lround|llround undef) -> undef
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // fold (lrint|llrint c1fp) -> c1
@@ -19436,7 +19439,7 @@ SDValue DAGCombiner::ForwardStoreValueToDirectLoad(LoadSDNode *LD) {
   }
 
   // TODO: Deal with nonzero offset.
-  if (LD->getBasePtr().isUndef() || Offset != 0)
+  if (LD->getBasePtr().isUndefOrPoison() || Offset != 0)
     return SDValue();
   // Model necessary truncations / extenstions.
   // Truncate Value To Stored Memory Size.
@@ -19751,7 +19754,7 @@ struct LoadedSlice {
       return false;
 
     // Offsets are for indexed load only, we do not handle that.
-    if (!Origin->getOffset().isUndef())
+    if (!Origin->getOffset().isUndefOrPoison())
       return false;
 
     const TargetLowering &TLI = DAG->getTargetLoweringInfo();
@@ -20817,7 +20820,7 @@ DAGCombiner::getStoreMergeCandidates(StoreSDNode *St,
   // pointer. We must have a base and an offset. Do not handle stores to undef
   // base pointers.
   BaseIndexOffset BasePtr = BaseIndexOffset::match(St, DAG);
-  if (!BasePtr.getBase().getNode() || BasePtr.getBase().isUndef())
+  if (!BasePtr.getBase().getNode() || BasePtr.getBase().isUndefOrPoison())
     return nullptr;
 
   SDValue Val = peekThroughBitcasts(St->getValue());
@@ -21878,7 +21881,7 @@ SDValue DAGCombiner::visitSTORE(SDNode *N) {
   }
 
   // Turn 'store undef, Ptr' -> nothing.
-  if (Value.isUndef() && ST->isUnindexed() && !ST->isVolatile())
+  if (Value.isUndefOrPoison() && ST->isUnindexed() && !ST->isVolatile())
     return Chain;
 
   // Try to infer better alignment information than the store already has.
@@ -22008,7 +22011,7 @@ SDValue DAGCombiner::visitSTORE(SDNode *N) {
       }
 
       if (OptLevel != CodeGenOptLevel::None && ST1->hasOneUse() &&
-          !ST1->getBasePtr().isUndef() &&
+          !ST1->getBasePtr().isUndefOrPoison() &&
           ST->getAddressSpace() == ST1->getAddressSpace()) {
         // If we consider two stores and one smaller in size is a scalable
         // vector type and another one a bigger size store with a fixed type,
@@ -22303,7 +22306,7 @@ static bool mergeEltWithShuffle(SDValue &X, SDValue &Y, ArrayRef<int> Mask,
   // If we failed to find a match, see if we can replace an UNDEF shuffle
   // operand.
   if (ElementOffset == -1) {
-    if (!Y.isUndef() || InsertVal0.getValueType() != Y.getValueType())
+    if (!Y.isUndefOrPoison() || InsertVal0.getValueType() != Y.getValueType())
       return false;
     ElementOffset = Mask.size();
     Y = InsertVal0;
@@ -22523,7 +22526,7 @@ SDValue DAGCombiner::visitINSERT_VECTOR_ELT(SDNode *N) {
   if (!IndexC) {
     // If this is variable insert to undef vector, it might be better to splat:
     // inselt undef, InVal, EltNo --> build_vector < InVal, InVal, ... >
-    if (InVec.isUndef() && TLI.shouldSplatInsEltVarIndex(VT))
+    if (InVec.isUndefOrPoison() && TLI.shouldSplatInsEltVarIndex(VT))
       return DAG.getSplat(VT, DL, InVal);
     return SDValue();
   }
@@ -22612,7 +22615,7 @@ SDValue DAGCombiner::visitINSERT_VECTOR_ELT(SDNode *N) {
     // Recurse up a INSERT_VECTOR_ELT chain to build a BUILD_VECTOR.
     for (SDValue CurVec = InVec; CurVec;) {
       // UNDEF - build new BUILD_VECTOR from already inserted operands.
-      if (CurVec.isUndef())
+      if (CurVec.isUndefOrPoison())
         return CanonicalizeBuildVector(Ops);
 
       // BUILD_VECTOR - insert unused operands and build new BUILD_VECTOR.
@@ -22936,7 +22939,7 @@ SDValue DAGCombiner::visitEXTRACT_VECTOR_ELT(SDNode *N) {
   SDValue Index = N->getOperand(1);
   EVT ScalarVT = N->getValueType(0);
   EVT VecVT = VecOp.getValueType();
-  if (VecOp.isUndef())
+  if (VecOp.isUndefOrPoison())
     return DAG.getUNDEF(ScalarVT);
 
   // extract_vector_elt (insert_vector_elt vec, val, idx), idx) -> val
@@ -23315,7 +23318,8 @@ SDValue DAGCombiner::reduceBuildVecExtToExtBuildVec(SDNode *N) {
   for (unsigned i = 0; i != NumInScalars; ++i) {
     SDValue In = N->getOperand(i);
     // Ignore undef inputs.
-    if (In.isUndef()) continue;
+    if (In.isUndefOrPoison())
+      continue;
 
     bool AnyExt  = In.getOpcode() == ISD::ANY_EXTEND;
     bool ZeroExt = In.getOpcode() == ISD::ZERO_EXTEND;
@@ -23375,10 +23379,10 @@ SDValue DAGCombiner::reduceBuildVecExtToExtBuildVec(SDNode *N) {
   for (unsigned i = 0, e = N->getNumOperands(); i != e; ++i) {
     SDValue Cast = N->getOperand(i);
     assert((Cast.getOpcode() == ISD::ANY_EXTEND ||
-            Cast.getOpcode() == ISD::ZERO_EXTEND ||
-            Cast.isUndef()) && "Invalid cast opcode");
+            Cast.getOpcode() == ISD::ZERO_EXTEND || Cast.isUndefOrPoison()) &&
+           "Invalid cast opcode");
     SDValue In;
-    if (Cast.isUndef())
+    if (Cast.isUndefOrPoison())
       In = DAG.getUNDEF(SourceType);
     else
       In = Cast->getOperand(0);
@@ -23448,7 +23452,8 @@ SDValue DAGCombiner::reduceBuildVecTruncToBitCast(SDNode *N) {
   for (unsigned i = 0; i != NumInScalars; ++i) {
     SDValue In = PeekThroughBitcast(N->getOperand(i));
     // Ignore undef inputs.
-    if (In.isUndef()) continue;
+    if (In.isUndefOrPoison())
+      continue;
 
     if (In.getOpcode() != ISD::TRUNCATE)
       return SDValue();
@@ -23643,7 +23648,7 @@ static SDValue reduceBuildVecToShuffleWithZero(SDNode *BV, SelectionDAG &DAG) {
   int ZextElt = -1;
   for (int i = 0; i != NumBVOps; ++i) {
     SDValue Op = BV->getOperand(i);
-    if (Op.isUndef())
+    if (Op.isUndefOrPoison())
       continue;
     if (ZextElt == -1)
       ZextElt = i;
@@ -23760,7 +23765,7 @@ SDValue DAGCombiner::reduceBuildVecToShuffle(SDNode *N) {
   for (unsigned i = 0; i != NumElems; ++i) {
     SDValue Op = N->getOperand(i);
 
-    if (Op.isUndef())
+    if (Op.isUndefOrPoison())
       continue;
 
     // See if we can use a blend with a zero vector.
@@ -23969,7 +23974,7 @@ SDValue DAGCombiner::reduceBuildVecToShuffle(SDNode *N) {
       SDValue L = Shuffles[Left];
       ArrayRef<int> LMask;
       bool IsLeftShuffle = L.getOpcode() == ISD::VECTOR_SHUFFLE &&
-                           L.use_empty() && L.getOperand(1).isUndef() &&
+                           L.use_empty() && L.getOperand(1).isUndefOrPoison() &&
                            L.getOperand(0).getValueType() == L.getValueType();
       if (IsLeftShuffle) {
         LMask = cast<ShuffleVectorSDNode>(L.getNode())->getMask();
@@ -23978,7 +23983,8 @@ SDValue DAGCombiner::reduceBuildVecToShuffle(SDNode *N) {
       SDValue R = Shuffles[Right];
       ArrayRef<int> RMask;
       bool IsRightShuffle = R.getOpcode() == ISD::VECTOR_SHUFFLE &&
-                            R.use_empty() && R.getOperand(1).isUndef() &&
+                            R.use_empty() &&
+                            R.getOperand(1).isUndefOrPoison() &&
                             R.getOperand(0).getValueType() == R.getValueType();
       if (IsRightShuffle) {
         RMask = cast<ShuffleVectorSDNode>(R.getNode())->getMask();
@@ -24161,7 +24167,8 @@ SDValue DAGCombiner::convertBuildVecZextToBuildVecWithZeros(SDNode *N) {
   NewOps.reserve(NewIntVT.getVectorNumElements());
   for (auto I : enumerate(N->ops())) {
     SDValue Op = I.value();
-    assert(!Op.isUndef() && "FIXME: after allowing UNDEF's, handle them here.");
+    assert(!Op.isUndefOrPoison() &&
+           "FIXME: after allowing UNDEF's, handle them here.");
     unsigned SrcOpIdx = I.index();
     if (KnownZeroOps[SrcOpIdx]) {
       NewOps.append(*Factor, ZeroOp);
@@ -24262,7 +24269,8 @@ SDValue DAGCombiner::visitBUILD_VECTOR(SDNode *N) {
   // Do this late as some of the above may replace the splat.
   if (TLI.getOperationAction(ISD::SPLAT_VECTOR, VT) != TargetLowering::Expand)
     if (SDValue V = cast<BuildVectorSDNode>(N)->getSplatValue()) {
-      assert(!V.isUndef() && "Splat of undef should have been handled earlier");
+      assert(!V.isUndefOrPoison() &&
+             "Splat of undef should have been handled earlier");
       return DAG.getNode(ISD::SPLAT_VECTOR, SDLoc(N), VT, V);
     }
 
@@ -24289,7 +24297,7 @@ static SDValue combineConcatVectorOfScalars(SDNode *N, SelectionDAG &DAG) {
     if (ISD::BITCAST == Op.getOpcode() &&
         !Op.getOperand(0).getValueType().isVector())
       Ops.push_back(Op.getOperand(0));
-    else if (ISD::UNDEF == Op.getOpcode())
+    else if (Op.isUndefOrPoison())
       Ops.push_back(DAG.getNode(ISD::UNDEF, DL, SVT));
     else
       return SDValue();
@@ -24311,7 +24319,7 @@ static SDValue combineConcatVectorOfScalars(SDNode *N, SelectionDAG &DAG) {
     for (SDValue &Op : Ops) {
       if (Op.getValueType() == SVT)
         continue;
-      if (Op.isUndef())
+      if (Op.isUndefOrPoison())
         Op = DAG.getNode(ISD::UNDEF, DL, SVT);
       else
         Op = DAG.getBitcast(SVT, Op);
@@ -24334,7 +24342,7 @@ static SDValue combineConcatVectorOfConcatVectors(SDNode *N,
   EVT SubVT;
   SDValue FirstConcat;
   for (const SDValue &Op : N->ops()) {
-    if (Op.isUndef())
+    if (Op.isUndefOrPoison())
       continue;
     if (Op.getOpcode() != ISD::CONCAT_VECTORS)
       return SDValue();
@@ -24352,7 +24360,7 @@ static SDValue combineConcatVectorOfConcatVectors(SDNode *N,
 
   SmallVector<SDValue> ConcatOps;
   for (const SDValue &Op : N->ops()) {
-    if (Op.isUndef()) {
+    if (Op.isUndefOrPoison()) {
       ConcatOps.append(FirstConcat->getNumOperands(), DAG.getUNDEF(SubVT));
       continue;
     }
@@ -24383,7 +24391,7 @@ static SDValue combineConcatVectorOfExtracts(SDNode *N, SelectionDAG &DAG) {
     Op = peekThroughBitcasts(Op);
 
     // UNDEF nodes convert to UNDEF shuffle mask values.
-    if (Op.isUndef()) {
+    if (Op.isUndefOrPoison()) {
       Mask.append((unsigned)NumOpElts, -1);
       continue;
     }
@@ -24401,7 +24409,7 @@ static SDValue combineConcatVectorOfExtracts(SDNode *N, SelectionDAG &DAG) {
     ExtVec = peekThroughBitcasts(ExtVec);
 
     // UNDEF nodes convert to UNDEF shuffle mask values.
-    if (ExtVec.isUndef()) {
+    if (ExtVec.isUndefOrPoison()) {
       Mask.append((unsigned)NumOpElts, -1);
       continue;
     }
@@ -24421,11 +24429,11 @@ static SDValue combineConcatVectorOfExtracts(SDNode *N, SelectionDAG &DAG) {
       return SDValue();
 
     // At most we can reference 2 inputs in the final shuffle.
-    if (SV0.isUndef() || SV0 == ExtVec) {
+    if (SV0.isUndefOrPoison() || SV0 == ExtVec) {
       SV0 = ExtVec;
       for (int i = 0; i != NumOpElts; ++i)
         Mask.push_back(i + ExtIdx);
-    } else if (SV1.isUndef() || SV1 == ExtVec) {
+    } else if (SV1.isUndefOrPoison() || SV1 == ExtVec) {
       SV1 = ExtVec;
       for (int i = 0; i != NumOpElts; ++i)
         Mask.push_back(i + ExtIdx + NumElts);
@@ -24531,10 +24539,10 @@ static SDValue combineConcatVectorOfShuffleAndItsOperands(
   ShuffleVectorSDNode *SVN = nullptr;
   for (SDValue Op : N->ops()) {
     if (auto *CurSVN = dyn_cast<ShuffleVectorSDNode>(Op);
-        CurSVN && CurSVN->getOperand(1).isUndef() && N->isOnlyUserOf(CurSVN) &&
-        all_of(N->ops(), [CurSVN](SDValue Op) {
+        CurSVN && CurSVN->getOperand(1).isUndefOrPoison() &&
+        N->isOnlyUserOf(CurSVN) && all_of(N->ops(), [CurSVN](SDValue Op) {
           // FIXME: can we allow UNDEF operands?
-          return !Op.isUndef() &&
+          return !Op.isUndefOrPoison() &&
                  (Op.getNode() == CurSVN || is_contained(CurSVN->ops(), Op));
         })) {
       SVN = CurSVN;
@@ -24548,7 +24556,7 @@ static SDValue combineConcatVectorOfShuffleAndItsOperands(
   // from the second operand, must be adjusted.
   SmallVector<int, 16> AdjustedMask;
   AdjustedMask.reserve(SVN->getMask().size());
-  assert(SVN->getOperand(1).isUndef() && "Expected unary shuffle!");
+  assert(SVN->getOperand(1).isUndefOrPoison() && "Expected unary shuffle!");
   append_range(AdjustedMask, SVN->getMask());
 
   // Identity masks for the operands of the (padded) shuffle.
@@ -24566,7 +24574,7 @@ static SDValue combineConcatVectorOfShuffleAndItsOperands(
   SmallVector<int, 32> Mask;
   Mask.reserve(VT.getVectorNumElements());
   for (SDValue Op : N->ops()) {
-    assert(!Op.isUndef() && "Not expecting to concatenate UNDEF.");
+    assert(!Op.isUndefOrPoison() && "Not expecting to concatenate UNDEF.");
     if (Op.getNode() == SVN) {
       append_range(Mask, AdjustedMask);
       continue;
@@ -24592,7 +24600,7 @@ static SDValue combineConcatVectorOfShuffleAndItsOperands(
   for (auto I : zip(SVN->ops(), ShufOps)) {
     SDValue ShufOp = std::get<0>(I);
     SDValue &NewShufOp = std::get<1>(I);
-    if (ShufOp.isUndef())
+    if (ShufOp.isUndefOrPoison())
       NewShufOp = DAG.getUNDEF(VT);
     else {
       SmallVector<SDValue, 2> ShufOpParts(N->getNumOperands(),
@@ -24617,7 +24625,7 @@ SDValue DAGCombiner::visitCONCAT_VECTORS(SDNode *N) {
 
   // Optimize concat_vectors where all but the first of the vectors are undef.
   if (all_of(drop_begin(N->ops()),
-             [](const SDValue &Op) { return Op.isUndef(); })) {
+             [](const SDValue &Op) { return Op.isUndefOrPoison(); })) {
     SDValue In = N->getOperand(0);
     assert(In.getValueType().isVector() && "Must concat vectors");
 
@@ -24684,7 +24692,7 @@ SDValue DAGCombiner::visitCONCAT_VECTORS(SDNode *N) {
   // fold (concat_vectors (BUILD_VECTOR A, B, ...), (BUILD_VECTOR C, D, ...))
   // -> (BUILD_VECTOR A, B, ..., C, D, ...)
   auto IsBuildVectorOrUndef = [](const SDValue &Op) {
-    return ISD::UNDEF == Op.getOpcode() || ISD::BUILD_VECTOR == Op.getOpcode();
+    return Op.isUndefOrPoison() || ISD::BUILD_VECTOR == Op.getOpcode();
   };
   if (llvm::all_of(N->ops(), IsBuildVectorOrUndef)) {
     SmallVector<SDValue, 8> Opnds;
@@ -24708,7 +24716,7 @@ SDValue DAGCombiner::visitCONCAT_VECTORS(SDNode *N) {
       EVT OpVT = Op.getValueType();
       unsigned NumElts = OpVT.getVectorNumElements();
 
-      if (ISD::UNDEF == Op.getOpcode())
+      if (Op.isUndefOrPoison())
         Opnds.append(NumElts, DAG.getUNDEF(MinVT));
 
       if (ISD::BUILD_VECTOR == Op.getOpcode()) {
@@ -24763,7 +24771,7 @@ SDValue DAGCombiner::visitCONCAT_VECTORS(SDNode *N) {
   for (unsigned i = 0, e = N->getNumOperands(); i != e; ++i) {
     SDValue Op = N->getOperand(i);
 
-    if (Op.isUndef())
+    if (Op.isUndefOrPoison())
       continue;
 
     // Check if this is the identity extract:
@@ -25122,7 +25130,7 @@ static SDValue foldExtractSubvectorFromShuffleVector(SDNode *N,
 
     SDValue Op = WideShuffleVector->getOperand(WideShufOpIdx);
 
-    if (Op.isUndef()) {
+    if (Op.isUndefOrPoison()) {
       // Picking from an undef operand. Let's adjust mask instead.
       NewMask.emplace_back(-1);
       continue;
@@ -25201,7 +25209,7 @@ SDValue DAGCombiner::visitEXTRACT_SUBVECTOR(SDNode *N) {
   SDLoc DL(N);
 
   // Extract from UNDEF is UNDEF.
-  if (V.isUndef())
+  if (V.isUndefOrPoison())
     return DAG.getUNDEF(NVT);
 
   if (TLI.isOperationLegalOrCustomOrPromote(ISD::LOAD, NVT))
@@ -25411,7 +25419,8 @@ static SDValue foldShuffleOfConcatUndefs(ShuffleVectorSDNode *Shuf,
   SDValue N0 = Shuf->getOperand(0), N1 = Shuf->getOperand(1);
   if (N0.getOpcode() != ISD::CONCAT_VECTORS || N0.getNumOperands() != 2 ||
       N1.getOpcode() != ISD::CONCAT_VECTORS || N1.getNumOperands() != 2 ||
-      !N0.getOperand(1).isUndef() || !N1.getOperand(1).isUndef())
+      !N0.getOperand(1).isUndefOrPoison() ||
+      !N1.getOperand(1).isUndefOrPoison())
     return SDValue();
 
   // Split the wide shuffle mask into halves. Any mask element that is accessing
@@ -25473,7 +25482,7 @@ static SDValue partitionShuffleOfConcats(SDNode *N, SelectionDAG &DAG) {
   // Special case: shuffle(concat(A,B)) can be more efficiently represented
   // as concat(shuffle(A,B),UNDEF) if the shuffle doesn't set any of the high
   // half vector elements.
-  if (NumElemsPerConcat * 2 == NumElts && N1.isUndef() &&
+  if (NumElemsPerConcat * 2 == NumElts && N1.isUndefOrPoison() &&
       llvm::all_of(Mask.slice(NumElemsPerConcat, NumElemsPerConcat),
                    IsUndefMaskElt)) {
     N0 = DAG.getVectorShuffle(ConcatVT, SDLoc(N), N0.getOperand(0),
@@ -25546,7 +25555,7 @@ static SDValue combineShuffleOfScalars(ShuffleVectorSDNode *SVN,
 
   // If only one of N1,N2 is constant, bail out if it is not ALL_ZEROS as
   // discussed above.
-  if (!N1.isUndef()) {
+  if (!N1.isUndefOrPoison()) {
     if (!N1->hasOneUse())
       return SDValue();
 
@@ -25589,7 +25598,7 @@ static SDValue combineShuffleOfScalars(ShuffleVectorSDNode *SVN,
     // generating a splat; semantically, this is fine, but it's likely to
     // generate low-quality code if the target can't reconstruct an appropriate
     // shuffle.
-    if (!Op.isUndef() && !isIntOrFPConstant(Op))
+    if (!Op.isUndefOrPoison() && !isIntOrFPConstant(Op))
       if (!IsSplat && !DuplicateOps.insert(Op).second)
         return SDValue();
 
@@ -25604,10 +25613,11 @@ static SDValue combineShuffleOfScalars(ShuffleVectorSDNode *SVN,
       SVT = (SVT.bitsLT(Op.getValueType()) ? Op.getValueType() : SVT);
   if (SVT != VT.getScalarType())
     for (SDValue &Op : Ops)
-      Op = Op.isUndef() ? DAG.getUNDEF(SVT)
-                        : (TLI.isZExtFree(Op.getValueType(), SVT)
-                               ? DAG.getZExtOrTrunc(Op, SDLoc(SVN), SVT)
-                               : DAG.getSExtOrTrunc(Op, SDLoc(SVN), SVT));
+      Op = Op.isUndefOrPoison()
+               ? DAG.getUNDEF(SVT)
+               : (TLI.isZExtFree(Op.getValueType(), SVT)
+                      ? DAG.getZExtOrTrunc(Op, SDLoc(SVN), SVT)
+                      : DAG.getSExtOrTrunc(Op, SDLoc(SVN), SVT));
   return DAG.getBuildVector(VT, SDLoc(SVN), Ops);
 }
 
@@ -25882,7 +25892,7 @@ static SDValue combineShuffleOfSplatVal(ShuffleVectorSDNode *Shuf,
   EVT VT = Shuf->getValueType(0);
   unsigned NumElts = VT.getVectorNumElements();
 
-  if (!Shuf->getOperand(1).isUndef())
+  if (!Shuf->getOperand(1).isUndefOrPoison())
     return SDValue();
 
   // See if this unary non-splat shuffle actually *is* a splat shuffle,
@@ -25989,11 +25999,11 @@ static SDValue combineShuffleOfBitcast(ShuffleVectorSDNode *SVN,
     return SDValue();
   EVT InVT = Op0.getOperand(0).getValueType();
   if (!InVT.isVector() ||
-      (!Op1.isUndef() && (Op1.getOpcode() != ISD::BITCAST ||
-                          Op1.getOperand(0).getValueType() != InVT)))
+      (!Op1.isUndefOrPoison() && (Op1.getOpcode() != ISD::BITCAST ||
+                                  Op1.getOperand(0).getValueType() != InVT)))
     return SDValue();
   if (isAnyConstantBuildVector(Op0.getOperand(0)) &&
-      (Op1.isUndef() || isAnyConstantBuildVector(Op1.getOperand(0))))
+      (Op1.isUndefOrPoison() || isAnyConstantBuildVector(Op1.getOperand(0))))
     return SDValue();
 
   int VTLanes = VT.getVectorNumElements();
@@ -26018,7 +26028,7 @@ static SDValue combineShuffleOfBitcast(ShuffleVectorSDNode *SVN,
   // original type.
   SDLoc DL(SVN);
   Op0 = Op0.getOperand(0);
-  Op1 = Op1.isUndef() ? DAG.getUNDEF(InVT) : Op1.getOperand(0);
+  Op1 = Op1.isUndefOrPoison() ? DAG.getUNDEF(InVT) : Op1.getOperand(0);
   SDValue NewShuf = DAG.getVectorShuffle(InVT, DL, Op0, Op1, NewMask);
   return DAG.getBitcast(VT, NewShuf);
 }
@@ -26027,10 +26037,10 @@ static SDValue combineShuffleOfBitcast(ShuffleVectorSDNode *SVN,
 /// shuf (shuf X, undef, InnerMask), undef, OuterMask --> splat X
 static SDValue formSplatFromShuffles(ShuffleVectorSDNode *OuterShuf,
                                      SelectionDAG &DAG) {
-  if (!OuterShuf->getOperand(1).isUndef())
+  if (!OuterShuf->getOperand(1).isUndefOrPoison())
     return SDValue();
   auto *InnerShuf = dyn_cast<ShuffleVectorSDNode>(OuterShuf->getOperand(0));
-  if (!InnerShuf || !InnerShuf->getOperand(1).isUndef())
+  if (!InnerShuf || !InnerShuf->getOperand(1).isUndefOrPoison())
     return SDValue();
 
   ArrayRef<int> OuterMask = OuterShuf->getMask();
@@ -26159,7 +26169,7 @@ static SDValue replaceShuffleOfInsert(ShuffleVectorSDNode *Shuf,
 static SDValue simplifyShuffleOfShuffle(ShuffleVectorSDNode *Shuf) {
   // shuf (shuf0 X, Y, Mask0), undef, Mask
   auto *Shuf0 = dyn_cast<ShuffleVectorSDNode>(Shuf->getOperand(0));
-  if (!Shuf0 || !Shuf->getOperand(1).isUndef())
+  if (!Shuf0 || !Shuf->getOperand(1).isUndefOrPoison())
     return SDValue();
 
   ArrayRef<int> Mask = Shuf->getMask();
@@ -26190,7 +26200,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
   assert(N0.getValueType() == VT && "Vector shuffle must be normalized in DAG");
 
   // Canonicalize shuffle undef, undef -> undef
-  if (N0.isUndef() && N1.isUndef())
+  if (N0.isUndefOrPoison() && N1.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   ShuffleVectorSDNode *SVN = cast<ShuffleVectorSDNode>(N);
@@ -26201,11 +26211,11 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
                                 createUnaryMask(SVN->getMask(), NumElts));
 
   // Canonicalize shuffle undef, v -> v, undef.  Commute the shuffle mask.
-  if (N0.isUndef())
+  if (N0.isUndefOrPoison())
     return DAG.getCommutedVectorShuffle(*SVN);
 
   // Remove references to rhs if it is undef
-  if (N1.isUndef()) {
+  if (N1.isUndefOrPoison()) {
     bool Changed = false;
     SmallVector<int, 8> NewMask;
     for (unsigned i = 0; i != NumElts; ++i) {
@@ -26298,7 +26308,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
       SDValue Base;
       bool AllSame = true;
       for (unsigned i = 0; i != NumElts; ++i) {
-        if (!V->getOperand(i).isUndef()) {
+        if (!V->getOperand(i).isUndefOrPoison()) {
           Base = V->getOperand(i);
           break;
         }
@@ -26355,11 +26365,10 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
   if (SDValue V = combineTruncationShuffle(SVN, DAG))
     return V;
 
-  if (N0.getOpcode() == ISD::CONCAT_VECTORS &&
-      Level < AfterLegalizeVectorOps &&
-      (N1.isUndef() ||
-      (N1.getOpcode() == ISD::CONCAT_VECTORS &&
-       N0.getOperand(0).getValueType() == N1.getOperand(0).getValueType()))) {
+  if (N0.getOpcode() == ISD::CONCAT_VECTORS && Level < AfterLegalizeVectorOps &&
+      (N1.isUndefOrPoison() ||
+       (N1.getOpcode() == ISD::CONCAT_VECTORS &&
+        N0.getOperand(0).getValueType() == N1.getOperand(0).getValueType()))) {
     if (SDValue V = partitionShuffleOfConcats(N, DAG))
       return V;
   }
@@ -26367,9 +26376,8 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
   // A shuffle of a concat of the same narrow vector can be reduced to use
   // only low-half elements of a concat with undef:
   // shuf (concat X, X), undef, Mask --> shuf (concat X, undef), undef, Mask'
-  if (N0.getOpcode() == ISD::CONCAT_VECTORS && N1.isUndef() &&
-      N0.getNumOperands() == 2 &&
-      N0.getOperand(0) == N0.getOperand(1)) {
+  if (N0.getOpcode() == ISD::CONCAT_VECTORS && N1.isUndefOrPoison() &&
+      N0.getNumOperands() == 2 && N0.getOperand(0) == N0.getOperand(1)) {
     int HalfNumElts = (int)NumElts / 2;
     SmallVector<int, 8> NewMask;
     for (unsigned i = 0; i != NumElts; ++i) {
@@ -26516,7 +26524,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
   // attempt to merge the 2 shuffles and suitably bitcast the inputs/output
   // back to their original types.
   if (N0.getOpcode() == ISD::BITCAST && N0.hasOneUse() &&
-      N1.isUndef() && Level < AfterLegalizeVectorOps &&
+      N1.isUndefOrPoison() && Level < AfterLegalizeVectorOps &&
       TLI.isTypeLegal(VT)) {
 
     SDValue BC0 = peekThroughOneUseBitcasts(N0);
@@ -26618,7 +26626,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
       }
 
       // Simple case where 'CurrentVec' is UNDEF.
-      if (CurrentVec.isUndef()) {
+      if (CurrentVec.isUndefOrPoison()) {
         Mask.push_back(-1);
         continue;
       }
@@ -26652,7 +26660,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
         SDValue InnerVec = (InnerIdx < (int)NumElts)
                                ? CurrentSVN->getOperand(0)
                                : CurrentSVN->getOperand(1);
-        if (InnerVec.isUndef()) {
+        if (InnerVec.isUndefOrPoison()) {
           Mask.push_back(-1);
           continue;
         }
@@ -26704,7 +26712,7 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
       SDValue SV0 = N1->getOperand(0);
       SDValue SV1 = N1->getOperand(1);
       bool HasSameOp0 = N0 == SV0;
-      bool IsSV1Undef = SV1.isUndef();
+      bool IsSV1Undef = SV1.isUndefOrPoison();
       if (HasSameOp0 || IsSV1Undef || N0 == SV1)
         // Commute the operands of this shuffle so merging below will trigger.
         return DAG.getCommutedVectorShuffle(*SVN);
@@ -26756,13 +26764,13 @@ SDValue DAGCombiner::visitVECTOR_SHUFFLE(SDNode *N) {
     // shuffle(bop(shuffle(x,y),shuffle(z,w)),bop(shuffle(a,b),shuffle(c,d)))
     unsigned SrcOpcode = N0.getOpcode();
     if (TLI.isBinOp(SrcOpcode) && N->isOnlyUserOf(N0.getNode()) &&
-        (N1.isUndef() ||
+        (N1.isUndefOrPoison() ||
          (SrcOpcode == N1.getOpcode() && N->isOnlyUserOf(N1.getNode())))) {
       // Get binop source ops, or just pass on the undef.
       SDValue Op00 = N0.getOperand(0);
       SDValue Op01 = N0.getOperand(1);
-      SDValue Op10 = N1.isUndef() ? N1 : N1.getOperand(0);
-      SDValue Op11 = N1.isUndef() ? N1 : N1.getOperand(1);
+      SDValue Op10 = N1.isUndefOrPoison() ? N1 : N1.getOperand(0);
+      SDValue Op11 = N1.isUndefOrPoison() ? N1 : N1.getOperand(1);
       // TODO: We might be able to relax the VT check but we don't currently
       // have any isBinOp() that has different result/ops VTs so play safe until
       // we have test coverage.
@@ -26943,13 +26951,13 @@ SDValue DAGCombiner::visitINSERT_SUBVECTOR(SDNode *N) {
   uint64_t InsIdx = N->getConstantOperandVal(2);
 
   // If inserting an UNDEF, just return the original vector.
-  if (N1.isUndef())
+  if (N1.isUndefOrPoison())
     return N0;
 
   // If this is an insert of an extracted vector into an undef vector, we can
   // just use the input to the extract if the types match, and can simplify
   // in some cases even if they don't.
-  if (N0.isUndef() && N1.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
+  if (N0.isUndefOrPoison() && N1.getOpcode() == ISD::EXTRACT_SUBVECTOR &&
       N1.getOperand(1) == N2) {
     EVT SrcVT = N1.getOperand(0).getValueType();
     if (SrcVT == VT)
@@ -26977,7 +26985,7 @@ SDValue DAGCombiner::visitINSERT_SUBVECTOR(SDNode *N) {
 
   // Simplify scalar inserts into an undef vector:
   // insert_subvector undef, (splat X), N2 -> splat X
-  if (N0.isUndef() && N1.getOpcode() == ISD::SPLAT_VECTOR)
+  if (N0.isUndefOrPoison() && N1.getOpcode() == ISD::SPLAT_VECTOR)
     if (DAG.isConstantValueOfAnyType(N1.getOperand(0)) || N1.hasOneUse())
       return DAG.getNode(ISD::SPLAT_VECTOR, SDLoc(N), VT, N1.getOperand(0));
 
@@ -26985,7 +26993,7 @@ SDValue DAGCombiner::visitINSERT_SUBVECTOR(SDNode *N) {
   // number of elements, just use the bitcast input of the extract.
   // i.e. INSERT_SUBVECTOR UNDEF (BITCAST N1) N2 ->
   //        BITCAST (INSERT_SUBVECTOR UNDEF N1 N2)
-  if (N0.isUndef() && N1.getOpcode() == ISD::BITCAST &&
+  if (N0.isUndefOrPoison() && N1.getOpcode() == ISD::BITCAST &&
       N1.getOperand(0).getOpcode() == ISD::EXTRACT_SUBVECTOR &&
       N1.getOperand(0).getOperand(1) == N2 &&
       N1.getOperand(0).getOperand(0).getValueType().getVectorElementCount() ==
@@ -27025,8 +27033,8 @@ SDValue DAGCombiner::visitINSERT_SUBVECTOR(SDNode *N) {
   // Eliminate an intermediate insert into an undef vector:
   // insert_subvector undef, (insert_subvector undef, X, 0), 0 -->
   // insert_subvector undef, X, 0
-  if (N0.isUndef() && N1.getOpcode() == ISD::INSERT_SUBVECTOR &&
-      N1.getOperand(0).isUndef() && isNullConstant(N1.getOperand(2)) &&
+  if (N0.isUndefOrPoison() && N1.getOpcode() == ISD::INSERT_SUBVECTOR &&
+      N1.getOperand(0).isUndefOrPoison() && isNullConstant(N1.getOperand(2)) &&
       isNullConstant(N2))
     return DAG.getNode(ISD::INSERT_SUBVECTOR, SDLoc(N), VT, N0,
                        N1.getOperand(1), N2);
@@ -27034,13 +27042,13 @@ SDValue DAGCombiner::visitINSERT_SUBVECTOR(SDNode *N) {
   // Push subvector bitcasts to the output, adjusting the index as we go.
   // insert_subvector(bitcast(v), bitcast(s), c1)
   // -> bitcast(insert_subvector(v, s, c2))
-  if ((N0.isUndef() || N0.getOpcode() == ISD::BITCAST) &&
+  if ((N0.isUndefOrPoison() || N0.getOpcode() == ISD::BITCAST) &&
       N1.getOpcode() == ISD::BITCAST) {
     SDValue N0Src = peekThroughBitcasts(N0);
     SDValue N1Src = peekThroughBitcasts(N1);
     EVT N0SrcSVT = N0Src.getValueType().getScalarType();
     EVT N1SrcSVT = N1Src.getValueType().getScalarType();
-    if ((N0.isUndef() || N0SrcSVT == N1SrcSVT) &&
+    if ((N0.isUndefOrPoison() || N0SrcSVT == N1SrcSVT) &&
         N0Src.getValueType().isVector() && N1Src.getValueType().isVector()) {
       EVT NewVT;
       SDLoc DL(N);
@@ -27186,9 +27194,9 @@ SDValue DAGCombiner::visitVECREDUCE(SDNode *N) {
     SDValue Vec = N0.getOperand(0);
     SDValue Subvec = N0.getOperand(1);
     if ((Opcode == ISD::VECREDUCE_OR &&
-         (N0.getOperand(0).isUndef() || isNullOrNullSplat(Vec))) ||
+         (N0.getOperand(0).isUndefOrPoison() || isNullOrNullSplat(Vec))) ||
         (Opcode == ISD::VECREDUCE_AND &&
-         (N0.getOperand(0).isUndef() || isAllOnesOrAllOnesSplat(Vec))))
+         (N0.getOperand(0).isUndefOrPoison() || isAllOnesOrAllOnesSplat(Vec))))
       return DAG.getNode(Opcode, SDLoc(N), N->getValueType(0), Subvec);
   }
 
@@ -27307,7 +27315,8 @@ SDValue DAGCombiner::visitGET_FPENV_MEM(SDNode *N) {
     return SDValue();
   }
   if (!LdNode || !LdNode->isSimple() || LdNode->isIndexed() ||
-      !LdNode->getOffset().isUndef() || LdNode->getMemoryVT() != MemVT ||
+      !LdNode->getOffset().isUndefOrPoison() ||
+      LdNode->getMemoryVT() != MemVT ||
       !LdNode->getChain().reachesChainWithoutSideEffects(SDValue(N, 0)))
     return SDValue();
 
@@ -27325,7 +27334,8 @@ SDValue DAGCombiner::visitGET_FPENV_MEM(SDNode *N) {
     }
   }
   if (!StNode || !StNode->isSimple() || StNode->isIndexed() ||
-      !StNode->getOffset().isUndef() || StNode->getMemoryVT() != MemVT ||
+      !StNode->getOffset().isUndefOrPoison() ||
+      StNode->getMemoryVT() != MemVT ||
       !StNode->getChain().reachesChainWithoutSideEffects(SDValue(LdNode, 1)))
     return SDValue();
 
@@ -27356,7 +27366,8 @@ SDValue DAGCombiner::visitSET_FPENV_MEM(SDNode *N) {
     return SDValue();
   }
   if (!StNode || !StNode->isSimple() || StNode->isIndexed() ||
-      !StNode->getOffset().isUndef() || StNode->getMemoryVT() != MemVT ||
+      !StNode->getOffset().isUndefOrPoison() ||
+      StNode->getMemoryVT() != MemVT ||
       !Chain.reachesChainWithoutSideEffects(SDValue(StNode, 0)))
     return SDValue();
 
@@ -27365,7 +27376,8 @@ SDValue DAGCombiner::visitSET_FPENV_MEM(SDNode *N) {
   SDValue StValue = StNode->getValue();
   auto *LdNode = dyn_cast<LoadSDNode>(StValue);
   if (!LdNode || !LdNode->isSimple() || LdNode->isIndexed() ||
-      !LdNode->getOffset().isUndef() || LdNode->getMemoryVT() != MemVT ||
+      !LdNode->getOffset().isUndefOrPoison() ||
+      LdNode->getMemoryVT() != MemVT ||
       !StNode->getChain().reachesChainWithoutSideEffects(SDValue(LdNode, 1)))
     return SDValue();
 
@@ -27414,7 +27426,7 @@ SDValue DAGCombiner::XformToShuffleWithZero(SDNode *N) {
       SDValue Elt = RHS.getOperand(EltIdx);
       // X & undef --> 0 (not undef). So this lane must be converted to choose
       // from the zero constant vector (same as if the element had all 0-bits).
-      if (Elt.isUndef()) {
+      if (Elt.isUndefOrPoison()) {
         Indices.push_back(i + NumSubElts);
         continue;
       }
@@ -27582,7 +27594,8 @@ SDValue DAGCombiner::SimplifyVBinOp(SDNode *N, const SDLoc &DL) {
     auto *Shuf0 = dyn_cast<ShuffleVectorSDNode>(LHS);
     auto *Shuf1 = dyn_cast<ShuffleVectorSDNode>(RHS);
     if (Shuf0 && Shuf1 && Shuf0->getMask().equals(Shuf1->getMask()) &&
-        LHS.getOperand(1).isUndef() && RHS.getOperand(1).isUndef() &&
+        LHS.getOperand(1).isUndefOrPoison() &&
+        RHS.getOperand(1).isUndefOrPoison() &&
         (LHS.hasOneUse() || RHS.hasOneUse() || LHS == RHS)) {
       SDValue NewBinOp = DAG.getNode(Opcode, DL, VT, LHS.getOperand(0),
                                      RHS.getOperand(0), Flags);
@@ -27597,7 +27610,7 @@ SDValue DAGCombiner::SimplifyVBinOp(SDNode *N, const SDLoc &DL) {
     // of an inserted scalar because that may be optimized better by
     // load-folding or other target-specific behaviors.
     if (isConstOrConstSplat(RHS) && Shuf0 && all_equal(Shuf0->getMask()) &&
-        Shuf0->hasOneUse() && Shuf0->getOperand(1).isUndef() &&
+        Shuf0->hasOneUse() && Shuf0->getOperand(1).isUndefOrPoison() &&
         Shuf0->getOperand(0).getOpcode() != ISD::INSERT_VECTOR_ELT) {
       // binop (splat X), (splat C) --> splat (binop X, C)
       SDValue X = Shuf0->getOperand(0);
@@ -27606,7 +27619,7 @@ SDValue DAGCombiner::SimplifyVBinOp(SDNode *N, const SDLoc &DL) {
                                   Shuf0->getMask());
     }
     if (isConstOrConstSplat(LHS) && Shuf1 && all_equal(Shuf1->getMask()) &&
-        Shuf1->hasOneUse() && Shuf1->getOperand(1).isUndef() &&
+        Shuf1->hasOneUse() && Shuf1->getOperand(1).isUndefOrPoison() &&
         Shuf1->getOperand(0).getOpcode() != ISD::INSERT_VECTOR_ELT) {
       // binop (splat C), (splat X) --> splat (binop C, X)
       SDValue X = Shuf1->getOperand(0);
@@ -27620,8 +27633,10 @@ SDValue DAGCombiner::SimplifyVBinOp(SDNode *N, const SDLoc &DL) {
   // the binary operation ahead of insertion may allow using a narrower vector
   // instruction that has better performance than the wide version of the op:
   // VBinOp (ins undef, X, Z), (ins undef, Y, Z) --> ins VecC, (VBinOp X, Y), Z
-  if (LHS.getOpcode() == ISD::INSERT_SUBVECTOR && LHS.getOperand(0).isUndef() &&
-      RHS.getOpcode() == ISD::INSERT_SUBVECTOR && RHS.getOperand(0).isUndef() &&
+  if (LHS.getOpcode() == ISD::INSERT_SUBVECTOR &&
+      LHS.getOperand(0).isUndefOrPoison() &&
+      RHS.getOpcode() == ISD::INSERT_SUBVECTOR &&
+      RHS.getOperand(0).isUndefOrPoison() &&
       LHS.getOperand(2) == RHS.getOperand(2) &&
       (LHS.hasOneUse() || RHS.hasOneUse())) {
     SDValue X = LHS.getOperand(1);
@@ -27643,7 +27658,7 @@ SDValue DAGCombiner::SimplifyVBinOp(SDNode *N, const SDLoc &DL) {
   auto ConcatWithConstantOrUndef = [](SDValue Concat) {
     return Concat.getOpcode() == ISD::CONCAT_VECTORS &&
            all_of(drop_begin(Concat->ops()), [](const SDValue &Op) {
-             return Op.isUndef() ||
+             return Op.isUndefOrPoison() ||
                     ISD::isBuildVectorOfConstantSDNodes(Op.getNode());
            });
   };
@@ -29040,7 +29055,7 @@ bool DAGCombiner::parallelizeChainedStores(StoreSDNode *St) {
     return false;
 
   // Do not handle stores to undef base pointers.
-  if (BasePtr.getBase().isUndef())
+  if (BasePtr.getBase().isUndefOrPoison())
     return false;
 
   // Do not handle stores to opaque types
@@ -29152,7 +29167,7 @@ bool DAGCombiner::findBetterNeighborChains(StoreSDNode *St) {
     return false;
 
   // Do not handle stores to undef base pointers.
-  if (BasePtr.getBase().isUndef())
+  if (BasePtr.getBase().isUndefOrPoison())
     return false;
 
   // Directly improve a chain of disjoint stores starting at St.

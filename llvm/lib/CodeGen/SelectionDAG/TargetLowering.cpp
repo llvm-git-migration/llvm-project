@@ -682,7 +682,7 @@ SDValue TargetLowering::SimplifyMultipleUseDemandedBits(
     return SDValue();
 
   // Ignore UNDEFs.
-  if (Op.isUndef())
+  if (Op.isUndefOrPoison())
     return SDValue();
 
   // Not demanding any bits/elts from Op.
@@ -1153,7 +1153,7 @@ bool TargetLowering::SimplifyDemandedBits(
   SDLoc dl(Op);
 
   // Undef operand.
-  if (Op.isUndef())
+  if (Op.isUndefOrPoison())
     return false;
 
   // We can't simplify target constants.
@@ -1455,7 +1455,7 @@ bool TargetLowering::SimplifyDemandedBits(
     // AND(INSERT_SUBVECTOR(C,X,I),M) -> INSERT_SUBVECTOR(AND(C,M),X,I)
     // iff 'C' is Undef/Constant and AND(X,M) == X (for DemandedBits).
     if (Op0.getOpcode() == ISD::INSERT_SUBVECTOR && !VT.isScalableVector() &&
-        (Op0.getOperand(0).isUndef() ||
+        (Op0.getOperand(0).isUndefOrPoison() ||
          ISD::isBuildVectorOfConstantSDNodes(Op0.getOperand(0).getNode())) &&
         Op0->hasOneUse()) {
       unsigned NumSubElts =
@@ -3050,7 +3050,8 @@ static APInt getKnownUndefForVectorBinop(SDValue BO, SelectionDAG &DAG,
       // nodes. Ignore opaque integers because they do not constant fold.
       SDValue Elt = BV->getOperand(Index);
       auto *C = dyn_cast<ConstantSDNode>(Elt);
-      if (isa<ConstantFPSDNode>(Elt) || Elt.isUndef() || (C && !C->isOpaque()))
+      if (isa<ConstantFPSDNode>(Elt) || Elt.isUndefOrPoison() ||
+          (C && !C->isOpaque()))
         return Elt;
     }
 
@@ -3068,7 +3069,8 @@ static APInt getKnownUndefForVectorBinop(SDValue BO, SelectionDAG &DAG,
     SDValue C0 = getUndefOrConstantElt(BO.getOperand(0), i, UndefOp0);
     SDValue C1 = getUndefOrConstantElt(BO.getOperand(1), i, UndefOp1);
     if (C0 && C1 && C0.getValueType() == EltVT && C1.getValueType() == EltVT)
-      if (DAG.getNode(BO.getOpcode(), SDLoc(BO), EltVT, C0, C1).isUndef())
+      if (DAG.getNode(BO.getOpcode(), SDLoc(BO), EltVT, C0, C1)
+              .isUndefOrPoison())
         KnownUndef.setBit(i);
   }
   return KnownUndef;
@@ -3097,7 +3099,7 @@ bool TargetLowering::SimplifyDemandedVectorElts(
          "Mask size mismatches value type element count!");
 
   // Undef operand.
-  if (Op.isUndef()) {
+  if (Op.isUndefOrPoison()) {
     KnownUndef.setAllBits();
     return false;
   }
@@ -3283,7 +3285,7 @@ bool TargetLowering::SimplifyDemandedVectorElts(
         SmallVector<SDValue, 32> Ops(Op->ops());
         bool Updated = false;
         for (unsigned i = 0; i != NumElts; ++i) {
-          if (!DemandedElts[i] && !Ops[i].isUndef()) {
+          if (!DemandedElts[i] && !Ops[i].isUndefOrPoison()) {
             Ops[i] = TLO.DAG.getUNDEF(Ops[0].getValueType());
             KnownUndef.setBit(i);
             Updated = true;
@@ -3295,7 +3297,7 @@ bool TargetLowering::SimplifyDemandedVectorElts(
     }
     for (unsigned i = 0; i != NumElts; ++i) {
       SDValue SrcOp = Op.getOperand(i);
-      if (SrcOp.isUndef()) {
+      if (SrcOp.isUndefOrPoison()) {
         KnownUndef.setBit(i);
       } else if (EltSizeInBits == SrcOp.getScalarValueSizeInBits() &&
                  (isNullConstant(SrcOp) || isNullFPConstant(SrcOp))) {
@@ -3356,7 +3358,7 @@ bool TargetLowering::SimplifyDemandedVectorElts(
       return true;
 
     // If none of the src operand elements are demanded, replace it with undef.
-    if (!DemandedSrcElts && !Src.isUndef())
+    if (!DemandedSrcElts && !Src.isUndefOrPoison())
       return TLO.CombineTo(Op, TLO.DAG.getNode(ISD::INSERT_SUBVECTOR, DL, VT,
                                                TLO.DAG.getUNDEF(VT), Sub,
                                                Op.getOperand(2)));
@@ -3429,7 +3431,7 @@ bool TargetLowering::SimplifyDemandedVectorElts(
                                      KnownZero, TLO, Depth + 1))
         return true;
 
-      KnownUndef.setBitVal(Idx, Scl.isUndef());
+      KnownUndef.setBitVal(Idx, Scl.isUndefOrPoison());
 
       KnownZero.setBitVal(Idx, isNullConstant(Scl) || isNullFPConstant(Scl));
       break;
@@ -7359,7 +7361,7 @@ SDValue TargetLowering::getNegatedExpression(SDValue Op, SelectionDAG &DAG,
   case ISD::BUILD_VECTOR: {
     // Only permit BUILD_VECTOR of constants.
     if (llvm::any_of(Op->op_values(), [&](SDValue N) {
-          return !N.isUndef() && !isa<ConstantFPSDNode>(N);
+          return !N.isUndefOrPoison() && !isa<ConstantFPSDNode>(N);
         }))
       break;
 
@@ -7367,7 +7369,7 @@ SDValue TargetLowering::getNegatedExpression(SDValue Op, SelectionDAG &DAG,
         (isOperationLegal(ISD::ConstantFP, VT) &&
          isOperationLegal(ISD::BUILD_VECTOR, VT)) ||
         llvm::all_of(Op->op_values(), [&](SDValue N) {
-          return N.isUndef() ||
+          return N.isUndefOrPoison() ||
                  isFPImmLegal(neg(cast<ConstantFPSDNode>(N)->getValueAPF()), VT,
                               OptForSize);
         });
@@ -7377,7 +7379,7 @@ SDValue TargetLowering::getNegatedExpression(SDValue Op, SelectionDAG &DAG,
 
     SmallVector<SDValue, 4> Ops;
     for (SDValue C : Op->op_values()) {
-      if (C.isUndef()) {
+      if (C.isUndefOrPoison()) {
         Ops.push_back(C);
         continue;
       }
@@ -11812,7 +11814,7 @@ SDValue TargetLowering::expandVECTOR_COMPRESS(SDNode *Node,
   SDValue Chain = DAG.getEntryNode();
   SDValue OutPos = DAG.getConstant(0, DL, PositionVT);
 
-  bool HasPassthru = !Passthru.isUndef();
+  bool HasPassthru = !Passthru.isUndefOrPoison();
 
   // If we have a passthru vector, store it on the stack, overwrite the matching
   // positions and then re-write the last element that was potentially

@@ -2345,7 +2345,7 @@ bool PPC::isXXINSERTWMask(ShuffleVectorSDNode *N, unsigned &ShiftElts,
 
   // If both vector operands for the shuffle are the same vector, the mask will
   // contain only elements from the first one and the second one will be undef.
-  if (N->getOperand(1).isUndef()) {
+  if (N->getOperand(1).isUndefOrPoison()) {
     ShiftElts = 0;
     Swap = true;
     unsigned XXINSERTWSrcElem = IsLE ? 2 : 1;
@@ -2385,7 +2385,7 @@ bool PPC::isXXSLDWIShuffleMask(ShuffleVectorSDNode *N, unsigned &ShiftElts,
 
   // If both vector operands for the shuffle are the same vector, the mask will
   // contain only elements from the first one and the second one will be undef.
-  if (N->getOperand(1).isUndef()) {
+  if (N->getOperand(1).isUndefOrPoison()) {
     assert(M0 < 4 && "Indexing into an undef vector?");
     if (M1 != (M0 + 1) % 4 || M2 != (M1 + 1) % 4 || M3 != (M2 + 1) % 4)
       return false;
@@ -2483,7 +2483,7 @@ bool PPC::isXXPERMDIShuffleMask(ShuffleVectorSDNode *N, unsigned &DM,
 
   // If both vector operands for the shuffle are the same vector, the mask will
   // contain only elements from the first one and the second one will be undef.
-  if (N->getOperand(1).isUndef()) {
+  if (N->getOperand(1).isUndefOrPoison()) {
     if ((M0 | M1) < 2) {
       DM = IsLE ? (((~M1) & 1) << 1) + ((~M0) & 1) : (M0 << 1) + (M1 & 1);
       Swap = false;
@@ -2560,7 +2560,8 @@ SDValue PPC::get_VSPLTI_elt(SDNode *N, unsigned ByteSize, SelectionDAG &DAG) {
 
     // See if all of the elements in the buildvector agree across.
     for (unsigned i = 0, e = N->getNumOperands(); i != e; ++i) {
-      if (N->getOperand(i).isUndef()) continue;
+      if (N->getOperand(i).isUndefOrPoison())
+        continue;
       // If the element isn't a constant, bail fully out.
       if (!isa<ConstantSDNode>(N->getOperand(i))) return SDValue();
 
@@ -2605,7 +2606,8 @@ SDValue PPC::get_VSPLTI_elt(SDNode *N, unsigned ByteSize, SelectionDAG &DAG) {
 
   // Check to see if this buildvec has a single non-undef value in its elements.
   for (unsigned i = 0, e = N->getNumOperands(); i != e; ++i) {
-    if (N->getOperand(i).isUndef()) continue;
+    if (N->getOperand(i).isUndefOrPoison())
+      continue;
     if (!OpVal.getNode())
       OpVal = N->getOperand(i);
     else if (OpVal != N->getOperand(i))
@@ -8629,7 +8631,7 @@ bool PPCTargetLowering::canReuseLoadAddress(SDValue Op, EVT MemVT,
     return false;
 
   RLI.Ptr = LD->getBasePtr();
-  if (LD->isIndexed() && !LD->getOffset().isUndef()) {
+  if (LD->isIndexed() && !LD->getOffset().isUndefOrPoison()) {
     assert(LD->getAddressingMode() == ISD::PRE_INC &&
            "Non-pre-inc AM on PPC?");
     RLI.Ptr = DAG.getNode(ISD::ADD, dl, RLI.Ptr.getValueType(), RLI.Ptr,
@@ -9456,7 +9458,7 @@ static bool haveEfficientBuildVectorPattern(BuildVectorSDNode *V,
   if (V->isConstant())
     return false;
   for (int i = 0, e = V->getNumOperands(); i < e; ++i) {
-    if (V->getOperand(i).isUndef())
+    if (V->getOperand(i).isUndefOrPoison())
       return false;
     // We want to expand nodes that represent load-and-splat even if the
     // loaded value is a floating point truncation or conversion to int.
@@ -9676,7 +9678,7 @@ SDValue PPCTargetLowering::LowerBUILD_VECTOR(SDValue Op,
       // BUILD_VECTOR is a separate use of the value.
       unsigned NumUsesOfInputLD = 128 / ElementSize;
       for (SDValue BVInOp : Op->ops())
-        if (BVInOp.isUndef())
+        if (BVInOp.isUndefOrPoison())
           NumUsesOfInputLD--;
 
       // Exclude somes case where LD_SPLAT is worse than scalar_to_vector:
@@ -10007,7 +10009,7 @@ SDValue PPCTargetLowering::lowerToVINSERTB(ShuffleVectorSDNode *N,
     unsigned CurrentElement = Mask[i];
     // If 2nd operand is undefined, we should only look for element 7 in the
     // Mask.
-    if (V2.isUndef() && CurrentElement != VINSERTBSrcElem)
+    if (V2.isUndefOrPoison() && CurrentElement != VINSERTBSrcElem)
       continue;
 
     bool OtherElementsInOrder = true;
@@ -10019,8 +10021,9 @@ SDValue PPCTargetLowering::lowerToVINSERTB(ShuffleVectorSDNode *N,
       // If CurrentElement is from V1 [0,15], then we the rest of the Mask to be
       // from V2 [16,31] and vice versa.  Unless the 2nd operand is undefined,
       // in which we always assume we're always picking from the 1st operand.
-      int MaskOffset =
-          (!V2.isUndef() && CurrentElement < BytesInVector) ? BytesInVector : 0;
+      int MaskOffset = (!V2.isUndefOrPoison() && CurrentElement < BytesInVector)
+                           ? BytesInVector
+                           : 0;
       if (Mask[j] != OriginalOrder[j] + MaskOffset) {
         OtherElementsInOrder = false;
         break;
@@ -10031,7 +10034,7 @@ SDValue PPCTargetLowering::lowerToVINSERTB(ShuffleVectorSDNode *N,
     // in the vector we should insert into.
     if (OtherElementsInOrder) {
       // If 2nd operand is undefined, we assume no shifts and no swapping.
-      if (V2.isUndef()) {
+      if (V2.isUndefOrPoison()) {
         ShiftElts = 0;
         Swap = false;
       } else {
@@ -10053,7 +10056,7 @@ SDValue PPCTargetLowering::lowerToVINSERTB(ShuffleVectorSDNode *N,
   // optionally with VECSHL if shift is required.
   if (Swap)
     std::swap(V1, V2);
-  if (V2.isUndef())
+  if (V2.isUndefOrPoison())
     V2 = V1;
   if (ShiftElts) {
     SDValue Shl = DAG.getNode(PPCISD::VECSHL, dl, MVT::v16i8, V2, V2,
@@ -10122,7 +10125,7 @@ SDValue PPCTargetLowering::lowerToVINSERTH(ShuffleVectorSDNode *N,
     // If both vector operands for the shuffle are the same vector, the mask
     // will contain only elements from the first one and the second one will be
     // undef.
-    if (V2.isUndef()) {
+    if (V2.isUndefOrPoison()) {
       ShiftElts = 0;
       unsigned VINSERTHSrcElem = IsLE ? 4 : 3;
       TargetOrder = OriginalOrderLow;
@@ -10159,7 +10162,7 @@ SDValue PPCTargetLowering::lowerToVINSERTH(ShuffleVectorSDNode *N,
   // optionally with VECSHL if shift is required.
   if (Swap)
     std::swap(V1, V2);
-  if (V2.isUndef())
+  if (V2.isUndefOrPoison())
     V2 = V1;
   SDValue Conv1 = DAG.getNode(ISD::BITCAST, dl, MVT::v8i16, V1);
   if (ShiftElts) {
@@ -10314,7 +10317,7 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
   // combine it because that will just produce multiple loads.
   bool IsPermutedLoad = false;
   const SDValue *InputLoad = getNormalLoadInput(V1, IsPermutedLoad);
-  if (InputLoad && Subtarget.hasVSX() && V2.isUndef() &&
+  if (InputLoad && Subtarget.hasVSX() && V2.isUndefOrPoison() &&
       (PPC::isSplatShuffleMask(SVOp, 4) || PPC::isSplatShuffleMask(SVOp, 8)) &&
       InputLoad->hasOneUse()) {
     bool IsFourByte = PPC::isSplatShuffleMask(SVOp, 4);
@@ -10374,7 +10377,7 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
   if (Subtarget.hasP9Vector() &&
       PPC::isXXINSERTWMask(SVOp, ShiftElts, InsertAtByte, Swap,
                            isLittleEndian)) {
-    if (V2.isUndef())
+    if (V2.isUndefOrPoison())
       V2 = V1;
     else if (Swap)
       std::swap(V1, V2);
@@ -10412,8 +10415,8 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
     if (Swap)
       std::swap(V1, V2);
     SDValue Conv1 = DAG.getNode(ISD::BITCAST, dl, MVT::v4i32, V1);
-    SDValue Conv2 =
-        DAG.getNode(ISD::BITCAST, dl, MVT::v4i32, V2.isUndef() ? V1 : V2);
+    SDValue Conv2 = DAG.getNode(ISD::BITCAST, dl, MVT::v4i32,
+                                V2.isUndefOrPoison() ? V1 : V2);
 
     SDValue Shl = DAG.getNode(PPCISD::VECSHL, dl, MVT::v4i32, Conv1, Conv2,
                               DAG.getConstant(ShiftElts, dl, MVT::i32));
@@ -10425,8 +10428,8 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
     if (Swap)
       std::swap(V1, V2);
     SDValue Conv1 = DAG.getNode(ISD::BITCAST, dl, MVT::v2i64, V1);
-    SDValue Conv2 =
-        DAG.getNode(ISD::BITCAST, dl, MVT::v2i64, V2.isUndef() ? V1 : V2);
+    SDValue Conv2 = DAG.getNode(ISD::BITCAST, dl, MVT::v2i64,
+                                V2.isUndefOrPoison() ? V1 : V2);
 
     SDValue PermDI = DAG.getNode(PPCISD::XXPERMDI, dl, MVT::v2i64, Conv1, Conv2,
                               DAG.getConstant(ShiftElts, dl, MVT::i32));
@@ -10454,7 +10457,7 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
   }
 
   if (Subtarget.hasVSX()) {
-    if (V2.isUndef() && PPC::isSplatShuffleMask(SVOp, 4)) {
+    if (V2.isUndefOrPoison() && PPC::isSplatShuffleMask(SVOp, 4)) {
       int SplatIdx = PPC::getSplatIdxForPPCMnemonics(SVOp, 4, DAG);
 
       SDValue Conv = DAG.getNode(ISD::BITCAST, dl, MVT::v4i32, V1);
@@ -10464,7 +10467,7 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
     }
 
     // Left shifts of 8 bytes are actually swaps. Convert accordingly.
-    if (V2.isUndef() && PPC::isVSLDOIShuffleMask(SVOp, 1, DAG) == 8) {
+    if (V2.isUndefOrPoison() && PPC::isVSLDOIShuffleMask(SVOp, 1, DAG) == 8) {
       SDValue Conv = DAG.getNode(ISD::BITCAST, dl, MVT::v2f64, V1);
       SDValue Swap = DAG.getNode(PPCISD::SWAP_NO_CHAIN, dl, MVT::v2f64, Conv);
       return DAG.getNode(ISD::BITCAST, dl, MVT::v16i8, Swap);
@@ -10474,7 +10477,7 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
   // Cases that are handled by instructions that take permute immediates
   // (such as vsplt*) should be left as VECTOR_SHUFFLE nodes so they can be
   // selected by the instruction selector.
-  if (V2.isUndef()) {
+  if (V2.isUndefOrPoison()) {
     if (PPC::isSplatShuffleMask(SVOp, 1) ||
         PPC::isSplatShuffleMask(SVOp, 2) ||
         PPC::isSplatShuffleMask(SVOp, 4) ||
@@ -10575,7 +10578,8 @@ SDValue PPCTargetLowering::LowerVECTOR_SHUFFLE(SDValue Op,
 
   // Lower this to a VPERM(V1, V2, V3) expression, where V3 is a constant
   // vector that will get spilled to the constant pool.
-  if (V2.isUndef()) V2 = V1;
+  if (V2.isUndefOrPoison())
+    V2 = V1;
 
   return LowerVPERM(Op, DAG, PermMask, VT, V1, V2);
 }
@@ -15013,7 +15017,7 @@ combineElementTruncationToVectorTruncation(SDNode *N,
       if (Is32Bit) {
         // For 32-bit values, we need to add an FP_ROUND node (if we made it
         // here, we know that all inputs are extending loads so this is safe).
-        if (In.isUndef())
+        if (In.isUndefOrPoison())
           Ops.push_back(DAG.getUNDEF(SrcVT));
         else {
           SDValue Trunc =
@@ -15022,7 +15026,8 @@ combineElementTruncationToVectorTruncation(SDNode *N,
           Ops.push_back(Trunc);
         }
       } else
-        Ops.push_back(In.isUndef() ? DAG.getUNDEF(SrcVT) : In.getOperand(0));
+        Ops.push_back(In.isUndefOrPoison() ? DAG.getUNDEF(SrcVT)
+                                           : In.getOperand(0));
     }
 
     unsigned Opcode;
@@ -15715,13 +15720,13 @@ static bool isSplatBV(SDValue Op) {
   // Find first non-undef input.
   for (int i = 0, e = Op.getNumOperands(); i < e; i++) {
     FirstOp = Op.getOperand(i);
-    if (!FirstOp.isUndef())
+    if (!FirstOp.isUndefOrPoison())
       break;
   }
 
   // All inputs are undef or the same as the first non-undef input.
   for (int i = 1, e = Op.getNumOperands(); i < e; i++)
-    if (Op.getOperand(i) != FirstOp && !Op.getOperand(i).isUndef())
+    if (Op.getOperand(i) != FirstOp && !Op.getOperand(i).isUndefOrPoison())
       return false;
   return true;
 }

@@ -71,6 +71,7 @@ void DAGTypeLegalizer::ScalarizeVectorResult(SDNode *N, unsigned ResNo) {
   case ISD::SELECT:            R = ScalarizeVecRes_SELECT(N); break;
   case ISD::SELECT_CC:         R = ScalarizeVecRes_SELECT_CC(N); break;
   case ISD::SETCC:             R = ScalarizeVecRes_SETCC(N); break;
+  case ISD::POISON:
   case ISD::UNDEF:             R = ScalarizeVecRes_UNDEF(N); break;
   case ISD::VECTOR_SHUFFLE:    R = ScalarizeVecRes_VECTOR_SHUFFLE(N); break;
   case ISD::IS_FPCLASS:        R = ScalarizeVecRes_IS_FPCLASS(N); break;
@@ -657,7 +658,7 @@ SDValue DAGTypeLegalizer::ScalarizeVecRes_UNDEF(SDNode *N) {
 SDValue DAGTypeLegalizer::ScalarizeVecRes_VECTOR_SHUFFLE(SDNode *N) {
   // Figure out if the scalar is the LHS or RHS and return it.
   SDValue Arg = N->getOperand(2).getOperand(0);
-  if (Arg.isUndef())
+  if (Arg.isUndefOrPoison())
     return DAG.getUNDEF(N->getValueType(0).getVectorElementType());
   unsigned Op = !cast<ConstantSDNode>(Arg)->isZero();
   return GetScalarizedVector(N->getOperand(Op));
@@ -1118,6 +1119,7 @@ void DAGTypeLegalizer::SplitVectorResult(SDNode *N, unsigned ResNo) {
   case ISD::VP_MERGE:
   case ISD::VP_SELECT:    SplitRes_Select(N, Lo, Hi); break;
   case ISD::SELECT_CC:    SplitRes_SELECT_CC(N, Lo, Hi); break;
+  case ISD::POISON:
   case ISD::UNDEF:        SplitRes_UNDEF(N, Lo, Hi); break;
   case ISD::BITCAST:           SplitVecRes_BITCAST(N, Lo, Hi); break;
   case ISD::BUILD_VECTOR:      SplitVecRes_BUILD_VECTOR(N, Lo, Hi); break;
@@ -2138,7 +2140,8 @@ void DAGTypeLegalizer::SplitVecRes_VP_LOAD(VPLoadSDNode *LD, SDValue &Lo,
   SDValue Ch = LD->getChain();
   SDValue Ptr = LD->getBasePtr();
   SDValue Offset = LD->getOffset();
-  assert(Offset.isUndef() && "Unexpected indexed variable-length load offset");
+  assert(Offset.isUndefOrPoison() &&
+         "Unexpected indexed variable-length load offset");
   Align Alignment = LD->getOriginalAlign();
   SDValue Mask = LD->getMask();
   SDValue EVL = LD->getVectorLength();
@@ -2212,7 +2215,7 @@ void DAGTypeLegalizer::SplitVecRes_VP_STRIDED_LOAD(VPStridedLoadSDNode *SLD,
                                                    SDValue &Lo, SDValue &Hi) {
   assert(SLD->isUnindexed() &&
          "Indexed VP strided load during type legalization!");
-  assert(SLD->getOffset().isUndef() &&
+  assert(SLD->getOffset().isUndefOrPoison() &&
          "Unexpected indexed variable-length load offset");
 
   SDLoc DL(SLD);
@@ -2299,7 +2302,7 @@ void DAGTypeLegalizer::SplitVecRes_MLOAD(MaskedLoadSDNode *MLD,
   SDValue Ch = MLD->getChain();
   SDValue Ptr = MLD->getBasePtr();
   SDValue Offset = MLD->getOffset();
-  assert(Offset.isUndef() && "Unexpected indexed masked load offset");
+  assert(Offset.isUndefOrPoison() && "Unexpected indexed masked load offset");
   SDValue Mask = MLD->getMask();
   SDValue PassThru = MLD->getPassThru();
   Align Alignment = MLD->getOriginalAlign();
@@ -2526,7 +2529,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_COMPRESS(SDNode *N, SDValue &Lo,
                        MachinePointerInfo::getUnknownStack(MF));
 
   SDValue Compressed = DAG.getLoad(VecVT, DL, Chain, StackPtr, PtrInfo);
-  if (!Passthru.isUndef()) {
+  if (!Passthru.isUndefOrPoison()) {
     Compressed =
         DAG.getNode(ISD::VSELECT, DL, VecVT, Mask, Compressed, Passthru);
   }
@@ -2808,7 +2811,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
         if (Idx == PoisonMaskElem)
           continue;
         unsigned SrcRegIdx = Idx / NewElts;
-        if (Inputs[SrcRegIdx].isUndef()) {
+        if (Inputs[SrcRegIdx].isUndefOrPoison()) {
           Idx = PoisonMaskElem;
           continue;
         }
@@ -2840,7 +2843,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
       if (Idx == PoisonMaskElem)
         continue;
       unsigned SrcRegIdx = Idx / NewElts;
-      if (Inputs[SrcRegIdx].isUndef()) {
+      if (Inputs[SrcRegIdx].isUndefOrPoison()) {
         Idx = PoisonMaskElem;
         continue;
       }
@@ -2848,7 +2851,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
           getTypeAction(Inputs[SrcRegIdx].getValueType());
       if (Inputs[SrcRegIdx].getOpcode() == ISD::CONCAT_VECTORS &&
           Inputs[SrcRegIdx].getNumOperands() == 2 &&
-          !Inputs[SrcRegIdx].getOperand(1).isUndef() &&
+          !Inputs[SrcRegIdx].getOperand(1).isUndefOrPoison() &&
           (TypeAction == TargetLowering::TypeLegal ||
            TypeAction == TargetLowering::TypeWidenVector))
         UsedSubVector.set(2 * SrcRegIdx + (Idx % NewElts) / (NewElts / 2));
@@ -2906,11 +2909,11 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
         if (Shuffle->getOperand(0).getValueType() != NewVT)
           continue;
         int Op = -1;
-        if (!Inputs[I].hasOneUse() && Shuffle->getOperand(1).isUndef() &&
-            !Shuffle->isSplat()) {
+        if (!Inputs[I].hasOneUse() &&
+            Shuffle->getOperand(1).isUndefOrPoison() && !Shuffle->isSplat()) {
           Op = 0;
         } else if (!Inputs[I].hasOneUse() &&
-                   !Shuffle->getOperand(1).isUndef()) {
+                   !Shuffle->getOperand(1).isUndefOrPoison()) {
           // Find the only used operand, if possible.
           for (int &Idx : Mask) {
             if (Idx == PoisonMaskElem)
@@ -2937,7 +2940,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
         if (Op < 0) {
           // Try to check if one of the shuffle operands is used already.
           for (int OpIdx = 0; OpIdx < 2; ++OpIdx) {
-            if (Shuffle->getOperand(OpIdx).isUndef())
+            if (Shuffle->getOperand(OpIdx).isUndefOrPoison())
               continue;
             auto *It = find(Inputs, Shuffle->getOperand(OpIdx));
             if (It == std::end(Inputs))
@@ -2994,7 +2997,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
     for (const auto &I : Inputs) {
       if (IsConstant(I))
         UniqueConstantInputs.insert(I);
-      else if (!I.isUndef())
+      else if (!I.isUndefOrPoison())
         UniqueInputs.insert(I);
     }
     // Adjust mask in case of reused inputs. Also, need to insert constant
@@ -3007,7 +3010,7 @@ void DAGTypeLegalizer::SplitVecRes_VECTOR_SHUFFLE(ShuffleVectorSDNode *N,
         if (Idx == PoisonMaskElem)
           continue;
         unsigned SrcRegIdx = Idx / NewElts;
-        if (Inputs[SrcRegIdx].isUndef()) {
+        if (Inputs[SrcRegIdx].isUndefOrPoison()) {
           Idx = PoisonMaskElem;
           continue;
         }
@@ -3792,7 +3795,7 @@ SDValue DAGTypeLegalizer::SplitVecOp_VP_STORE(VPStoreSDNode *N, unsigned OpNo) {
   SDValue Ch = N->getChain();
   SDValue Ptr = N->getBasePtr();
   SDValue Offset = N->getOffset();
-  assert(Offset.isUndef() && "Unexpected VP store offset");
+  assert(Offset.isUndefOrPoison() && "Unexpected VP store offset");
   SDValue Mask = N->getMask();
   SDValue EVL = N->getVectorLength();
   SDValue Data = N->getValue();
@@ -3869,7 +3872,8 @@ SDValue DAGTypeLegalizer::SplitVecOp_VP_STORE(VPStoreSDNode *N, unsigned OpNo) {
 SDValue DAGTypeLegalizer::SplitVecOp_VP_STRIDED_STORE(VPStridedStoreSDNode *N,
                                                       unsigned OpNo) {
   assert(N->isUnindexed() && "Indexed vp_strided_store of a vector?");
-  assert(N->getOffset().isUndef() && "Unexpected VP strided store offset");
+  assert(N->getOffset().isUndefOrPoison() &&
+         "Unexpected VP strided store offset");
 
   SDLoc DL(N);
 
@@ -3946,7 +3950,7 @@ SDValue DAGTypeLegalizer::SplitVecOp_MSTORE(MaskedStoreSDNode *N,
   SDValue Ch  = N->getChain();
   SDValue Ptr = N->getBasePtr();
   SDValue Offset = N->getOffset();
-  assert(Offset.isUndef() && "Unexpected indexed masked store offset");
+  assert(Offset.isUndefOrPoison() && "Unexpected indexed masked store offset");
   SDValue Mask = N->getMask();
   SDValue Data = N->getValue();
   Align Alignment = N->getOriginalAlign();
@@ -4553,6 +4557,7 @@ void DAGTypeLegalizer::WidenVectorResult(SDNode *N, unsigned ResNo) {
   case ISD::SELECT_CC:         Res = WidenVecRes_SELECT_CC(N); break;
   case ISD::VP_SETCC:
   case ISD::SETCC:             Res = WidenVecRes_SETCC(N); break;
+  case ISD::POISON:
   case ISD::UNDEF:             Res = WidenVecRes_UNDEF(N); break;
   case ISD::VECTOR_SHUFFLE:
     Res = WidenVecRes_VECTOR_SHUFFLE(cast<ShuffleVectorSDNode>(N));
@@ -5772,7 +5777,7 @@ SDValue DAGTypeLegalizer::WidenVecRes_CONCAT_VECTORS(SDNode *N) {
       // The inputs and the result are widen to the same value.
       unsigned i;
       for (i=1; i < NumOperands; ++i)
-        if (!N->getOperand(i).isUndef())
+        if (!N->getOperand(i).isUndefOrPoison())
           break;
 
       if (i == NumOperands)
@@ -6198,7 +6203,7 @@ static inline bool isSETCCorConvertedSETCC(SDValue N) {
     N = N.getOperand(0);
   else if (N.getOpcode() == ISD::CONCAT_VECTORS) {
     for (unsigned i = 1; i < N->getNumOperands(); ++i)
-      if (!N->getOperand(i)->isUndef())
+      if (!N->getOperand(i)->isUndefOrPoison())
         return false;
     N = N.getOperand(0);
   }
@@ -7039,7 +7044,7 @@ SDValue DAGTypeLegalizer::WidenVecOp_CONCAT_VECTORS(SDNode *N) {
   if (VT == TLI.getTypeToTransformTo(*DAG.getContext(), InVT)) {
     unsigned i;
     for (i = 1; i < NumOperands; ++i)
-      if (!N->getOperand(i).isUndef())
+      if (!N->getOperand(i).isUndefOrPoison())
         break;
 
     if (i == NumOperands)
@@ -7100,7 +7105,8 @@ SDValue DAGTypeLegalizer::WidenVecOp_INSERT_SUBVECTOR(SDNode *N) {
 
   // We need to make sure that the indices are still valid, otherwise we might
   // widen what was previously well-defined to something undefined.
-  if (IndicesValid && InVec.isUndef() && N->getConstantOperandVal(2) == 0)
+  if (IndicesValid && InVec.isUndefOrPoison() &&
+      N->getConstantOperandVal(2) == 0)
     return DAG.getNode(ISD::INSERT_SUBVECTOR, DL, VT, InVec, SubVec,
                        N->getOperand(2));
 

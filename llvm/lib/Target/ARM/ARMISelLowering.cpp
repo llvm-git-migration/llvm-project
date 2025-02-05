@@ -7837,7 +7837,7 @@ static SDValue LowerBUILD_VECTOR_i1(SDValue Op, SelectionDAG &DAG,
   SDValue FirstOp = Op.getOperand(0);
   if (!isa<ConstantSDNode>(FirstOp) &&
       llvm::all_of(llvm::drop_begin(Op->ops()), [&FirstOp](const SDUse &U) {
-        return U.get().isUndef() || U.get() == FirstOp;
+        return U.get().isUndefOrPoison() || U.get() == FirstOp;
       })) {
     SDValue Ext = DAG.getNode(ISD::SIGN_EXTEND_INREG, dl, MVT::i32, FirstOp,
                               DAG.getValueType(MVT::i1));
@@ -7848,9 +7848,9 @@ static SDValue LowerBUILD_VECTOR_i1(SDValue Op, SelectionDAG &DAG,
   unsigned Bits32 = 0;
   for (unsigned i = 0; i < NumElts; ++i) {
     SDValue V = Op.getOperand(i);
-    if (!isa<ConstantSDNode>(V) && !V.isUndef())
+    if (!isa<ConstantSDNode>(V) && !V.isUndefOrPoison())
       continue;
-    bool BitSet = V.isUndef() ? false : V->getAsZExtVal();
+    bool BitSet = V.isUndefOrPoison() ? false : V->getAsZExtVal();
     if (BitSet)
       Bits32 |= BoolMask << (i * BitsPerBool);
   }
@@ -7860,7 +7860,7 @@ static SDValue LowerBUILD_VECTOR_i1(SDValue Op, SelectionDAG &DAG,
                              DAG.getConstant(Bits32, dl, MVT::i32));
   for (unsigned i = 0; i < NumElts; ++i) {
     SDValue V = Op.getOperand(i);
-    if (isa<ConstantSDNode>(V) || V.isUndef())
+    if (isa<ConstantSDNode>(V) || V.isUndefOrPoison())
       continue;
     Base = DAG.getNode(ISD::INSERT_VECTOR_ELT, dl, VT, Base, V,
                        DAG.getConstant(i, dl, MVT::i32));
@@ -8044,7 +8044,7 @@ SDValue ARMTargetLowering::LowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG,
   SDValue Value;
   for (unsigned i = 0; i < NumElts; ++i) {
     SDValue V = Op.getOperand(i);
-    if (V.isUndef())
+    if (V.isUndefOrPoison())
       continue;
     if (i > 0)
       isOnlyLowElement = false;
@@ -8203,7 +8203,7 @@ SDValue ARMTargetLowering::LowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG,
     SDValue Vec = DAG.getUNDEF(VT);
     for (unsigned i = 0 ; i < NumElts; ++i) {
       SDValue V = Op.getOperand(i);
-      if (V.isUndef())
+      if (V.isUndefOrPoison())
         continue;
       SDValue LaneIdx = DAG.getConstant(i, dl, MVT::i32);
       Vec = DAG.getNode(ISD::INSERT_VECTOR_ELT, dl, VT, Vec, V, LaneIdx);
@@ -8248,7 +8248,7 @@ SDValue ARMTargetLowering::ReconstructShuffle(SDValue Op,
   SmallVector<ShuffleSourceInfo, 2> Sources;
   for (unsigned i = 0; i < NumElts; ++i) {
     SDValue V = Op.getOperand(i);
-    if (V.isUndef())
+    if (V.isUndefOrPoison())
       continue;
     else if (V.getOpcode() != ISD::EXTRACT_VECTOR_ELT) {
       // A shuffle can only come from building a vector from various
@@ -8377,7 +8377,7 @@ SDValue ARMTargetLowering::ReconstructShuffle(SDValue Op,
   int BitsPerShuffleLane = ShuffleVT.getScalarSizeInBits();
   for (unsigned i = 0; i < VT.getVectorNumElements(); ++i) {
     SDValue Entry = Op.getOperand(i);
-    if (Entry.isUndef())
+    if (Entry.isUndefOrPoison())
       continue;
 
     auto Src = llvm::find(Sources, Entry.getOperand(0));
@@ -8577,7 +8577,7 @@ static SDValue LowerVECTOR_SHUFFLEv8i8(SDValue Op,
   for (int I : ShuffleMask)
     VTBLMask.push_back(DAG.getSignedConstant(I, DL, MVT::i32));
 
-  if (V2.getNode()->isUndef())
+  if (V2.getNode()->isUndefOrPoison())
     return DAG.getNode(ARMISD::VTBL1, DL, MVT::v8i8, V1,
                        DAG.getBuildVector(MVT::v8i8, DL, VTBLMask));
 
@@ -8684,8 +8684,9 @@ static SDValue LowerVECTOR_SHUFFLE_i1(SDValue Op, SelectionDAG &DAG,
   // fields in a register into 8 other arbitrary 2-bit fields!
   SDValue PredAsVector1 = PromoteMVEPredVector(dl, V1, VT, DAG);
   EVT NewVT = PredAsVector1.getValueType();
-  SDValue PredAsVector2 = V2.isUndef() ? DAG.getUNDEF(NewVT)
-                                       : PromoteMVEPredVector(dl, V2, VT, DAG);
+  SDValue PredAsVector2 = V2.isUndefOrPoison()
+                              ? DAG.getUNDEF(NewVT)
+                              : PromoteMVEPredVector(dl, V2, VT, DAG);
   assert(PredAsVector2.getValueType() == NewVT &&
          "Expected identical vector type in expanded i1 shuffle!");
 
@@ -8880,7 +8881,7 @@ static SDValue LowerVECTOR_SHUFFLE(SDValue Op, SelectionDAG &DAG,
           !isa<ConstantSDNode>(V1.getOperand(0))) {
         bool IsScalarToVector = true;
         for (unsigned i = 1, e = V1.getNumOperands(); i != e; ++i)
-          if (!V1.getOperand(i).isUndef()) {
+          if (!V1.getOperand(i).isUndefOrPoison()) {
             IsScalarToVector = false;
             break;
           }
@@ -8907,7 +8908,8 @@ static SDValue LowerVECTOR_SHUFFLE(SDValue Op, SelectionDAG &DAG,
     if (isVREVMask(ShuffleMask, VT, 16))
       return DAG.getNode(ARMISD::VREV16, dl, VT, V1);
 
-    if (ST->hasNEON() && V2->isUndef() && isSingletonVEXTMask(ShuffleMask, VT, Imm)) {
+    if (ST->hasNEON() && V2->isUndefOrPoison() &&
+        isSingletonVEXTMask(ShuffleMask, VT, Imm)) {
       return DAG.getNode(ARMISD::VEXT, dl, VT, V1, V1,
                          DAG.getConstant(Imm, dl, MVT::i32));
     }
@@ -8955,7 +8957,8 @@ static SDValue LowerVECTOR_SHUFFLE(SDValue Op, SelectionDAG &DAG,
     // ->
     //   concat(VZIP(v1, v2):0, :1)
     //
-    if (ST->hasNEON() && V1->getOpcode() == ISD::CONCAT_VECTORS && V2->isUndef()) {
+    if (ST->hasNEON() && V1->getOpcode() == ISD::CONCAT_VECTORS &&
+        V2->isUndefOrPoison()) {
       SDValue SubV1 = V1->getOperand(0);
       SDValue SubV2 = V1->getOperand(1);
       EVT SubVT = SubV1.getValueType();
@@ -9269,11 +9272,11 @@ static SDValue LowerCONCAT_VECTORS(SDValue Op, SelectionDAG &DAG,
   SDValue Val = DAG.getUNDEF(MVT::v2f64);
   SDValue Op0 = Op.getOperand(0);
   SDValue Op1 = Op.getOperand(1);
-  if (!Op0.isUndef())
+  if (!Op0.isUndefOrPoison())
     Val = DAG.getNode(ISD::INSERT_VECTOR_ELT, dl, MVT::v2f64, Val,
                       DAG.getNode(ISD::BITCAST, dl, MVT::f64, Op0),
                       DAG.getIntPtrConstant(0, dl));
-  if (!Op1.isUndef())
+  if (!Op1.isUndefOrPoison())
     Val = DAG.getNode(ISD::INSERT_VECTOR_ELT, dl, MVT::v2f64, Val,
                       DAG.getNode(ISD::BITCAST, dl, MVT::f64, Op1),
                       DAG.getIntPtrConstant(1, dl));
@@ -10315,7 +10318,7 @@ static SDValue LowerMLOAD(SDValue Op, SelectionDAG &DAG) {
   bool PassThruIsCastZero = (PassThru.getOpcode() == ISD::BITCAST ||
                              PassThru.getOpcode() == ARMISD::VECTOR_REG_CAST) &&
                             isZeroVector(PassThru->getOperand(0));
-  if (!PassThru.isUndef() && !PassThruIsCastZero)
+  if (!PassThru.isUndefOrPoison() && !PassThruIsCastZero)
     Combo = DAG.getNode(ISD::VSELECT, dl, VT, Mask, NewLoad, PassThru);
   return DAG.getMergeValues({Combo, NewLoad.getValue(1)}, dl);
 }
@@ -13535,7 +13538,7 @@ static SDValue PerformVSetCCToVCTPCombine(SDNode *N,
 
   // Check first operand is BuildVector of 0,1,2,...
   for (unsigned I = 0; I < VT.getVectorNumElements(); I++) {
-    if (!Op0.getOperand(I).isUndef() &&
+    if (!Op0.getOperand(I).isUndefOrPoison() &&
         !(isa<ConstantSDNode>(Op0.getOperand(I)) &&
           Op0.getConstantOperandVal(I) == I))
       return SDValue();
@@ -15399,7 +15402,7 @@ PerformARMBUILD_VECTORCombine(SDNode *N, TargetLowering::DAGCombinerInfo &DCI) {
       // Assume only bit cast to i32 will go away.
       if (Elt->getOperand(0).getValueType() == MVT::i32)
         ++NumOfBitCastedElts;
-    } else if (Elt.isUndef() || isa<ConstantSDNode>(Elt))
+    } else if (Elt.isUndefOrPoison() || isa<ConstantSDNode>(Elt))
       // Constants are statically casted, thus do not count them as
       // relevant operands.
       --NumOfRelevantElts;
@@ -15426,7 +15429,7 @@ PerformARMBUILD_VECTORCombine(SDNode *N, TargetLowering::DAGCombinerInfo &DCI) {
   SDLoc dl(N);
   for (unsigned Idx = 0 ; Idx < NumElts; ++Idx) {
     SDValue V = N->getOperand(Idx);
-    if (V.isUndef())
+    if (V.isUndefOrPoison())
       continue;
     if (V.getOpcode() == ISD::BITCAST &&
         V->getOperand(0).getValueType() == MVT::i32)
@@ -15494,7 +15497,7 @@ static SDValue PerformVECTOR_REG_CASTCombine(SDNode *N, SelectionDAG &DAG,
   if (Op.getValueType() == VT)
     return Op;
   // VECTOR_REG_CAST undef -> undef
-  if (Op.isUndef())
+  if (Op.isUndefOrPoison())
     return DAG.getUNDEF(VT);
 
   // VECTOR_REG_CAST(VECTOR_REG_CAST(x)) == VECTOR_REG_CAST(x)
@@ -15719,7 +15722,7 @@ PerformInsertSubvectorCombine(SDNode *N, TargetLowering::DAGCombinerInfo &DCI) {
     return SDValue();
 
   // Ignore widening patterns.
-  if (IdxVal == 0 && Vec.isUndef())
+  if (IdxVal == 0 && Vec.isUndefOrPoison())
     return SDValue();
 
   // Subvector must be half the width and an "aligned" insertion.
@@ -15750,7 +15753,8 @@ static SDValue PerformShuffleVMOVNCombine(ShuffleVectorSDNode *N,
                                           SelectionDAG &DAG) {
   SDValue Trunc = N->getOperand(0);
   EVT VT = Trunc.getValueType();
-  if (Trunc.getOpcode() != ARMISD::MVETRUNC || !N->getOperand(1).isUndef())
+  if (Trunc.getOpcode() != ARMISD::MVETRUNC ||
+      !N->getOperand(1).isUndefOrPoison())
     return SDValue();
 
   SDLoc DL(Trunc);
@@ -15794,7 +15798,7 @@ static SDValue PerformVECTOR_SHUFFLECombine(SDNode *N, SelectionDAG &DAG) {
     return SDValue();
   SDValue Concat0Op1 = Op0.getOperand(1);
   SDValue Concat1Op1 = Op1.getOperand(1);
-  if (!Concat0Op1.isUndef() || !Concat1Op1.isUndef())
+  if (!Concat0Op1.isUndefOrPoison() || !Concat1Op1.isUndefOrPoison())
     return SDValue();
   // Skip the transformation if any of the types are illegal.
   const TargetLowering &TLI = DAG.getTargetLoweringInfo();
@@ -16715,7 +16719,7 @@ static SDValue PerformSplittingToNarrowingStores(StoreSDNode *St,
   auto isVMOVNShuffle = [&](ShuffleVectorSDNode *SVN, bool Rev) {
     ArrayRef<int> M = SVN->getMask();
     unsigned NumElts = ToVT.getVectorNumElements();
-    if (SVN->getOperand(1).isUndef())
+    if (SVN->getOperand(1).isUndefOrPoison())
       NumElts /= 2;
 
     unsigned Off0 = Rev ? NumElts : 0;
@@ -17404,7 +17408,7 @@ static SDValue PerformVECREDUCE_ADDCombine(SDNode *N, SelectionDAG &DAG,
 static SDValue PerformReduceShuffleCombine(SDNode *N, SelectionDAG &DAG) {
   unsigned VecOp = N->getOperand(0).getValueType().isVector() ? 0 : 2;
   auto *Shuf = dyn_cast<ShuffleVectorSDNode>(N->getOperand(VecOp));
-  if (!Shuf || !Shuf->getOperand(1).isUndef())
+  if (!Shuf || !Shuf->getOperand(1).isUndefOrPoison())
     return SDValue();
 
   // Check all elements are used once in the mask.
@@ -17420,7 +17424,8 @@ static SDValue PerformReduceShuffleCombine(SDNode *N, SelectionDAG &DAG) {
 
   if (N->getNumOperands() != VecOp + 1) {
     auto *Shuf2 = dyn_cast<ShuffleVectorSDNode>(N->getOperand(VecOp + 1));
-    if (!Shuf2 || !Shuf2->getOperand(1).isUndef() || Shuf2->getMask() != Mask)
+    if (!Shuf2 || !Shuf2->getOperand(1).isUndefOrPoison() ||
+        Shuf2->getMask() != Mask)
       return SDValue();
   }
 
@@ -17443,9 +17448,9 @@ static SDValue PerformVMOVNCombine(SDNode *N,
   // VMOVNT a undef -> a
   // VMOVNB a undef -> a
   // VMOVNB undef a -> a
-  if (Op1->isUndef())
+  if (Op1->isUndefOrPoison())
     return Op0;
-  if (Op0->isUndef() && !IsTop)
+  if (Op0->isUndefOrPoison() && !IsTop)
     return Op1;
 
   // VMOVNt(c, VQMOVNb(a, b)) => VQMOVNt(c, b)
@@ -17500,7 +17505,8 @@ static SDValue PerformVQDMULHCombine(SDNode *N,
   auto *Shuf1 = dyn_cast<ShuffleVectorSDNode>(RHS);
   // Turn VQDMULH(shuffle, shuffle) -> shuffle(VQDMULH)
   if (Shuf0 && Shuf1 && Shuf0->getMask().equals(Shuf1->getMask()) &&
-      LHS.getOperand(1).isUndef() && RHS.getOperand(1).isUndef() &&
+      LHS.getOperand(1).isUndefOrPoison() &&
+      RHS.getOperand(1).isUndefOrPoison() &&
       (LHS.hasOneUse() || RHS.hasOneUse() || LHS == RHS)) {
     SDLoc DL(N);
     SDValue NewBinOp = DCI.DAG.getNode(N->getOpcode(), DL, VT,
@@ -18658,7 +18664,7 @@ SDValue ARMTargetLowering::PerformMVETruncCombine(
   SDLoc DL(N);
 
   // MVETrunc(Undef, Undef) -> Undef
-  if (all_of(N->ops(), [](SDValue Op) { return Op.isUndef(); }))
+  if (all_of(N->ops(), [](SDValue Op) { return Op.isUndefOrPoison(); }))
     return DAG.getUNDEF(VT);
 
   // MVETrunc(MVETrunc a b, MVETrunc c, d) -> MVETrunc
