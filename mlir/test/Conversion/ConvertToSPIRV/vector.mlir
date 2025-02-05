@@ -22,6 +22,16 @@ func.func @extract_size1_vector(%arg0 : vector<1xf32>) -> f32 {
 
 // -----
 
+// CHECK-LABEL: @extract_poison_idx
+//       CHECK:   %[[R:.+]] = spirv.Undef : f32
+//       CHECK:   spirv.ReturnValue %[[R]] : f32
+func.func @extract_poison_idx(%arg0 : vector<4xf32>) -> f32 {
+  %0 = vector.extract %arg0[-1] : f32 from vector<4xf32>
+  return %0: f32
+}
+
+// -----
+
 // CHECK-LABEL: @insert
 //  CHECK-SAME: %[[V:.*]]: vector<4xf32>, %[[S:.*]]: f32
 //       CHECK:   spirv.CompositeInsert %[[S]], %[[V]][2 : i32] : f32 into vector<4xf32>
@@ -47,6 +57,16 @@ func.func @insert_index_vector(%arg0 : vector<4xindex>, %arg1: index) -> vector<
 func.func @insert_size1_vector(%arg0 : vector<1xf32>, %arg1: f32) -> vector<1xf32> {
   %1 = vector.insert %arg1, %arg0[0] : f32 into vector<1xf32>
   return %1 : vector<1xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @insert_poison_idx
+//       CHECK:   %[[R:.+]] = spirv.Undef : vector<4xf32>
+//       CHECK:   spirv.ReturnValue %[[R]] : vector<4xf32>
+func.func @insert_poison_idx(%arg0 : vector<4xf32>, %arg1: f32) -> vector<4xf32> {
+  %1 = vector.insert %arg1, %arg0[-1] : f32 into vector<4xf32>
+  return %1: vector<4xf32>
 }
 
 // -----

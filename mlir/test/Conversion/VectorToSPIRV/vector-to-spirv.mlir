@@ -175,9 +175,11 @@ func.func @extract(%arg0 : vector<2xf32>) -> (vector<1xf32>, f32) {
 
 // -----
 
+// CHECK-LABEL: @extract_poison_idx
+//  CHECK-SAME: %[[ARG0:.+]]: vector<4xf32>
+//       CHECK:   %[[R:.+]] = vector.extract %[[ARG0]][-1] : f32 from vector<4xf32>
+//       CHECK:   return %[[R]] : f32
 func.func @extract_poison_idx(%arg0 : vector<4xf32>) -> f32 {
-  // CHECK: %[[ZERO:.+]] = spirv.Constant 0.000000e+00
-  // CHECK: return %[[ZERO]]
   %0 = vector.extract %arg0[-1] : f32 from vector<4xf32>
   return %0: f32
 }
@@ -285,8 +287,9 @@ func.func @insert(%arg0 : vector<4xf32>, %arg1: f32) -> vector<4xf32> {
 // -----
 
 // CHECK-LABEL: @insert_poison_idx
-// CHECK: %[[ZERO:.+]] = spirv.Constant dense<0.000000e+00>
-// CHECK: return %[[ZERO]]
+//  CHECK-SAME: %[[V:.*]]: vector<4xf32>, %[[S:.*]]: f32
+//       CHECK:   %[[R:.*]] = vector.insert %[[S]], %[[V]] [-1] : f32 into vector<4xf32>
+//       CHECK:   return %[[R]] : vector<4xf32>
 func.func @insert_poison_idx(%arg0 : vector<4xf32>, %arg1: f32) -> vector<4xf32> {
   %1 = vector.insert %arg1, %arg0[-1] : f32 into vector<4xf32>
   return %1: vector<4xf32>
