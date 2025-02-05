@@ -1850,7 +1850,8 @@ bool RISCVFrameLowering::assignCalleeSavedSpillSlots(
   if (RVFI->isPushable(MF)) {
     // Allocate a fixed object that covers all the registers that are pushed.
     if (unsigned PushedRegs = RVFI->getRVPushRegs()) {
-      int64_t PushedRegsBytes = static_cast<int64_t>(PushedRegs) * (STI.getXLen() / 8);
+      int64_t PushedRegsBytes =
+          static_cast<int64_t>(PushedRegs) * (STI.getXLen() / 8);
       MFI.CreateFixedSpillStackObject(PushedRegsBytes, -PushedRegsBytes);
     }
   } else if (int LibCallRegs = getLibCallID(MF, CSI) + 1) {
