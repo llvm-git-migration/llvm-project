@@ -22,19 +22,12 @@ static inline void __kmp_node_deref(kmp_info_t *thread, kmp_depnode_t *node) {
   if (!node)
     return;
 
-#if KMP_DEBUG
-  if (node->dn.on_stack && node->dn.on_stack != thread)
-    fprintf (stderr, "on-stack depnode moved from thread %p to thread %p\n",
-             node->dn.on_stack, thread);
-#endif
-
   kmp_int32 n = KMP_ATOMIC_DEC(&node->dn.nrefs) - 1;
   KMP_DEBUG_ASSERT(n >= 0);
   if (n == 0) {
 #if USE_ITT_BUILD && USE_ITT_NOTIFY
     __itt_sync_destroy(node);
 #endif
-    KMP_DEBUG_ASSERT(!node->dn.on_stack);
     KMP_ASSERT(node->dn.nrefs == 0);
 #if USE_FAST_MEMORY
     __kmp_fast_free(thread, node);
