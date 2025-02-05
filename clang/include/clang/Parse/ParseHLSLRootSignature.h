@@ -89,12 +89,12 @@ public:
                       const SmallVector<RootSignatureToken> &Tokens,
                       DiagnosticsEngine &Diags);
 
-  // Iterates over the provided tokens and constructs the in-memory
-  // representations of the RootElements.
-  //
-  // The return value denotes if there was a failure and the method will
-  // return on the first encountered failure, or, return false if it
-  // can sucessfully reach the end of the tokens.
+  /// Iterates over the provided tokens and constructs the in-memory
+  /// representations of the RootElements.
+  ///
+  /// The return value denotes if there was a failure and the method will
+  /// return on the first encountered failure, or, return false if it
+  /// can sucessfully reach the end of the tokens.
   bool Parse();
 
 private:
@@ -103,14 +103,14 @@ private:
   bool ParseDescriptorTable();
   bool ParseDescriptorTableClause();
 
-  // Helper dispatch method
-  //
-  // These will switch on the Variant kind to dispatch to the respective Parse
-  // method and store the parsed value back into Ref.
-  //
-  // It is helpful to have a generalized dispatch method so that when we need
-  // to parse multiple optional parameters in any order, we can invoke this
-  // method
+  /// Helper dispatch method
+  ///
+  /// These will switch on the Variant kind to dispatch to the respective Parse
+  /// method and store the parsed value back into Ref.
+  ///
+  /// It is helpful to have a generalized dispatch method so that when we need
+  /// to parse multiple optional parameters in any order, we can invoke this
+  /// method
   bool ParseParam(llvm::hlsl::rootsig::ParamType Ref);
 
   // Parse as many optional parameters as possible in any order
@@ -134,39 +134,39 @@ private:
   ParseDescriptorRangeFlags(llvm::hlsl::rootsig::DescriptorRangeFlags *Enum);
   bool ParseShaderVisibility(llvm::hlsl::rootsig::ShaderVisibility *Enum);
 
-  // Increment the token iterator if we have not reached the end.
-  // Return value denotes if we were already at the last token.
+  /// Increment the token iterator if we have not reached the end.
+  /// Return value denotes if we were already at the last token.
   bool ConsumeNextToken();
 
-  // Attempt to retrieve the next token, if TokenKind is invalid then there was
-  // no next token.
+  /// Attempt to retrieve the next token, if TokenKind is invalid then there was
+  /// no next token.
   RootSignatureToken PeekNextToken();
 
-  // Is the current token one of the expected kinds
+  /// Is the current token one of the expected kinds
   bool EnsureExpectedToken(TokenKind AnyExpected);
   bool EnsureExpectedToken(ArrayRef<TokenKind> AnyExpected);
 
-  // Peek if the next token is of the expected kind.
-  //
-  // Return value denotes if it failed to match the expected kind, either it is
-  // the end of the stream or it didn't match any of the expected kinds.
+  /// Peek if the next token is of the expected kind.
+  ///
+  /// Return value denotes if it failed to match the expected kind, either it is
+  /// the end of the stream or it didn't match any of the expected kinds.
   bool PeekExpectedToken(TokenKind Expected);
   bool PeekExpectedToken(ArrayRef<TokenKind> AnyExpected);
 
-  // Consume the next token and report an error if it is not of the expected
-  // kind.
-  //
-  // Return value denotes if it failed to match the expected kind, either it is
-  // the end of the stream or it didn't match any of the expected kinds.
+  /// Consume the next token and report an error if it is not of the expected
+  /// kind.
+  ///
+  /// Return value denotes if it failed to match the expected kind, either it is
+  /// the end of the stream or it didn't match any of the expected kinds.
   bool ConsumeExpectedToken(TokenKind Expected);
   bool ConsumeExpectedToken(ArrayRef<TokenKind> AnyExpected);
 
-  // Peek if the next token is of the expected kind and if it is then consume
-  // it.
-  //
-  // Return value denotes if it failed to match the expected kind, either it is
-  // the end of the stream or it didn't match any of the expected kinds. It will
-  // not report an error if there isn't a match.
+  /// Peek if the next token is of the expected kind and if it is then consume
+  /// it.
+  ///
+  /// Return value denotes if it failed to match the expected kind, either it is
+  /// the end of the stream or it didn't match any of the expected kinds. It
+  /// will not report an error if there isn't a match.
   bool TryConsumeExpectedToken(TokenKind Expected);
   bool TryConsumeExpectedToken(ArrayRef<TokenKind> Expected);
 
