@@ -283,8 +283,8 @@ bool RootSignatureParser::ParseRootElement(bool First) {
     return ParseDescriptorTable();
   default:
     llvm_unreachable("Switch for an expected token was not provided");
-    return true;
   }
+  return true;
 }
 
 bool RootSignatureParser::ParseDescriptorTable() {
@@ -349,7 +349,6 @@ bool RootSignatureParser::ParseDescriptorTableClause() {
     break;
   default:
     llvm_unreachable("Switch for an expected token was not provided");
-    return true;
   }
   Clause.SetDefaultFlags();
 
@@ -474,7 +473,6 @@ bool RootSignatureParser::ParseRegister(Register *Register) {
     break;
   default:
     llvm_unreachable("Switch for an expected token was not provided");
-    return true;
   }
 
   Register->Number = CurTok->NumLiteral.getInt().getExtValue();
