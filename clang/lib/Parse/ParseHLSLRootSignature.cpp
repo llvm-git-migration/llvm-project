@@ -386,7 +386,7 @@ bool RootSignatureParser::ParseParam(ParamType Ref) {
 }
 
 bool RootSignatureParser::ParseOptionalParams(
-    llvm::SmallDenseMap<TokenKind, ParamType> RefMap) {
+    llvm::SmallDenseMap<TokenKind, ParamType> &RefMap) {
   SmallVector<TokenKind> ParamKeywords;
   for (auto RefPair : RefMap)
     ParamKeywords.push_back(RefPair.first);
@@ -461,7 +461,7 @@ bool RootSignatureParser::ParseRegister(Register *Register) {
 
 template <bool AllowZero, typename EnumType>
 bool RootSignatureParser::ParseEnum(
-    llvm::SmallDenseMap<TokenKind, EnumType> EnumMap, EnumType *Enum) {
+    llvm::SmallDenseMap<TokenKind, EnumType> &EnumMap, EnumType *Enum) {
   SmallVector<TokenKind> EnumToks;
   if (AllowZero)
     EnumToks.push_back(TokenKind::int_literal); //  '0' is a valid flag value
@@ -496,7 +496,7 @@ bool RootSignatureParser::ParseEnum(
 
 template <typename FlagType>
 bool RootSignatureParser::ParseFlags(
-    llvm::SmallDenseMap<TokenKind, FlagType> FlagMap, FlagType *Flags) {
+    llvm::SmallDenseMap<TokenKind, FlagType> &FlagMap, FlagType *Flags) {
   // Override the default value to 0 so that we can correctly 'or' the values
   *Flags = FlagType(0);
 
