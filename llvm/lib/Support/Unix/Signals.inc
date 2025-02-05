@@ -80,7 +80,8 @@
 
 using namespace llvm;
 
-static void SignalHandler(int Sig);     // defined below.
+static void SignalHandler(int Sig, siginfo_t *Info,
+                          void *Context); // defined below.
 static void InfoSignalHandler(int Sig); // defined below.
 
 using SignalHandlerFunctionType = void (*)();
@@ -313,8 +314,8 @@ static void RegisterHandlers() { // Not signal-safe.
 
     switch (Kind) {
     case SignalKind::IsKill:
-      NewHandler.sa_handler = SignalHandler;
-      NewHandler.sa_flags = SA_NODEFER | SA_RESETHAND | SA_ONSTACK;
+      NewHandler.sa_sigaction = SignalHandler;
+      NewHandler.sa_flags = SA_NODEFER | SA_RESETHAND | SA_ONSTACK | SA_SIGINFO;
       break;
     case SignalKind::IsInfo:
       NewHandler.sa_handler = InfoSignalHandler;
@@ -370,7 +371,7 @@ void sys::CleanupOnSignal(uintptr_t Context) {
 }
 
 // The signal handler that runs.
-static void SignalHandler(int Sig) {
+static void SignalHandler(int Sig, siginfo_t *Info, void *Context) {
   // Restore the signal behavior to default, so that the program actually
   // crashes when we return and the signal reissues.  This also ensures that if
   // we crash in our signal handler that the program will terminate immediately
@@ -400,6 +401,11 @@ static void SignalHandler(int Sig) {
       return;
     }
   }
+
+  // Signal sent from another process, do not assume that continuing the
+  // execution would re-raise it.
+  if (Info->si_pid != getpid())
+    raise(Sig);
 
   // Otherwise if it is a fault (like SEGV) run any handler.
   llvm::sys::RunSignalHandlers();
@@ -468,8 +474,7 @@ void llvm::sys::AddSignalHandler(sys::SignalHandlerCallback FnPtr,
 
 #if ENABLE_BACKTRACES && defined(HAVE_BACKTRACE) &&                            \
     (defined(__linux__) || defined(__FreeBSD__) ||                             \
-     defined(__FreeBSD_kernel__) || defined(__NetBSD__) ||                     \
-     defined(__OpenBSD__) || defined(__DragonFly__))
+     defined(__FreeBSD_kernel__) || defined(__NetBSD__))
 struct DlIteratePhdrData {
   void **StackTrace;
   int depth;
