@@ -801,6 +801,22 @@ static void computeKnownBitsFromCond(const Value *V, Value *Cond,
 
   if (auto *Cmp = dyn_cast<ICmpInst>(Cond))
     computeKnownBitsFromICmpCond(V, Cmp, Known, SQ, Invert);
+
+  if (match(Cond, m_Not(m_Value(Cond))))
+    Invert = !Invert;
+
+  if (match(Cond, m_Trunc(m_Specific(V)))) {
+    KnownBits DstKnown(1);
+    if (Invert) {
+      DstKnown.setAllZero();
+    } else {
+      DstKnown.setAllOnes();
+    }
+    if (cast<TruncInst>(Cond)->hasNoUnsignedWrap())
+      Known = Known.unionWith(DstKnown.zext(Known.getBitWidth()));
+    else
+      Known = Known.unionWith(DstKnown.anyext(Known.getBitWidth()));
+  }
 }
 
 void llvm::computeKnownBitsFromContext(const Value *V, KnownBits &Known,
@@ -10272,6 +10288,9 @@ void llvm::findValuesAffectedByCondition(
                                                            m_Value()))) {
       // Handle patterns that computeKnownFPClass() support.
       AddAffected(A);
+    } else if (!IsAssume && match(V, m_CombineOr(m_Trunc(m_Value(X)),
+                                                 m_Not(m_Trunc(m_Value(X)))))) {
+      AddAffected(X);
     }
   }
 }
