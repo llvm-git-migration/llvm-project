@@ -145,6 +145,14 @@ ConstantRange ConstantRange::makeAllowedICmpRegion(CmpInst::Predicate Pred,
   }
 }
 
+ConstantRange ConstantRange::makeAsymmetricICmpRegion(CmpPredicate Pred,
+                                                      const ConstantRange &CR) {
+  if (Pred.hasSameSign() && ICmpInst::isRelational(Pred))
+    return makeAllowedICmpRegion(Pred, CR).unionWith(makeAllowedICmpRegion(
+        ICmpInst::getFlippedSignednessPredicate(Pred), CR));
+  return makeAllowedICmpRegion(Pred, CR);
+}
+
 ConstantRange ConstantRange::makeSatisfyingICmpRegion(CmpInst::Predicate Pred,
                                                       const ConstantRange &CR) {
   // Follows from De-Morgan's laws:
