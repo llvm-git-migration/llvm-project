@@ -156,10 +156,19 @@ public:
   bool init();
 
   // Returns the graph node for 'id'.
-  Node *getNode(unsigned id);
+  const Node *getNode(unsigned id) const;
+  Node *getNode(unsigned id) {
+    return const_cast<Node *>(
+        static_cast<const MemRefDependenceGraph *>(this)->getNode(id));
+  }
+  bool hasNode(unsigned id) const { return nodes.contains(id); }
 
   // Returns the graph node for 'forOp'.
-  Node *getForOpNode(AffineForOp forOp);
+  const Node *getForOpNode(AffineForOp forOp) const;
+  Node *getForOpNode(AffineForOp forOp) {
+    return const_cast<Node *>(
+        static_cast<const MemRefDependenceGraph *>(this)->getForOpNode(forOp));
+  }
 
   // Adds a node with 'op' to the graph and returns its unique identifier.
   unsigned addNode(Operation *op);
@@ -169,12 +178,12 @@ public:
 
   // Returns true if node 'id' writes to any memref which escapes (or is an
   // argument to) the block. Returns false otherwise.
-  bool writesToLiveInOrEscapingMemrefs(unsigned id);
+  bool writesToLiveInOrEscapingMemrefs(unsigned id) const;
 
   // Returns true iff there is an edge from node 'srcId' to node 'dstId' which
   // is for 'value' if non-null, or for any value otherwise. Returns false
   // otherwise.
-  bool hasEdge(unsigned srcId, unsigned dstId, Value value = nullptr);
+  bool hasEdge(unsigned srcId, unsigned dstId, Value value = nullptr) const;
 
   // Adds an edge from node 'srcId' to node 'dstId' for 'value'.
   void addEdge(unsigned srcId, unsigned dstId, Value value);
@@ -185,23 +194,25 @@ public:
   // Returns true if there is a path in the dependence graph from node 'srcId'
   // to node 'dstId'. Returns false otherwise. `srcId`, `dstId`, and the
   // operations that the edges connected are expected to be from the same block.
-  bool hasDependencePath(unsigned srcId, unsigned dstId);
+  bool hasDependencePath(unsigned srcId, unsigned dstId) const;
 
   // Returns the input edge count for node 'id' and 'memref' from src nodes
   // which access 'memref' with a store operation.
-  unsigned getIncomingMemRefAccesses(unsigned id, Value memref);
+  unsigned getIncomingMemRefAccesses(unsigned id, Value memref) const;
 
   // Returns the output edge count for node 'id' and 'memref' (if non-null),
   // otherwise returns the total output edge count from node 'id'.
-  unsigned getOutEdgeCount(unsigned id, Value memref = nullptr);
+  unsigned getOutEdgeCount(unsigned id, Value memref = nullptr) const;
 
   /// Return all nodes which define SSA values used in node 'id'.
-  void gatherDefiningNodes(unsigned id, DenseSet<unsigned> &definingNodes);
+  void gatherDefiningNodes(unsigned id,
+                           DenseSet<unsigned> &definingNodes) const;
 
   // Computes and returns an insertion point operation, before which the
   // the fused <srcId, dstId> loop nest can be inserted while preserving
   // dependences. Returns nullptr if no such insertion point is found.
-  Operation *getFusedLoopNestInsertionPoint(unsigned srcId, unsigned dstId);
+  Operation *getFusedLoopNestInsertionPoint(unsigned srcId,
+                                            unsigned dstId) const;
 
   // Updates edge mappings from node 'srcId' to node 'dstId' after fusing them,
   // taking into account that:
