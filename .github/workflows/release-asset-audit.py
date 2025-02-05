@@ -80,7 +80,7 @@ def main():
 
     for release in repo.get_releases():
         print("Release:", release.title)
-        uploaders = _get_uploaders(release.title)
+        uploaders = _get_uploaders(_get_major_release_version(release.title))
         for asset in release.get_assets():
             created_at = asset.created_at
             updated_at = (
