@@ -196,3 +196,31 @@ func.func @group_fmul(%value: f32) -> f32 {
   %0 = spirv.KHR.GroupFMul <Workgroup> <Reduce> %value : f32
   return %0: f32
 }
+
+// -----
+
+//===----------------------------------------------------------------------===//
+// spirv.GroupNonUniformBallotBitCount 
+//===----------------------------------------------------------------------===//
+
+func.func @group_non_uniform_ballot_bit_count(%value: vector<4xi32>) -> i32 {
+  // CHECK: {{%.*}} = spirv.GroupNonUniformBallotBitCount <Subgroup> <Reduce> {{%.*}} : vector<4xi32> -> i32
+  %0 = spirv.GroupNonUniformBallotBitCount <Subgroup> <Reduce> %value : vector<4xi32> -> i32
+  return %0: i32
+}
+
+// -----
+
+func.func @group_non_uniform_ballot_bit_count_wrong_scope(%value: vector<4xi32>) -> i32 {
+  // expected-error @+1 {{execution_scope must be Scope of value Subgroup}}
+  %0 = spirv.GroupNonUniformBallotBitCount <Workgroup> <Reduce> %value : vector<4xi32> -> i32
+  return %0: i32
+}
+
+// -----
+
+func.func @group_non_uniform_ballot_bit_count_wrong_operation(%value: vector<4xi32>) -> i32 {
+  // expected-error @+1 {{group_operation must be GroupOperation of value Reduce}}
+  %0 = spirv.GroupNonUniformBallotBitCount <Subgroup> <InclusiveScan> %value : vector<4xi32> -> i32
+  return %0: i32
+}
