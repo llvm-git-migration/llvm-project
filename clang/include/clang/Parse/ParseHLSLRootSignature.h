@@ -28,8 +28,6 @@
 namespace clang {
 namespace hlsl {
 
-namespace rs = llvm::hlsl::root_signature;
-
 struct RootSignatureToken {
   enum Kind {
 #define TOK(X) X,
@@ -87,7 +85,7 @@ private:
 
 class RootSignatureParser {
 public:
-  RootSignatureParser(SmallVector<rs::RootElement> &Elements,
+  RootSignatureParser(SmallVector<llvm::hlsl::rootsig::RootElement> &Elements,
                       const SmallVector<RootSignatureToken> &Tokens,
                       DiagnosticsEngine &Diags);
 
@@ -113,16 +111,17 @@ private:
   // It is helpful to have a generalized dispatch method so that when we need
   // to parse multiple optional parameters in any order, we can invoke this
   // method
-  bool ParseParam(rs::ParamType Ref);
+  bool ParseParam(llvm::hlsl::rootsig::ParamType Ref);
 
   // Parse as many optional parameters as possible in any order
-  bool
-  ParseOptionalParams(llvm::SmallDenseMap<TokenKind, rs::ParamType> RefMap);
+  bool ParseOptionalParams(
+      llvm::SmallDenseMap<TokenKind, llvm::hlsl::rootsig::ParamType> RefMap);
 
   // Common parsing helpers
-  bool ParseRegister(rs::Register *Reg);
+  bool ParseRegister(llvm::hlsl::rootsig::Register *Reg);
   bool ParseUInt(uint32_t *X);
-  bool ParseDescriptorRangeOffset(rs::DescriptorRangeOffset *X);
+  bool
+  ParseDescriptorRangeOffset(llvm::hlsl::rootsig::DescriptorRangeOffset *X);
 
   // Various flags/enum parsing helpers
   template <bool AllowZero = false, typename EnumType>
@@ -131,8 +130,9 @@ private:
   template <typename FlagType>
   bool ParseFlags(llvm::SmallDenseMap<TokenKind, FlagType> EnumMap,
                   FlagType *Enum);
-  bool ParseDescriptorRangeFlags(rs::DescriptorRangeFlags *Enum);
-  bool ParseShaderVisibility(rs::ShaderVisibility *Enum);
+  bool
+  ParseDescriptorRangeFlags(llvm::hlsl::rootsig::DescriptorRangeFlags *Enum);
+  bool ParseShaderVisibility(llvm::hlsl::rootsig::ShaderVisibility *Enum);
 
   // Increment the token iterator if we have not reached the end.
   // Return value denotes if we were already at the last token.
@@ -171,7 +171,7 @@ private:
   bool TryConsumeExpectedToken(ArrayRef<TokenKind> Expected);
 
 private:
-  SmallVector<rs::RootElement> &Elements;
+  SmallVector<llvm::hlsl::rootsig::RootElement> &Elements;
   SmallVector<RootSignatureToken>::const_iterator CurTok;
   SmallVector<RootSignatureToken>::const_iterator LastTok;
 
