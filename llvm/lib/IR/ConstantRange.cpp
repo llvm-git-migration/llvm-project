@@ -95,54 +95,60 @@ KnownBits ConstantRange::toKnownBits() const {
   return Known;
 }
 
-ConstantRange ConstantRange::makeAllowedICmpRegion(CmpInst::Predicate Pred,
+ConstantRange ConstantRange::makeAllowedICmpRegion(CmpPredicate Pred,
                                                    const ConstantRange &CR) {
   if (CR.isEmptySet())
     return CR;
 
-  uint32_t W = CR.getBitWidth();
-  switch (Pred) {
-  default:
-    llvm_unreachable("Invalid ICmp predicate to makeAllowedICmpRegion()");
-  case CmpInst::ICMP_EQ:
-    return CR;
-  case CmpInst::ICMP_NE:
-    if (CR.isSingleElement())
-      return ConstantRange(CR.getUpper(), CR.getLower());
-    return getFull(W);
-  case CmpInst::ICMP_ULT: {
-    APInt UMax(CR.getUnsignedMax());
-    if (UMax.isMinValue())
-      return getEmpty(W);
-    return ConstantRange(APInt::getMinValue(W), std::move(UMax));
-  }
-  case CmpInst::ICMP_SLT: {
-    APInt SMax(CR.getSignedMax());
-    if (SMax.isMinSignedValue())
-      return getEmpty(W);
-    return ConstantRange(APInt::getSignedMinValue(W), std::move(SMax));
-  }
-  case CmpInst::ICMP_ULE:
-    return getNonEmpty(APInt::getMinValue(W), CR.getUnsignedMax() + 1);
-  case CmpInst::ICMP_SLE:
-    return getNonEmpty(APInt::getSignedMinValue(W), CR.getSignedMax() + 1);
-  case CmpInst::ICMP_UGT: {
-    APInt UMin(CR.getUnsignedMin());
-    if (UMin.isMaxValue())
-      return getEmpty(W);
-    return ConstantRange(std::move(UMin) + 1, APInt::getZero(W));
-  }
-  case CmpInst::ICMP_SGT: {
-    APInt SMin(CR.getSignedMin());
-    if (SMin.isMaxSignedValue())
-      return getEmpty(W);
-    return ConstantRange(std::move(SMin) + 1, APInt::getSignedMinValue(W));
-  }
-  case CmpInst::ICMP_UGE:
-    return getNonEmpty(CR.getUnsignedMin(), APInt::getZero(W));
-  case CmpInst::ICMP_SGE:
-    return getNonEmpty(CR.getSignedMin(), APInt::getSignedMinValue(W));
-  }
+  auto CheckPred = [CR](CmpInst::Predicate P) {
+    uint32_t W = CR.getBitWidth();
+    switch (P) {
+    default:
+      llvm_unreachable("Invalid ICmp predicate to makeAllowedICmpRegion()");
+    case CmpInst::ICMP_EQ:
+      return CR;
+    case CmpInst::ICMP_NE:
+      if (CR.isSingleElement())
+        return ConstantRange(CR.getUpper(), CR.getLower());
+      return getFull(W);
+    case CmpInst::ICMP_ULT: {
+      APInt UMax(CR.getUnsignedMax());
+      if (UMax.isMinValue())
+        return getEmpty(W);
+      return ConstantRange(APInt::getMinValue(W), std::move(UMax));
+    }
+    case CmpInst::ICMP_SLT: {
+      APInt SMax(CR.getSignedMax());
+      if (SMax.isMinSignedValue())
+        return getEmpty(W);
+      return ConstantRange(APInt::getSignedMinValue(W), std::move(SMax));
+    }
+    case CmpInst::ICMP_ULE:
+      return getNonEmpty(APInt::getMinValue(W), CR.getUnsignedMax() + 1);
+    case CmpInst::ICMP_SLE:
+      return getNonEmpty(APInt::getSignedMinValue(W), CR.getSignedMax() + 1);
+    case CmpInst::ICMP_UGT: {
+      APInt UMin(CR.getUnsignedMin());
+      if (UMin.isMaxValue())
+        return getEmpty(W);
+      return ConstantRange(std::move(UMin) + 1, APInt::getZero(W));
+    }
+    case CmpInst::ICMP_SGT: {
+      APInt SMin(CR.getSignedMin());
+      if (SMin.isMaxSignedValue())
+        return getEmpty(W);
+      return ConstantRange(std::move(SMin) + 1, APInt::getSignedMinValue(W));
+    }
+    case CmpInst::ICMP_UGE:
+      return getNonEmpty(CR.getUnsignedMin(), APInt::getZero(W));
+    case CmpInst::ICMP_SGE:
+      return getNonEmpty(CR.getSignedMin(), APInt::getSignedMinValue(W));
+    }
+  };
+  if (Pred.hasSameSign())
+    return CheckPred(Pred).unionWith(
+        CheckPred(ICmpInst::getFlippedSignednessPredicate(Pred)));
+  return CheckPred(Pred);
 }
 
 ConstantRange ConstantRange::makeSatisfyingICmpRegion(CmpInst::Predicate Pred,
