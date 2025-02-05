@@ -131,6 +131,11 @@ public:
   ///                   MCDisassembler::SoftFail if the instruction was
   ///                                            disassemblable but invalid,
   ///                   MCDisassembler::Fail if the instruction was invalid.
+  ///
+  /// Note: to avoid potential issues caused by the field
+  /// `MCDisassembler::CommentStream` being set nullptr (its default
+  /// value), an implementation of this method should make sure to set
+  /// `CommentStream = &CStream;`.
   virtual DecodeStatus getInstruction(MCInst &Instr, uint64_t &Size,
                                       ArrayRef<uint8_t> Bytes, uint64_t Address,
                                       raw_ostream &CStream) const = 0;
