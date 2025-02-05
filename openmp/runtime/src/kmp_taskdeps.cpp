@@ -48,6 +48,9 @@ static void __kmp_init_node(kmp_depnode_t *node) {
 #if USE_ITT_BUILD && USE_ITT_NOTIFY
   __itt_sync_create(node, "OMP task dep node", NULL, 0);
 #endif
+#if KMP_DEBUG
+  node->dn.on_stack = NULL;
+#endif
 }
 
 static inline kmp_depnode_t *__kmp_node_ref(kmp_depnode_t *node) {
@@ -1008,6 +1011,9 @@ void __kmpc_omp_taskwait_deps_51(ident_t *loc_ref, kmp_int32 gtid,
 
   kmp_depnode_t node = {0};
   __kmp_init_node(&node);
+#if KMP_DEBUG
+  node.dn.on_stack = thread;
+#endif
 
   if (!__kmp_check_deps(gtid, &node, NULL, &current_task->td_dephash,
                         DEP_BARRIER, ndeps, dep_list, ndeps_noalias,
@@ -1033,8 +1039,10 @@ void __kmpc_omp_taskwait_deps_51(ident_t *loc_ref, kmp_int32 gtid,
   // Wait until the last __kmp_release_deps is finished before we free the
   // current stack frame holding the "node" variable; once its nrefs count
   // reaches 1, we're sure nobody else can try to reference it again.
-  while (node.dn.nrefs > 1)
+  kmp_int32 nrefs;
+  while ((nrefs = node.dn.nrefs) > 1)
     KMP_YIELD(TRUE);
+  KMP_DEBUG_ASSERT(nrefs == 1);
 
 #if OMPT_SUPPORT
   __ompt_taskwait_dep_finish(current_task, taskwait_task_data);
