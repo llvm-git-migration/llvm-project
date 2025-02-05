@@ -912,7 +912,8 @@ static PHINode *FindLoopCounter(Loop *L, BasicBlock *ExitingBB,
 /// is taken ExitCount times.
 static Value *genLoopLimit(PHINode *IndVar, BasicBlock *ExitingBB,
                            const SCEV *ExitCount, bool UsePostInc, Loop *L,
-                           SCEVExpander &Rewriter, ScalarEvolution *SE) {
+                           SCEVExpander &Rewriter, ScalarEvolution *SE,
+                           const TargetTransformInfo *TTI) {
   assert(isLoopCounter(IndVar, L, SE));
   assert(ExitCount->getType()->isIntegerTy() && "exit count must be integer");
   const SCEVAddRecExpr *AR = cast<SCEVAddRecExpr>(SE->getSCEV(IndVar));
@@ -935,6 +936,9 @@ static Value *genLoopLimit(PHINode *IndVar, BasicBlock *ExitingBB,
   const SCEV *IVLimit = ARBase->evaluateAtIteration(ExitCount, *SE);
   assert(SE->isLoopInvariant(IVLimit, L) &&
          "Computed iteration count is not loop invariant!");
+  if (Rewriter.isHighCostExpansion(IVLimit, L, SCEVCheapExpansionBudget, TTI,
+                                   IndVar))
+    return nullptr;
   return Rewriter.expandCodeFor(IVLimit, ARBase->getType(),
                                 ExitingBB->getTerminator());
 }
@@ -995,8 +999,10 @@ linearFunctionTestReplace(Loop *L, BasicBlock *ExitingBB,
       BO->setHasNoSignedWrap(AR->hasNoSignedWrap());
   }
 
-  Value *ExitCnt = genLoopLimit(
-      IndVar, ExitingBB, ExitCount, UsePostInc, L, Rewriter, SE);
+  Value *ExitCnt = genLoopLimit(IndVar, ExitingBB, ExitCount, UsePostInc, L,
+                                Rewriter, SE, TTI);
+  if (!ExitCnt)
+    return false;
   assert(ExitCnt->getType()->isPointerTy() ==
              IndVar->getType()->isPointerTy() &&
          "genLoopLimit missed a cast");
