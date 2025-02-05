@@ -48,9 +48,6 @@ static void __kmp_init_node(kmp_depnode_t *node) {
 #if USE_ITT_BUILD && USE_ITT_NOTIFY
   __itt_sync_create(node, "OMP task dep node", NULL, 0);
 #endif
-#if KMP_DEBUG
-  node->dn.on_stack = NULL;
-#endif
 }
 
 static inline kmp_depnode_t *__kmp_node_ref(kmp_depnode_t *node) {

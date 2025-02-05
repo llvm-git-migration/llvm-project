@@ -2556,9 +2556,6 @@ typedef struct kmp_base_depnode {
 #endif
   std::atomic<kmp_int32> npredecessors;
   std::atomic<kmp_int32> nrefs;
-#if KMP_DEBUG
-  void *on_stack;
-#endif
 } kmp_base_depnode_t;
 
 union KMP_ALIGN_CACHE kmp_depnode {
