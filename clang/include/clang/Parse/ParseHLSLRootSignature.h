@@ -128,7 +128,7 @@ private:
 
   // Parse as many optional parameters as possible in any order
   bool ParseOptionalParams(
-      llvm::SmallDenseMap<TokenKind, llvm::hlsl::rootsig::ParamType> RefMap);
+      llvm::SmallDenseMap<TokenKind, llvm::hlsl::rootsig::ParamType> &RefMap);
 
   // Common parsing helpers
   bool ParseRegister(llvm::hlsl::rootsig::Register *Reg);
@@ -138,10 +138,10 @@ private:
 
   // Various flags/enum parsing helpers
   template <bool AllowZero = false, typename EnumType>
-  bool ParseEnum(llvm::SmallDenseMap<TokenKind, EnumType> EnumMap,
+  bool ParseEnum(llvm::SmallDenseMap<TokenKind, EnumType> &EnumMap,
                  EnumType *Enum);
   template <typename FlagType>
-  bool ParseFlags(llvm::SmallDenseMap<TokenKind, FlagType> EnumMap,
+  bool ParseFlags(llvm::SmallDenseMap<TokenKind, FlagType> &EnumMap,
                   FlagType *Enum);
   bool
   ParseDescriptorRangeFlags(llvm::hlsl::rootsig::DescriptorRangeFlags *Enum);
