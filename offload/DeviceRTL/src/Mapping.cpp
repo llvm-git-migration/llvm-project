@@ -308,7 +308,7 @@ uint32_t mapping::getNumberOfProcessorElements() {
 
 // TODO: This is a workaround for initialization coming from kernels outside of
 //       the TU. We will need to solve this more correctly in the future.
-[[gnu::weak]] int SHARED(IsSPMDMode);
+[[clang::loader_uninitialized]] [[gnu::weak]] int __gpu_local IsSPMDMode;
 
 void mapping::init(bool IsSPMD) {
   if (mapping::isInitialThreadInLevel0(IsSPMD))
