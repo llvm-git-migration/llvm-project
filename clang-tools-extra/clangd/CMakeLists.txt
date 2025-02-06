@@ -99,6 +99,7 @@ add_clang_library(clangDaemon STATIC
   ModulesBuilder.cpp
   PathMapping.cpp
   Protocol.cpp
+  ProjectModulesCache.cpp
   Quality.cpp
   ParsedAST.cpp
   Preamble.cpp

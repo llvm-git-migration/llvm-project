@@ -9,6 +9,7 @@
 #ifndef LLVM_CLANG_TOOLS_EXTRA_CLANGD_PROJECTMODULES_H
 #define LLVM_CLANG_TOOLS_EXTRA_CLANGD_PROJECTMODULES_H
 
+#include "ProjectModulesCache.h"
 #include "support/Function.h"
 #include "support/Path.h"
 #include "support/ThreadsafeFS.h"
@@ -43,7 +44,7 @@ public:
 
   virtual std::vector<std::string> getRequiredModules(PathRef File) = 0;
   virtual PathRef
-  getSourceForModuleName(llvm::StringRef ModuleName,
+  getSourceForModuleName(ProjectModulesCache &Cache, llvm::StringRef ModuleName,
                          PathRef RequiredSrcFile = PathRef()) = 0;
 
   virtual void setCommandMangler(CommandMangler Mangler) {}

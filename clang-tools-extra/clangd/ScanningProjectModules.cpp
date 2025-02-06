@@ -49,7 +49,8 @@ public:
 
   /// Scanning the single file specified by \param FilePath.
   std::optional<ModuleDependencyInfo>
-  scan(PathRef FilePath, const ProjectModules::CommandMangler &Mangler);
+  scan(PathRef FilePath, const ProjectModules::CommandMangler &Mangler,
+       ProjectModulesCache *Cache);
 
   /// Scanning every source file in the current project to get the
   /// <module-name> to <module-unit-source> map.
@@ -58,7 +59,8 @@ public:
   /// a global module dependency scanner to monitor every file. Or we
   /// can simply require the build systems (or even the end users)
   /// to provide the map.
-  void globalScan(const ProjectModules::CommandMangler &Mangler);
+  void globalScan(const ProjectModules::CommandMangler &Mangler,
+                  ProjectModulesCache &Cache);
 
   /// Get the source file from the module name. Note that the language
   /// guarantees all the module names are unique in a valid program.
@@ -67,6 +69,12 @@ public:
   /// TODO: We should handle the case that there are multiple source files
   /// declaring the same module.
   PathRef getSourceForModuleName(llvm::StringRef ModuleName) const;
+
+  /// Validate if source file \c Source declare a module with \c ModuleName.
+  /// If yes, return the source file path. Otherwise, return std::nullopt.
+  std::optional<PathRef>
+  validateSourceForModuleName(PathRef Source, llvm::StringRef ModuleName,
+                              const ProjectModules::CommandMangler &Mangler);
 
   /// Return the direct required modules. Indirect required modules are not
   /// included.
@@ -83,15 +91,14 @@ private:
 
   clang::tooling::dependencies::DependencyScanningService Service;
 
-  // TODO: Add a scanning cache.
-
   // Map module name to source file path.
   llvm::StringMap<std::string> ModuleNameToSource;
 };
 
 std::optional<ModuleDependencyScanner::ModuleDependencyInfo>
 ModuleDependencyScanner::scan(PathRef FilePath,
-                              const ProjectModules::CommandMangler &Mangler) {
+                              const ProjectModules::CommandMangler &Mangler,
+                              ProjectModulesCache *Cache) {
   auto Candidates = CDB->getCompileCommands(FilePath);
   if (Candidates.empty())
     return std::nullopt;
@@ -124,6 +131,9 @@ ModuleDependencyScanner::scan(PathRef FilePath,
   if (ScanningResult->Provides) {
     ModuleNameToSource[ScanningResult->Provides->ModuleName] = FilePath;
     Result.ModuleName = ScanningResult->Provides->ModuleName;
+
+    if (Cache)
+      Cache->setEntry(FilePath, ScanningResult->Provides->ModuleName);
   }
 
   for (auto &Required : ScanningResult->Requires)
@@ -133,9 +143,9 @@ ModuleDependencyScanner::scan(PathRef FilePath,
 }
 
 void ModuleDependencyScanner::globalScan(
-    const ProjectModules::CommandMangler &Mangler) {
+    const ProjectModules::CommandMangler &Mangler, ProjectModulesCache &Cache) {
   for (auto &File : CDB->getAllFiles())
-    scan(File, Mangler);
+    scan(File, Mangler, &Cache);
 
   GlobalScanned = true;
 }
@@ -155,11 +165,27 @@ PathRef ModuleDependencyScanner::getSourceForModuleName(
 
 std::vector<std::string> ModuleDependencyScanner::getRequiredModules(
     PathRef File, const ProjectModules::CommandMangler &Mangler) {
-  auto ScanningResult = scan(File, Mangler);
+  auto ScanningResult = scan(File, Mangler, /*Cache=*/nullptr);
   if (!ScanningResult)
     return {};
 
   return ScanningResult->RequiredModules;
+}
+
+std::optional<PathRef> ModuleDependencyScanner::validateSourceForModuleName(
+    PathRef Source, llvm::StringRef ModuleName,
+    const ProjectModules::CommandMangler &Mangler) {
+  auto ScanningResult = scan(Source, Mangler, /*Cache=*/nullptr);
+  if (!ScanningResult)
+    return std::nullopt;
+
+  // If the name matches, return the source file path from ModuleNameToSource
+  // cache instead of the input. Since the lifetime of the input may not be long
+  // enough.
+  if (ScanningResult->ModuleName == ModuleName)
+    return ModuleNameToSource[ModuleName];
+
+  return std::nullopt;
 }
 } // namespace
 
@@ -190,9 +216,18 @@ public:
   /// RequiredSourceFile is not used intentionally. See the comments of
   /// ModuleDependencyScanner for detail.
   PathRef
-  getSourceForModuleName(llvm::StringRef ModuleName,
+  getSourceForModuleName(ProjectModulesCache &Cache, llvm::StringRef ModuleName,
                          PathRef RequiredSourceFile = PathRef()) override {
-    Scanner.globalScan(Mangler);
+    if (auto Source =
+            Cache.getSourceForModuleName(ModuleName, RequiredSourceFile)) {
+      if (std::optional<PathRef> Path =
+              Scanner.validateSourceForModuleName(*Source, ModuleName, Mangler))
+        return *Path;
+
+      Cache.clearEntry(ModuleName, RequiredSourceFile);
+    }
+
+    Scanner.globalScan(Mangler, Cache);
     return Scanner.getSourceForModuleName(ModuleName);
   }
 

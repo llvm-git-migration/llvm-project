@@ -361,7 +361,8 @@ void ModuleFileCache::remove(StringRef ModuleName) {
 /// ModuleName in topological order. The \param ModuleName is guaranteed to
 /// be the last element in \param ModuleNames.
 llvm::SmallVector<StringRef> getAllRequiredModules(ProjectModules &MDB,
-                                                   StringRef ModuleName) {
+                                                   StringRef ModuleName,
+                                                   ProjectModulesCache &Cache) {
   llvm::SmallVector<llvm::StringRef> ModuleNames;
   llvm::StringSet<> ModuleNamesSet;
 
@@ -369,7 +370,7 @@ llvm::SmallVector<StringRef> getAllRequiredModules(ProjectModules &MDB,
     ModuleNamesSet.insert(ModuleName);
 
     for (StringRef RequiredModuleName :
-         MDB.getRequiredModules(MDB.getSourceForModuleName(ModuleName)))
+         MDB.getRequiredModules(MDB.getSourceForModuleName(Cache, ModuleName)))
       if (ModuleNamesSet.insert(RequiredModuleName).second)
         Visitor(RequiredModuleName, Visitor);
 
@@ -384,7 +385,9 @@ llvm::SmallVector<StringRef> getAllRequiredModules(ProjectModules &MDB,
 
 class ModulesBuilder::ModulesBuilderImpl {
 public:
-  ModulesBuilderImpl(const GlobalCompilationDatabase &CDB) : Cache(CDB) {}
+  ModulesBuilderImpl(const GlobalCompilationDatabase &CDB) : Cache(CDB) {
+    MDBCache = createProjectModulesCache();
+  }
 
   const GlobalCompilationDatabase &getCDB() const { return Cache.getCDB(); }
 
@@ -395,6 +398,7 @@ public:
 
 private:
   ModuleFileCache Cache;
+  std::unique_ptr<ProjectModulesCache> MDBCache;
 };
 
 llvm::Error ModulesBuilder::ModulesBuilderImpl::getOrBuildModuleFile(
@@ -403,7 +407,8 @@ llvm::Error ModulesBuilder::ModulesBuilderImpl::getOrBuildModuleFile(
   if (BuiltModuleFiles.isModuleUnitBuilt(ModuleName))
     return llvm::Error::success();
 
-  PathRef ModuleUnitFileName = MDB.getSourceForModuleName(ModuleName);
+  PathRef ModuleUnitFileName =
+      MDB.getSourceForModuleName(*MDBCache, ModuleName);
   /// It is possible that we're meeting third party modules (modules whose
   /// source are not in the project. e.g, the std module may be a third-party
   /// module for most project) or something wrong with the implementation of
@@ -416,7 +421,7 @@ llvm::Error ModulesBuilder::ModulesBuilderImpl::getOrBuildModuleFile(
         llvm::formatv("Don't get the module unit for module {0}", ModuleName));
 
   // Get Required modules in topological order.
-  auto ReqModuleNames = getAllRequiredModules(MDB, ModuleName);
+  auto ReqModuleNames = getAllRequiredModules(MDB, ModuleName, *MDBCache);
   for (llvm::StringRef ReqModuleName : ReqModuleNames) {
     if (BuiltModuleFiles.isModuleUnitBuilt(ModuleName))
       continue;
