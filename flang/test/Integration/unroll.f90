@@ -4,7 +4,9 @@
 subroutine unroll_dir
   integer :: a(10)
   !dir$ unroll 
-  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}, !llvm.loop ![[ANNOTATION:.*]]
+  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}
+  ! CHECK-NOT: !llvm.loop
+  ! CHECK:   br label {{.*}}, !llvm.loop ![[ANNOTATION:.*]]
   do i=1,10
      a(i)=i
   end do
