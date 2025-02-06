@@ -343,6 +343,22 @@ class GdbRemoteTestCaseBase(Base, metaclass=GdbRemoteTestCaseFactory):
         target = self.dbg.CreateTarget(inferior_exe_path)
         return target.GetByteOrder()
 
+    def is_port_opened(self):
+        connect_port = self.port
+    
+        err, retcode, cmd_output = self.run_platform_command(f"netstat -ltn | grep {connect_port} | grep LISTEN")
+        
+        self.assertTrue(
+            err.Success(),
+            "Failed to get opened tcp sockets: %s, retcode: %d"
+            % (err.GetCString(), retcode),
+        )
+        
+        if retcode == 0:
+            return True
+        else:
+            return False
+
     def launch_debug_monitor(self, attach_pid=None, logfile=None):
         if self.reverse_connect:
             family, type, proto, _, addr = socket.getaddrinfo(
@@ -401,15 +417,17 @@ class GdbRemoteTestCaseBase(Base, metaclass=GdbRemoteTestCaseFactory):
             MAX_CONNECT_ATTEMPTS = 10
 
             while connect_attempts < MAX_CONNECT_ATTEMPTS:
-                # Create a socket to talk to the server
-                try:
-                    logger.info("Connect attempt %d", connect_attempts + 1)
-                    self.sock = self.create_socket()
-                    self._server = Server(self.sock, server)
-                    return server
-                except _ConnectionRefused as serr:
-                    # Ignore, and try again.
-                    pass
+                if self.is_port_opened():
+                    # Create a socket to talk to the server
+                    try:
+                        logger.info("Connect attempt %d", connect_attempts + 1)
+                        self.sock = self.create_socket()
+                        self._server = Server(self.sock, server)
+                        return server
+                    except _ConnectionRefused as serr:
+                        # Ignore, and try again.
+                        pass
+                        
                 time.sleep(0.5)
                 connect_attempts += 1
 
