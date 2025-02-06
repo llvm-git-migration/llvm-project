@@ -1863,7 +1863,7 @@ enum : unsigned {
   GNU_PROPERTY_X86_ISA_1_V4 = 1 << 3,
 };
 
-// riscv processor feature bits.
+// RISC-V processor feature bits.
 enum : unsigned {
   GNU_PROPERTY_RISCV_FEATURE_1_CFI_LP_UNLABELED = 1 << 0,
   GNU_PROPERTY_RISCV_FEATURE_1_CFI_SS = 1 << 1,
