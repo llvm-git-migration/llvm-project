@@ -4472,6 +4472,7 @@ def SPIRV_OC_OpSelectionMerge                : I32EnumAttrCase<"OpSelectionMerge
 def SPIRV_OC_OpLabel                         : I32EnumAttrCase<"OpLabel", 248>;
 def SPIRV_OC_OpBranch                        : I32EnumAttrCase<"OpBranch", 249>;
 def SPIRV_OC_OpBranchConditional             : I32EnumAttrCase<"OpBranchConditional", 250>;
+def SPIRV_OC_OpKill                          : I32EnumAttrCase<"OpKill", 252>;
 def SPIRV_OC_OpReturn                        : I32EnumAttrCase<"OpReturn", 253>;
 def SPIRV_OC_OpReturnValue                   : I32EnumAttrCase<"OpReturnValue", 254>;
 def SPIRV_OC_OpUnreachable                   : I32EnumAttrCase<"OpUnreachable", 255>;
@@ -4599,7 +4600,7 @@ def SPIRV_OpcodeAttr :
       SPIRV_OC_OpAtomicAnd, SPIRV_OC_OpAtomicOr, SPIRV_OC_OpAtomicXor,
       SPIRV_OC_OpPhi, SPIRV_OC_OpLoopMerge, SPIRV_OC_OpSelectionMerge,
       SPIRV_OC_OpLabel, SPIRV_OC_OpBranch, SPIRV_OC_OpBranchConditional,
-      SPIRV_OC_OpReturn, SPIRV_OC_OpReturnValue, SPIRV_OC_OpUnreachable,
+      SPIRV_OC_OpKill, SPIRV_OC_OpReturn, SPIRV_OC_OpReturnValue, SPIRV_OC_OpUnreachable,
       SPIRV_OC_OpGroupBroadcast, SPIRV_OC_OpGroupIAdd, SPIRV_OC_OpGroupFAdd,
       SPIRV_OC_OpGroupFMin, SPIRV_OC_OpGroupUMin, SPIRV_OC_OpGroupSMin,
       SPIRV_OC_OpGroupFMax, SPIRV_OC_OpGroupUMax, SPIRV_OC_OpGroupSMax,
