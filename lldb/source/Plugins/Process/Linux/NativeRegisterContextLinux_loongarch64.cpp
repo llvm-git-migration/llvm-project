@@ -47,6 +47,18 @@
 #define REG_CONTEXT_SIZE                                                       \
   (GetGPRSize() + GetFPRSize() + sizeof(m_lsx) + sizeof(m_lasx))
 
+#ifndef user_watch_state_v2
+struct user_watch_state_v2 {
+	uint64_t dbg_info;
+	struct {
+		uint64_t    addr;
+		uint64_t    mask;
+		uint32_t    ctrl;
+		uint32_t    pad;
+	} dbg_regs[14];
+};
+#endif
+
 using namespace lldb;
 using namespace lldb_private;
 using namespace lldb_private::process_linux;
@@ -536,7 +548,7 @@ llvm::Error NativeRegisterContextLinux_loongarch64::ReadHardwareDebugInfo() {
 
   int regset = NT_LOONGARCH_HW_WATCH;
   struct iovec ioVec;
-  struct user_watch_state dreg_state;
+  struct user_watch_state_v2 dreg_state;
   Status error;
 
   ioVec.iov_base = &dreg_state;
@@ -564,7 +576,7 @@ llvm::Error NativeRegisterContextLinux_loongarch64::ReadHardwareDebugInfo() {
 llvm::Error NativeRegisterContextLinux_loongarch64::WriteHardwareDebugRegs(
     DREGType hwbType) {
   struct iovec ioVec;
-  struct user_watch_state dreg_state;
+  struct user_watch_state_v2 dreg_state;
   int regset;
 
   memset(&dreg_state, 0, sizeof(dreg_state));
