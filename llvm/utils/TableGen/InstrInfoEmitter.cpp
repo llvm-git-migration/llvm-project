@@ -92,7 +92,7 @@ private:
       raw_ostream &OS, const CodeGenTarget &Target,
       ArrayRef<const CodeGenInstruction *> NumberedInstructions);
   void emitLogicalOperandSizeMappings(
-      raw_ostream &OS, StringRef Namespace,
+      raw_ostream &OS, const CodeGenTarget &Target,
       ArrayRef<const CodeGenInstruction *> NumberedInstructions);
   void emitLogicalOperandTypeMappings(
       raw_ostream &OS, StringRef Namespace,
@@ -261,7 +261,11 @@ void InstrInfoEmitter::emitOperandNameMappings(
   // Max operand index seen.
   unsigned MaxOperandNo = 0;
 
-  for (const CodeGenInstruction *Inst : NumberedInstructions) {
+  // Fixed/Predefined instructions do not have UseNamedOperandTable enabled, so
+  // we can just skip them.
+  const unsigned NumFixedInsts = Target.getNumFixedInstructions();
+  for (const CodeGenInstruction *Inst :
+       NumberedInstructions.drop_front(NumFixedInsts)) {
     if (!Inst->TheDef->getValueAsBit("UseNamedOperandTable"))
       continue;
     std::map<unsigned, unsigned> OpList;
@@ -335,11 +339,18 @@ void InstrInfoEmitter::emitOperandNameMappings(
 /// Generate an enum for all the operand types for this target, under the
 /// llvm::TargetNamespace::OpTypes namespace.
 /// Operand types are all definitions derived of the Operand Target.td class.
+///
 void InstrInfoEmitter::emitOperandTypeMappings(
     raw_ostream &OS, const CodeGenTarget &Target,
     ArrayRef<const CodeGenInstruction *> NumberedInstructions) {
-
   StringRef Namespace = Target.getInstNamespace();
+
+  /// These generated functions are used only by the X86 target
+  /// (in bolt/lib/Target/X86/X86MCPlusBuilder.cpp). So emit them only
+  // for X86.
+  if (Namespace != "X86")
+    return;
+
   ArrayRef<const Record *> Operands =
       Records.getAllDerivedDefinitions("Operand");
   ArrayRef<const Record *> RegisterOperands =
@@ -418,7 +429,7 @@ void InstrInfoEmitter::emitOperandTypeMappings(
            "Too many operand types for operand types table");
     OS << "\n  using namespace OpTypes;\n";
     OS << "  static";
-    OS << ((EnumVal <= INT8_MAX) ? " const int8_t" : " const int16_t");
+    OS << (EnumVal <= INT8_MAX ? " const int8_t" : " const int16_t");
     OS << " OpcodeOperandTypes[] = {\n    ";
     for (int I = 0, E = OperandRecords.size(), CurOffset = 0; I != E; ++I) {
       // We print each Opcode's operands in its own row.
@@ -461,10 +472,10 @@ void InstrInfoEmitter::emitOperandTypeMappings(
       SizeToOperandName[Size].push_back(Op->getName());
   }
   OS << "  default: return 0;\n";
-  for (const auto &KV : SizeToOperandName) {
-    for (const StringRef &OperandName : KV.second)
+  for (const auto &[Size, OperandNames] : SizeToOperandName) {
+    for (const StringRef &OperandName : OperandNames)
       OS << "  case OpTypes::" << OperandName << ":\n";
-    OS << "    return " << KV.first << ";\n\n";
+    OS << "    return " << Size << ";\n\n";
   }
   OS << "  }\n}\n";
   OS << "} // end namespace llvm::" << Namespace << "\n";
@@ -472,15 +483,20 @@ void InstrInfoEmitter::emitOperandTypeMappings(
 }
 
 void InstrInfoEmitter::emitLogicalOperandSizeMappings(
-    raw_ostream &OS, StringRef Namespace,
+    raw_ostream &OS, const CodeGenTarget &Target,
     ArrayRef<const CodeGenInstruction *> NumberedInstructions) {
-  std::map<std::vector<unsigned>, unsigned> LogicalOpSizeMap;
+  StringRef Namespace = Target.getInstNamespace();
 
+  std::map<std::vector<unsigned>, unsigned> LogicalOpSizeMap;
   std::map<unsigned, std::vector<std::string>> InstMap;
 
   size_t LogicalOpListSize = 0U;
   std::vector<unsigned> LogicalOpList;
-  for (const auto *Inst : NumberedInstructions) {
+
+  // Fixed/Predefined instructions do not have UseLogicalOperandMappings
+  // enabled, so we can just skip them.
+  const unsigned NumFixedInsts = Target.getNumFixedInstructions();
+  for (const auto *Inst : NumberedInstructions.drop_front(NumFixedInsts)) {
     if (!Inst->TheDef->getValueAsBit("UseLogicalOperandMappings"))
       continue;
 
@@ -907,22 +923,34 @@ void InstrInfoEmitter::run(raw_ostream &OS) {
   unsigned OperandInfoSize =
       CollectOperandInfo(OperandInfoList, OperandInfoMap);
 
+  ArrayRef<const CodeGenInstruction *> NumberedInstructions =
+      Target.getInstructionsByEnumValue();
+
   // Collect all of the instruction's implicit uses and defs.
+  // Also collect which features are enabled by instructions to control
+  // emission of various mappings.
+
+  bool HasUseLogicalOperandMappings = false;
+  bool HasUseNamedOperandTable = false;
+
   Timer.startTimer("Collect uses/defs");
   std::map<std::vector<const Record *>, unsigned> EmittedLists;
   std::vector<std::vector<const Record *>> ImplicitLists;
   unsigned ImplicitListSize = 0;
-  for (const CodeGenInstruction *II : Target.getInstructionsByEnumValue()) {
-    std::vector<const Record *> ImplicitOps = II->ImplicitUses;
-    llvm::append_range(ImplicitOps, II->ImplicitDefs);
+  for (const CodeGenInstruction *Inst : NumberedInstructions) {
+    HasUseLogicalOperandMappings |=
+        Inst->TheDef->getValueAsBit("UseLogicalOperandMappings");
+    HasUseNamedOperandTable |=
+        Inst->TheDef->getValueAsBit("UseNamedOperandTable");
+
+    std::vector<const Record *> ImplicitOps = Inst->ImplicitUses;
+    llvm::append_range(ImplicitOps, Inst->ImplicitDefs);
     if (EmittedLists.insert({ImplicitOps, ImplicitListSize}).second) {
       ImplicitLists.push_back(ImplicitOps);
       ImplicitListSize += ImplicitOps.size();
     }
   }
 
-  ArrayRef<const CodeGenInstruction *> NumberedInstructions =
-      Target.getInstructionsByEnumValue();
   OS << "#if defined(GET_INSTRINFO_MC_DESC) || "
         "defined(GET_INSTRINFO_CTOR_DTOR)\n";
   OS << "namespace llvm {\n\n";
@@ -1123,14 +1151,18 @@ void InstrInfoEmitter::run(raw_ostream &OS) {
 
   OS << "#endif // GET_INSTRINFO_CTOR_DTOR\n\n";
 
-  Timer.startTimer("Emit operand name mappings");
-  emitOperandNameMappings(OS, Target, NumberedInstructions);
+  if (HasUseNamedOperandTable) {
+    Timer.startTimer("Emit operand name mappings");
+    emitOperandNameMappings(OS, Target, NumberedInstructions);
+  }
 
   Timer.startTimer("Emit operand type mappings");
   emitOperandTypeMappings(OS, Target, NumberedInstructions);
 
-  Timer.startTimer("Emit logical operand size mappings");
-  emitLogicalOperandSizeMappings(OS, TargetName, NumberedInstructions);
+  if (HasUseLogicalOperandMappings) {
+    Timer.startTimer("Emit logical operand size mappings");
+    emitLogicalOperandSizeMappings(OS, Target, NumberedInstructions);
+  }
 
   Timer.startTimer("Emit logical operand type mappings");
   emitLogicalOperandTypeMappings(OS, TargetName, NumberedInstructions);
