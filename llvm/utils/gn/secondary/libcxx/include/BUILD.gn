@@ -2044,6 +2044,15 @@ if (current_toolchain == default_toolchain) {
 
 config("include_config") {
   include_dirs = [ libcxx_generated_include_dir ]
+
+  if (libcxx_enable_explicit_modules) {
+    cflags_cc = [
+      "-fmodules",
+      "-fmodule-map-file=" +
+          rebase_path("//libcxx/include/module.modulemap", root_build_dir),
+      "-fno-implicit-module-maps",
+    ]
+  }
 }
 
 group("include") {

@@ -34,9 +34,17 @@ template("unix_toolchain") {
 
     tool("cxx") {
       depfile = "{{output}}.d"
-      command = "$cxx -MMD -MF $depfile -o {{output}} -c {{source}} {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}}"
+      command = "$cxx -MMD -MF $depfile -o {{output}} -c {{source}} {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} {{module_deps_no_self}}"
       depsformat = "gcc"
       description = "CXX {{output}}"
+      outputs = [ "{{source_out_dir}}/{{label_name}}.{{source_name_part}}.o" ]
+    }
+
+    tool("cxx_module") {
+      depfile = "{{output}}.d"
+      command = "$cxx -MMD -MF $depfile -o {{output}} -c {{source}} {{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} {{module_deps_no_self}} -fmodule-name={{label_name}} -x c++ -Xclang -emit-module"
+      depsformat = "gcc"
+      description = "CXX_MODULE {{output}}"
       outputs = [ "{{source_out_dir}}/{{label_name}}.{{source_name_part}}.o" ]
     }
 
