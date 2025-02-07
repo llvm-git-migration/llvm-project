@@ -1800,59 +1800,60 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
       });
   } else if (II == Ident__has_builtin || II == Ident__has_target_builtin) {
     bool IsHasTargetBuiltin = II == Ident__has_target_builtin;
-    EvaluateFeatureLikeBuiltinMacro(OS, Tok, II, *this, false,
-      [this, IsHasTargetBuiltin](Token &Tok, bool &HasLexedNextToken) -> int {
-        IdentifierInfo *II = ExpectFeatureIdentifierInfo(Tok, *this,
-                                           diag::err_feature_check_malformed);
-        if (!II)
-          return false;
-        auto BuiltinID = II->getBuiltinID();
-        if (BuiltinID != 0) {
-          switch (BuiltinID) {
-          case Builtin::BI__builtin_cpu_is:
-            return getTargetInfo().supportsCpuIs();
-          case Builtin::BI__builtin_cpu_init:
-            return getTargetInfo().supportsCpuInit();
-          case Builtin::BI__builtin_cpu_supports:
-            return getTargetInfo().supportsCpuSupports();
-          case Builtin::BI__builtin_operator_new:
-          case Builtin::BI__builtin_operator_delete:
-            // denotes date of behavior change to support calling arbitrary
-            // usual allocation and deallocation functions. Required by libc++
-            return 201802;
-          default:
-            // __has_target_builtin should return false for aux builtins.
-            if(IsHasTargetBuiltin &&
-               getBuiltinInfo().isAuxBuiltinID(BuiltinID))
+    EvaluateFeatureLikeBuiltinMacro(
+        OS, Tok, II, *this, false,
+        [this, IsHasTargetBuiltin](Token &Tok, bool &HasLexedNextToken) -> int {
+          IdentifierInfo *II = ExpectFeatureIdentifierInfo(
+              Tok, *this, diag::err_feature_check_malformed);
+          if (!II)
+            return false;
+          auto BuiltinID = II->getBuiltinID();
+          if (BuiltinID != 0) {
+            switch (BuiltinID) {
+            case Builtin::BI__builtin_cpu_is:
+              return getTargetInfo().supportsCpuIs();
+            case Builtin::BI__builtin_cpu_init:
+              return getTargetInfo().supportsCpuInit();
+            case Builtin::BI__builtin_cpu_supports:
+              return getTargetInfo().supportsCpuSupports();
+            case Builtin::BI__builtin_operator_new:
+            case Builtin::BI__builtin_operator_delete:
+              // denotes date of behavior change to support calling arbitrary
+              // usual allocation and deallocation functions. Required by libc++
+              return 201802;
+            default:
+              // __has_target_builtin should return false for aux builtins.
+              if (IsHasTargetBuiltin &&
+                  getBuiltinInfo().isAuxBuiltinID(BuiltinID))
                 return false;
-            return Builtin::evaluateRequiredTargetFeatures(
-                getBuiltinInfo().getRequiredFeatures(BuiltinID),
-                getTargetInfo().getTargetOpts().FeatureMap);
+              return Builtin::evaluateRequiredTargetFeatures(
+                  getBuiltinInfo().getRequiredFeatures(BuiltinID),
+                  getTargetInfo().getTargetOpts().FeatureMap);
+            }
+            return true;
+          } else if (IsBuiltinTrait(Tok)) {
+            return true;
+          } else if (II->getTokenID() != tok::identifier &&
+                     II->getName().starts_with("__builtin_")) {
+            return true;
+          } else {
+            return llvm::StringSwitch<bool>(II->getName())
+                // Report builtin templates as being builtins.
+                .Case("__make_integer_seq", getLangOpts().CPlusPlus)
+                .Case("__type_pack_element", getLangOpts().CPlusPlus)
+                .Case("__builtin_common_type", getLangOpts().CPlusPlus)
+                // Likewise for some builtin preprocessor macros.
+                // FIXME: This is inconsistent; we usually suggest detecting
+                // builtin macros via #ifdef. Don't add more cases here.
+                .Case("__is_target_arch", true)
+                .Case("__is_target_vendor", true)
+                .Case("__is_target_os", true)
+                .Case("__is_target_environment", true)
+                .Case("__is_target_variant_os", true)
+                .Case("__is_target_variant_environment", true)
+                .Default(false);
           }
-          return true;
-        } else if (IsBuiltinTrait(Tok)) {
-          return true;
-        } else if (II->getTokenID() != tok::identifier &&
-                   II->getName().starts_with("__builtin_")) {
-          return true;
-        } else {
-          return llvm::StringSwitch<bool>(II->getName())
-              // Report builtin templates as being builtins.
-              .Case("__make_integer_seq", getLangOpts().CPlusPlus)
-              .Case("__type_pack_element", getLangOpts().CPlusPlus)
-              .Case("__builtin_common_type", getLangOpts().CPlusPlus)
-              // Likewise for some builtin preprocessor macros.
-              // FIXME: This is inconsistent; we usually suggest detecting
-              // builtin macros via #ifdef. Don't add more cases here.
-              .Case("__is_target_arch", true)
-              .Case("__is_target_vendor", true)
-              .Case("__is_target_os", true)
-              .Case("__is_target_environment", true)
-              .Case("__is_target_variant_os", true)
-              .Case("__is_target_variant_environment", true)
-              .Default(false);
-        }
-      });
+        });
   } else if (II == Ident__has_constexpr_builtin) {
     EvaluateFeatureLikeBuiltinMacro(
         OS, Tok, II, *this, false,
@@ -1893,8 +1894,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
 
         return false;
       });
-  } else if (II == Ident__has_cpp_attribute ||
-             II == Ident__has_c_attribute) {
+  } else if (II == Ident__has_cpp_attribute || II == Ident__has_c_attribute) {
     bool IsCXX = II == Ident__has_cpp_attribute;
     EvaluateFeatureLikeBuiltinMacro(OS, Tok, II, *this, true,
         [&](Token &Tok, bool &HasLexedNextToken) -> int {
@@ -1924,8 +1924,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
                                    getLangOpts())
                     : 0;
         });
-  } else if (II == Ident__has_include ||
-             II == Ident__has_include_next) {
+  } else if (II == Ident__has_include || II == Ident__has_include_next) {
     // The argument to these two builtins should be a parenthesized
     // file name string literal using angle brackets (<>) or
     // double-quotes ("").
