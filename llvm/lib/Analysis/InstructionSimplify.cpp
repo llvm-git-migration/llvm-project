@@ -3012,7 +3012,7 @@ static Value *simplifyICmpWithConstant(CmpPredicate Pred, Value *LHS,
   }
 
   // Rule out tautological comparisons (eg., ult 0 or uge 0).
-  ConstantRange RHS_CR = ConstantRange::makeAllowedICmpRegion(Pred, *C);
+  ConstantRange RHS_CR = ConstantRange::makeAsymmetricICmpRegion(Pred, *C);
   if (RHS_CR.isEmptySet())
     return ConstantInt::getFalse(ITy);
   if (RHS_CR.isFullSet())

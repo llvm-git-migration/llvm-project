@@ -32,10 +32,8 @@
 #define LLVM_IR_CONSTANTRANGE_H
 
 #include "llvm/ADT/APInt.h"
-#include "llvm/IR/CmpPredicate.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
-#include "llvm/Support/Compiler.h"
 #include <cstdint>
 
 namespace llvm {
@@ -43,6 +41,7 @@ namespace llvm {
 class MDNode;
 class raw_ostream;
 struct KnownBits;
+class CmpPredicate;
 
 /// This class represents a range of values.
 class [[nodiscard]] ConstantRange {
@@ -100,11 +99,14 @@ public:
   /// answer is not representable as a ConstantRange, the return value will be a
   /// proper superset of the above.
   ///
-  /// Note that we respect samesign information on the icmp.
-  ///
   /// Example: Pred = ult and Other = i8 [2, 5) returns Result = [0, 4)
   static ConstantRange makeAllowedICmpRegion(CmpPredicate Pred,
                                              const ConstantRange &Other);
+
+  /// Calls makeAllowedICmpRegion with a CmpPredicate, yielding an asymmetric
+  /// range when samesign information is present.
+  static ConstantRange makeAsymmetricICmpRegion(CmpPredicate Pred,
+                                                const ConstantRange &Other);
 
   /// Produce the largest range such that all values in the returned range
   /// satisfy the given predicate with all values contained within Other.

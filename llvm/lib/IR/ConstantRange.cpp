@@ -100,7 +100,7 @@ ConstantRange ConstantRange::makeAllowedICmpRegion(CmpPredicate Pred,
   if (CR.isEmptySet())
     return CR;
 
-  auto CheckPred = [CR](CmpInst::Predicate P) {
+  auto GetCR = [CR](CmpInst::Predicate P) {
     uint32_t W = CR.getBitWidth();
     switch (P) {
     default:
@@ -145,10 +145,15 @@ ConstantRange ConstantRange::makeAllowedICmpRegion(CmpPredicate Pred,
       return getNonEmpty(CR.getSignedMin(), APInt::getSignedMinValue(W));
     }
   };
-  if (Pred.hasSameSign())
-    return CheckPred(Pred).unionWith(
-        CheckPred(ICmpInst::getFlippedSignednessPredicate(Pred)));
-  return CheckPred(Pred);
+  if (Pred.hasSameSign() && ICmpInst::isRelational(Pred))
+    return GetCR(Pred).unionWith(
+        GetCR(ICmpInst::getFlippedSignednessPredicate(Pred)));
+  return GetCR(Pred);
+}
+
+ConstantRange ConstantRange::makeAsymmetricICmpRegion(CmpPredicate Pred,
+                                                      const ConstantRange &CR) {
+  return makeAllowedICmpRegion(Pred, CR);
 }
 
 ConstantRange ConstantRange::makeSatisfyingICmpRegion(CmpInst::Predicate Pred,
