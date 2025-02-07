@@ -91,14 +91,28 @@ TEST_CONSTEXPR_CXX20 void test_bititer_with_custom_sized_types() {
     std::vector<bool, Alloc> in(100, false, Alloc(1));
     std::vector<bool, Alloc> expected(100, true, Alloc(1));
     std::ranges::fill(in, true);
-    assert(in == expected);
+
+    // FIXME: Force to call standard-form std::equal() instead of the vector<bool> optimization because the latter
+    // suffers from UB for small integral `size_type`s, which will be fixed soon.
+    assert(
+        in.size() == expected.size() &&
+        std::equal(
+            cpp17_input_iterator(in.begin()), cpp17_input_iterator(in.end()), cpp17_input_iterator(expected.begin())));
+    // assert(in == expected);
   }
   {
     using Alloc = sized_allocator<bool, std::uint16_t, std::int16_t>;
     std::vector<bool, Alloc> in(200, false, Alloc(1));
     std::vector<bool, Alloc> expected(200, true, Alloc(1));
     std::ranges::fill(in, true);
-    assert(in == expected);
+
+    // FIXME: Force to call standard-form std::equal() instead of the vector<bool> optimization because the latter
+    // suffers from UB for small integral `size_type`s, which will be fixed soon.
+    assert(
+        in.size() == expected.size() &&
+        std::equal(
+            cpp17_input_iterator(in.begin()), cpp17_input_iterator(in.end()), cpp17_input_iterator(expected.begin())));
+    // assert(in == expected);
   }
   {
     using Alloc = sized_allocator<bool, std::uint32_t, std::int32_t>;
