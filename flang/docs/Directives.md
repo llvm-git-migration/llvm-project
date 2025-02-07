@@ -61,7 +61,7 @@ applications.
 ### Unrolling Directive `!dir$ unroll [n]`
 
 This directive specifies that the compiler ought to unroll the immediately
-folling loop `n` times. When `n` is `0` or `1`, the loop should not be unrolled
+following loop `n` times. When `n` is `0` or `1`, the loop should not be unrolled
 at all. When `n` is `2` or greater, the loop should be unrolled exactly `n`
 times if possible. When `n` is omitted, the compiler should attempt to fully
 unroll the loop. Some compilers accept an optional `=` before the `n` when `n`
