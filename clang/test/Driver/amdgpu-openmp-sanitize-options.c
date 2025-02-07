@@ -13,6 +13,11 @@
 // RUN:   | FileCheck --check-prefix=NOTSUPPORTED %s
 
 // GPU ASan Enabled Test Cases
+
+// GPU ASan enabled through -fsanitize=address flag for amdgpu-arch [gfx908]
+// RUN:   %clang -no-canonical-prefixes -### --target=x86_64-unknown-linux-gnu -fopenmp=libomp --offload-arch=gfx908 -fsanitize=address --rocm-path=%S/Inputs/rocm %s 2>&1 \
+// RUN:   | FileCheck -check-prefixes=NOXNACK,GPUSAN %s
+
 // ASan enabled for amdgpu-arch [gfx908]
 // RUN:   %clang -no-canonical-prefixes -### --target=x86_64-unknown-linux-gnu -fopenmp=libomp --offload-arch=gfx908 -fsanitize=address -fgpu-sanitize --rocm-path=%S/Inputs/rocm %s 2>&1 \
 // RUN:   | FileCheck -check-prefixes=NOXNACK,GPUSAN %s
