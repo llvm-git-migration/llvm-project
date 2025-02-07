@@ -45,9 +45,10 @@ A list of non-standard directives supported by Flang
 ## Introduction
 Directives are commonly used in Fortran programs to specify additional actions 
 to be performed by the compiler. The directives are always specified with the 
-`!dir$` or `cdir$` prefix. 
+`!dir$` or `cdir$` prefix.
 
 ## Loop Directives
+
 Some directives are associated with the following construct, for example loop
 directives. Directives on loops are used to specify additional transformation to
 be performed by the compiler like enabling vectorisation, unrolling, interchange
@@ -56,6 +57,15 @@ etc.
 Currently loop directives are not accepted in the presence of OpenMP or OpenACC
 constructs on the loop. This should be implemented as it is used in some
 applications.
+
+### Unrolling Directive `!dir$ unroll [n]`
+
+This directive specifies that the compiler ought to unroll the immediately
+folling loop `n` times. When `n` is `0` or `1`, the loop should not be unrolled
+at all. When `n` is `2` or greater, the loop should be unrolled exactly `n`
+times if possible. When `n` is omitted, the compiler should attempt to fully
+unroll the loop. Some compilers accept an optional `=` before the `n` when `n`
+is present in the directive. Flang does not.
 
 ### Array Expressions
 It is to be decided whether loop directives should also be able to be associated
