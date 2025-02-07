@@ -87,6 +87,7 @@ template<typename T>
 struct unique_ptr {
   T &operator*();
   T *get() const;
+  T *release();
 };
 
 template<typename T>
