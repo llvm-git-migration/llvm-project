@@ -14,7 +14,7 @@ end subroutine unroll_dir
 subroutine unroll_dir_0
   integer :: a(10)
   !dir$ unroll 0
-  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}, !llvm.loop ![[UNROLL_DISABLE:.*]]
+  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}, !llvm.loop ![[UNROLL_DISABLE_ANNO:.*]]
   do i=1,10
   a(i)=i
   end do
@@ -24,7 +24,7 @@ end subroutine unroll_dir_0
 subroutine unroll_dir_1
   integer :: a(10)
   !dir$ unroll 1
-  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}, !llvm.loop ![[UNROLL_DISABLE_ANNO:.*]]
+  ! CHECK:   br i1 {{.*}}, label {{.*}}, label {{.*}}, !llvm.loop ![[UNROLL_DISABLE_ANNO]]
   do i=1,10
   a(i)=i
   end do
