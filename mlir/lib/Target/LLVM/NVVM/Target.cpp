@@ -51,6 +51,11 @@ extern "C" const unsigned char _mlir_embedded_libdevice[];
 extern "C" const unsigned _mlir_embedded_libdevice_size;
 
 namespace {
+// Model that contains performance results by stage.
+struct ModuleToObjectPerfResult {
+  int64_t llvmIRToPTX;
+  int64_t ptxToBinary;
+};
 // Implementation of the `TargetAttrInterface` model.
 class NVVMTargetAttrImpl
     : public gpu::TargetAttrInterface::FallbackModel<NVVMTargetAttrImpl> {
@@ -220,6 +225,10 @@ public:
   std::optional<SmallVector<char, 0>>
   moduleToObject(llvm::Module &llvmModule) override;
 
+  /// Get ModuleToObject function performance result.
+  /// Should call ModuleToObject function first.
+  ModuleToObjectPerfResult getModuleToObjectPerfResult();
+
 private:
   using TmpFile = std::pair<llvm::SmallString<128>, llvm::FileRemover>;
 
@@ -235,6 +244,9 @@ private:
 
   /// Target options.
   gpu::TargetOptions targetOptions;
+
+  /// ModuleToObject performance result.
+  ModuleToObjectPerfResult moduleToObjectPerfResult;
 };
 } // namespace
 
@@ -254,6 +266,10 @@ NVPTXSerializer::createTemp(StringRef name, StringRef suffix) {
     return std::nullopt;
   }
   return TmpFile(filename, llvm::FileRemover(filename.c_str()));
+}
+
+ModuleToObjectPerfResult NVPTXSerializer::getModuleToObjectPerfResult() {
+  return moduleToObjectPerfResult;
 }
 
 gpu::GPUModuleOp NVPTXSerializer::getOperation() {
@@ -618,6 +634,8 @@ NVPTXSerializer::compileToBinaryNVPTX(const std::string &ptxCode) {
 
 std::optional<SmallVector<char, 0>>
 NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
+  std::chrono::high_resolution_clock::time_point llvmPoint =
+      std::chrono::high_resolution_clock::now();
   // Return LLVM IR if the compilation target is `offload`.
 #define DEBUG_TYPE "serialize-to-llvm"
   LLVM_DEBUG({
@@ -650,6 +668,8 @@ NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
     getOperation().emitError() << "Failed translating the module to ISA.";
     return std::nullopt;
   }
+  std::chrono::high_resolution_clock::time_point ptxPoint =
+      std::chrono::high_resolution_clock::now();
   if (isaCallback)
     isaCallback(serializedISA.value());
 
@@ -669,17 +689,31 @@ NVPTXSerializer::moduleToObject(llvm::Module &llvmModule) {
     return SmallVector<char, 0>(bin.begin(), bin.end());
   }
 
+  std::optional<SmallVector<char, 0>> result;
   // Compile to binary.
 #if MLIR_ENABLE_NVPTXCOMPILER
-  return compileToBinaryNVPTX(*serializedISA);
+  result = compileToBinaryNVPTX(*serializedISA);
 #else
-  return compileToBinary(*serializedISA);
+  result = compileToBinary(*serializedISA);
 #endif // MLIR_ENABLE_NVPTXCOMPILER
+
+  std::chrono::high_resolution_clock::time_point binaryPoint =
+      std::chrono::high_resolution_clock::now();
+
+  moduleToObjectPerfResult = {
+      std::chrono::duration_cast<std::chrono::milliseconds>(ptxPoint -
+                                                            llvmPoint)
+          .count(),
+      std::chrono::duration_cast<std::chrono::milliseconds>(binaryPoint -
+                                                            ptxPoint)
+          .count()};
+  return result;
 }
 
 std::optional<SmallVector<char, 0>>
 NVVMTargetAttrImpl::serializeToObject(Attribute attribute, Operation *module,
                                       const gpu::TargetOptions &options) const {
+  Builder builder(attribute.getContext());
   assert(module && "The module must be non null.");
   if (!module)
     return std::nullopt;
@@ -689,7 +723,15 @@ NVVMTargetAttrImpl::serializeToObject(Attribute attribute, Operation *module,
   }
   NVPTXSerializer serializer(*module, cast<NVVMTargetAttr>(attribute), options);
   serializer.init();
-  return serializer.run();
+  std::optional<SmallVector<char, 0>> result = serializer.run();
+  auto moduleToObjectPerfResult = serializer.getModuleToObjectPerfResult();
+  module->setAttr(
+      "LLVMIRToPTXTimeCost",
+      builder.getI64IntegerAttr(moduleToObjectPerfResult.llvmIRToPTX));
+  module->setAttr(
+      "PTXToBinaryTimeCost",
+      builder.getI64IntegerAttr(moduleToObjectPerfResult.ptxToBinary));
+  return result;
 }
 
 Attribute
@@ -700,7 +742,7 @@ NVVMTargetAttrImpl::createObject(Attribute attribute, Operation *module,
   gpu::CompilationTarget format = options.getCompilationTarget();
   DictionaryAttr objectProps;
   Builder builder(attribute.getContext());
-  SmallVector<NamedAttribute, 2> properties;
+  SmallVector<NamedAttribute, 4> properties;
   if (format == gpu::CompilationTarget::Assembly)
     properties.push_back(
         builder.getNamedAttr("O", builder.getI32IntegerAttr(target.getO())));
@@ -708,6 +750,14 @@ NVVMTargetAttrImpl::createObject(Attribute attribute, Operation *module,
   if (StringRef section = options.getELFSection(); !section.empty())
     properties.push_back(builder.getNamedAttr(gpu::elfSectionName,
                                               builder.getStringAttr(section)));
+
+  for (const auto *perfName : {"LLVMIRToPTXTimeCost", "PTXToBinaryTimeCost"}) {
+    if (module->hasAttr(perfName)) {
+      IntegerAttr attr = llvm::dyn_cast<IntegerAttr>(module->getAttr(perfName));
+      properties.push_back(builder.getNamedAttr(
+          perfName, builder.getI64IntegerAttr(attr.getInt())));
+    }
+  }
 
   if (!properties.empty())
     objectProps = builder.getDictionaryAttr(properties);
