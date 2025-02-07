@@ -296,3 +296,35 @@ TEST_F(MLIRTargetLLVMNVVM, SKIP_WITHOUT_NVPTX(LinkedLLVMIRResource)) {
     ASSERT_TRUE(!object->empty());
   }
 }
+
+// Test performance results are injected into module.
+TEST_F(MLIRTargetLLVMNVVM, SKIP_WITHOUT_NVPTX(Stage)) {
+  MLIRContext context(registry);
+
+  OwningOpRef<ModuleOp> module =
+      parseSourceString<ModuleOp>(moduleStr, &context);
+  ASSERT_TRUE(!!module);
+
+  NVVM::NVVMTargetAttr target = NVVM::NVVMTargetAttr::get(&context);
+
+  auto serializer = dyn_cast<gpu::TargetAttrInterface>(target);
+  ASSERT_TRUE(!!serializer);
+
+  gpu::TargetOptions options({}, {}, {}, {}, gpu::CompilationTarget::Assembly);
+
+  for (auto gpuModule : (*module).getBody()->getOps<gpu::GPUModuleOp>()) {
+    std::optional<SmallVector<char, 0>> object =
+        serializer.serializeToObject(gpuModule, options);
+    ASSERT_TRUE(object != std::nullopt);
+    ASSERT_TRUE(!object->empty());
+    ASSERT_TRUE(gpuModule->hasAttr("LLVMIRToPTXTimeCost"));
+    ASSERT_TRUE(gpuModule->hasAttr("PTXToBinaryTimeCost"));
+
+    Attribute attr = serializer.createObject(gpuModule, *object, options);
+    ASSERT_TRUE(!!attr);
+    auto objectAttr = cast<gpu::ObjectAttr>(attr);
+    auto props = objectAttr.getProperties();
+    ASSERT_TRUE(!!props.get("LLVMIRToPTXTimeCost"));
+    ASSERT_TRUE(!!props.get("PTXToBinaryTimeCost"));
+  }
+}
