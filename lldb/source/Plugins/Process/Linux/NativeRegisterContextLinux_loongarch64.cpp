@@ -50,6 +50,19 @@
 #define REG_CONTEXT_SIZE                                                       \
   (GetGPRSize() + GetFPRSize() + sizeof(m_lsx) + sizeof(m_lasx))
 
+// In order to avoid undefined or redefined error, just add a new struct
+// loongarch_user_watch_state in LLDB which is same with the uapi struct
+// user_watch_state_v2.
+struct loongarch_user_watch_state {
+  uint64_t dbg_info;
+  struct {
+    uint64_t addr;
+    uint64_t mask;
+    uint32_t ctrl;
+    uint32_t pad;
+  } dbg_regs[14];
+};
+
 using namespace lldb;
 using namespace lldb_private;
 using namespace lldb_private::process_linux;
@@ -539,7 +552,7 @@ llvm::Error NativeRegisterContextLinux_loongarch64::ReadHardwareDebugInfo() {
 
   int regset = NT_LOONGARCH_HW_WATCH;
   struct iovec ioVec;
-  struct user_watch_state dreg_state;
+  struct loongarch_user_watch_state dreg_state;
   Status error;
 
   ioVec.iov_base = &dreg_state;
@@ -567,7 +580,7 @@ llvm::Error NativeRegisterContextLinux_loongarch64::ReadHardwareDebugInfo() {
 llvm::Error NativeRegisterContextLinux_loongarch64::WriteHardwareDebugRegs(
     DREGType hwbType) {
   struct iovec ioVec;
-  struct user_watch_state dreg_state;
+  struct loongarch_user_watch_state dreg_state;
   int regset;
 
   memset(&dreg_state, 0, sizeof(dreg_state));
