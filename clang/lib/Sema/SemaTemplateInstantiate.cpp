@@ -1627,8 +1627,14 @@ namespace {
           TemplateArgumentLoc Input = SemaRef.getTrivialTemplateArgumentLoc(
               pack, QualType(), SourceLocation{});
           TemplateArgumentLoc Output;
-          if (SemaRef.SubstTemplateArgument(Input, TemplateArgs, Output))
+          if (TransformTemplateArgument(Input, Output, Uneval))
             return true; // fails
+          if (Output.getArgument().containsUnexpandedParameterPack())
+            // FIXME: Is EllipsisLoc necessary? This pack expansion merely
+            // serves as a placeholder type for future rewrite-substitution
+            // (e.g. into constraint expressions.)
+            Output =
+                RebuildPackExpansion(Output, SourceLocation{}, std::nullopt);
           TArgs.push_back(Output.getArgument());
         }
         Output = SemaRef.getTrivialTemplateArgumentLoc(
