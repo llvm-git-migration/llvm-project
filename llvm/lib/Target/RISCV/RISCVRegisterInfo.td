@@ -247,7 +247,11 @@ def GPR : GPRRegisterClass<(add (sequence "X%u", 10, 17),
                                 (sequence "X%u", 0, 4))>;
 
 def GPRX0 : GPRRegisterClass<(add X0)>;
+
+let DiagnosticType = "InvalidRegClassGPRX1" in
 def GPRX1 : GPRRegisterClass<(add X1)>;
+
+let DiagnosticType = "InvalidRegClassGPRX5" in
 def GPRX5 : GPRRegisterClass<(add X5)>;
 
 def GPRNoX0 : GPRRegisterClass<(sub GPR, X0)>;
@@ -282,6 +286,7 @@ def SP : GPRRegisterClass<(add X2)>;
 def SR07 : GPRRegisterClass<(add (sequence "X%u", 8, 9),
                                  (sequence "X%u", 18, 23))>;
 
+let DiagnosticType = "InvalidRegClassGPRX1X5" in
 def GPRX1X5 :  GPRRegisterClass<(add X1, X5)>;
 
 //===----------------------------------------------------------------------===//

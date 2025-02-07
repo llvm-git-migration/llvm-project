@@ -1723,6 +1723,18 @@ bool RISCVAsmParser::matchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     SMLoc ErrorLoc = ((RISCVOperand &)*Operands[ErrorInfo]).getStartLoc();
     return Error(ErrorLoc, "operands must be register and register");
   }
+  case Match_InvalidRegClassGPRX1: {
+    SMLoc ErrorLoc = ((RISCVOperand &)*Operands[ErrorInfo]).getStartLoc();
+    return Error(ErrorLoc, "register must be ra (x1)");
+  }
+  case Match_InvalidRegClassGPRX5: {
+    SMLoc ErrorLoc = ((RISCVOperand &)*Operands[ErrorInfo]).getStartLoc();
+    return Error(ErrorLoc, "register must be t0 (x5)");
+  }
+  case Match_InvalidRegClassGPRX1X5: {
+    SMLoc ErrorLoc = ((RISCVOperand &)*Operands[ErrorInfo]).getStartLoc();
+    return Error(ErrorLoc, "register must be ra or t0 (x1 or x5)");
+  }
   }
 
   llvm_unreachable("Unknown match type detected!");
