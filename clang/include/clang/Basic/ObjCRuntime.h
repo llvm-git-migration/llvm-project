@@ -473,7 +473,8 @@ public:
     case GCC: return false;
     case GNUstep:
       return (getVersion() >= VersionTuple(2, 2));
-    case ObjFW: return false;
+    case ObjFW:
+      return (getVersion() >= VersionTuple(1, 3));
     }
     llvm_unreachable("bad kind");
   }

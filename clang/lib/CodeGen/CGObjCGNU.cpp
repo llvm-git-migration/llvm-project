@@ -2029,112 +2029,6 @@ class CGObjCGNUstep2 : public CGObjCGNUstep {
         llvm::StructType::get(CGM.getLLVMContext(),
             { PtrToInt8Ty, PtrToInt8Ty, PtrToInt8Ty, PtrToInt8Ty, PtrToInt8Ty });
     }
-
-    void GenerateDirectMethodPrologue(CodeGenFunction &CGF, llvm::Function *Fn,
-                                      const ObjCMethodDecl *OMD,
-                                      const ObjCContainerDecl *CD) override {
-      auto &Builder = CGF.Builder;
-      bool ReceiverCanBeNull = true;
-      auto selfAddr = CGF.GetAddrOfLocalVar(OMD->getSelfDecl());
-      auto selfValue = Builder.CreateLoad(selfAddr);
-
-      // Generate:
-      //
-      // /* unless the receiver is never NULL */
-      // if (self == nil) {
-      //     return (ReturnType){ };
-      // }
-      //
-      // /* for class methods only to force class lazy initialization */
-      // if (!__objc_{class}_initialized)
-      // {
-      //   objc_send_initialize(class);
-      //   __objc_{class}_initialized = 1;
-      // }
-      //
-      // _cmd = @selector(...)
-      // ...
-
-      if (OMD->isClassMethod()) {
-        const ObjCInterfaceDecl *OID = cast<ObjCInterfaceDecl>(CD);
-
-        // Nullable `Class` expressions cannot be messaged with a direct method
-        // so the only reason why the receive can be null would be because
-        // of weak linking.
-        ReceiverCanBeNull = isWeakLinkedClass(OID);
-      }
-
-      llvm::MDBuilder MDHelper(CGM.getLLVMContext());
-      if (ReceiverCanBeNull) {
-        llvm::BasicBlock *SelfIsNilBlock =
-            CGF.createBasicBlock("objc_direct_method.self_is_nil");
-        llvm::BasicBlock *ContBlock =
-            CGF.createBasicBlock("objc_direct_method.cont");
-
-        // if (self == nil) {
-        auto selfTy = cast<llvm::PointerType>(selfValue->getType());
-        auto Zero = llvm::ConstantPointerNull::get(selfTy);
-
-        Builder.CreateCondBr(Builder.CreateICmpEQ(selfValue, Zero),
-                             SelfIsNilBlock, ContBlock,
-                             MDHelper.createUnlikelyBranchWeights());
-
-        CGF.EmitBlock(SelfIsNilBlock);
-
-        //   return (ReturnType){ };
-        auto retTy = OMD->getReturnType();
-        Builder.SetInsertPoint(SelfIsNilBlock);
-        if (!retTy->isVoidType()) {
-          CGF.EmitNullInitialization(CGF.ReturnValue, retTy);
-        }
-        CGF.EmitBranchThroughCleanup(CGF.ReturnBlock);
-        // }
-
-        // rest of the body
-        CGF.EmitBlock(ContBlock);
-        Builder.SetInsertPoint(ContBlock);
-      }
-
-      if (OMD->isClassMethod()) {
-        // Prefix of the class type.
-        auto *classStart =
-            llvm::StructType::get(PtrTy, PtrTy, PtrTy, LongTy, LongTy);
-        auto &astContext = CGM.getContext();
-        // FIXME: The following few lines up to and including the call to
-        // `CreateLoad` were known to miscompile when MSVC 19.40.33813 is used
-        // to build Clang. When the bug is fixed in future MSVC releases, we
-        // should revert these lines to their previous state. See discussion in
-        // https://github.com/llvm/llvm-project/pull/102681
-        llvm::Value *Val = Builder.CreateStructGEP(classStart, selfValue, 4);
-        auto Align = CharUnits::fromQuantity(
-            astContext.getTypeAlign(astContext.UnsignedLongTy));
-        auto flags = Builder.CreateLoad(Address{Val, LongTy, Align});
-        auto isInitialized =
-            Builder.CreateAnd(flags, ClassFlags::ClassFlagInitialized);
-        llvm::BasicBlock *notInitializedBlock =
-            CGF.createBasicBlock("objc_direct_method.class_uninitialized");
-        llvm::BasicBlock *initializedBlock =
-            CGF.createBasicBlock("objc_direct_method.class_initialized");
-        Builder.CreateCondBr(Builder.CreateICmpEQ(isInitialized, Zeros[0]),
-                             notInitializedBlock, initializedBlock,
-                             MDHelper.createUnlikelyBranchWeights());
-        CGF.EmitBlock(notInitializedBlock);
-        Builder.SetInsertPoint(notInitializedBlock);
-        CGF.EmitRuntimeCall(SentInitializeFn, selfValue);
-        Builder.CreateBr(initializedBlock);
-        CGF.EmitBlock(initializedBlock);
-        Builder.SetInsertPoint(initializedBlock);
-      }
-
-      // only synthesize _cmd if it's referenced
-      if (OMD->getCmdDecl()->isUsed()) {
-        // `_cmd` is not a parameter to direct methods, so storage must be
-        // explicitly declared for it.
-        CGF.EmitVarDecl(*OMD->getCmdDecl());
-        Builder.CreateStore(GetSelector(CGF, OMD),
-                            CGF.GetAddrOfLocalVar(OMD->getCmdDecl()));
-      }
-    }
 };
 
 const char *const CGObjCGNUstep2::SectionsBaseNames[8] =
@@ -4121,7 +4015,110 @@ void CGObjCGNU::GenerateDirectMethodPrologue(CodeGenFunction &CGF,
                                              llvm::Function *Fn,
                                              const ObjCMethodDecl *OMD,
                                              const ObjCContainerDecl *CD) {
-  // GNU runtime doesn't support direct calls at this time
+  if (!CGM.getLangOpts().ObjCRuntime.allowsDirectDispatch())
+    return;
+
+  auto &Builder = CGF.Builder;
+  bool ReceiverCanBeNull = true;
+  auto selfAddr = CGF.GetAddrOfLocalVar(OMD->getSelfDecl());
+  auto selfValue = Builder.CreateLoad(selfAddr);
+
+  // Generate:
+  //
+  // /* unless the receiver is never NULL */
+  // if (self == nil) {
+  //     return (ReturnType){ };
+  // }
+  //
+  // /* for class methods only to force class lazy initialization */
+  // if (!__objc_{class}_initialized)
+  // {
+  //   objc_send_initialize(class);
+  //   __objc_{class}_initialized = 1;
+  // }
+  //
+  // _cmd = @selector(...)
+  // ...
+
+  if (OMD->isClassMethod()) {
+    const ObjCInterfaceDecl *OID = cast<ObjCInterfaceDecl>(CD);
+
+    // Nullable `Class` expressions cannot be messaged with a direct method
+    // so the only reason why the receive can be null would be because
+    // of weak linking.
+    ReceiverCanBeNull = isWeakLinkedClass(OID);
+  }
+
+  llvm::MDBuilder MDHelper(CGM.getLLVMContext());
+  if (ReceiverCanBeNull) {
+    llvm::BasicBlock *SelfIsNilBlock =
+        CGF.createBasicBlock("objc_direct_method.self_is_nil");
+    llvm::BasicBlock *ContBlock =
+        CGF.createBasicBlock("objc_direct_method.cont");
+
+    // if (self == nil) {
+    auto selfTy = cast<llvm::PointerType>(selfValue->getType());
+    auto Zero = llvm::ConstantPointerNull::get(selfTy);
+
+    Builder.CreateCondBr(Builder.CreateICmpEQ(selfValue, Zero),
+                         SelfIsNilBlock, ContBlock,
+                         MDHelper.createUnlikelyBranchWeights());
+
+    CGF.EmitBlock(SelfIsNilBlock);
+
+    //   return (ReturnType){ };
+    auto retTy = OMD->getReturnType();
+    Builder.SetInsertPoint(SelfIsNilBlock);
+    if (!retTy->isVoidType()) {
+      CGF.EmitNullInitialization(CGF.ReturnValue, retTy);
+    }
+    CGF.EmitBranchThroughCleanup(CGF.ReturnBlock);
+    // }
+
+    // rest of the body
+    CGF.EmitBlock(ContBlock);
+    Builder.SetInsertPoint(ContBlock);
+  }
+
+  if (OMD->isClassMethod()) {
+    // Prefix of the class type.
+    auto *classStart =
+        llvm::StructType::get(PtrTy, PtrTy, PtrTy, LongTy, LongTy);
+    auto &astContext = CGM.getContext();
+    // FIXME: The following few lines up to and including the call to
+    // `CreateLoad` were known to miscompile when MSVC 19.40.33813 is used
+    // to build Clang. When the bug is fixed in future MSVC releases, we
+    // should revert these lines to their previous state. See discussion in
+    // https://github.com/llvm/llvm-project/pull/102681
+    llvm::Value *Val = Builder.CreateStructGEP(classStart, selfValue, 4);
+    auto Align = CharUnits::fromQuantity(
+        astContext.getTypeAlign(astContext.UnsignedLongTy));
+    auto flags = Builder.CreateLoad(Address{Val, LongTy, Align});
+    auto isInitialized =
+        Builder.CreateAnd(flags, ClassFlags::ClassFlagInitialized);
+    llvm::BasicBlock *notInitializedBlock =
+        CGF.createBasicBlock("objc_direct_method.class_uninitialized");
+    llvm::BasicBlock *initializedBlock =
+        CGF.createBasicBlock("objc_direct_method.class_initialized");
+    Builder.CreateCondBr(Builder.CreateICmpEQ(isInitialized, Zeros[0]),
+                         notInitializedBlock, initializedBlock,
+                         MDHelper.createUnlikelyBranchWeights());
+    CGF.EmitBlock(notInitializedBlock);
+    Builder.SetInsertPoint(notInitializedBlock);
+    CGF.EmitRuntimeCall(SentInitializeFn, selfValue);
+    Builder.CreateBr(initializedBlock);
+    CGF.EmitBlock(initializedBlock);
+    Builder.SetInsertPoint(initializedBlock);
+  }
+
+  // only synthesize _cmd if it's referenced
+  if (OMD->getCmdDecl()->isUsed()) {
+    // `_cmd` is not a parameter to direct methods, so storage must be
+    // explicitly declared for it.
+    CGF.EmitVarDecl(*OMD->getCmdDecl());
+    Builder.CreateStore(GetSelector(CGF, OMD),
+                        CGF.GetAddrOfLocalVar(OMD->getCmdDecl()));
+  }
 }
 
 llvm::FunctionCallee CGObjCGNU::GetPropertyGetFunction() {
