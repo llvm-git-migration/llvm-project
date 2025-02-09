@@ -47,6 +47,7 @@ struct MathPolynomialApproximationOptions {
 
 void populatePolynomialApproximateTanhPattern(RewritePatternSet &patterns);
 void populatePolynomialApproximateErfPattern(RewritePatternSet &patterns);
+void populatePolynomialApproximateErfcPattern(RewritePatternSet &patterns);
 
 void populateMathPolynomialApproximationPatterns(
     RewritePatternSet &patterns,
