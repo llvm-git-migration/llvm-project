@@ -1937,8 +1937,7 @@ static void addRawAttributeValue(AttrBuilder &B, uint64_t Val) {
 }
 
 /// This fills an AttrBuilder object with the LLVM attributes that have
-/// been decoded from the given integer. This function must stay in sync with
-/// 'encodeLLVMAttributesForBitcode'.
+/// been decoded from the given integer.
 static void decodeLLVMAttributesForBitcode(AttrBuilder &B,
                                            uint64_t EncodedAttrs,
                                            uint64_t AttrIdx) {
@@ -2398,9 +2397,25 @@ Error BitcodeReader::parseAttributeGroupBlock() {
             B.addUWTableAttr(UWTableKind(Record[++i]));
           else if (Kind == Attribute::AllocKind)
             B.addAllocKindAttr(static_cast<AllocFnKind>(Record[++i]));
-          else if (Kind == Attribute::Memory)
-            B.addMemoryAttr(MemoryEffects::createFromIntValue(Record[++i]));
-          else if (Kind == Attribute::Captures)
+          else if (Kind == Attribute::Memory) {
+            uint64_t EncodedME = Record[++i];
+            const uint8_t Version = (EncodedME >> 56);
+            auto ME = MemoryEffects::createFromIntValue(EncodedME &
+                                                        0x00FFFFFFFFFFFFFFULL);
+            if (Version < 1) {
+              // Errno memory location was previously encompassed into default
+              // memory. Ensure this is taken into account while reconstructing
+              // the memory attribute prior to its introduction.
+              ModRefInfo OldOtherMR = ME.getModRef(IRMemLocation::ErrnoMem);
+              ME = MemoryEffects::inaccessibleMemOnly(
+                       ME.getModRef(IRMemLocation::InaccessibleMem)) |
+                   MemoryEffects::argMemOnly(
+                       ME.getModRef(IRMemLocation::ArgMem)) |
+                   MemoryEffects::errnoMemOnly(OldOtherMR) |
+                   MemoryEffects::defaultMemOnly(OldOtherMR);
+            }
+            B.addMemoryAttr(ME);
+          } else if (Kind == Attribute::Captures)
             B.addCapturesAttr(CaptureInfo::createFromIntValue(Record[++i]));
           else if (Kind == Attribute::NoFPClass)
             B.addNoFPClassAttr(

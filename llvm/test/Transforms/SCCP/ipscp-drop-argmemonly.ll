@@ -11,7 +11,7 @@
 ; Here the pointer argument %arg will be replaced by a constant. We need to
 ; drop argmemonly.
 ;.
-; CHECK: @[[G:[a-zA-Z0-9_$"\\.-]+]] = internal global i32 0
+; CHECK: @g = internal global i32 0
 ;.
 define internal void @ptrarg.1(ptr %arg, i32 %val) argmemonly nounwind {
 ; CHECK: Function Attrs: nounwind memory(readwrite, inaccessiblemem: none)
