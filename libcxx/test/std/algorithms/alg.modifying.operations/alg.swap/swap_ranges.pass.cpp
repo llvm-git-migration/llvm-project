@@ -19,6 +19,7 @@
 #include <memory>
 #include <utility>
 #include <__type_traits/is_constant_evaluated.h>
+#include <__type_traits/type_identity.h>
 
 #include "test_macros.h"
 #include "test_iterators.h"
@@ -70,25 +71,30 @@ struct TestUniquePtr {
 };
 #endif
 
+template <template <class> class Iter1, template <class> class Iter2>
 TEST_CONSTEXPR_CXX20 bool test_simple_cases() {
   {
     std::array<int, 3> a = {1, 2, 3}, a0 = a;
     std::array<int, 3> b = {4, 5, 6}, b0 = b;
-    std::swap_ranges(a.begin(), a.end(), b.begin());
+    std::swap_ranges(Iter1<int*>(a.begin()), Iter1<int*>(a.end()), Iter2<int*>(b.begin()));
     assert(a == b0);
     assert(b == a0);
   }
   {
     std::array<std::array<int, 2>, 2> a = {{{0, 1}, {2, 3}}}, a0 = a;
     std::array<std::array<int, 2>, 2> b = {{{9, 8}, {7, 6}}}, b0 = b;
-    std::swap_ranges(a.begin(), a.end(), b.begin());
+    using It1 = Iter1<std::array<std::array<int, 2>, 2>::iterator>;
+    using It2 = Iter2<std::array<std::array<int, 2>, 2>::iterator>;
+    std::swap_ranges(It1(a.begin()), It1(a.end()), It2(b.begin()));
     assert(a == b0);
     assert(b == a0);
   }
   {
     std::array<std::array<int, 3>, 3> a = {{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}}}, a0 = a;
     std::array<std::array<int, 3>, 3> b = {{{9, 8, 7}, {6, 5, 4}, {3, 2, 1}}}, b0 = b;
-    std::swap_ranges(a.begin(), a.end(), b.begin());
+    using It1 = Iter1<std::array<std::array<int, 3>, 3>::iterator>;
+    using It2 = Iter2<std::array<std::array<int, 3>, 3>::iterator>;
+    std::swap_ranges(It1(a.begin()), It1(a.end()), It2(b.begin()));
     assert(a == b0);
     assert(b == a0);
   }
@@ -97,7 +103,15 @@ TEST_CONSTEXPR_CXX20 bool test_simple_cases() {
 }
 
 TEST_CONSTEXPR_CXX20 bool test() {
-  test_simple_cases();
+  test_simple_cases<forward_iterator, forward_iterator>();
+  test_simple_cases<forward_iterator, bidirectional_iterator>();
+  test_simple_cases<forward_iterator, random_access_iterator>();
+  test_simple_cases<bidirectional_iterator, forward_iterator>();
+  test_simple_cases<bidirectional_iterator, bidirectional_iterator>();
+  test_simple_cases<bidirectional_iterator, random_access_iterator>();
+  test_simple_cases<random_access_iterator, random_access_iterator>();
+  test_simple_cases<std::__type_identity_t, std::__type_identity_t>();
+
   types::for_each(types::forward_iterator_list<int*>(), TestPtr());
 
   if (std::__libcpp_is_constant_evaluated()) {
