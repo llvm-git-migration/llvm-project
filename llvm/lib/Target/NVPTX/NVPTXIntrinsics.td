@@ -328,6 +328,24 @@ defm REDUX_SYNC_AND : REDUX_SYNC<"and", "b32", int_nvvm_redux_sync_and>;
 defm REDUX_SYNC_XOR : REDUX_SYNC<"xor", "b32", int_nvvm_redux_sync_xor>;
 defm REDUX_SYNC_OR : REDUX_SYNC<"or", "b32", int_nvvm_redux_sync_or>;
 
+multiclass REDUX_SYNC_F<string BinOp, string ABS, string NAN, Intrinsic Intrin> {
+  def : NVPTXInst<(outs Float32Regs:$dst),
+                  (ins Float32Regs:$src, Int32Regs:$mask),
+                  "redux.sync." # !tolower(BinOp) # !subst("_", ".", ABS) # !subst("_", ".", NAN) # ".f32 $dst, $src, $mask;",
+                  [(set f32:$dst, (Intrin f32:$src, Int32Regs:$mask))]>,
+                  Requires<[hasPTX<86>, hasSM100a]>; 
+ 
+}
+
+defm REDUX_SYNC_FMIN : REDUX_SYNC_F<"min", "", "", int_nvvm_redux_sync_fmin>;
+defm REDUX_SYNC_FMIN_ABS : REDUX_SYNC_F<"min", "_abs", "", int_nvvm_redux_sync_fmin_abs>;
+defm REDUX_SYNC_FMIN_NAN: REDUX_SYNC_F<"min", "", "_NaN", int_nvvm_redux_sync_fmin_NaN>;
+defm REDUX_SYNC_FMIN_ABS_NAN: REDUX_SYNC_F<"min", "_abs", "_NaN", int_nvvm_redux_sync_fmin_abs_NaN>;
+defm REDUX_SYNC_FMAX : REDUX_SYNC_F<"max", "", "", int_nvvm_redux_sync_fmax>;
+defm REDUX_SYNC_FMAX_ABS : REDUX_SYNC_F<"max", "_abs", "", int_nvvm_redux_sync_fmax_abs>;
+defm REDUX_SYNC_FMAX_NAN: REDUX_SYNC_F<"max", "", "_NaN", int_nvvm_redux_sync_fmax_NaN>;
+defm REDUX_SYNC_FMAX_ABS_NAN: REDUX_SYNC_F<"max", "_abs", "_NaN", int_nvvm_redux_sync_fmax_abs_NaN>;
+
 } // isConvergent = true
 
 //-----------------------------------
