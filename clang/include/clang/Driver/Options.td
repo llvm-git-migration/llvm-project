@@ -5621,6 +5621,9 @@ def : Flag<["-"], "nocudainc">, Alias<nogpuinc>;
 def nogpulib : Flag<["-"], "nogpulib">, MarshallingInfoFlag<LangOpts<"NoGPULib">>,
   Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
   HelpText<"Do not link device library for CUDA/HIP device compilation">;
+def gpulib : Flag<["-"], "gpulib">,
+             Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
+             HelpText<"Link device libraries for GPU device compilation">;
 def : Flag<["-"], "nocudalib">, Alias<nogpulib>;
 def gpulibc : Flag<["-"], "gpulibc">, Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
   HelpText<"Link the LLVM C Library for GPUs">;
