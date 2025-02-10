@@ -1582,7 +1582,21 @@ void aggregate() {
       F("___"),
       F("____")
   };
-  (void)ctors;
+
+  struct Copy {
+    Embed e;
+    EmbedDerived ed;
+    F f;
+    Copy(const Copy &c) : e(c.e), ed(c.ed), f(c.f) {} // no-error
+  };
+  F copy1(ctors[0]); // no-error
+  (void)copy1;
+  F copy2{ctors[0]}; // no-error
+  (void)copy2;
+  F copy3 = ctors[0]; // no-error
+  (void)copy3;
+  F copy4 = {ctors[0]}; // no-error
+  (void)copy4;
 
   S::foo(S{1, 2, 3, 4});
   S::foo(S{.s1 = 100, .s4 = 100});
