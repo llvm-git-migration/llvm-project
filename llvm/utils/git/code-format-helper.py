@@ -380,8 +380,9 @@ You can test this locally with the following command:
         # diff --git a/file b/file
         for file in re.split("^diff --git ", stdout, 0, re.MULTILINE):
             # We skip checking in MIR files as undef is a valid token and not
-            # going away.
-            if file.endswith(".mir"):
+            # going away. Starlark might need to template undef, so we allow
+            # that as well.
+            if file.endswith(".mir", ".bzl", ".bazel"):
                 continue
             # search for additions of undef
             if re.search(r"^[+](?!\s*#\s*).*(\bundef\b|UndefValue::get)", file, re.MULTILINE):
