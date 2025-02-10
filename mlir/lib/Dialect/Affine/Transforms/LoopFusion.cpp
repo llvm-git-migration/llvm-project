@@ -1150,6 +1150,8 @@ public:
         continue;
 
       unsigned bestDstLoopDepth = maxLegalFusionDepth;
+      const ComputationSliceState &bestSlice =
+          depthSliceUnions[bestDstLoopDepth - 1];
       if (!maximalFusion) {
         // Check if fusion would be profitable. For sibling fusion, the sibling
         // load op is treated as the src "store" op for fusion profitability
@@ -1162,24 +1164,40 @@ public:
       }
 
       assert(bestDstLoopDepth > 0 && "Unexpected loop fusion depth");
-      assert(!depthSliceUnions[bestDstLoopDepth - 1].isEmpty() &&
+      assert(!bestSlice.isEmpty() &&
              "Fusion depth has no computed slice union");
       // Check if source loop is being inserted in the innermost
       // destination loop. Based on this, the fused loop may be optimized
       // further inside `fuseLoops`.
       bool isInnermostInsertion = (bestDstLoopDepth == dstLoopDepthTest);
       // Fuse computation slice of 'sibLoopNest' into 'dstLoopNest'.
-      affine::fuseLoops(sibAffineForOp, dstAffineForOp,
-                        depthSliceUnions[bestDstLoopDepth - 1],
+      affine::fuseLoops(sibAffineForOp, dstAffineForOp, bestSlice,
                         isInnermostInsertion);
 
       auto dstForInst = cast<AffineForOp>(dstNode->op);
       // Update operation position of fused loop nest (if needed).
-      if (insertPointInst != dstForInst) {
+      if (insertPointInst != dstForInst)
         dstForInst->moveBefore(insertPointInst);
-      }
+
       // Update data dependence graph state post fusion.
       updateStateAfterSiblingFusion(sibNode, dstNode);
+
+      // Remove old sibling loop nest if it no longer has outgoing dependence
+      // edges, and the slice is maximal.
+      bool removeSrcNode = [&]() {
+        if (mdg->getOutEdgeCount(sibNode->id) > 0)
+          return false;
+        auto isMaximal = bestSlice.isMaximal();
+        return isMaximal && *isMaximal;
+      }();
+      LLVM_DEBUG(llvm::dbgs() << "Can remove source node after fusion: "
+                              << removeSrcNode << '\n');
+      if (removeSrcNode) {
+        // Get op before we invalidate the MDG node.
+        Operation *op = sibNode->op;
+        mdg->removeNode(sibNode->id);
+        op->erase();
+      }
     }
   }
 
@@ -1321,13 +1339,6 @@ public:
     mdg->addToNode(dstNode->id, dstLoopCollector.loadOpInsts,
                    dstLoopCollector.storeOpInsts, dstLoopCollector.memrefLoads,
                    dstLoopCollector.memrefStores, dstLoopCollector.memrefFrees);
-    // Remove old sibling loop nest if it no longer has outgoing dependence
-    // edges, and it does not write to a memref which escapes the block.
-    if (mdg->getOutEdgeCount(sibNode->id) == 0) {
-      Operation *op = sibNode->op;
-      mdg->removeNode(sibNode->id);
-      op->erase();
-    }
   }
 
   // Clean up any allocs with no users.
