@@ -48,8 +48,8 @@ jobs:
           'generic-cxx26',
           'generic-modules'
         ]
-        cc: [  'clang-20' ]
-        cxx: [ 'clang++-20' ]
+        cc: [  'clang-21' ]
+        cxx: [ 'clang++-21' ]
         include:
           - config: 'generic-gcc'
             cc: 'gcc-14'
@@ -88,18 +88,22 @@ jobs:
           'generic-cxx20',
           'generic-cxx23'
         ]
-        cc: [ 'clang-20' ]
-        cxx: [ 'clang++-20' ]
+        cc: [ 'clang-21' ]
+        cxx: [ 'clang++-21' ]
         include:
           - config: 'generic-gcc-cxx11'
             cc: 'gcc-14'
             cxx: 'g++-14'
-          - config: 'generic-cxx23'
-            cc: 'clang-18'
-            cxx: 'clang++-18'
+          - config: 'generic-cxx26'
+            cc: 'clang-20'
+            cxx: 'clang++-20'
           - config: 'generic-cxx26'
             cc: 'clang-19'
             cxx: 'clang++-19'
+          # Release transition
+          - config: 'generic-cxx23'
+            cc: 'clang-18'
+            cxx: 'clang++-18'
     steps:
       - uses: actions/checkout@v4
       - name: ${{ matrix.config }}
@@ -169,8 +173,8 @@ jobs:
       - name: ${{ matrix.config }}
         run: libcxx/utils/ci/run-buildbot ${{ matrix.config }}
         env:
-          CC: clang-20
-          CXX: clang++-20
+          CC: clang-21
+          CXX: clang++-21
       - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
         if: always()
         with:
