@@ -7088,7 +7088,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // Forward -nogpulib to -cc1.
-  if (Args.hasArg(options::OPT_nogpulib))
+  if (!Args.hasFlag(options::OPT_gpulib, options::OPT_nogpulib, true))
     CmdArgs.push_back("-nogpulib");
 
   if (Arg *A = Args.getLastArg(options::OPT_fcf_protection_EQ)) {
@@ -9289,7 +9289,8 @@ void LinkerWrapper::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("--save-temps");
 
   // Pass in the C library for GPUs if present and not disabled.
-  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_r, options::OPT_nogpulib,
+  if (Args.hasFlag(options::OPT_gpulib, OPT_nogpulib, true) &&
+      !Args.hasArg(options::OPT_nostdlib, options::OPT_r,
                    options::OPT_nodefaultlibs, options::OPT_nolibc,
                    options::OPT_nogpulibc)) {
     forAllAssociatedToolChains(C, JA, getToolChain(), [&](const ToolChain &TC) {

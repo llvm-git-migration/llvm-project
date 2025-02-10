@@ -5618,9 +5618,17 @@ def nogpuinc : Flag<["-"], "nogpuinc">, Group<IncludePath_Group>,
 def nohipwrapperinc : Flag<["-"], "nohipwrapperinc">, Group<IncludePath_Group>,
   HelpText<"Do not include the default HIP wrapper headers and include paths">;
 def : Flag<["-"], "nocudainc">, Alias<nogpuinc>;
-def nogpulib : Flag<["-"], "nogpulib">, MarshallingInfoFlag<LangOpts<"NoGPULib">>,
-  Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
-  HelpText<"Do not link device library for CUDA/HIP device compilation">;
+def nogpulib
+    : Flag<["--"], "no-offloadlib">,
+      MarshallingInfoFlag<LangOpts<"NoGPULib">>,
+      Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
+      HelpText<"Do not link device library for CUDA/HIP device compilation">;
+def gpulib : Flag<["--"], "offloadlib">,
+             Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
+             HelpText<"Link device libraries for GPU device compilation">;
+def : Flag<["-"], "nogpulib">,
+      Alias<nogpulib>,
+      Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>;
 def : Flag<["-"], "nocudalib">, Alias<nogpulib>;
 def gpulibc : Flag<["-"], "gpulibc">, Visibility<[ClangOption, CC1Option, FlangOption, FC1Option]>,
   HelpText<"Link the LLVM C Library for GPUs">;

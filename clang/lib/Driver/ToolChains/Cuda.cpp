@@ -196,7 +196,8 @@ CudaInstallationDetector::CudaInstallationDetector(
       Candidates.emplace_back(D.SysRoot + "/usr/lib/cuda");
   }
 
-  bool NoCudaLib = Args.hasArg(options::OPT_nogpulib);
+  bool NoCudaLib =
+      !Args.hasFlag(options::OPT_gpulib, options::OPT_nogpulib, true);
 
   for (const auto &Candidate : Candidates) {
     InstallPath = Candidate.Path;
@@ -865,7 +866,7 @@ void CudaToolChain::addClangTargetOptions(
                          options::OPT_fno_cuda_short_ptr, false))
     CC1Args.append({"-mllvm", "--nvptx-short-ptr"});
 
-  if (DriverArgs.hasArg(options::OPT_nogpulib))
+  if (!DriverArgs.hasFlag(options::OPT_gpulib, options::OPT_nogpulib, true))
     return;
 
   if (DeviceOffloadingKind == Action::OFK_OpenMP &&

@@ -936,7 +936,7 @@ void ROCMToolChain::addClangTargetOptions(
       DriverArgs.hasArg(options::OPT_nostdlib))
     return;
 
-  if (DriverArgs.hasArg(options::OPT_nogpulib))
+  if (!DriverArgs.hasFlag(options::OPT_gpulib, options::OPT_nogpulib, true))
     return;
 
   // Get the device name and canonicalize it

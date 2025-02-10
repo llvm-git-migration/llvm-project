@@ -27,7 +27,7 @@ void SPIRVOpenMPToolChain::addClangTargetOptions(
   if (DeviceOffloadingKind != Action::OFK_OpenMP)
     return;
 
-  if (DriverArgs.hasArg(options::OPT_nogpulib))
+  if (!DriverArgs.hasFlag(options::OPT_gpulib, options::OPT_nogpulib, true))
     return;
   addOpenMPDeviceRTL(getDriver(), DriverArgs, CC1Args, "", getTriple(), HostTC);
 }
