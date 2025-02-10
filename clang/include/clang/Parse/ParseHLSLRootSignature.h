@@ -99,8 +99,7 @@ private:
 class RootSignatureParser {
 public:
   RootSignatureParser(SmallVector<llvm::hlsl::rootsig::RootElement> &Elements,
-                      const SmallVector<RootSignatureToken> &Tokens,
-                      DiagnosticsEngine &Diags);
+                      RootSignatureLexer &Lexer, DiagnosticsEngine &Diags);
 
   /// Iterates over the provided tokens and constructs the in-memory
   /// representations of the RootElements.
@@ -112,7 +111,7 @@ public:
 
 private:
   // Root Element helpers
-  bool ParseRootElement(bool First);
+  bool ParseRootElement();
   bool ParseDescriptorTable();
   bool ParseDescriptorTableClause();
 
@@ -147,9 +146,17 @@ private:
   ParseDescriptorRangeFlags(llvm::hlsl::rootsig::DescriptorRangeFlags *Enum);
   bool ParseShaderVisibility(llvm::hlsl::rootsig::ShaderVisibility *Enum);
 
-  /// Increment the token iterator if we have not reached the end.
+  /// Invoke the lexer to consume a token and update CurToken with the result
+  ///
   /// Return value denotes if we were already at the last token.
-  bool ConsumeNextToken();
+  ///
+  /// This is used to avoid having to constantly access the Lexer's CurToken
+  bool ConsumeNextToken() {
+    if (Lexer.ConsumeToken())
+      return true; // Report lexer err
+    CurToken = Lexer.GetCurToken();
+    return false;
+  }
 
   /// Attempt to retrieve the next token, if TokenKind is invalid then there was
   /// no next token.
@@ -185,10 +192,10 @@ private:
 
 private:
   SmallVector<llvm::hlsl::rootsig::RootElement> &Elements;
-  SmallVector<RootSignatureToken>::const_iterator CurTok;
-  SmallVector<RootSignatureToken>::const_iterator LastTok;
-
+  RootSignatureLexer &Lexer;
   DiagnosticsEngine &Diags;
+
+  RootSignatureToken CurToken;
 };
 
 } // namespace hlsl

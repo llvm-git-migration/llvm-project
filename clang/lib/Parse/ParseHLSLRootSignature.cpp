@@ -18,6 +18,9 @@ static std::string FormatTokenKinds(ArrayRef<TokenKind> Kinds) {
       Out << ", ";
     switch (Kind) {
     case TokenKind::invalid:
+      Out << "uninitialized";
+      break;
+    case TokenKind::end_of_stream:
       break;
     case TokenKind::int_literal:
       Out << "integer literal";
@@ -243,42 +246,33 @@ std::optional<RootSignatureToken> RootSignatureLexer::PeekNextToken() {
 
 // Parser Definitions
 
-RootSignatureParser::RootSignatureParser(
-    SmallVector<RootElement> &Elements,
-    const SmallVector<RootSignatureToken> &Tokens, DiagnosticsEngine &Diags)
-    : Elements(Elements), Diags(Diags) {
-  CurTok = Tokens.begin();
-  LastTok = Tokens.end();
-}
+RootSignatureParser::RootSignatureParser(SmallVector<RootElement> &Elements,
+                                         RootSignatureLexer &Lexer,
+                                         DiagnosticsEngine &Diags)
+    : Elements(Elements), Lexer(Lexer), Diags(Diags) {}
 
 bool RootSignatureParser::Parse() {
   // Handle edge-case of empty RootSignature()
-  if (CurTok == LastTok)
+  if (Lexer.EndOfBuffer())
     return false;
 
-  bool First = true;
   // Iterate as many RootElements as possible
-  while (!ParseRootElement(First)) {
-    First = false;
-    // Avoid use of ConsumeNextToken here to skip incorrect end of tokens error
-    CurTok++;
-    if (CurTok == LastTok)
+  while (!ParseRootElement()) {
+    if (Lexer.EndOfBuffer())
       return false;
-    if (EnsureExpectedToken(TokenKind::pu_comma))
+    if (ConsumeExpectedToken(TokenKind::pu_comma))
       return true;
   }
 
   return true;
 }
 
-bool RootSignatureParser::ParseRootElement(bool First) {
-  if (First && EnsureExpectedToken(TokenKind::kw_DescriptorTable))
-    return true;
-  if (!First && ConsumeExpectedToken(TokenKind::kw_DescriptorTable))
+bool RootSignatureParser::ParseRootElement() {
+  if (ConsumeExpectedToken(TokenKind::kw_DescriptorTable))
     return true;
 
   // Dispatch onto the correct parse method
-  switch (CurTok->Kind) {
+  switch (CurToken.Kind) {
   case TokenKind::kw_DescriptorTable:
     return ParseDescriptorTable();
   default:
@@ -305,8 +299,8 @@ bool RootSignatureParser::ParseDescriptorTable() {
     // Handle the visibility parameter
     if (!TryConsumeExpectedToken(TokenKind::kw_visibility)) {
       if (SeenVisibility) {
-        Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_repeat_param)
-            << FormatTokenKinds(CurTok->Kind);
+        Diags.Report(CurToken.TokLoc, diag::err_hlsl_rootsig_repeat_param)
+            << FormatTokenKinds(CurToken.Kind);
         return true;
       }
       SeenVisibility = true;
@@ -334,7 +328,7 @@ bool RootSignatureParser::ParseDescriptorTableClause() {
     return true;
 
   DescriptorTableClause Clause;
-  switch (CurTok->Kind) {
+  switch (CurToken.Kind) {
   case TokenKind::kw_CBV:
     Clause.Type = ClauseType::CBuffer;
     break;
@@ -419,9 +413,9 @@ bool RootSignatureParser::ParseOptionalParams(
     if (ConsumeExpectedToken(ParamKeywords))
       return true;
 
-    TokenKind ParamKind = CurTok->Kind;
+    TokenKind ParamKind = CurToken.Kind;
     if (Seen.contains(ParamKind)) {
-      Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_repeat_param)
+      Diags.Report(CurToken.TokLoc, diag::err_hlsl_rootsig_repeat_param)
           << FormatTokenKinds(ParamKind);
       return true;
     }
@@ -440,12 +434,12 @@ bool RootSignatureParser::ParseDescriptorRangeOffset(DescriptorRangeOffset *X) {
     return true;
 
   // Edge case for the offset enum -> static value
-  if (CurTok->Kind == TokenKind::en_DescriptorRangeOffsetAppend) {
+  if (CurToken.Kind == TokenKind::en_DescriptorRangeOffsetAppend) {
     *X = DescriptorTableOffsetAppend;
     return false;
   }
 
-  *X = DescriptorRangeOffset(CurTok->NumLiteral.getInt().getExtValue());
+  *X = DescriptorRangeOffset(CurToken.NumLiteral.getInt().getExtValue());
   return false;
 }
 
@@ -453,12 +447,12 @@ bool RootSignatureParser::ParseUInt(uint32_t *X) {
   if (ConsumeExpectedToken(TokenKind::int_literal))
     return true;
 
-  *X = CurTok->NumLiteral.getInt().getExtValue();
+  *X = CurToken.NumLiteral.getInt().getExtValue();
   return false;
 }
 
 bool RootSignatureParser::ParseRegister(Register *Register) {
-  switch (CurTok->Kind) {
+  switch (CurToken.Kind) {
   case TokenKind::bReg:
     Register->ViewType = RegisterType::BReg;
     break;
@@ -475,7 +469,7 @@ bool RootSignatureParser::ParseRegister(Register *Register) {
     llvm_unreachable("Switch for an expected token was not provided");
   }
 
-  Register->Number = CurTok->NumLiteral.getInt().getExtValue();
+  Register->Number = CurToken.NumLiteral.getInt().getExtValue();
 
   return false;
 }
@@ -494,9 +488,9 @@ bool RootSignatureParser::ParseEnum(
     return true;
 
   // Handle the edge case when '0' is used to specify None
-  if (CurTok->Kind == TokenKind::int_literal) {
-    if (CurTok->NumLiteral.getInt() != 0) {
-      Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_non_zero_flag);
+  if (CurToken.Kind == TokenKind::int_literal) {
+    if (CurToken.NumLiteral.getInt() != 0) {
+      Diags.Report(CurToken.TokLoc, diag::err_hlsl_rootsig_non_zero_flag);
       return true;
     }
     // Set enum to None equivalent
@@ -506,7 +500,7 @@ bool RootSignatureParser::ParseEnum(
 
   // Effectively a switch statement on the token kinds
   for (auto EnumPair : EnumMap)
-    if (CurTok->Kind == EnumPair.first) {
+    if (CurToken.Kind == EnumPair.first) {
       *Enum = EnumPair.second;
       return false;
     }
@@ -556,25 +550,6 @@ bool RootSignatureParser::ParseShaderVisibility(ShaderVisibility *Enum) {
   return ParseEnum(EnumMap, Enum);
 }
 
-RootSignatureToken RootSignatureParser::PeekNextToken() {
-  // Create an invalid token
-  RootSignatureToken Token = RootSignatureToken(SourceLocation());
-  if (CurTok != LastTok)
-    Token = *(CurTok + 1);
-  return Token;
-}
-
-bool RootSignatureParser::ConsumeNextToken() {
-  SourceLocation EndLoc = CurTok->TokLoc;
-  CurTok++;
-  if (LastTok == CurTok) {
-    // Report unexpected end of tokens error
-    Diags.Report(EndLoc, diag::err_hlsl_rootsig_unexpected_eos);
-    return true;
-  }
-  return false;
-}
-
 // Is given token one of the expected kinds
 static bool IsExpectedToken(TokenKind Kind, ArrayRef<TokenKind> AnyExpected) {
   for (auto Expected : AnyExpected)
@@ -588,11 +563,11 @@ bool RootSignatureParser::EnsureExpectedToken(TokenKind Expected) {
 }
 
 bool RootSignatureParser::EnsureExpectedToken(ArrayRef<TokenKind> AnyExpected) {
-  if (IsExpectedToken(CurTok->Kind, AnyExpected))
+  if (IsExpectedToken(CurToken.Kind, AnyExpected))
     return false;
 
   // Report unexpected token kind error
-  Diags.Report(CurTok->TokLoc, diag::err_hlsl_rootsig_unexpected_token_kind)
+  Diags.Report(CurToken.TokLoc, diag::err_hlsl_rootsig_unexpected_token_kind)
       << (unsigned)(AnyExpected.size() != 1) << FormatTokenKinds(AnyExpected);
   return true;
 }
@@ -602,10 +577,10 @@ bool RootSignatureParser::PeekExpectedToken(TokenKind Expected) {
 }
 
 bool RootSignatureParser::PeekExpectedToken(ArrayRef<TokenKind> AnyExpected) {
-  RootSignatureToken Token = PeekNextToken();
-  if (Token.Kind == TokenKind::invalid)
+  auto Result = Lexer.PeekNextToken();
+  if (!Result)
     return true;
-  if (IsExpectedToken(Token.Kind, AnyExpected))
+  if (IsExpectedToken(Result->Kind, AnyExpected))
     return false;
   return true;
 }
