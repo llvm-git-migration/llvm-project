@@ -7,23 +7,23 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/AsmParser/Parser.h"
+#include <llvm/ADT/SmallString.h>
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstIterator.h"
+#include <llvm/IR/LLVMContext.h>
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
-#include "llvm/Pass.h"
-#include "llvm/PassRegistry.h"
-#include "llvm/Passes/StandardInstrumentations.h"
-#include "llvm/Support/SourceMgr.h"
-#include "gtest/gtest.h"
-#include <gtest/gtest.h>
-#include <llvm/ADT/SmallString.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/PassInstrumentation.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/PassTimingInfo.h>
+#include "llvm/Pass.h"
+#include "llvm/PassRegistry.h"
+#include "llvm/Passes/StandardInstrumentations.h"
+#include "llvm/Support/SourceMgr.h"
 #include <llvm/Support/raw_ostream.h>
+#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 using namespace llvm;
 namespace llvm {
