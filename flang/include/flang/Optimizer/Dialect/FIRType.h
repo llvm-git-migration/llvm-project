@@ -276,6 +276,10 @@ inline mlir::Type unwrapPassByRefType(mlir::Type t) {
   return t;
 }
 
+/// Unwrap either a reference or a boxed reference type, returning the
+/// (possibly)-boxed and referenced type.
+mlir::Type unwrapRefOrBoxedRefType(mlir::Type ty);
+
 /// Unwrap either a sequence or a boxed sequence type, returning the element
 /// type of the sequence type.
 /// e.g.,

@@ -426,6 +426,15 @@ mlir::Type unwrapAllRefAndSeqType(mlir::Type ty) {
   }
 }
 
+mlir::Type unwrapRefOrBoxedRefType(mlir::Type ty) {
+  mlir::Type eleTy;
+
+  if (auto boxTy = mlir::dyn_cast<fir::BaseBoxType>(ty))
+    eleTy = boxTy.getEleTy();
+
+  return unwrapRefType(eleTy);
+}
+
 mlir::Type unwrapSeqOrBoxedSeqType(mlir::Type ty) {
   if (auto seqTy = mlir::dyn_cast<fir::SequenceType>(ty))
     return seqTy.getEleTy();
