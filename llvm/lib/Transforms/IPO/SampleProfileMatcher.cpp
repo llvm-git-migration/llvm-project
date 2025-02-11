@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/IPO/SampleProfileMatcher.h"
+#include "llvm/Demangle/Demangle.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/Support/CommandLine.h"
@@ -764,6 +765,36 @@ bool SampleProfileMatcher::functionMatchesProfileHelper(
 
       return true;
     }
+  }
+
+  // Match the functions if they have the same base name(after demangling) and
+  // skip the similarity check.
+  ItaniumPartialDemangler Demangler;
+  auto GetBaseName = [&](StringRef FName) {
+    auto FunctionName = FName.str();
+    // Could not demangle.
+    if (Demangler.partialDemangle(FunctionName.c_str()))
+      return std::string("");
+    size_t BufferSize = 1;
+    char *Buffer = static_cast<char *>(std::malloc(BufferSize));
+    char *BaseName = Demangler.getFunctionBaseName(Buffer, &BufferSize);
+    if (!BaseName) {
+      std::free(Buffer);
+      return std::string("");
+    }
+    if (Buffer != BaseName)
+      Buffer = BaseName;
+    std::string BaseNameStr(Buffer, BufferSize);
+    std::free(Buffer);
+    return BaseNameStr;
+  };
+  auto IRBaseName = GetBaseName(IRFunc.getName());
+  auto ProfBaseName = GetBaseName(ProfFunc.stringRef());
+  if (!IRBaseName.empty() && IRBaseName == ProfBaseName) {
+    LLVM_DEBUG(dbgs() << "The functions " << IRFunc.getName() << "(IR) and "
+                      << ProfFunc << "(Profile) share the same base name: "
+                      << IRBaseName << ".\n");
+    return true;
   }
 
   AnchorMap IRAnchors;
