@@ -474,8 +474,8 @@ Expected<StringRef> clang(ArrayRef<StringRef> InputFiles, const ArgList &Args) {
 
   const llvm::Triple Triple(Args.getLastArgValue(OPT_triple_EQ));
   StringRef Arch = Args.getLastArgValue(OPT_arch_EQ);
-  if (Arch.empty())
-    Arch = "native";
+  if (Arch.empty() || Arch == "generic")
+    Arch = "";
   // Create a new file to write the linked device image to. Assume that the
   // input filename already has the device and architecture.
   auto TempFileOrErr =
@@ -492,10 +492,12 @@ Expected<StringRef> clang(ArrayRef<StringRef> InputFiles, const ArgList &Args) {
       "-o",
       *TempFileOrErr,
       Args.MakeArgString("--target=" + Triple.getTriple()),
-      Triple.isAMDGPU() ? Args.MakeArgString("-mcpu=" + Arch)
-                        : Args.MakeArgString("-march=" + Arch),
       Args.MakeArgString("-" + OptLevel),
   };
+
+  if (!Arch.empty())
+    Triple.isAMDGPU() ? Args.MakeArgString("-mcpu=" + Arch)
+                      : Args.MakeArgString("-march=" + Arch);
 
   // Forward all of the `--offload-opt` and similar options to the device.
   CmdArgs.push_back("-flto");
