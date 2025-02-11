@@ -680,7 +680,7 @@ bool ScriptInterpreterPythonImpl::EnterSession(uint16_t on_entry_flags,
   PythonDictionary &sys_module_dict = GetSysModuleDictionary();
   if (sys_module_dict.IsValid()) {
     lldb::FileSP top_in_sp;
-    lldb::StreamFileSP top_out_sp, top_err_sp;
+    lldb::SynchronizedStreamFileSP top_out_sp, top_err_sp;
     if (!in_sp || !out_sp || !err_sp || !*in_sp || !*out_sp || !*err_sp)
       m_debugger.AdoptTopIOHandlerFilesIfInvalid(top_in_sp, top_out_sp,
                                                  top_err_sp);

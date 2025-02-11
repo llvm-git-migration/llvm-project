@@ -151,8 +151,9 @@ using namespace line_editor;
 /// facility.  Both single- and multi-line editing are supported.
 class Editline {
 public:
-  Editline(const char *editor_name, FILE *input_file, FILE *output_file,
-           FILE *error_file, bool color, std::recursive_mutex &output_mutex);
+  Editline(const char *editor_name, FILE *input_file,
+           lldb::SynchronizedStreamFileSP output_stream_sp,
+           lldb::SynchronizedStreamFileSP error_stream_sp, bool color);
 
   ~Editline();
 
@@ -392,8 +393,8 @@ private:
   volatile std::sig_atomic_t m_terminal_size_has_changed = 0;
   std::string m_editor_name;
   FILE *m_input_file;
-  FILE *m_output_file;
-  FILE *m_error_file;
+  lldb::SynchronizedStreamFileSP m_output_stream_sp;
+  lldb::SynchronizedStreamFileSP m_error_stream_sp;
   ConnectionFileDescriptor m_input_connection;
 
   IsInputCompleteCallbackType m_is_input_complete_callback;
@@ -411,7 +412,6 @@ private:
   std::string m_suggestion_ansi_suffix;
 
   std::size_t m_previous_autosuggestion_size = 0;
-  std::recursive_mutex &m_output_mutex;
 };
 }
 

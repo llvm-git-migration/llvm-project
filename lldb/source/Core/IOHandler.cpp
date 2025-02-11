@@ -53,18 +53,20 @@ using namespace lldb_private;
 using llvm::StringRef;
 
 IOHandler::IOHandler(Debugger &debugger, IOHandler::Type type)
-    : IOHandler(debugger, type,
-                FileSP(),       // Adopt STDIN from top input reader
-                StreamFileSP(), // Adopt STDOUT from top input reader
-                StreamFileSP(), // Adopt STDERR from top input reader
-                0               // Flags
+    : IOHandler(
+          debugger, type,
+          FileSP(),                   // Adopt STDIN from top input reader
+          SynchronizedStreamFileSP(), // Adopt STDOUT from top input reader
+          SynchronizedStreamFileSP(), // Adopt STDERR from top input reader
+          0                           // Flags
 
       ) {}
 
 IOHandler::IOHandler(Debugger &debugger, IOHandler::Type type,
                      const lldb::FileSP &input_sp,
-                     const lldb::StreamFileSP &output_sp,
-                     const lldb::StreamFileSP &error_sp, uint32_t flags)
+                     const lldb::SynchronizedStreamFileSP &output_sp,
+                     const lldb::SynchronizedStreamFileSP &error_sp,
+                     uint32_t flags)
     : m_debugger(debugger), m_input_sp(input_sp), m_output_sp(output_sp),
       m_error_sp(error_sp), m_popped(false), m_flags(flags), m_type(type),
       m_user_data(nullptr), m_done(false), m_active(false) {
@@ -88,23 +90,15 @@ int IOHandler::GetErrorFD() {
   return (m_error_sp ? m_error_sp->GetFile().GetDescriptor() : -1);
 }
 
-FILE *IOHandler::GetInputFILE() {
-  return (m_input_sp ? m_input_sp->GetStream() : nullptr);
-}
-
-FILE *IOHandler::GetOutputFILE() {
-  return (m_output_sp ? m_output_sp->GetFile().GetStream() : nullptr);
-}
-
-FILE *IOHandler::GetErrorFILE() {
-  return (m_error_sp ? m_error_sp->GetFile().GetStream() : nullptr);
-}
-
 FileSP IOHandler::GetInputFileSP() { return m_input_sp; }
 
-StreamFileSP IOHandler::GetOutputStreamFileSP() { return m_output_sp; }
+SynchronizedStreamFileSP IOHandler::GetOutputStreamFileSP() {
+  return m_output_sp;
+}
 
-StreamFileSP IOHandler::GetErrorStreamFileSP() { return m_error_sp; }
+SynchronizedStreamFileSP IOHandler::GetErrorStreamFileSP() {
+  return m_error_sp;
+}
 
 bool IOHandler::GetIsInteractive() {
   return GetInputFileSP() ? GetInputFileSP()->GetIsInteractive() : false;
@@ -119,7 +113,6 @@ void IOHandler::SetPopped(bool b) { m_popped.SetValue(b, eBroadcastOnChange); }
 void IOHandler::WaitForPop() { m_popped.WaitForValueEqualTo(true); }
 
 void IOHandler::PrintAsync(const char *s, size_t len, bool is_stdout) {
-  std::lock_guard<std::recursive_mutex> guard(m_output_mutex);
   lldb::StreamFileSP stream = is_stdout ? m_output_sp : m_error_sp;
   stream->Write(s, len);
   stream->Flush();
@@ -228,19 +221,20 @@ IOHandlerEditline::IOHandlerEditline(
     llvm::StringRef prompt, llvm::StringRef continuation_prompt,
     bool multi_line, bool color, uint32_t line_number_start,
     IOHandlerDelegate &delegate)
-    : IOHandlerEditline(debugger, type,
-                        FileSP(),       // Inherit input from top input reader
-                        StreamFileSP(), // Inherit output from top input reader
-                        StreamFileSP(), // Inherit error from top input reader
-                        0,              // Flags
-                        editline_name,  // Used for saving history files
-                        prompt, continuation_prompt, multi_line, color,
-                        line_number_start, delegate) {}
+    : IOHandlerEditline(
+          debugger, type,
+          FileSP(),                   // Inherit input from top input reader
+          SynchronizedStreamFileSP(), // Inherit output from top input reader
+          SynchronizedStreamFileSP(), // Inherit error from top input reader
+          0,                          // Flags
+          editline_name,              // Used for saving history files
+          prompt, continuation_prompt, multi_line, color, line_number_start,
+          delegate) {}
 
 IOHandlerEditline::IOHandlerEditline(
     Debugger &debugger, IOHandler::Type type, const lldb::FileSP &input_sp,
-    const lldb::StreamFileSP &output_sp, const lldb::StreamFileSP &error_sp,
-    uint32_t flags,
+    const lldb::SynchronizedStreamFileSP &output_sp,
+    const lldb::SynchronizedStreamFileSP &error_sp, uint32_t flags,
     const char *editline_name, // Used for saving history files
     llvm::StringRef prompt, llvm::StringRef continuation_prompt,
     bool multi_line, bool color, uint32_t line_number_start,
@@ -256,15 +250,12 @@ IOHandlerEditline::IOHandlerEditline(
   SetPrompt(prompt);
 
 #if LLDB_ENABLE_LIBEDIT
-  bool use_editline = false;
-
-  use_editline = GetInputFILE() && GetOutputFILE() && GetErrorFILE() &&
-                 m_input_sp && m_input_sp->GetIsRealTerminal();
-
+  const bool use_editline = m_input_sp && m_output_sp && m_error_sp &&
+                            m_input_sp->GetIsRealTerminal();
   if (use_editline) {
-    m_editline_up = std::make_unique<Editline>(editline_name, GetInputFILE(),
-                                               GetOutputFILE(), GetErrorFILE(),
-                                               m_color, GetOutputMutex());
+    m_editline_up = std::make_unique<Editline>(
+        editline_name, m_input_sp ? m_input_sp->GetStream() : nullptr,
+        m_output_sp, m_error_sp, m_color);
     m_editline_up->SetIsInputCompleteCallback(
         [this](Editline *editline, StringList &lines) {
           return this->IsInputCompleteCallback(editline, lines);
@@ -380,7 +371,7 @@ bool IOHandlerEditline::GetLine(std::string &line, bool &interrupted) {
     return false;
   }
 
-  FILE *in = GetInputFILE();
+  FILE *in = m_input_sp ? m_input_sp->GetStream() : nullptr;
   char buffer[256];
 
   if (!got_line && !in && m_input_sp) {
@@ -630,7 +621,6 @@ void IOHandlerEditline::GotEOF() {
 void IOHandlerEditline::PrintAsync(const char *s, size_t len, bool is_stdout) {
 #if LLDB_ENABLE_LIBEDIT
   if (m_editline_up) {
-    std::lock_guard<std::recursive_mutex> guard(m_output_mutex);
     lldb::StreamFileSP stream = is_stdout ? m_output_sp : m_error_sp;
     m_editline_up->PrintAsync(stream.get(), s, len);
   } else

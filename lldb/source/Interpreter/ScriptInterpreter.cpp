@@ -206,7 +206,8 @@ ScriptInterpreterIORedirect::Create(bool enable_io, Debugger &debugger,
 ScriptInterpreterIORedirect::ScriptInterpreterIORedirect(
     std::unique_ptr<File> input, std::unique_ptr<File> output)
     : m_input_file_sp(std::move(input)),
-      m_output_file_sp(std::make_shared<StreamFile>(std::move(output))),
+      m_output_file_sp(
+          std::make_shared<SynchronizedStreamFile>(std::move(output))),
       m_error_file_sp(m_output_file_sp),
       m_communication("lldb.ScriptInterpreterIORedirect.comm"),
       m_disconnect(false) {}
@@ -240,7 +241,8 @@ ScriptInterpreterIORedirect::ScriptInterpreterIORedirect(
       m_disconnect = true;
 
       FILE *outfile_handle = fdopen(pipe.ReleaseWriteFileDescriptor(), "w");
-      m_output_file_sp = std::make_shared<StreamFile>(outfile_handle, true);
+      m_output_file_sp =
+          std::make_shared<SynchronizedStreamFile>(outfile_handle, true);
       m_error_file_sp = m_output_file_sp;
       if (outfile_handle)
         ::setbuf(outfile_handle, nullptr);

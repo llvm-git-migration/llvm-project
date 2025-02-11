@@ -128,8 +128,8 @@ private:
   ScriptInterpreterIORedirect(Debugger &debugger, CommandReturnObject *result);
 
   lldb::FileSP m_input_file_sp;
-  lldb::StreamFileSP m_output_file_sp;
-  lldb::StreamFileSP m_error_file_sp;
+  lldb::SynchronizedStreamFileSP m_output_file_sp;
+  lldb::SynchronizedStreamFileSP m_error_file_sp;
   ThreadedCommunication m_communication;
   bool m_disconnect;
 };
@@ -478,7 +478,7 @@ public:
     dest.clear();
     return false;
   }
-  
+
   virtual StructuredData::ObjectSP
   GetOptionsForCommandObject(StructuredData::GenericSP cmd_obj_sp) {
     return {};
@@ -488,9 +488,9 @@ public:
   GetArgumentsForCommandObject(StructuredData::GenericSP cmd_obj_sp) {
     return {};
   }
-  
+
   virtual bool SetOptionValueForCommandObject(
-      StructuredData::GenericSP cmd_obj_sp, ExecutionContext *exe_ctx, 
+      StructuredData::GenericSP cmd_obj_sp, ExecutionContext *exe_ctx,
       llvm::StringRef long_option, llvm::StringRef value) {
     return false;
   }
