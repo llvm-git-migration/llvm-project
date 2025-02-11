@@ -310,9 +310,16 @@ struct TwoDimMultiReductionToElementWise
                                 PatternRewriter &rewriter) const override {
     auto maskableOp =
         cast<vector::MaskableOpInterface>(multiReductionOp.getOperation());
-    if (maskableOp.isMasked())
-      // TODO: Support masking.
-      return failure();
+
+    Operation *rootOp;
+    Value mask = nullptr;
+    if (maskableOp.isMasked()) {
+      rewriter.setInsertionPoint(maskableOp.getMaskingOp());
+      rootOp = maskableOp.getMaskingOp();
+      mask = maskableOp.getMaskingOp().getMask();
+    } else {
+      rootOp = multiReductionOp;
+    }
 
     auto srcRank = multiReductionOp.getSourceVectorType().getRank();
     // Rank-2 ["parallel", "reduce"] or bail.
@@ -334,11 +341,15 @@ struct TwoDimMultiReductionToElementWise
     for (int64_t i = 0; i < srcShape[0]; i++) {
       auto operand = rewriter.create<vector::ExtractOp>(
           loc, multiReductionOp.getSource(), i);
+      Value extractMask = nullptr;
+      if (mask) {
+        extractMask = rewriter.create<vector::ExtractOp>(loc, mask, i);
+      }
       result = makeArithReduction(rewriter, loc, multiReductionOp.getKind(),
-                                  operand, result);
+                                  operand, result, nullptr, extractMask);
     }
 
-    rewriter.replaceOp(multiReductionOp, result);
+    rewriter.replaceOp(rootOp, result);
     return success();
   }
 };
