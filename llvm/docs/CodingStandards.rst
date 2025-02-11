@@ -1499,6 +1499,12 @@ Do:
     }
   };
 
+Make non-member variables and functions in `.cpp` files static
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When non-member functions or variables are defined in a `.cpp`` file and need
+not be referenced outside that file, make them `static`.
+
 Microscopic Details
 -------------------
 
