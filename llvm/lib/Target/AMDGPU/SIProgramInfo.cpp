@@ -27,6 +27,8 @@ void SIProgramInfo::reset(const MachineFunction &MF) {
 
   const MCExpr *ZeroExpr = MCConstantExpr::create(0, Ctx);
 
+  CodeSizeInBytes.reset();
+
   VGPRBlocks = ZeroExpr;
   SGPRBlocks = ZeroExpr;
   Priority = 0;
@@ -55,7 +57,7 @@ void SIProgramInfo::reset(const MachineFunction &MF) {
   LdsSize = 0;
   EXCPEnable = 0;
 
-  ComputePGMRSrc3GFX90A = ZeroExpr;
+  ComputePGMRSrc3 = ZeroExpr;
 
   NumVGPR = ZeroExpr;
   NumArchVGPR = ZeroExpr;
@@ -198,4 +200,29 @@ const MCExpr *SIProgramInfo::getPGMRSrc2(CallingConv::ID CC,
     return getComputePGMRSrc2(Ctx);
 
   return MCConstantExpr::create(0, Ctx);
+}
+
+uint64_t SIProgramInfo::getFunctionCodeSize(const MachineFunction &MF) {
+  if (!CodeSizeInBytes.has_value()) {
+    const GCNSubtarget &STM = MF.getSubtarget<GCNSubtarget>();
+    const SIInstrInfo *TII = STM.getInstrInfo();
+
+    uint64_t CodeSize = 0;
+
+    for (const MachineBasicBlock &MBB : MF) {
+      for (const MachineInstr &MI : MBB) {
+        // TODO: CodeSize should account for multiple functions.
+
+        // TODO: Should we count size of debug info?
+        if (MI.isDebugInstr())
+          continue;
+
+        CodeSize += TII->getInstSizeInBytes(MI);
+      }
+    }
+
+    CodeSizeInBytes = CodeSize;
+  }
+
+  return *CodeSizeInBytes;
 }
