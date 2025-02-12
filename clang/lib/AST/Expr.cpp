@@ -1648,8 +1648,11 @@ SourceLocation CallExpr::getBeginLoc() const {
   if (const auto *Method =
           dyn_cast_if_present<const CXXMethodDecl>(getCalleeDecl());
       Method && Method->isExplicitObjectMemberFunction()) {
-    assert(getNumArgs() > 0 && getArg(0));
-    return getArg(0)->getBeginLoc();
+    if (!isTypeDependent()) {
+      assert(getNumArgs() > 0 && getArg(0));
+      if (getNumArgs() > 0 && getArg(0))
+        return getArg(0)->getBeginLoc();
+    }
   }
 
   SourceLocation begin = getCallee()->getBeginLoc();
