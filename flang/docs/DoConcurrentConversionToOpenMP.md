@@ -27,16 +27,16 @@ are:
 ## Usage
 
 In order to enable `do concurrent` to OpenMP mapping, `flang` adds a new
-compiler flag: `-fdo-concurrent-to-openmp`. This flags has 3 possible values:
+compiler flag: `-fdo-concurrent-to-openmp`. This flag has 3 possible values:
 1. `host`: this maps `do concurent` loops to run in parallel on the host CPU.
    This maps such loops to the equivalent of `omp parallel do`.
-2. `device`: this maps `do concurent` loops to run in parallel on a device
-   (GPU). This maps such loops to the equivalent of `omp target teams
-   distribute parallel do`.
-3. `none`: this disables `do concurrent` mapping altogether. In such case, such
+2. `device`: this maps `do concurent` loops to run in parallel on a target device.
+   This maps such loops to the equivalent of
+   `omp target teams distribute parallel do`.
+3. `none`: this disables `do concurrent` mapping altogether. In that case, such
    loops are emitted as sequential loops.
 
-The above compiler switch is currently avaialble only when OpenMP is also
+The above compiler switch is currently available only when OpenMP is also
 enabled. So you need to provide the following options to flang in order to
 enable it:
 ```
@@ -54,13 +54,13 @@ that:
 To describe current status in more detail, following is a description of how
 the pass currently behaves for single-range loops and then for multi-range
 loops. The following sub-sections describe the status of the downstream 
-implementation on the AMD's ROCm fork(*). We are working on upstreaming the
+implementation on the AMD's ROCm fork[^1]. We are working on upstreaming the
 downstream implementation gradually and this document will be updated to reflect
 such upstreaming process. Example LIT tests referenced below might also be only
 be available in the ROCm fork and will upstream with the relevant parts of the
 code.
 
-(*) https://github.com/ROCm/llvm-project/blob/amd-staging/flang/lib/Optimizer/OpenMP/DoConcurrentConversion.cpp
+[^1]: https://github.com/ROCm/llvm-project/blob/amd-staging/flang/lib/Optimizer/OpenMP/DoConcurrentConversion.cpp
 
 ### Single-range loops
 
@@ -211,8 +211,8 @@ loops and map them as "collapsed" loops in OpenMP.
 
 Loop-nest detection is currently limited to the scenario described in the previous
 section. However, this is quite limited and can be extended in the future to cover
-more cases. For example, for the following loop nest, even thought, both loops are
-perfectly nested; at the moment, only the outer loop is parallized:
+more cases. For example, for the following loop nest, even though, both loops are
+perfectly nested; at the moment, only the outer loop is parallelized:
 ```fortran
 do concurrent(i=1:n)
   do concurrent(j=1:m)
@@ -221,9 +221,9 @@ do concurrent(i=1:n)
 end do
 ```
 
-Similary for the following loop nest, even though the intervening statement `x = 41`
-does not have any memory effects that would affect parallization, this nest is
-not parallized as well (only the outer loop is).
+Similarly, for the following loop nest, even though the intervening statement `x = 41`
+does not have any memory effects that would affect parallelization, this nest is
+not parallelized as well (only the outer loop is).
 
 ```fortran
 do concurrent(i=1:n)
@@ -244,7 +244,7 @@ of what is and is not detected as a perfect loop nest.
 
 ### Data environment
 
-By default, variables that are used inside a `do concurernt` loop nest are
+By default, variables that are used inside a `do concurrent` loop nest are
 either treated as `shared` in case of mapping to `host`, or mapped into the
 `target` region using a `map` clause in case of mapping to `device`. The only
 exceptions to this are:
@@ -253,20 +253,20 @@ exceptions to this are:
      examples above.
   1. any values that are from allocations outside the loop nest and used
      exclusively inside of it. In such cases, a local privatized
-     value is created in the OpenMP region to prevent multiple teams of threads
-     from accessing and destroying the same memory block which causes runtime
+     copy is created in the OpenMP region to prevent multiple teams of threads
+     from accessing and destroying the same memory block, which causes runtime
      issues. For an example of such cases, see
      `flang/test/Transforms/DoConcurrent/locally_destroyed_temp.f90`.
 
-Implicit mapping detection (for mapping to the GPU) is still quite limited and
-work to make it smarter is underway for both OpenMP in general and `do concurrent`
-mapping.
+Implicit mapping detection (for mapping to the target device) is still quite
+limited and work to make it smarter is underway for both OpenMP in general 
+and `do concurrent` mapping.
 
 #### Non-perfectly-nested loops' IVs
 
 For non-perfectly-nested loops, the IVs are still treated as `shared` or
 `map` entries as pointed out above. This **might not** be consistent with what
-the Fortran specficiation tells us. In particular, taking the following
+the Fortran specification tells us. In particular, taking the following
 snippets from the spec (version 2023) into account:
 
 > § 3.35
@@ -277,9 +277,9 @@ snippets from the spec (version 2023) into account:
 > § 19.4
 > ------
 >  A variable that appears as an index-name in a FORALL or DO CONCURRENT
->  construct, or ... is a construct entity. A variable that has LOCAL or
+>  construct [...] is a construct entity. A variable that has LOCAL or
 >  LOCAL_INIT locality in a DO CONCURRENT construct is a construct entity.
-> ...
+> [...]
 > The name of a variable that appears as an index-name in a DO CONCURRENT
 > construct, FORALL statement, or FORALL construct has a scope of the statement
 > or construct. A variable that has LOCAL or LOCAL_INIT locality in a DO
@@ -288,7 +288,7 @@ snippets from the spec (version 2023) into account:
 From the above quotes, it seems there is an equivalence between the IV of a `do
 concurrent` loop and a variable with a `LOCAL` locality specifier (equivalent
 to OpenMP's `private` clause). Which means that we should probably
-localize/privatize a `do concurernt` loop's IV even if it is not perfectly
+localize/privatize a `do concurrent` loop's IV even if it is not perfectly
 nested in the nest we are parallelizing. For now, however, we **do not** do
 that as pointed out previously. In the near future, we propose a middle-ground
 solution (see the Next steps section for more details).
@@ -327,8 +327,8 @@ At the moment, the FIR dialect does not have a way to model locality specifiers
 on the IR level. Instead, something similar to early/eager privatization in OpenMP
 is done for the locality specifiers in `fir.do_loop` ops. Having locality specifier
 modelled in a way similar to delayed privatization (i.e. the `omp.private` op) and
-reductions (i.e. the `omp.delcare_reduction` op) can make mapping `do concurrent`
-to OpenMP (and other parallization models) much easier.
+reductions (i.e. the `omp.declare_reduction` op) can make mapping `do concurrent`
+to OpenMP (and other parallel programming models) much easier.
 
 Therefore, one way to approach this problem is to extract the TableGen records
 for relevant OpenMP clauses in a shared dialect for "data environment management"
@@ -345,7 +345,7 @@ logic of loop nests needs to be implemented.
 ### Data-dependence analysis
 
 Right now, we map loop nests without analysing whether such mapping is safe to
-do or not. We probalby need to at least warn the use of unsafe loop nests due
+do or not. We probably need to at least warn the use of unsafe loop nests due
 to loop-carried dependencies.
 
 ### Non-rectangular loop nests
@@ -362,7 +362,7 @@ end do
 We defer this to the (hopefully) near future when we get the conversion in a
 good share for the samples/projects at hand.
 
-### Generalizing the pass to other parallization models
+### Generalizing the pass to other parallel programming models
 
 Once we have a stable and capable `do concurrent` to OpenMP mapping, we can take
 this in a more generalized direction and allow the pass to target other models;

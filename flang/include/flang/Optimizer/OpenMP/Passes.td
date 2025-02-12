@@ -50,7 +50,7 @@ def FunctionFilteringPass : Pass<"omp-function-filtering"> {
   ];
 }
 
-def DoConcurrentConversionPass : Pass<"fopenmp-do-concurrent-conversion", "mlir::func::FuncOp"> {
+def DoConcurrentConversionPass : Pass<"omp-do-concurrent-conversion", "mlir::func::FuncOp"> {
   let summary = "Map `DO CONCURRENT` loops to OpenMP worksharing loops.";
 
   let description = [{ This is an experimental pass to map `DO CONCURRENT` loops
@@ -59,7 +59,7 @@ def DoConcurrentConversionPass : Pass<"fopenmp-do-concurrent-conversion", "mlir:
      For now the following is supported:
        - Mapping simple loops to `parallel do`.
 
-     Still to TODO:
+     Still TODO:
        - More extensive testing.
   }];
 

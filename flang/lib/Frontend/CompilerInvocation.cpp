@@ -161,7 +161,7 @@ static bool parseDoConcurrentMapping(Fortran::frontend::CodeGenOptions &opts,
                                      llvm::opt::ArgList &args,
                                      clang::DiagnosticsEngine &diags) {
   llvm::opt::Arg *arg =
-      args.getLastArg(clang::driver::options::OPT_do_concurrent_parallel_EQ);
+      args.getLastArg(clang::driver::options::OPT_do_concurrent_to_openmp_EQ);
   if (!arg)
     return true;
 
