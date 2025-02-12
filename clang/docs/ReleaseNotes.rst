@@ -135,6 +135,8 @@ Improvements to Clang's diagnostics
 - Fixed a bug where Clang's Analysis did not correctly model the destructor behavior of ``union`` members (#GH119415).
 - A statement attribute applied to a ``case`` label no longer suppresses
   'bypassing variable initialization' diagnostics (#84072).
+- The ``-Wsign-compare`` warning now treats expressions with bitwise NOT(~) as signed integers 
+  and throws warning if they are compared with unsigned integers (##18878).
 
 Improvements to Clang's time-trace
 ----------------------------------
