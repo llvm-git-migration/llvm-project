@@ -216,7 +216,7 @@ uint64_t SIProgramInfo::getFunctionCodeSize(const MachineFunction &MF) {
       // TODO: CodeSize should account for multiple functions.
 
       // TODO: Should we count size of debug info?
-      if (MI.isDebugInstr())
+      if (MI.isDebugInstr() || MI.isMetaInstruction())
         continue;
 
       CodeSize += TII->getInstSizeInBytes(MI);
