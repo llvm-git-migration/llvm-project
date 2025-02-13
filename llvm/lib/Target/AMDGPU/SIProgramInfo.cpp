@@ -212,6 +212,8 @@ uint64_t SIProgramInfo::getFunctionCodeSize(const MachineFunction &MF) {
   uint64_t CodeSize = 0;
 
   for (const MachineBasicBlock &MBB : MF) {
+    CodeSize = alignTo(CodeSize, MBB.getAlignment());
+
     for (const MachineInstr &MI : MBB) {
       // TODO: CodeSize should account for multiple functions.
 
