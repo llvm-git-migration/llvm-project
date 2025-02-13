@@ -180,12 +180,21 @@ include_directories(BEFORE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 
+add_custom_target(lld-headers)
+set_target_properties(lld-headers PROPERTIES FOLDER "Misc")
 if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
-  install(DIRECTORY include/
+  install(DIRECTORY include/lld
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    COMPONENT lld-headers
     FILES_MATCHING
     PATTERN "*.h"
     )
+
+  if (NOT LLVM_ENABLE_IDE)
+    add_llvm_install_targets(install-lld-headers
+                             DEPENDS lld-headers
+                             COMPONENT lld-headers)
+  endif()
 endif()
 
 add_subdirectory(Common)
