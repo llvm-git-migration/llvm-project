@@ -559,6 +559,22 @@ def genOrderFile(args):
 
     return 0
 
+def filter_bolt_optimized(inputs, instrumented_outputs)
+    new_inputs = []
+    new_instrumented_ouputs = []
+    for input, instrumented_output in zip(inputs, instrumented_outputs):
+        output = subprocess.check_output(
+            [opts.readelf, "-WS", input], universal_newlines=True
+        )
+
+        # This binary has already been bolt-optimized, so skip further processing.
+        if re.search("\\.bolt\\.org\\.text", output, re.MULTILINE):
+            print(f"Skipping {input}, it's already instrumented")
+        else:
+            new_inputs.append(input)
+            new_instrumented_ouputs.append(instrumented_output)
+    return new_inputs, new_instrumented_ouputs
+
 
 def bolt_optimize(args):
     parser = argparse.ArgumentParser("%prog  [options] ")
@@ -574,47 +590,66 @@ def bolt_optimize(args):
 
     opts = parser.parse_args(args)
 
-    output = subprocess.check_output(
-        [opts.readelf, "-WS", opts.input], universal_newlines=True
-    )
+    inputs = opts.input.split(';')
+    instrumented_outputs = opts.instrumented_output.split(';')
+    assert len(inputs) == len(instrumented_outputs), "inconsistent --input / --instrumented-output arguments"
 
-    # This binary has already been bolt-optimized, so skip further processing.
-    if re.search("\\.bolt\\.org\\.text", output, re.MULTILINE):
+    inputs, instrumented_outputs = filter_bolt_optimized(inputs, instrumented_outputs)
+    if not inputs:
         return 0
 
+    environ = os.environ.copy()
     if opts.method == "INSTRUMENT":
-        process = subprocess.run(
-            [
-                opts.bolt,
-                opts.input,
-                "-o",
-                opts.instrumented_output,
-                "-instrument",
-                "--instrumentation-file-append-pid",
-                f"--instrumentation-file={opts.fdata}",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+        preloads = []
+        for input, instrumented_output in zip(inputs, instrumented_outputs):
+            args = [
+                    opts.bolt,
+                    input,
+                    "-o",
+                    instrumented_output,
+                    "-instrument",
+                    "--instrumentation-file-append-pid",
+                    f"--instrumentation-file={opts.fdata}",
+                ]
+            print("Running: " + " ".join(args))
+            process = subprocess.run(
+                args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
 
-        print(process.args)
-        for line in process.stdout:
-            sys.stdout.write(line)
-        process.check_returncode()
+            for line in process.stdout:
+                sys.stdout.write(line)
+            process.check_returncode()
 
-    process = subprocess.run(
-        [
+            output = subprocess.check_output(
+                [opts.readelf, "--file-header", input], universal_newlines=True
+            )
+            if re.search(r"Type:\s*((Shared)|(DYN))", output):
+                # force using the instrumented version
+                preloads.append(instrumented_output)
+
+        if preloads:
+            print("Patching execution environment for dynamic library")
+            environ["LD_PRELOAD"] = os.pathsep.join(preloads)
+
+
+    args = [
             sys.executable,
             opts.lit,
-            os.path.join(opts.perf_training_binary_dir, "bolt-fdata"),
-        ],
+            "-v",
+            os.path.join(opts.perf_training_binary_dir, f"bolt-fdata"),
+        ]
+    print("Running: " + " ".join(args))
+    process = subprocess.run(
+        args,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        env=environ,
     )
 
-    print(process.args)
     for line in process.stdout:
         sys.stdout.write(line)
     process.check_returncode()
@@ -624,35 +659,37 @@ def bolt_optimize(args):
 
     merge_fdata([opts.merge_fdata, opts.fdata, opts.perf_training_binary_dir])
 
-    shutil.copy(opts.input, f"{opts.input}-prebolt")
+    for input in inputs:
+        shutil.copy(input, f"{input}-prebolt")
 
-    process = subprocess.run(
-        [
-            opts.bolt,
-            f"{opts.input}-prebolt",
-            "-o",
-            opts.input,
-            "-data",
-            opts.fdata,
-            "-reorder-blocks=ext-tsp",
-            "-reorder-functions=cdsort",
-            "-split-functions",
-            "-split-all-cold",
-            "-split-eh",
-            "-dyno-stats",
-            "-use-gnu-stack",
-            "-update-debug-sections",
-            "-nl" if opts.method == "PERF" else "",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
+        args = [
+                opts.bolt,
+                f"{input}-prebolt",
+                "-o",
+                input,
+                "-data",
+                opts.fdata,
+                "-reorder-blocks=ext-tsp",
+                "-reorder-functions=cdsort",
+                "-split-functions",
+                "-split-all-cold",
+                "-split-eh",
+                "-dyno-stats",
+                "-use-gnu-stack",
+                "-update-debug-sections",
+                "-nl" if opts.method == "PERF" else "",
+            ]
+        print("Running: " + " ".join(args))
+        process = subprocess.run(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
 
-    print(process.args)
-    for line in process.stdout:
-        sys.stdout.write(line)
-    process.check_returncode()
+        for line in process.stdout:
+            sys.stdout.write(line)
+        process.check_returncode()
 
 
 commands = {
