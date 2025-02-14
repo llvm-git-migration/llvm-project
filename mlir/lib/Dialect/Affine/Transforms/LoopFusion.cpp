@@ -904,9 +904,11 @@ public:
               affine::canFuseLoops(srcAffineForOp, dstAffineForOp,
                                    /*dstLoopDepth=*/i + numSurroundingLoops,
                                    &depthSliceUnions[i - 1], strategy);
-
-          if (result.value == FusionResult::Success)
+          if (result.value == FusionResult::Success) {
             maxLegalFusionDepth = i;
+            LLVM_DEBUG(llvm::dbgs()
+                       << "Found valid slice for depth: " << i << '\n');
+          }
         }
 
         if (maxLegalFusionDepth == 0) {
