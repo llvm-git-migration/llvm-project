@@ -165,6 +165,7 @@ utils::UseRangesCheck::ReplacerMap UseRangesCheck::getReplacerMap() const {
       Buff.assign({"::std::", Name});
       Result.try_emplace(Buff, Replacer);
     }
+    // auto Diag = diag("1111");
   }
   if (getLangOpts().CPlusPlus23)
     Result.try_emplace(
