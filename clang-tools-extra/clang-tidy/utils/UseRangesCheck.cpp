@@ -215,6 +215,16 @@ void UseRangesCheck::check(const MatchFinder::MatchResult &Result) {
     const auto *Call = Result.Nodes.getNodeAs<CallExpr>(Buffer);
     if (!Call)
       continue;
+    if (Function->getName() == "find") {
+      unsigned ValueArgIndex = 2;
+      if (Call->getNumArgs() <= ValueArgIndex)
+        continue;
+      const Expr *ValueExpr =
+          Call->getArg(ValueArgIndex)->IgnoreParenImpCasts();
+      if (isa<CXXNullPtrLiteralExpr>(ValueExpr)) {
+        return;
+      }
+    }
     auto Diag = createDiag(*Call);
     if (auto ReplaceName = Replacer->getReplaceName(*Function))
       Diag << FixItHint::CreateReplacement(Call->getCallee()->getSourceRange(),
