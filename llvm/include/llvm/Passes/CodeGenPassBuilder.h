@@ -1092,7 +1092,7 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addRegAllocPass(
       addPass(RAGreedyPass());
       break;
     default:
-      report_fatal_error("register allocator not supported yet.", false);
+      report_fatal_error("register allocator not supported yet", false);
     }
     return;
   }
