@@ -13634,12 +13634,12 @@ ExprResult
 TreeTransform<Derived>::TransformDesignatedInitExpr(DesignatedInitExpr *E) {
   Designation Desig;
 
-  // transform the initializer value
+  // Transform the initializer value once.
   ExprResult Init = getDerived().TransformExpr(E->getInit());
   if (Init.isInvalid())
     return ExprError();
 
-  // transform the designators.
+  // Transform the designators.
   SmallVector<Expr*, 4> ArrayExprs;
   bool ExprChanged = false;
   for (const DesignatedInitExpr::Designator &D : E->designators()) {
@@ -13649,7 +13649,7 @@ TreeTransform<Derived>::TransformDesignatedInitExpr(DesignatedInitExpr *E) {
             getDerived().TransformDecl(D.getFieldLoc(), D.getFieldDecl()));
         if (Field != D.getFieldDecl())
           // Rebuild the expression when the transformed FieldDecl is
-          // different to the already assigned FieldDecl.
+          // different from the already assigned FieldDecl.
           ExprChanged = true;
         if (Field->isAnonymousStructOrUnion())
           continue;
@@ -13665,21 +13665,22 @@ TreeTransform<Derived>::TransformDesignatedInitExpr(DesignatedInitExpr *E) {
     }
 
     if (D.isArrayDesignator()) {
-      ExprResult Index = getDerived().TransformExpr(E->getArrayIndex(D));
-      if (Index.isInvalid())
+      // Transform the array index expression.
+      ExprResult NewIndex = getDerived().TransformExpr(E->getArrayIndex(D));
+      if (NewIndex.isInvalid())
         return ExprError();
 
-      Desig.AddDesignator(
-          Designator::CreateArrayDesignator(Index.get(), D.getLBracketLoc()));
+      Desig.AddDesignator(Designator::CreateArrayDesignator(
+          NewIndex.get(), D.getLBracketLoc()));
 
-      ExprChanged = ExprChanged || Init.get() != E->getArrayIndex(D);
-      ArrayExprs.push_back(Index.get());
+      // Check if the transformed index is different from the original.
+      ExprChanged = ExprChanged || NewIndex.get() != E->getArrayIndex(D);
+      ArrayExprs.push_back(NewIndex.get());
       continue;
     }
 
     assert(D.isArrayRangeDesignator() && "New kind of designator?");
-    ExprResult Start
-      = getDerived().TransformExpr(E->getArrayRangeStart(D));
+    ExprResult Start = getDerived().TransformExpr(E->getArrayRangeStart(D));
     if (Start.isInvalid())
       return ExprError();
 
@@ -13697,6 +13698,7 @@ TreeTransform<Derived>::TransformDesignatedInitExpr(DesignatedInitExpr *E) {
     ArrayExprs.push_back(End.get());
   }
 
+  // Compare the transformed initializer against the original.
   if (!getDerived().AlwaysRebuild() &&
       Init.get() == E->getInit() &&
       !ExprChanged)
